@@ -6,12 +6,14 @@ define(['logManager',
     'js/NodePropertyNames',
     'js/Utils/GMEConcepts',
     './MetaRelations',
+    './MetaEditorConstants',
     'js/DragDrop/DragHelper'], function (logManager,
                                         util,
                                         CONSTANTS,
                                         nodePropertyNames,
                                         GMEConcepts,
                                         MetaRelations,
+                                        MetaEditorConstants,
                                         DragHelper) {
 
     var MetaEditorControlDiagramDesignerWidgetEventHandlers,
@@ -86,8 +88,7 @@ define(['logManager',
             params = DragHelper.getDragParams(dragInfo),
             dragEffects = DragHelper.getDragEffects(dragInfo),
             i,
-            accept = false,
-            PROJECT_META_ID = this._client.getNode(this.currentNodeInfo.id).getRegistry(nodePropertyNames.Registry.ProjectRegistry)[CONSTANTS.PROJECT_META_ID];
+            accept = false;
 
         //accept is self reposition OR dragging from somewhere else and the items are not on the sheet yet
         if (params && params.hasOwnProperty(DRAG_PARAMS_META_CONTAINER_ID)) {
@@ -95,24 +96,20 @@ define(['logManager',
                 accept = true;
             }
         } else {
-            if (gmeIDList.length === 1 &&
-                dragEffects.length === 1 &&
+            if (dragEffects.length === 1 &&
                 dragEffects[0] === DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE) {
-                //dragging from PartBrowser
-                //if the dragged item can be a valid children, let it drop
-                if (GMEConcepts.canCreateChild(PROJECT_META_ID, gmeIDList[0])) {
-                    accept = true;
-                }
-            } else {
-                //return true if there is at least one item among the dragged ones that is not on the sheet yet
-                if (gmeIDList.length > 0) {
-                    for (i = 0; i < gmeIDList.length; i+= 1) {
-                        if (this._GMENodes.indexOf(gmeIDList[i]) === -1 ) {
-                            accept = true;
-                            break;
+                    //dragging from PartBrowser
+                    accept = false;
+                } else {
+                    //return true if there is at least one item among the dragged ones that is not on the sheet yet
+                    if (gmeIDList.length > 0) {
+                        for (i = 0; i < gmeIDList.length; i+= 1) {
+                            if (this.currentNodeInfo.members.indexOf(gmeIDList[i]) === -1 ) {
+                                accept = true;
+                                break;
+                            }
                         }
                     }
-                }
             }
         }
 
@@ -127,113 +124,62 @@ define(['logManager',
     /*  HANDLE OBJECT DRAG & DROP TO SHEET                    */
     /**********************************************************/
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDrop = function (event, dragInfo, position) {
-        var gmeIDList = DragHelper.getDragItems(dragInfo),
+        var _client = this._client,
+            aspectNodeID = this.currentNodeInfo.id,
+            gmeIDList = DragHelper.getDragItems(dragInfo),
             params = DragHelper.getDragParams(dragInfo),
-            cNode = this._client.getNode(this.currentNodeInfo.id),
-            registry = cNode.getEditableRegistry(this._META_EDITOR_REGISTRY_KEY) || this._emptyMetaEditorRegistry(),
             i,
-            addMember,
-            repositionMember,
             selectedIDs = [],
             componentID,
-            dragEffects = DragHelper.getDragEffects(dragInfo),
-            PROJECT_META_ID = this._client.getNode(this.currentNodeInfo.id).getRegistry(nodePropertyNames.Registry.ProjectRegistry)[CONSTANTS.PROJECT_META_ID],
-            createChildParams,
-            newID,
-            _client = this._client,
-            parentID = this.currentNodeInfo.id,
-            _META_EDITOR_REGISTRY_KEY = this._META_EDITOR_REGISTRY_KEY;
+            posX,
+            posY;
 
-        addMember = function (gmeID, position) {
-            var added = false;
-
-            if (registry.Members.indexOf(gmeID) === -1) {
-                registry.Members.push(gmeID);
-                registry.MemberCoord[gmeID] = { "x": position.x,
-                    "y": position.y};
-
-                added = true;
-            }
-
-            return added;
-        };
-
-        repositionMember = function (gmeID, position) {
-            if (registry.Members.indexOf(gmeID) !== -1) {
-                registry.MemberCoord[gmeID] = { "x": position.x,
-                    "y": position.y};
-            }
-        };
-
-        //check to see it self drop and reposition or dropping fro somewhere else
-        if (params && params.hasOwnProperty(DRAG_PARAMS_META_CONTAINER_ID) && params[DRAG_PARAMS_META_CONTAINER_ID] === this.currentNodeInfo.id) {
+        //check to see it self drop and reposition or dropping from somewhere else
+        if (params && params.hasOwnProperty(DRAG_PARAMS_META_CONTAINER_ID) && params[DRAG_PARAMS_META_CONTAINER_ID] === aspectNodeID) {
             if (gmeIDList.length === 0) {
                 //params.position holds the old coordinates of the items being dragged
                 //update UI
+                _client.startTransaction();
                 this.diagramDesigner.beginUpdate();
 
                 for (i in params.positions) {
                     if (params.positions.hasOwnProperty(i)) {
-                        repositionMember(i, {'x': position.x + params.positions[i].x,
-                                             'y': position.y + params.positions[i].y});
+
+                        posX = position.x + params.positions[i].x;
+                        posY = position.y + params.positions[i].y;
+                        _client.setMemberRegistry(aspectNodeID, i, MetaEditorConstants.META_ASPECT_SET_NAME, MetaEditorConstants.META_ASPECT_MEMBER_POSITION_REGISTRY_KEY, {'x': posX, 'y': posY} );
 
                         componentID = this._GMEID2ComponentID[i];
 
                         selectedIDs.push(componentID);
-                        this.diagramDesigner.updateDesignerItem(componentID, { "position": {"x": position.x + params.positions[i].x, "y": position.y + params.positions[i].y }});
+                        this.diagramDesigner.updateDesignerItem(componentID, { "position": {'x': posX, 'y': posY}});
                     }
                 }
 
                 this.diagramDesigner.endUpdate();
                 this.diagramDesigner.select(selectedIDs);
 
-                setTimeout(function () {
-                    _client.startTransaction();
-
-                    _client.setRegistry(parentID, _META_EDITOR_REGISTRY_KEY, registry);
-
-                    _client.completeTransaction();
-                }, 10);
+                _client.completeTransaction();
             }
         } else {
-            this._client.startTransaction();
+            _client.startTransaction();
 
-            if (gmeIDList.length === 1 &&
-                dragEffects.length === 1 &&
-                dragEffects[0] === DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE) {
-                //dragging from PartBrowser
-                //if the dragged item can be a valid children, let it drop
-                if (GMEConcepts.canCreateChild(PROJECT_META_ID, gmeIDList[0])) {
-                    createChildParams = { "parentId": PROJECT_META_ID,
-                        "baseId": gmeIDList[0]};
+            //if the item is not currently in the METAAspect, add it
+            if (gmeIDList.length > 0) {
+                for (i = 0; i < gmeIDList.length; i += 1) {
+                    componentID = gmeIDList[i];
+                    if (this.currentNodeInfo.members.indexOf(componentID) === -1) {
+                        _client.addMember(aspectNodeID, componentID, MetaEditorConstants.META_ASPECT_SET_NAME);
+                        _client.setMemberRegistry(aspectNodeID, componentID, MetaEditorConstants.META_ASPECT_SET_NAME, MetaEditorConstants.META_ASPECT_MEMBER_POSITION_REGISTRY_KEY, {'x': position.x, 'y': position.y} );
 
-                    newID = this._client.createChild(createChildParams);
-
-                    if (newID) {
-                        addMember(newID, position);
-                            //store new position
-                        this._client.setRegistry(newID, nodePropertyNames.Registry.position, {'x': position.x,
-                                'y': position.y});
-                    }
-                }
-            } else {
-                //return true if there is at least one item among the dragged ones that is not on the sheet yet
-                if (gmeIDList.length > 0) {
-                    for (i = 0; i < gmeIDList.length; i += 1) {
-                        if (addMember(gmeIDList[i], position)) {
-                            position.x += 20;
-                            position.y += 20;
-                        }
+                        position.x += 20;
+                        position.y += 20;
                     }
                 }
             }
 
-            this._client.setRegistry(this.currentNodeInfo.id, this._META_EDITOR_REGISTRY_KEY, registry);
-
-            this._client.completeTransaction();
+            _client.completeTransaction();
         }
-
-
     };
     /**********************************************************/
     /*  END OF --- HANDLE OBJECT DRAG & DROP TO SHEET         */
@@ -244,22 +190,24 @@ define(['logManager',
     /*  HANDLE OBJECT REPOSITION IN THE ASPECT ASPECT         */
     /**********************************************************/
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onDesignerItemsMove = function (repositionDesc) {
-        var cNode = this._client.getNode(this.currentNodeInfo.id),
-            registry = cNode.getEditableRegistry(this._META_EDITOR_REGISTRY_KEY) || this._emptyMetaEditorRegistry(),
+        var _client = this._client,
+            aspectNodeID = this.currentNodeInfo.id,
+            members = this.currentNodeInfo.members,
             id,
             gmeID;
+
+        _client.startTransaction();
 
         for (id in repositionDesc) {
             if (repositionDesc.hasOwnProperty(id)) {
                 gmeID = this._ComponentID2GMEID[id];
-                if (registry.Members.indexOf(gmeID) !== -1) {
-                    registry.MemberCoord[gmeID] = { "x": repositionDesc[id].x,
-                        "y": repositionDesc[id].y};
+                if (members.indexOf(gmeID) !== -1) {
+                    _client.setMemberRegistry(aspectNodeID, gmeID, MetaEditorConstants.META_ASPECT_SET_NAME, MetaEditorConstants.META_ASPECT_MEMBER_POSITION_REGISTRY_KEY, { "x": repositionDesc[id].x,"y": repositionDesc[id].y} );
                 }
             }
         }
 
-        this._client.setRegistry(this.currentNodeInfo.id, this._META_EDITOR_REGISTRY_KEY, registry);
+        _client.completeTransaction();
     };
     /************************************************************/
     /* END OF --- HANDLE OBJECT REPOSITION IN THE ASPECT ASPECT */
@@ -270,53 +218,13 @@ define(['logManager',
     /*  HANDLE OBJECT / CONNECTION DELETION IN THE ASPECT ASPECT */
     /*************************************************************/
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionDelete = function (idList) {
-        var cNode = this._client.getNode(this.currentNodeInfo.id),
-            registry = cNode.getEditableRegistry(this._META_EDITOR_REGISTRY_KEY) || this._emptyMetaEditorRegistry(),
+        var _client = this._client,
+            aspectNodeID = this.currentNodeInfo.id,
             len = idList.length,
             gmeID,
             idx,
-            getAssociatedConnections,
-            connectionListBySrcGMEID = this._connectionListBySrcGMEID,
-            connectionListByDstGMEID = this._connectionListByDstGMEID,
-            aConnections,
             deleteConnection,
-            i,
             self = this;
-
-        getAssociatedConnections = function (objectID) {
-            var associatedConnectionIDs = [],
-                otherID,
-                connType,
-                len,
-                cID,
-                checkConnections;
-
-            checkConnections = function (cList) {
-                //check objectID as source
-                if (cList.hasOwnProperty(objectID)) {
-                    for (otherID in cList[objectID]) {
-                        if (cList[objectID].hasOwnProperty(otherID)) {
-                            for (connType in cList[objectID][otherID]) {
-                                if (cList[objectID][otherID].hasOwnProperty(connType)) {
-                                    len = cList[objectID][otherID][connType].length;
-                                    while (len--) {
-                                        cID = cList[objectID][otherID][connType][len];
-                                        if (associatedConnectionIDs.indexOf(cID) === -1) {
-                                            associatedConnectionIDs.push(cID);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            };
-
-            checkConnections(connectionListBySrcGMEID);
-            checkConnections(connectionListByDstGMEID);
-
-            return associatedConnectionIDs;
-        };
 
         deleteConnection = function (connectionID) {
             var connDesc = self._connectionListByID[connectionID];
@@ -324,44 +232,29 @@ define(['logManager',
             if (connDesc.type === MetaRelations.META_RELATIONS.CONTAINMENT) {
                 self._deleteContainmentRelationship(connDesc.GMESrcId, connDesc.GMEDstId);
             } else if (connDesc.type === MetaRelations.META_RELATIONS.POINTER) {
-                self._deletePointerRelationship(connDesc.GMESrcId, connDesc.GMEDstId, connDesc.name);
+                self._deletePointerRelationship(connDesc.GMESrcId, connDesc.GMEDstId, connDesc.name, false);
             } else if (connDesc.type === MetaRelations.META_RELATIONS.INHERITANCE) {
                 self._deleteInheritanceRelationship(connDesc.GMESrcId, connDesc.GMEDstId);
+            } else if (connDesc.type === MetaRelations.META_RELATIONS.POINTERLIST) {
+                self._deletePointerRelationship(connDesc.GMESrcId, connDesc.GMEDstId, connDesc.name, true);
             }
-            //TODO: PointerList deletion not yet handled
         };
 
-        this._client.startTransaction();
+        _client.startTransaction();
 
         while (len--) {
             gmeID = this._ComponentID2GMEID[idList[len]];
-            idx = registry.Members.indexOf(gmeID);
+            idx = this.currentNodeInfo.members.indexOf(gmeID);
             if ( idx !== -1) {
-                //entity is a box --> delete GME object from the sheet member's list and delete relationship definitions as well
-
-                //handle associated connections
-                //if GMEObject is a source of a connection (Containment / Pointer / PointerList relationship)
-                // --> DELETE these relationship definitions from the node
-                //if GMEObject is a destination of a connection (Inheritance)
-                // --> inheritance is stored on the 'other' end, need to delete from the 'other' node
-                aConnections = getAssociatedConnections(gmeID);
-                i = aConnections.length;
-                while (i--) {
-                    deleteConnection(aConnections[i]);
-                }
-
-                //finally remove from members list
-                registry.Members.splice(idx, 1);
-                delete registry.MemberCoord[gmeID];
+                //entity is a box --> delete GME object from the aspect's members list
+                _client.removeMember(aspectNodeID, gmeID, MetaEditorConstants.META_ASPECT_SET_NAME);
             } else if (this._connectionListByID.hasOwnProperty(idList[len])) {
                 //entity is a connection, just simply delete it
                 deleteConnection(idList[len]);
             }
         }
 
-        this._client.setRegistry(this.currentNodeInfo.id, this._META_EDITOR_REGISTRY_KEY, registry);
-
-        this._client.completeTransaction();
+        _client.completeTransaction();
     };
     /************************************************************************/
     /*  END OF --- HANDLE OBJECT / CONNECTION DELETION IN THE ASPECT ASPECT */
@@ -410,6 +303,7 @@ define(['logManager',
         this.diagramDesigner.toolbarItems.ddbtnConnectionArrowStart.enabled(onlyConnectionTypeSelected);
         this.diagramDesigner.toolbarItems.ddbtnConnectionPattern.enabled(onlyConnectionTypeSelected);
         this.diagramDesigner.toolbarItems.ddbtnConnectionArrowEnd.enabled(onlyConnectionTypeSelected);
+        this.diagramDesigner.toolbarItems.ddbtnConnectionLineType.enabled(onlyConnectionTypeSelected);
 
         //nobody is selected on the canvas
         //set the active selection to the opened guy
@@ -425,7 +319,6 @@ define(['logManager',
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSetConnectionProperty = function (params) {
         var items = params.items,
             visualParams = params.params,
-            gmeIDs = [],
             len = items.length,
             id,
             connRegLineStyle;

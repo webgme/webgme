@@ -163,6 +163,18 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
     };
 
     DefaultLayout.prototype._onWestResize = function () {
+        var len = this._westPanels.length,
+            w = this._westPanel.width(),
+            h = this._westPanel.height(),
+            h0,
+            i;
+
+        //TODO: fix this
+        //second widget takes all the available space
+        if (len === 2) {
+            h0 = this._westPanels[0].$pEl.outerHeight(true);
+            this._westPanels[1].setSize(w, h - h0);
+        }
     };
 
     return DefaultLayout;

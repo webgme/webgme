@@ -16,7 +16,8 @@ define(['js/Constants',
                          Port,
                          ModelDecoratorConstants) {
 
-    var ModelDecoratorCore;
+    var ModelDecoratorCore,
+        ABSTRACT_CLASS = 'abstract';
 
 
     ModelDecoratorCore = function () {
@@ -55,6 +56,7 @@ define(['js/Constants',
     ModelDecoratorCore.prototype.destroy = function () {
         var len = this._portIDs.length;
         while (len--) {
+            this._unregisterForNotification(this._portIDs[len]);
             this._removePort(this._portIDs[len]);
         }
     };
@@ -97,6 +99,7 @@ define(['js/Constants',
         this._updateName();
         this._updatePorts();
         this._updateReference();
+        this._updateAbstract();
     };
 
 
@@ -408,6 +411,21 @@ define(['js/Constants',
 
         if (this._refTo !== val) {
             client.makePointer(nodeID, ModelDecoratorConstants.REFERENCE_POINTER_NAME, val);
+        }
+    };
+
+    ModelDecoratorCore.prototype._updateAbstract = function () {
+        var client = this._control._client,
+            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]);
+
+        if (nodeObj) {
+            if (nodeObj.getRegistry(nodePropertyNames.Registry.isAbstract) === true) {
+                this.$el.addClass(ABSTRACT_CLASS);
+            } else {
+                this.$el.removeClass(ABSTRACT_CLASS);
+            }
+        } else {
+            this.$el.removeClass(ABSTRACT_CLASS);
         }
     };
 

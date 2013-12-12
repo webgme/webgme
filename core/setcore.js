@@ -12,9 +12,8 @@ define([ "util/assert"], function (ASSERT) {
     function SetCore(innerCore){
 
         //help functions
-        var setModified = function(node,setName){
-            var sethashregid = '_hash_'+setName;
-            innerCore.setRegistry(node,sethashregid,(innerCore.getRegistry(node,sethashregid) || 0)+1);
+        var setModified = function(node){
+            innerCore.setRegistry(node,'_sets_',(innerCore.getRegistry(node,'_sets_') || 0)+1);
         };
         var getMemberRelId = function(node,setName,memberPath){
             ASSERT(typeof setName === 'string');
@@ -45,11 +44,11 @@ define([ "util/assert"], function (ASSERT) {
         }
 
         //adding new functions
-        setcore.getSetsNumber = function(node){
-            return (innerCore.getChildrenRelids(innerCore.getChild(node,SETS_ID))).length;
+        setcore.getSetNumbers = function(node){
+            return this.getSetNames(node).length;
         };
-        setcore.getSetsName = function(node){
-            return  innerCore.getChildrenRelids(innerCore.getChild(node,SETS_ID))|| [];
+        setcore.getSetNames = function(node){
+            return  innerCore.getPointerNames(innerCore.getChild(node,SETS_ID))|| [];
         };
         setcore.getMemberPaths = function(node,setName){
             ASSERT(typeof setName === 'string');
@@ -75,7 +74,7 @@ define([ "util/assert"], function (ASSERT) {
             if(setMemberRelId){
                 var setMemberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),setMemberRelId);
                 innerCore.deleteNode(setMemberNode);
-                setModified(node,setName);
+                setModified(node);
             }
         };
         setcore.addMember = function(node,setName,member){
@@ -86,7 +85,7 @@ define([ "util/assert"], function (ASSERT) {
                 var setMember =  innerCore.getChild(setNode,createNewMemberRelid(setNode));
                 innerCore.setPointer(setMember,'member',member);
                 innerCore.setRegistry(setMember,"_","_");//TODO hack, somehow the empty children have been removed during persist
-                setModified(node,setName);
+                setModified(node);
             }
         };
 
@@ -113,7 +112,69 @@ define([ "util/assert"], function (ASSERT) {
             if(memberRelId){
                 var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
                 innerCore.setAttribute(memberNode,attrName,attrValue);
+                setModified(node);
             }
+        };
+        setcore.delMemberAttribute = function(node,setName,memberPath,attrName){
+            ASSERT(typeof setName === 'string' && typeof attrName === 'string');
+            var memberRelId = getMemberRelId(node,setName,memberPath);
+            if(memberRelId){
+                var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
+                innerCore.delAttribute(memberNode,attrName);
+                setModified(node);
+            }
+        };
+
+        setcore.getMemberRegistryNames = function(node,setName,memberPath){
+            ASSERT(typeof setName === 'string');
+            var memberRelId = getMemberRelId(node,setName,memberPath);
+            if(memberRelId){
+                var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
+                return innerCore.getRegistryNames(memberNode);
+            }
+            return [];
+        };
+        setcore.getMemberRegistry = function(node,setName,memberPath,regName){
+            ASSERT(typeof setName === 'string' && typeof regName === 'string');
+            var memberRelId = getMemberRelId(node,setName,memberPath);
+            if(memberRelId){
+                var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
+                return innerCore.getAttribute(memberNode,regName);
+            }
+        };
+        setcore.setMemberRegistry = function(node,setName,memberPath,regName,regValue){
+            ASSERT(typeof setName === 'string' && typeof regName === 'string' && regValue !== undefined);
+            var memberRelId = getMemberRelId(node,setName,memberPath);
+            if(memberRelId){
+                var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
+                innerCore.setAttribute(memberNode,regName,regValue);
+                setModified(node);
+            }
+        };
+        setcore.delMemberRegistry = function(node,setName,memberPath,regName){
+            ASSERT(typeof setName === 'string' && typeof regName === 'string');
+            var memberRelId = getMemberRelId(node,setName,memberPath);
+            if(memberRelId){
+                var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
+                innerCore.delAttribute(memberNode,regName);
+                setModified(node);
+            }
+        };
+        setcore.createSet = function(node,setName) {
+            ASSERT(typeof setName === 'string');
+            var setsNode = innerCore.getChild(node,SETS_ID),
+                setNode = innerCore.getChild(setsNode,setName);
+            innerCore.setRegistry(setNode,"_","_");//TODO hack, somehow the empty children have been removed during persist
+            innerCore.setPointer(innerCore.getChild(node,SETS_ID), setName, null);
+            setModified(node);
+        };
+        setcore.deleteSet = function(node,setName) {
+            ASSERT(typeof setName === 'string');
+            var setsNode = innerCore.getChild(node,SETS_ID),
+                setNode = innerCore.getChild(setsNode,setName);
+            innerCore.deletePointer(setsNode,setName);
+            innerCore.deleteNode(setNode);
+            setModified(node);
         };
 
         return setcore;

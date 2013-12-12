@@ -81,38 +81,36 @@ define(['logManager',
                 for (i = 0; i < childrenIDs.length; i += 1) {
                     currentChildId = childrenIDs[i];
 
-                    if (GMEConcepts.isBrowsable(currentChildId) === true) {
-                        childNode = client.getNode(currentChildId);
+                    childNode = client.getNode(currentChildId);
 
-                        //local variable for the created treenode of the child node (loading or full)
-                        childTreeNode = null;
+                    //local variable for the created treenode of the child node (loading or full)
+                    childTreeNode = null;
 
-                        //check if the node could be retreived from the client
-                        if (childNode) {
-                            //the node was present on the client side, render ist full data
-                            childTreeNode = treeBrowser.createNode(parentNode, {   "id": currentChildId,
-                                "name": childNode.getAttribute("name"),
-                                "hasChildren" : (childNode.getChildrenIds()).length > 0,
-                                "class" :   ((childNode.getChildrenIds()).length > 0) ? "gme-model" : "gme-atom" });
+                    //check if the node could be retreived from the client
+                    if (childNode) {
+                        //the node was present on the client side, render ist full data
+                        childTreeNode = treeBrowser.createNode(parentNode, {   "id": currentChildId,
+                            "name": childNode.getAttribute("name"),
+                            "hasChildren" : (childNode.getChildrenIds()).length > 0,
+                            "class" :   ((childNode.getChildrenIds()).length > 0) ? "gme-model" : "gme-atom" });
 
-                            //store the node's info in the local hashmap
-                            nodes[currentChildId] = {    "treeNode": childTreeNode,
-                                "children" : childNode.getChildrenIds(),
-                                "state" : stateLoaded };
-                        } else {
-                            //the node is not present on the client side, render a loading node instead
-                            //create a new node for it in the tree
-                            childTreeNode = treeBrowser.createNode(parentNode, {   "id": currentChildId,
-                                "name": "Loading...",
-                                "hasChildren" : false,
-                                "class" :  NODE_PROGRESS_CLASS });
+                        //store the node's info in the local hashmap
+                        nodes[currentChildId] = {    "treeNode": childTreeNode,
+                            "children" : childNode.getChildrenIds(),
+                            "state" : stateLoaded };
+                    } else {
+                        //the node is not present on the client side, render a loading node instead
+                        //create a new node for it in the tree
+                        childTreeNode = treeBrowser.createNode(parentNode, {   "id": currentChildId,
+                            "name": "Loading...",
+                            "hasChildren" : false,
+                            "class" :  NODE_PROGRESS_CLASS });
 
-                            //store the node's info in the local hashmap
-                            nodes[currentChildId] = {    "treeNode": childTreeNode,
-                                "children" : [],
-                                "state" : stateLoading };
-                        };
-                    }
+                        //store the node's info in the local hashmap
+                        nodes[currentChildId] = {    "treeNode": childTreeNode,
+                            "children" : [],
+                            "state" : stateLoading };
+                    };
                 }
 
                 treeBrowser.enableUpdate(true);
@@ -173,10 +171,14 @@ define(['logManager',
 
         //called from the TreeBrowserWidget when a node has been marked to "delete this"
         treeBrowser.onNodeDelete = function (selectedIds) {
-            /*var i;
-            for (i = 0; i < selectedIds.length; i += 1) {
-                client.deleteNode(selectedIds[i]);
-            }*/
+            var i = selectedIds.length;
+            //temporary fix to not allow deleting ROOT AND FCO
+            while (i--) {
+                if (!GMEConcepts.canDeleteNode(selectedIds[i])) {
+                    logger.warning('Can not delete item with ID: ' + selectedIds[i] + '. Possibly it is the ROOT or FCO');
+                    selectedIds.splice(i, 1);
+                }
+            }
             client.delMoreNodes(selectedIds);
         };
 
@@ -205,7 +207,8 @@ define(['logManager',
         treeBrowser.getDragEffects = function (el) {
             return [treeBrowser.DRAG_EFFECTS.DRAG_COPY,
                 treeBrowser.DRAG_EFFECTS.DRAG_MOVE,
-                treeBrowser.DRAG_EFFECTS.DRAG_CREATE_REFERENCE];
+                treeBrowser.DRAG_EFFECTS.DRAG_CREATE_REFERENCE,
+                treeBrowser.DRAG_EFFECTS.DRAG_CREATE_INSTANCE];
         };
 
         treeBrowser.getDragItems = function (el) {
@@ -228,10 +231,6 @@ define(['logManager',
                 childTreeNode;
 
             logger.debug("Refresh event '" + eventType + "', with objectId: '" + objectId + "'");
-
-            if (eventType !== "unload" && GMEConcepts.isBrowsable(objectId) === false) {
-                return;
-            }
 
             //HANDLE INSERT
             //object got inserted into the territory

@@ -892,6 +892,10 @@ define(['logManager',
             idx = this._componentIDPartIDMap[componentID].indexOf(partId);
             if (idx !== -1) {
                 this._componentIDPartIDMap[componentID].splice(idx, 1);
+
+                if (this._componentIDPartIDMap[componentID].length === 0) {
+                    delete this._componentIDPartIDMap[componentID];
+                }
             }
         }
     };
@@ -928,10 +932,11 @@ define(['logManager',
         }
     };
 
-    ModelEditorControl.prototype._onOCLValidate = function () {
-        //OCL Validation goes here...
-        //WebGMEGlobal.OCLManager.validate()....
-        this.logger.warning('OCL Validate all clicked...');
+    ModelEditorControl.prototype._constraintCheck = function () {
+        //Cconstraint Checking goes here...
+        if (this.currentNodeInfo.id) {
+            WebGMEGlobal.ConstraintManager.validate(this.currentNodeInfo.id);
+        }
     };
 
     ModelEditorControl.prototype._attachClientEventListeners = function () {
@@ -1011,11 +1016,11 @@ define(['logManager',
         this.$btnModelHierarchyUp.hide();
 
 
-        /************************ OCL CONTSTRAINT VALIDATION ******************/
-        this.$btnConstraintValidate = toolBar.addButton({ "title": "Validate",
+        /************************ CONTSTRAINT VALIDATION ******************/
+        this.$btnConstraintValidate = toolBar.addButton({ "title": "Constraint check...",
             "icon": "icon-fire",
             "clickFn": function (/*data*/) {
-                self._onOCLValidate();
+                self._constraintCheck();
             }
         });
         this._toolbarItems.push(this.$btnConstraintValidate);
@@ -1032,7 +1037,7 @@ define(['logManager',
         this.$btnConnectionRemoveSegmentPoints.enabled(false);
 
         /************ ENFORCE META RULES TOGGLE BUTTON **********************/
-        this.$btnEnforceMetaRules = toolBar.addToggleButton({
+        /*this.$btnEnforceMetaRules = toolBar.addToggleButton({
                 "icon": 'icon-exclamation-sign',
                 "text": 'Enforce META rules',
                 "title": "Enforce META rules ON/OFF",
@@ -1042,7 +1047,7 @@ define(['logManager',
                 }}
         );
         this.$btnEnforceMetaRules.setToggled(this._enforceMetaRules);
-        this._toolbarItems.push(this.$btnEnforceMetaRules);
+        this._toolbarItems.push(this.$btnEnforceMetaRules);*/
 
 
         this._toolbarInitialized = true;

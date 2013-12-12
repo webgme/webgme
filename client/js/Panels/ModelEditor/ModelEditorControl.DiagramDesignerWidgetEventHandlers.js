@@ -260,10 +260,17 @@ define(['logManager',
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionDelete = function (idList) {
         var objIdList = [],
-            i = idList.length;
+            i = idList.length,
+            objID;
 
         while(i--) {
-            objIdList.pushUnique(this._ComponentID2GmeID[idList[i]]);
+            objID = this._ComponentID2GmeID[idList[i]];
+            //temporary fix to not allow deleting ROOT AND FCO
+            if (GMEConcepts.canDeleteNode(objID)) {
+                objIdList.pushUnique(objID);
+            } else {
+                this.logger.warning('Can not delete item with ID: ' + objID + '. Possibly it is the ROOT or FCO');
+            }
         }
 
         if (objIdList.length > 0) {
@@ -410,12 +417,7 @@ define(['logManager',
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDroppableAccept = function (event, dragInfo) {
         var accept;
 
-        if (GMEConcepts.isProjectPROJECTBASE(this.currentNodeInfo.id)) {
-            //DO NOT ACCEPT ANYTHING IF THE PROJECT'S PROJECT_BASE IS THE CURRENTLY OPENED NODE
-            accept = false;
-        } else {
-            accept = this._getPossibleDropActions(dragInfo).length > 0;
-        }
+        accept = this._getPossibleDropActions(dragInfo).length > 0;
 
         return accept;
     };
@@ -438,25 +440,25 @@ define(['logManager',
                     case DragHelper.DRAG_EFFECTS.DRAG_COPY:
                         menuItems[i] = {
                             "name": "Copy here",
-                            "icon": false
+                            "icon": 'icon-plus'
                         };
                         break;
                     case DragHelper.DRAG_EFFECTS.DRAG_MOVE:
                         menuItems[i] = {
                             "name": "Move here",
-                            "icon": false
+                            "icon": 'icon-move'
                         };
                         break;
                     case DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE:
                         menuItems[i] = {
                             "name": "Create instance here",
-                            "icon": false
+                            "icon": 'icon-share-alt'
                         };
                         break;
                     case DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE:
                         menuItems[i] = {
                             "name": "Create reference '" + possibleDropActions[i].name + "'",
-                            "icon": false
+                            "icon": 'icon-share'
                         };
                         break;
                     default:
@@ -533,22 +535,38 @@ define(['logManager',
             case DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE:
                 params = { "parentId": parentID };
                 i = items.length;
-                this._client.startTransaction();
+                /*this._client.startTransaction();
                 while (i--) {
                     params.baseId = items[i];
 
                     gmeID = this._client.createChild(params);
 
                     if (gmeID) {
+                        //check if old position is in drag-params
+                        oldPos = dragParams && dragParams.positions[items[i]] || {'x':0, 'y': 0};
                         //store new position
-                        this._client.setRegistry(gmeID, nodePropertyNames.Registry.position, {'x': position.x,
-                            'y': position.y});
+                        this._client.setRegistry(gmeID, nodePropertyNames.Registry.position, {'x': position.x + oldPos.x,
+                            'y': position.y + oldPos.y});
 
+                        //old position is not in drag-params
+                        if (!(dragParams && dragParams.positions[items[i]])) {
+                            position.x += POS_INC;
+                            position.y += POS_INC;
+                        }
+                    }
+                }
+                this._client.completeTransaction();*/
+                while(i--){
+                    oldPos = dragParams && dragParams.positions[items[i]] || {'x':0, 'y': 0};
+                    params[items[i]] = {registry:{position:{x:position.x+oldPos.x,y:position.y+oldPos.y}}};
+                    //old position is not in drag-params
+                    if (!(dragParams && dragParams.positions[items[i]])) {
                         position.x += POS_INC;
                         position.y += POS_INC;
                     }
                 }
-                this._client.completeTransaction();
+                this._client.createChildren(params);
+                
                 break;
             case DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE:
                 if (items.length === 1) {
@@ -560,9 +578,11 @@ define(['logManager',
                     gmeID = this._client.createChild(params);
 
                     if (gmeID) {
+                        //check if old position is in drag-params
+                        oldPos = dragParams && dragParams.positions[items[0]] || {'x':0, 'y': 0};
                         //store new position
-                        this._client.setRegistry(gmeID, nodePropertyNames.Registry.position, {'x': position.x,
-                            'y': position.y});
+                        this._client.setRegistry(gmeID, nodePropertyNames.Registry.position, {'x': position.x + oldPos.x,
+                            'y': position.y + oldPos.y});
 
                         //set reference
                         this._client.makePointer(gmeID, CONSTANTS.POINTER_REF, items[0]);
@@ -659,6 +679,7 @@ define(['logManager',
         this.designerCanvas.toolbarItems.ddbtnConnectionArrowStart.enabled(allHasRegistrylineStyle);
         this.designerCanvas.toolbarItems.ddbtnConnectionPattern.enabled(allHasRegistrylineStyle);
         this.designerCanvas.toolbarItems.ddbtnConnectionArrowEnd.enabled(allHasRegistrylineStyle);
+        this.designerCanvas.toolbarItems.ddbtnConnectionLineType.enabled(allHasRegistrylineStyle);
 
         this.$btnConnectionRemoveSegmentPoints.enabled(connectionSelected);
 
@@ -724,7 +745,8 @@ define(['logManager',
             validConnectionTypes,
             j,
             canCreateChildOfConnectionType,
-            parentID = this.currentNodeInfo.id;
+            parentID = this.currentNodeInfo.id,
+            client = this._client;
 
         if (params.srcSubCompId !== undefined) {
             sourceId = this._Subcomponent2GMEID[params.srcId][params.srcSubCompId];
@@ -735,6 +757,8 @@ define(['logManager',
         //need to test for each source-destination pair if the connection can be made or not?
         //there is at least one valid connection type definition in the parent that could be created between the source and target
         //there is at least one valid connection type that really can be created in the parent (max chilren num...)
+        validConnectionTypes = GMEConcepts.getValidConnectionTypesInParent(sourceId, parentID);
+
         while (i--) {
             var p = availableConnectionEnds[i];
             if (p.dstSubCompID !== undefined) {
@@ -743,18 +767,12 @@ define(['logManager',
                 targetId = this._ComponentID2GmeID[p.dstItemID];
             }
 
-            validConnectionTypes = GMEConcepts.getValidConnectionTypes(sourceId, targetId, parentID);
             j = validConnectionTypes.length;
-            canCreateChildOfConnectionType = false;
             while (j--) {
-                if (GMEConcepts.canCreateChild(parentID, validConnectionTypes[j])) {
-                    canCreateChildOfConnectionType = true;
+                if (client.isValidTarget(validConnectionTypes[j], CONSTANTS.POINTER_TARGET, targetId)) {
+                    result.push(availableConnectionEnds[i]);
                     break;
                 }
-            }
-
-            if (canCreateChildOfConnectionType) {
-                result.push(availableConnectionEnds[i]);
             }
         }
 

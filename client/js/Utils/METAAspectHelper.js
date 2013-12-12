@@ -11,34 +11,39 @@ define(['jquery',
         'js/Constants',
         'js/NodePropertyNames',
         'logManager',
-        'js/Panels/MetaEditor/MetaEditorConstants'], function (_jquery,
+        'js/Panels/MetaEditor/MetaEditorConstants',
+        'eventDispatcher'], function (_jquery,
                                     _underscore,
                                     CONSTANTS,
                                     nodePropertyNames,
                                     logManager,
-                                    MetaEditorConstants) {
+                                    MetaEditorConstants,
+                                    EventDispatcher) {
 
-    var METAKey = "META",
-        META_RULES_CONTAINER_NODE_ID = CONSTANTS.PROJECT_ROOT_ID,
-        META_EDITOR_REGISTRY_KEY = MetaEditorConstants.META_EDITOR_REGISTRY_KEY,
+    var META_RULES_CONTAINER_NODE_ID = MetaEditorConstants.META_ASPECT_CONTAINER_ID,
         _client,
         _territoryId,
         _territoryUI,
         TerritoryUI,
         _metaMembers,
         _patterns = {},
-        _logger = logManager.create("METATypeHelper"),
-        _btnMETA;
+        _logger = logManager.create("METAAspectHelper"),
+        _btnMETA,
+        _events = {'META_ASPECT_CHANGED': 'META_ASPECT_CHANGED'},
+        _metaTypes;
 
     TerritoryUI = function () {
+        $.extend(this, new EventDispatcher());
     };
 
     TerritoryUI.prototype.onOneEvent = function (/*events*/) {
         _processMetaContainer();
+
+        this.dispatchEvent(_events.META_ASPECT_CHANGED);
     };
 
     var _reset = function () {
-        WebGMEGlobal[METAKey] = undefined;
+        _metaTypes = {};
 
         if (_territoryId) {
             _client.removeUI(_territoryId);
@@ -93,22 +98,20 @@ define(['jquery',
         var metaContainer = _client.getNode(META_RULES_CONTAINER_NODE_ID);
 
         //reset META info container
-        WebGMEGlobal[METAKey] = undefined;
+        _metaTypes = {};
 
         if (metaContainer) {
             //read the META rules out of the META container and generate
-            var metaContainerRegistry = metaContainer.getRegistry(META_EDITOR_REGISTRY_KEY),
+            var metaAspectSetMembers = metaContainer.getMemberIds(MetaEditorConstants.META_ASPECT_SET_NAME),
                 diff,
                 territoryChanged = false,
                 len,
                 nodeID,
                 nodeName;
 
-            if (metaContainerRegistry && metaContainerRegistry.Members) {
-                var members = metaContainerRegistry.Members;
-
+            if (metaAspectSetMembers && metaAspectSetMembers.length > 0) {
                 //check deleted nodes
-                diff = _.difference(_metaMembers, members);
+                diff = _.difference(_metaMembers, metaAspectSetMembers);
                 len = diff.length;
                 while (len--) {
                     if (diff[len] !== META_RULES_CONTAINER_NODE_ID) {
@@ -118,7 +121,7 @@ define(['jquery',
                 }
 
                 //check added nodes
-                diff = _.difference(members, _metaMembers);
+                diff = _.difference(metaAspectSetMembers, _metaMembers);
                 len = diff.length;
                 while (len--) {
                     if (diff[len] !== META_RULES_CONTAINER_NODE_ID) {
@@ -128,9 +131,9 @@ define(['jquery',
                 }
 
                 //save the new contained nodes
-                _metaMembers = members.slice(0);
+                _metaMembers = metaAspectSetMembers.slice(0);
 
-                WebGMEGlobal[METAKey] = {};
+                _metaTypes = {};
 
                 //generate the ID - TYPE mapping
                 len = _metaMembers.length;
@@ -144,17 +147,17 @@ define(['jquery',
                         if (nodeName === undefined || nodeName === null || nodeName === "") {
                             _logger.error('META item "' + nodeID + '" has an invalid name of: ' + nodeName);
                         } else {
-                            if (WebGMEGlobal[METAKey].hasOwnProperty(nodeName)) {
+                            if (_metaTypes.hasOwnProperty(nodeName)) {
                                 _logger.error('Duplicate name on META level: "' + nodeName + '"');
-                                delete WebGMEGlobal[METAKey][nodeName];
+                                delete _metaTypes[nodeName];
                             } else {
-                                WebGMEGlobal[METAKey][nodeName] = nodeID;
+                                _metaTypes[nodeName] = nodeID;
                             }
                         }
                     }
                 }
 
-                //_logger.warning('WebGMEGlobal_META: \n' + JSON.stringify(WebGMEGlobal[METAKey]));
+                _logger.debug('_metaTypes: \n' + JSON.stringify(_metaTypes));
 
                 //there was change in the territory
                 if (territoryChanged === true) {
@@ -170,7 +173,7 @@ define(['jquery',
                 _btnMETA = WebGMEGlobal.Toolbar.addButton({ "title": "Display META entries...",
                     "icon": "icon-barcode",
                     "clickFn": function (/*data*/) {
-                        alert('META entries: \n' + JSON.stringify(WebGMEGlobal[METAKey], undefined, 2));
+                        alert('META entries: \n' + JSON.stringify(_getMETAAspectTypesSorted(), undefined, 2));
                     }});
             }
         }
@@ -210,8 +213,87 @@ define(['jquery',
         return result;
     };
 
+    var _getMetaAspectMembers = function () {
+        var members = [];
+
+        for (var m in _metaTypes) {
+            if (_metaTypes.hasOwnProperty(m)) {
+                members.push(_metaTypes[m]);
+            }
+        }
+
+        return members;
+    };
+
+    var _addEventListener = function (event, callback) {
+        if (_territoryUI) {
+            _territoryUI.addEventListener(event, callback);
+        }
+    };
+
+    var _removeEventListener = function (event, callback) {
+        if (_territoryUI) {
+            _territoryUI.removeEventListener(event, callback);
+        }
+    };
+
+    var _getMETAAspectTypes = function () {
+        var result = {};
+        _.extend(result, _metaTypes);
+
+        return result;
+    };
+
+    var _getMETAAspectTypesSorted = function () {
+        var result = {},
+            typeNames = [],
+            m;
+
+        for (m in _metaTypes) {
+            if (_metaTypes.hasOwnProperty(m)) {
+                typeNames.push(m);
+            }
+        }
+
+        typeNames.sort();
+
+        for (m = 0; m < typeNames.length; m += 1) {
+            result[typeNames[m]] = _metaTypes[typeNames[m]];
+        }
+
+        return result;
+    };
+
+    /*
+    Returns the parent meta types of the given object ID in the order of inheritance.
+     */
+    var _getMETATypesOf = function (objID) {
+        var result = [];
+
+        for (var m in _metaTypes) {
+            if (_metaTypes.hasOwnProperty(m)) {
+                if (_isMETAType(objID, _metaTypes[m])) {
+                    result.push(m);
+                }
+            }
+        }
+
+        // sort based on metatypes inheritance
+        result.sort(function(a, b) {
+            return  _isMETAType(_metaTypes[a], _metaTypes[b]) ? -1 : 1;
+        });
+
+        return result;
+    };
+
     //return utility functions
     return { initialize: _initialize,
-            METAKey: METAKey,
-            isMETAType: _isMETAType};
+            isMETAType: _isMETAType,
+            getMetaAspectMembers: _getMetaAspectMembers,
+            events: _events,
+            addEventListener: _addEventListener,
+            removeEventListener: _removeEventListener,
+            getMETAAspectTypes: _getMETAAspectTypes,
+            getMETATypesOf: _getMETATypesOf
+        };
 });

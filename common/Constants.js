@@ -24,14 +24,12 @@ define([], function () {
          */
         PROJECT_ROOT_ID: 'root',
         PROJECT_FCO_ID: 'FCO_ID',
-        PROJECT_META_ID: 'META_ID',
-        PROJECT_PROJECT_BASE_ID: 'PROJECT_BASE_ID',
 
         /*
          * Dedicated POINTER names
          */
-         POINTER_SOURCE : 'source',     //dedicated connection source pointer name
-         POINTER_TARGET : 'target',     //dedicated connection target pointer name
+         POINTER_SOURCE : 'src',     //dedicated connection source pointer name
+         POINTER_TARGET : 'dst',     //dedicated connection target pointer name
          POINTER_REF: 'ref',    //dedicated reference pointer name
          POINTER_BASE: 'base',  //dedicated inheritance pointer name
 

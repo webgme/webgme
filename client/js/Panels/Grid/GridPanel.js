@@ -60,18 +60,21 @@ define(['js/PanelBase/PanelBaseWithHeader',
 
         PanelBaseWithHeader.prototype.destroy.call(this);
         WebGMEGlobal.KeyboardManager.setListener(undefined);
+        WebGMEGlobal.Toolbar.refresh();
     };
 
     GridPanel.prototype.onActivate = function () {
         this.widget.onActivate();
         this.control.attachClientEventListeners();
         WebGMEGlobal.KeyboardManager.setListener(this.widget);
+        WebGMEGlobal.Toolbar.refresh();
     };
 
     GridPanel.prototype.onDeactivate = function () {
         this.widget.onDeactivate();
         this.control.detachClientEventListeners();
         WebGMEGlobal.KeyboardManager.setListener(undefined);
+        WebGMEGlobal.Toolbar.refresh();
     };
 
     return GridPanel;

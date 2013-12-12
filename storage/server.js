@@ -17,7 +17,7 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
         var _socket = null,
             _objects = {},
             _projects = {},
-            _references = {},
+            /*_references = {},*/
             _databaseOpened = false,
             ERROR_DEAD_GUID = 'the given object does not exists';
 
@@ -38,28 +38,93 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
             if(_databaseOpened){
                 callback();
             } else {
+                _databaseOpened = true;
                 _database.openDatabase(function(err){
                     if(err){
+                        _databaseOpened = false;
                         callback(err);
                     } else {
-                        _databaseOpened = true;
                         callback(null);
                     }
                 });
             }
         }
 
-        function checkProject(client,project,callback){
+        function _checkProject(client,project,callback){
             options.authorization(client,project,'read',function(err,cando){
                 if(!err && cando === true){
                     if(_projects[project]){
-                        addClient(client,project);
+                        //addClient(client,project);
+                        //TODO we should find the real reason behind collection loose
+                        try{
+                         _projects[project].getBranchNames(function(err,names){
+                            if(err){
+                                delete _projects[project];
+                                checkProject(client,project,callback);
+                            } else {
+                                callback(null,_projects[project]);
+                            }
+                         });
+                        }
+                        catch(e){
+                            delete _projects[project];
+                            checkProject(client,project,callback);
+                        }
                         callback(null,_projects[project]);
                     } else {
                         _database.openProject(project,function(err,proj){
                             if(!err && proj){
                                 _projects[project] = proj;
-                                addClient(client,project);
+                                //addClient(client,project);
+                                callback(null,_projects[project]);
+                            } else {
+                                callback(err,null);
+                            }
+                        });
+                    }
+                } else {
+                    err = err || 'missing necessary user rights';
+                    callback(err);
+                }
+            });
+        }
+        function checkProject(client,projectName,callback){
+            options.authorization(client,projectName,'read',function(err,cando){
+                if(!err && cando === true){
+                    _database.openProject(projectName,callback);
+                } else {
+                    err = err || 'missing necessary user rights';
+                    callback(err);
+                }
+            });
+        }
+
+        function createProject(client,project,callback){
+            options.authorization(client,project,'create',function(err,cando){
+                if(!err && cando === true){
+                    if(_projects[project]){
+                        //addClient(client,project);
+                        //TODO we should find the real reason behind collection loose
+                        try{
+                            _projects[project].getBranchNames(function(err,names){
+                                if(err){
+                                    delete _projects[project];
+                                    checkProject(client,project,callback);
+                                } else {
+                                    callback(null,_projects[project]);
+                                }
+                            });
+                        }
+                        catch(e){
+                            delete _projects[project];
+                            checkProject(client,project,callback);
+                        }
+                        callback(null,_projects[project]);
+                    } else {
+                        _database.openProject(project,function(err,proj){
+                            if(!err && proj){
+                                _projects[project] = proj;
+                                //addClient(client,project);
                                 callback(null,_projects[project]);
                             } else {
                                 callback(err,null);
@@ -91,7 +156,9 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
                     var sessionID = data.webgme;
                     if(sessionID === null || sessionID === undefined){
                         var cookie = URL.parseCookie(data.headers.cookie);
-                        sessionID = require('connect').utils.parseSignedCookie(cookie[options.cookieID],options.secret);
+                        if(cookie[options.cookieID] !== undefined || cookie[options.cookieID] !== null){
+                            sessionID = require('connect').utils.parseSignedCookie(cookie[options.cookieID],options.secret);
+                        }
                     }
                     options.sessioncheck(sessionID,function(err,isOk){
                         if(!err && isOk === true){
@@ -167,7 +234,20 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
                 });
 
                 socket.on('openProject', function(projectName,callback){
-                    checkProject(getSessionID(socket),projectName,callback);
+                    checkDatabase(function(err){
+                        if(err){
+                            callback(err);
+                        } else {
+                            _database.getProjectNames(function(err,names){
+                                if(names.indexOf(projectName) === -1){
+                                    //project creation
+                                    createProject(getSessionID(socket),projectName,callback);
+                                } else {
+                                    checkProject(getSessionID(socket),projectName,callback);
+                                }
+                            });
+                        }
+                    });
                 });
 
                 socket.on('closeProject', function(projectName,callback){
@@ -176,15 +256,16 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
                         if(err) {
                             callback(err);
                         } else {
-                            var index = _references[projectName].indexOf(getSessionID(socket));
-                            _references[projectName].splice(index,1);
-                            if(_references[projectName].length === 0){
-                                delete _references[projectName];
-                                delete _projects[projectName];
-                                project.closeProject(callback);
-                            } else {
+                            //TODO put this together
+                            //var index = _references[projectName].indexOf(getSessionID(socket));
+                            //_references[projectName].splice(index,1);
+                            //if(_references[projectName].length === 0){
+                                //delete _references[projectName];
+                                //delete _projects[projectName];
+                                //project.closeProject(callback);
+                            //} else {
                                 callback(null);
-                            }
+                           // }
                         }
                     });
                 });
@@ -288,7 +369,7 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
                 });*/
 
                 socket.on('disconnect',function(){
-                    var todelete = [];
+                    /*var todelete = [];
                     for(var i in _references){
                         if(_projects[i]){
                             var index = _references[i].indexOf(socket.id);
@@ -308,7 +389,7 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
 
                     for(i=0;i<todelete.length;i++){
                         delete _references[todelete[i]];
-                    }
+                    }*/
                 });
             });
         }
@@ -337,7 +418,7 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
 
             _objects = {};
             _projects = {};
-            _references = {};
+            //_references = {};
             _databaseOpened = false;
         }
 

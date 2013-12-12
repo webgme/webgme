@@ -93,6 +93,9 @@
     width: 15px;
     margin-top: 2px;
     border-radius: 5px; }
+  .meta-decorator.abstract .name {
+    font-style: italic;
+    color: #aaaaaa; }
 
 .selected .meta-decorator {
   border: 1px solid #52a8ec;

@@ -8,22 +8,21 @@ define(['clientUtil',
                                                                metaEditorPointerNamesDialogTemplate) {
 
     var MetaEditorPointerNamesDialog,
-        POPULAR_POINTER_NAMES = [CONSTANTS.POINTER_SOURCE, CONSTANTS.POINTER_TARGET, CONSTANTS.POINTER_REF],
-        RESERVED_POINTER_NAMES = [CONSTANTS.POINTER_BASE];
+        POPULAR_POINTER_NAMES = [CONSTANTS.POINTER_SOURCE, CONSTANTS.POINTER_TARGET, CONSTANTS.POINTER_REF];
 
     MetaEditorPointerNamesDialog = function () {
       
     };
 
-    MetaEditorPointerNamesDialog.prototype.show = function (pointerNames, callBack) {
+    MetaEditorPointerNamesDialog.prototype.show = function (existingPointerNames, notAllowedPointerNames, isPointerList, callBack) {
         var self = this;
 
-        this._initDialog(pointerNames, callBack);
+        this._initDialog(existingPointerNames, notAllowedPointerNames, isPointerList, callBack);
 
         this._dialog.modal('show');
 
         this._dialog.on('shown', function () {
-            if (pointerNames.length === 0) {
+            if (existingPointerNames.length === 0) {
 	        	self._txtNewPointerName.focus();
 	        }
         });
@@ -35,10 +34,10 @@ define(['clientUtil',
         });
     };
 
-    MetaEditorPointerNamesDialog.prototype._initDialog = function (pointerNames, callBack) {
+    MetaEditorPointerNamesDialog.prototype._initDialog = function (existingPointerNames, notAllowedPointerNames, isPointerList, callBack) {
         var self = this,
             i,
-            len = pointerNames.length,
+            len = existingPointerNames.length,
             closeAndCallback,
             popularsAdded,
             isValidPointerName;
@@ -52,10 +51,19 @@ define(['clientUtil',
         };
 
         isValidPointerName = function (name) {
-            return !(name === "" || pointerNames.indexOf(name) !== -1 || RESERVED_POINTER_NAMES.indexOf(name) !== -1);
+            return !(name === "" || existingPointerNames.indexOf(name) !== -1 || notAllowedPointerNames.indexOf(name) !== -1);
         };
 
         this._dialog = $(metaEditorPointerNamesDialogTemplate);
+
+        //by default the template is for single pointer
+        //in case of pointer list, update labels in the dialog
+        if (isPointerList === true) {
+            this._dialog.find('.modal-header > h3').text('New pointer-list...');
+            this._dialog.find('.modal-body > .title').text('Pick one of the existing pointer-lists:');
+            this._dialog.find('.modal-footer .create').text('Or create a new pointer-list:');
+            this._dialog.find('.modal-footer .txt-pointer-name').attr('placeholder', 'New pointer-list name...');
+        }
 
         //get controls
         this._el = this._dialog.find('.modal-body').first();
@@ -63,18 +71,21 @@ define(['clientUtil',
         this._btnGroupPopular = this._dialog.find('.btn-group-popular').first();
 
 		//fill pointer names
-        pointerNames.sort();
+        existingPointerNames.sort();
         for (i = 0; i < len ; i += 1) {
-            this._btnGroup.append($('<button class="btn">' + util.toSafeString(pointerNames[i]) + '</button>'));
+            this._btnGroup.append($('<button class="btn">' + util.toSafeString(existingPointerNames[i]) + '</button>'));
         }
 
         //add most popular ones
-        len = POPULAR_POINTER_NAMES.length;
         popularsAdded = false;
-        for (i = 0; i < len ; i += 1) {
-            if (pointerNames.indexOf(POPULAR_POINTER_NAMES[i]) === -1) {
-                this._btnGroupPopular.append($('<button class="btn">' + POPULAR_POINTER_NAMES[i] + '</button>'));
-                popularsAdded = true;
+        if (isPointerList !== true) {
+            len = POPULAR_POINTER_NAMES.length;
+
+            for (i = 0; i < len ; i += 1) {
+                if (existingPointerNames.indexOf(POPULAR_POINTER_NAMES[i]) === -1) {
+                    this._btnGroupPopular.append($('<button class="btn">' + POPULAR_POINTER_NAMES[i] + '</button>'));
+                    popularsAdded = true;
+                }
             }
         }
 

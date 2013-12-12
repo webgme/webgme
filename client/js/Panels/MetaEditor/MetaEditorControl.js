@@ -20,10 +20,9 @@ define(['logManager',
 
     var MetaEditorControl,
         GME_ID = "GME_ID",
-        META_EDITOR_REGISTRY_KEY = MetaEditorConstants.META_EDITOR_REGISTRY_KEY,
         META_DECORATOR = "MetaDecorator",
         WIDGET_NAME = 'DiagramDesigner',
-        META_RULES_CONTAINER_NODE_ID = CONSTANTS.PROJECT_ROOT_ID;
+        META_RULES_CONTAINER_NODE_ID = MetaEditorConstants.META_ASPECT_CONTAINER_ID;
 
     MetaEditorControl = function (options) {
         var self = this;
@@ -34,8 +33,6 @@ define(['logManager',
 
         //initialize core collections and variables
         this.diagramDesigner = options.widget;
-
-        this._META_EDITOR_REGISTRY_KEY = META_EDITOR_REGISTRY_KEY;
 
         if (this._client === undefined) {
             this.logger.error("ModelEditorControl's client is not specified...");
@@ -75,7 +72,6 @@ define(['logManager',
         //TODO: give the UI time to render first before start using it's features
         setTimeout(function () {
             self.selectedObjectChanged(META_RULES_CONTAINER_NODE_ID);
-            self._client.setSelectedObjectId(self._client.getNode(CONSTANTS.PROJECT_ROOT_ID).getRegistry(nodePropertyNames.Registry.ProjectRegistry)[CONSTANTS.PROJECT_META_ID]);
         }, 10);
 
 
@@ -111,6 +107,7 @@ define(['logManager',
 
         this._nodeMetaContainment = {};
         this._nodeMetaPointers = {};
+        this._nodeMetaPointerLists = {};
         this._nodeMetaInheritance = {};
 
         this._filteredOutConnectionDescriptors = {};
@@ -169,10 +166,6 @@ define(['logManager',
     /**********************************************************/
     /*                   PRIVATE METHODS                      */
     /**********************************************************/
-
-    MetaEditorControl.prototype._emptyMetaEditorRegistry = function () {
-        return MetaEditorConstants.GET_EMPTY_META_EDITOR_REGISTRY_OBJ();
-    };
 
     /**********************************************************/
     /*       EVENT AND DECORATOR DOWNLOAD HANDLING            */
@@ -251,8 +244,10 @@ define(['logManager',
     /*       READ IMPORTANT INFORMATION FROM A NODE           */
     /**********************************************************/
     MetaEditorControl.prototype._getObjectDescriptor = function (gmeID) {
-        var cNode = this._client.getNode(gmeID),
-            nodeDescriptor;
+        var aspectNode = this._client.getNode(this.currentNodeInfo.id),
+            cNode = this._client.getNode(gmeID),
+            nodeDescriptor,
+            metaAspectPos;
 
         if (cNode) {
             nodeDescriptor = {"ID": gmeID,
@@ -261,13 +256,13 @@ define(['logManager',
                 "name": cNode.getAttribute(nodePropertyNames.Attributes.name) || "",
                 "position": { "x": -1, "y": -1 }};
 
-            //nodeDescriptor.decorator = cNode.getRegistry(nodePropertyNames.Registry.decorator) || META_DECORATOR;
-
-            if (gmeID === this.currentNodeInfo.id) {
-
-            } else {
-                if (this._selfRegistry) {
-                    nodeDescriptor.position = this._selfRegistry.MemberCoord[gmeID]; // || { "x": 100, "y": 100  };
+            if (gmeID !== this.currentNodeInfo.id) {
+                if (this.currentNodeInfo.members.indexOf(gmeID) !== -1) {
+                    metaAspectPos = aspectNode.getMemberRegistry(MetaEditorConstants.META_ASPECT_SET_NAME, gmeID, MetaEditorConstants.META_ASPECT_MEMBER_POSITION_REGISTRY_KEY);
+                    if (metaAspectPos) {
+                        nodeDescriptor.position.x = metaAspectPos.x;
+                        nodeDescriptor.position.y = metaAspectPos.y;
+                    }
                 }
             }
         }
@@ -346,7 +341,7 @@ define(['logManager',
                     this.logger.warning(nodeName + ' (' + gmeID + ')\'s pointerMetaDescriptor "' + pointerNames[i] + '": ' + JSON.stringify(pointerMetaDescriptor));
                 }
 
-                this.logger.warning(nodeName + ' (' + gmeID + ')\'s metaInheritance: ' + node.getBase());
+                this.logger.warning(nodeName + ' (' + gmeID + ')\'s metaInheritance: ' + node.getBaseId());
 
                 var attributeNames = node.getAttributeNames();
                 i = attributeNames.length;
@@ -374,14 +369,11 @@ define(['logManager',
             objDesc,
             componentID,
             gmeID,
-            metaEditorRegistry = aspectNode.getEditableRegistry(META_EDITOR_REGISTRY_KEY) || this._emptyMetaEditorRegistry(),
+            metaAspectSetMembers = aspectNode.getMemberIds(MetaEditorConstants.META_ASPECT_SET_NAME),
             territoryChanged = false;
 
-        //update selfRegistry (for node positions)
-        this._selfRegistry = metaEditorRegistry;
-
         //check deleted nodes
-        diff = _.difference(this.currentNodeInfo.members, metaEditorRegistry.Members);
+        diff = _.difference(this.currentNodeInfo.members, metaAspectSetMembers);
         len = diff.length;
         while (len--) {
             delete this._selfPatterns[diff[len]];
@@ -389,7 +381,7 @@ define(['logManager',
         }
 
         //check added nodes
-        diff = _.difference(metaEditorRegistry.Members, this.currentNodeInfo.members);
+        diff = _.difference(metaAspectSetMembers, this.currentNodeInfo.members);
         len = diff.length;
         while (len--) {
             this._selfPatterns[diff[len]] = { "children": 0 };
@@ -397,7 +389,7 @@ define(['logManager',
         }
 
         //check all other nodes for position change
-        diff = _.intersection(this.currentNodeInfo.members, metaEditorRegistry.Members);
+        diff = _.intersection(this.currentNodeInfo.members, metaAspectSetMembers);
         len = diff.length;
         while (len--) {
             gmeID = diff[len];
@@ -410,7 +402,7 @@ define(['logManager',
         }
 
         //update current member list
-        this.currentNodeInfo.members = metaEditorRegistry.Members.slice(0);
+        this.currentNodeInfo.members = metaAspectSetMembers.slice(0);
 
         //there was change in the territory
         if (territoryChanged === true) {
@@ -451,8 +443,9 @@ define(['logManager',
 
                 //process new node to display containment / pointers / inheritance / pointerlists as connections
                 this._processNodeMetaContainment(gmeID);
-                this._processNodeMetaPointers(gmeID);
+                this._processNodeMetaPointers(gmeID, false);
                 this._processNodeMetaInheritance(gmeID);
+                this._processNodeMetaPointers(gmeID, true);
 
                 //check all the waiting pointers (whose SRC/DST is already displayed and waiting for the DST/SRC to show up)
                 //it might be this new node
@@ -466,7 +459,8 @@ define(['logManager',
             gmeSrcID,
             gmeDstID,
             connType,
-            connTexts;
+            connTexts,
+            c = [];
 
         //check for possible endpoint as gmeID
         gmeDstID = gmeID;
@@ -477,7 +471,10 @@ define(['logManager',
                     while (len--) {
                         connType = this._connectionWaitingListByDstGMEID[gmeDstID][gmeSrcID][len][0];
                         connTexts = this._connectionWaitingListByDstGMEID[gmeDstID][gmeSrcID][len][1];
-                        this._createConnection(gmeSrcID, gmeDstID, connType, connTexts);
+                        c.push({'gmeSrcID': gmeSrcID,
+                                'gmeDstID': gmeDstID,
+                                'connType': connType,
+                                'connTexts': connTexts});
                     }
                 }
             }
@@ -494,12 +491,24 @@ define(['logManager',
                     while (len--) {
                         connType = this._connectionWaitingListBySrcGMEID[gmeSrcID][gmeDstID][len][0];
                         connTexts = this._connectionWaitingListBySrcGMEID[gmeSrcID][gmeDstID][len][1];
-                        this._createConnection(gmeSrcID, gmeDstID, connType, connTexts);
+                        c.push({'gmeSrcID': gmeSrcID,
+                            'gmeDstID': gmeDstID,
+                            'connType': connType,
+                            'connTexts': connTexts});
                     }
                 }
             }
 
             delete this._connectionWaitingListBySrcGMEID[gmeSrcID];
+        }
+
+        len = c.length;
+        while (len--) {
+            gmeSrcID = c[len].gmeSrcID;
+            gmeDstID = c[len].gmeDstID;
+            connType = c[len].connType;
+            connTexts = c[len].connTexts;
+            this._createConnection(gmeSrcID, gmeDstID, connType, connTexts);
         }
     };
     /**************************************************************************/
@@ -512,11 +521,49 @@ define(['logManager',
     /****************************************************************************/
     MetaEditorControl.prototype._processNodeUnload = function (gmeID) {
         var componentID,
-            idx;
+            idx,
+            len,
+            otherEnd,
+            pointerName,
+            aConns,
+            connectionID;
 
         if (this._GMEID2ComponentID.hasOwnProperty(gmeID)) {
             componentID = this._GMEID2ComponentID[gmeID];
 
+            //gather all the information that is stored in this node's META
+
+            //CONTAINMENT
+            len = this._nodeMetaContainment[gmeID].targets.length;
+            while(len--) {
+                otherEnd = this._nodeMetaContainment[gmeID].targets[len];
+                this._removeConnection(gmeID, otherEnd, MetaRelations.META_RELATIONS.CONTAINMENT);
+            }
+
+            //POINTERS
+            len = this._nodeMetaPointers[gmeID].combinedNames.length;
+            while(len--) {
+                pointerName = this._nodeMetaPointers[gmeID].combinedNames[len];
+                otherEnd = this._nodeMetaPointers[gmeID][pointerName].target;
+                pointerName = this._nodeMetaPointers[gmeID][pointerName].name;
+                this._removeConnection(gmeID, otherEnd, MetaRelations.META_RELATIONS.POINTER, pointerName);
+            }
+
+            //INHERITANCE
+            if (this._nodeMetaInheritance[gmeID] && !_.isEmpty(this._nodeMetaInheritance[gmeID])) {
+                this._removeConnection(this._nodeMetaInheritance[gmeID], gmeID, MetaRelations.META_RELATIONS.INHERITANCE);
+            }
+
+            //POINTER LISTS
+            len = this._nodeMetaPointerLists[gmeID].combinedNames.length;
+            while(len--) {
+                pointerName = this._nodeMetaPointerLists[gmeID].combinedNames[len];
+                otherEnd = this._nodeMetaPointerLists[gmeID][pointerName].target;
+                pointerName = this._nodeMetaPointerLists[gmeID][pointerName].name;
+                this._removeConnection(gmeID, otherEnd, MetaRelations.META_RELATIONS.POINTERLIST, pointerName);
+            }
+
+            //finally delete the guy from the screen
             this.diagramDesigner.deleteComponent(componentID);
 
             delete this._ComponentID2GMEID[componentID];
@@ -526,10 +573,54 @@ define(['logManager',
             idx = this._GMENodes.indexOf(gmeID);
             this._GMENodes.splice(idx,1);
 
+            //check if there is any more connection present that's associated with this object
+            //typically the connection end is this guy
+            //if so, remove but save to savedList
+            aConns = this._getAssociatedConnections(gmeID);
+            len = aConns.src.length;
+            while (len--) {
+                connectionID = aConns.src[len];
+                //save the connection to the waiting list, since the destination is still there
+                this._saveConnectionToWaitingList(this._connectionListByID[connectionID].GMESrcId, this._connectionListByID[connectionID].GMEDstId, this._connectionListByID[connectionID].type, this._connectionListByID[connectionID].connTexts);
+                this._removeConnection(this._connectionListByID[connectionID].GMESrcId, this._connectionListByID[connectionID].GMEDstId, this._connectionListByID[connectionID].type);
+            }
+
+            len = aConns.dst.length;
+            while (len--) {
+                connectionID = aConns.dst[len];
+                if (this._connectionListByID[connectionID]) {
+                    //save the connection to the waiting list, since the destination is still there
+                    this._saveConnectionToWaitingList(this._connectionListByID[connectionID].GMESrcId, this._connectionListByID[connectionID].GMEDstId, this._connectionListByID[connectionID].type, this._connectionListByID[connectionID].connTexts);
+                    this._removeConnection(this._connectionListByID[connectionID].GMESrcId, this._connectionListByID[connectionID].GMEDstId, this._connectionListByID[connectionID].type);
+                }
+            }
+
+            //check the waiting list and remove any connection that was waiting and this end was present
+            for (otherEnd in this._connectionWaitingListBySrcGMEID) {
+                if (this._connectionWaitingListBySrcGMEID.hasOwnProperty(otherEnd)) {
+                    delete this._connectionWaitingListBySrcGMEID[otherEnd][gmeID];
+
+                    if (_.isEmpty(this._connectionWaitingListBySrcGMEID[otherEnd])) {
+                        delete this._connectionWaitingListBySrcGMEID[otherEnd];
+                    }
+                }
+            }
+
+            for (otherEnd in this._connectionWaitingListByDstGMEID) {
+                if (this._connectionWaitingListByDstGMEID.hasOwnProperty(otherEnd)) {
+                    delete this._connectionWaitingListByDstGMEID[otherEnd][gmeID];
+
+                    if (_.isEmpty(this._connectionWaitingListByDstGMEID[otherEnd])) {
+                        delete this._connectionWaitingListByDstGMEID[otherEnd];
+                    }
+                }
+            }
+
             //keep up accounting
             delete this._nodeMetaContainment[gmeID];
             delete this._nodeMetaPointers[gmeID];
             delete this._nodeMetaInheritance[gmeID];
+            delete this._nodeMetaPointerLists[gmeID];
         }
     };
     /****************************************************************************/
@@ -650,9 +741,7 @@ define(['logManager',
         //only bother if
         //- both the source and destination is present on the screen
         //the connection in question is drawn
-        if (this._GMENodes.indexOf(gmeSrcId)!== -1 &&
-            this._GMENodes.indexOf(gmeDstId)!== -1 &&
-            this._connectionListBySrcGMEID[gmeSrcId] &&
+        if (this._connectionListBySrcGMEID[gmeSrcId] &&
             this._connectionListBySrcGMEID[gmeSrcId][gmeDstId] &&
             this._connectionListBySrcGMEID[gmeSrcId][gmeDstId][connType]) {
             connectionPresent = true;
@@ -792,8 +881,9 @@ define(['logManager',
 
             //update set relations
             this._processNodeMetaContainment(gmeID);
-            this._processNodeMetaPointers(gmeID);
+            this._processNodeMetaPointers(gmeID, false);
             this._processNodeMetaInheritance(gmeID);
+            this._processNodeMetaPointers(gmeID, true);
         }
     };
     /**************************************************************************/
@@ -805,8 +895,7 @@ define(['logManager',
     /*  DISPLAY META CONTAINMENT RELATIONS AS A CONNECTION FROM CONTAINER TO CONTAINED */
     /***********************************************************************************/
     MetaEditorControl.prototype._processNodeMetaContainment = function (gmeID) {
-        var node = this._client.getNode(gmeID),
-            containmentMetaDescriptor = this._client.getValidChildrenItems(gmeID) || [],
+        var containmentMetaDescriptor = this._client.getValidChildrenItems(gmeID) || [],
             containmentOwnTypes = this._client.getOwnValidChildrenTypes(gmeID) || [],
             len,
             oldMetaContainment,
@@ -875,9 +964,9 @@ define(['logManager',
     /*******************************************************************************/
     /*  DISPLAY META POINTER RELATIONS AS A CONNECTION FROM CONTAINER TO CONTAINED */
     /*******************************************************************************/
-    MetaEditorControl.prototype._processNodeMetaPointers = function (gmeID) {
+    MetaEditorControl.prototype._processNodeMetaPointers = function (gmeID, isPointerList) {
         var node = this._client.getNode(gmeID),
-            pointerNames = node.getPointerNames(),
+            pointerNames = isPointerList === true ? node.getSetNames() : node.getPointerNames(),
             pointerMetaDescriptor,
             pointerOwnMetaTypes,
             len,
@@ -888,10 +977,16 @@ define(['logManager',
             pointerName,
             idx,
             lenTargets,
-            combinedName;
+            combinedName,
+            ptrType = isPointerList === true ? MetaRelations.META_RELATIONS.POINTERLIST : MetaRelations.META_RELATIONS.POINTER;
 
-        this._nodeMetaPointers[gmeID] = this._nodeMetaPointers[gmeID] || {'names': [], 'combinedNames': []};
-        oldMetaPointers = this._nodeMetaPointers[gmeID];
+        if (isPointerList !== true) {
+            this._nodeMetaPointers[gmeID] = this._nodeMetaPointers[gmeID] || {'names': [], 'combinedNames': []};
+            oldMetaPointers = this._nodeMetaPointers[gmeID];
+        } else {
+            this._nodeMetaPointerLists[gmeID] = this._nodeMetaPointerLists[gmeID] || {'names': [], 'combinedNames': []};
+            oldMetaPointers = this._nodeMetaPointerLists[gmeID];
+        }
 
         len = pointerNames.length;
         while (len--) {
@@ -928,7 +1023,7 @@ define(['logManager',
 
                 oldMetaPointers[combinedName].multiplicity = newMetaPointers[combinedName].multiplicity;
 
-                this._updateConnectionText(gmeID, pointerTarget, MetaRelations.META_RELATIONS.POINTER, {'name': pointerName,
+                this._updateConnectionText(gmeID, pointerTarget, ptrType, {'name': pointerName,
                     'dstText': newMetaPointers[combinedName].multiplicity,
                     'dstTextEdit': true});
             }
@@ -942,7 +1037,7 @@ define(['logManager',
             pointerName = oldMetaPointers[combinedName].name;
             pointerTarget = oldMetaPointers[combinedName].target;
 
-            this._removeConnection(gmeID, pointerTarget, MetaRelations.META_RELATIONS.POINTER, pointerName);
+            this._removeConnection(gmeID, pointerTarget, ptrType, pointerName);
 
             idx = oldMetaPointers.combinedNames.indexOf(combinedName);
             oldMetaPointers.combinedNames.splice(idx,1);
@@ -963,9 +1058,9 @@ define(['logManager',
                                             'target': newMetaPointers[combinedName].target,
                                             'multiplicity': newMetaPointers[combinedName].multiplicity};
 
-            this._createConnection(gmeID, pointerTarget, MetaRelations.META_RELATIONS.POINTER, {'name': pointerName,
-                                                                                                'dstText': newMetaPointers[combinedName].multiplicity,
-                                                                                                'dstTextEdit': true});
+            this._createConnection(gmeID, pointerTarget, ptrType, {'name': pointerName,
+                                                                    'dstText': newMetaPointers[combinedName].multiplicity,
+                                                                    'dstTextEdit': true});
         }
     };
     /******************************************************************************************/
@@ -980,17 +1075,17 @@ define(['logManager',
     MetaEditorControl.prototype._processNodeMetaInheritance = function (gmeID) {
         var node = this._client.getNode(gmeID),
             oldMetaInheritance,
-            newMetaInheritance = node.getBase();
+            newMetaInheritance = node.getBaseId();
 
         //if there was a valid old that's different than the current, delete the connection representing the old
         oldMetaInheritance = this._nodeMetaInheritance[gmeID];
-        if (oldMetaInheritance && !_.isEmpty(oldMetaInheritance) && (oldMetaInheritance !== newMetaInheritance)) {
+        if (oldMetaInheritance && (oldMetaInheritance !== newMetaInheritance)) {
             this._removeConnection(oldMetaInheritance, gmeID, MetaRelations.META_RELATIONS.INHERITANCE);
 
             delete this._nodeMetaInheritance[gmeID];
         }
 
-        if (newMetaInheritance && !_.isEmpty(newMetaInheritance) && (oldMetaInheritance !== newMetaInheritance)) {
+        if (newMetaInheritance && (oldMetaInheritance !== newMetaInheritance)) {
             this._nodeMetaInheritance[gmeID] = newMetaInheritance;
             this._createConnection(newMetaInheritance, gmeID, MetaRelations.META_RELATIONS.INHERITANCE, undefined);
         }
@@ -1042,9 +1137,10 @@ define(['logManager',
                 this._createInheritanceRelationship(sourceId, targetId);
                 break;
             case MetaRelations.META_RELATIONS.POINTER:
-                this._createPointerRelationship(sourceId, targetId);
+                this._createPointerRelationship(sourceId, targetId, false);
                 break;
             case MetaRelations.META_RELATIONS.POINTERLIST:
+                this._createPointerRelationship(sourceId, targetId, true);
                 break;
             default:
                 break;
@@ -1072,43 +1168,70 @@ define(['logManager',
     };
 
 
-    MetaEditorControl.prototype._createPointerRelationship = function (sourceID, targetID) {
+    MetaEditorControl.prototype._createPointerRelationship = function (sourceID, targetID, isPointerList) {
         var sourceNode = this._client.getNode(sourceID),
             targetNode = this._client.getNode(targetID),
             pointerMetaDescriptor,
-            pointerNames,
+            existingPointerNames,
+            notAllowedPointerNames,
             self = this;
 
         if (sourceNode && targetNode) {
-            //get the list of existing pointers and show them in a dialog so the user can choose
-            pointerNames = sourceNode.getPointerNames() || [];
-
-            //exclude ones that are dedicated META pointers and should not be overriden by the user
-            if (pointerNames.indexOf(CONSTANTS.POINTER_BASE) !== -1) {
-                pointerNames.splice(pointerNames.indexOf(CONSTANTS.POINTER_BASE), 1);
+            if (isPointerList === true) {
+                //this is a pointer list
+                existingPointerNames = sourceNode.getSetNames() || [];
+                notAllowedPointerNames = sourceNode.getPointerNames() || [];
+            } else {
+                //this is a single pointer
+                //get the list of existing pointers and show them in a dialog so the user can choose
+                existingPointerNames = sourceNode.getPointerNames() || [];
+                notAllowedPointerNames = sourceNode.getSetNames() || [];
             }
 
+            //handle RESERVED pointer names
+            existingPointerNames = _.difference(existingPointerNames, MetaEditorConstants.RESERVED_POINTER_NAMES);
+            notAllowedPointerNames = notAllowedPointerNames.concat(MetaEditorConstants.RESERVED_POINTER_NAMES);
+
             //query pointer name from user
-            this.diagramDesigner.selectNewPointerName(pointerNames, function (userSelectedPointerName) {
+            this.diagramDesigner.selectNewPointerName(existingPointerNames, notAllowedPointerNames, isPointerList, function (userSelectedPointerName) {
                 self._client.startTransaction();
                 pointerMetaDescriptor = self._client.getValidTargetItems(sourceID,userSelectedPointerName);
                 if(!pointerMetaDescriptor){
-                    self._client.makePointer(sourceID,userSelectedPointerName,null);
-                    self._client.setPointerMeta(sourceID,userSelectedPointerName,{
-                        "min":1,
-                        "max":1,
-                        "items":[
-                            {
-                                id:targetID,
-                                "max":1
-                            }
-                        ]
-                    });
+                    if (isPointerList !== true) {
+                        //single pointer
+                        self._client.setPointerMeta(sourceID,userSelectedPointerName,{
+                            "min":1,
+                            "max":1,
+                            "items":[
+                                {
+                                    id:targetID,
+                                    "max":1
+                                }
+                            ]
+                        });
+                        self._client.makePointer(sourceID,userSelectedPointerName,null);
+                        self._updateObjectConnectionVisualStyles(sourceID);
+                    } else {
+                        //pointer list
+                        self._client.setPointerMeta(sourceID,userSelectedPointerName,{
+                            "items":[
+                                {
+                                    id:targetID
+                                }
+                            ]
+                        });
+                        self._client.createSet(sourceID,userSelectedPointerName);
+                    }
                 } else {
-                    self._client.updateValidTargetItem(sourceID,userSelectedPointerName,{id:targetID,max:1});
+                    if (isPointerList !== true) {
+                        //single pointer
+                        self._client.updateValidTargetItem(sourceID,userSelectedPointerName,{id:targetID,max:1});
+                        self._updateObjectConnectionVisualStyles(sourceID);
+                    } else {
+                        //pointer list
+                        self._client.updateValidTargetItem(sourceID,userSelectedPointerName,{id:targetID});
+                    }
                 }
-
-                self._updateObjectConnectionVisualStyles(sourceID);
 
                 self._client.completeTransaction();
             });
@@ -1116,54 +1239,67 @@ define(['logManager',
     };
 
 
-    MetaEditorControl.prototype._deletePointerRelationship = function (sourceID, targetID, pointerName) {
+    MetaEditorControl.prototype._deletePointerRelationship = function (sourceID, targetID, pointerName, isPointerList) {
         var sourceNode = this._client.getNode(sourceID),
             targetNode = this._client.getNode(targetID),
-            pointerMetaDescriptor,
-            idx;
+            pointerMetaDescriptor;
+
+        //NOTE: this method is called from inside a transaction, don't need to start/complete one
 
         if (sourceNode && targetNode) {
-            //this._client.startTransaction();
             this._client.removeValidTargetItem(sourceID,pointerName,targetID);
             pointerMetaDescriptor = this._client.getValidTargetItems(sourceID,pointerName);
             if(pointerMetaDescriptor && pointerMetaDescriptor.length === 0){
-                this._client.deleteMetaPointer(sourceID,pointerName);
-                this._client.delPointer(sourceID,pointerName);
+                if (isPointerList === false) {
+                    //single pointer
+                    this._client.deleteMetaPointer(sourceID,pointerName);
+                    this._client.delPointer(sourceID,pointerName);
+                    this._updateObjectConnectionVisualStyles(sourceID);
+                } else {
+                    //pointer list
+                    this._client.deleteMetaPointer(sourceID,pointerName);
+                    this._client.deleteSet(sourceID,pointerName);
+                }
             }
-
-            this._updateObjectConnectionVisualStyles(sourceID);
-            //this._client.completeTransaction();
         }
     };
 
 
     MetaEditorControl.prototype._createInheritanceRelationship = function (parentID, objectID) {
-        var parentNode = this._client.getNode(parentID),
+        //TEMPORARILY DO NOT ALLOW CREATING INHERITANCE RELATIONSHIP
+        /*var parentNode = this._client.getNode(parentID),
             objectNode = this._client.getNode(objectID),
             objectBase;
 
         if (parentNode && objectNode) {
-            objectBase = objectNode.getBase();
+            objectBase = objectNode.getBaseId();
 
             if (objectBase && !_.isEmpty(objectBase)) {
                 this.logger.debug('InheritanceRelationship from "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') to parent "' + objectBase + '" already exists, but overwriting to "' + parentNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + parentID + ')"');
             }
 
             this._client.setBase(objectID, parentID);
-        }
+        }*/
     };
 
 
     MetaEditorControl.prototype._deleteInheritanceRelationship = function (parentID, objectID) {
         var objectNode = this._client.getNode(objectID),
-            objectBase;
+            objectBaseId,
+            baseNode;
 
         if (objectNode) {
-            objectBase = objectNode.getBase();
+            objectBaseId = objectNode.getBaseId();
 
-            if (objectBase && !_.isEmpty(objectBase)) {
-                this.logger.debug('InheritanceRelationship from "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') to parent "' + objectBase + '" already exists, but deleting it');
-                this._client.delBase(objectID);
+            if (objectBaseId) {
+                baseNode = this._client.getNode(objectBaseId);
+                if (baseNode) {
+                    objectBaseId = baseNode.getAttribute(nodePropertyNames.Attributes.name) + ' (' + objectBaseId + ')';
+                }
+                /*this.logger.debug('Deleting InheritanceRelationship from "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') to parent "' + objectBaseId + '"');
+                this._client.delBase(objectID);*/
+                //TEMPORARILY DO NOT ALLOW DELETING INHERITANCE RELATIONSHIP
+                this.logger.warning('Deleting InheritanceRelationship from "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') to parent "' + objectBaseId + '" is not allowed...');
             }
         }
     };
@@ -1275,6 +1411,8 @@ define(['logManager',
             this._pointerRelationshipMultiplicityUpdate(connDesc.GMESrcId, connDesc.GMEDstId, connDesc.name, oldValue, newValue);
         } else if (connDesc.type === MetaRelations.META_RELATIONS.INHERITANCE) {
             //never can happen
+        } else if (connDesc.type === MetaRelations.META_RELATIONS.POINTERLIST) {
+            this._pointerListRelationshipMultiplicityUpdate(connDesc.GMESrcId, connDesc.GMEDstId, connDesc.name, oldValue, newValue);
         }
     };
 
@@ -1290,7 +1428,7 @@ define(['logManager',
                 pattMinToMax = /^\d+\.\.\d+$/g,
                 pattMinToMany = /^\d+\.\.\*$/g;
 
-            //valid value for containment is 1, 0..*, x..y
+            //valid values for containment are 1, x..*, x..y
             if (pattNum.test(value)) {
                 //#1: single digit number
                 result = {'min': parseInt(value, 10),
@@ -1325,28 +1463,77 @@ define(['logManager',
     MetaEditorControl.prototype._pointerRelationshipMultiplicityUpdate = function (sourceID, targetID, pointerName, oldValue, newValue) {
         var sourceNode = this._client.getNode(sourceID),
             targetNode = this._client.getNode(targetID),
-            pointerMetaDescriptor,
-            multiplicityValid;
+            multiplicityValid,
+            multiplicity;
 
         multiplicityValid = function (value) {
             var result,
                 pattOne = "1",
                 pattZeroOne = "0..1";
 
-            //valid value for pointer is 1, 0..1
-            result = value === pattOne || value === pattZeroOne;
+            //valid values for pointer are: 1, 0..1
+            if (value === pattOne) {
+                //#1: single digit number
+                result = {'min': 1,
+                    'max': 1};
+            } else if (value === pattZeroOne) {
+                result = {'min': 0,
+                    'max': 1};
+            }
 
             return result;
         };
 
         if (sourceNode && targetNode) {
-            pointerMetaDescriptor = sourceNode.getEditablePointerDescriptor(pointerName) || [];
-
-            if (multiplicityValid(newValue)) {
-                pointerMetaDescriptor.multiplicity = newValue;
-                this._client.setPointerDescriptor(sourceID, pointerName, pointerMetaDescriptor);
+            multiplicity = multiplicityValid(newValue);
+            if (multiplicity) {
+                multiplicity.id = targetID;
+                this._client.updateValidTargetItem(sourceID, pointerName, multiplicity);
             } else {
-                this._updateConnectionText(sourceID, targetID, MetaRelations.META_RELATIONS.POINTER, { 'name': pointerName,
+                this._updateConnectionText(sourceID, targetID, MetaRelations.META_RELATIONS.POINTER, {'name': pointerName,
+                    'dstText': oldValue,
+                    'dstTextEdit': true});
+            }
+        }
+    };
+
+    MetaEditorControl.prototype._pointerListRelationshipMultiplicityUpdate = function (sourceID, targetID, pointerName, oldValue, newValue) {
+        var sourceNode = this._client.getNode(sourceID),
+            targetNode = this._client.getNode(targetID),
+            multiplicityValid,
+            multiplicity;
+
+        multiplicityValid = function (value) {
+            var result = null,
+                pattNum = /^\d+$/g,
+                pattMinToMax = /^\d+\.\.\d+$/g,
+                pattMinToMany = /^\d+\.\.\*$/g;
+
+            //valid value for pointer list are: 1, x..*, x..y
+            if (pattNum.test(value)) {
+                //#1: single digit number
+                result = {'min': parseInt(value, 10),
+                    'max': parseInt(value, 10)};
+            } else if (pattMinToMax.test(value)) {
+                //#2: x..y
+                result = {'min': parseInt(value, 10),
+                    'max': parseInt(value.substring(value.indexOf('..') + 2), 10)};
+            } else if (pattMinToMany.test(value)) {
+                //#3: x..*
+                result = {'min': parseInt(value, 10),
+                    'max': -1};
+            }
+
+            return result;
+        };
+
+        if (sourceNode && targetNode) {
+            multiplicity = multiplicityValid(newValue);
+            if (multiplicity) {
+                multiplicity.id = targetID;
+                this._client.updateValidTargetItem(sourceID, pointerName, multiplicity);
+            } else {
+                this._updateConnectionText(sourceID, targetID, MetaRelations.META_RELATIONS.POINTERLIST, {'name': pointerName,
                     'dstText': oldValue,
                     'dstTextEdit': true});
             }
@@ -1418,22 +1605,22 @@ define(['logManager',
         this._radioButtonGroupMetaRelationType.addButton({ "title": "Containment",
             "selected": true,
             "data": { "connType": MetaRelations.META_RELATIONS.CONTAINMENT },
-            "icon": MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.CONTAINMENT)}, this._$btnGroupObjectRelations);
+            "icon": MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.CONTAINMENT)});
 
-        this._radioButtonGroupMetaRelationType.addButton({ "title": "Inheritance",
+        /*this._radioButtonGroupMetaRelationType.addButton({ "title": "Inheritance",
             "selected": false,
             "data": { "connType": MetaRelations.META_RELATIONS.INHERITANCE },
-            "icon": MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.INHERITANCE)}, this._$btnGroupObjectRelations);
+            "icon": MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.INHERITANCE)});*/
 
         this._radioButtonGroupMetaRelationType.addButton({ "title": "Pointer",
             "selected": false,
             "data": { "connType": MetaRelations.META_RELATIONS.POINTER },
-            "icon": MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.POINTER)}, this._$btnGroupObjectRelations);
+            "icon": MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.POINTER)});
 
         this._radioButtonGroupMetaRelationType.addButton({ "title": "PointerList",
             "selected": false,
             "data": { "connType": MetaRelations.META_RELATIONS.POINTERLIST },
-            "icon": MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.POINTERLIST)}, this._$btnGroupObjectRelations);
+            "icon": MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.POINTERLIST)});
 
         /************** END OF - CREATE META RELATION CONNECTION TYPES *****************/
 
@@ -1479,6 +1666,41 @@ define(['logManager',
             //remove registry settings
             this._client.setRegistry(objectID, nodePropertyNames.Registry.lineStyle, {});
         }
+    };
+
+    MetaEditorControl.prototype._getAssociatedConnections =  function (objectID) {
+        var result = {'src': [], 'dst': []},
+            otherID,
+            connType,
+            len,
+            cID,
+            checkConnections;
+
+        checkConnections = function (cList, res) {
+            //check objectID as source
+            if (cList.hasOwnProperty(objectID)) {
+                for (otherID in cList[objectID]) {
+                    if (cList[objectID].hasOwnProperty(otherID)) {
+                        for (connType in cList[objectID][otherID]) {
+                            if (cList[objectID][otherID].hasOwnProperty(connType)) {
+                                len = cList[objectID][otherID][connType].length;
+                                while (len--) {
+                                    cID = cList[objectID][otherID][connType][len];
+                                    if (res.indexOf(cID) === -1) {
+                                        res.push(cID);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        checkConnections(this._connectionListBySrcGMEID, result.src);
+        checkConnections(this._connectionListByDstGMEID, result.dst);
+
+        return result;
     };
 
     //attach MetaEditorControl - DiagramDesigner event handler functions

@@ -11,14 +11,19 @@
  */
 
 define(['jquery',
+        'logManager',
         'js/Constants',
         'js/NodePropertyNames',
+        'js/Utils/METAAspectHelper',
         'js/Panels/MetaEditor/MetaEditorConstants'], function (_jquery,
+                                                               logManager,
                                            CONSTANTS,
                                            nodePropertyNames,
+                                           METAAspectHelper,
                                            MetaEditorConstants) {
 
-    var _client;
+    var _client,
+        _logger = logManager.create('GMEConcepts');
 
     var _initialize = function (client) {
         if (!_client) {
@@ -70,13 +75,13 @@ define(['jquery',
      * The given parent has a valid children type that has CONSTANTS.POINTER_SOURCE and CONSTANTS.POINTER_TARGET pointers
      * and the given object can be a valid target for CONSTANTS.POINTER_SOURCE
      */
-    var _isValidConnectionSource = function (objID, parentID) {
+    /*var _isValidConnectionSource = function (objID, parentID) {
         var valid = false,
             validChildrenTypes,
             len,
             childID;
 
-        validChildrenTypes = _client.getValidChildrenTypes(parentID) || [];
+        validChildrenTypes = _getMETAAspectMergedValidChildrenTypes(parentID) || [];
         len = validChildrenTypes.length;
         while (len--) {
             childID = validChildrenTypes[len];
@@ -89,7 +94,7 @@ define(['jquery',
         }
 
         return valid;
-    };
+    };*/
 
     /*
      * Determines if a GME Connection can be created between source and target in parent
@@ -100,14 +105,37 @@ define(['jquery',
             len,
             childID;
 
-        validChildrenTypes = _client.getValidChildrenTypes(parentID) || [];
+        validChildrenTypes = _getMETAAspectMergedValidChildrenTypes(parentID) || [];
+
         len = validChildrenTypes.length;
         while (len--) {
             childID = validChildrenTypes[len];
-            if (_client.getPointerMeta(childID, CONSTANTS.POINTER_SOURCE) &&
-                _client.getPointerMeta(childID, CONSTANTS.POINTER_TARGET) &&
-                _client.isValidTarget(childID, CONSTANTS.POINTER_SOURCE, sourceID) &&
+            if (_client.isValidTarget(childID, CONSTANTS.POINTER_SOURCE, sourceID) &&
                 _client.isValidTarget(childID, CONSTANTS.POINTER_TARGET, targetID)) {
+                validTypes.push(childID);
+            }
+        }
+
+        return validTypes;
+    };
+
+    /*
+     * Determines if a GME Connection can be created between source and target in parent
+     */
+    var _getValidConnectionTypesInParent = function (sourceID, parentID) {
+        var validTypes = [],
+            validChildrenTypes,
+            len,
+            childID;
+
+        validChildrenTypes = _getMETAAspectMergedValidChildrenTypes(parentID) || [];
+
+        len = validChildrenTypes.length;
+        while (len--) {
+            childID = validChildrenTypes[len];
+            if (_isConnectionType(childID) &&
+                _client.isValidTarget(childID, CONSTANTS.POINTER_SOURCE, sourceID) &&
+                _canCreateChild(parentID, childID)) {
                 validTypes.push(childID);
             }
         }
@@ -151,18 +179,11 @@ define(['jquery',
         var FCO_ID = _client.createChild({'parentId': CONSTANTS.PROJECT_ROOT_ID});
         _client.setAttributes(FCO_ID, nodePropertyNames.Attributes.name, 'FCO');
         _client.setRegistry(FCO_ID, nodePropertyNames.Registry.decorator, "");
-        _client.setRegistry(FCO_ID, nodePropertyNames.Registry.isPort, true);
-
-        var META_ID = _client.createChild({'parentId': CONSTANTS.PROJECT_ROOT_ID});
-        _client.setAttributes(META_ID, nodePropertyNames.Attributes.name, 'META');
-
-        var PROJECT_BASE_ID = _client.createChild({'parentId': CONSTANTS.PROJECT_ROOT_ID});
-        _client.setAttributes(PROJECT_BASE_ID, nodePropertyNames.Attributes.name, 'PROJECT');
+        _client.setRegistry(FCO_ID, nodePropertyNames.Registry.isPort, false);
+        _client.setRegistry(FCO_ID, nodePropertyNames.Registry.isAbstract, false);
 
         var projectRegistry = {};
         projectRegistry[CONSTANTS.PROJECT_FCO_ID] = FCO_ID;
-        projectRegistry[CONSTANTS.PROJECT_META_ID] = META_ID;
-        projectRegistry[CONSTANTS.PROJECT_PROJECT_BASE_ID] = PROJECT_BASE_ID;
         _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, nodePropertyNames.Registry.ProjectRegistry, projectRegistry);
 
         //FCO has a DisplayAttr registry field that controls what Attribute's value should be displayed
@@ -173,35 +194,20 @@ define(['jquery',
 
         //ROOT's meta rules
         var rootMeta = $.extend(true, {}, metaRuleBase);
-        rootMeta.children.items = [{'$ref': '#' + FCO_ID}, {'$ref': '#' + META_ID}, {'$ref': '#' + PROJECT_BASE_ID}];
-        rootMeta.children.minItems = [1,1,-1];
-        rootMeta.children.maxItems = [1,1,-1];
+        rootMeta.children.items = [{'$ref': '#' + FCO_ID}];
+        rootMeta.children.minItems = [-1];
+        rootMeta.children.maxItems = [-1];
         rootMeta.attributes.name = {'type': 'string'};
         _client.setMeta(CONSTANTS.PROJECT_ROOT_ID, rootMeta);
-
-        //META's meta rules
-        var metaMeta = $.extend(true, {}, metaRuleBase);
-        metaMeta.children.items = [{'$ref': '#' + FCO_ID}, {'$ref': '#' + PROJECT_BASE_ID}];
-        metaMeta.children.minItems = [-1,-1];
-        metaMeta.children.maxItems = [-1,-1];
-        metaMeta.attributes.name = {'type': 'string'};
-        _client.setMeta(META_ID, metaMeta);
-
-        //META's meta rules
-        var projectBaseMeta = $.extend(true, {}, metaRuleBase);
-        projectBaseMeta.attributes.name = {'type': 'string'};
-        _client.setMeta(PROJECT_BASE_ID, projectBaseMeta);
 
         //FCO's meta rules
         var fcoMeta = $.extend(true, {}, metaRuleBase);
         fcoMeta.attributes.name = {'type': 'string'};
         _client.setMeta(FCO_ID, fcoMeta);
 
-        //set METAEDITOR object containment correctly
-        var rootMetaEditorDesc = MetaEditorConstants.GET_EMPTY_META_EDITOR_REGISTRY_OBJ();
-        rootMetaEditorDesc.Members = [PROJECT_BASE_ID];
-        rootMetaEditorDesc.MemberCoord[PROJECT_BASE_ID] = {'x': 100, 'y': 100};
-        _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, MetaEditorConstants.META_EDITOR_REGISTRY_KEY, rootMetaEditorDesc);
+        //set META ASPECT to show FCO
+        _client.addMember(CONSTANTS.PROJECT_ROOT_ID, FCO_ID, MetaEditorConstants.META_ASPECT_SET_NAME);
+        _client.setMemberRegistry(CONSTANTS.PROJECT_ROOT_ID, FCO_ID, MetaEditorConstants.META_ASPECT_SET_NAME, MetaEditorConstants.META_ASPECT_MEMBER_POSITION_REGISTRY_KEY, {'x': 100, 'y': 100} );
 
         _client.completeTransaction();
     };
@@ -214,40 +220,9 @@ define(['jquery',
         return objID === value;
     };
 
-    var _getProjectRegistryValue = function (key) {
-        var rootNode = _client.getNode(CONSTANTS.PROJECT_ROOT_ID),
-            projectRegistry = rootNode.getRegistry(nodePropertyNames.Registry.ProjectRegistry);
-
-        return projectRegistry ?  projectRegistry[key] : null;
-    };
-
     var _isProjectFCO = function (objID) {
         return _isProjectRegistryValue(CONSTANTS.PROJECT_FCO_ID, objID);
     };
-
-    var _isProjectMETA = function (objID) {
-        return _isProjectRegistryValue(CONSTANTS.PROJECT_META_ID, objID);
-    };
-
-    var _isProjectPROJECTBASE = function (objID) {
-        return _isProjectRegistryValue(CONSTANTS.PROJECT_PROJECT_BASE_ID, objID);
-    };
-
-    var _isProjectPROJECTBASEType = function (objID) {
-        return _client.isTypeOf(objID, _getProjectRegistryValue(CONSTANTS.PROJECT_PROJECT_BASE_ID));
-    };
-
-    var _isBrowsable = function (objID) {
-        var result = false;
-
-        if (!_isProjectFCO(objID) &&
-            !_isProjectPROJECTBASE(objID)) {
-            result = true;
-        }
-
-        return result;
-    };
-
 
     /*
      * Returns true if a new child with the given baseId (instance of base) can be created in parent
@@ -262,26 +237,27 @@ define(['jquery',
             counter,
             childrenMeta,
             baseId,
-            j;
+            j,
+            node;
 
         //TODO: implement real logic based on META and CONSTRAINTS...
         if(parentId && baseIdList && baseIdList.length > 0){
-            if (parentId === CONSTANTS.PROJECT_ROOT_ID) {
-                //do not let them create
-                // - FCO instances and
-                // - META instances
-                //but let them create PROJECT_BASE and its derived types
-                i = baseIdList.length;
-                result = true;
-                while(i--) {
-                    baseId = baseIdList[i];
-                    if (!_isProjectPROJECTBASEType(baseId)) {
-                        result = false;
+           result = true;
+
+            //FILTER OUT ABSTRACTS
+            len = baseIdList.length;
+            while (len--) {
+                node = _client.getNode(baseIdList[len]);
+                if (node) {
+                    if (node.getRegistry(nodePropertyNames.Registry.isAbstract) === true) {
+                        baseIdList.splice(len, 1);
                     }
                 }
-            } else {
-                result = true;
             }
+            if (baseIdList.length === 0) {
+                result = false;
+            }
+            //END OF --- FILTER OUT ABSTRACTS
 
             //Check #1: Global children number multiplicity
             if (result === true) {
@@ -358,7 +334,7 @@ define(['jquery',
     };
 
     var _getValidReferenceTypes = function (parentId, targetId) {
-        var validReferenceTypes = _client.getValidChildrenTypes(parentId),
+        var validReferenceTypes = _getMETAAspectMergedValidChildrenTypes(parentId),
             i;
 
         i = validReferenceTypes.length;
@@ -372,21 +348,51 @@ define(['jquery',
         return validReferenceTypes;
     };
 
+    var _canDeleteNode = function (objID) {
+        var result = false;
+
+        //do not let delete project root and FCO
+        if (objID !== CONSTANTS.PROJECT_ROOT_ID &&
+            !_isProjectFCO(objID)) {
+            result = true;
+        }
+
+        return result;
+    };
+
+    var _getMETAAspectMergedValidChildrenTypes = function (objID) {
+        var metaAspectMembers = METAAspectHelper.getMetaAspectMembers(),
+            validChildrenTypes = _client.getValidChildrenTypes(objID),
+            len = metaAspectMembers.length,
+            id;
+
+        while(len--) {
+            id = metaAspectMembers[len];
+            if (validChildrenTypes.indexOf(id) === -1) {
+                if (_client.isValidChild(objID, id)) {
+                    validChildrenTypes.push(id);
+                }
+            }
+        }
+
+        return validChildrenTypes;
+    };
+
     //return utility functions
     return {
         initialize: _initialize,
         isConnection: _isConnection,
         isConnectionType: _isConnectionType,
-        isValidConnectionSource: _isValidConnectionSource,
+        /*isValidConnectionSource: _isValidConnectionSource,*/
         getValidConnectionTypes: _getValidConnectionTypes,
         canCreateChild: _canCreateChild,
         isValidConnection: _isValidConnection,
         createBasicProjectSeed: _createBasicProjectSeed,
-        isBrowsable: _isBrowsable,
         isProjectFCO: _isProjectFCO,
-        isProjectMETA: _isProjectMETA,
-        isProjectPROJECTBASE: _isProjectPROJECTBASE,
         canCreateChildren: _canCreateChildren,
-        getValidReferenceTypes: _getValidReferenceTypes
+        getValidReferenceTypes: _getValidReferenceTypes,
+        canDeleteNode: _canDeleteNode,
+        getMETAAspectMergedValidChildrenTypes: _getMETAAspectMergedValidChildrenTypes,
+        getValidConnectionTypesInParent: _getValidConnectionTypesInParent
     }
 });

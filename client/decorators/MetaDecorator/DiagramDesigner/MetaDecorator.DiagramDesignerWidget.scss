@@ -14,6 +14,7 @@ $selected-attributes-add-new-hover-background-color: #FFFFC0;
 $attribute-height: 16px;
 $hover-background-color: #EEE;
 $section-title-background-color: #F3F3F3;
+$abstract-class-name-color: #AAAAAA;
 
 .meta-decorator {
   min-width: $min-width;
@@ -139,6 +140,13 @@ $section-title-background-color: #F3F3F3;
     width: 15px;
     margin-top: 2px;
     border-radius: 5px;
+  }
+
+  &.abstract {
+    .name {
+      font-style:italic;
+      color: $abstract-class-name-color;
+    }
   }
 }
 

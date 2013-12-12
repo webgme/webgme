@@ -46,7 +46,11 @@ define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
             if (i === 0) {
                 pathDef.push("M" + p[i][0] + "," + p[i][1]);
             } else {
-                pathDef.push("L" + p[i][0] + "," + p[i][1]);
+                if (this.connection.isBezier) {
+                    pathDef.push("C" + (p[i-1][0] + p[i-1][2]) + "," + (p[i-1][1] + p[i-1][3]) + " " + (p[i][0] - p[i][2]) + "," + (p[i][1] - p[i][3]) + " " + p[i][0] + "," + p[i][1]);
+                } else {
+                    pathDef.push("L" + p[i][0] + "," + p[i][1]);
+                }
             }
         }
 
@@ -105,7 +109,22 @@ define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
                 pos = self._getSelectedPathPoint(mousePos.mX, mousePos.mY);
 
             if (pos) {
-                self.connection.addSegmentPoint(self.id, pos.x, pos.y);
+                if (self.connection.isBezier) {
+                    var dots = Raphael.findDotsAtSegment(pos.bez[0],
+                        pos.bez[1],
+                        pos.bez[2],
+                        pos.bez[3],
+                        pos.bez[4],
+                        pos.bez[5],
+                        pos.bez[6],
+                        pos.bez[7],
+                        pos.t);
+                    var cx = dots.n.x - pos.x;
+                    var cy = dots.n.y - pos.y;
+                    self.connection.addSegmentPoint(self.id, pos.x, pos.y, cx, cy);
+                } else {
+                    self.connection.addSegmentPoint(self.id, pos.x, pos.y, 0, 0);
+                }
             }
 
             event.stopPropagation();
@@ -146,7 +165,7 @@ define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
                 resultPos = {   "x": intersectionsVertical[0].x,
                     "y": intersectionsVertical[0].y,
                     "t": intersectionsVertical[0].t1,
-                    "bez": intersectionsVertical[0].bez1 };
+                    "bez": intersectionsVertical[0].bez1};
             }
         }
 

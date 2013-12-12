@@ -19,7 +19,7 @@ define([ "util/assert" ], function (ASSERT) {
 			},
 
 			unlock: function () {
-				waiters.pop();
+                waiters.shift();
 				if (waiters.length >= 1) {
 					var func = waiters[0];
 					func();
@@ -91,11 +91,18 @@ define([ "util/assert" ], function (ASSERT) {
 			function deepFreeze (obj) {
 				ASSERT(typeof obj === "object");
 
-				Object.freeze(obj);
+
+                try{
+				    Object.freeze(obj);
+                }
+                catch(e){
+                    //TODO find the proper answer why this can occur
+                    return;
+                }
 
 				var key;
 				for (key in obj) {
-					if (typeof obj[key] === "object") {
+					if (obj[key] !== null && typeof obj[key] === "object") {
 						deepFreeze(obj[key]);
 					}
 				}

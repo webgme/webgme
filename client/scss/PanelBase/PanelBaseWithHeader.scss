@@ -216,7 +216,10 @@ $title-font-size: 14px;
 
     .panel-body {
       background-color: $sidepane-panel-body-background-color;
-      padding: 3px;
+      padding-top: 3px;
+      padding-bottom: 3px;
+      padding-left: 0px;
+      padding-right: 0px;
     }
 
     &.read-only {

@@ -28,10 +28,14 @@ define([ "mongodb", "util/assert", "util/canon" ], function (MONGODB, ASSERT, CA
 		var mongo = null;
 
 		function openDatabase (callback) {
-			ASSERT(mongo === null && typeof callback === "function");
+			//ASSERT(mongo === null && typeof callback === "function");
 
-			mongo = new MONGODB.Db(options.database, new MONGODB.Server(options.host, options.port), {
-				w: 1
+
+			/*mongo = new MONGODB.Db(options.database, new MONGODB.Server(options.host, options.port), {
+				'w': 1,
+                'auto_reconnect': true,
+                'poolSize': 20,
+                socketOptions: {keepAlive: 1}
 			});
 
 			mongo.open(function (err) {
@@ -42,18 +46,37 @@ define([ "mongodb", "util/assert", "util/canon" ], function (MONGODB, ASSERT, CA
 				} else {
 					callback(null);
 				}
-			});
+			});*/
+
+            MONGODB.MongoClient.connect("mongodb://"+options.host+":"+options.port+"/"+options.database,{
+                'w':1,
+                'native-parser':true,
+                'auto_reconnect': true,
+                'poolSize': 20,
+                socketOptions: {keepAlive: 1}
+            },function(err,db){
+                if(!err && db){
+                    mongo = db;
+                    callback(null);
+                } else {
+                    mongo = null;
+                    callback(err);
+                }
+            });
 		}
 
 		function closeDatabase (callback) {
 			if (mongo !== null) {
 				fsyncDatabase(function () {
-					mongo.close(function () {
+					/*mongo.close(function () {
 						mongo = null;
 						if (typeof callback === "function") {
 							callback(null);
 						}
-					});
+					});*/
+                    if (typeof callback === "function") {
+                        callback(null);
+                    }
 				});
 			} else if (typeof callback === "function") {
 				callback(null);
@@ -260,6 +283,7 @@ define([ "mongodb", "util/assert", "util/canon" ], function (MONGODB, ASSERT, CA
 					}
 				}).toArray(function (err, docs) {
 					if (err) {
+                        console.log('kecso',err);
 						callback(err);
 					} else {
 						var branches = {};

@@ -358,7 +358,7 @@ define([], function () {
             getOwnValidTargetTypes: getOwnValidTargetTypes,
             isTypeOf: isTypeOf,
             getValidAttributeNames :  getValidAttributeNames,
-            getOwnValidAttributeNames : getOwnValidAttributeNames,
+            getOwnValidAttributeNames : getOwnValidAttributeNames
         };
     }
 

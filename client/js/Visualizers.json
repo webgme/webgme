@@ -7,20 +7,20 @@
     {"id": "ContainmentGrid",
         "title": "Containment Grid - All",
         "panel": "js/Panels/Grid/GridPanel",
-        "DEBUG_ONLY": false},
+        "DEBUG_ONLY": true},
 
     {"id": "ContainmentGridPointers",
         "title": "Containment Grid - Pointers",
         "panel": "js/Panels/Grid/GridPanelPointers",
-        "DEBUG_ONLY": false},
+        "DEBUG_ONLY": true},
 
     {"id": "GraphViz",
         "title": "Graph visualizer",
         "panel": "js/Panels/GraphViz/GraphVizPanel",
-        "DEBUG_ONLY": false},
+        "DEBUG_ONLY": true},
 
-    {"id": "METAEditor",
-        "title": "METAEditor",
+    {"id": "METAAspect",
+        "title": "META Aspect",
         "panel": "js/Panels/MetaEditor/MetaEditorPanel",
         "DEBUG_ONLY": false}
 ]

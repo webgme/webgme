@@ -2,11 +2,11 @@
 
 define(['js/PanelBase/PanelBaseWithHeader',
     'js/PanelManager/IActivePanel',
-    'js/Widgets/DiagramDesigner/DiagramDesignerWidget',
+    'js/Widgets/ModelEditor/ModelEditorWidget',
     './ModelEditorControl'
 ], function (PanelBaseWithHeader,
              IActivePanel,
-             DiagramDesignerWidget,
+             ModelEditorWidget,
              ModelEditorControl) {
 
     var ModelEditorPanel;
@@ -38,7 +38,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         //set Widget title
         this.setTitle("DiagramDesigner");
 
-        this.widget = new DiagramDesignerWidget(this.$el, {'toolBar': this.toolBar});
+        this.widget = new ModelEditorWidget(this.$el, {'toolBar': this.toolBar});
 
         this.widget.setTitle = function (title) {
             self.setTitle(title);
@@ -75,6 +75,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
 
         PanelBaseWithHeader.prototype.destroy.call(this);
         WebGMEGlobal.KeyboardManager.setListener(undefined);
+        WebGMEGlobal.Toolbar.refresh();
     };
 
     /* override IActivePanel.prototype.onActivate */
@@ -82,6 +83,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         this.widget.onActivate();
         this.control.onActivate();
         WebGMEGlobal.KeyboardManager.setListener(this.widget);
+        WebGMEGlobal.Toolbar.refresh();
     };
 
     /* override IActivePanel.prototype.onDeactivate */
@@ -89,6 +91,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         this.widget.onDeactivate();
         this.control.onDeactivate();
         WebGMEGlobal.KeyboardManager.setListener(undefined);
+        WebGMEGlobal.Toolbar.refresh();
     };
 
     return ModelEditorPanel;

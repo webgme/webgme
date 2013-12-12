@@ -74,9 +74,9 @@ define(['js/DragDrop/DragSource',
 
             if (dragEffects.length === 1) {
                 if (dragEffects[0] === dragSource.DRAG_EFFECTS.DRAG_MOVE) {
-                    helperEl.append($('<i class="icon-move"></i>'));
+                    helperEl.append($('<i class="icon-move"></i>')).append(' Move...');
                 } else if (dragEffects[0] === dragSource.DRAG_EFFECTS.DRAG_COPY) {
-                    helperEl.append($('<i class="icon-plus"></i>'));
+                    helperEl.append($('<i class="icon-plus"></i>')).append(' Copy...');
                 }
             }
         }

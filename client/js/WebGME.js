@@ -14,7 +14,8 @@ define(['logManager',
     'js/KeyboardManager/KeyboardManager',
     'js/PanelManager/PanelManager',
     './WebGME.History',
-    'js/Utils/METATypeHelper'], function (logManager,
+    'js/Utils/METAAspectHelper',
+    'js/ConstraintManager/ConstraintManager'], function (logManager,
                                             CONFIG,
                                             Client,
                                             util,
@@ -24,7 +25,8 @@ define(['logManager',
                                             KeyboardManager,
                                             PanelManager,
                                             WebGMEHistory,
-                                            METATypeHelper) {
+                                            METAAspectHelper,
+                                            ConstraintManager) {
 
     var _webGMEStart = function () {
         var lm,
@@ -32,7 +34,7 @@ define(['logManager',
             loadPanels,
             layoutToLoad = util.getURLParameterByName('layout') || 'DefaultLayout',
             commitToLoad = util.getURLParameterByName('commit').toLowerCase(),
-            projectToLoad = util.getURLParameterByName('project').toLowerCase(),
+            projectToLoad = util.getURLParameterByName('project'),
             objectToLoad = util.getURLParameterByName('obj').toLowerCase(),
             logger = logManager.create('WebGME'),
             selectObject;
@@ -46,11 +48,13 @@ define(['logManager',
 
             client = new Client(CONFIG);
 
+            WebGMEGlobal.ConstraintManager = new ConstraintManager(client);
+
             WebGMEHistory.setClient(client);
 
             GMEConcepts.initialize(client);
 
-            METATypeHelper.initialize(client);
+            METAAspectHelper.initialize(client);
 
             //hook up branch changed to set read-only mode on panels
             client.addEventListener(client.events.BRANCH_CHANGED, function (__project, branchName) {

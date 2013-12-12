@@ -3,16 +3,20 @@
 define(['logManager',
     'js/Constants',
     'js/Utils/GMEConcepts',
-    'js/NodePropertyNames'], function (logManager,
+    'js/NodePropertyNames',
+    'js/Utils/METAAspectHelper'], function (logManager,
                              CONSTANTS,
                              GMEConcepts,
-                             nodePropertyNames) {
+                             nodePropertyNames,
+                             METAAspectHelper) {
 
     var PartBrowserControl,
         WIDGET_NAME = 'PartBrowser',
         DEFAULT_DECORATOR = "ModelDecorator";
 
     PartBrowserControl = function (myClient, myPartBrowserView) {
+        var self = this;
+
         this._client = myClient;
         this._partBrowserView = myPartBrowserView;
 
@@ -29,6 +33,10 @@ define(['logManager',
 
         this._logger = logManager.create("PartBrowserControl");
         this._logger.debug("Created");
+
+        METAAspectHelper.addEventListener(METAAspectHelper.events.META_ASPECT_CHANGED, function () {
+            self._processContainerNode(self._containerNodeId);
+        });
     };
 
     PartBrowserControl.prototype.selectedObjectChanged = function (nodeId) {
@@ -128,7 +136,7 @@ define(['logManager',
 
         if (node) {
             //get possible targets from MetaDescriptor
-            validChildrenTypes = this._client.getValidChildrenTypes(gmeID);
+            validChildrenTypes = GMEConcepts.getMETAAspectMergedValidChildrenTypes(gmeID);
 
             //the deleted ones
             diff = _.difference(oValidChildrenTypes, validChildrenTypes);
@@ -224,6 +232,10 @@ define(['logManager',
            idx = this._componentIDPartIDMap[componentID].indexOf(partId);
             if (idx !== -1) {
                 this._componentIDPartIDMap[componentID].splice(idx, 1);
+
+                if (this._componentIDPartIDMap[componentID].length === 0) {
+                    delete this._componentIDPartIDMap[componentID];
+                }
             }
         }
     };
@@ -357,8 +369,7 @@ define(['logManager',
         i = this._validChildrenTypeIDs.length;
         while (i--) {
             id = this._validChildrenTypeIDs[i];
-            partEnabled = GMEConcepts.canCreateChild(this._containerNodeId, id) &&
-                        !GMEConcepts.isProjectPROJECTBASE(this._containerNodeId);
+            partEnabled = GMEConcepts.canCreateChild(this._containerNodeId, id);
             this._partBrowserView.setEnabled(id, partEnabled);
         }
 

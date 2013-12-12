@@ -64,7 +64,7 @@ define(['logManager',
         this._loader = new LoaderCircles({"containerElement": this._btnRefresh });
         this._loader.setSize(14);
 
-        this._el.find('.tabContainer').first().groupedAlphabetTabs({'onClick': function (filter) {
+        this._dialog.find('.tabContainer').first().groupedAlphabetTabs({'onClick': function (filter) {
             self._filter = filter;
             self._updateProjectNameList();
         }});
@@ -137,7 +137,7 @@ define(['logManager',
             self._panelPuttons.show();
             self._panelCreateNew.hide();
 
-            self._filter = self._el.find('.tabContainer li.active').data('filter');
+            self._filter = self._dialog.find('.tabContainer li.active').data('filter');
             self._updateProjectNameList();
 
             event.stopPropagation();

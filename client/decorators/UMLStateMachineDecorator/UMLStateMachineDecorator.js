@@ -24,8 +24,8 @@ define(['js/Decorators/DecoratorBase',
     /*********************** OVERRIDE DecoratorBase MEMBERS **************************/
 
     UMLStateMachineDecorator.prototype.initializeSupportedWidgetMap = function () {
-        this.supportedWidgetMap = {'DiagramDesigner': UMLStateMachineDecoratorDiagramDesignerWidget/*,
-                                   'PartBrowser': UMLStateMachineDecoratorPartBrowserWidget*/};
+        this.supportedWidgetMap = {'DiagramDesigner': UMLStateMachineDecoratorDiagramDesignerWidget,
+                                   'PartBrowser': UMLStateMachineDecoratorPartBrowserWidget};
     };
 
     return UMLStateMachineDecorator;

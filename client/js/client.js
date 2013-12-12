@@ -342,22 +342,21 @@ define([
                 }
 
                 function getNCommitsFrom(commitHash,number,callback){
-                    var fillCache = function(time,number,callback){
+                    var fillCache = function(time,number,cb){
                         _project.getCommits(time,number,function(err,commits){
                             if(!err && commits){
                                 for(var i=0;i<commits.length;i++){
                                     addCommit(commits[i]);
                                 }
-                                callback(null);
+                                cb(null);
                             } else {
                                 //we cannot get new commits from the server
                                 //we should use our very own ones
-                                //callback(err);
-                                callback(null);
+                                cb(null);
                             }
                         });
                     };
-                    var returnNCommitsFromHash= function(hash,num,cb){
+                    var returnNCommitsFromHash = function(hash,num,cb){
                         //now we should have all the commits in place
                         var index = _timeOrder.indexOf(hash),
                             commits = [];
@@ -1243,23 +1242,20 @@ define([
                         var child = _core.getChild(tempTo,returnParameters[i]['1strelid']);
                         var finalNode = _core.moveNode(child,_nodes[parameters.parentId].node);
                         returnParameters[i] = storeNode(finalNode);
+                        if(parameters[i]){
+                            for(var j in parameters[i].attributes){
+                                _core.setAttribute(finalNode,j,parameters[i].attributes[j]);
+                            }
+                            for(j in parameters[i].registry){
+                                _core.setRegistry(finalNode,j,parameters[i].registry[j]);
+                            }
+                        }
                     }
                     _core.deleteNode(tempTo);
                     delete tempTo;
 
+                    saveRoot('copyMoreNodes('+JSON.stringify(returnParameters)+')');
                     return returnParameters;
-                    //now load the copied items, to set their parameters
-                    /*_core.loadChildren(tempTo,function(err,children){
-                        if(err){
-                            //we should delete the temp nodes and assume that nothing happened :/
-                            _core.deleteNode(tempTo);
-                            delete  tempTo;
-                            delete returnParameters;
-                            return null;
-                        } else {
-                            for(var i=0;i<)
-                        }
-                    });*/
                 }
             }
             function moveMoreNodes(parameters){
@@ -1294,6 +1290,92 @@ define([
                 }
 
                 return returnParams;
+            }
+            function createChildren(parameters){
+                var returnParameters = {},
+                    pathsToCopy = [];
+                for(var i in parameters){
+                    if(i !== 'parentId'){
+                        pathsToCopy.push(i);
+                    }
+                }
+                if(pathsToCopy.length > 0 && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
+                    for(var i=0;i<pathsToCopy.length;i++){
+                        if(_nodes[pathsToCopy[i]] && typeof _nodes[pathsToCopy[i]].node === 'object'){
+                            var node = _core.createNode({parent:_nodes[parameters.parentId].node,base:_nodes[pathsToCopy[i]].node});
+                            var newPath = storeNode(node);
+                            returnParameters[pathsToCopy[i]] = newPath;
+
+                            if(parameters[pathsToCopy[i]]){
+                                for(var j in parameters[pathsToCopy[i]].attributes){
+                                    _core.setAttribute(node,j,parameters[pathsToCopy[i]].attributes[j]);
+                                }
+                                for(j in parameters[pathsToCopy[i]].registry){
+                                    _core.setRegistry(node,j,parameters[pathsToCopy[i]].registry[j]);
+                                }
+                            }
+
+                        }
+                    }
+                }
+
+                saveRoot('createChildren('+JSON.stringify(returnParameters)+')');
+                return returnParameters;
+            }
+            function _createChildren(parameters){
+                var returnParameters = {},
+                    pathsToCopy = [];
+                for(var i in parameters){
+                    if(i !== 'parentId'){
+                        pathsToCopy.push(i);
+                    }
+                }
+                
+                if(pathsToCopy.length > 0 && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
+                    //collecting nodes under tempFrom
+                    var tempFrom = _core.createNode({parent:_nodes[parameters.parentId].node,base:null});
+                    for(var i=0;i<pathsToCopy.length;i++){
+                        console.log('kecso',001,pathsToCopy[i]);
+                        if(_nodes[pathsToCopy[i]] && typeof _nodes[pathsToCopy[i]].node === 'object'){
+                            returnParameters[pathsToCopy[i]] = {'1stparent':_core.getParent(_nodes[pathsToCopy[i]].node),'1st':_core.moveNode(_nodes[pathsToCopy[i]].node,tempFrom)};
+                            returnParameters[pathsToCopy[i]]['1strelid'] = _core.getRelid(returnParameters[pathsToCopy[i]]['1st']);
+                            console.log('kecso',002,pathsToCopy[i],returnParameters[pathsToCopy[i]]['1strelid']);
+                        }
+                    }
+                    var tempTo = _core.createNode({parent:_nodes[parameters.parentId].node, base:tempFrom});
+
+                    //clean up part of temporary mess
+                    for(var i in returnParameters){
+                        _core.moveNode(returnParameters[i]['1st'],returnParameters[i]['1stparent']);
+                        delete returnParameters[i]['1st'];
+                        delete returnParameters[i]['1stparent'];
+                    }
+
+                    _core.deleteNode(tempFrom);
+                    delete tempFrom;
+
+                    for(var i in returnParameters){
+                        console.log('kecso',003,i);
+                        var child = _core.getChild(tempTo,returnParameters[i]['1strelid']);
+                        var finalNode = _core.moveNode(child,_nodes[parameters.parentId].node);
+                        returnParameters[i] = storeNode(finalNode);
+                        console.log('kecso',004,i,returnParameters[i]);
+                        if(parameters[i]){
+                            for(var j in parameters[i].attributes){
+                                _core.setAttribute(finalNode,j,parameters[i].attributes[j]);
+                            }
+                            for(j in parameters[i].registry){
+                                _core.setRegistry(finalNode,j,parameters[i].registry[j]);
+                            }
+                        }
+                    }
+                    _core.deleteNode(tempTo);
+                    delete tempTo;
+
+
+                    saveRoot('createChildren('+JSON.stringify(returnParameters)+')');
+                    return returnParameters;
+                }
             }
 
             function startTransaction() {
@@ -1456,6 +1538,42 @@ define([
                     typeof _nodes[path].node === 'object'){
                     _core.delMember(_nodes[path].node,setid,memberpath);
                     saveRoot('removeMember('+path+','+memberpath+','+setid+')');
+                }
+            }
+            function setMemberAttribute(path,memberpath,setid,name,value){
+                if(_nodes[path] && typeof _nodes[path].node === 'object'){
+                    _core.setMemberAttribute(_nodes[path].node,setid,memberpath,name,value);
+                    saveRoot('setMemberAttribute('+path+","+memberpath+","+setid+","+name+","+value+")");
+                }
+            }
+            function delMemberAttribute(path,memberpath,setid,name){
+                if(_nodes[path] && typeof _nodes[path].node === 'object'){
+                    _core.delMemberAttribute(_nodes[path].node,setid,memberpath,name);
+                    saveRoot('delMemberAttribute('+path+","+memberpath+","+setid+","+name+")");
+                }
+            }
+            function setMemberRegistry(path,memberpath,setid,name,value){
+                if(_nodes[path] && typeof _nodes[path].node === 'object'){
+                    _core.setMemberRegistry(_nodes[path].node,setid,memberpath,name,value);
+                    saveRoot('setMemberRegistry('+path+","+memberpath+","+setid+","+name+","+value+")");
+                }
+            }
+            function delMemberRegistry(path,memberpath,setid,name){
+                if(_nodes[path] && typeof _nodes[path].node === 'object'){
+                    _core.delMemberRegistry(_nodes[path].node,setid,memberpath,name);
+                    saveRoot('delMemberRegistry('+path+","+memberpath+","+setid+","+name+")");
+                }
+            }
+            function createSet(path, setid) {
+                if(_nodes[path] && typeof _nodes[path].node === 'object'){
+                    _core.createSet(_nodes[path].node,setid);
+                    saveRoot('createSet('+path+","+setid+")");
+                }
+            }
+            function deleteSet(path, setid) {
+                if(_nodes[path] && typeof _nodes[path].node === 'object'){
+                    _core.deleteSet(_nodes[path].node,setid);
+                    saveRoot('deleteSet('+path+","+setid+")");
                 }
             }
 
@@ -1661,6 +1779,33 @@ define([
                 var getSetNames = function(){
                     return _core.getSetNames(_nodes[_id].node);
                 };
+                var getMemberAttributeNames = function(setid,memberid){
+                    return _core.getMemberAttributeNames(_nodes[_id].node,setid,memberid);
+                };
+                var getMemberAttribute = function(setid,memberid,name){
+                    return _core.getMemberAttribute(_nodes[_id].node,setid,memberid,name);
+                };
+                var getEditableMemberAttribute = function(setid,memberid,name){
+                    var attr = _core.getMemberAttribute(_nodes[_id].node,setid,memberid,name);
+                    if(attr !== null && attr !== undefined){
+                        return JSON.parse(JSON.stringify(attr));
+                    }
+                    return null;
+                };
+
+                var getMemberRegistryNames = function(setid,memberid){
+                    return _core.getMemberRegistryNames(_nodes[_id].node,setid,memberid);
+                };
+                var getMemberRegistry = function(setid,memberid,name){
+                    return _core.getMemberRegistry(_nodes[_id].node,setid,memberid,name);
+                };
+                var getEditableMemberRegistry = function(setid,memberid,name){
+                    var attr = _core.getMemberRegistry(_nodes[_id].node,setid,memberid,name);
+                    if(attr !== null && attr !== undefined){
+                        return JSON.parse(JSON.stringify(attr));
+                    }
+                    return null;
+                };
 
                 //META
                 var getValidChildrenTypes = function(){
@@ -1697,10 +1842,7 @@ define([
                     }
                     return descriptor;
                 };
-                var getBase = function(){
-                    //return _core.getRegistry(_nodes[_id].node,'base');
-                    return _core.getPath(_core.getBase(_nodes[_id].node));
-                };
+
 
                 //constraint functions
                 var getConstraintNames = function(){
@@ -1741,17 +1883,24 @@ define([
                         getAttributeNames : getAttributeNames,
                         getRegistryNames : getRegistryNames,
 
+                        //SetFunctions
+                        getMemberIds               : getMemberIds,
+                        getSetNames                : getSetNames,
+                        getMemberAttributeNames    : getMemberAttributeNames,
+                        getMemberAttribute         : getMemberAttribute,
+                        getEditableMemberAttribute : getEditableMemberAttribute,
+                        getMemberRegistryNames     : getMemberRegistryNames,
+                        getMemberRegistry          : getMemberRegistry,
+                        getEditableMemberRegistry  : getEditableMemberRegistry,
+
                         //META functions
                         getValidChildrenTypes : getValidChildrenTypes,
-                        getMemberIds          : getMemberIds,
-                        getSetNames           : getSetNames,
                         getAttributeDescriptor         : getAttributeDescriptor,
                         getEditableAttributeDescriptor : getEditableAttributeDescriptor,
                         getPointerDescriptor           : getPointerDescriptor,
                         getEditablePointerDescriptor   : getEditablePointerDescriptor,
                         getChildrenMetaDescriptor      : getChildrenMetaDescriptor,
                         getEditableChildrenMetaDescriptor      : getEditableChildrenMetaDescriptor,
-                        getBase                        : getBase,
 
                         //constraint functions
                         getConstraintNames : getConstraintNames,
@@ -1873,15 +2022,19 @@ define([
                 delRegistry: delRegistry,
                 copyMoreNodes: copyMoreNodes,
                 moveMoreNodes: moveMoreNodes,
-                /*copyNodes: copyNodes,
-                pasteNodes: pasteNodes,*/
-                /*deleteNode: deleteNode,*/
                 delMoreNodes: delMoreNodes,
                 createChild: createChild,
+                createChildren: createChildren,
                 makePointer: makePointer,
                 delPointer: delPointer,
                 addMember: addMember,
                 removeMember: removeMember,
+                setMemberAttribute: setMemberAttribute,
+                delMemberAttribute: delMemberAttribute,
+                setMemberRegistry: setMemberRegistry,
+                delMemberRegistry: delMemberRegistry,
+                createSet:createSet,
+                deleteSet: deleteSet,
 
                 //desc and META
                 setAttributeDescriptor: setAttributeDescriptor,
