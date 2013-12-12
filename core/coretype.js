@@ -299,7 +299,42 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 			return Object.keys(merged);
 		};
 
-		core.getPointerPath = function(node, name) {
+        core.getPointerPath = function (node, name) {
+            ASSERT(isValidNode(node) && typeof name === "string");
+
+            var source = "",
+                target,
+                coretree = core.getCoreTree(),
+                child,
+                childBase;
+
+
+            do {
+                child = core.getChild(node, 'ovr');
+                ASSERT(child);
+
+                child = core.getChild(child, source);
+                childBase = core.getBase(child);
+                if (child) {
+                    target = coretree.getProperty(child, name) || (childBase ? coretree.getProperty(childBase,name) : undefined);
+                    if (target !== undefined) {
+                        break;
+                    }
+                }
+
+                source = "/" + core.getRelid(node) + source;
+                node = core.getParent(node);
+            } while (node);
+
+            if (target !== undefined) {
+                ASSERT(node);
+                target = coretree.joinPaths(core.getPath(node), target);
+            }
+
+            return target;
+        };
+
+		core._getPointerPath = function(node, name) {
 			ASSERT(isValidNode(node));
             var value;
 			do {
