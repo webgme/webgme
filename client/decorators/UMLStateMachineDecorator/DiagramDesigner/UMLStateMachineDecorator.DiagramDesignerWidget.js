@@ -11,11 +11,13 @@ define(['js/Constants',
     'js/Utils/METAAspectHelper',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase',
     './../Core/UMLStateMachineDecoratorCore',
+    './../Core/UMLStateMachine.META',
     'css!./UMLStateMachineDecorator.DiagramDesignerWidget'], function (CONSTANTS,
                                                                nodePropertyNames,
                                                                METAAspectHelper,
                                                                DiagramDesignerWidgetDecoratorBase,
-                                                               UMLStateMachineDecoratorCore) {
+                                                               UMLStateMachineDecoratorCore,
+                                                               UMLStateMachineMETA) {
 
     var UMLStateMachineDecoratorDiagramDesignerWidget,
         DECORATOR_ID = "UMLStateMachineDecoratorDiagramDesignerWidget";
@@ -44,7 +46,7 @@ define(['js/Constants',
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     UMLStateMachineDecoratorDiagramDesignerWidget.prototype.on_addTo = function () {
         var self = this,
-            META_TYPES = METAAspectHelper.getMETAAspectTypes();
+            META_TYPES = UMLStateMachineMETA.META_TYPES;
 
         this._renderContent();
 
@@ -85,7 +87,7 @@ define(['js/Constants',
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     UMLStateMachineDecoratorDiagramDesignerWidget.prototype.onRenderGetLayoutInfo = function () {
-        var META_TYPES = METAAspectHelper.getMETAAspectTypes();
+        var META_TYPES = UMLStateMachineMETA.META_TYPES;
 
         //let the parent decorator class do its job first
         DiagramDesignerWidgetDecoratorBase.prototype.onRenderGetLayoutInfo.apply(this, arguments);
@@ -100,7 +102,7 @@ define(['js/Constants',
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     UMLStateMachineDecoratorDiagramDesignerWidget.prototype.onRenderSetLayoutInfo = function () {
-        var META_TYPES = METAAspectHelper.getMETAAspectTypes();
+        var META_TYPES = UMLStateMachineMETA.META_TYPES;
 
         if (this.renderLayoutInfo) {
             var shift = this.renderLayoutInfo.nameWidth / -2;

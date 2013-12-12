@@ -21,7 +21,8 @@ define(['js/Constants',
     'text!./EndState.html',
     'text!./State.html',
     'text!./Transition.html',
-    './Transition'], function (CONSTANTS,
+    './Transition',
+    './UMLStateMachine.META'], function (CONSTANTS,
                                        METAAspectHelper,
                                        nodePropertyNames,
                                        DiagramDesignerWidgetConstants,
@@ -30,7 +31,8 @@ define(['js/Constants',
                                        EndStateTemplate,
                                        StateTemplate,
                                        TransitionTemplate,
-                                       Transition) {
+                                       Transition,
+                                       UMLStateMachineMETA) {
 
     var UMLStateMachineDecoratorCore,
         UMLStateMachineDecoratorClass = 'uml-state-machine',
@@ -153,7 +155,7 @@ define(['js/Constants',
 
 
     UMLStateMachineDecoratorCore.prototype._instantiateMetaType = function () {
-        var META_TYPES = METAAspectHelper.getMETAAspectTypes();
+        var META_TYPES = UMLStateMachineMETA.META_TYPES;
 
         if (META_TYPES) {
             if (METAAspectHelper.isMETAType(this._gmeID, META_TYPES.Initial)) {
