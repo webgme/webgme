@@ -5727,7 +5727,6 @@ define(['logManager'], function (logManager) {
                                 c--;
                             } while( c > 0 && horizontal.block_ScanBackward() );
 
-//c = 20;
                             if( last < 2 || last > 5 )
                                 d = 0;
                             else if( ++d >= dm )
