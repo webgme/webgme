@@ -13,7 +13,6 @@
 "use strict";
 
 define(['js/Constants',
-    'js/Utils/METAAspectHelper',
     'js/NodePropertyNames',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     'text!./Diagram.html',
@@ -23,7 +22,6 @@ define(['js/Constants',
     'text!./Transition.html',
     './Transition',
     './UMLStateMachine.META'], function (CONSTANTS,
-                                       METAAspectHelper,
                                        nodePropertyNames,
                                        DiagramDesignerWidgetConstants,
                                        DiagramTemplate,
@@ -158,20 +156,20 @@ define(['js/Constants',
         var META_TYPES = UMLStateMachineMETA.META_TYPES;
 
         if (META_TYPES) {
-            if (METAAspectHelper.isMETAType(this._gmeID, META_TYPES.Initial)) {
+            if (UMLStateMachineMETA.TYPE_INFO.isInitial(this._gmeID)) {
                 this._metaType = META_TYPES.Initial;
                 this._metaTypeTemplate = METATYPETEMPLATE_INTIAL.clone();
-            } else if (METAAspectHelper.isMETAType(this._gmeID, META_TYPES.End)) {
+            } else if (UMLStateMachineMETA.TYPE_INFO.isEnd(this._gmeID)) {
                 this._metaType = META_TYPES.End;
                 this._metaTypeTemplate = METATYPETEMPLATE_END.clone();
-            } else if (METAAspectHelper.isMETAType(this._gmeID, META_TYPES.State)) {
+            } else if (UMLStateMachineMETA.TYPE_INFO.isState(this._gmeID)) {
                 this._metaType = META_TYPES.State;
                 this._metaTypeTemplate = METATYPETEMPLATE_STATE.clone();
-            } else if (METAAspectHelper.isMETAType(this._gmeID, META_TYPES.Transition)) {
+            } else if (UMLStateMachineMETA.TYPE_INFO.isTransition(this._gmeID)) {
                 this._metaType = META_TYPES.Transition;
                 this._metaTypeTemplate = METATYPETEMPLATE_TRANSITION.clone();
                 _.extend(this, new Transition());
-            } else if (METAAspectHelper.isMETAType(this._gmeID, META_TYPES.UMLStateDiagram)) {
+            } else if (UMLStateMachineMETA.TYPE_INFO.isUMLStateDiagram(this._gmeID)) {
                 this._metaType = META_TYPES.UMLStateDiagram;
                 this._metaTypeTemplate = METATYPETEMPLATE_UMLSTATEDIAGRAM.clone();
             }

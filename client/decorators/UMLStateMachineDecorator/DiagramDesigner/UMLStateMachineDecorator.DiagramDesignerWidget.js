@@ -8,13 +8,11 @@
 
 define(['js/Constants',
     'js/NodePropertyNames',
-    'js/Utils/METAAspectHelper',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase',
     './../Core/UMLStateMachineDecoratorCore',
     './../Core/UMLStateMachine.META',
     'css!./UMLStateMachineDecorator.DiagramDesignerWidget'], function (CONSTANTS,
                                                                nodePropertyNames,
-                                                               METAAspectHelper,
                                                                DiagramDesignerWidgetDecoratorBase,
                                                                UMLStateMachineDecoratorCore,
                                                                UMLStateMachineMETA) {

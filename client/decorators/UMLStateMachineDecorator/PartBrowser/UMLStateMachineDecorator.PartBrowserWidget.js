@@ -8,13 +8,11 @@
 
 define(['js/Constants',
     'js/NodePropertyNames',
-    'js/Utils/METAAspectHelper',
     'js/Widgets/PartBrowser/PartBrowserWidget.DecoratorBase',
     './../Core/UMLStateMachineDecoratorCore',
     './../Core/UMLStateMachine.META',
     'css!./UMLStateMachineDecorator.PartBrowserWidget'], function (CONSTANTS,
                                                          nodePropertyNames,
-                                                         METAAspectHelper,
                                                          PartBrowserWidgetDecoratorBase,
                                                          UMLStateMachineDecoratorCore,
                                                          UMLStateMachineMETA) {
