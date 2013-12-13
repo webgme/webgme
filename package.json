@@ -27,6 +27,7 @@
     "socket.io": ">=0.9.14",
     "requirejs": ">=2.0.0",
     "express": ">=3.4.0",
+    "connect": ">=2.10.0",
     "passport": ">=0.1.10",
     "passport-google": ">=0.3.0",
     "socket.io-client": ">=0.9.10"
