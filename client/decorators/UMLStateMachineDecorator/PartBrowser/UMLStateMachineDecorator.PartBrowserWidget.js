@@ -8,14 +8,14 @@
 
 define(['js/Constants',
     'js/NodePropertyNames',
-    'js/Utils/METAAspectHelper',
     'js/Widgets/PartBrowser/PartBrowserWidget.DecoratorBase',
     './../Core/UMLStateMachineDecoratorCore',
+    './../Core/UMLStateMachine.META',
     'css!./UMLStateMachineDecorator.PartBrowserWidget'], function (CONSTANTS,
                                                          nodePropertyNames,
-                                                         METAAspectHelper,
                                                          PartBrowserWidgetDecoratorBase,
-                                                         UMLStateMachineDecoratorCore) {
+                                                         UMLStateMachineDecoratorCore,
+                                                         UMLStateMachineMETA) {
 
     var UMLStateMachineDecoratorPartBrowserWidget,
         DECORATOR_ID = "UMLStateMachineDecoratorPartBrowserWidget";
@@ -53,7 +53,7 @@ define(['js/Constants',
 
     /**** Override from PartBrowserWidgetDecoratorBase ****/
     UMLStateMachineDecoratorPartBrowserWidget.prototype.afterAppend = function () {
-        var META_TYPES = METAAspectHelper.getMETAAspectTypes();
+        var META_TYPES = UMLStateMachineMETA.META_TYPES;
 
         if (this._metaType === META_TYPES.End ||
             this._metaType === META_TYPES.Initial) {

@@ -7,9 +7,11 @@
 "use strict";
 
 define(['clientUtil',
+    'js/Utils/METAAspectHelper',
     'js/Dialogs/Projects/ProjectsDialog',
     'js/Dialogs/Commit/CommitDialog',
     'js/Dialogs/ProjectRepository/ProjectRepositoryDialog'], function (util,
+                                                                       METAAspectHelper,
                                                                        ProjectsDialog,
                                                                        CommitDialog,
                                                                         ProjectRepositoryDialog) {
@@ -52,6 +54,30 @@ define(['clientUtil',
                 var cd = new CommitDialog(_client);
                 cd.show();
             } });
+
+        toolbar.addSeparator();
+
+        //META ASPECT helper parts
+        toolbar.addButton({ "title": "Display META entries...",
+            "icon": "icon-barcode",
+            "clickFn": function (/*data*/) {
+                alert('METAAspectTypes: \n' + JSON.stringify(METAAspectHelper.getMETAAspectTypesSorted(), undefined, 2));
+            }});
+
+        toolbar.addButton({ "title": "Download Domain's META javascript...",
+            "icon": "icon-download-alt",
+            "clickFn": function (/*data*/) {
+                var meta = METAAspectHelper.generateMETAAspectJavaScript();
+
+                if (meta && !_.isEmpty(meta)) {
+                    var pom = document.createElement('a');
+                    pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(meta.content));
+                    pom.setAttribute('download', meta.fileName);
+                    pom.click();
+                } else {
+                    alert('Something went wrong, METAAspectTypes are not available...');
+                }
+            }});
 
         //TODO: remove
         //this._createDummyControls();

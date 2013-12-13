@@ -4579,8 +4579,8 @@ define(['logManager'], function (logManager) {
                         enddir = endport.getStartEndDirTo(startport.getCenter(), false, startport === endport ? startdir : Dir_None );
                     }
 
-                    startpoint = startport.createStartEndPointOn(startdir);
-                    endpoint = endport.createStartEndPointOn(enddir);
+                    startpoint = startport.createStartEndPointTo(endport.getCenter(), startdir);
+                    endpoint = endport.createStartEndPointTo(startpoint, enddir);//startport.getCenter(), enddir);
 
                     if( startpoint.equals(endpoint) )
                         startpoint = stepOneInDir(startpoint, nextClockwiseDir(startdir));
@@ -4886,8 +4886,11 @@ define(['logManager'], function (logManager) {
             }
 
             function disconnect(path){
-                if( path.isConnected() )
+                if( path.isConnected() ){
                     deleteEdges(path);
+                    path.getStartPort().removePoint(path.getStartPoint());//Removing points from ports
+                    path.getEndPort().removePoint(path.getEndPoint());
+                }
 
                 path.deleteAll();
             }
@@ -5727,7 +5730,6 @@ define(['logManager'], function (logManager) {
                                 c--;
                             } while( c > 0 && horizontal.block_ScanBackward() );
 
-//c = 20;
                             if( last < 2 || last > 5 )
                                 d = 0;
                             else if( ++d >= dm )
@@ -5897,6 +5899,9 @@ define(['logManager'], function (logManager) {
 
                     remove(path);
                 }
+
+                path.getStartPort().removePoint(path.getStartPoint());
+                path.getEndPort().removePoint(path.getEndPoint());
 
                 path.destroy();
                 path = null;
@@ -6187,12 +6192,12 @@ pt = [pt];
 
             this.getStartPoint = function(){
                 assert( points.getLength() >= 2, "ARPath.getStartPoint: points.getLength() >= 2 FAILED");
-                return points[0];
+                return points.get(0)[0];
             };
 
             this.getEndPoint = function(){
                 assert( points.getLength() >= 2, "ARPath.getEndPoint: points.getLength() >= 2 FAILED");
-                return points[points.getLength() - 1];
+                return points.get(points.getLength() - 1)[0];
             };
 
             this.getStartBox = function(){
@@ -6224,7 +6229,7 @@ pt = [pt];
                 else
                     p.y = getRectOuterCoord(startBoxRect, d);
 
-                assert( getDir(points.get(pos)[0].minus(p)) === reverseDir( d ) || getDir(points.get(pos)[0].minus(p)) === d, "getDir(points.get(pos)[0].minus(p)) === reverseDir( d ) || getDir(points.get(pos)[0].minus(p)) === d FAILED"); 
+                //assert( getDir(points.get(pos)[0].minus(p)) === reverseDir( d ) || getDir(points.get(pos)[0].minus(p)) === d, "getDir(points.get(pos)[0].minus(p)) === reverseDir( d ) || getDir(points.get(pos)[0].minus(p)) === d FAILED"); 
 
                 return p;
             };
@@ -6248,7 +6253,7 @@ pt = [pt];
                 else
                     p.y = getRectOuterCoord(endBoxRect, d);
 
-                assert( getDir(points.get(pos)[0].minus(p)) === reverseDir( d ) || getDir(points.get(pos)[0].minus(p)) == d, "ARPath.getOutOfBoxEndPoint: getDir(points.get(pos)[0].minus(p)) == d || getDir(points.get(pos)[0].minus(p)) == d FAILED"); 
+                //assert( getDir(points.get(pos)[0].minus(p)) === reverseDir( d ) || getDir(points.get(pos)[0].minus(p)) == d, "ARPath.getOutOfBoxEndPoint: getDir(points.get(pos)[0].minus(p)) == d || getDir(points.get(pos)[0].minus(p)) == d FAILED"); 
 
                 return p;
             };
@@ -6673,11 +6678,12 @@ pt = [pt];
             limitedDirections = false,
             rect = new ArRect(),
             attributes = ARPORT_Default,
+            points = [ [], [], [], [] ],//For points on Dir_Top, Dir_Left, Dir_Right, etc
             selfPoints = [];
 
             calculateSelfPoints();
 
-            //functions
+            //Public functions
             this.destroy = destroy;
             this.getOwner = getOwner;
             this.hasOwner = hasOwner;
@@ -6710,6 +6716,7 @@ pt = [pt];
             this.createStartEndPointAt = createStartEndPointAt;
             this.createStartEndPointTo = createStartEndPointTo;
             this.createStartEndPointOn = createStartEndPointOn;
+            this.removePoint = removePoint;
 
             function calculateSelfPoints(){
                 selfPoints = [];
@@ -6931,6 +6938,7 @@ pt = [pt];
             }
 
             function createStartEndPointOn(dir){
+                // I will add the next point in the appropriate order based on the current pointAngles
                 assert( !rect.isRectEmpty(), "ARPort.createStartEndPointOn: !rect.isRectEmpty() FAILED!");
                 assert( isRightAngle(dir) , "ARPort.createStartEndPointOn: isRightAngle(dir) FAILED!");
 
@@ -6949,9 +6957,95 @@ pt = [pt];
                 return new ArPoint(rect.right - 1, roundToHalfGrid(rect.ceil, rect.floor));
             }
 
-            function createStartEndPointTo(point, isStart){
-                var dir = this.getStartEndDirTo(point, isStart, Dir_None);
-                return this.createStartEndPointOn(dir);
+            function createStartEndPointTo(point, dir){
+                //calculate pathAngle
+                var dx = point.x - this.getCenter().x,
+                    dy = point.y - this.getCenter().y,
+                    pathAngle = Math.atan2(-dy, dx),
+                    k = 0,
+                    maxX = rect.right - 1,
+                    maxY = rect.floor - 1,
+                    minX = rect.left,
+                    minY = rect.ceil,
+                    resultPoint;
+
+                //Adjust angle based on part of port to which it is connecting
+                switch(dir){
+                
+                    case Dir_Top:
+                        pathAngle = 2 * Math.PI - (pathAngle + Math.PI/2);
+                        resultPoint = new ArPoint(roundToHalfGrid(rect.left, rect.right), rect.ceil);
+                        maxY = rect.ceil;
+                        break;
+
+                    case Dir_Right:
+                        pathAngle = 2 * Math.PI - pathAngle;
+                        //pathAngle = pathAngle - Math.PI/2;
+                        resultPoint = new ArPoint(rect.right - 1, roundToHalfGrid(rect.ceil, rect.floor));
+                        minX = rect.right - 1;
+                        break;
+
+                    case Dir_Bottom:
+                        pathAngle -= Math.PI/2;
+                        //pathAngle = Math.PI/2 - pathAngle;
+                        resultPoint = new ArPoint(roundToHalfGrid(rect.left, rect.right), rect.floor - 1);
+                        minY = rect.floor - 1;
+                        break;
+
+                    case Dir_Left:
+                        //pathAngle = 3 * Math.PI/2 - pathAngle;
+                        resultPoint = new ArPoint(rect.left, roundToHalfGrid(rect.ceil, rect.floor));
+                        maxX = rect.left;
+                        break;
+                }
+
+                if( pathAngle < 0 ){
+                    pathAngle += 2*Math.PI;
+                }
+
+                pathAngle *= 180/Math.PI;//Using degrees for easier debugging
+
+                //Finding points ordering
+                while( k < points[dir].length && pathAngle > points[dir][k].pathAngle ){
+                    k++;
+                }
+
+                if( points[dir].length){
+                    if ( k === 0 ){
+                        resultPoint.x = ( points[dir][k].x + minX )/2;
+                        resultPoint.y = ( points[dir][k].y + minY )/2;
+                    }else if ( k !== points[dir].length ){
+                        resultPoint.x = ( points[dir][k-1].x + points[dir][k].x )/2;
+                        resultPoint.y = ( points[dir][k-1].y + points[dir][k].y )/2;
+                    }else{
+                        resultPoint.x = ( points[dir][k-1].x + maxX )/2;
+                        resultPoint.y = ( points[dir][k-1].y + maxY )/2;
+                    }
+                }
+
+                resultPoint.pathAngle = pathAngle;
+                points[dir].splice(k, 0, resultPoint);
+
+                assert( isRightAngle( this.port_OnWhichEdge(resultPoint) ), "AutoRouterPort.createStartEndPointTo: isRightAngle( this.port_OnWhichEdge(resultPoint) FAILED");
+
+                return resultPoint;
+            }
+
+            function removePoint(pt){
+                var i = 0,
+                    removed = false;
+
+                while( i < 4 && !removed ){ //Check all sides for the point
+                    var k = points[i].indexOf(pt);
+
+                    if( k > -1){ //If the point is on this side of the port
+                        points[i].splice( k, 1);
+                        removed = true;
+                    }
+                    i++;
+                }
+
+                assert( removed, "AutoRouterPort.removePoint: point was not removed!");
             }
             
         };

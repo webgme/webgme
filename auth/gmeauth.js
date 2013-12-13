@@ -22,6 +22,9 @@ define(["storage/mongo", "storage/commit", "core/core"],function(Mongo,Commit,Co
             _core = null,
             _cachedUserData = {};
 
+        function getProjectId (userId,projectName){
+            return ""+userId+"/"+projectName;
+        }
         function clearData(id){
             if(_cachedUserData[id]){
                 delete _cachedUserData[id];
@@ -160,9 +163,10 @@ define(["storage/mongo", "storage/commit", "core/core"],function(Mongo,Commit,Co
             } else {
                 getUserNode(id,function(err,node){
                     if(!err){
-                        _cachedUserData[id+'/'+projectName] = _core.getRegistry(node,'projects')[projectName];
-                        setTimeout(clearData,_validity,id+'/'+projectName);
-                        return callback(null,_cachedUserData[id+'/'+projectName]);
+                        var projId = getProjectId(id,projectName);
+                        _cachedUserData[projId] = _core.getRegistry(node,'projects')[projectName];
+                        setTimeout(clearData,_validity,projId);
+                        return callback(null,_cachedUserData[projId]);
                     } else {
                         callback(err);
                     }
@@ -173,7 +177,6 @@ define(["storage/mongo", "storage/commit", "core/core"],function(Mongo,Commit,Co
         function addProjectToUser(userId,projectName,callback){
             getUserNode(userId,function(err,userNode){
                 if(!err && userNode){
-                    //_cachedUserData[id+'/'+projectName] = _core.getRegistry(node,'projects')[projectName];
                     var userProjects = _core.getRegistry(userNode,'projects');
                     if(userProjects === null || userProjects === undefined){
                         userProjects = {};
@@ -190,7 +193,42 @@ define(["storage/mongo", "storage/commit", "core/core"],function(Mongo,Commit,Co
                             var newCommitHash = _project.makeCommit([oldCommit.root],newHash,'user '+userId+'have created '+projectName+' project',function(err){});
                             _project.setBranchHash('master',oldCommit['_id'],newCommitHash,function(err){
                                 if(!err){
-                                    _cachedUserData[userId+'/'+projectName] = {read:true,write:true,delete:true};
+                                    _cachedUserData[getProjectId(userId,projectName)] = {read:true,write:true,delete:true};
+                                    callback(null);
+                                } else {
+                                    callback(err);
+                                }
+                            });
+                        } else {
+                            callback(err);
+                        }
+                    });
+                } else {
+                    callback(err);
+                }
+            });
+        }
+
+        function removeProjectFromUser(userId,projectName,callback){
+            getUserNode(userId,function(err,userNode){
+                if(!err && userNode){
+                    var userProjects = _core.getRegistry(userNode,'projects');
+                    if(userProjects === null || userProjects === undefined){
+                        userProjects = {};
+                    } else {
+                        userProjects = JSON.parse(JSON.stringify(userProjects));
+                    }
+                    delete userProjects[projectName];
+                    _core.setRegistry(userNode,'projects',userProjects);
+                    var root = _core.getRoot(userNode);
+                    _core.persist(root,function(){});
+                    var newHash = _core.getHash(root);
+                    getLatestCommit(function(err,oldCommit){
+                        if(!err && oldCommit){
+                            var newCommitHash = _project.makeCommit([oldCommit.root],newHash,'user '+userId+'have created '+projectName+' project',function(err){});
+                            _project.setBranchHash('master',oldCommit['_id'],newCommitHash,function(err){
+                                if(!err){
+                                    delete _cachedUserData[getProjectId(userId,projectName)];
                                     callback(null);
                                 } else {
                                     callback(err);
@@ -246,7 +284,7 @@ define(["storage/mongo", "storage/commit", "core/core"],function(Mongo,Commit,Co
         function authorize(sessionId,projectName,type,callback){
             _session.getSessionUser(sessionId,function(err,userID){
                 if(!err && userID){
-                    var projId = userID+'/'+projectName;
+                    var projId = getProjectId(userID,projectName);
                     if(type === 'create'){
                         if(_cachedUserData[userID]){
                             if(_cachedUserData[userID].create === true){
@@ -273,6 +311,39 @@ define(["storage/mongo", "storage/commit", "core/core"],function(Mongo,Commit,Co
                                         });
                                     } else {
                                         callback(null,false);
+                                    }
+                                } else {
+                                    err = err || 'no valid user permissions found';
+                                    callback(err,false);
+                                }
+                            });
+                        }
+                    } else if (type === 'delete'){
+                        if(_cachedUserData[projId]){
+                            if(_cachedUserData[projId]['delete'] === true){
+                                removeProjectFromUser(userID,projectName,function(err){
+                                    if(err){
+                                        callback(err,false);
+                                    } else {
+                                        callback(null,true);
+                                    }
+                                });
+                            } else {
+                                callback('no valid user permissions found',false);
+                            }
+                        } else {
+                            getUserProject(userID,projectName,function(err,userData){
+                                if(!err && userData){
+                                    if(userData['delete'] === true){
+                                        removeProjectFromUser(userID,projectName,function(err){
+                                            if(err){
+                                                callback(err,false);
+                                            } else {
+                                                callback(null,true);
+                                            }
+                                        });
+                                    } else {
+                                        callback('no valid user permissions found',false);
                                     }
                                 } else {
                                     err = err || 'no valid user permissions found';

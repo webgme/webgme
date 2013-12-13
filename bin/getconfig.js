@@ -44,7 +44,7 @@ if (typeof define !== "function" && typeof require === "function" && typeof proc
 		"use strict";
 
 		var GLOBAL = {
-			host: 'http://kecskes.isis.vanderbilt.edu',
+			host: '127.0.0.1',
 			port: 80,
 			project: "test",
 			autorecconnect: true,
@@ -55,7 +55,7 @@ if (typeof define !== "function" && typeof require === "function" && typeof proc
 			//used by the server
 			loglevel: 2, // 5 = ALL, 4 = DEBUG, 3 = INFO, 2 = WARNING, 1 = ERROR, 0 = OFF
 			logfile: 'server.log',
-			mongoip: "129.59.105.239",
+			mongoip: "127.0.0.1",
 			mongoport: 27017,
 			mongodatabase: "multi",
             authentication: false,
