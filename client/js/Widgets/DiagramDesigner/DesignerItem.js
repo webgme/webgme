@@ -194,6 +194,9 @@ define(['logManager',
         //destroy old decorator
         this._callDecoratorMethod("destroy");
 
+        //unregister all subcomponents
+        this.canvas.unregisterAllSubcomponents(this.id);
+
         this._remove();
 
         this.logger.debug("Destroyed");

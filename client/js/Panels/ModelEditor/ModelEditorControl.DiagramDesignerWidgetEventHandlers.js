@@ -336,7 +336,9 @@ define(['logManager',
         var gmeID = this._Subcomponent2GMEID[objID][sCompID];
 
         delete this._Subcomponent2GMEID[objID][sCompID];
-        delete this._GMEID2Subcomponent[gmeID][objID];
+        if (this._GMEID2Subcomponent[gmeID]) {
+            delete this._GMEID2Subcomponent[gmeID][objID];
+        }
         //TODO: add event handling here that a subcomponent disappeared
     };
 
