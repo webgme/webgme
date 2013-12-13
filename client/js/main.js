@@ -1,6 +1,6 @@
 "use strict";
 
-var DEBUG = true;
+var DEBUG = false;
 var _webGME_jquery_ver = '2.0.3';
 var _webGME_jqueryui_ver = '1.10.3';
 
