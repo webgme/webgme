@@ -30,7 +30,6 @@ define(['jquery',
         _metaMembers,
         _patterns = {},
         _logger = logManager.create("METAAspectHelper"),
-        _btnMETA,
         _events = {'META_ASPECT_CHANGED': 'META_ASPECT_CHANGED'},
         _metaTypes;
 
@@ -169,23 +168,6 @@ define(['jquery',
                 }
             }
         }
-
-        if (!_btnMETA && DEBUG) {
-            if (WebGMEGlobal.Toolbar) {
-                _btnMETA = WebGMEGlobal.Toolbar.addButton({ "title": "Display META entries...",
-                    "icon": "icon-barcode",
-                    "clickFn": function (/*data*/) {
-                        alert('META entries: \n' + JSON.stringify(_getMETAAspectTypesSorted(), undefined, 2));
-                    }});
-
-                WebGMEGlobal.Toolbar.addButton({ "title": "Download Domain's META...",
-                    "icon": "icon-file",
-                    "clickFn": function (/*data*/) {
-                        _downloadMETA();
-                    }});
-            }
-        }
-
     };
 
     var _initialize = function (c) {
@@ -295,10 +277,11 @@ define(['jquery',
     };
 
 
-    var _downloadMETA = function () {
+    var _generateMETAAspectJavaScript = function () {
+        var result = {};
+
         if (!_.isEmpty(_metaTypes)) {
             var projName = _client.getActiveProject();
-            var fileName = projName + ".META.js";
             var content = METATemplateJS;
             var regExpPROJ = /__PROJECT__/g;
             var regExpMETAASPECTTYPES = /__META_ASPECT_TYPES__/g;
@@ -306,11 +289,11 @@ define(['jquery',
             content = content.replace(regExpPROJ, projName);
             content = content.replace(regExpMETAASPECTTYPES, JSON.stringify(_getMETAAspectTypesSorted(), undefined, 2));
 
-            var pom = document.createElement('a');
-            pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(content));
-            pom.setAttribute('download', fileName);
-            pom.click();
+            result.fileName = projName + ".META.js";
+            result.content = content;
         }
+
+        return result;
     };
 
 
@@ -322,6 +305,8 @@ define(['jquery',
             addEventListener: _addEventListener,
             removeEventListener: _removeEventListener,
             getMETAAspectTypes: _getMETAAspectTypes,
-            getMETATypesOf: _getMETATypesOf
+            getMETAAspectTypesSorted: _getMETAAspectTypesSorted,
+            getMETATypesOf: _getMETATypesOf,
+            generateMETAAspectJavaScript: _generateMETAAspectJavaScript
         };
 });
