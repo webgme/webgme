@@ -283,11 +283,32 @@ define(['jquery',
         if (!_.isEmpty(_metaTypes)) {
             var projName = _client.getActiveProject();
             var content = METATemplateJS;
-            var regExpPROJ = /__PROJECT__/g;
-            var regExpMETAASPECTTYPES = /__META_ASPECT_TYPES__/g;
+            var sortedMetaTypes = _getMETAAspectTypesSorted();
+            var typeCheckMethodTemplate = 'var _is__METATYPE__ = function (objID) { return METAAspectHelper.isMETAType(objID, _metaTypes.__METATYPE__); };'
+            var typeCheckMethods = '';
+            var typeCheckMethodsMap = [];
+            var typeCheckMethodNamePrefix = 'is';
+            var typeCheckMethodsMapIndent = '\t\t\t';
+            var metaAspectTypesMap = [];
 
-            content = content.replace(regExpPROJ, projName);
-            content = content.replace(regExpMETAASPECTTYPES, JSON.stringify(_getMETAAspectTypesSorted(), undefined, 2));
+            //generate each type checker method
+            /*
+             var _isXXX = function (objID) {
+                return METAAspectHelper.isMETAType(objID, _metaTypes.XXX);
+             };
+             */
+            for (var t in sortedMetaTypes) {
+                if (sortedMetaTypes.hasOwnProperty(t)) {
+                    typeCheckMethods += typeCheckMethodTemplate.replace(/__METATYPE__/g, t) + '\n\t';
+                    typeCheckMethodsMap.push(typeCheckMethodNamePrefix + t + ": _" + typeCheckMethodNamePrefix + t);
+                    metaAspectTypesMap.push('\'' + t + '\'' + ': ' + '\'' + sortedMetaTypes[t] + '\'');
+                }
+            }
+
+            content = content.replace( /__PROJECT__/g, projName);
+            content = content.replace(/__META_ASPECT_TYPES__/g, '{\n\t\t' + metaAspectTypesMap.join(',\n\t\t') + '\n\t}');
+            content = content.replace(/__META_ASPECT_TYPE_CHECKING__/g, typeCheckMethods);
+            content = content.replace(/__TYPE_CHECK_METHOD_MAP__/g, '{\n' + typeCheckMethodsMapIndent + typeCheckMethodsMap.join(',\n' + typeCheckMethodsMapIndent) + '\n\t\t}');
 
             result.fileName = projName + ".META.js";
             result.content = content;

@@ -12,7 +12,11 @@ define(['underscore',
 
     var _metaID = '__PROJECT__.META.js';
 
+    //META ASPECT TYPES
     var _metaTypes = __META_ASPECT_TYPES__;
+
+    //META ASPECT TYPE CHECKING
+    __META_ASPECT_TYPE_CHECKING__
 
     var _queryMetaTypes = function () {
         var nMetaTypes = METAAspectHelper.getMETAAspectTypes(),
@@ -50,6 +54,7 @@ define(['underscore',
 
     //return utility functions
     return {
-        META_TYPES: _metaTypes
+        META_TYPES: _metaTypes,
+        TYPE_INFO: __TYPE_CHECK_METHOD_MAP__
     };
 });
