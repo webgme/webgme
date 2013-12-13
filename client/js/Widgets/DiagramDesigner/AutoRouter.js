@@ -7037,7 +7037,8 @@ pt = [pt];
                     i++;
                 }
 
-                assert( removed, "AutoRouterPort.removePoint: point was not removed!");
+                if( !removed )
+                    _logger.warning("point was not removed from port");
             }
             
         };
