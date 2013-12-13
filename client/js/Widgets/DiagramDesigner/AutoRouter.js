@@ -4078,6 +4078,10 @@ define(['logManager'], function (logManager) {
                 if(box instanceof AutoRouterBox){
                     deleteBoxAndPortEdges(box);
 
+                    //For the WebGME, the removal of the paths connected to boxes is handled outside the AutoRouter.
+                    //For removal of paths with the removal of boxes, uncomment the following code:
+
+                    /*
                     var iter = 0;
                     
                     while(iter < paths.length){
@@ -4110,20 +4114,15 @@ define(['logManager'], function (logManager) {
                         if (!iteratorChanged)
                             ++iter;
                     }
+                    */
 
                     box.setOwner(null);
 
                     var iter2 = boxes.indexOf(box);
+                    assert( iter2 > -1, "ARGraph.remove: Box does not exist");
 
-                    if (iter2 != -1) 
-                    {
-                        boxes.splice(iter2, 1);
-                    }
-                    else
-                    {
-                        //error
-                        assert(false, "ARGraph.remove: finding iter2 FAILED");
-                    }
+                    boxes.splice(iter2, 1);
+
                 }else{
                     var path = box;
                     deleteEdges(path);
@@ -4131,16 +4130,9 @@ define(['logManager'], function (logManager) {
                     path.setOwner(null);
 
                     var iter = paths.indexOf(path);
+                    assert( iter > -1, "ARGraph.remove: Path does not exist");
 
-                    if (iter != -1)
-                    {
-                        paths.splice(iter, 1);
-                    }
-                    else
-                    {
-                        //error
-                        assert(false, "ARGraph.remove: ERROR" );
-                    }
+                    paths.splice(iter, 1);
                 }
             }
 
@@ -5900,9 +5892,6 @@ define(['logManager'], function (logManager) {
                     remove(path);
                 }
 
-                path.getStartPort().removePoint(path.getStartPoint());
-                path.getEndPort().removePoint(path.getEndPoint());
-
                 path.destroy();
                 path = null;
             };
@@ -6639,6 +6628,9 @@ pt = [pt];
             };
 
             this.destroy = function(){
+                this.getStartPort().removePoint(this.getStartPoint());
+                this.getEndPort().removePoint(this.getEndPoint());
+
                 this.setStartPort(null);
                 this.setEndPort(null);
             };
