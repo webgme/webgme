@@ -1691,6 +1691,9 @@ define([
                         if(_loadNodes['root']){
                             //probably we are in the loading process, so we should redo this update when the loading finishes
                             setTimeout(updateTerritory,100,guid,patterns);
+                        } else {
+                            //root is not in nodes and has not even started to load it yet...
+                            _users[guid].PATTERNS = patterns;
                         }
                     }
                 } else {
