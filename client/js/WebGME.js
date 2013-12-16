@@ -1,6 +1,6 @@
 "use strict";
 
-var WebGMEGlobal = { 'version': 'DEMO - 12/16/2013',
+var WebGMEGlobal = { 'version': '0.1.0',
     'SUPPORTS_TOUCH': 'ontouchstart' in window || navigator.msMaxTouchPoints }; //touch device detection}
 
 // let require load all the toplevel needed script and call us on domReady
