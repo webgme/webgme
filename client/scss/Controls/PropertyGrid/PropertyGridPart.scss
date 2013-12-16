@@ -113,12 +113,15 @@ $input-color: lighten($background-color, 18.5%);
           float: left;
           width: 60%;
           height: $row-height;
+          overflow: hidden;
+          text-overflow: ellipsis;
 
           /** Controller placement */
           input {
             font-size: 12px;
-            height: 13px;
-            line-height: 17px;
+            height: 19px;
+            line-height: 19px;
+            box-sizing: border-box;
           }
 
           input[type=checkbox] {
@@ -127,11 +130,10 @@ $input-color: lighten($background-color, 18.5%);
 
           input[type=text] {
             border: 0;
-            margin-top: 4px;
+            margin-top: -2px;
             margin-bottom: 0;
             padding: 3px;
             width: 100%;
-            float: right;
             outline: none;
           }
 

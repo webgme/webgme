@@ -27,6 +27,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'],
 
         LabelWidget.prototype.updateDisplay = function () {
             this.__label.text(this.propertyValue);
+            this.__label.attr('title', this.propertyValue);
             return LabelWidget.superclass.prototype.updateDisplay.call(this);
         };
 
