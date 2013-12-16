@@ -121,6 +121,7 @@ define(['logManager',
         if (this._containerNodeId === gmeID) {
             this._logger.warning('Container node got unloaded...');
             this._client.removeUI(this._territoryId);
+            this._validChildrenTypeIDs = [];
             this._partBrowserView.clear();
         }
     };
