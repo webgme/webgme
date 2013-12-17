@@ -4652,6 +4652,56 @@ if(DEBUG && ArPointList.length > 0){
                         simplifyPathCurves(path);
                         simplifyPathPoints(path);
                         centerStairsInPathPoints(path, startdir, enddir);
+
+                        //Make sure if a straight line is possible, the path is a straight line
+                        //Note, this may make it so the stems are no longer centered in the port.
+                        if(path.getPointList().getLength() === 4){
+                            var startDir = startPort.port_OnWhichEdge(startpoint),
+                                endDir = endPort.port_OnWhichEdge(endpoint),
+                                tstStart,
+                                tstEnd;
+
+                            if( startDir === reverseDir(endDir) ){
+                                var newStart = new ArPoint(startpoint),
+                                    newEnd = new ArPoint(endpoint),
+                                    startRect = startPort.getRect(),
+                                    endRect = endPort.getRect(),
+                                    minOverlap,
+                                    maxOverlap;
+
+                                if( isHorizontal(startDir) ){
+                                    minOverlap = Math.min(startRect.floor, endRect.floor);
+                                    maxOverlap = Math.max(startRect.ceil, endRect.ceil);
+
+                                    var newY = (minOverlap + maxOverlap)/2;
+                                    newStart.y = newY;
+                                    newEnd.y = newY;
+
+                                    tstStart = new ArPoint(getRectOuterCoord(startPort.getOwner().getRect(), startDir), newStart.y);
+                                    tstEnd = new ArPoint(getRectOuterCoord(endPort.getOwner().getRect(), endDir), newEnd.y);
+
+                                }else{
+                                    minOverlap = Math.min(startRect.right, endRect.right);
+                                    maxOverlap = Math.max(startRect.left, endRect.left);
+
+                                    var newX = (minOverlap + maxOverlap)/2;
+                                    newStart.x = newX;
+                                    newEnd.x = newX;
+
+                                    tstStart = new ArPoint(newStart.x, getRectOuterCoord(startPort.getOwner().getRect(), startDir));
+                                    tstEnd = new ArPoint(newEnd.x, getRectOuterCoord(endPort.getOwner().getRect(), endDir));
+                                }
+
+                                if( startRect.ptInRect(newStart) && endRect.ptInRect(newEnd)
+                                        && !isLineClipBoxes(tstStart, tstEnd) ){
+
+                                    startpoint.assign(newStart);
+                                    endpoint.assign(newEnd);
+                                    path.getPointList().splice(1, 2);
+                                }
+                            }
+
+                        }
                     }
                     path.setState(ARPATHST_Connected);
 
@@ -7008,7 +7058,7 @@ pt = [pt];
                     k++;
                 }
 
-                if( points[dir].length){
+                if( points[dir].length ){
                     if ( k === 0 ){
                         x = ( points[dir][k].x + minX )/2;
                         y = ( points[dir][k].y + minY )/2;
