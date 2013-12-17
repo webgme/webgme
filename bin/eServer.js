@@ -238,6 +238,7 @@ requirejs(['logManager',
         __storageOptions.sessioncheck = __sessionStore.check;
         __storageOptions.secret = parameters.sessioncookiesecret;
         __storageOptions.authorization = globalAuthorization;
+        __storageOptions.authInfo = gme.getAuthorizationInfo;
     }
 
     __storageOptions.host = parameters.mongoip;

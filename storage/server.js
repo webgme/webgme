@@ -14,6 +14,7 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
         options.cookieID = options.cookieID || 'webgme';
         options.authorization = options.authorization || function(sessionID,projectName,type,callback){callback(null,true);};
         options.sessioncheck = options.sessioncheck || function(sessionID,callback){callback(null,true)};
+        options.authInfo = options.authInfo || function(sessionID,projectName,callback){callback(null,{read:true,write:true,delete:true});};
         var _socket = null,
             _objects = {},
             _projects = {},
@@ -212,6 +213,44 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
                             callback(err);
                         } else {
                             _database.getProjectNames(callback);
+                        }
+                    });
+                });
+
+                socket.on('getAllowedProjectNames', function(callback){
+                    checkDatabase(function(err){
+                        if(err){
+                            callback(err);
+                        } else {
+                            _database.getProjectNames(function(err,names){
+                                if(!err){
+                                    var allowedNames = [];
+                                    var answerNeeded = names.length;
+                                    var isProjectReadable = function(name,callback){
+                                        options.authInfo(getSessionID(socket),name,function(err,authObj){
+                                            if(!err){
+                                                if(authObj && authObj.read === true){
+                                                    allowedNames.push(name);
+                                                }
+                                            }
+                                            callback(err);
+                                        });
+                                    };
+                                    if(answerNeeded>0){
+                                        for(var i=0;i<names.length;i++){
+                                            isProjectReadable(names[i],function(err){
+                                                if(--answerNeeded === 0){
+                                                    callback(null,allowedNames);
+                                                }
+                                            });
+                                        }
+                                    } else {
+                                        callback(null,allowedNames);
+                                    }
+                                } else {
+                                    callback(err);
+                                }
+                            });
                         }
                     });
                 });

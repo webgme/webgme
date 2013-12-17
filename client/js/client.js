@@ -867,6 +867,14 @@ define([
             function getAvailableProjectsAsync(callback) {
                 if(_database){
                     _database.getProjectNames(callback);
+                    //_database.getAllowedProjectNames(callback);
+                } else {
+                    callback(new Error('there is no open database connection!'));
+                }
+            }
+            function getViewableProjectsAsync(callback) {
+                if(_database){
+                    _database.getAllowedProjectNames(callback);
                 } else {
                     callback(new Error('there is no open database connection!'));
                 }
@@ -1995,6 +2003,7 @@ define([
                 //projects, branch, etc.
                 getActiveProject: getActiveProject,
                 getAvailableProjectsAsync: getAvailableProjectsAsync,
+                getViewableProjectsAsync: getViewableProjectsAsync,
                 connectToDatabaseAsync: connectToDatabaseAsync,
                 selectProjectAsync: selectProjectAsync,
                 createProjectAsync: createProjectAsync,

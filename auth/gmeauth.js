@@ -373,9 +373,30 @@ define(["storage/mongo", "storage/commit", "core/core"],function(Mongo,Commit,Co
             });
         }
 
+        function getAuthorizationInfo(sessionId,projectName,callback){
+            _session.getSessionUser(sessionId,function(err,userID){
+                if(!err && userID){
+                    var projId = getProjectId(userID,projectName);
+                    if(_cachedUserData[projId]){
+                        callback(null,_cachedUserData[projId]);
+                    } else {
+                        getUserProject(userID,projectName,function(err,userData){
+                            if(!err && userData){
+                                callback(null,_cachedUserData[projId]);
+                            } else {
+                                callback(null,{read:false,write:false,delete:false});
+                            }
+                        });
+                    }
+                } else {
+                    callback(null,{read:false,write:false,delete:false});
+                }
+            });
+        }
         return {
             authenticate: authenticate,
-            authorize: authorize
+            authorize: authorize,
+            getAuthorizationInfo: getAuthorizationInfo
         }
     }
 

@@ -273,6 +273,24 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
             }
         }
 
+        function getAllowedProjectNames (callback){
+            ASSERT(typeof callback === 'function');
+            if (socketConnected) {
+                var guid = GUID();
+                callbacks[guid] = {
+                    cb: callback,
+                    to: setTimeout(callbackTimeout, options.timeout, guid)
+                };
+                socket.emit('getAllowedProjectNames', function (err, names) {
+                    clearTimeout(callbacks[guid].to);
+                    delete callbacks[guid];
+                    callback(err, names);
+                });
+            } else {
+                callback(new Error(ERROR_DISCONNECTED));
+            }
+        }
+
         function deleteProject (project, callback) {
             ASSERT(typeof callback === 'function');
             if (socketConnected) {
@@ -600,6 +618,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
             fsyncDatabase: fsyncDatabase,
             getDatabaseStatus: getDatabaseStatus,
             getProjectNames: getProjectNames,
+            getAllowedProjectNames: getAllowedProjectNames,
             deleteProject: deleteProject,
             openProject: openProject
         };

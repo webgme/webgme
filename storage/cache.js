@@ -322,6 +322,7 @@ define([ "util/assert" ], function (ASSERT) {
 			fsyncDatabase: database.fsyncDatabase,
 			getDatabaseStatus: database.getDatabaseStatus,
 			getProjectNames: database.getProjectNames,
+            getAllowedProjectNames: database.getAllowedProjectNames,
 			openProject: openProject,
 			deleteProject: deleteProject,
             authenticate: database.authenticate
