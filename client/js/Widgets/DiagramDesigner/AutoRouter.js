@@ -1079,7 +1079,10 @@ define(['logManager'], function (logManager) {
             };
 
             this.push = function(element){
-                //this[length++] = element;
+if(DEBUG && ArPointList.length > 0){
+    assert(element[0].x === ArPointList[ArPointList.length - 1][0].x ||
+        element[0].y === ArPointList[ArPointList.length - 1][0].y, "ArPointListPath.push: point does not create horizontal or vertical edge!");
+}
                 if(element instanceof Array)
                     ArPointList.push(element);
                 else
@@ -4572,7 +4575,7 @@ define(['logManager'], function (logManager) {
                     }
 
                     startpoint = startport.createStartEndPointTo(endport.getCenter(), startdir);
-                    endpoint = endport.createStartEndPointTo(startpoint, enddir);//startport.getCenter(), enddir);
+                    endpoint = endport.createStartEndPointTo(startpoint, enddir);
 
                     if( startpoint.equals(endpoint) )
                         startpoint = stepOneInDir(startpoint, nextClockwiseDir(startdir));
@@ -6959,34 +6962,37 @@ pt = [pt];
                     maxY = rect.floor - 1,
                     minX = rect.left,
                     minY = rect.ceil,
-                    resultPoint;
+                    resultPoint,
+                    x,
+                    y;
 
                 //Adjust angle based on part of port to which it is connecting
                 switch(dir){
                 
                     case Dir_Top:
                         pathAngle = 2 * Math.PI - (pathAngle + Math.PI/2);
-                        resultPoint = new ArPoint(roundToHalfGrid(rect.left, rect.right), rect.ceil);
+                        x = roundToHalfGrid(rect.left, rect.right);
+                        y = rect.ceil;
                         maxY = rect.ceil;
                         break;
 
                     case Dir_Right:
                         pathAngle = 2 * Math.PI - pathAngle;
-                        //pathAngle = pathAngle - Math.PI/2;
-                        resultPoint = new ArPoint(rect.right - 1, roundToHalfGrid(rect.ceil, rect.floor));
+                        x = rect.right - 1;
+                        y = roundToHalfGrid(rect.ceil, rect.floor);
                         minX = rect.right - 1;
                         break;
 
                     case Dir_Bottom:
                         pathAngle -= Math.PI/2;
-                        //pathAngle = Math.PI/2 - pathAngle;
-                        resultPoint = new ArPoint(roundToHalfGrid(rect.left, rect.right), rect.floor - 1);
+                        x = roundToHalfGrid(rect.left, rect.right);
+                        y = rect.floor - 1;
                         minY = rect.floor - 1;
                         break;
 
                     case Dir_Left:
-                        //pathAngle = 3 * Math.PI/2 - pathAngle;
-                        resultPoint = new ArPoint(rect.left, roundToHalfGrid(rect.ceil, rect.floor));
+                        x = rect.left;
+                        y = roundToHalfGrid(rect.ceil, rect.floor);
                         maxX = rect.left;
                         break;
                 }
@@ -7004,20 +7010,21 @@ pt = [pt];
 
                 if( points[dir].length){
                     if ( k === 0 ){
-                        resultPoint.x = ( points[dir][k].x + minX )/2;
-                        resultPoint.y = ( points[dir][k].y + minY )/2;
+                        x = ( points[dir][k].x + minX )/2;
+                        y = ( points[dir][k].y + minY )/2;
                     }else if ( k !== points[dir].length ){
-                        resultPoint.x = ( points[dir][k-1].x + points[dir][k].x )/2;
-                        resultPoint.y = ( points[dir][k-1].y + points[dir][k].y )/2;
+                        x = ( points[dir][k-1].x + points[dir][k].x )/2;
+                        y = ( points[dir][k-1].y + points[dir][k].y )/2;
                     }else{
-                        resultPoint.x = ( points[dir][k-1].x + maxX )/2;
-                        resultPoint.y = ( points[dir][k-1].y + maxY )/2;
+                        x = ( points[dir][k-1].x + maxX )/2;
+                        y = ( points[dir][k-1].y + maxY )/2;
                     }
                 }
 
+                resultPoint = new ArPoint(x, y);
                 resultPoint.pathAngle = pathAngle;
                 points[dir].splice(k, 0, resultPoint);
-
+                
                 assert( isRightAngle( this.port_OnWhichEdge(resultPoint) ), "AutoRouterPort.createStartEndPointTo: isRightAngle( this.port_OnWhichEdge(resultPoint) FAILED");
 
                 return resultPoint;
