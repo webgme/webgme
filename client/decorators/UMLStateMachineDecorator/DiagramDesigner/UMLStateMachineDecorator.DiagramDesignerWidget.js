@@ -48,8 +48,10 @@ define(['js/Constants',
 
         this._renderContent();
 
-        //if END or INITIAL state, don't display name only on META level
-        if ((this._metaType === META_TYPES.End ||
+        //if END or INITIAL state, don't display name except only on META level
+        if (META_TYPES.End &&
+            META_TYPES.Initial &&
+            (this._metaType === META_TYPES.End ||
             this._metaType === META_TYPES.Initial) &&
             this._gmeID !== META_TYPES.Initial &&
             this._gmeID !== META_TYPES.End) {
@@ -91,8 +93,9 @@ define(['js/Constants',
         DiagramDesignerWidgetDecoratorBase.prototype.onRenderGetLayoutInfo.apply(this, arguments);
 
         if (this.$name) {
-            if (this._metaType === META_TYPES.End ||
-                this._metaType === META_TYPES.Initial) {
+            if (META_TYPES.End &&
+                META_TYPES.Initial &&
+                (this._metaType === META_TYPES.End || this._metaType === META_TYPES.Initial)) {
                 this.renderLayoutInfo.nameWidth = this.$name.outerWidth();
             }
         }
@@ -106,8 +109,9 @@ define(['js/Constants',
             var shift = this.renderLayoutInfo.nameWidth / -2;
 
             if (this.$name) {
-                if (this._metaType === META_TYPES.End ||
-                    this._metaType === META_TYPES.Initial) {
+                if (META_TYPES.End &&
+                    META_TYPES.Initial &&
+                    (this._metaType === META_TYPES.End || this._metaType === META_TYPES.Initial)) {
                     this.$name.css({ "margin-left": shift });
                 }
             }
