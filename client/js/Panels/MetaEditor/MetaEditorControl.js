@@ -408,6 +408,9 @@ define(['logManager',
         if (territoryChanged === true) {
             this._client.updateTerritory(this._territoryId, this._selfPatterns);
         }
+
+        //process the sheets
+        this._processMetaAspectSheetsRegistry();
     };
     /**********************************************************************/
     /*  END OF --- PROCESS CURRENT NODE TO HANDLE ADDED / REMOVED ELEMENT */
@@ -1701,6 +1704,32 @@ define(['logManager',
         checkConnections(this._connectionListByDstGMEID, result.dst);
 
         return result;
+    };
+
+    MetaEditorControl.prototype._processMetaAspectSheetsRegistry = function () {
+        var aspectNode = this._client.getNode(this.currentNodeInfo.id),
+            metaAspectSheetsRegistry = aspectNode.getRegistry(MetaEditorConstants.META_SHEET_REGISTRY_KEY) || [],
+            i,
+            len,
+            sheetID;
+
+        this._sheets = {};
+        this.diagramDesigner.clearSheets();
+
+        metaAspectSheetsRegistry.sort(function (a, b) {
+            if (a.order < b.order) {
+                return -1;
+            } else {
+                return 1;
+            }
+        });
+
+        //here we have the metaAspectRegistry ordered by user defined order
+        len = metaAspectSheetsRegistry.length;
+        for (i = 0; i < len; i += 1) {
+            sheetID = this.diagramDesigner.addSheet(metaAspectSheetsRegistry[i].title, true);
+            this._sheets[sheetID] = metaAspectSheetsRegistry[i].SetID;
+        }
     };
 
     //attach MetaEditorControl - DiagramDesigner event handler functions

@@ -23,7 +23,8 @@ define(['logManager',
         SHEETS_CONTAINER = "sheets-container",
         ADD_SHEET_CONTAINER_CLASS = 'add-sheet-container',
         SHEET_LIST_CONTAINER_CLASS = 'sheet-list-container',
-        SHEET_SCROLL = 200;
+        SHEET_SCROLL = 200,
+        SHEET_ID = 'SHEET_ID';
 
     MetaEditorWidget = function (container, params) {
         params = params || {};
@@ -133,14 +134,16 @@ define(['logManager',
 
         this.$el.parent().append(this.$sheetsContainer);
 
-        this._sheets = [];
+        this._sheetCounter = 0;
+
+        this._selectedSheet = undefined;
 
         this.$divAddSheet = $('<div/>', {'class': ADD_SHEET_CONTAINER_CLASS});
 
         this.$btnAddSheet = new ToolbarButton({ "title": "Add new sheet...",
             "icon": "icon-plus",
             "clickFn": function (/*data*/) {
-                self.addSheet('Sheet' + (self._sheets.length + 1));
+                self.onSheetAddClicked();
             }});
         this.$divAddSheet.append(this.$btnAddSheet.el);
 
@@ -171,10 +174,6 @@ define(['logManager',
         this.$sheetsContainer.append(this.$divAddSheet);
         this.$sheetsContainer.append(this.$divSheetList);
 
-        for (var i = 0; i <5 ; i++) {
-            this.addSheet('Sheet'+i, i !== 0);
-        }
-
         this._sheetScrollValue = 0;
 
         //hook up sheet rename
@@ -183,7 +182,8 @@ define(['logManager',
             if (self.getIsReadOnlyMode() !== true) {
                 $(this).editInPlace({"class": "",
                     "onChange": function (oldValue, newValue) {
-                        self.onSheetTitleChanged(oldValue, newValue);
+                        var li = $(this).parent().parent();
+                        self.onSheetTitleChanged(li.data(SHEET_ID), oldValue, newValue);
                     }});
             }
             event.stopPropagation();
@@ -192,26 +192,39 @@ define(['logManager',
 
         this.$ulSheetTab.on("click.deleteSheetClick", 'a > i', function (event) {
             if (self.getIsReadOnlyMode() !== true) {
-                    self.onSheetDelete($(this).parent().text());
+                    self.onSheetDelete($(this).parent().parent().data(SHEET_ID));
             }
             event.stopPropagation();
             event.preventDefault();
         });
     };
 
-    MetaEditorWidget.prototype.addSheet = function (name, deletable) {
+    MetaEditorWidget.prototype.clearSheets = function () {
+        this.$ulSheetTab.empty();
+        this._sheetCounter = 0;
+        this._selectedSheet = undefined;
+        this._scrollSheetListBy(0 - this._sheetScrollValue);
+    };
+
+    MetaEditorWidget.prototype.addSheet = function (title, deletable) {
         var li = $('<li class=""><a href="#" data-toggle="tab"></a></li>');
 
-        if (this._sheets.indexOf(name) === -1) {
-            this.$ulSheetTab.append(li);
-            this._sheets.push(name);
+        li.find('a').append('<div class="sheet-title" title="' + title + '">' + title + '</div>');
+        li.data(SHEET_ID, this._sheetCounter);
+        this._sheetCounter += 1;
 
-            li.find('a').append('<div class="sheet-title" title="' + name + '">' + name + '</div>');
-
-            if (deletable === true) {
-                li.find('a').append($('<i class="icon-remove-circle"/>'));
-            }
+        if (deletable === true) {
+            li.find('a').append($('<i class="icon-remove-circle"/>'));
+            li.find('a').attr('title', 'Delete sheet');
         }
+
+        this.$ulSheetTab.append(li);
+
+        if (this._selectedSheet === undefined) {
+            this.selectSheet(li.data(SHEET_ID));
+        }
+
+        return li.data(SHEET_ID);
     };
 
     MetaEditorWidget.prototype._sheetsScrollLeft = function () {
@@ -234,12 +247,45 @@ define(['logManager',
         this.$ulSheetTab.css('left', this._sheetScrollValue);
     };
 
-    MetaEditorWidget.prototype.onSheetDelete = function (sheetName) {
-        this.logger.warning('onSheetDelete not implemented: "' + sheetName + '"');
+    MetaEditorWidget.prototype.selectSheet = function (sheetID) {
+        var liToSelect,
+            allLi = this.$ulSheetTab.find('li'),
+            i,
+            li;
+
+        if (this._selectedSheet !== sheetID) {
+            for(i = 0; i < allLi.length; i += 1) {
+                li = $(allLi[i]);
+                if (li && li.data(SHEET_ID) === sheetID) {
+                    liToSelect = li;
+                    break;
+                }
+            }
+
+            if (liToSelect) {
+                this.$ulSheetTab.find('li.active').removeClass('active');
+                liToSelect.addClass('active');
+                this._selectedSheet = liToSelect.data(SHEET_ID);
+                this.onSelectedSheetChanged(this._selectedSheet);
+            }
+        }
     };
 
-    MetaEditorWidget.prototype.onSheetTitleChanged = function (oldValue, newValue) {
-        this.logger.warning('onSheetTitleChanged not implemented: "' + oldValue + '" --> "' + newValue + '"');
+    MetaEditorWidget.prototype.onSheetDelete = function (sheetID) {
+        this.logger.warning('onSheetDelete not implemented: "' + sheetID + '"');
+    };
+
+    MetaEditorWidget.prototype.onSheetAddClicked = function () {
+        var sheetID = this.addSheet('New sheet', true);
+        this.logger.warning('onSheetAddClicked not implemented: "' + sheetID + '"');
+    };
+
+    MetaEditorWidget.prototype.onSheetTitleChanged = function (sheetID, oldValue, newValue) {
+        this.logger.warning('onSheetTitleChanged not implemented: ID: ' + sheetID + ' "' + oldValue + '" --> "' + newValue + '"');
+    };
+
+    MetaEditorWidget.prototype.onSelectedSheetChanged = function (sheetID) {
+        this.logger.warning('onSelectedSheetChanged not implemented: "' + sheetID + '"');
     };
 
     return MetaEditorWidget;

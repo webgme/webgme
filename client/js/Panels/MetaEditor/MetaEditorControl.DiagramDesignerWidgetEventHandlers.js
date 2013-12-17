@@ -77,6 +77,14 @@ define(['logManager',
             return params.availableConnectionEnds;
         };
 
+        this.diagramDesigner.onSheetAddClicked = function () {
+            self._onSheetAddClicked();
+        };
+
+        this.diagramDesigner.onSheetTitleChanged = function (sheetID, oldValue, newValue) {
+            self._onSheetTitleChanged(sheetID, oldValue, newValue);
+        };
+
         this.logger.debug("attachDesignerCanvasEventHandlers finished");
     };
 
@@ -337,6 +345,71 @@ define(['logManager',
         }
 
         this._client.completeTransaction();
+    };
+
+    //adding new meta aspect sheet
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSheetAddClicked = function () {
+        var aspectNodeID = this.currentNodeInfo.id,
+            aspectNode = this._client.getNode(aspectNodeID),
+            metaAspectSheetsRegistry = aspectNode.getEditableRegistry(MetaEditorConstants.META_SHEET_REGISTRY_KEY) || [],
+            i,
+            len,
+            sheetID,
+            newSetID;
+
+        metaAspectSheetsRegistry.sort(function (a, b) {
+            if (a.order < b.order) {
+                return -1;
+            } else {
+                return 1;
+            }
+        });
+
+        len = metaAspectSheetsRegistry.length;
+        for (i = 0; i < len; i += 1) {
+            metaAspectSheetsRegistry.order = i;
+        }
+
+        //start transaction
+        this._client.startTransaction();
+
+        //create new aspect set in  meta container node
+        newSetID = MetaEditorConstants.META_ASPECT_SHEET_NAME_PREFIX + (aspectNode.getSetNames().length + 1);
+        this._client.createSet(aspectNodeID, newSetID);
+
+        var newSheetDesc = {'SetID': newSetID,
+                            'order': metaAspectSheetsRegistry.length,
+                            'title': 'New sheet'};
+
+        metaAspectSheetsRegistry.push(newSheetDesc);
+
+        this._client.setRegistry(aspectNodeID, MetaEditorConstants.META_SHEET_REGISTRY_KEY, metaAspectSheetsRegistry);
+
+        //finish transaction
+        this._client.completeTransaction();
+    };
+
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSheetTitleChanged = function (sheetID, oldValue, newValue) {
+        var aspectNodeID = this.currentNodeInfo.id,
+            aspectNode = this._client.getNode(aspectNodeID),
+            metaAspectSheetsRegistry = aspectNode.getEditableRegistry(MetaEditorConstants.META_SHEET_REGISTRY_KEY) || [],
+            i,
+            len,
+            setID;
+
+        if (this._sheets[sheetID]) {
+            setID = this._sheets[sheetID];
+
+            len = metaAspectSheetsRegistry.length;
+            for (i = 0; i < len; i += 1) {
+                if (metaAspectSheetsRegistry[i].SetID === setID) {
+                    metaAspectSheetsRegistry[i].title = newValue;
+                    break;
+                }
+            }
+
+            this._client.setRegistry(aspectNodeID, MetaEditorConstants.META_SHEET_REGISTRY_KEY, metaAspectSheetsRegistry);
+        }
     };
 
     return MetaEditorControlDiagramDesignerWidgetEventHandlers;

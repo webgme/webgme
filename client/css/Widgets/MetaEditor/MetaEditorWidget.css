@@ -59,7 +59,8 @@ div.filterPanel {
     overflow: hidden; }
     .sheets-container div.sheet-list-container ul.nav {
       position: relative;
-      margin-bottom: 0px; }
+      margin-bottom: 0px;
+      height: 24px; }
       .sheets-container div.sheet-list-container ul.nav.nav-tabs > li {
         display: inline-block;
         float: none; }
@@ -75,7 +76,7 @@ div.filterPanel {
             text-overflow: ellipsis; }
           .sheets-container div.sheet-list-container ul.nav.nav-tabs > li > a [class^="icon-"],
           .sheets-container div.sheet-list-container ul.nav.nav-tabs > li > a [class*=" icon-"] {
-            margin-top: -1px;
+            margin-top: -2px;
             margin-left: 2px;
             cursor: pointer;
             display: none; }
