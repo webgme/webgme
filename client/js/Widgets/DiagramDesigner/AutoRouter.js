@@ -7099,9 +7099,9 @@ pt = [pt];
                 }
 
                 if( dir === Dir_Right ){             //This is done to guarantee that the x,y will never round up to the corner of 
-                    x = Math.floor(x);       //the port. If it does, the next assert will fail.
+                    y = Math.floor(y);               //the port. If it does, the next assert will fail.
                 }else if( dir === Dir_Bottom ){
-                    y = Math.floor(y);
+                    x = Math.floor(x);
                 }
 
                 resultPoint = new ArPoint(x, y);
