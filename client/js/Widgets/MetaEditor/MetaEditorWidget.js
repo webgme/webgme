@@ -228,9 +228,9 @@ define(['logManager',
 
         this.$ulSheetTab.append(li);
 
-        if (this._selectedSheet === undefined) {
+        /*if (this._selectedSheet === undefined) {
             this.selectSheet(li.data(SHEET_ID));
-        }
+        }*/
 
         return li.data(SHEET_ID);
     };

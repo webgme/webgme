@@ -1751,6 +1751,13 @@ define(['logManager',
 
         if (selectedSheetID) {
             this.diagramDesigner.selectSheet(selectedSheetID);
+        } else {
+            for (selectedSheetID in this._sheets) {
+                if (this._sheets.hasOwnProperty(selectedSheetID)) {
+                    break;
+                }
+            }
+            this.diagramDesigner.selectSheet(selectedSheetID);
         }
     };
 
