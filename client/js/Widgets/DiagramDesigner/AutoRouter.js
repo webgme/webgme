@@ -6706,8 +6706,10 @@ pt = [pt];
             };
 
             this.destroy = function(){
-                this.getStartPort().removePoint(this.getStartPoint());
-                this.getEndPort().removePoint(this.getEndPoint());
+                if( this.isConnected() ){
+                    this.getStartPort().removePoint(this.getStartPoint());
+                    this.getEndPort().removePoint(this.getEndPoint());
+                }
 
                 this.setStartPort(null);
                 this.setEndPort(null);
