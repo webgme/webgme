@@ -4693,7 +4693,7 @@ if(DEBUG && ArPointList.length > 0){
                                     maxOverlap;
 
                                 if( isHorizontal(startDir) ){
-                                    minOverlap = Math.min(startRect.floor, endRect.floor);
+                                    minOverlap = Math.min(startRect.floor - 1, endRect.floor - 1);
                                     maxOverlap = Math.max(startRect.ceil, endRect.ceil);
 
                                     var newY = (minOverlap + maxOverlap)/2;
@@ -4704,7 +4704,7 @@ if(DEBUG && ArPointList.length > 0){
                                     tstEnd = new ArPoint(getRectOuterCoord(endPort.getOwner().getRect(), endDir), newEnd.y);
 
                                 }else{
-                                    minOverlap = Math.min(startRect.right, endRect.right);
+                                    minOverlap = Math.min(startRect.right - 1, endRect.right - 1);
                                     maxOverlap = Math.max(startRect.left, endRect.left);
 
                                     var newX = (minOverlap + maxOverlap)/2;
