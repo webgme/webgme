@@ -7093,8 +7093,8 @@ pt = [pt];
                         x = ( points[dir][k-1].x + points[dir][k].x )/2;
                         y = ( points[dir][k-1].y + points[dir][k].y )/2;
                     }else{
-                        x = ( points[dir][k-1].x + maxX )/2;
-                        y = ( points[dir][k-1].y + maxY )/2;
+                        x = ( points[dir][k-1].x + maxX )/2 - .1; //This is done to guarantee that the x,y will never round up to the corner of 
+                        y = ( points[dir][k-1].y + maxY )/2 - .1; //the port. If it does, the next assert will fail.
                     }
                 }
 
