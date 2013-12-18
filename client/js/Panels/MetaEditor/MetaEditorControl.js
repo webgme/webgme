@@ -1749,16 +1749,15 @@ define(['logManager',
             }
         }
 
-        if (selectedSheetID) {
-            this.diagramDesigner.selectSheet(selectedSheetID);
-        } else {
+        if (!selectedSheetID) {
             for (selectedSheetID in this._sheets) {
                 if (this._sheets.hasOwnProperty(selectedSheetID)) {
                     break;
                 }
             }
-            this.diagramDesigner.selectSheet(selectedSheetID);
         }
+        
+        this.diagramDesigner.selectSheet(selectedSheetID);
     };
 
     //attach MetaEditorControl - DiagramDesigner event handler functions

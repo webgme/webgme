@@ -218,7 +218,7 @@ define(['logManager',
         var li = $('<li class=""><a href="#" data-toggle="tab"></a></li>');
 
         li.find('a').append('<div class="sheet-title" title="' + title + '">' + title + '</div>');
-        li.data(SHEET_ID, this._sheetCounter);
+        li.data(SHEET_ID, this._sheetCounter + "");
         this._sheetCounter += 1;
 
         if (deletable === true) {
