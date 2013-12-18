@@ -74,6 +74,8 @@ div.filterPanel {
             max-width: 120px;
             overflow: hidden;
             text-overflow: ellipsis; }
+            .sheets-container div.sheet-list-container ul.nav.nav-tabs > li > a .sheet-title input {
+              min-width: 50px !important; }
           .sheets-container div.sheet-list-container ul.nav.nav-tabs > li > a [class^="icon-"],
           .sheets-container div.sheet-list-container ul.nav.nav-tabs > li > a [class*=" icon-"] {
             margin-top: -2px;

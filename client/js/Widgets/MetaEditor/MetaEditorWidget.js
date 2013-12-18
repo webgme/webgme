@@ -190,10 +190,18 @@ define(['logManager',
             event.preventDefault();
         });
 
+        //sheet delete handler
         this.$ulSheetTab.on("click.deleteSheetClick", 'a > i', function (event) {
             if (self.getIsReadOnlyMode() !== true) {
                     self.onSheetDelete($(this).parent().parent().data(SHEET_ID));
             }
+            event.stopPropagation();
+            event.preventDefault();
+        });
+
+        //sheet selection handler
+        this.$ulSheetTab.on("click.selectSheetClick", 'li', function (event) {
+            self.selectSheet($(this).data(SHEET_ID));
             event.stopPropagation();
             event.preventDefault();
         });

@@ -118,6 +118,10 @@ div.filterPanel {
                         max-width: 120px;
                         overflow: hidden;
                         text-overflow: ellipsis;
+                        
+                        input {
+                          min-width: 50px !important;
+                        }
                       }
 
                         [class^="icon-"],

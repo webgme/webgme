@@ -85,6 +85,10 @@ define(['logManager',
             self._onSheetTitleChanged(sheetID, oldValue, newValue);
         };
 
+        this.diagramDesigner.onSelectedSheetChanged = function (sheetID) {
+            self._onSelectedSheetChanged(sheetID);
+        };
+
         this.logger.debug("attachDesignerCanvasEventHandlers finished");
     };
 
@@ -411,6 +415,15 @@ define(['logManager',
             this._client.setRegistry(aspectNodeID, MetaEditorConstants.META_SHEET_REGISTRY_KEY, metaAspectSheetsRegistry);
         }
     };
+
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectedSheetChanged = function (sheetID) {
+        if (this._sheets[sheetID] && this._selectedMetaAspectSet !== this._sheets[sheetID]) {
+            this._selectedMetaAspectSet = this._sheets[sheetID];
+
+            this.logger.warning('selectedAspectChanged: ' + this._selectedMetaAspectSet);
+        }
+    };
+
 
     return MetaEditorControlDiagramDesignerWidgetEventHandlers;
 });

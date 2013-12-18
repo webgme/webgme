@@ -60,6 +60,9 @@ define(['logManager',
         //local variable holding info about the currently opened node
         this.currentNodeInfo = {"id": null, "members" : [] };
 
+        this._metaAspectMembersAll = [];
+        this._metaAspectMembersPerSheet = {};
+
         //set default connection type to containment
         this._setNewConnectionType(MetaRelations.META_RELATIONS.CONTAINMENT);
 
@@ -372,8 +375,10 @@ define(['logManager',
             metaAspectSetMembers = aspectNode.getMemberIds(MetaEditorConstants.META_ASPECT_SET_NAME),
             territoryChanged = false;
 
+        //this._metaAspectMembersAll contains all the currently known members of the meta aspect
+
         //check deleted nodes
-        diff = _.difference(this.currentNodeInfo.members, metaAspectSetMembers);
+        diff = _.difference(this._metaAspectMembersAll, metaAspectSetMembers);
         len = diff.length;
         while (len--) {
             delete this._selfPatterns[diff[len]];
@@ -381,12 +386,14 @@ define(['logManager',
         }
 
         //check added nodes
-        diff = _.difference(metaAspectSetMembers, this.currentNodeInfo.members);
+        diff = _.difference(metaAspectSetMembers, this._metaAspectMembersAll);
         len = diff.length;
         while (len--) {
             this._selfPatterns[diff[len]] = { "children": 0 };
             territoryChanged = true;
         }
+
+        ///TODO: broken!!!!!
 
         //check all other nodes for position change
         diff = _.intersection(this.currentNodeInfo.members, metaAspectSetMembers);
@@ -1711,7 +1718,8 @@ define(['logManager',
             metaAspectSheetsRegistry = aspectNode.getRegistry(MetaEditorConstants.META_SHEET_REGISTRY_KEY) || [],
             i,
             len,
-            sheetID;
+            sheetID,
+            selectedSheetID;
 
         this._sheets = {};
         this.diagramDesigner.clearSheets();
@@ -1729,6 +1737,14 @@ define(['logManager',
         for (i = 0; i < len; i += 1) {
             sheetID = this.diagramDesigner.addSheet(metaAspectSheetsRegistry[i].title, true);
             this._sheets[sheetID] = metaAspectSheetsRegistry[i].SetID;
+            if (this._selectedMetaAspectSet &&
+                this._selectedMetaAspectSet === metaAspectSheetsRegistry[i].SetID) {
+                selectedSheetID = sheetID;
+            }
+        }
+
+        if (selectedSheetID) {
+            this.diagramDesigner.selectSheet(selectedSheetID);
         }
     };
 
