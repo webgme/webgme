@@ -141,7 +141,7 @@ define(['logManager'], function (logManager) {
                 versionStr = inChannel.substr(0, curSubPos);
 
             setVersion(Number(versionStr));
-            assert(getVersion() == CONNECTIONCUSTOMIZATIONDATAVERSION, "CustomPathData.deserialize: getVersion() == CONNECTIONCUSTOMIZATIONDATAVERSION FAILED");
+            assert(getVersion() === CONNECTIONCUSTOMIZATIONDATAVERSION, "CustomPathData.deserialize: getVersion() === CONNECTIONCUSTOMIZATIONDATAVERSION FAILED");
 
             if (getVersion() != CONNECTIONCUSTOMIZATIONDATAVERSION) {
                 // TODO: Convert from older version to newer
@@ -340,7 +340,7 @@ define(['logManager'], function (logManager) {
 
         var isRectClip = function (r1, r2){
             var rect = new ArRect();
-            return rect.intersectAssign(r1, r2) == true;
+            return rect.intersectAssign(r1, r2) === true;
         };
 
         var isPointNearHLine = function (p, x1, x2, y, nearness){
@@ -381,12 +381,12 @@ define(['logManager'], function (logManager) {
         };
 
         var isOnEdge = function (start, end, pt, nearness){
-            if (start.x == end.x)			// vertical edge, horizontal move
+            if (start.x === end.x)			// vertical edge, horizontal move
             {
                 if (Math.abs(end.x - pt.x) <= nearness && pt.y <= Math.max(end.y, start.y) + nearness && pt.y >= Math.min(end.y, start.y) - nearness)
                     return true;
             }
-            else if (start.y == end.y)	// horizontal line, vertical move
+            else if (start.y === end.y)	// horizontal line, vertical move
             {
                 if (Math.abs(end.y - pt.y) <= nearness && pt.x <= Math.max(end.x, start.x) + nearness && pt.x >= Math.min(end.x, start.x) - nearness)
                     return true;
@@ -420,7 +420,7 @@ define(['logManager'], function (logManager) {
             // begin Zolmol
             // the routing may create edges that have start==end
             // thus confusing this algorithm
-            if( end.x == start.x && end.y == start.y)
+            if( end.x === start.x && end.y === start.y)
                 return false;
             // end Zolmol
 
@@ -464,8 +464,8 @@ define(['logManager'], function (logManager) {
             x2 -= start.x;
             y -= start.y;
 
-            if( end2.y == 0 )
-                return y == 0 && (( x1 <= 0 && 0 <= x2 ) || (x1 <= end2.x && end2.x <= x2));
+            if( end2.y === 0 )
+                return y === 0 && (( x1 <= 0 && 0 <= x2 ) || (x1 <= end2.x && end2.x <= x2));
 
             var x = ((end2.x) / end2.y) * y;
             return x1 <= x && x <= x2;
@@ -487,8 +487,8 @@ define(['logManager'], function (logManager) {
             y2 -= start.y;
             x -= start.x;
 
-            if( end2.x == 0 )
-                return x == 0 && (( y1 <= 0 && 0 <= y2 ) || (y1 <= end2.y && end2.y <= y2));
+            if( end2.x === 0 )
+                return x === 0 && (( y1 <= 0 && 0 <= y2 ) || (y1 <= end2.y && end2.y <= y2));
 
             var y = ((end2.y) / end2.x) * x;
             return y1 <= y && y <= y2;
@@ -532,7 +532,7 @@ define(['logManager'], function (logManager) {
 
         var areInRightAngle = function (dir1, dir2){
             assert( isRightAngle(dir1) && isRightAngle(dir2), "ArHelper.areInRightAngle: isRightAngle(dir1) && isRightAngle(dir2) FAILED" );
-            return isHorizontal(dir1) == isVertical(dir2);
+            return isHorizontal(dir1) === isVertical(dir2);
         };
 
         var nextClockwiseDir = function (dir){
@@ -838,7 +838,29 @@ define(['logManager'], function (logManager) {
         };
 
         var getDir = function (offset, nodir){
-            assert(offset.cy !== undefined && offset.cx !== undefined, "getDir: offset.cx cannot be undefined! offset is " + offset);
+            if( offset.cx === 0 )
+            {
+                if( offset.cy === 0 )
+                    return nodir;
+
+                if( offset.cy < 0 )
+                    return Dir_Top;
+
+                return Dir_Bottom;
+            }
+
+            if( offset.cy === 0 )
+            {
+                if( offset.cx > 0 )
+                    return Dir_Right;
+
+                return Dir_Left;
+            }
+
+            return Dir_Skew;
+        };
+    /*{
+            assert(offset.cy !== undefined && offset.cx !== undefined, "getDir: offset.cx and offset.cy cannot both be undefined! offset is " + offset);
             if( nodir === undefined )
                 nodir = Dir_None;
 
@@ -866,11 +888,12 @@ define(['logManager'], function (logManager) {
 
                 return Dir_Skew;
         };
+*/
 
         var getSkewDir = function (offset, nodir){
-            if (offset.cx == 0 || Math.abs(offset.cy) > Math.abs(offset.cx))
+            if (offset.cx === 0 || Math.abs(offset.cy) > Math.abs(offset.cx))
             {
-                if (offset.cy == 0)
+                if (offset.cy === 0)
                     return nodir;
 
                 if (offset.cy < 0)
@@ -879,7 +902,7 @@ define(['logManager'], function (logManager) {
                 return Dir_Bottom;
             }
 
-            if (offset.cy == 0 || Math.abs(offset.cx) >= Math.abs(offset.cy))
+            if (offset.cy === 0 || Math.abs(offset.cx) >= Math.abs(offset.cy))
             {
                 if (offset.cx > 0)
                     return Dir_Right;
@@ -981,7 +1004,7 @@ define(['logManager'], function (logManager) {
             if( from instanceof ArPoint)
                 from = getPointCoord(from, dir);
 
-            if( dir == Dir_Top || dir == Dir_Left )
+            if( dir === Dir_Top || dir === Dir_Left )
                 return coord <= from;
 
             return coord >= from;
@@ -991,16 +1014,16 @@ define(['logManager'], function (logManager) {
         // cannot be in a corner of the rectangle.
         // NOTE: the right and floor used to be - 1. 
         var onWhichEdge = function (rect, point){
-            if( point.y == rect.ceil && rect.left < point.x && point.x < rect.right - 1 ) 
+            if( point.y === rect.ceil && rect.left < point.x && point.x < rect.right - 1 ) 
                 return Dir_Top;
 
-            if( point.y == rect.floor - 1 && rect.left < point.x && point.x < rect.right - 1 )
+            if( point.y === rect.floor - 1 && rect.left < point.x && point.x < rect.right - 1 )
                 return Dir_Bottom;
 
-            if( point.x == rect.left && rect.ceil < point.y && point.y < rect.floor - 1 )
+            if( point.x === rect.left && rect.ceil < point.y && point.y < rect.floor - 1 )
                 return Dir_Left;
 
-            if( point.x == rect.right - 1 && rect.ceil < point.y && point.y < rect.floor - 1 )
+            if( point.x === rect.right - 1 && rect.ceil < point.y && point.y < rect.floor - 1 )
                 return Dir_Right;
 
             return Dir_None;
@@ -1020,7 +1043,7 @@ define(['logManager'], function (logManager) {
                 var d1 = distanceFromHLine(point, x1, x2, y),
                     d2 = Math.abs(point.y - y);
 
-                if( d1 < dist1 || (d1 == dist1 && d2 < dist2) )
+                if( d1 < dist1 || (d1 === dist1 && d2 < dist2) )
                 {
                     dist1 = d1;
                     dist2 = d2;
@@ -1036,7 +1059,7 @@ define(['logManager'], function (logManager) {
                 var d1 = distanceFromVLine(point, y1, y2, x),
                     d2 = Math.abs(point.x - x);
 
-                if( d1 < dist1 || (d1 == dist1 && d2 < dist2) )
+                if( d1 < dist1 || (d1 === dist1 && d2 < dist2) )
                 {
                     dist1 = d1;
                     dist2 = d2;
@@ -1079,7 +1102,10 @@ define(['logManager'], function (logManager) {
             };
 
             this.push = function(element){
-                //this[length++] = element;
+if(DEBUG && ArPointList.length > 0){
+    assert(element[0].x === ArPointList[ArPointList.length - 1][0].x ||
+        element[0].y === ArPointList[ArPointList.length - 1][0].y, "ArPointListPath.push: point does not create horizontal or vertical edge!");
+}
                 if(element instanceof Array)
                     ArPointList.push(element);
                 else
@@ -1146,7 +1172,7 @@ define(['logManager'], function (logManager) {
 
                 var p = pos;
                 start = ArPointList[p++];
-                if( p == ArPointList.length)
+                if( p === ArPointList.length)
                     pos = ArPointList.length;
                 else
                     end = ArPointList[p];
@@ -1276,7 +1302,7 @@ define(['logManager'], function (logManager) {
                     AssertValidPos(pos);
 
                 pos--;
-                if( pos == ArPointList.length)
+                if( pos === ArPointList.length)
                     return null;
 
                 return ArPointList[pos]; //&
@@ -1290,7 +1316,7 @@ define(['logManager'], function (logManager) {
                 assert( pos < ArPointList.length, "ArPointListPath.getPointAfterEdge: pos < ArPointList.length FAILED");
 
                 pos++;
-                if( pos == ArPointList.length )
+                if( pos === ArPointList.length )
                     return null;
 
                 return ArPointList[pos];//&
@@ -1310,7 +1336,7 @@ define(['logManager'], function (logManager) {
 
                 var p = pos + 1;
 
-                if( p == ArPointList.length )
+                if( p === ArPointList.length )
                     return ArPointList.length;
 
                 return pos;
@@ -1320,7 +1346,7 @@ define(['logManager'], function (logManager) {
                 var pos = 0;
                 while( pos < ArPointList.length )
                 {
-                    if( ArPointList[pos++] == startpoint )
+                    if( ArPointList[pos++] === startpoint )
                     {
                         assert( pos < ArPointList.length, "ArPointListPath.getEdgePosForStartPoint: pos < ArPointList.length FAILED" );
                         pos--;
@@ -1343,7 +1369,7 @@ define(['logManager'], function (logManager) {
                 for(;;)
                 {
                     assert( pos < ArPointList.length, "ArPointListPath.assertValidPos: pos < ArPointList.length FAILED" );
-                    if( p == pos )
+                    if( p === pos )
                         return;
 
                     p++;
@@ -2029,7 +2055,7 @@ define(['logManager'], function (logManager) {
                 assert( r.getWidth() >= 3 && r.getHeight() >= 3, "ARBox.setRect: r.getWidth() >= 3 && r.getHeight() >= 3 FAILED!");
                 assert( r.getTopLeft().x >= ED_MINCOORD && r.getTopLeft().y >= ED_MINCOORD, "ARBox.setRect: r.getTopLeft().x >= ED_MINCOORD && r.getTopLeft().y >= ED_MAXCOORD FAILED!"); 
                 assert( r.getBottomRight().x <= ED_MAXCOORD && r.getBottomRight().y <= ED_MAXCOORD, "ARBox.setRect:  r.getBottomRight().x <= ED_MAXCOORD && r.getBottomRight().y <= ED_MAXCOORD FAILED!");
-                assert( ports.length == 0 || atomic, "ARBox.setRect: ports.length == 0 || atomic FAILED!");
+                assert( ports.length === 0 || atomic, "ARBox.setRect: ports.length === 0 || atomic FAILED!");
 
                 rect.assign(r);
 
@@ -2239,7 +2265,7 @@ define(['logManager'], function (logManager) {
             };
 
             this.isStartPointPrevNull = function () {
-                return startpoint_prev == null;
+                return startpoint_prev === null;
             };
 
             this.setStartPointPrev = function (point){
@@ -2311,7 +2337,7 @@ define(['logManager'], function (logManager) {
             };
 
             this.isEndPointNull = function(){
-                return endpoint == null;
+                return endpoint === null;
             };
 
             this.setEndPoint = function(point, b){
@@ -2927,13 +2953,13 @@ define(['logManager'], function (logManager) {
 
                 if( ishorizontal )
                 {
-                    assert( edge.getStartPoint().y == edge.getEndPoint().y, "AREdgeList.position_SetRealY: edge.getStartPoint().y == edge.getEndPoint().y FAILED");
+                    assert( edge.getStartPoint().y === edge.getEndPoint().y, "AREdgeList.position_SetRealY: edge.getStartPoint().y === edge.getEndPoint().y FAILED");
                     edge.setStartPointY(y);
                     edge.setEndPointY(y);
                 }
                 else
                 {
-                    assert( edge.getStartPoint().x == edge.getEndPoint().x, "AREdgeList.position_SetRealY: edge.getStartPoint().x == edge.getEndPoint().x FAILED");
+                    assert( edge.getStartPoint().x === edge.getEndPoint().x, "AREdgeList.position_SetRealY: edge.getStartPoint().x === edge.getEndPoint().x FAILED");
                     edge.setStartPointX(y);
                     edge.setEndPointX(y);
                 }
@@ -2955,7 +2981,7 @@ define(['logManager'], function (logManager) {
                         x2 = edge.getStartPoint().x;
                     }
                 }else{
-                    assert( edge.getStartPoint().x == edge.getEndPoint().x, "AREdgeList.position_GetRealX: edge.getStartPoint().x == edge.getEndPoint().x FAILED");
+                    assert( edge.getStartPoint().x === edge.getEndPoint().x, "AREdgeList.position_GetRealX: edge.getStartPoint().x === edge.getEndPoint().x FAILED");
                     if(edge.getStartPoint().y < edge.getEndPoint().y){
 
                         x1 = edge.getStartPoint().y;
@@ -3072,7 +3098,7 @@ define(['logManager'], function (logManager) {
 
             this.insertAfter = function(edge, after){
                 assert( edge !== null && after !== null && !edge.equals(after), "AREdgeList.insertAfter:  edge !== null && after !== null && !edge.equals(after) FAILED"); 
-                assert( edge.getOrderNext() === null && edge.getOrderPrev() === null, "AREdgeList.insertAfter: edge.getOrderNext() == null && edge.getOrderPrev() == null FAILED ");
+                assert( edge.getOrderNext() === null && edge.getOrderPrev() === null, "AREdgeList.insertAfter: edge.getOrderNext() === null && edge.getOrderPrev() === null FAILED ");
 
                 edge.setOrderNext(after.getOrderNext());
                 edge.setOrderPrev(after);
@@ -3095,13 +3121,13 @@ define(['logManager'], function (logManager) {
 
             this.insertLast = function(edge){
                 assert( edge !== null, "AREdgeList.insertLast: edge !== null FAILED" );
-                assert( edge.getOrderPrev() === null && edge.getOrderNext() == null, "AREdgeList.insertLast: edge.getOrderPrev() === null && edge.getOrderNext() == null FAILED");
+                assert( edge.getOrderPrev() === null && edge.getOrderNext() === null, "AREdgeList.insertLast: edge.getOrderPrev() === null && edge.getOrderNext() === null FAILED");
 
                 edge.setOrderPrev(order_last);
 
                 if( order_last )
                 {
-                    assert( order_last.getOrderNext() == null, "AREdgeList.insertLast: order_last.getOrderNext() == null FAILED");
+                    assert( order_last.getOrderNext() === null, "AREdgeList.insertLast: order_last.getOrderNext() === null FAILED");
                     assert( order_first != null, "AREdgeList.insertLast: order_first != null FAILED" );
 
                     order_last.setOrderNext(edge);
@@ -3109,7 +3135,7 @@ define(['logManager'], function (logManager) {
                 }
                 else
                 {
-                    assert( order_first == null, "AREdgeList.insertLast:  order_first == null FAILED");
+                    assert( order_first === null, "AREdgeList.insertLast:  order_first === null FAILED");
 
                     order_first = edge;
                     order_last = edge;
@@ -3118,7 +3144,7 @@ define(['logManager'], function (logManager) {
 
             this.insert = function(edge){
                 assert( edge !== null, "AREdgeList.insert:  edge !== null FAILED");
-                assert( edge.getOrderPrev() == null && edge.getOrderNext() == null, "AREdgeList.insert: edge.getOrderPrev() == null && edge.getOrderNext() == null FAILED" );
+                assert( edge.getOrderPrev() === null && edge.getOrderNext() === null, "AREdgeList.insert: edge.getOrderPrev() === null && edge.getOrderNext() === null FAILED" );
 
                 var y = edge.getPositionY();
 
@@ -3173,7 +3199,7 @@ define(['logManager'], function (logManager) {
                 var oldy = edge.getPositionY();
                 assert( ED_MINCOORD < oldy && oldy < ED_MAXCOORD, "AREdgeList.slideButNotPassEdges: ED_MINCOORD < oldy && oldy < ED_MAXCOORD FAILED");
 
-                if( oldy == y )
+                if( oldy === y )
                     return null;
 
                 var x1 = edge.getPositionX1(),
@@ -3254,11 +3280,11 @@ define(['logManager'], function (logManager) {
             }
 
             function checkSection(){
-                if( !(section_blocker == null && section_ptr2blocked == null)){
+                if( !(section_blocker === null && section_ptr2blocked === null)){
                     //This used to be contained in an assert. Generally this fails when the router does not have a clean exit then is asked to reroute.
                     _logger.warning("section_blocker and section_ptr2blocked are not null. Assuming last run did not exit cleanly. Fixing...");
-                    section_blocker == null;
-                    section_ptr2blocked == null;
+                    section_blocker === null;
+                    section_ptr2blocked === null;
                 }
             }
             
@@ -3304,19 +3330,19 @@ define(['logManager'], function (logManager) {
 
                 if( a1 <= b1 )
                 {
-                    while( !(e == null || e.getStartPoint().equals(emptyPoint)) && e.getSectionX2() < b1 )
+                    while( !(e === null || e.getStartPoint().equals(emptyPoint)) && e.getSectionX2() < b1 )
                         e = e.getSectionNext();
 
                     if( b2 <= a2 )
-                        return (e == null || e.getStartPoint().equals(emptyPoint))|| b2 < e.getSectionX1();				// case 3
+                        return (e === null || e.getStartPoint().equals(emptyPoint))|| b2 < e.getSectionX1();				// case 3
                     
-                    return (e == null || e.getStartPoint().equals(emptyPoint)) && a2 == p2;								// case 2
+                    return (e === null || e.getStartPoint().equals(emptyPoint)) && a2 === p2;								// case 2
                 }
 
                 if( b2 <= a2 )
-                    return a1 == p1 && ((e == null || e.getStartPoint().equals(emptyPoint)) || b2 < e.getSectionX1());	// case 5
+                    return a1 === p1 && ((e === null || e.getStartPoint().equals(emptyPoint)) || b2 < e.getSectionX1());	// case 5
 
-                return (e == null || e.getStartPoint().equals(emptyPoint)) && a1 == p1 && a2 == p2;						// case 4
+                return (e === null || e.getStartPoint().equals(emptyPoint)) && a1 === p1 && a2 === p2;						// case 4
             }
             
             
@@ -3410,7 +3436,7 @@ define(['logManager'], function (logManager) {
                             o = e;
                             e = e.getSectionNext();
 
-                            if( o.getSectionX2() + 1 < b1 && ( e == null || e.getStartPoint().equals(emptyPoint) || o.getSectionX2() + 1 < e.getSectionX1() ) ){
+                            if( o.getSectionX2() + 1 < b1 && ( e === null || e.getStartPoint().equals(emptyPoint) || o.getSectionX2() + 1 < e.getSectionX1() ) ){
                                 section_ptr2blocked = o.getSectionNextPtr();
                             }
                         }
@@ -3462,7 +3488,7 @@ define(['logManager'], function (logManager) {
                         for(;;)
                         {
 
-                            if( e == null || e.getStartPoint().equals(emptyPoint) || x < e.getSectionX1() ){ 
+                            if( e === null || e.getStartPoint().equals(emptyPoint) || x < e.getSectionX1() ){ 
                                 return true;
                             }
                             else if( x <= e.getSectionX2() )
@@ -3483,7 +3509,7 @@ define(['logManager'], function (logManager) {
                     return true;
                 }
 
-                assert( section_blocker.getSectionNext() == null && (section_blocker.getSectionDown() == null || section_blocker.getSectionDown().getStartPoint().equals(emptyPoint)) , "AREdgeList.section_HasBlockedEdge: section_blocker.getSectionNext() == null && section_blocker.getSectionDown() == null FAILED");
+                assert( section_blocker.getSectionNext() === null && (section_blocker.getSectionDown() === null || section_blocker.getSectionDown().getStartPoint().equals(emptyPoint)) , "AREdgeList.section_HasBlockedEdge: section_blocker.getSectionNext() === null && section_blocker.getSectionDown() === null FAILED");
 
                 section_blocker.setSectionNext((section_ptr2blocked[0]));
                 section_ptr2blocked[0] = section_blocker; //Set anything pointing to section_ptr2blocked to point to section_blocker (eg, section_down)
@@ -3558,14 +3584,14 @@ define(['logManager'], function (logManager) {
 
                 if( (nx1 < ex1 && ex1 < nx2 && eo1 > 0 ) || (ex1 < nx1 && nx1 < ex2 && no1 < 0) )
                     c1 = +1;
-                else if( ex1 == nx1 && eo1 == 0 && no1 == 0 )
+                else if( ex1 === nx1 && eo1 === 0 && no1 === 0 )
                     c1 = 0;
                 else
                     c1 = -9;
 
                 if( (nx1 < ex2 && ex2 < nx2 && eo2 > 0 ) || (ex1 < nx2 && nx2 < ex2 && no2 < 0) )
                     c2 = +1;
-                else if( ex2 == nx2 && eo2 == 0 && no2 == 0 )
+                else if( ex2 === nx2 && eo2 === 0 && no2 === 0 )
                     c2 = 0;
                 else
                     c2 = -9;
@@ -3582,7 +3608,7 @@ define(['logManager'], function (logManager) {
                     D = EDLS_D; //This is the total distance of the graph
 
                 //If f is greater than the SMALLGAP, then make some checks/edits
-                if( b == 0 && R <= f ) //If every comparison resulted in an overlap AND SMALLGAP + 1 is less than the distance between each edge (in the given range)
+                if( b === 0 && R <= f ) //If every comparison resulted in an overlap AND SMALLGAP + 1 is less than the distance between each edge (in the given range)
                     f += (D-R);
                 else if( S < f && s > 0 )
                     f = ((D-S)*d - S*(D-R)*s) / ((D-S)*b + (R-S)*s);
@@ -3663,7 +3689,7 @@ define(['logManager'], function (logManager) {
 
                 if( b+s > 1 )
                 {
-                    if( edge == null )
+                    if( edge === null )
                     {
                         f = block_GetF(d,b,s);
                         g = block_GetG(d,b,s);
@@ -3726,7 +3752,7 @@ define(['logManager'], function (logManager) {
                     trace = edge;
                     edge = edge.getBlockNext();
 
-                    if( edge == null ){
+                    if( edge === null ){
                         break;
                     }
 
@@ -4201,11 +4227,11 @@ define(['logManager'], function (logManager) {
             function isLineClipBufferBoxes(p1, p2){
                 var rect = new ArRect(p1, p2);
                 rect.normalizeRect();
-                assert( rect.left == rect.right || rect.ceil == rect.floor, "ARGraph.isLineClipBoxes: rect.left == rect.right || rect.ceil == rect.floor FAILED");
+                assert( rect.left === rect.right || rect.ceil === rect.floor, "ARGraph.isLineClipBoxes: rect.left === rect.right || rect.ceil === rect.floor FAILED");
 
-                if( rect.left == rect.right)
+                if( rect.left === rect.right)
                     rect.right++;
-                if( rect.ceil == rect.floor )
+                if( rect.ceil === rect.floor )
                     rect.floor++;
 
                 return isRectClipBufferBoxes(rect);
@@ -4214,11 +4240,11 @@ define(['logManager'], function (logManager) {
             function isLineClipBoxes(p1, p2){
                 var rect = new ArRect(p1, p2);
                 rect.normalizeRect();
-                assert( rect.left == rect.right || rect.ceil == rect.floor, "ARGraph.isLineClipBoxes: rect.left == rect.right || rect.ceil == rect.floor FAILED");
+                assert( rect.left === rect.right || rect.ceil === rect.floor, "ARGraph.isLineClipBoxes: rect.left === rect.right || rect.ceil === rect.floor FAILED");
 
-                if( rect.left == rect.right)
+                if( rect.left === rect.right)
                     rect.right++;
-                if( rect.ceil == rect.floor )
+                if( rect.ceil === rect.floor )
                     rect.floor++;
 
                 return isRectClipBoxes(rect);
@@ -4261,7 +4287,7 @@ define(['logManager'], function (logManager) {
             }
 
             function hasNoPath(){
-                return paths.length == 0;
+                return paths.length === 0;
             }
 
             function getPathCount(){
@@ -4278,7 +4304,7 @@ define(['logManager'], function (logManager) {
             }
 
             function isEmpty(){
-                return boxes.length == 0 && paths.length == 0;
+                return boxes.length === 0 && paths.length === 0;
             }
 
             function getSurroundRect(){
@@ -4480,7 +4506,7 @@ define(['logManager'], function (logManager) {
                 start.assign(startPt);
                 end.assign(endPt);
 
-                if( start.y == end.y )
+                if( start.y === end.y )
                 {
                     if( start.x > end.x )
                     {
@@ -4505,7 +4531,7 @@ define(['logManager'], function (logManager) {
                 }
                 else
                 {
-                    assert( start.x == end.x, "ARGraph.getLimitsOfEdge: start.x == end.x FAILED" );
+                    assert( start.x === end.x, "ARGraph.getLimitsOfEdge: start.x === end.x FAILED" );
 
                     if( start.y > end.y )
                     {
@@ -4551,7 +4577,7 @@ define(['logManager'], function (logManager) {
                         startportHasLimited = startport.hasLimitedDirs();
                         startportCanHave = startport.canHaveStartEndPointOn(startdir, true);
                     }
-                    if( startdir == Dir_None ||							// recalc startdir if empty
+                    if( startdir === Dir_None ||							// recalc startdir if empty
                         startportHasLimited && !startportCanHave)		// or is limited and userpref is invalid
                     {
                         startdir = startport.getStartEndDirTo(endport.getCenter(), true);
@@ -4565,14 +4591,14 @@ define(['logManager'], function (logManager) {
                         endportHasLimited = endport.hasLimitedDirs();
                         endportCanHave = endport.canHaveStartEndPointOn(enddir, false);
                     }
-                    if( enddir == Dir_None ||							// like above
+                    if( enddir === Dir_None ||							// like above
                         endportHasLimited && !endportCanHave)
                     {
                         enddir = endport.getStartEndDirTo(startport.getCenter(), false, startport === endport ? startdir : Dir_None );
                     }
 
                     startpoint = startport.createStartEndPointTo(endport.getCenter(), startdir);
-                    endpoint = endport.createStartEndPointTo(startpoint, enddir);//startport.getCenter(), enddir);
+                    endpoint = endport.createStartEndPointTo(startpoint, enddir);
 
                     if( startpoint.equals(endpoint) )
                         startpoint = stepOneInDir(startpoint, nextClockwiseDir(startdir));
@@ -4581,7 +4607,7 @@ define(['logManager'], function (logManager) {
 
                 }else{
                     assert(startpoint instanceof ArPoint, "ARGraph.connect: startpoint instanceof ArPoint FAILED");
-                    assert( path != null && path.getOwner() == self, "ARGraph.connect: path != null && path.getOwner() == self FAILED");
+                    assert( path != null && path.getOwner() === self, "ARGraph.connect: path != null && path.getOwner() === self FAILED");
                     assert( !path.isConnected(), "ARGraph.connect: !path.isConnected() FAILED");
                     assert( !startpoint.equals(endpoint), "ARGraph.connect: !startpoint.equals(endpoint) FAILED");
 
@@ -4649,6 +4675,56 @@ define(['logManager'], function (logManager) {
                         simplifyPathCurves(path);
                         simplifyPathPoints(path);
                         centerStairsInPathPoints(path, startdir, enddir);
+
+                        //Make sure if a straight line is possible, the path is a straight line
+                        //Note, this may make it so the stems are no longer centered in the port.
+                        if(path.getPointList().getLength() === 4){
+                            var startDir = startPort.port_OnWhichEdge(startpoint),
+                                endDir = endPort.port_OnWhichEdge(endpoint),
+                                tstStart,
+                                tstEnd;
+
+                            if( startDir === reverseDir(endDir) ){
+                                var newStart = new ArPoint(startpoint),
+                                    newEnd = new ArPoint(endpoint),
+                                    startRect = startPort.getRect(),
+                                    endRect = endPort.getRect(),
+                                    minOverlap,
+                                    maxOverlap;
+
+                                if( isHorizontal(startDir) ){
+                                    minOverlap = Math.min(startRect.floor, endRect.floor);
+                                    maxOverlap = Math.max(startRect.ceil, endRect.ceil);
+
+                                    var newY = (minOverlap + maxOverlap)/2;
+                                    newStart.y = newY;
+                                    newEnd.y = newY;
+
+                                    tstStart = new ArPoint(getRectOuterCoord(startPort.getOwner().getRect(), startDir), newStart.y);
+                                    tstEnd = new ArPoint(getRectOuterCoord(endPort.getOwner().getRect(), endDir), newEnd.y);
+
+                                }else{
+                                    minOverlap = Math.min(startRect.right, endRect.right);
+                                    maxOverlap = Math.max(startRect.left, endRect.left);
+
+                                    var newX = (minOverlap + maxOverlap)/2;
+                                    newStart.x = newX;
+                                    newEnd.x = newX;
+
+                                    tstStart = new ArPoint(newStart.x, getRectOuterCoord(startPort.getOwner().getRect(), startDir));
+                                    tstEnd = new ArPoint(newEnd.x, getRectOuterCoord(endPort.getOwner().getRect(), endDir));
+                                }
+
+                                if( startRect.ptInRect(newStart) && endRect.ptInRect(newEnd)
+                                        && !isLineClipBoxes(tstStart, tstEnd) ){
+
+                                    startpoint.assign(newStart);
+                                    endpoint.assign(newEnd);
+                                    path.getPointList().splice(1, 2);
+                                }
+                            }
+
+                        }
                     }
                     path.setState(ARPATHST_Connected);
 
@@ -4675,17 +4751,17 @@ define(['logManager'], function (logManager) {
                         dir2 = exGetMinorDir(end.minus(start));
                     assert( dir1 != Dir_None, "ARGraph.connectPoints: dir1 != Dir_None FAILED");
 
-                    assert( dir1 == getMajorDir(end.minus(start)), "ARGraph.connectPoints: dir1 == getMajorDir(end.minus(start)) FAILED");
-                    assert( dir2 == Dir_None || dir2 == getMinorDir(end.minus(start)), "ARGraph.connectPoints: dir2 == Dir_None || dir2 == getMinorDir(end.minus(start)) FAILED" );
+                    assert( dir1 === getMajorDir(end.minus(start)), "ARGraph.connectPoints: dir1 === getMajorDir(end.minus(start)) FAILED");
+                    assert( dir2 === Dir_None || dir2 === getMinorDir(end.minus(start)), "ARGraph.connectPoints: dir2 === Dir_None || dir2 === getMinorDir(end.minus(start)) FAILED" );
 
-                    if( retend == ret.getLength() && dir2 == hintstartdir && dir2 != Dir_None )
+                    if( retend === ret.getLength() && dir2 === hintstartdir && dir2 != Dir_None )
                     {
                         // i.e. std::swap(dir1, dir2);
                         dir2 = dir1;
                         dir1 = hintstartdir;
                     }
 
-                    if (retend == ret.getLength() ){
+                    if (retend === ret.getLength() ){
                         ret.push([new ArPoint(start)]);
                         retend = ret.getLength() - 1; //This should give the index of the newly inserted value
                     }else{
@@ -4701,7 +4777,7 @@ define(['logManager'], function (logManager) {
                         bufferObject,
                         box;
 
-                    if( bufferBoxes.length == 0 ){
+                    if( bufferBoxes.length === 0 ){
                         box = goToNextBox(start, dir1, end);
                     }else{
                         bufferObject = goToNextBufferBox({ "point": start, "dir": dir1, "dir2": dir2, "end": end });//Modified goToNextBox (that allows entering parent buffer boxes here
@@ -4718,7 +4794,7 @@ define(['logManager'], function (logManager) {
                         assert( box != null, "ARGraph.connectPoints: box != null FAILED");
                         var rect = box instanceof ArRect ? box : box.getRect(); 
 
-                        if( dir2 == Dir_None ){
+                        if( dir2 === Dir_None ){
                             dir2 = nextClockwiseDir(dir1);
                         }
 
@@ -4781,7 +4857,7 @@ define(['logManager'], function (logManager) {
 
                             var rev = 0;
 
-                            if( reverseDir(dir2) == hintenddir && 
+                            if( reverseDir(dir2) === hintenddir && 
                                     getChildRectOuterCoordFrom(bufferObject, reverseDir(dir2), start) === getRectOuterCoord(rect, reverseDir(dir2))) //And if point can exit that way 
                                 rev = 1;
                             else if( dir2 != hintenddir )
@@ -4815,7 +4891,7 @@ define(['logManager'], function (logManager) {
                                 assert( !start.equals(old), "ARGraph.connectPoints: !start.equals(old) FAILED");
                                 assert(retend != ret.getLength(), "ARGraph.connectPoints: retend != ret.getLength() FAILED");
                                 retend++;
-                                if(retend == ret.getLength()){
+                                if(retend === ret.getLength()){
                                     ret.push([new ArPoint(start)]);
                                     retend--;
                                 }else{
@@ -5012,7 +5088,7 @@ define(['logManager'], function (logManager) {
 
             function candeleteTwoEdgesAt(path, points, pos){
                 if(DEBUG){
-                    assert( path.getOwner() == self, "ARGraph.candeleteTwoEdgesAt: path.getOwner() == self FAILED");
+                    assert( path.getOwner() === self, "ARGraph.candeleteTwoEdgesAt: path.getOwner() === self FAILED");
                     path.assertValid();
                     assert( path.isConnected(), "ARGraph.candeleteTwoEdgesAt: path.isConnected() FAILED");
                     points.AssertValidPos(pos);
@@ -5040,7 +5116,9 @@ define(['logManager'], function (logManager) {
                 assert( pppointpos < points.getLength() && ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength(), 
                     "ARGraph.candeleteTwoEdgesAt: pppointpos < points.getLength() && ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength() FAILED");
 
-                var dir = getDir(npoint.minus(point));
+                var dir = getDir({ 'cx': parseInt(npoint.x - point.x), //'cast' it to an int to remove any decimal value
+                                   'cy': parseInt(npoint.y - point.y) }); //Unfortunately, I need this to be a rough value or it may not correctly determine direction
+
                 assert( isRightAngle(dir), "ARGraph.candeleteTwoEdgesAt: isRightAngle(dir) FAILED");
                 var ishorizontal = isHorizontal(dir);
 
@@ -5054,7 +5132,7 @@ define(['logManager'], function (logManager) {
                     newpoint.x = getPointCoord(ppoint, !ishorizontal);
                 }
 
-                assert( getDir(newpoint.minus(ppoint)) === dir, "ARGraph.candeleteTwoEdgesAt: getDir(newpoint.minus(ppoint)) == dir FAILED" );
+                assert( getDir(newpoint.minus(ppoint)) === dir, "ARGraph.candeleteTwoEdgesAt: getDir(newpoint.minus(ppoint)) === dir FAILED" );
 
                 if( isLineClipBoxes(newpoint, npoint) ) return false;
                 if( isLineClipBoxes(newpoint, ppoint) ) return false;
@@ -5102,7 +5180,7 @@ define(['logManager'], function (logManager) {
                     newpoint.y = getPointCoord(npoint, ishorizontal);
                 }
 
-                assert( getDir(newpoint.minus(ppoint)) == dir, "ARGraph.deleteTwoEdgesAt: getDir(newpoint.minus(ppoint)) == dir FAILED");
+                assert( getDir(newpoint.minus(ppoint)) === dir, "ARGraph.deleteTwoEdgesAt: getDir(newpoint.minus(ppoint)) === dir FAILED");
 
                 assert( !isLineClipBoxes(newpoint, npoint), "ARGraph.deleteTwoEdgesAt: !isLineClipBoxes(newpoint, npoint) FAILED");
                 assert( !isLineClipBoxes(newpoint, ppoint), "ARGraph.deleteTwoEdgesAt: !isLineClipBoxes(newpoint, ppoint) FAILED");
@@ -5142,7 +5220,7 @@ define(['logManager'], function (logManager) {
 
             function deleteSamePointsAt(path, points, pos){
                 if(DEBUG){
-                    assert( path.getOwner() == self, "ARGraph.deleteSamePointsAt: path.getOwner() == self FAILED" );
+                    assert( path.getOwner() === self, "ARGraph.deleteSamePointsAt: path.getOwner() === self FAILED" );
                     path.assertValid();
                     assert( path.isConnected(), "ARGraph.deleteSamePointsAt: path.isConnected() FAILED");
                     points.AssertValidPos(pos);
@@ -5162,7 +5240,7 @@ define(['logManager'], function (logManager) {
                 var ppointpos = pos,
                     point = points.get(pos--), 
                     pppointpos = pos,
-                    pppoint = pos == points.getLength() ? null : points.get(pos--);
+                    pppoint = pos === points.getLength() ? null : points.get(pos--);
 
                 assert( ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength(), "ARGraph.deleteSamePointsAt: ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength() FAILED");
                 assert( ppoint != null && point != null && npoint != null && nnpoint != null, "ARGraph.deleteSamePointsAt: ppoint != null && point != null && npoint != null && nnpoint != null FAILED");
@@ -5296,7 +5374,7 @@ define(['logManager'], function (logManager) {
                         }
                     }
 
-                    if( p4p < pointList.getLength() && d12 == d34 )
+                    if( p4p < pointList.getLength() && d12 === d34 )
                     {
                         assert( p1p < pointList.getLength() && p2p < pointList.getLength() && p3p < pointList.getLength() && p4p < pointList.getLength(), "ARGraph.centerStairsInPathPoints: p1p < pointList.getLength() && p2p < pointList.getLength() && p3p < pointList.getLength() && p4p < pointList.getLength() FAILED");
 
@@ -5342,8 +5420,8 @@ define(['logManager'], function (logManager) {
                             }
 
                             if( !isLineClipBoxes(np2, np3) &&
-                                !isLineClipBoxes(p1p == pointList.getLength() ? outOfBoxEndPoint : p1, np2) &&
-                                !isLineClipBoxes(p4p == 0 ? outOfBoxStartPoint : p4, np3) )
+                                !isLineClipBoxes(p1p === pointList.getLength() ? outOfBoxEndPoint : p1, np2) &&
+                                !isLineClipBoxes(p4p === 0 ? outOfBoxStartPoint : p4, np3) )
                             {
                                 p2 = np2;
                                 p3 = np3;
@@ -5710,7 +5788,7 @@ define(['logManager'], function (logManager) {
 
                     if( c > 0 )
                     {
-                        if( last == 2 )
+                        if( last === 2 )
                             break;
 
                         c--;
@@ -5733,7 +5811,7 @@ define(['logManager'], function (logManager) {
 
                     if( c > 0 )
                     {
-                        if( last == 3 )
+                        if( last === 3 )
                             break;
 
                         c--;
@@ -5756,7 +5834,7 @@ define(['logManager'], function (logManager) {
 
                     if( c > 0 )
                     {
-                        if( last == 4 )
+                        if( last === 4 )
                             break;
 
                         c--;
@@ -5779,7 +5857,7 @@ define(['logManager'], function (logManager) {
 
                     if( c > 0 )
                     {
-                        if( last == 5 )
+                        if( last === 5 )
                             break;
 
                         c--;
@@ -5802,7 +5880,7 @@ define(['logManager'], function (logManager) {
 
                     if( c > 0 )
                     {
-                        if( last == 6 )
+                        if( last === 6 )
                             break;
 
                         c--;
@@ -5815,7 +5893,7 @@ define(['logManager'], function (logManager) {
 
                     if( c > 0 )
                     {
-                        if( last == 7 )
+                        if( last === 7 )
                             break;
 
                         c--;
@@ -5826,7 +5904,7 @@ define(['logManager'], function (logManager) {
                         }
                     }
 
-                    if( last == 0 )
+                    if( last === 0 )
                         break;
                 }
 
@@ -5882,12 +5960,12 @@ define(['logManager'], function (logManager) {
 
             this.deletePath = function(path){
                 assert(path != null, "ARGraph.deletePath: path != null FAILED");
-                if (path == null)
+                if (path === null)
                     return;
 
                 if( path.hasOwner() )
                 {
-                    assert( path.getOwner() == this, "ARGraph.deletePath: path.getOwner() == this FAILED");
+                    assert( path.getOwner() === this, "ARGraph.deletePath: path.getOwner() === this FAILED");
 
                     remove(path);
                 }
@@ -6209,7 +6287,7 @@ pt = [pt];
                     p = new ArPoint(points.get(pos++)[0]);
                     var d = getDir(points.get(pos)[0].minus(p));
 
-                if (d == Dir_Skew)
+                if (d === Dir_Skew)
                     d = hintDir;
                 assert( isRightAngle(d), "ARPath.getOutOfBoxStartPoint: isRightAngle(d) FAILED");
 
@@ -6233,7 +6311,7 @@ pt = [pt];
                     p = new ArPoint(points.get(pos--)[0]),
                     d = getDir(points.get(pos)[0].minus(p));
 
-                if (d == Dir_Skew)
+                if (d === Dir_Skew)
                     d = hintDir;
                 assert( isRightAngle(d), "ARPath.getOutOfBoxEndPoint: isRightAngle(d) FAILED");
 
@@ -6242,7 +6320,7 @@ pt = [pt];
                 else
                     p.y = getRectOuterCoord(endBoxRect, d);
 
-                //assert( getDir(points.get(pos)[0].minus(p)) === reverseDir( d ) || getDir(points.get(pos)[0].minus(p)) == d, "ARPath.getOutOfBoxEndPoint: getDir(points.get(pos)[0].minus(p)) == d || getDir(points.get(pos)[0].minus(p)) == d FAILED"); 
+                //assert( getDir(points.get(pos)[0].minus(p)) === reverseDir( d ) || getDir(points.get(pos)[0].minus(p)) === d, "ARPath.getOutOfBoxEndPoint: getDir(points.get(pos)[0].minus(p)) === d || getDir(points.get(pos)[0].minus(p)) === d FAILED"); 
 
                 return p;
             };
@@ -6272,9 +6350,9 @@ pt = [pt];
 
                 for(;;)
                 {
-                    if( dir12 == Dir_None || dir23 == Dir_None ||
+                    if( dir12 === Dir_None || dir23 === Dir_None ||
                         (dir12 != Dir_Skew && dir23 != Dir_Skew &&
-                        (dir12 == dir23 || dir12 == reverseDir(dir23)) ) )
+                        (dir12 === dir23 || dir12 === reverseDir(dir23)) ) )
                     {
                         points.splice(pos2, 1);
                         pos--;
@@ -6288,7 +6366,7 @@ pt = [pt];
                         dir12 = dir23;
                     }
 
-                    if( pos == points.getLength() ){
+                    if( pos === points.getLength() ){
                         return;
                     }
 
@@ -6332,8 +6410,8 @@ pt = [pt];
                     rect.floor = Math.max(rect.floor, point.y);
                 }
 
-                if( rect.left == INT_MAX || rect.top == INT_MAX ||
-                    rect.right == INT_MIN || rect.bottom == INT_MIN )
+                if( rect.left === INT_MAX || rect.top === INT_MAX ||
+                    rect.right === INT_MIN || rect.bottom === INT_MIN )
                 {
                     rect.setRectEmpty();
                 }
@@ -6359,7 +6437,7 @@ pt = [pt];
 
                 while( pos >= 0)
                 {
-                    if( isStartOrEndRect && ( i == 0 || i == numEdges - 1 ) )
+                    if( isStartOrEndRect && ( i === 0 || i === numEdges - 1 ) )
                     {
                         if (isPointIn(a, r, 1) &&
                             isPointIn(b, r, 1))
@@ -6476,7 +6554,7 @@ pt = [pt];
                     var ii = 0;
                     while (ii < customPathData.length){
                         if ((customPathData[ii]).getEdgeCount() != numEdges &&
-                            (customPathData[ii]).getType() == SimpleEdgeDisplacement)
+                            (customPathData[ii]).getType() === SimpleEdgeDisplacement)
                         {
                             pathDataToDelete.push(customPathData[ii]);
                             customPathData.splice(ii, 1);
@@ -6496,23 +6574,23 @@ pt = [pt];
                     var ii = 0;
                     while (ii < customPathData.length) {
                         var increment = true;
-                        if (currEdgeIndex == (customPathData[ii]).getEdgeIndex()) {
-                            if ((customPathData[ii]).getType() == SimpleEdgeDisplacement) {
+                        if (currEdgeIndex === (customPathData[ii]).getEdgeIndex()) {
+                            if ((customPathData[ii]).getType() === SimpleEdgeDisplacement) {
                                 var dir = getDir(endpoint.minus(startpoint)),
                                     isHorizontalVar = (isHorizontal(dir) != 0),
                                     doNotApply = false;
-                                if ((customPathData[ii]).isHorizontalOrVertical() == isHorizontalVar) {
+                                if ((customPathData[ii]).isHorizontalOrVertical() === isHorizontalVar) {
                                     var xToSet = (customPathData[ii]).getX(),
                                         yToSet = (customPathData[ii]).getY();
                                     // Check if the edge displacement at the end of the path
                                     // is still within the boundary limits of the start or the end box
-                                    if (currEdgeIndex == 0 || currEdgeIndex == numEdges - 1) {
+                                    if (currEdgeIndex === 0 || currEdgeIndex === numEdges - 1) {
                                         var startRect = startport.getRect(),
                                             endRect = endport.getRect(),
-                                            minLimit = (currEdgeIndex == 0 ?
+                                            minLimit = (currEdgeIndex === 0 ?
                                             ((customPathData[ii]).IsHorizontalOrVertical() ? startRect.ceil : startRect.left) :
                                             ((customPathData[ii]).IsHorizontalOrVertical() ? endRect.ceil : endRect.left)),
-                                            maxLimit = (currEdgeIndex == 0 ?
+                                            maxLimit = (currEdgeIndex === 0 ?
                                             ((customPathData[ii]).IsHorizontalOrVertical() ? startRect.floor : startRect.right) :
                                             ((customPathData[ii]).IsHorizontalOrVertical() ? endRect.floor : endRect.right)),
                                             valueToSet = (customPathData[ii]).IsHorizontalOrVertical() ? yToSet : xToSet;
@@ -6562,7 +6640,7 @@ pt = [pt];
             this.markPathCustomizationsForDeletion = function(asp){
                 var ii = 0;
                 while (ii < customPathData.length) {
-                    if ((customPathData[ii]).getAspect() == asp)
+                    if ((customPathData[ii]).getAspect() === asp)
                         pathDataToDelete.push(customPathData[ii]);
                     ++ii;
                 }
@@ -6575,9 +6653,9 @@ pt = [pt];
                 var ii = 0,
                     numEdges = points.getLength() - 1;
                 while (ii < customPathData.length) {
-                    if ((customPathData[ii]).getAspect() == asp) {
+                    if ((customPathData[ii]).getAspect() === asp) {
                         if ((customPathData[ii]).getEdgeCount() != numEdges &&
-                            (customPathData[ii]).getType() == SimpleEdgeDisplacement)
+                            (customPathData[ii]).getType() === SimpleEdgeDisplacement)
                         {
                             customPathData.splice(ii, 1);
                         } else {
@@ -6609,7 +6687,7 @@ pt = [pt];
                 var ii = 0;
                 while(ii < customPathData.length)
                 {
-                    if (this.isAutoRouted() && (customPathData[ii]).getType() == SimpleEdgeDisplacement ||
+                    if (this.isAutoRouted() && (customPathData[ii]).getType() === SimpleEdgeDisplacement ||
                         !this.isAutoRouted() && (customPathData[ii]).getType() != SimpleEdgeDisplacement)
                     {
                         var edgeIndex = (customPathData[ii]).getEdgeIndex();
@@ -6959,34 +7037,37 @@ pt = [pt];
                     maxY = rect.floor - 1,
                     minX = rect.left,
                     minY = rect.ceil,
-                    resultPoint;
+                    resultPoint,
+                    x,
+                    y;
 
                 //Adjust angle based on part of port to which it is connecting
                 switch(dir){
                 
                     case Dir_Top:
                         pathAngle = 2 * Math.PI - (pathAngle + Math.PI/2);
-                        resultPoint = new ArPoint(roundToHalfGrid(rect.left, rect.right), rect.ceil);
+                        x = roundToHalfGrid(rect.left, rect.right);
+                        y = rect.ceil;
                         maxY = rect.ceil;
                         break;
 
                     case Dir_Right:
                         pathAngle = 2 * Math.PI - pathAngle;
-                        //pathAngle = pathAngle - Math.PI/2;
-                        resultPoint = new ArPoint(rect.right - 1, roundToHalfGrid(rect.ceil, rect.floor));
+                        x = rect.right - 1;
+                        y = roundToHalfGrid(rect.ceil, rect.floor);
                         minX = rect.right - 1;
                         break;
 
                     case Dir_Bottom:
                         pathAngle -= Math.PI/2;
-                        //pathAngle = Math.PI/2 - pathAngle;
-                        resultPoint = new ArPoint(roundToHalfGrid(rect.left, rect.right), rect.floor - 1);
+                        x = roundToHalfGrid(rect.left, rect.right);
+                        y = rect.floor - 1;
                         minY = rect.floor - 1;
                         break;
 
                     case Dir_Left:
-                        //pathAngle = 3 * Math.PI/2 - pathAngle;
-                        resultPoint = new ArPoint(rect.left, roundToHalfGrid(rect.ceil, rect.floor));
+                        x = rect.left;
+                        y = roundToHalfGrid(rect.ceil, rect.floor);
                         maxX = rect.left;
                         break;
                 }
@@ -7002,22 +7083,23 @@ pt = [pt];
                     k++;
                 }
 
-                if( points[dir].length){
+                if( points[dir].length ){
                     if ( k === 0 ){
-                        resultPoint.x = ( points[dir][k].x + minX )/2;
-                        resultPoint.y = ( points[dir][k].y + minY )/2;
+                        x = ( points[dir][k].x + minX )/2;
+                        y = ( points[dir][k].y + minY )/2;
                     }else if ( k !== points[dir].length ){
-                        resultPoint.x = ( points[dir][k-1].x + points[dir][k].x )/2;
-                        resultPoint.y = ( points[dir][k-1].y + points[dir][k].y )/2;
+                        x = ( points[dir][k-1].x + points[dir][k].x )/2;
+                        y = ( points[dir][k-1].y + points[dir][k].y )/2;
                     }else{
-                        resultPoint.x = ( points[dir][k-1].x + maxX )/2;
-                        resultPoint.y = ( points[dir][k-1].y + maxY )/2;
+                        x = ( points[dir][k-1].x + maxX )/2;
+                        y = ( points[dir][k-1].y + maxY )/2;
                     }
                 }
 
+                resultPoint = new ArPoint(x, y);
                 resultPoint.pathAngle = pathAngle;
                 points[dir].splice(k, 0, resultPoint);
-
+                
                 assert( isRightAngle( this.port_OnWhichEdge(resultPoint) ), "AutoRouterPort.createStartEndPointTo: isRightAngle( this.port_OnWhichEdge(resultPoint) FAILED");
 
                 return resultPoint;
@@ -7104,9 +7186,9 @@ pt = [pt];
                 x2 = box.getRect().right,
                 y2 = box.getRect().floor;
 
-            if(connAreas == undefined){
+            if(connAreas === undefined){
                 return p;
-            }else if(connAreas == "all"){//If "all" designated, I will add a 'virtual' port that allows connections on 
+            }else if(connAreas === "all"){//If "all" designated, I will add a 'virtual' port that allows connections on 
                 port = box.createPort(); // all sides
                 r = new ArRect(x1 + 1, y1 + 1, x2 - 1, y2 - 1);
                 port.setLimitedDirs(false);
@@ -7172,18 +7254,18 @@ pt = [pt];
                                    isStart -= (type === "start" ? 1 : 16); 
                                 }
 
-                                if(connArea[j].length == 1 ){//using points to designate the connection RECTANGLE [ [x1, y1, x2, y2] ]
+                                if(connArea[j].length === 1 ){//using points to designate the connection RECTANGLE [ [x1, y1, x2, y2] ]
                                     arx1 = connArea[j][0][0] + 1;
                                     arx2 = connArea[j][0][1] - 1;
                                     ary1 = connArea[j][0][2] + 1;
                                     ary2 = connArea[j][0][3] - 1;
 
-                                    attr = (arx1  - 1 == x1 ? ARPORT_EndOnLeft * isStart : 0) + 
-                                        (arx2 + 1 == x2 ? ARPORT_EndOnRight * isStart : 0) + 
-                                        (ary1 - 1 == y1 ? ARPORT_EndOnTop * isStart : 0) + 
-                                        (ary2 + 1 == y2 ? ARPORT_EndOnBottom * isStart : 0);
+                                    attr = (arx1  - 1 === x1 ? ARPORT_EndOnLeft * isStart : 0) + 
+                                        (arx2 + 1 === x2 ? ARPORT_EndOnRight * isStart : 0) + 
+                                        (ary1 - 1 === y1 ? ARPORT_EndOnTop * isStart : 0) + 
+                                        (ary2 + 1 === y2 ? ARPORT_EndOnBottom * isStart : 0);
 
-                                }else if(connArea[j].length == 2 && connArea[j][0][0] != connArea[j][1][0] //connection RECTANGLE
+                                }else if(connArea[j].length === 2 && connArea[j][0][0] != connArea[j][1][0] //connection RECTANGLE
                                          && connArea[j][0][1] != connArea[j][1][1]) {//[ [x1, y1], [x2, y2] ]
                                     arx1 = Math.min( connArea[j][0][0], connArea[j][1][0]) + 1;
                                     arx2 = Math.max( connArea[j][0][0], connArea[j][1][0]) - 1;
@@ -7211,22 +7293,22 @@ pt = [pt];
                                         attr = ARPORT_StartOnRight + ARPORT_EndOnRight;
 
 
-                                    //attr = (arx1  - 1 == x1 ? ARPORT_EndOnLeft * isStart : 0) + 
-                                     //   (arx2 + 1 == x2 ? ARPORT_EndOnRight * isStart : 0) + 
-                                      //  (ary1 - 1 == y1 ? ARPORT_EndOnTop * isStart : 0) + 
-                                       // (ary2 + 1 == y2 ? ARPORT_EndOnBottom * isStart : 0);
+                                    //attr = (arx1  - 1 === x1 ? ARPORT_EndOnLeft * isStart : 0) + 
+                                     //   (arx2 + 1 === x2 ? ARPORT_EndOnRight * isStart : 0) + 
+                                      //  (ary1 - 1 === y1 ? ARPORT_EndOnTop * isStart : 0) + 
+                                       // (ary2 + 1 === y2 ? ARPORT_EndOnBottom * isStart : 0);
 
                                 }else{//using points to designate the connection area: [ [x1, y1], [x2, y2] ]
                                     var _x1 = Math.min( connArea[j][0][0], connArea[j][1][0]),
                                         _x2 = Math.max( connArea[j][0][0], connArea[j][1][0]),
                                         _y1 = Math.min( connArea[j][0][1], connArea[j][1][1]),
                                         _y2 = Math.max( connArea[j][0][1], connArea[j][1][1]),
-                                        horizontal = (_y1 == _y2 ? true : false); 
+                                        horizontal = (_y1 === _y2 ? true : false); 
 
                                     //If it is a single point of connection, we will expand it to a rect
                                     // We will determine that it is horizontal by if it is closer to a horizontal edges
                                     // or the vertical edges
-                                    if(_y1 == _y2 && _x1 == _x2){ 
+                                    if(_y1 === _y2 && _x1 === _x2){ 
                                         horizontal =  Math.min(Math.abs(y1 - _y1), Math.abs(y2 - _y2)) <
                                             Math.min(Math.abs(x1 - _x1), Math.abs(x2 - _x2)) ;
                                         if(horizontal)
@@ -7241,7 +7323,7 @@ pt = [pt];
                                         }
                                     }
 
-                                    assert(horizontal || _x1 == _x2, "AutoRouter:addBox Connection Area for box must be either horizontal or vertical");
+                                    assert(horizontal || _x1 === _x2, "AutoRouter:addBox Connection Area for box must be either horizontal or vertical");
 
                                     arx1 = _x1;
                                     arx2 = _x2;
@@ -7289,22 +7371,22 @@ pt = [pt];
                                 assert(x1 < arx1 && y1 < ary1 && x2 > arx2 && y2 > ary2, "AutoRouter.addBox Cannot add port outside of the box");
                                 r = new ArRect(arx1, ary1, arx2, ary2); 
                 
-                            }else if(typeof connArea[j] == "string") //Using words to designate connection area
+                            }else if(typeof connArea[j] === "string") //Using words to designate connection area
                             {
                                 r = new ArRect(x1 + 1, y1 + 1, x2 - 1, y2 - 1);
                                 //connArea[j] = connArea[j].toLowerCase();
                                 attr = (connArea[j].indexOf("top") != -1 ? 
                                     //Connection area is on top
-                                        (( j % 2 == 0 ? ARPORT_StartOnTop : 0) + (j < 2 ? ARPORT_EndOnTop : 0)) : 0) +
+                                        (( j % 2 === 0 ? ARPORT_StartOnTop : 0) + (j < 2 ? ARPORT_EndOnTop : 0)) : 0) +
                                     //Connection area is on bottom
                                     (connArea[j].indexOf("bottom") != -1 ? 
-                                        (( j % 2 == 0 ? ARPORT_StartOnBottom : 0) + (j < 2 ? ARPORT_EndOnBottom : 0)) : 0) +
+                                        (( j % 2 === 0 ? ARPORT_StartOnBottom : 0) + (j < 2 ? ARPORT_EndOnBottom : 0)) : 0) +
                                     //Connection area is on left
                                     (connArea[j].indexOf("left") != -1 ? 
-                                        (( j % 2 == 0 ? ARPORT_StartOnLeft : 0) + (j < 2 ? ARPORT_EndOnLeft : 0)) : 0) +
+                                        (( j % 2 === 0 ? ARPORT_StartOnLeft : 0) + (j < 2 ? ARPORT_EndOnLeft : 0)) : 0) +
                                     //Connection area is on right
                                     (connArea[j].indexOf("right") != -1 ? 
-                                        (( j % 2 == 0 ? ARPORT_StartOnRight : 0) + (j < 2 ? ARPORT_EndOnRight : 0)) : 0) ||
+                                        (( j % 2 === 0 ? ARPORT_StartOnRight : 0) + (j < 2 ? ARPORT_EndOnRight : 0)) : 0) ||
                                     (connArea[j].indexOf("all") != -1 ? ARPORT_ConnectOnAll : 0) ; 
 
                                 //Unfortunately, all will not specify in or outgoing connections
