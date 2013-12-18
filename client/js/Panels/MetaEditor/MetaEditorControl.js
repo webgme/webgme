@@ -393,10 +393,8 @@ define(['logManager',
             territoryChanged = true;
         }
 
-        ///TODO: broken!!!!!
-
         //check all other nodes for position change
-        diff = _.intersection(this.currentNodeInfo.members, metaAspectSetMembers);
+        /*diff = _.intersection(this.currentNodeInfo.members, metaAspectSetMembers);
         len = diff.length;
         while (len--) {
             gmeID = diff[len];
@@ -406,18 +404,18 @@ define(['logManager',
                 componentID = this._GMEID2ComponentID[gmeID];
                 this.diagramDesigner.updateDesignerItem(componentID, objDesc);
             }
-        }
+        }*/
 
         //update current member list
-        this.currentNodeInfo.members = metaAspectSetMembers.slice(0);
+        this._metaAspectMembersAll = metaAspectSetMembers.slice(0);
+
+        //process the sheets
+        this._processMetaAspectSheetsRegistry();
 
         //there was change in the territory
         if (territoryChanged === true) {
             this._client.updateTerritory(this._territoryId, this._selfPatterns);
         }
-
-        //process the sheets
-        this._processMetaAspectSheetsRegistry();
     };
     /**********************************************************************/
     /*  END OF --- PROCESS CURRENT NODE TO HANDLE ADDED / REMOVED ELEMENT */
@@ -1719,7 +1717,8 @@ define(['logManager',
             i,
             len,
             sheetID,
-            selectedSheetID;
+            selectedSheetID,
+            setName;
 
         this._sheets = {};
         this.diagramDesigner.clearSheets();
@@ -1735,8 +1734,15 @@ define(['logManager',
         //here we have the metaAspectRegistry ordered by user defined order
         len = metaAspectSheetsRegistry.length;
         for (i = 0; i < len; i += 1) {
+            setName = metaAspectSheetsRegistry[i].SetID;
+
             sheetID = this.diagramDesigner.addSheet(metaAspectSheetsRegistry[i].title, true);
-            this._sheets[sheetID] = metaAspectSheetsRegistry[i].SetID;
+
+            this._sheets[sheetID] = setName;
+
+            //get the most up-to-date member list for each set
+            this._metaAspectMembersPerSheet[setName] = aspectNode.getMemberIds(setName);
+
             if (this._selectedMetaAspectSet &&
                 this._selectedMetaAspectSet === metaAspectSheetsRegistry[i].SetID) {
                 selectedSheetID = sheetID;

@@ -102,26 +102,28 @@ define(['logManager',
             i,
             accept = false;
 
-        //accept is self reposition OR dragging from somewhere else and the items are not on the sheet yet
-        if (params && params.hasOwnProperty(DRAG_PARAMS_META_CONTAINER_ID)) {
-            if (gmeIDList.length === 0) {
-                accept = true;
-            }
-        } else {
-            if (dragEffects.length === 1 &&
-                dragEffects[0] === DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE) {
+        if (this._selectedMetaAspectSet) {
+            //accept is self reposition OR dragging from somewhere else and the items are not on the sheet yet
+            if (params && params.hasOwnProperty(DRAG_PARAMS_META_CONTAINER_ID)) {
+                if (gmeIDList.length === 0) {
+                    accept = true;
+                }
+            } else {
+                if (dragEffects.length === 1 &&
+                    dragEffects[0] === DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE) {
                     //dragging from PartBrowser
                     accept = false;
                 } else {
                     //return true if there is at least one item among the dragged ones that is not on the sheet yet
                     if (gmeIDList.length > 0) {
                         for (i = 0; i < gmeIDList.length; i+= 1) {
-                            if (this.currentNodeInfo.members.indexOf(gmeIDList[i]) === -1 ) {
+                            if (this._metaAspectMembersPerSheet[this._selectedMetaAspectSet].indexOf(gmeIDList[i]) === -1 ) {
                                 accept = true;
                                 break;
                             }
                         }
                     }
+                }
             }
         }
 
@@ -159,7 +161,7 @@ define(['logManager',
 
                         posX = position.x + params.positions[i].x;
                         posY = position.y + params.positions[i].y;
-                        _client.setMemberRegistry(aspectNodeID, i, MetaEditorConstants.META_ASPECT_SET_NAME, MetaEditorConstants.META_ASPECT_MEMBER_POSITION_REGISTRY_KEY, {'x': posX, 'y': posY} );
+                        _client.setMemberRegistry(aspectNodeID, i, this._selectedMetaAspectSet, MetaEditorConstants.META_ASPECT_MEMBER_POSITION_REGISTRY_KEY, {'x': posX, 'y': posY} );
 
                         componentID = this._GMEID2ComponentID[i];
 
@@ -176,13 +178,19 @@ define(['logManager',
         } else {
             _client.startTransaction();
 
-            //if the item is not currently in the METAAspect, add it
+            //if the item is not currently in the current META Aspect sheet, add it
             if (gmeIDList.length > 0) {
                 for (i = 0; i < gmeIDList.length; i += 1) {
                     componentID = gmeIDList[i];
-                    if (this.currentNodeInfo.members.indexOf(componentID) === -1) {
-                        _client.addMember(aspectNodeID, componentID, MetaEditorConstants.META_ASPECT_SET_NAME);
-                        _client.setMemberRegistry(aspectNodeID, componentID, MetaEditorConstants.META_ASPECT_SET_NAME, MetaEditorConstants.META_ASPECT_MEMBER_POSITION_REGISTRY_KEY, {'x': position.x, 'y': position.y} );
+                    if (this._metaAspectMembersPerSheet[this._selectedMetaAspectSet].indexOf(componentID) === -1) {
+                        _client.addMember(aspectNodeID, componentID, this._selectedMetaAspectSet);
+                        _client.setMemberRegistry(aspectNodeID, componentID, this._selectedMetaAspectSet, MetaEditorConstants.META_ASPECT_MEMBER_POSITION_REGISTRY_KEY, {'x': position.x, 'y': position.y} );
+
+                        //if this item has not been part of the META Aspect at all, add it
+                        if (this._metaAspectMembersAll.indexOf(componentID) === -1) {
+                            _client.addMember(aspectNodeID, componentID, MetaEditorConstants.META_ASPECT_SET_NAME);
+                            _client.setMemberRegistry(aspectNodeID, componentID, MetaEditorConstants.META_ASPECT_SET_NAME, MetaEditorConstants.META_ASPECT_MEMBER_POSITION_REGISTRY_KEY, {'x': position.x, 'y': position.y} );
+                        }
 
                         position.x += 20;
                         position.y += 20;
