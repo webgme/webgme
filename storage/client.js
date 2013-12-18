@@ -290,6 +290,23 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                 callback(new Error(ERROR_DISCONNECTED));
             }
         }
+        function getAuthorizationInfo (name,callback){
+            ASSERT(typeof callback === 'function');
+            if (socketConnected) {
+                var guid = GUID();
+                callbacks[guid] = {
+                    cb: callback,
+                    to: setTimeout(callbackTimeout, options.timeout, guid)
+                };
+                socket.emit('getAuthorizationInfo', name, function (err, authInfo) {
+                    clearTimeout(callbacks[guid].to);
+                    delete callbacks[guid];
+                    callback(err, authInfo);
+                });
+            } else {
+                callback(new Error(ERROR_DISCONNECTED));
+            }
+        }
 
         function deleteProject (project, callback) {
             ASSERT(typeof callback === 'function');
@@ -619,6 +636,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
             getDatabaseStatus: getDatabaseStatus,
             getProjectNames: getProjectNames,
             getAllowedProjectNames: getAllowedProjectNames,
+            getAuthorizationInfo: getAuthorizationInfo,
             deleteProject: deleteProject,
             openProject: openProject
         };

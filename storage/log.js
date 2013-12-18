@@ -44,6 +44,11 @@ define([ "util/assert" ], function (ASSERT) {
             _database.getAllowedProjectNames(callback);
         }
 
+        function getAuthorizationInfo (name,callback) {
+            logger.debug('getAuthorizationInfo('+name+')');
+            _database.getAuthorizationInfo(name,callback);
+        }
+
 		function deleteProject (project, callback) {
 			logger.debug('deleteProject(' + project + ")");
 			_database.deleteProject(project, callback);
@@ -152,6 +157,7 @@ define([ "util/assert" ], function (ASSERT) {
 			fsyncDatabase: fsyncDatabase,
 			getProjectNames: getProjectNames,
             getAllowedProjectNames: getAllowedProjectNames,
+            getAuthorizationInfo: getAuthorizationInfo,
 			getDatabaseStatus: getDatabaseStatus,
 			openProject: openProject,
 			deleteProject: deleteProject,

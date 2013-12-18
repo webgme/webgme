@@ -73,6 +73,7 @@ define([ "util/assert", "util/sha1", "util/canon" ], function (ASSERT, SHA1, CAN
 			fsyncDatabase: _database.fsyncDatabase,
 			getProjectNames: _database.getProjectNames,
             getAllowedProjectNames: _database.getAllowedProjectNames,
+            getAuthorizationInfo: _database.getAuthorizationInfo,
 			getDatabaseStatus: _database.getDatabaseStatus,
 			openProject: openProject,
 			deleteProject: _database.deleteProject,

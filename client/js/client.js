@@ -878,6 +878,13 @@ define([
                     callback(new Error('there is no open database connection!'));
                 }
             }
+            function getProjectAuthInfoAsync(projectname,callback){
+                if(_database){
+                    _database.getAuthorizationInfo(projectname,callback);
+                } else {
+                    callback(new Error('there is no open database connection!'));
+                }
+            }
             function selectProjectAsync(projectname,callback) {
                 if(_database){
                     if(projectname === _projectName){
@@ -1875,6 +1882,13 @@ define([
                     console.log(_core.getConstraintNames(_nodes[_id].node));
                     _core.delConstraint(_nodes[_id].node,"proba");
                     console.log(_core.getConstraintNames(_nodes[_id].node));
+                    _database.getAuthorizationInfo(_projectName,function(err,authInfo){
+                        if(err){
+                            console.log('kecso ehh',err);
+                        } else {
+                            console.log('kecso yeah',authInfo);
+                        }
+                    })
                 };
 
                 if(_nodes[_id]){
@@ -2003,6 +2017,7 @@ define([
                 getActiveProject: getActiveProject,
                 getAvailableProjectsAsync: getAvailableProjectsAsync,
                 getViewableProjectsAsync: getViewableProjectsAsync,
+                getProjectAuthInfoAsync: getProjectAuthInfoAsync,
                 connectToDatabaseAsync: connectToDatabaseAsync,
                 selectProjectAsync: selectProjectAsync,
                 createProjectAsync: createProjectAsync,

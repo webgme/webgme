@@ -156,9 +156,14 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
                 if (options.session === true){
                     var sessionID = data.webgme;
                     if(sessionID === null || sessionID === undefined){
-                        var cookie = URL.parseCookie(data.headers.cookie);
-                        if(cookie[options.cookieID] !== undefined || cookie[options.cookieID] !== null){
-                            sessionID = require('connect').utils.parseSignedCookie(cookie[options.cookieID],options.secret);
+                        if(data.headers.cookie){
+                            var cookie = URL.parseCookie(data.headers.cookie);
+                            if(cookie[options.cookieID] !== undefined || cookie[options.cookieID] !== null){
+                                sessionID = require('connect').utils.parseSignedCookie(cookie[options.cookieID],options.secret);
+                            }
+                        } else {
+                            console.log('DEBUG COOKIE INFO', JSON.stringify(data.headers));
+                            return accept(null,false);
                         }
                     }
                     options.sessioncheck(sessionID,function(err,isOk){
@@ -251,6 +256,16 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
                                     callback(err);
                                 }
                             });
+                        }
+                    });
+                });
+
+                socket.on('getAuthorizationInfo', function(name,callback){
+                    checkDatabase(function(err){
+                        if(err){
+                            callback(err);
+                        } else {
+                            options.authInfo(getSessionID(socket),name,callback);
                         }
                     });
                 });
