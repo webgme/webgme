@@ -147,7 +147,7 @@ requirejs(['logManager',
         app.use(express.cookieParser());
         app.use(express.bodyParser());
         app.use(express.methodOverride());
-        app.use(express.session({store: __sessionStore, secret: parameters.sessioncookiesecret, key: parameters.sessioncookieid }));
+        app.use(express.session({store: __sessionStore, secret: parameters.sessioncookiesecret, key: parameters.sessioncookieid, cookie: { domain:parameters.host} }));
         app.use(passport.initialize());
         app.use(passport.session());
         app.use(app.router);
