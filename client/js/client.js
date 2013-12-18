@@ -93,8 +93,6 @@ define([
             _configuration.autoreconnect = _configuration.autoreconnect === null || _configuration.autoreconnect === undefined ? true : _configuration.autoreconnect;
             _configuration.reconndelay  = _configuration.reconndelay || 1000;
             _configuration.reconnamount = _configuration.reconnamount || 1000;
-            _configuration.host = _configuration.host || "http://"+document.location.hostname;
-            _configuration.port = _configuration.port || document.location.port;
             _configuration.autostart = _configuration.autostart === null || _configuration.autostart === undefined ? false : _configuration.autostart;
 
 
@@ -128,7 +126,7 @@ define([
             }
 
             function newDatabase(){
-                return Storage({host:_configuration.host,port:_configuration.port,log:LogManager.create('client-storage')});
+                return Storage({log:LogManager.create('client-storage')});
             }
             function setSelectedObjectId(objectId, activeSelection) {
                 /*if (objectId !== _selectedObjectId) {*/
@@ -448,53 +446,56 @@ define([
                 ASSERT(_database);
                 _database.openProject(name,function(err,p){
                     if(!err &&  p){
-                        _project = p;
-                        _projectName = name;
-                        _inTransaction = false;
-                        _nodes = {};
-                        _metaNodes = {};
-                        _core = getNewCore(_project);
-                        META.initialize(_core,_metaNodes,saveRoot);
-                        if(_commitCache){
-                            _commitCache.clearCache();
-                        } else {
-                            _commitCache = commitCache();
-                        }
-                        _self.dispatchEvent(_self.events.PROJECT_OPENED, _projectName);
+                        _database.getAuthorizationInfo(name,function(err,authInfo){
+                            _viewer = authInfo ? (authInfo.write === true ? false : true) : true;
+                            _project = p;
+                            _projectName = name;
+                            _inTransaction = false;
+                            _nodes = {};
+                            _metaNodes = {};
+                            _core = getNewCore(_project);
+                            META.initialize(_core,_metaNodes,saveRoot);
+                            if(_commitCache){
+                                _commitCache.clearCache();
+                            } else {
+                                _commitCache = commitCache();
+                            }
+                            _self.dispatchEvent(_self.events.PROJECT_OPENED, _projectName);
 
-                        //check for master or any other branch
-                        _project.getBranchNames(function(err,names){
-                            if(!err && names){
-                                var firstName = null;
+                            //check for master or any other branch
+                            _project.getBranchNames(function(err,names){
+                                if(!err && names){
+                                    var firstName = null;
 
-                                for(var i in names){
-                                    if(!firstName){
-                                        firstName = i;
-                                    }
-                                    if(i === 'master'){
-                                        firstName = i;
-                                        break;
-                                    }
-                                }
-
-                                if(firstName){
-                                    branchWatcher(firstName,function(err){
-                                        if(!err){
-                                            _self.dispatchEvent(_self.events.BRANCH_CHANGED, _branch);
-                                            callback(null);
-                                        } else {
-                                            logger.error('The branch '+firstName+' of project '+name+' cannot be selected! ['+JSON.stringify(err)+']');
-                                            callback(err);
+                                    for(var i in names){
+                                        if(!firstName){
+                                            firstName = i;
                                         }
-                                    });
+                                        if(i === 'master'){
+                                            firstName = i;
+                                            break;
+                                        }
+                                    }
+
+                                    if(firstName){
+                                        branchWatcher(firstName,function(err){
+                                            if(!err){
+                                                _self.dispatchEvent(_self.events.BRANCH_CHANGED, _branch);
+                                                callback(null);
+                                            } else {
+                                                logger.error('The branch '+firstName+' of project '+name+' cannot be selected! ['+JSON.stringify(err)+']');
+                                                callback(err);
+                                            }
+                                        });
+                                    } else {
+                                        //we should try the latest commit
+                                        viewLatestCommit(callback);
+                                    }
                                 } else {
                                     //we should try the latest commit
                                     viewLatestCommit(callback);
                                 }
-                            } else {
-                                //we should try the latest commit
-                                viewLatestCommit(callback);
-                            }
+                            });
                         });
                     } else {
                         logger.error('The project '+name+' cannot be opened! ['+JSON.stringify(err)+']');
@@ -1113,8 +1114,6 @@ define([
             function connectToDatabaseAsync(options,callback){
                 options = options || {};
                 callback = callback || function(){};
-                options.host = options.host || _configuration.host;
-                options.port = options.port || _configuration.port;
                 options.open = (options.open !== undefined || options.open !== null) ? options.open : false;
                 options.project = options.project || null;
                 if(_database){
@@ -1882,13 +1881,7 @@ define([
                     console.log(_core.getConstraintNames(_nodes[_id].node));
                     _core.delConstraint(_nodes[_id].node,"proba");
                     console.log(_core.getConstraintNames(_nodes[_id].node));
-                    _database.getAuthorizationInfo(_projectName,function(err,authInfo){
-                        if(err){
-                            console.log('kecso ehh',err);
-                        } else {
-                            console.log('kecso yeah',authInfo);
-                        }
-                    })
+                    console.log('kecso',_viewer);
                 };
 
                 if(_nodes[_id]){

@@ -10,14 +10,11 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
     function Database (options) {
         ASSERT(typeof options === "object");
 
-        options.host = options.host || "http://localhost";
-        options.port = options.port || 80;
         options.type = options.type || "browser";
         options.timeout = options.timeout || 10000;
 
-        if (options.host.substr(0, 7) !== "http://" && options.host.substr(0, 8) !== "https://") {
-            options.host = "http://" + options.host;
-        }
+        var _hostAddress = window.location.protocol + '//' + window.location.host;
+
 
         var socketConnected = false, socket = null, status = null, reconnect = false, getDbStatusCallbacks = {}, callbacks = {}, getBranchHashCallbacks = {}, IO = null, projects = {}, references = {}, ERROR_DISCONNECTED =
             'The socket.io is disconnected', ERROR_TIMEOUT = "no valid response arrived in time", STATUS_NETWORK_DISCONNECTED = "socket.io is disconnected";
@@ -118,7 +115,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                 };
 
                 var IOReady = function () {
-                    socket = IO.connect(options.host + ":" + options.port, {
+                    socket = IO.connect(_hostAddress,{
                         'connect timeout': 10,
                         'reconnection delay': 1,
                         'force new connection': true,
@@ -172,7 +169,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                 };
 
                 if (options.type === 'browser') {
-                    require([ options.host + ":" + options.port + "/socket.io/socket.io.js" ], function () {
+                    require([ _hostAddress + "/socket.io/socket.io.js" ], function () {
                         IO = io;
                         IOReady();
                     });

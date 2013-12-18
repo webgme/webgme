@@ -104,14 +104,25 @@ requirejs(['logManager',
         done(null,_users[id]);
     });
 
-    passport.use(new stratGugli({
-            returnURL: parameters.host+':'+parameters.port+'/login/google/return',
-            realm: parameters.host+':'+parameters.port
-        },
-        function(identifier, profile, done) {
-            return done(null,{id:profile.emails[0].value});
+    var googleAuthenticaitonSet = false;
+    function checkGoogleAuthentication(req,res,next){
+        if(googleAuthenticaitonSet === true){
+            return next();
+        } else {
+            var protocolPrefix = parameters.httpsecure === true ? 'https://' : 'http://';
+            passport.use(new stratGugli({
+                    returnURL: protocolPrefix+req.headers.host +'/login/google/return',
+                    realm: protocolPrefix+req.headers.host
+                },
+                function(identifier, profile, done) {
+                    return done(null,{id:profile.emails[0].value});
+                }
+            ));
+            googleAuthenticaitonSet = true;
+            return next();
         }
-    ));
+    }
+
 
     function ensureAuthenticated(req, res, next) {
         if(true === parameters.authentication){
@@ -147,7 +158,7 @@ requirejs(['logManager',
         app.use(express.cookieParser());
         app.use(express.bodyParser());
         app.use(express.methodOverride());
-        app.use(express.session({store: __sessionStore, secret: parameters.sessioncookiesecret, key: parameters.sessioncookieid, cookie: { domain:parameters.host} }));
+        app.use(express.session({store: __sessionStore, secret: parameters.sessioncookiesecret, key: parameters.sessioncookieid}));
         app.use(passport.initialize());
         app.use(passport.session());
         app.use(app.router);
@@ -181,7 +192,7 @@ requirejs(['logManager',
         res.cookie('webgme',req.session.udmId);
         res.redirect('/');
     });
-    app.get('/login/google',passport.authenticate('google'));
+    app.get('/login/google',checkGoogleAuthentication,passport.authenticate('google'));
     app.get('/login/google/return',gme.authenticate,function(req,res){
         res.cookie('webgme',req.session.udmId);
         res.redirect('/');
