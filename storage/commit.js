@@ -76,8 +76,7 @@ define([ "util/assert", "util/sha1", "util/canon" ], function (ASSERT, SHA1, CAN
             getAuthorizationInfo: _database.getAuthorizationInfo,
 			getDatabaseStatus: _database.getDatabaseStatus,
 			openProject: openProject,
-			deleteProject: _database.deleteProject,
-            authenticate: _database.authenticate
+			deleteProject: _database.deleteProject
 		};
 	}
 

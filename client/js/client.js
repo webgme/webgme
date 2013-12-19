@@ -1983,28 +1983,22 @@ define([
                 _database = newDatabase();
                 _database.openDatabase(function(err){
                     if(!err){
-                        _database.authenticate(_userName,_privateKey,function(err){
-                            if(!err){
-                                _networkWatcher = networkWatcher();
-                                _database.getProjectNames(function(err,names){
-                                    if(!err && names && names.length>0){
-                                        var projectName = null;
-                                        if(_configuration.project && names.indexOf(_configuration.project) !== -1){
-                                            projectName = _configuration.project;
-                                        } else {
-                                            projectName = names[0];
-                                        }
-                                        openProject(projectName,function(err){
-                                            if(err){
-                                                logger.error('Problem during project opening:'+JSON.stringify(err));
-                                            }
-                                        });
-                                    } else {
-                                        logger.error('Cannot get project names / There is no project on the server');
+                        _networkWatcher = networkWatcher();
+                        _database.getProjectNames(function(err,names){
+                            if(!err && names && names.length>0){
+                                var projectName = null;
+                                if(_configuration.project && names.indexOf(_configuration.project) !== -1){
+                                    projectName = _configuration.project;
+                                } else {
+                                    projectName = names[0];
+                                }
+                                openProject(projectName,function(err){
+                                    if(err){
+                                        logger.error('Problem during project opening:'+JSON.stringify(err));
                                     }
                                 });
                             } else {
-                                logger.error('authentication failed');
+                                logger.error('Cannot get project names / There is no project on the server');
                             }
                         });
                     } else {
