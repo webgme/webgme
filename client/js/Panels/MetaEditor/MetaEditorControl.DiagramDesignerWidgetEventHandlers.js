@@ -460,7 +460,8 @@ define(['logManager',
             metaAspectSheetsRegistry = aspectNode.getEditableRegistry(MetaEditorConstants.META_SHEET_REGISTRY_KEY) || [],
             i,
             len,
-            newSetID;
+            newSetID,
+            componentID;
 
         metaAspectSheetsRegistry.sort(function (a, b) {
             if (a.order < b.order) {
@@ -487,6 +488,16 @@ define(['logManager',
                             'title': 'New sheet'};
 
         metaAspectSheetsRegistry.push(newSheetDesc);
+
+        //migrating projects that already have META aspect members but did not have sheets before
+        if (metaAspectSheetsRegistry.length === 1) {
+            len = this._metaAspectMembersAll.length;
+            while (len--) {
+                componentID = this._metaAspectMembersAll[len];
+                this._client.addMember(aspectNodeID, componentID, newSetID);
+                this._client.setMemberRegistry(aspectNodeID, componentID, newSetID, MetaEditorConstants.META_ASPECT_MEMBER_POSITION_REGISTRY_KEY, {'x': this._metaAspectMembersCoordinatesGlobal[componentID].x, 'y': this._metaAspectMembersCoordinatesGlobal[componentID].y} );
+            }
+        }
 
         this._client.setRegistry(aspectNodeID, MetaEditorConstants.META_SHEET_REGISTRY_KEY, metaAspectSheetsRegistry);
 
