@@ -17,7 +17,8 @@ define(['logManager',
                                         DragHelper) {
 
     var MetaEditorControlDiagramDesignerWidgetEventHandlers,
-        DRAG_PARAMS_META_CONTAINER_ID = 'metaContainerID';
+        DRAG_PARAMS_META_CONTAINER_ID = 'metaContainerID',
+        META_RULES_CONTAINER_NODE_ID = MetaEditorConstants.META_ASPECT_CONTAINER_ID;
 
     MetaEditorControlDiagramDesignerWidgetEventHandlers = function () {
     };
@@ -429,6 +430,8 @@ define(['logManager',
             this._selectedMetaAspectSet = this._sheets[sheetID];
 
             this.logger.warning('selectedAspectChanged: ' + this._selectedMetaAspectSet);
+
+            this.selectedObjectChanged(META_RULES_CONTAINER_NODE_ID);
         }
     };
 

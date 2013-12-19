@@ -62,6 +62,9 @@ define(['logManager',
 
         this._metaAspectMembersAll = [];
         this._metaAspectMembersPerSheet = {};
+        this._metaAspectMembersCoordinatesGlobal = {};
+        this._metaAspectMembersCoordinatesPerSheet = {};
+        this._selectedMetaAspectSheetMembers = [];
 
         //set default connection type to containment
         this._setNewConnectionType(MetaRelations.META_RELATIONS.CONTAINMENT);
@@ -71,19 +74,20 @@ define(['logManager',
         //attach all the event handlers for event's coming from DiagramDesigner
         this.attachDiagramDesignerWidgetEventHandlers();
 
-        //TODO: load meta container node
-        //TODO: give the UI time to render first before start using it's features
-        setTimeout(function () {
-            self.selectedObjectChanged(META_RULES_CONTAINER_NODE_ID);
-        }, 10);
+        //let the decoratormanager download the required decorator
+        this._client.decoratorManager.download([META_DECORATOR], WIDGET_NAME, function () {
+            self.logger.debug("MetaEditorControl ctor finished");
 
-
-        this.logger.debug("MetaEditorControl ctor finished");
+            //TODO: load meta container node
+            //TODO: give the UI time to render first before start using it's features
+            setTimeout(function () {
+                self.selectedObjectChanged(META_RULES_CONTAINER_NODE_ID);
+            }, 10);
+        });
     };
 
     MetaEditorControl.prototype.selectedObjectChanged = function (nodeId) {
-        var desc = this._getObjectDescriptor(nodeId),
-            len;
+        var len;
 
         if (nodeId !== META_RULES_CONTAINER_NODE_ID) {
             return;
@@ -132,9 +136,6 @@ define(['logManager',
             this._selfPatterns = {};
             this._selfPatterns[nodeId] = { "children": 0 };
 
-
-            this.diagramDesigner.setTitle(desc.name);
-
             this.diagramDesigner.showProgressbar();
 
             this._territoryId = this._client.addUI(this, true);
@@ -147,70 +148,10 @@ define(['logManager',
     /*                    PUBLIC METHODS                      */
     /**********************************************************/
     MetaEditorControl.prototype.onOneEvent = function (events) {
-        var i = events ? events.length : 0;
-
-        this.logger.debug("onOneEvent '" + i + "' items");
-
-        if (i > 0) {
-            this.eventQueue.push(events);
-            this._processNextInQueue();
-        }
-
-        this.logger.debug("onOneEvent '" + events.length + "' items - DONE");
-    };
-
-    //might not be the best approach
-    MetaEditorControl.prototype.destroy = function () {
-        this._detachClientEventListeners();
-        this._client.removeUI(this._territoryId);
-        this.diagramDesigner.clear();
-    };
-
-    /**********************************************************/
-    /*                   PRIVATE METHODS                      */
-    /**********************************************************/
-
-    /**********************************************************/
-    /*       EVENT AND DECORATOR DOWNLOAD HANDLING            */
-    /**********************************************************/
-    MetaEditorControl.prototype._processNextInQueue = function () {
-        var nextBatchInQueue,
-            len = this.eventQueue.length,
-            decoratorsToDownload = [],
-            itemDecorator,
-            self = this;
-
-        if (len > 0) {
-            nextBatchInQueue = this.eventQueue.pop();
-
-            len = nextBatchInQueue.length;
-
-            while (len--) {
-                if ( (nextBatchInQueue[len].etype === CONSTANTS.TERRITORY_EVENT_LOAD) || (nextBatchInQueue[len].etype === CONSTANTS.TERRITORY_EVENT_UPDATE)) {
-                    nextBatchInQueue[len].desc = this._getObjectDescriptor(nextBatchInQueue[len].eid);
-
-                    if (nextBatchInQueue[len].desc) {
-                        itemDecorator = nextBatchInQueue[len].desc.decorator;
-
-                        if (itemDecorator && itemDecorator !== "") {
-                            decoratorsToDownload.pushUnique(itemDecorator);
-                        }
-                    }
-                }
-            }
-
-            //few decorators need to be downloaded
-            this._client.decoratorManager.download(decoratorsToDownload, WIDGET_NAME, function () {
-                self._dispatchEvents(nextBatchInQueue);
-            });
-        }
-    };
-
-    MetaEditorControl.prototype._dispatchEvents = function (events) {
-        var i = events.length,
+        var i = events ? events.length : 0,
             e;
 
-        this.logger.debug("_dispatchEvents '" + i + "' items");
+        this.logger.debug("onOneEvent '" + i + "' items");
 
         this.diagramDesigner.beginUpdate();
 
@@ -218,10 +159,10 @@ define(['logManager',
             e = events[i];
             switch (e.etype) {
                 case CONSTANTS.TERRITORY_EVENT_LOAD:
-                    this._onLoad(e.eid, e.desc);
+                    this._onLoad(e.eid);
                     break;
                 case CONSTANTS.TERRITORY_EVENT_UPDATE:
-                    this._onUpdate(e.eid, e.desc);
+                    this._onUpdate(e.eid);
                     break;
                 case CONSTANTS.TERRITORY_EVENT_UNLOAD:
                     this._onUnload(e.eid);
@@ -233,66 +174,33 @@ define(['logManager',
 
         this.diagramDesigner.hideProgressbar();
 
-        this.logger.debug("_dispatchEvents '" + events.length + "' items - DONE");
-
-        //continue processing event queue
-        this._processNextInQueue();
+        this.logger.debug("onOneEvent '" + events.length + "' items - DONE");
     };
-    /**********************************************************/
-    /*    END OF --- EVENT AND DECORATOR DOWNLOAD HANDLING    */
-    /**********************************************************/
 
-
-    /**********************************************************/
-    /*       READ IMPORTANT INFORMATION FROM A NODE           */
-    /**********************************************************/
-    MetaEditorControl.prototype._getObjectDescriptor = function (gmeID) {
-        var aspectNode = this._client.getNode(this.currentNodeInfo.id),
-            cNode = this._client.getNode(gmeID),
-            nodeDescriptor,
-            metaAspectPos;
-
-        if (cNode) {
-            nodeDescriptor = {"ID": gmeID,
-                "ParentID": cNode.getParentId(),
-                "decorator": META_DECORATOR,
-                "name": cNode.getAttribute(nodePropertyNames.Attributes.name) || "",
-                "position": { "x": -1, "y": -1 }};
-
-            if (gmeID !== this.currentNodeInfo.id) {
-                if (this.currentNodeInfo.members.indexOf(gmeID) !== -1) {
-                    metaAspectPos = aspectNode.getMemberRegistry(MetaEditorConstants.META_ASPECT_SET_NAME, gmeID, MetaEditorConstants.META_ASPECT_MEMBER_POSITION_REGISTRY_KEY);
-                    if (metaAspectPos) {
-                        nodeDescriptor.position.x = metaAspectPos.x;
-                        nodeDescriptor.position.y = metaAspectPos.y;
-                    }
-                }
-            }
-        }
-
-        return nodeDescriptor;
+    //might not be the best approach
+    MetaEditorControl.prototype.destroy = function () {
+        this._detachClientEventListeners();
+        this._client.removeUI(this._territoryId);
+        this.diagramDesigner.clear();
     };
-    /**********************************************************/
-    /*  END OF --- READ IMPORTANT INFORMATION FROM A NODE     */
-    /**********************************************************/
 
 
     /**********************************************************/
     /*                LOAD / UPDATE / UNLOAD HANDLER          */
     /**********************************************************/
-    MetaEditorControl.prototype._onLoad = function (gmeID, objD) {
+    MetaEditorControl.prototype._onLoad = function (gmeID) {
         if (gmeID === this.currentNodeInfo.id) {
-            this._processCurrentNode();
+            this._processMetaAspectContainerNode();
         } else {
-            this._processNodeLoad(gmeID, objD);
+            this._processNodeLoad(gmeID);
         }
     };
 
-    MetaEditorControl.prototype._onUpdate = function (gmeID, objD) {
+    MetaEditorControl.prototype._onUpdate = function (gmeID) {
         if (gmeID === this.currentNodeInfo.id) {
-            this._processCurrentNode();
+            this._processMetaAspectContainerNode();
         } else {
-            this._processNodeUpdate(gmeID, objD);
+            this._processNodeUpdate(gmeID);
         }
     };
 
@@ -365,20 +273,44 @@ define(['logManager',
     /***********************************************************/
     /*  PROCESS CURRENT NODE TO HANDLE ADDED / REMOVED ELEMENT */
     /***********************************************************/
-    MetaEditorControl.prototype._processCurrentNode = function () {
-        var aspectNode = this._client.getNode(this.currentNodeInfo.id),
+    MetaEditorControl.prototype._processMetaAspectContainerNode = function () {
+        var aspectNodeID = this.currentNodeInfo.id,
+            aspectNode = this._client.getNode(aspectNodeID),
             len,
             diff,
             objDesc,
             componentID,
             gmeID,
             metaAspectSetMembers = aspectNode.getMemberIds(MetaEditorConstants.META_ASPECT_SET_NAME),
-            territoryChanged = false;
+            territoryChanged = false,
+            selectedSheetMembers;
 
         //this._metaAspectMembersAll contains all the currently known members of the meta aspect
+        //update current member list
+        this._metaAspectMembersAll = metaAspectSetMembers.slice(0);
+        len = this._metaAspectMembersAll.length;
+        this._metaAspectMembersCoordinatesGlobal = {};
+        while (len--) {
+            gmeID =  this._metaAspectMembersAll[len];
+            this._metaAspectMembersCoordinatesGlobal[gmeID] = aspectNode.getMemberRegistry(MetaEditorConstants.META_ASPECT_SET_NAME, gmeID, MetaEditorConstants.META_ASPECT_MEMBER_POSITION_REGISTRY_KEY);
+        }
+
+        //process the sheets
+        this._processMetaAspectSheetsRegistry();
+
+        this.logger.warning('_metaAspectMembersAll: \n' + JSON.stringify(this._metaAspectMembersAll));
+        this.logger.warning('_metaAspectMembersCoordinatesGlobal: \n' + JSON.stringify(this._metaAspectMembersCoordinatesGlobal));
+
+        this.logger.warning('_metaAspectMembersPerSheet: \n' + JSON.stringify(this._metaAspectMembersPerSheet));
+        this.logger.warning('_metaAspectMembersCoordinatesPerSheet: \n' + JSON.stringify(this._metaAspectMembersCoordinatesPerSheet));
+
+        //check to see if the territory needs to be changed
+        //the territory contains the nodes that are on the currently opened sheet
+        //this._selectedMetaAspectSheetMembers
+        selectedSheetMembers = this._metaAspectMembersPerSheet[this._selectedMetaAspectSet];
 
         //check deleted nodes
-        diff = _.difference(this._metaAspectMembersAll, metaAspectSetMembers);
+        diff = _.difference(this._selectedMetaAspectSheetMembers, selectedSheetMembers);
         len = diff.length;
         while (len--) {
             delete this._selfPatterns[diff[len]];
@@ -386,7 +318,7 @@ define(['logManager',
         }
 
         //check added nodes
-        diff = _.difference(metaAspectSetMembers, this._metaAspectMembersAll);
+        diff = _.difference(selectedSheetMembers, this._selectedMetaAspectSheetMembers);
         len = diff.length;
         while (len--) {
             this._selfPatterns[diff[len]] = { "children": 0 };
@@ -394,23 +326,23 @@ define(['logManager',
         }
 
         //check all other nodes for position change
-        /*diff = _.intersection(this.currentNodeInfo.members, metaAspectSetMembers);
+        diff = _.intersection(this._selectedMetaAspectSheetMembers, selectedSheetMembers);
         len = diff.length;
         while (len--) {
             gmeID = diff[len];
-            objDesc = this._getObjectDescriptor(gmeID);
+            objDesc = {'position': {'x': 0, 'y': 0}};
+
+            objDesc.position.x = this._metaAspectMembersCoordinatesPerSheet[this._selectedMetaAspectSet][gmeID].x;
+            objDesc.position.y = this._metaAspectMembersCoordinatesPerSheet[this._selectedMetaAspectSet][gmeID].y;
 
             if (this._GMEID2ComponentID.hasOwnProperty(gmeID)) {
                 componentID = this._GMEID2ComponentID[gmeID];
                 this.diagramDesigner.updateDesignerItem(componentID, objDesc);
             }
-        }*/
+        }
 
-        //update current member list
-        this._metaAspectMembersAll = metaAspectSetMembers.slice(0);
+        this._selectedMetaAspectSheetMembers = selectedSheetMembers.slice(0);
 
-        //process the sheets
-        this._processMetaAspectSheetsRegistry();
 
         //there was change in the territory
         if (territoryChanged === true) {
@@ -425,7 +357,7 @@ define(['logManager',
     /**************************************************************************/
     /*  HANDLE OBJECT LOAD  --- DISPLAY IT WITH ALL THE POINTERS / SETS / ETC */
     /**************************************************************************/
-    MetaEditorControl.prototype._processNodeLoad = function (gmeID, objD) {
+    MetaEditorControl.prototype._processNodeLoad = function (gmeID) {
         var uiComponent,
             decClass,
             objDesc;
@@ -433,32 +365,33 @@ define(['logManager',
         //component loaded
         if (this._GMENodes.indexOf(gmeID) === -1) {
             //aspect's member has been loaded
-            if (objD && objD.position.x > -1 && objD.position.y > -1) {
-                objDesc = _.extend({}, objD);
+            objDesc = {'position' : { 'x': 0, 'y': 0}};
 
-                decClass = this._client.decoratorManager.getDecoratorForWidget(objDesc.decorator, WIDGET_NAME);
+            objDesc.position.x = this._metaAspectMembersCoordinatesPerSheet[this._selectedMetaAspectSet][gmeID].x;
+            objDesc.position.y = this._metaAspectMembersCoordinatesPerSheet[this._selectedMetaAspectSet][gmeID].y;
 
-                objDesc.decoratorClass = decClass;
-                objDesc.control = this;
-                objDesc.metaInfo = {};
-                objDesc.metaInfo[CONSTANTS.GME_ID] = gmeID;
+            decClass = this._client.decoratorManager.getDecoratorForWidget(META_DECORATOR, WIDGET_NAME);
 
-                uiComponent = this.diagramDesigner.createDesignerItem(objDesc);
+            objDesc.decoratorClass = decClass;
+            objDesc.control = this;
+            objDesc.metaInfo = {};
+            objDesc.metaInfo[CONSTANTS.GME_ID] = gmeID;
 
-                this._GMENodes.push(gmeID);
-                this._GMEID2ComponentID[gmeID] = uiComponent.id;
-                this._ComponentID2GMEID[uiComponent.id] = gmeID;
+            uiComponent = this.diagramDesigner.createDesignerItem(objDesc);
 
-                //process new node to display containment / pointers / inheritance / pointerlists as connections
-                this._processNodeMetaContainment(gmeID);
-                this._processNodeMetaPointers(gmeID, false);
-                this._processNodeMetaInheritance(gmeID);
-                this._processNodeMetaPointers(gmeID, true);
+            this._GMENodes.push(gmeID);
+            this._GMEID2ComponentID[gmeID] = uiComponent.id;
+            this._ComponentID2GMEID[uiComponent.id] = gmeID;
 
-                //check all the waiting pointers (whose SRC/DST is already displayed and waiting for the DST/SRC to show up)
-                //it might be this new node
-                this._processConnectionWaitingList(gmeID);
-            }
+            //process new node to display containment / pointers / inheritance / pointerlists as connections
+            this._processNodeMetaContainment(gmeID);
+            this._processNodeMetaPointers(gmeID, false);
+            this._processNodeMetaInheritance(gmeID);
+            this._processNodeMetaPointers(gmeID, true);
+
+            //check all the waiting pointers (whose SRC/DST is already displayed and waiting for the DST/SRC to show up)
+            //it might be this new node
+            this._processConnectionWaitingList(gmeID);
         }
     };
 
@@ -874,14 +807,15 @@ define(['logManager',
     /**************************************************************************/
     /*  HANDLE OBJECT UPDATE  --- DISPLAY IT WITH ALL THE POINTERS / SETS / ETC */
     /**************************************************************************/
-    MetaEditorControl.prototype._processNodeUpdate = function(gmeID, objDesc) {
+    MetaEditorControl.prototype._processNodeUpdate = function(gmeID) {
         var componentID,
-            decClass;
+            decClass,
+            objDesc = {};
 
         if (this._GMEID2ComponentID.hasOwnProperty(gmeID)) {
             componentID = this._GMEID2ComponentID[gmeID];
 
-            decClass = this._client.decoratorManager.getDecoratorForWidget(objDesc.decorator, WIDGET_NAME);
+            decClass = this._client.decoratorManager.getDecoratorForWidget(META_DECORATOR, WIDGET_NAME);
 
             objDesc.decoratorClass = decClass;
 
@@ -1718,9 +1652,13 @@ define(['logManager',
             len,
             sheetID,
             selectedSheetID,
-            setName;
+            setName,
+            j,
+            gmeID;
 
         this._sheets = {};
+        this._metaAspectMembersPerSheet = {};
+        this._metaAspectMembersCoordinatesPerSheet = {};
         this.diagramDesigner.clearSheets();
 
         metaAspectSheetsRegistry.sort(function (a, b) {
@@ -1743,6 +1681,14 @@ define(['logManager',
             //get the most up-to-date member list for each set
             this._metaAspectMembersPerSheet[setName] = aspectNode.getMemberIds(setName);
 
+            //get the sheet coordinates
+            this._metaAspectMembersCoordinatesPerSheet[setName] = {};
+            j = this._metaAspectMembersPerSheet[setName].length;
+            while (j--) {
+                gmeID =  this._metaAspectMembersPerSheet[setName][j];
+                this._metaAspectMembersCoordinatesPerSheet[setName][gmeID] = aspectNode.getMemberRegistry(setName, gmeID, MetaEditorConstants.META_ASPECT_MEMBER_POSITION_REGISTRY_KEY);
+            }
+
             if (this._selectedMetaAspectSet &&
                 this._selectedMetaAspectSet === metaAspectSheetsRegistry[i].SetID) {
                 selectedSheetID = sheetID;
@@ -1756,7 +1702,7 @@ define(['logManager',
                 }
             }
         }
-        
+
         this.diagramDesigner.selectSheet(selectedSheetID);
     };
 
