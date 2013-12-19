@@ -40,7 +40,8 @@ requirejs(['logManager',
     'storage/log',
     'auth/sessionstore',
     'auth/vehicleforgeauth',
-    'auth/gmeauth'],function(
+    'auth/gmeauth',
+    'util/newrest'],function(
     logManager,
     CONFIG,
     Storage,
@@ -50,7 +51,8 @@ requirejs(['logManager',
     Log,
     SStore,
     VFAUTH,
-    GMEAUTH){
+    GMEAUTH,
+    REST){
     var parameters = CONFIG;
     var logLevel = parameters.loglevel || logManager.logLevels.WARNING;
     var logFile = parameters.logfile || 'server.log';
@@ -61,6 +63,7 @@ requirejs(['logManager',
     var iologger = logManager.create("socket.io");
     var sitekey = null;
     var sitecertificate = null;
+    var _REST = null;
     if(parameters.httpsecure){
         sitekey = require('fs').readFileSync("proba-key.pem");
         sitecertificate = require('fs').readFileSync("proba-cert.pem");
@@ -121,6 +124,14 @@ requirejs(['logManager',
             googleAuthenticaitonSet = true;
             return next();
         }
+    }
+
+    function checkREST(req,res,next){
+        if(_REST === null){
+            var protocolPrefix = parameters.httpsecure === true ? 'https://' : 'http://';
+            _REST = new REST({host:parameters.mongoip,port:parameters.mongoport,database:parameters.mongodatabase,baseUrl:protocolPrefix+req.headers.host});
+        }
+        return next();
     }
 
 
@@ -226,8 +237,24 @@ requirejs(['logManager',
         });
     });
     //rest functionality
-    app.get('/rest/*',function(req,res){
-        res.send(500);
+    app.get('/rest/*',checkREST,function(req,res){
+
+        var urlArray = req.url.split('/');
+        if(urlArray.length > 2){
+            var command = urlArray[2];
+            var parameters = urlArray.slice(3);
+            _REST.initialize(function(err){
+                if(err){
+                    res.send(500);
+                } else {
+                    _REST.doRESTCommand(_REST.request.GET,command,parameters,function(httpStatus,object){
+                        res.json(httpStatus, object || null);
+                    });
+                }
+            });
+        } else {
+            res.send(400);
+        }
     });
     //other get
     app.get('*',function(req,res){
