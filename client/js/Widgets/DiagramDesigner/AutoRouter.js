@@ -2924,7 +2924,7 @@ if(DEBUG && ArPointList.length > 0){
                 while( edge !== null ){
                     console.log('\t' + edge.getStartPoint().x + ', ' + edge.getStartPoint().y + '\t\t' + edge.getEndPoint().x + ', ' + edge.getEndPoint().y 
                         + '\t\t\t(' + (edge.getEdgeFixed() ? "FIXED" : "MOVEABLE" ) + ')\t\t' 
-                        + (edge.getBracketClosing() ? "Bracket Closing" : (edge.getBracketOpening() ? "Bracket Opening" : ""));
+                        + (edge.getBracketClosing() ? "Bracket Closing" : (edge.getBracketOpening() ? "Bracket Opening" : "")));
                     edge = edge.getOrderNext();
                 }
             };
