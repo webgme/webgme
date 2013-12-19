@@ -888,6 +888,36 @@ define([
                     callback(new Error('there is no open database connection!'));
                 }
             }
+            function getFullProjectListAsync(callback){
+                _database.getProjectNames(function(err,names){
+                    if(!err && names){
+                        var wait = names.length || 0;
+                        var fullList = {};
+                        if(wait > 0){
+                            var getProjectAuthInfo = function(name,cb){
+                                _database.getAuthorizationInfo(name,function(err,authObj){
+                                    if(!err && authObj){
+                                        fullList[name] = authObj;
+                                    }
+                                    cb(err);
+                                });
+                            };
+
+                            for(var i=0;i<names.length;i++){
+                                getProjectAuthInfo(names[i],function(err){
+                                    if(--wait === 0){
+                                        callback(null,fullList);
+                                    }
+                                })
+                            }
+                        } else {
+                            callback(null,{});
+                        }
+                    } else {
+                        callback(err,{});
+                    }
+                });
+            }
             function selectProjectAsync(projectname,callback) {
                 if(_database){
                     if(projectname === _projectName){
@@ -1878,12 +1908,9 @@ define([
                     console.log('printing info of node '+_id+' done');
 
                     //testfunction placeholder
-                    console.log(_core.getConstraintNames(_nodes[_id].node));
-                    _core.setConstraint(_nodes[_id].node,"proba",{});
-                    console.log(_core.getConstraintNames(_nodes[_id].node));
-                    _core.delConstraint(_nodes[_id].node,"proba");
-                    console.log(_core.getConstraintNames(_nodes[_id].node));
-                    console.log('kecso',_readOnlyProject);
+                    getFullProjectListAsync(function(err,list){
+                        console.log('kecso',err,list);
+                    });
                 };
 
                 if(_nodes[_id]){
@@ -2012,6 +2039,7 @@ define([
                 getActiveProject: getActiveProject,
                 getAvailableProjectsAsync: getAvailableProjectsAsync,
                 getViewableProjectsAsync: getViewableProjectsAsync,
+                getFullProjectListAsync: getFullProjectListAsync,
                 getProjectAuthInfoAsync: getProjectAuthInfoAsync,
                 connectToDatabaseAsync: connectToDatabaseAsync,
                 selectProjectAsync: selectProjectAsync,
