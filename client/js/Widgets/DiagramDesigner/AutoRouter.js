@@ -2917,6 +2917,16 @@ if(DEBUG && ArPointList.length > 0){
 
                 return null;
             };        
+
+             this.dumpEdges = function(msg){
+                var edge = order_first;
+                console.log(msg);
+
+                while( edge !== null ){
+                    console.log('\t' + edge.getStartPoint().x + ', ' + edge.getStartPoint().y + '\t\t' + edge.getEndPoint().x + ', ' + edge.getEndPoint().y + '\t\t\t(' + (edge.getEdgeFixed() ? "FIXED" : "MOVEABLE" ) + ')');
+                    edge = edge.getOrderNext();
+                }
+            };
                    
                 //--Private Functions
             function position_GetRealY(edge, y){
@@ -6132,10 +6142,8 @@ if(DEBUG && ArPointList.length > 0){
             };
 
             this.dumpEdgeLists = function(){
-                if(DEBUG_DEEP){
-                    horizontal.dumpEdges("Horizontal edges:");
-                    vertical.dumpEdges("Vertical edges:");
-                }
+                horizontal.dumpEdges("Horizontal edges:");
+                vertical.dumpEdges("Vertical edges:");
             };
 
             // AutoRouterGraph
