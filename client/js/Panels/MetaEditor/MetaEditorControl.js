@@ -117,6 +117,8 @@ define(['logManager',
         this._nodeMetaPointerLists = {};
         this._nodeMetaInheritance = {};
 
+        this._selectedMetaAspectSheetMembers = [];
+
         this._filteredOutConnectionDescriptors = {};
         len = this._filteredOutConnTypes.length;
         while (len--) {
@@ -1660,6 +1662,7 @@ define(['logManager',
         this._metaAspectMembersPerSheet = {};
         this._metaAspectMembersCoordinatesPerSheet = {};
         this.diagramDesigner.clearSheets();
+        this._metaAspectSheetsPerMember = {};
 
         metaAspectSheetsRegistry.sort(function (a, b) {
             if (a.order < b.order) {
@@ -1687,6 +1690,8 @@ define(['logManager',
             while (j--) {
                 gmeID =  this._metaAspectMembersPerSheet[setName][j];
                 this._metaAspectMembersCoordinatesPerSheet[setName][gmeID] = aspectNode.getMemberRegistry(setName, gmeID, MetaEditorConstants.META_ASPECT_MEMBER_POSITION_REGISTRY_KEY);
+                this._metaAspectSheetsPerMember[gmeID] = this._metaAspectSheetsPerMember[gmeID] || [];
+                this._metaAspectSheetsPerMember[gmeID].push(setName);
             }
 
             if (this._selectedMetaAspectSet &&

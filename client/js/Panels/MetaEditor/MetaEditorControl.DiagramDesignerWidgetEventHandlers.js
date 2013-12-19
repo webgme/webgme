@@ -241,11 +241,12 @@ define(['logManager',
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionDelete = function (idList) {
         var _client = this._client,
             aspectNodeID = this.currentNodeInfo.id,
-            len = idList.length,
+            len,
             gmeID,
             idx,
             deleteConnection,
-            self = this;
+            self = this,
+            metaInfoToBeLost = [];
 
         deleteConnection = function (connectionID) {
             var connDesc = self._connectionListByID[connectionID];
@@ -261,7 +262,49 @@ define(['logManager',
             }
         };
 
-        _client.startTransaction();
+        //first figure out if the deleted-to-be items are present in any other meta sheet
+        //if not, ask the user to confirm delete
+        len = idList.length;
+        while (len--) {
+            gmeID = this._ComponentID2GMEID[idList[len]];
+            idx = this._GMENodes.indexOf(gmeID);
+            if ( idx !== -1) {
+                //entity is a box
+                //check to see if this gmeID is present on any other sheet at all
+                if (this._metaAspectSheetsPerMember[gmeID].length === 1) {
+                    metaInfoToBeLost.push(gmeID);
+                }
+            }
+        }
+
+        if (metaInfoToBeLost.length > 0) {
+            //need user confirmation because there is some meta info to be lost
+            var confirmMsg = "The following items you are about to delete are not present on any other sheet and will be permanently removed from the META aspect:\n";
+            var itemNames = [];
+            var nodeObj;
+            len = metaInfoToBeLost.length;
+            while (len--) {
+                gmeID = metaInfoToBeLost[len];
+                nodeObj = _client.getNode(gmeID);
+                if (nodeObj) {
+                    itemNames.push(nodeObj.getAttribute(nodePropertyNames.Attributes.name));
+                } else {
+                    itemNames.push(gmeID);
+                }
+            }
+            itemNames.sort();
+            for(len = 0; len < itemNames.length; len += 1) {
+                confirmMsg += "- " + itemNames[len] + "\n";
+            }
+            confirmMsg += "\nAre you sure you want to delete?";
+            if (confirm(confirmMsg) === true) {
+
+            }
+        } else {
+            //trivial deletion
+        }
+
+        /*_client.startTransaction();
 
         while (len--) {
             gmeID = this._ComponentID2GMEID[idList[len]];
@@ -275,7 +318,7 @@ define(['logManager',
             }
         }
 
-        _client.completeTransaction();
+        _client.completeTransaction();*/
     };
     /************************************************************************/
     /*  END OF --- HANDLE OBJECT / CONNECTION DELETION IN THE ASPECT ASPECT */
