@@ -300,11 +300,11 @@ define(['logManager',
         //process the sheets
         this._processMetaAspectSheetsRegistry();
 
-        this.logger.warning('_metaAspectMembersAll: \n' + JSON.stringify(this._metaAspectMembersAll));
-        this.logger.warning('_metaAspectMembersCoordinatesGlobal: \n' + JSON.stringify(this._metaAspectMembersCoordinatesGlobal));
+        this.logger.debug('_metaAspectMembersAll: \n' + JSON.stringify(this._metaAspectMembersAll));
+        this.logger.debug('_metaAspectMembersCoordinatesGlobal: \n' + JSON.stringify(this._metaAspectMembersCoordinatesGlobal));
 
-        this.logger.warning('_metaAspectMembersPerSheet: \n' + JSON.stringify(this._metaAspectMembersPerSheet));
-        this.logger.warning('_metaAspectMembersCoordinatesPerSheet: \n' + JSON.stringify(this._metaAspectMembersCoordinatesPerSheet));
+        this.logger.debug('_metaAspectMembersPerSheet: \n' + JSON.stringify(this._metaAspectMembersPerSheet));
+        this.logger.debug('_metaAspectMembersCoordinatesPerSheet: \n' + JSON.stringify(this._metaAspectMembersCoordinatesPerSheet));
 
         //check to see if the territory needs to be changed
         //the territory contains the nodes that are on the currently opened sheet

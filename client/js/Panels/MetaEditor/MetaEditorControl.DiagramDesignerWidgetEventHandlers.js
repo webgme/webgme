@@ -536,7 +536,7 @@ define(['logManager',
         if (this._sheets[sheetID] && this._selectedMetaAspectSet !== this._sheets[sheetID]) {
             this._selectedMetaAspectSet = this._sheets[sheetID];
 
-            this.logger.warning('selectedAspectChanged: ' + this._selectedMetaAspectSet);
+            this.logger.debug('selectedAspectChanged: ' + this._selectedMetaAspectSet);
 
             this.selectedObjectChanged(META_RULES_CONTAINER_NODE_ID);
         }
