@@ -2877,7 +2877,7 @@ if(DEBUG && ArPointList.length > 0){
                 return edge;
             };
 
-            this.getEdgeByPointer = function(startpoint, endpoint){
+            this.getEdgeByPointer = function(startpoint){
                 var edge = order_first;
                 while( edge !== null ){
                     if(edge.isSameStartPoint(startpoint))
@@ -3243,7 +3243,7 @@ if(DEBUG && ArPointList.length > 0){
 
                     if( edge !== insert && insert.getOrderPrev() !== edge )
                     {
-                        self.remove(edge); //This is where I believe the error could lie!
+                        self.remove(edge); 
                         self.insertBefore(edge, insert);
                     }
                 }
@@ -4686,56 +4686,6 @@ if(DEBUG && ArPointList.length > 0){
                         simplifyPathCurves(path);
                         simplifyPathPoints(path);
                         centerStairsInPathPoints(path, startdir, enddir);
-
-                        //Make sure if a straight line is possible, the path is a straight line
-                        //Note, this may make it so the stems are no longer centered in the port.
-                        if(path.getPointList().getLength() === 4){
-                            var startDir = startPort.port_OnWhichEdge(startpoint),
-                                endDir = endPort.port_OnWhichEdge(endpoint),
-                                tstStart,
-                                tstEnd;
-
-                            if( startDir === reverseDir(endDir) ){
-                                var newStart = new ArPoint(startpoint),
-                                    newEnd = new ArPoint(endpoint),
-                                    startRect = startPort.getRect(),
-                                    endRect = endPort.getRect(),
-                                    minOverlap,
-                                    maxOverlap;
-
-                                if( isHorizontal(startDir) ){
-                                    minOverlap = Math.min(startRect.floor - 1, endRect.floor - 1);
-                                    maxOverlap = Math.max(startRect.ceil, endRect.ceil);
-
-                                    var newY = (minOverlap + maxOverlap)/2;
-                                    newStart.y = newY;
-                                    newEnd.y = newY;
-
-                                    tstStart = new ArPoint(getRectOuterCoord(startPort.getOwner().getRect(), startDir), newStart.y);
-                                    tstEnd = new ArPoint(getRectOuterCoord(endPort.getOwner().getRect(), endDir), newEnd.y);
-
-                                }else{
-                                    minOverlap = Math.min(startRect.right - 1, endRect.right - 1);
-                                    maxOverlap = Math.max(startRect.left, endRect.left);
-
-                                    var newX = (minOverlap + maxOverlap)/2;
-                                    newStart.x = newX;
-                                    newEnd.x = newX;
-
-                                    tstStart = new ArPoint(newStart.x, getRectOuterCoord(startPort.getOwner().getRect(), startDir));
-                                    tstEnd = new ArPoint(newEnd.x, getRectOuterCoord(endPort.getOwner().getRect(), endDir));
-                                }
-
-                                if( startRect.ptInRect(newStart) && endRect.ptInRect(newEnd)
-                                        && !isLineClipBoxes(tstStart, tstEnd) ){
-
-                                    startpoint.assign(newStart);
-                                    endpoint.assign(newEnd);
-                                    path.getPointList().splice(1, 2);
-                                }
-                            }
-
-                        }
                     }
                     path.setState(ARPATHST_Connected);
 
@@ -5310,6 +5260,8 @@ if(DEBUG && ArPointList.length > 0){
                         var pointList = path.getPointList(),
                             pointpos = 0;
 
+                        fixShortPaths(path);
+
                         while( pointpos < pointList.getLength() )
                         {
                             if( candeleteTwoEdgesAt(path, pointList, pointpos) )
@@ -5445,6 +5397,85 @@ if(DEBUG && ArPointList.length > 0){
 
                 if(DEBUG)
                     path.assertValidPoints();
+            }
+
+            function fixShortPaths(path){
+            //Make sure if a straight line is possible, the path is a straight line
+            //Note, this may make it so the stems are no longer centered in the port.
+
+                var startPort = path.getStartPort(),
+                    endPort = path.getEndPort(),
+                    len = path.getPointList().getLength();
+
+                if(len === 4){
+                    var points = path.getPointList(),
+                        startpoint = points.get(0)[0],
+                        endpoint = points.get(len - 1)[0],
+                        startDir = startPort.port_OnWhichEdge(startpoint),
+                        endDir = endPort.port_OnWhichEdge(endpoint),
+                        tstStart,
+                        tstEnd;
+
+                    if( startDir === reverseDir(endDir) ){
+                        var newStart = new ArPoint(startpoint),
+                            newEnd = new ArPoint(endpoint),
+                            startRect = startPort.getRect(),
+                            endRect = endPort.getRect(),
+                            minOverlap,
+                            maxOverlap;
+
+                        if( isHorizontal(startDir) ){
+                            minOverlap = Math.min(startRect.floor - 1, endRect.floor - 1);
+                            maxOverlap = Math.max(startRect.ceil, endRect.ceil);
+
+                            var newY = (minOverlap + maxOverlap)/2;
+                            newStart.y = newY;
+                            newEnd.y = newY;
+
+                            tstStart = new ArPoint(getRectOuterCoord(startPort.getOwner().getRect(), startDir), newStart.y);
+                            tstEnd = new ArPoint(getRectOuterCoord(endPort.getOwner().getRect(), endDir), newEnd.y);
+
+                        }else{
+                            minOverlap = Math.min(startRect.right - 1, endRect.right - 1);
+                            maxOverlap = Math.max(startRect.left, endRect.left);
+
+                            var newX = (minOverlap + maxOverlap)/2;
+                            newStart.x = newX;
+                            newEnd.x = newX;
+
+                            tstStart = new ArPoint(newStart.x, getRectOuterCoord(startPort.getOwner().getRect(), startDir));
+                            tstEnd = new ArPoint(newEnd.x, getRectOuterCoord(endPort.getOwner().getRect(), endDir));
+                        }
+
+                        if( startRect.ptInRect(newStart) && endRect.ptInRect(newEnd)
+                                && !isLineClipBoxes(tstStart, tstEnd) ){
+
+                            
+                            var ishorizontal = isHorizontal(startDir),
+                                hlist = getEdgeList(ishorizontal),
+                                vlist = getEdgeList(!ishorizontal),
+                                edge = hlist.getEdgeByPointer(startpoint),
+                                edge2 = vlist.getEdgeByPointer(points.get(1)[0]),
+                                edge3 = hlist.getEdgeByPointer(points.get(2)[0]);
+
+                            vlist.Delete(edge2);
+                            hlist.Delete(edge3);
+                            hlist.remove(edge);
+
+                            startpoint.assign(newStart); //The values of startpoint is changed but we don't change the startpoint of the edge
+                            endpoint.assign(newEnd);    //to maintain the reference that the port has to the startpoint
+                            edge.setEndPoint(endpoint);
+
+                            edge.setStartPointPrev(null);
+                            edge.setEndPointNext(null);
+
+                            edge.setPositionY(getPointCoord(newStart, nextClockwiseDir(startDir) ));
+                            hlist.insert(edge);
+
+                            points.splice(1, 2);
+                        }
+                    }
+                }
             }
 
             function simplifyPathCurves(path){
