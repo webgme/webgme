@@ -88,7 +88,7 @@ define(['jquery',
         i = ret.length;
         while (i--) {
             if (allowed.indexOf(ret[i]) === -1) {
-                ret.splice(i, 1);
+                ret = ret.substr(0, i) + ret.substr(i + 1);
             }
         }
 
