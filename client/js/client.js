@@ -64,6 +64,7 @@ define([
                 _msg = "",
                 _recentCommits = [],
                 _viewer = false,
+                _readOnlyProject = false,
                 _loadNodes = {},
                 _loadError = 0,
                 _commitCache = null,
@@ -447,7 +448,7 @@ define([
                 _database.openProject(name,function(err,p){
                     if(!err &&  p){
                         _database.getAuthorizationInfo(name,function(err,authInfo){
-                            _viewer = authInfo ? (authInfo.write === true ? false : true) : true;
+                            _readOnlyProject = authInfo ? (authInfo.write === true ? false : true) : true;
                             _project = p;
                             _projectName = name;
                             _inTransaction = false;
@@ -543,6 +544,7 @@ define([
                     _msg = "";
                     _recentCommits = [];
                     _viewer = false;
+                    _readOnlyProject = false;
                     _loadNodes = {};
                     _loadError = 0;
                     _offline = false;
@@ -838,7 +840,7 @@ define([
 
             function saveRoot(msg,callback){
                 callback = callback || function(){};
-                if(!_viewer){
+                if(!_viewer && !_readOnlyProject){
                     _msg +="\n"+msg;
                     if(!_inTransaction){
                         ASSERT(_project && _core && _branch);
@@ -1881,7 +1883,7 @@ define([
                     console.log(_core.getConstraintNames(_nodes[_id].node));
                     _core.delConstraint(_nodes[_id].node,"proba");
                     console.log(_core.getConstraintNames(_nodes[_id].node));
-                    console.log('kecso',_viewer);
+                    console.log('kecso',_readOnlyProject);
                 };
 
                 if(_nodes[_id]){
@@ -2028,7 +2030,8 @@ define([
                 commitAsync: commitAsync,
                 goOffline: goOffline,
                 goOnline: goOnline,
-                isReadOnly: function(){ return _viewer;},//TODO should be removed
+                isProjectReadOnly: function(){ return _readOnlyProject;},
+                isCommitReadOnly: function(){return _viewer;},
                 getActiveSelection: getActiveSelection,
 
 
