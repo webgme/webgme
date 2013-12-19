@@ -193,7 +193,7 @@ define(['logManager',
         //sheet delete handler
         this.$ulSheetTab.on("click.deleteSheetClick", 'a > i', function (event) {
             if (self.getIsReadOnlyMode() !== true) {
-                    self.onSheetDelete($(this).parent().parent().data(SHEET_ID));
+                    self.onSheetDeleteClicked($(this).parent().parent().data(SHEET_ID));
             }
             event.stopPropagation();
             event.preventDefault();
@@ -279,8 +279,8 @@ define(['logManager',
         }
     };
 
-    MetaEditorWidget.prototype.onSheetDelete = function (sheetID) {
-        this.logger.warning('onSheetDelete not implemented: "' + sheetID + '"');
+    MetaEditorWidget.prototype.onSheetDeleteClicked = function (sheetID) {
+        this.logger.warning('onSheetDeleteClicked not implemented: "' + sheetID + '"');
     };
 
     MetaEditorWidget.prototype.onSheetAddClicked = function () {

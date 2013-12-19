@@ -2,6 +2,7 @@
 
 define(['logManager',
     'clientUtil',
+    'util/guid',
     'js/Constants',
     'js/NodePropertyNames',
     'js/Utils/GMEConcepts',
@@ -9,6 +10,7 @@ define(['logManager',
     './MetaEditorConstants',
     'js/DragDrop/DragHelper'], function (logManager,
                                         util,
+                                        generateGuid,
                                         CONSTANTS,
                                         nodePropertyNames,
                                         GMEConcepts,
@@ -88,6 +90,10 @@ define(['logManager',
 
         this.diagramDesigner.onSelectedSheetChanged = function (sheetID) {
             self._onSelectedSheetChanged(sheetID);
+        };
+
+        this.diagramDesigner.onSheetDeleteClicked = function (sheetID) {
+            self._onSheetDeleteClicked(sheetID);
         };
 
         this.logger.debug("attachDesignerCanvasEventHandlers finished");
@@ -246,7 +252,8 @@ define(['logManager',
             idx,
             deleteConnection,
             self = this,
-            metaInfoToBeLost = [];
+            metaInfoToBeLost = [],
+            doDelete;
 
         deleteConnection = function (connectionID) {
             var connDesc = self._connectionListByID[connectionID];
@@ -260,6 +267,30 @@ define(['logManager',
             } else if (connDesc.type === MetaRelations.META_RELATIONS.POINTERLIST) {
                 self._deletePointerRelationship(connDesc.GMESrcId, connDesc.GMEDstId, connDesc.name, true);
             }
+        };
+
+        doDelete = function (itemsToDelete) {
+            _client.startTransaction();
+
+            len = itemsToDelete.length;
+             while (len--) {
+                 gmeID = self._ComponentID2GMEID[itemsToDelete[len]];
+                 idx = self._GMENodes.indexOf(gmeID);
+                 if ( idx !== -1) {
+                     //entity is a box --> delete GME object from the aspect's members list
+                     _client.removeMember(aspectNodeID, gmeID, self._selectedMetaAspectSet);
+
+                     //if the items is not present anywhere else, remove it from the META's global sheet too
+                     if (self._metaAspectSheetsPerMember[gmeID].length === 1) {
+                         _client.removeMember(aspectNodeID, gmeID, MetaEditorConstants.META_ASPECT_SET_NAME);
+                     }
+                 } else if (self._connectionListByID.hasOwnProperty(itemsToDelete[len])) {
+                     //entity is a connection, just simply delete it
+                     deleteConnection(itemsToDelete[len]);
+                 }
+             }
+
+             _client.completeTransaction();
         };
 
         //first figure out if the deleted-to-be items are present in any other meta sheet
@@ -298,27 +329,12 @@ define(['logManager',
             }
             confirmMsg += "\nAre you sure you want to delete?";
             if (confirm(confirmMsg) === true) {
-
+                doDelete(idList);
             }
         } else {
             //trivial deletion
+            doDelete(idList);
         }
-
-        /*_client.startTransaction();
-
-        while (len--) {
-            gmeID = this._ComponentID2GMEID[idList[len]];
-            idx = this.currentNodeInfo.members.indexOf(gmeID);
-            if ( idx !== -1) {
-                //entity is a box --> delete GME object from the aspect's members list
-                _client.removeMember(aspectNodeID, gmeID, MetaEditorConstants.META_ASPECT_SET_NAME);
-            } else if (this._connectionListByID.hasOwnProperty(idList[len])) {
-                //entity is a connection, just simply delete it
-                deleteConnection(idList[len]);
-            }
-        }
-
-        _client.completeTransaction();*/
     };
     /************************************************************************/
     /*  END OF --- HANDLE OBJECT / CONNECTION DELETION IN THE ASPECT ASPECT */
@@ -410,7 +426,6 @@ define(['logManager',
             metaAspectSheetsRegistry = aspectNode.getEditableRegistry(MetaEditorConstants.META_SHEET_REGISTRY_KEY) || [],
             i,
             len,
-            sheetID,
             newSetID;
 
         metaAspectSheetsRegistry.sort(function (a, b) {
@@ -423,14 +438,14 @@ define(['logManager',
 
         len = metaAspectSheetsRegistry.length;
         for (i = 0; i < len; i += 1) {
-            metaAspectSheetsRegistry.order = i;
+            metaAspectSheetsRegistry[i].order = i;
         }
 
         //start transaction
         this._client.startTransaction();
 
         //create new aspect set in  meta container node
-        newSetID = MetaEditorConstants.META_ASPECT_SHEET_NAME_PREFIX + (aspectNode.getSetNames().length + 1);
+        newSetID = MetaEditorConstants.META_ASPECT_SHEET_NAME_PREFIX + generateGuid();
         this._client.createSet(aspectNodeID, newSetID);
 
         var newSheetDesc = {'SetID': newSetID,
@@ -443,6 +458,10 @@ define(['logManager',
 
         //finish transaction
         this._client.completeTransaction();
+
+        //force switching to the new sheet
+        this._selectedMetaAspectSet = newSetID;
+        this.selectedObjectChanged(META_RULES_CONTAINER_NODE_ID);
     };
 
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSheetTitleChanged = function (sheetID, oldValue, newValue) {
@@ -475,6 +494,112 @@ define(['logManager',
             this.logger.warning('selectedAspectChanged: ' + this._selectedMetaAspectSet);
 
             this.selectedObjectChanged(META_RULES_CONTAINER_NODE_ID);
+        }
+    };
+
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSheetDeleteClicked = function (sheetID) {
+        //deleting a sheet invilves deleting all the items present on that sheet
+        //if there is an item on this sheet that's not present on any other sheet
+        //it needs to be removed from the META Aspect (when user confirms DELETE)
+        var aspectToDelete = this._sheets[sheetID],
+            itemsOfAspect = this._metaAspectMembersPerSheet[aspectToDelete],
+            aspectNodeID = this.currentNodeInfo.id,
+            aspectNode = this._client.getNode(aspectNodeID),
+            metaAspectSheetsRegistry = aspectNode.getEditableRegistry(MetaEditorConstants.META_SHEET_REGISTRY_KEY) || [],
+            len,
+            gmeID,
+            idx,
+            metaAspectMemberToBeLost = [],
+            _client = this._client,
+            doDeleteSheet,
+            i;
+
+        doDeleteSheet = function () {
+            _client.startTransaction();
+
+            //delete the members of the META aspect who are not present on any other sheet
+            len = metaAspectMemberToBeLost.length;
+            while (len--) {
+                gmeID = metaAspectMemberToBeLost[len];
+                _client.removeMember(aspectNodeID, gmeID, MetaEditorConstants.META_ASPECT_SET_NAME);
+            }
+
+            //delete the sheet
+            len = metaAspectSheetsRegistry.length;
+            while(len--) {
+                if (metaAspectSheetsRegistry[len].SetID === aspectToDelete) {
+                    metaAspectSheetsRegistry.splice(len, 1);
+                    break;
+                }
+            }
+
+            //update remaining sheets' order
+            metaAspectSheetsRegistry.sort(function (a, b) {
+                if (a.order < b.order) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            });
+
+            len = metaAspectSheetsRegistry.length;
+            for (i = 0; i < len; i += 1) {
+                metaAspectSheetsRegistry[i].order = i;
+            }
+
+            _client.setRegistry(aspectNodeID, MetaEditorConstants.META_SHEET_REGISTRY_KEY, metaAspectSheetsRegistry);
+
+            //finally delete the sheet's SET
+            _client.deleteSet(aspectNodeID, aspectToDelete);
+
+            _client.completeTransaction();
+        };
+
+
+        //first figure out if the deleted-to-be items are present in any other meta sheet
+        //if not, ask the user to confirm delete
+        len = itemsOfAspect.length;
+        while (len--) {
+            gmeID = itemsOfAspect[len];
+            idx = this._GMENodes.indexOf(gmeID);
+            if ( idx !== -1) {
+                //entity is a box
+                //check to see if this gmeID is present on any other sheet at all
+                if (this._metaAspectSheetsPerMember[gmeID].length === 1) {
+                    metaAspectMemberToBeLost.push(gmeID);
+                }
+            }
+        }
+
+        if (metaAspectMemberToBeLost.length > 0) {
+            //need user confirmation because there is some meta info to be lost
+            var confirmMsg = "You are about to delete a sheet that contains the following items that are not present on any other sheet and will be permanently removed from the META aspect:\n";
+            var itemNames = [];
+            var nodeObj;
+            len = metaAspectMemberToBeLost.length;
+            while (len--) {
+                gmeID = metaAspectMemberToBeLost[len];
+                nodeObj = _client.getNode(gmeID);
+                if (nodeObj) {
+                    itemNames.push(nodeObj.getAttribute(nodePropertyNames.Attributes.name));
+                } else {
+                    itemNames.push(gmeID);
+                }
+            }
+            itemNames.sort();
+            for(len = 0; len < itemNames.length; len += 1) {
+                confirmMsg += "- " + itemNames[len] + "\n";
+            }
+            confirmMsg += "\nAre you sure you want to delete the sheet anyway?";
+            if (confirm(confirmMsg) === true) {
+                doDeleteSheet();
+            }
+        } else {
+            //no meta member will be lost permanently but make sure that the user really wants to delete the sheet
+            var confirmMsg = "Are you sure you want to delete this sheet?";
+            if (confirm(confirmMsg) === true) {
+                doDeleteSheet();
+            }
         }
     };
 
