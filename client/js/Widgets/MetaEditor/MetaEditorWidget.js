@@ -209,12 +209,14 @@ define(['logManager',
 
     MetaEditorWidget.prototype.clearSheets = function () {
         this.$ulSheetTab.empty();
+        this.$ddlSheetsList.clear();
         this._sheetCounter = 0;
         this._selectedSheet = undefined;
         this._scrollSheetListBy(0 - this._sheetScrollValue);
     };
 
     MetaEditorWidget.prototype.addSheet = function (title, deletable) {
+        var self = this;
         var li = $('<li class=""><a href="#" data-toggle="tab"></a></li>');
 
         li.find('a').append('<div class="sheet-title" title="' + title + '">' + title + '</div>');
@@ -228,9 +230,12 @@ define(['logManager',
 
         this.$ulSheetTab.append(li);
 
-        /*if (this._selectedSheet === undefined) {
-            this.selectSheet(li.data(SHEET_ID));
-        }*/
+        this.$ddlSheetsList.addButton({ "title": title,
+            "text": title,
+            "data": { 'SHEET_ID': li.data(SHEET_ID)},
+            "clickFn": function (data) {
+                self.selectSheet(data.SHEET_ID);
+            }});
 
         return li.data(SHEET_ID);
     };
@@ -258,10 +263,13 @@ define(['logManager',
     MetaEditorWidget.prototype.selectSheet = function (sheetID) {
         var liToSelect,
             allLi = this.$ulSheetTab.find('li'),
+            allDropDownLi = this.$ddlSheetsList.el.find('li'),
             i,
-            li;
+            li,
+            ddlSelectedIcon = 'icon-ok';
 
         if (this._selectedSheet !== sheetID) {
+            //select tab
             for(i = 0; i < allLi.length; i += 1) {
                 li = $(allLi[i]);
                 if (li && li.data(SHEET_ID) === sheetID) {
@@ -275,6 +283,21 @@ define(['logManager',
                 liToSelect.addClass('active');
                 this._selectedSheet = liToSelect.data(SHEET_ID);
                 this.onSelectedSheetChanged(this._selectedSheet);
+            }
+
+            //select in DropDown
+            liToSelect = undefined;
+            for(i = 0; i < allDropDownLi.length; i += 1) {
+                li = $(allDropDownLi[i]).find('a').first();
+                if (li && li.data(SHEET_ID) === sheetID) {
+                    liToSelect = $(allDropDownLi[i]);
+                    break;
+                }
+            }
+
+            if (liToSelect) {
+                this.$ddlSheetsList.el.find('i.' + ddlSelectedIcon).remove();
+                liToSelect.find('a').prepend('<i class="' + ddlSelectedIcon + '" />');
             }
         }
     };

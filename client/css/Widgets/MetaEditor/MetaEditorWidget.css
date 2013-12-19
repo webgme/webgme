@@ -54,6 +54,10 @@ div.filterPanel {
   .sheets-container div.add-sheet-container > div {
     display: inline-block;
     margin-right: 3px; }
+  .sheets-container div.add-sheet-container ul.dropdown-menu li a [class^="icon-"],
+  .sheets-container div.add-sheet-container ul.dropdown-menu li a [class*=" icon-"] {
+    margin-left: -17px;
+    margin-right: 3px; }
   .sheets-container div.sheet-list-container {
     width: 100%;
     overflow: hidden; }
