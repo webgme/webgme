@@ -2260,8 +2260,7 @@ if(DEBUG && ArPointList.length > 0){
 
             this.getStartPointPrev = function (){
                 return startpoint_prev !== null ? 
-                    ((startpoint_prev instanceof Array) ? new ArPoint(startpoint_prev[0]) : new ArPoint(startpoint_prev)) 
-                        : emptyPoint;
+                    new ArPoint(startpoint_prev[0]) : null;
             };
 
             this.isStartPointPrevNull = function () {
@@ -2269,7 +2268,7 @@ if(DEBUG && ArPointList.length > 0){
             };
 
             this.setStartPointPrev = function (point){
-                startpoint_prev = point;
+                startpoint_prev = point || null;
             };
 
             this.getStartPointPtr = function(){
