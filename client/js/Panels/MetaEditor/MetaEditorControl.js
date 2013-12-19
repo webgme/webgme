@@ -309,7 +309,7 @@ define(['logManager',
         //check to see if the territory needs to be changed
         //the territory contains the nodes that are on the currently opened sheet
         //this._selectedMetaAspectSheetMembers
-        selectedSheetMembers = this._metaAspectMembersPerSheet[this._selectedMetaAspectSet];
+        selectedSheetMembers = this._metaAspectMembersPerSheet[this._selectedMetaAspectSet] || [];
 
         //check deleted nodes
         diff = _.difference(this._selectedMetaAspectSheetMembers, selectedSheetMembers);
