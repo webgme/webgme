@@ -224,7 +224,7 @@ define(['logManager',
 
             for (p in projectList) {
                 if (projectList.hasOwnProperty(p)) {
-                    self._projectNames.push(p)
+                    self._projectNames.push(p);
                     self._projectList[p] = projectList[p];
                 }
             }
