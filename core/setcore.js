@@ -15,13 +15,34 @@ define([ "util/assert"], function (ASSERT) {
         var setModified = function(node){
             innerCore.setRegistry(node,'_sets_',(innerCore.getRegistry(node,'_sets_') || 0)+1);
         };
+        var getMemberPath = function(node,setElementNode){
+            var ownPath = innerCore.getPath(node),
+                memberPath = innerCore.getPointerPath(setElementNode,'member');
+            ownPath = ownPath.substring(0,ownPath.indexOf('/_')); //TODO this is a hack and should be solved some other way if possible
+            if(ownPath !== memberPath){
+                return memberPath;
+            }
+
+            //now we should check who really set this member as its own
+            while(innerCore.getBase(node) !== null && innerCore.getBase(setElementNode) !== null && innerCore.getRegistry(innerCore.getBase(setElementNode),'_') === '_'){
+                node = innerCore.getBase(node);
+                setElementNode = innerCore.getBase(setElementNode);
+                ownPath = innerCore.getPath(node);
+                ownPath = ownPath.substring(0,ownPath.indexOf('/_')); //TODO this is a hack and should be solved some other way if possible
+            }
+
+
+            return ownPath;
+
+        };
         var getMemberRelId = function(node,setName,memberPath){
             ASSERT(typeof setName === 'string');
             var setNode = innerCore.getChild(innerCore.getChild(node,SETS_ID),setName);
             var elements = innerCore.getChildrenRelids(setNode);
 
             for(var i=0;i<elements.length;i++){
-                if(innerCore.getPointerPath(innerCore.getChild(setNode,elements[i]),'member') === memberPath){
+                //if(innerCore.getPointerPath(innerCore.getChild(setNode,elements[i]),'member') === memberPath){
+                if(getMemberPath(node,innerCore.getChild(setNode,elements[i])) === memberPath){
                     return elements[i];
                 }
             }
@@ -56,7 +77,8 @@ define([ "util/assert"], function (ASSERT) {
             var members = [];
             var elements = innerCore.getChildrenRelids(setNode);
             for(var i=0;i<elements.length;i++){
-                var path = innerCore.getPointerPath(innerCore.getChild(setNode,elements[i]),'member');
+                //var path = innerCore.getPointerPath(innerCore.getChild(setNode,elements[i]),'member');
+                var path = getMemberPath(node,innerCore.getChild(setNode,elements[i]));
                 if(path){
                     members.push(path);
                 }

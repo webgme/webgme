@@ -817,6 +817,10 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
             return nodes;
         }
 
+        function getCoreTree () {
+            return coretree;
+        }
+
         return {
             // check
             isValidNode: isValidNode,
@@ -879,7 +883,9 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
             loadCollection: loadCollection,
 
             getSingleNodeHash: getSingleNodeHash,
-            getCommonPathPrefixData: getCommonPathPrefixData
+            getCommonPathPrefixData: getCommonPathPrefixData,
+
+            getCoreTree : getCoreTree
         };
     };
 
