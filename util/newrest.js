@@ -2,11 +2,13 @@ define([
     'core/core',
     'storage/serveruserstorage',
     'coreclient/tojson',
+    'util/url',
     'logManager'
 ],function(
     Core,
     Storage,
     ToJson,
+    URL,
     logManager
     ){
 
@@ -37,16 +39,6 @@ define([
                 'ok':200
             };
 
-        function specialCharHandling(text){
-            text = text.replace(/%23/g,'#');
-            text = text.replace(/%2f/g,'/');text = text.replace(/%2F/g,'/');
-            return text;
-        }
-        function addingSpecialChars(text){
-            text = text.replace(/#/g,'%23');
-            text = text.replace(/\//g,'%2F');
-            return text;
-        }
         function printHelp(callback){
             callback(_HTTPError.ok,{
                 commands:{
@@ -98,7 +90,7 @@ define([
                             callback(_HTTPError.internalServerError,err);
                         } else {
                             for(var i in names){
-                                names[i] = _parameters.baseUrl+'/commit/'+projectName+'/'+addingSpecialChars(names[i]);
+                                names[i] = URL.urlToRefObject(_parameters.baseUrl+'/commit/'+projectName+'/'+URL.addSpecialChars(names[i]));
                             }
                             callback(_HTTPError.ok,names);
                         }
@@ -116,11 +108,11 @@ define([
                             callback(_HTTPError.internalServerError,err);
                         } else {
                             var myCommit = {};
-                            myCommit.self = _parameters.baseUrl+'/commit/'+projectName+'/'+addingSpecialChars(commitHash);
-                            myCommit.root = _parameters.baseUrl+'/node/'+projectName+'/'+addingSpecialChars(commit.root);
+                            myCommit.self = URL.urlToRefObject(_parameters.baseUrl+'/commit/'+projectName+'/'+URL.addSpecialChars(commitHash));
+                            myCommit.root = URL.urlToRefObject(_parameters.baseUrl+'/node/'+projectName+'/'+URL.addSpecialChars(commit.root));
                             myCommit.parents = [];
                             for(var i=0;i<commit.parents.length;i++){
-                                myCommit.parents.push(_parameters.baseUrl+'/commit/'+projectName+'/'+addingSpecialChars(commit.parents[i]));
+                                myCommit.parents.push(URL.urlToRefObject(_parameters.baseUrl+'/commit/'+projectName+'/'+URL.addSpecialChars(commit.parents[i])));
                             }
                             myCommit.message = commit.message;
 
@@ -140,7 +132,7 @@ define([
                             callback(_HTTPError.internalServerError,err);
                         } else {
                             for(var i=0;i<commits.length;i++){
-                                commits[i] = _parameters.baseUrl+'/commit/'+projectName+'/'+addingSpecialChars(commits[i]['_id']);
+                                commits[i] = URL.urlToRefObject(_parameters.baseUrl+'/commit/'+projectName+'/'+URL.addSpecialChars(commits[i]['_id']));
                             }
                             callback(_HTTPError.ok,commits);
                         }
@@ -162,7 +154,7 @@ define([
                                 if(err){
                                     callback(_HTTPError.internalServerError,err);
                                 } else {
-                                    callback(_HTTPError.ok,ToJson(core,node));
+                                    callback(_HTTPError.ok,ToJson(core,node,_parameters.baseUrl+'/node/'+projectName+'/'+URL.addSpecialChars(rootHash)));
                                 }
                             });
                         }
@@ -185,10 +177,10 @@ define([
                     listCommits(parameters[0],Number(parameters[1]) === 'NaN' ? 1 : Number(parameters[1]),callback);
                     break;
                 case _commands.commit:
-                    printCommit(parameters[0],specialCharHandling(parameters[1] || ""),callback);
+                    printCommit(parameters[0],URL.removeSpecialChars(parameters[1] || ""),callback);
                     break;
                 case _commands.node:
-                    printNode(parameters[0],specialCharHandling(parameters[1] || ""),specialCharHandling(parameters[2] || ""),callback);
+                    printNode(parameters[0],URL.removeSpecialChars(parameters[1] || ""),URL.removeSpecialChars(parameters[2] || ""),callback);
                     break;
                 default:
                     printHelp(callback);

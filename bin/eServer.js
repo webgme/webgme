@@ -129,7 +129,7 @@ requirejs(['logManager',
     function checkREST(req,res,next){
         if(_REST === null){
             var protocolPrefix = parameters.httpsecure === true ? 'https://' : 'http://';
-            _REST = new REST({host:parameters.mongoip,port:parameters.mongoport,database:parameters.mongodatabase,baseUrl:protocolPrefix+req.headers.host});
+            _REST = new REST({host:parameters.mongoip,port:parameters.mongoport,database:parameters.mongodatabase,baseUrl:protocolPrefix+req.headers.host+'/rest'});
         }
         return next();
     }

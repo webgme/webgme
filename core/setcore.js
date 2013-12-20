@@ -79,7 +79,12 @@ define([ "util/assert"], function (ASSERT) {
         };
         setcore.addMember = function(node,setName,member){
             ASSERT(typeof setName === 'string');
-            var setNode = innerCore.getChild(innerCore.getChild(node,SETS_ID),setName);
+            var setsNode = innerCore.getChild(node,SETS_ID);
+            //TODO decide if the member addition should really create the set or it should fail...
+            if(innerCore.getPointerPath(setsNode,setName) === undefined){
+                setcore.createSet(node,setName);
+            }
+            var setNode = innerCore.getChild(setsNode,setName);
             var setMemberRelId = getMemberRelId(node,setName,setcore.getPath(member));
             if(setMemberRelId === null){
                 var setMember =  innerCore.getChild(setNode,createNewMemberRelid(setNode));
