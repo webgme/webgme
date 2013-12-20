@@ -204,6 +204,28 @@ define([ "util/assert"], function (ASSERT) {
             setModified(node);
         };
 
+        setcore.isMemberOf = function(node){
+            //TODO we should find a proper way to do this - or at least some support from lower layers would be fine
+            var coll = setcore.getCollectionPaths(node,'member');
+            var sets = {};
+            for(var i=0;i<coll.length;i++){
+                var pathArray = coll[i].split('/');
+                if(pathArray.indexOf('_meta') === -1){
+                    //now we simply skip META sets...
+                    var index = pathArray.indexOf(SETS_ID);
+                    if(index>0 && pathArray.length>index+2){
+                        //otherwise it is not a real set
+                        var ownerPath = pathArray.slice(0,index).join('/');
+                        if(sets[ownerPath] === undefined){
+                            sets[ownerPath] = [];
+                        }
+                        sets[ownerPath].push(pathArray[index+1]);
+                    }
+                }
+            }
+            return sets;
+        };
+
         return setcore;
 
     }

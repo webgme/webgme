@@ -1908,9 +1908,8 @@ define([
                     console.log('printing info of node '+_id+' done');
 
                     //testfunction placeholder
-                    getFullProjectListAsync(function(err,list){
-                        console.log('kecso',err,list);
-                    });
+
+                    console.log(_core.isMemberOf(_nodes[_id].node));
                 };
 
                 if(_nodes[_id]){

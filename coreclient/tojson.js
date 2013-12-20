@@ -59,6 +59,8 @@ define([
         tArray = core.getChildrenRelids(node);
         for(i=0;i<tArray.length;i++){
             var path = core.getPath(core.getParent(node)) || "";
+            //TODO this needs to be done in another way
+            path = path === "root" ? "" : path;
             path += '/'+tArray[i];
             jNode['children'].push(pathToRefObj(urlPrefix,path));
         }
@@ -82,6 +84,10 @@ define([
             var members = core.getMemberPaths(node,tArray[i]);
             for(j=0;j<members.length;j++){
                 pointer.to.push(pathToRefObj(urlPrefix,members[j]));
+            }
+            var coll = core.isMemberOf(node);
+            for(j in coll){
+                pointer.from.push(pathToRefObj(urlPrefix,j));
             }
             jNode['pointers'][tArray[i]] = pointer;
         }

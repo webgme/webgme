@@ -84,10 +84,30 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
             },child,basechild,node,relid);
         };
 
-		core.loadByPath = function(node, path) {
+		core._loadByPath = function(node, path) {
 			ASSERT(isValidNode(node));
 			return TASYNC.call(__loadBase, oldcore.loadByPath(node, path));
 		};
+        core.loadByPath = function(node,path) {
+            ASSERT(isValidNode(node));
+            //we have to completely override the coretree's loadByPath, to load every node properly
+            if(path === ""){
+                return node;
+            }
+            var basePath = core.getPath(node);
+            var pathArray = path.split('/');
+            if(pathArray.length > 1 && pathArray[0] === ""){
+                pathArray = pathArray.splice(1);
+            }
+            var relid = pathArray.shift();
+            var child = core.loadChild(node,relid);
+            if(pathArray.length>0){
+                return TASYNC.call(core.loadByPath,child,'/'+pathArray.join('/'));
+            } else {
+                return TASYNC.call(function(c){
+                    return c;},child);
+            }
+        };
 
         core.loadPointer = function(node,name){
             var pointer = TASYNC.call(__loadBase,oldcore.loadPointer(node, name));
@@ -324,7 +344,7 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
                 getSimpleBasePath = function(node){
                     var path = oldcore.getPointerPath(node,name);
                     if(path === undefined){
-                        if(node.base !== null || node.base !== undefined){
+                        if(node.base !== null && node.base !== undefined){
                             return getSimpleBasePath(node.base);
                         } else {
                             return undefined;
@@ -389,7 +409,6 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
                 ASSERT(node);
                 target = coretree.joinPaths(oldcore.getPath(node), target);
             }
-            console.log('kecso',target,basePath);
             return target || basePath || (hasNullTarget ? null : undefined);
         };
 
