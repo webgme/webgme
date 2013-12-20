@@ -542,6 +542,8 @@ define(['logManager',
 
             this.logger.debug('selectedAspectChanged: ' + this._selectedMetaAspectSet);
 
+            //TODO: this is not good bcos this way on every tab switch there is a full reload
+            //and re-generation of the tabs
             this.selectedObjectChanged(META_RULES_CONTAINER_NODE_ID);
         }
     };
