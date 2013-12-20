@@ -127,6 +127,16 @@ define(['logManager',
         return [DragHelper.DRAG_EFFECTS.DRAG_MOVE];
     };
 
+    /* OVERWRITE DiagramDesignerWidget.prototype._dragHelper */
+    MetaEditorWidget.prototype._dragHelper = function (el, event, dragInfo) {
+        var helperEl = DiagramDesignerWidget.prototype._dragHelper.apply(this, [el, event, dragInfo]);
+
+        //clear out default 'Move' text from helperEl
+        helperEl.html('');
+
+        return helperEl;
+    };
+
     MetaEditorWidget.prototype._initializeSheets = function () {
         var self = this;
 
