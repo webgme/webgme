@@ -169,6 +169,10 @@ define(['logManager',
         this.$divSheetList = $('<div/>', {'class': SHEET_LIST_CONTAINER_CLASS});
         this.$ulSheetTab = $('<ul/>', {'class': 'nav nav-tabs'});
         this.$divSheetList.append(this.$ulSheetTab);
+
+        this.$ulSheetTab.sortable({'stop': function () {
+            self._onTabsSortStop();
+        }});
  
         
         this.$sheetsContainer.append(this.$divAddSheet);
@@ -208,7 +212,14 @@ define(['logManager',
     };
 
     MetaEditorWidget.prototype.clearSheets = function () {
+        var self = this;
+
+        this.$ulSheetTab.sortable('destroy');
         this.$ulSheetTab.empty();
+        this.$ulSheetTab.sortable({'stop': function () {
+            self._onTabsSortStop();
+        }});
+
         this.$ddlSheetsList.clear();
         this._sheetCounter = 0;
         this._selectedSheet = undefined;
@@ -302,6 +313,23 @@ define(['logManager',
         }
     };
 
+    MetaEditorWidget.prototype._onTabsSortStop = function () {
+        var ul = this.$ulSheetTab,
+            allLi = ul.find('li'),
+            i,
+            li,
+            order = [];
+
+        for (i = 0; i < allLi.length; i += 1) {
+            li = $(allLi[i]);
+            order.push(li.data(SHEET_ID));
+        }
+
+        if (order.length > 0) {
+            this.onTabsSorted(order);
+        }
+    };
+
     MetaEditorWidget.prototype.onSheetDeleteClicked = function (sheetID) {
         this.logger.warning('onSheetDeleteClicked not implemented: "' + sheetID + '"');
     };
@@ -318,6 +346,12 @@ define(['logManager',
     MetaEditorWidget.prototype.onSelectedSheetChanged = function (sheetID) {
         this.logger.warning('onSelectedSheetChanged not implemented: "' + sheetID + '"');
     };
+
+    MetaEditorWidget.prototype.onTabsSorted = function (newSheetIDOrder) {
+        this.logger.warning('onTabsSorted not implemented: "' + newSheetIDOrder + '"');
+    };
+
+
 
     return MetaEditorWidget;
 });

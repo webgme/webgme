@@ -97,6 +97,10 @@ define(['logManager',
             self._onSheetDeleteClicked(sheetID);
         };
 
+        this.diagramDesigner.onTabsSorted = function (newSheetIDOrder) {
+            self._onTabsSorted(newSheetIDOrder);
+        };
+
         this.logger.debug("attachDesignerCanvasEventHandlers finished");
     };
 
@@ -647,6 +651,40 @@ define(['logManager',
                 doDeleteSheet();
             }
         }
+    };
+
+
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onTabsSorted = function (newSheetIDOrder) {
+        var aspectNodeID = this.currentNodeInfo.id,
+            aspectNode = this._client.getNode(aspectNodeID),
+            metaAspectSheetsRegistry = aspectNode.getEditableRegistry(MetaEditorConstants.META_SHEET_REGISTRY_KEY) || [],
+            i,
+            j,
+            setID;
+
+        for (i = 0; i < newSheetIDOrder.length; i += 1) {
+            //i is the new order number
+            //newSheetIDOrder[i] is the sheet identifier
+            setID = this._sheets[newSheetIDOrder[i]];
+            for (j = 0; j < metaAspectSheetsRegistry.length; j += 1) {
+                if (metaAspectSheetsRegistry[j].SetID === setID) {
+                    metaAspectSheetsRegistry[j].order = i;
+                    break;
+                }
+            }
+        }
+
+        metaAspectSheetsRegistry.sort(function (a, b) {
+            if (a.order < b.order) {
+                return -1;
+            } else {
+                return 1;
+            }
+        });
+
+        this._client.startTransaction();
+        this._client.setRegistry(aspectNodeID, MetaEditorConstants.META_SHEET_REGISTRY_KEY, metaAspectSheetsRegistry);
+        this._client.completeTransaction();
     };
 
 

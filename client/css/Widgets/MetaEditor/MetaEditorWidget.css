@@ -89,3 +89,8 @@ div.filterPanel {
         .sheets-container div.sheet-list-container ul.nav.nav-tabs > li.active > a [class^="icon-"],
         .sheets-container div.sheet-list-container ul.nav.nav-tabs > li.active > a [class*=" icon-"] {
           display: inline-block; }
+      .sheets-container div.sheet-list-container ul.nav.nav-tabs.ui-sortable li.ui-sortable-placeholder {
+        height: 0px !important; }
+      .sheets-container div.sheet-list-container ul.nav.nav-tabs.ui-sortable li.ui-sortable-helper {
+        top: 0px !important;
+        pointer-events: none; }

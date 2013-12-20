@@ -156,6 +156,17 @@ div.filterPanel {
                     }
                   }
 				}
+              
+              &.ui-sortable {
+                li.ui-sortable-placeholder {
+                  height: 0px !important;
+                }
+
+                li.ui-sortable-helper {
+                  top: 0px !important;
+                  pointer-events: none;
+                }
+              }
 			}
 		}
 	}
