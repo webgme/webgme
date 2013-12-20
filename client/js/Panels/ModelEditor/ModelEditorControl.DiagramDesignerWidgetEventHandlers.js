@@ -588,6 +588,13 @@ define(['logManager',
 
                         //set reference
                         this._client.makePointer(gmeID, CONSTANTS.POINTER_REF, items[0]);
+
+                        //try to set name
+                        var origNode = this._client.getNode(items[0]);
+                        if (origNode) {
+                            var refName = origNode.getAttribute(nodePropertyNames.Attributes.name) + "-REF";
+                            this._client.setAttributes(gmeID, nodePropertyNames.Attributes.name, refName);
+                        }
                     }
 
                     this._client.completeTransaction();
