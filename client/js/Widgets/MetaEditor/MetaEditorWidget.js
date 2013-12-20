@@ -170,11 +170,8 @@ define(['logManager',
         this.$ulSheetTab = $('<ul/>', {'class': 'nav nav-tabs'});
         this.$divSheetList.append(this.$ulSheetTab);
 
-        this.$ulSheetTab.sortable({'stop': function () {
-            self._onTabsSortStop();
-        }});
- 
-        
+        this._makeTabsSortable();
+
         this.$sheetsContainer.append(this.$divAddSheet);
         this.$sheetsContainer.append(this.$divSheetList);
 
@@ -212,18 +209,21 @@ define(['logManager',
     };
 
     MetaEditorWidget.prototype.clearSheets = function () {
-        var self = this;
-
         this.$ulSheetTab.sortable('destroy');
         this.$ulSheetTab.empty();
-        this.$ulSheetTab.sortable({'stop': function () {
-            self._onTabsSortStop();
-        }});
-
+        this._makeTabsSortable();
         this.$ddlSheetsList.clear();
         this._sheetCounter = 0;
         this._selectedSheet = undefined;
         this._scrollSheetListBy(0 - this._sheetScrollValue);
+    };
+
+    MetaEditorWidget.prototype._makeTabsSortable = function () {
+        var self = this;
+
+        this.$ulSheetTab.sortable({'dropBehaviour': true, 'stop': function () {
+            self._onTabsSortStop();
+        }});
     };
 
     MetaEditorWidget.prototype.addSheet = function (title, deletable) {
