@@ -145,7 +145,7 @@ define(['logManager',
     /**********************************************************/
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDrop = function (event, dragInfo, position) {
         var _client = this._client,
-            aspectNodeID = this.currentNodeInfo.id,
+            aspectNodeID = this.metaAspectContainerNodeID,
             gmeIDList = DragHelper.getDragItems(dragInfo),
             params = DragHelper.getDragParams(dragInfo),
             i,
@@ -238,7 +238,7 @@ define(['logManager',
     /*************************************************************/
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionDelete = function (idList) {
         var _client = this._client,
-            aspectNodeID = this.currentNodeInfo.id,
+            aspectNodeID = this.metaAspectContainerNodeID,
             len,
             gmeID,
             idx,
@@ -338,7 +338,7 @@ define(['logManager',
             params = { 'positions': {} },
             i;
 
-        params[DRAG_PARAMS_META_CONTAINER_ID] = this.currentNodeInfo.id;
+        params[DRAG_PARAMS_META_CONTAINER_ID] = this.metaAspectContainerNodeID;
         params[DRAG_PARAMS_ACTIVE_META_ASPECT] = this._selectedMetaAspectSet;
 
         for (i in oParams.positions) {
@@ -393,8 +393,8 @@ define(['logManager',
 
         //nobody is selected on the canvas
         //set the active selection to the opened guy
-        if (gmeIDs.length === 0 && this.currentNodeInfo.id) {
-            gmeIDs.push(this.currentNodeInfo.id);
+        if (gmeIDs.length === 0 && this.metaAspectContainerNodeID) {
+            gmeIDs.push(this.metaAspectContainerNodeID);
         }
 
         if (gmeIDs.length !== 0) {
@@ -427,7 +427,7 @@ define(['logManager',
 
     //adding new meta aspect sheet
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSheetAddClicked = function () {
-        var aspectNodeID = this.currentNodeInfo.id,
+        var aspectNodeID = this.metaAspectContainerNodeID,
             aspectNode = this._client.getNode(aspectNodeID),
             metaAspectSheetsRegistry = aspectNode.getEditableRegistry(MetaEditorConstants.META_SHEET_REGISTRY_KEY) || [],
             i,
@@ -473,16 +473,15 @@ define(['logManager',
 
         this._client.setRegistry(aspectNodeID, MetaEditorConstants.META_SHEET_REGISTRY_KEY, metaAspectSheetsRegistry);
 
-        //finish transaction
-        this._client.completeTransaction();
-
         //force switching to the new sheet
         this._selectedMetaAspectSet = newSetID;
-        this.selectedObjectChanged(META_RULES_CONTAINER_NODE_ID);
+
+        //finish transaction
+        this._client.completeTransaction();
     };
 
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSheetTitleChanged = function (sheetID, oldValue, newValue) {
-        var aspectNodeID = this.currentNodeInfo.id,
+        var aspectNodeID = this.metaAspectContainerNodeID,
             aspectNode = this._client.getNode(aspectNodeID),
             metaAspectSheetsRegistry = aspectNode.getEditableRegistry(MetaEditorConstants.META_SHEET_REGISTRY_KEY) || [],
             i,
@@ -520,7 +519,7 @@ define(['logManager',
         //it needs to be removed from the META Aspect (when user confirms DELETE)
         var aspectToDelete = this._sheets[sheetID],
             itemsOfAspect = this._metaAspectMembersPerSheet[aspectToDelete],
-            aspectNodeID = this.currentNodeInfo.id,
+            aspectNodeID = this.metaAspectContainerNodeID,
             aspectNode = this._client.getNode(aspectNodeID),
             metaAspectSheetsRegistry = aspectNode.getEditableRegistry(MetaEditorConstants.META_SHEET_REGISTRY_KEY) || [],
             len,
@@ -623,7 +622,7 @@ define(['logManager',
 
 
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onTabsSorted = function (newSheetIDOrder) {
-        var aspectNodeID = this.currentNodeInfo.id,
+        var aspectNodeID = this.metaAspectContainerNodeID,
             aspectNode = this._client.getNode(aspectNodeID),
             metaAspectSheetsRegistry = aspectNode.getEditableRegistry(MetaEditorConstants.META_SHEET_REGISTRY_KEY) || [],
             i,

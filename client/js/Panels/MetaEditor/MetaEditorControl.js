@@ -96,11 +96,11 @@ define(['logManager',
         this._initializeSelectedSheet();
 
         //remove current territory patterns
-        if (this.currentNodeInfo.id) {
+        if (this._territoryId) {
             this._client.removeUI(this._territoryId);
         }
 
-        this.currentNodeInfo.id = nodeId;
+        this.metaAspectContainerNodeID = META_RULES_CONTAINER_NODE_ID;
 
         if (nodeId) {
             //put new node's info into territory rules
@@ -159,7 +159,7 @@ define(['logManager',
     /*                LOAD / UPDATE / UNLOAD HANDLER          */
     /**********************************************************/
     MetaEditorControl.prototype._onLoad = function (gmeID) {
-        if (gmeID === this.currentNodeInfo.id) {
+        if (gmeID === this.metaAspectContainerNodeID) {
             this._processMetaAspectContainerNode();
         } else {
             this._processNodeLoad(gmeID);
@@ -167,7 +167,7 @@ define(['logManager',
     };
 
     MetaEditorControl.prototype._onUpdate = function (gmeID) {
-        if (gmeID === this.currentNodeInfo.id) {
+        if (gmeID === this.metaAspectContainerNodeID) {
             this._processMetaAspectContainerNode();
         } else {
             this._processNodeUpdate(gmeID);
@@ -175,9 +175,9 @@ define(['logManager',
     };
 
     MetaEditorControl.prototype._onUnload = function (gmeID) {
-        if (gmeID === this.currentNodeInfo.id) {
+        if (gmeID === this.metaAspectContainerNodeID) {
             //the opened model has been deleted....
-            this.logger.debug('The currently opened aspect has been deleted --- GMEID: "' + this.currentNodeInfo.id + '"');
+            this.logger.debug('The currently opened aspect has been deleted --- GMEID: "' + this.metaAspectContainerNodeID + '"');
             this.diagramDesigner.setBackgroundText('The currently opened aspect has been deleted...', {'font-size': 30,
                                                                                                      'color': '#000000'});
         } else {
@@ -244,7 +244,7 @@ define(['logManager',
     /*  PROCESS CURRENT NODE TO HANDLE ADDED / REMOVED ELEMENT */
     /***********************************************************/
     MetaEditorControl.prototype._processMetaAspectContainerNode = function () {
-        var aspectNodeID = this.currentNodeInfo.id,
+        var aspectNodeID = this.metaAspectContainerNodeID,
             aspectNode = this._client.getNode(aspectNodeID),
             len,
             diff,
@@ -1616,7 +1616,7 @@ define(['logManager',
     };
 
     MetaEditorControl.prototype._processMetaAspectSheetsRegistry = function () {
-        var aspectNode = this._client.getNode(this.currentNodeInfo.id),
+        var aspectNode = this._client.getNode(this.metaAspectContainerNodeID),
             metaAspectSheetsRegistry = aspectNode.getEditableRegistry(MetaEditorConstants.META_SHEET_REGISTRY_KEY) || [],
             i,
             len,
