@@ -30,10 +30,6 @@ define(['logManager',
         var self = this;
 
         /*OVERRIDE DESIGNER CANVAS METHODS*/
-        this.diagramDesigner.onDesignerItemsMove = function (repositionDesc) {
-            self._onDesignerItemsMove(repositionDesc);
-        };
-
         this.diagramDesigner.onCreateNewConnection = function (params) {
             self._onCreateNewConnection(params);
         };
@@ -235,34 +231,6 @@ define(['logManager',
     /**********************************************************/
     /*  END OF --- HANDLE OBJECT DRAG & DROP TO SHEET         */
     /**********************************************************/
-
-
-    /**********************************************************/
-    /*  HANDLE OBJECT REPOSITION IN THE ASPECT ASPECT         */
-    /**********************************************************/
-    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onDesignerItemsMove = function (repositionDesc) {
-        var _client = this._client,
-            aspectNodeID = this.currentNodeInfo.id,
-            members = this.currentNodeInfo.members,
-            id,
-            gmeID;
-
-        _client.startTransaction();
-
-        for (id in repositionDesc) {
-            if (repositionDesc.hasOwnProperty(id)) {
-                gmeID = this._ComponentID2GMEID[id];
-                if (members.indexOf(gmeID) !== -1) {
-                    _client.setMemberRegistry(aspectNodeID, gmeID, MetaEditorConstants.META_ASPECT_SET_NAME, MetaEditorConstants.META_ASPECT_MEMBER_POSITION_REGISTRY_KEY, { "x": repositionDesc[id].x,"y": repositionDesc[id].y} );
-                }
-            }
-        }
-
-        _client.completeTransaction();
-    };
-    /************************************************************/
-    /* END OF --- HANDLE OBJECT REPOSITION IN THE ASPECT ASPECT */
-    /************************************************************/
 
 
     /*************************************************************/

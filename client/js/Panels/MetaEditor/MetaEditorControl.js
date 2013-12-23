@@ -101,7 +101,6 @@ define(['logManager',
         }
 
         this.currentNodeInfo.id = nodeId;
-        this.currentNodeInfo.members = [];
 
         if (nodeId) {
             //put new node's info into territory rules
