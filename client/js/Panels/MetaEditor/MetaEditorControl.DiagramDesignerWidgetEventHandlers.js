@@ -20,7 +20,6 @@ define(['logManager',
 
     var MetaEditorControlDiagramDesignerWidgetEventHandlers,
         DRAG_PARAMS_META_CONTAINER_ID = 'metaContainerID',
-        META_RULES_CONTAINER_NODE_ID = MetaEditorConstants.META_ASPECT_CONTAINER_ID,
         DRAG_PARAMS_ACTIVE_META_ASPECT = 'DRAG_PARAMS_ACTIVE_META_ASPECT';
 
     MetaEditorControlDiagramDesignerWidgetEventHandlers = function () {
