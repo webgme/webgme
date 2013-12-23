@@ -122,7 +122,7 @@ define(['logManager',
         }
     };
 
-    MetaEditorWidget.prototype.getDragEffects = function (selectedElements, event) {
+    MetaEditorWidget.prototype.getDragEffects = function (/*selectedElements, event*/) {
         //the only drag is a MOVE
         return [DragHelper.DRAG_EFFECTS.DRAG_MOVE];
     };
@@ -258,6 +258,8 @@ define(['logManager',
                 self.selectSheet(data.SHEET_ID);
             }});
 
+        this._refreshTabScrollButtons();
+
         return li.data(SHEET_ID);
     };
 
@@ -279,6 +281,8 @@ define(['logManager',
     MetaEditorWidget.prototype._scrollSheetListBy = function (value) {
         this._sheetScrollValue += value;
         this.$ulSheetTab.css('left', this._sheetScrollValue);
+
+        this._refreshTabScrollButtons();
     };
 
     MetaEditorWidget.prototype.selectSheet = function (sheetID) {
@@ -303,7 +307,6 @@ define(['logManager',
                 this.$ulSheetTab.find('li.active').removeClass('active');
                 liToSelect.addClass('active');
                 this._selectedSheet = liToSelect.data(SHEET_ID);
-                this.onSelectedSheetChanged(this._selectedSheet);
             }
 
             //select in DropDown
@@ -320,7 +323,33 @@ define(['logManager',
                 this.$ddlSheetsList.el.find('i.' + ddlSelectedIcon).remove();
                 liToSelect.find('a').prepend('<i class="' + ddlSelectedIcon + '" />');
             }
+
+            this._scrollSelectedTabIntoView();
+
+            //fire event...
+            this.onSelectedSheetChanged(this._selectedSheet);
         }
+    };
+
+    MetaEditorWidget.prototype._scrollSelectedTabIntoView = function () {
+        //scroll selected sheet's tab into view
+        var li = this.$ulSheetTab.find('li.active').first();
+        var liPos = li.position();
+        var visibleWidth = this.$sheetsContainer.width() - this.$divAddSheet.outerWidth(true);
+        var visibleMin = -this._sheetScrollValue;
+        var visibleMax = -this._sheetScrollValue + visibleWidth;
+        if (liPos.left < visibleMin) {
+            this._scrollSheetListBy(visibleMin - liPos.left);
+        } else if (liPos.left + li.width() > visibleMax) {
+            this._scrollSheetListBy(visibleMax - (liPos.left + li.width()));
+        }
+    };
+
+    MetaEditorWidget.prototype._refreshTabScrollButtons = function () {
+        var overflowRightBy = this.$ulSheetTab.width() - this.$sheetsContainer.width() + this.$divAddSheet.outerWidth(true) + this._sheetScrollValue;
+
+        this.$btnScrollLeft.enabled(this._sheetScrollValue < 0);
+        this.$btnScrollRight.enabled(overflowRightBy > 0);
     };
 
     MetaEditorWidget.prototype._onTabsSortStop = function () {
