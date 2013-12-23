@@ -1711,7 +1711,7 @@ define(['logManager',
 
         this._metaAspectMemberPatterns = {};
 
-        if (this._selectedMetaAspectSet) {
+        if (this._selectedMetaAspectSet && this._metaAspectMembersPerSheet[this._selectedMetaAspectSet]) {
             len = this._metaAspectMembersPerSheet[this._selectedMetaAspectSet].length;
             if (len > 0) {
                 this.diagramDesigner.showProgressbar();
