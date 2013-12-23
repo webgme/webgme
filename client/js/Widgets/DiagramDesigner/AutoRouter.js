@@ -5077,8 +5077,7 @@ if(DEBUG && ArPointList.length > 0){
                 assert( pppointpos < points.getLength() && ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength(), 
                     "ARGraph.candeleteTwoEdgesAt: pppointpos < points.getLength() && ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength() FAILED");
 
-                var dir = getDir({ 'cx': parseInt(npoint.x - point.x), //'cast' it to an int to remove any decimal value
-                                   'cy': parseInt(npoint.y - point.y) }); //Unfortunately, I need this to be a rough value or it may not correctly determine direction
+                var dir = getDir(npoint.minus(point));
 
                 assert( isRightAngle(dir), "ARGraph.candeleteTwoEdgesAt: isRightAngle(dir) FAILED");
                 var ishorizontal = isHorizontal(dir);
@@ -5129,6 +5128,7 @@ if(DEBUG && ArPointList.length > 0){
                 assert( pppoint !== null && ppoint !== null && point !== null && npoint !== null && nnpoint !== null, "ARGraph.deleteTwoEdgesAt: pppoint !== null && ppoint !== null && point !== null && npoint !== null && nnpoint !== null FAILED");
 
                 var dir = getDir(npoint.minus(point));
+
                 assert( isRightAngle(dir), "ARGraph.deleteTwoEdgesAt: isRightAngle(dir) FAILED");
                 var ishorizontal = isHorizontal(dir);
 
@@ -5359,7 +5359,7 @@ if(DEBUG && ArPointList.length > 0){
 
                         if( p4x < p3x && p3x < p1x )
                         {
-                            var m = (p4x + p1x)/2;
+                            var m = Math.round((p4x + p1x)/2);
                             if(h){
                                 np2.x = m;
                                 np3.x = m;
@@ -5372,7 +5372,7 @@ if(DEBUG && ArPointList.length > 0){
                             p4x = tmp.min;
                             p1x = tmp.max;
 
-                            m = (p4x + p1x)/2;
+                            m = Math.round((p4x + p1x)/2);
 
                             if(h){
                                 np2.x = m;
@@ -6769,14 +6769,20 @@ pt = [pt];
                 if( endport !== null )
                     endport.assertValid();
 
-                if( isConnected() )
+                if( isConnected() ){
                     assert( points.getLength() !== 0, "ARPath.assertValid: points.getLength() !== 0 FAILED" );
-                else
-                    assert( points.getLength() === 0, "ARPath.assertValid: points.getLength() === 0 FAILED");
-            };
+                    var i = 0;
+                    while(i++ < this.getPointCount()){
+                        var point = this.getPointList().get(i)[0],
+                            ppoint = this.getPointList().get(i-1)[0];
 
-            this.assertValidPos = function(pos){
-                return pos < points.getLength();
+                        if(point.x !== ppoint.x && point.y !== ppoint.y)
+                            assert(false, "Path.assertValid: Path is not valid");
+                    }
+                
+                }else{
+                    assert( points.getLength() === 0, "ARPath.assertValid: points.getLength() === 0 FAILED");
+                }
             };
 
             this.assertValidPoints = function(){
