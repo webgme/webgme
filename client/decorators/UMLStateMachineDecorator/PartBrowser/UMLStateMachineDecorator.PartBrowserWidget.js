@@ -55,8 +55,9 @@ define(['js/Constants',
     UMLStateMachineDecoratorPartBrowserWidget.prototype.afterAppend = function () {
         var META_TYPES = UMLStateMachineMETA.META_TYPES;
 
-        if (this._metaType === META_TYPES.End ||
-            this._metaType === META_TYPES.Initial) {
+        if (META_TYPES.End &&
+            META_TYPES.Initial &&
+            (this._metaType === META_TYPES.End || this._metaType === META_TYPES.Initial)) {
             var nameWidth = this.$name.outerWidth();
 
             this.$name.css({ "margin-left": nameWidth / -2 });

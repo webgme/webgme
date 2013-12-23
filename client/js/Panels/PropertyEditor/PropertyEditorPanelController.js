@@ -3,10 +3,12 @@
 define(['logManager',
     'clientUtil',
     'js/NodePropertyNames',
-    'js/Decorators/DecoratorDB'], function (logManager,
+    'js/Decorators/DecoratorDB',
+    'js/Constants'], function (logManager,
                                         util,
                                         nodePropertyNames,
-                                        DecoratorDB) {
+                                        DecoratorDB,
+                                        CONSTANTS) {
 
     var PropertyEditorController;
 
@@ -129,6 +131,12 @@ define(['logManager',
 
             while (len--) {
                 result[availablePointers[len]] = node.getPointer(availablePointers[len]).to || '';
+                if (availablePointers[len] === CONSTANTS.POINTER_BASE) {
+                    var baseNode = _client.getNode(result[availablePointers[len]]);
+                    if (baseNode) {
+                        result[availablePointers[len]] = baseNode.getAttribute(nodePropertyNames.Attributes.name) + ' (' + result[availablePointers[len]] + ')';
+                    }
+                }
             }
 
             return util.flattenObject(result);

@@ -44,8 +44,7 @@ if (typeof define !== "function" && typeof require === "function" && typeof proc
 		"use strict";
 
 		var GLOBAL = {
-			host: '127.0.0.1',
-			port: 80,
+            port: 80,
 			project: "test",
 			autorecconnect: true,
 			reconndelay: 1000,

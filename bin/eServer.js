@@ -40,7 +40,8 @@ requirejs(['logManager',
     'storage/log',
     'auth/sessionstore',
     'auth/vehicleforgeauth',
-    'auth/gmeauth'],function(
+    'auth/gmeauth',
+    'util/newrest'],function(
     logManager,
     CONFIG,
     Storage,
@@ -50,7 +51,8 @@ requirejs(['logManager',
     Log,
     SStore,
     VFAUTH,
-    GMEAUTH){
+    GMEAUTH,
+    REST){
     var parameters = CONFIG;
     var logLevel = parameters.loglevel || logManager.logLevels.WARNING;
     var logFile = parameters.logfile || 'server.log';
@@ -61,6 +63,7 @@ requirejs(['logManager',
     var iologger = logManager.create("socket.io");
     var sitekey = null;
     var sitecertificate = null;
+    var _REST = null;
     if(parameters.httpsecure){
         sitekey = require('fs').readFileSync("proba-key.pem");
         sitecertificate = require('fs').readFileSync("proba-cert.pem");
@@ -104,14 +107,33 @@ requirejs(['logManager',
         done(null,_users[id]);
     });
 
-    passport.use(new stratGugli({
-            returnURL: parameters.host+':'+parameters.port+'/login/google/return',
-            realm: parameters.host+':'+parameters.port
-        },
-        function(identifier, profile, done) {
-            return done(null,{id:profile.emails[0].value});
+    var googleAuthenticaitonSet = false;
+    function checkGoogleAuthentication(req,res,next){
+        if(googleAuthenticaitonSet === true){
+            return next();
+        } else {
+            var protocolPrefix = parameters.httpsecure === true ? 'https://' : 'http://';
+            passport.use(new stratGugli({
+                    returnURL: protocolPrefix+req.headers.host +'/login/google/return',
+                    realm: protocolPrefix+req.headers.host
+                },
+                function(identifier, profile, done) {
+                    return done(null,{id:profile.emails[0].value});
+                }
+            ));
+            googleAuthenticaitonSet = true;
+            return next();
         }
-    ));
+    }
+
+    function checkREST(req,res,next){
+        if(_REST === null){
+            var protocolPrefix = parameters.httpsecure === true ? 'https://' : 'http://';
+            _REST = new REST({host:parameters.mongoip,port:parameters.mongoport,database:parameters.mongodatabase,baseUrl:protocolPrefix+req.headers.host+'/rest'});
+        }
+        return next();
+    }
+
 
     function ensureAuthenticated(req, res, next) {
         if(true === parameters.authentication){
@@ -147,7 +169,7 @@ requirejs(['logManager',
         app.use(express.cookieParser());
         app.use(express.bodyParser());
         app.use(express.methodOverride());
-        app.use(express.session({store: __sessionStore, secret: parameters.sessioncookiesecret, key: parameters.sessioncookieid }));
+        app.use(express.session({store: __sessionStore, secret: parameters.sessioncookiesecret, key: parameters.sessioncookieid}));
         app.use(passport.initialize());
         app.use(passport.session());
         app.use(app.router);
@@ -181,7 +203,7 @@ requirejs(['logManager',
         res.cookie('webgme',req.session.udmId);
         res.redirect('/');
     });
-    app.get('/login/google',passport.authenticate('google'));
+    app.get('/login/google',checkGoogleAuthentication,passport.authenticate('google'));
     app.get('/login/google/return',gme.authenticate,function(req,res){
         res.cookie('webgme',req.session.udmId);
         res.redirect('/');
@@ -215,8 +237,24 @@ requirejs(['logManager',
         });
     });
     //rest functionality
-    app.get('/rest/*',function(req,res){
-        res.send(500);
+    app.get('/rest/*',checkREST,function(req,res){
+
+        var urlArray = req.url.split('/');
+        if(urlArray.length > 2){
+            var command = urlArray[2];
+            var parameters = urlArray.slice(3);
+            _REST.initialize(function(err){
+                if(err){
+                    res.send(500);
+                } else {
+                    _REST.doRESTCommand(_REST.request.GET,command,parameters,function(httpStatus,object){
+                        res.json(httpStatus, object || null);
+                    });
+                }
+            });
+        } else {
+            res.send(400);
+        }
     });
     //other get
     app.get('*',function(req,res){
@@ -238,6 +276,7 @@ requirejs(['logManager',
         __storageOptions.sessioncheck = __sessionStore.check;
         __storageOptions.secret = parameters.sessioncookiesecret;
         __storageOptions.authorization = globalAuthorization;
+        __storageOptions.authInfo = gme.getAuthorizationInfo;
     }
 
     __storageOptions.host = parameters.mongoip;

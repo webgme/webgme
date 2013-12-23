@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  * 
- * AUTO GENERATED CODE FOR PROJECT newmetaStateMachine
+ * AUTO GENERATED CODE FOR PROJECT UMLStateMachine
  */
 
 "use strict";
@@ -10,7 +10,7 @@ define(['underscore',
         'js/Utils/METAAspectHelper'], function (_underscore,
                                                 METAAspectHelper) {
 
-    var _metaID = 'newmetaStateMachine.META.js';
+    var _metaID = 'UMLStateMachine.META.js';
 
     //META ASPECT TYPES
     var _metaTypes = {

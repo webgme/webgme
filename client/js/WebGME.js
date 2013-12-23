@@ -58,8 +58,10 @@ define(['logManager',
 
             //hook up branch changed to set read-only mode on panels
             client.addEventListener(client.events.BRANCH_CHANGED, function (__project, branchName) {
-                var readOnly = branchName === null || branchName === undefined;
-                lm.setPanelReadOnly(readOnly);
+                lm.setPanelReadOnly(client.isCommitReadOnly() || client.isProjectReadOnly());
+            });
+            client.addEventListener(client.events.PROJECT_OPENED, function (__project, projectName) {
+                lm.setPanelReadOnly(client.isProjectReadOnly());
             });
 
             client.decoratorManager = new DecoratorManager();
