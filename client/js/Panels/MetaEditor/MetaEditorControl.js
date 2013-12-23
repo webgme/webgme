@@ -1726,6 +1726,10 @@ define(['logManager',
         this._client.updateTerritory(this._metaAspectMembersTerritoryId, this._metaAspectMemberPatterns);
     };
 
+    MetaEditorControl.prototype.setReadOnly = function (isReadOnly) {
+        this._radioButtonGroupMetaRelationType.enabled(!isReadOnly);
+    };
+
     //attach MetaEditorControl - DiagramDesigner event handler functions
     _.extend(MetaEditorControl.prototype, MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype);
 

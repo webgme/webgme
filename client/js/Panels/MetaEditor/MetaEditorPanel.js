@@ -64,6 +64,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         PanelBaseWithHeader.prototype.onReadOnlyChanged.call(this, isReadOnly);
 
         this.widget.setReadOnly(isReadOnly);
+        this.control.setReadOnly(isReadOnly);
     };
 
     MetaEditorPanel.prototype.onResize = function (width, height) {
