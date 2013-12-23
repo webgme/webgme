@@ -24,7 +24,9 @@ define(['logManager',
         ADD_SHEET_CONTAINER_CLASS = 'add-sheet-container',
         SHEET_LIST_CONTAINER_CLASS = 'sheet-list-container',
         SHEET_SCROLL = 200,
-        SHEET_ID = 'SHEET_ID';
+        SHEET_ID = 'SHEET_ID',
+        BACKGROUND_TEXT_COLOR = '#DEDEDE',
+        BACKGROUND_TEXT_SIZE = 30;
 
     MetaEditorWidget = function (container, params) {
         params = params || {};
@@ -307,6 +309,9 @@ define(['logManager',
                 this.$ulSheetTab.find('li.active').removeClass('active');
                 liToSelect.addClass('active');
                 this._selectedSheet = liToSelect.data(SHEET_ID);
+
+                this.setBackgroundText('META ASPECT: ' + this.$ulSheetTab.find('li.active').first().find('.sheet-title').text().toUpperCase(), {'font-size': BACKGROUND_TEXT_SIZE,
+                    'color': BACKGROUND_TEXT_COLOR});
             }
 
             //select in DropDown
