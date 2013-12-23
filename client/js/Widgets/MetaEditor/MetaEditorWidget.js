@@ -338,10 +338,12 @@ define(['logManager',
         var visibleWidth = this.$sheetsContainer.width() - this.$divAddSheet.outerWidth(true);
         var visibleMin = -this._sheetScrollValue;
         var visibleMax = -this._sheetScrollValue + visibleWidth;
-        if (liPos.left < visibleMin) {
-            this._scrollSheetListBy(visibleMin - liPos.left);
-        } else if (liPos.left + li.width() > visibleMax) {
-            this._scrollSheetListBy(visibleMax - (liPos.left + li.width()));
+        if (liPos) {
+            if (liPos.left < visibleMin) {
+                this._scrollSheetListBy(visibleMin - liPos.left);
+            } else if (liPos.left + li.width() > visibleMax) {
+                this._scrollSheetListBy(visibleMax - (liPos.left + li.width()));
+            }
         }
     };
 
@@ -367,6 +369,24 @@ define(['logManager',
         if (order.length > 0) {
             this.onTabsSorted(order);
         }
+    };
+
+    MetaEditorWidget.prototype._refreshSheetTabsScrollOnResize = function () {
+        var overflowRightBy = this.$ulSheetTab.width() - this.$sheetsContainer.width() + this.$divAddSheet.outerWidth(true) + this._sheetScrollValue;
+
+        if (overflowRightBy < 0) {
+            this._scrollSheetListBy(-overflowRightBy);
+        }
+
+        this._scrollSelectedTabIntoView();
+        this._refreshTabScrollButtons();
+    };
+
+    //Called when the widget's container size changed
+    MetaEditorWidget.prototype.onWidgetContainerResize = function (width, height) {
+        DiagramDesignerWidget.prototype.onWidgetContainerResize.call(this, width, height);
+
+        this._refreshSheetTabsScrollOnResize();
     };
 
     MetaEditorWidget.prototype.onSheetDeleteClicked = function (sheetID) {
