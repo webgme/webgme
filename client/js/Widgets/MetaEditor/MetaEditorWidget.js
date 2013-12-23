@@ -155,7 +155,9 @@ define(['logManager',
         this.$btnAddSheet = new ToolbarButton({ "title": "Add new sheet...",
             "icon": "icon-plus",
             "clickFn": function (/*data*/) {
-                self.onSheetAddClicked();
+                if (self.getIsReadOnlyMode() !== true) {
+                    self.onSheetAddClicked();
+                }
             }});
         this.$divAddSheet.append(this.$btnAddSheet.el);
 
@@ -221,7 +223,7 @@ define(['logManager',
     };
 
     MetaEditorWidget.prototype.clearSheets = function () {
-        this.$ulSheetTab.sortable('destroy');
+        this._destroyTabsSortable();
         this.$ulSheetTab.empty();
         this._makeTabsSortable();
         this.$ddlSheetsList.clear();
@@ -233,9 +235,19 @@ define(['logManager',
     MetaEditorWidget.prototype._makeTabsSortable = function () {
         var self = this;
 
-        this.$ulSheetTab.sortable({'dropBehaviour': true, 'stop': function () {
-            self._onTabsSortStop();
-        }});
+        if (this.getIsReadOnlyMode() !== true) {
+            if (!this.$ulSheetTab.hasClass('ui-sortable')) {
+                this.$ulSheetTab.sortable({'dropBehaviour': true, 'stop': function () {
+                    self._onTabsSortStop();
+                }});
+            }
+        }
+    };
+
+    MetaEditorWidget.prototype._destroyTabsSortable = function () {
+        if (this.$ulSheetTab.hasClass('ui-sortable')) {
+            this.$ulSheetTab.sortable('destroy');
+        }
     };
 
     MetaEditorWidget.prototype.addSheet = function (title, deletable) {
@@ -413,6 +425,19 @@ define(['logManager',
 
     MetaEditorWidget.prototype.onTabsSorted = function (newSheetIDOrder) {
         this.logger.warning('onTabsSorted not implemented: "' + newSheetIDOrder + '"');
+    };
+
+
+    MetaEditorWidget.prototype.setOperatingMode = function (mode) {
+        DiagramDesignerWidget.prototype.setOperatingMode.call(this, mode);
+
+        if (mode === DiagramDesignerWidget.prototype.OPERATING_MODES.DESIGN) {
+            this.$btnAddSheet.enabled(true);
+            this._makeTabsSortable();
+        } else {
+            this.$btnAddSheet.enabled(false);
+            this._destroyTabsSortable();
+        }
     };
 
 
