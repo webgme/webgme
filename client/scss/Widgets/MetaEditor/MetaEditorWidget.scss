@@ -171,3 +171,24 @@ div.filterPanel {
 		}
 	}
 }
+
+.read-only {
+  .sheets-container {
+    div.sheet-list-container {
+      ul.nav {
+        &.nav-tabs {
+          > li {
+            &.active {
+              > a {
+                [class^="icon-"],
+                [class*=" icon-"] {
+                  display: none;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
