@@ -52,7 +52,7 @@ define(['logManager',
         this.diagramDesigner.enableDragCopy(false);
 
         this._selfPatterns = {};
-        this.eventQueue = [];
+        this._metaAspectMemberPatterns = {};
 
         this._filteredOutConnTypes = [];
         this._filteredOutConnectionDescriptors = {};
@@ -87,43 +87,13 @@ define(['logManager',
     };
 
     MetaEditorControl.prototype.selectedObjectChanged = function (nodeId) {
-        var len;
-
         if (nodeId !== META_RULES_CONTAINER_NODE_ID) {
             return;
         }
 
         this.logger.debug("SELECTEDOBJECT_CHANGED nodeId '" + nodeId + "'");
 
-        //delete everything from model editor
-        this.diagramDesigner.clear();
-
-        //clean up local hash map
-        this._GMENodes = [];
-
-        this._GMEID2ComponentID = {};
-        this._ComponentID2GMEID = {};
-
-        this._connectionWaitingListByDstGMEID = {};
-        this._connectionWaitingListBySrcGMEID = {};
-
-        this._connectionListBySrcGMEID = {};
-        this._connectionListByDstGMEID = {};
-        this._connectionListByType = {};
-        this._connectionListByID = {};
-
-        this._nodeMetaContainment = {};
-        this._nodeMetaPointers = {};
-        this._nodeMetaPointerLists = {};
-        this._nodeMetaInheritance = {};
-
-        this._selectedMetaAspectSheetMembers = [];
-
-        this._filteredOutConnectionDescriptors = {};
-        len = this._filteredOutConnTypes.length;
-        while (len--) {
-            this._filteredOutConnectionDescriptors[this._filteredOutConnTypes[len]] = [];
-        }
+        this._initializeSelectedSheet();
 
         //remove current territory patterns
         if (this.currentNodeInfo.id) {
@@ -137,8 +107,6 @@ define(['logManager',
             //put new node's info into territory rules
             this._selfPatterns = {};
             this._selfPatterns[nodeId] = { "children": 0 };
-
-            this.diagramDesigner.showProgressbar();
 
             this._territoryId = this._client.addUI(this, true);
             //update the territory
@@ -183,6 +151,7 @@ define(['logManager',
     MetaEditorControl.prototype.destroy = function () {
         this._detachClientEventListeners();
         this._client.removeUI(this._territoryId);
+        this._client.removeUI(this._metaAspectMembersTerritoryId);
         this.diagramDesigner.clear();
     };
 
@@ -315,7 +284,7 @@ define(['logManager',
         diff = _.difference(this._selectedMetaAspectSheetMembers, selectedSheetMembers);
         len = diff.length;
         while (len--) {
-            delete this._selfPatterns[diff[len]];
+            delete this._metaAspectMemberPatterns[diff[len]];
             territoryChanged = true;
         }
 
@@ -323,7 +292,7 @@ define(['logManager',
         diff = _.difference(selectedSheetMembers, this._selectedMetaAspectSheetMembers);
         len = diff.length;
         while (len--) {
-            this._selfPatterns[diff[len]] = { "children": 0 };
+            this._metaAspectMemberPatterns[diff[len]] = { "children": 0 };
             territoryChanged = true;
         }
 
@@ -348,7 +317,7 @@ define(['logManager',
 
         //there was change in the territory
         if (territoryChanged === true) {
-            this._client.updateTerritory(this._territoryId, this._selfPatterns);
+            this._client.updateTerritory(this._metaAspectMembersTerritoryId, this._metaAspectMemberPatterns);
         }
     };
     /**********************************************************************/
@@ -1709,6 +1678,64 @@ define(['logManager',
         }
 
         this.diagramDesigner.selectSheet(selectedSheetID);
+    };
+
+
+    MetaEditorControl.prototype._initializeSelectedSheet = function () {
+        var len;
+
+        this.logger.debug("_initializeSelectedSheet");
+
+        //delete everything from model editor
+        this.diagramDesigner.clear();
+
+        //clean up local hash map
+        this._GMENodes = [];
+
+        this._GMEID2ComponentID = {};
+        this._ComponentID2GMEID = {};
+
+        this._connectionWaitingListByDstGMEID = {};
+        this._connectionWaitingListBySrcGMEID = {};
+
+        this._connectionListBySrcGMEID = {};
+        this._connectionListByDstGMEID = {};
+        this._connectionListByType = {};
+        this._connectionListByID = {};
+
+        this._nodeMetaContainment = {};
+        this._nodeMetaPointers = {};
+        this._nodeMetaPointerLists = {};
+        this._nodeMetaInheritance = {};
+
+        this._selectedMetaAspectSheetMembers = [];
+
+        this._filteredOutConnectionDescriptors = {};
+        len = this._filteredOutConnTypes.length;
+        while (len--) {
+            this._filteredOutConnectionDescriptors[this._filteredOutConnTypes[len]] = [];
+        }
+
+        //remove current territory patterns
+        if (this._metaAspectMembersTerritoryId) {
+            this._client.removeUI(this._metaAspectMembersTerritoryId);
+        }
+
+        this._metaAspectMemberPatterns = {};
+
+        if (this._selectedMetaAspectSet) {
+            len = this._metaAspectMembersPerSheet[this._selectedMetaAspectSet].length;
+            if (len > 0) {
+                this.diagramDesigner.showProgressbar();
+            }
+            while (len--) {
+                this._metaAspectMemberPatterns[this._metaAspectMembersPerSheet[this._selectedMetaAspectSet][len]] = { "children": 0 };
+            }
+        }
+
+        this._metaAspectMembersTerritoryId = this._client.addUI(this, true);
+
+        this._client.updateTerritory(this._metaAspectMembersTerritoryId, this._metaAspectMemberPatterns);
     };
 
     //attach MetaEditorControl - DiagramDesigner event handler functions
