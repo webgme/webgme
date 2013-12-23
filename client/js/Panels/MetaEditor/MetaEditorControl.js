@@ -39,10 +39,6 @@ define(['logManager',
             throw ("ModelEditorControl can not be created");
         }
 
-        /*this._selectedObjectChanged = function (__project, nodeId) {
-            self.selectedObjectChanged(nodeId);
-        };*/
-
         if (this.diagramDesigner === undefined) {
             this.logger.error("ModelEditorControl's DiagramDesigner is not specified...");
             throw ("ModelEditorControl can not be created");
@@ -51,7 +47,6 @@ define(['logManager',
         //in METAEDITOR mode DRAG & COPY is not enabled
         this.diagramDesigner.enableDragCopy(false);
 
-        this._selfPatterns = {};
         this._metaAspectMemberPatterns = {};
 
         this._filteredOutConnTypes = [];
@@ -74,24 +69,20 @@ define(['logManager',
         //attach all the event handlers for event's coming from DiagramDesigner
         this.attachDiagramDesignerWidgetEventHandlers();
 
-        //let the decoratormanager download the required decorator
+        //let the decorator-manager download the required decorator
         this._client.decoratorManager.download([META_DECORATOR], WIDGET_NAME, function () {
             self.logger.debug("MetaEditorControl ctor finished");
 
-            //TODO: load meta container node
-            //TODO: give the UI time to render first before start using it's features
+            //load meta container node
+            //give the UI time to render first before start using it's features
             setTimeout(function () {
-                self.selectedObjectChanged(META_RULES_CONTAINER_NODE_ID);
+                self._loadMetaAspectContainerNode();
             }, 10);
         });
     };
 
-    MetaEditorControl.prototype.selectedObjectChanged = function (nodeId) {
-        if (nodeId !== META_RULES_CONTAINER_NODE_ID) {
-            return;
-        }
-
-        this.logger.debug("SELECTEDOBJECT_CHANGED nodeId '" + nodeId + "'");
+    MetaEditorControl.prototype._loadMetaAspectContainerNode = function () {
+        this.logger.debug("_loadMetaAspectContainerNode: '" + META_RULES_CONTAINER_NODE_ID + "'");
 
         this._initializeSelectedSheet();
 
@@ -102,15 +93,13 @@ define(['logManager',
 
         this.metaAspectContainerNodeID = META_RULES_CONTAINER_NODE_ID;
 
-        if (nodeId) {
-            //put new node's info into territory rules
-            this._selfPatterns = {};
-            this._selfPatterns[nodeId] = { "children": 0 };
+        //put new node's info into territory rules
+        this._selfPatterns = {};
+        this._selfPatterns[this.metaAspectContainerNodeID] = { "children": 0 };
 
-            this._territoryId = this._client.addUI(this, true);
-            //update the territory
-            this._client.updateTerritory(this._territoryId, this._selfPatterns);
-        }
+        //create and set territory
+        this._territoryId = this._client.addUI(this, true);
+        this._client.updateTerritory(this._territoryId, this._selfPatterns);
     };
 
     /**********************************************************/
@@ -175,11 +164,15 @@ define(['logManager',
     };
 
     MetaEditorControl.prototype._onUnload = function (gmeID) {
+        var self = this;
+
         if (gmeID === this.metaAspectContainerNodeID) {
             //the opened model has been deleted....
+            //most probably a project / branch / whatever change
             this.logger.debug('The currently opened aspect has been deleted --- GMEID: "' + this.metaAspectContainerNodeID + '"');
-            this.diagramDesigner.setBackgroundText('The currently opened aspect has been deleted...', {'font-size': 30,
-                                                                                                     'color': '#000000'});
+            setTimeout(function () {
+                self._loadMetaAspectContainerNode();
+            }, 10);
         } else {
             this._processNodeUnload(gmeID);
         }
@@ -312,7 +305,6 @@ define(['logManager',
         }
 
         this._selectedMetaAspectSheetMembers = selectedSheetMembers.slice(0);
-
 
         //there was change in the territory
         if (territoryChanged === true) {
@@ -1456,12 +1448,9 @@ define(['logManager',
     /****************************************************************************/
 
     MetaEditorControl.prototype._attachClientEventListeners = function () {
-        /*this._detachClientEventListeners();
-        this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);*/
     };
 
     MetaEditorControl.prototype._detachClientEventListeners = function () {
-        //this._client.removeEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
     };
 
     MetaEditorControl.prototype.onActivate = function () {
