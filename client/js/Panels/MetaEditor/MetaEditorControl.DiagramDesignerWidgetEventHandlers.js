@@ -8,7 +8,8 @@ define(['logManager',
     'js/Utils/GMEConcepts',
     './MetaRelations',
     './MetaEditorConstants',
-    'js/DragDrop/DragHelper'], function (logManager,
+    'js/DragDrop/DragHelper',
+    'js/Controls/Dialog'], function (logManager,
                                         util,
                                         generateGuid,
                                         CONSTANTS,
@@ -16,7 +17,8 @@ define(['logManager',
                                         GMEConcepts,
                                         MetaRelations,
                                         MetaEditorConstants,
-                                        DragHelper) {
+                                        DragHelper,
+                                        dialog) {
 
     var MetaEditorControlDiagramDesignerWidgetEventHandlers,
         DRAG_PARAMS_META_CONTAINER_ID = 'metaContainerID',
@@ -301,7 +303,7 @@ define(['logManager',
 
         if (metaInfoToBeLost.length > 0) {
             //need user confirmation because there is some meta info to be lost
-            var confirmMsg = "The following items you are about to delete are not present on any other sheet and will be permanently removed from the META aspect:\n";
+            var confirmMsg = "The following items you are about to delete are not present on any other sheet and will be permanently removed from the META aspect:<br><br>";
             var itemNames = [];
             var nodeObj;
             len = metaInfoToBeLost.length;
@@ -316,12 +318,12 @@ define(['logManager',
             }
             itemNames.sort();
             for(len = 0; len < itemNames.length; len += 1) {
-                confirmMsg += "- " + itemNames[len] + "\n";
+                confirmMsg += "- " + itemNames[len] + "<br>";
             }
-            confirmMsg += "\nAre you sure you want to delete?";
-            if (confirm(confirmMsg) === true) {
+            confirmMsg += "<br>Are you sure you want to delete?";
+            dialog.confirm('Confirm delete', confirmMsg, function () {
                 doDelete(idList);
-            }
+});
         } else {
             //trivial deletion
             doDelete(idList);
@@ -589,7 +591,7 @@ define(['logManager',
 
         if (metaAspectMemberToBeLost.length > 0) {
             //need user confirmation because there is some meta info to be lost
-            confirmMsg = "You are about to delete a sheet that contains the following items that are not present on any other sheet and will be permanently removed from the META aspect:\n";
+            confirmMsg = "You are about to delete a sheet that contains the following items that are not present on any other sheet and will be permanently removed from the META aspect:<br><br>";
             var itemNames = [];
             var nodeObj;
             len = metaAspectMemberToBeLost.length;
@@ -604,18 +606,18 @@ define(['logManager',
             }
             itemNames.sort();
             for(len = 0; len < itemNames.length; len += 1) {
-                confirmMsg += "- " + itemNames[len] + "\n";
+                confirmMsg += "- " + itemNames[len] + "<br>";
             }
-            confirmMsg += "\nAre you sure you want to delete the sheet anyway?";
-            if (confirm(confirmMsg) === true) {
+            confirmMsg += "<br>Are you sure you want to delete the sheet anyway?";
+            dialog.confirm('Confirm delete', confirmMsg, function () {
                 doDeleteSheet();
-            }
+            });
         } else {
             //no meta member will be lost permanently but make sure that the user really wants to delete the sheet
             confirmMsg = "Are you sure you want to delete this sheet?";
-            if (confirm(confirmMsg) === true) {
+            dialog.confirm('Confirm delete', confirmMsg, function () {
                 doDeleteSheet();
-            }
+            });
         }
     };
 
