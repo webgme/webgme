@@ -118,7 +118,7 @@ define(['logManager',
                 }
 
                 if (this._currentNodeID) {
-                    if (this._activePanel[panel] && this._activePanel[panel].control) {
+                    if (this._activePanel[panel] && this._activePanel[panel].control && _.isFunction(this._activePanel[panel].control.selectedObjectChanged)) {
                         this._activePanel[panel].control.selectedObjectChanged(this._currentNodeID);
                     }
                 }
