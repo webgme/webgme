@@ -8,6 +8,7 @@ define([ "util/assert"], function (ASSERT) {
     "use strict";
 
     var SETS_ID = '_sets';
+    var REL_ID = 'member';
 
     function SetCore(innerCore){
 
@@ -17,7 +18,7 @@ define([ "util/assert"], function (ASSERT) {
         };
         var getMemberPath = function(node,setElementNode){
             var ownPath = innerCore.getPath(node),
-                memberPath = innerCore.getPointerPath(setElementNode,'member');
+                memberPath = innerCore.getPointerPath(setElementNode,REL_ID);
             ownPath = ownPath.substring(0,ownPath.indexOf('/_')); //TODO this is a hack and should be solved some other way if possible
             if(ownPath !== memberPath){
                 return memberPath;
@@ -41,7 +42,6 @@ define([ "util/assert"], function (ASSERT) {
             var elements = innerCore.getChildrenRelids(setNode);
 
             for(var i=0;i<elements.length;i++){
-                //if(innerCore.getPointerPath(innerCore.getChild(setNode,elements[i]),'member') === memberPath){
                 if(getMemberPath(node,innerCore.getChild(setNode,elements[i])) === memberPath){
                     return elements[i];
                 }
@@ -71,13 +71,32 @@ define([ "util/assert"], function (ASSERT) {
         setcore.getSetNames = function(node){
             return  innerCore.getPointerNames(innerCore.getChild(node,SETS_ID))|| [];
         };
+        setcore.getPointerNames = function(node){
+            var sorted = [],
+                raw = innerCore.getPointerNames(node);
+            for(var i=0;i<raw.length;i++){
+                if(raw[i].indexOf(REL_ID) === -1){
+                    sorted.push(raw[i]);
+                }
+            }
+            return sorted;
+        };
+        setcore.getCollectionNames = function(node){
+            var sorted = [],
+                raw = innerCore.getCollectionNames(node);
+            for(var i=0;i<raw.length;i++){
+                if(raw[i].indexOf(REL_ID) === -1){
+                    sorted.push(raw[i]);
+                }
+            }
+            return sorted;
+        };
         setcore.getMemberPaths = function(node,setName){
             ASSERT(typeof setName === 'string');
             var setNode = innerCore.getChild(innerCore.getChild(node,SETS_ID),setName);
             var members = [];
             var elements = innerCore.getChildrenRelids(setNode);
             for(var i=0;i<elements.length;i++){
-                //var path = innerCore.getPointerPath(innerCore.getChild(setNode,elements[i]),'member');
                 var path = getMemberPath(node,innerCore.getChild(setNode,elements[i]));
                 if(path){
                     members.push(path);
@@ -206,16 +225,16 @@ define([ "util/assert"], function (ASSERT) {
 
         setcore.isMemberOf = function(node){
             //TODO we should find a proper way to do this - or at least some support from lower layers would be fine
-            var coll = setcore.getCollectionPaths(node,'member');
+            var coll = setcore.getCollectionPaths(node,REL_ID);
             var sets = {};
             for(var i=0;i<coll.length;i++){
                 var pathArray = coll[i].split('/');
                 if(pathArray.indexOf('_meta') === -1){
                     //now we simply skip META sets...
                     var index = pathArray.indexOf(SETS_ID);
-                    if(index>0 && pathArray.length>index+2){
+                    if(index>0 && pathArray.length>index+1){
                         //otherwise it is not a real set
-                        var ownerPath = pathArray.slice(0,index).join('/');
+                        var ownerPath = innerCore.toVisiblePath(pathArray.slice(0,index).join('/'));
                         if(sets[ownerPath] === undefined){
                             sets[ownerPath] = [];
                         }

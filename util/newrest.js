@@ -211,7 +211,8 @@ define([
                         doDELETE(command,parameters,callback);
                         break;
                     default:
-                        callback(_HTTPError.badRequest);
+                        // TODO now we are helping thenm a bit :) callback(_HTTPError.badRequest);
+                        doGET(_commands.help,null,callback);
                 }
 
             } else {

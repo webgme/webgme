@@ -30,7 +30,7 @@ define([
     }
     var getJsonNode = function(core,node,urlPrefix){
         var nodes = {},
-            tArray,
+            tArray,t2Array,
             i,j,
             jNode;
         nodes[core.getPath(node)] = node;
@@ -67,6 +67,12 @@ define([
 
         //pointers
         tArray = core.getPointerNames(node);
+        t2Array = core.getCollectionNames(node);
+        for(i=0;i<t2Array.length;i++){
+            if(tArray.indexOf(t2Array[i]) === -1){
+                tArray.push(t2Array[i]);
+            }
+        }
         for(i=0;i<tArray.length;i++){
             var coll = core.getCollectionPaths(node,tArray[i]);
             var pointer = {to:[],from:[]};
@@ -79,15 +85,25 @@ define([
 
         //sets
         tArray = core.getSetNames(node);
+        t2Array = core.isMemberOf(node);
+        for(j in t2Array){
+            for(i=0;i<t2Array[j].length;i++){
+                if(tArray.indexOf(t2Array[j][i]) === -1){
+                    tArray.push(t2Array[j][i]);
+                }
+            }
+        }
+
         for(i=0;i<tArray.length;i++){
             var pointer = {to:[],from:[]};
             var members = core.getMemberPaths(node,tArray[i]);
             for(j=0;j<members.length;j++){
                 pointer.to.push(pathToRefObj(urlPrefix,members[j]));
             }
-            var coll = core.isMemberOf(node);
-            for(j in coll){
-                pointer.from.push(pathToRefObj(urlPrefix,j));
+            for(j in t2Array){
+                if(t2Array[j].indexOf(tArray[i]) !== -1){
+                    pointer.from.push(pathToRefObj(urlPrefix,core.toActualPath(j)));
+                }
             }
             jNode['pointers'][tArray[i]] = pointer;
         }

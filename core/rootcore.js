@@ -53,6 +53,8 @@ define([ "util/assert", 'core/tasync'], function (ASSERT,TASYNC) {
             return toVisiblePath(innerCore.getCommonPathPrefixData(toActualPath(first),toActualPath(second)));
         };
 
+        rootcore.toVisiblePath = toVisiblePath;
+        rootcore.toActualPath = toActualPath;
         return rootcore;
     }
 

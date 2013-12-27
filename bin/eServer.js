@@ -258,7 +258,7 @@ requirejs(['logManager',
     });
     //other get
     app.get('*',function(req,res){
-        res.send(500);
+        res.send(400);
     });
 
     var httpServer = null;
