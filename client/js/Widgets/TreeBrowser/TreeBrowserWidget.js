@@ -11,7 +11,7 @@ define(['logManager',
     'js/Constants',
     './TreeBrowserWidget.Keyboard',
     'js/DragDrop/DragSource',
-    'lib/jquery/jquery.dynatree-1.2.4.min',
+    'lib/jquery/jquery.dynatree-1.2.5.min',
     'lib/jquery/jquery.contextMenu',
     'css!/css/Widgets/TreeBrowser/TreeBrowserWidget'], function (logManager, CONSTANTS, TreeBrowserWidgetKeyboard, dragSource) {
 
