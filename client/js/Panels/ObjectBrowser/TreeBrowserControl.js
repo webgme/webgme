@@ -245,10 +245,6 @@ define(['logManager',
                         eventType = "update";
                     }
                 }
-
-                if (DEBUG === "DEMOHACK" && objectId === 'root') {
-                    client.setSelectedObjectId(objectId);
-                }
             }
             //ENDOF : HANDLE INSERT
 
