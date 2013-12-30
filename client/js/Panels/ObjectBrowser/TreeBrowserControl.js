@@ -7,8 +7,10 @@
 
 define(['logManager',
         'js/Utils/GMEConcepts',
+        'js/NodePropertyNames',
         'css!/css/Panels/ObjectBrowser/TreeBrowserControl'], function (logManager,
-                                                                       GMEConcepts) {
+                                                                       GMEConcepts,
+                                                                       nodePropertyNames) {
 
     var NODE_PROGRESS_CLASS = 'node-progress';
 
@@ -199,8 +201,60 @@ define(['logManager',
         };
 
         //called from the TreeBrowserWidget when a create function is called from context menu
-        treeBrowser.onNodeCreate = function (nodeId) {
-            client.createChild({parentId: nodeId});
+        treeBrowser.onSetCreateSubMenu = function (nodeId) {
+            var result = [],
+                validChildrenTypes = GMEConcepts.getMETAAspectMergedValidChildrenTypes(nodeId), //get possible targets from MetaDescriptor
+                children = [],
+                len,
+                childObj,
+                childName,
+                childId,
+                id;
+
+            len = validChildrenTypes.length;
+            while (len--) {
+                //do not list connection types in Create...
+                id = validChildrenTypes[len];
+                if (GMEConcepts.isConnectionType(id) !== true &&
+                    GMEConcepts.canCreateChild(nodeId, id)) {
+                    childObj = client.getNode(id);
+
+                    childId = id + "";
+                    childName = childId;
+
+                    if (childObj) {
+                        childName = childObj.getAttribute(nodePropertyNames.Attributes.name);
+                    }
+
+                    children.push({'ID': childId, 'Title': childName});
+                }
+            }
+
+            children.sort(function(a,b) {
+                if (a.Title.toLowerCase() < b.Title.toLowerCase()) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            });
+
+            for (len = 0; len < children.length; len += 1) {
+                result.push({id: children[len].ID,
+                             title: children[len].Title});
+            }
+
+            return result;
+        };
+
+        //called from the TreeBrowserWidget when a create function is called from context menu
+        treeBrowser.onNodeCreate = function (nodeId, childId) {
+            if (GMEConcepts.canCreateChild(nodeId, childId)) {
+                var params = { "parentId": nodeId };
+                params[childId] = {registry:{position:{x: 100, y: 100}}};
+                client.createChildren(params);
+            } else {
+                logger.warning("Can not create child instance of '" + childId + "', in parent object: '" + nodeId + "'");
+            }
         };
 
 
