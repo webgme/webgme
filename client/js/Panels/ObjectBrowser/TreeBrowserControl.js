@@ -12,7 +12,11 @@ define(['logManager',
                                                                        GMEConcepts,
                                                                        nodePropertyNames) {
 
-    var NODE_PROGRESS_CLASS = 'node-progress';
+    var NODE_PROGRESS_CLASS = 'node-progress',
+        GME_MODEL_CLASS = "gme-model",
+        GME_ATOM_CLASS = "gme-atom",
+        GME_CONNECTION_CLASS = "gme-connection",
+        GME_ROOT_ICON = "gme-root";
 
     var TreeBrowserControl = function (client, treeBrowser) {
 
@@ -25,7 +29,8 @@ define(['logManager',
             nodes = {}, //local container for accounting the currently opened node list, its a hashmap with a key of nodeId and a value of { DynaTreeDOMNode, childrenIds[], state }
             refresh,
             initialize,
-            self = this;
+            self = this,
+            getNodeClass;
 
         //get logger instance for this component
         logger = logManager.create("TreeBrowserControl");
@@ -56,6 +61,23 @@ define(['logManager',
             } else {
                 setTimeout(initialize, 500);
             }
+        };
+
+        getNodeClass = function (nodeObj) {
+            var c = GME_ATOM_CLASS; //by default everyone is represented with the atom class
+
+            if (nodeObj.getId() === rootNodeId) {
+                //if root object
+                c = GME_ROOT_ICON;
+            } else if (GMEConcepts.isConnectionType(nodeObj.getId())) {
+                //if it's a connection, let it have the connection icon
+                c = GME_CONNECTION_CLASS;
+            } else if (nodeObj.getChildrenIds().length > 0) {
+                //if it has children, let it have the model icon
+                c = GME_MODEL_CLASS;
+            }
+
+            return c;
         };
 
         //called from the TreeBrowserWidget when a node is expanded by its expand icon
@@ -94,7 +116,7 @@ define(['logManager',
                         childTreeNode = treeBrowser.createNode(parentNode, {   "id": currentChildId,
                             "name": childNode.getAttribute("name"),
                             "hasChildren" : (childNode.getChildrenIds()).length > 0,
-                            "class" :   ((childNode.getChildrenIds()).length > 0) ? "gme-model" : "gme-atom" });
+                            "class" :   getNodeClass(childNode) });
 
                         //store the node's info in the local hashmap
                         nodes[currentChildId] = {    "treeNode": childTreeNode,
@@ -321,12 +343,7 @@ define(['logManager',
                             //render it's real data
 
                             //specify the icon for the treenode
-                            //TODO: fixme (determine the type based on the 'kind' of the object)
-                            objType = ((updatedObject.getChildrenIds()).length > 0) ? "gme-model" : "gme-atom";
-                            //for root node let's specify specific type
-                            if (objectId === rootNodeId) {
-                                objType = "gme-root";
-                            }
+                            objType = getNodeClass(updatedObject);
 
                             //create the node's descriptor for the tree-browser widget
                             nodeDescriptor = {  "text" :  updatedObject.getAttribute("name"),
@@ -345,12 +362,7 @@ define(['logManager',
                             //object is already loaded here, let's see what changed in it
 
                             //specify the icon for the treenode
-                            //TODO: fixme (determine the type based on the 'kind' of the object)
-                            objType = ((updatedObject.getChildrenIds()).length > 0) ? "gme-model" : "gme-atom";
-                            //for root node let's specify specific type
-                            if (objectId === rootNodeId) {
-                                objType = "gme-root";
-                            }
+                            objType = getNodeClass(updatedObject);
 
                             //create the node's descriptor for the treebrowser widget
                             nodeDescriptor = {
@@ -426,7 +438,7 @@ define(['logManager',
                                         childTreeNode = treeBrowser.createNode(nodes[objectId].treeNode, {  "id": currentChildId,
                                             "name": childNode.getAttribute("name"),
                                             "hasChildren": (childNode.getChildrenIds()).length > 0,
-                                            "class" :  ((childNode.getChildrenIds()).length > 0) ? "gme-model" : "gme-atom" });
+                                            "class" :  getNodeClass(childNode) });
 
                                         //store the node's info in the local hashmap
                                         nodes[currentChildId] = {   "treeNode": childTreeNode,
