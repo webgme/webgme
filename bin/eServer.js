@@ -214,27 +214,31 @@ requirejs(['logManager',
     });
 
 
-
-
-
     //static contents
     //javascripts - core and transportation related files
-    app.get(/^\/(common|util|storage|core|config|auth|bin|coreclient)\/.*\.js/,ensureAuthenticated,function(req,res){
+    app.get(/^\/(common|util|storage|core|config|auth|bin|coreclient)\/.*\.js$/,ensureAuthenticated,function(req,res){
         res.sendfile(path.join(staticdirpath,req.path),function(err){
             res.send(404);
         });
     });
     //client contents - js/html/css
     //css classified as not secure content
-    app.get(/^\/.*\.(css|ico)/,function(req,res){
+    app.get(/^\/.*\.(css|ico)$/,function(req,res){
         res.sendfile(staticclientdirpath+req.path,function(err){
             res.send(404);
         });
     });
-    app.get(/^\/.*\.(js|html|gif|png|bmp|svg)/,ensureAuthenticated,function(req,res){
-        res.sendfile(staticclientdirpath+req.path,function(err){
-            res.send(404);
-        });
+    app.get(/^\/.*\.(js|html|gif|png|bmp|svg|json)$/,ensureAuthenticated,function(req,res){
+        //package.json
+        if(req.path === '/package.json') {
+            res.sendfile(staticdirpath+req.path,function(err){
+                res.send(404);
+            });
+        } else {
+            res.sendfile(staticclientdirpath+req.path,function(err){
+                res.send(404);
+            });
+        }
     });
     //rest functionality
     app.get('/rest/*',checkREST,function(req,res){
