@@ -1,13 +1,15 @@
 $filterPanel-background-color: #FFFFFF;
-$filterPanel-top: 5px;
+$filterPanel-top: 8px;
 $filterPanel-right: 11px;
 $filterPanel-border: 1px solid rgba(0, 0, 0, 0.2);
 $filterPanel-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 $filterPanel-header-min-width: 100px;
 
+$sheets-container-height: 26px;
+
 div.filterPanel {
 	position: absolute;
-	top: $filterPanel-top;
+	top: $sheets-container-height + $filterPanel-top;
 	right: $filterPanel-right;
 
 	background-color: $filterPanel-background-color;
@@ -61,4 +63,132 @@ div.filterPanel {
 			display :block;
 		}
 	}
+}
+
+.sheets-container {
+	position: absolute;
+	top: 2px;
+	width : 100%;
+	height: $sheets-container-height;
+	background-color: rgba(255, 255, 255, 0.3);
+	padding-top: 2px;
+
+	> div {
+		display: table-cell;
+		vertical-align: middle;
+		white-space: nowrap;
+	}
+
+	div.add-sheet-container {
+		border-bottom: 1px solid #ddd;
+		padding-left: 3px;
+		padding-right: 3px;
+		padding-bottom: 2px;
+	}
+
+	div.add-sheet-container {
+		> div {
+			display: inline-block;
+			margin-right: 3px;
+		}
+	}
+
+    div.add-sheet-container {
+      ul.dropdown-menu {
+        li {
+          a {
+            [class^="icon-"],
+            [class*=" icon-"] {
+              margin-left: -17px;
+              margin-right: 3px;
+            }
+          }
+        }
+      }
+    }
+
+	div.sheet-list-container {
+		width: 100%;
+		overflow: hidden;
+
+		ul.nav {
+			position: relative;
+			margin-bottom: 0px;
+            height: 24px;
+
+			&.nav-tabs {
+				> li {
+					display: inline-block;
+					float:none;
+
+					> a {
+						padding-top: 5px;
+				  		padding-bottom: 5px;
+				  		line-height: 13px;
+
+                      .sheet-title {
+                        white-space: nowrap;
+                        display: inline-block;
+                        max-width: 120px;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        
+                        input {
+                          min-width: 50px !important;
+                        }
+                      }
+
+                        [class^="icon-"],
+                        [class*=" icon-"] {
+                          margin-top: -2px;
+                          margin-left: 2px;
+                          cursor: pointer;
+                          display: none;
+                        }
+					}
+
+                  &.active {
+                    > a {
+                      [class^="icon-"],
+                      [class*=" icon-"] {
+                        display: inline-block;
+                      }
+                    }
+                  }
+				}
+              
+              &.ui-sortable {
+                li.ui-sortable-placeholder {
+                  height: 0px !important;
+                }
+
+                li.ui-sortable-helper {
+                  top: 0px !important;
+                  pointer-events: none;
+                }
+              }
+			}
+		}
+	}
+}
+
+.read-only {
+  .sheets-container {
+    div.sheet-list-container {
+      ul.nav {
+        &.nav-tabs {
+          > li {
+            &.active {
+              > a {
+                [class^="icon-"],
+                [class*=" icon-"] {
+                  display: none;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }

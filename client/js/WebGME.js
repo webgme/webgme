@@ -1,11 +1,12 @@
 "use strict";
 
-var WebGMEGlobal = { 'version': 'DEMO - 12/16/2013',
+var WebGMEGlobal = { 'version': 'x',    //will be set from Node's package.json
     'SUPPORTS_TOUCH': 'ontouchstart' in window || navigator.msMaxTouchPoints }; //touch device detection}
 
 // let require load all the toplevel needed script and call us on domReady
 define(['logManager',
     'bin/getconfig',
+    'text!package.json',
     'js/client',
     'clientUtil',
     'js/Utils/GMEConcepts',
@@ -17,6 +18,7 @@ define(['logManager',
     'js/Utils/METAAspectHelper',
     'js/ConstraintManager/ConstraintManager'], function (logManager,
                                             CONFIG,
+                                            packagejson,
                                             Client,
                                             util,
                                             GMEConcepts,
@@ -27,6 +29,9 @@ define(['logManager',
                                             WebGMEHistory,
                                             METAAspectHelper,
                                             ConstraintManager) {
+
+    var npmJSON = JSON.parse(packagejson);
+    WebGMEGlobal.version = npmJSON.version;
 
     var _webGMEStart = function () {
         var lm,

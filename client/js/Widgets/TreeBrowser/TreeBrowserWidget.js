@@ -11,7 +11,7 @@ define(['logManager',
     'js/Constants',
     './TreeBrowserWidget.Keyboard',
     'js/DragDrop/DragSource',
-    'lib/jquery/jquery.dynatree-1.2.4.min',
+    'lib/jquery/jquery.dynatree-1.2.5.min',
     'lib/jquery/jquery.contextMenu',
     'css!/css/Widgets/TreeBrowser/TreeBrowserWidget'], function (logManager, CONSTANTS, TreeBrowserWidgetKeyboard, dragSource) {
 
@@ -478,7 +478,7 @@ define(['logManager',
     TreeBrowserWidget.prototype.DRAG_EFFECTS = dragSource.DRAG_EFFECTS;
 
 
-    TreeBrowserWidget.prototype._nodeCreate = function (nodeToEdit) {
+    TreeBrowserWidget.prototype._nodeCreate = function (nodeToEdit, childId) {
 
         //can not edit 'loading...' node
         if (nodeToEdit.data.addClass === NODE_PROGRESS_CLASS) {
@@ -486,7 +486,7 @@ define(['logManager',
         }
 
         this._logger.debug("Create child for " + nodeToEdit.data.key);
-        this.onNodeCreate(nodeToEdit.data.key);
+        this.onNodeCreate(nodeToEdit.data.key, childId);
     };
 
     TreeBrowserWidget.prototype._nodeEdit = function (nodeToEdit) {
@@ -609,15 +609,13 @@ define(['logManager',
                     },
                     "icon": "edit"
                 },
-                /*"separator2": "-",
+                "separator2": "-",
                 "addChild": { // The "create" menu item
                     "name": "Create",
-                    callback: function(key, options) {
-                        self._nodeCreate(node);
-                    },
-                    "icon": "add"
+                    "icon": "add",
+                    "items": {}
                 },
-                "separator3": "-",
+                /*"separator3": "-",
                 "copy": { // The "copy" menu item
                     "name": "Copy",
                     callback: function(key, options) {
@@ -631,8 +629,8 @@ define(['logManager',
                         self._nodePaste(node);
                     },
                     "icon": "paste"
-                },
-                "separator4": "-",*/
+                },*/
+                "separator4": "-",
                 "delete": { // The "delete" menu item
                     "name": "Delete",
                     callback: function(/*key, options*/) {
@@ -648,6 +646,24 @@ define(['logManager',
                 }
             } else {
                 delete menuItems["toggleNode"];
+            }
+
+            var validChildren = self.onSetCreateSubMenu(node.data.key);
+            var cChild;
+            if (!validChildren || validChildren.length === 0) {
+                delete menuItems.separator2;
+                delete menuItems.addChild;
+            } else {
+                //iterate through each possible item and att it to the list
+                for (var i = 0; i < validChildren.length; i += 1) {
+                    cChild = validChildren[i];
+                    menuItems.addChild.items[cChild.id] = {
+                        name: cChild.title,
+                        callback: function(key, options) {
+                            self._nodeCreate(node, key);
+                        }
+                    }
+                }
             }
         }
 
@@ -668,6 +684,14 @@ define(['logManager',
         }
 
         return selectedIds;
+    };
+
+    TreeBrowserWidget.prototype.onSetCreateSubMenu = function (nodeId) {
+        this._logger.warning('onSetCreateSubMenu is not overridden for node with ID: "' + nodeId + '". Returning default sub-item list...');
+        return [{id: 'item1ID',
+                 title: 'Item 1'},
+                {id: 'item2ID',
+                title: 'Item 2'}];
     };
 
     _.extend(TreeBrowserWidget.prototype, TreeBrowserWidgetKeyboard.prototype);

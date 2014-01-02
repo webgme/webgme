@@ -1,6 +1,6 @@
 div.filterPanel {
   position: absolute;
-  top: 5px;
+  top: 34px;
   right: 11px;
   background-color: white;
   border: 1px solid rgba(0, 0, 0, 0.2);
@@ -34,3 +34,67 @@ div.filterPanel {
     border-bottom: 1px solid rgba(0, 0, 0, 0.2); }
   div.filterPanel:hover .body {
     display: block; }
+
+.sheets-container {
+  position: absolute;
+  top: 2px;
+  width: 100%;
+  height: 26px;
+  background-color: rgba(255, 255, 255, 0.3);
+  padding-top: 2px; }
+  .sheets-container > div {
+    display: table-cell;
+    vertical-align: middle;
+    white-space: nowrap; }
+  .sheets-container div.add-sheet-container {
+    border-bottom: 1px solid #ddd;
+    padding-left: 3px;
+    padding-right: 3px;
+    padding-bottom: 2px; }
+  .sheets-container div.add-sheet-container > div {
+    display: inline-block;
+    margin-right: 3px; }
+  .sheets-container div.add-sheet-container ul.dropdown-menu li a [class^="icon-"],
+  .sheets-container div.add-sheet-container ul.dropdown-menu li a [class*=" icon-"] {
+    margin-left: -17px;
+    margin-right: 3px; }
+  .sheets-container div.sheet-list-container {
+    width: 100%;
+    overflow: hidden; }
+    .sheets-container div.sheet-list-container ul.nav {
+      position: relative;
+      margin-bottom: 0px;
+      height: 24px; }
+      .sheets-container div.sheet-list-container ul.nav.nav-tabs > li {
+        display: inline-block;
+        float: none; }
+        .sheets-container div.sheet-list-container ul.nav.nav-tabs > li > a {
+          padding-top: 5px;
+          padding-bottom: 5px;
+          line-height: 13px; }
+          .sheets-container div.sheet-list-container ul.nav.nav-tabs > li > a .sheet-title {
+            white-space: nowrap;
+            display: inline-block;
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis; }
+            .sheets-container div.sheet-list-container ul.nav.nav-tabs > li > a .sheet-title input {
+              min-width: 50px !important; }
+          .sheets-container div.sheet-list-container ul.nav.nav-tabs > li > a [class^="icon-"],
+          .sheets-container div.sheet-list-container ul.nav.nav-tabs > li > a [class*=" icon-"] {
+            margin-top: -2px;
+            margin-left: 2px;
+            cursor: pointer;
+            display: none; }
+        .sheets-container div.sheet-list-container ul.nav.nav-tabs > li.active > a [class^="icon-"],
+        .sheets-container div.sheet-list-container ul.nav.nav-tabs > li.active > a [class*=" icon-"] {
+          display: inline-block; }
+      .sheets-container div.sheet-list-container ul.nav.nav-tabs.ui-sortable li.ui-sortable-placeholder {
+        height: 0px !important; }
+      .sheets-container div.sheet-list-container ul.nav.nav-tabs.ui-sortable li.ui-sortable-helper {
+        top: 0px !important;
+        pointer-events: none; }
+
+.read-only .sheets-container div.sheet-list-container ul.nav.nav-tabs > li.active > a [class^="icon-"],
+.read-only .sheets-container div.sheet-list-container ul.nav.nav-tabs > li.active > a [class*=" icon-"] {
+  display: none; }

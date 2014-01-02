@@ -35,13 +35,15 @@ define(['js/PanelBase/PanelBaseWithHeader',
     MetaEditorPanel.prototype._initialize = function () {
         var self = this;
 
-        //set Widget title
-        this.setTitle("MetaEditor");
+        //remove title container
+        if (this.$panelHeaderTitle) {
+            this.$panelHeaderTitle.remove();
+        }
 
         this.widget = new MetaEditorWidget(this.$el, {'toolBar': this.toolBar});
 
         this.widget.setTitle = function (title) {
-            self.setTitle(title);
+            //self.setTitle(title);
         };
 
         this.widget.onUIActivity = function () {
@@ -62,6 +64,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         PanelBaseWithHeader.prototype.onReadOnlyChanged.call(this, isReadOnly);
 
         this.widget.setReadOnly(isReadOnly);
+        this.control.setReadOnly(isReadOnly);
     };
 
     MetaEditorPanel.prototype.onResize = function (width, height) {

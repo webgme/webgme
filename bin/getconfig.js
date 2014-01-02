@@ -61,7 +61,8 @@ if (typeof define !== "function" && typeof require === "function" && typeof proc
             httpsecure: false,
             guest: false,
             sessioncookieid : 'webgmeSid',
-            sessioncookiesecret : 'meWebGMEez'
+            sessioncookiesecret : 'meWebGMEez',
+            debug: false
 		};
 
 		if (LOCAL) {

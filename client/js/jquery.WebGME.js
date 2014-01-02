@@ -112,7 +112,7 @@ define(['jquery'], function () {
 
                         if (newValue !== originalValue) {
                             if (onChangeFn) {
-                                onChangeFn(originalValue, newValue);
+                                onChangeFn.call(el, originalValue, newValue);
                             }
                         }
                     });
