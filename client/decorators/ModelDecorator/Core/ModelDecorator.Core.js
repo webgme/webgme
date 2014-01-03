@@ -10,11 +10,13 @@ define(['js/Constants',
     'js/NodePropertyNames',
     'loaderProgressBar',
     './Port',
-    './ModelDecorator.Constants'], function (CONSTANTS,
+    './ModelDecorator.Constants',
+    'js/Utils/DisplayFormat'], function (CONSTANTS,
                          nodePropertyNames,
                          LoaderProgressBar,
                          Port,
-                         ModelDecoratorConstants) {
+                         ModelDecoratorConstants,
+                         displayFormat) {
 
     var ModelDecoratorCore,
         ABSTRACT_CLASS = 'abstract';
@@ -26,6 +28,7 @@ define(['js/Constants',
 
     ModelDecoratorCore.prototype._initializeVariables = function (params) {
         this.name = "";
+        this.formattedName = "";
         this._refTo = undefined;
         this._portIDs = [];
         this._ports = {};
@@ -66,7 +69,7 @@ define(['js/Constants',
     ModelDecoratorCore.prototype.doSearch = function (searchDesc) {
         var searchText = searchDesc.toString().toLowerCase();
 
-        return (this.name && this.name.toLowerCase().indexOf(searchText) !== -1);
+        return (this.formattedName && this.formattedName.toLowerCase().indexOf(searchText) !== -1);
     };
 
 
@@ -110,13 +113,15 @@ define(['js/Constants',
             noName = "(N/A)";
 
         if (nodeObj) {
-            this.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name) || noName;
+            this.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name);
+            this.formattedName = displayFormat.resolve(nodeObj);
         } else {
-            this.name = noName;
+            this.name = "";
+            this.formattedName = noName;
         }
 
-        this.skinParts.$name.text(this.name);
-        this.skinParts.$name.attr("title", this.name);
+        this.skinParts.$name.text(this.formattedName);
+        this.skinParts.$name.attr("title", this.formattedName);
     };
 
 

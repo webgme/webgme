@@ -68,6 +68,7 @@ define(['js/Constants',
         this.skinParts.$name.on("dblclick.editOnDblClick", null, function (event) {
             if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
                 $(this).editInPlace({"class": "",
+                    "value": self.name,
                     "onChange": function (oldValue, newValue) {
                         self.__onNodeTitleChanged(oldValue, newValue);
                     }});
