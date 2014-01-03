@@ -1717,6 +1717,7 @@ define(['logManager',
                 this.diagramDesigner.showProgressbar();
             }
             while (len--) {
+                this._selectedMetaAspectSheetMembers.push(this._metaAspectMembersPerSheet[this._selectedMetaAspectSet][len]);
                 this._metaAspectMemberPatterns[this._metaAspectMembersPerSheet[this._selectedMetaAspectSet][len]] = { "children": 0 };
             }
         }
