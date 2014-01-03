@@ -5,7 +5,8 @@
 $min-width: 90px;
 $height: 40px;
 $border: 1px solid #000000;
-$padding: 0 17px 0 17px;
+$padding: 0 3px 0 3px;
+$name-padding: 0 17px 0 17px;
 $background-color: #FFFFFF;
 $selected-background-color: lighten($background-color, 10);
 $selected-border: 1px solid #52A8EC;
@@ -32,7 +33,7 @@ $abstract-class-name-color: #AAAAAA;
     overflow: hidden;
     text-overflow: ellipsis;
     border-bottom: 1px solid #000000;
-    padding: $padding;
+    padding: $name-padding;
 
     input {
       height: 16px !important;
