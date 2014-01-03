@@ -45,6 +45,9 @@ define(['jquery'], function () {
 
                 //save old content
                 originalValue = el.text();
+                if (params && params.value) {
+                    originalValue = params.value;
+                }
 
                 //create edit control
                 inputCtrl = $("<input/>", {
