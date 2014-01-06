@@ -12,13 +12,15 @@ define(['jquery',
         'js/NodePropertyNames',
         'logManager',
         'js/Panels/MetaEditor/MetaEditorConstants',
-        'eventDispatcher'], function (_jquery,
+        'eventDispatcher',
+        'text!./METATemplate.js'], function (_jquery,
                                     _underscore,
                                     CONSTANTS,
                                     nodePropertyNames,
                                     logManager,
                                     MetaEditorConstants,
-                                    EventDispatcher) {
+                                    EventDispatcher,
+                                    METATemplateJS) {
 
     var META_RULES_CONTAINER_NODE_ID = MetaEditorConstants.META_ASPECT_CONTAINER_ID,
         _client,
@@ -28,7 +30,6 @@ define(['jquery',
         _metaMembers,
         _patterns = {},
         _logger = logManager.create("METAAspectHelper"),
-        _btnMETA,
         _events = {'META_ASPECT_CHANGED': 'META_ASPECT_CHANGED'},
         _metaTypes;
 
@@ -87,7 +88,7 @@ define(['jquery',
         i = ret.length;
         while (i--) {
             if (allowed.indexOf(ret[i]) === -1) {
-                ret.splice(i, 1);
+                ret = ret.substr(0, i) + ret.substr(i + 1);
             }
         }
 
@@ -167,17 +168,6 @@ define(['jquery',
                 }
             }
         }
-
-        if (!_btnMETA && DEBUG) {
-            if (WebGMEGlobal.Toolbar) {
-                _btnMETA = WebGMEGlobal.Toolbar.addButton({ "title": "Display META entries...",
-                    "icon": "icon-barcode",
-                    "clickFn": function (/*data*/) {
-                        alert('META entries: \n' + JSON.stringify(_getMETAAspectTypesSorted(), undefined, 2));
-                    }});
-            }
-        }
-
     };
 
     var _initialize = function (c) {
@@ -286,6 +276,48 @@ define(['jquery',
         return result;
     };
 
+
+    var _generateMETAAspectJavaScript = function () {
+        var result = {};
+
+        if (!_.isEmpty(_metaTypes)) {
+            var projName = _client.getActiveProject();
+            var content = METATemplateJS;
+            var sortedMetaTypes = _getMETAAspectTypesSorted();
+            var typeCheckMethodTemplate = 'var _is__METATYPE__ = function (objID) { return METAAspectHelper.isMETAType(objID, _metaTypes.__METATYPE__); };'
+            var typeCheckMethods = '';
+            var typeCheckMethodsMap = [];
+            var typeCheckMethodNamePrefix = 'is';
+            var typeCheckMethodsMapIndent = '\t\t\t';
+            var metaAspectTypesMap = [];
+
+            //generate each type checker method
+            /*
+             var _isXXX = function (objID) {
+                return METAAspectHelper.isMETAType(objID, _metaTypes.XXX);
+             };
+             */
+            for (var t in sortedMetaTypes) {
+                if (sortedMetaTypes.hasOwnProperty(t)) {
+                    typeCheckMethods += typeCheckMethodTemplate.replace(/__METATYPE__/g, t) + '\n\t';
+                    typeCheckMethodsMap.push(typeCheckMethodNamePrefix + t + ": _" + typeCheckMethodNamePrefix + t);
+                    metaAspectTypesMap.push('\'' + t + '\'' + ': ' + '\'' + sortedMetaTypes[t] + '\'');
+                }
+            }
+
+            content = content.replace( /__PROJECT__/g, projName);
+            content = content.replace(/__META_ASPECT_TYPES__/g, '{\n\t\t' + metaAspectTypesMap.join(',\n\t\t') + '\n\t}');
+            content = content.replace(/__META_ASPECT_TYPE_CHECKING__/g, typeCheckMethods);
+            content = content.replace(/__TYPE_CHECK_METHOD_MAP__/g, '{\n' + typeCheckMethodsMapIndent + typeCheckMethodsMap.join(',\n' + typeCheckMethodsMapIndent) + '\n\t\t}');
+
+            result.fileName = projName + ".META.js";
+            result.content = content;
+        }
+
+        return result;
+    };
+
+
     //return utility functions
     return { initialize: _initialize,
             isMETAType: _isMETAType,
@@ -294,6 +326,8 @@ define(['jquery',
             addEventListener: _addEventListener,
             removeEventListener: _removeEventListener,
             getMETAAspectTypes: _getMETAAspectTypes,
-            getMETATypesOf: _getMETATypesOf
+            getMETAAspectTypesSorted: _getMETAAspectTypesSorted,
+            getMETATypesOf: _getMETATypesOf,
+            generateMETAAspectJavaScript: _generateMETAAspectJavaScript
         };
 });

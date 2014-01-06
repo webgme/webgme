@@ -97,6 +97,10 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
 			_database.getProjectNames(callback);
 		}
 
+        function getAllowedProjectNames(callback) {
+            _database.getAllowedProjectNames(callback);
+        }
+
 		function deleteProject (project, callback) {
 			_database.deleteProject(project, callback);
 		}
@@ -475,10 +479,11 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
 			closeDatabase: closeDatabase,
 			fsyncDatabase: fsyncDatabase,
 			getProjectNames: getProjectNames,
+            getAllowedProjectNames: getAllowedProjectNames,
+            getAuthorizationInfo: _database.getAuthorizationInfo,
 			getDatabaseStatus: _database.getDatabaseStatus,
 			openProject: openProject,
-			deleteProject: deleteProject,
-            authenticate: _database.authenticate
+			deleteProject: deleteProject
 		};
 	}
 

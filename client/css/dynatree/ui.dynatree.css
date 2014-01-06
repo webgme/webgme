@@ -282,7 +282,8 @@ span.dynatree-node
 {
 /*	display: -moz-inline-box; /* issue 133, 165, 172, 192. removed for issue 221 */
 /*	-moz-box-align: start; /* issue 221 */
-/*  display: inline-block; /* Required to make a span sizeable */
+	display: inline-block; /* issue 373 Required to make a span sizeable */
+	vertical-align: top;
 }
 
 

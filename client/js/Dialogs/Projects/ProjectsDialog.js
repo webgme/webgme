@@ -9,13 +9,15 @@ define(['logManager',
                                                                GMEConcepts,
                                                                projectsDialogTemplate) {
 
-    var ProjectsDialog;
+    var ProjectsDialog,
+        DATA_PROJECT_NAME = "PROJECT_NAME";
 
     ProjectsDialog = function (client) {
         this._logger = logManager.create("ProjectsDialog");
 
         this._client = client;
         this._projectNames = [];
+        this._projectList = {};
         this._filter = undefined;
 
         this._logger.debug("Created");
@@ -41,6 +43,31 @@ define(['logManager',
     ProjectsDialog.prototype._initDialog = function () {
         var self = this,
             selectedId;
+
+        var openProject = function (projId) {
+            if (self._projectList[projId].read === true) {
+                self._client.selectProjectAsync(projId,function(){
+                    self._dialog.modal('hide');
+                });
+            }
+        };
+
+        var doCreateProject = function () {
+            var val = self._txtNewProjectName.val();
+
+            if (val !== "" && self._projectNames.indexOf(val) === -1) {
+                self._btnNewProjectCreate.addClass("disabled");
+                self._createNewProject(val);
+            }
+        };
+
+        var deleteProject = function (projId) {
+            if (self._projectList[projId].delete === true) {
+                self._client.deleteProjectAsync(selectedId,function(){
+                    self._refreshProjectList();
+                });
+            }
+        };
 
         this._dialog = $(projectsDialogTemplate);
 
@@ -69,31 +96,28 @@ define(['logManager',
             self._updateProjectNameList();
         }});
 
-        //hook up event handlers
-        this._ul.on("click", "a", function (event) {
-            selectedId = $(this).attr("data-id");
+        //hook up event handlers - SELECT project in the list
+        this._ul.on("click", "li:not(.disabled)", function (event) {
+            selectedId = $(this).data(DATA_PROJECT_NAME);
 
             event.stopPropagation();
             event.preventDefault();
 
-            self._ul.find('a[class="btn-env"]').parent().removeClass('active');
-            self._ul.find('a[class="btn-env"][data-id="' + selectedId + '"]').parent().addClass('active');
+            if (self._projectList[selectedId].read === true) {
+                self._ul.find('.active').removeClass('active');
+                $(this).addClass('active');
 
-            if (selectedId === self._activeProject) {
-                self._showButtons(false);
-            } else {
-                self._showButtons(true);
+                if (selectedId === self._activeProject) {
+                    self._showButtons(false, selectedId);
+                } else {
+                    self._showButtons(true, selectedId);
+                }
             }
         });
 
-        var openProject = function (projId) {
-            self._client.selectProjectAsync(projId,function(){
-                self._dialog.modal('hide');
-            });
-        };
-
-        this._ul.on("dblclick", "a", function (event) {
-            selectedId = $(this).attr("data-id");
+        //open on double click
+        this._ul.on("dblclick", "li:not(.disabled)", function (event) {
+            selectedId = $(this).data(DATA_PROJECT_NAME);
 
             event.stopPropagation();
             event.preventDefault();
@@ -115,9 +139,7 @@ define(['logManager',
             self._btnOpen.addClass("disabled");
             self._btnDelete.addClass("disabled");
 
-            self._client.deleteProjectAsync(selectedId,function(){
-                self._refreshProjectList();
-            });
+            deleteProject(selectedId);
 
             event.stopPropagation();
             event.preventDefault();
@@ -162,15 +184,6 @@ define(['logManager',
             }
         });
 
-        var doCreateProject = function () {
-            var val = self._txtNewProjectName.val();
-
-            if (val !== "" && self._projectNames.indexOf(val) === -1) {
-                self._btnNewProjectCreate.addClass("disabled");
-                self._createNewProject(val);
-            }
-        };
-
         this._btnNewProjectCreate.on('click', function (event) {
             doCreateProject();
             event.stopPropagation();
@@ -203,17 +216,38 @@ define(['logManager',
         this._btnRefresh.addClass('disabled');
         this._btnRefresh.find('i').css('opacity', '0');
 
-        this._client.getAvailableProjectsAsync(function(err,projectNames){
+        this._client.getFullProjectListAsync(function(err,projectList){
+            var p;
             self._activeProject = self._client.getActiveProject();
-            self._projectNames = projectNames || [];
-            self._projectNames.sort(function compare(a, b) {
-                if (a.toLowerCase() < b.toLowerCase())
-                    return -1;
-                if (a.toLowerCase() > b.toLowerCase())
-                    return 1;
+            self._projectList = {};
+            self._projectNames = [];
 
-                // a must be equal to b
-                return 0;
+            for (p in projectList) {
+                if (projectList.hasOwnProperty(p)) {
+                    self._projectNames.push(p);
+                    self._projectList[p] = projectList[p];
+                }
+            }
+
+            self._projectNames.sort(function compare(a, b) {
+                //same read access right, sort by name
+                if (self._projectList[a].read === self._projectList[b].read) {
+                    if (a.toLowerCase() < b.toLowerCase())
+                        return -1;
+                    if (a.toLowerCase() > b.toLowerCase())
+                        return 1;
+
+                    // a must be equal to b
+                    return 0;
+                } else {
+                    //different read access right
+                    //read-ony goes later in the order
+                    if (self._projectList[a].read === true) {
+                        return -1;
+                    } else {
+                        return 1;
+                    }
+                }
             });
 
             self._updateProjectNameList();
@@ -224,16 +258,32 @@ define(['logManager',
         });
     };
 
-    ProjectsDialog.prototype._showButtons = function (enabled) {
-        var showMethod = enabled === true ? "show" : "hide",
-            enableClass = enabled === true ? "removeClass" : "addClass",
-            btnList = [this._btnOpen, this._btnDelete],
-            len = btnList.length;
+    ProjectsDialog.prototype._showButtons = function (enabled, projectId) {
+        if (enabled === true) {
+            //btnOpen
+            if (this._projectList[projectId].read === true) {
+                this._btnOpen.show();
+                this._btnOpen.removeClass('disabled');
+            } else {
+                this._btnOpen.hide();
+                this._btnOpen.addClass('disabled');
+            }
 
-        while (len--) {
-            btnList[len][showMethod]();
-            btnList[len][enableClass]('disabled');
+            //btnDelete
+            if (this._projectList[projectId].delete === true) {
+                this._btnDelete.show();
+                this._btnDelete.removeClass('disabled');
+            } else {
+                this._btnDelete.hide();
+                this._btnDelete.addClass('disabled');
+            }
+        } else {
+            this._btnOpen.hide();
+            this._btnOpen.addClass('disabled');
+            this._btnDelete.hide();
+            this._btnDelete.addClass('disabled');
         }
+
     };
 
     ProjectsDialog.prototype._createNewProject = function (projectName) {
@@ -275,10 +325,16 @@ define(['logManager',
             }
 
             if (displayProject) {
-                li = $('<li class="center pointer"><a class="btn-env" data-id="' + this._projectNames[i] + '">' + this._projectNames[i] + '</a>');
+                li = $('<li class="center pointer"><a class="btn-env">' + this._projectNames[i] + '</a>');
+                li.data(DATA_PROJECT_NAME, this._projectNames[i]);
 
                 if (this._projectNames[i] === this._activeProject) {
                     li.addClass('active');
+                }
+
+                //check to see if the user has READ access to this project
+                if (this._projectList[this._projectNames[i]].read !== true) {
+                    li.addClass('disabled');
                 }
 
                 this._ul.append(li);

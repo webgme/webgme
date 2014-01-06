@@ -2,22 +2,27 @@
 
 define(['logManager',
     'clientUtil',
+    'util/guid',
     'js/Constants',
     'js/NodePropertyNames',
     'js/Utils/GMEConcepts',
     './MetaRelations',
     './MetaEditorConstants',
-    'js/DragDrop/DragHelper'], function (logManager,
+    'js/DragDrop/DragHelper',
+    'js/Controls/Dialog'], function (logManager,
                                         util,
+                                        generateGuid,
                                         CONSTANTS,
                                         nodePropertyNames,
                                         GMEConcepts,
                                         MetaRelations,
                                         MetaEditorConstants,
-                                        DragHelper) {
+                                        DragHelper,
+                                        dialog) {
 
     var MetaEditorControlDiagramDesignerWidgetEventHandlers,
-        DRAG_PARAMS_META_CONTAINER_ID = 'metaContainerID';
+        DRAG_PARAMS_META_CONTAINER_ID = 'metaContainerID',
+        DRAG_PARAMS_ACTIVE_META_ASPECT = 'DRAG_PARAMS_ACTIVE_META_ASPECT';
 
     MetaEditorControlDiagramDesignerWidgetEventHandlers = function () {
     };
@@ -26,10 +31,6 @@ define(['logManager',
         var self = this;
 
         /*OVERRIDE DESIGNER CANVAS METHODS*/
-        this.diagramDesigner.onDesignerItemsMove = function (repositionDesc) {
-            self._onDesignerItemsMove(repositionDesc);
-        };
-
         this.diagramDesigner.onCreateNewConnection = function (params) {
             self._onCreateNewConnection(params);
         };
@@ -77,6 +78,26 @@ define(['logManager',
             return params.availableConnectionEnds;
         };
 
+        this.diagramDesigner.onSheetAddClicked = function () {
+            self._onSheetAddClicked();
+        };
+
+        this.diagramDesigner.onSheetTitleChanged = function (sheetID, oldValue, newValue) {
+            self._onSheetTitleChanged(sheetID, oldValue, newValue);
+        };
+
+        this.diagramDesigner.onSelectedSheetChanged = function (sheetID) {
+            self._onSelectedSheetChanged(sheetID);
+        };
+
+        this.diagramDesigner.onSheetDeleteClicked = function (sheetID) {
+            self._onSheetDeleteClicked(sheetID);
+        };
+
+        this.diagramDesigner.onTabsSorted = function (newSheetIDOrder) {
+            self._onTabsSorted(newSheetIDOrder);
+        };
+
         this.logger.debug("attachDesignerCanvasEventHandlers finished");
     };
 
@@ -90,26 +111,26 @@ define(['logManager',
             i,
             accept = false;
 
-        //accept is self reposition OR dragging from somewhere else and the items are not on the sheet yet
-        if (params && params.hasOwnProperty(DRAG_PARAMS_META_CONTAINER_ID)) {
-            if (gmeIDList.length === 0) {
+        if (this._selectedMetaAspectSet) {
+            //accept is self reposition OR dragging from somewhere else and the items are not on the sheet yet
+            if (params && params.hasOwnProperty(DRAG_PARAMS_META_CONTAINER_ID)) {
                 accept = true;
-            }
-        } else {
-            if (dragEffects.length === 1 &&
-                dragEffects[0] === DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE) {
+            } else {
+                if (dragEffects.length === 1 &&
+                    dragEffects[0] === DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE) {
                     //dragging from PartBrowser
                     accept = false;
                 } else {
                     //return true if there is at least one item among the dragged ones that is not on the sheet yet
                     if (gmeIDList.length > 0) {
                         for (i = 0; i < gmeIDList.length; i+= 1) {
-                            if (this.currentNodeInfo.members.indexOf(gmeIDList[i]) === -1 ) {
+                            if (this._metaAspectMembersPerSheet[this._selectedMetaAspectSet].indexOf(gmeIDList[i]) === -1 ) {
                                 accept = true;
                                 break;
                             }
                         }
                     }
+                }
             }
         }
 
@@ -125,7 +146,7 @@ define(['logManager',
     /**********************************************************/
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDrop = function (event, dragInfo, position) {
         var _client = this._client,
-            aspectNodeID = this.currentNodeInfo.id,
+            aspectNodeID = this.metaAspectContainerNodeID,
             gmeIDList = DragHelper.getDragItems(dragInfo),
             params = DragHelper.getDragParams(dragInfo),
             i,
@@ -135,45 +156,72 @@ define(['logManager',
             posY;
 
         //check to see it self drop and reposition or dropping from somewhere else
-        if (params && params.hasOwnProperty(DRAG_PARAMS_META_CONTAINER_ID) && params[DRAG_PARAMS_META_CONTAINER_ID] === aspectNodeID) {
-            if (gmeIDList.length === 0) {
-                //params.position holds the old coordinates of the items being dragged
-                //update UI
-                _client.startTransaction();
-                this.diagramDesigner.beginUpdate();
+        if (params &&
+            params.hasOwnProperty(DRAG_PARAMS_META_CONTAINER_ID) &&
+            params[DRAG_PARAMS_META_CONTAINER_ID] === aspectNodeID &&
+            params[DRAG_PARAMS_ACTIVE_META_ASPECT] === this._selectedMetaAspectSet) {
 
-                for (i in params.positions) {
-                    if (params.positions.hasOwnProperty(i)) {
+            //params.position holds the old coordinates of the items being dragged
+            //update UI
+            _client.startTransaction();
+            this.diagramDesigner.beginUpdate();
 
-                        posX = position.x + params.positions[i].x;
-                        posY = position.y + params.positions[i].y;
-                        _client.setMemberRegistry(aspectNodeID, i, MetaEditorConstants.META_ASPECT_SET_NAME, MetaEditorConstants.META_ASPECT_MEMBER_POSITION_REGISTRY_KEY, {'x': posX, 'y': posY} );
+            for (i in params.positions) {
+                if (params.positions.hasOwnProperty(i)) {
 
-                        componentID = this._GMEID2ComponentID[i];
+                    posX = position.x + params.positions[i].x;
+                    posY = position.y + params.positions[i].y;
+                    _client.setMemberRegistry(aspectNodeID, i, this._selectedMetaAspectSet, MetaEditorConstants.META_ASPECT_MEMBER_POSITION_REGISTRY_KEY, {'x': posX, 'y': posY} );
 
-                        selectedIDs.push(componentID);
-                        this.diagramDesigner.updateDesignerItem(componentID, { "position": {'x': posX, 'y': posY}});
-                    }
+                    componentID = this._GMEID2ComponentID[i];
+
+                    selectedIDs.push(componentID);
+                    this.diagramDesigner.updateDesignerItem(componentID, { "position": {'x': posX, 'y': posY}});
                 }
-
-                this.diagramDesigner.endUpdate();
-                this.diagramDesigner.select(selectedIDs);
-
-                _client.completeTransaction();
             }
+
+            this.diagramDesigner.endUpdate();
+            this.diagramDesigner.select(selectedIDs);
+
+            _client.completeTransaction();
         } else {
             _client.startTransaction();
 
-            //if the item is not currently in the METAAspect, add it
+            //if the item is not currently in the current META Aspect sheet, add it
             if (gmeIDList.length > 0) {
                 for (i = 0; i < gmeIDList.length; i += 1) {
                     componentID = gmeIDList[i];
-                    if (this.currentNodeInfo.members.indexOf(componentID) === -1) {
-                        _client.addMember(aspectNodeID, componentID, MetaEditorConstants.META_ASPECT_SET_NAME);
-                        _client.setMemberRegistry(aspectNodeID, componentID, MetaEditorConstants.META_ASPECT_SET_NAME, MetaEditorConstants.META_ASPECT_MEMBER_POSITION_REGISTRY_KEY, {'x': position.x, 'y': position.y} );
+                    if (this._metaAspectMembersPerSheet[this._selectedMetaAspectSet].indexOf(componentID) === -1) {
 
-                        position.x += 20;
-                        position.y += 20;
+                        posX = position.x;
+                        posY = position.y;
+
+                        //when dragging between META ASPECT sheets, read position from dragParams
+                        if (params &&
+                            params.hasOwnProperty(DRAG_PARAMS_META_CONTAINER_ID) &&
+                            params[DRAG_PARAMS_META_CONTAINER_ID] === aspectNodeID &&
+                            params[DRAG_PARAMS_ACTIVE_META_ASPECT] !== this._selectedMetaAspectSet) {
+
+                            if (params && params.positions && params.positions[componentID]) {
+                                posX += params.positions[componentID].x;
+                            }
+
+                            if (params && params.positions && params.positions[componentID]) {
+                                posY += params.positions[componentID].y;
+                            }
+                        } else {
+                            position.x += 20;
+                            position.y += 20;
+                        }
+
+                        _client.addMember(aspectNodeID, componentID, this._selectedMetaAspectSet);
+                        _client.setMemberRegistry(aspectNodeID, componentID, this._selectedMetaAspectSet, MetaEditorConstants.META_ASPECT_MEMBER_POSITION_REGISTRY_KEY, {'x': posX, 'y': posY} );
+
+                        //if this item has not been part of the META Aspect at all, add it
+                        if (this._metaAspectMembersAll.indexOf(componentID) === -1) {
+                            _client.addMember(aspectNodeID, componentID, MetaEditorConstants.META_ASPECT_SET_NAME);
+                            _client.setMemberRegistry(aspectNodeID, componentID, MetaEditorConstants.META_ASPECT_SET_NAME, MetaEditorConstants.META_ASPECT_MEMBER_POSITION_REGISTRY_KEY, {'x': posX, 'y': posY} );
+                        }
                     }
                 }
             }
@@ -186,45 +234,19 @@ define(['logManager',
     /**********************************************************/
 
 
-    /**********************************************************/
-    /*  HANDLE OBJECT REPOSITION IN THE ASPECT ASPECT         */
-    /**********************************************************/
-    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onDesignerItemsMove = function (repositionDesc) {
-        var _client = this._client,
-            aspectNodeID = this.currentNodeInfo.id,
-            members = this.currentNodeInfo.members,
-            id,
-            gmeID;
-
-        _client.startTransaction();
-
-        for (id in repositionDesc) {
-            if (repositionDesc.hasOwnProperty(id)) {
-                gmeID = this._ComponentID2GMEID[id];
-                if (members.indexOf(gmeID) !== -1) {
-                    _client.setMemberRegistry(aspectNodeID, gmeID, MetaEditorConstants.META_ASPECT_SET_NAME, MetaEditorConstants.META_ASPECT_MEMBER_POSITION_REGISTRY_KEY, { "x": repositionDesc[id].x,"y": repositionDesc[id].y} );
-                }
-            }
-        }
-
-        _client.completeTransaction();
-    };
-    /************************************************************/
-    /* END OF --- HANDLE OBJECT REPOSITION IN THE ASPECT ASPECT */
-    /************************************************************/
-
-
     /*************************************************************/
     /*  HANDLE OBJECT / CONNECTION DELETION IN THE ASPECT ASPECT */
     /*************************************************************/
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionDelete = function (idList) {
         var _client = this._client,
-            aspectNodeID = this.currentNodeInfo.id,
-            len = idList.length,
+            aspectNodeID = this.metaAspectContainerNodeID,
+            len,
             gmeID,
             idx,
             deleteConnection,
-            self = this;
+            self = this,
+            metaInfoToBeLost = [],
+            doDelete;
 
         deleteConnection = function (connectionID) {
             var connDesc = self._connectionListByID[connectionID];
@@ -240,21 +262,72 @@ define(['logManager',
             }
         };
 
-        _client.startTransaction();
+        doDelete = function (itemsToDelete) {
+            _client.startTransaction();
 
+            len = itemsToDelete.length;
+             while (len--) {
+                 gmeID = self._ComponentID2GMEID[itemsToDelete[len]];
+                 idx = self._GMENodes.indexOf(gmeID);
+                 if ( idx !== -1) {
+                     //entity is a box --> delete GME object from the aspect's members list
+                     _client.removeMember(aspectNodeID, gmeID, self._selectedMetaAspectSet);
+
+                     //if the items is not present anywhere else, remove it from the META's global sheet too
+                     if (self._metaAspectSheetsPerMember[gmeID].length === 1) {
+                         _client.removeMember(aspectNodeID, gmeID, MetaEditorConstants.META_ASPECT_SET_NAME);
+                     }
+                 } else if (self._connectionListByID.hasOwnProperty(itemsToDelete[len])) {
+                     //entity is a connection, just simply delete it
+                     deleteConnection(itemsToDelete[len]);
+                 }
+             }
+
+             _client.completeTransaction();
+        };
+
+        //first figure out if the deleted-to-be items are present in any other meta sheet
+        //if not, ask the user to confirm delete
+        len = idList.length;
         while (len--) {
             gmeID = this._ComponentID2GMEID[idList[len]];
-            idx = this.currentNodeInfo.members.indexOf(gmeID);
+            idx = this._GMENodes.indexOf(gmeID);
             if ( idx !== -1) {
-                //entity is a box --> delete GME object from the aspect's members list
-                _client.removeMember(aspectNodeID, gmeID, MetaEditorConstants.META_ASPECT_SET_NAME);
-            } else if (this._connectionListByID.hasOwnProperty(idList[len])) {
-                //entity is a connection, just simply delete it
-                deleteConnection(idList[len]);
+                //entity is a box
+                //check to see if this gmeID is present on any other sheet at all
+                if (this._metaAspectSheetsPerMember[gmeID].length === 1) {
+                    metaInfoToBeLost.push(gmeID);
+                }
             }
         }
 
-        _client.completeTransaction();
+        if (metaInfoToBeLost.length > 0) {
+            //need user confirmation because there is some meta info to be lost
+            var confirmMsg = "The following items you are about to delete are not present on any other sheet and will be permanently removed from the META aspect:<br><br>";
+            var itemNames = [];
+            var nodeObj;
+            len = metaInfoToBeLost.length;
+            while (len--) {
+                gmeID = metaInfoToBeLost[len];
+                nodeObj = _client.getNode(gmeID);
+                if (nodeObj) {
+                    itemNames.push(nodeObj.getAttribute(nodePropertyNames.Attributes.name));
+                } else {
+                    itemNames.push(gmeID);
+                }
+            }
+            itemNames.sort();
+            for(len = 0; len < itemNames.length; len += 1) {
+                confirmMsg += "- " + itemNames[len] + "<br>";
+            }
+            confirmMsg += "<br>Are you sure you want to delete?";
+            dialog.confirm('Confirm delete', confirmMsg, function () {
+                doDelete(idList);
+});
+        } else {
+            //trivial deletion
+            doDelete(idList);
+        }
     };
     /************************************************************************/
     /*  END OF --- HANDLE OBJECT / CONNECTION DELETION IN THE ASPECT ASPECT */
@@ -266,7 +339,8 @@ define(['logManager',
             params = { 'positions': {} },
             i;
 
-        params[DRAG_PARAMS_META_CONTAINER_ID] = this.currentNodeInfo.id;
+        params[DRAG_PARAMS_META_CONTAINER_ID] = this.metaAspectContainerNodeID;
+        params[DRAG_PARAMS_ACTIVE_META_ASPECT] = this._selectedMetaAspectSet;
 
         for (i in oParams.positions) {
             if (oParams.positions.hasOwnProperty(i)) {
@@ -279,7 +353,20 @@ define(['logManager',
 
 
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._getDragItems = function (selectedElements) {
-        return [];
+        var draggedItems = [],
+            len,
+            gmeID;
+
+        //get the GME ID's of the dragged items
+        len = selectedElements.length;
+        while (len--) {
+            gmeID = this._ComponentID2GMEID[selectedElements[len]];
+            if (this._GMENodes.indexOf(gmeID) !== -1) {
+                draggedItems.push(gmeID);
+            }
+        }
+
+        return draggedItems;
     };
 
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionChanged = function (selectedIds) {
@@ -307,8 +394,8 @@ define(['logManager',
 
         //nobody is selected on the canvas
         //set the active selection to the opened guy
-        if (gmeIDs.length === 0 && this.currentNodeInfo.id) {
-            gmeIDs.push(this.currentNodeInfo.id);
+        if (gmeIDs.length === 0 && this.metaAspectContainerNodeID) {
+            gmeIDs.push(this.metaAspectContainerNodeID);
         }
 
         if (gmeIDs.length !== 0) {
@@ -338,6 +425,236 @@ define(['logManager',
 
         this._client.completeTransaction();
     };
+
+    //adding new meta aspect sheet
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSheetAddClicked = function () {
+        var aspectNodeID = this.metaAspectContainerNodeID,
+            aspectNode = this._client.getNode(aspectNodeID),
+            metaAspectSheetsRegistry = aspectNode.getEditableRegistry(MetaEditorConstants.META_SHEET_REGISTRY_KEY) || [],
+            i,
+            len,
+            newSetID,
+            componentID;
+
+        metaAspectSheetsRegistry.sort(function (a, b) {
+            if (a.order < b.order) {
+                return -1;
+            } else {
+                return 1;
+            }
+        });
+
+        len = metaAspectSheetsRegistry.length;
+        for (i = 0; i < len; i += 1) {
+            metaAspectSheetsRegistry[i].order = i;
+        }
+
+        //start transaction
+        this._client.startTransaction();
+
+        //create new aspect set in  meta container node
+        newSetID = MetaEditorConstants.META_ASPECT_SHEET_NAME_PREFIX + generateGuid();
+        this._client.createSet(aspectNodeID, newSetID);
+
+        var newSheetDesc = {'SetID': newSetID,
+                            'order': metaAspectSheetsRegistry.length,
+                            'title': 'New sheet'};
+
+        metaAspectSheetsRegistry.push(newSheetDesc);
+
+        //migrating projects that already have META aspect members but did not have sheets before
+        if (metaAspectSheetsRegistry.length === 1) {
+            len = this._metaAspectMembersAll.length;
+            while (len--) {
+                componentID = this._metaAspectMembersAll[len];
+                this._client.addMember(aspectNodeID, componentID, newSetID);
+                this._client.setMemberRegistry(aspectNodeID, componentID, newSetID, MetaEditorConstants.META_ASPECT_MEMBER_POSITION_REGISTRY_KEY, {'x': this._metaAspectMembersCoordinatesGlobal[componentID].x, 'y': this._metaAspectMembersCoordinatesGlobal[componentID].y} );
+            }
+        }
+
+        this._client.setRegistry(aspectNodeID, MetaEditorConstants.META_SHEET_REGISTRY_KEY, metaAspectSheetsRegistry);
+
+        //force switching to the new sheet
+        this._selectedMetaAspectSet = newSetID;
+
+        //finish transaction
+        this._client.completeTransaction();
+    };
+
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSheetTitleChanged = function (sheetID, oldValue, newValue) {
+        var aspectNodeID = this.metaAspectContainerNodeID,
+            aspectNode = this._client.getNode(aspectNodeID),
+            metaAspectSheetsRegistry = aspectNode.getEditableRegistry(MetaEditorConstants.META_SHEET_REGISTRY_KEY) || [],
+            i,
+            len,
+            setID;
+
+        if (this._sheets[sheetID]) {
+            setID = this._sheets[sheetID];
+
+            len = metaAspectSheetsRegistry.length;
+            for (i = 0; i < len; i += 1) {
+                if (metaAspectSheetsRegistry[i].SetID === setID) {
+                    metaAspectSheetsRegistry[i].title = newValue;
+                    break;
+                }
+            }
+
+            this._client.setRegistry(aspectNodeID, MetaEditorConstants.META_SHEET_REGISTRY_KEY, metaAspectSheetsRegistry);
+        }
+    };
+
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectedSheetChanged = function (sheetID) {
+        if (this._sheets[sheetID] && this._selectedMetaAspectSet !== this._sheets[sheetID]) {
+            this._selectedMetaAspectSet = this._sheets[sheetID];
+
+            this.logger.debug('selectedAspectChanged: ' + this._selectedMetaAspectSet);
+
+            this._initializeSelectedSheet();
+        }
+    };
+
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSheetDeleteClicked = function (sheetID) {
+        //deleting a sheet invilves deleting all the items present on that sheet
+        //if there is an item on this sheet that's not present on any other sheet
+        //it needs to be removed from the META Aspect (when user confirms DELETE)
+        var aspectToDelete = this._sheets[sheetID],
+            itemsOfAspect = this._metaAspectMembersPerSheet[aspectToDelete],
+            aspectNodeID = this.metaAspectContainerNodeID,
+            aspectNode = this._client.getNode(aspectNodeID),
+            metaAspectSheetsRegistry = aspectNode.getEditableRegistry(MetaEditorConstants.META_SHEET_REGISTRY_KEY) || [],
+            len,
+            gmeID,
+            idx,
+            metaAspectMemberToBeLost = [],
+            _client = this._client,
+            doDeleteSheet,
+            i,
+            confirmMsg;
+
+        doDeleteSheet = function () {
+            _client.startTransaction();
+
+            //delete the members of the META aspect who are not present on any other sheet
+            len = metaAspectMemberToBeLost.length;
+            while (len--) {
+                gmeID = metaAspectMemberToBeLost[len];
+                _client.removeMember(aspectNodeID, gmeID, MetaEditorConstants.META_ASPECT_SET_NAME);
+            }
+
+            //delete the sheet
+            len = metaAspectSheetsRegistry.length;
+            while(len--) {
+                if (metaAspectSheetsRegistry[len].SetID === aspectToDelete) {
+                    metaAspectSheetsRegistry.splice(len, 1);
+                    break;
+                }
+            }
+
+            //update remaining sheets' order
+            metaAspectSheetsRegistry.sort(function (a, b) {
+                if (a.order < b.order) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            });
+
+            len = metaAspectSheetsRegistry.length;
+            for (i = 0; i < len; i += 1) {
+                metaAspectSheetsRegistry[i].order = i;
+            }
+
+            _client.setRegistry(aspectNodeID, MetaEditorConstants.META_SHEET_REGISTRY_KEY, metaAspectSheetsRegistry);
+
+            //finally delete the sheet's SET
+            _client.deleteSet(aspectNodeID, aspectToDelete);
+
+            _client.completeTransaction();
+        };
+
+
+        //first figure out if the deleted-to-be items are present in any other meta sheet
+        //if not, ask the user to confirm delete
+        len = itemsOfAspect.length;
+        while (len--) {
+            gmeID = itemsOfAspect[len];
+            idx = this._GMENodes.indexOf(gmeID);
+            if ( idx !== -1) {
+                //entity is a box
+                //check to see if this gmeID is present on any other sheet at all
+                if (this._metaAspectSheetsPerMember[gmeID].length === 1) {
+                    metaAspectMemberToBeLost.push(gmeID);
+                }
+            }
+        }
+
+        if (metaAspectMemberToBeLost.length > 0) {
+            //need user confirmation because there is some meta info to be lost
+            confirmMsg = "You are about to delete a sheet that contains the following items that are not present on any other sheet and will be permanently removed from the META aspect:<br><br>";
+            var itemNames = [];
+            var nodeObj;
+            len = metaAspectMemberToBeLost.length;
+            while (len--) {
+                gmeID = metaAspectMemberToBeLost[len];
+                nodeObj = _client.getNode(gmeID);
+                if (nodeObj) {
+                    itemNames.push(nodeObj.getAttribute(nodePropertyNames.Attributes.name));
+                } else {
+                    itemNames.push(gmeID);
+                }
+            }
+            itemNames.sort();
+            for(len = 0; len < itemNames.length; len += 1) {
+                confirmMsg += "- " + itemNames[len] + "<br>";
+            }
+            confirmMsg += "<br>Are you sure you want to delete the sheet anyway?";
+            dialog.confirm('Confirm delete', confirmMsg, function () {
+                doDeleteSheet();
+            });
+        } else {
+            //no meta member will be lost permanently but make sure that the user really wants to delete the sheet
+            confirmMsg = "Are you sure you want to delete this sheet?";
+            dialog.confirm('Confirm delete', confirmMsg, function () {
+                doDeleteSheet();
+            });
+        }
+    };
+
+
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onTabsSorted = function (newSheetIDOrder) {
+        var aspectNodeID = this.metaAspectContainerNodeID,
+            aspectNode = this._client.getNode(aspectNodeID),
+            metaAspectSheetsRegistry = aspectNode.getEditableRegistry(MetaEditorConstants.META_SHEET_REGISTRY_KEY) || [],
+            i,
+            j,
+            setID;
+
+        for (i = 0; i < newSheetIDOrder.length; i += 1) {
+            //i is the new order number
+            //newSheetIDOrder[i] is the sheet identifier
+            setID = this._sheets[newSheetIDOrder[i]];
+            for (j = 0; j < metaAspectSheetsRegistry.length; j += 1) {
+                if (metaAspectSheetsRegistry[j].SetID === setID) {
+                    metaAspectSheetsRegistry[j].order = i;
+                    break;
+                }
+            }
+        }
+
+        metaAspectSheetsRegistry.sort(function (a, b) {
+            if (a.order < b.order) {
+                return -1;
+            } else {
+                return 1;
+            }
+        });
+
+        this._client.startTransaction();
+        this._client.setRegistry(aspectNodeID, MetaEditorConstants.META_SHEET_REGISTRY_KEY, metaAspectSheetsRegistry);
+        this._client.completeTransaction();
+    };
+
 
     return MetaEditorControlDiagramDesignerWidgetEventHandlers;
 });

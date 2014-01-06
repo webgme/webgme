@@ -39,6 +39,16 @@ define([ "util/assert" ], function (ASSERT) {
 			_database.getProjectNames(callback);
 		}
 
+        function getAllowedProjectNames (callback) {
+            logger.debug('getAllowedProjectNames()');
+            _database.getAllowedProjectNames(callback);
+        }
+
+        function getAuthorizationInfo (name,callback) {
+            logger.debug('getAuthorizationInfo('+name+')');
+            _database.getAuthorizationInfo(name,callback);
+        }
+
 		function deleteProject (project, callback) {
 			logger.debug('deleteProject(' + project + ")");
 			_database.deleteProject(project, callback);
@@ -48,11 +58,6 @@ define([ "util/assert" ], function (ASSERT) {
 			logger.debug('getDatabaseStatus(' + oldstatus + ")");
 			_database.getDatabaseStatus(oldstatus, callback);
 		}
-
-        function authenticate (username,privatekey, callback){
-            logger.debug('authenticate('+username+',***)');
-            _database.authenticate(username,privatekey,callback);
-        }
 
 		function openProject (projectName, callback) {
 			logger.debug('openProject(' + projectName + ")");
@@ -146,10 +151,11 @@ define([ "util/assert" ], function (ASSERT) {
 			closeDatabase: closeDatabase,
 			fsyncDatabase: fsyncDatabase,
 			getProjectNames: getProjectNames,
+            getAllowedProjectNames: getAllowedProjectNames,
+            getAuthorizationInfo: getAuthorizationInfo,
 			getDatabaseStatus: getDatabaseStatus,
 			openProject: openProject,
-			deleteProject: deleteProject,
-            authenticate: authenticate
+			deleteProject: deleteProject
 		};
 	}
 

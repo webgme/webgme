@@ -18,8 +18,26 @@ define(function(){
         }
         return parsed;
     }
+    function removeSpecialChars(text){
+        text = text.replace(/%23/g,'#');
+        text = text.replace(/%2f/g,'/');text = text.replace(/%2F/g,'/');
+        return text;
+    }
+    function addSpecialChars(text){
+        text = text.replace(/#/g,'%23');
+        text = text.replace(/\//g,'%2F');
+        return text;
+    }
+    function urlToRefObject(url){
+        return {
+            '$ref':url
+        };
+    }
     return {
         decodeUrl : decodeUrl,
-        parseCookie : parseCookie
+        parseCookie : parseCookie,
+        removeSpecialChars : removeSpecialChars,
+        addSpecialChars : addSpecialChars,
+        urlToRefObject : urlToRefObject
     }
 });

@@ -44,6 +44,11 @@ define(['js/PanelBase/PanelBase',
         navBar.append(navBarInner);
         this.$el.append(navBar);
 
+        //add ISIS link
+        var pullLeft = $('<div class="pull-left inline"></div>');
+        pullLeft.append($('<div class="navbar-text"><div class="webgme-copyright">© 2013 <a href="http://www.isis.vanderbilt.edu/" title="ISIS" target="_blank">ISIS</a></div></div>'));
+        navBarInner.append(pullLeft);
+
         //add version UI piece
         var pullLeft = $('<div class="pull-left inline"></div>');
         pullLeft.append($('<div class="navbar-text"><div class="webgme-version">version: ' + WebGMEGlobal.version + '</div></div>'));

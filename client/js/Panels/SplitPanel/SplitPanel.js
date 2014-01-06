@@ -33,6 +33,8 @@ define(['js/PanelBase/PanelBase',
         this._panel1 = undefined;
         this._panel2 = undefined;
 
+        this._readOnly = false;
+
         this._splitterPos = 0.5;
 
         //initialize UI
@@ -184,6 +186,9 @@ define(['js/PanelBase/PanelBase',
             this._setActivePanel(1);
         }
 
+        //make sure that read-only info is passed down to the actual panels
+        this.onReadOnlyChanged(this._readOnly);
+
         this._updateUI();
     };
 
@@ -206,6 +211,8 @@ define(['js/PanelBase/PanelBase',
     SplitPanel.prototype.onReadOnlyChanged = function (isReadOnly) {
         //apply parent's onReadOnlyChanged
         PanelBase.prototype.onReadOnlyChanged.call(this, isReadOnly);
+
+        this._readOnly = isReadOnly;
 
         if (this._panel1) {
             this._panel1.onReadOnlyChanged(isReadOnly);

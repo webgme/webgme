@@ -84,10 +84,30 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
             },child,basechild,node,relid);
         };
 
-		core.loadByPath = function(node, path) {
+		core._loadByPath = function(node, path) {
 			ASSERT(isValidNode(node));
 			return TASYNC.call(__loadBase, oldcore.loadByPath(node, path));
 		};
+        core.loadByPath = function(node,path) {
+            ASSERT(isValidNode(node));
+            //we have to completely override the coretree's loadByPath, to load every node properly
+            if(path === ""){
+                return node;
+            }
+            var basePath = core.getPath(node);
+            var pathArray = path.split('/');
+            if(pathArray.length > 1 && pathArray[0] === ""){
+                pathArray = pathArray.splice(1);
+            }
+            var relid = pathArray.shift();
+            var child = core.loadChild(node,relid);
+            if(pathArray.length>0){
+                return TASYNC.call(core.loadByPath,child,'/'+pathArray.join('/'));
+            } else {
+                return TASYNC.call(function(c){
+                    return c;},child);
+            }
+        };
 
         core.loadPointer = function(node,name){
             var pointer = TASYNC.call(__loadBase,oldcore.loadPointer(node, name));
@@ -299,7 +319,100 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 			return Object.keys(merged);
 		};
 
-		core.getPointerPath = function(node, name) {
+        core.getPointerPath = function (node, name) {
+            ASSERT(isValidNode(node) && typeof name === "string");
+
+            var ownPointerPath = oldcore.getPointerPath(node,name);
+            if(ownPointerPath !== undefined){
+                return ownPointerPath;
+            }
+            var source = "",
+                target,
+                coretree = core.getCoreTree(),
+                parentOfBase,
+                baseOfParent,
+                basePath,
+                hasNullTarget = false,
+                getProperty = function(node,name){
+                    var property;
+                    while(property === undefined && node !== null){
+                        property = coretree.getProperty(node,name);
+                        node = core.getBase(node);
+                    }
+                    return property;
+                },
+                getSimpleBasePath = function(node){
+                    var path = oldcore.getPointerPath(node,name);
+                    if(path === undefined){
+                        if(node.base !== null && node.base !== undefined){
+                            return getSimpleBasePath(node.base);
+                        } else {
+                            return undefined;
+                        }
+                    } else {
+                        return path;
+                    }
+                },
+                getParentOfBasePath = function(node){
+                    if(node.base){
+                        var parent = core.getParent(node.base);
+                        if(parent){
+                            return core.getPath(parent);
+                        } else {
+                            return undefined;
+                        }
+                    } else {
+                        return undefined;
+                    }
+                },
+                getBaseOfParentPath = function(node){
+                    var parent = core.getParent(node);
+                    if(parent){
+                        if(parent.base){
+                            return core.getPath(parent.base);
+                        } else {
+                            return undefined;
+                        }
+                    } else {
+                        return undefined;
+                    }
+                },
+                getTargetRelPath = function(node,relSource,name){
+                    var ovr = core.getChild(node,'ovr');
+                    var source = core.getChild(ovr,relSource);
+                    return getProperty(source,name);
+                };
+
+            basePath = node.base ? getSimpleBasePath(node.base) : undefined;
+
+            while(node){
+                target = getTargetRelPath(node,source,name);
+                if( target !== undefined){
+                    if(target.indexOf('_nullptr') !== -1){
+                        hasNullTarget = true;
+                        target = undefined;
+                    } else {
+                        break;
+                    }
+                }
+
+                source = "/" + core.getRelid(node) + source;
+                if(getParentOfBasePath(node) === getBaseOfParentPath(node)){
+                    node = core.getParent(node);
+                } else {
+                    node = null;
+                }
+            }
+
+
+            if (target !== undefined) {
+                ASSERT(node);
+                target = coretree.joinPaths(oldcore.getPath(node), target);
+            }
+            return target || basePath || (hasNullTarget ? null : undefined);
+        };
+
+		core._getPointerPath = function(node, name) {
 			ASSERT(isValidNode(node));
             var value;
 			do {

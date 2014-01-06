@@ -31,5 +31,18 @@ define([], function () {
         this.onUnregisterSubcomponent(objID, sCompID);
     };
 
+    DiagramDesignerWidgetSubcomponents.prototype.unregisterAllSubcomponents = function (objID) {
+        var len;
+
+        if (this._itemSubcomponentsMap[objID]) {
+            len = this._itemSubcomponentsMap[objID].length;
+            while (len--) {
+                this.unregisterSubcomponent(objID, this._itemSubcomponentsMap[objID][len]);
+            }
+
+            delete this._itemSubcomponentsMap[objID];
+        }
+    };
+
     return DiagramDesignerWidgetSubcomponents;
 });

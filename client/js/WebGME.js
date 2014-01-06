@@ -1,11 +1,12 @@
 "use strict";
 
-var WebGMEGlobal = { 'version': 'pre-alpha',
+var WebGMEGlobal = { 'version': 'x',    //will be set from Node's package.json
     'SUPPORTS_TOUCH': 'ontouchstart' in window || navigator.msMaxTouchPoints }; //touch device detection}
 
 // let require load all the toplevel needed script and call us on domReady
 define(['logManager',
     'bin/getconfig',
+    'text!package.json',
     'js/client',
     'clientUtil',
     'js/Utils/GMEConcepts',
@@ -17,6 +18,7 @@ define(['logManager',
     'js/Utils/METAAspectHelper',
     'js/ConstraintManager/ConstraintManager'], function (logManager,
                                             CONFIG,
+                                            packagejson,
                                             Client,
                                             util,
                                             GMEConcepts,
@@ -27,6 +29,9 @@ define(['logManager',
                                             WebGMEHistory,
                                             METAAspectHelper,
                                             ConstraintManager) {
+
+    var npmJSON = JSON.parse(packagejson);
+    WebGMEGlobal.version = npmJSON.version;
 
     var _webGMEStart = function () {
         var lm,
@@ -58,8 +63,10 @@ define(['logManager',
 
             //hook up branch changed to set read-only mode on panels
             client.addEventListener(client.events.BRANCH_CHANGED, function (__project, branchName) {
-                var readOnly = branchName === null || branchName === undefined;
-                lm.setPanelReadOnly(readOnly);
+                lm.setPanelReadOnly(client.isCommitReadOnly() || client.isProjectReadOnly());
+            });
+            client.addEventListener(client.events.PROJECT_OPENED, function (__project, projectName) {
+                lm.setPanelReadOnly(client.isProjectReadOnly());
             });
 
             client.decoratorManager = new DecoratorManager();

@@ -8,14 +8,14 @@
 
 define(['js/Constants',
     'js/NodePropertyNames',
-    'js/Utils/METAAspectHelper',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase',
     './../Core/UMLStateMachineDecoratorCore',
+    './../Core/UMLStateMachine.META',
     'css!./UMLStateMachineDecorator.DiagramDesignerWidget'], function (CONSTANTS,
                                                                nodePropertyNames,
-                                                               METAAspectHelper,
                                                                DiagramDesignerWidgetDecoratorBase,
-                                                               UMLStateMachineDecoratorCore) {
+                                                               UMLStateMachineDecoratorCore,
+                                                               UMLStateMachineMETA) {
 
     var UMLStateMachineDecoratorDiagramDesignerWidget,
         DECORATOR_ID = "UMLStateMachineDecoratorDiagramDesignerWidget";
@@ -44,12 +44,14 @@ define(['js/Constants',
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     UMLStateMachineDecoratorDiagramDesignerWidget.prototype.on_addTo = function () {
         var self = this,
-            META_TYPES = METAAspectHelper.getMETAAspectTypes();
+            META_TYPES = UMLStateMachineMETA.META_TYPES;
 
         this._renderContent();
 
-        //if END or INITIAL state, don't display name only on META level
-        if ((this._metaType === META_TYPES.End ||
+        //if END or INITIAL state, don't display name except only on META level
+        if (META_TYPES.End &&
+            META_TYPES.Initial &&
+            (this._metaType === META_TYPES.End ||
             this._metaType === META_TYPES.Initial) &&
             this._gmeID !== META_TYPES.Initial &&
             this._gmeID !== META_TYPES.End) {
@@ -85,14 +87,15 @@ define(['js/Constants',
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     UMLStateMachineDecoratorDiagramDesignerWidget.prototype.onRenderGetLayoutInfo = function () {
-        var META_TYPES = METAAspectHelper.getMETAAspectTypes();
+        var META_TYPES = UMLStateMachineMETA.META_TYPES;
 
         //let the parent decorator class do its job first
         DiagramDesignerWidgetDecoratorBase.prototype.onRenderGetLayoutInfo.apply(this, arguments);
 
         if (this.$name) {
-            if (this._metaType === META_TYPES.End ||
-                this._metaType === META_TYPES.Initial) {
+            if (META_TYPES.End &&
+                META_TYPES.Initial &&
+                (this._metaType === META_TYPES.End || this._metaType === META_TYPES.Initial)) {
                 this.renderLayoutInfo.nameWidth = this.$name.outerWidth();
             }
         }
@@ -100,14 +103,15 @@ define(['js/Constants',
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     UMLStateMachineDecoratorDiagramDesignerWidget.prototype.onRenderSetLayoutInfo = function () {
-        var META_TYPES = METAAspectHelper.getMETAAspectTypes();
+        var META_TYPES = UMLStateMachineMETA.META_TYPES;
 
         if (this.renderLayoutInfo) {
             var shift = this.renderLayoutInfo.nameWidth / -2;
 
             if (this.$name) {
-                if (this._metaType === META_TYPES.End ||
-                    this._metaType === META_TYPES.Initial) {
+                if (META_TYPES.End &&
+                    META_TYPES.Initial &&
+                    (this._metaType === META_TYPES.End || this._metaType === META_TYPES.Initial)) {
                     this.$name.css({ "margin-left": shift });
                 }
             }

@@ -336,7 +336,9 @@ define(['logManager',
         var gmeID = this._Subcomponent2GMEID[objID][sCompID];
 
         delete this._Subcomponent2GMEID[objID][sCompID];
-        delete this._GMEID2Subcomponent[gmeID][objID];
+        if (this._GMEID2Subcomponent[gmeID]) {
+            delete this._GMEID2Subcomponent[gmeID][objID];
+        }
         //TODO: add event handling here that a subcomponent disappeared
     };
 
@@ -586,6 +588,13 @@ define(['logManager',
 
                         //set reference
                         this._client.makePointer(gmeID, CONSTANTS.POINTER_REF, items[0]);
+
+                        //try to set name
+                        var origNode = this._client.getNode(items[0]);
+                        if (origNode) {
+                            var refName = origNode.getAttribute(nodePropertyNames.Attributes.name) + "-REF";
+                            this._client.setAttributes(gmeID, nodePropertyNames.Attributes.name, refName);
+                        }
                     }
 
                     this._client.completeTransaction();

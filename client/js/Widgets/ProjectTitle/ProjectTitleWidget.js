@@ -45,7 +45,7 @@ define(['logManager',
         var client = this._client,
             actualProject = client.getActiveProject(),
             actualBranch = client.getActualBranch(),
-            readOnly = client.isReadOnly(),
+            readOnly = client.isProjectReadOnly() || client.isCommitReadOnly(),
             titleText = actualProject + " @ " + actualBranch,
             documentTitle = titleText + (readOnly ? " [READ-ONLY]": "");
 
