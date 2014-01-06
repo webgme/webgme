@@ -142,8 +142,9 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         var i = idList.length;
 
         while(i--){
-            this.autorouter.remove(this._autorouterPaths[idList[i]]);
-            this._autorouterPaths[idList[i]] = undefined;
+            this.deleteItem(idList[i]);
+            //this.autorouter.remove(this._autorouterPaths[idList[i]]);
+            //this._autorouterPaths[idList[i]] = undefined;
             this.insertConnection([idList[i]]);
         }
 
@@ -344,7 +345,9 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
             portdefinition.push([ [ res[j].x1, res[j].y1 ], [ res[j].x2, res[j].y2 ] ]);
         }
             this._autorouterBoxes[longid] = { "ports": this.autorouter.addPort(parentBox, portdefinition) };
-            this._autorouterPorts[objId].push(subCompId);
+
+            if(this._autorouterPorts[objId].indexOf(subCompId) === -1)
+                this._autorouterPorts[objId].push(subCompId);
         }
      };
 
