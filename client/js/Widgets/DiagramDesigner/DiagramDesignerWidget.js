@@ -31,6 +31,7 @@ define(['logManager',
     './DiagramDesignerWidget.Draggable',
     './DiagramDesignerWidget.Clipboard',
     './DiagramDesignerWidget.Toolbar',
+    './DiagramDesignerWidget.Mouse',
     'css!/css/Widgets/DiagramDesigner/DiagramDesignerWidget'], function (logManager,
                                                       CONSTANTS,
                                                       raphaeljs,
@@ -55,7 +56,8 @@ define(['logManager',
                                                       DiagramDesignerWidgetDroppable,
                                                       DiagramDesignerWidgetDraggable,
                                                       DiagramDesignerWidgetClipboard,
-                                                      DiagramDesignerWidgetToolbar) {
+                                                      DiagramDesignerWidgetToolbar,
+                                                      DiagramDesignerWidgetMouse) {
 
     var DiagramDesignerWidget,
         CANVAS_EDGE = 100,
@@ -206,6 +208,8 @@ define(['logManager',
         this._afterManagersInitialized();
 
         this.setOperatingMode(DiagramDesignerWidgetOperatingModes.prototype.OPERATING_MODES.DESIGN);
+
+        this._activateMouseListeners();
 
 
         this.logger.debug("DiagramDesignerWidget ctor finished");
@@ -738,10 +742,6 @@ define(['logManager',
                 }
             }
         }
-    };
-
-    DiagramDesignerWidget.prototype.onElementMouseDown = function (elementId) {
-        this.logger.debug("onElementMouseDown: " + elementId);
     };
 
     /************************** DRAG ITEM ***************************/
@@ -1307,6 +1307,7 @@ define(['logManager',
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetClipboard.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetDraggable.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetToolbar.prototype);
+    _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetMouse.prototype);
 
 
     return DiagramDesignerWidget;
