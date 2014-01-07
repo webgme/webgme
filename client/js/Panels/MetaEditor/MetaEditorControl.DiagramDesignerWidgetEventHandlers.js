@@ -78,24 +78,24 @@ define(['logManager',
             return params.availableConnectionEnds;
         };
 
-        this.diagramDesigner.onSheetAddClicked = function () {
-            self._onSheetAddClicked();
+        this.diagramDesigner.onTabAddClicked = function () {
+            self._onTabAddClicked();
         };
 
-        this.diagramDesigner.onSheetTitleChanged = function (sheetID, oldValue, newValue) {
-            self._onSheetTitleChanged(sheetID, oldValue, newValue);
+        this.diagramDesigner.onTabTitleChanged = function (tabID, oldValue, newValue) {
+            self._onTabTitleChanged(tabID, oldValue, newValue);
         };
 
-        this.diagramDesigner.onSelectedSheetChanged = function (sheetID) {
-            self._onSelectedSheetChanged(sheetID);
+        this.diagramDesigner.onSelectedTabChanged = function (tabID) {
+            self._onSelectedTabChanged(tabID);
         };
 
-        this.diagramDesigner.onSheetDeleteClicked = function (sheetID) {
-            self._onSheetDeleteClicked(sheetID);
+        this.diagramDesigner.onTabDeleteClicked = function (tabID) {
+            self._onTabDeleteClicked(tabID);
         };
 
-        this.diagramDesigner.onTabsSorted = function (newSheetIDOrder) {
-            self._onTabsSorted(newSheetIDOrder);
+        this.diagramDesigner.onTabsSorted = function (newTabIDOrder) {
+            self._onTabsSorted(newTabIDOrder);
         };
 
         this.logger.debug("attachDesignerCanvasEventHandlers finished");
@@ -427,7 +427,7 @@ define(['logManager',
     };
 
     //adding new meta aspect sheet
-    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSheetAddClicked = function () {
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onTabAddClicked = function () {
         var aspectNodeID = this.metaAspectContainerNodeID,
             aspectNode = this._client.getNode(aspectNodeID),
             metaAspectSheetsRegistry = aspectNode.getEditableRegistry(MetaEditorConstants.META_SHEET_REGISTRY_KEY) || [],
@@ -481,7 +481,7 @@ define(['logManager',
         this._client.completeTransaction();
     };
 
-    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSheetTitleChanged = function (sheetID, oldValue, newValue) {
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onTabTitleChanged = function (tabID, oldValue, newValue) {
         var aspectNodeID = this.metaAspectContainerNodeID,
             aspectNode = this._client.getNode(aspectNodeID),
             metaAspectSheetsRegistry = aspectNode.getEditableRegistry(MetaEditorConstants.META_SHEET_REGISTRY_KEY) || [],
@@ -489,8 +489,8 @@ define(['logManager',
             len,
             setID;
 
-        if (this._sheets[sheetID]) {
-            setID = this._sheets[sheetID];
+        if (this._sheets[tabID]) {
+            setID = this._sheets[tabID];
 
             len = metaAspectSheetsRegistry.length;
             for (i = 0; i < len; i += 1) {
@@ -504,9 +504,9 @@ define(['logManager',
         }
     };
 
-    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectedSheetChanged = function (sheetID) {
-        if (this._sheets[sheetID] && this._selectedMetaAspectSet !== this._sheets[sheetID]) {
-            this._selectedMetaAspectSet = this._sheets[sheetID];
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectedTabChanged = function (tabID) {
+        if (this._sheets[tabID] && this._selectedMetaAspectSet !== this._sheets[tabID]) {
+            this._selectedMetaAspectSet = this._sheets[tabID];
 
             this.logger.debug('selectedAspectChanged: ' + this._selectedMetaAspectSet);
 
@@ -514,11 +514,11 @@ define(['logManager',
         }
     };
 
-    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSheetDeleteClicked = function (sheetID) {
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onTabDeleteClicked = function (tabID) {
         //deleting a sheet invilves deleting all the items present on that sheet
         //if there is an item on this sheet that's not present on any other sheet
         //it needs to be removed from the META Aspect (when user confirms DELETE)
-        var aspectToDelete = this._sheets[sheetID],
+        var aspectToDelete = this._sheets[tabID],
             itemsOfAspect = this._metaAspectMembersPerSheet[aspectToDelete],
             aspectNodeID = this.metaAspectContainerNodeID,
             aspectNode = this._client.getNode(aspectNodeID),
@@ -528,11 +528,11 @@ define(['logManager',
             idx,
             metaAspectMemberToBeLost = [],
             _client = this._client,
-            doDeleteSheet,
+            doDeleteTab,
             i,
             confirmMsg;
 
-        doDeleteSheet = function () {
+        doDeleteTab = function () {
             _client.startTransaction();
 
             //delete the members of the META aspect who are not present on any other sheet
@@ -610,19 +610,19 @@ define(['logManager',
             }
             confirmMsg += "<br>Are you sure you want to delete the sheet anyway?";
             dialog.confirm('Confirm delete', confirmMsg, function () {
-                doDeleteSheet();
+                doDeleteTab();
             });
         } else {
             //no meta member will be lost permanently but make sure that the user really wants to delete the sheet
             confirmMsg = "Are you sure you want to delete this sheet?";
             dialog.confirm('Confirm delete', confirmMsg, function () {
-                doDeleteSheet();
+                doDeleteTab();
             });
         }
     };
 
 
-    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onTabsSorted = function (newSheetIDOrder) {
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onTabsSorted = function (newTabIDOrder) {
         var aspectNodeID = this.metaAspectContainerNodeID,
             aspectNode = this._client.getNode(aspectNodeID),
             metaAspectSheetsRegistry = aspectNode.getEditableRegistry(MetaEditorConstants.META_SHEET_REGISTRY_KEY) || [],
@@ -630,10 +630,10 @@ define(['logManager',
             j,
             setID;
 
-        for (i = 0; i < newSheetIDOrder.length; i += 1) {
+        for (i = 0; i < newTabIDOrder.length; i += 1) {
             //i is the new order number
-            //newSheetIDOrder[i] is the sheet identifier
-            setID = this._sheets[newSheetIDOrder[i]];
+            //newTabIDOrder[i] is the sheet identifier
+            setID = this._sheets[newTabIDOrder[i]];
             for (j = 0; j < metaAspectSheetsRegistry.length; j += 1) {
                 if (metaAspectSheetsRegistry[j].SetID === setID) {
                     metaAspectSheetsRegistry[j].order = i;

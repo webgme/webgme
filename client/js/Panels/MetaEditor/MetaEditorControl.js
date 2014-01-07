@@ -1618,7 +1618,7 @@ define(['logManager',
         this._sheets = {};
         this._metaAspectMembersPerSheet = {};
         this._metaAspectMembersCoordinatesPerSheet = {};
-        this.diagramDesigner.clearSheets();
+        this.diagramDesigner.clearTabs();
         this._metaAspectSheetsPerMember = {};
 
         metaAspectSheetsRegistry.sort(function (a, b) {
@@ -1634,7 +1634,7 @@ define(['logManager',
         for (i = 0; i < len; i += 1) {
             setName = metaAspectSheetsRegistry[i].SetID;
 
-            sheetID = this.diagramDesigner.addSheet(metaAspectSheetsRegistry[i].title, true);
+            sheetID = this.diagramDesigner.addTab(metaAspectSheetsRegistry[i].title, true);
 
             this._sheets[sheetID] = setName;
 
@@ -1665,7 +1665,7 @@ define(['logManager',
             }
         }
 
-        this.diagramDesigner.selectSheet(selectedSheetID);
+        this.diagramDesigner.selectTab(selectedSheetID);
     };
 
 
