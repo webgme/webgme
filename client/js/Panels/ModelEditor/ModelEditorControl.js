@@ -739,8 +739,8 @@ define(['logManager',
     };
 
     ModelEditorControl.prototype._updateSheetName = function (name) {
-        this.designerCanvas.setTitle(name);
-        this.designerCanvas.setBackgroundText(name, {'font-size': BACKGROUND_TEXT_SIZE,
+        this.designerCanvas.setTitle(name.toUpperCase());
+        this.designerCanvas.setBackgroundText(name.toUpperCase(), {'font-size': BACKGROUND_TEXT_SIZE,
             'color': BACKGROUND_TEXT_COLOR });
     };
 
