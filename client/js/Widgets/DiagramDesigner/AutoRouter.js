@@ -6013,7 +6013,6 @@ if(DEBUG && ArPointList.length > 0){
                 }
 
                 path.destroy();
-                path = null;
             };
 
             this.deleteAll = function(addBackSelfEdges){
@@ -7624,16 +7623,20 @@ pt = [pt];
         while( i-- ){
             var pathSrc = paths.in[i].getStartPort().getOwner(),
                 newEndPort = this._getClosestPorts( pathSrc, boxObject ).dst;
-            paths.in[i].setEndPort( newEndPort );
-            this.router.disconnect( paths.in[i] );
+            if( boxObject.ports.indexOf( newEndPort ) !== -1 ){ //Only reconnect connections to the box - not to any child ports!
+                paths.in[i].setEndPort( newEndPort );
+                this.router.disconnect( paths.in[i] );
+            }
         }
     
         i = paths.out.length;
         while( i-- ){
             var pathDst = paths.out[i].getEndPort().getOwner(),
                 newStartPort = this._getClosestPorts( boxObject, pathDst ).src;
-            paths.out[i].setStartPort( newStartPort );
-            this.router.disconnect( paths.out[i] );
+            if( boxObject.ports.indexOf( newStartPort) !== -1 ){ //Only reconnect connections to the box - not to any child ports!
+                paths.out[i].setStartPort( newStartPort );
+                this.router.disconnect( paths.out[i] );
+            }
         }
     };
     
@@ -7662,6 +7665,18 @@ pt = [pt];
             this.router.deleteBox(item);
     
         }else if(item instanceof AutoRouterPath){
+            var i;
+
+            if(item.getStartPort() && item.getStartPort().getOwner() instanceof AutoRouterBox){
+                i = this.boxId2Path[item.getStartPort().getOwner().getID()].out.indexOf(item);//Remove from boxId2Path dictionary
+                this.boxId2Path[item.getStartPort().getOwner().getID()].out.splice(i, 1);
+            }
+
+            if(item.getEndPort() && item.getEndPort().getOwner() instanceof AutoRouterBox){
+                i = this.boxId2Path[item.getEndPort().getOwner().getID()].in.indexOf(item);
+                this.boxId2Path[item.getEndPort().getOwner().getID()].in.splice(i, 1);
+            }
+
             this.router.deletePath(item); //This should remove it from boxId2Path dictionary also
     
         }else
