@@ -7667,12 +7667,12 @@ pt = [pt];
         }else if(item instanceof AutoRouterPath){
             var i;
 
-            if(item.getStartPort().getOwner() instanceof AutoRouterBox){
+            if(item.getStartPort() && item.getStartPort().getOwner() instanceof AutoRouterBox){
                 i = this.boxId2Path[item.getStartPort().getOwner().getID()].out.indexOf(item);//Remove from boxId2Path dictionary
                 this.boxId2Path[item.getStartPort().getOwner().getID()].out.splice(i, 1);
             }
 
-            if(item.getStartPort().getOwner() instanceof AutoRouterBox){
+            if(item.getEndPort() && item.getEndPort().getOwner() instanceof AutoRouterBox){
                 i = this.boxId2Path[item.getEndPort().getOwner().getID()].in.indexOf(item);
                 this.boxId2Path[item.getEndPort().getOwner().getID()].in.splice(i, 1);
             }

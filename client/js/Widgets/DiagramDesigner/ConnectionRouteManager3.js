@@ -298,10 +298,13 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         this.autorouter.setBox(this._autorouterBoxes[objId], newBox);
 
         //Resize Ports Based on Connections
-        i = portIds !== undefined ? portIds.length : 0;
-        while( i-- ){
-            this._updatePort( objId, portIds[i] );
-        }
+        //This has been removed as the idList will refresh the connections to the given ports 
+        //on the next redraw; this will add the relevant ports
+        //
+        //i = portIds !== undefined ? portIds.length : 0;
+        //while( i-- ){
+            //this._updatePort( objId, portIds[i] );
+        //}
 
     };
 
