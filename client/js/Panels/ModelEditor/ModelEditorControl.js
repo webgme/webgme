@@ -404,6 +404,8 @@ define(['logManager',
                     orderedItemEvents.push(e);
                 }
 
+            } else if (this.currentNodeInfo.id === e.eid) {
+                orderedItemEvents.push(e);
             }
 
         }
@@ -636,6 +638,9 @@ define(['logManager',
                     this._checkComponentDependency(gmeID, CONSTANTS.TERRITORY_EVENT_LOAD);
                 }
             }
+        } else {
+            //currently opened node
+            this._updateSheetName(objD.name);
         }
 
         return territoryChanged;
@@ -655,9 +660,7 @@ define(['logManager',
             //the updated object is the parent whose children are displayed here
             //the interest about the parent is:
             // - name change
-            this.designerCanvas.setTitle(objDesc.name);
-            this.designerCanvas.setBackgroundText(objDesc.name, {'font-size': BACKGROUND_TEXT_SIZE,
-                'color': BACKGROUND_TEXT_COLOR });
+            this._updateSheetName(objDesc.name);
         } else {
             if (objDesc) {
                 if (objDesc.parentId === this.currentNodeInfo.id) {
@@ -735,6 +738,12 @@ define(['logManager',
         }
     };
 
+    ModelEditorControl.prototype._updateSheetName = function (name) {
+        this.designerCanvas.setTitle(name);
+        this.designerCanvas.setBackgroundText(name, {'font-size': BACKGROUND_TEXT_SIZE,
+            'color': BACKGROUND_TEXT_COLOR });
+    };
+
     ModelEditorControl.prototype._onUnload = function (gmeID) {
         var componentID,
             len,
@@ -762,8 +771,8 @@ define(['logManager',
 
         if (gmeID === this.currentNodeInfo.id) {
             //the opened model has been removed from territoy --> most likely deleted...
-            this.logger.debug('The currently opened model has been deleted --- GMEID: "' + this.currentNodeInfo.id + '"');
-            this.designerCanvas.setBackgroundText('The currently opened model has been deleted...', {'font-size': BACKGROUND_TEXT_SIZE,
+            this.logger.debug('The previously opened model does not exist... --- GMEID: "' + this.currentNodeInfo.id + '"');
+            this.designerCanvas.setBackgroundText('The previously opened model does not exist...', {'font-size': BACKGROUND_TEXT_SIZE,
                                                                                                      'color': BACKGROUND_TEXT_COLOR});
         } else {
             if (this._GmeID2ComponentID.hasOwnProperty(gmeID)) {
