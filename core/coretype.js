@@ -84,29 +84,19 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
             },child,basechild,node,relid);
         };
 
-		core._loadByPath = function(node, path) {
-			ASSERT(isValidNode(node));
-			return TASYNC.call(__loadBase, oldcore.loadByPath(node, path));
-		};
-        core.loadByPath = function(node,path) {
+        core.loadByPath = function(node,path){
             ASSERT(isValidNode(node));
-            //we have to completely override the coretree's loadByPath, to load every node properly
-            if(path === ""){
+            ASSERT(path === "" || path.charAt(0) === "/");
+            path = path.split("/");
+            return loadDescendantByPath(node, path, 1);
+        };
+        var loadDescendantByPath = function(node,pathArray,index){
+            if (node === null || index === pathArray.length) {
                 return node;
             }
-            var basePath = core.getPath(node);
-            var pathArray = path.split('/');
-            if(pathArray.length > 1 && pathArray[0] === ""){
-                pathArray = pathArray.splice(1);
-            }
-            var relid = pathArray.shift();
-            var child = core.loadChild(node,relid);
-            if(pathArray.length>0){
-                return TASYNC.call(core.loadByPath,child,'/'+pathArray.join('/'));
-            } else {
-                return TASYNC.call(function(c){
-                    return c;},child);
-            }
+
+            var child = core.loadChild(node, pathArray[index]);
+            return TASYNC.call(loadDescendantByPath, child, pathArray, index + 1);
         };
 
         core.loadPointer = function(node,name){
@@ -137,7 +127,8 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
                     console.log('!!! ISFALSENODE PLEASE CHECK PROJECT STRUCTURE !!!: ' + core.getPath(node));
                     var root = core.getRoot(node);
                     core.deleteNode(node);
-                    return TASYNC.call(function(){return null;},core.persist(root));
+                    //return TASYNC.call(function(){return null;},core.persist(root));
+                    return null;
                 } else {
                     return TASYNC.call(__loadBase2, node, oldcore.loadPointer(node, "base"));
                 }
