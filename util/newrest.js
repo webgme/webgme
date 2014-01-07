@@ -29,7 +29,8 @@ define([
                 'branches':'branches',
                 'commits':'commits',
                 'commit':'commit',
-                'node':'node'
+                'node':'node',
+                'dump':'dump'
             },
             _HTTPError = {
                 'badRequest':400,
@@ -66,6 +67,10 @@ define([
                         'node':{
                             'description':"Responds with the JSON representation of the pointed node. All related nodes are presented with JSON reference objects.",
                             'example': _parameters.baseUrl+'/node/projectName/rootHash/pathOfNode'
+                        },
+                        'dump':{
+                            'description':"Responds with the JSON representation of the pointed node. All sub-nodes are extracted and outer relations of the sub-tree represented by JSON reference objects.",
+                            'example': _parameters.baseUrl+'/dump/projectName/rootHash/pathOfNode'
                         }
                     }
                 }
@@ -162,6 +167,9 @@ define([
                 }
             });
         }
+        function dumpNode(projectName,rootHash,path,callback){
+
+        }
         function doGET(command,parameters,callback){
             switch(command){
                 case _commands.help:
@@ -181,6 +189,9 @@ define([
                     break;
                 case _commands.node:
                     printNode(parameters[0],URL.removeSpecialChars(parameters[1] || ""),URL.removeSpecialChars(parameters[2] || ""),callback);
+                    break;
+                case _commands.dump:
+                    dumpNode(parameters[0],URL.removeSpecialChars(parameters[1] || ""),URL.removeSpecialChars(parameters[2] || ""),callback);
                     break;
                 default:
                     printHelp(callback);

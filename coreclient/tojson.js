@@ -58,7 +58,7 @@ define([
         //children
         tArray = core.getChildrenRelids(node);
         for(i=0;i<tArray.length;i++){
-            var path = core.getPath(core.getParent(node)) || "";
+            var path = core.getPath(node) || "";
             //TODO this needs to be done in another way
             path = path === "root" ? "" : path;
             path += '/'+tArray[i];
