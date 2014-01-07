@@ -149,7 +149,7 @@ define(['js/Toolbar/ToolbarButton',
         li.data(TAB_ID, this._tabCounter + "");
         this._tabCounter += 1;
 
-        if (deletable === true) {
+        if (this._deleteTabs === true && deletable === true) {
             li.find('a').append($('<i class="icon-remove-circle"/>'));
             li.find('a').attr('title', 'Delete tab');
         }
