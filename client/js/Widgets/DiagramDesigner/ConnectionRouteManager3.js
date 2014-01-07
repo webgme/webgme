@@ -284,7 +284,6 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
                        'y2': newCoord.y2,
           'ConnectionAreas': [] },
             connAreas = designerItem.getConnectionAreas(objId, isEnd, connectionMetaInfo),
-            portIds = this._autorouterPorts[objId],
             i;
 
         //Create the new box connection areas
@@ -296,15 +295,6 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
 
         //Update Box 
         this.autorouter.setBox(this._autorouterBoxes[objId], newBox);
-
-        //Resize Ports Based on Connections
-        //This has been removed as the idList will refresh the connections to the given ports 
-        //on the next redraw; this will add the relevant ports
-        //
-        //i = portIds !== undefined ? portIds.length : 0;
-        //while( i-- ){
-            //this._updatePort( objId, portIds[i] );
-        //}
 
     };
 
@@ -337,7 +327,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         this._autorouterPorts[objId] = this._autorouterPorts[objId] === undefined ? [] : this._autorouterPorts[objId];
         
 
-        if( subCompId !== undefined /*&& this._autorouterBoxes[longid] === undefined */){
+        if( subCompId !== undefined ){
         //Add ports to our list of _autorouterBoxes and add the port to the respective box (if undefined, of course)
             var parentBox = this._autorouterBoxes[objId].box,
                 portdefinition = [],
