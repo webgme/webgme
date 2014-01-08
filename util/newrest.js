@@ -2,12 +2,14 @@ define([
     'core/core',
     'storage/serveruserstorage',
     'coreclient/tojson',
+    'coreclient/dump',
     'util/url',
     'logManager'
 ],function(
     Core,
     Storage,
     ToJson,
+    Dump,
     URL,
     logManager
     ){
@@ -168,7 +170,32 @@ define([
             });
         }
         function dumpNode(projectName,rootHash,path,callback){
-
+            _storage.openProject(projectName,function(err,project){
+                if(err){
+                    callback(_HTTPError.internalServerError,err);
+                } else {
+                    var core = new Core(project);
+                    core.loadRoot(rootHash,function(err,root){
+                        if(err){
+                            callback(_HTTPError.internalServerError,err);
+                        } else {
+                            core.loadByPath(root,path,function(err,node){
+                                if(err){
+                                    callback(_HTTPError.internalServerError,err);
+                                } else {
+                                    Dump(core,node,_parameters.baseUrl+'/dump/'+projectName+'/'+URL.addSpecialChars(rootHash),function(err,dump){
+                                        if(err){
+                                            callback(_HTTPError.internalServerError,err);
+                                        } else {
+                                            callback(_HTTPError.ok,dump);
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    });
+                }
+            });
         }
         function doGET(command,parameters,callback){
             switch(command){

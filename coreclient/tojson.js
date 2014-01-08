@@ -43,6 +43,8 @@ define([
         if(typeof core.getGuid === 'function'){
             jNode.GUID = core.getGuid(node);
         }
+        //RELID
+        jNode.RELID = core.getRelid(node);
         //registry entries
         tArray = core.getRegistryNames(node);
         for(i=0;i<tArray.length;i++){
