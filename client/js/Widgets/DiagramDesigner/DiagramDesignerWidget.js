@@ -76,11 +76,12 @@ define(['logManager',
                          'zoomUIControls': true
     };
 
-    DiagramDesignerWidget = function (container, params) {
-        var self = this;
+    DiagramDesignerWidget = function (container, par) {
+        var self = this,
+            params = {};
 
         //merge dfault values with the given parameters
-        params = _.extend(defaultParams, params);
+        _.extend(params, defaultParams, par);
 
         //create logger instance with specified name
         this.logger = logManager.create(params.loggerName);
