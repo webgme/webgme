@@ -498,10 +498,10 @@ define(['logManager'], function (logManager) {
             if( rect.ptInRect(start) || rect.ptInRect(end) )
                 return true;
 
-            return isLineMeetHLine(start, end, rect.left, rect.right - 1, rect.ceil) ||
-                   isLineMeetHLine(start, end, rect.left, rect.right - 1, rect.floor - 1) ||
-                   isLineMeetVLine(start, end, rect.ceil, rect.floor - 1, rect.left) ||
-                   isLineMeetVLine(start, end, rect.ceil, rect.floor - 1, rect.right - 1);
+            return isLineMeetHLine(start, end, rect.left, rect.right, rect.ceil) ||
+                   isLineMeetHLine(start, end, rect.left, rect.right, rect.floor) ||
+                   isLineMeetVLine(start, end, rect.ceil, rect.floor, rect.left) ||
+                   isLineMeetVLine(start, end, rect.ceil, rect.floor, rect.right);
         };
 
         var intersect = function (a1, a2, b1, b2){
@@ -631,8 +631,8 @@ define(['logManager'], function (logManager) {
             assert( rect instanceof ArRect, "ArHelper.getRectOuterCoord: rect instanceof ArRect FAILED. 'rect' is " + rect);
             var d = len ? len + 1 : 1,//BUFFER + 1, //How far to exit the box
                 t = rect.ceil - d,
-                r = rect.right + d - 1,
-                b = rect.floor + d - 1,
+                r = rect.right + d,
+                b = rect.floor + d,
                 l = rect.left - d;
 
             switch( dir )
@@ -1014,16 +1014,16 @@ define(['logManager'], function (logManager) {
         // cannot be in a corner of the rectangle.
         // NOTE: the right and floor used to be - 1. 
         var onWhichEdge = function (rect, point){
-            if( point.y === rect.ceil && rect.left < point.x && point.x < rect.right - 1 ) 
+            if( point.y === rect.ceil && rect.left < point.x && point.x < rect.right ) 
                 return Dir_Top;
 
-            if( point.y === rect.floor - 1 && rect.left < point.x && point.x < rect.right - 1 )
+            if( point.y === rect.floor && rect.left < point.x && point.x < rect.right )
                 return Dir_Bottom;
 
-            if( point.x === rect.left && rect.ceil < point.y && point.y < rect.floor - 1 )
+            if( point.x === rect.left && rect.ceil < point.y && point.y < rect.floor )
                 return Dir_Left;
 
-            if( point.x === rect.right - 1 && rect.ceil < point.y && point.y < rect.floor - 1 )
+            if( point.x === rect.right && rect.ceil < point.y && point.y < rect.floor )
                 return Dir_Right;
 
             return Dir_None;
@@ -1569,6 +1569,7 @@ if(DEBUG && ArPointList.length > 0){
             this.union = union;
             this.intersectAssign = intersectAssign;
             this.intersect = intersect;
+            this.touching = touching;
 
             this.getCenter = function(){
                 return { 'x': (this.left + this.right)/2, 'y': (this.ceil + this.floor)/2 };
@@ -1620,9 +1621,9 @@ if(DEBUG && ArPointList.length > 0){
                     pt = pt[0];
 
                 if( pt.x >= this.left &&
-                    pt.x < this.right &&
+                    pt.x <= this.right &&
                     pt.y >= this.ceil &&
-                    pt.y < this.floor)
+                    pt.y <= this.floor)
                     return true;
 
                 return false;
@@ -1818,6 +1819,10 @@ if(DEBUG && ArPointList.length > 0){
                 return resRect;
             }
 
+            function touching(rect){
+                return Math.max(rect.left, this.left) <= Math.min(rect.right, this.right)
+                && Math.max(rect.ceil, this.ceil) <= Math.min(rect.floor, this.floor);
+            }
         };
 
         var ArSize = function (x, y){
@@ -1950,9 +1955,9 @@ if(DEBUG && ArPointList.length > 0){
                 selfPoints = [];
                 selfPoints.push(new ArPoint(rect.getTopLeft()));
 
-                selfPoints.push(new ArPoint( rect.right - 1, rect.ceil));
-                selfPoints.push(new ArPoint(rect.right - 1, rect.floor - 1));
-                selfPoints.push(new ArPoint(rect.left, rect.floor - 1));
+                selfPoints.push(new ArPoint( rect.right, rect.ceil));
+                selfPoints.push(new ArPoint(rect.right, rect.floor));
+                selfPoints.push(new ArPoint(rect.left, rect.floor));
             }
 
             function deleteAllPorts(){
@@ -4765,7 +4770,7 @@ if(DEBUG && ArPointList.length > 0){
                                 ret2 = new ArPointListPath(),
                                 i;
 
-                            connectPoints(ret2, end, start, hintenddir, dir1);
+                            connectPoints(ret2, end, start, hintenddir, dir1, true);
                             i = ret2.getLength() - 1;
 
                             while( i-- > 1){
@@ -5425,7 +5430,7 @@ if(DEBUG && ArPointList.length > 0){
                             maxOverlap;
 
                         if( isHorizontal(startDir) ){
-                            minOverlap = Math.min(startRect.floor - 1, endRect.floor - 1);
+                            minOverlap = Math.min(startRect.floor, endRect.floor);
                             maxOverlap = Math.max(startRect.ceil, endRect.ceil);
 
                             var newY = (minOverlap + maxOverlap)/2;
@@ -5436,7 +5441,7 @@ if(DEBUG && ArPointList.length > 0){
                             tstEnd = new ArPoint(getRectOuterCoord(endPort.getOwner().getRect(), endDir), newEnd.y);
 
                         }else{
-                            minOverlap = Math.min(startRect.right - 1, endRect.right - 1);
+                            minOverlap = Math.min(startRect.right, endRect.right);
                             maxOverlap = Math.max(startRect.left, endRect.left);
 
                             var newX = (minOverlap + maxOverlap)/2;
@@ -5659,7 +5664,7 @@ if(DEBUG && ArPointList.length > 0){
 
                             while( k < groups[j].length ){ //Check all boxes in the given group
 
-                                if( groups[j][k] && !groups[j][k].rect.intersect( collection[i].rect ).isRectEmpty() ){
+                                if( groups[j][k] && groups[j][k].rect.touching( collection[i].rect ) ){
                                     //groups[j].push( collection[i] );
                                     overlaps.push(j);
                                     break;
@@ -6838,9 +6843,9 @@ pt = [pt];
                 selfPoints = [];
                 selfPoints.push(new ArPoint(rect.getTopLeft()));
 
-                selfPoints.push(new ArPoint( rect.right - 1, rect.ceil));
-                selfPoints.push(new ArPoint(rect.right - 1, rect.floor - 1));
-                selfPoints.push(new ArPoint(rect.left, rect.floor - 1));
+                selfPoints.push(new ArPoint( rect.right, rect.ceil));
+                selfPoints.push(new ArPoint(rect.right, rect.floor));
+                selfPoints.push(new ArPoint(rect.left, rect.floor));
             }
 
             function destroy(){
@@ -6997,16 +7002,16 @@ pt = [pt];
                     nearest = new ArFindNearestLine(point),
                     canHave = false;
             
-                if(this.canHaveStartEndPointOn(Dir_Top, isStart) && nearest.HLine(rect.left, rect.right - 1, rect.ceil))
+                if(this.canHaveStartEndPointOn(Dir_Top, isStart) && nearest.HLine(rect.left, rect.right, rect.ceil))
                     dir = Dir_Top;
 
-                if(this.canHaveStartEndPointOn(Dir_Right, isStart) && nearest.VLine(rect.ceil, rect.floor - 1, rect.right - 1))
+                if(this.canHaveStartEndPointOn(Dir_Right, isStart) && nearest.VLine(rect.ceil, rect.floor, rect.right))
                     dir = Dir_Right;
 
-                if(this.canHaveStartEndPointOn(Dir_Bottom, isStart) && nearest.HLine(rect.left, rect.right - 1, rect.floor - 1))
+                if(this.canHaveStartEndPointOn(Dir_Bottom, isStart) && nearest.HLine(rect.left, rect.right, rect.floor))
                     dir = Dir_Bottom;
 
-                if(this.canHaveStartEndPointOn(Dir_Left, isStart) && nearest.VLine(rect.ceil, rect.floor - 1, rect.left ))
+                if(this.canHaveStartEndPointOn(Dir_Left, isStart) && nearest.VLine(rect.ceil, rect.floor, rect.left ))
                     dir = Dir_Left;
                 
                 assert(isRightAngle(dir), "ArPort.createStartEndPointAt: isRightAngle(dir) FAILED!");
@@ -7017,7 +7022,7 @@ pt = [pt];
                 if( point.x < rect.left )
                     point.x = rect.left;
                 else if(rect.right <= point.x)
-                    points.x = rect.right - 1;
+                    points.x = rect.right;
 
                 if( point.y < rect.ceil )
                     point.y = rect.ceil;
@@ -7031,11 +7036,11 @@ pt = [pt];
                     break;  
 
                 case Dir_Right:
-                    point.x = rect.right - 1;
+                    point.x = rect.right;
                     break;
                 
                 case Dir_Bottom:
-                    point.y = rect.floor - 1;
+                    point.y = rect.floor;
                     break;
 
                 case Dir_Left:
@@ -7048,8 +7053,8 @@ pt = [pt];
 
             function roundToHalfGrid(left, right){
                 // I added a checking condition to make sure that the rounding will not yield a value outside of the left, right values
-                var btwn = (left + right - 1)/2;//btwn < Math.max(left, right - 1) && btwn > Math.min(left, right - 1) ? btwn : (left + right - 1)/2;
-                assert(btwn < Math.max(left, right - 1) && btwn > Math.min(left, right - 1), "roundToHalfGrid: btwn variable not between left, right values. Perhaps box/connectionArea is too small?"); 
+                var btwn = (left + right)/2;//btwn < Math.max(left, right) && btwn > Math.min(left, right) ? btwn : (left + right)/2;
+                assert(btwn < Math.max(left, right) && btwn > Math.min(left, right), "roundToHalfGrid: btwn variable not between left, right values. Perhaps box/connectionArea is too small?"); 
                 return btwn;
             }
 
@@ -7064,13 +7069,13 @@ pt = [pt];
                     return new ArPoint(roundToHalfGrid(rect.left, rect.right), rect.ceil);
 
                 case Dir_Bottom:
-                    return new ArPoint(roundToHalfGrid(rect.left, rect.right), rect.floor - 1);
+                    return new ArPoint(roundToHalfGrid(rect.left, rect.right), rect.floor);
 
                 case Dir_Left:
                     return new ArPoint(rect.left, roundToHalfGrid(rect.ceil, rect.floor));
                 }
 
-                return new ArPoint(rect.right - 1, roundToHalfGrid(rect.ceil, rect.floor));
+                return new ArPoint(rect.right, roundToHalfGrid(rect.ceil, rect.floor));
             }
 
             function createStartEndPointTo(point, dir){
@@ -7079,8 +7084,8 @@ pt = [pt];
                     dy = point.y - this.getCenter().y,
                     pathAngle = Math.atan2(-dy, dx),
                     k = 0,
-                    maxX = rect.right - 1,
-                    maxY = rect.floor - 1,
+                    maxX = rect.right,
+                    maxY = rect.floor,
                     minX = rect.left,
                     minY = rect.ceil,
                     resultPoint,
@@ -7099,16 +7104,16 @@ pt = [pt];
 
                     case Dir_Right:
                         pathAngle = 2 * Math.PI - pathAngle;
-                        x = rect.right - 1;
+                        x = rect.right;
                         y = roundToHalfGrid(rect.ceil, rect.floor);
-                        minX = rect.right - 1;
+                        minX = rect.right;
                         break;
 
                     case Dir_Bottom:
                         pathAngle -= Math.PI/2;
                         x = roundToHalfGrid(rect.left, rect.right);
-                        y = rect.floor - 1;
-                        minY = rect.floor - 1;
+                        y = rect.floor;
+                        minY = rect.floor;
                         break;
 
                     case Dir_Left:
