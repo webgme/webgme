@@ -93,21 +93,6 @@ define([
         }
     };
     var checkForInternalReferences = function(dumpObject){
-        if(isRefObject(dumpObject)){
-            var path = getRefObjectPath(dumpObject);
-            if(isSubordinate(path)){
-                dumpObject = pathToRelRefObject(path);
-            }
-        } else {
-            //we have to go deeper
-            for(var i in dumpObject){
-                if(typeof dumpObject[i] === 'object'){
-                    checkForInternalReferences(dumpObject[i]);
-                }
-            }
-        }
-    };
-    checkForInternalReferences = function(dumpObject){
         if(typeof dumpObject === 'object'){
             for(var i in dumpObject){
                 if(typeof dumpObject[i] === 'object'){

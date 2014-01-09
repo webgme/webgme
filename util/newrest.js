@@ -161,7 +161,14 @@ define([
                                 if(err){
                                     callback(_HTTPError.internalServerError,err);
                                 } else {
-                                    callback(_HTTPError.ok,ToJson(core,node,_parameters.baseUrl+'/node/'+projectName+'/'+URL.addSpecialChars(rootHash)));
+                                    //callback(_HTTPError.ok,ToJson(core,node,_parameters.baseUrl+'/node/'+projectName+'/'+URL.addSpecialChars(rootHash)));
+                                    ToJson(core,node,_parameters.baseUrl+'/node/'+projectName+'/'+URL.addSpecialChars(rootHash),'url',function(err,jNode){
+                                        if(err){
+                                            callback(_HTTPError.internalServerError,err);
+                                        } else {
+                                            callback(_HTTPError.ok,jNode);
+                                        }
+                                    });
                                 }
                             });
                         }

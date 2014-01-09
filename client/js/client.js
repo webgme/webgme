@@ -12,7 +12,9 @@ define([
     'storage/commit',
     'logManager',
     'util/url',
-    'coreclient/metaforgui'
+    'coreclient/metaforgui',
+    'coreclient/tojson',
+    'coreclient/dump'
 ],
     function (
         ASSERT,
@@ -28,7 +30,9 @@ define([
         Commit,
         LogManager,
         URL,
-        META
+        META,
+        ToJson,
+        Dump
         ) {
 
         function COPY(object){
@@ -1900,14 +1904,9 @@ define([
                 //ASSERT(_nodes[_id]);
 
                 var printData = function(){
-                    //TODO - what to print here - now we use as testing method...
-                    console.log('printing info of node '+_id);
-                    console.log('not implemented');
-                    console.log('printing info of node '+_id+' done');
-
-                    //testfunction placeholder
-
-                    console.log(_core.isMemberOf(_nodes[_id].node));
+                    //probably we will still use it for test purposes, but now it goes officially into printing the node's json representation
+                    var jNode = ToJson(_core,_nodes[_id].node,"",'path');
+                    console.log(jNode);
                 };
 
                 if(_nodes[_id]){
@@ -1975,6 +1974,17 @@ define([
                 });
             }
 
+            //export and import functions
+            function dumpObjectAsync(path,callback){
+                if(_nodes[path]){
+                    //Dump(_core,_nodes[path])
+                } else {
+                    callback('unknown object',null);
+                }
+            }
+            function importObjectAsync(){
+
+            }
             //initialization
             function initialize(){
                 _database = newDatabase();
