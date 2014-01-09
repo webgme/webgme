@@ -4687,8 +4687,8 @@ if(DEBUG && ArPointList.length > 0){
                     path.addTail(endpoint);
 
                     if (isAutoRouted) {
-                        path.simplifyTrivially(); 
                         simplifyPathCurves(path);
+                        path.simplifyTrivially(); 
                         simplifyPathPoints(path);
                         centerStairsInPathPoints(path, startdir, enddir);
                     }
