@@ -181,7 +181,7 @@ define([
         var gHash = {},
             pointerNames = core.getPointerNames(node),
             collectionNames = core.getCollectionNames(node),
-            needed = pointerNames+collectionNames,
+            needed = pointerNames.length+collectionNames.length,
             error = null;
         if(needed > 0){
             //pointers
@@ -307,6 +307,7 @@ define([
         var needed = 4,
             error = null;
         getChildrenOfNode(core,node,urlPrefix,refType,function(err,children){
+            console.log('kecso','children',err);
             error = error || err;
             jNode.children = children;
             if(--needed === 0){
@@ -314,6 +315,7 @@ define([
             }
         });
         getMetaOfNode(core,node,urlPrefix,refType,function(err,meta){
+            console.log('kecso','meta',err);
             error = error || err;
             jNode.meta = meta;
             if(--needed === 0){
@@ -321,6 +323,7 @@ define([
             }
         });
         getPointersOfNode(core,node,urlPrefix,refType,function(err,pointers){
+            console.log('kecso','pointers',err);
             error = error || err;
             for(var i in pointers){
                 jNode.pointers[i] = pointers[i];
@@ -330,6 +333,7 @@ define([
             }
         });
         getSetsOfNode(core,node,urlPrefix,refType,function(err,sets){
+            console.log('kecso','sets',err);
             error = error || err;
             for(var i in sets){
                 jNode.pointers[i] = sets[i];

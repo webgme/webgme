@@ -161,7 +161,6 @@ define([
                                 if(err){
                                     callback(_HTTPError.internalServerError,err);
                                 } else {
-                                    //callback(_HTTPError.ok,ToJson(core,node,_parameters.baseUrl+'/node/'+projectName+'/'+URL.addSpecialChars(rootHash)));
                                     ToJson(core,node,_parameters.baseUrl+'/node/'+projectName+'/'+URL.addSpecialChars(rootHash),'url',function(err,jNode){
                                         if(err){
                                             callback(_HTTPError.internalServerError,err);
@@ -190,11 +189,18 @@ define([
                                 if(err){
                                     callback(_HTTPError.internalServerError,err);
                                 } else {
-                                    Dump(core,node,_parameters.baseUrl+'/dump/'+projectName+'/'+URL.addSpecialChars(rootHash),function(err,dump){
+                                    /*Dump(core,node,_parameters.baseUrl+'/dump/'+projectName+'/'+URL.addSpecialChars(rootHash),function(err,dump){
                                         if(err){
                                             callback(_HTTPError.internalServerError,err);
                                         } else {
                                             callback(_HTTPError.ok,dump);
+                                        }
+                                    });*/
+                                    ToJson(core,node,_parameters.baseUrl+'/node/'+projectName+'/'+URL.addSpecialChars(rootHash),'guid',function(err,jNode){
+                                        if(err){
+                                            callback(_HTTPError.internalServerError,err);
+                                        } else {
+                                            callback(_HTTPError.ok,jNode);
                                         }
                                     });
                                 }
