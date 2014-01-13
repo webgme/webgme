@@ -7,8 +7,14 @@ define([
     ToJson,
     URL
     ){
+    var _refTypes = {
+        'url':'url',
+        'path':'path',
+        'guid':'guid'
+    };
     var _cache = {};
     var _rootPath = "";
+    var _refType = 'url';
     var isRefObject = function(obj){
         if(obj && obj['$ref']){
             return true;
@@ -17,12 +23,23 @@ define([
     };
     var getRefObjectPath = function(obj){
         if(isRefObject(obj) === true){
-            var url = obj['$ref'];
-            if(url === null){
-                return null;
+            var refValue = obj['$ref'];
+            switch(_refType){
+                case _refTypes.url:
+                    if(refValue === null){
+                        return null;
+                    }
+                    refValue = refValue.split('/');
+                    return URL.removeSpecialChars(refValue[refValue.length-1]);
+                    break;
+                case _refTypes.path:
+                case _refTypes.guid:
+                    return refValue;
+                    break;
+                default:
+                    return null;
             }
-            url = url.split('/');
-            return URL.removeSpecialChars(url[url.length-1]);
+
         } else {
             return null;
         }
@@ -52,38 +69,36 @@ define([
                     if(children === null || children === undefined || ! children.length > 0){
                         callback(new Error('invalid children info found'));
                     } else {
-                        //first we insert the children into our dump and updates our cache
-                        var indexmap = [];
-                        for(var i=0;i<dumpObject.children.length;i++){
-                            indexmap.push(0);
-                        }
-                        for(var i=0;i<children.length;i++){
-                            var childDump = ToJson(core,children[i],urlPrefix);
-                            if(childDump){
-                                var childPath = core.getPath(children[i]);
-                                //TODO this needs to be done in another way
-                                childPath = childPath === "root" ? "" : childPath;
-                                //we should found where we should put it
-                                for(var j=0;j<dumpObject.children.length;j++){
-                                    if(childPath === getRefObjectPath(dumpObject.children[j])){
-                                        _cache[childPath] = relPath+'/children['+j+']';
-                                        dumpObject.children[j] = childDump;
-                                        indexmap[j] = i;
+                        var setChildJson = function(child,cb){
+                            ToJson(core,child,urlPrefix,_refType,function(err,jChild){
+                                if(err){
+                                    cb(err);
+                                } else {
+                                    if(jChild){
+                                        var childRelPath,
+                                            childPath = core.getPath(child);
+                                        for(var j=0;j<dumpObject.children.length;j++){
+                                            if(childPath === getRefObjectPath(dumpObject.children[j])){
+                                                childRelPath = relPath+'/children['+j+']';
+                                                _cache[childPath] = childRelPath;
+                                                dumpObject.children[j] = jChild;
+                                                break;
+                                            }
+                                        }
+                                        dumpChildren(core,child,dumpObject.children[j],urlPrefix,childRelPath,cb);
                                     }
                                 }
-                            }
-                        }
-
-                        //now comes the recursive call time
-                        var error = null;
-                        var internalReturn = function(err){
-                            error = error || err;
-                            if(--needed === 0){
-                                callback(err);
-                            }
+                            })
                         };
-                        for(var i=0;i<dumpObject.children.length;i++){
-                            dumpChildren(core,children[indexmap[i]],dumpObject.children[i],urlPrefix,relPath+'/children['+i+']',internalReturn);
+                        var error = null;
+
+                        for(var i=0;i<children.length;i++){
+                            setChildJson(children[i],function(err){
+                                error = error || err;
+                                if(--needed === 0){
+                                    callback(error);
+                                }
+                            })
                         }
                     }
                 }
@@ -108,23 +123,30 @@ define([
             }
         }
     };
-    var dumpJsonNode = function(core,node,urlPrefix,callback){
+    var dumpJsonNode = function(core,node,urlPrefix,refType,callback){
         _cache = {};
         _rootPath = core.getPath(node);
+        _refType = refType;
+
         //TODO this needs to be done in another way
         _rootPath = _rootPath === "root" ? "" : _rootPath;
-        var jDump = ToJson(core,node,urlPrefix);
-        if(jDump){
-            _cache[_rootPath] = "#";
-        }
-        dumpChildren(core,node,jDump,urlPrefix,_cache[_rootPath],function(err){
+        ToJson(core,node,urlPrefix,_refType,function(err,jDump){
             if(err){
-                callback(err);
+                callback(err,null);
             } else {
-                checkForInternalReferences(jDump);
-                callback(null,jDump);
+                if(jDump){
+                    _cache[_rootPath] = "#";
+                }
+                dumpChildren(core,node,jDump,urlPrefix,_cache[_rootPath],function(err){
+                    if(err){
+                        callback(err);
+                    } else {
+                        checkForInternalReferences(jDump);
+                        callback(null,jDump);
+                    }
+                });
             }
-        })
+        });
     };
 
     return dumpJsonNode;

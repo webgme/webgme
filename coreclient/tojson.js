@@ -151,31 +151,82 @@ define([
         }
     };
     var getSetsOfNode = function(core,node,urlPrefix,refType,callback){
-        callback(null,{});
-        /*//sets
-        tArray = core.getSetNames(node);
-        t2Array = core.isMemberOf(node);
-        for(j in t2Array){
-            for(i=0;i<t2Array[j].length;i++){
-                if(tArray.indexOf(t2Array[j][i]) === -1){
-                    tArray.push(t2Array[j][i]);
+        var setsInfo = {};
+        var createOneSetInfo = function(setName,callback){
+            var needed,
+                members = core.getMemberPaths(node,setName),
+                info = {from:[],to:[]},
+                i,
+                error = null,
+                containers = [];
+
+            for(i in memberOfInfo){
+                if(memberOfInfo[i].indexOf(setName) !== -1){
+                    containers.push(core.toActualPath(i));
+                }
+            }
+
+            needed = members.length + containers.length;
+            if(needed > 0){
+                for(i=0;i<members.length;i++){
+                    pathToRefObjAsync(refType,urlPrefix,members[i],core,core.getRoot(node),function(err,refObj){
+                        error = error || err;
+                        if(refObj !== undefined && refObj !== null){
+                            info.to.push(refObj);
+                        }
+
+                        if(--needed === 0){
+                            if(error === null){
+                                setsInfo[setName] = info;
+                            }
+                            callback(error);
+                        }
+                    });
+                }
+
+                for(i=0;i<containers.length;i++){
+                    pathToRefObjAsync(refType,urlPrefix,containers[i],core,core.getRoot(node),function(err,refObj){
+                        error = error || err;
+                        if(refObj !== undefined && refObj !== null){
+                            info.from.push(refObj);
+                        }
+
+                        if(--needed === 0){
+                            if(error === null){
+                                setsInfo[setName] = info;
+                            }
+                            callback(error);
+                        }
+                    });
+                }
+            } else {
+                callback(null);
+            }
+        };
+
+        var tArray = core.getSetNames(node),
+            memberOfInfo = core.isMemberOf(node),
+            i, j, needed, error = null;
+        for(j in memberOfInfo){
+            for(i=0;i<memberOfInfo[j].length;i++){
+                if(tArray.indexOf(memberOfInfo[j][i]) === -1){
+                    tArray.push(memberOfInfo[j][i]);
                 }
             }
         }
-
-        for(i=0;i<tArray.length;i++){
-            var pointer = {to:[],from:[]};
-            var members = core.getMemberPaths(node,tArray[i]);
-            for(j=0;j<members.length;j++){
-                pointer.to.push(pathToRefObj(refType,urlPrefix,members[j]));
+        needed = tArray.length;
+        if(needed>0){
+            for(i=0;i<tArray.length;i++){
+                createOneSetInfo(tArray[i],function(err){
+                    error = error || err;
+                    if(--needed === 0){
+                        callback(error,setsInfo);
+                    }
+                })
             }
-            for(j in t2Array){
-                if(t2Array[j].indexOf(tArray[i]) !== -1){
-                    pointer.from.push(pathToRefObj(refType,urlPrefix,core.toActualPath(j)));
-                }
-            }
-            jNode['pointers'][tArray[i]] = pointer;
-        }*/
+        } else {
+            callback(null,setsInfo);
+        }
     };
     var getPointersGUIDs = function(core,node,callback){
         var gHash = {},
@@ -307,7 +358,6 @@ define([
         var needed = 4,
             error = null;
         getChildrenOfNode(core,node,urlPrefix,refType,function(err,children){
-            console.log('kecso','children',err);
             error = error || err;
             jNode.children = children;
             if(--needed === 0){
@@ -315,7 +365,6 @@ define([
             }
         });
         getMetaOfNode(core,node,urlPrefix,refType,function(err,meta){
-            console.log('kecso','meta',err);
             error = error || err;
             jNode.meta = meta;
             if(--needed === 0){
@@ -323,7 +372,6 @@ define([
             }
         });
         getPointersOfNode(core,node,urlPrefix,refType,function(err,pointers){
-            console.log('kecso','pointers',err);
             error = error || err;
             for(var i in pointers){
                 jNode.pointers[i] = pointers[i];
@@ -333,7 +381,6 @@ define([
             }
         });
         getSetsOfNode(core,node,urlPrefix,refType,function(err,sets){
-            console.log('kecso','sets',err);
             error = error || err;
             for(var i in sets){
                 jNode.pointers[i] = sets[i];
