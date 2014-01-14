@@ -10,7 +10,7 @@ define(['logManager'], function (logManager) {
          CONNECTIONCUSTOMIZATIONDATAVERSION = 0,
          EMPTYCONNECTIONCUSTOMIZATIONDATAMAGIC = -1,
          DEBUG =  false,
-         BUFFER = 10,
+         BUFFER = 5,
 
          EDLS_S = ED_SMALLGAP,
          EDLS_R = ED_SMALLGAP + 1, 
@@ -7547,8 +7547,10 @@ pt = [pt];
             endDir = a.endDirection || a.end,
             path;
     
-        assert(src instanceof AutoRouterBox || src instanceof AutoRouterPort || src.ports[0] instanceof AutoRouterPort, "AutoRouter.addPath: src is not recognized as an AutoRouterPort");
-        assert(dst instanceof AutoRouterBox || dst instanceof AutoRouterPort || dst.ports[0] instanceof AutoRouterPort, "AutoRouter.addPath: dst is not recognized as an AutoRouterPort");
+        assert(src instanceof AutoRouterBox || src instanceof AutoRouterPort 
+                    || src instanceof Array || src.ports[0] instanceof AutoRouterPort, "AutoRouter.addPath: src is not recognized as an AutoRouterPort");
+        assert(dst instanceof AutoRouterBox || dst instanceof AutoRouterPort 
+                    || dst instanceof Array || dst.ports[0] instanceof AutoRouterPort, "AutoRouter.addPath: dst is not recognized as an AutoRouterPort");
         if( src.ports || dst.ports
                 || src instanceof Array || dst instanceof Array ){ //If there are multiple port possibilities
             var srcPorts = src.ports || src,
