@@ -202,14 +202,32 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
             dstObjId = canvas.connectionEndIDs[connId].dstObjId,
             dstSubCompId = canvas.connectionEndIDs[connId].dstSubCompId,
             sId = srcSubCompId ? srcObjId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + srcSubCompId : srcObjId,
-            tId = dstSubCompId ? dstObjId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + dstSubCompId : dstObjId;
+            tId = dstSubCompId ? dstObjId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + dstSubCompId : dstObjId,
+            connMetaInfo = canvas.items[connId].getMetaInfo(),
+            srcConnAreas = canvas.items[srcObjId].getConnectionAreas(srcSubCompId, false, connMetaInfo),
+            dstConnAreas = canvas.items[dstObjId].getConnectionAreas(dstSubCompId, true, connMetaInfo),
+            srcPorts = [],
+            dstPorts = [],
+            j;
 
         this._updatePort(srcObjId, srcSubCompId);//Adding ports for connection
         this._updatePort(dstObjId, dstSubCompId);
+
+        //Get available ports for this connection
+        j = srcConnAreas.length;
+        while(j--){
+            srcPorts.push(this._autorouterBoxes[sId].ports[srcConnAreas[j].id]);
+        }
+        
+        j = dstConnAreas.length;
+        while(j--){
+            dstPorts.push(this._autorouterBoxes[tId].ports[dstConnAreas[j].id]);
+        }
+
         //If it has both a src and dst
         if( this._autorouterBoxes[sId].ports.length !== 0 && this._autorouterBoxes[tId].ports.length !== 0 ){
-            this._autorouterPaths[connId] = this.autorouter.addPath({ "src": this._autorouterBoxes[sId],
-                                                                               "dst": this._autorouterBoxes[tId] });
+            this._autorouterPaths[connId] = this.autorouter.addPath({ "src": srcPorts,
+                                                                      "dst": dstPorts });
         }
 
      };
@@ -222,7 +240,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
             boxdefinition,
             connectionMetaInfo,
             isEnd,
-            j;
+            j = 0;
 
         designerItem = canvas.items[objId];
         bBox = designerItem.getBoundingBox();
@@ -239,10 +257,10 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
             "ConnectionAreas": []
         };
 
-        j = areas.length;
-        while (j--) {
+        while (j < areas.length) {
             //Building up the ConnectionAreas object
             boxdefinition.ConnectionAreas.push([ [ areas[j].x1, areas[j].y1 ], [ areas[j].x2, areas[j].y2 ] ]);
+            j++;
         }
 
         this._autorouterBoxes[objId] = this.autorouter.addBox(boxdefinition);
