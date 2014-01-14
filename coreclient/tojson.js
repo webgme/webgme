@@ -11,22 +11,7 @@ define([
         'path':'path',
         'guid':'guid'
     };
-    /*var changeRefObjects = function(refType,urlPrefix,object){
-        if(typeof object === 'object' && object !== null){
-            if(object['$ref']){
-                //the object is a reference
-                object = pathToRefObj(refType,urlPrefix,object['$ref'].substring(1));
-            } else {
-                //recursive call to the members of the non-reference object
-                for(var i in object){
-                    if(object[i] !== null){
-                        object[i] = changeRefObjects(refType,urlPrefix,object[i]);
-                    }
-                }
-            }
-        }
-        return object;
-    };*/
+
     var changeRefObjects = function(refType,urlPrefix,object,core,root,callback){
         if(typeof object === 'object'){
             var needed = 0,
@@ -348,11 +333,7 @@ define([
         for(i=0;i<tArray.length;i++){
             jNode['attributes'][tArray[i]] = core.getAttribute(node,tArray[i]);
         }
-        //registry entries
-        tArray = core.getRegistryNames(node);
-        for(i=0;i<tArray.length;i++){
-            jNode['registry'][tArray[i]] = core.getAttribute(node,tArray[i]);
-        }
+
 
         //now calling the relational parts
         var needed = 4,

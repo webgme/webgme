@@ -14,7 +14,8 @@ define([
     'util/url',
     'coreclient/metaforgui',
     'coreclient/tojson',
-    'coreclient/dump'
+    'coreclient/dump',
+    'coreclient/import'
 ],
     function (
         ASSERT,
@@ -32,7 +33,8 @@ define([
         URL,
         META,
         ToJson,
-        Dump
+        Dump,
+        Import
         ) {
 
         function COPY(object){
@@ -1985,7 +1987,17 @@ define([
             }
 
             function importNodeAsync(parentPath,callback){
-
+                var node = null;
+                if(_nodes[parentPath]){
+                    node = _nodes[parentPath].node;
+                }
+                Import(_core,_node[path].node,function(err){
+                    if(err){
+                        callback(err);
+                    } else {
+                        saveRoot('importNode under '+parentPath);
+                    }
+                });
             }
             //initialization
             function initialize(){
