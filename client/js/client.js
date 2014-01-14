@@ -1905,8 +1905,9 @@ define([
 
                 var printData = function(){
                     //probably we will still use it for test purposes, but now it goes officially into printing the node's json representation
-                    var jNode = ToJson(_core,_nodes[_id].node,"",'path');
-                    console.log(jNode);
+                    ToJson(_core,_nodes[_id].node,"",'guid',function(err,jNode){
+                        console.log('node in JSON format[status = ',err,']:',jNode);
+                    });
                 };
 
                 if(_nodes[_id]){
@@ -1975,14 +1976,15 @@ define([
             }
 
             //export and import functions
-            function dumpObjectAsync(path,callback){
+            function dumpNodeAsync(path,callback){
                 if(_nodes[path]){
-                    //Dump(_core,_nodes[path])
+                    Dump(_core,_node[path].node,"",'guid',callback);
                 } else {
                     callback('unknown object',null);
                 }
             }
-            function importObjectAsync(){
+
+            function importNodeAsync(parentPath,callback){
 
             }
             //initialization
@@ -2129,6 +2131,10 @@ define([
                 getValidAttributeNames   : META.getValidAttributeNames,
                 getOwnValidAttributeNames: META.getOwnValidAttributeNames,
                 //end of META functions
+
+                //JSON functions
+                dumpNodeAsync: dumpNodeAsync,
+                importNodeAsync: importNodeAsync,
 
                 //constraint
                 setConstraint: setConstraint,
