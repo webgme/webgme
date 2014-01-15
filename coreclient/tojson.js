@@ -135,12 +135,35 @@ define([
             callback(null,children);
         }
     };
+    var getSetAttributesAndRegistry = function(core,node,setName,setOwnerPath,callback){
+        var path = core.getPath(node);
+        core.loadByPath(core.getRoot(node),setOwnerPath,function(err,owner){
+            if(err){
+                callback(err);
+            } else {
+                if(owner){
+                    var atrAndReg = {attributes:{},registry:{}};
+                    var names = core.getMemberAttributeNames(owner,setName,path);
+                    for(var i=0;i<names.length;i++){
+                        atrAndReg.attributes[names[i]] = core.getMemberAttribute(owner,setName,path,names[i]);
+                    }
+                    names = core.getMemberRegistryNames(owner,setName,path);
+                    for(var i=0;i<names.length;i++){
+                        atrAndReg.registry[names[i]] = core.getMemberRegistry(owner,setName,path,names[i]);
+                    }
+                    callback(null,atrAndReg);
+                } else {
+                    callback('internal error',null);
+                }
+            }
+        });
+    };
     var getSetsOfNode = function(core,node,urlPrefix,refType,callback){
         var setsInfo = {};
         var createOneSetInfo = function(setName,callback){
             var needed,
                 members = core.getMemberPaths(node,setName),
-                info = {from:[],to:[]},
+                info = {from:[],to:[],attributes:{},registry:{}},
                 i,
                 error = null,
                 containers = [];
@@ -170,18 +193,26 @@ define([
                 }
 
                 for(i=0;i<containers.length;i++){
-                    pathToRefObjAsync(refType,urlPrefix,containers[i],core,core.getRoot(node),function(err,refObj){
+                    getSetAttributesAndRegistry(core,node,setName,containers[i],function(err,atrAndReg){
                         error = error || err;
-                        if(refObj !== undefined && refObj !== null){
-                            info.from.push(refObj);
+                        if(atrAndReg){
+                            info.attributes[containers[i]] = atrAndReg.attributes;
+                            info.registry[containers[i]] = atrAndReg.registry;
                         }
-
-                        if(--needed === 0){
-                            if(error === null){
-                                setsInfo[setName] = info;
+                        
+                        pathToRefObjAsync(refType,urlPrefix,containers[i],core,core.getRoot(node),function(err,refObj){
+                            error = error || err;
+                            if(refObj !== undefined && refObj !== null){
+                                info.from.push(refObj);
                             }
-                            callback(error);
-                        }
+
+                            if(--needed === 0){
+                                if(error === null){
+                                    setsInfo[setName] = info;
+                                }
+                                callback(error);
+                            }
+                        });
                     });
                 }
             } else {
