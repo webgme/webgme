@@ -1986,12 +1986,12 @@ define([
                 }
             }
 
-            function importNodeAsync(parentPath,callback){
+            function importNodeAsync(parentPath,jNode,callback){
                 var node = null;
                 if(_nodes[parentPath]){
                     node = _nodes[parentPath].node;
                 }
-                Import(_core,_node[path].node,function(err){
+                Import(_core,_nodes[path].node,jNode,function(err){
                     if(err){
                         callback(err);
                     } else {
