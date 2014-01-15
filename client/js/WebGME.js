@@ -10,6 +10,7 @@ define(['logManager',
     'js/client',
     'clientUtil',
     'js/Utils/GMEConcepts',
+    'js/Utils/GMEVisualConcepts',
     'js/LayoutManager/LayoutManager',
     'js/Decorators/DecoratorManager',
     'js/KeyboardManager/KeyboardManager',
@@ -22,6 +23,7 @@ define(['logManager',
                                             Client,
                                             util,
                                             GMEConcepts,
+                                            GMEVisualConcepts,
                                             LayoutManager,
                                             DecoratorManager,
                                             KeyboardManager,
@@ -58,6 +60,7 @@ define(['logManager',
             WebGMEHistory.setClient(client);
 
             GMEConcepts.initialize(client);
+            GMEVisualConcepts.initialize(client);
 
             METAAspectHelper.initialize(client);
 
