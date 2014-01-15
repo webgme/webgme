@@ -58,6 +58,7 @@ define(['logManager',
     ExportDialog.prototype._doExport = function () {
         var self = this,
             actualBranchName = this._client.getActualBranch(),
+            projectName = this._client.getActiveProject(),
             exportSourceNodeID = WebGMEGlobal.PanelManager.getActivePanel().getNodeID(),
             loader;
 
@@ -82,7 +83,7 @@ define(['logManager',
             //start export
             this._client.dumpNodeAsync(exportSourceNodeID, function (err, result) {
                 var content = JSON.stringify(result, null, 2);
-                var fileName = nodeName + "_" + actualBranchName + ".WebGME.json";
+                var fileName = projectName + "_" + actualBranchName + "_" + nodeName + ".WebGME.json";
                 if (err) {
                     self._exportErrorLabel.text(err);
                     self._exportErrorLabel.show();
