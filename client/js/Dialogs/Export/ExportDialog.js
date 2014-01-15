@@ -3,10 +3,12 @@
 define(['logManager',
     'loaderCircles',
     'text!html/Dialogs/Export/ExportDialog.html',
-    'js/NodePropertyNames'], function (logManager,
+    'js/NodePropertyNames',
+    'codemirror'], function (logManager,
                                          LoaderCircles,
                                          exportDialogTemplate,
-                                         nodePropertyNames) {
+                                         nodePropertyNames,
+                                         CodeMirror) {
 
     var ExportDialog;
 
@@ -89,8 +91,16 @@ define(['logManager',
                     self._exportErrorLabel.show();
                 } else {
                     self._makeFullScreen();
-                    self._txtExport.text(content);
                     self._txtExport.show();
+
+                    self._codeMirror = CodeMirror(self._txtExport[0], {
+                        value: content,
+                        mode:  "javascript",
+                        readOnly: "true"
+                    });
+
+                    self._dialog.find('.CodeMirror').css('height','100%');
+
                     self._btnDownload.removeClass("disabled");
                     self._btnDownload.on('click', function (event) {
                         event.stopPropagation();
@@ -101,6 +111,11 @@ define(['logManager',
                         pom.setAttribute('download', fileName);
                         pom.click();
                     });
+
+                    setTimeout(function () {
+                        self._codeMirror.refresh();
+                        self._codeMirror.focus();
+                    }, 10);
                 }
 
                 loader.stop();
