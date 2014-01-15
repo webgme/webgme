@@ -1991,7 +1991,7 @@ define([
                 if(_nodes[parentPath]){
                     node = _nodes[parentPath].node;
                 }
-                Import(_core,_nodes[path].node,jNode,function(err){
+                Import(_core,_nodes[parentPath].node,jNode,function(err){
                     if(err){
                         callback(err);
                     } else {
