@@ -1980,7 +1980,7 @@ define([
             //export and import functions
             function dumpNodeAsync(path,callback){
                 if(_nodes[path]){
-                    Dump(_core,_node[path].node,"",'guid',callback);
+                    Dump(_core,_nodes[path].node,"",'guid',callback);
                 } else {
                     callback('unknown object',null);
                 }
