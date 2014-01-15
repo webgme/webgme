@@ -1,0 +1,27 @@
+<div class="import-dialog modal hide fade">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">×</button>
+        <h3>Import...</h3>
+    </div>
+    <div class="modal-body">
+        <fieldset>
+            <legend>Import target</legend>
+            <div class="alert alert-info" style="text-align: center;font-weight: bold;">&nbsp;</div>
+        </fieldset>
+        <fieldset class="fs-selectfile">
+            <legend>File to import</legend>
+            <input type="file" id="fileInput" accept=".json">
+            <div class="file-drop-target">
+                Select a file or drop one here...
+            </div>
+        </fieldset>
+        <fieldset class="fs-message">
+            <div class="alert alert-error" style="margin-top:5px; text-align: center;font-weight: bold;">
+                Something went wrong with the import...
+            </div>
+        </fieldset>
+    </div>
+    <div class="modal-footer">
+        <a href="#" class="btn btn-import">Import...</a>
+    </div>
+</div>
