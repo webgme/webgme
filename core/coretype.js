@@ -84,64 +84,43 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
             },child,basechild,node,relid);
         };
 
-		core._loadByPath = function(node, path) {
-			ASSERT(isValidNode(node));
-			return TASYNC.call(__loadBase, oldcore.loadByPath(node, path));
-		};
-        core.loadByPath = function(node,path) {
+        core.loadByPath = function(node,path){
             ASSERT(isValidNode(node));
-            //we have to completely override the coretree's loadByPath, to load every node properly
-            if(path === ""){
+            ASSERT(path === "" || path.charAt(0) === "/");
+            path = path.split("/");
+            return loadDescendantByPath(node, path, 1);
+        };
+        var loadDescendantByPath = function(node,pathArray,index){
+            if (node === null || index === pathArray.length) {
                 return node;
             }
-            var basePath = core.getPath(node);
-            var pathArray = path.split('/');
-            if(pathArray.length > 1 && pathArray[0] === ""){
-                pathArray = pathArray.splice(1);
-            }
-            var relid = pathArray.shift();
-            var child = core.loadChild(node,relid);
-            if(pathArray.length>0){
-                return TASYNC.call(core.loadByPath,child,'/'+pathArray.join('/'));
-            } else {
-                return TASYNC.call(function(c){
-                    return c;},child);
-            }
+
+            var child = core.loadChild(node, pathArray[index]);
+            return TASYNC.call(loadDescendantByPath, child, pathArray, index + 1);
         };
 
+        //TODO the pointer loading is totally based upon the loadByPath...
         core.loadPointer = function(node,name){
-            var pointer = TASYNC.call(__loadBase,oldcore.loadPointer(node, name));
-            var base = core.getBase(node);
-            var basepointer = null;
-            if(base){
-                basepointer = TASYNC.call(__loadBase,oldcore.loadPointer(base, name));
-            }
-            return TASYNC.call(function(p,bp,n,nm){
-                var done = null;
-                if(p === null){
-                    if(bp !== null){
-                        core.setPointer(n,nm,bp);
-                        done = core.persist(core.getRoot(n));
-                        p = bp;
-                    }
-                }
-                return TASYNC.call(function(pointer){return pointer;},p,done);
-            },pointer,basepointer,node,relid);
+            var pointerPath = core.getPointerPath(node,name);
+            return TASYNC.call(core.loadByPath,core.getRoot(node),pointerPath);
         };
 
 		function __loadBase(node) {
-			ASSERT(typeof node.base === "undefined" || typeof node.base === "object");
+			ASSERT(node === null || typeof node.base === "undefined" || typeof node.base === "object");
 
 			if (typeof node.base === "undefined") {
                 if(isFalseNode(node)){
                     console.log('!!! ISFALSENODE PLEASE CHECK PROJECT STRUCTURE !!!: ' + core.getPath(node));
                     var root = core.getRoot(node);
                     core.deleteNode(node);
-                    return TASYNC.call(function(){return null;},core.persist(root));
+                    //return TASYNC.call(function(){return null;},core.persist(root));
+                    return null;
                 } else {
                     return TASYNC.call(__loadBase2, node, oldcore.loadPointer(node, "base"));
                 }
-			} else {
+			} else if(node === null){
+                return node; //TODO we have to check if it can be allowed or we have to make the nullpointer otherwise
+            } else {
                 var oldpath = core.getPath(node.base);
                 var newpath = core.getPointerPath(node,"base");
                 if(oldpath !== newpath){
@@ -197,28 +176,17 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
             },TASYNC.lift(children));
         };
 
-
-        core.loadCollection = function(node, name) {
-			ASSERT(isValidNode(node));
-			return TASYNC.call(__loadBaseArray, oldcore.loadCollection(node, name));
-		};
-
-		function __loadBaseArray(nodes) {
-			ASSERT(nodes instanceof Array);
-
-			for ( var i = 0; i < nodes.length; ++i)
-				nodes[i] = __loadBase(nodes[i]);
-
-			return TASYNC.call(function(n){
-                var newn = [];
-                for(var i=0; i<n.length;i++){
-                    if(n[i] !== null){
-                        newn.push(n[i]);
-                    }
-                }
-                return newn;
-            },TASYNC.lift(nodes));
-		}
+        //TODO now the collection pathes doesn't take any kind of inheritance into account...
+        core.loadCollection = function(node,name) {
+            var paths = core.getCollectionPaths(node,name);
+            var nodes = [];
+            for(var i=0;i<paths.length;i++){
+                nodes[i] = TASYNC.call(function(p){
+                    return core.loadByPath(core.getRoot(node),p);
+                },paths[i]);
+            }
+            return TASYNC.lift(nodes);
+        };
 
 		// ----- creation
 
@@ -423,7 +391,6 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 			return value;
 		};
 
-        // -------- kecso
         core.setBase = function(node,base){
             ASSERT(isValidNode(node) && (base === undefined || base === null || isValidNode(base)));
             ASSERT(!base || core.getPath(core.getParent(node)) !== core.getPath(base));

@@ -144,7 +144,7 @@ define(['js/Constants',
                 "angle1": 90,
                 "angle2": 90,
                 "len": LEN} );
-        } else {
+        } else if (this._ports[id]) {
             //subcomponent
             var portConnArea = this._ports[id].getConnectorArea(),
                 idx = this._portIDs.indexOf(id);

@@ -96,7 +96,6 @@ define(['https','http' ],function(HTTPS,HTTP){
                     callback(null,data);
                 });
             }).on('error',function(err){
-                    console.log('kecso',err);
                     callback(err);
                 });
         }

@@ -59,7 +59,7 @@ requirejs(['logManager',
     logManager.setLogLevel(logLevel);
     logManager.useColors(true);
     logManager.setFileLogPath(logFile);
-    var logger = logManager.create("combined-server");
+    var logger = logManager.create("enhancedServer");
     var iologger = logManager.create("socket.io");
     var sitekey = null;
     var sitecertificate = null;
@@ -291,4 +291,22 @@ requirejs(['logManager',
     storage = Storage(__storageOptions);
 
     storage.open();
+
+    //debug information
+    if(parameters.debug === true){
+        console.log('parameters of webgme server:');
+        console.log(parameters);
+    }
+    var networkIfs = require('os').networkInterfaces();
+    for(var dev in networkIfs){
+        networkIfs[dev].forEach(function(netIf){
+            if(netIf.family === 'IPv4'){
+                var address = parameters.httpsecure ? 'https' : 'http' + '://' + netIf.address + ':' + parameters.port
+                logger.info(address);
+                if(parameters.debug === true){
+                    console.log('valid address of webgme server: '+address);
+                }
+            }
+        });
+    }
 });

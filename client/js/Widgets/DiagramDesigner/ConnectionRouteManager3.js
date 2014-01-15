@@ -95,10 +95,12 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
     };
 
     ConnectionRouteManager3.prototype.redrawConnections = function (idList) {
-        var i = idList.length;
 
-        if( !this._initialized )
+        if( !this._initialized ){
             this._initializeGraph();
+        }else{
+            this._refreshConnData(idList);
+        }
 
         this._updateConnectionPorts( idList );
 
@@ -106,7 +108,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         //not just the ones that explicitly needs rerouting
         idList = this.diagramDesigner.connectionIds.slice(0);
 
-        i = idList.length;
+        var i = idList.length;
 
         //1 - autoroute
         this.autorouter.autoroute();
@@ -115,7 +117,12 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         var pathPoints,
             realPathPoints;
         for (i = 0; i < idList.length; i += 1) {
-            pathPoints = this.autorouter.getPathPoints(this._autorouterPaths[idList[i]]);
+            if( this._autorouterPaths[idList[i]] ){
+                pathPoints = this.autorouter.getPathPoints(this._autorouterPaths[idList[i]]);
+            }else{
+                pathPoints = [];
+            }
+
             realPathPoints = [];
             for(var j = 0; j < pathPoints.length; j++){
                 realPathPoints.push({'x': pathPoints[j][0], 'y': pathPoints[j][1] });
@@ -128,6 +135,19 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         //redrawn or any other visual property changed (width, etc)
 
         return idList;
+    };
+
+    ConnectionRouteManager3.prototype._refreshConnData = function (idList) {
+        //Clear connection data and paths then re-add them
+        var i = idList.length;
+
+        while(i--){
+            this.deleteItem(idList[i]);
+            //this.autorouter.remove(this._autorouterPaths[idList[i]]);
+            //this._autorouterPaths[idList[i]] = undefined;
+            this.insertConnection([idList[i]]);
+        }
+
     };
 
     ConnectionRouteManager3.prototype._clearGraph = function () {
@@ -182,12 +202,34 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
             dstObjId = canvas.connectionEndIDs[connId].dstObjId,
             dstSubCompId = canvas.connectionEndIDs[connId].dstSubCompId,
             sId = srcSubCompId ? srcObjId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + srcSubCompId : srcObjId,
-            tId = dstSubCompId ? dstObjId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + dstSubCompId : dstObjId;
+            tId = dstSubCompId ? dstObjId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + dstSubCompId : dstObjId,
+            connMetaInfo = canvas.items[connId].getMetaInfo(),
+            srcConnAreas = canvas.items[srcObjId].getConnectionAreas(srcSubCompId, false, connMetaInfo),
+            dstConnAreas = canvas.items[dstObjId].getConnectionAreas(dstSubCompId, true, connMetaInfo),
+            srcPorts = [],
+            dstPorts = [],
+            j;
 
         this._updatePort(srcObjId, srcSubCompId);//Adding ports for connection
         this._updatePort(dstObjId, dstSubCompId);
-        this._autorouterPaths[connId] = this.autorouter.addPath({ "src": this._autorouterBoxes[sId],
-                                                                           "dst": this._autorouterBoxes[tId] });
+
+        //Get available ports for this connection
+        j = srcConnAreas.length;
+        while(j--){
+            srcPorts.push(this._autorouterBoxes[sId].ports[srcConnAreas[j].id]);
+        }
+        
+        j = dstConnAreas.length;
+        while(j--){
+            dstPorts.push(this._autorouterBoxes[tId].ports[dstConnAreas[j].id]);
+        }
+
+        //If it has both a src and dst
+        if( this._autorouterBoxes[sId].ports.length !== 0 && this._autorouterBoxes[tId].ports.length !== 0 ){
+            this._autorouterPaths[connId] = this.autorouter.addPath({ "src": srcPorts,
+                                                                      "dst": dstPorts });
+        }
+
      };
 
     ConnectionRouteManager3.prototype.insertBox = function (objId) {
@@ -198,7 +240,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
             boxdefinition,
             connectionMetaInfo,
             isEnd,
-            j;
+            j = 0;
 
         designerItem = canvas.items[objId];
         bBox = designerItem.getBoundingBox();
@@ -215,10 +257,10 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
             "ConnectionAreas": []
         };
 
-        j = areas.length;
-        while (j--) {
+        while (j < areas.length) {
             //Building up the ConnectionAreas object
             boxdefinition.ConnectionAreas.push([ [ areas[j].x1, areas[j].y1 ], [ areas[j].x2, areas[j].y2 ] ]);
+            j++;
         }
 
         this._autorouterBoxes[objId] = this.autorouter.addBox(boxdefinition);
@@ -260,7 +302,6 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
                        'y2': newCoord.y2,
           'ConnectionAreas': [] },
             connAreas = designerItem.getConnectionAreas(objId, isEnd, connectionMetaInfo),
-            portIds = this._autorouterPorts[objId],
             i;
 
         //Create the new box connection areas
@@ -272,12 +313,6 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
 
         //Update Box 
         this.autorouter.setBox(this._autorouterBoxes[objId], newBox);
-
-        //Resize Ports Based on Connections
-        i = portIds !== undefined ? portIds.length : 0;
-        while( i-- ){
-            this._updatePort( objId, portIds[i] );
-        }
 
     };
 
@@ -310,7 +345,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         this._autorouterPorts[objId] = this._autorouterPorts[objId] === undefined ? [] : this._autorouterPorts[objId];
         
 
-        if( subCompId !== undefined && this._autorouterBoxes[longid] === undefined ){
+        if( subCompId !== undefined ){
         //Add ports to our list of _autorouterBoxes and add the port to the respective box (if undefined, of course)
             var parentBox = this._autorouterBoxes[objId].box,
                 portdefinition = [],
@@ -321,7 +356,9 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
             portdefinition.push([ [ res[j].x1, res[j].y1 ], [ res[j].x2, res[j].y2 ] ]);
         }
             this._autorouterBoxes[longid] = { "ports": this.autorouter.addPort(parentBox, portdefinition) };
-            this._autorouterPorts[objId].push(subCompId);
+
+            if(this._autorouterPorts[objId].indexOf(subCompId) === -1)
+                this._autorouterPorts[objId].push(subCompId);
         }
      };
 

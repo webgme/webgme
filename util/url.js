@@ -24,6 +24,9 @@ define(function(){
         return text;
     }
     function addSpecialChars(text){
+        if(text === undefined){
+            return text;
+        }
         text = text.replace(/#/g,'%23');
         text = text.replace(/\//g,'%2F');
         return text;

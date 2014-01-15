@@ -2,12 +2,14 @@ define([
     'core/core',
     'storage/serveruserstorage',
     'coreclient/tojson',
+    'coreclient/dump',
     'util/url',
     'logManager'
 ],function(
     Core,
     Storage,
     ToJson,
+    Dump,
     URL,
     logManager
     ){
@@ -29,7 +31,8 @@ define([
                 'branches':'branches',
                 'commits':'commits',
                 'commit':'commit',
-                'node':'node'
+                'node':'node',
+                'dump':'dump'
             },
             _HTTPError = {
                 'badRequest':400,
@@ -66,6 +69,10 @@ define([
                         'node':{
                             'description':"Responds with the JSON representation of the pointed node. All related nodes are presented with JSON reference objects.",
                             'example': _parameters.baseUrl+'/node/projectName/rootHash/pathOfNode'
+                        },
+                        'dump':{
+                            'description':"Responds with the JSON representation of the pointed node. All sub-nodes are extracted and outer relations of the sub-tree represented by JSON reference objects.",
+                            'example': _parameters.baseUrl+'/dump/projectName/rootHash/pathOfNode'
                         }
                     }
                 }
@@ -154,7 +161,41 @@ define([
                                 if(err){
                                     callback(_HTTPError.internalServerError,err);
                                 } else {
-                                    callback(_HTTPError.ok,ToJson(core,node,_parameters.baseUrl+'/node/'+projectName+'/'+URL.addSpecialChars(rootHash)));
+                                    ToJson(core,node,_parameters.baseUrl+'/node/'+projectName+'/'+URL.addSpecialChars(rootHash),'url',function(err,jNode){
+                                        if(err){
+                                            callback(_HTTPError.internalServerError,err);
+                                        } else {
+                                            callback(_HTTPError.ok,jNode);
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        }
+        function dumpNode(projectName,rootHash,path,callback){
+            _storage.openProject(projectName,function(err,project){
+                if(err){
+                    callback(_HTTPError.internalServerError,err);
+                } else {
+                    var core = new Core(project);
+                    core.loadRoot(rootHash,function(err,root){
+                        if(err){
+                            callback(_HTTPError.internalServerError,err);
+                        } else {
+                            core.loadByPath(root,path,function(err,node){
+                                if(err){
+                                    callback(_HTTPError.internalServerError,err);
+                                } else {
+                                    Dump(core,node,_parameters.baseUrl+'/dump/'+projectName+'/'+URL.addSpecialChars(rootHash),'url',function(err,dump){
+                                        if(err){
+                                            callback(_HTTPError.internalServerError,err);
+                                        } else {
+                                            callback(_HTTPError.ok,dump);
+                                        }
+                                    });
                                 }
                             });
                         }
@@ -181,6 +222,9 @@ define([
                     break;
                 case _commands.node:
                     printNode(parameters[0],URL.removeSpecialChars(parameters[1] || ""),URL.removeSpecialChars(parameters[2] || ""),callback);
+                    break;
+                case _commands.dump:
+                    dumpNode(parameters[0],URL.removeSpecialChars(parameters[1] || ""),URL.removeSpecialChars(parameters[2] || ""),callback);
                     break;
                 default:
                     printHelp(callback);

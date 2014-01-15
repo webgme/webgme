@@ -12,7 +12,10 @@ define([
     'storage/commit',
     'logManager',
     'util/url',
-    'coreclient/metaforgui'
+    'coreclient/metaforgui',
+    'coreclient/tojson',
+    'coreclient/dump',
+    'coreclient/import'
 ],
     function (
         ASSERT,
@@ -28,7 +31,10 @@ define([
         Commit,
         LogManager,
         URL,
-        META
+        META,
+        ToJson,
+        Dump,
+        Import
         ) {
 
         function COPY(object){
@@ -1384,11 +1390,9 @@ define([
                     //collecting nodes under tempFrom
                     var tempFrom = _core.createNode({parent:_nodes[parameters.parentId].node,base:null});
                     for(var i=0;i<pathsToCopy.length;i++){
-                        console.log('kecso',001,pathsToCopy[i]);
                         if(_nodes[pathsToCopy[i]] && typeof _nodes[pathsToCopy[i]].node === 'object'){
                             returnParameters[pathsToCopy[i]] = {'1stparent':_core.getParent(_nodes[pathsToCopy[i]].node),'1st':_core.moveNode(_nodes[pathsToCopy[i]].node,tempFrom)};
                             returnParameters[pathsToCopy[i]]['1strelid'] = _core.getRelid(returnParameters[pathsToCopy[i]]['1st']);
-                            console.log('kecso',002,pathsToCopy[i],returnParameters[pathsToCopy[i]]['1strelid']);
                         }
                     }
                     var tempTo = _core.createNode({parent:_nodes[parameters.parentId].node, base:tempFrom});
@@ -1404,11 +1408,9 @@ define([
                     delete tempFrom;
 
                     for(var i in returnParameters){
-                        console.log('kecso',003,i);
                         var child = _core.getChild(tempTo,returnParameters[i]['1strelid']);
                         var finalNode = _core.moveNode(child,_nodes[parameters.parentId].node);
                         returnParameters[i] = storeNode(finalNode);
-                        console.log('kecso',004,i,returnParameters[i]);
                         if(parameters[i]){
                             for(var j in parameters[i].attributes){
                                 _core.setAttribute(finalNode,j,parameters[i].attributes[j]);
@@ -1715,9 +1717,11 @@ define([
                         var missing = 0;
                         var error = null;
                         var allDone = function(){
-                            _users[guid].PATTERNS = JSON.parse(JSON.stringify(patterns));
-                            if(!error){
-                                userEvents(guid,[]);
+                            if(_users[guid]){
+                                _users[guid].PATTERNS = JSON.parse(JSON.stringify(patterns));
+                                if(!error){
+                                    userEvents(guid,[]);
+                                }
                             }
                         };
                         for(var i in patterns){
@@ -1906,14 +1910,10 @@ define([
                 //ASSERT(_nodes[_id]);
 
                 var printData = function(){
-                    //TODO - what to print here - now we use as testing method...
-                    console.log('printing info of node '+_id);
-                    console.log('not implemented');
-                    console.log('printing info of node '+_id+' done');
-
-                    //testfunction placeholder
-
-                    console.log(_core.isMemberOf(_nodes[_id].node));
+                    //probably we will still use it for test purposes, but now it goes officially into printing the node's json representation
+                    ToJson(_core,_nodes[_id].node,"",'guid',function(err,jNode){
+                        console.log('node in JSON format[status = ',err,']:',jNode);
+                    });
                 };
 
                 if(_nodes[_id]){
@@ -1981,6 +1981,28 @@ define([
                 });
             }
 
+            //export and import functions
+            function dumpNodeAsync(path,callback){
+                if(_nodes[path]){
+                    Dump(_core,_nodes[path].node,"",'guid',callback);
+                } else {
+                    callback('unknown object',null);
+                }
+            }
+
+            function importNodeAsync(parentPath,jNode,callback){
+                var node = null;
+                if(_nodes[parentPath]){
+                    node = _nodes[parentPath].node;
+                }
+                Import(_core,_nodes[parentPath].node,jNode,function(err){
+                    if(err){
+                        callback(err);
+                    } else {
+                        saveRoot('importNode under '+parentPath);
+                    }
+                });
+            }
             //initialization
             function initialize(){
                 _database = newDatabase();
@@ -2125,6 +2147,10 @@ define([
                 getValidAttributeNames   : META.getValidAttributeNames,
                 getOwnValidAttributeNames: META.getOwnValidAttributeNames,
                 //end of META functions
+
+                //JSON functions
+                dumpNodeAsync: dumpNodeAsync,
+                importNodeAsync: importNodeAsync,
 
                 //constraint
                 setConstraint: setConstraint,
