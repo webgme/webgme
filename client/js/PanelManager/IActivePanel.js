@@ -32,5 +32,10 @@ define([], function () {
         this.logger.warning('IActivePanel.prototype.onDeactivate IS NOT IMPLEMENTED!!!');
     };
 
+    IActivePanel.prototype.getNodeID = function () {
+        this.logger.warning('IActivePanel.prototype.getNodeID IS NOT IMPLEMENTED!!!');
+        return undefined;
+    };
+
     return IActivePanel;
 });

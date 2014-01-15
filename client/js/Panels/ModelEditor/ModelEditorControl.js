@@ -1062,6 +1062,10 @@ define(['logManager',
         this._toolbarInitialized = true;
     };
 
+    ModelEditorControl.prototype.getNodeID = function () {
+        return this.currentNodeInfo.id;
+    };
+
     //attach ModelEditorControl - DesignerCanvas event handler functions
     _.extend(ModelEditorControl.prototype, ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype);
 
