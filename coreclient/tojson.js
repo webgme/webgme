@@ -199,7 +199,7 @@ define([
                             info.attributes[containers[i]] = atrAndReg.attributes;
                             info.registry[containers[i]] = atrAndReg.registry;
                         }
-                        
+
                         pathToRefObjAsync(refType,urlPrefix,containers[i],core,core.getRoot(node),function(err,refObj){
                             error = error || err;
                             if(refObj !== undefined && refObj !== null){

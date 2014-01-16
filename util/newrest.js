@@ -189,7 +189,7 @@ define([
                                 if(err){
                                     callback(_HTTPError.internalServerError,err);
                                 } else {
-                                    Dump(core,node,_parameters.baseUrl+'/dump/'+projectName+'/'+URL.addSpecialChars(rootHash),'url',function(err,dump){
+                                    Dump(core,node,_parameters.baseUrl+'/dump/'+projectName+'/'+URL.addSpecialChars(rootHash),'guid',function(err,dump){
                                         if(err){
                                             callback(_HTTPError.internalServerError,err);
                                         } else {
