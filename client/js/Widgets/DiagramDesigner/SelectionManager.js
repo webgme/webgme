@@ -533,7 +533,8 @@ define(['logManager',
     /************* RENDER COMMAND BUTTONS ON SELECTION OUTLINE ************************/
     SelectionManager.prototype._renderSelectionActions = function () {
         var self = this,
-            deleteBtn;
+            deleteBtn,
+            contextMenuBtn;
 
         if (this._diagramDesigner.getIsReadOnlyMode() === true) {
             return;
@@ -548,6 +549,14 @@ define(['logManager',
             deleteBtn.html('<i class="icon-remove"></i>');
         }
 
+        //context menu
+        contextMenuBtn = $('<div/>', {
+            "class" : "s-btn contextmenu",
+            "command" : "contextmenu"
+        });
+        this._diagramDesigner.skinParts.$selectionOutline.append(contextMenuBtn);
+        contextMenuBtn.html('<i class="icon-list-alt"></i>');
+
         //detach mousedown handler on selection outline
         this._diagramDesigner.skinParts.$selectionOutline.off("mousedown").off("click", ".s-btn");
         this._diagramDesigner.skinParts.$selectionOutline.on("mousedown", function (event) {
@@ -556,7 +565,7 @@ define(['logManager',
             var command = $(this).attr("command");
             self.logger.debug("Selection button clicked with command: '" + command + "'");
 
-            self.onSelectionCommandClicked(command, self._selectedElements);
+            self.onSelectionCommandClicked(command, self._selectedElements, event);
 
             event.stopPropagation();
             event.preventDefault();
