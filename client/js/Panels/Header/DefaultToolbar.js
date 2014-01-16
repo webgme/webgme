@@ -7,17 +7,19 @@
 "use strict";
 
 define(['clientUtil',
+    'js/Constants',
     'js/Utils/METAAspectHelper',
+    'js/Utils/ExportManager',
     'js/Dialogs/Projects/ProjectsDialog',
     'js/Dialogs/Commit/CommitDialog',
     'js/Dialogs/ProjectRepository/ProjectRepositoryDialog',
-    'js/Dialogs/Export/ExportDialog',
     'js/Dialogs/Import/ImportDialog'], function (util,
+                                                 CONSTANTS,
                                                                        METAAspectHelper,
+                                                                       ExportManager,
                                                                        ProjectsDialog,
                                                                        CommitDialog,
                                                                        ProjectRepositoryDialog,
-                                                                       ExportDialog,
                                                                        ImportDialog) {
 
     var DefaultToolbar;
@@ -63,11 +65,10 @@ define(['clientUtil',
 
         //EXPORT & IMPORT
 
-        toolbar.addButton({ "title": "Export...",
+        var btnExport = toolbar.addButton({ "title": "Export project...",
             "icon": "icon-download",
-            "clickFn": function (/*data*/) {
-                var d = new ExportDialog(_client);
-                d.show();
+            "clickFn": function (data) {
+                ExportManager.export(CONSTANTS.PROJECT_ROOT_ID);
             } });
 
         toolbar.addButton({ "title": "Import...",

@@ -32,7 +32,8 @@ define([
                 'commits':'commits',
                 'commit':'commit',
                 'node':'node',
-                'dump':'dump'
+                'dump':'dump',
+                'etf': 'etf'
             },
             _HTTPError = {
                 'badRequest':400,
@@ -73,6 +74,10 @@ define([
                         'dump':{
                             'description':"Responds with the JSON representation of the pointed node. All sub-nodes are extracted and outer relations of the sub-tree represented by JSON reference objects.",
                             'example': _parameters.baseUrl+'/dump/projectName/rootHash/pathOfNode'
+                        },
+                        'etf':{
+                            'description':"Responds with the JSON representation of the pointed node. All sub-nodes are extracted and outer relations of the sub-tree represented by JSON reference objects. It forces file download.",
+                            'example': _parameters.baseUrl+'/etf/projectName/rootHash/pathOfNode/outputFileName'
                         }
                     }
                 }
@@ -224,6 +229,7 @@ define([
                     printNode(parameters[0],URL.removeSpecialChars(parameters[1] || ""),URL.removeSpecialChars(parameters[2] || ""),callback);
                     break;
                 case _commands.dump:
+                case _commands.etf:
                     dumpNode(parameters[0],URL.removeSpecialChars(parameters[1] || ""),URL.removeSpecialChars(parameters[2] || ""),callback);
                     break;
                 default:

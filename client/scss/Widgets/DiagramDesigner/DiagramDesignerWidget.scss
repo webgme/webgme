@@ -95,6 +95,11 @@ $tabs-container-height: 26px;
             bottom: -13px;
           }
         }
+
+        &.contextmenu {
+          bottom: -13px;
+          right: -13px;
+        }
       }
 
       .rotation-deg {

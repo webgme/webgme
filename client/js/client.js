@@ -1979,12 +1979,11 @@ define([
 
             //export and import functions
             function dumpNodeAsync(path,callback){
-                /*if(_nodes[path]){
+                if(_nodes[path]){
                     Dump(_core,_nodes[path].node,"",'guid',callback);
                 } else {
                     callback('unknown object',null);
-                }*/
-                console.log(getDumpURL(path));
+                }
             }
 
             function importNodeAsync(parentPath,jNode,callback){
@@ -2000,9 +1999,10 @@ define([
                     }
                 });
             }
-            function getDumpURL(path){
-                if(window && window.location && window.location.origin && _nodes && _nodes['root']){
-                    return window.location.origin+'/rest/dump/'+_projectName+'/'+URL.addSpecialChars(_core.getHash(_nodes['root'].node))+'/'+URL.addSpecialChars(path);
+            function getDumpURL(path,filepath){
+                filepath = filepath || _projectName+'_'+_branch+'_'+URL.addSpecialChars(path);
+                if(window && window.location && window.location && _nodes && _nodes['root']){
+                    return window.location.protocol + '//' + window.location.host +'/rest/etf/'+_projectName+'/'+URL.addSpecialChars(_core.getHash(_nodes['root'].node))+'/'+URL.addSpecialChars(path)+'/'+filepath;
                 }
                 return null;
             }
