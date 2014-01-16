@@ -398,7 +398,7 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
         return indent+"</"+jsonObject._type+">\n";
     }
     function createXMLStart(){
-        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE project SYSTEM \"mga.dtd\">\n\n"
+        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE project SYSTEM \"mga.dtd\">\n\n";
     }
 
     //new TASYNC compatible functions

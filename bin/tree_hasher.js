@@ -142,7 +142,7 @@ define([ "util/assert", "core/tasync", "util/common", "util/canon", "util/sha1" 
     function prettify(){
         var pretty = "printing the hashes of the tree:\n\n";
         pretty+=prettifyObject(theTree,"");
-        pretty+="\n\nprintout finished"
+        pretty+="\n\nprintout finished";
         return pretty;
     }
     function prettifyObject(treeObject,indent){

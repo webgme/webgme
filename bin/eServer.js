@@ -315,7 +315,7 @@ requirejs(['logManager',
     for(var dev in networkIfs){
         networkIfs[dev].forEach(function(netIf){
             if(netIf.family === 'IPv4'){
-                var address = parameters.httpsecure ? 'https' : 'http' + '://' + netIf.address + ':' + parameters.port
+                var address = parameters.httpsecure ? 'https' : 'http' + '://' + netIf.address + ':' + parameters.port;
                 logger.info(address);
                 if(parameters.debug === true){
                     console.log('valid address of webgme server: '+address);

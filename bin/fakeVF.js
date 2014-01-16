@@ -5,7 +5,7 @@ app.get('/',function(req,res){
     res.redirect('http://kecskes.isis.vanderbilt.edu');
 });
 app.get('/auth/webgme/get_user_info',function(req,res){
-    console.log(req.headers.cookie)
+    console.log(req.headers.cookie);
     res.write(JSON.stringify({
         fullName: 'vehicle forge user',
         username: 'vfuser',
@@ -13,13 +13,13 @@ app.get('/auth/webgme/get_user_info',function(req,res){
     }));
     res.send();
 });
-app.get('/auth/webgme/get_project_info',function(req,res){
+app.get('/auth/webgme/get_project_info', function(req,res){
     console.log('kecso',req.url,req.query['project_name']);
     res.write(JSON.stringify({
         permissions:{
             read : true,
             write : false,
-            delete: false
+            'delete': false
         }
     }));
     res.send();
