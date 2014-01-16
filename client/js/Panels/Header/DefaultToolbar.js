@@ -65,9 +65,9 @@ define(['clientUtil',
 
         //EXPORT & IMPORT
 
-        var btnExport = toolbar.addButton({ "title": "Export project...",
+        toolbar.addButton({ "title": "Export project...",
             "icon": "icon-download",
-            "clickFn": function (data) {
+            "clickFn": function (/*data*/) {
                 ExportManager.export(CONSTANTS.PROJECT_ROOT_ID);
             } });
 
