@@ -498,6 +498,8 @@ define(['logManager',
     DiagramDesignerWidget.prototype.clear = function () {
         var i;
 
+        this.setTitle('');
+
         this.selectionManager.clear(); 
 
         for (i in this.items) {
