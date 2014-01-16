@@ -121,24 +121,21 @@ define(['logManager',
 
     ImportDialog.prototype._fileSelectHandler = function (event) {
         var loader = this._loader,
-            importErrorLabel = this._importErrorLabel,
             btnImport = this._btnImport.addClass("disabled"),
             client = this._client,
-            importSourceNodeID = this._importSourceNodeID;
+            importSourceNodeID = this._importSourceNodeID,
+            self = this;
 
         // cancel event and hover styling
         event.stopPropagation();
         event.preventDefault();
         this._fileDropTarget.removeClass('hover');
 
-        importErrorLabel.removeClass('alert-success').addClass('alert-error');
         btnImport.addClass("disabled");
         btnImport.off('click');
 
         // fetch FileList object
         var files = event.target.files || event.dataTransfer.files;
-
-        this._importErrorLabel.hide();
 
         var parsedJSONFileContent = undefined;
 
@@ -146,8 +143,7 @@ define(['logManager',
         if (files && files.length > 0) {
             files = files[0];
             if (files.size > MAX_FILE_SIZE) {
-                this._importErrorLabel.text(files.name + ': File size is too big...');
-                this._importErrorLabel.show();
+                self._displayMessage(files.name + ': File size is too big...', true);
             } else {
                 //try to json parse it's content
                 var reader = new FileReader();
@@ -169,12 +165,9 @@ define(['logManager',
                     }
 
                     if (parsedJSONFileContent === undefined) {
-                        importErrorLabel.text(files.name + ': Invalid file format...');
-                        importErrorLabel.show();
+                        self._displayMessage(files.name + ': Invalid file format...', true);
                     } else {
-                        importErrorLabel.text(files.name + ': File has been parsed successfully, ready to import...');
-                        importErrorLabel.addClass('alert-success').removeClass('alert-error');
-                        importErrorLabel.show();
+                        self._displayMessage(files.name + ': File has been parsed successfully, ready to import...', false);
                         btnImport.removeClass("disabled");
                         btnImport.on('click', function (event) {
                             event.preventDefault();
@@ -182,11 +175,9 @@ define(['logManager',
 
                             client.importNodeAsync(importSourceNodeID, parsedJSONFileContent, function (err) {
                                if (err) {
-                                   importErrorLabel.text(files.name + ': Import failed: ' + err);
-                                   importErrorLabel.removeClass('alert-success').addClass('alert-error');
+                                   self._displayMessage(files.name + ': Import failed: ' + err, true);
                                } else {
-                                   importErrorLabel.text(files.name + ': Import successful...');
-                                   importErrorLabel.addClass('alert-success').removeClass('alert-error');
+                                   self._displayMessage(files.name + ': Import successful...', false);
                                }
                             });
                         });
@@ -196,9 +187,22 @@ define(['logManager',
                 reader.readAsText(files);
             }
         } else {
-            this._importErrorLabel.text('No file has been selected...');
-            this._importErrorLabel.show();
+            self._displayMessage('No file has been selected...', true);
         }
+    };
+
+    ImportDialog.prototype._displayMessage = function (msg, isError) {
+        this._importErrorLabel.removeClass('alert-success').removeClass('alert-error');
+
+        if (isError === true) {
+            this._importErrorLabel.addClass('alert-error');
+        } else {
+            this._importErrorLabel.addClass('alert-success');
+        }
+        
+        this._importErrorLabel.text(msg);
+        this._importErrorLabel.hide();
+        this._importErrorLabel.fadeIn();
     };
 
     return ImportDialog;
