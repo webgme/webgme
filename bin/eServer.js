@@ -252,7 +252,21 @@ requirejs(['logManager',
                     res.send(500);
                 } else {
                     _REST.doRESTCommand(_REST.request.GET,command,parameters,function(httpStatus,object){
-                        res.json(httpStatus, object || null);
+                        if(command === _REST.command.etf){
+                            var filename = 'exportedNode.json';
+                            if(parameters[3]){
+                                filename = parameters[3];
+                            }
+                            if(filename.indexOf('.') === -1){
+                                filename += '.json';
+                            }
+                            res.header("Content-Type", "application/json");
+                            res.header("Content-Disposition", "attachment;filename=\""+filename+"\"");
+                            res.status(httpStatus);
+                            res.end(JSON.stringify(object));
+                        } else {
+                            res.json(httpStatus, object || null);
+                        }
                     });
                 }
             });

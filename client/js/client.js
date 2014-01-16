@@ -2000,9 +2000,10 @@ define([
                     }
                 });
             }
-            function getDumpURL(path){
+            function getDumpURL(path,filepath){
+                filepath = filepath || _projectName+'_'+_branch+'_'+URL.addSpecialChars(path)+'.json'
                 if(window && window.location && window.location.origin && _nodes && _nodes['root']){
-                    return window.location.origin+'/rest/dump/'+_projectName+'/'+URL.addSpecialChars(_core.getHash(_nodes['root'].node))+'/'+URL.addSpecialChars(path);
+                    return window.location.origin+'/rest/etf/'+_projectName+'/'+URL.addSpecialChars(_core.getHash(_nodes['root'].node))+'/'+URL.addSpecialChars(path)+'/'+filepath;
                 }
                 return null;
             }
