@@ -19,7 +19,7 @@ define([], function () {
         }
         var _core = {};
         for(var i in _innerCore){
-            _core[i] = _innerCore[i]
+            _core[i] = _innerCore[i];
         }
 
 
