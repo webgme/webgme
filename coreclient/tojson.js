@@ -170,7 +170,8 @@ define([
 
             for(i in memberOfInfo){
                 if(memberOfInfo[i].indexOf(setName) !== -1){
-                    containers.push(core.toActualPath(i));
+                    //containers.push(core.toActualPath(i)); kecso
+                    containers.push(i);
                 }
             }
 

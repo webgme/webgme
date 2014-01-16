@@ -2001,7 +2001,7 @@ define([
                 });
             }
             function getDumpURL(path){
-                if(window && window.location && window.location.origin){
+                if(window && window.location && window.location.origin && _nodes && _nodes['root']){
                     return window.location.origin+'/rest/dump/'+_projectName+'/'+URL.addSpecialChars(_core.getHash(_nodes['root'].node))+'/'+URL.addSpecialChars(path);
                 }
                 return null;
