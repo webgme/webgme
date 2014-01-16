@@ -32,7 +32,7 @@ define([
         var callbacks = _underImport[intPath] || [];
         delete _underImport[intPath];
         for(var i=0;i<callbacks.length;i++){
-            callbacks[i](node);
+            callbacks[i](null,node);
         }
     }
     function objectLoaded(error,node){
@@ -45,6 +45,14 @@ define([
         for(var i=0;i<callbacks.length;i++){
             callbacks[i](error,node);
         }
+    }
+    function isInternalReference(refObj){
+        if(refObj && typeof refObj['$ref'] === 'string'){
+            if(refObj['$ref'].indexOf('#') === 0){
+                return true;
+            }
+        }
+        return false;
     }
     function getReferenceNode(refObj,callback){
         //we allow the internal references and the
@@ -67,11 +75,25 @@ define([
                     _underImport[refObj['$ref']].push(callback);
                 } else {
                     _underImport[refObj['$ref']] = [callback];
-                    _core.loadByPath(_root,refObj['$ref'],objectLoaded);
+                    _core.loadByPath(_root,refObj['$ref'],function(err,node){
+                        if(err){
+                            return objectLoaded(err, null);
+                        }
+
+                        if(refObj['GUID']){
+                            if(refObj['GUID'] === _core.getGuid(node)){
+                                return objectLoaded(err,node);
+                            } else {
+                                return objectLoaded('GUID mismatch',node);
+                            }
+                        } else {
+                            return objectLoaded(err,node);
+                        }
+                    });
                 }
             }
         } else {
-            callback(null);
+            callback(null,null);
         }
     }
     function importChildren(node,jNode,pIntPath,callback){
@@ -111,13 +133,90 @@ define([
         }
     }
     function importPointer(node,jNode,pName,callback){
-        return callback(null);
+        if(jNode.pointers[pName].to && jNode.pointers[pName].from){
+            var needed = jNode.pointers[pName].to.length + jNode.pointers[pName].from.length,
+                i,
+                error = null;
+
+            for(i=0;i<jNode.pointers[pName].to.length;i++){
+                getReferenceNode(jNode.pointers[pName].to[i],function(err,target){
+                    error = error || err;
+                    if(target){
+                        _core.setPointer(node,pName,target);
+                    }
+
+                    if(--needed === 0){
+                        return callback(error);
+                    }
+                });
+            }
+
+            for(i=0;i<jNode.pointers[pName].from.length;i++){
+                if(!isInternalReference(jNode.pointers[pName].from[i])){
+                    getReferenceNode(jNode.pointers[pName].from[i],function(err,source){
+                        error = error || err;
+                        if(source){
+                            _core.setPointer(source,pName,node);
+                        }
+
+                        if(--needed === 0){
+                            return callback(error);
+                        }
+                    });
+                } else {
+                    if(--needed === 0){
+                        return callback(error);
+                    }
+                }
+            }
+
+        } else {
+            return callback(null);
+        }
     }
     function importSet(node,jNode,sName, callback){
         return callback(null);
     }
     function importRelations(node,jNode,callback){
-        return callback(null);
+        //TODO now we go with the pointer/registry with the dicision of pointer/set
+        var pointers = [],
+            sets = [],
+            needed = 0,
+            error = null,
+            i;
+        if(! typeof jNode.pointers === 'object'){
+            return callback(null); //TODO should we drop an error???
+        }
+        for(i in jNode.pointers){
+            if(jNode.pointers[i].attributes || jNode.pointers[i].registry){
+                sets.push(i);
+            } else {
+                pointers.push(i);
+            }
+        }
+
+        needed = sets.length + pointers.length;
+
+        if(needed > 0){
+            for(i=0;i<pointers.length;i++){
+                importPointer(node,jNode,pointers[i],function(err){
+                    error = error || err;
+                    if(--needed === 0){
+                        return callback(error);
+                    }
+                });
+            }
+            for(i=0;i<sets.length;i++){
+                importSet(node,jNode,sets[i],function(err){
+                    error = error || err;
+                    if(--needed === 0){
+                        return callback(error);
+                    }
+                });
+            }
+        } else {
+            return callback(null);
+        }
     }
     function importMeta(node,jNode,callback){
         return callback(null);
