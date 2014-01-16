@@ -12,11 +12,13 @@
 
 define(['jquery',
         'logManager',
+        'util/guid',
         'js/Constants',
         'js/NodePropertyNames',
         'js/Utils/METAAspectHelper',
         'js/Panels/MetaEditor/MetaEditorConstants'], function (_jquery,
                                                                logManager,
+                                                               generateGuid,
                                            CONSTANTS,
                                            nodePropertyNames,
                                            METAAspectHelper,
@@ -208,6 +210,20 @@ define(['jquery',
         //set META ASPECT to show FCO
         _client.addMember(CONSTANTS.PROJECT_ROOT_ID, FCO_ID, MetaEditorConstants.META_ASPECT_SET_NAME);
         _client.setMemberRegistry(CONSTANTS.PROJECT_ROOT_ID, FCO_ID, MetaEditorConstants.META_ASPECT_SET_NAME, MetaEditorConstants.META_ASPECT_MEMBER_POSITION_REGISTRY_KEY, {'x': 100, 'y': 100} );
+
+        //create a default MetaSheet
+        var defaultMetaSheetID = MetaEditorConstants.META_ASPECT_SHEET_NAME_PREFIX + generateGuid();
+        _client.createSet(CONSTANTS.PROJECT_ROOT_ID, defaultMetaSheetID);
+
+        var defaultMetaSheetDesc = {'SetID': defaultMetaSheetID,
+            'order': 0,
+            'title': 'META'};
+
+        _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, MetaEditorConstants.META_SHEET_REGISTRY_KEY, [defaultMetaSheetDesc]);
+
+        //add the FCO to the default META sheet
+        _client.addMember(CONSTANTS.PROJECT_ROOT_ID, FCO_ID, defaultMetaSheetID);
+        _client.setMemberRegistry(CONSTANTS.PROJECT_ROOT_ID, FCO_ID, defaultMetaSheetID, MetaEditorConstants.META_ASPECT_MEMBER_POSITION_REGISTRY_KEY, {'x': 100, 'y': 100} );
 
         _client.completeTransaction();
     };
