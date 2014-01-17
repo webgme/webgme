@@ -12,15 +12,13 @@ define(['clientUtil',
     'js/Utils/ExportManager',
     'js/Dialogs/Projects/ProjectsDialog',
     'js/Dialogs/Commit/CommitDialog',
-    'js/Dialogs/ProjectRepository/ProjectRepositoryDialog',
-    'js/Dialogs/Import/ImportDialog'], function (util,
+    'js/Dialogs/ProjectRepository/ProjectRepositoryDialog'], function (util,
                                                  CONSTANTS,
                                                                        METAAspectHelper,
                                                                        ExportManager,
                                                                        ProjectsDialog,
                                                                        CommitDialog,
-                                                                       ProjectRepositoryDialog,
-                                                                       ImportDialog) {
+                                                                       ProjectRepositoryDialog) {
 
     var DefaultToolbar;
 
@@ -69,13 +67,6 @@ define(['clientUtil',
             "icon": "icon-share",
             "clickFn": function (/*data*/) {
                 ExportManager.export(CONSTANTS.PROJECT_ROOT_ID);
-            } });
-
-        toolbar.addButton({ "title": "Import...",
-            "icon": "icon-upload",
-            "clickFn": function (/*data*/) {
-                var d = new ImportDialog(_client);
-                d.show();
             } });
 
         toolbar.addSeparator();
