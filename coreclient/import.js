@@ -239,7 +239,12 @@ define([
                     return callback(err);
                 }
 
-                importMeta(_root,jNode,callback);
+                importMeta(_root,jNode,function(err){
+                    if(err){
+                        return callback(err);
+                    }
+                    return callback(null,_root);
+                });
             });
         });
     }

@@ -2002,6 +2002,22 @@ define([
                     }
                 });
             }
+            function createProjectFromFileAsync(projectname,jNode,callback){
+                //if called on an existing project, it will ruin it!!! - although the old commits will be untouched
+                createProjectAsync(projectname,function(err){
+                    selectProjectAsync(projectname,function(err){
+                        Import(_core,null,jNode,function(err,root){
+                            if(err){
+                                callback(err);
+                            } else {
+                                _metaNodes[_core.getPath(root)] = root;
+                                _nodes[_core.getPath(root)] = {node:root,hash:""};
+                                saveRoot('import project from file',callback);
+                            }
+                        });
+                    });
+                });
+            }
             function getDumpURL(path,filepath){
                 filepath = filepath || _projectName+'_'+_branch+'_'+URL.addSpecialChars(path);
                 if(window && window.location && window.location && _nodes && _nodes['root']){
@@ -2157,6 +2173,7 @@ define([
                 //JSON functions
                 dumpNodeAsync: dumpNodeAsync,
                 importNodeAsync: importNodeAsync,
+                createProjectFromFileAsync: createProjectFromFileAsync,
                 getDumpURL: getDumpURL,
 
                 //constraint
