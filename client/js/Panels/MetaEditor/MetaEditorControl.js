@@ -1641,6 +1641,14 @@ define(['logManager',
             //get the most up-to-date member list for each set
             this._metaAspectMembersPerSheet[setName] = aspectNode.getMemberIds(setName);
 
+            //TODO: debug check to see if root for any reason is present among the members list
+            //TODO: remove, not needed, just for DEGUG reasons...
+            //TODO: it should never happen because it leads to double refresh when ROOT changes
+            //TODO: when onOneEvent will be eliminated this will not be an issue anymore
+            if (this._metaAspectMembersPerSheet[setName].indexOf(CONSTANTS.PROJECT_ROOT_ID) > -1) {
+                this.logger.error('ROOT is in MetaSet: ' + setName);
+            }
+
             //get the sheet coordinates
             this._metaAspectMembersCoordinatesPerSheet[setName] = {};
             j = this._metaAspectMembersPerSheet[setName].length;
