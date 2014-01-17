@@ -9,10 +9,12 @@ define(['logManager',
         'js/Utils/GMEConcepts',
         'js/NodePropertyNames',
         'js/Utils/ExportManager',
+        'js/Utils/ImportManager',
         'css!/css/Panels/ObjectBrowser/TreeBrowserControl'], function (logManager,
                                                                        GMEConcepts,
                                                                        nodePropertyNames,
-                                                                       ExportManager) {
+                                                                       ExportManager,
+                                                                       ImportManager) {
 
     var NODE_PROGRESS_CLASS = 'node-progress',
         GME_MODEL_CLASS = "gme-model",
@@ -275,6 +277,14 @@ define(['logManager',
                 "name": "Export object...",
                 "callback": function(/*key, options*/) {
                     ExportManager.export(nodeId);
+                },
+                "icon": false
+            };
+
+            menuItems["importNode"] = { // Import...
+                "name": "Import here...",
+                "callback": function(/*key, options*/) {
+                    ImportManager.import(nodeId);
                 },
                 "icon": false
             }
