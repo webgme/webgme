@@ -1044,7 +1044,7 @@ define(['logManager',
 
         menuItems[MENU_EXPORT] = {
             "name": 'Export selected...',
-            "icon": 'icon-download'
+            "icon": 'icon-share'
         };
 
         this.designerCanvas.createMenu(menuItems, function (key) {
