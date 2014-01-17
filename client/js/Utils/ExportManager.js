@@ -42,7 +42,7 @@ define(['jquery',
             fileName += '_' + objName;
         }
 
-        window.open(_client.getDumpURL(objID, fileName));
+        window.location = _client.getDumpURL(objID, fileName);
     };
 
     //return utility functions
