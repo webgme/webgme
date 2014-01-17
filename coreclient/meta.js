@@ -362,5 +362,5 @@ define([], function () {
         };
     }
 
-    return metaStorage();
+    return metaStorage;
 });

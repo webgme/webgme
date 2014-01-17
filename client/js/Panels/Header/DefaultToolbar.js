@@ -7,18 +7,18 @@
 "use strict";
 
 define(['clientUtil',
+    'js/Constants',
     'js/Utils/METAAspectHelper',
+    'js/Utils/ExportManager',
     'js/Dialogs/Projects/ProjectsDialog',
     'js/Dialogs/Commit/CommitDialog',
-    'js/Dialogs/ProjectRepository/ProjectRepositoryDialog',
-    'js/Dialogs/Export/ExportDialog',
-    'js/Dialogs/Import/ImportDialog'], function (util,
+    'js/Dialogs/ProjectRepository/ProjectRepositoryDialog'], function (util,
+                                                 CONSTANTS,
                                                                        METAAspectHelper,
+                                                                       ExportManager,
                                                                        ProjectsDialog,
                                                                        CommitDialog,
-                                                                       ProjectRepositoryDialog,
-                                                                       ExportDialog,
-                                                                       ImportDialog) {
+                                                                       ProjectRepositoryDialog) {
 
     var DefaultToolbar;
 
@@ -63,18 +63,10 @@ define(['clientUtil',
 
         //EXPORT & IMPORT
 
-        toolbar.addButton({ "title": "Export...",
-            "icon": "icon-download",
+        toolbar.addButton({ "title": "Export project...",
+            "icon": "icon-share",
             "clickFn": function (/*data*/) {
-                var d = new ExportDialog(_client);
-                d.show();
-            } });
-
-        toolbar.addButton({ "title": "Import...",
-            "icon": "icon-upload",
-            "clickFn": function (/*data*/) {
-                var d = new ImportDialog(_client);
-                d.show();
+                ExportManager.export(CONSTANTS.PROJECT_ROOT_ID);
             } });
 
         toolbar.addSeparator();
@@ -95,7 +87,9 @@ define(['clientUtil',
                     var pom = document.createElement('a');
                     pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(meta.content));
                     pom.setAttribute('download', meta.fileName);
+                    $('body').append($(pom));
                     pom.click();
+                    $(pom).remove();
                 } else {
                     alert('Something went wrong, METAAspectTypes are not available...');
                 }

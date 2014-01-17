@@ -1,6 +1,6 @@
-define(['coreclient/meta'], function (META) {
+define([], function () {
     "use strict";
-    function metaForGui(){
+    function metaForGui(META){
 
         function indexOfPathInRefObjArray(array,path){
             var index = 0;
@@ -307,6 +307,6 @@ define(['coreclient/meta'], function (META) {
             isTypeOf                : META.isTypeOf
         }
     }
-    return metaForGui();
+    return metaForGui;
 });
 

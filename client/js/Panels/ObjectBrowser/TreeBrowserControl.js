@@ -8,9 +8,13 @@
 define(['logManager',
         'js/Utils/GMEConcepts',
         'js/NodePropertyNames',
+        'js/Utils/ExportManager',
+        'js/Utils/ImportManager',
         'css!/css/Panels/ObjectBrowser/TreeBrowserControl'], function (logManager,
                                                                        GMEConcepts,
-                                                                       nodePropertyNames) {
+                                                                       nodePropertyNames,
+                                                                       ExportManager,
+                                                                       ImportManager) {
 
     var NODE_PROGRESS_CLASS = 'node-progress',
         GME_MODEL_CLASS = "gme-model",
@@ -266,6 +270,24 @@ define(['logManager',
             }
 
             return result;
+        };
+
+        treeBrowser.onExtendMenuItems = function (nodeId, menuItems) {
+            menuItems["exportNode"] = { // Export...
+                "name": "Export object...",
+                "callback": function(/*key, options*/) {
+                    ExportManager.export(nodeId);
+                },
+                "icon": false
+            };
+
+            menuItems["importNode"] = { // Import...
+                "name": "Import here...",
+                "callback": function(/*key, options*/) {
+                    ImportManager.import(nodeId);
+                },
+                "icon": false
+            }
         };
 
         //called from the TreeBrowserWidget when a create function is called from context menu

@@ -2,7 +2,7 @@ define([
     'coreclient/meta',
     'util/url'
 ],function(
-    META,
+    BaseMeta,
     URL
     ){
 
@@ -11,6 +11,7 @@ define([
         'path':'path',
         'guid':'guid'
     };
+    var META = new BaseMeta();
 
     var changeRefObjects = function(refType,urlPrefix,object,core,root,callback){
         if(typeof object === 'object'){
@@ -18,7 +19,7 @@ define([
                 neededNames = [],
                 error = null;
             for(var i in object){
-                if(typeof object[i] === 'object'){
+                if(object[i] !== null && typeof object[i] === 'object'){
                     needed++;
                     neededNames.push(i);
                 }
@@ -170,7 +171,8 @@ define([
 
             for(i in memberOfInfo){
                 if(memberOfInfo[i].indexOf(setName) !== -1){
-                    containers.push(core.toActualPath(i));
+                    //containers.push(core.toActualPath(i)); kecso
+                    containers.push(i);
                 }
             }
 
@@ -199,7 +201,7 @@ define([
                             info.attributes[containers[i]] = atrAndReg.attributes;
                             info.registry[containers[i]] = atrAndReg.registry;
                         }
-                        
+
                         pathToRefObjAsync(refType,urlPrefix,containers[i],core,core.getRoot(node),function(err,refObj){
                             error = error || err;
                             if(refObj !== undefined && refObj !== null){

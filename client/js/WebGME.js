@@ -11,6 +11,8 @@ define(['logManager',
     'clientUtil',
     'js/Utils/GMEConcepts',
     'js/Utils/GMEVisualConcepts',
+    'js/Utils/ExportManager',
+    'js/Utils/ImportManager',
     'js/LayoutManager/LayoutManager',
     'js/Decorators/DecoratorManager',
     'js/KeyboardManager/KeyboardManager',
@@ -24,6 +26,8 @@ define(['logManager',
                                             util,
                                             GMEConcepts,
                                             GMEVisualConcepts,
+                                            ExportManager,
+                                            ImportManager,
                                             LayoutManager,
                                             DecoratorManager,
                                             KeyboardManager,
@@ -63,6 +67,9 @@ define(['logManager',
             GMEVisualConcepts.initialize(client);
 
             METAAspectHelper.initialize(client);
+
+            ExportManager.initialize(client);
+            ImportManager.initialize(client);
 
             //hook up branch changed to set read-only mode on panels
             client.addEventListener(client.events.BRANCH_CHANGED, function (__project, branchName) {

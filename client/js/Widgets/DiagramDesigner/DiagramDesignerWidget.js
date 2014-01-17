@@ -172,12 +172,8 @@ define(['logManager',
         //initiate Selection Manager (if needed)
         this.selectionManager = params.selectionManager || new SelectionManager({"diagramDesigner": this});
         this.selectionManager.initialize(this.skinParts.$itemsContainer);
-        this.selectionManager.onSelectionCommandClicked = function (command, selectedIds) {
-            self._onSelectionCommandClicked(command, selectedIds);
-        };
-
-        this.selectionManager.onSelectionCommandClicked = function (command, selectedIds) {
-            self._onSelectionCommandClicked(command, selectedIds);
+        this.selectionManager.onSelectionCommandClicked = function (command, selectedIds, event) {
+            self._onSelectionCommandClicked(command, selectedIds, event);
         };
 
         this.selectionManager.onSelectionRotated = function (deg, selectedIds) {
@@ -497,6 +493,8 @@ define(['logManager',
 
     DiagramDesignerWidget.prototype.clear = function () {
         var i;
+
+        this.setTitle('');
 
         this.selectionManager.clear(); 
 
@@ -833,16 +831,23 @@ define(['logManager',
 
     /************************** SELECTION DELETE CLICK HANDLER ****************************/
 
-    DiagramDesignerWidget.prototype._onSelectionCommandClicked = function (command, selectedIds) {
+    DiagramDesignerWidget.prototype._onSelectionCommandClicked = function (command, selectedIds, event) {
         switch(command) {
             case 'delete':
                 this.onSelectionDelete(selectedIds);
+                break;
+            case 'contextmenu':
+                this.onSelectionContextMenu(selectedIds, this.getAdjustedMousePos(event));
                 break;
         }
     };
 
     DiagramDesignerWidget.prototype.onSelectionDelete = function (selectedIds) {
         this.logger.warning("DiagramDesignerWidget.onSelectionDelete IS NOT OVERRIDDEN IN A CONTROLLER. ID: '" + selectedIds + "'");
+    };
+
+    DiagramDesignerWidget.prototype.onSelectionContextMenu = function (selectedIds, mousePos) {
+        this.logger.warning("DiagramDesignerWidget.onSelectionContextMenu IS NOT OVERRIDDEN IN A CONTROLLER. ID: '" + selectedIds + "', mousePos: " + JSON.stringify(mousePos));
     };
 
     /************************** SELECTION DELETE CLICK HANDLER ****************************/

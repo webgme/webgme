@@ -12,6 +12,7 @@ define([
     'storage/commit',
     'logManager',
     'util/url',
+    'coreclient/meta',
     'coreclient/metaforgui',
     'coreclient/tojson',
     'coreclient/dump',
@@ -31,7 +32,8 @@ define([
         Commit,
         LogManager,
         URL,
-        META,
+        BaseMeta,
+        GuiMeta,
         ToJson,
         Dump,
         Import
@@ -77,7 +79,8 @@ define([
                 _offline = false,
                 _networkWatcher = null,
                 _userName = URL.parseCookie(document.cookie).webgme || _configuration.user,
-                _privateKey = 4;
+                _privateKey = 4,
+                META = new GuiMeta(new BaseMeta());
 
             function print_nodes(pretext){
                 if(pretext){
@@ -1999,9 +2002,32 @@ define([
                     if(err){
                         callback(err);
                     } else {
-                        saveRoot('importNode under '+parentPath);
+                        saveRoot('importNode under '+parentPath, callback);
                     }
                 });
+            }
+            function createProjectFromFileAsync(projectname,jNode,callback){
+                //if called on an existing project, it will ruin it!!! - although the old commits will be untouched
+                createProjectAsync(projectname,function(err){
+                    selectProjectAsync(projectname,function(err){
+                        Import(_core,null,jNode,function(err,root){
+                            if(err){
+                                callback(err);
+                            } else {
+                                _metaNodes[_core.getPath(root)] = root;
+                                _nodes[_core.getPath(root)] = {node:root,hash:""};
+                                saveRoot('import project from file',callback);
+                            }
+                        });
+                    });
+                });
+            }
+            function getDumpURL(path,filepath){
+                filepath = filepath || _projectName+'_'+_branch+'_'+URL.addSpecialChars(path);
+                if(window && window.location && window.location && _nodes && _nodes['root']){
+                    return window.location.protocol + '//' + window.location.host +'/rest/etf/'+_projectName+'/'+URL.addSpecialChars(_core.getHash(_nodes['root'].node))+'/'+URL.addSpecialChars(path)+'/'+filepath;
+                }
+                return null;
             }
             //initialization
             function initialize(){
@@ -2151,6 +2177,8 @@ define([
                 //JSON functions
                 dumpNodeAsync: dumpNodeAsync,
                 importNodeAsync: importNodeAsync,
+                createProjectFromFileAsync: createProjectFromFileAsync,
+                getDumpURL: getDumpURL,
 
                 //constraint
                 setConstraint: setConstraint,

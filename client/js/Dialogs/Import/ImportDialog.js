@@ -6,28 +6,33 @@
 
 "use strict";
 
-define(['logManager',
-    'loaderCircles',
+define(['loaderCircles',
     'text!html/Dialogs/Import/ImportDialog.html',
-    'js/NodePropertyNames',
-    'css!/css/Dialogs/Import/ImportDialog'], function (logManager,
-                                         LoaderCircles,
-                                         importDialogTemplate,
-                                         nodePropertyNames) {
+    'css!/css/Dialogs/Import/ImportDialog'], function (LoaderCircles,
+                                         importDialogTemplate) {
 
     var ImportDialog,
         MAX_FILE_SIZE = 100000000;
 
-    ImportDialog = function (client) {
-        this._logger = logManager.create("ImportDialog");
-
-        this._client = client;
-
-        this._logger.debug("Created");
+    ImportDialog = function () {
     };
 
-    ImportDialog.prototype.show = function () {
+    ImportDialog.prototype.show = function (fnCallback) {
+        var self = this;
+
+        this._fnCallback = fnCallback;
+
         this._initDialog();
+
+        this._dialog.on('hidden', function () {
+            self._dialog.remove();
+            self._dialog.empty();
+            self._dialog = undefined;
+
+            if (self._fnCallback && self._JSONContent) {
+                self._fnCallback(self._JSONContent);
+            }
+        });
 
         this._dialog.modal('show');
     };
@@ -37,13 +42,8 @@ define(['logManager',
 
         this._dialog = $(importDialogTemplate);
 
-        this._messagePanel = this._dialog.find('.fs-message');
-        this._filePanel = this._dialog.find('.fs-selectfile');
-
         this._btnImport = this._dialog.find('.btn-import');
         this._btnImport.addClass("disabled");
-
-        this._importTargetNodeLabel = this._dialog.find('.alert-info');
 
         this._importErrorLabel = this._dialog.find('.alert-error');
         this._importErrorLabel.hide();
@@ -51,79 +51,43 @@ define(['logManager',
         this._fileDropTarget = this._dialog.find('.file-drop-target');
         this._fileInput = this._dialog.find('#fileInput');
 
-        this._txtImport = this._dialog.find('.txt-import');
-        this._txtImport.hide();
+        this._loader = new LoaderCircles({"containerElement": this._dialog});
 
-        this._progressBarDiv = this._dialog.find('.progress-bar');
-
-        this._loader = new LoaderCircles({"containerElement": this._filePanel});
-
-        this._dialog.on('shown', function () {
-            self._initImport();
+        // file select
+        this._fileInput.on("change", function (event) {
+            event.stopPropagation();
+            event.preventDefault();
+            self._fileSelectHandler(event.originalEvent);
         });
 
-        this._dialog.on('hidden', function () {
-            self._dialog.remove();
-            self._dialog.empty();
-            self._dialog = undefined;
+        //filedrag
+        this._fileDropTarget.on('dragover', function (event) {
+            event.stopPropagation();
+            event.preventDefault(); //IE 10 needs this to ba able to drop
         });
-    };
 
-    ImportDialog.prototype._initImport = function () {
-        var importSourceNodeID = WebGMEGlobal.PanelManager.getActivePanel().getNodeID(),
-            self = this;
+        this._fileDropTarget.on('dragenter', function (event) {
+            event.stopPropagation();
+            event.preventDefault();
+            self._fileDropTarget.addClass('hover');
+        });
 
-        if (importSourceNodeID === undefined || importSourceNodeID === null) {
-            this._messagePanel.remove();
-            this._filePanel.remove();
-            this._btnImport.remove();
-            this._importTargetNodeLabel.text('Invalid import target object...');
-            this._importTargetNodeLabel.removeClass('alert-info').addClass('alert-error');
-        } else {
-            this._importSourceNodeID = importSourceNodeID;
-            var nodeName = importSourceNodeID;
-            var obj = this._client.getNode(importSourceNodeID);
-            if (obj) {
-                nodeName = obj.getAttribute(nodePropertyNames.Attributes.name);
-                if (!nodeName || nodeName === "") {
-                    nodeName = importSourceNodeID;
-                }
-            }
-            this._importTargetNodeLabel.text('Import target: ' + nodeName);
+        this._fileDropTarget.on('dragleave', function (event) {
+            event.stopPropagation();
+            event.preventDefault();
+            self._fileDropTarget.removeClass('hover');
+        });
 
-            // file select
-            this._fileInput.on("change", function (event) {
-                event.stopPropagation();
-                event.preventDefault();
-                self._fileSelectHandler(event.originalEvent);
-            });
-
-            //filedrag
-            this._fileDropTarget.on('dragover', function (event) {
-                event.stopPropagation();
-                event.preventDefault();
-                self._fileDropTarget.addClass('hover');
-            });
-
-            this._fileDropTarget.on('dragleave', function (event) {
-                event.stopPropagation();
-                event.preventDefault();
-                self._fileDropTarget.removeClass('hover');
-            });
-
-            this._fileDropTarget.on("drop", function (event) {
-                event.stopPropagation();
-                event.preventDefault();
-                self._fileSelectHandler(event.originalEvent);
-            });
-        }
+        this._fileDropTarget.on("drop", function (event) {
+            event.stopPropagation();
+            event.preventDefault();
+            self._fileSelectHandler(event.originalEvent);
+        });
     };
 
     ImportDialog.prototype._fileSelectHandler = function (event) {
         var loader = this._loader,
             btnImport = this._btnImport.addClass("disabled"),
-            client = this._client,
-            importSourceNodeID = this._importSourceNodeID,
             self = this;
 
         // cancel event and hover styling
@@ -135,15 +99,15 @@ define(['logManager',
         btnImport.off('click');
 
         // fetch FileList object
-        var files = event.target.files || event.dataTransfer.files;
+        var file = event.target.files || event.dataTransfer.files;
 
         var parsedJSONFileContent = undefined;
 
         // process all File objects
-        if (files && files.length > 0) {
-            files = files[0];
-            if (files.size > MAX_FILE_SIZE) {
-                self._displayMessage(files.name + ': File size is too big...', true);
+        if (file && file.length > 0) {
+            file = file[0];
+            if (file.size > MAX_FILE_SIZE) {
+                self._displayMessage(file.name + ':<br><br>FILE SITE IS TOO BIG...', true);
             } else {
                 //try to json parse it's content
                 var reader = new FileReader();
@@ -165,29 +129,26 @@ define(['logManager',
                     }
 
                     if (parsedJSONFileContent === undefined) {
-                        self._displayMessage(files.name + ': Invalid file format...', true);
+                        self._displayMessage(file.name + ':<br><br>INVALID FILE FORMAT...', true);
                     } else {
-                        self._displayMessage(files.name + ': File has been parsed successfully, ready to import...', false);
+                        self._displayMessage(file.name + ':<br><br>File has been parsed successfully, click \'Import...\' to start importing.', false);
                         btnImport.removeClass("disabled");
                         btnImport.on('click', function (event) {
                             event.preventDefault();
                             event.stopPropagation();
 
-                            client.importNodeAsync(importSourceNodeID, parsedJSONFileContent, function (err) {
-                               if (err) {
-                                   self._displayMessage(files.name + ': Import failed: ' + err, true);
-                               } else {
-                                   self._displayMessage(files.name + ': Import successful...', false);
-                               }
-                            });
+                            self._JSONContent = parsedJSONFileContent;
+
+                            self._dialog.modal('hide');
                         });
                     }
                 };
 
-                reader.readAsText(files);
+                //read the file
+                setTimeout(function () {
+                    reader.readAsText(file);
+                }, 100);
             }
-        } else {
-            self._displayMessage('No file has been selected...', true);
         }
     };
 
@@ -200,7 +161,7 @@ define(['logManager',
             this._importErrorLabel.addClass('alert-success');
         }
         
-        this._importErrorLabel.text(msg);
+        this._importErrorLabel.html(msg);
         this._importErrorLabel.hide();
         this._importErrorLabel.fadeIn();
     };

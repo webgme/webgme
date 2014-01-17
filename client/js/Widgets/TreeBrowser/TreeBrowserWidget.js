@@ -665,6 +665,8 @@ define(['logManager',
                     }
                 }
             }
+
+            self.onExtendMenuItems(node.data.key ,menuItems);
         }
 
         //return the complete action set for this node
@@ -692,6 +694,10 @@ define(['logManager',
                  title: 'Item 1'},
                 {id: 'item2ID',
                 title: 'Item 2'}];
+    };
+
+    TreeBrowserWidget.prototype.onExtendMenuItems = function (nodeId, menuItems) {
+        this._logger.warning('onExtendMenuItems is not overridden for node with ID: "' + nodeId + '".');
     };
 
     _.extend(TreeBrowserWidget.prototype, TreeBrowserWidgetKeyboard.prototype);

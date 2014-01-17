@@ -3,7 +3,7 @@ define([
     'coreclient/tojson',
     'util/url'
 ],function(
-    META,
+    BaseMeta,
     ToJson,
     URL
     ){
@@ -11,10 +11,13 @@ define([
         'url':'url',
         'path':'path',
         'guid':'guid'
-    };
-    var _cache = {};
-    var _rootPath = "";
-    var _refType = 'url';
+        },
+        cache = {},
+        _rootPath = "",
+        _refType = 'url',
+        _core = null,
+        META = new BaseMeta();
+
     var isRefObject = function(obj){
         if(obj && obj['$ref']){
             return true;
@@ -53,16 +56,16 @@ define([
     };
 
     var isSubordinate = function(path){
-        if(path.indexOf(_rootPath) === 0){
+        if(path.indexOf(_core.toActualPath(_rootPath)) === 0){
             return true;
         }
         return false;
     };
 
-    var dumpChildren = function(core,node,dumpObject,urlPrefix,relPath,callback){
+    var dumpChildren = function(node,dumpObject,urlPrefix,relPath,callback){
         var needed = dumpObject.children.length;
         if(needed > 0){
-            core.loadChildren(node,function(err,children){
+            _core.loadChildren(node,function(err,children){
                 if(err){
                     callback(err);
                 } else {
@@ -70,13 +73,13 @@ define([
                         callback(new Error('invalid children info found'));
                     } else {
                         var setChildJson = function(child,cb){
-                            ToJson(core,child,urlPrefix,_refType,function(err,jChild){
+                            ToJson(_core,child,urlPrefix,_refType,function(err,jChild){
                                 if(err){
                                     cb(err);
                                 } else {
                                     if(jChild){
                                         var childRelPath,
-                                            childPath = core.getPath(child);
+                                            childPath = _core.getPath(child);
                                         for(var j=0;j<dumpObject.children.length;j++){
                                             if(childPath === getRefObjectPath(dumpObject.children[j])){
                                                 childRelPath = relPath+'/children['+j+']';
@@ -85,7 +88,7 @@ define([
                                                 break;
                                             }
                                         }
-                                        dumpChildren(core,child,dumpObject.children[j],urlPrefix,childRelPath,cb);
+                                        dumpChildren(child,dumpObject.children[j],urlPrefix,childRelPath,cb);
                                     }
                                 }
                             })
@@ -125,11 +128,12 @@ define([
     };
     var dumpJsonNode = function(core,node,urlPrefix,refType,callback){
         _cache = {};
+        _core = core;
         _rootPath = core.getPath(node);
         _refType = refType;
 
         //TODO this needs to be done in another way
-        _rootPath = _rootPath === "root" ? "" : _rootPath;
+        //_rootPath = _rootPath === "root" ? "" : _rootPath; kecso
         ToJson(core,node,urlPrefix,_refType,function(err,jDump){
             if(err){
                 callback(err,null);
@@ -137,7 +141,7 @@ define([
                 if(jDump){
                     _cache[_rootPath] = "#";
                 }
-                dumpChildren(core,node,jDump,urlPrefix,_cache[_rootPath],function(err){
+                dumpChildren(node,jDump,urlPrefix,_cache[_rootPath],function(err){
                     if(err){
                         callback(err);
                     } else {

@@ -4,7 +4,7 @@
  * Author: Tamas Kecskes
  */
 
-define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID,URL,IO){
+define([ "util/assert","util/guid","util/url","socket.io" ], function(ASSERT,GUID,URL,IO){
 
     var server = function(_database,options){
         ASSERT(typeof _database === 'object');
@@ -13,8 +13,8 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
         options.secret = options.secret || 'this is WEBGME!!!';
         options.cookieID = options.cookieID || 'webgme';
         options.authorization = options.authorization || function(sessionID,projectName,type,callback){callback(null,true);};
-        options.sessioncheck = options.sessioncheck || function(sessionID,callback){callback(null,true)};
-        options.authInfo = options.authInfo || function(sessionID,projectName,callback){callback(null,{read:true,write:true,delete:true});};
+        options.sessioncheck = options.sessioncheck || function(sessionID,callback){callback(null,true);};
+        options.authInfo = options.authInfo || function(sessionID,projectName,callback){callback(null,{'read':true,'write':true,'delete':true});};
         var _socket = null,
             _objects = {},
             _projects = {},
@@ -484,4 +484,3 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
 
     return server;
 });
-

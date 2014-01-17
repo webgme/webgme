@@ -165,7 +165,7 @@ requirejs([ "util/common", "util/assert", "core/tasync", "util/guid" ], function
                 done = TASYNC.call(traverseNode,core,nodearray[i],done);
             }
             return TASYNC.call(function(){return;},done);
-        }
+        };
         return TASYNC.call(traverseChildren,core,children);
     }
     function updateProject(core,roothash){
