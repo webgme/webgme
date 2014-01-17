@@ -19,7 +19,7 @@ define([
                 neededNames = [],
                 error = null;
             for(var i in object){
-                if(typeof object[i] === 'object'){
+                if(object[i] !== null && typeof object[i] === 'object'){
                     needed++;
                     neededNames.push(i);
                 }
