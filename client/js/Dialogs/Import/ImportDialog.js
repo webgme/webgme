@@ -63,6 +63,11 @@ define(['loaderCircles',
         //filedrag
         this._fileDropTarget.on('dragover', function (event) {
             event.stopPropagation();
+            event.preventDefault(); //IE 10 needs this to ba able to drop
+        });
+
+        this._fileDropTarget.on('dragenter', function (event) {
+            event.stopPropagation();
             event.preventDefault();
             self._fileDropTarget.addClass('hover');
         });
