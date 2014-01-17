@@ -16,12 +16,9 @@ define(['jquery',
 
     var _initialize = function (c) {
         //if already initialized, just return
-        if (_client) {
-            return;
+        if (!_client) {
+            _client = c;
         }
-        _client = c;
-
-        _initialize = undefined;
     };
 
     var _export = function (objID) {
