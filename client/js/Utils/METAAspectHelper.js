@@ -190,7 +190,6 @@ define(['jquery',
         });
 
         _territoryUI = new TerritoryUI();
-        _initialize = undefined;
     };
 
     var _isMETAType = function (objID, metaTypeID) {
