@@ -1998,7 +1998,7 @@ define([
                     if(err){
                         callback(err);
                     } else {
-                        saveRoot('importNode under '+parentPath);
+                        saveRoot('importNode under '+parentPath, callback);
                     }
                 });
             }
