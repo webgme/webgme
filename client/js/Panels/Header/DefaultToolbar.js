@@ -87,7 +87,9 @@ define(['clientUtil',
                     var pom = document.createElement('a');
                     pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(meta.content));
                     pom.setAttribute('download', meta.fileName);
+                    $('body').append($(pom));
                     pom.click();
+                    $(pom).remove();
                 } else {
                     alert('Something went wrong, METAAspectTypes are not available...');
                 }
