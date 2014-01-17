@@ -12,6 +12,7 @@ define([
     'storage/commit',
     'logManager',
     'util/url',
+    'coreclient/meta',
     'coreclient/metaforgui',
     'coreclient/tojson',
     'coreclient/dump',
@@ -31,7 +32,8 @@ define([
         Commit,
         LogManager,
         URL,
-        META,
+        BaseMeta,
+        GuiMeta,
         ToJson,
         Dump,
         Import
@@ -77,7 +79,8 @@ define([
                 _offline = false,
                 _networkWatcher = null,
                 _userName = URL.parseCookie(document.cookie).webgme || _configuration.user,
-                _privateKey = 4;
+                _privateKey = 4,
+                META = new GuiMeta(new BaseMeta());
 
             function print_nodes(pretext){
                 if(pretext){

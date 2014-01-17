@@ -2,7 +2,7 @@ define([
     'coreclient/meta',
     'util/url'
 ],function(
-    META,
+    BaseMeta,
     URL
     ){
 
@@ -11,6 +11,7 @@ define([
         'path':'path',
         'guid':'guid'
     };
+    var META = new BaseMeta();
 
     var changeRefObjects = function(refType,urlPrefix,object,core,root,callback){
         if(typeof object === 'object'){

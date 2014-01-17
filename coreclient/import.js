@@ -17,14 +17,15 @@ Currently we expect to have 'GUID enhanced' reference objects (or internal refer
 define([
     'coreclient/meta'
 ],function(
-    META
+    BaseMeta
     ){
     var _core = null,
         _root = null,
         _rootPath = "",
         _cache = {},
         _underImport = {},
-        _internalRefHash = {};
+        _internalRefHash = {},
+        META = new BaseMeta();
 
     function internalRefCreated(intPath,node){
         _cache[_core.getPath(node)] = node;

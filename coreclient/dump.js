@@ -3,7 +3,7 @@ define([
     'coreclient/tojson',
     'util/url'
 ],function(
-    META,
+    BaseMeta,
     ToJson,
     URL
     ){
@@ -15,7 +15,8 @@ define([
         cache = {},
         _rootPath = "",
         _refType = 'url',
-        _core = null;
+        _core = null,
+        META = new BaseMeta();
 
     var isRefObject = function(obj){
         if(obj && obj['$ref']){
