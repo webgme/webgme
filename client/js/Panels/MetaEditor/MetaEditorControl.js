@@ -259,7 +259,7 @@ define(['logManager',
         }
 
         //process the sheets
-        this._processMetaAspectSheetsRegistry();
+        var positionsUpdated = this._processMetaAspectSheetsRegistry();
 
         this.logger.debug('_metaAspectMembersAll: \n' + JSON.stringify(this._metaAspectMembersAll));
         this.logger.debug('_metaAspectMembersCoordinatesGlobal: \n' + JSON.stringify(this._metaAspectMembersCoordinatesGlobal));
@@ -289,7 +289,7 @@ define(['logManager',
         }
 
         //check all other nodes for position change
-        diff = _.intersection(this._selectedMetaAspectSheetMembers, selectedSheetMembers);
+        diff = positionsUpdated;//_.intersection(this._selectedMetaAspectSheetMembers, selectedSheetMembers);
         len = diff.length;
         while (len--) {
             gmeID = diff[len];
@@ -1615,6 +1615,9 @@ define(['logManager',
             j,
             gmeID;
 
+        //save old positions
+        var oldMetaAspectMembersCoordinatesPerSheet = this._metaAspectMembersCoordinatesPerSheet;
+
         this._sheets = {};
         this._metaAspectMembersPerSheet = {};
         this._metaAspectMembersCoordinatesPerSheet = {};
@@ -1665,6 +1668,23 @@ define(['logManager',
             }
         }
 
+        //figure out whose position has changed
+        var positionUpdated = [];
+        if (this._selectedMetaAspectSet) {
+            var oldPositions = oldMetaAspectMembersCoordinatesPerSheet[this._selectedMetaAspectSet];
+            var newPositions = this._metaAspectMembersCoordinatesPerSheet[this._selectedMetaAspectSet];
+            if (oldPositions && newPositions) {
+                for (var oldItemId in oldPositions) {
+                    if (oldPositions.hasOwnProperty(oldItemId) && newPositions.hasOwnProperty(oldItemId)) {
+                        if (oldPositions[oldItemId].x !== newPositions[oldItemId].x ||
+                            oldPositions[oldItemId].y !== newPositions[oldItemId].y) {
+                            positionUpdated.push(oldItemId);
+                        }
+                    }
+                }
+            }
+        }
+
         if (!selectedSheetID) {
             for (selectedSheetID in this._sheets) {
                 if (this._sheets.hasOwnProperty(selectedSheetID)) {
@@ -1674,6 +1694,8 @@ define(['logManager',
         }
 
         this.diagramDesigner.selectTab(selectedSheetID);
+
+        return positionUpdated;
     };
 
 
