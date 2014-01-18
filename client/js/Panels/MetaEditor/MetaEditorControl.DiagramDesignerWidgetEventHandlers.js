@@ -184,7 +184,9 @@ define(['logManager',
             this.diagramDesigner.endUpdate();
             this.diagramDesigner.select(selectedIDs);
 
-            _client.completeTransaction();
+            setTimeout(function () {
+                _client.completeTransaction();
+            }, 10);
         } else {
             _client.startTransaction();
 
@@ -227,7 +229,9 @@ define(['logManager',
                 }
             }
 
-            _client.completeTransaction();
+            setTimeout(function () {
+                _client.completeTransaction();
+            }, 10);
         }
     };
     /**********************************************************/
