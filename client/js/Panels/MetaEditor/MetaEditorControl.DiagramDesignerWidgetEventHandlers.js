@@ -122,7 +122,8 @@ define(['logManager',
                     accept = false;
                 } else {
                     //return true if there is at least one item among the dragged ones that is not on the sheet yet
-                    if (gmeIDList.length > 0) {
+                    if (gmeIDList.length > 0
+                        && gmeIDList.indexOf(CONSTANTS.PROJECT_ROOT_ID) === -1) {
                         for (i = 0; i < gmeIDList.length; i+= 1) {
                             if (this._metaAspectMembersPerSheet[this._selectedMetaAspectSet].indexOf(gmeIDList[i]) === -1 ) {
                                 accept = true;
@@ -183,7 +184,9 @@ define(['logManager',
             this.diagramDesigner.endUpdate();
             this.diagramDesigner.select(selectedIDs);
 
-            _client.completeTransaction();
+            setTimeout(function () {
+                _client.completeTransaction();
+            }, 10);
         } else {
             _client.startTransaction();
 
@@ -226,7 +229,9 @@ define(['logManager',
                 }
             }
 
-            _client.completeTransaction();
+            setTimeout(function () {
+                _client.completeTransaction();
+            }, 10);
         }
     };
     /**********************************************************/
