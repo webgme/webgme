@@ -1072,7 +1072,7 @@ define(['logManager',
                 if (inOutConnections && inOutConnections.length > 0) {
                     cLen = inOutConnections.length;
                     while (cLen--) {
-                        componentID = inOutConnections[len];
+                        componentID = inOutConnections[cLen];
                         connGMEID = this._ComponentID2GMEID[componentID];
 
                         //check if already saved for delayedConnections
