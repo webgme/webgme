@@ -545,6 +545,7 @@ define(['logManager',
         this._componentIDPartIDMap = {};
 
         this._selectedMemberListMembers = [];
+        this._delayedConnections = [];
 
         //remove current territory patterns
         if (this._selectedMemberListMembersTerritoryId) {
@@ -1068,13 +1069,6 @@ define(['logManager',
 
                 //delete all the associated connections
                 //and save the connection as delayed connection
-
-
-                %%%%%%%%%%%%%%%%%%%%%%%
-
-                TODO: SAVE ASSOCIATED CONNECTIONS FOR LATER AND REMOVE FROM SCREEENNNNN!!
-
-                %%%%%%%%%%%%%%%%%%%%%%%
                 if (inOutConnections && inOutConnections.length > 0) {
                     cLen = inOutConnections.length;
                     while (cLen--) {
@@ -1095,8 +1089,10 @@ define(['logManager',
 
                             if (connObj) {
                                 this._delayedConnections.push({ID: connGMEID,
-                                    srcID: connObj.getPointer(SRC_POINTER_NAME).to,
-                                    dstID: connObj.getPointer(DST_POINTER_NAME).to});
+                                    desc: { isConnection: true,
+                                            srcID: connObj.getPointer(SRC_POINTER_NAME).to,
+                                            dstID: connObj.getPointer(DST_POINTER_NAME).to}
+                                });
                             }
                         }
 
