@@ -83,6 +83,10 @@ define(['logManager',
         this._widget.onTabsSorted = function (newTabIDOrder) {
             self._onTabsSorted(newTabIDOrder);
         };
+
+        this._widget.onTabDeleteClicked = function (tabID) {
+            self._onTabDeleteClicked(tabID);
+        };
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.selectedObjectChanged = function (nodeId) {
@@ -1299,6 +1303,53 @@ define(['logManager',
         }
     };
 
+
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onTabDeleteClicked = function (tabID) {
+        var memberListContainerID = this._memberListContainerID,
+            memberListContainer,
+            memberListSetsRegistryKey = this.getMemberListSetsRegistryKey(),
+            memberListSetsRegistry,
+            i,
+            setID;
+
+        if (memberListContainerID &&
+            memberListSetsRegistryKey &&
+            memberListSetsRegistryKey !== '') {
+            memberListContainer = this._client.getNode(memberListContainerID);
+            memberListSetsRegistry = memberListContainer.getEditableRegistry(memberListSetsRegistryKey) || [];
+
+            setID = this._tabIDMemberListID[tabID];
+            i = memberListSetsRegistry.length;
+            while (i--) {
+                if (memberListSetsRegistry[i].SetID === setID) {
+                    memberListSetsRegistry.splice(i, 1);
+                    break;
+                }
+            }
+
+            //order remaining and reset order number
+            memberListSetsRegistry.sort(function (a, b) {
+                if (a.order < b.order) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            });
+
+            i = memberListSetsRegistry.length;
+            while (i--) {
+                memberListSetsRegistry[i].order = i;
+            }
+
+            this._client.startTransaction();
+            this._client.setRegistry(memberListContainerID, memberListSetsRegistryKey, memberListSetsRegistry);
+
+            //finally delete the sheet's SET
+            this._client.deleteSet(memberListContainerID, setID);
+
+            this._client.completeTransaction();
+        }
+    };
 
     return DiagramDesignerWidgetMultiTabMemberListControllerBase;
 });

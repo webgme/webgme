@@ -17,10 +17,6 @@ define(['util/guid',
             self._onTabAddClicked();
         };
 
-        this._widget.onTabDeleteClicked = function (tabID) {
-            self._onTabDeleteClicked(tabID);
-        };
-
         this.logger.debug("attachDesignerCanvasEventHandlers finished");
     };
 
@@ -74,8 +70,7 @@ define(['util/guid',
     };
 
 
-    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onTabDeleteClicked = function (tabID) {
-    };
+
 
 
     return MetaEditorControlDiagramDesignerWidgetEventHandlers;
