@@ -15,6 +15,7 @@ define(['js/DragDrop/DragHelper',
         params.deleteTabs = true;
         params.reorderTabs = true;
         params.lineStyleControls = false;
+        params.enableConnectionDrawing = false;
 
         DiagramDesignerWidget.call(this, container, params);
 

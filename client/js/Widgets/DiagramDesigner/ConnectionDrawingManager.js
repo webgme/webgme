@@ -105,6 +105,10 @@ define(['logManager',
     ConnectionDrawingManager.prototype._activateMouseListeners = function () {
         var self = this;
 
+        if (this._diagramDesigner._enableConnectionDrawing !== true) {
+            return;
+        }
+
         //MOUSE LISTENER FOR CONNECTOR MOUSEDOWN --> CREATE NEW CONNECTION
         this._el.on(MOUSEDOWN, '.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS, function (event) {
             var el = $(this),
