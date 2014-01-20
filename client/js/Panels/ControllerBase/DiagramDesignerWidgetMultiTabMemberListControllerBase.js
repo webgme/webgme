@@ -372,11 +372,15 @@ define(['logManager',
 
         //check to see if there is a currently selected memberlist to add the dragged elements to
         if (this._selectedMemberListID) {
-            //accept is self reposition OR dragging from somewhere else and the items are not on the sheet yet
+            //accept is self reposition OR
+            //dragging from somewhere else and the items are not on the sheet yet
             if (params &&
-                params.hasOwnProperty(DRAG_PARAMS_MULTI_TAB_MEMBER_LIST_CONTAINER_ID)) {
+                params.hasOwnProperty(DRAG_PARAMS_MULTI_TAB_MEMBER_LIST_CONTAINER_ID) &&
+                params[DRAG_PARAMS_MULTI_TAB_MEMBER_LIST_CONTAINER_ID] === this._getDragParamsDataID()) {
+                //reposition on the same sheet
                 accept = true;
             } else {
+                //dragging from somewhere else
                 if (dragEffects.length === 1 &&
                     dragEffects[0] === DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE) {
                     //dragging from PartBrowser
@@ -464,24 +468,17 @@ define(['logManager',
                         posX = position.x;
                         posY = position.y;
 
-                        //when dragging between META ASPECT sheets, read position from dragParams
-                        //TODO: drag beetween sheets!!!
-                        /*if (params &&
-                            params.hasOwnProperty(DRAG_PARAMS_META_CONTAINER_ID) &&
-                            params[DRAG_PARAMS_META_CONTAINER_ID] === aspectNodeID &&
-                            params[DRAG_PARAMS_ACTIVE_META_ASPECT] !== this._selectedMetaAspectSet) {
+                        //when dragging between ASPECT sheets, read position from dragParams
+                        if (params &&
+                            params.positions &&
+                            params.positions[componentID]) {
 
-                            if (params && params.positions && params.positions[componentID]) {
-                                posX += params.positions[componentID].x;
-                            }
-
-                            if (params && params.positions && params.positions[componentID]) {
-                                posY += params.positions[componentID].y;
-                            }
-                        } else {*/
+                            posX += params.positions[componentID].x;
+                            posY += params.positions[componentID].y;
+                        } else {
                             position.x += 20;
                             position.y += 20;
-                        /*}*/
+                        }
 
                         _client.addMember(memberListContainerID, componentID, memberListToAddTo);
                         _client.setMemberRegistry(memberListContainerID, componentID, memberListToAddTo, memberListMemberPositionRegistryKey, {'x': posX, 'y': posY} );
