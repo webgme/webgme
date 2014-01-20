@@ -210,7 +210,7 @@ define(['logManager',
             gmeID,
             memberListMemberPositionsRegistryKey;
 
-        this.logger.warning("_processMemberListContainer");
+        this.logger.debug("_processMemberListContainer");
 
         //#1 - clear tabs
         this._widget.clearTabs();
@@ -636,7 +636,7 @@ define(['logManager',
             j,
             ce;
 
-        this.logger.warning("_dispatchEvents '" + events.length + "' items: " + JSON.stringify(events));
+        this.logger.debug("_dispatchEvents '" + events.length + "' items: " + JSON.stringify(events));
 
         /********** ORDER EVENTS BASED ON DEPENDENCY ************/
         /** 1: items first, no dependency **/
@@ -657,7 +657,7 @@ define(['logManager',
                     j = this._delayedConnections.length;
                     while (j--) {
                         if (this._delayedConnections[j].ID === e.eid) {
-                            this.logger.warning('Removing ' + e.eid + ' from delayed connections...');
+                            this.logger.debug('Removing ' + e.eid + ' from delayed connections...');
                             this._delayedConnections[j].splice(j, 1);
                         }
                     }
@@ -667,7 +667,7 @@ define(['logManager',
                     j = this._delayedConnections.length;
                     while (j--) {
                         if (this._delayedConnections[j].ID === e.eid) {
-                            this.logger.warning('Updating ' + e.eid + ' in delayed connections...');
+                            this.logger.debug('Updating ' + e.eid + ' in delayed connections...');
                             this._delayedConnections[j].desc.srcID = e.desc.srcID;
                             this._delayedConnections[j].desc.dstID = e.desc.dstID;
                         }
