@@ -79,6 +79,10 @@ define(['logManager',
         this._widget.onTabTitleChanged = function (tabID, oldValue, newValue) {
             self._onTabTitleChanged(tabID, oldValue, newValue);
         };
+
+        this._widget.onTabsSorted = function (newTabIDOrder) {
+            self._onTabsSorted(newTabIDOrder);
+        };
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.selectedObjectChanged = function (nodeId) {
@@ -1247,6 +1251,51 @@ define(['logManager',
 
                 this._client.setRegistry(memberListContainerID, memberListSetsRegistryKey, memberListSetsRegistry);
             }
+        }
+    };
+
+
+    /*
+     TAB REORDER EVENT HANDLER
+     */
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onTabsSorted = function (newTabIDOrder) {
+        var memberListContainerID = this._memberListContainerID,
+            memberListContainer,
+            memberListSetsRegistryKey = this.getMemberListSetsRegistryKey(),
+            memberListSetsRegistry,
+            i,
+            j,
+            setID;
+
+        if (memberListContainerID &&
+            memberListSetsRegistryKey &&
+            memberListSetsRegistryKey !== '') {
+            memberListContainer = this._client.getNode(memberListContainerID);
+            memberListSetsRegistry = memberListContainer.getEditableRegistry(memberListSetsRegistryKey) || [];
+
+            for (i = 0; i < newTabIDOrder.length; i += 1) {
+                //i is the new order number
+                //newTabIDOrder[i] is the tab identifier
+                setID = this._tabIDMemberListID[newTabIDOrder[i]];
+                for (j = 0; j < memberListSetsRegistry.length; j += 1) {
+                    if (memberListSetsRegistry[j].SetID === setID) {
+                        memberListSetsRegistry[j].order = i;
+                        break;
+                    }
+                }
+            }
+
+            memberListSetsRegistry.sort(function (a, b) {
+                if (a.order < b.order) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            });
+
+            this._client.startTransaction();
+            this._client.setRegistry(memberListContainerID, memberListSetsRegistryKey, memberListSetsRegistry);
+            this._client.completeTransaction();
         }
     };
 

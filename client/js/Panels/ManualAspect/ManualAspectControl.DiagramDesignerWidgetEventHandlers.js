@@ -21,10 +21,6 @@ define(['util/guid',
             self._onTabDeleteClicked(tabID);
         };
 
-        this._widget.onTabsSorted = function (newTabIDOrder) {
-            self._onTabsSorted(newTabIDOrder);
-        };
-
         this.logger.debug("attachDesignerCanvasEventHandlers finished");
     };
 
@@ -79,40 +75,6 @@ define(['util/guid',
 
 
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onTabDeleteClicked = function (tabID) {
-    };
-
-
-    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onTabsSorted = function (newTabIDOrder) {
-        /*var aspectNodeID = this.metaAspectContainerNodeID,
-            aspectNode = this._client.getNode(aspectNodeID),
-            manualAspectsRegistry = aspectNode.getEditableRegistry(ManualAspectConstants.META_SHEET_REGISTRY_KEY) || [],
-            i,
-            j,
-            setID;
-
-        for (i = 0; i < newTabIDOrder.length; i += 1) {
-            //i is the new order number
-            //newTabIDOrder[i] is the sheet identifier
-            setID = this._sheets[newTabIDOrder[i]];
-            for (j = 0; j < manualAspectsRegistry.length; j += 1) {
-                if (manualAspectsRegistry[j].SetID === setID) {
-                    manualAspectsRegistry[j].order = i;
-                    break;
-                }
-            }
-        }
-
-        manualAspectsRegistry.sort(function (a, b) {
-            if (a.order < b.order) {
-                return -1;
-            } else {
-                return 1;
-            }
-        });
-
-        this._client.startTransaction();
-        this._client.setRegistry(aspectNodeID, ManualAspectConstants.META_SHEET_REGISTRY_KEY, manualAspectsRegistry);
-        this._client.completeTransaction();*/
     };
 
 
