@@ -106,7 +106,7 @@ define(['logManager',
 
             this._widget.showProgressbar();
 
-            this._territoryId = this._client.addUI(this, true, null, function (events) {
+            this._territoryId = this._client.addUI(this, true, null, function (/*events*/) {
                 self._processMemberListContainer();
                 self._widget.hideProgressbar();
             });
@@ -289,7 +289,7 @@ define(['logManager',
         this._widget.endUpdate();
 
         //save current list of members
-        this._selectedMemberListMembers = this._memberListMembers[this._selectedMemberListID].slice(0);
+        this._selectedMemberListMembers = actualMembers;
 
         if (territoryChanged) {
             setTimeout( function () {
@@ -611,13 +611,13 @@ define(['logManager',
 
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._dispatchEvents = function (events) {
-        var i = events.length,
+        var i,
             e,
             territoryChanged = false,
             j,
             ce;
 
-        this.logger.warning("_dispatchEvents '" + i + "' items: " + JSON.stringify(events));
+        this.logger.warning("_dispatchEvents '" + events.length + "' items: " + JSON.stringify(events));
 
         /********** ORDER EVENTS BASED ON DEPENDENCY ************/
         /** 1: items first, no dependency **/
@@ -627,6 +627,35 @@ define(['logManager',
         var orderedConnectionEvents = [];
 
         if (this._delayedConnections && this._delayedConnections.length > 0) {
+            //if there are saved connections, first check if any UPDATE or UNLOAD event is about them
+            //if so, remove/update those information in delayed connections list
+            i = events.length;
+            while (i--) {
+                e = events[i];
+                if (e.etype === CONSTANTS.TERRITORY_EVENT_UNLOAD &&
+                    e.desc.isConnection === true) {
+                    //if it's an unload, remove the delayed connection entry
+                    j = this._delayedConnections.length;
+                    while (j--) {
+                        if (this._delayedConnections[j].ID === e.eid) {
+                            this.logger.warning('Removing ' + e.eid + ' from delayed connections...');
+                            this._delayedConnections[j].splice(j, 1);
+                        }
+                    }
+                } else if ( e.etype === CONSTANTS.TERRITORY_EVENT_UPDATE &&
+                    e.desc.isConnection === true) {
+                    //if it is an UPDATE, update the SRC and DST info
+                    j = this._delayedConnections.length;
+                    while (j--) {
+                        if (this._delayedConnections[j].ID === e.eid) {
+                            this.logger.warning('Updating ' + e.eid + ' in delayed connections...');
+                            this._delayedConnections[j].desc.srcID = e.desc.srcID;
+                            this._delayedConnections[j].desc.dstID = e.desc.dstID;
+                        }
+                    }
+                }
+            }
+
             for (i = 0; i < this._delayedConnections.length; i += 1) {
                 orderedConnectionEvents.push({'etype': CONSTANTS.TERRITORY_EVENT_LOAD,
                     'eid': this._delayedConnections[i].ID,
@@ -939,13 +968,23 @@ define(['logManager',
                 } else {
                     //the connection is here, but no valid endpoint on canvas
                     //save the connection
-                    this._delayedConnections.push({'ID': gmeID, 'desc': desc});
+                    var alreadySaved = false;
+                    var len = this._delayedConnections.length;
+                    while (len--) {
+                        if (this._delayedConnections[len].ID === gmeID) {
+                            alreadySaved = true;
+                            break;
+                        }
+                    }
+                    if (alreadySaved !== true) {
+                        this._delayedConnections.push({'ID': gmeID, 'desc': desc});
+                    }
                 }
             }
-        } else {
-            //probably loaded because of one of the decorators' territory
-            this._checkComponentDependency(gmeID, CONSTANTS.TERRITORY_EVENT_LOAD);
         }
+
+        //check if one of the decorators' is dependent on this
+        this._checkComponentDependency(gmeID, CONSTANTS.TERRITORY_EVENT_LOAD);
 
         return territoryChanged;
     };
@@ -958,8 +997,7 @@ define(['logManager',
 
         //component updated
         //we are interested in the load of member items and their custom territory involvement
-        if (this._selectedMemberListMembers.indexOf(gmeID) !== -1 &&
-            this._GMEID2ComponentID[gmeID]) {
+        if (this._selectedMemberListMembers.indexOf(gmeID) !== -1) {
             if (desc.isConnection === false) {
                 //this is an item on the screen
                 len = this._GMEID2ComponentID[gmeID].length;
@@ -1036,10 +1074,10 @@ define(['logManager',
                     }
                 }
             }
-        } else {
-            //probably loaded because of one of the decorators' territory
-            this._checkComponentDependency(gmeID, CONSTANTS.TERRITORY_EVENT_UPDATE);
         }
+
+        //check if one of the decorators' is dependent on this
+        this._checkComponentDependency(gmeID, CONSTANTS.TERRITORY_EVENT_UPDATE);
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onUnload = function (gmeID) {
@@ -1111,10 +1149,10 @@ define(['logManager',
             }
 
             delete this._GMEID2ComponentID[gmeID];
-        } else {
-            //probably a subcomponent has been deleted - will be handled in the decorator
-            this._checkComponentDependency(gmeID, CONSTANTS.TERRITORY_EVENT_UNLOAD);
         }
+
+        //check if one of the decorators' is dependent on this
+        this._checkComponentDependency(gmeID, CONSTANTS.TERRITORY_EVENT_UNLOAD);
 
         return territoryChanged;
     };
