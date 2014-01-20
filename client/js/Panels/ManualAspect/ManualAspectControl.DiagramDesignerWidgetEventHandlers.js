@@ -74,7 +74,7 @@ define(['util/guid',
             this._client.setRegistry(manualAspectContainerID, ManualAspectConstants.MANUAL_ASPECTS_REGISTRY_KEY, manualAspectsRegistry);
 
             //force switching to the new sheet
-            this._selectedManualAspect = newAspectID;
+            this._selectedMemberListID = newAspectID;
 
             //finish transaction
             this._client.completeTransaction();
