@@ -42,7 +42,8 @@ define(['logManager',
 
     PropertyEditorController.prototype._selectedObjectsChanged = function (idList) {
         var patterns = {},
-            i;
+            i,
+            self = this;
 
         this._idList = idList;
 
@@ -56,13 +57,11 @@ define(['logManager',
                 patterns[idList[i]] = { "children": 0 };
             }
 
-            this._territoryId = this._client.addUI(this, true);
+            this._territoryId = this._client.addUI(this, function (/*events*/) {
+                self._refreshPropertyList();
+            });
             this._client.updateTerritory(this._territoryId, patterns);
         }
-    };
-
-    PropertyEditorController.prototype.onOneEvent = function (/*events*/) {
-        this._refreshPropertyList();
     };
 
     PropertyEditorController.prototype._refreshPropertyList = function () {

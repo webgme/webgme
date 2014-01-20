@@ -37,12 +37,6 @@ define(['jquery',
         $.extend(this, new EventDispatcher());
     };
 
-    TerritoryUI.prototype.onOneEvent = function (/*events*/) {
-        _processMetaContainer();
-
-        this.dispatchEvent(_events.META_ASPECT_CHANGED);
-    };
-
     var _reset = function () {
         _metaTypes = {};
 
@@ -52,7 +46,10 @@ define(['jquery',
 
         //there is an open project
         if (_client.getActiveProject()) {
-            _territoryId = _client.addUI(_territoryUI, true);
+            _territoryId = _client.addUI(_territoryUI, function (/*events*/) {
+                _processMetaContainer();
+                _territoryUI.dispatchEvent(_events.META_ASPECT_CHANGED);
+            });
 
             _patterns = {};
             _metaMembers = [];

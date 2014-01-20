@@ -40,6 +40,8 @@ define(['logManager',
     };
 
     PartBrowserControl.prototype.selectedObjectChanged = function (nodeId) {
+        var self = this;
+
         this._logger.debug("SELECTEDOBJECT_CHANGED nodeId '" + nodeId + "'");
 
         //remove current territory patterns
@@ -56,7 +58,9 @@ define(['logManager',
             this._selfPatterns = {};
             this._selfPatterns[nodeId] = { "children": 1 };
 
-            this._territoryId = this._client.addUI(this, true);
+            this._territoryId = this._client.addUI(this, function (events) {
+                self._eventCallback(events);
+            });
             //update the territory
             this._logger.debug('UPDATING TERRITORY: selectedObjectChanged' + JSON.stringify(this._selfPatterns));
             this._client.updateTerritory(this._territoryId, this._selfPatterns);
@@ -78,11 +82,11 @@ define(['logManager',
         return objDescriptor;
     };
 
-    PartBrowserControl.prototype.onOneEvent = function (events) {
+    PartBrowserControl.prototype._eventCallback = function (events) {
         var i = events ? events.length : 0,
             e;
 
-        this._logger.debug("onOneEvent '" + i + "' items, events: " + JSON.stringify(events));
+        this._logger.debug("_eventCallback '" + i + "' items, events: " + JSON.stringify(events));
 
         while (i--) {
             e = events[i];
@@ -101,7 +105,7 @@ define(['logManager',
 
         this._updateValidChildrenTypeDecorators();
 
-        this._logger.debug("onOneEvent '" + events.length + "' items - DONE");
+        this._logger.debug("_eventCallback '" + events.length + "' items - DONE");
     };
 
     // PUBLIC METHODS

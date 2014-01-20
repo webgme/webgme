@@ -50,14 +50,6 @@ define(['js/Constants',
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     ModelDecoratorDiagramDesignerWidget.prototype.$DOMBase = $(modelDecoratorTemplate);
 
-
-    //callback method for territory update
-    ModelDecoratorDiagramDesignerWidget.prototype.onOneEvent = function (events) {
-        //don't really care here, just want to make sure that the reference object is loaded in the client
-        this.logger.debug('onOneEvent: ' + JSON.stringify(events));
-    };
-
-
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     ModelDecoratorDiagramDesignerWidget.prototype.on_addTo = function () {
         var self = this;
@@ -323,14 +315,19 @@ define(['js/Constants',
 
     /**** Override from ModelDecoratorCore ****/
     ModelDecoratorDiagramDesignerWidget.prototype._refToChanged = function (oldValue, newValue) {
-        this.logger.debug('refToChanged from ' + oldValue + ' to ' + newValue);
+        var logger = this.logger;
+
+        logger.debug('refToChanged from ' + oldValue + ' to ' + newValue);
 
         if (oldValue) {
             delete this._selfPatterns[oldValue];
         }
 
         if (newValue) {
-            this._territoryId = this._territoryId || this._control._client.addUI(this, true);
+            this._territoryId = this._territoryId || this._control._client.addUI(this, function (events) {
+                //don't really care here, just want to make sure that the reference object is loaded in the client
+                logger.debug('onEvent: ' + JSON.stringify(events));
+            });
             this._selfPatterns[newValue] = { "children": 0 };
         }
 

@@ -71,7 +71,8 @@ define(['logManager',
 
     ModelEditorControl.prototype.selectedObjectChanged = function (nodeId) {
         var desc,
-            nodeName;
+            nodeName,
+            self = this;
 
         this.logger.debug("SELECTEDOBJECT_CHANGED nodeId '" + nodeId + "'");
 
@@ -122,7 +123,9 @@ define(['logManager',
 
             this.designerCanvas.showProgressbar();
 
-            this._territoryId = this._client.addUI(this, true);
+            this._territoryId = this._client.addUI(this, function (events) {
+                self._eventCallback(events);
+            });
             //update the territory
             this._client.updateTerritory(this._territoryId, this._selfPatterns);
         } else {
@@ -198,17 +201,17 @@ define(['logManager',
     };
 
     // PUBLIC METHODS
-    ModelEditorControl.prototype.onOneEvent = function (events) {
+    ModelEditorControl.prototype._eventCallback = function (events) {
         var i = events ? events.length : 0;
 
-        this.logger.debug("onOneEvent '" + i + "' items");
+        this.logger.debug("_eventCallback '" + i + "' items");
 
         if (i > 0) {
             this.eventQueue.push(events);
             this.processNextInQueue();
         }
 
-        this.logger.debug("onOneEvent '" + events.length + "' items - DONE");
+        this.logger.debug("_eventCallback '" + events.length + "' items - DONE");
     };
 
     ModelEditorControl.prototype.processNextInQueue = function () {

@@ -124,7 +124,7 @@ define(['logManager',
 
             this._widget.showProgressbar();
 
-            this._territoryId = this._client.addUI(this, true, null, function (/*events*/) {
+            this._territoryId = this._client.addUI(this, function (/*events*/) {
                 self._processMemberListContainer();
                 self._widget.hideProgressbar();
             });
@@ -584,7 +584,7 @@ define(['logManager',
             }
         }
 
-        this._selectedMemberListMembersTerritoryId = this._client.addUI(this, true, null, function (events) {
+        this._selectedMemberListMembersTerritoryId = this._client.addUI(this, function (events) {
             var decoratorsToDownload = [DEFAULT_DECORATOR],
                 len = events.length,
                 obj,

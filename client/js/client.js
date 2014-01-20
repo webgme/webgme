@@ -523,15 +523,8 @@ define([
                     }
                     // TODO events.push({etype:'complete',eid:null});
 
-                    if (_users[i].FN) {
-                        _users[i].FN(events);
-                    } else if(_users[i].ONEEVENT){
-                        _users[i].UI.onOneEvent(events);
-                    } else {
-                        for(j=0;j<events.length;j++){
-                            _users[i].UI.onEvent(events[j].etype,events[j].eid);
-                        }
-                    }
+
+                    _users[i].FN(events);
                     _users[i].PATTERNS = {};
                     _users[i].PATHS = {};
                     _users[i].SENDEVENTS = true;
@@ -656,15 +649,8 @@ define([
                     } else {
                         // TODO events.push({etype:'complete',eid:null});
                     }
-                    if (_users[userId].FN) {
-                        _users[userId].FN(events);
-                    } else if(_users[userId].ONEEVENT){
-                        _users[userId].UI.onOneEvent(events);
-                    } else {
-                        for(i=0;i<events.length;i++){
-                            _users[userId].UI.onEvent(events[i].etype,events[i].eid);
-                        }
-                    }
+
+                    _users[userId].FN(events);
                 }
             }
             function storeNode(node,basic){
@@ -1705,9 +1691,11 @@ define([
             }
 
             //territory functions
-            function addUI(ui, oneevent, guid, fn) {
+            function addUI(ui, fn, guid) {
+                ASSERT(fn);
+                ASSERT(typeof fn === 'function');
                 guid = guid || GUID();
-                _users[guid] = {type:'notused', UI:ui, PATTERNS:{}, PATHS:{}, ONEEVENT:oneevent ? true : false, SENDEVENTS:true, FN: fn};
+                _users[guid] = {type:'notused', UI:ui, PATTERNS:{}, PATHS:{}, SENDEVENTS:true, FN: fn};
                 return guid;
             }
             function removeUI(guid) {
