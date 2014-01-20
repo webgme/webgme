@@ -75,6 +75,10 @@ define(['logManager',
         this._widget.onSelectionDelete = function (idList) {
             self._onSelectionDelete(idList);
         };
+
+        this._widget.onTabTitleChanged = function (tabID, oldValue, newValue) {
+            self._onTabTitleChanged(tabID, oldValue, newValue);
+        };
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.selectedObjectChanged = function (nodeId) {
@@ -318,6 +322,10 @@ define(['logManager',
         return undefined;
     };
 
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.getMemberListSetsRegistryKey = function () {
+        this.logger.warning('DiagramDesignerWidgetMultiTabMemberListControllerBase.getMemberListSetsRegistryKey is not overridden, returning default value...');
+        return undefined;
+    };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onSelectedTabChanged = function (tabID) {
         if (this._tabIDMemberListID[tabID] && this._selectedMemberListID !== this._tabIDMemberListID[tabID]) {
@@ -1204,6 +1212,40 @@ define(['logManager',
                         this._widget.notifyItemComponentEvents(itemID, this._notifyPackage[gmeID]);
                     }
                 }
+            }
+        }
+    };
+
+    /*
+     TAB RENAME EVENT HANDLER
+     */
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onTabTitleChanged = function (tabID, oldValue, newValue) {
+        var memberListContainerID = this._memberListContainerID,
+            memberListContainer,
+            memberListSetsRegistryKey = this.getMemberListSetsRegistryKey(),
+            memberListSetsRegistry,
+            i,
+            len,
+            setID;
+
+        if (memberListContainerID &&
+            memberListSetsRegistryKey &&
+            memberListSetsRegistryKey !== '') {
+            memberListContainer = this._client.getNode(memberListContainerID);
+            memberListSetsRegistry = memberListContainer.getEditableRegistry(memberListSetsRegistryKey) || [];
+
+            if (this._tabIDMemberListID[tabID]) {
+                setID = this._tabIDMemberListID[tabID];
+
+                len = memberListSetsRegistry.length;
+                for (i = 0; i < len; i += 1) {
+                    if (memberListSetsRegistry[i].SetID === setID) {
+                        memberListSetsRegistry[i].title = newValue;
+                        break;
+                    }
+                }
+
+                this._client.setRegistry(memberListContainerID, memberListSetsRegistryKey, memberListSetsRegistry);
             }
         }
     };

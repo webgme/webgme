@@ -17,10 +17,6 @@ define(['util/guid',
             self._onTabAddClicked();
         };
 
-        this._widget.onTabTitleChanged = function (tabID, oldValue, newValue) {
-            self._onTabTitleChanged(tabID, oldValue, newValue);
-        };
-
         this._widget.onTabDeleteClicked = function (tabID) {
             self._onTabDeleteClicked(tabID);
         };
@@ -81,33 +77,6 @@ define(['util/guid',
         }
     };
 
-    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onTabTitleChanged = function (tabID, oldValue, newValue) {
-        var manualAspectContainerID = this._memberListContainerID,
-            manualAspectContainer,
-            manualAspectsRegistry,
-            i,
-            len,
-            setID;
-
-        if (manualAspectContainerID) {
-            manualAspectContainer = this._client.getNode(manualAspectContainerID);
-            manualAspectsRegistry = manualAspectContainer.getEditableRegistry(ManualAspectConstants.MANUAL_ASPECTS_REGISTRY_KEY) || [];
-
-            if (this._tabIDMemberListID[tabID]) {
-                setID = this._tabIDMemberListID[tabID];
-
-                len = manualAspectsRegistry.length;
-                for (i = 0; i < len; i += 1) {
-                    if (manualAspectsRegistry[i].SetID === setID) {
-                        manualAspectsRegistry[i].title = newValue;
-                        break;
-                    }
-                }
-
-                this._client.setRegistry(manualAspectContainerID, ManualAspectConstants.MANUAL_ASPECTS_REGISTRY_KEY, manualAspectsRegistry);
-            }
-        }
-    };
 
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onTabDeleteClicked = function (tabID) {
     };
