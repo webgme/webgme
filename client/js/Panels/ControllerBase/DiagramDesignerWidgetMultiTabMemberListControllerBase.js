@@ -1016,7 +1016,8 @@ define(['logManager',
 
         //component updated
         //we are interested in the load of member items and their custom territory involvement
-        if (this._selectedMemberListMembers.indexOf(gmeID) !== -1) {
+        if (this._selectedMemberListMembers.indexOf(gmeID) !== -1 &&
+            this._GMEID2ComponentID[gmeID]) {
             if (desc.isConnection === false) {
                 //this is an item on the screen
                 len = this._GMEID2ComponentID[gmeID].length;
