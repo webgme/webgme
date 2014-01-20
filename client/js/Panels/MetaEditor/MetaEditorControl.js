@@ -1637,7 +1637,7 @@ define(['logManager',
         for (i = 0; i < len; i += 1) {
             setName = metaAspectSheetsRegistry[i].SetID;
 
-            sheetID = this.diagramDesigner.addTab(metaAspectSheetsRegistry[i].title, true);
+            sheetID = this.diagramDesigner.addTab(metaAspectSheetsRegistry[i].title, true, true);
 
             this._sheets[sheetID] = setName;
 

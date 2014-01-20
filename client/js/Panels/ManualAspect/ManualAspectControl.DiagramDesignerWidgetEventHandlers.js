@@ -82,26 +82,31 @@ define(['util/guid',
     };
 
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onTabTitleChanged = function (tabID, oldValue, newValue) {
-        /*var aspectNodeID = this.metaAspectContainerNodeID,
-            aspectNode = this._client.getNode(aspectNodeID),
-            manualAspectsRegistry = aspectNode.getEditableRegistry(ManualAspectConstants.META_SHEET_REGISTRY_KEY) || [],
+        var manualAspectContainerID = this._memberListContainerID,
+            manualAspectContainer,
+            manualAspectsRegistry,
             i,
             len,
             setID;
 
-        if (this._sheets[tabID]) {
-            setID = this._sheets[tabID];
+        if (manualAspectContainerID) {
+            manualAspectContainer = this._client.getNode(manualAspectContainerID);
+            manualAspectsRegistry = manualAspectContainer.getEditableRegistry(ManualAspectConstants.MANUAL_ASPECTS_REGISTRY_KEY) || [];
 
-            len = manualAspectsRegistry.length;
-            for (i = 0; i < len; i += 1) {
-                if (manualAspectsRegistry[i].SetID === setID) {
-                    manualAspectsRegistry[i].title = newValue;
-                    break;
+            if (this._tabIDMemberListID[tabID]) {
+                setID = this._tabIDMemberListID[tabID];
+
+                len = manualAspectsRegistry.length;
+                for (i = 0; i < len; i += 1) {
+                    if (manualAspectsRegistry[i].SetID === setID) {
+                        manualAspectsRegistry[i].title = newValue;
+                        break;
+                    }
                 }
-            }
 
-            this._client.setRegistry(aspectNodeID, ManualAspectConstants.META_SHEET_REGISTRY_KEY, manualAspectsRegistry);
-        }*/
+                this._client.setRegistry(manualAspectContainerID, ManualAspectConstants.MANUAL_ASPECTS_REGISTRY_KEY, manualAspectsRegistry);
+            }
+        }
     };
 
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onTabDeleteClicked = function (tabID) {

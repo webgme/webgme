@@ -214,7 +214,7 @@ define(['logManager',
                 renameTab = orderedMemberListInfo[i].enableRenameTab && true;
 
                 //create tab
-                memberListTabID = this._widget.addTab(tabTitle, deleteTab);
+                memberListTabID = this._widget.addTab(tabTitle, deleteTab, renameTab);
                 this._tabIDMemberListID[memberListTabID] = memberListID;
 
                 //get members of this pointer list
