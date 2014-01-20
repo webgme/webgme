@@ -1,11 +1,13 @@
 "use strict";
 
 define(['logManager',
+        'util/guid',
         'js/Constants',
         'js/NodePropertyNames',
         'js/Utils/GMEConcepts',
         'js/Utils/GMEVisualConcepts',
         'js/DragDrop/DragHelper'], function (logManager,
+                                   generateGuid,
                                    CONSTANTS,
                                    nodePropertyNames,
                                    GMEConcepts,
@@ -86,6 +88,10 @@ define(['logManager',
 
         this._widget.onTabDeleteClicked = function (tabID) {
             self._onTabDeleteClicked(tabID);
+        };
+
+        this._widget.onTabAddClicked = function () {
+            self._onTabAddClicked();
         };
     };
 
@@ -1349,6 +1355,69 @@ define(['logManager',
 
             this._client.completeTransaction();
         }
+    };
+
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onTabAddClicked = function () {
+        var memberListContainerID = this._memberListContainerID,
+            memberListContainer,
+            memberListSetsRegistryKey = this.getMemberListSetsRegistryKey(),
+            memberListSetsRegistry,
+            i,
+            newSetID;
+
+        if (memberListContainerID &&
+            memberListSetsRegistryKey &&
+            memberListSetsRegistryKey !== '') {
+            memberListContainer = this._client.getNode(memberListContainerID);
+            memberListSetsRegistry = memberListContainer.getEditableRegistry(memberListSetsRegistryKey) || [];
+
+            //reset set's order
+            memberListSetsRegistry.sort(function (a, b) {
+                if (a.order < b.order) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            });
+
+            i = memberListSetsRegistry.length;
+            while (i--) {
+                memberListSetsRegistry[i].order = i;
+            }
+
+            //create new Set's descriptor
+            //create new aspect set in  meta container node
+            var newSetNamePrefixDesc = this.getNewSetNamePrefixDesc();
+
+            newSetID = newSetNamePrefixDesc.SetID + generateGuid();
+
+            var newSetDesc = {'SetID': newSetID,
+                'order': memberListSetsRegistry.length,
+                'title': newSetNamePrefixDesc.Title + memberListSetsRegistry.length};
+
+            memberListSetsRegistry.push(newSetDesc);
+
+            //start transaction
+            this._client.startTransaction();
+
+            this._client.createSet(memberListContainerID, newSetID);
+
+            this._client.setRegistry(memberListContainerID, memberListSetsRegistryKey, memberListSetsRegistry);
+
+            //force switching to the new sheet
+            this._selectedMemberListID = newSetID;
+
+            //finish transaction
+            this._client.completeTransaction();
+        }
+    };
+
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.getNewSetNamePrefixDesc = function () {
+        var result = {'SetID': 'SET_',
+                      'Title': 'Tab '};
+
+        this.logger.warning('DiagramDesignerWidgetMultiTabMemberListControllerBase.getNewSetNamePrefixDesc is not overridden, returning default value: ' + JSON.stringify(result));
+        return result;
     };
 
     return DiagramDesignerWidgetMultiTabMemberListControllerBase;

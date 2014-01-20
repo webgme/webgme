@@ -2,10 +2,8 @@
 
 define(['logManager',
     './ManualAspectConstants',
-    './ManualAspectControl.DiagramDesignerWidgetEventHandlers',
     'js/Panels/ControllerBase/DiagramDesignerWidgetMultiTabMemberListControllerBase'], function (logManager,
                                                ManualAspectConstants,
-                                               ManualAspectControlDiagramDesignerWidgetEventHandlers,
                                                DiagramDesignerWidgetMultiTabMemberListControllerBase) {
 
     var ManualAspectController;
@@ -16,13 +14,10 @@ define(['logManager',
 
         DiagramDesignerWidgetMultiTabMemberListControllerBase.call(this, options);
 
-        this.attachDiagramDesignerWidgetEventHandlers();
-
         this.logger.debug("ManualAspectController ctor finished");
     };
 
     _.extend(ManualAspectController.prototype, DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype);
-    _.extend(ManualAspectController.prototype, ManualAspectControlDiagramDesignerWidgetEventHandlers.prototype);
 
     ManualAspectController.prototype.getOrderedMemberListInfo = function (memberListContainerObject) {
         var result = [],
@@ -47,12 +42,20 @@ define(['logManager',
         return result;
     };
 
+
     ManualAspectController.prototype.getMemberListMemberPositionsRegistryKey = function () {
         return ManualAspectConstants.MANUAL_ASPECT_MEMBER_POSITION_REGISTRY_KEY;
     };
 
+
     ManualAspectController.prototype.getMemberListSetsRegistryKey = function () {
         return ManualAspectConstants.MANUAL_ASPECTS_REGISTRY_KEY;
+    };
+
+
+    ManualAspectController.prototype.getNewSetNamePrefixDesc = function () {
+        return {'SetID': ManualAspectConstants.MANUAL_ASPECT_NAME_PREFIX,
+            'Title': 'Aspect '};
     };
 
 
