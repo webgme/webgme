@@ -297,10 +297,12 @@ define(['logManager',
         len = diff.length;
         while (len--) {
             gmeID = diff[len];
-            objDesc = {'position': {'x': 0, 'y': 0}};
+            objDesc = {'position': {'x': 100, 'y': 100}};
 
-            objDesc.position.x = this._metaAspectMembersCoordinatesPerSheet[this._selectedMetaAspectSet][gmeID].x;
-            objDesc.position.y = this._metaAspectMembersCoordinatesPerSheet[this._selectedMetaAspectSet][gmeID].y;
+            if (this._metaAspectMembersCoordinatesPerSheet[this._selectedMetaAspectSet][gmeID]) {
+                objDesc.position.x = this._metaAspectMembersCoordinatesPerSheet[this._selectedMetaAspectSet][gmeID].x;
+                objDesc.position.y = this._metaAspectMembersCoordinatesPerSheet[this._selectedMetaAspectSet][gmeID].y;
+            }
 
             if (this._GMEID2ComponentID.hasOwnProperty(gmeID)) {
                 componentID = this._GMEID2ComponentID[gmeID];
@@ -331,10 +333,12 @@ define(['logManager',
         //component loaded
         if (this._GMENodes.indexOf(gmeID) === -1) {
             //aspect's member has been loaded
-            objDesc = {'position' : { 'x': 0, 'y': 0}};
+            objDesc = {'position' : { 'x': 100, 'y': 100}};
 
-            objDesc.position.x = this._metaAspectMembersCoordinatesPerSheet[this._selectedMetaAspectSet][gmeID].x;
-            objDesc.position.y = this._metaAspectMembersCoordinatesPerSheet[this._selectedMetaAspectSet][gmeID].y;
+            if (this._metaAspectMembersCoordinatesPerSheet[this._selectedMetaAspectSet][gmeID]) {
+                objDesc.position.x = this._metaAspectMembersCoordinatesPerSheet[this._selectedMetaAspectSet][gmeID].x;
+                objDesc.position.y = this._metaAspectMembersCoordinatesPerSheet[this._selectedMetaAspectSet][gmeID].y;
+            }
 
             decClass = this._client.decoratorManager.getDecoratorForWidget(META_DECORATOR, WIDGET_NAME);
 
