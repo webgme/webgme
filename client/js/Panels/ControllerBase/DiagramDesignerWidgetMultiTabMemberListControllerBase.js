@@ -93,6 +93,10 @@ define(['logManager',
         this._widget.onTabAddClicked = function () {
             self._onTabAddClicked();
         };
+
+        this._widget.onSelectionChanged = function (selectedIds) {
+            self._onSelectionChanged(selectedIds);
+        };
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.selectedObjectChanged = function (nodeId) {
@@ -1419,6 +1423,35 @@ define(['logManager',
 
         this.logger.warning('DiagramDesignerWidgetMultiTabMemberListControllerBase.getNewSetNamePrefixDesc is not overridden, returning default value: ' + JSON.stringify(result));
         return result;
+    };
+
+
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onSelectionChanged = function (selectedIds) {
+        var gmeIDs = [],
+            len = selectedIds.length,
+            id,
+            connectionSelected = false,
+            allHasRegistrylineStyle = selectedIds.length > 0,
+            nodeObj,
+            lineStyle;
+
+        while (len--) {
+            id = this._ComponentID2GMEID[selectedIds[len]];
+            if (id &&
+                gmeIDs.indexOf(id) === -1) {
+                gmeIDs.push(id);
+            }
+        }
+
+        //nobody is selected on the canvas
+        //set the active selection to the opened guy
+        if (gmeIDs.length === 0 && this._memberListContainerID) {
+            gmeIDs.push(this._memberListContainerID);
+        }
+
+        if (gmeIDs.length !== 0) {
+            this._client.setPropertyEditorIdList(gmeIDs);
+        }
     };
 
     return DiagramDesignerWidgetMultiTabMemberListControllerBase;
