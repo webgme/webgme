@@ -185,7 +185,7 @@ define([ "util/assert"], function (ASSERT) {
             var memberRelId = getMemberRelId(node,setName,memberPath);
             if(memberRelId){
                 var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
-                return innerCore.getAttribute(memberNode,regName);
+                return innerCore.getRegistry(memberNode,regName);
             }
         };
         setcore.setMemberRegistry = function(node,setName,memberPath,regName,regValue){
@@ -193,7 +193,7 @@ define([ "util/assert"], function (ASSERT) {
             var memberRelId = getMemberRelId(node,setName,memberPath);
             if(memberRelId){
                 var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
-                innerCore.setAttribute(memberNode,regName,regValue);
+                innerCore.setRegistry(memberNode,regName,regValue);
                 setModified(node);
             }
         };
@@ -202,7 +202,7 @@ define([ "util/assert"], function (ASSERT) {
             var memberRelId = getMemberRelId(node,setName,memberPath);
             if(memberRelId){
                 var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
-                innerCore.delAttribute(memberNode,regName);
+                innerCore.delRegistry(memberNode,regName);
                 setModified(node);
             }
         };
