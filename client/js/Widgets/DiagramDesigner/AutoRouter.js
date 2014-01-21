@@ -74,11 +74,8 @@ define(['logManager'], function (logManager) {
     var _logger = logManager.create("AutoRouter");
 
     AutoRouter = function(graphDetails){
-       this.boxes = [];
-       this.bufferBoxes = []; //Used for covering general off-limits areas in original path finding
        this.paths = {};
        this.pCount = 0;//A not decrementing count of paths for unique path id's
-       this.futurePaths = []; 
        this.boxId2Path = {};
        this.portCount = 0;//A not decrementing count of ports for unique path id's
        this.ports = {};//port list by id
@@ -90,6 +87,81 @@ define(['logManager'], function (logManager) {
  
        this.router = new AutoRouterGraph();
     };
+
+    var getClosestPorts = function(srcPorts, dstPorts, segmentPoints){
+    //TODO Change this to go by furthest distance or something.
+        var i,
+            j,
+            dx,
+            dy,
+            srcP,
+            dstP,
+            minLength = -1,
+            srcConnectionPoints = [],
+            dstConnectionPoints = [],
+            cLength;
+
+        //Make sure srcPorts, dstPorts are arrays of ports
+        if( srcPorts instanceof AutoRouterBox )
+            srcPorts = srcPorts.getPortList(); 
+        else if( srcPorts.ports && srcPorts.ports[0] instanceof AutoRouterPort )
+            srcPorts = srcPorts.ports; 
+        else
+            srcPorts = srcPorts instanceof Array ? srcPorts : [ srcPorts ];
+
+        if( dstPorts instanceof AutoRouterBox )
+            dstPorts = dstPorts.getPortList(); 
+        else if( dstPorts.ports && dstPorts.ports[0] instanceof AutoRouterPort )
+            dstPorts = dstPorts.ports; 
+        else
+            dstPorts = dstPorts instanceof Array ? dstPorts : [ dstPorts ];
+
+        for(i = 0; i < srcPorts.length; i++){
+            srcConnectionPoints.push(srcPorts[i].getRect().getCenter());
+        }
+        for(i = 0; i < dstPorts.length; i++){
+            dstConnectionPoints.push(dstPorts[i].getRect().getCenter());
+        }
+
+
+        if (segmentPoints && segmentPoints.length > 0) {
+            for (i = 0; i < srcConnectionPoints.length; i += 1) {
+                for (j = 0; j < dstConnectionPoints.length; j += 1) {
+                    dx = { "src": Math.abs(srcConnectionPoints[i].x - segmentPoints[0][1]),
+                        "dst": Math.abs(dstConnectionPoints[j].x - segmentPoints[segmentPoints.length - 1][0])};
+
+                    dy =  { "src": Math.abs(srcConnectionPoints[i].y - segmentPoints[0][1]),
+                        "dst": Math.abs(dstConnectionPoints[j].y - segmentPoints[segmentPoints.length - 1][1])};
+
+                    cLength = Math.sqrt(dx.src * dx.src + dy.src * dy.src) + Math.sqrt(dx.dst * dx.dst + dy.dst * dy.dst);
+
+                    if (minLength === -1 || minLength > cLength) {
+                        minLength = cLength;
+                        srcP = i;
+                        dstP = j;
+                    }
+                }
+            }
+        } else {
+            for (i = 0; i < srcConnectionPoints.length; i += 1) {
+                for (j = 0; j < dstConnectionPoints.length; j += 1) {
+                    dx = Math.abs(srcConnectionPoints[i].x - dstConnectionPoints[j].x);
+                    dy = Math.abs(srcConnectionPoints[i].y - dstConnectionPoints[j].y);
+
+                    cLength = Math.sqrt(dx * dx + dy * dy);
+
+                    if (minLength === -1 || minLength > cLength) {
+                        minLength = cLength;
+                        srcP = i;
+                        dstP = j;
+                    }
+                }
+            }
+        }
+
+        return { "src": srcPorts[ srcP ], "dst": dstPorts[ dstP ] };
+    };
+
 
     var CustomPathData = function (_x, _y){
         var version = CONNECTIONCUSTOMIZATIONDATAVERSION,
@@ -4227,8 +4299,8 @@ if(DEBUG && ArPointList.length > 0){
                         boxes[box].destroy(); 
                         delete boxes[box];
                     }
-
                 }
+                bufferBoxes = [];
             }
 
             function getBoxList(){
@@ -4626,9 +4698,9 @@ if(DEBUG && ArPointList.length > 0){
             }
 
             function connect(path){
-                //path.calculateStartEndPorts();
-                var startport = path.getStartPort(),
-                    endport = path.getEndPort(),
+                var ports = path.calculateStartEndPorts(),
+                    startport = ports.src,
+                    endport = ports.dst,
                     startdir = path.getStartDir(),
                     startportHasLimited = false,
                     startportCanHave = true,
@@ -6260,14 +6332,12 @@ if(DEBUG && ArPointList.length > 0){
                 return null;
             };
 
-            this.addPath = function(isAutoRouted, startport, endport){
+            this.addPath = function(isAutoRouted, startports, endports){
                 var path = new AutoRouterPath();
-                //TODO FIXME
-                //Add a method to resolve startport/endport from id's to ports
 
                 path.setAutoRouting(isAutoRouted);
-                path.setStartPort(startport);
-                path.setEndPort(endport);
+                path.setStartPorts(startports);
+                path.setEndPorts(endports);
                 add(path);
 
                 return path;
@@ -6403,10 +6473,10 @@ if(DEBUG && ArPointList.length > 0){
 
     var AutoRouterPath = function (){
             var owner = null,
-                
+                startports,
+                endports,
                 startport = null,
                 endport = null,
-
                 attributes = ARPATH_Default,
                 state = ARPATHST_Default,
                 isAutoRoutingOn = true,
@@ -6471,12 +6541,18 @@ if(DEBUG && ArPointList.length > 0){
                 owner = newOwner;
             };
 
-            this.setStartPort = function(newPort){
-                startport = newPort;
+            this.setStartPorts = function(newPorts){
+                if(!(newPorts instanceof Array))
+                    newPorts = [newPorts];
+
+                startports = newPorts;
             };
 
-            this.setEndPort = function(newPort){
-                endport = newPort;
+            this.setEndPorts = function(newPorts){
+                if(!(newPorts instanceof Array))
+                    newPorts = [newPorts];
+
+                endports = newPorts;
             };
 
             this.clearPorts = function(){
@@ -6492,15 +6568,58 @@ if(DEBUG && ArPointList.length > 0){
                 return endport;
             };
 
+            this.getStartPorts = function(){
+                return startports;
+            };
+
+            this.getEndPorts = function(){
+                return endports;
+            };
+
+            this.calculateStartEndPorts = function(){
+                var srcPorts = [],
+                    dstPorts = [],
+                    i = startports.length,
+                    result = null;
+
+                assert(startports.length > 0, "ArPath.calculateStartEndPorts: startports cannot be empty!");
+                assert(endports.length > 0, "ArPath.calculateStartEndPorts: endports cannot be empty!");
+
+                while(i--){
+                    if(startports[i].isAvailable())
+                        srcPorts.push(startports[i]);
+                }
+
+                if(srcPorts.length === 0)
+                    srcPorts = startports;
+
+                i = endports.length;
+                while(i--){
+                    if(endports[i].isAvailable())
+                        dstPorts.push(endports[i]);
+                }
+
+                if(dstPorts.length === 0)
+                    dstPorts = endports;
+
+                if(dstPorts.length > 0 && srcPorts.length > 0){
+                    result = getClosestPorts(srcPorts, dstPorts, customPathData);
+                    startport = result.src;
+                    endport = result.dst;
+                }
+
+                return result;
+            }
+
             this.isConnected = function(){
                 return (state & ARPATHST_Connected) != 0;
             };
 
             this.addTail = function(pt){
                 assert( !this.isConnected(), "ARPath.addTail: !this.isConnected() FAILED");
-if(!(pt instanceof Array)){
-pt = [pt];
-}
+                if(!(pt instanceof Array)){
+                    pt = [pt];
+                }
                 points.push(pt);
             };
 
@@ -6971,8 +7090,6 @@ pt = [pt];
                     this.getEndPort().removePoint(this.getEndPoint());
                 }
 
-                this.setStartPort(null);
-                this.setEndPort(null);
             };
 
             this.getExtPtr = function(){
@@ -7485,8 +7602,7 @@ pt = [pt];
 
         AutoRouter.prototype.clear = function(){
             this.router.deleteAll(true);
-            this.bufferBoxes = []; //Used for covering general off-limits areas in original path finding
-            this.boxes = {};
+            //this.boxes = {};
             this.paths = {};
             this.boxId2Path = {};
             this.pCount = 0;
@@ -7509,7 +7625,7 @@ pt = [pt];
                 x2 = size.x2 !== undefined ? size.x2 : (size.x1 + size.width),
                 y1 = size.y1 !== undefined ? size.y1 : (size.y2 - size.height),
                 y2 = size.y2 !== undefined ? size.y2 : (size.y1 + size.height),
-                connAreas = size.ConnectionAreas,
+                connInfo = size.ConnectionInfo,
                 box = this.router.createBox(),
                 rect = new ArRect(x1, y1, x2, y2),
                 p = [],
@@ -7519,10 +7635,10 @@ pt = [pt];
             box.setRect(rect);
 
             //Adding connection port
-            p = this.addPort(box, connAreas);
+            p = this.addPort(box, connInfo);
 
             this.router.addBox(box);
-            this.boxes[box.getID()] = box;
+            //this.boxes[box.getID()] = box;
             this.boxId2Path[ box.getID() ] = { 'in': [], 'out': [] };
 
             return new ArBoxObject(box, p);
@@ -7534,7 +7650,7 @@ pt = [pt];
             box = box instanceof ArBoxObject ? box.box : box;
             var port,
                 r,
-                p = [],
+                p = {},
                 x1 = box.getRect().left,
                 y1 = box.getRect().ceil,
                 x2 = box.getRect().right,
@@ -7551,7 +7667,7 @@ pt = [pt];
 
                 port.setAttributes(ARPORT_ConnectOnAll);
 
-                p.push(port);
+                p['0'] = port;
             }else{ 
             //A connection area is specified
             /* There are a couple possibilities here:
@@ -7581,12 +7697,13 @@ pt = [pt];
                     connAreas = [connAreas];
 
                 connAreas.forEach(function (connData, i, list){
-                        var attr = 0,
+                        var id = connData.id,
+                            attr = 0,
                             type = "any", //Specify start, end, or any --Not fully implemented
                             j = 0,
                             port = box.createPort(),
-                            connArea = connData instanceof Array ? 
-                                    [ connData ] : //Line
+                            connArea = connData.area instanceof Array ? 
+                                    [ connData.area ] : //Line
                                     [ connData.any, connData.in || connData.incoming, connData.out || connData.outgoing ];
 
 
@@ -7752,7 +7869,8 @@ pt = [pt];
                                 port.setAttributes(attr);
                                 port.setRect(r);
                                 box.addPort(port);
-                                p.push(port);
+                                //p.push(port);
+                                p[id] = port;
                             }
 
                         }while(++j < connArea.length);
@@ -7765,79 +7883,6 @@ pt = [pt];
             //Returning the list of ports added to the box
             return p;
         };
-
-        AutoRouter.prototype._getClosestPorts = function(srcPorts, dstPorts, segmentPoints){
-        var i,
-            j,
-            dx,
-            dy,
-            srcP,
-            dstP,
-            minLength = -1,
-            srcConnectionPoints = [],
-            dstConnectionPoints = [],
-            cLength;
-
-        //Make sure srcPorts, dstPorts are arrays of ports
-        if( srcPorts instanceof AutoRouterBox )
-            srcPorts = srcPorts.getPortList(); 
-        else if( srcPorts.ports && srcPorts.ports[0] instanceof AutoRouterPort )
-            srcPorts = srcPorts.ports; 
-        else
-            srcPorts = srcPorts instanceof Array ? srcPorts : [ srcPorts ];
-
-        if( dstPorts instanceof AutoRouterBox )
-            dstPorts = dstPorts.getPortList(); 
-        else if( dstPorts.ports && dstPorts.ports[0] instanceof AutoRouterPort )
-            dstPorts = dstPorts.ports; 
-        else
-            dstPorts = dstPorts instanceof Array ? dstPorts : [ dstPorts ];
-
-        for(i = 0; i < srcPorts.length; i++){
-            srcConnectionPoints.push(srcPorts[i].getRect().getCenter());
-        }
-        for(i = 0; i < dstPorts.length; i++){
-            dstConnectionPoints.push(dstPorts[i].getRect().getCenter());
-        }
-
-
-        if (segmentPoints && segmentPoints.length > 0) {
-            for (i = 0; i < srcConnectionPoints.length; i += 1) {
-                for (j = 0; j < dstConnectionPoints.length; j += 1) {
-                    dx = { "src": Math.abs(srcConnectionPoints[i].x - segmentPoints[0][1]),
-                        "dst": Math.abs(dstConnectionPoints[j].x - segmentPoints[segmentPoints.length - 1][0])};
-
-                    dy =  { "src": Math.abs(srcConnectionPoints[i].y - segmentPoints[0][1]),
-                        "dst": Math.abs(dstConnectionPoints[j].y - segmentPoints[segmentPoints.length - 1][1])};
-
-                    cLength = Math.sqrt(dx.src * dx.src + dy.src * dy.src) + Math.sqrt(dx.dst * dx.dst + dy.dst * dy.dst);
-
-                    if (minLength === -1 || minLength > cLength) {
-                        minLength = cLength;
-                        srcP = i;
-                        dstP = j;
-                    }
-                }
-            }
-        } else {
-            for (i = 0; i < srcConnectionPoints.length; i += 1) {
-                for (j = 0; j < dstConnectionPoints.length; j += 1) {
-                    dx = Math.abs(srcConnectionPoints[i].x - dstConnectionPoints[j].x);
-                    dy = Math.abs(srcConnectionPoints[i].y - dstConnectionPoints[j].y);
-
-                    cLength = Math.sqrt(dx * dx + dy * dy);
-
-                    if (minLength === -1 || minLength > cLength) {
-                        minLength = cLength;
-                        srcP = i;
-                        dstP = j;
-                    }
-                }
-            }
-        }
-
-        return { "src": srcPorts[ srcP ], "dst": dstPorts[ dstP ] };
-    };
 
     AutoRouter.prototype.addPath = function(a){
         //Assign a pathId to the path (return this id).
@@ -7853,26 +7898,8 @@ pt = [pt];
         }
         pathId = "PATH_" + pathId;
 
-        //If path src/dst are both ports, create path
-        if( (src instanceof AutoRouterPort && dst instanceof AutoRouterPort) || (src.length === 1 && dst.length === 1) ){
-            a.id = pathId;
-            this._createPath(a);
-        }else{//Else store path
-            var srcPorts = src.ports ? src.ports : src,
-                dstPorts = dst.ports ? dst.ports : dst;
-
-            assert(srcPorts[0] instanceof AutoRouterPort, "AutoRouter:addPath: src is not recognized as an array of AutoRouterPorts or ARBoxObject");
-            assert(dstPorts[0] instanceof AutoRouterPort, "AutoRouter:addPath: dst is not recognized as an array of AutoRouterPorts or ARBoxObject");
-
-            this.futurePaths.push({ 'src': srcPorts, 
-                    'dst': dstPorts, 
-                    'id': pathId,
-                    'autoroute': a.autoroute || true,
-                    'startDir': a.startDirection || a.start,
-                    'endDir': a.endDirection || a.end });
-
-            this.paths[pathId] = 'Not Available';
-        }
+        a.id = pathId;
+        this._createPath(a);
     
         return pathId;
     };
@@ -7893,15 +7920,6 @@ pt = [pt];
                     || src instanceof Array || src.ports[0] instanceof AutoRouterPort, "AutoRouter:_createPath: src is not recognized as an AutoRouterPort");
         assert(dst instanceof AutoRouterPort
                     || dst instanceof Array || dst.ports[0] instanceof AutoRouterPort, "AutoRouter:_createPath: dst is not recognized as an AutoRouterPort");
-        if( src instanceof Array || dst instanceof Array ){ //If there are multiple port possibilities
-            var srcPorts = src.ports || src,
-                dstPorts = dst.ports || dst,
-                portsInfo = this._getClosestPorts(srcPorts, dstPorts);
-    
-            src = portsInfo.src;
-            dst = portsInfo.dst;
-        }
-
         path = this.router.addPath(autoroute, src, dst);
     
         if(startDir || endDir){ 
@@ -7926,50 +7944,15 @@ pt = [pt];
         this.paths[id] = path;
     
         //Register the path under box id
-        this.boxId2Path[src.getOwner().getID()].out.push(path);
-        this.boxId2Path[dst.getOwner().getID()].in.push(path);
+        this.boxId2Path[src[0].getOwner().getID()].out.push(path);//Assuming all ports belong to the same box
+        this.boxId2Path[dst[0].getOwner().getID()].in.push(path);//so the specific port to check is trivial
         return path;
     };
     
     AutoRouter.prototype.autoroute = function(){ 
-        //Create futurepaths
-        this._createFuturePaths();
         this.router.autoRoute();
     };
 
-    AutoRouter.prototype._createFuturePaths = function(){
-        //create future paths
-        var i = this.futurePaths.length;
-
-        while(i--){
-            var path = this.futurePaths.splice(i, 1)[0],
-                srcPorts = [],
-                dstPorts = [],
-                ports = path.src,
-                j = ports.length;
-
-            //Get available src ports
-            while(j--){
-                if(ports[j].isAvailable())
-                    srcPorts.push(ports[j]);
-            }
-
-            //Get available dst ports
-            ports = path.dst;
-            j = ports.length;
-            while(j--){
-                if(ports[j].isAvailable())
-                    dstPorts.push(ports[j]);
-            }
-
-            //Add Path
-            path.src = srcPorts.length > 0 ? srcPorts : path.src;
-            path.dst = dstPorts.length > 0 ? dstPorts : path.dst;
-            this._createPath(path);
-
-        }
-    };
-    
     AutoRouter.prototype.getPathPoints = function(pathId){
         assert(this.paths[pathId] !== undefined, "AutoRouter:getPath requested path does not match any current paths");
         var path = this.paths[pathId],
@@ -7992,7 +7975,7 @@ pt = [pt];
             x2 = size.x2 !== undefined ? size.x2 : (size.x1 + size.width),
             y1 = size.y1 !== undefined ? size.y1 : (size.y2 - size.height),
             y2 = size.y2 !== undefined ? size.y2 : (size.y1 + size.height),
-            connAreas = size.ConnectionAreas,
+            connInfo = size.ConnectionInfo,
             rect = new ArRect(x1, y1, x2, y2),
             paths = { "in": this.boxId2Path[ box.getID() ].in, "out": this.boxId2Path[ box.getID() ].out },
             i = paths.in.length;
@@ -8001,30 +7984,30 @@ pt = [pt];
         box.deleteAllPorts();
         boxObject.ports = [];
         this.router.setBoxRect(box, rect);
-        this.setConnectionAreas(boxObject, connAreas);
+        this.setConnectionInfo(boxObject, connInfo);
     
         //Reconnect paths to ports
         while( i-- ){
-            var pathSrc = paths.in[i].getStartPort().getOwner(),
-                newEndPort = this._getClosestPorts( pathSrc, boxObject ).dst;
-            if( boxObject.ports.indexOf( newEndPort ) !== -1 ){ //Only reconnect connections to the box - not to any child ports!
-                paths.in[i].setEndPort( newEndPort );
+            var pathSrc = paths.in[i].getStartPorts();
+                //newEndPort = this._getClosestPorts( pathSrc, boxObject ).dst;
+            //if( boxObject.ports.indexOf( newEndPort ) !== -1 ){ //Only reconnect connections to the box - not to any child ports!
+                paths.in[i].setEndPorts( ports );
                 this.router.disconnect( paths.in[i] );
-            }
+            //}
         }
     
         i = paths.out.length;
         while( i-- ){
-            var pathDst = paths.out[i].getEndPort().getOwner(),
-                newStartPort = this._getClosestPorts( boxObject, pathDst ).src;
-            if( boxObject.ports.indexOf( newStartPort) !== -1 ){ //Only reconnect connections to the box - not to any child ports!
-                paths.out[i].setStartPort( newStartPort );
+            var pathDst = paths.out[i].getEndPorts();
+                //newStartPort = this._getClosestPorts( boxObject, pathDst ).src;
+            //if( boxObject.ports.indexOf( newStartPort) !== -1 ){ //Only reconnect connections to the box - not to any child ports!
+                paths.out[i].setStartPorts( ports );
                 this.router.disconnect( paths.out[i] );
-            }
+            //}
         }
     };
     
-    AutoRouter.prototype.setConnectionAreas = function(boxObject, connArea){
+    AutoRouter.prototype.setConnectionInfo = function(boxObject, connArea){
         var box = boxObject.box,
             oldPorts = boxObject.ports,
             ports;
