@@ -52,50 +52,31 @@ define(['logManager',
         var self = this;
 
         //handle click on designer-items
-        this.$el.on('mousedown.HighlightManagerItem', 'div.' + DiagramDesignerWidgetConstants.DESIGNER_ITEM_CLASS,  function (event) {
-            var itemId = $(this).attr("id"),
-                rightClick = event.which === 3;
+        this._diagramDesigner.onItemMouseDown = function (itemId, eventDetails) {
             if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.HIGHLIGHT) {
-                self._highLight(itemId, rightClick);
-                event.preventDefault();
-                event.stopImmediatePropagation();
+                self._highLight(itemId, eventDetails.rightClick);
             }
-        });
+        };
 
         //handle click on designer-connections
-        this.$el.on('mousedown.HighlightManagerConnection', 'path[class~="' + DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS +'"]',  function (event) {
-            var connId = $(this).attr("id").replace(DiagramDesignerWidgetConstants.PATH_SHADOW_ARROW_END_ID_PREFIX, "").replace(DiagramDesignerWidgetConstants.PATH_SHADOW_ID_PREFIX, "");
+        this._diagramDesigner.onConnectionMouseDown = function (connId/*, eventDetails*/) {
             if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.HIGHLIGHT) {
                 self._highLight(connId, true);
-                event.preventDefault();
-                event.stopImmediatePropagation();
             }
-        });
+        };
 
-        //disable context-menu on right-click
-        this.$el.on('contextmenu.HighlightManager', function (event) {
-            if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.HIGHLIGHT) {
-                event.preventDefault();
-                event.stopImmediatePropagation();
-            }
-        });
-
-        //handle click on background --> clear highlight selection
-        this.$el.on('dblclick.HighlightManagerItem', function (event) {
+        //background double-click
+        this._diagramDesigner.onBackgroundDblClick = function (/*eventDetails*/) {
             if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.HIGHLIGHT) {
                 self._clear();
-                event.preventDefault();
-                event.stopImmediatePropagation();
             }
-        });
+        };
     };
 
     HighlightManager.prototype._deactivateMouseListeners = function () {
-        //disable HighlightManager specific DOM event listeners
-        this.$el.off('mousedown.HighlightManagerItem', 'div.' + DiagramDesignerWidgetConstants.DESIGNER_ITEM_CLASS);
-        this.$el.off('mousedown.HighlightManagerConnection', 'path[class~="' + DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS +'"]');
-        this.$el.off('contextmenu.HighlightManager');
-        this.$el.off('dblclick.HighlightManagerItem');
+        this._diagramDesigner.onItemMouseDown = undefined;
+        this._diagramDesigner.onConnectionMouseDown = undefined;
+        this._diagramDesigner.onBackgroundDblClick = undefined;
     };
 
 

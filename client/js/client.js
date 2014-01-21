@@ -12,7 +12,11 @@ define([
     'storage/commit',
     'logManager',
     'util/url',
-    'coreclient/metaforgui'
+    'coreclient/meta',
+    'coreclient/metaforgui',
+    'coreclient/tojson',
+    'coreclient/dump',
+    'coreclient/import'
 ],
     function (
         ASSERT,
@@ -28,7 +32,11 @@ define([
         Commit,
         LogManager,
         URL,
-        META
+        BaseMeta,
+        GuiMeta,
+        ToJson,
+        Dump,
+        Import
         ) {
 
         function COPY(object){
@@ -71,7 +79,8 @@ define([
                 _offline = false,
                 _networkWatcher = null,
                 _userName = URL.parseCookie(document.cookie).webgme || _configuration.user,
-                _privateKey = 4;
+                _privateKey = 4,
+                META = new GuiMeta(new BaseMeta());
 
             function print_nodes(pretext){
                 if(pretext){
@@ -1900,14 +1909,10 @@ define([
                 //ASSERT(_nodes[_id]);
 
                 var printData = function(){
-                    //TODO - what to print here - now we use as testing method...
-                    console.log('printing info of node '+_id);
-                    console.log('not implemented');
-                    console.log('printing info of node '+_id+' done');
-
-                    //testfunction placeholder
-
-                    console.log(_core.isMemberOf(_nodes[_id].node));
+                    //probably we will still use it for test purposes, but now it goes officially into printing the node's json representation
+                    ToJson(_core,_nodes[_id].node,"",'guid',function(err,jNode){
+                        console.log('node in JSON format[status = ',err,']:',jNode);
+                    });
                 };
 
                 if(_nodes[_id]){
@@ -1975,6 +1980,51 @@ define([
                 });
             }
 
+            //export and import functions
+            function dumpNodeAsync(path,callback){
+                if(_nodes[path]){
+                    Dump(_core,_nodes[path].node,"",'guid',callback);
+                } else {
+                    callback('unknown object',null);
+                }
+            }
+
+            function importNodeAsync(parentPath,jNode,callback){
+                var node = null;
+                if(_nodes[parentPath]){
+                    node = _nodes[parentPath].node;
+                }
+                Import(_core,_nodes[parentPath].node,jNode,function(err){
+                    if(err){
+                        callback(err);
+                    } else {
+                        saveRoot('importNode under '+parentPath, callback);
+                    }
+                });
+            }
+            function createProjectFromFileAsync(projectname,jNode,callback){
+                //if called on an existing project, it will ruin it!!! - although the old commits will be untouched
+                createProjectAsync(projectname,function(err){
+                    selectProjectAsync(projectname,function(err){
+                        Import(_core,null,jNode,function(err,root){
+                            if(err){
+                                callback(err);
+                            } else {
+                                _metaNodes[_core.getPath(root)] = root;
+                                _nodes[_core.getPath(root)] = {node:root,hash:""};
+                                saveRoot('import project from file',callback);
+                            }
+                        });
+                    });
+                });
+            }
+            function getDumpURL(path,filepath){
+                filepath = filepath || _projectName+'_'+_branch+'_'+URL.addSpecialChars(path);
+                if(window && window.location && window.location && _nodes && _nodes['root']){
+                    return window.location.protocol + '//' + window.location.host +'/rest/etf/'+_projectName+'/'+URL.addSpecialChars(_core.getHash(_nodes['root'].node))+'/'+URL.addSpecialChars(path)+'/'+filepath;
+                }
+                return null;
+            }
             //initialization
             function initialize(){
                 _database = newDatabase();
@@ -2119,6 +2169,12 @@ define([
                 getValidAttributeNames   : META.getValidAttributeNames,
                 getOwnValidAttributeNames: META.getOwnValidAttributeNames,
                 //end of META functions
+
+                //JSON functions
+                dumpNodeAsync: dumpNodeAsync,
+                importNodeAsync: importNodeAsync,
+                createProjectFromFileAsync: createProjectFromFileAsync,
+                getDumpURL: getDumpURL,
 
                 //constraint
                 setConstraint: setConstraint,

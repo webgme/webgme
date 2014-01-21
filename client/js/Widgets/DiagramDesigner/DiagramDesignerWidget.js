@@ -31,6 +31,8 @@ define(['logManager',
     './DiagramDesignerWidget.Draggable',
     './DiagramDesignerWidget.Clipboard',
     './DiagramDesignerWidget.Toolbar',
+    './DiagramDesignerWidget.Mouse',
+    './DiagramDesignerWidget.Tabs',
     'css!/css/Widgets/DiagramDesigner/DiagramDesignerWidget'], function (logManager,
                                                       CONSTANTS,
                                                       raphaeljs,
@@ -55,13 +57,17 @@ define(['logManager',
                                                       DiagramDesignerWidgetDroppable,
                                                       DiagramDesignerWidgetDraggable,
                                                       DiagramDesignerWidgetClipboard,
-                                                      DiagramDesignerWidgetToolbar) {
+                                                      DiagramDesignerWidgetToolbar,
+                                                      DiagramDesignerWidgetMouse,
+                                                      DiagramDesignerWidgetTabs) {
 
     var DiagramDesignerWidget,
         CANVAS_EDGE = 100,
         WIDGET_CLASS = 'diagram-designer',  // must be same as scss/Widgets/DiagramDesignerWidget.scss
         DEFAULT_CONNECTION_ROUTE_MANAGER = ConnectionRouteManager2,
-        GUID_DIGITS = 6;
+        GUID_DIGITS = 6,
+        BACKGROUND_TEXT_COLOR = '#DEDEDE',
+        BACKGROUND_TEXT_SIZE = 30
 
     var defaultParams = {'loggerName': 'DiagramDesignerWidget',
                          'gridSize': 10,
@@ -70,11 +76,12 @@ define(['logManager',
                          'zoomUIControls': true
     };
 
-    DiagramDesignerWidget = function (container, params) {
-        var self = this;
+    DiagramDesignerWidget = function (container, par) {
+        var self = this,
+            params = {};
 
         //merge dfault values with the given parameters
-        params = _.extend(defaultParams, params);
+        _.extend(params, defaultParams, par);
 
         //create logger instance with specified name
         this.logger = logManager.create(params.loggerName);
@@ -103,6 +110,28 @@ define(['logManager',
         this._lineStyleControls = true;
         if (params && params.hasOwnProperty('lineStyleControls')) {
             this._lineStyleControls = params.lineStyleControls;
+        }
+
+        //by default tabs are not enabled
+        this._tabsEnabled = false;
+        this._addTabs = false;
+        this._deleteTabs = false;
+        this._reorderTabs = false;
+
+        if (params && params.hasOwnProperty('tabsEnabled')) {
+            this._tabsEnabled = params.tabsEnabled && true;
+        }
+
+        if (params && params.hasOwnProperty('addTabs')) {
+            this._addTabs = params.addTabs && true;
+        }
+
+        if (params && params.hasOwnProperty('deleteTabs')) {
+            this._deleteTabs = params.deleteTabs && true;
+        }
+
+        if (params && params.hasOwnProperty('reorderTabs')) {
+            this._reorderTabs = params.reorderTabs && true;
         }
 
         //END OF --- Get DiagramDesignerWidget parameters from options
@@ -143,12 +172,8 @@ define(['logManager',
         //initiate Selection Manager (if needed)
         this.selectionManager = params.selectionManager || new SelectionManager({"diagramDesigner": this});
         this.selectionManager.initialize(this.skinParts.$itemsContainer);
-        this.selectionManager.onSelectionCommandClicked = function (command, selectedIds) {
-            self._onSelectionCommandClicked(command, selectedIds);
-        };
-
-        this.selectionManager.onSelectionCommandClicked = function (command, selectedIds) {
-            self._onSelectionCommandClicked(command, selectedIds);
+        this.selectionManager.onSelectionCommandClicked = function (command, selectedIds, event) {
+            self._onSelectionCommandClicked(command, selectedIds, event);
         };
 
         this.selectionManager.onSelectionRotated = function (deg, selectedIds) {
@@ -206,6 +231,8 @@ define(['logManager',
         this._afterManagersInitialized();
 
         this.setOperatingMode(DiagramDesignerWidgetOperatingModes.prototype.OPERATING_MODES.DESIGN);
+
+        this._activateMouseListeners();
 
 
         this.logger.debug("DiagramDesignerWidget ctor finished");
@@ -306,6 +333,8 @@ define(['logManager',
 
         //call our own resize handler
         this._resizeItemContainer();
+
+        this._refreshTabTabsScrollOnResize();
     };
 
     DiagramDesignerWidget.prototype.destroy = function () {
@@ -354,6 +383,10 @@ define(['logManager',
         }
 
         this.__loader = new LoaderCircles({"containerElement": this.$el.parent()});
+
+        if (this._tabsEnabled === true) {
+            this._initializeTabs();
+        }
     };
 
     DiagramDesignerWidget.prototype._createLineStyleMenuItem = function (width, color, pattern, startArrow, endArrow, type) {
@@ -460,6 +493,8 @@ define(['logManager',
 
     DiagramDesignerWidget.prototype.clear = function () {
         var i;
+
+        this.setTitle('');
 
         this.selectionManager.clear(); 
 
@@ -740,10 +775,6 @@ define(['logManager',
         }
     };
 
-    DiagramDesignerWidget.prototype.onElementMouseDown = function (elementId) {
-        this.logger.debug("onElementMouseDown: " + elementId);
-    };
-
     /************************** DRAG ITEM ***************************/
     DiagramDesignerWidget.prototype.onDesignerItemDragStart = function (draggedItemId, allDraggedItemIDs) {
         this.selectionManager.hideSelectionOutline();
@@ -800,16 +831,23 @@ define(['logManager',
 
     /************************** SELECTION DELETE CLICK HANDLER ****************************/
 
-    DiagramDesignerWidget.prototype._onSelectionCommandClicked = function (command, selectedIds) {
+    DiagramDesignerWidget.prototype._onSelectionCommandClicked = function (command, selectedIds, event) {
         switch(command) {
             case 'delete':
                 this.onSelectionDelete(selectedIds);
+                break;
+            case 'contextmenu':
+                this.onSelectionContextMenu(selectedIds, this.getAdjustedMousePos(event));
                 break;
         }
     };
 
     DiagramDesignerWidget.prototype.onSelectionDelete = function (selectedIds) {
         this.logger.warning("DiagramDesignerWidget.onSelectionDelete IS NOT OVERRIDDEN IN A CONTROLLER. ID: '" + selectedIds + "'");
+    };
+
+    DiagramDesignerWidget.prototype.onSelectionContextMenu = function (selectedIds, mousePos) {
+        this.logger.warning("DiagramDesignerWidget.onSelectionContextMenu IS NOT OVERRIDDEN IN A CONTROLLER. ID: '" + selectedIds + "', mousePos: " + JSON.stringify(mousePos));
     };
 
     /************************** SELECTION DELETE CLICK HANDLER ****************************/
@@ -1032,6 +1070,10 @@ define(['logManager',
                 }
             };
 
+            params = params || {};
+            params['font-size'] = params['font-size'] || BACKGROUND_TEXT_SIZE;
+            params['color'] = params['color'] || BACKGROUND_TEXT_COLOR;
+
             if (params) {
                 setSvgAttrFromParams([['color', 'fill'],
                                  ['font-size', 'font-size']]);
@@ -1127,6 +1169,8 @@ define(['logManager',
             this.connectionDrawingManager.deactivate();
             this.searchManager.deactivate();
             this._setComponentsReadOnly(true);
+            this._addTabsButtonEnabled(false);
+            this._destroyTabsSortable();
             switch (mode) {
                 case DiagramDesignerWidgetOperatingModes.prototype.OPERATING_MODES.READ_ONLY:
                     this.mode = this.OPERATING_MODES.READ_ONLY;
@@ -1140,6 +1184,8 @@ define(['logManager',
                     this.connectionDrawingManager.activate();
                     this.searchManager.activate();
                     this._setComponentsReadOnly(false);
+                    this._addTabsButtonEnabled(true);
+                    this._makeTabsSortable();
                     break;
                 case DiagramDesignerWidgetOperatingModes.prototype.OPERATING_MODES.HIGHLIGHT:
                     this.mode = this.OPERATING_MODES.HIGHLIGHT;
@@ -1307,6 +1353,8 @@ define(['logManager',
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetClipboard.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetDraggable.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetToolbar.prototype);
+    _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetMouse.prototype);
+    _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetTabs.prototype);
 
 
     return DiagramDesignerWidget;

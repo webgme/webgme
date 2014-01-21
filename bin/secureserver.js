@@ -202,7 +202,7 @@ requirejs(['logManager',
             } else {
                 throw "cannot initialize UserDataManager";
             }
-        })
+        });
     };
 
     function main(){

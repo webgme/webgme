@@ -5,12 +5,14 @@ define(['logManager',
     'js/Constants',
     'js/NodePropertyNames',
     'js/Utils/GMEConcepts',
+    'js/Utils/ExportManager',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     'js/DragDrop/DragHelper'], function (logManager,
                                                         util,
                                                         CONSTANTS,
                                                         nodePropertyNames,
                                                         GMEConcepts,
+                                                        ExportManager,
                                                         DiagramDesignerWidgetConstants,
                                                         DragHelper) {
 
@@ -126,6 +128,10 @@ define(['logManager',
         this._oGetDragParams = this.designerCanvas.getDragParams;
         this.designerCanvas.getDragParams = function (selectedElements, event) {
             return self._getDragParams(selectedElements, event);
+        };
+
+        this.designerCanvas.onSelectionContextMenu = function (selectedIds, mousePos) {
+            self._onSelectionContextMenu(selectedIds, mousePos);
         };
 
         this.logger.debug("attachDiagramDesignerWidgetEventHandlers finished");
@@ -1029,6 +1035,34 @@ define(['logManager',
         }
 
         return params;
+    };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionContextMenu = function (selectedIds, mousePos) {
+        var menuItems = {},
+            MENU_EXPORT = 'export',
+            self = this;
+
+        menuItems[MENU_EXPORT] = {
+            "name": 'Export selected...',
+            "icon": 'icon-share'
+        };
+
+        this.designerCanvas.createMenu(menuItems, function (key) {
+                if (key === MENU_EXPORT) {
+                    self._exportItems(selectedIds);
+                }
+            },
+            this.designerCanvas.posToPageXY(mousePos.mX,
+                mousePos.mY)
+        );
+    };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._exportItems = function (selectedIds) {
+        var i = selectedIds.length;
+
+        while(i--) {
+            ExportManager.export(this._ComponentID2GmeID[selectedIds[i]]);
+        }
     };
 
     return ModelEditorControlDiagramDesignerWidgetEventHandlers;

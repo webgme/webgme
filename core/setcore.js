@@ -14,7 +14,7 @@ define([ "util/assert"], function (ASSERT) {
 
         //help functions
         var setModified = function(node){
-            innerCore.setRegistry(node,'_sets_',(innerCore.getRegistry(node,'_sets_') || 0)+1);
+            //innerCore.setRegistry(node,'_sets_',(innerCore.getRegistry(node,'_sets_') || 0)+1);
         };
         var getMemberPath = function(node,setElementNode){
             var ownPath = innerCore.getPath(node),
@@ -185,7 +185,7 @@ define([ "util/assert"], function (ASSERT) {
             var memberRelId = getMemberRelId(node,setName,memberPath);
             if(memberRelId){
                 var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
-                return innerCore.getAttribute(memberNode,regName);
+                return innerCore.getRegistry(memberNode,regName);
             }
         };
         setcore.setMemberRegistry = function(node,setName,memberPath,regName,regValue){
@@ -193,7 +193,7 @@ define([ "util/assert"], function (ASSERT) {
             var memberRelId = getMemberRelId(node,setName,memberPath);
             if(memberRelId){
                 var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
-                innerCore.setAttribute(memberNode,regName,regValue);
+                innerCore.setRegistry(memberNode,regName,regValue);
                 setModified(node);
             }
         };
@@ -202,7 +202,7 @@ define([ "util/assert"], function (ASSERT) {
             var memberRelId = getMemberRelId(node,setName,memberPath);
             if(memberRelId){
                 var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
-                innerCore.delAttribute(memberNode,regName);
+                innerCore.delRegistry(memberNode,regName);
                 setModified(node);
             }
         };
@@ -243,6 +243,32 @@ define([ "util/assert"], function (ASSERT) {
                 }
             }
             return sets;
+        };
+
+        setcore.getSingleNodeHash = function(node){
+            //TODO this function only needed while the inheritance is not in its final form!!!
+            //bb377d14fd57cbe2b0a2ad297a7a303b7a5fccf3
+            ASSERT(setcore.isValidNode(node));
+            function xorHashes (a, b) {
+                var outHash = "";
+                if(a.length === b.length){
+                    for(var i=0;i< a.length;i++){
+                        outHash += (parseInt(a.charAt(i),16) ^ parseInt(b.charAt(i),16)).toString(16);
+                    }
+                }
+                return outHash;
+            }
+            //var hash = "0000000000000000000000000000000000000000";
+            var hash = innerCore.getSingleNodeHash(node);
+
+            //now we should stir all the sets hashes into the node's hash to get changes deep inside
+            var names = setcore.getSetNames(node);
+            for(var i=0;i<names.length;i++){
+                var setNode = setcore.getChild(setcore.getChild(node,SETS_ID),names[i]);
+                hash = xorHashes(hash,innerCore.getSingleNodeHash(setNode));
+            }
+
+            return hash;
         };
 
         return setcore;

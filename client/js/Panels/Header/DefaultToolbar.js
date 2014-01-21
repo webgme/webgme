@@ -7,14 +7,18 @@
 "use strict";
 
 define(['clientUtil',
+    'js/Constants',
     'js/Utils/METAAspectHelper',
+    'js/Utils/ExportManager',
     'js/Dialogs/Projects/ProjectsDialog',
     'js/Dialogs/Commit/CommitDialog',
     'js/Dialogs/ProjectRepository/ProjectRepositoryDialog'], function (util,
+                                                 CONSTANTS,
                                                                        METAAspectHelper,
+                                                                       ExportManager,
                                                                        ProjectsDialog,
                                                                        CommitDialog,
-                                                                        ProjectRepositoryDialog) {
+                                                                       ProjectRepositoryDialog) {
 
     var DefaultToolbar;
 
@@ -57,6 +61,16 @@ define(['clientUtil',
 
         toolbar.addSeparator();
 
+        //EXPORT & IMPORT
+
+        toolbar.addButton({ "title": "Export project...",
+            "icon": "icon-share",
+            "clickFn": function (/*data*/) {
+                ExportManager.export(CONSTANTS.PROJECT_ROOT_ID);
+            } });
+
+        toolbar.addSeparator();
+
         //META ASPECT helper parts
         toolbar.addButton({ "title": "Display META entries...",
             "icon": "icon-barcode",
@@ -73,7 +87,9 @@ define(['clientUtil',
                     var pom = document.createElement('a');
                     pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(meta.content));
                     pom.setAttribute('download', meta.fileName);
+                    $('body').append($(pom));
                     pom.click();
+                    $(pom).remove();
                 } else {
                     alert('Something went wrong, METAAspectTypes are not available...');
                 }

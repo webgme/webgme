@@ -259,7 +259,7 @@ define(['logManager',
         }
 
         //process the sheets
-        this._processMetaAspectSheetsRegistry();
+        var positionsUpdated = this._processMetaAspectSheetsRegistry();
 
         this.logger.debug('_metaAspectMembersAll: \n' + JSON.stringify(this._metaAspectMembersAll));
         this.logger.debug('_metaAspectMembersCoordinatesGlobal: \n' + JSON.stringify(this._metaAspectMembersCoordinatesGlobal));
@@ -289,7 +289,7 @@ define(['logManager',
         }
 
         //check all other nodes for position change
-        diff = _.intersection(this._selectedMetaAspectSheetMembers, selectedSheetMembers);
+        diff = positionsUpdated;//_.intersection(this._selectedMetaAspectSheetMembers, selectedSheetMembers);
         len = diff.length;
         while (len--) {
             gmeID = diff[len];
@@ -1615,10 +1615,13 @@ define(['logManager',
             j,
             gmeID;
 
+        //save old positions
+        var oldMetaAspectMembersCoordinatesPerSheet = this._metaAspectMembersCoordinatesPerSheet;
+
         this._sheets = {};
         this._metaAspectMembersPerSheet = {};
         this._metaAspectMembersCoordinatesPerSheet = {};
-        this.diagramDesigner.clearSheets();
+        this.diagramDesigner.clearTabs();
         this._metaAspectSheetsPerMember = {};
 
         metaAspectSheetsRegistry.sort(function (a, b) {
@@ -1634,12 +1637,20 @@ define(['logManager',
         for (i = 0; i < len; i += 1) {
             setName = metaAspectSheetsRegistry[i].SetID;
 
-            sheetID = this.diagramDesigner.addSheet(metaAspectSheetsRegistry[i].title, true);
+            sheetID = this.diagramDesigner.addTab(metaAspectSheetsRegistry[i].title, true);
 
             this._sheets[sheetID] = setName;
 
             //get the most up-to-date member list for each set
             this._metaAspectMembersPerSheet[setName] = aspectNode.getMemberIds(setName);
+
+            //TODO: debug check to see if root for any reason is present among the members list
+            //TODO: remove, not needed, just for DEGUG reasons...
+            //TODO: it should never happen because it leads to double refresh when ROOT changes
+            //TODO: when onOneEvent will be eliminated this will not be an issue anymore
+            if (this._metaAspectMembersPerSheet[setName].indexOf(CONSTANTS.PROJECT_ROOT_ID) > -1) {
+                this.logger.error('ROOT is in MetaSet: ' + setName);
+            }
 
             //get the sheet coordinates
             this._metaAspectMembersCoordinatesPerSheet[setName] = {};
@@ -1657,6 +1668,23 @@ define(['logManager',
             }
         }
 
+        //figure out whose position has changed
+        var positionUpdated = [];
+        if (this._selectedMetaAspectSet) {
+            var oldPositions = oldMetaAspectMembersCoordinatesPerSheet[this._selectedMetaAspectSet];
+            var newPositions = this._metaAspectMembersCoordinatesPerSheet[this._selectedMetaAspectSet];
+            if (oldPositions && newPositions) {
+                for (var oldItemId in oldPositions) {
+                    if (oldPositions.hasOwnProperty(oldItemId) && newPositions.hasOwnProperty(oldItemId)) {
+                        if (oldPositions[oldItemId].x !== newPositions[oldItemId].x ||
+                            oldPositions[oldItemId].y !== newPositions[oldItemId].y) {
+                            positionUpdated.push(oldItemId);
+                        }
+                    }
+                }
+            }
+        }
+
         if (!selectedSheetID) {
             for (selectedSheetID in this._sheets) {
                 if (this._sheets.hasOwnProperty(selectedSheetID)) {
@@ -1665,7 +1693,9 @@ define(['logManager',
             }
         }
 
-        this.diagramDesigner.selectSheet(selectedSheetID);
+        this.diagramDesigner.selectTab(selectedSheetID);
+
+        return positionUpdated;
     };
 
 

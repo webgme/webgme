@@ -6,8 +6,8 @@
   left: 0;
   margin: 0;
   /*background-color: $loader-bg-background-color;
-  opacity: $loader-bg-opacity;
-  z-index: 12000;*/ }
+  opacity: $loader-bg-opacity;*/
+  z-index: 12000; }
 
 .loader-container {
   position: absolute;

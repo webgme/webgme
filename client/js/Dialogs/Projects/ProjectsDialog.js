@@ -3,10 +3,12 @@
 define(['logManager',
         'loaderCircles',
         'js/Utils/GMEConcepts',
+        'js/Dialogs/Import/ImportDialog',
         'text!html/Dialogs/Projects/ProjectsDialog.html',
         'css!/css/Dialogs/Projects/ProjectsDialog'], function (logManager,
                                                                LoaderCircles,
                                                                GMEConcepts,
+                                                               ImportDialog,
                                                                projectsDialogTemplate) {
 
     var ProjectsDialog,
@@ -69,6 +71,19 @@ define(['logManager',
             }
         };
 
+        var doCreateProjectFromFile = function () {
+            var val = self._txtNewProjectName.val();
+
+            if (val !== "" && self._projectNames.indexOf(val) === -1) {
+                self._btnNewProjectImport.addClass("disabled");
+                self._dialog.modal('hide');
+                var d = new ImportDialog();
+                d.show(function (fileContent) {
+                    self._createProjectFromFile(val, fileContent);
+                });
+            }
+        };
+
         this._dialog = $(projectsDialogTemplate);
 
         //get controls
@@ -81,10 +96,12 @@ define(['logManager',
         this._btnOpen = this._dialog.find(".btn-open");
         this._btnDelete = this._dialog.find(".btn-delete");
         this._btnCreateNew = this._dialog.find(".btn-create-new");
+        this._btnCreateFromFile = this._dialog.find(".btn-import-file");
         this._btnRefresh = this._dialog.find(".btn-refresh");
         
         this._btnNewProjectCancel = this._dialog.find(".btn-cancel");
         this._btnNewProjectCreate = this._dialog.find(".btn-save");
+        this._btnNewProjectImport = this._dialog.find(".btn-import");
 
         this._txtNewProjectName = this._dialog.find(".txt-project-name");
 
@@ -150,6 +167,7 @@ define(['logManager',
             self._panelPuttons.hide();
             self._panelCreateNew.show();
             self._txtNewProjectName.focus();
+            self._btnNewProjectImport.hide();
 
             event.stopPropagation();
             event.preventDefault();
@@ -158,9 +176,22 @@ define(['logManager',
         this._btnNewProjectCancel.on('click', function (event) {
             self._panelPuttons.show();
             self._panelCreateNew.hide();
+            self._btnNewProjectCreate.show();
+            self._btnNewProjectImport.show();
 
             self._filter = self._dialog.find('.tabContainer li.active').data('filter');
             self._updateProjectNameList();
+
+            event.stopPropagation();
+            event.preventDefault();
+        });
+
+        this._btnCreateFromFile.on('click', function (event) {
+            self._txtNewProjectName.val('');
+            self._panelPuttons.hide();
+            self._panelCreateNew.show();
+            self._txtNewProjectName.focus();
+            self._btnNewProjectCreate.hide();
 
             event.stopPropagation();
             event.preventDefault();
@@ -178,14 +209,22 @@ define(['logManager',
             if (!re.test(val) || self._projectNames.indexOf(val) !== -1) {
                 self._panelCreateNew.addClass("error");
                 self._btnNewProjectCreate.addClass("disabled");
+                self._btnNewProjectImport.addClass("disabled");
             } else {
                 self._panelCreateNew.removeClass("error");
                 self._btnNewProjectCreate.removeClass("disabled");
+                self._btnNewProjectImport.removeClass("disabled");
             }
         });
 
         this._btnNewProjectCreate.on('click', function (event) {
             doCreateProject();
+            event.stopPropagation();
+            event.preventDefault();
+        });
+
+        this._btnNewProjectImport.on('click', function (event) {
+            doCreateProjectFromFile();
             event.stopPropagation();
             event.preventDefault();
         });
@@ -342,6 +381,19 @@ define(['logManager',
         }
 
         this._showButtons(false);
+    };
+
+    ProjectsDialog.prototype._createProjectFromFile = function (projectName, jsonContent) {
+        var _client = this._client,
+            _logger = this._logger;
+
+        _client.createProjectFromFileAsync(projectName, jsonContent, function (err) {
+            if (!err) {
+                _logger.debug('CREATE NEW PROJECT FROM FILE FINISHED SUCCESSFULLY');
+            } else {
+                _logger.error('CAN NOT CREATE NEW PROJECT FROM FILE: ' + err.message);
+            }
+        });
     };
 
     return ProjectsDialog;

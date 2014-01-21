@@ -14,10 +14,10 @@ define([], function () {
     function nullPointerCore (_innerCore) {
         var _core = {};
         for(var i in _innerCore){
-            _core[i] = _innerCore[i]
+            _core[i] = _innerCore[i];
         }
 
-
+        
         //extra functions
         _core.setPointer = function(node,name, target){
             if(target === null){
@@ -45,8 +45,7 @@ define([], function () {
             }
         };
 
-
-
+        
         return _core;
     }
 

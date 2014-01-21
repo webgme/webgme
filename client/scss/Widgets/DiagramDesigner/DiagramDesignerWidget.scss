@@ -42,6 +42,8 @@ $rotation-deg-color: #666666;
 
 $connection-drawing-connector-background-color: #00FF00;
 
+$tabs-container-height: 26px;
+
 .diagram-designer {
   outline: none;
 
@@ -92,6 +94,11 @@ $connection-drawing-connector-background-color: #00FF00;
             margin-left: -13px;
             bottom: -13px;
           }
+        }
+
+        &.contextmenu {
+          bottom: -13px;
+          right: -13px;
         }
       }
 
@@ -273,4 +280,135 @@ div.css-zoom.diagram-designer-zoom {
 
 div.diagram-designer-drag-outline {
   white-space: nowrap;
+}
+
+/*
+TABS CONTAINER
+*/
+.diagram-designer-tabs-container {
+  position: absolute;
+  top: 2px;
+  width : 100%;
+  height: $tabs-container-height;
+  background-color: rgba(255, 255, 255, 0.3);
+  padding-top: 2px;
+
+  > div {
+    display: table-cell;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  div.add-tab-container {
+    border-bottom: 1px solid #ddd;
+    padding-left: 3px;
+    padding-right: 3px;
+    padding-bottom: 2px;
+  }
+
+  div.add-tab-container {
+    > div {
+      display: inline-block;
+      margin-right: 3px;
+    }
+  }
+
+  div.add-tab-container {
+    ul.dropdown-menu {
+      li {
+        a {
+          [class^="icon-"],
+          [class*=" icon-"] {
+            margin-left: -17px;
+            margin-right: 3px;
+          }
+        }
+      }
+    }
+  }
+
+  div.tab-list-container {
+    width: 100%;
+    overflow: hidden;
+
+    ul.nav {
+      position: relative;
+      margin-bottom: 0px;
+      height: 24px;
+
+      &.nav-tabs {
+        > li {
+          display: inline-block;
+          float:none;
+
+          > a {
+            padding-top: 5px;
+            padding-bottom: 5px;
+            line-height: 13px;
+
+            .tab-title {
+              white-space: nowrap;
+              display: inline-block;
+              max-width: 120px;
+              overflow: hidden;
+              text-overflow: ellipsis;
+
+              input {
+                min-width: 50px !important;
+              }
+            }
+
+            [class^="icon-"],
+            [class*=" icon-"] {
+              margin-top: -2px;
+              margin-left: 2px;
+              cursor: pointer;
+              display: none;
+            }
+          }
+
+          &.active {
+            > a {
+              [class^="icon-"],
+              [class*=" icon-"] {
+                display: inline-block;
+              }
+            }
+          }
+        }
+
+        &.ui-sortable {
+          li.ui-sortable-placeholder {
+            height: 0px !important;
+          }
+
+          li.ui-sortable-helper {
+            top: 0px !important;
+            pointer-events: none;
+          }
+        }
+      }
+    }
+  }
+}
+
+.read-only {
+  .diagram-designer-tabs-container {
+    div.tab-list-container {
+      ul.nav {
+        &.nav-tabs {
+          > li {
+            &.active {
+              > a {
+                [class^="icon-"],
+                [class*=" icon-"] {
+                  display: none;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }

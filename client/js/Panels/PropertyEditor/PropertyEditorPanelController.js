@@ -4,11 +4,13 @@ define(['logManager',
     'clientUtil',
     'js/NodePropertyNames',
     'js/Decorators/DecoratorDB',
-    'js/Constants'], function (logManager,
+    'js/Constants',
+    'js/Panels/MetaEditor/MetaEditorConstants'], function (logManager,
                                         util,
                                         nodePropertyNames,
                                         DecoratorDB,
-                                        CONSTANTS) {
+                                        CONSTANTS,
+                                        MetaEditorConstants) {
 
     var PropertyEditorController;
 
@@ -345,6 +347,8 @@ define(['logManager',
                         //#1: filter out rows of 'MetaEditor.MemberCoord' from Registry
                         if (it.indexOf( nodePropertyNames.Registry.ProjectRegistry + '.') === 0) {   //#3: make ProjectRegistry entries readonly
                             commonRegs[it].readOnly = true;
+                        } else if (it.indexOf(MetaEditorConstants.META_SHEET_REGISTRY_KEY) === 0 ) {
+                            delete commonRegs[it];
                         }
                     }
                 }

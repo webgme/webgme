@@ -94,5 +94,9 @@ define(['js/PanelBase/PanelBaseWithHeader',
         WebGMEGlobal.Toolbar.refresh();
     };
 
+    ModelEditorPanel.prototype.getNodeID = function () {
+        return this.control.getNodeID();
+    };
+
     return ModelEditorPanel;
 });

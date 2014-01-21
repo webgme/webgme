@@ -59,7 +59,7 @@ requirejs(['logManager',
     logManager.setLogLevel(logLevel);
     logManager.useColors(true);
     logManager.setFileLogPath(logFile);
-    var logger = logManager.create("combined-server");
+    var logger = logManager.create("enhancedServer");
     var iologger = logManager.create("socket.io");
     var sitekey = null;
     var sitecertificate = null;
@@ -252,7 +252,21 @@ requirejs(['logManager',
                     res.send(500);
                 } else {
                     _REST.doRESTCommand(_REST.request.GET,command,parameters,function(httpStatus,object){
-                        res.json(httpStatus, object || null);
+                        if(command === _REST.command.etf){
+                            var filename = 'exportedNode.json';
+                            if(parameters[3]){
+                                filename = parameters[3];
+                            }
+                            if(filename.indexOf('.') === -1){
+                                filename += '.json';
+                            }
+                            res.header("Content-Type", "application/json");
+                            res.header("Content-Disposition", "attachment;filename=\""+filename+"\"");
+                            res.status(httpStatus);
+                            res.end(JSON.stringify(object));
+                        } else {
+                            res.json(httpStatus, object || null);
+                        }
                     });
                 }
             });
@@ -291,4 +305,22 @@ requirejs(['logManager',
     storage = Storage(__storageOptions);
 
     storage.open();
+
+    //debug information
+    if(parameters.debug === true){
+        console.log('parameters of webgme server:');
+        console.log(parameters);
+    }
+    var networkIfs = require('os').networkInterfaces();
+    for(var dev in networkIfs){
+        networkIfs[dev].forEach(function(netIf){
+            if(netIf.family === 'IPv4'){
+                var address = parameters.httpsecure ? 'https' : 'http' + '://' + netIf.address + ':' + parameters.port;
+                logger.info(address);
+                if(parameters.debug === true){
+                    console.log('valid address of webgme server: '+address);
+                }
+            }
+        });
+    }
 });

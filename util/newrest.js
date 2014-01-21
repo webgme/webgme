@@ -2,12 +2,14 @@ define([
     'core/core',
     'storage/serveruserstorage',
     'coreclient/tojson',
+    'coreclient/dump',
     'util/url',
     'logManager'
 ],function(
     Core,
     Storage,
     ToJson,
+    Dump,
     URL,
     logManager
     ){
@@ -30,7 +32,8 @@ define([
                 'commits':'commits',
                 'commit':'commit',
                 'node':'node',
-                'dump':'dump'
+                'dump':'dump',
+                'etf': 'etf'
             },
             _HTTPError = {
                 'badRequest':400,
@@ -71,6 +74,10 @@ define([
                         'dump':{
                             'description':"Responds with the JSON representation of the pointed node. All sub-nodes are extracted and outer relations of the sub-tree represented by JSON reference objects.",
                             'example': _parameters.baseUrl+'/dump/projectName/rootHash/pathOfNode'
+                        },
+                        'etf':{
+                            'description':"Responds with the JSON representation of the pointed node. All sub-nodes are extracted and outer relations of the sub-tree represented by JSON reference objects. It forces file download.",
+                            'example': _parameters.baseUrl+'/etf/projectName/rootHash/pathOfNode/outputFileName'
                         }
                     }
                 }
@@ -159,7 +166,13 @@ define([
                                 if(err){
                                     callback(_HTTPError.internalServerError,err);
                                 } else {
-                                    callback(_HTTPError.ok,ToJson(core,node,_parameters.baseUrl+'/node/'+projectName+'/'+URL.addSpecialChars(rootHash)));
+                                    ToJson(core,node,_parameters.baseUrl+'/node/'+projectName+'/'+URL.addSpecialChars(rootHash),'url',function(err,jNode){
+                                        if(err){
+                                            callback(_HTTPError.internalServerError,err);
+                                        } else {
+                                            callback(_HTTPError.ok,jNode);
+                                        }
+                                    });
                                 }
                             });
                         }
@@ -168,7 +181,32 @@ define([
             });
         }
         function dumpNode(projectName,rootHash,path,callback){
-
+            _storage.openProject(projectName,function(err,project){
+                if(err){
+                    callback(_HTTPError.internalServerError,err);
+                } else {
+                    var core = new Core(project);
+                    core.loadRoot(rootHash,function(err,root){
+                        if(err){
+                            callback(_HTTPError.internalServerError,err);
+                        } else {
+                            core.loadByPath(root,path,function(err,node){
+                                if(err){
+                                    callback(_HTTPError.internalServerError,err);
+                                } else {
+                                    Dump(core,node,_parameters.baseUrl+'/dump/'+projectName+'/'+URL.addSpecialChars(rootHash),'guid',function(err,dump){
+                                        if(err){
+                                            callback(_HTTPError.internalServerError,err);
+                                        } else {
+                                            callback(_HTTPError.ok,dump);
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    });
+                }
+            });
         }
         function doGET(command,parameters,callback){
             switch(command){
@@ -191,6 +229,7 @@ define([
                     printNode(parameters[0],URL.removeSpecialChars(parameters[1] || ""),URL.removeSpecialChars(parameters[2] || ""),callback);
                     break;
                 case _commands.dump:
+                case _commands.etf:
                     dumpNode(parameters[0],URL.removeSpecialChars(parameters[1] || ""),URL.removeSpecialChars(parameters[2] || ""),callback);
                     break;
                 default:
