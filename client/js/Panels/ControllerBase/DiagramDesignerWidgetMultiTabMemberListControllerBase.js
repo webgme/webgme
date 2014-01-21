@@ -1429,11 +1429,7 @@ define(['logManager',
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onSelectionChanged = function (selectedIds) {
         var gmeIDs = [],
             len = selectedIds.length,
-            id,
-            connectionSelected = false,
-            allHasRegistrylineStyle = selectedIds.length > 0,
-            nodeObj,
-            lineStyle;
+            id;
 
         while (len--) {
             id = this._ComponentID2GMEID[selectedIds[len]];
