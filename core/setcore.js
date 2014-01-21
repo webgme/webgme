@@ -265,7 +265,10 @@ define([ "util/assert"], function (ASSERT) {
             var names = setcore.getSetNames(node);
             for(var i=0;i<names.length;i++){
                 var setNode = setcore.getChild(setcore.getChild(node,SETS_ID),names[i]);
-                hash = xorHashes(hash,innerCore.getSingleNodeHash(setNode));
+                var memberRelids = setcore.getChildrenRelids(setNode);
+                for(var j=0;j<memberRelids.length;j++){
+                    hash = xorHashes(hash,innerCore.getSingleNodeHash(setcore.getChild(setNode,memberRelids[j])));
+                }
             }
 
             return hash;
