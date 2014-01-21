@@ -42,7 +42,8 @@ define(['css!/css/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase.Co
     DiagramDesignerWidgetDecoratorBaseConnectionArea.prototype._editConnectionAreas = function () {
         var w = this.$el.outerWidth(true),
             h = this.$el.outerHeight(true),
-            j;
+            j,
+            self = this;
 
         this._connAreaEditBackground = $('<div/>', { 'class': 'conn-area-edit-bg'});
 
@@ -50,8 +51,32 @@ define(['css!/css/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase.Co
                                           'height': h});
 
         this.$el.addClass(DECORATOR_EDIT_CLASS);
-        this.$el.parent().append(this._connAreaEditBackground);
+        this._decoratorItem = this.$el.parent();
+        this._decoratorItem.append(this._connAreaEditBackground);
 
+        this._connAreaEditBackground.on('mouseup mouseenter mouseleave dblclick', function (event) {
+            event.stopPropagation();
+        });
+
+        this._connAreaEditBackground.on('mousedown', function (event) {
+            event.stopPropagation();
+
+            //save selection on right-click
+            var rightClick = event.which === 3;
+            if (rightClick) {
+                self._endEditConnectionAreas();
+            }
+        });
+
+        //hook up mouse event handler on the connection areas to toggle enabled/disabled state
+        this._connAreaEditBackground.on('mousedown.' + EVENT_POSTFIX, '.' + CONN_AREA_EDIT_CLASS, function (event) {
+            $(this).toggleClass(DISABLED);
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+        });
+
+        //get the connection areas from the decorator and render them
         this._areas = this.getConnectionAreas();
 
         j = this._areas.length;
@@ -82,15 +107,20 @@ define(['css!/css/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase.Co
 
            this._connAreaEditBackground.append(divArea);
         }
+    };
 
+    DiagramDesignerWidgetDecoratorBaseConnectionArea.prototype._endEditConnectionAreas = function () {
+        var connAreas = this._connAreaEditBackground.find('.' + CONN_AREA_EDIT_CLASS),
+            logger = this.logger;
 
-        this._connAreaEditBackground.on('mousedown.' + EVENT_POSTFIX, '.' + CONN_AREA_EDIT_CLASS, function (event) {
-            $(this).toggleClass(DISABLED);
-            event.preventDefault();
-            event.stopPropagation();
-            event.stopImmediatePropagation();
+        connAreas.each(function(index, value) {
+            value = $(value);
+            logger.warning(value.data(DATA_CONN_AREA_ID) + ' enabled: ' + !value.hasClass(DISABLED));
         });
 
+        //finish editing
+        this.$el.removeClass(DECORATOR_EDIT_CLASS);
+        this._connAreaEditBackground.remove();
     };
 
 
