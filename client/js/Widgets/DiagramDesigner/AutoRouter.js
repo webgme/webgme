@@ -7056,8 +7056,7 @@ pt = [pt];
             this.createStartEndPointTo = createStartEndPointTo;
             this.createStartEndPointOn = createStartEndPointOn;
             this.removePoint = removePoint;
-            this.clearPoints = clearPoints;
-            this.printPoints = printPoints;
+            this.getPoints = getPoints;
 
             //AvailableAreas Methods
             this.isAvailable = isAvailable;
@@ -7249,7 +7248,7 @@ pt = [pt];
                 if( point.x < rect.left )
                     point.x = rect.left;
                 else if(rect.right <= point.x)
-                    points.x = rect.right;
+                    point.x = rect.right;
 
                 if( point.y < rect.ceil )
                     point.y = rect.ceil;
@@ -7429,35 +7428,10 @@ pt = [pt];
                     _logger.warning("point was not removed from port");
             }
 
-            function clearPoints(){
-                points = [ [], [], [], [] ];//For points on Dir_Top, Dir_Left, Dir_Right, etc
-/*
-                var d = 4;
-                while(d--){
-                    var pts = points[d].length;
-                    while(pts--){
-                        points[d].splice(pts,1);
-                    }
-                }
-*/
+            function getPoints(){
+                return points;
             }
 
-            function printPoints(){
-                var d = 4,
-                    hasPoint = false;
-                while(d--){
-                    var pts = points[d].length;
-                    while(pts--){
-                        console.log('(' + points[d][pts].x + ', ' + points[d][pts].y + ')');
-                        hasPoint = true;
-                    }
-                }
-                if(!hasPoint){
-                    console.log('Port has no points');
-                }
-
-            }
-            
             function resetAvailableArea(){
                 availableArea = [];
 
