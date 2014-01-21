@@ -4631,7 +4631,9 @@ if(DEBUG && ArPointList.length > 0){
                     endport = path.getEndPort(),
                     startdir = path.getStartDir(),
                     startportHasLimited = false,
-                    startportCanHave = true;
+                    startportCanHave = true,
+                    startpoint,
+                    endpoint;
 
                 if (startdir != Dir_None) {
                     startportHasLimited = startport.hasLimitedDirs();
