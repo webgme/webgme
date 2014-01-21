@@ -4625,142 +4625,140 @@ if(DEBUG && ArPointList.length > 0){
                 return getBoxAt(point) !== null;
             }
 
-            function connect(path, startpoint, endpoint){
-                if(startpoint === undefined){
+            function connect(path){
+                //path.calculateStartEndPorts();
+                var startport = path.getStartPort(),
+                    endport = path.getEndPort(),
+                    startdir = path.getStartDir(),
+                    startportHasLimited = false,
+                    startportCanHave = true;
 
-                    var startport = path.getStartPort(),
-                        endport = path.getEndPort(),
-                        startdir = path.getStartDir(),
-                        startportHasLimited = false,
-                        startportCanHave = true;
-
-                    if (startdir != Dir_None) {
-                        startportHasLimited = startport.hasLimitedDirs();
-                        startportCanHave = startport.canHaveStartEndPointOn(startdir, true);
-                    }
-                    if( startdir === Dir_None ||							// recalc startdir if empty
+                if (startdir != Dir_None) {
+                    startportHasLimited = startport.hasLimitedDirs();
+                    startportCanHave = startport.canHaveStartEndPointOn(startdir, true);
+                }
+                if( startdir === Dir_None ||							// recalc startdir if empty
                         startportHasLimited && !startportCanHave)		// or is limited and userpref is invalid
-                    {
-                        startdir = startport.getStartEndDirTo(endport.getCenter(), true);
-//Make sure the startdir is valid
-//FIXME
-                    }
+                {
+                    startdir = startport.getStartEndDirTo(endport.getCenter(), true);
+                }
 
-                    var enddir = path.getEndDir(),
-                        endportHasLimited = false,
-                        endportCanHave = true;
+                var enddir = path.getEndDir(),
+                    endportHasLimited = false,
+                    endportCanHave = true;
 
-                    if (enddir != Dir_None) {
-                        endportHasLimited = endport.hasLimitedDirs();
-                        endportCanHave = endport.canHaveStartEndPointOn(enddir, false);
-                    }
-                    if( enddir === Dir_None ||							// like above
+                if (enddir != Dir_None) {
+                    endportHasLimited = endport.hasLimitedDirs();
+                    endportCanHave = endport.canHaveStartEndPointOn(enddir, false);
+                }
+                if( enddir === Dir_None ||							// like above
                         endportHasLimited && !endportCanHave)
-                    {
-                        enddir = endport.getStartEndDirTo(startport.getCenter(), false, startport === endport ? startdir : Dir_None );
-                    }
+                {
+                    enddir = endport.getStartEndDirTo(startport.getCenter(), false, startport === endport ? startdir : Dir_None );
+                }
 
-                    startpoint = startport.createStartEndPointTo(endport.getCenter(), startdir);
-                    endpoint = endport.createStartEndPointTo(startpoint, enddir);
+                startpoint = startport.createStartEndPointTo(endport.getCenter(), startdir);
+                endpoint = endport.createStartEndPointTo(startpoint, enddir);
 
-                    if( startpoint.equals(endpoint) )
-                        startpoint = stepOneInDir(startpoint, nextClockwiseDir(startdir));
+                if( startpoint.equals(endpoint) )
+                    startpoint = stepOneInDir(startpoint, nextClockwiseDir(startdir));
 
-                    var startId = startport.getOwner().getID(),
-                        endId = endport.getOwner().getID(),
-                        startdir = startport.port_OnWhichEdge(startpoint),
-                        enddir = endport.port_OnWhichEdge(endpoint);
+                var startId = startport.getOwner().getID(),
+                    endId = endport.getOwner().getID(),
+                    startdir = startport.port_OnWhichEdge(startpoint),
+                    enddir = endport.port_OnWhichEdge(endpoint);
 
-                    if(path.isAutoRouted() && box2bufferBox[startId] === box2bufferBox[endId]
-                            && startdir === reverseDir(enddir)){
+                if(path.isAutoRouted() && box2bufferBox[startId] === box2bufferBox[endId]
+                        && startdir === reverseDir(enddir)){
 
-                        return connectPointsSharingParentBox(path, startpoint, endpoint, startdir);
-                    }else{
-
-                        return connect(path, startpoint, endpoint);
-                    }
-
+                    return connectPointsSharingParentBox(path, startpoint, endpoint, startdir);
                 }else{
-                    assert(startpoint instanceof ArPoint, "ARGraph.connect: startpoint instanceof ArPoint FAILED");
-                    assert( path != null && path.getOwner() === self, "ARGraph.connect: path != null && path.getOwner() === self FAILED");
-                    assert( !path.isConnected(), "ARGraph.connect: !path.isConnected() FAILED");
-                    assert( !startpoint.equals(endpoint), "ARGraph.connect: !startpoint.equals(endpoint) FAILED");
 
-                    var startPort = path.getStartPort();
-                    assert(startPort != null, "ARGraph.connect: startPort != null FAILED");
+                    return connectPathWithPoints(path, startpoint, endpoint);
+                }
 
-                    var startdir = startPort.port_OnWhichEdge(startpoint),
-                        endPort = path.getEndPort();
+            }
 
-                    assert(endPort != null, "ARGraph.connect: endPort != null FAILED");
-                    var enddir = endPort.port_OnWhichEdge(endpoint);
-                    assert( isRightAngle(startdir) && isRightAngle(enddir), "ARGraph.connect: isRightAngle(startdir) && isRightAngle(enddir) FAILED" );
+            function connectPathWithPoints(path, startpoint, endpoint){
+                assert(startpoint instanceof ArPoint, "ARGraph.connect: startpoint instanceof ArPoint FAILED");
+                assert( path != null && path.getOwner() === self, "ARGraph.connect: path != null && path.getOwner() === self FAILED");
+                assert( !path.isConnected(), "ARGraph.connect: !path.isConnected() FAILED");
+                assert( !startpoint.equals(endpoint), "ARGraph.connect: !startpoint.equals(endpoint) FAILED");
 
-                    //Find the bufferbox containing startpoint, endpoint
-                    var startBox = box2bufferBox[startPort.getOwner().getID()].box,
-                        endBox = box2bufferBox[endPort.getOwner().getID()].box;
+                var startPort = path.getStartPort();
+                assert(startPort != null, "ARGraph.connect: startPort != null FAILED");
 
-                    var start = new ArPoint(startpoint);
-                    getOutOfBox({ "point": start, 
-                            "dir": startdir, 
-                            "end": endpoint, 
-                            "box": startPort.getOwner() } );
-                    assert( !start.equals(startpoint), "ARGraph.connect: !start.equals(startpoint) FAILED" );
+                var startdir = startPort.port_OnWhichEdge(startpoint),
+                    endPort = path.getEndPort();
 
-                    var end = new ArPoint(endpoint);
-                    getOutOfBox({ "point": end, 
-                            "dir": enddir, 
-                            "end": start, 
-                            "box": endPort.getOwner() } ) ;
-                    assert( !end.equals(endpoint), "ARGraph.connect: !end.equals(endpoint) FAILED" );
+                assert(endPort != null, "ARGraph.connect: endPort != null FAILED");
+                var enddir = endPort.port_OnWhichEdge(endpoint);
+                assert( isRightAngle(startdir) && isRightAngle(enddir), "ARGraph.connect: isRightAngle(startdir) && isRightAngle(enddir) FAILED" );
 
-                    assert( path.isEmpty(),  "ARGraph.connect: path.isEmpty() FAILED" );
+                //Find the bufferbox containing startpoint, endpoint
+                var startBox = box2bufferBox[startPort.getOwner().getID()].box,
+                    endBox = box2bufferBox[endPort.getOwner().getID()].box;
 
-                    var ret = new ArPointListPath(),
-                        isAutoRouted = path.isAutoRouted();
-                    if (isAutoRouted)
-                        connectPoints(ret, start, end, startdir, enddir);
+                var start = new ArPoint(startpoint);
+                getOutOfBox({ "point": start, 
+                        "dir": startdir, 
+                        "end": endpoint, 
+                        "box": startPort.getOwner() } );
+                assert( !start.equals(startpoint), "ARGraph.connect: !start.equals(startpoint) FAILED" );
 
-                    if (!isAutoRouted)
+                var end = new ArPoint(endpoint);
+                getOutOfBox({ "point": end, 
+                        "dir": enddir, 
+                        "end": start, 
+                        "box": endPort.getOwner() } ) ;
+                assert( !end.equals(endpoint), "ARGraph.connect: !end.equals(endpoint) FAILED" );
+
+                assert( path.isEmpty(),  "ARGraph.connect: path.isEmpty() FAILED" );
+
+                var ret = new ArPointListPath(),
+                    isAutoRouted = path.isAutoRouted();
+                if (isAutoRouted)
+                    connectPoints(ret, start, end, startdir, enddir);
+
+                if (!isAutoRouted)
+                {
+                    var ret2 = path.applyCustomizationsBeforeAutoConnectPoints();
+
+                    if (ret2.length > 0)
                     {
-                        var ret2 = path.applyCustomizationsBeforeAutoConnectPoints();
-
-                        if (ret2.length > 0)
+                        var pos = 0;
+                        while( pos < ret2.length)
                         {
-                            var pos = 0;
-                            while( pos < ret2.length)
-                            {
-                                ret.push(ret2[pos++]);
-                            }
+                            ret.push(ret2[pos++]);
                         }
                     }
-
-                    path.deleteAll();
-                    path.addTail(startpoint);
-                    var pos = 0;
-                    while( pos < ret.getLength())
-                    {
-                        var p = ret.get(pos++)[0];
-                        path.addTail(p);
-                    }
-                    path.addTail(endpoint);
-
-                    if (isAutoRouted) {
-                        simplifyPathCurves(path);
-                        path.simplifyTrivially(); 
-                        simplifyPathPoints(path);
-                        centerStairsInPathPoints(path, startdir, enddir);
-                    }
-                    path.setState(ARPATHST_Connected);
-
-                    // Apply custom edge modifications - step 1
-                    // (Step 1: Move the desired edges - see in AutoRouterGraph::Connect(AutoRouterPath* path, ArPoint& startpoint, ArPoint& endpoint)
-                    //  Step 2: Fix the desired edges - see in AutoRouterEdgeList::addEdges(AutoRouterPath* path))
-                    if (isAutoRouted)
-                        path.applyCustomizationsAfterAutoConnectPointsAndStuff();
-
-                    return addEdges(path);
                 }
+
+                path.deleteAll();
+                path.addTail(startpoint);
+                var pos = 0;
+                while( pos < ret.getLength())
+                {
+                    var p = ret.get(pos++)[0];
+                    path.addTail(p);
+                }
+                path.addTail(endpoint);
+
+                if (isAutoRouted) {
+                    simplifyPathCurves(path);
+                    path.simplifyTrivially(); 
+                    simplifyPathPoints(path);
+                    centerStairsInPathPoints(path, startdir, enddir);
+                }
+                path.setState(ARPATHST_Connected);
+
+                // Apply custom edge modifications - step 1
+                // (Step 1: Move the desired edges - see in AutoRouterGraph::Connect(AutoRouterPath* path, ArPoint& startpoint, ArPoint& endpoint)
+                //  Step 2: Fix the desired edges - see in AutoRouterEdgeList::addEdges(AutoRouterPath* path))
+                if (isAutoRouted)
+                    path.applyCustomizationsAfterAutoConnectPointsAndStuff();
+
+                return addEdges(path);
             }
 
             function connectPointsSharingParentBox(path, startpoint, endpoint, startdir){
