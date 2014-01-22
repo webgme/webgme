@@ -159,12 +159,25 @@ define([
             }
         });
     };
+    var getMemberAttributesAndRegistry = function(core,node,setName,memberPath){
+        var retObj = {'attributes':{},'registry':{}};
+        var names,i;
+        names = core.getMemberAttributeNames(node,setName,memberPath);
+        for(i=0;i<names.length;i++){
+            retObj.attributes[names[i]] = core.getMemberAttribute(node,setName,memberPath,names[i]);
+        }
+        names = core.getMemberRegistryNames(node,setName,memberPath);
+        for(i=0;i<names.length;i++){
+            retObj.registry[names[i]] = core.getMemberRegistry(node,setName,memberPath,names[i]);
+        }
+        return retObj;
+    };
     var getSetsOfNode = function(core,node,urlPrefix,refType,callback){
         var setsInfo = {};
         var createOneSetInfo = function(setName,callback){
             var needed,
                 members = core.getMemberPaths(node,setName),
-                info = {from:[],to:[],attributes:{},registry:{}},
+                info = {from:[],to:[]},
                 i,
                 error = null,
                 containers = [];
@@ -182,6 +195,10 @@ define([
                     pathToRefObjAsync(refType,urlPrefix,members[i],core,core.getRoot(node),function(err,refObj){
                         error = error || err;
                         if(refObj !== undefined && refObj !== null){
+                            var atrAndReg = getMemberAttributesAndRegistry(core,node,setName,members[i]);
+                            for(var j in atrAndReg){
+                                refObj[j] = atrAndReg[j];
+                            }
                             info.to.push(refObj);
                         }
 
@@ -195,26 +212,27 @@ define([
                 }
 
                 for(i=0;i<containers.length;i++){
-                    getSetAttributesAndRegistry(core,node,setName,containers[i],function(err,atrAndReg){
+                    pathToRefObjAsync(refType,urlPrefix,containers[i],core,core.getRoot(node),function(err,refObj){
                         error = error || err;
-                        if(atrAndReg){
-                            info.attributes[containers[i]] = atrAndReg.attributes;
-                            info.registry[containers[i]] = atrAndReg.registry;
+                        if(refObj !== undefined && refObj !== null){
+                            getSetAttributesAndRegistry(core,node,setName,containers[i],function(err,atrAndReg){
+                                error = error || err;
+                                if(atrAndReg){
+                                    for(var j in atrAndReg){
+                                        refObj[j] = atrAndReg[j];
+                                    }
+                                }
+
+                                info.from.push(refObj);
+                            });
                         }
 
-                        pathToRefObjAsync(refType,urlPrefix,containers[i],core,core.getRoot(node),function(err,refObj){
-                            error = error || err;
-                            if(refObj !== undefined && refObj !== null){
-                                info.from.push(refObj);
+                        if(--needed === 0){
+                            if(error === null){
+                                setsInfo[setName] = info;
                             }
-
-                            if(--needed === 0){
-                                if(error === null){
-                                    setsInfo[setName] = info;
-                                }
-                                callback(error);
-                            }
-                        });
+                            callback(error);
+                        }
                     });
                 }
             } else {

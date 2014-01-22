@@ -4957,7 +4957,8 @@ if(DEBUG && ArPointList.length > 0){
                                 var pts;
                                 if( box.children.length > 1 ){
                                     pts = hugChildren( box, start, dir2, dir1, 
-                                        function( pt, bo ) { return getPointCoord( pt, dir1 ) === getRectOuterCoord( bo.box, dir1); } ); 
+                                        function( pt, bo ) { return (getPointCoord( pt, dir1 ) === getRectOuterCoord( bo.box, dir1)) 
+                                                                            || ( isPointInDirFrom(pt, end, dir1)); } ); 
                                 }else{
                                     pts = hugChildren( bufferObject, start, dir1, dir2 );
                                 }
@@ -5043,7 +5044,9 @@ if(DEBUG && ArPointList.length > 0){
 
                             }else{ //If the box has multiple children
                                 var pts = hugChildren( bufferObject, start, dir1, dir2, 
-                                        function( pt, bo ) { return getPointCoord( pt, dir1 ) === getRectOuterCoord( bo.box, dir1); } ); 
+                                        //exitCondition is when you get to the dir1 side of the box or when you pass end
+                                        function( pt, bo ) { return (getPointCoord( pt, dir1 ) === getRectOuterCoord( bo.box, dir1)) 
+                                                                            || ( isPointInDirFrom(pt, end, dir1)); } ); 
                                 if( pts !== null ){
 
                                     //Add new points to the current list 
@@ -5323,7 +5326,7 @@ if(DEBUG && ArPointList.length > 0){
                     nedge = hlist.getEdgeByPointer(point, npoint),
                     nnedge = vlist.getEdgeByPointer(npoint, nnpoint);
 
-                assert( ppedge != null && pedge != null && nedge != null && nnedge != null, "ARGraph.deleteTwoEdgesAt:  ppedge != null && pedge != null && nedge != null && nnedge != null FAILED");
+                assert( ppedge !== null && pedge !== null && nedge !== null && nnedge !== null, "ARGraph.deleteTwoEdgesAt:  ppedge !== null && pedge !== null && nedge !== null && nnedge !== null FAILED");
 
                 vlist.Delete(pedge);
                 hlist.Delete(nedge);
@@ -5338,8 +5341,8 @@ if(DEBUG && ArPointList.length > 0){
                 if( nnnpointpos < points.getLength())
                 {
                     var nnnedge = hlist.getEdgeByPointer(nnpoint, (nnnpointpos)); 
-                    assert( nnnedge != null, "ARGraph.deleteTwoEdgesAt: nnnedge != null FAILED");
-                    assert( nnnedge.getStartPointPrev().equals(npoint) && nnnedge.getStartPoint().equals(nnpoint), "ARGraph.deleteTwoEdgesAt: nnnedge.getStartPointPrev().equals(npoint) && nnnedge.getStartPoint().equals(nnpoint) FAILED" );
+                    assert( nnnedge !== null, "ARGraph.deleteTwoEdgesAt: nnnedge !== null FAILED");
+                    assert( nnnedge.getStartPointPrev().equals(npoint) && nnnedge.getStartPointPtr()[0].equals(nnpoint), "ARGraph.deleteTwoEdgesAt: nnnedge.getStartPointPrev().equals(npoint) && nnnedge.getStartPoint().equals(nnpoint) FAILED" );
                     nnnedge.setStartPointPrev(ppoint);
                 }
 
@@ -5419,11 +5422,11 @@ if(DEBUG && ArPointList.length > 0){
 
             function simplifyPaths(){
                 var was = false,
-                    iter = 0;
+                    i = 0;
 
-                while (iter < paths.length)
+                while (i < paths.length)
                 {
-                    var path = paths[iter++];
+                    var path = paths[i++];
 
                     if (path.isAutoRouted()) {
                         var pointList = path.getPointList(),
@@ -5917,95 +5920,6 @@ if(DEBUG && ArPointList.length > 0){
 
             }
 
-            function createBufferBoxes(){
-                //First I will create the atomic buffer boxes and store them in order of x
-                var i,
-                    k = -1,
-                    j = 0,
-                    bufferBox,
-                    rect,
-                    box,
-                    collection = [];
-
-                bufferBoxes = [];
-
-                for(var b in boxes){
-                    if(boxes.hasOwnProperty(box)){
-                        rect = new ArRect(boxes[b].getRect());
-                        rect.inflateRect(BUFFER);
-                        box = { "rect": rect, "id": boxes[b].getID() };
-
-                        while( collection[++k] && collection[k].rect.left < box.rect.left); //Get index for insertion
-                        collection.splice( k, 0, box);
-                        k = -1;
-                    }
-                }
-
-                var groups = []; //Groups will contain grouped boxes by overlap
-                i = 0;
-
-                while( i < collection.length ){ //Adding element 'i' to the appropriate group
-                    var overlaps = [];
-                    j = 0;
-
-                    while( j < groups.length ){ //Check all groups for intersection
-                        var k = 0;
-
-                        while( k < groups[j].length ){ //Check all boxes in the given group
-
-                            if( groups[j][k] && groups[j][k].rect.touching( collection[i].rect ) ){
-                                //groups[j].push( collection[i] );
-                                overlaps.push(j);
-                                break;
-
-                            }
-                            k++;
-                        }
-                        j++;
-                    }
-
-                    //Combine all intersectings groups into one
-
-                    if( overlaps.length > 0 ){
-                        var n = overlaps.length,
-                            group = [];
-
-                        //Move all overlapping groups to group
-                        while( n-- ){
-                            group = group.concat(groups.splice( overlaps[n], 1)[0]);
-                        }
-                        group.push( collection[i] );
-                        groups.push(group);
-                    }else{
-                        groups.push( [ collection[i] ] );
-                    }
-
-                    i++;
-                }
-
-                //Now to create the parent objects and add them to the bufferBoxes
-                i = 0;
-                while( i < groups.length ){
-                    var k = 0,
-                        parentBox = new ArRect( groups[i][0].rect );
-
-                    while( k < groups[i].length ){
-                        parentBox.unionAssign( groups[i][k].rect ); //Creating Parent Box
-                        box2bufferBox[groups[i][k].id] = bufferBoxes.length;// match the box id with bufferbox index
-                        groups[i][k] = groups[i][k].rect;
-                        k++;
-                    }
-
-                    bufferBoxes.push( { "box": parentBox, "children": groups[i] });
-                    i++;
-                }
-
-                for( var id in box2bufferBox ){ //change the indices to bufferbox elements 
-                    box2bufferBox[id] = bufferBoxes[ box2bufferBox[id] ];
-                }
-
-            }
-
             //Public Functions
             this.disconnect = disconnect;
 
@@ -6099,7 +6013,6 @@ if(DEBUG && ArPointList.length > 0){
             };
 
             this.autoRoute = function(){
-                //createBufferBoxes(); 
                 connectAllDisconnectedPaths();
 
                 var updated = 0,
@@ -8066,15 +7979,16 @@ if(DEBUG && ArPointList.length > 0){
     };
     
     AutoRouter.prototype.setPathCustomPoints = function( args ){ //args.path = [ [x, y], [x2, y2], ... ]
-        var points = [],
+        var path = this.paths[args.path],
+            points = [],
             i = 0;
-        if( !args.path instanceof AutoRouterPath )
+        if( path === undefined )
             throw "AutoRouter: Need to have an AutoRouterPath type to set custom path points";
     
         if( args.points.length > 0 )
-            args.path.setAutoRouting( false );
+            path.setAutoRouting( false );
         else
-            args.path.setAutoRouting( true );
+            path.setAutoRouting( true );
     
         //Convert args.points to array of [ArPoint] 's
         while ( i < args.points.length ){
@@ -8082,7 +7996,7 @@ if(DEBUG && ArPointList.length > 0){
             ++i;
         }
     
-        args.path.setCustomPathData( points );
+        path.setCustomPathData( points );
     
     };
     

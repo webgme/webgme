@@ -55,6 +55,14 @@ define([
         return {'$ref': null};
     };
 
+    var refToRelRefObj = function(path,refObj){
+        if(_cache[path]){
+            refObj['$ref'] = _cache[path];
+        } else {
+            refObj = {'$ref': null};
+        }
+    };
+
     var isSubordinate = function(path){
         if(path.indexOf(_core.toActualPath(_rootPath)) === 0){
             return true;
@@ -117,7 +125,7 @@ define([
                     if(isRefObject(dumpObject[i])){
                         var path = getRefObjectPath(dumpObject[i]);
                         if(isSubordinate(path)){
-                            dumpObject[i] = pathToRelRefObject(path);
+                            refToRelRefObj(path,dumpObject[i]);
                         }
                     } else {
                         checkForInternalReferences(dumpObject[i]);
