@@ -4,8 +4,8 @@
  * Author: Robert Kereskenyi
  */
 
-$conn-area-edit-background-color: #00FF00;
-$conn-area-edit-disabled-background-color: #FF0000;
+$conn-area-edit-color: #00FF00;
+$conn-area-edit-disabled-color: #FF0000;
 $darkenValue: 20%;
 
 .designer-item {
@@ -19,22 +19,22 @@ $darkenValue: 20%;
     left: 0;
   }
 
-  .conn-area-edit {
+  path.conn-area-edit {
     position: absolute;
     top: 0;
     left: 0;
     opacity: 0.5;
-    background-color: $conn-area-edit-background-color;
+    stroke: $conn-area-edit-color;
 
     &:hover {
-      background-color: darken($conn-area-edit-background-color, $darkenValue);
+      stroke: darken($conn-area-edit-color, $darkenValue);
     }
 
     &.disabled {
-      background-color: $conn-area-edit-disabled-background-color;
+      stroke: $conn-area-edit-disabled-color;
 
       &:hover {
-        background-color: darken($conn-area-edit-disabled-background-color, $darkenValue);
+        stroke: darken($conn-area-edit-disabled-color, $darkenValue);
       }
     }
   }

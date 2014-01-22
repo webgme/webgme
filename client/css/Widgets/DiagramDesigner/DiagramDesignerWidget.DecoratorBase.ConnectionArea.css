@@ -9,15 +9,15 @@
   position: absolute;
   top: 0;
   left: 0; }
-.designer-item .conn-area-edit {
+.designer-item path.conn-area-edit {
   position: absolute;
   top: 0;
   left: 0;
   opacity: 0.5;
-  background-color: lime; }
-  .designer-item .conn-area-edit:hover {
-    background-color: #009900; }
-  .designer-item .conn-area-edit.disabled {
-    background-color: red; }
-    .designer-item .conn-area-edit.disabled:hover {
-      background-color: #990000; }
+  stroke: lime; }
+  .designer-item path.conn-area-edit:hover {
+    stroke: #009900; }
+  .designer-item path.conn-area-edit.disabled {
+    stroke: red; }
+    .designer-item path.conn-area-edit.disabled:hover {
+      stroke: #990000; }

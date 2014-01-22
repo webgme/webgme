@@ -545,5 +545,13 @@ define(['logManager',
         };
     };
 
+    DesignerItem.prototype.editConnectionAreas = function () {
+        this._decoratorInstance.editConnectionAreas();
+    };
+
+    DesignerItem.prototype.endEditConnectionAreas = function () {
+        this._decoratorInstance.endEditConnectionAreas();
+    };
+
     return DesignerItem;
 });

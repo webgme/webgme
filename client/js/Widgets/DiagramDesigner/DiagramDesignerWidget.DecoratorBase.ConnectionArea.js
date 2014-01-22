@@ -6,15 +6,17 @@
 
 "use strict";
 
-define(['css!/css/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase.ConnectionArea'], function () {
+define(['raphaeljs',
+    'css!/css/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase.ConnectionArea'], function (raphaeljs) {
 
     var DiagramDesignerWidgetDecoratorBaseConnectionArea,
         EVENT_POSTFIX = 'DiagramDesignerWidgetDecoratorBaseConnectionArea',
         DECORATOR_EDIT_CLASS = 'decorator-edit',
         CONN_AREA_EDIT_CLASS = 'conn-area-edit',
+        CONN_AREA_EDIT_BACKGROUND = 'conn-area-edit-bg',
         DISABLED = 'disabled',
         DATA_CONN_AREA_ID = 'CONN_AREA_ID',
-        MIN_SIZE = 8;
+        CONN_AREA_SIZE = 8;
 
     DiagramDesignerWidgetDecoratorBaseConnectionArea = function () {
     };
@@ -30,7 +32,7 @@ define(['css!/css/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase.Co
                 enableEdit = widget.getIsReadOnlyMode() !== true;
 
             if (enableEdit && rightClick) {
-                self._editConnectionAreas();
+                self.editConnectionAreas();
                 event.preventDefault();
                 event.stopPropagation();
                 event.stopImmediatePropagation();
@@ -39,16 +41,16 @@ define(['css!/css/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase.Co
     };
 
 
-    DiagramDesignerWidgetDecoratorBaseConnectionArea.prototype._editConnectionAreas = function () {
+    DiagramDesignerWidgetDecoratorBaseConnectionArea.prototype.editConnectionAreas = function () {
         var w = this.$el.outerWidth(true),
             h = this.$el.outerHeight(true),
             j,
-            self = this;
+            self = this,
+            shiftVal = (CONN_AREA_SIZE / 2);
 
-        this._connAreaEditBackground = $('<div/>', { 'class': 'conn-area-edit-bg'});
-
-        this._connAreaEditBackground.css({'width': w,
-                                          'height': h});
+        this._connAreaEditBackground = $('<div/>', { 'class': CONN_AREA_EDIT_BACKGROUND});
+        this._connAreaEditBackground.css({'left': -shiftVal + 'px',
+            'top': -shiftVal + 'px'});
 
         this.$el.addClass(DECORATOR_EDIT_CLASS);
         this._decoratorItem = this.$el.parent();
@@ -64,17 +66,26 @@ define(['css!/css/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase.Co
             //save selection on right-click
             var rightClick = event.which === 3;
             if (rightClick) {
-                self._endEditConnectionAreas();
+                self.endEditConnectionAreas();
             }
         });
 
         //hook up mouse event handler on the connection areas to toggle enabled/disabled state
-        this._connAreaEditBackground.on('mousedown.' + EVENT_POSTFIX, '.' + CONN_AREA_EDIT_CLASS, function (event) {
-            $(this).toggleClass(DISABLED);
+        this._connAreaEditBackground.on('mousedown.' + EVENT_POSTFIX, 'path.' + CONN_AREA_EDIT_CLASS, function (event) {
+            //$(this.node).toggleClass(DISABLED);
+            var c = $(this).attr("class");
+            if (c === CONN_AREA_EDIT_CLASS) {
+                $(this).attr({ "class": CONN_AREA_EDIT_CLASS + ' ' + DISABLED });
+            } else {
+                $(this).attr({ "class": CONN_AREA_EDIT_CLASS });
+            }
             event.preventDefault();
             event.stopPropagation();
             event.stopImmediatePropagation();
         });
+
+        this._svg = Raphael(this._connAreaEditBackground[0], w + CONN_AREA_SIZE, h + CONN_AREA_SIZE);
+        this._svg.canvas.className.baseVal = CONN_AREA_EDIT_BACKGROUND;
 
         //get the connection areas from the decorator and render them
         this._areas = this.getConnectionAreas();
@@ -82,40 +93,34 @@ define(['css!/css/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase.Co
         j = this._areas.length;
         while (j--) {
             var a = this._areas[j];
-            var divArea = $('<div/>', { 'class': CONN_AREA_EDIT_CLASS });
+            a.x1 += shiftVal;
+            a.y1 += shiftVal;
+            a.x2 += shiftVal;
+            a.y2 += shiftVal;
 
-            var aW = a.x2 - a.x1;
-            var aH = a.y2 - a.y1;
-            var aL = a.x1;
-            var aT = a.y1;
-
-            if (aW <= MIN_SIZE) {
-                aL -= (MIN_SIZE - aW) / 2;
-                aW = MIN_SIZE;
+            //if the area is too small, enlarge it
+            if (a.x2 - a.x1 < CONN_AREA_SIZE &&
+                a.y2 - a.y1 < CONN_AREA_SIZE) {
+                a.x1 -= CONN_AREA_SIZE / 2;
+                a.x2 += CONN_AREA_SIZE / 2;
             }
 
-            if (aH <= MIN_SIZE) {
-                aT -= (MIN_SIZE - aH) / 2;
-                aH = MIN_SIZE;
-            }
-
-            divArea.data(DATA_CONN_AREA_ID, a.id);
-            divArea.css({'left': aL,
-                        'top': aT,
-                        'width': aW,
-                        'height': aH});
-
-           this._connAreaEditBackground.append(divArea);
+            var path = this._svg.path('M ' + a.x1 + ',' + a.y1 + 'L' + a.x2 + ',' + a.y2);
+            $(path.node).attr({ "class": CONN_AREA_EDIT_CLASS });
+            $(path.node).data(DATA_CONN_AREA_ID, a.id);
+            path.attr({ "stroke-width": CONN_AREA_SIZE });
         }
     };
 
-    DiagramDesignerWidgetDecoratorBaseConnectionArea.prototype._endEditConnectionAreas = function () {
-        var connAreas = this._connAreaEditBackground.find('.' + CONN_AREA_EDIT_CLASS),
+    DiagramDesignerWidgetDecoratorBaseConnectionArea.prototype.endEditConnectionAreas = function () {
+        var connAreas = this._connAreaEditBackground.find('path.' + CONN_AREA_EDIT_CLASS),
             logger = this.logger;
 
         connAreas.each(function(index, value) {
             value = $(value);
-            logger.warning(value.data(DATA_CONN_AREA_ID) + ' enabled: ' + !value.hasClass(DISABLED));
+            var aID = value.data(DATA_CONN_AREA_ID),
+                enabled = value.attr("class") === CONN_AREA_EDIT_CLASS;
+            logger.warning(aID + ' enabled: ' + enabled);
         });
 
         //finish editing
