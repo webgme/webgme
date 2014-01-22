@@ -142,11 +142,13 @@ define(['js/Constants',
             }
         });
 
-        //finish editing
-        this.$el.removeClass(DECORATOR_EDIT_CLASS);
-        this._connAreaEditBackground.remove();
+        if (connAreas.length > 0 && connAreas.length !== disabledAreas.length) {
+            //finish editing
+            this.$el.removeClass(DECORATOR_EDIT_CLASS);
+            this._connAreaEditBackground.remove();
 
-        this._setDisabledConnectionAreas(disabledAreas);
+            this._setDisabledConnectionAreas(disabledAreas);
+        }
     };
 
     DiagramDesignerWidgetDecoratorBaseConnectionArea.prototype._getDisabledConnectionAreas = function () {
