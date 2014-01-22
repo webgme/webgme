@@ -482,7 +482,8 @@ define(['js/Constants',
             cN,
             cE,
             cW,
-            cS;
+            cS,
+            disabledAreas = this._getDisabledConnectionAreas();
 
         //by default return the bounding box edge's midpoints
 
@@ -532,9 +533,25 @@ define(['js/Constants',
                 //it can be NORTH only if destination
                 //it can be SOUTH only if source
                 if (isEnd) {
-                    result.push(cN);
+                    //north is not disabled, use north only
+                    //otherwise use all
+                    if (disabledAreas.indexOf(cN.id) === -1) {
+                        result.push(cN);
+                    } else {
+                        result.push(cE);
+                        result.push(cS);
+                        result.push(cW);
+                    }
                 } else {
-                    result.push(cS);
+                    //south is not disabled, use south only
+                    //otherwise use all
+                    if (disabledAreas.indexOf(cS.id) === -1) {
+                        result.push(cS);
+                    } else {
+                        result.push(cN);
+                        result.push(cE);
+                        result.push(cW);
+                    }
                 }
             } else {
                 result.push(cN);
