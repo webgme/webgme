@@ -7979,15 +7979,16 @@ if(DEBUG && ArPointList.length > 0){
     };
     
     AutoRouter.prototype.setPathCustomPoints = function( args ){ //args.path = [ [x, y], [x2, y2], ... ]
-        var points = [],
+        var path = this.paths[args.path],
+            points = [],
             i = 0;
-        if( !args.path instanceof AutoRouterPath )
+        if( path === undefined )
             throw "AutoRouter: Need to have an AutoRouterPath type to set custom path points";
     
         if( args.points.length > 0 )
-            args.path.setAutoRouting( false );
+            path.setAutoRouting( false );
         else
-            args.path.setAutoRouting( true );
+            path.setAutoRouting( true );
     
         //Convert args.points to array of [ArPoint] 's
         while ( i < args.points.length ){
@@ -7995,7 +7996,7 @@ if(DEBUG && ArPointList.length > 0){
             ++i;
         }
     
-        args.path.setCustomPathData( points );
+        path.setCustomPathData( points );
     
     };
     
