@@ -78,7 +78,6 @@ define(['logManager'], function (logManager) {
        this.pCount = 0;//A not decrementing count of paths for unique path id's
        this.boxId2Path = {};
        this.portCount = 0;//A not decrementing count of ports for unique path id's
-       this.ports = {};//port list by id
 
        ED_MAXCOORD = (graphDetails && graphDetails.coordMax !== undefined ? graphDetails.coordMax : false) || ED_MAXCOORD;
        ED_MINCOORD = (graphDetails && graphDetails.coordMin !== undefined ? graphDetails.coordMin : false) || ED_MINCOORD;
@@ -5900,7 +5899,7 @@ if(DEBUG && ArPointList.length > 0){
                 i = groups.length;
                 while(i--){
                     var j = groups[i].length,
-                        parentBox = groups[i][0],
+                        parentBox = new ArRect(groups[i][0]),
                         ids = [];
 
                     while(j--){
@@ -7602,12 +7601,9 @@ if(DEBUG && ArPointList.length > 0){
 
         AutoRouter.prototype.clear = function(){
             this.router.deleteAll(true);
-            //this.boxes = {};
             this.paths = {};
             this.boxId2Path = {};
             this.pCount = 0;
-            this.portCount = 0;//A not decrementing count of ports for unique path id's
-            this.ports = {};//port list by id
         };
 
         AutoRouter.prototype.destroy = function(){
