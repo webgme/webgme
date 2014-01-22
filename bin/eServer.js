@@ -263,7 +263,7 @@ requirejs(['logManager',
                             res.header("Content-Type", "application/json");
                             res.header("Content-Disposition", "attachment;filename=\""+filename+"\"");
                             res.status(httpStatus);
-                            res.end(JSON.stringify(object));
+                            res.end(JSON.stringify(object,null,2));
                         } else {
                             res.json(httpStatus, object || null);
                         }

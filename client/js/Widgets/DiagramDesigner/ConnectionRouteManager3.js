@@ -254,12 +254,12 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
             "y2": bBox.y2,
 
             //PORTS
-            "ConnectionAreas": []
+            "ConnectionInfo": []
         };
 
         while (j < areas.length) {
-            //Building up the ConnectionAreas object
-            boxdefinition.ConnectionAreas.push([ [ areas[j].x1, areas[j].y1 ], [ areas[j].x2, areas[j].y2 ] ]);
+            //Building up the ConnectionInfo object
+            boxdefinition.ConnectionInfo.push({ 'id': areas[j].id, 'area': [ [ areas[j].x1, areas[j].y1 ], [ areas[j].x2, areas[j].y2 ] ] });
             j++;
         }
 
@@ -353,7 +353,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
                 j = res.length;
 
         while (j--) {
-            portdefinition.push([ [ res[j].x1, res[j].y1 ], [ res[j].x2, res[j].y2 ] ]);
+            portdefinition.push({ 'id': res[j].id, 'area': [ [ res[j].x1, res[j].y1 ], [ res[j].x2, res[j].y2 ] ] });
         }
             this._autorouterBoxes[longid] = { "ports": this.autorouter.addPort(parentBox, portdefinition) };
 
