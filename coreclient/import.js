@@ -78,17 +78,17 @@ define([
                     _underImport[refObj['$ref']] = [callback];
                     _core.loadByPath(_root,refObj['$ref'],function(err,node){
                         if(err){
-                            return objectLoaded(err, null);
-                        }
-
-                        if(refObj['GUID']){
-                            if(refObj['GUID'] === _core.getGuid(node)){
-                                return objectLoaded(err,node);
-                            } else {
-                                return objectLoaded('GUID mismatch',node);
-                            }
+                            objectLoaded(err, null);
                         } else {
-                            return objectLoaded(err,node);
+                            if(refObj['GUID']){
+                                if(refObj['GUID'] === _core.getGuid(node)){
+                                    objectLoaded(err,node);
+                                } else {
+                                    objectLoaded('GUID mismatch',node);
+                                }
+                            } else {
+                                objectLoaded(err,node);
+                            }
                         }
                     });
                 }
@@ -107,16 +107,16 @@ define([
                     importNode(jNode.children[i],node,pIntPath+'/children['+i+']',function(err){
                         error = error || err;
                         if(--needed === 0){
-                            return callback(error);
+                            callback(error);
                         }
                     });
                 }
             } else {
-                return callback(null);
+                callback(null);
             }
 
         } else {
-            return callback(null); //TODO maybe we should be more strict
+            callback(null); //TODO maybe we should be more strict
         }
     }
     function importAttributes(node,jNode){
@@ -147,7 +147,7 @@ define([
                     }
 
                     if(--needed === 0){
-                        return callback(error);
+                        callback(error);
                     }
                 });
             }
@@ -161,67 +161,184 @@ define([
                         }
 
                         if(--needed === 0){
-                            return callback(error);
+                            callback(error);
                         }
                     });
                 } else {
                     if(--needed === 0){
-                        return callback(error);
+                        callback(error);
                     }
                 }
             }
 
         } else {
-            return callback(null);
+            callback(null);
         }
     }
     function importSet(node,jNode,sName, callback){
-        return callback(null);
+        if(jNode.pointers[sName].to && jNode.pointers[sName].from){
+            var needed = 0,
+                importSetRegAndAtr = function(sOwner,sMember,atrAndReg){
+                    _core.addMember(sOwner,sName,sMember);
+                    var mPath = _core.getPath(sMember);
+                    atrAndReg.attributes = atrAndReg.attributes || {};
+                    for(var i in atrAndReg.attributes){
+                        _core.setMemberAttribute(sOwner,sName,mPath,i,atrAndReg.attributes[i]);
+                    }
+                    atrAndReg.registry = atrAndReg.registry || {};
+                    for(var i in atrAndReg.registry){
+                        _core.setMemberRegistry(sOwner,sName,mPath,i,atrAndReg.registry[i]);
+                    }
+                },
+                importSetReference = function(isTo,index,cb){
+                    var jObj = isTo === true ? jNode.pointers[sName].to[index] : jNode.pointers[sName].from[index];
+                    getReferenceNode(jObj,function(err,sNode){
+                        if(err){
+                            cb(err);
+                        } else {
+                            if(sNode){
+                                var sOwner = isTo === true ? node : sNode,
+                                    sMember = isTo === true ? sNode : node;
+                                importSetRegAndAtr(sOwner,sMember,jObj);
+                            }
+                            cb(null);
+                        }
+                    });
+                },
+                error = null;
+
+            if(jNode.pointers[sName].to.length > 0){
+                needed += jNode.pointers[sName].to.length;
+                _core.createSet(node,sName);
+            }
+            if(jNode.pointers[sName].from.length > 0){
+                needed += jNode.pointers[sName].from.length;
+            }
+
+            if(needed > 0){
+                for(var i=0;i<jNode.pointers[sName].to.length;i++){
+                    importSetReference(true,i,function(err){
+                        error = error || err;
+                        if(--needed === 0){
+                            callback(error);
+                        }
+                    });
+                }
+                for(var i=0;i<jNode.pointers[sName].from.length;i++){
+                    importSetReference(false,i,function(err){
+                        error = error || err;
+                        if(--needed === 0){
+                            callback(error);
+                        }
+                    });
+                }
+            } else {
+                callback(null);
+            }
+        } else {
+            callback(null); //TODO now we just simply try to ignore faulty data import
+        }
     }
     function importRelations(node,jNode,callback){
-        //TODO now we go with the pointer/registry with the dicision of pointer/set
+        //TODO now se use the pointer's 'set' attribute to decide if it is a set or a pointer really
         var pointers = [],
             sets = [],
             needed = 0,
             error = null,
             i;
         if(! typeof jNode.pointers === 'object'){
-            return callback(null); //TODO should we drop an error???
-        }
-        for(i in jNode.pointers){
-            if(jNode.pointers[i].attributes || jNode.pointers[i].registry){
-                sets.push(i);
-            } else {
-                pointers.push(i);
-            }
-        }
-
-        needed = sets.length + pointers.length;
-
-        if(needed > 0){
-            for(i=0;i<pointers.length;i++){
-                importPointer(node,jNode,pointers[i],function(err){
-                    error = error || err;
-                    if(--needed === 0){
-                        return callback(error);
-                    }
-                });
-            }
-            for(i=0;i<sets.length;i++){
-                importSet(node,jNode,sets[i],function(err){
-                    error = error || err;
-                    if(--needed === 0){
-                        return callback(error);
-                    }
-                });
-            }
+            callback(null); //TODO should we drop an error???
         } else {
-            return callback(null);
+            for(i in jNode.pointers){
+                if(jNode.pointers[i].set === 'true'){
+                    sets.push(i);
+                } else {
+                    pointers.push(i);
+                }
+            }
+
+            needed = sets.length + pointers.length;
+
+            if(needed > 0){
+                for(i=0;i<pointers.length;i++){
+                    importPointer(node,jNode,pointers[i],function(err){
+                        error = error || err;
+                        if(--needed === 0){
+                            callback(error);
+                        }
+                    });
+                }
+                for(i=0;i<sets.length;i++){
+                    importSet(node,jNode,sets[i],function(err){
+                        error = error || err;
+                        if(--needed === 0){
+                            callback(error);
+                        }
+                    });
+                }
+            } else {
+                callback(null);
+            }
         }
     }
     function importMeta(node,jNode,callback){
-        return callback(null);
-    }
+
+        //TODO now this function searches the whole meta data for reference objects and load them, then call setMeta
+        var loadReference = function(refObj,cb){
+                getReferenceNode(refObj,function(err,rNode){
+                    if(err){
+                        cb(err);
+                    } else {
+                        if(rNode){
+                            refObj['$ref'] = _core.getPath(rNode);
+                        }
+                        cb(null);
+                    }
+                });
+            },
+            loadMetaReferences = function(jObject,cb){
+                var needed = 0,
+                    error = null;
+                for(var i in jObject){
+                    if(jObject[i] !== null && typeof jObject[i] === 'object'){
+                        needed++;
+                    }
+                }
+
+                if(needed>0){
+                    for(var i in jObject){
+                        if(jObject[i] !== null && typeof jObject[i] === 'object'){
+                            if(jObject[i]['$ref']){
+                                loadReference(jObject[i],function(err){
+                                    error = error || err;
+                                    if(--needed === 0){
+                                        cb(error);
+                                    }
+                                });
+                            } else {
+                                loadMetaReferences(jObject[i],function(err){
+                                    error = error || err;
+                                    if(--needed === 0){
+                                        cb(error);
+                                    }
+                                })
+                            }
+                        }
+                    }
+                } else {
+                    cb(error);
+                }
+            };
+
+        loadMetaReferences(jNode.meta || {}, function(err){
+            if(err){
+                callback(err);
+            } else {
+                META.setMeta(_core.getPath(node),jNode.meta || {});
+                callback(null);
+            }
+        });
+    };
     function importRoot(jNode,callback){
         //first we create the root node itself, then the other parts of the function is pretty much like the importNode
 
@@ -231,21 +348,18 @@ define([
         importRegistry(_root,jNode);
         importChildren(_root,jNode,'#',function(err){
             if(err){
-                return callback(err);
-            }
-
-            importRelations(_root,jNode,function(err){
-                if(err){
-                    return callback(err);
-                }
-
-                importMeta(_root,jNode,function(err){
+                callback(err);
+            } else {
+                importRelations(_root,jNode,function(err){
                     if(err){
-                        return callback(err);
+                        callback(err);
+                    } else {
+                        importMeta(_root,jNode,function(err){
+                            callback(err,_root);
+                        });
                     }
-                    return callback(null,_root);
                 });
-            });
+            }
         });
     }
     function importNode(jNode,parentNode,intPath,callback){
@@ -254,31 +368,30 @@ define([
         if(jNode.pointers && jNode.pointers.base && jNode.pointers.base.to){
             getReferenceNode(jNode.pointers.base.to[0],function(err,base){
                 if(err){
-                    return callback(err);
-                }
-
-                //now we are ready to create the node itself
-                var node = _core.createNode({base:base,parent:parentNode});
-                internalRefCreated(intPath,node);
-
-                importAttributes(node,jNode);
-                importRegistry(node,jNode);
-                importChildren(node,jNode,intPath,function(err){
-                    if(err){
-                        return callback(err);
-                    }
-
-                    importRelations(node,jNode,function(err){
+                    callback(err);
+                } else {
+                    //now we are ready to create the node itself
+                    var node = _core.createNode({base:base,parent:parentNode});
+                    internalRefCreated(intPath,node);
+                    importAttributes(node,jNode);
+                    importRegistry(node,jNode);
+                    importChildren(node,jNode,intPath,function(err){
                         if(err){
-                            return callback(err);
+                            callback(err);
+                        } else {
+                            importRelations(node,jNode,function(err){
+                                if(err){
+                                    callback(err);
+                                } else {
+                                    importMeta(node,jNode,callback);
+                                }
+                            });
                         }
-
-                        importMeta(node,jNode,callback);
                     });
-                });
+                }
             });
         } else {
-            return callback('wrong import format: base info is wrong');
+            callback('wrong import format: base info is wrong');
         }
     }
     function importing(core,parent,jNode,callback){
@@ -286,6 +399,7 @@ define([
         _cache = {};
         _underImport = {};
         _internalRefHash = {};
+        META.initialize(_core,_cache,function(){});
 
         if(parent){
             _cache[core.getPath(parent)] = parent;

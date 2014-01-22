@@ -45,14 +45,14 @@ define([], function () {
         //TODO this may change
         function pathToRefObject(path){
             var ref = {};
-            ref['$ref'] = "#"+path;
+            ref['$ref'] = path;
             return ref;
         }
 
         //TODO this may change
         function refObjectToPath(ref){
             if(typeof ref['$ref'] === 'string'){
-                return ref['$ref'].substring(1);
+                return ref['$ref']/*.substring(1)*/;
             } else {
                 return null;
             }
