@@ -88,7 +88,6 @@ define(['logManager'], function (logManager) {
     };
 
     var getClosestPorts = function(srcPorts, dstPorts, segmentPoints){
-    //TODO Change this to go by furthest distance or something.
         var i,
             j,
             dx,
@@ -659,28 +658,26 @@ define(['logManager'], function (logManager) {
 
         var stepOneInDir = function (point, dir){
             assert( isRightAngle(dir), "ArHelper.stepOnInDir: isRightAngle(dir) FAILED");
-            var p = new ArPoint(point);
 
             switch(dir)
             {
             case Dir_Top:
-                p.y--;
+                point.y--;
                 break;
 
             case Dir_Right:
-                p.x++;
+                point.x++;
                 break;
 
             case Dir_Bottom:
-                p.y++;
+                point.y++;
                 break;
 
             case Dir_Left:
-                p.x--;
+                point.x--;
                 break;
             }
 
-            return p;
         };
 
         var getRectCoord = function (rect, dir){
@@ -1336,17 +1333,17 @@ if(DEBUG && ArPointList.length > 0){
                 if(DEBUG)
                     AssertValidPos(pos);
 
-                //start.assign(ArPointList[pos++]);
                 start = ArPointList[pos++];
                 if (pos < ArPointList.length)
-                    //end.assign(ArPointList[pos]);
                     end = ArPointList[pos];
 
                 return { 'pos': pos, 'start': start, 'end': end };
             };
 
-           this.getPrevEdgePtrs = function(pos, start, end){
-                var result = {};
+           this.getPrevEdgePtrs = function(pos){
+                var result = {},
+                    start,
+                    end;
 
                 if(DEBUG)
                     AssertValidPos(pos);
@@ -2823,7 +2820,7 @@ if(DEBUG && ArPointList.length > 0){
 
                         }
 
-                    ptrsObject = pointList.getPrevEdgePtrs(pos, startpoint, endpoint);
+                    ptrsObject = pointList.getPrevEdgePtrs(pos);
                     pos = ptrsObject.pos;
                     startpoint = ptrsObject.start;
                     endpoint = ptrsObject.end;
@@ -4714,7 +4711,7 @@ if(DEBUG && ArPointList.length > 0){
                 endpoint = endport.createStartEndPointTo(startpoint, enddir);
 
                 if( startpoint.equals(endpoint) )
-                    startpoint = stepOneInDir(startpoint, nextClockwiseDir(startdir));
+                    stepOneInDir(startpoint, nextClockwiseDir(startdir));
 
                 var startId = startport.getOwner().getID(),
                     endId = endport.getOwner().getID(),
@@ -6529,7 +6526,7 @@ if(DEBUG && ArPointList.length > 0){
             };
 
             this.getStartPoint = function(){
-                assert( points.getLength() >= 2, "ARPath.getStartPoint: points.getLength() >= 2 FAILED");
+                //assert( points.getLength() >= 2, "ARPath.getStartPoint: points.getLength() >= 2 FAILED");
                 return points.get(0)[0];
             };
 
@@ -7434,8 +7431,25 @@ if(DEBUG && ArPointList.length > 0){
                 }
 
                 if( !removed )
-                    _logger.warning("point was not removed from port");
+                    _logger.warning("point (" + pt.x + ", " + pt.y + ") was not removed from port");
             }
+
+//DEBUGGING TOOL
+            this.hasPoint = function(pt){
+                var i = 0;
+
+                while( i < 4 ){ //Check all sides for the point
+                    var k = points[i].indexOf(pt);
+
+                    if( k > -1){ //If the point is on this side of the port
+                        return true;
+                    }
+                    i++;
+                }
+
+                return false;
+            };
+//DEBUGGING TOOL
 
             function getPoints(){
                 return points;
