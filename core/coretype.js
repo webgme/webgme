@@ -176,15 +176,16 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
             },TASYNC.lift(children));
         };
 
-        //TODO now the collection pathes doesn't take any kind of inheritance into account...
-        core.loadCollection = function(node,name) {
+        //TODO now the collection paths doesn't take any kind of inheritance into account...
+        core.loadCollection = function(node, name) {
+            var root =  core.getRoot(node);
             var paths = core.getCollectionPaths(node,name);
+
             var nodes = [];
-            for(var i=0;i<paths.length;i++){
-                nodes[i] = TASYNC.call(function(p){
-                    return core.loadByPath(core.getRoot(node),p);
-                },paths[i]);
+            for(var i = 0; i < paths.length; i++) {
+                nodes[i] = core.loadByPath(root, paths[i]);
             }
+
             return TASYNC.lift(nodes);
         };
 

@@ -10,11 +10,11 @@ define([ "core/corerel",'core/setcore','core/rootcore','core/guidcore','core/nul
     function core(storage,options){
         options = options || {};
         options.usetype = options.usertype || 'nodejs';
-        var core = new Constraint(new Descriptor(new Guid(new Set(new Root(new NullPtr(new Type(new NullPtr(new Rel(storage,options)))))))));
+        var c = new Constraint(new Descriptor(new Guid(new Set(new Root(new NullPtr(new Type(new NullPtr(new Rel(storage,options)))))))));
         if(options.usertype === 'tasync'){
-            return core;
+            return c;
         } else {
-            return new UnWrap(core);
+            return new UnWrap(c);
         }
     }
 
