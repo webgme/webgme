@@ -157,6 +157,9 @@ define(['logManager'], function (logManager) {
             }
         }
 
+        if(srcPorts[srcP].getOwner() === dstPorts[dstP].getOwner() && srcPorts.length-1 )
+            srcP = srcP + 1 % srcPorts.length;
+
         return { "src": srcPorts[ srcP ], "dst": dstPorts[ dstP ] };
     };
 
