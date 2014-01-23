@@ -4722,7 +4722,7 @@ if(DEBUG && ArPointList.length > 0){
                     enddir = endport.port_OnWhichEdge(endpoint);
 
                 if(path.isAutoRouted() && box2bufferBox[startId] === box2bufferBox[endId]
-                        && startdir === reverseDir(enddir)){
+                        && startdir === reverseDir(enddir) && startport.getOwner() !== endport.getOwner()){
 
                     return connectPointsSharingParentBox(path, startpoint, endpoint, startdir);
                 }else{
