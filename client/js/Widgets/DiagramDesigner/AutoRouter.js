@@ -5647,7 +5647,7 @@ if(DEBUG && ArPointList.length > 0){
 
                     while( j-- > 0 ){
                         p2 = pointList.get(j)[0];
-                        if( isRightAngle( getDir(p1.minus(p2)) ) && !isLineClipBufferBoxes(p1, p2)){
+                        if( isRightAngle( getDir(p1.minus(p2)) ) && !isLineClipBoxes(p1, p2)){
                             pointList.splice( i+1, j-i-1); //Remove all points between i, j
                             break;
                         }
