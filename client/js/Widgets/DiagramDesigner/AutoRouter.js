@@ -4908,7 +4908,7 @@ if(DEBUG && ArPointList.length > 0){
                                 start.x = end.x;
                             else
                                 start.y = end.y;
-                        }else if( bufferObject.box.ptInRect( end ) && !bufferObject.box.ptInRect( start ) && !flipped ){
+                        }else if( bufferObject.box.ptInRect( end ) && !flipped ){
                             var oldEnd = new ArPoint(end),
                                 ret2 = new ArPointListPath(),
                                 i;
