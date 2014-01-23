@@ -142,9 +142,7 @@ define([
             for(i=0;i<jNode.pointers[pName].to.length;i++){
                 getReferenceNode(jNode.pointers[pName].to[i],function(err,target){
                     error = error || err;
-                    if(target){
-                        _core.setPointer(node,pName,target);
-                    }
+                    _core.setPointer(node,pName,target);
 
                     if(--needed === 0){
                         callback(error);
@@ -250,7 +248,7 @@ define([
             callback(null); //TODO should we drop an error???
         } else {
             for(i in jNode.pointers){
-                if(jNode.pointers[i].set === 'true'){
+                if(jNode.pointers[i].set === true){
                     sets.push(i);
                 } else {
                     pointers.push(i);
