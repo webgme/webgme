@@ -2370,7 +2370,7 @@ if(DEBUG && ArPointList.length > 0){
 
             this.getStartPointPrev = function (){
                 return startpoint_prev !== null ? 
-                    new ArPoint(startpoint_prev[0]) : null;
+                    startpoint_prev[0] || startpoint_prev : null;
             };
 
             this.isStartPointPrevNull = function () {
@@ -2864,7 +2864,7 @@ if(DEBUG && ArPointList.length > 0){
                             if( edge.getBracketClosing() )
                                 edge.addToPosition(0.999); 
 
-                            this.insert((new AutoRouterEdge().assign(edge))); //This should work but has only been tested in example above
+                            this.insert(edge);
                         }
                     }
                 }else if(path instanceof AutoRouterBox){
@@ -2900,7 +2900,7 @@ if(DEBUG && ArPointList.length > 0){
                             if( edge.getBracketClosing() )
                                 edge.addToPosition(0.999); 
 
-                            this.insert((new AutoRouterEdge().assign(edge))); //This should work but has only been tested in example above
+                            this.insert(edge);
                         }
                     }
                 }else if(path instanceof AutoRouterGraph){
@@ -2929,7 +2929,7 @@ if(DEBUG && ArPointList.length > 0){
                             edge.setEdgeFixed(true);
 
                             position_LoadY(edge);
-                            this.insert((new AutoRouterEdge().assign(edge))); //This should work but has only been tested in example above
+                            this.insert(edge);
                         }
                     }
 
@@ -5260,7 +5260,7 @@ if(DEBUG && ArPointList.length > 0){
                 var pointpos = pos, //Getting the next, and next-next, points
                     point = points.get(pos++)[0],
                     npointpos = pos,
-                    npoint = points.get(pos++)[0],
+                    npoint = points.get(pos++),
                     nnpointpos = pos,
                     nnpoint = points.get(pos++)[0],
                     nnnpointpos = pos;
@@ -5276,23 +5276,23 @@ if(DEBUG && ArPointList.length > 0){
                 assert( pppointpos < points.getLength() && ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength(), "ARGraph.deleteTwoEdgesAt: pppointpos < points.getLength() && ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength() FAILED");
                 assert( pppoint !== null && ppoint !== null && point !== null && npoint !== null && nnpoint !== null, "ARGraph.deleteTwoEdgesAt: pppoint !== null && ppoint !== null && point !== null && npoint !== null && nnpoint !== null FAILED");
 
-                var dir = getDir(npoint.minus(point));
+                var dir = getDir(npoint[0].minus(point));
 
                 assert( isRightAngle(dir), "ARGraph.deleteTwoEdgesAt: isRightAngle(dir) FAILED");
                 var ishorizontal = isHorizontal(dir);
 
                 var newpoint = new ArPoint();
                 if(ishorizontal){
-                    newpoint.x = getPointCoord(npoint, ishorizontal);
+                    newpoint.x = getPointCoord(npoint[0], ishorizontal);
                     newpoint.y = getPointCoord(ppoint, !ishorizontal);
                 }else{
                     newpoint.x = getPointCoord(ppoint, !ishorizontal);
-                    newpoint.y = getPointCoord(npoint, ishorizontal);
+                    newpoint.y = getPointCoord(npoint[0], ishorizontal);
                 }
 
                 assert( getDir(newpoint.minus(ppoint)) === dir, "ARGraph.deleteTwoEdgesAt: getDir(newpoint.minus(ppoint)) === dir FAILED");
 
-                assert( !isLineClipBoxes(newpoint, npoint), "ARGraph.deleteTwoEdgesAt: !isLineClipBoxes(newpoint, npoint) FAILED");
+                assert( !isLineClipBoxes(newpoint, npoint[0]), "ARGraph.deleteTwoEdgesAt: !isLineClipBoxes(newpoint, npoint[0]) FAILED");
                 assert( !isLineClipBoxes(newpoint, ppoint), "ARGraph.deleteTwoEdgesAt: !isLineClipBoxes(newpoint, ppoint) FAILED");
 
                 var hlist = getEdgeList(ishorizontal),
@@ -5300,8 +5300,8 @@ if(DEBUG && ArPointList.length > 0){
 
                 var ppedge = hlist.getEdgeByPointer(pppoint, ppoint),
                     pedge = vlist.getEdgeByPointer(ppoint, point),
-                    nedge = hlist.getEdgeByPointer(point, npoint),
-                    nnedge = vlist.getEdgeByPointer(npoint, nnpoint);
+                    nedge = hlist.getEdgeByPointer(point, npoint[0]),
+                    nnedge = vlist.getEdgeByPointer(npoint[0], nnpoint);
 
                 assert( ppedge !== null && pedge !== null && nedge !== null && nnedge !== null, "ARGraph.deleteTwoEdgesAt:  ppedge !== null && pedge !== null && nedge !== null && nnedge !== null FAILED");
 
@@ -5319,7 +5319,7 @@ if(DEBUG && ArPointList.length > 0){
                 {
                     var nnnedge = hlist.getEdgeByPointer(nnpoint, (nnnpointpos)); 
                     assert( nnnedge !== null, "ARGraph.deleteTwoEdgesAt: nnnedge !== null FAILED");
-                    assert( nnnedge.getStartPointPrev().equals(npoint) && nnnedge.getStartPointPtr()[0].equals(nnpoint), "ARGraph.deleteTwoEdgesAt: nnnedge.getStartPointPrev().equals(npoint) && nnnedge.getStartPoint().equals(nnpoint) FAILED" );
+                    assert( nnnedge.getStartPointPrev().equals(npoint[0]) && nnnedge.getStartPointPtr()[0].equals(nnpoint), "ARGraph.deleteTwoEdgesAt: nnnedge.getStartPointPrev().equals(npoint[0]) && nnnedge.getStartPoint().equals(nnpoint) FAILED" );
                     nnnedge.setStartPointPrev(ppoint);
                 }
 
