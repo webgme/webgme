@@ -129,8 +129,8 @@ define([ "util/assert", "util/sha1", "core/future", "core/tasync", 'util/canon' 
         var getCommonPathPrefixData = function (first, second) {
             ASSERT(typeof first === "string" && typeof second === "string");
 
-            first = coretree.splitPath(first);
-            second = coretree.splitPath(second);
+            first = splitPath(first);
+            second = splitPath(second);
 
             var common = [];
             for ( var i = 0; first[i] === second[i] && i < first.length; ++i) {
@@ -138,10 +138,10 @@ define([ "util/assert", "util/sha1", "core/future", "core/tasync", 'util/canon' 
             }
 
             return {
-                common: coretree.buildPath(common),
-                first: coretree.buildPath(first.slice(i)),
+                common: buildPath(common),
+                first: buildPath(first.slice(i)),
                 firstLength: first.length - i,
-                second: coretree.buildPath(second.slice(i)),
+                second: buildPath(second.slice(i)),
                 secondLength: second.length - i
             };
         };
