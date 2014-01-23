@@ -32,7 +32,7 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
 
 	// ----------------- Core -----------------
 
-	function CoreRel(coretree, options) {
+	function CoreRel(coretree) {
 		ASSERT(typeof coretree == "object");
 
 		function isValidNode(node) {
