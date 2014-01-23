@@ -12,7 +12,7 @@ if (typeof define !== "function") {
         baseUrl: __dirname + "/.."
     });
 
-    requirejs([ "util/common", "util/assert", "core/tasync" ], function (COMMON, ASSERT, TASYNC) {
+    requirejs([ "util/common", "util/assert", "core/tasync" ], function(COMMON, ASSERT, TASYNC) {
         "use strict";
 
         TASYNC.trycatch(main, function (error) {

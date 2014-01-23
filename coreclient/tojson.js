@@ -28,7 +28,7 @@ define([
                 for(var i=0;i<neededNames.length;i++){
                     if(object[neededNames[i]]['$ref']){
                         //refrence object
-                        pathToRefObjAsync(refType,urlPrefix,object[neededNames[i]]['$ref'].substring(1),core,root,function(err,refObj){
+                        pathToRefObjAsync(refType,urlPrefix,object[neededNames[i]]['$ref']/*.substring(1)*/,core,root,function(err,refObj){
                             error = error || err;
                             object[neededNames[i]] = refObj;
                             if(--needed === 0){
@@ -160,7 +160,7 @@ define([
         });
     };
     var getMemberAttributesAndRegistry = function(core,node,setName,memberPath){
-        var retObj = {'attributes':{},'registry':{}};
+        var retObj = {attributes:{},registry:{}};
         var names,i;
         names = core.getMemberAttributeNames(node,setName,memberPath);
         for(i=0;i<names.length;i++){
@@ -177,7 +177,7 @@ define([
         var createOneSetInfo = function(setName,callback){
             var needed,
                 members = core.getMemberPaths(node,setName),
-                info = {from:[],to:[]},
+                info = {from:[],to:[],set:true},
                 i,
                 error = null,
                 containers = [];
@@ -329,7 +329,7 @@ define([
             }
             for(var i=0;i<tArray.length;i++){
                 var coll = core.getCollectionPaths(node,tArray[i]);
-                var pointer = {to:[],from:[]};
+                var pointer = {to:[],from:[],set:false};
                 pointer.to.push(getRefObj(core.getPointerPath(node,tArray[i])));
                 for(var j=0;j<coll.length;j++){
                     pointer.from.push(getRefObj(coll[j]));

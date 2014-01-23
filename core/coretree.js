@@ -126,6 +126,26 @@ define([ "util/assert", "util/sha1", "core/future", "core/tasync", 'util/canon' 
 			return first + second;
 		};
 
+        var getCommonPathPrefixData = function (first, second) {
+            ASSERT(typeof first === "string" && typeof second === "string");
+
+            first = splitPath(first);
+            second = splitPath(second);
+
+            var common = [];
+            for ( var i = 0; first[i] === second[i] && i < first.length; ++i) {
+                common.push(first[i]);
+            }
+
+            return {
+                common: buildPath(common),
+                first: buildPath(first.slice(i)),
+                firstLength: first.length - i,
+                second: buildPath(second.slice(i)),
+                secondLength: second.length - i
+            };
+        };
+
 		// ------- memory management
 
 		var __detachChildren = function (node) {
@@ -864,6 +884,7 @@ define([ "util/assert", "util/sha1", "core/future", "core/tasync", 'util/canon' 
 			splitPath: splitPath,
 			buildPath: buildPath,
 			joinPaths: joinPaths,
+			getCommonPathPrefixData: getCommonPathPrefixData,
 
 			normalize: normalize,
 			getAncestor: getAncestor,

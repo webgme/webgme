@@ -110,14 +110,14 @@ define(['https','http' ],function(HTTPS,HTTP){
             },function(res){
                 var data = "";
                 res.on('data',function(chunk){
-                    data+=chunk
+                    data+=chunk;
                 });
                 res.on('end',function(){
                     data = JSON.parse(data);
                     _cachedUserData[VFID+'/'+projectName] = data;
                     setTimeout(clearData,_validity,VFID+'/'+projectName);
                     callback(null,_cachedUserData[VFID+'/'+projectName]);
-                })
+                });
             }).on('error',function(error){
                     callback(error);
                 });
@@ -125,7 +125,7 @@ define(['https','http' ],function(HTTPS,HTTP){
         return {
             authenticate: authenticate,
             authorize: authorize
-        }
+        };
     }
 
     return VFAuth;

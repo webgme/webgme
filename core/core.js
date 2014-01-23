@@ -4,17 +4,23 @@
  * Author: Tamas Kecskes
  */
 
-define([ "core/corerel",'core/setcore','core/rootcore','core/guidcore','core/nullpointercore','core/coreunwrap', 'core/descriptorcore', 'core/coretype', 'core/constraintcore'], function (Rel,Set,Root,Guid,NullPtr,UnWrap,Descriptor,Type,Constraint) {
+define(["core/corerel",'core/setcore','core/rootcore','core/guidcore','core/nullpointercore','core/coreunwrap', 'core/descriptorcore', 'core/coretype', 'core/constraintcore', 'core/coretree', 'core/corerel2'], 
+			function (CoreRel, Set, Root, Guid, NullPtr, UnWrap, Descriptor, Type, Constraint, CoreTree, CoreRel2)
+{
     "use strict";
 
     function core(storage,options){
         options = options || {};
         options.usetype = options.usertype || 'nodejs';
-        var core = new Constraint(new Descriptor(new Guid(new Set(new Root(new NullPtr(new Type(new NullPtr(new Rel(storage,options)))))))));
+        options.corerel = options.corerel || 1;
+        
+        var corerel = options.corerel === 2 ? new CoreRel2(new CoreTree(storage, options)) : new CoreRel(storage, options);
+        var corecon = new Constraint(new Descriptor(new Guid(new Set(new Root(new NullPtr(new Type(new NullPtr(corerel))))))));
+
         if(options.usertype === 'tasync'){
-            return core;
+            return corecon;
         } else {
-            return new UnWrap(core);
+            return new UnWrap(corecon);
         }
     }
 

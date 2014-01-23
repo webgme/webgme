@@ -42,5 +42,5 @@ define(function(){
         removeSpecialChars : removeSpecialChars,
         addSpecialChars : addSpecialChars,
         urlToRefObject : urlToRefObject
-    }
+    };
 });

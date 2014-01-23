@@ -1313,43 +1313,36 @@ if(DEBUG && ArPointList.length > 0){
                 return pos;
             };
 
-           this.getTailEdgePtrs = function(start, end){
-                var result = {};
-
-                if( ArPointList.length < 2 ){
-                    result.pos = ArPointList.length;
-                    return result;
-                }
-
+           this.getTailEdgePtrs = function(){
                 var pos = ArPointList.length,
                     start,
                     end;
+
+                if( ArPointList.length < 2 ){
+                    return { 'pos': pos };
+                }
+
                 assert( --pos < ArPointList.length, "ArPointListPath.getTailEdgePtrs: --pos < ArPointList.length FAILED"); 
 
-                end = ArPointList[pos--];//&
+                end = ArPointList[pos--];
                 assert( pos < ArPointList.length, "ArPointListPath.getTailEdgePtrs: pos < ArPointList.length FAILED"); 
 
-                start = ArPointList[pos];//&
+                start = ArPointList[pos];
 
-                result.pos = pos;
-                result.start = start;
-                result.end = end;
-                return result;
+                return { 'pos': pos, 'start': start, 'end': end };
             };
 
            this.getNextEdgePtrs = function(pos, start, end){
-               var result = {};
                 if(DEBUG)
                     AssertValidPos(pos);
 
-                start.assign(ArPointList[pos++]);
+                //start.assign(ArPointList[pos++]);
+                start = ArPointList[pos++];
                 if (pos < ArPointList.length)
-                    end.assign(ArPointList[pos]);
+                    //end.assign(ArPointList[pos]);
+                    end = ArPointList[pos];
 
-                result.pos = pos;
-                result.start = start;
-                result.end = end;
-                return result;
+                return { 'pos': pos, 'start': start, 'end': end };
             };
 
            this.getPrevEdgePtrs = function(pos, start, end){
@@ -2400,7 +2393,6 @@ if(DEBUG && ArPointList.length > 0){
             };
 
             this.getStartPoint = function (){
-                //return new ArPoint(startpoint[0]);
                 return startpoint !== null ? 
                     (startpoint instanceof Array ? new ArPoint(startpoint[0]) : new ArPoint(startpoint)) 
                         : emptyPoint;//returning copy of startpoint
@@ -2431,22 +2423,10 @@ if(DEBUG && ArPointList.length > 0){
 
             this.setStartPointX = function(_x){
                     startpoint[0].x = _x;
-/*
-                if(startpoint instanceof Array)
-                    startpoint[0].x = _x;
-                else
-                    startpoint.x = _x;
-*/
             };
 
             this.setStartPointY = function(_y){
                     startpoint[0].y = _y;
-/*
-                if(startpoint instanceof Array)
-                    startpoint[0].y = _y;
-                else
-                    startpoint.y = _y;
-*/
             };
 
             this.getEndPoint = function(){
@@ -2745,7 +2725,7 @@ if(DEBUG && ArPointList.length > 0){
 
             this.addEdges = function(path){
                 if(path instanceof AutoRouterPath){
-                    assert(path.getOwner() === (owner), "AREdgeList.addEdges: path.getOwner() === (owner) FAILED!");
+                    assert(path.getOwner() === owner, "AREdgeList.addEdges: path.getOwner() === owner FAILED!");
 
                     var isPathAutoRouted = path.isAutoRouted(),
                         hasCustomEdge = false,
@@ -2779,7 +2759,7 @@ if(DEBUG && ArPointList.length > 0){
                         var skipEdge = dir === Dir_None ? true : false,
                             isMoveable = path.isMoveable();
 
-                        if( !isMoveable && dir != Dir_Skew){
+                        if( !isMoveable && dir !== Dir_Skew){
                             var goodAngle = isRightAngle(dir);
                             assert( goodAngle, "AREdgeList.addEdges: isRightAngle(dir) FAILED!");
 
@@ -2839,7 +2819,7 @@ if(DEBUG && ArPointList.length > 0){
                                 edge.setBracketClosing(false);
                             }
 
-                            this.insert((new AutoRouterEdge()).assign(edge));
+                            this.insert(edge);
 
                         }
 
@@ -5411,7 +5391,7 @@ if(DEBUG && ArPointList.length > 0){
                 if( nnnpointpos < points.getLength())
                 {
                     var nnnedge = vlist.getEdgeByPointer(nnpoint, (nnnpointpos)); //&*
-                    assert( nnnedge != null && nnnedge.getStartPointPrev().equals(npoint) && nnnedge.getStartPoint().equals(nnpoint), "ARGraph.deleteSamePointsAt: nnnedge != null && nnnedge.getStartPointPrev().equals(npoint) && nnnedge.getStartPoint().equals(nnpoint) FAILED");
+                    assert( nnnedge !== null && nnnedge.getStartPointPrev().equals(npoint) && nnnedge.getStartPoint().equals(nnpoint), "ARGraph.deleteSamePointsAt: nnnedge !== null && nnnedge.getStartPointPrev().equals(npoint) && nnnedge.getStartPoint().equals(nnpoint) FAILED");
                     nnnedge.setStartPointPrev(ppoint);
                 }
 
