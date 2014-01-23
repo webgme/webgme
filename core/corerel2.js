@@ -777,7 +777,7 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
 		corerel.deleteNode = deleteNode;
 		corerel.copyNode = copyNode;
 		corerel.moveNode = moveNode;
-		
+
 		corerel.getAttributeNames = getAttributeNames;
 		corerel.getAttribute = getAttribute;
 		corerel.setAttribute = setAttribute;

@@ -130,7 +130,7 @@ define([
 
                             callback(_HTTPError.ok,myCommit);
                         }
-                    })
+                    });
                 }
             });
         }
@@ -290,7 +290,7 @@ define([
             doRESTCommand: doRESTCommand,
             request: _requestTypes,
             command: _commands
-        }
+        };
 
     }
 

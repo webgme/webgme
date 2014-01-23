@@ -512,7 +512,7 @@ define([
             processDELETE : processDELETE,
             processPUT : processPUT,
             open: _database.openDatabase
-        }
+        };
     }
 
     return Rest;
