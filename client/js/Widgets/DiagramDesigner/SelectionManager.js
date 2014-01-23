@@ -348,6 +348,24 @@ define(['logManager',
                         }
 
                         changed = true;
+                    } else {
+                        var idx = this._selectedElements.indexOf(itemId);
+                        this._selectedElements.splice(idx, 1);
+
+                        item = items[itemId];
+
+                        if ($.isFunction(item.onDeselect)) {
+                            item.onDeselect();
+                        }
+
+                        changed = true;
+                    }
+                }
+
+                if (this._selectedElements.length === 1) {
+                    item = items[this._selectedElements[0]];
+                    if ($.isFunction(item.onSelect)) {
+                        item.onSelect(false);
                     }
                 }
             } else {
