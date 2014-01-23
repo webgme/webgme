@@ -47,26 +47,6 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
 			}
 		}
 
-		function getCommonPathPrefixData(first, second) {
-			ASSERT(typeof first === "string" && typeof second === "string");
-
-			first = coretree.splitPath(first);
-			second = coretree.splitPath(second);
-
-			var common = [];
-			for ( var i = 0; first[i] === second[i] && i < first.length; ++i) {
-				common.push(first[i]);
-			}
-
-			return {
-				common: coretree.buildPath(common),
-				first: coretree.buildPath(first.slice(i)),
-				firstLength: first.length - i,
-				second: coretree.buildPath(second.slice(i)),
-				secondLength: second.length - i
-			};
-		}
-
 		function getAttributeNames(node) {
 			ASSERT(isValidNode(node));
 
@@ -132,7 +112,7 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
 		function overlayInsert(overlays, source, name, target) {
 			ASSERT(isValidNode(overlays) && coretree.getRelid(overlays) === OVERLAYS);
 			ASSERT(isValidPath(source) && isValidPath(target) && isPointerName(name));
-			ASSERT(getCommonPathPrefixData(source, target).common === "");
+			ASSERT(coretree.getCommonPathPrefixData(source, target).common === "");
 
 			// console.log("insert", overlays.parent.data.atr.name, source, name, target);
 
@@ -161,7 +141,7 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
 		function overlayRemove(overlays, source, name, target) {
 			ASSERT(isValidNode(overlays) && coretree.getRelid(overlays) === OVERLAYS);
 			ASSERT(isValidPath(source) && isValidPath(target) && isPointerName(name));
-			ASSERT(getCommonPathPrefixData(source, target).common === "");
+			ASSERT(coretree.getCommonPathPrefixData(source, target).common === "");
 
 			// console.log("remove", overlays.parent.data.atr.name, source, name, target);
 
@@ -354,7 +334,7 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
 								overlays = ancestorOverlays;
 							} else if (aboveAncestor === 0) {
 								//at ancestor node
-								var data = getCommonPathPrefixData(ancestorNewPath, entry.t);
+								var data = coretree.getCommonPathPrefixData(ancestorNewPath, entry.t);
 
 								overlays = newNode;
 								while (data.firstLength-- > 0) {
@@ -449,7 +429,7 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
 						overlays = ancestorOverlays;
 					} else if (aboveAncestor === 0) {
 						//at ancestor node
-						var data = getCommonPathPrefixData(ancestorNewPath, entry.t);
+						var data = coretree.getCommonPathPrefixData(ancestorNewPath, entry.t);
 
 						overlays = node;
 						while (data.firstLength-- > 0) {
@@ -820,7 +800,6 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
 		corerel.loadCollection = loadCollection;
 		
 		corerel.getSingleNodeHash = getSingleNodeHash;
-		corerel.getCommonPathPrefixData = getCommonPathPrefixData;
 		
 		corerel.getCoreTree = function() {
 			return coretree;
