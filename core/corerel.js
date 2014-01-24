@@ -265,7 +265,14 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
             while (node) {
                 var overlays = coretree.getChild(node, OVERLAYS);
                 var rels = coretree.getProperty(overlays, prefix);
-                data[prefix] = rels;
+                //removing inverse relations
+                var frels = {};
+                for(var i in rels){
+                    if(i.indexOf('-inv') === -1){
+                        frels[i] = i;
+                    }
+                }
+                data[prefix] = frels;
 
                 prefix = "/" + coretree.getRelid(node) + prefix;
                 node = coretree.getParent(node);
