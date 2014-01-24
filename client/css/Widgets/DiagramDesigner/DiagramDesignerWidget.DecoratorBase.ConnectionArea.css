@@ -1,0 +1,23 @@
+/*
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ * 
+ * Author: Robert Kereskenyi
+ */
+.designer-item .decorator-edit {
+  opacity: 0.2; }
+.designer-item .conn-area-edit-bg {
+  position: absolute;
+  top: 0;
+  left: 0; }
+.designer-item path.conn-area-edit {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0.5;
+  stroke: lime; }
+  .designer-item path.conn-area-edit:hover {
+    stroke: #009900; }
+  .designer-item path.conn-area-edit.disabled {
+    stroke: red; }
+    .designer-item path.conn-area-edit.disabled:hover {
+      stroke: #990000; }

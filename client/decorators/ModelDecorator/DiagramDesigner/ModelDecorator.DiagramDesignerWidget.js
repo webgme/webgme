@@ -126,8 +126,8 @@ define(['js/Constants',
         //by default return the bounding box edges midpoints
 
         if (id === undefined || id === this.hostDesignerItem.id) {
-            //top left
-            result.push( {"id": "0",
+            //North side
+            result.push( {"id": "N",
                 "x1": edge,
                 "y1": 0,
                 "x2": this.hostDesignerItem.getWidth() - edge,
@@ -136,7 +136,8 @@ define(['js/Constants',
                 "angle2": 270,
                 "len": LEN} );
 
-            result.push( {"id": "1",
+            //South side
+            result.push( {"id": "S",
                 "x1": edge,
                 "y1": this.hostDesignerItem.getHeight(),
                 "x2": this.hostDesignerItem.getWidth() - edge,
@@ -144,6 +145,48 @@ define(['js/Constants',
                 "angle1": 90,
                 "angle2": 90,
                 "len": LEN} );
+
+            //check east and west
+            //if there is port on the side, it's disabled for drawing connections
+            //otherwise enabled
+            var eastEnabled = true;
+            var westEnabled = true;
+            for (var pId in this._ports) {
+                if (this._ports.hasOwnProperty(pId)) {
+                    if (this._ports[pId].orientation === "E") {
+                        eastEnabled = false;
+                    }
+                    if (this._ports[pId].orientation === "W") {
+                        westEnabled = false;
+                    }
+                }
+                if (!eastEnabled && !westEnabled) {
+                    break;
+                }
+            }
+
+            if (eastEnabled) {
+                result.push({"id": "E",
+                    "x1": this.hostDesignerItem.getWidth(),
+                    "y1": edge,
+                    "x2": this.hostDesignerItem.getWidth(),
+                    "y2": this.hostDesignerItem.getHeight() - edge,
+                    "angle1": 0,
+                    "angle2": 0,
+                    "len": LEN});
+            }
+
+            if (westEnabled) {
+                result.push({"id": "W",
+                    "x1": 0,
+                    "y1": edge,
+                    "x2": 0,
+                    "y2": this.hostDesignerItem.getHeight() - edge,
+                    "angle1": 180,
+                    "angle2": 180,
+                    "len": LEN});
+            }
+
         } else if (this._ports[id]) {
             //subcomponent
             var portConnArea = this._ports[id].getConnectorArea(),
