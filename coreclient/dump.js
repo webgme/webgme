@@ -64,7 +64,7 @@ define([
     };
 
     var isSubordinate = function(path){
-        if(path.indexOf(_core.toActualPath(_rootPath)) === 0){
+        if(path.indexOf(_rootPath) === 0){
             return true;
         }
         return false;
