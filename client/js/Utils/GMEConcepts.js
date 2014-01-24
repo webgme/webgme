@@ -196,7 +196,7 @@ define(['jquery',
 
         //ROOT's meta rules
         var rootMeta = $.extend(true, {}, metaRuleBase);
-        rootMeta.children.items = [{'$ref': '#' + FCO_ID}];
+        rootMeta.children.items = [{'$ref': FCO_ID}];
         rootMeta.children.minItems = [-1];
         rootMeta.children.maxItems = [-1];
         rootMeta.attributes.name = {'type': 'string'};
