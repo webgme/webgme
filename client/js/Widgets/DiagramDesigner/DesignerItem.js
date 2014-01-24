@@ -462,7 +462,9 @@ define(['logManager',
     /*********************** CONNECTION END CONNECTOR HIGHLIGHT ************************/
 
     DesignerItem.prototype.showSourceConnectors = function (params) {
-        this._decoratorInstance.showSourceConnectors(params);
+        if (this.canvas._enableConnectionDrawing === true) {
+            this._decoratorInstance.showSourceConnectors(params);
+        }
     };
 
     DesignerItem.prototype.hideSourceConnectors = function () {
@@ -470,7 +472,9 @@ define(['logManager',
     };
 
     DesignerItem.prototype.showEndConnectors = function (params) {
-        this._decoratorInstance.showEndConnectors(params);
+        if (this.canvas._enableConnectionDrawing === true) {
+            this._decoratorInstance.showEndConnectors(params);
+        }
     };
 
     DesignerItem.prototype.hideEndConnectors = function () {

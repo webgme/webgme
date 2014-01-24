@@ -5,12 +5,14 @@ define(['logManager',
     'js/NodePropertyNames',
     'js/Decorators/DecoratorDB',
     'js/Constants',
-    'js/Panels/MetaEditor/MetaEditorConstants'], function (logManager,
+    'js/Panels/MetaEditor/MetaEditorConstants',
+    'js/Panels/ManualAspect/ManualAspectConstants'], function (logManager,
                                         util,
                                         nodePropertyNames,
                                         DecoratorDB,
                                         CONSTANTS,
-                                        MetaEditorConstants) {
+                                        MetaEditorConstants,
+                                        ManualAspectConstants) {
 
     var PropertyEditorController;
 
@@ -40,7 +42,8 @@ define(['logManager',
 
     PropertyEditorController.prototype._selectedObjectsChanged = function (idList) {
         var patterns = {},
-            i;
+            i,
+            self = this;
 
         this._idList = idList;
 
@@ -54,13 +57,11 @@ define(['logManager',
                 patterns[idList[i]] = { "children": 0 };
             }
 
-            this._territoryId = this._client.addUI(this, true);
+            this._territoryId = this._client.addUI(this, function (/*events*/) {
+                self._refreshPropertyList();
+            });
             this._client.updateTerritory(this._territoryId, patterns);
         }
-    };
-
-    PropertyEditorController.prototype.onOneEvent = function (/*events*/) {
-        this._refreshPropertyList();
     };
 
     PropertyEditorController.prototype._refreshPropertyList = function () {
@@ -345,9 +346,11 @@ define(['logManager',
                 if (commonRegs.hasOwnProperty(it)) {
                     if (commonRegs.hasOwnProperty(it)) {
                         //#1: filter out rows of 'MetaEditor.MemberCoord' from Registry
-                        if (it.indexOf( nodePropertyNames.Registry.ProjectRegistry + '.') === 0) {   //#3: make ProjectRegistry entries readonly
+                        if (it.indexOf( nodePropertyNames.Registry.ProjectRegistry + '.') === 0) { //#3: make ProjectRegistry entries readonly
                             commonRegs[it].readOnly = true;
-                        } else if (it.indexOf(MetaEditorConstants.META_SHEET_REGISTRY_KEY) === 0 ) {
+                        } else if (it.indexOf(MetaEditorConstants.META_SHEET_REGISTRY_KEY) === 0 ) { //filter out MetaAspectRegistry
+                            delete commonRegs[it];
+                        } else if (it.indexOf(ManualAspectConstants.MANUAL_ASPECTS_REGISTRY_KEY) === 0) { //filter out ManualAspectRegistry
                             delete commonRegs[it];
                         }
                     }

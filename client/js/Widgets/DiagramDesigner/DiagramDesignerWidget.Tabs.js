@@ -15,7 +15,8 @@ define(['js/Toolbar/ToolbarButton',
         ADD_TAB_CONTAINER_CLASS = 'add-tab-container',
         TAB_LIST_CONTAINER_CLASS = 'tab-list-container',
         TAB_SCROLL = 200,
-        TAB_ID = 'TAB_ID';
+        TAB_ID = 'TAB_ID',
+        TAB_RENAME = 'TAB_RENAME';
 
     DiagramDesignerWidgetTabs = function () {
     };
@@ -78,11 +79,14 @@ define(['js/Toolbar/ToolbarButton',
         // set title editable on double-click
         this.$ulTabTab.on("dblclick.editOnDblClick", '.tab-title', function (event) {
             if (self.getIsReadOnlyMode() !== true) {
-                $(this).editInPlace({"class": "",
-                    "onChange": function (oldValue, newValue) {
-                        var li = $(this).parent().parent();
-                        self.onTabTitleChanged(li.data(TAB_ID), oldValue, newValue);
-                    }});
+                var li = $(this).parentsUntil('li').parent();
+                if (li.data(TAB_RENAME) === true) {
+                    $(this).editInPlace({"class": "",
+                        "onChange": function (oldValue, newValue) {
+                            var li = $(this).parent().parent();
+                            self.onTabTitleChanged(li.data(TAB_ID), oldValue, newValue);
+                        }});
+                }
             }
             event.stopPropagation();
             event.preventDefault();
@@ -141,7 +145,7 @@ define(['js/Toolbar/ToolbarButton',
         }
     };
 
-    DiagramDesignerWidgetTabs.prototype.addTab = function (title, deletable) {
+    DiagramDesignerWidgetTabs.prototype.addTab = function (title, deletable, renamable) {
         var self = this;
         var li = $('<li class=""><a href="#" data-toggle="tab"></a></li>');
 
@@ -153,6 +157,9 @@ define(['js/Toolbar/ToolbarButton',
             li.find('a').append($('<i class="icon-remove-circle"/>'));
             li.find('a').attr('title', 'Delete tab');
         }
+
+        //store renamable info in LI
+        li.data(TAB_RENAME, renamable);
 
         this.$ulTabTab.append(li);
 

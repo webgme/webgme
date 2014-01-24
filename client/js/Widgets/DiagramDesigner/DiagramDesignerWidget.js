@@ -134,6 +134,13 @@ define(['logManager',
             this._reorderTabs = params.reorderTabs && true;
         }
 
+        this._enableConnectionDrawing = true;
+
+        if (params && params.hasOwnProperty('enableConnectionDrawing')) {
+            this._enableConnectionDrawing = params.enableConnectionDrawing && true;
+        }
+
+
         //END OF --- Get DiagramDesignerWidget parameters from options
 
         //define properties of its own
@@ -211,6 +218,7 @@ define(['logManager',
         this.connectionDrawingManager.onModifyConnectionEnd = function (params) {
             self._onModifyConnectionEnd(params);
         };
+
         /*********** END OF --- CONNECTION DRAWING COMPONENT *************/
 
         //initiate Highlight Manager
