@@ -295,12 +295,13 @@ define(['logManager',
                                 dstList[extKey].options = {"textColor": noCommonValueColor};
                             }
 
-                            if (extKey.indexOf(".x") > -1) {
+                            //possible inherited style --> italic
+                            /*if (extKey.indexOf(".x") > -1) {
                                 //let's say its inherited, make it italic
                                 dstList[extKey].options = dstList[extKey].options || {};
                                 dstList[extKey].options.textItalic = true;
                                 dstList[extKey].options.textBold = true;
-                            }
+                            }*/
 
                             //decorator value should be rendered as an option list
                             if (i === nodePropertyNames.Registry.decorator) {
