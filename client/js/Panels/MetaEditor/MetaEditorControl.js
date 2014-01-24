@@ -82,6 +82,8 @@ define(['logManager',
     };
 
     MetaEditorControl.prototype._loadMetaAspectContainerNode = function () {
+        var self = this;
+
         this.logger.debug("_loadMetaAspectContainerNode: '" + META_RULES_CONTAINER_NODE_ID + "'");
 
         this._initializeSelectedSheet();
@@ -98,18 +100,20 @@ define(['logManager',
         this._selfPatterns[this.metaAspectContainerNodeID] = { "children": 0 };
 
         //create and set territory
-        this._territoryId = this._client.addUI(this, true);
+        this._territoryId = this._client.addUI(this, function (events) {
+            self._eventCallback(events);
+        });
         this._client.updateTerritory(this._territoryId, this._selfPatterns);
     };
 
     /**********************************************************/
     /*                    PUBLIC METHODS                      */
     /**********************************************************/
-    MetaEditorControl.prototype.onOneEvent = function (events) {
+    MetaEditorControl.prototype._eventCallback = function (events) {
         var i = events ? events.length : 0,
             e;
 
-        this.logger.debug("onOneEvent '" + i + "' items");
+        this.logger.debug("_eventCallback '" + i + "' items");
 
         this.diagramDesigner.beginUpdate();
 
@@ -132,7 +136,7 @@ define(['logManager',
 
         this.diagramDesigner.hideProgressbar();
 
-        this.logger.debug("onOneEvent '" + events.length + "' items - DONE");
+        this.logger.debug("_eventCallback '" + events.length + "' items - DONE");
     };
 
     //might not be the best approach
@@ -1641,7 +1645,7 @@ define(['logManager',
         for (i = 0; i < len; i += 1) {
             setName = metaAspectSheetsRegistry[i].SetID;
 
-            sheetID = this.diagramDesigner.addTab(metaAspectSheetsRegistry[i].title, true);
+            sheetID = this.diagramDesigner.addTab(metaAspectSheetsRegistry[i].title, true, true);
 
             this._sheets[sheetID] = setName;
 
@@ -1704,7 +1708,8 @@ define(['logManager',
 
 
     MetaEditorControl.prototype._initializeSelectedSheet = function () {
-        var len;
+        var len,
+            self = this;
 
         this.logger.debug("_initializeSelectedSheet");
 
@@ -1756,7 +1761,9 @@ define(['logManager',
             }
         }
 
-        this._metaAspectMembersTerritoryId = this._client.addUI(this, true);
+        this._metaAspectMembersTerritoryId = this._client.addUI(this, function (events) {
+            self._eventCallback(events);
+        });
 
         this._client.updateTerritory(this._metaAspectMembersTerritoryId, this._metaAspectMemberPatterns);
     };

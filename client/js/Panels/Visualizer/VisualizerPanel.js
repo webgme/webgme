@@ -11,7 +11,8 @@ define(['logManager',
                                     SplitPanel,
                                     VisualizersJSON) {
 
-    var VisualizerPanel;
+    var VisualizerPanel,
+        DEFAULT_VISUALIZER = 'ModelEditor';
 
     VisualizerPanel = function (layoutManager, params) {
         var options = {};
@@ -88,7 +89,7 @@ define(['logManager',
         var self = this;
 
         this.addRange(JSON.parse(VisualizersJSON), function () {
-            self._setActiveVisualizer('ModelEditor', self._ul1);
+            self._setActiveVisualizer(DEFAULT_VISUALIZER, self._ul1);
         });
     };
 

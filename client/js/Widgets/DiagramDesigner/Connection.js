@@ -413,7 +413,7 @@ define(['logManager',
             strokeWidthAdjust,
             dx,
             dy,
-            shadowAdjust,
+            shadowAdjust = 0,
             endMarkerBBox,
             bBoxPath,
             bPoints,
@@ -427,7 +427,6 @@ define(['logManager',
         } else if (this.skinParts.path) {
             bBoxPath = this.skinParts.path.getBBox();
             strokeWidthAdjust = this.designerAttributes.width;
-            shadowAdjust = 0;
         } else {
             bBoxPath = { "x": 0,
                 "y": 0,
@@ -540,6 +539,14 @@ define(['logManager',
         bBox.y2 = Math.max(bBox.y2, endMarkerBBox.y2);
         bBox.width = bBox.x2 - bBox.x;
         bBox.height = bBox.y2 - bBox.y;
+
+        //safety check
+        if (isNaN(bBox.x)) {bBox.x = 0;}
+        if (isNaN(bBox.y)) {bBox.y = 0;}
+        if (isNaN(bBox.x2)) {bBox.x2 = 0;}
+        if (isNaN(bBox.y2)) {bBox.y2 = 0;}
+        if (isNaN(bBox.width)) {bBox.width = 0;}
+        if (isNaN(bBox.height)) {bBox.height = 0;}
 
         return bBox;
     };

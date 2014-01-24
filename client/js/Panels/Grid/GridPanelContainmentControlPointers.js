@@ -34,6 +34,8 @@ define(['logManager',
     };
 
     GridPanelContainmentControPointers.prototype.selectedObjectChanged = function (nodeId) {
+        var self = this;
+
         this._logger.debug("SELECTEDOBJECT_CHANGED nodeId '" + nodeId + "'");
 
         //remove current territory patterns
@@ -53,7 +55,9 @@ define(['logManager',
             var title = (desc.Name ? desc.Name + " " : "N/A ") + "(" + desc.ID + ")";
             this._panel.setTitle(title);
 
-            this._territoryId = this._client.addUI(this, true);
+            this._territoryId = this._client.addUI(this, function (events) {
+                self._eventCallback(events);
+            });
             //update the territory
             this._client.updateTerritory(this._territoryId, this._selfPatterns);
         }
@@ -64,11 +68,11 @@ define(['logManager',
         this._client.removeUI(this._territoryId);
     };
 
-    GridPanelContainmentControPointers.prototype.onOneEvent = function (events) {
+    GridPanelContainmentControPointers.prototype._eventCallback = function (events) {
         var i = events ? events.length : 0,
             e;
 
-        this._logger.debug("onOneEvent '" + i + "' items");
+        this._logger.debug("_eventCallback '" + i + "' items");
 
         this._insertList = [];
         this._updateList = [];
@@ -93,7 +97,7 @@ define(['logManager',
         this._dataGridWidget.updateObjects(this._updateList);
         this._dataGridWidget.deleteObjects(this._deleteList);
 
-        this._logger.debug("onOneEvent '" + events.length + "' items - DONE");
+        this._logger.debug("_eventCallback '" + events.length + "' items - DONE");
     };
 
     // PUBLIC METHODS

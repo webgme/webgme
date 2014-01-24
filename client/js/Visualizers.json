@@ -22,5 +22,17 @@
     {"id": "METAAspect",
         "title": "META Aspect",
         "panel": "js/Panels/MetaEditor/MetaEditorPanel",
+        "DEBUG_ONLY": false},
+
+    {"id": "PointerListEditor",
+        "title": "PointerListEditor",
+        "panel": "js/Panels/PointerListEditor/PointerListEditorPanel",
+        "DEBUG_ONLY": false},
+
+    {"id": "ManualAspectEditor",
+        "title": "ManualAspectEditor",
+        "panel": "js/Panels/ManualAspect/ManualAspectPanel",
         "DEBUG_ONLY": false}
+
+
 ]

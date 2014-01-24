@@ -394,6 +394,68 @@ define(['jquery',
         return validChildrenTypes;
     };
 
+    var _canAddToPointerList = function (objID, pointerListName, itemIDList) {
+        var obj = _client.getNode(objID),
+            pointerListMeta = _client.getPointerMeta(objID, pointerListName),
+            members = obj.getMemberIds(pointerListName) || [],
+            result = true,
+            i,
+            baseId;
+
+        //check #1: global multiplicity
+        if (pointerListMeta.max !== undefined &&
+            pointerListMeta.max > -1 &&
+            members.length + itemIDList.length > pointerListMeta.max) {
+            result = false;
+        }
+
+        //check #2: is every item a valid target of the pointer list
+        if (result === true) {
+            for (i = 0; i < itemIDList.length; i += 1) {
+                if (!_client.isValidTarget(objID, pointerListName, itemIDList[i])) {
+                    result = false;
+                    break;
+                }
+            }
+        }
+
+        //check #3: multiplicity check for each type
+        if (result === true) {
+            var maxPerType = {};
+            for (i = 0; i < pointerListMeta.items.length; i += 1) {
+                if (pointerListMeta.items[i].max !== undefined &&
+                    pointerListMeta.items[i].max > -1) {
+                    maxPerType[pointerListMeta.items[i].id] = pointerListMeta.items[i].max;
+                }
+            }
+
+            for (baseId in maxPerType) {
+                if (maxPerType.hasOwnProperty(baseId)) {
+                    //check all the members if it's this type
+                    for (i = 0; i < members.length; i += 1) {
+                        if (_client.isTypeOf(members[i]), baseId) {
+                            maxPerType[baseId] -= 1;
+                        }
+                    }
+
+                    //check all the itemIDList if it's this type
+                    for (i = 0; i < itemIDList.length; i += 1) {
+                        if (_client.isTypeOf(itemIDList[i], baseId)) {
+                            maxPerType[baseId] -= 1;
+                        }
+                    }
+
+                    if (maxPerType[baseId] < 1) {
+                        result = false;
+                        break;
+                    }
+                }
+            }
+        }
+
+        return result;
+    };
+
     //return utility functions
     return {
         initialize: _initialize,
@@ -409,6 +471,7 @@ define(['jquery',
         getValidReferenceTypes: _getValidReferenceTypes,
         canDeleteNode: _canDeleteNode,
         getMETAAspectMergedValidChildrenTypes: _getMETAAspectMergedValidChildrenTypes,
-        getValidConnectionTypesInParent: _getValidConnectionTypesInParent
+        getValidConnectionTypesInParent: _getValidConnectionTypesInParent,
+        canAddToPointerList: _canAddToPointerList
     }
 });

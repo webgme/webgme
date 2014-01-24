@@ -354,34 +354,49 @@ define(['logManager',
     };
 
     DesignerItem.prototype.getConnectionAreas = function (id, isEnd, connectionMetaInfo) {
-        var areas = this._decoratorInstance.getConnectionAreas(id, isEnd, connectionMetaInfo),
+        var result = [],
+            areas = this._decoratorInstance.getConnectionAreas(id, isEnd, connectionMetaInfo),
+            disabledAreas = this._decoratorInstance._getDisabledConnectionAreas(),
             i = areas.length,
             rotatedXY,
-            cArea;
+            cArea,
+            areaOK;
 
         while (i--) {
             cArea = areas[i];
 
-            if (this.rotation === 0) {
-                cArea.x1 += this.positionX;
-                cArea.y1 += this.positionY;
-                cArea.x2 += this.positionX;
-                cArea.y2 += this.positionY;
-            } else {
-                rotatedXY = this._rotatePoint(cArea.x1, cArea.y1);
-                cArea.x1 = rotatedXY.x + this.positionX;
-                cArea.y1 = rotatedXY.y + this.positionY;
+            areaOK = true;
 
-                rotatedXY = this._rotatePoint(cArea.x2, cArea.y2);
-                cArea.x2 = rotatedXY.x + this.positionX;
-                cArea.y2 = rotatedXY.y + this.positionY;
+            if (id === undefined ||
+                id === null ||
+                id === this.id) {
+                areaOK = disabledAreas.indexOf(cArea.id) === -1;
+            }
 
-                cArea.angle1 = (cArea.angle1 + this.rotation) % 360;
-                cArea.angle2 = (cArea.angle2 + this.rotation) % 360;
+            if (areaOK) {
+                if (this.rotation === 0) {
+                    cArea.x1 += this.positionX;
+                    cArea.y1 += this.positionY;
+                    cArea.x2 += this.positionX;
+                    cArea.y2 += this.positionY;
+                } else {
+                    rotatedXY = this._rotatePoint(cArea.x1, cArea.y1);
+                    cArea.x1 = rotatedXY.x + this.positionX;
+                    cArea.y1 = rotatedXY.y + this.positionY;
+
+                    rotatedXY = this._rotatePoint(cArea.x2, cArea.y2);
+                    cArea.x2 = rotatedXY.x + this.positionX;
+                    cArea.y2 = rotatedXY.y + this.positionY;
+
+                    cArea.angle1 = (cArea.angle1 + this.rotation) % 360;
+                    cArea.angle2 = (cArea.angle2 + this.rotation) % 360;
+                }
+
+                result.push(cArea);
             }
         }
 
-        return areas;
+        return result;
     };
 
     DesignerItem.prototype.moveTo = function (posX, posY) {
@@ -447,7 +462,9 @@ define(['logManager',
     /*********************** CONNECTION END CONNECTOR HIGHLIGHT ************************/
 
     DesignerItem.prototype.showSourceConnectors = function (params) {
-        this._decoratorInstance.showSourceConnectors(params);
+        if (this.canvas._enableConnectionDrawing === true) {
+            this._decoratorInstance.showSourceConnectors(params);
+        }
     };
 
     DesignerItem.prototype.hideSourceConnectors = function () {
@@ -455,7 +472,9 @@ define(['logManager',
     };
 
     DesignerItem.prototype.showEndConnectors = function (params) {
-        this._decoratorInstance.showEndConnectors(params);
+        if (this.canvas._enableConnectionDrawing === true) {
+            this._decoratorInstance.showEndConnectors(params);
+        }
     };
 
     DesignerItem.prototype.hideEndConnectors = function () {

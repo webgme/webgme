@@ -5,18 +5,14 @@ define(['logManager',
     'js/NodePropertyNames',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     './ModelEditorControl.DiagramDesignerWidgetEventHandlers',
-    './ModelEditorControl.DEBUG',
     'js/Utils/GMEConcepts',
-    'js/Decorators/DecoratorDB',
-    'js/Utils/DisplayFormat'], function (logManager,
+    'js/Utils/GMEVisualConcepts'], function (logManager,
                                                         CONSTANTS,
                                                         nodePropertyNames,
                                                         DiagramDesignerWidgetConstants,
                                                         ModelEditorControlDiagramDesignerWidgetEventHandlers,
-                                                        ModelEditorControlDEBUG,
                                                         GMEConcepts,
-                                                        DecoratorDB,
-                                                        displayFormat) {
+                                                        GMEVisualConcepts) {
 
     var ModelEditorControl,
         GME_ID = "GME_ID",
@@ -24,17 +20,8 @@ define(['logManager',
         BACKGROUND_TEXT_SIZE = 30,
         DEFAULT_DECORATOR = "ModelDecorator",
         WIDGET_NAME = 'DiagramDesigner',
-        DEFAULT_LINE_STYLE = {},
         SRC_POINTER_NAME = CONSTANTS.POINTER_SOURCE,
         DST_POINTER_NAME = CONSTANTS.POINTER_TARGET;
-
-    DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.WIDTH] = 1;
-    DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.COLOR] = "#000000";
-    DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.PATTERN] = "";
-    DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.TYPE] = "";
-    DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.START_ARROW] = "none";
-    DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.END_ARROW] = "none";
-    DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.POINTS] = [];
 
     ModelEditorControl = function (options) {
         var self = this;
@@ -71,10 +58,6 @@ define(['logManager',
         //TODO: experiemtnal only, remove!!!
         this.___SLOW_CONN = false;
 
-        this._DEFAULT_LINE_STYLE = DEFAULT_LINE_STYLE;
-
-        this._enforceMetaRules = true;
-
         //local variable holding info about the currently opened node
         this.currentNodeInfo = {"id": null, "children" : [], "parentId": null };
 
@@ -88,7 +71,8 @@ define(['logManager',
 
     ModelEditorControl.prototype.selectedObjectChanged = function (nodeId) {
         var desc,
-            nodeName;
+            nodeName,
+            self = this;
 
         this.logger.debug("SELECTEDOBJECT_CHANGED nodeId '" + nodeId + "'");
 
@@ -139,7 +123,9 @@ define(['logManager',
 
             this.designerCanvas.showProgressbar();
 
-            this._territoryId = this._client.addUI(this, true);
+            this._territoryId = this._client.addUI(this, function (events) {
+                self._eventCallback(events);
+            });
             //update the territory
             this._client.updateTerritory(this._territoryId, this._selfPatterns);
         } else {
@@ -152,42 +138,7 @@ define(['logManager',
         var nodeObj = this._client.getNode(nodeId),
             objDescriptor,
             pos,
-            defaultPos = 0,
-            lineStyle,
-            getValue;
-
-        getValue = function (srcObj, srcKey, dstObj, dstKey, type) {
-            if (srcObj) {
-                if (srcObj[srcKey]) {
-                      switch(type) {
-                        case 'int':
-                            try {
-                                dstObj[dstKey] = parseInt(srcObj[srcKey], 10);
-                            } catch (e) {
-
-                            }
-                            break;
-                        case 'array':
-                            try {
-                                if (!_.isArray(srcObj[srcKey])) {
-                                    dstObj[dstKey] = JSON.parse(srcObj[srcKey]);
-                                } else {
-                                    dstObj[dstKey] = srcObj[srcKey].slice(0);
-                                }
-
-                                if (!_.isArray(dstObj[dstKey])) {
-                                    delete dstObj[dstKey];
-                                }
-                            } catch (e) {
-
-                            }
-                            break;
-                        default:
-                            dstObj[dstKey] = srcObj[srcKey];
-                     }
-                }
-            }
-        };
+            defaultPos = 0;
 
         if (nodeObj) {
             objDescriptor = {};
@@ -203,21 +154,8 @@ define(['logManager',
                     objDescriptor.source = nodeObj.getPointer(SRC_POINTER_NAME).to;
                     objDescriptor.target = nodeObj.getPointer(DST_POINTER_NAME).to;
 
-                    //clear out name not to display anything for connections
-                    objDescriptor.name = displayFormat.resolve(nodeObj);
-
-                    if (nodeObj.getAttribute(nodePropertyNames.Attributes.directed) === true) {
-                        objDescriptor.arrowEnd = "block";
-                    }
-                    lineStyle =  nodeObj.getRegistry(nodePropertyNames.Registry.lineStyle);
-
-                    getValue(lineStyle, CONSTANTS.LINE_STYLE.WIDTH, objDescriptor, DiagramDesignerWidgetConstants.LINE_WIDTH, 'int');
-                    getValue(lineStyle, CONSTANTS.LINE_STYLE.COLOR, objDescriptor, DiagramDesignerWidgetConstants.LINE_COLOR);
-                    getValue(lineStyle, CONSTANTS.LINE_STYLE.PATTERN, objDescriptor, DiagramDesignerWidgetConstants.LINE_PATTERN);
-                    getValue(lineStyle, CONSTANTS.LINE_STYLE.TYPE, objDescriptor, DiagramDesignerWidgetConstants.LINE_TYPE);
-                    getValue(lineStyle, CONSTANTS.LINE_STYLE.START_ARROW, objDescriptor, DiagramDesignerWidgetConstants.LINE_START_ARROW);
-                    getValue(lineStyle, CONSTANTS.LINE_STYLE.END_ARROW, objDescriptor, DiagramDesignerWidgetConstants.LINE_END_ARROW);
-                    getValue(lineStyle, CONSTANTS.LINE_STYLE.POINTS, objDescriptor, DiagramDesignerWidgetConstants.LINE_POINTS, 'array');
+                    //get all the other visual properties of the connection
+                    _.extend(objDescriptor, GMEVisualConcepts.getConnectionVisualProperties(nodeId));
                 } else {
                     objDescriptor.kind = "MODEL";
                     pos = nodeObj.getRegistry(nodePropertyNames.Registry.position);
@@ -263,17 +201,17 @@ define(['logManager',
     };
 
     // PUBLIC METHODS
-    ModelEditorControl.prototype.onOneEvent = function (events) {
+    ModelEditorControl.prototype._eventCallback = function (events) {
         var i = events ? events.length : 0;
 
-        this.logger.debug("onOneEvent '" + i + "' items");
+        this.logger.debug("_eventCallback '" + i + "' items");
 
         if (i > 0) {
             this.eventQueue.push(events);
             this.processNextInQueue();
         }
 
-        this.logger.debug("onOneEvent '" + events.length + "' items - DONE");
+        this.logger.debug("_eventCallback '" + events.length + "' items - DONE");
     };
 
     ModelEditorControl.prototype.processNextInQueue = function () {
@@ -727,6 +665,7 @@ define(['logManager',
                                 componentID =  this._GmeID2ComponentID[gmeID][len];
                                 this.designerCanvas.deleteComponent(componentID);
                                 this._GmeID2ComponentID[gmeID].splice(len, 1);
+                                delete this._ComponentID2GmeID[componentID];
                             }
                         }
                     }
@@ -970,15 +909,9 @@ define(['logManager',
     ModelEditorControl.prototype._displayToolbarItems = function () {
         if (this._toolbarInitialized !== true) {
             this._initializeToolbar();
-            if (DEBUG === true) {
-                this._addDebugModeExtensions();
-            }
         } else {
             for (var i = 0; i < this._toolbarItems.length; i++) {
                 this._toolbarItems[i].show();
-            }
-            if (DEBUG === true) {
-                this._showDebugModeExtensions();
             }
         }
     };
@@ -988,9 +921,6 @@ define(['logManager',
             for (var i = 0; i < this._toolbarItems.length; i++) {
                 this._toolbarItems[i].hide();
             }
-            if (DEBUG === true) {
-                this._hideDebugModeExtensions();
-            }
         }
     };
 
@@ -998,9 +928,6 @@ define(['logManager',
         if (this._toolbarInitialized === true) {
             for (var i = 0; i < this._toolbarItems.length; i++) {
                 this._toolbarItems[i].destroy();
-            }
-            if (DEBUG === true) {
-                this._removeDebugModeExtensions();
             }
         }
     };
@@ -1045,20 +972,6 @@ define(['logManager',
         this._toolbarItems.push(this.$btnConnectionRemoveSegmentPoints);
         this.$btnConnectionRemoveSegmentPoints.enabled(false);
 
-        /************ ENFORCE META RULES TOGGLE BUTTON **********************/
-        /*this.$btnEnforceMetaRules = toolBar.addToggleButton({
-                "icon": 'icon-exclamation-sign',
-                "text": 'Enforce META rules',
-                "title": "Enforce META rules ON/OFF",
-                "clickFn": function (data, isPressed) {
-                    self._enforceMetaRules = !self._enforceMetaRules;
-                    self.logger.warning('!!! ENFORCE META RULES IS NOT YET IMPLEMENTED !!!');
-                }}
-        );
-        this.$btnEnforceMetaRules.setToggled(this._enforceMetaRules);
-        this._toolbarItems.push(this.$btnEnforceMetaRules);*/
-
-
         this._toolbarInitialized = true;
     };
 
@@ -1068,11 +981,6 @@ define(['logManager',
 
     //attach ModelEditorControl - DesignerCanvas event handler functions
     _.extend(ModelEditorControl.prototype, ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype);
-
-    //in DEBUG mode add additional content to canvas
-    if (DEBUG === true) {
-        _.extend(ModelEditorControl.prototype, ModelEditorControlDEBUG.prototype);
-    }
 
     return ModelEditorControl;
 });

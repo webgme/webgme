@@ -45,7 +45,9 @@ define(['logManager',
             if (rootNode) {
                 var loadingRootTreeNode;
 
-                selfId = client.addUI(self);
+                selfId = client.addUI(self, function (events) {
+                    self._eventCallback(events);
+                });
 
                 //add "root" with its children to territory
                 //create a new loading node for it in the tree
@@ -505,23 +507,28 @@ define(['logManager',
             //ENDOF : HANDLE UPDATE
         };
 
-        this.onEvent = function (etype, eid) {
-            switch (etype) {
-            case "load":
-                refresh("insert", eid);
-                break;
-            case "update":
-                refresh("update", eid);
-                break;
-            /*case "create":
-                refresh("insert", eid);
-                break;
-            case "delete":
-                refresh("update", eid);
-                break;*/
-            case "unload":
-                refresh("unload", eid);
-                break;
+        this._eventCallback = function (events) {
+            var i,
+                len = events.length;
+
+            for (i = 0; i < len; i += 1) {
+                switch (events[i].etype) {
+                    case "load":
+                        refresh("insert", events[i].eid);
+                        break;
+                    case "update":
+                        refresh("update", events[i].eid);
+                        break;
+                    /*case "create":
+                     refresh("insert", events[i].eid);
+                     break;
+                     case "delete":
+                     refresh("update", events[i].eid);
+                     break;*/
+                    case "unload":
+                        refresh("unload", events[i].eid);
+                        break;
+                }
             }
         };
 
