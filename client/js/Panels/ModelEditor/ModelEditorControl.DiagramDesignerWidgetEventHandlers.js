@@ -895,8 +895,15 @@ define(['logManager',
         this._client.startTransaction();
         while(i--) {
             gmeID = this._ComponentID2GmeID[selectedIds[i]];
-            regDegree = this._client.getNode(gmeID).getRegistry(nodePropertyNames.Registry.rotation);
-            this._client.setRegistry(gmeID, nodePropertyNames.Registry.rotation, ((regDegree || 0) + degree) % 360 );
+            regDegree = this._client.getNode(gmeID).getEditableRegistry(nodePropertyNames.Registry.rotation);
+
+            if (degree === DiagramDesignerWidgetConstants.ROTATION_RESET ) {
+                regDegree = 0;
+            } else {
+                regDegree = ((regDegree || 0) + degree) % 360;
+            }
+
+            this._client.setRegistry(gmeID, nodePropertyNames.Registry.rotation, regDegree);
         }
         this._client.completeTransaction();
     };

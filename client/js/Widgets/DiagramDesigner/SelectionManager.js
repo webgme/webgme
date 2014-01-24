@@ -7,8 +7,10 @@
 "use strict";
 
 define(['logManager',
-    'clientUtil'], function (logManager,
-                            clientUtil) {
+    'clientUtil',
+    './DiagramDesignerWidget.Constants'], function (logManager,
+                            clientUtil,
+                            DiagramDesignerWidgetConstants) {
 
     var SelectionManager,
         SELECTION_OVERLAP_RATIO = 0.5,
@@ -602,7 +604,7 @@ define(['logManager',
             rotateBtnBottom = $('<div/>', {
                 "class" : "s-btn rotate bottom"
             });
-            rotateBtnBottom.html('<i class="icon-repeat"><div class="popover right nowrap" style="top: -10px; left: 22px; display: none;"><div class="arrow"></div><div class="popover-content narrow"><div class="btn-group"><a class="btn btn-small" id="rotate-left" title="Rotate left"><i class="icon-repeat flip-vertical"></i></a><a class="btn  btn-small" id="rotate-right" title="Rotate right"><i class="icon-repeat"></i></a></div></div></div></i>');
+            rotateBtnBottom.html('<i class="icon-repeat"><div class="popover right nowrap" style="top: -10px; left: 22px; display: none;"><div class="arrow"></div><div class="popover-content narrow"><div class="btn-group"><a class="btn btn-small" id="rotate-left" title="Rotate left"><i class="icon-repeat flip-vertical"></i></a><a class="btn  btn-small" id="rotate-right" title="Rotate right"><i class="icon-repeat"></i></a><a class="btn  btn-small" id="rotate-reset" title="Reset rotation"><i class="icon-remove"></i></a></div></div></div></i>');
 
             this._rotationDegree = $('<div/>', {
                 "class" : "rotation-deg"
@@ -641,6 +643,9 @@ define(['logManager',
                         break;
                     case 'right':
                         deg = 90;
+                        break;
+                    case DiagramDesignerWidgetConstants.ROTATION_RESET:
+                        deg = DiagramDesignerWidgetConstants.ROTATION_RESET;
                         break;
                 }
 
