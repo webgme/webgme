@@ -14,6 +14,11 @@
         "panel": "js/Panels/Grid/GridPanelPointers",
         "DEBUG_ONLY": true},
 
+    {"id": "GridSets",
+        "title": "Set explorer",
+        "panel": "js/Panels/Grid/GridPanelSets",
+        "DEBUG_ONLY": true},
+
     {"id": "GraphViz",
         "title": "Graph visualizer",
         "panel": "js/Panels/GraphViz/GraphVizPanel",
