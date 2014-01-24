@@ -257,7 +257,7 @@ define(['jquery',
             node;
 
         //TODO: implement real logic based on META and CONSTRAINTS...
-        if(parentId && baseIdList && baseIdList.length > 0){
+        if(typeof parentId === 'string' && baseIdList && baseIdList.length > 0){
            result = true;
 
             //FILTER OUT ABSTRACTS
