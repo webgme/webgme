@@ -15,7 +15,8 @@ define(["core/corerel",'core/setcore','core/rootcore','core/guidcore','core/null
         options.corerel = options.corerel || 1;
         
         var corerel = options.corerel === 2 ? new CoreRel2(new CoreTree(storage, options)) : new CoreRel(storage, options);
-        var corecon = new Constraint(new Descriptor(new Guid(new Set(new Root(new NullPtr(new Type(new NullPtr(corerel))))))));
+        //var corecon = new Constraint(new Descriptor(new Guid(new Set(new Root(new NullPtr(new Type(new NullPtr(corerel))))))));
+        var corecon = new Constraint(new Descriptor(new Guid(new Set(new NullPtr(new Type(new NullPtr(corerel)))))));
 
         if(options.usertype === 'tasync'){
             return corecon;

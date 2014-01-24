@@ -39,6 +39,7 @@ define([
         Import
         ) {
 
+        var ROOT_PATH = '';
         function COPY(object){
             if(object){
                 return JSON.parse(JSON.stringify(object));
@@ -712,10 +713,10 @@ define([
                     baseLoaded();
                 } else {
                     var base = null;
-                    if(_loadNodes['root']){
-                        base = _loadNodes['root'].node;
-                    } else if(_nodes['root']){
-                        base = _nodes['root'].node;
+                    if(_loadNodes[ROOT_PATH]){
+                        base = _loadNodes[ROOT_PATH].node;
+                    } else if(_nodes[ROOT_PATH]){
+                        base = _nodes[ROOT_PATH].node;
                     }
                     core.loadByPath(base,id,function(err,node){
                         if(!err && node && !core.isEmpty(node)){
@@ -782,7 +783,7 @@ define([
                             userEvents(i,modifiedPaths);
                         }
                         _loadError = 0;
-                    } else if(_loadNodes['root']){
+                    } else if(_loadNodes[ROOT_PATH]){
                         //we left the stuff in the loading rack, probably because there were no _nodes beforehand
                         _nodes = _loadNodes;
                         _loadNodes = {};
@@ -843,8 +844,8 @@ define([
                     _msg +="\n"+msg;
                     if(!_inTransaction){
                         ASSERT(_project && _core && _branch);
-                        _core.persist(_nodes['root'].node,function(err){});
-                        var newRootHash = _core.getHash(_nodes['root'].node);
+                        _core.persist(_nodes[ROOT_PATH].node,function(err){});
+                        var newRootHash = _core.getHash(_nodes[ROOT_PATH].node);
                         var newCommitHash = _project.makeCommit([_recentCommits[0]],newRootHash,_msg,function(err){
                             //TODO now what??? - could we end up here?
                         });
@@ -856,7 +857,7 @@ define([
                         });
                         loading(newRootHash);
                     } else {
-                        _core.persist(_nodes['root'].node,function(err){});
+                        _core.persist(_nodes[ROOT_PATH].node,function(err){});
                     }
                 } else {
                     _msg="";
@@ -1703,7 +1704,7 @@ define([
             }
             function updateTerritory(guid, patterns) {
                 if(_project){
-                    if(_nodes['root']){
+                    if(_nodes[ROOT_PATH]){
                         //this has to be optimized
                         var missing = 0;
                         var error = null;
@@ -1732,7 +1733,7 @@ define([
                         }
                     } else {
                         //something funny is going on
-                        if(_loadNodes['root']){
+                        if(_loadNodes[ROOT_PATH]){
                             //probably we are in the loading process, so we should redo this update when the loading finishes
                             setTimeout(updateTerritory,100,guid,patterns);
                         } else {
@@ -2012,8 +2013,8 @@ define([
             }
             function getDumpURL(path,filepath){
                 filepath = filepath || _projectName+'_'+_branch+'_'+URL.addSpecialChars(path);
-                if(window && window.location && window.location && _nodes && _nodes['root']){
-                    return window.location.protocol + '//' + window.location.host +'/rest/etf/'+_projectName+'/'+URL.addSpecialChars(_core.getHash(_nodes['root'].node))+'/'+URL.addSpecialChars(path)+'/'+filepath;
+                if(window && window.location && window.location && _nodes && _nodes[ROOT_PATH]){
+                    return window.location.protocol + '//' + window.location.host +'/rest/etf/'+_projectName+'/'+URL.addSpecialChars(_core.getHash(_nodes[ROOT_PATH].node))+'/'+URL.addSpecialChars(path)+'/'+filepath;
                 }
                 return null;
             }

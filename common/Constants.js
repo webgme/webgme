@@ -22,7 +22,7 @@ define([], function () {
         /*
          * DEDICATED GME OBJECT IDs
          */
-        PROJECT_ROOT_ID: 'root',
+        PROJECT_ROOT_ID: '',
         PROJECT_FCO_ID: 'FCO_ID',
 
         /*

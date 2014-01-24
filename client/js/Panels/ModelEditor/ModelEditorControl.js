@@ -97,7 +97,7 @@ define(['logManager',
         this.currentNodeInfo.id = nodeId;
         this.currentNodeInfo.parentId = undefined;
 
-        if (nodeId) {
+        if (nodeId !== null || nodeId !== undefined) {
             desc = this._getObjectDescriptor(nodeId);
             if (desc) {
                 this.currentNodeInfo.parentId = desc.parentId;
