@@ -234,7 +234,7 @@ define([ "util/assert"], function (ASSERT) {
                     var index = pathArray.indexOf(SETS_ID);
                     if(index>0 && pathArray.length>index+1){
                         //otherwise it is not a real set
-                        var ownerPath = innerCore.toVisiblePath(pathArray.slice(0,index).join('/'));
+                        var ownerPath = pathArray.slice(0,index).join('/');
                         if(sets[ownerPath] === undefined){
                             sets[ownerPath] = [];
                         }

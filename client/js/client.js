@@ -1263,7 +1263,7 @@ define([
                     }
                 }
 
-                if(pathsToCopy.length > 0 && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
+                if(pathsToCopy.length > 0 && typeof parameters.parentId === 'string' && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
                     //collecting nodes under tempFrom
                     var tempFrom = _core.createNode({parent:_nodes[parameters.parentId].node});
                     for(var i=0;i<pathsToCopy.length;i++){
@@ -1312,7 +1312,7 @@ define([
                     }
                 }
 
-                if(pathsToMove.length > 0 && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
+                if(pathsToMove.length > 0 && typeof parameters.parentId === 'string' && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
                     for(var i=0;i<pathsToMove.length;i++){
                         if(_nodes[pathsToMove[i]] && typeof _nodes[pathsToMove[i]].node === 'object'){
                             var newNode = _core.moveNode(_nodes[pathsToMove[i]].node,_nodes[parameters.parentId].node);
@@ -1344,7 +1344,7 @@ define([
                         pathsToCopy.push(i);
                     }
                 }
-                if(pathsToCopy.length > 0 && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
+                if(pathsToCopy.length > 0 && typeof parameters.parentId === 'string' && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
                     for(var i=0;i<pathsToCopy.length;i++){
                         if(_nodes[pathsToCopy[i]] && typeof _nodes[pathsToCopy[i]].node === 'object'){
                             var node = _core.createNode({parent:_nodes[parameters.parentId].node,base:_nodes[pathsToCopy[i]].node});
@@ -1376,7 +1376,7 @@ define([
                     }
                 }
                 
-                if(pathsToCopy.length > 0 && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
+                if(pathsToCopy.length > 0 && typeof parameters.parentId === 'string' && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
                     //collecting nodes under tempFrom
                     var tempFrom = _core.createNode({parent:_nodes[parameters.parentId].node,base:null});
                     for(var i=0;i<pathsToCopy.length;i++){
@@ -1479,7 +1479,7 @@ define([
                 var newID;
 
                 if(_core){
-                    if(parameters.parentId && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
+                    if(typeof parameters.parentId === 'string'  && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
                         var baseNode = null;
                         if(_nodes[parameters.baseId]){
                             baseNode = _nodes[parameters.baseId].node || baseNode;
@@ -1519,7 +1519,7 @@ define([
 
             function _copyMoreNodes(parameters){
                 var pathestocopy = [];
-                if(parameters.parentId && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
+                if(typeof parameters.parentId === 'string' && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
                     for(var i in parameters){
                         if(i !== "parentId"){
                             pathestocopy.push(i);
