@@ -2,12 +2,10 @@
 
 define(['js/Utils/GMEConcepts',
     'js/DragDrop/DragHelper',
-    './PointerListEditorConstants',
     './../ManualAspect/ManualAspectConstants',
     'js/Panels/ControllerBase/DiagramDesignerWidgetMultiTabMemberListControllerBase'], function (
                                                GMEConcepts,
                                                DragHelper,
-                                               PointerListEditorConstants,
                                                ManualAspectConstants,
                                                DiagramDesignerWidgetMultiTabMemberListControllerBase) {
 
@@ -57,9 +55,6 @@ define(['js/Utils/GMEConcepts',
         return result;
     };
 
-    PointerListEditorController.prototype.getMemberListMemberPositionsRegistryKey = function () {
-        return PointerListEditorConstants.POINTER_LIST_MEMBER_POSITION_REGISTRY_KEY;
-    };
 
     /**********************************************************/
     /*         HANDLE OBJECT DRAG & DROP ACCEPTANCE           */

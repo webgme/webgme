@@ -35,6 +35,8 @@ define([], function () {
 
         DISPLAY_FORMAT_ATTRIBUTE_MARKER: '$',
 
+        MEMBER_POSITION_REGISTRY_KEY: 'MemberPosition',
+
          /*
           * Dedicated SET names
           */

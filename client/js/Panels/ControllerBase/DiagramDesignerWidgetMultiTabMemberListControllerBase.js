@@ -336,8 +336,7 @@ define(['logManager',
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.getMemberListMemberPositionsRegistryKey = function () {
-        this.logger.warning('DiagramDesignerWidgetMultiTabMemberListControllerBase.getMemberListMemberPositionsRegistryKey is not overridden, returning default value...');
-        return undefined;
+        return CONSTANTS.MEMBER_POSITION_REGISTRY_KEY;
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.getMemberListSetsRegistryKey = function () {

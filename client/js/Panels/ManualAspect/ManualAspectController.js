@@ -43,11 +43,6 @@ define(['logManager',
     };
 
 
-    ManualAspectController.prototype.getMemberListMemberPositionsRegistryKey = function () {
-        return ManualAspectConstants.MANUAL_ASPECT_MEMBER_POSITION_REGISTRY_KEY;
-    };
-
-
     ManualAspectController.prototype.getMemberListSetsRegistryKey = function () {
         return ManualAspectConstants.MANUAL_ASPECTS_REGISTRY_KEY;
     };

@@ -14,7 +14,6 @@ define([], function () {
     //return string constants
     return {
         MANUAL_ASPECTS_REGISTRY_KEY : 'ManualAspects',
-        MANUAL_ASPECT_NAME_PREFIX : 'ManualAspect_',
-        MANUAL_ASPECT_MEMBER_POSITION_REGISTRY_KEY : 'ManualAspectMemberPosition'
+        MANUAL_ASPECT_NAME_PREFIX : 'ManualAspect_'
     };
 });
