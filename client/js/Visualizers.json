@@ -32,12 +32,12 @@
     {"id": "PointerListEditor",
         "title": "PointerListEditor",
         "panel": "js/Panels/PointerListEditor/PointerListEditorPanel",
-        "DEBUG_ONLY": false},
+        "DEBUG_ONLY": true},
 
     {"id": "ManualAspectEditor",
         "title": "ManualAspectEditor",
         "panel": "js/Panels/ManualAspect/ManualAspectPanel",
-        "DEBUG_ONLY": false}
+        "DEBUG_ONLY": true}
 
 
 ]
