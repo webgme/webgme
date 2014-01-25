@@ -259,7 +259,7 @@ define(['logManager',
         this._metaAspectMembersCoordinatesGlobal = {};
         while (len--) {
             gmeID =  this._metaAspectMembersAll[len];
-            this._metaAspectMembersCoordinatesGlobal[gmeID] = aspectNode.getMemberRegistry(MetaEditorConstants.META_ASPECT_SET_NAME, gmeID, MetaEditorConstants.META_ASPECT_MEMBER_POSITION_REGISTRY_KEY);
+            this._metaAspectMembersCoordinatesGlobal[gmeID] = aspectNode.getMemberRegistry(MetaEditorConstants.META_ASPECT_SET_NAME, gmeID, CONSTANTS.MEMBER_POSITION_REGISTRY_KEY);
         }
 
         //process the sheets
@@ -1665,7 +1665,7 @@ define(['logManager',
             j = this._metaAspectMembersPerSheet[setName].length;
             while (j--) {
                 gmeID =  this._metaAspectMembersPerSheet[setName][j];
-                this._metaAspectMembersCoordinatesPerSheet[setName][gmeID] = aspectNode.getMemberRegistry(setName, gmeID, MetaEditorConstants.META_ASPECT_MEMBER_POSITION_REGISTRY_KEY);
+                this._metaAspectMembersCoordinatesPerSheet[setName][gmeID] = aspectNode.getMemberRegistry(setName, gmeID, CONSTANTS.MEMBER_POSITION_REGISTRY_KEY);
                 this._metaAspectSheetsPerMember[gmeID] = this._metaAspectSheetsPerMember[gmeID] || [];
                 this._metaAspectSheetsPerMember[gmeID].push(setName);
             }

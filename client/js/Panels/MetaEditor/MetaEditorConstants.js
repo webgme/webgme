@@ -14,7 +14,6 @@ define(['js/Constants'], function (CONSTANTS) {
     //return string constants
     return {
         META_ASPECT_SET_NAME : 'MetaAspectSet',
-        META_ASPECT_MEMBER_POSITION_REGISTRY_KEY : 'MetaAspectPosition',
         RESERVED_POINTER_NAMES : [CONSTANTS.POINTER_BASE],
         META_ASPECT_CONTAINER_ID: CONSTANTS.PROJECT_ROOT_ID,
         META_SHEET_REGISTRY_KEY : 'MetaSheets',
