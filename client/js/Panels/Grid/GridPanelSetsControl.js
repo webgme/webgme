@@ -2,9 +2,11 @@
 
 define(['logManager',
     'clientUtil',
-    'js/Constants'], function (logManager,
+    'js/Constants',
+    'js/NodePropertyNames'], function (logManager,
                                     util,
-                                    CONSTANTS) {
+                                    CONSTANTS,
+                                    nodePropertyNames) {
 
     var GridPanelSetsControl;
 
@@ -68,15 +70,13 @@ define(['logManager',
             setMembers,
             j,
             memberRegistryNames,
-            k;
-
-        var gridContent = {};
+            k,
+            title = " (" + this._setContainerID + ")";
 
         this._insertList = [];
 
-        this._dataGridWidget.clear();
-
         if (setContainer) {
+            title = (setContainer.getAttribute(nodePropertyNames.Attributes.name) || 'N/A') + title;
             //get set names
             //get set members
             //get set registries
@@ -111,6 +111,8 @@ define(['logManager',
 
             this._dataGridWidget.insertObjects(this._insertList);
         }
+
+        this._panel.setTitle(title);
     };
 
 
