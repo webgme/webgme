@@ -209,7 +209,7 @@ define(['jquery',
 
         //set META ASPECT to show FCO
         _client.addMember(CONSTANTS.PROJECT_ROOT_ID, FCO_ID, MetaEditorConstants.META_ASPECT_SET_NAME);
-        _client.setMemberRegistry(CONSTANTS.PROJECT_ROOT_ID, FCO_ID, MetaEditorConstants.META_ASPECT_SET_NAME, MetaEditorConstants.META_ASPECT_MEMBER_POSITION_REGISTRY_KEY, {'x': 100, 'y': 100} );
+        _client.setMemberRegistry(CONSTANTS.PROJECT_ROOT_ID, FCO_ID, MetaEditorConstants.META_ASPECT_SET_NAME, CONSTANTS.MEMBER_POSITION_REGISTRY_KEY, {'x': 100, 'y': 100} );
 
         //create a default MetaSheet
         var defaultMetaSheetID = MetaEditorConstants.META_ASPECT_SHEET_NAME_PREFIX + generateGuid();
@@ -223,7 +223,7 @@ define(['jquery',
 
         //add the FCO to the default META sheet
         _client.addMember(CONSTANTS.PROJECT_ROOT_ID, FCO_ID, defaultMetaSheetID);
-        _client.setMemberRegistry(CONSTANTS.PROJECT_ROOT_ID, FCO_ID, defaultMetaSheetID, MetaEditorConstants.META_ASPECT_MEMBER_POSITION_REGISTRY_KEY, {'x': 100, 'y': 100} );
+        _client.setMemberRegistry(CONSTANTS.PROJECT_ROOT_ID, FCO_ID, defaultMetaSheetID, CONSTANTS.MEMBER_POSITION_REGISTRY_KEY, {'x': 100, 'y': 100} );
 
         _client.completeTransaction();
     };
