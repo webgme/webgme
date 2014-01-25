@@ -57,8 +57,12 @@ define(['logManager',
         this._commonColumns = [];
 
         if (this._oTable) {
-            this._oTable.fnClearTable();
-            this._oTable.fnDestroy(false);
+            try {
+                this._oTable.fnClearTable();
+                this._oTable.fnDestroy(false);
+            } catch (exx) {
+
+            }
         }
 
         if (this.$table) {
