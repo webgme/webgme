@@ -90,7 +90,7 @@ define(['logManager',
         this._Subcomponent2GMEID = {};
 
         //remove current territory patterns
-        if (this.currentNodeInfo.id) {
+        if (this._territoryId) {
             this._client.removeUI(this._territoryId);
         }
 
