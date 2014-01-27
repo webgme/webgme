@@ -97,7 +97,8 @@ define(['logManager',
         this.currentNodeInfo.id = nodeId;
         this.currentNodeInfo.parentId = undefined;
 
-        if (nodeId !== null || nodeId !== undefined) {
+        //since PROJECT_ROOT_ID is an empty string, it is considered false..
+        if (nodeId || nodeId === CONSTANTS.PROJECT_ROOT_ID) {
             desc = this._getObjectDescriptor(nodeId);
             if (desc) {
                 this.currentNodeInfo.parentId = desc.parentId;
