@@ -43,7 +43,7 @@ define(['logManager',
 
         this._setContainerID = nodeId;
 
-        if (this._setContainerID !== null && this._setContainerID !== undefined) {
+        if (this._setContainerID || this._setContainerID === CONSTANTS.PROJECT_ROOT_ID) {
             //put new node's info into territory rules
             this._selfPatterns = {};
             this._selfPatterns[nodeId] = { "children": 0 };

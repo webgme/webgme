@@ -53,7 +53,7 @@ define(['logManager',
         this._containerNodeId = nodeId;
         this._validChildrenTypeIDs = [];
 
-        if (typeof this._containerNodeId === 'string') {
+        if (this._containerNodeId || this._containerNodeId === CONSTANTS.PROJECT_ROOT_ID) {
             //put new node's info into territory rules
             this._selfPatterns = {};
             this._selfPatterns[nodeId] = { "children": 1 };
