@@ -64,8 +64,7 @@ define(['underscore',
     };
 
     //hook up to META ASPECT CHANGES
-    METAAspectHelper.addEventListener(METAAspectHelper.events.META_ASPECT_CHANGED, function (projectName) {
-        console.log(projectName);
+    METAAspectHelper.addEventListener(METAAspectHelper.events.META_ASPECT_CHANGED, function () {
         _queryMetaTypes();
     });
 
