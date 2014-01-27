@@ -12,7 +12,9 @@ define(['logManager',
                                                                projectsDialogTemplate) {
 
     var ProjectsDialog,
-        DATA_PROJECT_NAME = "PROJECT_NAME";
+        DATA_PROJECT_NAME = "PROJECT_NAME",
+        CREATE_TYPE_EMPTY = 'create_empty',
+        CREATE_TYPE_IMPORT = 'create_import';
 
     ProjectsDialog = function (client) {
         this._logger = logManager.create("ProjectsDialog");
@@ -44,7 +46,8 @@ define(['logManager',
 
     ProjectsDialog.prototype._initDialog = function () {
         var self = this,
-            selectedId;
+            selectedId,
+            createType;
 
         var openProject = function (projId) {
             if (self._projectList[projId].read === true) {
@@ -163,6 +166,7 @@ define(['logManager',
         });
 
         this._btnCreateNew.on('click', function (event) {
+            createType = CREATE_TYPE_EMPTY;
             self._txtNewProjectName.val('');
             self._panelPuttons.hide();
             self._panelCreateNew.show();
@@ -174,6 +178,7 @@ define(['logManager',
         });
 
         this._btnNewProjectCancel.on('click', function (event) {
+            createType = undefined;
             self._panelPuttons.show();
             self._panelCreateNew.hide();
             self._btnNewProjectCreate.show();
@@ -187,6 +192,7 @@ define(['logManager',
         });
 
         this._btnCreateFromFile.on('click', function (event) {
+            createType = CREATE_TYPE_IMPORT;
             self._txtNewProjectName.val('');
             self._panelPuttons.hide();
             self._panelCreateNew.show();
@@ -233,7 +239,12 @@ define(['logManager',
             // [enter]
             if (event.which === 13) {
                 //create project
-                doCreateProject();
+                if (createType === CREATE_TYPE_EMPTY) {
+                    doCreateProject();
+                } else if (createType === CREATE_TYPE_IMPORT) {
+                    doCreateProjectFromFile();
+                }
+
                 event.preventDefault();
                 event.stopPropagation();
             }
