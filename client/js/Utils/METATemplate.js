@@ -23,12 +23,13 @@ define(['underscore',
             m;
 
         if (!_.isEqual(_metaTypes,nMetaTypes)) {
-            var metaOutOfDateMsg = _metaID + " is not up to date with the latest META aspect. Please update your local copy!";
+            //TODO: when displaying an error message make sure it's the very same project
+            /*var metaOutOfDateMsg = _metaID + " is not up to date with the latest META aspect. Please update your local copy!";
             if (console.error) {
                 console.error(metaOutOfDateMsg);
             } else {
                 console.log(metaOutOfDateMsg);
-            }
+            }*/
 
             for (m in _metaTypes) {
                 if (_metaTypes.hasOwnProperty(m)) {
