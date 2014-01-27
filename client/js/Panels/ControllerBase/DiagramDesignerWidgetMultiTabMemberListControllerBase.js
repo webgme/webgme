@@ -109,7 +109,7 @@ define(['logManager',
         this._widget.clear();
 
         //remove current territory patterns
-        if (this._memberListContainerID) {
+        if (this._territoryId) {
             this._client.removeUI(this._territoryId);
             this._widget.clearTabs();
         }

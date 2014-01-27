@@ -36,7 +36,7 @@ define(['logManager',
         this._logger.debug("SELECTEDOBJECT_CHANGED nodeId '" + nodeId + "'");
 
         //remove current territory patterns
-        if (this._setContainerID) {
+        if (this._territoryId) {
             this._client.removeUI(this._territoryId);
             this._dataGridWidget.clear();
         }
