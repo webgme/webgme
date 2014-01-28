@@ -16,6 +16,7 @@ define([
     'coreclient/metaforgui',
     'coreclient/tojson',
     'coreclient/dump',
+    'coreclient/dumpmore',
     'coreclient/import'
 ],
     function (
@@ -36,6 +37,7 @@ define([
         GuiMeta,
         ToJson,
         Dump,
+        DumpMore,
         Import
         ) {
 
@@ -1974,6 +1976,20 @@ define([
             }
 
             //export and import functions
+            function exportItems(paths,callback){
+                var nodes = [];
+                for(var i=0;i<paths.length;i++){
+                    if(_nodes[paths[i]]){
+                        nodes.push(_nodes[paths[i]].node);
+                    } else {
+                        callback('invalid node');
+                        return;
+                    }
+                }
+
+                DumpMore(_core,nodes,"",'guid',callback);
+
+            }
             function dumpNodeAsync(path,callback){
                 if(_nodes[path]){
                     Dump(_core,_nodes[path].node,"",'guid',callback);
@@ -2164,6 +2180,7 @@ define([
                 //end of META functions
 
                 //JSON functions
+                exportItems: exportItems,
                 dumpNodeAsync: dumpNodeAsync,
                 importNodeAsync: importNodeAsync,
                 createProjectFromFileAsync: createProjectFromFileAsync,
