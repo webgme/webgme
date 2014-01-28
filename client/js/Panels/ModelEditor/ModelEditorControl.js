@@ -90,14 +90,15 @@ define(['logManager',
         this._Subcomponent2GMEID = {};
 
         //remove current territory patterns
-        if (this.currentNodeInfo.id) {
+        if (this._territoryId) {
             this._client.removeUI(this._territoryId);
         }
 
         this.currentNodeInfo.id = nodeId;
         this.currentNodeInfo.parentId = undefined;
 
-        if (nodeId) {
+        //since PROJECT_ROOT_ID is an empty string, it is considered false..
+        if (nodeId || nodeId === CONSTANTS.PROJECT_ROOT_ID) {
             desc = this._getObjectDescriptor(nodeId);
             if (desc) {
                 this.currentNodeInfo.parentId = desc.parentId;

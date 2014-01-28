@@ -493,7 +493,7 @@ define(['js/Constants',
                 if (nodeObj.getParentId()) {
                     this._control._client.setSelectedObjectId(nodeObj.getParentId(), this._refTo);
                 } else {
-                    this._control._client.setSelectedObjectId('root', this._refTo);
+                    this._control._client.setSelectedObjectId(CONSTANTS.PROJECT_ROOT_ID, this._refTo);
                 }
             } else {
                 this.logger.warning('_navigateToReference client.getNode(' + this._refTo + ') returned null... :(');

@@ -10,22 +10,24 @@ define(['logManager',
         'js/NodePropertyNames',
         'js/Utils/ExportManager',
         'js/Utils/ImportManager',
+        'js/Constants',
         'css!/css/Panels/ObjectBrowser/TreeBrowserControl'], function (logManager,
                                                                        GMEConcepts,
                                                                        nodePropertyNames,
                                                                        ExportManager,
-                                                                       ImportManager) {
+                                                                       ImportManager,
+                                                                       CONSTANTS) {
 
     var NODE_PROGRESS_CLASS = 'node-progress',
         GME_MODEL_CLASS = "gme-model",
         GME_ATOM_CLASS = "gme-atom",
         GME_CONNECTION_CLASS = "gme-connection",
-        GME_ROOT_ICON = "gme-root";
+        GME_ROOT_ICON = "gme-root",
+        projectRootID = CONSTANTS.PROJECT_ROOT_ID;
 
     var TreeBrowserControl = function (client, treeBrowser) {
 
         var logger,
-            rootNodeId = "root",
             stateLoading = 0,
             stateLoaded = 1,
             selfId,
@@ -40,7 +42,7 @@ define(['logManager',
         logger = logManager.create("TreeBrowserControl");
 
         initialize = function () {
-            var rootNode = client.getNode('root');
+            var rootNode = client.getNode(projectRootID); //TODO make this loaded from constants
 
             if (rootNode) {
                 var loadingRootTreeNode;
@@ -51,18 +53,19 @@ define(['logManager',
 
                 //add "root" with its children to territory
                 //create a new loading node for it in the tree
-                loadingRootTreeNode = treeBrowser.createNode(null, {   "id": rootNodeId,
+                loadingRootTreeNode = treeBrowser.createNode(null, {   "id": projectRootID,
                     "name": "Initializing tree...",
                     "hasChildren" : false,
                     "class" :  NODE_PROGRESS_CLASS });
 
                 //store the node's info in the local hashmap
-                nodes[rootNodeId] = {   "treeNode": loadingRootTreeNode,
+                nodes[projectRootID] = {   "treeNode": loadingRootTreeNode,
                     "children" : [],
                     "state" : stateLoading };
 
                 //add the root to the query
-                selfPatterns = { "root": { "children": 2} };
+                selfPatterns ={};
+                selfPatterns[projectRootID] = { "children": 2}; //TODO make this loaded from constants
                 client.updateTerritory(selfId, selfPatterns);
             } else {
                 setTimeout(initialize, 500);
@@ -72,7 +75,7 @@ define(['logManager',
         getNodeClass = function (nodeObj) {
             var c = GME_ATOM_CLASS; //by default everyone is represented with the atom class
 
-            if (nodeObj.getId() === rootNodeId) {
+            if (nodeObj.getId() === projectRootID) {
                 //if root object
                 c = GME_ROOT_ICON;
             } else if (GMEConcepts.isConnectionType(nodeObj.getId())) {
@@ -491,7 +494,7 @@ define(['logManager',
                             nodes[objectId].state = stateLoaded;
 
                             //if there is no more children of the current node, remove it from the territory
-                            if ((updatedObject.getChildrenIds()).length === 0 && objectId !== "root") {
+                            if ((updatedObject.getChildrenIds()).length === 0 && objectId !== projectRootID) {
                                 removeFromTerritory.push({ "nodeid" : objectId });
                                 delete selfPatterns[objectId];
                             }
@@ -538,7 +541,7 @@ define(['logManager',
             //forget the old territory
             client.removeUI(selfId);
 
-            treeBrowser.deleteNode(nodes[rootNodeId].treeNode);
+            treeBrowser.deleteNode(nodes[projectRootID].treeNode);
 
             selfPatterns = {};
             nodes = {};

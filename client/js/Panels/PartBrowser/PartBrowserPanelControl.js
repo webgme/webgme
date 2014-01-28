@@ -45,7 +45,7 @@ define(['logManager',
         this._logger.debug("SELECTEDOBJECT_CHANGED nodeId '" + nodeId + "'");
 
         //remove current territory patterns
-        if (this._containerNodeId) {
+        if (this._territoryId) {
             this._client.removeUI(this._territoryId);
             this._partBrowserView.clear();
         }
@@ -53,7 +53,7 @@ define(['logManager',
         this._containerNodeId = nodeId;
         this._validChildrenTypeIDs = [];
 
-        if (this._containerNodeId) {
+        if (this._containerNodeId || this._containerNodeId === CONSTANTS.PROJECT_ROOT_ID) {
             //put new node's info into territory rules
             this._selfPatterns = {};
             this._selfPatterns[nodeId] = { "children": 1 };

@@ -14,6 +14,11 @@
         "panel": "js/Panels/Grid/GridPanelPointers",
         "DEBUG_ONLY": true},
 
+    {"id": "GridSets",
+        "title": "Set explorer",
+        "panel": "js/Panels/Grid/GridPanelSets",
+        "DEBUG_ONLY": true},
+
     {"id": "GraphViz",
         "title": "Graph visualizer",
         "panel": "js/Panels/GraphViz/GraphVizPanel",
@@ -27,12 +32,12 @@
     {"id": "PointerListEditor",
         "title": "PointerListEditor",
         "panel": "js/Panels/PointerListEditor/PointerListEditorPanel",
-        "DEBUG_ONLY": false},
+        "DEBUG_ONLY": true},
 
     {"id": "ManualAspectEditor",
         "title": "ManualAspectEditor",
         "panel": "js/Panels/ManualAspect/ManualAspectPanel",
-        "DEBUG_ONLY": false}
+        "DEBUG_ONLY": true}
 
 
 ]

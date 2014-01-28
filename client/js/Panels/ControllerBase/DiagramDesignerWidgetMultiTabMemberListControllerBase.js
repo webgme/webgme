@@ -109,7 +109,7 @@ define(['logManager',
         this._widget.clear();
 
         //remove current territory patterns
-        if (this._memberListContainerID) {
+        if (this._territoryId) {
             this._client.removeUI(this._territoryId);
             this._widget.clearTabs();
         }
@@ -336,8 +336,7 @@ define(['logManager',
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.getMemberListMemberPositionsRegistryKey = function () {
-        this.logger.warning('DiagramDesignerWidgetMultiTabMemberListControllerBase.getMemberListMemberPositionsRegistryKey is not overridden, returning default value...');
-        return undefined;
+        return CONSTANTS.MEMBER_POSITION_REGISTRY_KEY;
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.getMemberListSetsRegistryKey = function () {

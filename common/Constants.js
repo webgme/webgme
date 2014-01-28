@@ -22,7 +22,7 @@ define([], function () {
         /*
          * DEDICATED GME OBJECT IDs
          */
-        PROJECT_ROOT_ID: 'root',
+        PROJECT_ROOT_ID: '',
         PROJECT_FCO_ID: 'FCO_ID',
 
         /*
@@ -34,6 +34,8 @@ define([], function () {
          POINTER_BASE: 'base',  //dedicated inheritance pointer name
 
         DISPLAY_FORMAT_ATTRIBUTE_MARKER: '$',
+
+        MEMBER_POSITION_REGISTRY_KEY: 'MemberPosition',
 
          /*
           * Dedicated SET names

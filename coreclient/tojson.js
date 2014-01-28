@@ -180,7 +180,36 @@ define([
                 info = {from:[],to:[],set:true},
                 i,
                 error = null,
-                containers = [];
+                containers = [],
+                collectSetInfo = function(nodePath,container,callback){
+                    if(container === true){
+                        pathToRefObjAsync(refType,urlPrefix,nodePath,core,core.getRoot(node),function(err,refObj){
+                            if(!err && refObj !== undefined && refObj !== null){
+                                getSetAttributesAndRegistry(core,node,setName,nodePath,function(err,atrAndReg){
+                                    if(atrAndReg){
+                                        for(var j in atrAndReg){
+                                            refObj[j] = atrAndReg[j];
+                                        }
+                                    }
+                                    callback(err,refObj);
+                                });
+                            } else {
+                                callback(err,null);
+                            }
+                        });
+                    } else {
+                        //member
+                        pathToRefObjAsync(refType,urlPrefix,nodePath,core,core.getRoot(node),function(err,refObj){
+                            if(refObj !== undefined && refObj !== null){
+                                var atrAndReg = getMemberAttributesAndRegistry(core,node,setName,nodePath);
+                                for(var j in atrAndReg){
+                                    refObj[j] = atrAndReg[j];
+                                }
+                                callback(err,refObj);
+                            }
+                        });
+                    }
+                };
 
             for(i in memberOfInfo){
                 if(memberOfInfo[i].indexOf(setName) !== -1){
@@ -192,13 +221,9 @@ define([
             needed = members.length + containers.length;
             if(needed > 0){
                 for(i=0;i<members.length;i++){
-                    pathToRefObjAsync(refType,urlPrefix,members[i],core,core.getRoot(node),function(err,refObj){
+                    collectSetInfo(members[i],false,function(err,refObj){
                         error = error || err;
                         if(refObj !== undefined && refObj !== null){
-                            var atrAndReg = getMemberAttributesAndRegistry(core,node,setName,members[i]);
-                            for(var j in atrAndReg){
-                                refObj[j] = atrAndReg[j];
-                            }
                             info.to.push(refObj);
                         }
 
@@ -212,19 +237,10 @@ define([
                 }
 
                 for(i=0;i<containers.length;i++){
-                    pathToRefObjAsync(refType,urlPrefix,containers[i],core,core.getRoot(node),function(err,refObj){
+                    collectSetInfo(containers[i],true,function(err,refObj){
                         error = error || err;
                         if(refObj !== undefined && refObj !== null){
-                            getSetAttributesAndRegistry(core,node,setName,containers[i],function(err,atrAndReg){
-                                error = error || err;
-                                if(atrAndReg){
-                                    for(var j in atrAndReg){
-                                        refObj[j] = atrAndReg[j];
-                                    }
-                                }
-
-                                info.from.push(refObj);
-                            });
+                            info.from.push(refObj);
                         }
 
                         if(--needed === 0){

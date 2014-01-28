@@ -67,6 +67,11 @@ define([], function () {
          * CONNECTION CONSTANTS
          */
         PATH_SHADOW_ID_PREFIX: "p_",
-        PATH_SHADOW_ARROW_END_ID_PREFIX: "p_e_"
+        PATH_SHADOW_ARROW_END_ID_PREFIX: "p_e_",
+
+        /*
+         * ROTATINO RESET CONSTANTS
+         */
+        ROTATION_RESET: 'reset'
     };
 });

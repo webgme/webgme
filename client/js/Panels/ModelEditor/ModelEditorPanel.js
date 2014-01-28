@@ -35,9 +35,6 @@ define(['js/PanelBase/PanelBaseWithHeader',
     ModelEditorPanel.prototype._initialize = function () {
         var self = this;
 
-        //set Widget title
-        this.setTitle("DiagramDesigner");
-
         this.widget = new ModelEditorWidget(this.$el, {'toolBar': this.toolBar});
 
         this.widget.setTitle = function (title) {

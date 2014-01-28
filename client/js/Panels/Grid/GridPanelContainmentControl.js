@@ -36,14 +36,14 @@ define(['logManager',
         this._logger.debug("SELECTEDOBJECT_CHANGED nodeId '" + nodeId + "'");
 
         //remove current territory patterns
-        if (this._currentNodeId) {
+        if (this._territoryId) {
             this._client.removeUI(this._territoryId);
             this._dataGridWidget.clear();
         }
 
         this._currentNodeId = nodeId;
 
-        if (this._currentNodeId) {
+        if (this._currentNodeId || this._currentNodeId === CONSTANTS.PROJECT_ROOT_ID) {
             //put new node's info into territory rules
             this._selfPatterns = {};
             this._selfPatterns[nodeId] = { "children": 1 };

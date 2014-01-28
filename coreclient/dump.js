@@ -64,7 +64,7 @@ define([
     };
 
     var isSubordinate = function(path){
-        if(path.indexOf(_core.toActualPath(_rootPath)) === 0){
+        if(path.indexOf(_rootPath) === 0){
             return true;
         }
         return false;
@@ -141,7 +141,6 @@ define([
         _refType = refType;
 
         //TODO this needs to be done in another way
-        //_rootPath = _rootPath === "root" ? "" : _rootPath; kecso
         ToJson(core,node,urlPrefix,_refType,function(err,jDump){
             if(err){
                 callback(err,null);

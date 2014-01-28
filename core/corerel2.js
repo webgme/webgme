@@ -111,7 +111,7 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
 
 		function overlayInsert(overlays, source, name, target) {
 			ASSERT(isValidNode(overlays) && coretree.getRelid(overlays) === OVERLAYS);
-			ASSERT(isValidPath(source) && isValidPath(target) && isPointerName(name));
+			ASSERT(coretree.isValidPath(source) && coretree.isValidPath(target) && isPointerName(name));
 			ASSERT(coretree.getCommonPathPrefixData(source, target).common === "");
 
 			// console.log("insert", overlays.parent.data.atr.name, source, name, target);
@@ -140,7 +140,7 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
 
 		function overlayRemove(overlays, source, name, target) {
 			ASSERT(isValidNode(overlays) && coretree.getRelid(overlays) === OVERLAYS);
-			ASSERT(isValidPath(source) && isValidPath(target) && isPointerName(name));
+			ASSERT(coretree.isValidPath(source) && coretree.isValidPath(target) && isPointerName(name));
 			ASSERT(coretree.getCommonPathPrefixData(source, target).common === "");
 
 			// console.log("remove", overlays.parent.data.atr.name, source, name, target);
@@ -173,7 +173,7 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
 		}
 
 		function overlayQuery(overlays, prefix) {
-			ASSERT(isValidNode(overlays) && isValidPath(prefix));
+			ASSERT(isValidNode(overlays) && coretree.isValidPath(prefix));
 
 			var prefix2 = prefix + "/";
 			var list = [];
