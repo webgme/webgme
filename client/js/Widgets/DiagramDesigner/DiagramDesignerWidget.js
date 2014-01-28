@@ -1330,7 +1330,7 @@ define(['logManager',
     DiagramDesignerWidget.prototype._redrawConnections = function (connIDs) {
         var res;
         try {
-            res = this.connectionRouteManager.redrawConnections(connIDs) || []
+            res = this.connectionRouteManager.redrawConnections(connIDs) || [];
         } catch (exp) {
             res = [];
             this.logger.error('connectionRouteManager.redrawConnections failed with error: ' + exp.stack);
