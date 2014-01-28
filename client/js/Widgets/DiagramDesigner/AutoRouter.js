@@ -2752,7 +2752,7 @@ if(DEBUG && ArPointList.length > 0){
                         currEdgeIndex = pointList.length - 2,
                         pos = ptrsObject.pos; 
                                              
-                    while( -1 < pos && pos < pointList.getLength()){
+                    while( pos ){
 
                         var dir = getDir(endpoint[0].minus(startpoint[0]));
 

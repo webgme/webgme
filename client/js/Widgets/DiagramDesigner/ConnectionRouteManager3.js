@@ -238,13 +238,12 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
             areas, 
             bBox,
             boxdefinition,
-            connectionMetaInfo,
             isEnd,
             j = 0;
 
         designerItem = canvas.items[objId];
         bBox = designerItem.getBoundingBox();
-        areas = designerItem.getConnectionAreas(objId, isEnd, connectionMetaInfo) || [];
+        areas = designerItem.getConnectionAreas(objId, isEnd) || [];
 
         boxdefinition = {
             //BOX
@@ -359,6 +358,8 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
 
             if(this._autorouterPorts[objId].indexOf(subCompId) === -1)
                 this._autorouterPorts[objId].push(subCompId);
+        }else{ //Updating the box's connection areas
+            //TODO
         }
      };
 
