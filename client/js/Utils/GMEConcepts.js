@@ -433,7 +433,7 @@ define(['jquery',
                 if (maxPerType.hasOwnProperty(baseId)) {
                     //check all the members if it's this type
                     for (i = 0; i < members.length; i += 1) {
-                        if (_client.isTypeOf(members[i]), baseId) {
+                        if (_client.isTypeOf(members[i], baseId)) {
                             maxPerType[baseId] -= 1;
                         }
                     }
