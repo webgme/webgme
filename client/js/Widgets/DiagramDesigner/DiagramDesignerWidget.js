@@ -1331,9 +1331,9 @@ define(['logManager',
         var res;
         try {
             res = this.connectionRouteManager.redrawConnections(connIDs) || []
-        } catch (e) {
+        } catch (exp) {
             res = [];
-            this.logger.error('connectionRouteManager.redrawConnections failed with error: ' + JSON.stringify(e));
+            this.logger.error('connectionRouteManager.redrawConnections failed with error: ' + exp.stack);
         }
         return res;
     };
