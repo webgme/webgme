@@ -332,10 +332,12 @@ define(['logManager',
 
         //filter out the types that doesn't need to be displayed for whatever reason:
         // - don't display validConnectionTypes
+        // - don't display abstract items
         i = this._validChildrenTypeIDs.length;
         while (i--) {
             id = this._validChildrenTypeIDs[i];
-            if (GMEConcepts.isConnectionType(id) === false) {
+            if (GMEConcepts.isConnectionType(id) === false &&
+                GMEConcepts.isAbstract(id) === false) {
                 childrenTypeToDisplay.push(id);
 
                 objDesc = this._getObjectDescriptor(id);

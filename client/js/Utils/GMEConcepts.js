@@ -456,6 +456,17 @@ define(['jquery',
         return result;
     };
 
+    var _isAbstract = function (objID) {
+        var isAbstract = false,
+            obj = _client.getNode(objID);
+
+        if (obj) {
+            isAbstract = obj.getRegistry(nodePropertyNames.Registry.isAbstract);
+        }
+
+        return isAbstract === true;
+    };
+
     //return utility functions
     return {
         initialize: _initialize,
@@ -472,6 +483,7 @@ define(['jquery',
         canDeleteNode: _canDeleteNode,
         getMETAAspectMergedValidChildrenTypes: _getMETAAspectMergedValidChildrenTypes,
         getValidConnectionTypesInParent: _getValidConnectionTypesInParent,
-        canAddToPointerList: _canAddToPointerList
+        canAddToPointerList: _canAddToPointerList,
+        isAbstract: _isAbstract
     }
 });
