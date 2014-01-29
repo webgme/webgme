@@ -17,7 +17,8 @@ define([
     'coreclient/tojson',
     'coreclient/dump',
     'coreclient/dumpmore',
-    'coreclient/import'
+    'coreclient/import',
+    'coreclient/copyimport'
 ],
     function (
         ASSERT,
@@ -38,6 +39,7 @@ define([
         ToJson,
         Dump,
         DumpMore,
+        MergeImport,
         Import
         ) {
 
