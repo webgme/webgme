@@ -51,7 +51,7 @@ define(['js/Dialogs/Import/ImportDialog',
             //JSON content to import is not defined, show FileOpenDialog
             var d = new ImportDialog();
             d.show(function (fileContent) {
-                _doImport(objID, fileContent);
+                _doImport(objID, fileContent, isMerge);
             });
         }
     };
