@@ -42,8 +42,26 @@ define(['jquery',
         window.location = _client.getDumpURL(objID, fileName);
     };
 
+    var _exportMultiple = function (objIDs) {
+        var fileName =  _client.getActiveProject() + "_" + _client.getActualBranch() + "_multiple.json";
+
+        if (_.isArray(objIDs) &&
+            objIDs.length > 0) {
+            _client.exportItems(objIDs, function(error, jsonDump) {
+                var pom = document.createElement('a'),
+                    content = JSON.stringify(jsonDump, null, 2);
+                pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(content));
+                pom.setAttribute('download', fileName);
+                $('body').append($(pom));
+                pom.click();
+                $(pom).remove();
+            });
+        }
+    };
+
     //return utility functions
     return { initialize: _initialize,
-        export: _export
+        export: _export,
+        exportMultiple: _exportMultiple
     };
 });

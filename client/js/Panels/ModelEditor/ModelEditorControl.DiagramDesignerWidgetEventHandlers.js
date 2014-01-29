@@ -1065,11 +1065,14 @@ define(['logManager',
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._exportItems = function (selectedIds) {
-        var i = selectedIds.length;
+        var i = selectedIds.length,
+            gmeIDs = [];
 
         while(i--) {
-            ExportManager.export(this._ComponentID2GmeID[selectedIds[i]]);
+            gmeIDs.push(this._ComponentID2GmeID[selectedIds[i]]);
         }
+
+        ExportManager.exportMultiple(gmeIDs);
     };
 
     return ModelEditorControlDiagramDesignerWidgetEventHandlers;
