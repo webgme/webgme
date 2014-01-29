@@ -2125,10 +2125,12 @@ if(DEBUG && ArPointList.length > 0){
                     return;
 
                 var index = ports.indexOf(port),
-                    delPort;
+                    delPort,
+                    graph = owner;
 
                 assert(index !== -1, "ARBox.deletePort: index !== -1 FAILED");
 
+                graph.deleteEdges(port);
                 delPort = ports.splice(index, 1);
                 delPort.setOwner(null);
                 delPort = null;
@@ -2752,7 +2754,7 @@ if(DEBUG && ArPointList.length > 0){
                         currEdgeIndex = pointList.length - 2,
                         pos = ptrsObject.pos; 
                                              
-                    while( -1 < pos && pos < pointList.getLength()){
+                    while( pointList.getLength() && pos >= 0){
 
                         var dir = getDir(endpoint[0].minus(startpoint[0]));
 
@@ -4259,7 +4261,7 @@ if(DEBUG && ArPointList.length > 0){
 
                     delete boxes[box.getID()];
 
-                }else{
+                }else{ //ARPath
                     var path = box;
                     deleteEdges(path);
 
@@ -5301,10 +5303,10 @@ if(DEBUG && ArPointList.length > 0){
                 var hlist = getEdgeList(ishorizontal),
                     vlist = getEdgeList(!ishorizontal);
 
-                var ppedge = hlist.getEdgeByPointer(pppoint, ppoint),
-                    pedge = vlist.getEdgeByPointer(ppoint, point),
-                    nedge = hlist.getEdgeByPointer(point, npoint[0]),
-                    nnedge = vlist.getEdgeByPointer(npoint[0], nnpoint);
+                var ppedge = hlist.getEdgeByPointer(pppoint),
+                    pedge = vlist.getEdgeByPointer(ppoint),
+                    nedge = hlist.getEdgeByPointer(point),
+                    nnedge = vlist.getEdgeByPointer(npoint[0]);
 
                 assert( ppedge !== null && pedge !== null && nedge !== null && nnedge !== null, "ARGraph.deleteTwoEdgesAt:  ppedge !== null && pedge !== null && nedge !== null && nnedge !== null FAILED");
 
@@ -7895,21 +7897,15 @@ if(DEBUG && ArPointList.length > 0){
         //Reconnect paths to ports
         while( i-- ){
             var pathSrc = paths.in[i].getStartPorts();
-                //newEndPort = this._getClosestPorts( pathSrc, boxObject ).dst;
-            //if( boxObject.ports.indexOf( newEndPort ) !== -1 ){ //Only reconnect connections to the box - not to any child ports!
                 paths.in[i].setEndPorts( ports );
                 this.router.disconnect( paths.in[i] );
-            //}
         }
     
         i = paths.out.length;
         while( i-- ){
             var pathDst = paths.out[i].getEndPorts();
-                //newStartPort = this._getClosestPorts( boxObject, pathDst ).src;
-            //if( boxObject.ports.indexOf( newStartPort) !== -1 ){ //Only reconnect connections to the box - not to any child ports!
                 paths.out[i].setStartPorts( ports );
                 this.router.disconnect( paths.out[i] );
-            //}
         }
     };
     
@@ -7996,6 +7992,21 @@ if(DEBUG && ArPointList.length > 0){
         path.setCustomPathData( points );
     
     };
+
+/*
+    AutoRouter.prototype.addRemoveBoxPorts = function( args ){
+        var box = args.box,
+            removePorts = args.remove,
+            addConnectionAreas = args.add;
+
+        if(removePorts)
+            this.router.removePortsFromBox(removePorts, box);
+
+        if(addConnectionAreas)
+            return this.addPort(box, addConnectionAreas);
+        
+    };
+*/
     
     return AutoRouter;
     

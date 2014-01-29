@@ -238,13 +238,12 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
             areas, 
             bBox,
             boxdefinition,
-            connectionMetaInfo,
             isEnd,
             j = 0;
 
         designerItem = canvas.items[objId];
         bBox = designerItem.getBoundingBox();
-        areas = designerItem.getConnectionAreas(objId, isEnd, connectionMetaInfo) || [];
+        areas = designerItem.getConnectionAreas(objId, isEnd) || [];
 
         boxdefinition = {
             //BOX
@@ -349,16 +348,26 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         //Add ports to our list of _autorouterBoxes and add the port to the respective box (if undefined, of course)
             var parentBox = this._autorouterBoxes[objId].box,
                 portdefinition = [],
-                res = canvas.items[objId].getConnectionAreas(subCompId, true, connectionMetaInfo) || [],
-                j = res.length;
+                areas = canvas.items[objId].getConnectionAreas(subCompId, true, connectionMetaInfo) || [],
+                j = areas.length;
 
         while (j--) {
-            portdefinition.push({ 'id': res[j].id, 'area': [ [ res[j].x1, res[j].y1 ], [ res[j].x2, res[j].y2 ] ] });
+            portdefinition.push({ 'id': areas[j].id, 'area': [ [ areas[j].x1, areas[j].y1 ], [ areas[j].x2, areas[j].y2 ] ] });
         }
             this._autorouterBoxes[longid] = { "ports": this.autorouter.addPort(parentBox, portdefinition) };
 
             if(this._autorouterPorts[objId].indexOf(subCompId) === -1)
                 this._autorouterPorts[objId].push(subCompId);
+        }else{ //Updating the box's connection areas
+            var areas = canvas.items[objId].getConnectionAreas() || [],
+                connInfo = [],
+                j = areas.length;
+
+            while (j--) {
+                //Building up the ConnectionInfo object
+                connInfo.push({ 'id': areas[j].id, 'area': [ [ areas[j].x1, areas[j].y1 ], [ areas[j].x2, areas[j].y2 ] ] });
+            }
+            this._autorouterBoxes[objId] = this.autorouter.setConnectionInfo(this._autorouterBoxes[objId], connInfo);
         }
      };
 
