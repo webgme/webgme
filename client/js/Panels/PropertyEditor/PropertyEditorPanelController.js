@@ -359,6 +359,9 @@ define(['logManager',
             enabledRegistryKeys.push(nodePropertyNames.Registry.isPort);
             enabledRegistryKeys.push(nodePropertyNames.Registry.isAbstract);
             enabledRegistryKeys.push(nodePropertyNames.Registry.DisplayFormat);
+            enabledRegistryKeys.push(nodePropertyNames.Registry.FillColor);
+            enabledRegistryKeys.push(nodePropertyNames.Registry.TextColor);
+            enabledRegistryKeys.push(nodePropertyNames.Registry.LineColor);
             for (var it in commonRegs) {
                 if (commonRegs.hasOwnProperty(it)) {
                     if (commonRegs.hasOwnProperty(it)) {

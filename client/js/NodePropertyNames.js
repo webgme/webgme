@@ -1,7 +1,7 @@
 /*
  * NodePropertyNames
  */
-define([], function () {
+define(['js/Constants'], function (CONSTANTS) {
     "use strict";
 
     var attributeNames = {  "name" : "name",
@@ -13,7 +13,10 @@ define([], function () {
                             "isAbstract": "isAbstract",
                             "lineStyle": "lineStyle",
                             "ProjectRegistry": "ProjectRegistry",
-                            "DisplayFormat": "DisplayFormat"};
+                            "DisplayFormat": "DisplayFormat",
+                            "FillColor": CONSTANTS.FILL_COLOR,
+                            "TextColor": CONSTANTS.TEXT_COLOR,
+                            "LineColor": CONSTANTS.LINE_COLOR};
 
     return { "Attributes": attributeNames,
              "Registry": registryNames };

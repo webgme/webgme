@@ -99,10 +99,21 @@ define(['js/Constants',
     };
 	
 	ModelDecoratorCore.prototype._update = function () {
+        this._updateColors();
         this._updateName();
         this._updatePorts();
         this._updateReference();
         this._updateAbstract();
+    };
+
+    ModelDecoratorCore.prototype._updateColors = function () {
+        //get the color info from the registry using js/DecoratorBase.Colors.js support
+        this.getNodeColorsFromRegistry();
+        this.$el.css({'background-color': this.fillColor,
+                      'border-color': this.lineColor,
+                      'color': this.textColor});
+
+        this.skinParts.$name.css({'border-color': this.lineColor});
     };
 
 

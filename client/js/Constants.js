@@ -50,7 +50,14 @@ define(['underscore', 'common/Constants'], function (underscore, COMMON_CONSTANT
                             OVAL: 'oval',
                             DIAMOND2: 'diamond2',
                             INHERITANCE: 'inheritance'}
-        }
+        },
+
+        /*
+         * ITEM COLOR REGISTRY KEYS
+         */
+        FILL_COLOR: 'FILL_COLOR',   //fill/background color of the item
+        TEXT_COLOR: 'TEXT_COLOR',   //color of the texts of the item
+        LINE_COLOR: 'LINE_COLOR'    //border color of the item (if any)
     });
 
 
