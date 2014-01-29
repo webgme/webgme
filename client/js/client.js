@@ -2012,7 +2012,7 @@ define([
                     }
                 });
             }
-            function MergeNodeAsync(parentPath,jNode,callback){
+            function mergeNodeAsync(parentPath,jNode,callback){
                 var node = null;
                 if(_nodes[parentPath]){
                     node = _nodes[parentPath].node;
@@ -2197,7 +2197,7 @@ define([
                 exportItems: exportItems,
                 dumpNodeAsync: dumpNodeAsync,
                 importNodeAsync: importNodeAsync,
-                MergeNodeAsync: MergeNodeAsync,
+                mergeNodeAsync: mergeNodeAsync,
                 createProjectFromFileAsync: createProjectFromFileAsync,
                 getDumpURL: getDumpURL,
 
