@@ -36,6 +36,22 @@ define(['jquery',
                 }
             }, 5);
         });
+
+        this.el.on('keydown', function(e) {
+            if (e.keyCode === 13) {
+                e.preventDefault();
+                e.stopPropagation();
+                try {
+                    var cVal = $(this).val();
+                    if (self._colorPicker.fromString(cVal)) {
+                        self.onColorChanged(cVal);
+                        self.onEndColorPick();
+                    }
+                } catch (exp) {
+
+                }
+            }
+        });
     };
 
     ColorPicker.prototype.setColor = function (color) {
