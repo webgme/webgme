@@ -111,7 +111,8 @@ define(['js/Constants',
         this.getNodeColorsFromRegistry();
         this.$el.css({'background-color': this.fillColor,
                       'border-color': this.lineColor,
-                      'color': this.textColor});
+                      'color': this.textColor,
+                      'box-shadow': '0px 0px 7px 0px ' + this.lineColor + ' inset'});
 
         this.skinParts.$name.css({'border-color': this.lineColor});
     };
