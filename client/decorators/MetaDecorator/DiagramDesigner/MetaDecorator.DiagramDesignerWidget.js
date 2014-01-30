@@ -78,7 +78,6 @@ define(['js/Constants',
 
     MetaDecoratorDiagramDesignerWidget.prototype._renderContent = function () {
         var client = this._control._client,
-            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
             self = this;
 
         //render GME-ID in the DOM, for debugging
@@ -95,7 +94,6 @@ define(['js/Constants',
                 var attrName = $(this).find('.n').text().replace(":", ""),
                     attrNames,
                     dialog = new AttributeDetailsDialog(),
-                    /*desc = _.extend({}, nodeObj.getAttributeDescriptor(attrName));*/
                     atrMeta = client.getAttributeSchema(self._metaInfo[CONSTANTS.GME_ID],attrName);
                 var desc = _.extend({},{name:attrName,type:atrMeta.type,defaultValue:atrMeta.default});
                 if(atrMeta.enum && atrMeta.enum.length >0){
@@ -144,16 +142,7 @@ define(['js/Constants',
             this._skinParts.$addConstraintContainer.detach();
         }
 
-        /* FILL WITH DATA */
-        if (nodeObj) {
-            this.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name) || "";
-            this._refreshName();
-
-            this._updateAttributes();
-            this._updateConstraints();
-            this._updateAbstract();
-        }
-
+        this.update();
     };
 
     MetaDecoratorDiagramDesignerWidget.prototype.update = function () {
@@ -169,10 +158,21 @@ define(['js/Constants',
                 this._refreshName();
             }
 
+            this._updateColors();
             this._updateAttributes();
             this._updateConstraints();
             this._updateAbstract();
         }
+    };
+
+    MetaDecoratorDiagramDesignerWidget.prototype._updateColors = function () {
+        //get the color info from the registry using js/DecoratorBase.Colors.js support
+        this.getNodeColorsFromRegistry();
+        this.$el.css({'background-color': this.fillColor,
+                      'border-color': this.lineColor,
+                      'color': this.textColor});
+
+        this._skinParts.$name.css({'border-color': this.lineColor});
     };
 
     MetaDecoratorDiagramDesignerWidget.prototype._refreshName = function () {
