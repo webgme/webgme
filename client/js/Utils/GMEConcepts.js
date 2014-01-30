@@ -184,9 +184,9 @@ define(['jquery',
         _client.setRegistry(FCO_ID, nodePropertyNames.Registry.isPort, false);
         _client.setRegistry(FCO_ID, nodePropertyNames.Registry.isAbstract, false);
 
-        _client.setRegistry(FCO_ID, nodePropertyNames.Registry.FillColor, '#ECECEC');
-        _client.setRegistry(FCO_ID, nodePropertyNames.Registry.TextColor, '#000000');
-        _client.setRegistry(FCO_ID, nodePropertyNames.Registry.LineColor, '#000000');
+        _client.setRegistry(FCO_ID, nodePropertyNames.Registry.FillColor, '');
+        _client.setRegistry(FCO_ID, nodePropertyNames.Registry.TextColor, '');
+        _client.setRegistry(FCO_ID, nodePropertyNames.Registry.LineColor, '');
 
         var projectRegistry = {};
         projectRegistry[CONSTANTS.PROJECT_FCO_ID] = FCO_ID;
