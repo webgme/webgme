@@ -372,7 +372,7 @@ define(['logManager',
                     case DragHelper.DRAG_EFFECTS.DRAG_MOVE:
                         //check to see if dragParams.parentID and this.parentID are the same
                         //if so, it's not a real move, it is a reposition
-                        if ((dragParams && dragParams.parentID && dragParams.parentID === parentID) ||
+                        if ((dragParams && dragParams.parentID === parentID) ||
                             GMEConcepts.canCreateChildren(parentID, items)) {
                             dragAction = {'dragEffect': dragEffects[i]};
                             possibleDropActions.push(dragAction);
@@ -517,7 +517,7 @@ define(['logManager',
             case DragHelper.DRAG_EFFECTS.DRAG_MOVE:
                 //check to see if dragParams.parentID and this.parentID are the same
                 //if so, it's not a real move, it is a reposition
-                if (dragParams && dragParams.parentID && dragParams.parentID === parentID) {
+                if (dragParams && dragParams.parentID === parentID) {
                     //it is a reposition
                     this._repositionItems(items, dragParams.positions, position);
                 } else {

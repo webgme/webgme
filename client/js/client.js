@@ -1999,13 +1999,25 @@ define([
                     callback('unknown object',null);
                 }
             }
-
             function importNodeAsync(parentPath,jNode,callback){
                 var node = null;
                 if(_nodes[parentPath]){
                     node = _nodes[parentPath].node;
                 }
                 Import(_core,_nodes[parentPath].node,jNode,function(err){
+                    if(err){
+                        callback(err);
+                    } else {
+                        saveRoot('importNode under '+parentPath, callback);
+                    }
+                });
+            }
+            function mergeNodeAsync(parentPath,jNode,callback){
+                var node = null;
+                if(_nodes[parentPath]){
+                    node = _nodes[parentPath].node;
+                }
+                MergeImport(_core,_nodes[parentPath].node,jNode,function(err){
                     if(err){
                         callback(err);
                     } else {
@@ -2185,6 +2197,7 @@ define([
                 exportItems: exportItems,
                 dumpNodeAsync: dumpNodeAsync,
                 importNodeAsync: importNodeAsync,
+                mergeNodeAsync: mergeNodeAsync,
                 createProjectFromFileAsync: createProjectFromFileAsync,
                 getDumpURL: getDumpURL,
 
