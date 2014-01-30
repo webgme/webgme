@@ -9,14 +9,14 @@
 define(['js/Constants'], function (CONSTANTS) {
 
     var DecoratorBaseColors,
-        DEFAULT_FILL_COLOR = '#ECECEC',
+        DEFAULT_FILL_COLOR = '#FFFFFF',
         DEFAULT_TEXT_COLOR = '#000000',
         DEFAULT_LINE_COLOR = '#000000';
 
-    DecoratorBaseColors = function () {
-        this.fillColor = DEFAULT_FILL_COLOR;
-        this.textColor = DEFAULT_TEXT_COLOR;
-        this.lineColor = DEFAULT_LINE_COLOR;
+    DecoratorBaseColors = function (params) {
+        this.defaultFillColor = this.fillColor = (params && params.defaultFillColor) ? params.defaultfillColor : DEFAULT_FILL_COLOR;
+        this.defaultTextColor = this.textColor = (params && params.defaultTextColor) ? params.defaultfillColor : DEFAULT_TEXT_COLOR;
+        this.defaultLineColor = this.lineColor = (params && params.defaultLineColor) ? params.defaultfillColor : DEFAULT_LINE_COLOR;
     };
 
     DecoratorBaseColors.prototype.getNodeColorsFromRegistry = function () {
@@ -37,9 +37,9 @@ define(['js/Constants'], function (CONSTANTS) {
 
 
         if (nodeObj) {
-            this.fillColor = getColorOrDefault(nodeObj.getRegistry(CONSTANTS.FILL_COLOR), DEFAULT_FILL_COLOR);
-            this.textColor = getColorOrDefault(nodeObj.getRegistry(CONSTANTS.TEXT_COLOR), DEFAULT_TEXT_COLOR);
-            this.lineColor = getColorOrDefault(nodeObj.getRegistry(CONSTANTS.LINE_COLOR), DEFAULT_LINE_COLOR);
+            this.fillColor = getColorOrDefault(nodeObj.getRegistry(CONSTANTS.FILL_COLOR), this.defaultFillColor);
+            this.textColor = getColorOrDefault(nodeObj.getRegistry(CONSTANTS.TEXT_COLOR), this.defaultTextColor);
+            this.lineColor = getColorOrDefault(nodeObj.getRegistry(CONSTANTS.LINE_COLOR), this.defaultLineColor);
         }
     };
 
