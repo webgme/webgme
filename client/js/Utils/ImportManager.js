@@ -46,7 +46,7 @@ define(['js/Dialogs/Import/ImportDialog',
 
     var _import = function (objID, jsonContent, isMerge) {
         if (jsonContent) {
-            _doImport(objID, jsonContent);
+            _doImport(objID, jsonContent, isMerge);
         } else {
             //JSON content to import is not defined, show FileOpenDialog
             var d = new ImportDialog();
