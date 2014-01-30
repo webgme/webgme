@@ -13,7 +13,7 @@ define(['logManager',
 
     DiagramDesignerWidgetDecoratorBase = function (params) {
 
-        DecoratorBaseColors.apply(this, []);
+        DecoratorBaseColors.apply(this, [{defaultFillColor: '#ECECEC'}]);
 
         this.hostDesignerItem = params.host;
         this.logger = params.logger || logManager.create(this.DECORATORID);
