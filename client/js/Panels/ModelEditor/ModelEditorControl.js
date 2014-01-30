@@ -104,11 +104,7 @@ define(['logManager',
                 this.currentNodeInfo.parentId = desc.parentId;
             }
 
-            if (this.currentNodeInfo.parentId) {
-                this.$btnModelHierarchyUp.show();
-            } else {
-                this.$btnModelHierarchyUp.hide();
-            }
+            this._refreshBtnModelHierarchyUp();
 
             //put new node's info into territory rules
             this._selfPatterns = {};
@@ -747,7 +743,8 @@ define(['logManager',
     };
 
     ModelEditorControl.prototype._onModelHierarchyUp = function () {
-        if (this.currentNodeInfo.parentId) {
+        if (this.currentNodeInfo.parentId ||
+            this.currentNodeInfo.parentId === CONSTANTS.PROJECT_ROOT_ID) {
             this._client.setSelectedObjectId(this.currentNodeInfo.parentId);
         }
     };
@@ -915,6 +912,8 @@ define(['logManager',
                 this._toolbarItems[i].show();
             }
         }
+
+        this._refreshBtnModelHierarchyUp();
     };
 
     ModelEditorControl.prototype._hideToolbarItems = function () {
@@ -978,6 +977,15 @@ define(['logManager',
 
     ModelEditorControl.prototype.getNodeID = function () {
         return this.currentNodeInfo.id;
+    };
+
+    ModelEditorControl.prototype._refreshBtnModelHierarchyUp = function () {
+        if (this.currentNodeInfo.parentId ||
+            this.currentNodeInfo.parentId === CONSTANTS.PROJECT_ROOT_ID) {
+            this.$btnModelHierarchyUp.show();
+        } else {
+            this.$btnModelHierarchyUp.hide();
+        }
     };
 
     //attach ModelEditorControl - DesignerCanvas event handler functions
