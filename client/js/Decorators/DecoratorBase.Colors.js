@@ -6,7 +6,9 @@
 
 "use strict";
 
-define(['js/Constants'], function (CONSTANTS) {
+define(['js/Constants',
+        'js/RegistryKeys'], function (CONSTANTS,
+                                      REGISTRY_KEYS) {
 
     var DecoratorBaseColors,
         DEFAULT_FILL_COLOR = '#FFFFFF',
@@ -37,9 +39,9 @@ define(['js/Constants'], function (CONSTANTS) {
 
 
         if (nodeObj) {
-            this.fillColor = getColorOrDefault(nodeObj.getRegistry(CONSTANTS.FILL_COLOR), this.defaultFillColor);
-            this.textColor = getColorOrDefault(nodeObj.getRegistry(CONSTANTS.TEXT_COLOR), this.defaultTextColor);
-            this.lineColor = getColorOrDefault(nodeObj.getRegistry(CONSTANTS.LINE_COLOR), this.defaultLineColor);
+            this.fillColor = getColorOrDefault(nodeObj.getRegistry(REGISTRY_KEYS.COLOR), this.defaultFillColor);
+            this.textColor = getColorOrDefault(nodeObj.getRegistry(REGISTRY_KEYS.TEXT_COLOR), this.defaultTextColor);
+            this.lineColor = getColorOrDefault(nodeObj.getRegistry(REGISTRY_KEYS.BORDER_COLOR), this.defaultLineColor);
         }
     };
 

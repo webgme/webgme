@@ -3,12 +3,14 @@
 define(['logManager',
     'js/Constants',
     'js/NodePropertyNames',
+    'js/RegistryKeys',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     './ModelEditorControl.DiagramDesignerWidgetEventHandlers',
     'js/Utils/GMEConcepts',
     'js/Utils/GMEVisualConcepts'], function (logManager,
                                                         CONSTANTS,
                                                         nodePropertyNames,
+                                                        REGISTRY_KEYS,
                                                         DiagramDesignerWidgetConstants,
                                                         ModelEditorControlDiagramDesignerWidgetEventHandlers,
                                                         GMEConcepts,
@@ -155,7 +157,7 @@ define(['logManager',
                     _.extend(objDescriptor, GMEVisualConcepts.getConnectionVisualProperties(nodeId));
                 } else {
                     objDescriptor.kind = "MODEL";
-                    pos = nodeObj.getRegistry(nodePropertyNames.Registry.position);
+                    pos = nodeObj.getRegistry(REGISTRY_KEYS.POSITION);
 
                     if (pos) {
                         objDescriptor.position = { "x": pos.x, "y": pos.y };
@@ -175,8 +177,8 @@ define(['logManager',
                         objDescriptor.position.y = defaultPos;
                     }
 
-                    objDescriptor.decorator = nodeObj.getRegistry(nodePropertyNames.Registry.decorator) || "";
-                    objDescriptor.rotation = parseInt(nodeObj.getRegistry(nodePropertyNames.Registry.rotation), 10) || 0;
+                    objDescriptor.decorator = nodeObj.getRegistry(REGISTRY_KEYS.DECORATOR) || "";
+                    objDescriptor.rotation = parseInt(nodeObj.getRegistry(REGISTRY_KEYS.ROTATION), 10) || 0;
                 }
             }
         }
@@ -763,11 +765,11 @@ define(['logManager',
                 nodeObj = this._client.getNode(this._ComponentID2GmeID[idList[len]]);
 
                 if (nodeObj) {
-                    existingLineStyle = nodeObj.getEditableRegistry(nodePropertyNames.Registry.lineStyle) || {};
+                    existingLineStyle = nodeObj.getEditableRegistry(REGISTRY_KEYS.LINE_STYLE) || {};
 
                     existingLineStyle[CONSTANTS.LINE_STYLE.POINTS] = [];
 
-                    this._client.setRegistry(nodeObj.getId(), nodePropertyNames.Registry.lineStyle, existingLineStyle);
+                    this._client.setRegistry(nodeObj.getId(), REGISTRY_KEYS.LINE_STYLE, existingLineStyle);
                 }
             }
         }

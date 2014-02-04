@@ -3,6 +3,7 @@ define(['logManager',
     'js/Constants',
     'js/Utils/GMEConcepts',
     'js/NodePropertyNames',
+    'js/RegistryKeys',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     './MetaEditorControl.DiagramDesignerWidgetEventHandlers',
     './MetaRelations',
@@ -11,6 +12,7 @@ define(['logManager',
                                                         CONSTANTS,
                                                         GMEConcepts,
                                                         nodePropertyNames,
+                                                        REGISTRY_KEYS,
                                                         DiagramDesignerWidgetConstants,
                                                         MetaEditorControlDiagramDesignerWidgetEventHandlers,
                                                         MetaRelations,
@@ -1555,7 +1557,7 @@ define(['logManager',
     MetaEditorControl.prototype._updateObjectConnectionVisualStyles = function(objectID) {
         var isConnectionType = GMEConcepts.isConnectionType(objectID),
             nodeObj = this._client.getNode(objectID),
-            existingLineStyle = nodeObj.getEditableRegistry(nodePropertyNames.Registry.lineStyle),
+            existingLineStyle = nodeObj.getEditableRegistry(REGISTRY_KEYS.LINE_STYLE),
             resultLineStyle = {},
             DEFAULT_LINE_STYLE = {};
 
@@ -1569,11 +1571,11 @@ define(['logManager',
 
         if (isConnectionType) {
             _.extend(resultLineStyle, DEFAULT_LINE_STYLE, existingLineStyle);
-            this._client.setRegistry(objectID, nodePropertyNames.Registry.lineStyle, resultLineStyle);
+            this._client.setRegistry(objectID, REGISTRY_KEYS.LINE_STYLE, resultLineStyle);
         } else {
             //not connection type
             //remove registry settings
-            this._client.setRegistry(objectID, nodePropertyNames.Registry.lineStyle, {});
+            this._client.setRegistry(objectID, REGISTRY_KEYS.LINE_STYLE, {});
         }
     };
 

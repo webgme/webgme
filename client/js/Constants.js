@@ -41,7 +41,7 @@ define(['underscore', 'common/Constants'], function (underscore, COMMON_CONSTANT
                                BEZIER: 'bezier'},
                       START_ARROW: 'start-arrow',
                       END_ARROW: 'end-arrow',
-                      POINTS: 'points',
+                      CUSTOM_POINTS: 'custom-points',
                       LINE_ARROWS: { NONE: 'none',
                             DIAMOND: 'diamond',
                             BLOCK: 'block',
@@ -54,14 +54,7 @@ define(['underscore', 'common/Constants'], function (underscore, COMMON_CONSTANT
 
         DISPLAY_FORMAT_ATTRIBUTE_MARKER: '$',
 
-        MEMBER_POSITION_REGISTRY_KEY: 'MemberPosition',
-
-        /*
-         * ITEM COLOR REGISTRY KEYS
-         */
-        FILL_COLOR: 'FILL_COLOR',   //fill/background color of the item
-        TEXT_COLOR: 'TEXT_COLOR',   //color of the texts of the item
-        LINE_COLOR: 'LINE_COLOR'    //border color of the item (if any)
+        MEMBER_POSITION_REGISTRY_KEY: 'MemberPosition'
     });
 
 

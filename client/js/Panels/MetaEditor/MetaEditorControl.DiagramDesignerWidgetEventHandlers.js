@@ -5,6 +5,7 @@ define(['logManager',
     'util/guid',
     'js/Constants',
     'js/NodePropertyNames',
+    'js/RegistryKeys',
     'js/Utils/GMEConcepts',
     './MetaRelations',
     './MetaEditorConstants',
@@ -14,6 +15,7 @@ define(['logManager',
                                         generateGuid,
                                         CONSTANTS,
                                         nodePropertyNames,
+                                        REGISTRY_KEYS,
                                         GMEConcepts,
                                         MetaRelations,
                                         MetaEditorConstants,
@@ -420,10 +422,10 @@ define(['logManager',
         while (len--) {
             id = this._ComponentID2GMEID[items[len]];
             if (id && GMEConcepts.isConnectionType(id)) {
-                connRegLineStyle = this._client.getNode(id).getEditableRegistry(nodePropertyNames.Registry.lineStyle);
+                connRegLineStyle = this._client.getNode(id).getEditableRegistry(REGISTRY_KEYS.LINE_STYLE);
                 if (connRegLineStyle && !_.isEmpty(connRegLineStyle)) {
                     _.extend(connRegLineStyle, visualParams);
-                    this._client.setRegistry(id, nodePropertyNames.Registry.lineStyle, connRegLineStyle);
+                    this._client.setRegistry(id, REGISTRY_KEYS.LINE_STYLE, connRegLineStyle);
                 }
             }
         }

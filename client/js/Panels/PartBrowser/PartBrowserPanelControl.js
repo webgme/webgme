@@ -4,10 +4,12 @@ define(['logManager',
     'js/Constants',
     'js/Utils/GMEConcepts',
     'js/NodePropertyNames',
+    'js/RegistryKeys',
     'js/Utils/METAAspectHelper'], function (logManager,
                              CONSTANTS,
                              GMEConcepts,
                              nodePropertyNames,
+                             REGISTRY_KEYS,
                              METAAspectHelper) {
 
     var PartBrowserControl,
@@ -75,7 +77,7 @@ define(['logManager',
             objDescriptor = {};
 
             objDescriptor.id = nodeObj.getId();
-            objDescriptor.decorator = nodeObj.getRegistry(nodePropertyNames.Registry.decorator) || DEFAULT_DECORATOR;
+            objDescriptor.decorator = nodeObj.getRegistry(REGISTRY_KEYS.DECORATOR) || DEFAULT_DECORATOR;
             objDescriptor.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name);
         }
 

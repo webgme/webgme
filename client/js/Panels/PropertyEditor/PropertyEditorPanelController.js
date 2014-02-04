@@ -3,16 +3,14 @@
 define(['logManager',
     'clientUtil',
     'js/NodePropertyNames',
+    'js/RegistryKeys',
     'js/Decorators/DecoratorDB',
-    'js/Constants',
-    'js/Panels/MetaEditor/MetaEditorConstants',
-    'js/Panels/ManualAspect/ManualAspectConstants'], function (logManager,
+    'js/Constants'], function (logManager,
                                         util,
                                         nodePropertyNames,
+                                        REGISTRY_KEYS,
                                         DecoratorDB,
-                                        CONSTANTS,
-                                        MetaEditorConstants,
-                                        ManualAspectConstants) {
+                                        CONSTANTS) {
 
     var PropertyEditorController;
 
@@ -304,7 +302,7 @@ define(['logManager',
                             }*/
 
                             //decorator value should be rendered as an option list
-                            if (i === nodePropertyNames.Registry.decorator) {
+                            if (i === REGISTRY_KEYS.DECORATOR) {
                                 //dstList[extKey].valueType = "option";
                                 //TODO: only the decorators for DiagramDesigner are listed so far, needs to be fixed...
                                 dstList[extKey].valueItems = DecoratorDB.getDecoratorsByWidget('DiagramDesigner');
@@ -348,20 +346,12 @@ define(['logManager',
             //#2: isPort
             //#3: isAbstract
             //#4: DisplayFormat
-            //#5: position
-            //#6: rotation
             var displayReg = false;
             var enabledRegistryKeys = [];
-            enabledRegistryKeys.push(nodePropertyNames.Registry.position);
-            enabledRegistryKeys.push(nodePropertyNames.Registry.rotation);
-            enabledRegistryKeys.push(nodePropertyNames.Registry.lineStyle);
-            enabledRegistryKeys.push(nodePropertyNames.Registry.decorator);
-            enabledRegistryKeys.push(nodePropertyNames.Registry.isPort);
-            enabledRegistryKeys.push(nodePropertyNames.Registry.isAbstract);
-            enabledRegistryKeys.push(nodePropertyNames.Registry.DisplayFormat);
-            enabledRegistryKeys.push(nodePropertyNames.Registry.FillColor);
-            enabledRegistryKeys.push(nodePropertyNames.Registry.TextColor);
-            enabledRegistryKeys.push(nodePropertyNames.Registry.LineColor);
+            enabledRegistryKeys.push(REGISTRY_KEYS.DECORATOR);
+            enabledRegistryKeys.push(REGISTRY_KEYS.IS_PORT);
+            enabledRegistryKeys.push(REGISTRY_KEYS.IS_ABSTRACT);
+            enabledRegistryKeys.push(REGISTRY_KEYS.DISPLAY_FORMAT);
             for (var it in commonRegs) {
                 if (commonRegs.hasOwnProperty(it)) {
                     if (commonRegs.hasOwnProperty(it)) {

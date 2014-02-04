@@ -4,12 +4,14 @@ define(['logManager',
         'util/guid',
         'js/Constants',
         'js/NodePropertyNames',
+        'js/RegistryKeys',
         'js/Utils/GMEConcepts',
         'js/Utils/GMEVisualConcepts',
         'js/DragDrop/DragHelper'], function (logManager,
                                    generateGuid,
                                    CONSTANTS,
                                    nodePropertyNames,
+                                   REGISTRY_KEYS,
                                    GMEConcepts,
                                    GMEVisualConcepts,
                                    DragHelper) {
@@ -616,7 +618,7 @@ define(['logManager',
                             events[len].desc.srcID  = obj.getPointer(SRC_POINTER_NAME).to;
                             events[len].desc.dstID = obj.getPointer(DST_POINTER_NAME).to;
                         } else {
-                            objDecorator = obj.getRegistry(nodePropertyNames.Registry.decorator);
+                            objDecorator = obj.getRegistry(REGISTRY_KEYS.DECORATOR);
 
                             if (!objDecorator ||
                                 objDecorator === "") {

@@ -2,6 +2,7 @@
 
 define(['js/Constants',
     'js/NodePropertyNames',
+    'js/RegistryKeys',
     '../../DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesignerWidget',
     'text!./MetaDecorator.DiagramDesignerWidget.html',
     './Attribute',
@@ -11,6 +12,7 @@ define(['js/Constants',
     './MetaTextEditorDialog',
     'css!./MetaDecorator.DiagramDesignerWidget'], function (CONSTANTS,
                                                           nodePropertyNames,
+                                                          REGISTRY_KEYS,
                                                           DefaultDecoratorDiagramDesignerWidget,
                                                           MetaDecoratorTemplate,
                                                           Attribute,
@@ -185,7 +187,7 @@ define(['js/Constants',
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]);
 
         if (nodeObj) {
-            if (nodeObj.getRegistry(nodePropertyNames.Registry.isAbstract) === true) {
+            if (nodeObj.getRegistry(REGISTRY_KEYS.IS_ABSTRACT) === true) {
                 this.$el.addClass(ABSTRACT_CLASS);
             } else {
                 this.$el.removeClass(ABSTRACT_CLASS);

@@ -8,11 +8,13 @@
 
 define(['js/Constants',
     'js/NodePropertyNames',
+    'js/RegistryKeys',
     'loaderProgressBar',
     './Port',
     './ModelDecorator.Constants',
     'js/Utils/DisplayFormat'], function (CONSTANTS,
                          nodePropertyNames,
+                         REGISTRY_KEYS,
                          LoaderProgressBar,
                          Port,
                          ModelDecoratorConstants,
@@ -169,7 +171,7 @@ define(['js/Constants',
         var isPort = false;
 
         if (portNode) {
-            isPort = portNode.getRegistry(nodePropertyNames.Registry.isPort);
+            isPort = portNode.getRegistry(REGISTRY_KEYS.IS_PORT);
             isPort = (isPort === true || isPort === false) ? isPort : false;
         }
 
@@ -209,7 +211,7 @@ define(['js/Constants',
         var portId = portNode.getId(),
             portOrientation = "W",
             portContainer = this.skinParts.$portsContainerLeft,
-            portPosition = portNode.getRegistry(nodePropertyNames.Registry.position) || { "x": 0, "y": 0 },
+            portPosition = portNode.getRegistry(REGISTRY_KEYS.POSITION) || { "x": 0, "y": 0 },
             portToAppendBefore = null,
             i,
             changed;
@@ -282,7 +284,7 @@ define(['js/Constants',
 
     ModelDecoratorCore.prototype._updatePortPosition = function (portId) {
         var portNode = this._control._client.getNode(portId),
-            portPosition = portNode.getRegistry(nodePropertyNames.Registry.position) || { "x": 0, "y": 0 };
+            portPosition = portNode.getRegistry(REGISTRY_KEYS.POSITION) || { "x": 0, "y": 0 };
 
         //check if is has changed at all
         if ((this._ports[portId].position.x !== portPosition.x) ||
@@ -436,7 +438,7 @@ define(['js/Constants',
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]);
 
         if (nodeObj) {
-            if (nodeObj.getRegistry(nodePropertyNames.Registry.isAbstract) === true) {
+            if (nodeObj.getRegistry(REGISTRY_KEYS.IS_ABSTRACT) === true) {
                 this.$el.addClass(ABSTRACT_CLASS);
             } else {
                 this.$el.removeClass(ABSTRACT_CLASS);

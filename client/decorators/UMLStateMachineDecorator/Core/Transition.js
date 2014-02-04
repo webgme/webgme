@@ -8,8 +8,10 @@
 
 define(['raphaeljs',
         'js/NodePropertyNames',
+        'js/RegistryKeys',
         'js/Constants'], function (_raphaeljs,
                                    nodePropertyNames,
+                                   REGISTRY_KEYS,
                                    CONSTANTS) {
 
     var Transition,
@@ -37,7 +39,7 @@ define(['raphaeljs',
         this._lineStyle[CONSTANTS.LINE_STYLE.END_ARROW] = CONSTANTS.LINE_STYLE.LINE_ARROWS.NONE;
 
         if (nodeObj) {
-            lineStyleRegistry = nodeObj.getRegistry(nodePropertyNames.Registry.lineStyle);
+            lineStyleRegistry = nodeObj.getRegistry(REGISTRY_KEYS.LINE_STYLE);
 
             if (lineStyleRegistry) {
                 this._lineStyle[CONSTANTS.LINE_STYLE.WIDTH] = parseInt(lineStyleRegistry[CONSTANTS.LINE_STYLE.WIDTH], 10) || this._lineStyle[CONSTANTS.LINE_STYLE.WIDTH];
@@ -55,7 +57,7 @@ define(['raphaeljs',
             displayFormat;
 
         if (nodeObj) {
-            displayFormat = nodeObj.getRegistry(nodePropertyNames.Registry.DisplayFormat) || "";
+            displayFormat = nodeObj.getRegistry(REGISTRY_KEYS.DISPLAY_FORMAT) || "";
         }
 
         return displayFormat;

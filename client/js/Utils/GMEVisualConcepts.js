@@ -14,12 +14,14 @@ define(['jquery',
         'logManager',
         'js/Constants',
         'js/NodePropertyNames',
+        'js/RegistryKeys',
         'js/Utils/METAAspectHelper',
         'js/Panels/MetaEditor/MetaEditorConstants',
         'js/Utils/DisplayFormat'], function (_jquery,
                                            logManager,
                                            CONSTANTS,
                                            nodePropertyNames,
+                                           REGISTRY_KEYS,
                                            METAAspectHelper,
                                            MetaEditorConstants,
                                            displayFormat) {
@@ -85,7 +87,7 @@ define(['jquery',
             _.extend(result, DEFAULT_LINE_STYLE);
             result.name = displayFormat.resolve(obj);
 
-            regLineStyle =  obj.getRegistry(nodePropertyNames.Registry.lineStyle);
+            regLineStyle =  obj.getRegistry(REGISTRY_KEYS.LINE_STYLE);
 
             getValue(regLineStyle, CONSTANTS.LINE_STYLE.WIDTH, result, 'int');
             getValue(regLineStyle, CONSTANTS.LINE_STYLE.COLOR, result);
