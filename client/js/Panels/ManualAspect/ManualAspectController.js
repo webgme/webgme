@@ -53,6 +53,13 @@ define(['logManager',
             'Title': 'Aspect '};
     };
 
+    /*
+     * Overwrite 'no tab' warning message to the user
+     */
+    ManualAspectController.prototype.displayNoTabMessage = function () {
+        this._widget.setBackgroundText('No custom aspects defined yet. Press the + button in the top-left corner to create one...');
+    };
+
 
     return ManualAspectController;
 });

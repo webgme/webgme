@@ -2,10 +2,12 @@
 
 define(['js/Utils/GMEConcepts',
     'js/DragDrop/DragHelper',
+    'js/NodePropertyNames',
     './../ManualAspect/ManualAspectConstants',
     'js/Panels/ControllerBase/DiagramDesignerWidgetMultiTabMemberListControllerBase'], function (
                                                GMEConcepts,
                                                DragHelper,
+                                               nodePropertyNames,
                                                ManualAspectConstants,
                                                DiagramDesignerWidgetMultiTabMemberListControllerBase) {
 
@@ -74,6 +76,23 @@ define(['js/Utils/GMEConcepts',
     /**********************************************************/
     /*  END OF --- HANDLE OBJECT DRAG & DROP ACCEPTANCE       */
     /**********************************************************/
+
+    /*
+     * Overwrite 'no tab' warning message to the user
+     */
+    PointerListEditorController.prototype.displayNoTabMessage = function () {
+        var setContainerObj = this._client.getNode(this._memberListContainerID),
+            msg = 'The currently selected object does not contain any pointer lists.';
+
+        if (setContainerObj) {
+            var name = setContainerObj.getAttribute(nodePropertyNames.Attributes.name);
+            if (name && name !== "") {
+                msg = name + ' does not contain any pointer lists. You can define one in the Meta Aspect.';
+            }
+        }
+
+        this._widget.setBackgroundText(msg);
+    };
 
     return PointerListEditorController;
 });

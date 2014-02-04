@@ -229,46 +229,50 @@ define(['logManager',
             orderedMemberListInfo = this.getOrderedMemberListInfo(memberListContainerObj) || [];
             memberListMemberPositionsRegistryKey = this.getMemberListMemberPositionsRegistryKey();
 
-            for (i = 0; i < orderedMemberListInfo.length; i += 1) {
-                memberListID = orderedMemberListInfo[i].memberListID;
-                tabTitle = orderedMemberListInfo[i].title;
-                deleteTab = orderedMemberListInfo[i].enableDeleteTab && true;
-                renameTab = orderedMemberListInfo[i].enableRenameTab && true;
+            if (orderedMemberListInfo.length > 0) {
+                for (i = 0; i < orderedMemberListInfo.length; i += 1) {
+                    memberListID = orderedMemberListInfo[i].memberListID;
+                    tabTitle = orderedMemberListInfo[i].title;
+                    deleteTab = orderedMemberListInfo[i].enableDeleteTab && true;
+                    renameTab = orderedMemberListInfo[i].enableRenameTab && true;
 
-                //create tab
-                memberListTabID = this._widget.addTab(tabTitle, deleteTab, renameTab);
-                this._tabIDMemberListID[memberListTabID] = memberListID;
+                    //create tab
+                    memberListTabID = this._widget.addTab(tabTitle, deleteTab, renameTab);
+                    this._tabIDMemberListID[memberListTabID] = memberListID;
 
-                //get members of this pointer list
-                this._memberListMembers[memberListID] = memberListContainerObj.getMemberIds(memberListID);
+                    //get members of this pointer list
+                    this._memberListMembers[memberListID] = memberListContainerObj.getMemberIds(memberListID);
 
-                //get member coordinates
-                this._memberListMemberCoordinates[memberListID] = {};
-                j = this._memberListMembers[memberListID].length;
-                while (j--) {
-                    gmeID = this._memberListMembers[memberListID][j];
-                    this._memberListMemberCoordinates[memberListID][gmeID] = memberListContainerObj.getMemberRegistry(memberListID, gmeID, memberListMemberPositionsRegistryKey);
-                }
+                    //get member coordinates
+                    this._memberListMemberCoordinates[memberListID] = {};
+                    j = this._memberListMembers[memberListID].length;
+                    while (j--) {
+                        gmeID = this._memberListMembers[memberListID][j];
+                        this._memberListMemberCoordinates[memberListID][gmeID] = memberListContainerObj.getMemberRegistry(memberListID, gmeID, memberListMemberPositionsRegistryKey);
+                    }
 
-                //#3 - set selected based on actual selection
-                //if there is no actual selection, select thr first tab
-                if (this._selectedMemberListID &&
-                    this._selectedMemberListID === memberListID) {
-                    selectedMemberListTabID = memberListTabID;
-                }
-            }
-
-            if (!selectedMemberListTabID) {
-                for (selectedMemberListTabID in this._tabIDMemberListID) {
-                    if (this._tabIDMemberListID.hasOwnProperty(selectedMemberListTabID)) {
-                        break;
+                    //#3 - set selected based on actual selection
+                    //if there is no actual selection, select thr first tab
+                    if (this._selectedMemberListID &&
+                        this._selectedMemberListID === memberListID) {
+                        selectedMemberListTabID = memberListTabID;
                     }
                 }
+
+                if (!selectedMemberListTabID) {
+                    for (selectedMemberListTabID in this._tabIDMemberListID) {
+                        if (this._tabIDMemberListID.hasOwnProperty(selectedMemberListTabID)) {
+                            break;
+                        }
+                    }
+                }
+
+                this._widget.selectTab(selectedMemberListTabID);
+
+                this._updateSelectedMemberListMembersTerritoryPatterns();
+            } else {
+                this.displayNoTabMessage();
             }
-
-            this._widget.selectTab(selectedMemberListTabID);
-
-            this._updateSelectedMemberListMembersTerritoryPatterns();
         }
     };
 
@@ -1450,6 +1454,10 @@ define(['logManager',
         if (gmeIDs.length !== 0) {
             this._client.setPropertyEditorIdList(gmeIDs);
         }
+    };
+
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.displayNoTabMessage = function () {
+        this._widget.setBackgroundText('NO TAB TO DISPLAY...');
     };
 
     return DiagramDesignerWidgetMultiTabMemberListControllerBase;
