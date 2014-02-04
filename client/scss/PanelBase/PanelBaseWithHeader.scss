@@ -171,6 +171,12 @@ $title-font-size: 14px;
       box-shadow: $active-floating-box-shadow;
     }
   }
+
+  &.w-tabs {
+    .floating-title {
+      top: 30px;
+    }
+  }
 }
 
 
