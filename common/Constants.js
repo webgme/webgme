@@ -35,15 +35,6 @@ define([], function () {
 
         DISPLAY_FORMAT_ATTRIBUTE_MARKER: '$',
 
-        MEMBER_POSITION_REGISTRY_KEY: 'MemberPosition',
-
-         /*
-          * Dedicated SET names
-          */
-         SET_VALIDCHILDREN : 'ValidChildren',
-         SET_VALIDSOURCE : 'ValidSource',
-         SET_VALIDDESTINATION : 'ValidDestination',
-         SET_VALIDINHERITOR : 'ValidInheritor',
-         SET_GENERAL : 'General'
+        MEMBER_POSITION_REGISTRY_KEY: 'MemberPosition'
     };
 });
