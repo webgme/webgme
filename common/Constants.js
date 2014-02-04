@@ -31,10 +31,6 @@ define([], function () {
          POINTER_SOURCE : 'src',     //dedicated connection source pointer name
          POINTER_TARGET : 'dst',     //dedicated connection target pointer name
          POINTER_REF: 'ref',    //dedicated reference pointer name
-         POINTER_BASE: 'base',  //dedicated inheritance pointer name
-
-        DISPLAY_FORMAT_ATTRIBUTE_MARKER: '$',
-
-        MEMBER_POSITION_REGISTRY_KEY: 'MemberPosition'
+         POINTER_BASE: 'base'  //dedicated inheritance pointer name
     };
 });
