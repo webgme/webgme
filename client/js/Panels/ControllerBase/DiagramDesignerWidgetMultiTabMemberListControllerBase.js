@@ -225,6 +225,9 @@ define(['logManager',
         this._memberListMemberCoordinates = {};
 
         if (memberListContainerObj) {
+            //display name of the container
+            this._displayContainerObjectName();
+
             //#2 - get pointer lists and display a tab for each one
             orderedMemberListInfo = this.getOrderedMemberListInfo(memberListContainerObj) || [];
             memberListMemberPositionsRegistryKey = this.getMemberListMemberPositionsRegistryKey();
@@ -556,6 +559,9 @@ define(['logManager',
 
         //delete everything from model editor
         this._widget.clear();
+
+        //display name
+        this._displayContainerObjectName();
 
         //clean up local hash map
         this._GMEID2ComponentID = {};
@@ -1458,6 +1464,14 @@ define(['logManager',
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.displayNoTabMessage = function () {
         this._widget.setBackgroundText('NO TAB TO DISPLAY...');
+    };
+
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._displayContainerObjectName = function () {
+        var memberListContainerObj = this._client.getNode(this._memberListContainerID);
+
+        if (memberListContainerObj) {
+            this._widget.setTitle(memberListContainerObj.getAttribute(nodePropertyNames.Attributes.name));
+        }
     };
 
     return DiagramDesignerWidgetMultiTabMemberListControllerBase;
