@@ -146,6 +146,14 @@ define([ "util/assert" ], function (ASSERT) {
 			}
 		}
 
+        function simpleRequest (parameters,callback){
+            logger.debug('simpleRequest()');
+            _database.simpleRequest(parameters,callback);
+        }
+        function simpleResult(resultId,callback){
+            logger.debug('simpleResult('+resultId+')');
+            _database.simpleResult(resultId,callback);
+        }
 		return {
 			openDatabase: openDatabase,
 			closeDatabase: closeDatabase,
@@ -155,7 +163,9 @@ define([ "util/assert" ], function (ASSERT) {
             getAuthorizationInfo: getAuthorizationInfo,
 			getDatabaseStatus: getDatabaseStatus,
 			openProject: openProject,
-			deleteProject: deleteProject
+			deleteProject: deleteProject,
+            simpleRequest: simpleRequest,
+            simpleResult: simpleResult
 		};
 	}
 

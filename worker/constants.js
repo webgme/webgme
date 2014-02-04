@@ -4,16 +4,21 @@ function(){
     return {
         'msgTypes':{
             'request': 'request',
-            'response': 'response'
+            'result': 'result',
+            'info': 'info',
+            'initialize': 'initialize',
+            'initialized': 'initialized'
         },
         'workerStates':{
+            'initializing': 'initializing',
             'free': 'free',
             'working': 'working',
             'waiting': 'waiting'
         },
         'workerCommands':{
             'initialize': 'initialize',
-            'getResult': 'getResult'
+            'getResult': 'getResult',
+            'dumpMoreNodes': 'dumpMoreNodes'
         }
     }
 });

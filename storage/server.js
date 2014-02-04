@@ -365,12 +365,21 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 });
 
 
+                //worker commands
+                socket.on('simpleRequest',function(parameters,callback){
+                    _workerManager.request(parameters,callback);
+                });
+
+                socket.on('simpleResult',function(resultId,callback){
+                    getWorkerResult(resultId,callback);
+                });
+
                 socket.on('disconnect',function(){
                     //TODO temporary the disconnect function has been removed
                 });
             });
 
-            _workerManager = new SWM(_database,{basedir:options.basedir});
+            _workerManager = new SWM({basedir:options.basedir,mongoip:options.host,mongoport:options.port,mongodb:options.database});
         }
 
         function close(){
@@ -402,7 +411,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
         }
 
         function getWorkerResult(resultId,callback){
-
+            _workerManager.result(resultId,callback);
         }
 
         return {
