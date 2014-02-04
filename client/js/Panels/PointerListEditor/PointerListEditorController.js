@@ -81,15 +81,7 @@ define(['js/Utils/GMEConcepts',
      * Overwrite 'no tab' warning message to the user
      */
     PointerListEditorController.prototype.displayNoTabMessage = function () {
-        var setContainerObj = this._client.getNode(this._memberListContainerID),
-            msg = 'The currently selected object does not contain any pointer lists.';
-
-        if (setContainerObj) {
-            var name = setContainerObj.getAttribute(nodePropertyNames.Attributes.name);
-            if (name && name !== "") {
-                msg = name + ' does not contain any pointer lists. You can define one in the Meta Aspect.';
-            }
-        }
+        var msg = 'The currently selected object does not contain any pointer lists.';
 
         this._widget.setBackgroundText(msg);
     };
