@@ -1,7 +1,22 @@
 [
     {"id": "ModelEditor",
-        "title": "ModelEditor",
+        "title": "Model Editor",
         "panel": "js/Panels/ModelEditor/ModelEditorPanel",
+        "DEBUG_ONLY": false},
+
+    {"id": "METAAspect",
+        "title": "Meta Aspect",
+        "panel": "js/Panels/MetaEditor/MetaEditorPanel",
+        "DEBUG_ONLY": false},
+
+    {"id": "ManualAspectEditor",
+        "title": "Custom Aspects",
+        "panel": "js/Panels/ManualAspect/ManualAspectPanel",
+        "DEBUG_ONLY": false},
+
+    {"id": "PointerListEditor",
+        "title": "Pointer Lists",
+        "panel": "js/Panels/PointerListEditor/PointerListEditorPanel",
         "DEBUG_ONLY": false},
 
     {"id": "ContainmentGrid",
@@ -15,29 +30,12 @@
         "DEBUG_ONLY": true},
 
     {"id": "GridSets",
-        "title": "Set explorer",
+        "title": "Set explorer (DEBUG)",
         "panel": "js/Panels/Grid/GridPanelSets",
         "DEBUG_ONLY": true},
 
     {"id": "GraphViz",
         "title": "Graph visualizer",
         "panel": "js/Panels/GraphViz/GraphVizPanel",
-        "DEBUG_ONLY": true},
-
-    {"id": "METAAspect",
-        "title": "META Aspect",
-        "panel": "js/Panels/MetaEditor/MetaEditorPanel",
-        "DEBUG_ONLY": false},
-
-    {"id": "PointerListEditor",
-        "title": "PointerListEditor",
-        "panel": "js/Panels/PointerListEditor/PointerListEditorPanel",
-        "DEBUG_ONLY": true},
-
-    {"id": "ManualAspectEditor",
-        "title": "ManualAspectEditor",
-        "panel": "js/Panels/ManualAspect/ManualAspectPanel",
         "DEBUG_ONLY": true}
-
-
 ]

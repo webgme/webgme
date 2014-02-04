@@ -16,7 +16,8 @@ define(['js/Toolbar/ToolbarButton',
         TAB_LIST_CONTAINER_CLASS = 'tab-list-container',
         TAB_SCROLL = 200,
         TAB_ID = 'TAB_ID',
-        TAB_RENAME = 'TAB_RENAME';
+        TAB_RENAME = 'TAB_RENAME',
+        WITH_TABS_CLASS = 'w-tabs';
 
     DiagramDesignerWidgetTabs = function () {
     };
@@ -27,6 +28,7 @@ define(['js/Toolbar/ToolbarButton',
         this.$tabsContainer = $('<div/>', { 'class': TABS_CONTAINER });
 
         this.$el.parent().append(this.$tabsContainer);
+        this.$el.parent().addClass(WITH_TABS_CLASS);
 
         this._tabCounter = 0;
 

@@ -225,50 +225,57 @@ define(['logManager',
         this._memberListMemberCoordinates = {};
 
         if (memberListContainerObj) {
+            //display name of the container
+            this._displayContainerObjectName();
+
             //#2 - get pointer lists and display a tab for each one
             orderedMemberListInfo = this.getOrderedMemberListInfo(memberListContainerObj) || [];
             memberListMemberPositionsRegistryKey = this.getMemberListMemberPositionsRegistryKey();
 
-            for (i = 0; i < orderedMemberListInfo.length; i += 1) {
-                memberListID = orderedMemberListInfo[i].memberListID;
-                tabTitle = orderedMemberListInfo[i].title;
-                deleteTab = orderedMemberListInfo[i].enableDeleteTab && true;
-                renameTab = orderedMemberListInfo[i].enableRenameTab && true;
+            if (orderedMemberListInfo.length > 0) {
+                for (i = 0; i < orderedMemberListInfo.length; i += 1) {
+                    memberListID = orderedMemberListInfo[i].memberListID;
+                    tabTitle = orderedMemberListInfo[i].title;
+                    deleteTab = orderedMemberListInfo[i].enableDeleteTab && true;
+                    renameTab = orderedMemberListInfo[i].enableRenameTab && true;
 
-                //create tab
-                memberListTabID = this._widget.addTab(tabTitle, deleteTab, renameTab);
-                this._tabIDMemberListID[memberListTabID] = memberListID;
+                    //create tab
+                    memberListTabID = this._widget.addTab(tabTitle, deleteTab, renameTab);
+                    this._tabIDMemberListID[memberListTabID] = memberListID;
 
-                //get members of this pointer list
-                this._memberListMembers[memberListID] = memberListContainerObj.getMemberIds(memberListID);
+                    //get members of this pointer list
+                    this._memberListMembers[memberListID] = memberListContainerObj.getMemberIds(memberListID);
 
-                //get member coordinates
-                this._memberListMemberCoordinates[memberListID] = {};
-                j = this._memberListMembers[memberListID].length;
-                while (j--) {
-                    gmeID = this._memberListMembers[memberListID][j];
-                    this._memberListMemberCoordinates[memberListID][gmeID] = memberListContainerObj.getMemberRegistry(memberListID, gmeID, memberListMemberPositionsRegistryKey);
-                }
+                    //get member coordinates
+                    this._memberListMemberCoordinates[memberListID] = {};
+                    j = this._memberListMembers[memberListID].length;
+                    while (j--) {
+                        gmeID = this._memberListMembers[memberListID][j];
+                        this._memberListMemberCoordinates[memberListID][gmeID] = memberListContainerObj.getMemberRegistry(memberListID, gmeID, memberListMemberPositionsRegistryKey);
+                    }
 
-                //#3 - set selected based on actual selection
-                //if there is no actual selection, select thr first tab
-                if (this._selectedMemberListID &&
-                    this._selectedMemberListID === memberListID) {
-                    selectedMemberListTabID = memberListTabID;
-                }
-            }
-
-            if (!selectedMemberListTabID) {
-                for (selectedMemberListTabID in this._tabIDMemberListID) {
-                    if (this._tabIDMemberListID.hasOwnProperty(selectedMemberListTabID)) {
-                        break;
+                    //#3 - set selected based on actual selection
+                    //if there is no actual selection, select thr first tab
+                    if (this._selectedMemberListID &&
+                        this._selectedMemberListID === memberListID) {
+                        selectedMemberListTabID = memberListTabID;
                     }
                 }
+
+                if (!selectedMemberListTabID) {
+                    for (selectedMemberListTabID in this._tabIDMemberListID) {
+                        if (this._tabIDMemberListID.hasOwnProperty(selectedMemberListTabID)) {
+                            break;
+                        }
+                    }
+                }
+
+                this._widget.selectTab(selectedMemberListTabID);
+
+                this._updateSelectedMemberListMembersTerritoryPatterns();
+            } else {
+                this.displayNoTabMessage();
             }
-
-            this._widget.selectTab(selectedMemberListTabID);
-
-            this._updateSelectedMemberListMembersTerritoryPatterns();
         }
     };
 
@@ -279,14 +286,14 @@ define(['logManager',
             len,
             territoryChanged = false,
             territoryId = this._selectedMemberListMembersTerritoryId,
-            territoryPattenrs = this._selectedMemberListMembersTerritoryPatterns,
+            territoryPatterns = this._selectedMemberListMembersTerritoryPatterns,
             client = this._client;
 
         //let's see who has been deleted
         diff = _.difference(currentlyDisplayedMembers, actualMembers);
         len = diff.length;
         while (len--) {
-            delete territoryPattenrs[diff[len]];
+            delete territoryPatterns[diff[len]];
             territoryChanged = true;
         }
 
@@ -294,7 +301,7 @@ define(['logManager',
         diff = _.difference(actualMembers, currentlyDisplayedMembers);
         len = diff.length;
         while (len--) {
-            territoryPattenrs[diff[len]] = { "children": 0 };
+            territoryPatterns[diff[len]] = { "children": 0 };
             territoryChanged = true;
         }
 
@@ -315,7 +322,7 @@ define(['logManager',
 
         if (territoryChanged) {
             setTimeout( function () {
-                client.updateTerritory(territoryId, territoryPattenrs);
+                client.updateTerritory(territoryId, territoryPatterns);
             }, 10);
         }
     };
@@ -552,6 +559,9 @@ define(['logManager',
 
         //delete everything from model editor
         this._widget.clear();
+
+        //display name
+        this._displayContainerObjectName();
 
         //clean up local hash map
         this._GMEID2ComponentID = {};
@@ -1408,8 +1418,11 @@ define(['logManager',
 
             this._client.setRegistry(memberListContainerID, memberListSetsRegistryKey, memberListSetsRegistry);
 
-            //force switching to the new sheet
-            this._selectedMemberListID = newSetID;
+            //force switching to the new sheet if this is not the first sheet
+            //if this is the first, it will be activated by default
+            if (memberListSetsRegistry.length !== 1) {
+                this._selectedMemberListID = newSetID;
+            }
 
             //finish transaction
             this._client.completeTransaction();
@@ -1446,6 +1459,18 @@ define(['logManager',
 
         if (gmeIDs.length !== 0) {
             this._client.setPropertyEditorIdList(gmeIDs);
+        }
+    };
+
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.displayNoTabMessage = function () {
+        this._widget.setBackgroundText('NO TAB TO DISPLAY...');
+    };
+
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._displayContainerObjectName = function () {
+        var memberListContainerObj = this._client.getNode(this._memberListContainerID);
+
+        if (memberListContainerObj) {
+            this._widget.setTitle(memberListContainerObj.getAttribute(nodePropertyNames.Attributes.name));
         }
     };
 
