@@ -279,14 +279,14 @@ define(['logManager',
             len,
             territoryChanged = false,
             territoryId = this._selectedMemberListMembersTerritoryId,
-            territoryPattenrs = this._selectedMemberListMembersTerritoryPatterns,
+            territoryPatterns = this._selectedMemberListMembersTerritoryPatterns,
             client = this._client;
 
         //let's see who has been deleted
         diff = _.difference(currentlyDisplayedMembers, actualMembers);
         len = diff.length;
         while (len--) {
-            delete territoryPattenrs[diff[len]];
+            delete territoryPatterns[diff[len]];
             territoryChanged = true;
         }
 
@@ -294,7 +294,7 @@ define(['logManager',
         diff = _.difference(actualMembers, currentlyDisplayedMembers);
         len = diff.length;
         while (len--) {
-            territoryPattenrs[diff[len]] = { "children": 0 };
+            territoryPatterns[diff[len]] = { "children": 0 };
             territoryChanged = true;
         }
 
@@ -315,7 +315,7 @@ define(['logManager',
 
         if (territoryChanged) {
             setTimeout( function () {
-                client.updateTerritory(territoryId, territoryPattenrs);
+                client.updateTerritory(territoryId, territoryPatterns);
             }, 10);
         }
     };
@@ -1408,8 +1408,11 @@ define(['logManager',
 
             this._client.setRegistry(memberListContainerID, memberListSetsRegistryKey, memberListSetsRegistry);
 
-            //force switching to the new sheet
-            this._selectedMemberListID = newSetID;
+            //force switching to the new sheet if this is not the first sheet
+            //if this is the first, it will be activated by default
+            if (memberListSetsRegistry.length !== 1) {
+                this._selectedMemberListID = newSetID;
+            }
 
             //finish transaction
             this._client.completeTransaction();
