@@ -5,7 +5,7 @@ function(ASSERT,Child,CONSTANTS){
            _waitingRequests = [];
 
         _parameters = _parameters || {};
-        _parameters.maxrowkers = _parameters.maxworkers || 10;
+        _parameters.maxworkers = _parameters.maxworkers || 10;
 
         //helping functions
 
@@ -53,8 +53,9 @@ function(ASSERT,Child,CONSTANTS){
 
         //initialization part
         for(var i=0;i<_parameters.maxworkers;i++){
-            var worker = Child.fork(__dirname+'/../worker/simpleworker.js');
+            var worker = Child.fork(_parameters.basedir+'/worker/simpleworker.js');
             worker._s_w_m_id = _workers.push({worker:worker,state:CONSTANTS.workerStates.free,resid:null}) - 1;
+            console.log(worker.pid);
 
             worker.on('message', function(msg) {
                 msg.type = msg.type || CONSTANTS.msgTypes.request;
@@ -82,6 +83,8 @@ function(ASSERT,Child,CONSTANTS){
                         break;
                 }
             });
+
+            worker.send({command:CONSTANTS.workerCommands.initialize,storage:_database});
         }
         return {
             request : request,

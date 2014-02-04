@@ -4,7 +4,7 @@
  * Author: Tamas Kecskes
  */
 
-define([ "util/assert","util/guid","util/url","socket.io" ], function(ASSERT,GUID,URL,IO){
+define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkermanager" ], function(ASSERT,GUID,URL,IO,SWM){
 
     var server = function(_database,options){
         ASSERT(typeof _database === 'object');
@@ -20,7 +20,8 @@ define([ "util/assert","util/guid","util/url","socket.io" ], function(ASSERT,GUI
             _projects = {},
             /*_references = {},*/
             _databaseOpened = false,
-            ERROR_DEAD_GUID = 'the given object does not exists';
+            ERROR_DEAD_GUID = 'the given object does not exists',
+            _workerManager = null;
 
         function getSessionID(socket){
             return socket.handshake.webGMESession;
@@ -368,6 +369,8 @@ define([ "util/assert","util/guid","util/url","socket.io" ], function(ASSERT,GUI
                     //TODO temporary the disconnect function has been removed
                 });
             });
+
+            _workerManager = new SWM(_database,{basedir:options.basedir});
         }
 
         function close(){
@@ -398,9 +401,14 @@ define([ "util/assert","util/guid","util/url","socket.io" ], function(ASSERT,GUI
             _databaseOpened = false;
         }
 
+        function getWorkerResult(resultId,callback){
+
+        }
+
         return {
             open: open,
-            close: close
+            close: close,
+            getWorkerResult: getWorkerResult
         };
     };
 

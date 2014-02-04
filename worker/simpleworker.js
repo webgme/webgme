@@ -29,12 +29,15 @@ function(CONSTANT,Core){
         error = null;
     //main message processing loop
     process.on('message',function(parameters){
+        console.log(parameters);
         parameters = parameters || {};
         parameters.command = parameters.command || CONSTANT.workerCommands.getResult; //default command
 
         switch(parameters.command){
             case CONSTANT.workerCommands.initialize:
                 storage = parameters.storage;
+                break;
+            case CONSTANT.workerCommands.getResult:
                 if(resultReady === 'true'){
                     var e = error,
                         r = result;
@@ -48,9 +51,6 @@ function(CONSTANT,Core){
                 } else {
                     resultRequested = true;
                 }
-                break;
-            case CONSTANT.workerCommands.getResult:
-
                 break;
             default:
                 process.send({error:'unknown command'});

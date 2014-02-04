@@ -302,6 +302,8 @@ requirejs(['logManager',
     __storageOptions.database = parameters.mongodatabase;
     __storageOptions.log = logManager.create('combined-server-storage');
 
+    __storageOptions.basedir =  __dirname + "/..";
+
     storage = Storage(__storageOptions);
 
     storage.open();
