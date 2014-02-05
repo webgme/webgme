@@ -1999,6 +1999,15 @@ define([
                     }
                 });
             }
+            function getExportItemsUrlAsync(paths,filename,callback){
+                _database.simpleRequest({command:'dumpMoreNodes',name:_projectName,hash:_core.getHash(_nodes[ROOT_PATH].node),nodes:paths},function(err,resId){
+                    if(err){
+                        callback(err);
+                    } else {
+                        callback(null,window.location.protocol + '//' + window.location.host +'/worker/simpleResult/'+resId+'/'+filename);
+                    }
+                });
+            }
             function dumpNodeAsync(path,callback){
                 if(_nodes[path]){
                     Dump(_core,_nodes[path].node,"",'guid',callback);
@@ -2202,6 +2211,7 @@ define([
 
                 //JSON functions
                 exportItems: exportItems,
+                getExportItemsUrlAsync: getExportItemsUrlAsync,
                 dumpNodeAsync: dumpNodeAsync,
                 importNodeAsync: importNodeAsync,
                 mergeNodeAsync: mergeNodeAsync,
