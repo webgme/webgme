@@ -43,18 +43,14 @@ define(['jquery',
     };
 
     var _exportMultiple = function (objIDs) {
-        var fileName =  _client.getActiveProject() + "_" + _client.getActualBranch() + "_multiple.json";
+        var fileName =  _client.getActiveProject() + "_" + _client.getActualBranch() + "_multiple";
 
         if (_.isArray(objIDs) &&
             objIDs.length > 0) {
-            _client.exportItems(objIDs, function(error, jsonDump) {
-                var pom = document.createElement('a'),
-                    content = JSON.stringify(jsonDump, null, 2);
-                pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(content));
-                pom.setAttribute('download', fileName);
-                $('body').append($(pom));
-                pom.click();
-                $(pom).remove();
+            _client.getExportItemsUrlAsync(objIDs, fileName, function (err, url) {
+                if (!err) {
+                    window.location = url;
+                }
             });
         }
     };

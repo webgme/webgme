@@ -274,6 +274,31 @@ requirejs(['logManager',
             res.send(400);
         }
     });
+    //worker functionalities
+    app.get('/worker/simpleResult/*',function(req,res){
+        var urlArray = req.url.split('/');
+        if(urlArray.length > 3){
+            storage.getWorkerResult(urlArray[3],function(err,result){
+                if(err){
+                    res.send(500);
+                } else {
+                    var filename = 'exportedNodes.json';
+                    if(urlArray[4]){
+                        filename = urlArray[4];
+                    }
+                    if(filename.indexOf('.') === -1){
+                        filename += '.json';
+                    }
+                    res.header("Content-Type", "application/json");
+                    res.header("Content-Disposition", "attachment;filename=\""+filename+"\"");
+                    res.status(200);
+                    res.end(JSON.stringify(result,null,2));
+                }
+            });
+        } else {
+            res.send(404);
+        }
+    });
     //other get
     app.get('*',function(req,res){
         res.send(400);

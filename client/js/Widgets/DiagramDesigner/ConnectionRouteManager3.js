@@ -21,7 +21,6 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
     };
 
     ConnectionRouteManager3.prototype.initialize = function () {
-        this._initialized = false;
         this._clearGraph();
 
         //Adding event listeners
@@ -29,15 +28,8 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
 
         this._onComponentUpdate = function(_canvas, ID) {//Boxes and lines
             if( self.diagramDesigner.itemIds.indexOf( ID ) !== -1 ){
-
-             if( self.diagramDesigner.items[ID].rotation !== self._autorouterBoxRotation[ID] ) //Item has been rotated
-                self._resizeItem( ID );
-
-            }else if( self.diagramDesigner.connectionIds.indexOf( ID ) !== -1 ){ //Segment points have been modified
-                self.autorouter.setPathCustomPoints({
-                        "path": self._autorouterPaths[ ID ], 
-                        "points": self.diagramDesigner.items[ ID ].segmentPoints
-                        });
+                if( self.diagramDesigner.items[ID].rotation !== self._autorouterBoxRotation[ID] ) //Item has been rotated
+                    self._resizeItem( ID );
             }
        };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_UPDATE, this._onComponentUpdate);
@@ -143,8 +135,6 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
 
         while(i--){
             this.deleteItem(idList[i]);
-            //this.autorouter.remove(this._autorouterPaths[idList[i]]);
-            //this._autorouterPaths[idList[i]] = undefined;
             this.insertConnection([idList[i]]);
         }
 
@@ -157,6 +147,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         this._autorouterPaths = {};
         this._autorouterBoxRotation = {};//Define container that will map obj+subID -> rotation
         this.endpointConnectionAreaInfo = {};
+        this.initialized = false;
     };
 
     ConnectionRouteManager3.prototype._initializeGraph = function () {
@@ -181,11 +172,6 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         i = connIdList.length;
         while( i-- ){
             this.insertConnection(connIdList[i]);
-            if( canvas.items[connIdList[i]].segmentPoints.length > 0 )
-                this.autorouter.setPathCustomPoints({
-                        "path": this._autorouterPaths[ connIdList[i] ], 
-                        "points": canvas.items[ connIdList[i] ].segmentPoints
-                        });
         }
 
         //Next, I will update the ports as necessary
@@ -228,6 +214,14 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         if( this._autorouterBoxes[sId].ports.length !== 0 && this._autorouterBoxes[tId].ports.length !== 0 ){
             this._autorouterPaths[connId] = this.autorouter.addPath({ "src": srcPorts,
                                                                       "dst": dstPorts });
+        }
+
+        //Set custom points, if applicable
+        if( canvas.items[connId].segmentPoints.length > 0 ){
+            this.autorouter.setPathCustomPoints({
+                    "path": this._autorouterPaths[ connId ], 
+                    "points": canvas.items[ connId ].segmentPoints
+                    });
         }
 
      };
