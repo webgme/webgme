@@ -7971,7 +7971,7 @@ if(DEBUG && ArPointList.length > 0){
         this.router.setBuffer( Math.floor(min/2) );
     };
     
-    AutoRouter.prototype.setPathCustomPoints = function( args ){ //args.path = [ [x, y], [x2, y2], ... ]
+    AutoRouter.prototype.setPathCustomPoints = function( args ){ //args.points = [ [x, y], [x2, y2], ... ]
         var path = this.paths[args.path],
             points = [],
             i = 0;
@@ -7993,21 +7993,6 @@ if(DEBUG && ArPointList.length > 0){
     
     };
 
-/*
-    AutoRouter.prototype.addRemoveBoxPorts = function( args ){
-        var box = args.box,
-            removePorts = args.remove,
-            addConnectionAreas = args.add;
-
-        if(removePorts)
-            this.router.removePortsFromBox(removePorts, box);
-
-        if(addConnectionAreas)
-            return this.addPort(box, addConnectionAreas);
-        
-    };
-*/
-    
     return AutoRouter;
     
 });
