@@ -3,7 +3,7 @@
  * STRING CONSTANT DEFINITIONS USED IN DESIGNER DIAGRAM
  */
 
-define([], function () {
+define(['js/Constants'], function (CONSTANTS) {
 
     //return string constants
     return {
@@ -40,28 +40,16 @@ define([], function () {
         /*
          * LINE STYLE PARAMETERS KEYS
          */
-        LINE_WIDTH : 'width',
-        LINE_COLOR : 'color',
-        LINE_PATTERN: 'pattern',
-        LINE_PATTERNS: { SOLID: '',
-            DASH: "-",
-            DOT: ".",
-            DASH_DOT: "-.",
-            DASH_DOT_DOT: "-.."},
-        LINE_TYPE: 'type',
-        LINE_TYPES: { NONE : '',
-                      BEZIER: 'bezier'},
-        LINE_START_ARROW: 'start-arrow',
-        LINE_END_ARROW: 'end-arrow',
-        LINE_POINTS: 'points',
-        LINE_ARROWS: { NONE: 'none',
-                       DIAMOND: 'diamond',
-                       BLOCK: 'block',
-                       CLASSIC: 'classic',
-                       OPEN: 'open',
-                       OVAL: 'oval',
-                       DIAMOND2: 'diamond2',
-                       INHERITANCE: 'inheritance'},
+        LINE_WIDTH : CONSTANTS.LINE_STYLE.WIDTH,
+        LINE_COLOR : CONSTANTS.LINE_STYLE.COLOR,
+        LINE_PATTERN: CONSTANTS.LINE_STYLE.PATTERN,
+        LINE_PATTERNS: CONSTANTS.LINE_STYLE.PATTERNS,
+        LINE_TYPE: CONSTANTS.LINE_STYLE.TYPE,
+        LINE_TYPES: CONSTANTS.LINE_STYLE.TYPES,
+        LINE_START_ARROW: CONSTANTS.LINE_STYLE.START_ARROW,
+        LINE_END_ARROW: CONSTANTS.LINE_STYLE.END_ARROW,
+        LINE_POINTS: CONSTANTS.LINE_STYLE.CUSTOM_POINTS,
+        LINE_ARROWS: CONSTANTS.LINE_STYLE.LINE_ARROWS,
 
         /*
          * CONNECTION CONSTANTS

@@ -754,8 +754,7 @@ define(['logManager',
     ModelEditorControl.prototype._removeConnectionSegmentPoints = function () {
         var idList = this.designerCanvas.selectionManager.getSelectedElements(),
             len = idList.length,
-            nodeObj,
-            existingLineStyle;
+            nodeObj;
 
 
         this._client.startTransaction();
@@ -765,11 +764,7 @@ define(['logManager',
                 nodeObj = this._client.getNode(this._ComponentID2GmeID[idList[len]]);
 
                 if (nodeObj) {
-                    existingLineStyle = nodeObj.getEditableRegistry(REGISTRY_KEYS.LINE_STYLE) || {};
-
-                    existingLineStyle[CONSTANTS.LINE_STYLE.POINTS] = [];
-
-                    this._client.setRegistry(nodeObj.getId(), REGISTRY_KEYS.LINE_STYLE, existingLineStyle);
+                    this._client.delRegistry(nodeObj.getId(), REGISTRY_KEYS.LINE_CUSTOM_POINTS);
                 }
             }
         }

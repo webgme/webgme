@@ -70,10 +70,6 @@ define(['logManager',
             self._onSelectionChanged(selectedIds);
         };
 
-        this.diagramDesigner.onSetConnectionProperty = function (params) {
-            self._onSetConnectionProperty(params);
-        };
-
         //oeverriding this just to avoid warning message from DiagramDesignerWidget
         //we don't need to filter it, everybody can be connected to everybody
         this.diagramDesigner.onFilterNewConnectionDroppableEnds = function (params) {
@@ -408,29 +404,6 @@ define(['logManager',
         if (gmeIDs.length !== 0) {
             this._client.setPropertyEditorIdList(gmeIDs);
         }
-    };
-
-    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSetConnectionProperty = function (params) {
-        var items = params.items,
-            visualParams = params.params,
-            len = items.length,
-            id,
-            connRegLineStyle;
-
-        this._client.startTransaction();
-
-        while (len--) {
-            id = this._ComponentID2GMEID[items[len]];
-            if (id && GMEConcepts.isConnectionType(id)) {
-                connRegLineStyle = this._client.getNode(id).getEditableRegistry(REGISTRY_KEYS.LINE_STYLE);
-                if (connRegLineStyle && !_.isEmpty(connRegLineStyle)) {
-                    _.extend(connRegLineStyle, visualParams);
-                    this._client.setRegistry(id, REGISTRY_KEYS.LINE_STYLE, connRegLineStyle);
-                }
-            }
-        }
-
-        this._client.completeTransaction();
     };
 
     //adding new meta aspect sheet

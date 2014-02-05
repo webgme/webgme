@@ -646,37 +646,23 @@ define(['logManager',
         var gmeIDs = [],
             len = selectedIds.length,
             id,
-            connectionSelected = false,
-            allHasRegistrylineStyle = selectedIds.length > 0,
-            nodeObj,
-            lineStyle;
+            onlyConnectionSelected =  selectedIds.length > 0;
 
         while (len--) {
             id = this._ComponentID2GmeID[selectedIds[len]];
             if (id) {
                 gmeIDs.push(id);
 
-                nodeObj = this._client.getNode(id);
-
-                if (allHasRegistrylineStyle && nodeObj) {
-                    lineStyle = nodeObj.getRegistry(REGISTRY_KEYS.LINE_STYLE);
-                    allHasRegistrylineStyle = lineStyle && !_.isEmpty(lineStyle);
-                } else {
-                    allHasRegistrylineStyle = false;
-                }
-            }
-
-            if (this.designerCanvas.connectionIds.indexOf(selectedIds[len]) !== -1) {
-                connectionSelected = true;
+                onlyConnectionSelected = onlyConnectionSelected && GMEConcepts.isConnectionType(id);
             }
         }
 
-        this.designerCanvas.toolbarItems.ddbtnConnectionArrowStart.enabled(allHasRegistrylineStyle);
-        this.designerCanvas.toolbarItems.ddbtnConnectionPattern.enabled(allHasRegistrylineStyle);
-        this.designerCanvas.toolbarItems.ddbtnConnectionArrowEnd.enabled(allHasRegistrylineStyle);
-        this.designerCanvas.toolbarItems.ddbtnConnectionLineType.enabled(allHasRegistrylineStyle);
+        this.designerCanvas.toolbarItems.ddbtnConnectionArrowStart.enabled(onlyConnectionSelected);
+        this.designerCanvas.toolbarItems.ddbtnConnectionPattern.enabled(onlyConnectionSelected);
+        this.designerCanvas.toolbarItems.ddbtnConnectionArrowEnd.enabled(onlyConnectionSelected);
+        this.designerCanvas.toolbarItems.ddbtnConnectionLineType.enabled(onlyConnectionSelected);
 
-        this.$btnConnectionRemoveSegmentPoints.enabled(connectionSelected);
+        this.$btnConnectionRemoveSegmentPoints.enabled(onlyConnectionSelected);
 
         //nobody is selected on the canvas
         //set the active selection to the opened guy
@@ -716,16 +702,12 @@ define(['logManager',
         var connID = params.connectionID,
             points = params.points,
             gmeID = this._ComponentID2GmeID[connID],
-            nodeObj,
-            lineStyle;
+            nodeObj;
 
         if (gmeID) {
             nodeObj = this._client.getNode(gmeID);
             if (nodeObj) {
-                lineStyle = nodeObj.getEditableRegistry(REGISTRY_KEYS.LINE_STYLE) || {};
-                lineStyle[DiagramDesignerWidgetConstants.LINE_POINTS] = points;
-
-                this._client.setRegistry(gmeID, REGISTRY_KEYS.LINE_STYLE, lineStyle);
+                this._client.setRegistry(gmeID, REGISTRY_KEYS.LINE_CUSTOM_POINTS, points);
             }
         }
     };
@@ -894,7 +876,15 @@ define(['logManager',
             gmeIDs = [],
             len = items.length,
             id,
-            connRegLineStyle;
+            connRegLineStyle,
+            setObjRegistry,
+            client = this._client;
+
+        setObjRegistry = function (objID, paramKey, registryKey) {
+            if (visualParams.hasOwnProperty(paramKey)) {
+                client.setRegistry(objID, registryKey, visualParams[paramKey]);
+            }
+        };
 
         while (len--) {
             id = this._ComponentID2GmeID[items[len]];
@@ -909,11 +899,11 @@ define(['logManager',
 
             while(len--) {
                 id = gmeIDs[len];
-                connRegLineStyle = this._client.getNode(id).getEditableRegistry(REGISTRY_KEYS.LINE_STYLE);
-                if (connRegLineStyle && !_.isEmpty(connRegLineStyle)) {
-                    _.extend(connRegLineStyle, visualParams);
-                    this._client.setRegistry(id, REGISTRY_KEYS.LINE_STYLE, connRegLineStyle);
-                }
+                //set visual properties
+                setObjRegistry(id, CONSTANTS.LINE_STYLE.START_ARROW, REGISTRY_KEYS.LINE_START_ARROW);
+                setObjRegistry(id, CONSTANTS.LINE_STYLE.END_ARROW, REGISTRY_KEYS.LINE_END_ARROW);
+                setObjRegistry(id, CONSTANTS.LINE_STYLE.TYPE, REGISTRY_KEYS.LINE_TYPE);
+                setObjRegistry(id, CONSTANTS.LINE_STYLE.PATTERN, REGISTRY_KEYS.LINE_STYLE);
             }
 
             this._client.completeTransaction();

@@ -1124,7 +1124,6 @@ define(['logManager',
                             ]
                         });
                         self._client.makePointer(sourceID,userSelectedPointerName,null);
-                        self._updateObjectConnectionVisualStyles(sourceID);
                     } else {
                         //pointer list
                         self._client.setPointerMeta(sourceID,userSelectedPointerName,{
@@ -1140,7 +1139,6 @@ define(['logManager',
                     if (isPointerList !== true) {
                         //single pointer
                         self._client.updateValidTargetItem(sourceID,userSelectedPointerName,{id:targetID,max:1});
-                        self._updateObjectConnectionVisualStyles(sourceID);
                     } else {
                         //pointer list
                         self._client.updateValidTargetItem(sourceID,userSelectedPointerName,{id:targetID});
@@ -1168,7 +1166,6 @@ define(['logManager',
                     //single pointer
                     this._client.deleteMetaPointer(sourceID,pointerName);
                     this._client.delPointer(sourceID,pointerName);
-                    this._updateObjectConnectionVisualStyles(sourceID);
                 } else {
                     //pointer list
                     this._client.deleteMetaPointer(sourceID,pointerName);
@@ -1550,33 +1547,6 @@ define(['logManager',
 
 
         this._toolbarInitialized = true;
-    };
-
-    //if the object is a validConnectionType and does not have the connection style visual properties in Registry, add them
-    //if it's not and has, remove them
-    MetaEditorControl.prototype._updateObjectConnectionVisualStyles = function(objectID) {
-        var isConnectionType = GMEConcepts.isConnectionType(objectID),
-            nodeObj = this._client.getNode(objectID),
-            existingLineStyle = nodeObj.getEditableRegistry(REGISTRY_KEYS.LINE_STYLE),
-            resultLineStyle = {},
-            DEFAULT_LINE_STYLE = {};
-
-        DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.WIDTH] = 1;
-        DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.COLOR] = "#000000";
-        DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.PATTERN] = "";
-        DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.TYPE] = "";
-        DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.START_ARROW] = "none";
-        DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.END_ARROW] = "none";
-        DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.POINTS] = [];
-
-        if (isConnectionType) {
-            _.extend(resultLineStyle, DEFAULT_LINE_STYLE, existingLineStyle);
-            this._client.setRegistry(objectID, REGISTRY_KEYS.LINE_STYLE, resultLineStyle);
-        } else {
-            //not connection type
-            //remove registry settings
-            this._client.setRegistry(objectID, REGISTRY_KEYS.LINE_STYLE, {});
-        }
     };
 
     MetaEditorControl.prototype._getAssociatedConnections =  function (objectID) {
