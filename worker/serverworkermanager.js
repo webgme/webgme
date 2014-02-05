@@ -1,6 +1,6 @@
 define(['util/assert','child_process','worker/constants','util/guid'],
 function(ASSERT,Child,CONSTANTS){
-    function ServerWorkerManager(_database,_parameters){
+    function ServerWorkerManager(_parameters){
         var _workers = [],
            _waitingRequests = [];
 
@@ -50,41 +50,71 @@ function(ASSERT,Child,CONSTANTS){
             }
             callback('no result under the given id found');
         }
+        function indexByPid(pid){
+            for(var i=0;i<_workers.length;i++){
+                if(pid === _workers[i].pid){
+                    return i;
+                }
+            }
+            return -1;
+        }
 
-        //initialization part
-        for(var i=0;i<_parameters.maxworkers;i++){
-            var worker = Child.fork(_parameters.basedir+'/worker/simpleworker.js');
-            worker._s_w_m_id = _workers.push({worker:worker,state:CONSTANTS.workerStates.free,resid:null}) - 1;
-            console.log(worker.pid);
-
-            worker.on('message', function(msg) {
-                msg.type = msg.type || CONSTANTS.msgTypes.request;
-
+        function messageHandling(msg){
+            var index = indexByPid(msg.pid);
+            if(index !== -1){
+                var worker = _workers[index];
                 switch(msg.type){
                     case CONSTANTS.msgTypes.request:
-                        var cFunction = _workers[worker._s_w_m_id].cb;
-                        _workers[worker._s_w_m_id].cb = null;
-                        _workers[worker._s_w_m_id].state = CONSTANTS.workerStates.waiting;
-                        _workers[worker._s_w_m_id].resid = msg.resid || null;
-                        if(_workers[worker._s_w_m_id].resid === null){
+                        var cFunction = worker.cb;
+                        worker.cb = null;
+                        worker.state = CONSTANTS.workerStates.waiting;
+                        worker.resid = msg.resid || null;
+                        if(worker.resid === null){
                             //some error occured during request generation
-                            _workers[worker._s_w_m_id].state = CONSTANTS.workerStates.free;
+                            worker.state = CONSTANTS.workerStates.free;
                             checkRequests(); //someone became free...
                         }
-                        cFunction(msg.error,msg.result);
+                        cFunction(msg.error,msg.resid);
                         break;
                     case CONSTANTS.msgTypes.result:
-                        var cFunction = _workers[worker._s_w_m_id].cb;
-                        _workers[worker._s_w_m_id].cb = null;
-                        _workers[worker._s_w_m_id].state = CONSTANTS.workerStates.free;
-                        _workers[worker._s_w_m_id].resid = null;
+                        var cFunction = worker.cb;
+                        worker.cb = null;
+                        worker.state = CONSTANTS.workerStates.free;
+                        worker.resid = null;
                         checkRequests();
                         cFunction(msg.error,msg.result);
                         break;
+                    case CONSTANTS.msgTypes.initialize:
+                        //this arrives when the worker seems ready for initialization
+                        worker.worker.send({command:CONSTANTS.workerCommands.initialize,ip:_parameters.mongoip,port:_parameters.mongoport,db:_parameters.mongodb});
+                        break;
+                    case CONSTANTS.msgTypes.initialized:
+                        worker.state = CONSTANTS.workerStates.free;
+                        console.log('worker '+worker.pid+' is ready for tasks');
+                        break;
+                    case CONSTANTS.msgTypes.info:
+                        console.log(msg.info);
                 }
-            });
+            }
+        }
 
-            worker.send({command:CONSTANTS.workerCommands.initialize,storage:_database});
+        //initialization part
+        for(var i=0;i<_parameters.maxworkers;i++){
+            var debug = false;
+            for(var j = 0;j<process.execArgv.length;j++){
+                if(process.execArgv[j].indexOf('--debug-brk') !== -1){
+                    debug = true;
+                    break;
+                }
+            }
+            if(debug) {
+                //Set an unused port number.
+                process.execArgv.push('--debug-brk=' + (32000+i));
+            }
+            var worker = Child.fork(_parameters.basedir+'/worker/simpleworker.js');
+            _workers.push({pid:worker.pid,worker:worker,state:CONSTANTS.workerStates.initializing,resid:null}) - 1;
+
+            worker.on('message', messageHandling);
         }
         return {
             request : request,

@@ -54,7 +54,7 @@ define([
 
         function getNewCore(project){
             //return new NullPointerCore(new DescriptorCore(new SetCore(new GuidCore(new Core(project)))));
-            return Core(project,{autopersist: true,usertype:'nodejs'});
+            return Core(project,{autopersist: true,usertype:'nodejs',corerel:2});
         }
         function Client(_configuration){
             var _self = this,
@@ -1989,8 +1989,15 @@ define([
                     }
                 }
 
-                DumpMore(_core,nodes,"",'guid',callback);
-
+                //DumpMore(_core,nodes,"",'guid',callback);
+                _database.simpleRequest({command:'dumpMoreNodes',name:_projectName,hash:_core.getHash(_nodes[ROOT_PATH].node),nodes:paths},function(err,resId){
+                    if(err){
+                        callback(err);
+                        _database.simpleResult(resId,callback);
+                    } else {
+                        _database.simpleResult(resId,callback);
+                    }
+                });
             }
             function dumpNodeAsync(path,callback){
                 if(_nodes[path]){

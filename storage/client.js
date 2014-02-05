@@ -626,6 +626,40 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
             }
         }
 
+        function simpleRequest (parameters,callback){
+            ASSERT(typeof callback === 'function');
+            if(socketConnected){
+                var guid = GUID();
+                callbacks[guid] = {
+                    cb: callback,
+                    to: setTimeout(callbackTimeout,100*options.timeout, guid)
+                };
+                socket.emit('simpleRequest',parameters,function(err,resId){
+                    clearTimeout(callbacks[guid].to);
+                    delete callbacks[guid];
+                    callback(err,resId);
+                });
+            } else {
+                callback(new Error(ERROR_DISCONNECTED));
+            }
+        }
+        function simpleResult (resultId,callback){
+            ASSERT(typeof callback === 'function');
+            if(socketConnected){
+                var guid = GUID();
+                callbacks[guid] = {
+                    cb: callback,
+                    to: setTimeout(callbackTimeout,100*options.timeout, guid)
+                };
+                socket.emit('simpleResult',resultId,function(err,result){
+                    clearTimeout(callbacks[guid].to);
+                    delete callbacks[guid];
+                    callback(err,result);
+                });
+            } else {
+                callback(new Error(ERROR_DISCONNECTED));
+            }
+        }
         return {
             openDatabase: openDatabase,
             closeDatabase: closeDatabase,
@@ -635,7 +669,9 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
             getAllowedProjectNames: getAllowedProjectNames,
             getAuthorizationInfo: getAuthorizationInfo,
             deleteProject: deleteProject,
-            openProject: openProject
+            openProject: openProject,
+            simpleRequest: simpleRequest,
+            simpleResult: simpleResult
         };
     }
     return Database;
