@@ -7993,21 +7993,6 @@ if(DEBUG && ArPointList.length > 0){
     
     };
 
-/*
-    AutoRouter.prototype.addRemoveBoxPorts = function( args ){
-        var box = args.box,
-            removePorts = args.remove,
-            addConnectionAreas = args.add;
-
-        if(removePorts)
-            this.router.removePortsFromBox(removePorts, box);
-
-        if(addConnectionAreas)
-            return this.addPort(box, addConnectionAreas);
-        
-    };
-*/
-    
     return AutoRouter;
     
 });
