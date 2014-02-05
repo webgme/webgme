@@ -7,8 +7,10 @@
 "use strict";
 
 define(['js/Constants',
+    'js/RegistryKeys',
     'raphaeljs',
-    'css!/css/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase.ConnectionArea'], function (CONSTANTS) {
+    'css!/css/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase.ConnectionArea'], function (CONSTANTS,
+                                                                                                      REGISTRY_KEYS) {
 
     var DiagramDesignerWidgetDecoratorBaseConnectionArea,
         EVENT_POSTFIX = 'DiagramDesignerWidgetDecoratorBaseConnectionArea',
@@ -18,7 +20,7 @@ define(['js/Constants',
         DISABLED = 'disabled',
         DATA_CONN_AREA_ID = 'CONN_AREA_ID',
         CONN_AREA_SIZE = 8,
-        DIAGRAM_DESIGNER_WIDGET_DECORATOR_DISABLED_CONNECTION_AREAS_REGISTRY_KEY = 'DIAGRAM_DESIGNER_WIDGET_DECORATOR_DISABLED_CONNECTION_AREAS_REGISTRY_KEY';
+        DIAGRAM_DESIGNER_WIDGET_DECORATOR_DISABLED_CONNECTION_AREAS_REGISTRY_KEY = REGISTRY_KEYS.DIAGRAM_DESIGNER_WIDGET_DECORATOR_DISABLED_CONNECTION_AREAS;
 
     DiagramDesignerWidgetDecoratorBaseConnectionArea = function () {
     };
