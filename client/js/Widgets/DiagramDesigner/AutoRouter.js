@@ -7971,7 +7971,7 @@ if(DEBUG && ArPointList.length > 0){
         this.router.setBuffer( Math.floor(min/2) );
     };
     
-    AutoRouter.prototype.setPathCustomPoints = function( args ){ //args.path = [ [x, y], [x2, y2], ... ]
+    AutoRouter.prototype.setPathCustomPoints = function( args ){ //args.points = [ [x, y], [x2, y2], ... ]
         var path = this.paths[args.path],
             points = [],
             i = 0;
