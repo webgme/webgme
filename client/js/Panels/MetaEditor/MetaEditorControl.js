@@ -1616,7 +1616,7 @@ define(['logManager',
 
     MetaEditorControl.prototype._processMetaAspectSheetsRegistry = function () {
         var aspectNode = this._client.getNode(this.metaAspectContainerNodeID),
-            metaAspectSheetsRegistry = aspectNode.getEditableRegistry(MetaEditorConstants.META_SHEET_REGISTRY_KEY) || [],
+            metaAspectSheetsRegistry = aspectNode.getEditableRegistry(REGISTRY_KEYS.META_SHEETS) || [],
             i,
             len,
             sheetID,

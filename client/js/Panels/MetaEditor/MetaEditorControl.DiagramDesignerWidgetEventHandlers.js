@@ -437,7 +437,7 @@ define(['logManager',
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onTabAddClicked = function () {
         var aspectNodeID = this.metaAspectContainerNodeID,
             aspectNode = this._client.getNode(aspectNodeID),
-            metaAspectSheetsRegistry = aspectNode.getEditableRegistry(MetaEditorConstants.META_SHEET_REGISTRY_KEY) || [],
+            metaAspectSheetsRegistry = aspectNode.getEditableRegistry(REGISTRY_KEYS.META_SHEETS) || [],
             i,
             len,
             newSetID,
@@ -479,7 +479,7 @@ define(['logManager',
             }
         }
 
-        this._client.setRegistry(aspectNodeID, MetaEditorConstants.META_SHEET_REGISTRY_KEY, metaAspectSheetsRegistry);
+        this._client.setRegistry(aspectNodeID, REGISTRY_KEYS.META_SHEETS, metaAspectSheetsRegistry);
 
         //force switching to the new sheet
         this._selectedMetaAspectSet = newSetID;
@@ -491,7 +491,7 @@ define(['logManager',
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onTabTitleChanged = function (tabID, oldValue, newValue) {
         var aspectNodeID = this.metaAspectContainerNodeID,
             aspectNode = this._client.getNode(aspectNodeID),
-            metaAspectSheetsRegistry = aspectNode.getEditableRegistry(MetaEditorConstants.META_SHEET_REGISTRY_KEY) || [],
+            metaAspectSheetsRegistry = aspectNode.getEditableRegistry(REGISTRY_KEYS.META_SHEETS) || [],
             i,
             len,
             setID;
@@ -507,7 +507,7 @@ define(['logManager',
                 }
             }
 
-            this._client.setRegistry(aspectNodeID, MetaEditorConstants.META_SHEET_REGISTRY_KEY, metaAspectSheetsRegistry);
+            this._client.setRegistry(aspectNodeID, REGISTRY_KEYS.META_SHEETS, metaAspectSheetsRegistry);
         }
     };
 
@@ -529,7 +529,7 @@ define(['logManager',
             itemsOfAspect = this._metaAspectMembersPerSheet[aspectToDelete],
             aspectNodeID = this.metaAspectContainerNodeID,
             aspectNode = this._client.getNode(aspectNodeID),
-            metaAspectSheetsRegistry = aspectNode.getEditableRegistry(MetaEditorConstants.META_SHEET_REGISTRY_KEY) || [],
+            metaAspectSheetsRegistry = aspectNode.getEditableRegistry(REGISTRY_KEYS.META_SHEETS) || [],
             len,
             gmeID,
             idx,
@@ -572,7 +572,7 @@ define(['logManager',
                 metaAspectSheetsRegistry[i].order = i;
             }
 
-            _client.setRegistry(aspectNodeID, MetaEditorConstants.META_SHEET_REGISTRY_KEY, metaAspectSheetsRegistry);
+            _client.setRegistry(aspectNodeID, REGISTRY_KEYS.META_SHEETS, metaAspectSheetsRegistry);
 
             //finally delete the sheet's SET
             _client.deleteSet(aspectNodeID, aspectToDelete);
@@ -632,7 +632,7 @@ define(['logManager',
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onTabsSorted = function (newTabIDOrder) {
         var aspectNodeID = this.metaAspectContainerNodeID,
             aspectNode = this._client.getNode(aspectNodeID),
-            metaAspectSheetsRegistry = aspectNode.getEditableRegistry(MetaEditorConstants.META_SHEET_REGISTRY_KEY) || [],
+            metaAspectSheetsRegistry = aspectNode.getEditableRegistry(REGISTRY_KEYS.META_SHEETS) || [],
             i,
             j,
             setID;
@@ -658,7 +658,7 @@ define(['logManager',
         });
 
         this._client.startTransaction();
-        this._client.setRegistry(aspectNodeID, MetaEditorConstants.META_SHEET_REGISTRY_KEY, metaAspectSheetsRegistry);
+        this._client.setRegistry(aspectNodeID, REGISTRY_KEYS.META_SHEETS, metaAspectSheetsRegistry);
         this._client.completeTransaction();
     };
 

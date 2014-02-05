@@ -221,7 +221,7 @@ define(['jquery',
             'order': 0,
             'title': 'META'};
 
-        _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, MetaEditorConstants.META_SHEET_REGISTRY_KEY, [defaultMetaSheetDesc]);
+        _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, REGISTRY_KEYS.META_SHEETS, [defaultMetaSheetDesc]);
 
         //add the FCO to the default META sheet
         _client.addMember(CONSTANTS.PROJECT_ROOT_ID, FCO_ID, defaultMetaSheetID);

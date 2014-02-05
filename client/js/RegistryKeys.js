@@ -26,9 +26,14 @@ define([], function () {
             LINE_CUSTOM_POINTS: 'lineCustomPoints',  //custom routing points of a line
 
         /*
-         *
+         *  MISC
          */
             PROJECT_REGISTRY: "ProjectRegistry",
-            DISPLAY_FORMAT: "DisplayFormat"
+            DISPLAY_FORMAT: "DisplayFormat",
+
+        /*
+         * META_SHEETS_METADATA (title, order, setID, etc)
+         */
+            META_SHEETS: 'MetaSheets'
     };
 });
