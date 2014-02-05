@@ -21,7 +21,6 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
     };
 
     ConnectionRouteManager3.prototype.initialize = function () {
-        this._initialized = false;
         this._clearGraph();
 
         //Adding event listeners
@@ -157,6 +156,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         this._autorouterPaths = {};
         this._autorouterBoxRotation = {};//Define container that will map obj+subID -> rotation
         this.endpointConnectionAreaInfo = {};
+        this.initialized = false;
     };
 
     ConnectionRouteManager3.prototype._initializeGraph = function () {
