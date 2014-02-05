@@ -21,7 +21,8 @@ define(['logManager',
         WIDGET_NAME = 'DiagramDesigner',
         SRC_POINTER_NAME = CONSTANTS.POINTER_SOURCE,
         DST_POINTER_NAME = CONSTANTS.POINTER_TARGET,
-        DRAG_PARAMS_MULTI_TAB_MEMBER_LIST_CONTAINER_ID = 'DRAG_PARAMS_MULTI_TAB_MEMBER_LIST_CONTAINER_ID';
+        DRAG_PARAMS_MULTI_TAB_MEMBER_LIST_CONTAINER_ID = 'DRAG_PARAMS_MULTI_TAB_MEMBER_LIST_CONTAINER_ID',
+        MEMBER_POSITION_REGISTRY_KEY = REGISTRY_KEYS.POSITION;
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase = function (options) {
         var self = this;
@@ -232,7 +233,7 @@ define(['logManager',
 
             //#2 - get pointer lists and display a tab for each one
             orderedMemberListInfo = this.getOrderedMemberListInfo(memberListContainerObj) || [];
-            memberListMemberPositionsRegistryKey = this.getMemberListMemberPositionsRegistryKey();
+            memberListMemberPositionsRegistryKey = MEMBER_POSITION_REGISTRY_KEY;
 
             if (orderedMemberListInfo.length > 0) {
                 for (i = 0; i < orderedMemberListInfo.length; i += 1) {
@@ -342,10 +343,6 @@ define(['logManager',
         this.logger.warning('DiagramDesignerWidgetMultiTabMemberListControllerBase.getOrderedMemberListInfo(memberListContainerObject) is not overridden for object "' + memberListContainerObject + '", returning default...');
 
         return undefined;
-    };
-
-    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.getMemberListMemberPositionsRegistryKey = function () {
-        return CONSTANTS.MEMBER_POSITION_REGISTRY_KEY;
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.getMemberListSetsRegistryKey = function () {
@@ -459,7 +456,7 @@ define(['logManager',
             componentID,
             posX,
             posY,
-            memberListMemberPositionRegistryKey = this.getMemberListMemberPositionsRegistryKey();
+            memberListMemberPositionRegistryKey = MEMBER_POSITION_REGISTRY_KEY;
 
         //check to see it self drop and reposition or dropping from somewhere else
         if (params &&

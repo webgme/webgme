@@ -170,7 +170,7 @@ define(['logManager',
 
                     posX = position.x + params.positions[i].x;
                     posY = position.y + params.positions[i].y;
-                    _client.setMemberRegistry(aspectNodeID, i, this._selectedMetaAspectSet, CONSTANTS.MEMBER_POSITION_REGISTRY_KEY, {'x': posX, 'y': posY} );
+                    _client.setMemberRegistry(aspectNodeID, i, this._selectedMetaAspectSet, REGISTRY_KEYS.POSITION, {'x': posX, 'y': posY} );
 
                     componentID = this._GMEID2ComponentID[i];
 
@@ -216,12 +216,12 @@ define(['logManager',
                         }
 
                         _client.addMember(aspectNodeID, componentID, this._selectedMetaAspectSet);
-                        _client.setMemberRegistry(aspectNodeID, componentID, this._selectedMetaAspectSet, CONSTANTS.MEMBER_POSITION_REGISTRY_KEY, {'x': posX, 'y': posY} );
+                        _client.setMemberRegistry(aspectNodeID, componentID, this._selectedMetaAspectSet, REGISTRY_KEYS.POSITION, {'x': posX, 'y': posY} );
 
                         //if this item has not been part of the META Aspect at all, add it
                         if (this._metaAspectMembersAll.indexOf(componentID) === -1) {
                             _client.addMember(aspectNodeID, componentID, MetaEditorConstants.META_ASPECT_SET_NAME);
-                            _client.setMemberRegistry(aspectNodeID, componentID, MetaEditorConstants.META_ASPECT_SET_NAME, CONSTANTS.MEMBER_POSITION_REGISTRY_KEY, {'x': posX, 'y': posY} );
+                            _client.setMemberRegistry(aspectNodeID, componentID, MetaEditorConstants.META_ASPECT_SET_NAME, REGISTRY_KEYS.POSITION, {'x': posX, 'y': posY} );
                         }
                     }
                 }
@@ -415,7 +415,8 @@ define(['logManager',
             i,
             len,
             newSetID,
-            componentID;
+            componentID,
+            pos;
 
         metaAspectSheetsRegistry.sort(function (a, b) {
             if (a.order < b.order) {
@@ -444,12 +445,21 @@ define(['logManager',
         metaAspectSheetsRegistry.push(newSheetDesc);
 
         //migrating projects that already have META aspect members but did not have sheets before
+        //TODO: not needed in the future, but before version 0.4.3 users were able to create META definitions without meta sheets
+        //TODO: that needed to be carried over
+        //TODO: can be removed sometimes in the future
         if (metaAspectSheetsRegistry.length === 1) {
             len = this._metaAspectMembersAll.length;
+            pos = 100;
             while (len--) {
                 componentID = this._metaAspectMembersAll[len];
                 this._client.addMember(aspectNodeID, componentID, newSetID);
-                this._client.setMemberRegistry(aspectNodeID, componentID, newSetID, CONSTANTS.MEMBER_POSITION_REGISTRY_KEY, {'x': this._metaAspectMembersCoordinatesGlobal[componentID].x, 'y': this._metaAspectMembersCoordinatesGlobal[componentID].y} );
+                if (this._metaAspectMembersCoordinatesGlobal[componentID]) {
+                    this._client.setMemberRegistry(aspectNodeID, componentID, newSetID, REGISTRY_KEYS.POSITION, {'x': this._metaAspectMembersCoordinatesGlobal[componentID].x, 'y': this._metaAspectMembersCoordinatesGlobal[componentID].y} );
+                } else {
+                    this._client.setMemberRegistry(aspectNodeID, componentID, newSetID, REGISTRY_KEYS.POSITION, {'x': pos, 'y': pos} );
+                    pos += 30;
+                }
             }
         }
 

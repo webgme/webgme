@@ -52,9 +52,7 @@ define(['underscore', 'common/Constants'], function (underscore, COMMON_CONSTANT
                             INHERITANCE: 'inheritance'}
         },
 
-        DISPLAY_FORMAT_ATTRIBUTE_MARKER: '$',
-
-        MEMBER_POSITION_REGISTRY_KEY: 'MemberPosition'
+        DISPLAY_FORMAT_ATTRIBUTE_MARKER: '$'
     });
 
 
