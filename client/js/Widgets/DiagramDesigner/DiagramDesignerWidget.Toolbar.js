@@ -109,6 +109,12 @@ define(['./DiagramDesignerWidget.OperatingModes',
                 this.toolbarItems.ddbtnConnectionArrowStart = toolbar.addDropDownButton({ "title": "Line start marker", "icon": "icon-arrow-left", "menuClass": "no-min-width" });
                 this.toolbarItems.ddbtnConnectionPattern = toolbar.addDropDownButton({ "title": "Line pattern", "icon": "icon-minus", "menuClass": "no-min-width" });
                 this.toolbarItems.ddbtnConnectionArrowEnd = toolbar.addDropDownButton({ "title": "Line end marker","icon": "icon-arrow-right", "menuClass": "no-min-width" });
+
+                this.toolbarItems.ddbtnConnectionLineWidth = toolbar.addDropDownButton({
+                    "title": "Line width",
+                    "icon": btnIconBase.clone().css('background-image', 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAAK3RFWHRDcmVhdGlvbiBUaW1lAFdlZCA1IEZlYiAyMDE0IDE1OjE0OjQ2IC0wNjAw56MnmwAAAAd0SU1FB94CBRURAg7EVwoAAAAJcEhZcwAACxIAAAsSAdLdfvwAAAAEZ0FNQQAAsY8L/GEFAAAAKUlEQVR42mP8z0AeYCJTHwMLiGBkYCDJYqBiRsah41SybRwJfhxCgQMAmmIKGzUyxp0AAAAASUVORK5CYII=)'),
+                    "menuClass": "no-min-width" });
+
                 this.toolbarItems.ddbtnConnectionLineType = toolbar.addDropDownButton({
                     "title": "Line type",
                     "icon": btnIconBase.clone().css('background-image', 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAIAAACQKrqGAAAAK3RFWHRDcmVhdGlvbiBUaW1lAEZyaSA2IERlYyAyMDEzIDE1OjE1OjUyIC0wNjAwvQqmVQAAAAd0SU1FB90MBhURF0gI0MAAAAAJcEhZcwAACxIAAAsSAdLdfvwAAAAEZ0FNQQAAsY8L/GEFAAAABnRSTlMA/wD/AP83WBt9AAAAuUlEQVR42mP8//8/A3GAiUh1KEp//fqFXykLhCorK3v+/LmkpGRXVxdOtUC35ufnb9myBcjYuHEjkP0fB2AGYhsbGx8fH6A2dXX1P3/+LFu2zMHBAYtbP3365OvrC+cD9Xz+/Pno0aPYHYAGTpw4gekMoAiWwDI3NxcQENiwYQNcZNOmTYKCggy4PFFYWAhUAfFrQUEBkMGIJ7bKy8ufPn0qLS3d2dkJ5OJTCgTAAGFhgYY9AaVkpgEAIAumySCHw2MAAAAASUVORK5CYII=)'),
@@ -181,10 +187,28 @@ define(['./DiagramDesignerWidget.OperatingModes',
                     }
                 });
 
+                //fill linewidth dropdown
+                var createWidthMenuItem = function (width) {
+                    return { "title": width,
+                        "icon": self._createLineStyleMenuItem(width, null, DiagramDesignerWidgetConstants.LINE_PATTERNS.SOLID, null, null),
+                        "data": {'width': width},
+                        "clickFn": function (data) {
+                            var p = {};
+                            p[DiagramDesignerWidgetConstants.LINE_WIDTH] = data.width;
+                            self._setConnectionProperty(p);
+                        }
+                    };
+                };
+
+                for (it = 1; it < 10; it += 1) {
+                    this.toolbarItems.ddbtnConnectionLineWidth.addButton(createWidthMenuItem(it));
+                }
+
                 this.toolbarItems.ddbtnConnectionArrowStart.enabled(false);
                 this.toolbarItems.ddbtnConnectionPattern.enabled(false);
                 this.toolbarItems.ddbtnConnectionArrowEnd.enabled(false);
                 this.toolbarItems.ddbtnConnectionLineType.enabled(false);
+                this.toolbarItems.ddbtnConnectionLineWidth.enabled(false);
                 /************** END OF - VISUAL STYLE ARROWS *****************/
             }
 

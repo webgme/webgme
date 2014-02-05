@@ -892,6 +892,10 @@ define(['logManager',
             if (this.toolbarItems.ddbtnConnectionLineType) {
                 this.toolbarItems.ddbtnConnectionLineType.enabled(connectionSelected);
             }
+
+            if (this.toolbarItems.ddbtnConnectionLineWidth) {
+                this.toolbarItems.ddbtnConnectionLineWidth.enabled(connectionSelected);
+            }
         }
 
         this.onSelectionChanged(selectedIds);

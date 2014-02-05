@@ -661,6 +661,7 @@ define(['logManager',
         this.designerCanvas.toolbarItems.ddbtnConnectionPattern.enabled(onlyConnectionSelected);
         this.designerCanvas.toolbarItems.ddbtnConnectionArrowEnd.enabled(onlyConnectionSelected);
         this.designerCanvas.toolbarItems.ddbtnConnectionLineType.enabled(onlyConnectionSelected);
+        this.designerCanvas.toolbarItems.ddbtnConnectionLineWidth.enabled(onlyConnectionSelected);
 
         this.$btnConnectionRemoveSegmentPoints.enabled(onlyConnectionSelected);
 
@@ -904,6 +905,7 @@ define(['logManager',
                 setObjRegistry(id, CONSTANTS.LINE_STYLE.END_ARROW, REGISTRY_KEYS.LINE_END_ARROW);
                 setObjRegistry(id, CONSTANTS.LINE_STYLE.TYPE, REGISTRY_KEYS.LINE_TYPE);
                 setObjRegistry(id, CONSTANTS.LINE_STYLE.PATTERN, REGISTRY_KEYS.LINE_STYLE);
+                setObjRegistry(id, CONSTANTS.LINE_STYLE.WIDTH, REGISTRY_KEYS.LINE_WIDTH);
             }
 
             this._client.completeTransaction();
