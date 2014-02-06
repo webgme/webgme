@@ -1786,9 +1786,19 @@ define([
                 var getAttribute = function(name){
                     return _core.getAttribute(_nodes[_id].node,name);
                 };
+                var getOwnAttribute = function(name){
+                    return _core.getOwnAttribute(_nodes[_id].node,name);
+                };
 
                 var getEditableAttribute = function(name){
                     var value = _core.getAttribute(_nodes[_id].node,name);
+                    if(typeof value === 'object'){
+                        return JSON.parse(JSON.stringify(value));
+                    }
+                    return value;
+                };
+                var getOwnEditableAttribute = function(name){
+                    var value = _core.getOwnAttribute(_nodes[_id].node,name);
                     if(typeof value === 'object'){
                         return JSON.parse(JSON.stringify(value));
                     }
@@ -1798,9 +1808,19 @@ define([
                 var getRegistry = function(name){
                     return _core.getRegistry(_nodes[_id].node,name);
                 };
+                var getOwnRegistry = function(name){
+                    return _core.getOwnRegistry(_nodes[_id].node,name);
+                };
 
                 var getEditableRegistry = function(name){
                     var value = _core.getRegistry(_nodes[_id].node,name);
+                    if(typeof value === 'object'){
+                        return JSON.parse(JSON.stringify(value));
+                    }
+                    return value;
+                };
+                var getOwnEditableRegistry = function(name){
+                    var value = _core.getOwnRegistry(_nodes[_id].node,name);
                     if(typeof value === 'object'){
                         return JSON.parse(JSON.stringify(value));
                     }
@@ -1819,9 +1839,16 @@ define([
                 var getAttributeNames = function(){
                     return _core.getAttributeNames(_nodes[_id].node);
                 };
+                var getOwnAttributeNames = function(){
+                    return _core.getOwnAttributeNames(_nodes[_id].node);
+                };
+
 
                 var getRegistryNames = function(){
                     return _core.getRegistryNames(_nodes[_id].node);
+                };
+                var getOwnRegistryNames = function(){
+                    return _core.getOwnRegistryNames(_nodes[_id].node);
                 };
 
                 //SET
@@ -1923,10 +1950,16 @@ define([
                         getEditableAttribute: getEditableAttribute,
                         getRegistry : getRegistry,
                         getEditableRegistry : getEditableRegistry,
+                        getOwnAttribute : getOwnAttribute,
+                        getOwnEditableAttribute: getOwnEditableAttribute,
+                        getOwnRegistry : getOwnRegistry,
+                        getOwnEditableRegistry : getOwnEditableRegistry,
                         getPointer : getPointer,
                         getPointerNames : getPointerNames,
                         getAttributeNames : getAttributeNames,
                         getRegistryNames : getRegistryNames,
+                        getOwnAttributeNames : getOwnAttributeNames,
+                        getOwnRegistryNames : getOwnRegistryNames,
 
                         //SetFunctions
                         getMemberIds               : getMemberIds,

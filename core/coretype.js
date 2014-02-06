@@ -227,6 +227,9 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 
 			return Object.keys(merged);
 		};
+        core.getOwnAttributeNames = function(node){
+            return oldcore.getAttributeNames(node);
+        };
 
 		core.getRegistryNames = function(node) {
 			ASSERT(isValidNode(node));
@@ -245,6 +248,9 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 
 			return Object.keys(merged);
 		};
+        core.getOwnRegistryNames = function(node){
+            return oldcore.getRegistryNames(node);
+        };
 
 		core.getAttribute = function(node, name) {
 			ASSERT(isValidNode(node));
@@ -256,6 +262,9 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 
 			return value;
 		};
+        core.getOwnAttribute = function(node,name) {
+            return oldcore.getAttribute(node,name);
+        };
 
 		core.getRegistry = function(node, name) {
 			ASSERT(isValidNode(node));
@@ -267,6 +276,10 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 
 			return value;
 		};
+        core.getOwnRegistry = function(node,name) {
+            return oldcore.getRegistry(node,name);
+        };
+
 
 		// ----- pointers
 
