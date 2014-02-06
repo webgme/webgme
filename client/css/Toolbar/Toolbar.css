@@ -59,6 +59,14 @@
   .webgme-toolbar .dropdown-menu li .iCheckBox,
   .webgme-toolbar-ext .dropdown-menu li .iCheckBox {
     top: 1px; }
+  .webgme-toolbar .toolbar-colorpicker,
+  .webgme-toolbar-ext .toolbar-colorpicker {
+    display: inline-block; }
+    .webgme-toolbar .toolbar-colorpicker input,
+    .webgme-toolbar-ext .toolbar-colorpicker input {
+      margin: 0;
+      width: 20px;
+      color: rgba(0, 0, 0, 0) !important; }
 
 .webgme-toolbar-ext {
   position: absolute;

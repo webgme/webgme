@@ -80,6 +80,16 @@ $webgme-toolbar-ext-toggle-hover-background-color: #E6E6E6;
       }
     }
   }
+
+  .toolbar-colorpicker {
+    display: inline-block;
+
+    input {
+      margin: 0;
+      width: 20px;
+      color: rgba(0,0,0,0) !important;
+    }
+  }
 }
 
 .webgme-toolbar-ext {

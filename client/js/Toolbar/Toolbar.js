@@ -15,6 +15,7 @@ define(['logManager',
     './ToolbarLabel',
     './ToolbarCheckBox',
     './ToolbarDropDownButton',
+    './ToolbarColorPicker',
     'css!/css/Toolbar/Toolbar'], function (logManager,
                                            ToolbarButton,
                                            ToolbarSeparator,
@@ -23,7 +24,8 @@ define(['logManager',
                                            ToolbarTextBox,
                                            ToolbarLabel,
                                            ToolbarCheckBox,
-                                           ToolbarDropDownButton) {
+                                           ToolbarDropDownButton,
+                                           ToolbarColorPicker) {
 
     var _toolBar,
         TOOLBAR_CLASS = 'webgme-toolbar',
@@ -118,6 +120,12 @@ define(['logManager',
 
     Toolbar.prototype.addDropDownButton = function (params) {
         var btn = new ToolbarDropDownButton(params);
+        this.add(btn);
+        return btn;
+    };
+
+    Toolbar.prototype.addColorPicker = function (params) {
+        var btn = new ToolbarColorPicker(params);
         this.add(btn);
         return btn;
     };
