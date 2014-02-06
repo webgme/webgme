@@ -1078,8 +1078,12 @@ define(['logManager',
         this._client.startTransaction();
         while(i--) {
             gmeID = this._ComponentID2GmeID[selectedIds[i]];
-            
-            this._client.setRegistry(gmeID, regKey, color);
+
+            if (color) {
+                this._client.setRegistry(gmeID, regKey, color);
+            } else {
+                this._client.delRegistry(gmeID, regKey);
+            }
         }
         this._client.completeTransaction();
     };

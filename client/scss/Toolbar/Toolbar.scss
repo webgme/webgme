@@ -89,6 +89,17 @@ $webgme-toolbar-ext-toggle-hover-background-color: #E6E6E6;
       width: 20px;
       color: rgba(0,0,0,0) !important;
     }
+
+    &.input-append,
+    &.input-prepend {
+      margin-bottom: 0px !important;
+      
+      .add-on {
+        i:hover {
+          cursor: pointer;
+        }
+      }
+    }
   }
 }
 

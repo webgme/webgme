@@ -679,7 +679,11 @@ define(['logManager',
         while(i--) {
             gmeID = this._ComponentID2GMEID[selectedIds[i]];
 
-            this._client.setMemberRegistry(this.metaAspectContainerNodeID, gmeID, MetaEditorConstants.META_ASPECT_SET_NAME, regKey, color);
+            if (color) {
+                this._client.setMemberRegistry(this.metaAspectContainerNodeID, gmeID, MetaEditorConstants.META_ASPECT_SET_NAME, regKey, color);
+            } else {
+                this._client.delMemberRegistry(this.metaAspectContainerNodeID, gmeID, MetaEditorConstants.META_ASPECT_SET_NAME, regKey);
+            }
         }
         this._client.completeTransaction();
     };

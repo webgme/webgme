@@ -113,16 +113,24 @@ define(['js/Constants',
 
         if (this.fillColor) {
             this.$el.css({'background-color': this.fillColor});
+        } else {
+            this.$el.css({'background-color': ''});
         }
 
         if (this.borderColor) {
             this.$el.css({'border-color': this.borderColor,
                           'box-shadow': '0px 0px 7px 0px ' + this.borderColor + ' inset'});
             this.skinParts.$name.css({'border-color': this.borderColor});
+        } else {
+            this.$el.css({'border-color': '',
+                'box-shadow': ''});
+            this.skinParts.$name.css({'border-color': ''});
         }
 
         if (this.textColor) {
             this.$el.css({'color': this.textColor});
+        } else {
+            this.$el.css({'color': ''});
         }
     };
 

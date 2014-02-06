@@ -67,6 +67,14 @@
       margin: 0;
       width: 20px;
       color: rgba(0, 0, 0, 0) !important; }
+    .webgme-toolbar .toolbar-colorpicker.input-append, .webgme-toolbar .toolbar-colorpicker.input-prepend,
+    .webgme-toolbar-ext .toolbar-colorpicker.input-append,
+    .webgme-toolbar-ext .toolbar-colorpicker.input-prepend {
+      margin-bottom: 0px !important; }
+      .webgme-toolbar .toolbar-colorpicker.input-append .add-on i:hover, .webgme-toolbar .toolbar-colorpicker.input-prepend .add-on i:hover,
+      .webgme-toolbar-ext .toolbar-colorpicker.input-append .add-on i:hover,
+      .webgme-toolbar-ext .toolbar-colorpicker.input-prepend .add-on i:hover {
+        cursor: pointer; }
 
 .webgme-toolbar-ext {
   position: absolute;
