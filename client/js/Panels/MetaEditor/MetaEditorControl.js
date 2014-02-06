@@ -7,7 +7,8 @@ define(['logManager',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     './MetaEditorControl.DiagramDesignerWidgetEventHandlers',
     './MetaRelations',
-    './MetaEditorConstants'], function (logManager,
+    './MetaEditorConstants',
+    'js/Utils/PreferencesHelper'], function (logManager,
                                                         util,
                                                         CONSTANTS,
                                                         GMEConcepts,
@@ -16,7 +17,8 @@ define(['logManager',
                                                         DiagramDesignerWidgetConstants,
                                                         MetaEditorControlDiagramDesignerWidgetEventHandlers,
                                                         MetaRelations,
-                                                        MetaEditorConstants) {
+                                                        MetaEditorConstants,
+                                                        PreferencesHelper) {
 
     "use strict";
 
@@ -86,7 +88,9 @@ define(['logManager',
     MetaEditorControl.prototype._loadMetaAspectContainerNode = function () {
         var self = this;
 
-        this.logger.debug("_loadMetaAspectContainerNode: '" + META_RULES_CONTAINER_NODE_ID + "'");
+        this.metaAspectContainerNodeID = META_RULES_CONTAINER_NODE_ID;
+
+        this.logger.debug("_loadMetaAspectContainerNode: '" + this.metaAspectContainerNodeID + "'");
 
         this._initializeSelectedSheet();
 
@@ -94,8 +98,6 @@ define(['logManager',
         if (this._territoryId) {
             this._client.removeUI(this._territoryId);
         }
-
-        this.metaAspectContainerNodeID = META_RULES_CONTAINER_NODE_ID;
 
         //put new node's info into territory rules
         this._selfPatterns = {};
@@ -295,7 +297,9 @@ define(['logManager',
         }
 
         //check all other nodes for position change
-        diff = positionsUpdated;//_.intersection(this._selectedMetaAspectSheetMembers, selectedSheetMembers);
+        //or any other change that could have happened (local registry modifications)
+        //diff = positionsUpdated;//_.intersection(this._selectedMetaAspectSheetMembers, selectedSheetMembers);
+        diff = _.intersection(this._selectedMetaAspectSheetMembers, selectedSheetMembers);
         len = diff.length;
         while (len--) {
             gmeID = diff[len];
@@ -348,6 +352,9 @@ define(['logManager',
             objDesc.control = this;
             objDesc.metaInfo = {};
             objDesc.metaInfo[CONSTANTS.GME_ID] = gmeID;
+            //each meta specific registry customization will be stored in the MetaContainer node's main META SET (MetaEditorConstants.META_ASPECT_SET_NAME)
+            objDesc.preferencesHelper = PreferencesHelper.getPreferences([{'containerID': this.metaAspectContainerNodeID,
+                                                                            'setID': MetaEditorConstants.META_ASPECT_SET_NAME }]);
 
             uiComponent = this.diagramDesigner.createDesignerItem(objDesc);
 
@@ -790,6 +797,8 @@ define(['logManager',
             decClass = this._client.decoratorManager.getDecoratorForWidget(META_DECORATOR, WIDGET_NAME);
 
             objDesc.decoratorClass = decClass;
+            objDesc.preferencesHelper = PreferencesHelper.getPreferences([{'containerID': this.metaAspectContainerNodeID,
+                'setID': MetaEditorConstants.META_ASPECT_SET_NAME }]);
 
             this.diagramDesigner.updateDesignerItem(componentID, objDesc);
 

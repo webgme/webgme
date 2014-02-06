@@ -19,6 +19,7 @@ define(['logManager',
     'js/PanelManager/PanelManager',
     './WebGME.History',
     'js/Utils/METAAspectHelper',
+    'js/Utils/PreferencesHelper',
     'js/ConstraintManager/ConstraintManager'], function (logManager,
                                             CONFIG,
                                             packagejson,
@@ -34,6 +35,7 @@ define(['logManager',
                                             PanelManager,
                                             WebGMEHistory,
                                             METAAspectHelper,
+                                            PreferencesHelper,
                                             ConstraintManager) {
 
     var npmJSON = JSON.parse(packagejson);
@@ -67,6 +69,7 @@ define(['logManager',
             GMEVisualConcepts.initialize(client);
 
             METAAspectHelper.initialize(client);
+            PreferencesHelper.initialize(client);
 
             ExportManager.initialize(client);
             ImportManager.initialize(client);

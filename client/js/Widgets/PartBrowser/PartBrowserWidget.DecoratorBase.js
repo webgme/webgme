@@ -1,25 +1,19 @@
 "use strict";
 
-define(['logManager',
-        'js/Decorators/DecoratorBase.Colors'], function (logManager,
-                                                          DecoratorBaseColors) {
+define(['logManager'], function (logManager) {
 
     var PartBrowserWidgetDecoratorBase,
         DECORATOR_ID = "PartBrowserWidgetDecoratorBase";
 
     PartBrowserWidgetDecoratorBase = function (params) {
-        DecoratorBaseColors.apply(this, []);
-
         this.logger = params.logger || logManager.create(this.DECORATORID);
-
+        this.preferencesHelper = params.preferencesHelper;
         this.skinParts = {};
 
         this._initialize();
 
         this.logger.debug("Created");
     };
-
-    _.extend(PartBrowserWidgetDecoratorBase.prototype, DecoratorBaseColors.prototype);
 
     PartBrowserWidgetDecoratorBase.prototype.DECORATORID = DECORATOR_ID;
 

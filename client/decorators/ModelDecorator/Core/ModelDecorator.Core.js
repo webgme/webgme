@@ -109,16 +109,29 @@ define(['js/Constants',
     };
 
     ModelDecoratorCore.prototype._updateColors = function () {
-        //get the color info from the registry using js/DecoratorBase.Colors.js support
-        this.getNodeColorsFromRegistry();
-        this.$el.css({'background-color': this.fillColor,
-                      'border-color': this.lineColor,
-                      'color': this.textColor,
-                      'box-shadow': '0px 0px 7px 0px ' + this.lineColor + ' inset'});
+        this._getNodeColorsFromRegistry();
 
-        this.skinParts.$name.css({'border-color': this.lineColor});
+        if (this.fillColor) {
+            this.$el.css({'background-color': this.fillColor});
+        }
+
+        if (this.borderColor) {
+            this.$el.css({'border-color': this.borderColor,
+                          'box-shadow': '0px 0px 7px 0px ' + this.borderColor + ' inset'});
+            this.skinParts.$name.css({'border-color': this.borderColor});
+        }
+
+        if (this.textColor) {
+            this.$el.css({'color': this.textColor});
+        }
     };
 
+    ModelDecoratorCore.prototype._getNodeColorsFromRegistry = function () {
+        var objID = this._metaInfo[CONSTANTS.GME_ID];
+        this.fillColor = this.preferencesHelper.getRegistry(objID, REGISTRY_KEYS.COLOR, true);
+        this.borderColor = this.preferencesHelper.getRegistry(objID, REGISTRY_KEYS.BORDER_COLOR, true);
+        this.textColor = this.preferencesHelper.getRegistry(objID, REGISTRY_KEYS.TEXT_COLOR, true);
+    };
 
     /***** UPDATE THE NAME OF THE NODE *****/
     ModelDecoratorCore.prototype._updateName = function () {

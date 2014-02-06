@@ -96,6 +96,18 @@ define(['logManager',
             self._onTabsSorted(newTabIDOrder);
         };
 
+        this.diagramDesigner.onSelectionFillColorChanged = function (selectedElements, color) {
+            self._onSelectionFillColorChanged(selectedElements, color);
+        };
+
+        this.diagramDesigner.onSelectionBorderColorChanged = function (selectedElements, color) {
+            self._onSelectionBorderColorChanged(selectedElements, color);
+        };
+
+        this.diagramDesigner.onSelectionTextColorChanged = function (selectedElements, color) {
+            self._onSelectionTextColorChanged(selectedElements, color);
+        };
+
         this.logger.debug("attachDesignerCanvasEventHandlers finished");
     };
 
@@ -643,6 +655,32 @@ define(['logManager',
 
         this._client.startTransaction();
         this._client.setRegistry(aspectNodeID, REGISTRY_KEYS.META_SHEETS, metaAspectSheetsRegistry);
+        this._client.completeTransaction();
+    };
+
+
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionFillColorChanged = function (selectedElements, color) {
+        this._onSelectionSetColor(selectedElements, color, REGISTRY_KEYS.COLOR);
+    };
+
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionBorderColorChanged = function (selectedElements, color) {
+        this._onSelectionSetColor(selectedElements, color, REGISTRY_KEYS.BORDER_COLOR);
+    };
+
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionTextColorChanged = function (selectedElements, color) {
+        this._onSelectionSetColor(selectedElements, color, REGISTRY_KEYS.TEXT_COLOR);
+    };
+
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionSetColor = function (selectedIds, color, regKey) {
+        var i = selectedIds.length,
+            gmeID;
+
+        this._client.startTransaction();
+        while(i--) {
+            gmeID = this._ComponentID2GMEID[selectedIds[i]];
+
+            this._client.setMemberRegistry(this.metaAspectContainerNodeID, gmeID, MetaEditorConstants.META_ASPECT_SET_NAME, regKey, color);
+        }
         this._client.completeTransaction();
     };
 

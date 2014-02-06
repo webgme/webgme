@@ -7,14 +7,16 @@ define(['logManager',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     './ModelEditorControl.DiagramDesignerWidgetEventHandlers',
     'js/Utils/GMEConcepts',
-    'js/Utils/GMEVisualConcepts'], function (logManager,
+    'js/Utils/GMEVisualConcepts',
+    'js/Utils/PreferencesHelper'], function (logManager,
                                                         CONSTANTS,
                                                         nodePropertyNames,
                                                         REGISTRY_KEYS,
                                                         DiagramDesignerWidgetConstants,
                                                         ModelEditorControlDiagramDesignerWidgetEventHandlers,
                                                         GMEConcepts,
-                                                        GMEVisualConcepts) {
+                                                        GMEVisualConcepts,
+                                                        PreferencesHelper) {
 
     var ModelEditorControl,
         GME_ID = "GME_ID",
@@ -518,6 +520,7 @@ define(['logManager',
                         objDesc.control = this;
                         objDesc.metaInfo = {};
                         objDesc.metaInfo[CONSTANTS.GME_ID] = gmeID;
+                        objDesc.preferencesHelper = PreferencesHelper.getPreferences();
 
                         uiComponent = this.designerCanvas.createDesignerItem(objDesc);
 
@@ -610,6 +613,7 @@ define(['logManager',
                                 decClass = this._getItemDecorator(objDesc.decorator);
 
                                 objDesc.decoratorClass = decClass;
+                                objDesc.preferencesHelper = PreferencesHelper.getPreferences();
 
                                 this.designerCanvas.updateDesignerItem(componentID, objDesc);
                             }

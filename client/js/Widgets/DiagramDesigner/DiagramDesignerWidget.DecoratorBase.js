@@ -1,10 +1,8 @@
 "use strict";
 
 define(['logManager',
-        'js/Decorators/DecoratorBase.Colors',
         './DiagramDesignerWidget.Constants',
         './DiagramDesignerWidget.DecoratorBase.ConnectionArea'], function (logManager,
-                                                        DecoratorBaseColors,
                                                         DiagramDesignerWidgetConstants,
                                                         DiagramDesignerWidgetDecoratorBaseConnectionArea) {
 
@@ -13,9 +11,8 @@ define(['logManager',
 
     DiagramDesignerWidgetDecoratorBase = function (params) {
 
-        DecoratorBaseColors.apply(this, [{defaultFillColor: '#ECECEC'}]);
-
         this.hostDesignerItem = params.host;
+        this.preferencesHelper = params.preferencesHelper;
         this.logger = params.logger || logManager.create(this.DECORATORID);
 
         this.skinParts = {};
@@ -27,7 +24,6 @@ define(['logManager',
         this.logger.debug("Created");
     };
 
-    _.extend(DiagramDesignerWidgetDecoratorBase.prototype, DecoratorBaseColors.prototype);
     _.extend(DiagramDesignerWidgetDecoratorBase.prototype, DiagramDesignerWidgetDecoratorBaseConnectionArea.prototype);
 
     DiagramDesignerWidgetDecoratorBase.prototype.DECORATORID = DECORATOR_ID;

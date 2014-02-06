@@ -168,13 +168,28 @@ define(['js/Constants',
     };
 
     MetaDecoratorDiagramDesignerWidget.prototype._updateColors = function () {
-        //get the color info from the registry using js/DecoratorBase.Colors.js support
-        this.getNodeColorsFromRegistry();
-        this.$el.css({'background-color': this.fillColor,
-                      'border-color': this.lineColor,
-                      'color': this.textColor});
+        this._getNodeColorsFromRegistry();
 
-        this._skinParts.$name.css({'border-color': this.lineColor});
+        if (this.fillColor) {
+            this.$el.css({'background-color': this.fillColor});
+        }
+
+        if (this.borderColor) {
+            this.$el.css({'border-color': this.borderColor});
+            this._skinParts.$name.css({'border-color': this.borderColor});
+        }
+
+        if (this.textColor) {
+            this.$el.css({'color': this.textColor});
+        }
+    };
+
+    MetaDecoratorDiagramDesignerWidget.prototype._getNodeColorsFromRegistry = function () {
+        var objID = this._metaInfo[CONSTANTS.GME_ID];
+
+        this.fillColor = this.preferencesHelper.getRegistry(objID, REGISTRY_KEYS.COLOR, false);
+        this.borderColor = this.preferencesHelper.getRegistry(objID, REGISTRY_KEYS.BORDER_COLOR, false);
+        this.textColor = this.preferencesHelper.getRegistry(objID, REGISTRY_KEYS.TEXT_COLOR, false);
     };
 
     MetaDecoratorDiagramDesignerWidget.prototype._refreshName = function () {
