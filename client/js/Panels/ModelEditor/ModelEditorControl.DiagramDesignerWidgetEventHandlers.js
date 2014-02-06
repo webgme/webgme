@@ -136,6 +136,18 @@ define(['logManager',
             self._onSelectionContextMenu(selectedIds, mousePos);
         };
 
+        this.designerCanvas.onSelectionFillColorChanged = function (selectedElements, color) {
+            self._onSelectionFillColorChanged(selectedElements, color);
+        };
+
+        this.designerCanvas.onSelectionBorderColorChanged = function (selectedElements, color) {
+            self._onSelectionBorderColorChanged(selectedElements, color);
+        };
+
+        this.designerCanvas.onSelectionTextColorChanged = function (selectedElements, color) {
+            self._onSelectionTextColorChanged(selectedElements, color);
+        };
+
         this.logger.debug("attachDiagramDesignerWidgetEventHandlers finished");
     };
 
@@ -1045,6 +1057,31 @@ define(['logManager',
         }
 
         ExportManager.exportMultiple(gmeIDs);
+    };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionFillColorChanged = function (selectedElements, color) {
+        this._onSelectionSetColor(selectedElements, color, REGISTRY_KEYS.COLOR);
+    };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionBorderColorChanged = function (selectedElements, color) {
+        this._onSelectionSetColor(selectedElements, color, REGISTRY_KEYS.BORDER_COLOR);
+    };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionTextColorChanged = function (selectedElements, color) {
+        this._onSelectionSetColor(selectedElements, color, REGISTRY_KEYS.TEXT_COLOR);
+    };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionSetColor = function (selectedIds, color, regKey) {
+        var i = selectedIds.length,
+            gmeID;
+
+        this._client.startTransaction();
+        while(i--) {
+            gmeID = this._ComponentID2GmeID[selectedIds[i]];
+            
+            this._client.setRegistry(gmeID, regKey, color);
+        }
+        this._client.completeTransaction();
     };
 
     return ModelEditorControlDiagramDesignerWidgetEventHandlers;
