@@ -39,6 +39,6 @@ define([], function () {
         /*
          * DISABLED CONNECTION AREAS FOR DIAGRAM-DESIGNER-WIDGET DECORATORS ARE STORED UNDER THIS REGISTRY KEY ON A PER DECORATOR BASIS
          */
-        DIAGRAM_DESIGNER_WIDGET_DECORATOR_DISABLED_CONNECTION_AREAS: 'diagramDesignerWidgetDecoratorDisabledConnectionAreas'
+        DIAGRAM_DESIGNER_WIDGET_DECORATOR_DISABLED_CONNECTION_AREAS: 'diagramDesignerWidgetDecoratorDisabledConnectionAreas_'
     };
 });

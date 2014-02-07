@@ -154,34 +154,25 @@ define(['js/Constants',
     };
 
     DiagramDesignerWidgetDecoratorBaseConnectionArea.prototype._getDisabledConnectionAreas = function () {
-        var result = [],
-            client = this._control._client,
-            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
+        var objID = this._metaInfo[CONSTANTS.GME_ID],
             decoratorID = this.DECORATORID,
-            diagramDesignerWidgetDecoratorDisabledConnectionAreasRegistry;
+            result = [],
+            regKey = DIAGRAM_DESIGNER_WIDGET_DECORATOR_DISABLED_CONNECTION_AREAS_REGISTRY_KEY + decoratorID,
+            registry = this.preferencesHelper.getRegistry(objID, regKey, true) || [];
 
-        if (nodeObj) {
-            diagramDesignerWidgetDecoratorDisabledConnectionAreasRegistry = nodeObj.getRegistry(DIAGRAM_DESIGNER_WIDGET_DECORATOR_DISABLED_CONNECTION_AREAS_REGISTRY_KEY) || {};
-            if (diagramDesignerWidgetDecoratorDisabledConnectionAreasRegistry[decoratorID]) {
-                result = diagramDesignerWidgetDecoratorDisabledConnectionAreasRegistry[decoratorID].slice(0);
-            }
+        if (registry) {
+            result = registry.slice(0);
         }
 
         return result;
     };
 
     DiagramDesignerWidgetDecoratorBaseConnectionArea.prototype._setDisabledConnectionAreas = function (disabledAreaIdList) {
-        var client = this._control._client,
-            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
+        var objID = this._metaInfo[CONSTANTS.GME_ID],
             decoratorID = this.DECORATORID,
-            diagramDesignerWidgetDecoratorDisabledConnectionAreasRegistry;
+            regKey = DIAGRAM_DESIGNER_WIDGET_DECORATOR_DISABLED_CONNECTION_AREAS_REGISTRY_KEY + decoratorID;
 
-        if (nodeObj) {
-            diagramDesignerWidgetDecoratorDisabledConnectionAreasRegistry = nodeObj.getEditableRegistry(DIAGRAM_DESIGNER_WIDGET_DECORATOR_DISABLED_CONNECTION_AREAS_REGISTRY_KEY) || {};
-            diagramDesignerWidgetDecoratorDisabledConnectionAreasRegistry[decoratorID] = disabledAreaIdList.slice(0);
-
-            client.setRegistry(this._metaInfo[CONSTANTS.GME_ID], DIAGRAM_DESIGNER_WIDGET_DECORATOR_DISABLED_CONNECTION_AREAS_REGISTRY_KEY, diagramDesignerWidgetDecoratorDisabledConnectionAreasRegistry);
-        }
+        this.preferencesHelper.setRegistry(objID, regKey, disabledAreaIdList.slice(0));
     };
 
 
