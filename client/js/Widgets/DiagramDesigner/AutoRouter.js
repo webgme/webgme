@@ -87,80 +87,99 @@ define(['logManager'], function (logManager) {
        this.router = new AutoRouterGraph();
     };
 
-    var getClosestPorts = function(srcPorts, dstPorts, segmentPoints){
-        var i,
-            j,
-            dx,
-            dy,
-            srcP,
-            dstP,
-            minLength = -1,
-            srcConnectionPoints = [],
-            dstConnectionPoints = [],
-            cLength;
+    var getClosestPorts = function(srcList, dstList, segmentPoints){
+        //I will get the dx, dy that to the src/dst target and then I will calculate
+        // a priority value that will rate the ports as candidates for the 
+        //given path
+        var srcPorts = [],
+            dstPorts = [],
+            srcC = new ArPoint(), //src center
+            dstC = new ArPoint(), //dst center
+            vectors = [],
+            srcTgt, //src target
+            dstTgt,//dst target 
+            i; 
 
-        //Make sure srcPorts, dstPorts are arrays of ports
-        if( srcPorts instanceof AutoRouterBox )
-            srcPorts = srcPorts.getPortList(); 
-        else if( srcPorts.ports && srcPorts.ports[0] instanceof AutoRouterPort )
-            srcPorts = srcPorts.ports; 
-        else
-            srcPorts = srcPorts instanceof Array ? srcPorts : [ srcPorts ];
-
-        if( dstPorts instanceof AutoRouterBox )
-            dstPorts = dstPorts.getPortList(); 
-        else if( dstPorts.ports && dstPorts.ports[0] instanceof AutoRouterPort )
-            dstPorts = dstPorts.ports; 
-        else
-            dstPorts = dstPorts instanceof Array ? dstPorts : [ dstPorts ];
-
-        for(i = 0; i < srcPorts.length; i++){
-            srcConnectionPoints.push(srcPorts[i].getRect().getCenter());
+        //Get the center points of the src,dst ports
+        for(i = 0; i < srcList.length; i++){
+            var sPoint = srcList[i].getRect().getCenter();
+            srcPorts.push(srcList[i]); 
+            srcC.x += sPoint.x;
+            srcC.y += sPoint.y;
         }
-        for(i = 0; i < dstPorts.length; i++){
-            dstConnectionPoints.push(dstPorts[i].getRect().getCenter());
+        for(i = 0; i < dstList.length; i++){
+            var dPoint = dstList[i].getRect().getCenter();
+            dstPorts.push(dstList[i]);
+            dstC.x += dPoint.x;
+            dstC.y += dPoint.y;
         }
 
+        //Get the average center point of src, dst
+        srcC.x = srcC.x/srcPorts.length;
+        srcC.y = srcC.y/srcPorts.length;
+        dstC.x = dstC.x/dstPorts.length;
+        dstC.y = dstC.y/dstPorts.length;
 
+        //Adjust if there are segment points
         if (segmentPoints && segmentPoints.length > 0) {
-            for (i = 0; i < srcConnectionPoints.length; i += 1) {
-                for (j = 0; j < dstConnectionPoints.length; j += 1) {
-                    dx = { "src": Math.abs(srcConnectionPoints[i].x - segmentPoints[0][1]),
-                        "dst": Math.abs(dstConnectionPoints[j].x - segmentPoints[segmentPoints.length - 1][0])};
-
-                    dy =  { "src": Math.abs(srcConnectionPoints[i].y - segmentPoints[0][1]),
-                        "dst": Math.abs(dstConnectionPoints[j].y - segmentPoints[segmentPoints.length - 1][1])};
-
-                    cLength = Math.sqrt(dx.src * dx.src + dy.src * dy.src) + Math.sqrt(dx.dst * dx.dst + dy.dst * dy.dst);
-
-                    if (minLength === -1 || minLength > cLength) {
-                        minLength = cLength;
-                        srcP = i;
-                        dstP = j;
-                    }
-                }
-            }
-        } else {
-            for (i = 0; i < srcConnectionPoints.length; i += 1) {
-                for (j = 0; j < dstConnectionPoints.length; j += 1) {
-                    dx = Math.abs(srcConnectionPoints[i].x - dstConnectionPoints[j].x);
-                    dy = Math.abs(srcConnectionPoints[i].y - dstConnectionPoints[j].y);
-
-                    cLength = Math.sqrt(dx * dx + dy * dy);
-
-                    if (minLength === -1 || minLength > cLength) {
-                        minLength = cLength;
-                        srcP = i;
-                        dstP = j;
-                    }
-                }
-            }
+            srcTgt = new ArPoint(segmentPoints[0].getX(), segmentPoints[0].getY());
+            dstTgt = new ArPoint(segmentPoints[segmentPoints.length-1].getX(), segmentPoints[segmentPoints.length-1].getY());
+        }else{
+            srcTgt = dstC;
+            dstTgt = srcC;
         }
 
-        if(srcPorts[srcP].getOwner() === dstPorts[dstP].getOwner() && srcPorts.length-1 )
-            srcP = srcP + 1 % srcPorts.length;
+        //Get the directions
+        vectors.push(srcTgt.minus(srcC).getArray());
+        vectors.push(dstTgt.minus(dstC).getArray());
 
-        return { "src": srcPorts[ srcP ], "dst": dstPorts[ dstP ] };
+        //Create priority function
+        function createPriority(port, center, vector){
+            var priority = 0,
+                point = [ port.getRect().getCenter().x - center.x, port.getRect().getCenter().y - center.y],
+                major = Math.abs(vector[0]) > Math.abs(vector[1]) ? 0 : 1,
+                minor = (major+1)%2;
+
+
+            if(point[major] > 0 === vector[major] > 0)//If they have the same parity, assign the priority to maximize that is > 1
+                priority = (1/Math.abs(vector[major] - point[major])) * Math.abs(vector[major]); 
+
+            if(point[minor] > 0 === vector[minor] > 0)//If they have the same parity, assign the priority to maximize that is < 1
+                priority += 1/Math.abs(vector[minor] - point[minor]); 
+
+            return priority;
+        }
+
+        //Create priority values for each port.
+        for(i = 0; i < srcPorts.length; i++){
+            var priority = createPriority(srcPorts[i], srcC, vectors[0]);
+            srcPorts[i] = { "port": srcPorts[i], "priority": priority };
+        }
+
+        for(i = 0; i < dstPorts.length; i++){
+            var priority = createPriority(dstPorts[i], dstC, vectors[1]);
+            dstPorts[i] = { "port": dstPorts[i], "priority": priority };
+        }
+
+        //Sort the ports
+        srcPorts.sort(function(a, b){
+            if(b.priority > a.priority)
+                return 1;
+
+            return -1;
+        });
+
+        dstPorts.sort(function(a, b){
+            if(b.priority > a.priority)
+                return 1;
+
+            return -1;
+        });
+
+        if(srcPorts[0].port.getOwner() === dstPorts[0].port.getOwner() && srcPorts.length-1 )
+            srcPorts.splice(0,1);
+
+        return { "src": srcPorts[0].port, "dst": dstPorts[0].port };
     };
 
 
@@ -1932,32 +1951,24 @@ if(DEBUG && ArPointList.length > 0){
             this.cx = x;
             this.cy = y;
 
-            //functions
-            this.equals = equals;
-            this.add = add;
-            this.subtract = subtract;
-            this.plus = plus;
-            this.minus = minus;
-            this.assign = assign;
-
-            function equals(otherSize){
+            this.equals = function(otherSize){
                 if( this.cx === otherSize.cx && this.cy === otherSize.cy)
                     return true;
 
                 return false;
             }
 
-            function add(otherSize){ //equivalent to +=
+            this.add = function(otherSize){ //equivalent to +=
                 this.cx += otherSize.cx;
                 this.cy += otherSize.cy;
             }
 
-            function subtract(otherSize){
+            this.subtract = function(otherSize){
                 this.cx -= otherSize.cx;
                 this.cy -= otherSize.cy;
             }
 
-            function plus(otherObject){ //equivalent to +
+            this.plus = function(otherObject){ //equivalent to +
                 var objectCopy = undefined;
 
                 if(otherObject instanceof ArSize){
@@ -1978,7 +1989,7 @@ if(DEBUG && ArPointList.length > 0){
                 return objectCopy;
             }
 
-            function minus(otherObject){ //equivalent to +
+            this.minus = function(otherObject){ //equivalent to -
                 var objectCopy = undefined;
 
                 if(otherObject instanceof ArSize){
@@ -1999,9 +2010,16 @@ if(DEBUG && ArPointList.length > 0){
                 return objectCopy;
             }
 
-            function assign(otherSize){
+            this.assign = function(otherSize){
                 this.cx = otherSize.cx;
                 this.cy = otherSize.cy;
+            }
+
+            this.getArray = function(){
+                var res = [];
+                res.push(this.cx);
+                res.push(this.cy);
+                return res;
             }
         };
 
