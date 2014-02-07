@@ -114,6 +114,10 @@ define(['logManager',
         this._widget.onSelectionTextColorChanged = function (selectedElements, color) {
             self._onSelectionSetColor(selectedElements, color, REGISTRY_KEYS.TEXT_COLOR);
         };
+
+        this._widget.onConnectionSegmentPointsChange = function (params) {
+            self._onConnectionSegmentPointsChange(params);
+        };
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.selectedObjectChanged = function (nodeId) {
@@ -310,7 +314,9 @@ define(['logManager',
             territoryChanged = false,
             territoryId = this._selectedMemberListMembersTerritoryId,
             territoryPatterns = this._selectedMemberListMembersTerritoryPatterns,
-            client = this._client;
+            client = this._client,
+            desc,
+            obj;
 
         //let's see who has been deleted
         diff = _.difference(currentlyDisplayedMembers, actualMembers);
@@ -334,8 +340,17 @@ define(['logManager',
         this._widget.beginUpdate();
         while (len--) {
             //only items are interesting since only those position is stored in the container's set's registry
+            //connections are interesting too since their color or segment points could have changed which is set specific
             if (GMEConcepts.isConnection(diff[len]) === false) {
                 this._onUpdate(diff[len], {isConnection: false});
+            } else {
+                desc = {isConnection: true};
+                obj = client.getNode(diff[len]);
+                if (obj) {
+                    desc.srcID  = obj.getPointer(SRC_POINTER_NAME).to;
+                    desc.dstID = obj.getPointer(DST_POINTER_NAME).to;
+                    this._onUpdate(diff[len], desc);
+                }
             }
         }
         this._widget.endUpdate();
@@ -951,7 +966,9 @@ define(['logManager',
             objDesc = {},
             sources = [],
             destinations = [],
-            territoryChanged = false;
+            territoryChanged = false,
+            customPoints,
+            memberListContainer;
 
         //component loaded
         //we are interested in the load of member items and their custom territory involvement
@@ -995,7 +1012,7 @@ define(['logManager',
                 var k = sources.length;
                 var l = destinations.length;
 
-                var connVisualProperties = GMEVisualConcepts.getConnectionVisualProperties(gmeID);
+                var connVisualProperties = this._getConnectionVisualProperties(gmeID);
 
                 if (k > 0 && l > 0) {
                     while (k--) {
@@ -1088,7 +1105,7 @@ define(['logManager',
                 var l = destinations.length;
                 len -= 1;
 
-                var connVisualProperties = GMEVisualConcepts.getConnectionVisualProperties(gmeID);
+                var connVisualProperties = this._getConnectionVisualProperties(gmeID);
 
                 while (k--) {
                     while (l--) {
@@ -1518,6 +1535,44 @@ define(['logManager',
             }
         }
         this._client.completeTransaction();
+    };
+
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._getConnectionVisualProperties = function (objID) {
+        var connVisualProperties = GMEVisualConcepts.getConnectionVisualProperties(objID),
+            memberListContainer =  this._client.getNode(this._memberListContainerID),
+            val;
+
+        //get custom color from the set's registry object
+        val = memberListContainer.getMemberRegistry(this._selectedMemberListID, objID,  REGISTRY_KEYS.COLOR);
+        if (val) {
+            connVisualProperties[CONSTANTS.LINE_STYLE.COLOR] = val;
+        }
+
+        //get custom points from the set's registry object
+        val = memberListContainer.getMemberRegistry(this._selectedMemberListID, objID,  REGISTRY_KEYS.LINE_CUSTOM_POINTS);
+        if (val && _.isArray(val)) {
+            connVisualProperties[CONSTANTS.LINE_STYLE.CUSTOM_POINTS] = $.extend(true, [], val);
+        }
+
+        return connVisualProperties;
+    };
+
+
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onConnectionSegmentPointsChange = function (params) {
+        var connID = params.connectionID,
+            points = params.points,
+            gmeID = this._ComponentID2GMEID[connID],
+            containerID = this._memberListContainerID,
+            setID = this._selectedMemberListID,
+            regKey = REGISTRY_KEYS.LINE_CUSTOM_POINTS;
+
+        if (gmeID) {
+            if (points && points.length > 0) {
+                this._client.setMemberRegistry(containerID, gmeID, setID, regKey, points);
+            } else {
+                this._client.delMemberRegistry(containerID, gmeID, setID, regKey);
+            }
+        }
     };
 
     return DiagramDesignerWidgetMultiTabMemberListControllerBase;

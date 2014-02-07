@@ -139,7 +139,8 @@ define(['logManager',
         var nodeObj = this._client.getNode(nodeId),
             objDescriptor,
             pos,
-            defaultPos = 0;
+            defaultPos = 0,
+            customPoints;
 
         if (nodeObj) {
             objDescriptor = {};
@@ -157,6 +158,12 @@ define(['logManager',
 
                     //get all the other visual properties of the connection
                     _.extend(objDescriptor, GMEVisualConcepts.getConnectionVisualProperties(nodeId));
+
+                    //get custom points from the node object
+                    customPoints = nodeObj.getRegistry(REGISTRY_KEYS.LINE_CUSTOM_POINTS);
+                    if (customPoints && _.isArray(customPoints)) {
+                        objDescriptor[CONSTANTS.LINE_STYLE.CUSTOM_POINTS] = $.extend(true, [], customPoints); //JSON.parse(JSON.stringify(customPoints));
+                    }
                 } else {
                     objDescriptor.kind = "MODEL";
                     pos = nodeObj.getRegistry(REGISTRY_KEYS.POSITION);

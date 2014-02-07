@@ -125,12 +125,6 @@ define(['jquery',
             if (val) {
                 result[CONSTANTS.LINE_STYLE.END_ARROW] = val;
             }
-
-            //end arrow
-            val = getValue(obj, REGISTRY_KEYS.LINE_CUSTOM_POINTS, 'array');
-            if (val) {
-                result[CONSTANTS.LINE_STYLE.CUSTOM_POINTS] = val;
-            }
         }
 
         return result;
