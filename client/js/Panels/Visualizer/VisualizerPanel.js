@@ -103,7 +103,7 @@ define(['logManager',
         if (this._activeVisualizer[panel] !== visualizer && this._visualizers.hasOwnProperty(visualizer)) {
 
             //destroy current visualizer
-            if (this._activePanel[panel] && this._activePanel[panel].destroy) {
+            if (this._activePanel[panel]) {
                 this._activePanel[panel].destroy();
             }
 
