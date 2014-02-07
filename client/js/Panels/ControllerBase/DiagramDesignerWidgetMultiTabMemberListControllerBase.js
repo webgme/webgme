@@ -7,14 +7,16 @@ define(['logManager',
         'js/RegistryKeys',
         'js/Utils/GMEConcepts',
         'js/Utils/GMEVisualConcepts',
-        'js/DragDrop/DragHelper'], function (logManager,
+        'js/DragDrop/DragHelper',
+        'js/Utils/PreferencesHelper'], function (logManager,
                                    generateGuid,
                                    CONSTANTS,
                                    nodePropertyNames,
                                    REGISTRY_KEYS,
                                    GMEConcepts,
                                    GMEVisualConcepts,
-                                   DragHelper) {
+                                   DragHelper,
+                                   PreferencesHelper) {
 
     var DiagramDesignerWidgetMultiTabMemberListControllerBase,
         DEFAULT_DECORATOR = "ModelDecorator",
@@ -954,6 +956,11 @@ define(['logManager',
                     objDesc.position.y = this._memberListMemberCoordinates[this._selectedMemberListID][gmeID].y;
                 }
 
+                //registry preferences here are:
+                //#1: local set membership registry
+                objDesc.preferencesHelper = PreferencesHelper.getPreferences([{'containerID': this._memberListContainerID,
+                    'setID': this._selectedMemberListID }]);
+
                 uiComponent = this._widget.createDesignerItem(objDesc);
 
                 this._GMEID2ComponentID[gmeID] = this._GMEID2ComponentID[gmeID] || [];
@@ -1046,6 +1053,8 @@ define(['logManager',
 
                     if (desc && desc.decorator) {
                         objDesc.decoratorClass = this._getItemDecorator(desc.decorator);
+                        objDesc.preferencesHelper = PreferencesHelper.getPreferences([{'containerID': this._memberListContainerID,
+                            'setID': this._selectedMemberListID }]);
                     }
 
                     this._widget.updateDesignerItem(componentID, objDesc);
