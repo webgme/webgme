@@ -116,6 +116,9 @@ define(['logManager',
         //remove current territory patterns
         if (this._territoryId) {
             this._client.removeUI(this._territoryId);
+            if (this._selectedMemberListMembersTerritoryId) {
+                this._client.removeUI(this._selectedMemberListMembersTerritoryId);
+            }
             this._widget.clearTabs();
         }
 
@@ -203,6 +206,9 @@ define(['logManager',
         this._detachClientEventListeners();
         this._removeToolbarItems();
         this._client.removeUI(this._territoryId);
+        if (this._selectedMemberListMembersTerritoryId) {
+            this._client.removeUI(this._selectedMemberListMembersTerritoryId);
+        }
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._processMemberListContainer = function () {
