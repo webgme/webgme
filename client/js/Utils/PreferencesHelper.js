@@ -48,7 +48,15 @@ define(['underscore',
     };
 
     Preferences.prototype.setRegistry = function (objID, regKey, value) {
+        var registryDesc;
 
+        if (this._registryList.length === 0) {
+            //no prefernece list, writing item's registry
+            _client.setRegistry(objID, regKey, value);
+        } else {
+            registryDesc = this._registryList[0];
+            _client.setMemberRegistry(registryDesc.containerID, objID, registryDesc.setID, regKey, value);
+        }
     };
 
     var _initialize = function (c) {
