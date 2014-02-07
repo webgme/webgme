@@ -102,6 +102,18 @@ define(['logManager',
         this._widget.onSelectionChanged = function (selectedIds) {
             self._onSelectionChanged(selectedIds);
         };
+
+        this._widget.onSelectionFillColorChanged = function (selectedElements, color) {
+            self._onSelectionSetColor(selectedElements, color, REGISTRY_KEYS.COLOR);
+        };
+
+        this._widget.onSelectionBorderColorChanged = function (selectedElements, color) {
+            self._onSelectionSetColor(selectedElements, color, REGISTRY_KEYS.BORDER_COLOR);
+        };
+
+        this._widget.onSelectionTextColorChanged = function (selectedElements, color) {
+            self._onSelectionSetColor(selectedElements, color, REGISTRY_KEYS.TEXT_COLOR);
+        };
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.selectedObjectChanged = function (nodeId) {
@@ -1486,6 +1498,26 @@ define(['logManager',
         if (memberListContainerObj) {
             this._widget.setTitle(memberListContainerObj.getAttribute(nodePropertyNames.Attributes.name));
         }
+    };
+
+
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onSelectionSetColor = function (selectedIds, color, regKey) {
+        var i = selectedIds.length,
+            gmeID,
+            containerID = this._memberListContainerID,
+            setID = this._selectedMemberListID;
+
+        this._client.startTransaction();
+        while(i--) {
+            gmeID = this._ComponentID2GMEID[selectedIds[i]];
+
+            if (color) {
+                this._client.setMemberRegistry(containerID, gmeID, setID, regKey, color);
+            } else {
+                this._client.delMemberRegistry(containerID, gmeID, setID, regKey);
+            }
+        }
+        this._client.completeTransaction();
     };
 
     return DiagramDesignerWidgetMultiTabMemberListControllerBase;
