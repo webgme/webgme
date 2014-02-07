@@ -172,7 +172,12 @@ define(['js/Constants',
             decoratorID = this.DECORATORID,
             regKey = DIAGRAM_DESIGNER_WIDGET_DECORATOR_DISABLED_CONNECTION_AREAS_REGISTRY_KEY + decoratorID;
 
-        this.preferencesHelper.setRegistry(objID, regKey, disabledAreaIdList.slice(0));
+        if (disabledAreaIdList.length === 0) {
+            this.preferencesHelper.delRegistry(objID, regKey);
+        } else {
+            this.preferencesHelper.setRegistry(objID, regKey, disabledAreaIdList.slice(0));
+        }
+
     };
 
 
