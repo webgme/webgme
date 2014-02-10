@@ -16,6 +16,7 @@ define([
 
     function Rest(_parameters){
         _parameters.baseUrl = _parameters.baseUrl || "http://localhost/rest";
+        _parameters.authenticate = _parameters.authenticate || function(tokenId,projectName){callback(null,true);};
         var _storage = new Storage({'host':_parameters.host,'port':_parameters.port,'database':_parameters.database,'log':logManager.create('REST-actor')}),
             _initialized = false,
             _opened = false,

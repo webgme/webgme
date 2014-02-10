@@ -12,7 +12,7 @@ if (typeof define !== "function") {
         baseUrl: __dirname + "/.."
     });
 
-    requirejs([ "util/common", "util/assert", "core/tasync" ], function(COMMON, ASSERT, TASYNC) {
+    requirejs([ "util/common", "util/assert", "core/tasync", 'util/guid' ], function(COMMON, ASSERT, TASYNC,GUID) {
         "use strict";
 
         TASYNC.trycatch(main, function (error) {
@@ -44,6 +44,7 @@ if (typeof define !== "function") {
                 console.log("  -adduser <write = true/false> [password email]\tthe user to add");
                 console.log("  -addproject <projectname> <mode = r|rw|rwd>\t\tadds a project to the user data");
                 console.log("  -removeproject <projectname>\t\t\t\tremoves a project from the user data");
+                console.log("  -token \t\t\t\t\tgenerates a token for the user");
                 console.log("  -removeuser \t\t\t\t\t\tremoves a user data");
                 console.log("  -info\t\t\t\t\t\t\tprints out the data of the user, or if no user is given then the data of all users");
                 console.log("  -help\t\t\t\t\t\t\tprints out this help message");
@@ -70,21 +71,23 @@ if (typeof define !== "function") {
                 done = TASYNC.call(createEmptyDb,core,_branch,done);
             } else {
                 _startHash = TASYNC.call(getRootHashOfBranch,_branch,done);
-
+                var projpars;
                 if(COMMON.getParameters("info")){
                     //info command
                     done = TASYNC.call(infoPrint,core,_startHash,_user);
+                } else if(COMMON.getParameters("token")){
+                    done = TASYNC.call(generateToken,core,_startHash,_user);
                 } else if(COMMON.getParameters("addproject")){
-                    var projpars = COMMON.getParameters("addproject");
+                    projpars = COMMON.getParameters("addproject");
                     done = TASYNC.call(addProject,core,_startHash,_user,projpars[0],projpars[1] || "");
                 } else if(COMMON.getParameters("removeproject")){
-                    var projpars = COMMON.getParameters("removeproject");
+                    projpars = COMMON.getParameters("removeproject");
                     done = TASYNC.call(removeProject,core,_startHash,_user,projpars[0]);
                 } else if(COMMON.getParameters("adduser")){
-                    var projpars = COMMON.getParameters("adduser");
+                    projpars = COMMON.getParameters("adduser");
                     done = TASYNC.call(addUser,core,_startHash,_user,projpars[0] || "false",projpars[1] || null,projpars[2] || null);
                 } else if(COMMON.getParameters("removeuser")){
-                    var projpars = COMMON.getParameters("removeuser");
+                    projpars = COMMON.getParameters("removeuser");
                     done = TASYNC.call(removeUser,core,_startHash,_user);
                 }
             }
@@ -210,6 +213,33 @@ if (typeof define !== "function") {
 
             return done;
 
+        }
+        function generateToken(core,roothash,userName){
+            function iterateChildren(parentObject){
+                var children = core.loadChildren(parentObject);
+                return TASYNC.call(function(objectArray){
+                    var i= 0,child=null;
+                    while(i<objectArray.length && child === null){
+                        if(core.getAttribute(objectArray[i],'name') === userName){
+                            child = objectArray[i];
+                        }
+                        i++;
+                    }
+
+                    if(child){
+                        core.setAttribute(child,'token',{id:GUID()+'token',created:(new Date()).getDate()});
+                        var newroothash = persist(core,parentObject);
+                        return TASYNC.call(saveModifications,newroothash,"token have been generated for user: "+userName);
+                    } else {
+                        return null;
+                    }
+                },children);
+            }
+
+            var root = core.loadRoot(roothash);
+            var done = TASYNC.call(iterateChildren,root);
+
+            return done;
         }
         function addProject(core,roothash,username,projectname,rights){
             function iterateChildren(parentObject){

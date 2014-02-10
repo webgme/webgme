@@ -241,6 +241,17 @@ requirejs(['logManager',
         }
     });
     //rest functionality
+    //rest token generation
+    app.get('/gettoken',ensureAuthenticated,function(req,res){
+        gme.generateToken(req.session.id,function(err,token){
+            if(err){
+                res.send(err);
+            } else {
+                res.send(token);
+            }
+        });
+    });
+    //rest requests
     app.get('/rest/*',checkREST,function(req,res){
 
         var urlArray = req.url.split('/');
