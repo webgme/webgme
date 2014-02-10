@@ -76,6 +76,10 @@ define(['js/Constants',
         if (this.hostDesignerItem) {
             this.hostDesignerItem.setSize(this.$el.outerWidth(true), this.$el.outerHeight(true));
         }
+
+        this.svgContainerWidth = this.$svgContent.outerWidth(true);
+        this.svgWidth = this.$svgContent.find('svg').outerWidth(true);
+        this.svgHeight = this.$svgContent.find('svg').outerHeight(true);
     };
 
 
@@ -83,16 +87,16 @@ define(['js/Constants',
     SVGDecoratorDiagramDesignerWidget.prototype.getConnectionAreas = function (id/*, isEnd, connectionMetaInfo*/) {
         var result = [],
             edge = 10,
-            LEN = 20;
+            LEN = 20,
+            xShift = (this.svgContainerWidth - this.svgWidth) / 2;
 
         //by default return the bounding box edges midpoints
-
         if (id === undefined || id === this.hostDesignerItem.id) {
             //North side
             result.push( {"id": "N",
-                "x1": edge,
+                "x1": edge + xShift,
                 "y1": 0,
-                "x2": this.hostDesignerItem.getWidth() - edge,
+                "x2": this.svgWidth - edge + xShift,
                 "y2": 0,
                 "angle1": 270,
                 "angle2": 270,
@@ -100,30 +104,30 @@ define(['js/Constants',
 
             //South side
             result.push( {"id": "S",
-                "x1": edge,
-                "y1": this.hostDesignerItem.getHeight(),
-                "x2": this.hostDesignerItem.getWidth() - edge,
-                "y2": this.hostDesignerItem.getHeight(),
+                "x1": edge + xShift,
+                "y1": this.svgHeight,
+                "x2": this.svgWidth - edge + xShift,
+                "y2": this.svgHeight,
                 "angle1": 90,
                 "angle2": 90,
                 "len": LEN} );
 
 
             result.push({"id": "E",
-                "x1": this.hostDesignerItem.getWidth(),
+                "x1": this.svgWidth + xShift,
                 "y1": edge,
-                "x2": this.hostDesignerItem.getWidth(),
-                "y2": this.hostDesignerItem.getHeight() - edge,
+                "x2": this.svgWidth + xShift,
+                "y2": this.svgHeight - edge,
                 "angle1": 0,
                 "angle2": 0,
                 "len": LEN});
 
 
             result.push({"id": "W",
-                "x1": 0,
+                "x1": 0 + xShift,
                 "y1": edge,
-                "x2": 0,
-                "y2": this.hostDesignerItem.getHeight() - edge,
+                "x2": 0 + xShift,
+                "y2": this.svgHeight - edge,
                 "angle1": 180,
                 "angle2": 180,
                 "len": LEN});
