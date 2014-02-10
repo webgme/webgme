@@ -27,7 +27,9 @@ define(['js/Constants',
         DATA_ANGLE1 = 'angle1',
         DATA_ANGLE2 = 'angle2',
         DEFAULT_STEM_LENGTH = 20,
-        CONNECTOR_SIZE = 10;
+        FILL_COLOR_CLASS = "fill-color",
+        BORDER_COLOR_CLASS = "border-color",
+        TEXT_COLOR_CLASS = "text-color";
 
 
     /**
@@ -81,35 +83,38 @@ define(['js/Constants',
     };
 	
 	SVGDecoratorCore.prototype._update = function () {
+        this._updateSVGFile();
         this._updateColors();
         this._updateName();
         this._updateAbstract();
-        this._updateSVGFile();
     };
 
     SVGDecoratorCore.prototype._updateColors = function () {
+        var svg = this.$svgContent.find('svg'),
+            fillColorElements = svg.find('.' + FILL_COLOR_CLASS),
+            borderColorElements = svg.find('.' + BORDER_COLOR_CLASS),
+            textColorElements = svg.find('.' + TEXT_COLOR_CLASS);
+
         this._getNodeColorsFromRegistry();
 
         if (this.fillColor) {
-            this.$el.css({'background-color': this.fillColor});
+            fillColorElements.css({'fill': this.fillColor});
         } else {
-            this.$el.css({'background-color': ''});
+            this.$el.css({'fill': ''});
         }
 
         if (this.borderColor) {
-            this.$el.css({'border-color': this.borderColor,
-                          'box-shadow': '0px 0px 7px 0px ' + this.borderColor + ' inset'});
-            this.$name.css({'border-color': this.borderColor});
+            borderColorElements.css({'stroke': this.borderColor});
         } else {
-            this.$el.css({'border-color': '',
-                'box-shadow': ''});
-            this.$name.css({'border-color': ''});
+            borderColorElements.css({'stroke': ''});
         }
 
         if (this.textColor) {
             this.$el.css({'color': this.textColor});
+            textColorElements.css({'fill': this.textColor});
         } else {
             this.$el.css({'color': ''});
+            textColorElements.css({'fill': ''});
         }
     };
 
