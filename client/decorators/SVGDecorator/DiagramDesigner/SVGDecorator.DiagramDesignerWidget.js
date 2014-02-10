@@ -90,47 +90,58 @@ define(['js/Constants',
             LEN = 20,
             xShift = (this.svgContainerWidth - this.svgWidth) / 2;
 
-        //by default return the bounding box N, S, E, W edges with a little bit of padding (variable 'edge') from the sides
         if (id === undefined || id === this.hostDesignerItem.id) {
-            //North side
-            result.push( {"id": "N",
-                "x1": edge + xShift,
-                "y1": 0,
-                "x2": this.svgWidth - edge + xShift,
-                "y2": 0,
-                "angle1": 270,
-                "angle2": 270,
-                "len": LEN} );
+            if (this._customConnectionAreas && this._customConnectionAreas.length > 0) {
+                //custom connections are defined in the SVG itself
+                result = $.extend(true, [], this._customConnectionAreas);
+                var i = result.length;
+                while (i--) {
+                    result[i].x1 += xShift;
+                    result[i].x2 += xShift;
+                }
+            } else {
+                //no custom connection area defined in the SVG
+                //by default return the bounding box N, S, E, W edges with a little bit of padding (variable 'edge') from the sides
+                //North side
+                result.push( {"id": "N",
+                    "x1": edge + xShift,
+                    "y1": 0,
+                    "x2": this.svgWidth - edge + xShift,
+                    "y2": 0,
+                    "angle1": 270,
+                    "angle2": 270,
+                    "len": LEN} );
 
-            //South side
-            result.push( {"id": "S",
-                "x1": edge + xShift,
-                "y1": this.svgHeight,
-                "x2": this.svgWidth - edge + xShift,
-                "y2": this.svgHeight,
-                "angle1": 90,
-                "angle2": 90,
-                "len": LEN} );
+                //South side
+                result.push( {"id": "S",
+                    "x1": edge + xShift,
+                    "y1": this.svgHeight,
+                    "x2": this.svgWidth - edge + xShift,
+                    "y2": this.svgHeight,
+                    "angle1": 90,
+                    "angle2": 90,
+                    "len": LEN} );
 
+                //East side
+                result.push({"id": "E",
+                    "x1": this.svgWidth + xShift,
+                    "y1": edge,
+                    "x2": this.svgWidth + xShift,
+                    "y2": this.svgHeight - edge,
+                    "angle1": 0,
+                    "angle2": 0,
+                    "len": LEN});
 
-            result.push({"id": "E",
-                "x1": this.svgWidth + xShift,
-                "y1": edge,
-                "x2": this.svgWidth + xShift,
-                "y2": this.svgHeight - edge,
-                "angle1": 0,
-                "angle2": 0,
-                "len": LEN});
-
-
-            result.push({"id": "W",
-                "x1": 0 + xShift,
-                "y1": edge,
-                "x2": 0 + xShift,
-                "y2": this.svgHeight - edge,
-                "angle1": 180,
-                "angle2": 180,
-                "len": LEN});
+                //West side
+                result.push({"id": "W",
+                    "x1": 0 + xShift,
+                    "y1": edge,
+                    "x2": 0 + xShift,
+                    "y2": this.svgHeight - edge,
+                    "angle1": 180,
+                    "angle2": 180,
+                    "len": LEN});
+            }
         }
 
         return result;

@@ -18,7 +18,13 @@ define(['js/Constants',
 
     var SVGDecoratorCore,
         ABSTRACT_CLASS = 'abstract',
-        SVG_DIR = '/decorators/SVGDecorator/SVG/';
+        SVG_DIR = '/decorators/SVGDecorator/SVG/',
+        CONNECTION_AREA_CLASS = 'connection-area',
+        DATA_LEN = 'len',
+        DATA_ANGLE = 'angle',
+        DATA_ANGLE1 = 'angle1',
+        DATA_ANGLE2 = 'angle2',
+        DEFAULT_STEM_LENGTH = 20;
 
 
     /**
@@ -129,7 +135,7 @@ define(['js/Constants',
         this.$name.attr("title", this.formattedName);
     };
 
-
+    /***** UPDATE THE ABSTRACTNESS OF THE NODE *****/
     SVGDecoratorCore.prototype._updateAbstract = function () {
         var client = this._control._client,
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]);
@@ -145,6 +151,7 @@ define(['js/Constants',
         }
     };
 
+    /***** UPDATE THE SVG ICON OF THE NODE *****/
     SVGDecoratorCore.prototype._updateSVGFile = function () {
         var client = this._control._client,
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
@@ -157,14 +164,9 @@ define(['js/Constants',
             svgFile = nodeObj.getAttribute('svg');
         }
 
-        var updateSVGContent = function (svg) {
-            self.$svgContent.empty();
-            self.$svgContent.append(self._getSVGContent(svg));
-        };
-
         if (svgFile) {
             if (svgCache[svgFile]) {
-                updateSVGContent(svgFile);
+                this._updateSVGContent(svgFile);
             } else {
                 // get the svg from the server in SYNC mode, may take some time
                 svgURL = SVG_DIR + svgFile;
@@ -173,16 +175,16 @@ define(['js/Constants',
                         // downloaded successfully
                         // cache the content
                         svgCache[svgFile] = $(data.childNodes[0]);
-                        updateSVGContent(svgFile);
+                        self._updateSVGContent(svgFile);
                     })
                     .fail(function () {
                         // download failed for this type
                         logger.error('Failed to download SVG file: ' + svgFile);
-                        updateSVGContent(svgFile);
+                        self._updateSVGContent(svgFile);
                     });
             }
         } else {
-            updateSVGContent(undefined);
+            this._updateSVGContent(undefined);
         }
 
     };
@@ -193,6 +195,73 @@ define(['js/Constants',
         } else {
             return defaultSVG.clone();
         }
+    };
+
+    SVGDecoratorCore.prototype._updateSVGContent = function (svg) {
+        //set new content
+        this.$svgContent.empty();
+        this.$svgContent.append(this._getSVGContent(svg));
+
+        this._discoverConnectionAreas();
+    };
+
+    SVGDecoratorCore.prototype._discoverConnectionAreas = function () {
+        var connAreas = this.$svgContent.find('svg').find('.' + CONNECTION_AREA_CLASS),
+            len = connAreas.length,
+            line,
+            connA,
+            lineData;
+
+        delete this._customConnectionAreas;
+
+        if (len > 0) {
+            this._customConnectionAreas = [];
+
+            while (len--) {
+                line = $(connAreas[len]);
+                connA = {"id": line.attr('id'),
+                    "x1": parseInt(line.attr('x1'), 10),
+                    "y1": parseInt(line.attr('y1'), 10),
+                    "x2": parseInt(line.attr('x2'), 10),
+                    "y2": parseInt(line.attr('y2'), 10),
+                    "angle1": 0,
+                    "angle2": 0,
+                    "len": DEFAULT_STEM_LENGTH};
+
+                //try to figure out meta info from the embedded SVG
+                lineData = line.data();
+
+                if (lineData.hasOwnProperty(DATA_LEN)) {
+                    connA.len = parseInt(lineData[DATA_LEN], 10);
+                }
+
+                if (lineData.hasOwnProperty(DATA_ANGLE)) {
+                    connA.angle1 = parseInt(lineData[DATA_ANGLE], 10);
+                    connA.angle2 = parseInt(lineData[DATA_ANGLE], 10);
+                }
+
+                if (lineData.hasOwnProperty(DATA_ANGLE1)) {
+                    connA.angle1 = parseInt(lineData[DATA_ANGLE1], 10);
+                }
+
+                if (lineData.hasOwnProperty(DATA_ANGLE2)) {
+                    connA.angle2 = parseInt(lineData[DATA_ANGLE2], 10);
+                }
+
+                if (!lineData.hasOwnProperty(DATA_ANGLE) &&
+                    !(lineData.hasOwnProperty(DATA_ANGLE1) && lineData.hasOwnProperty(DATA_ANGLE2))) {
+                    //TODO: fixme
+                    this.logger.error('ANGLE1 & ANGLE1 should be calculated correctly');
+                    connA.angle1 = 0;
+                    connA.angle2 = 0;
+                }
+
+                this._customConnectionAreas.push(connA);
+
+                line.remove();
+            }
+        }
+
     };
 
     return SVGDecoratorCore;
