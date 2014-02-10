@@ -90,7 +90,7 @@ define(['js/Constants',
             LEN = 20,
             xShift = (this.svgContainerWidth - this.svgWidth) / 2;
 
-        //by default return the bounding box edges midpoints
+        //by default return the bounding box N, S, E, W edges with a little bit of padding (variable 'edge') from the sides
         if (id === undefined || id === this.hostDesignerItem.id) {
             //North side
             result.push( {"id": "N",
