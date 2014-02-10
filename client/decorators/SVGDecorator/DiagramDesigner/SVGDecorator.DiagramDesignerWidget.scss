@@ -17,23 +17,24 @@
     .svg-content {
       svg {
         border: $border;
+
+        .connector {
+          fill: $connector-background-color;
+          stroke: $connection-border-color;
+          stroke-width: $connector-border-width;
+
+          &:hover {
+            stroke: $connector-hover-border-color;
+          }
+        }
       }
     }
-
 
     .connector {
       @include connector_basics;
 
       margin-left: $connector-size / -2;
-      left: 50%;
-
-      &.top {
-        top: $connector-size / -2;
-      }
-
-      &.bottom {
-        bottom: $connector-size / -2;
-      }
+      margin-top: $connector-size / -2;
     }
   }
 

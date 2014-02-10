@@ -10,10 +10,12 @@ define(['js/Constants',
     'js/NodePropertyNames',
     'js/RegistryKeys',
     'js/Utils/DisplayFormat',
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     'text!./default.svg'], function (CONSTANTS,
                          nodePropertyNames,
                          REGISTRY_KEYS,
                          displayFormat,
+                         DiagramDesignerWidgetConstants,
                          DefaultSvgTemplate) {
 
     var SVGDecoratorCore,
@@ -24,7 +26,8 @@ define(['js/Constants',
         DATA_ANGLE = 'angle',
         DATA_ANGLE1 = 'angle1',
         DATA_ANGLE2 = 'angle2',
-        DEFAULT_STEM_LENGTH = 20;
+        DEFAULT_STEM_LENGTH = 20,
+        CONNECTOR_SIZE = 10;
 
 
     /**
@@ -203,6 +206,7 @@ define(['js/Constants',
         this.$svgContent.append(this._getSVGContent(svg));
 
         this._discoverConnectionAreas();
+        this._generateConnectors();
     };
 
     SVGDecoratorCore.prototype._discoverConnectionAreas = function () {
@@ -262,6 +266,50 @@ define(['js/Constants',
             }
         }
 
+    };
+
+    SVGDecoratorCore.prototype._generateConnectors = function () {
+        var connectors = this.$svgContent.find('svg').find('.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS),
+            c,
+            svg = this.$svgContent.find('svg'),
+            svgWidth = parseInt(svg.attr('width'), 10),
+            svgHeight = parseInt(svg.attr('height'), 10);
+
+        if (this._displayConnectors === true) {
+            //check if there are any connectors defined in the SVG itself
+            if (connectors.length === 0) {
+                //no dedicated connectors
+                //by default generate four: N, S, E, W
+
+                //NORTH
+                c = $('<div/>', { class: 'connector' });
+                c.css({'top': 0,
+                       'left': svgWidth / 2});
+                this.$el.append(c);
+
+                //SOUTH
+                c = $('<div/>', { class: 'connector' });
+                c.css({'top': svgHeight,
+                       'left': svgWidth / 2});
+                this.$el.append(c);
+
+                //EAST
+                c = $('<div/>', { class: 'connector' });
+                c.css({'top': svgHeight / 2,
+                       'left': svgWidth});
+                this.$el.append(c);
+
+                //WEST
+                c = $('<div/>', { class: 'connector' });
+                c.css({'top': svgHeight / 2,
+                    'left': 0});
+                this.$el.append(c);
+            }
+
+            this.initializeConnectors();
+        } else {
+            connectors.remove();
+        }
     };
 
     return SVGDecoratorCore;

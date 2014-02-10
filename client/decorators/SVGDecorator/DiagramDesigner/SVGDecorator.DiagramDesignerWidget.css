@@ -28,6 +28,12 @@
 
 .designer-item .svg-decorator .svg-content svg {
   border: 1px solid rgba(0, 0, 0, 0); }
+  .designer-item .svg-decorator .svg-content svg .connector {
+    fill: #fefefe;
+    stroke: blue;
+    stroke-width: 1px; }
+    .designer-item .svg-decorator .svg-content svg .connector:hover {
+      stroke: rgba(82, 168, 236, 0.8); }
 .designer-item .svg-decorator .connector {
   background-color: #fefefe;
   height: 10px;
@@ -36,16 +42,12 @@
   cursor: pointer;
   border: 1px solid blue;
   margin-left: -6px;
-  left: 50%; }
+  margin-top: -6px; }
   .designer-item .svg-decorator .connector:hover {
     border-color: rgba(82, 168, 236, 0.8);
     -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
     -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
     box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6); }
-  .designer-item .svg-decorator .connector.top {
-    top: -6px; }
-  .designer-item .svg-decorator .connector.bottom {
-    bottom: -6px; }
 .designer-item.selected .svg-decorator .svg-content svg {
   border: 1px solid #52a8ec;
   background-color: rgba(219, 234, 252, 0.2);

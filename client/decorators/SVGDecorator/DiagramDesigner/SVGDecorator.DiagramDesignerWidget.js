@@ -82,6 +82,15 @@ define(['js/Constants',
         this.svgHeight = this.$svgContent.find('svg').outerHeight(true);
     };
 
+    SVGDecoratorDiagramDesignerWidget.prototype.onRenderSetLayoutInfo = function () {
+        var xShift = (this.svgContainerWidth - this.svgWidth) / 2,
+            connectors = this.$el.find('.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS);
+
+        connectors.css('transform', 'translateX(' + xShift + 'px)');
+
+        DiagramDesignerWidgetDecoratorBase.prototype.onRenderSetLayoutInfo.call(this);
+    };
+
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     SVGDecoratorDiagramDesignerWidget.prototype.getConnectionAreas = function (id/*, isEnd, connectionMetaInfo*/) {
