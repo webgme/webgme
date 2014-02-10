@@ -1,0 +1,39 @@
+$min-width: 65px;
+$height: 40px;
+$border: 1px solid rgba(0,0,0,0);
+$padding: 0px;
+$background-color: #ECECEC;
+$box-shadow: 0px 0px 7px 0px #444 inset;
+$selected-background-color: #DBEAFC;
+$selected-box-shadow: 0px 0px 15px 0px #1276D4 !important;
+$selected-border: 1px solid #52A8EC;
+$svg-name-height: 16px;
+$abstract-class-name-color: #AAAAAA;
+
+@mixin svg_decorator_core {
+  .svg-decorator {
+    border: $border;
+    padding: $padding;
+    text-align: center;
+    position: relative;
+
+    .name {
+      white-space: nowrap;
+      font-size: 9px;
+      font-weight: bold;
+      text-transform: uppercase;
+      text-align: center;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      height: $svg-name-height;
+      line-height: $svg-name-height;
+    }
+
+    &.abstract {
+      .name {
+        font-style:italic;
+        color: $abstract-class-name-color;
+      }
+    }
+  }
+}

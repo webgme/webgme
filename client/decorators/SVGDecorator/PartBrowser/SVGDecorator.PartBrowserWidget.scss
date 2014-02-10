@@ -1,0 +1,13 @@
+/*
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ * 
+ * Author: Robert Kereskenyi
+ */
+
+//imports
+@import "../Core/_SVGDecorator";
+
+//include ModelDecoratorCore style
+.part {
+  @include svg_decorator_core;
+}

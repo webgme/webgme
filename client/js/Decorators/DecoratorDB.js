@@ -20,7 +20,8 @@ define(["ifexists!bin/decorators"], function (LOCAL_DECORATORS) {
             'CircleDecorator',
             'DefaultDecorator',
             'ModelDecorator',
-            'UMLStateMachineDecorator']
+            'UMLStateMachineDecorator',
+	    'SVGDecorator']
     };
 
     if (LOCAL_DECORATORS) {

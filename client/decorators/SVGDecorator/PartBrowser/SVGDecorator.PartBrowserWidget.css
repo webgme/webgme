@@ -1,0 +1,23 @@
+/*
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ * 
+ * Author: Robert Kereskenyi
+ */
+.part .svg-decorator {
+  border: 1px solid rgba(0, 0, 0, 0);
+  padding: 0px;
+  text-align: center;
+  position: relative; }
+  .part .svg-decorator .name {
+    white-space: nowrap;
+    font-size: 9px;
+    font-weight: bold;
+    text-transform: uppercase;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 16px;
+    line-height: 16px; }
+  .part .svg-decorator.abstract .name {
+    font-style: italic;
+    color: #aaaaaa; }
