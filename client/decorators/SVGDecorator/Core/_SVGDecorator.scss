@@ -12,10 +12,14 @@ $abstract-class-name-color: #AAAAAA;
 
 @mixin svg_decorator_core {
   .svg-decorator {
-    border: $border;
-    padding: $padding;
     text-align: center;
     position: relative;
+
+    .svg-content {
+      svg {
+        vertical-align: top;
+      }
+    }
 
     .name {
       white-space: nowrap;

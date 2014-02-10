@@ -4,10 +4,10 @@
  * Author: Robert Kereskenyi
  */
 .part .svg-decorator {
-  border: 1px solid rgba(0, 0, 0, 0);
-  padding: 0px;
   text-align: center;
   position: relative; }
+  .part .svg-decorator .svg-content svg {
+    vertical-align: top; }
   .part .svg-decorator .name {
     white-space: nowrap;
     font-size: 9px;

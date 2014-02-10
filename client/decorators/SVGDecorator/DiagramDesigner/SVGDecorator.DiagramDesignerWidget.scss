@@ -14,6 +14,12 @@
 //overwrite / extend with local modifications
 .designer-item {
   .svg-decorator {
+    .svg-content {
+      svg {
+        border: $border;
+      }
+    }
+
 
     .connector {
       @include connector_basics;
@@ -33,11 +39,15 @@
 
   &.selected {
     .svg-decorator {
-      border: $selected-border;
-      background-color: $selected-background-color;
-      -webkit-box-shadow: $selected-box-shadow;
-      -moz-box-shadow: $selected-box-shadow;
-      box-shadow: $selected-box-shadow;
+      .svg-content {
+        svg {
+          border: $selected-border;
+          background-color: $selected-background-color;
+          -webkit-box-shadow: $selected-box-shadow;
+          -moz-box-shadow: $selected-box-shadow;
+          box-shadow: $selected-box-shadow;
+        }
+      }
     }
   }
 }
