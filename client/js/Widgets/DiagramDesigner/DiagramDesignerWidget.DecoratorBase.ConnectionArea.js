@@ -108,10 +108,16 @@ define(['js/Constants',
             a.y2 += shiftVal;
 
             //if the area is too small, enlarge it
-            if (a.x2 - a.x1 < CONN_AREA_SIZE &&
-                a.y2 - a.y1 < CONN_AREA_SIZE) {
-                a.x1 -= CONN_AREA_SIZE / 2;
-                a.x2 += CONN_AREA_SIZE / 2;
+            if (Math.abs(a.x2 - a.x1) < CONN_AREA_SIZE &&
+                Math.abs(a.y2 - a.y1) < CONN_AREA_SIZE) {
+                if (a.x2 > a.x1) {
+                    a.x1 -= CONN_AREA_SIZE / 2;
+                    a.x2 += CONN_AREA_SIZE / 2;
+                } else {
+                    a.x2 -= CONN_AREA_SIZE / 2;
+                    a.x1 += CONN_AREA_SIZE / 2;
+                }
+
             }
 
             var path = this._svg.path('M ' + a.x1 + ',' + a.y1 + 'L' + a.x2 + ',' + a.y2);
