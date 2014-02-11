@@ -219,7 +219,10 @@ define(['js/Constants',
             len = connAreas.length,
             line,
             connA,
-            lineData;
+            lineData,
+            dx,
+            dy,
+            alpha;
 
         delete this._customConnectionAreas;
 
@@ -259,14 +262,30 @@ define(['js/Constants',
 
                 if (!lineData.hasOwnProperty(DATA_ANGLE) &&
                     !(lineData.hasOwnProperty(DATA_ANGLE1) && lineData.hasOwnProperty(DATA_ANGLE2))) {
-                    //TODO: fixme
-                    this.logger.error('ANGLE1 & ANGLE1 should be calculated correctly');
-                    connA.angle1 = 0;
-                    connA.angle2 = 0;
+                    dx = connA.x2 - connA.x1;
+                    dy = connA.y2 - connA.y1;
+                    if (dx !== 0 && dy !== 0) {
+                        alpha = Math.atan(dy / dx) * (180/Math.PI);
+                        if (dx > 0) {
+                            alpha = 270 + alpha;
+                        } else if (dx < 0) {
+                            alpha = 90 + alpha;
+                        }
+                    } else if (dx === 0 && dy !== 0) {
+                        //conn area is vertical
+                        alpha = dy > 0 ? 0 : 180;
+                    } else if (dx !== 0 && dy === 0) {
+                        //conn area is horizontal
+                        alpha = dx > 0 ? 270 : 90;
+                    }
+
+                    connA.angle1 = alpha;
+                    connA.angle2 = alpha;
                 }
 
                 this._customConnectionAreas.push(connA);
 
+                //finally remove the placeholder from the SVG
                 line.remove();
             }
         }
