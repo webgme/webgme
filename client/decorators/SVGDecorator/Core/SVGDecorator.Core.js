@@ -181,9 +181,14 @@ define(['js/Constants',
                 $.ajax(svgURL, {'async': false})
                     .done(function ( data ) {
                         // downloaded successfully
-                        // cache the content
-                        svgCache[svgFile] = $(data.childNodes[0]);
-                        self._updateSVGContent(svgFile);
+                        // cache the content if valid
+                        var svgElements = $(data).find('svg');
+                        if (svgElements.length > 0) {
+                            svgCache[svgFile] = svgElements.first();
+                            self._updateSVGContent(svgFile);
+                        } else {
+                            self._updateSVGContent(undefined);
+                        }
                     })
                     .fail(function () {
                         // download failed for this type
@@ -192,9 +197,9 @@ define(['js/Constants',
                     });
             }
         } else {
+            logger.error('Invalid SVG file: "' + svgFile + '"');
             this._updateSVGContent(undefined);
         }
-
     };
 
     SVGDecoratorCore.prototype._updateSVGContent = function (svg) {
