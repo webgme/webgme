@@ -221,14 +221,26 @@ define(['js/Constants',
     };
 
     SVGDecoratorCore.prototype._discoverConnectionAreas = function () {
-        var connAreas = this.$svgContent.find('svg').find('.' + CONNECTION_AREA_CLASS),
+        var svgElement = this.$svgContent.find('svg'),
+            connAreas = svgElement.find('.' + CONNECTION_AREA_CLASS),
             len = connAreas.length,
             line,
             connA,
             lineData,
             dx,
             dy,
-            alpha;
+            alpha,
+            svgWidth,
+            viewBox,
+            ratio = 1;
+
+        svgWidth = parseInt(svgElement.attr('width'), 10);
+        viewBox = svgElement[0].getAttribute('viewBox');
+        if (viewBox) {
+            var vb0 = parseInt(viewBox.split(' ')[0], 10);
+            var vb1 = parseInt(viewBox.split(' ')[2], 10);
+            ratio = svgWidth / (vb1 - vb0);
+        }
 
         delete this._customConnectionAreas;
 
@@ -238,10 +250,10 @@ define(['js/Constants',
             while (len--) {
                 line = $(connAreas[len]);
                 connA = {"id": line.attr('id'),
-                    "x1": parseInt(line.attr('x1'), 10),
-                    "y1": parseInt(line.attr('y1'), 10),
-                    "x2": parseInt(line.attr('x2'), 10),
-                    "y2": parseInt(line.attr('y2'), 10),
+                    "x1": parseInt(line.attr('x1'), 10) * ratio,
+                    "y1": parseInt(line.attr('y1'), 10) * ratio,
+                    "x2": parseInt(line.attr('x2'), 10) * ratio,
+                    "y2": parseInt(line.attr('y2'), 10) * ratio,
                     "angle1": 0,
                     "angle2": 0,
                     "len": DEFAULT_STEM_LENGTH};
