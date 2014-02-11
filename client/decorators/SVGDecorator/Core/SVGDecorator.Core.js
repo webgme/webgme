@@ -207,6 +207,9 @@ define(['js/Constants',
         //set new content
         this.$svgContent.empty();
 
+        //remove existing connectors (if any)
+        this.$el.find('.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS).remove();
+
         if (svgCache[svg]) {
             svgIcon = svgCache[svg].clone();
         } else {
@@ -316,9 +319,6 @@ define(['js/Constants',
             svg = this.$svgContent.find('svg'),
             svgWidth = parseInt(svg.attr('width'), 10),
             svgHeight = parseInt(svg.attr('height'), 10);
-
-        //remove existing ones
-        this.$el.find('.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS).remove();
 
         if (this._displayConnectors === true) {
             //check if there are any connectors defined in the SVG itself
