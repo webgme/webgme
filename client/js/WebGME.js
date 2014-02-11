@@ -8,6 +8,7 @@ define(['logManager',
     'bin/getconfig',
     'text!package.json',
     'js/client',
+    'js/Constants',
     'clientUtil',
     'js/Utils/GMEConcepts',
     'js/Utils/GMEVisualConcepts',
@@ -24,6 +25,7 @@ define(['logManager',
                                             CONFIG,
                                             packagejson,
                                             Client,
+                                            CONSTANTS,
                                             util,
                                             GMEConcepts,
                                             GMEVisualConcepts,
@@ -132,6 +134,9 @@ define(['logManager',
 
         selectObject = function () {
             if (objectToLoad && objectToLoad !== "") {
+                if (objectToLoad.toLowerCase() === 'root') {
+                    objectToLoad = CONSTANTS.PROJECT_ROOT_ID;
+                }
                 setTimeout(function () {
                     client.setSelectedObjectId(objectToLoad);
                 }, 1000);
