@@ -45,11 +45,9 @@ if (typeof define !== "function" && typeof require === "function" && typeof proc
 
 		var GLOBAL = {
             port: 80,
-			project: "test",
 			autorecconnect: true,
 			reconndelay: 1000,
 			reconnamount: 1000,
-			autostart: false,
 
 			//used by the server
 			loglevel: 2, // 5 = ALL, 4 = DEBUG, 3 = INFO, 2 = WARNING, 1 = ERROR, 0 = OFF
