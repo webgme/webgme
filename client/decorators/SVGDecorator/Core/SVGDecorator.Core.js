@@ -262,7 +262,7 @@ define(['js/Constants',
                 lineData = line.data();
 
                 if (lineData.hasOwnProperty(DATA_LEN)) {
-                    connA.len = parseInt(lineData[DATA_LEN], 10);
+                    connA.len = parseInt(lineData[DATA_LEN], 10) * ratio;
                 }
 
                 if (lineData.hasOwnProperty(DATA_ANGLE)) {
