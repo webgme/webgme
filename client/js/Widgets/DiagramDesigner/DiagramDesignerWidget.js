@@ -67,7 +67,7 @@ define(['logManager',
         DEFAULT_CONNECTION_ROUTE_MANAGER = ConnectionRouteManager3,
         GUID_DIGITS = 6,
         BACKGROUND_TEXT_COLOR = '#DEDEDE',
-        BACKGROUND_TEXT_SIZE = 30
+        BACKGROUND_TEXT_SIZE = 30;
 
     var defaultParams = {'loggerName': 'DiagramDesignerWidget',
                          'gridSize': 10,
