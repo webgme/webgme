@@ -451,7 +451,11 @@ define(["storage/mongo", "storage/commit", "core/core", "util/guid"],function(Mo
                             if(err){
                                 callback(err,false);
                             } else {
-                                callback(null,projInfo['read'] || false);
+                                if(projInfo){
+                                    callback(null,projInfo['read'] || false);
+                                } else {
+                                    callback(null,false);
+                                }
                             }
                         });
 
@@ -492,12 +496,37 @@ define(["storage/mongo", "storage/commit", "core/core", "util/guid"],function(Mo
                 }
             });
         }
+        function getToken(sessionId,callback){
+            _session.getSessionUser(sessionId,function(err,userID){
+                if(!err && userID){
+                    getUserNode(userID,function(err,userNode){
+                        if(!err && userNode){
+                            var token = _core.getAttribute(userNode,'token');
+                            if(token !== null && token !== undefined){
+                                if(isTokenValid(token.created) === true){
+                                    callback(null,token.id);
+                                } else {
+                                    generateToken(sessionId,callback);
+                                }
+                            } else {
+                                generateToken(sessionId,callback);
+                            }
+                        } else {
+                            callback(err,null);
+                        }
+                    });
+                } else {
+                    callback(err,null);
+                }
+            });
+        }
         return {
             authenticate: authenticate,
             authorize: authorize,
             getAuthorizationInfo: getAuthorizationInfo,
             tokenAuthorization: tokenAuthorization,
-            generateToken: generateToken
+            generateToken: generateToken,
+            getToken: getToken
         }
     }
 

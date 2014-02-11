@@ -660,6 +660,23 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                 callback(new Error(ERROR_DISCONNECTED));
             }
         }
+        function getToken(callback){
+            ASSERT(typeof callback === 'function');
+            if(socketConnected){
+                var guid = GUID();
+                callbacks[guid] = {
+                    cb: callback,
+                    to: setTimeout(callbackTimeout,100*options.timeout, guid)
+                };
+                socket.emit('getToken',function(err,result){
+                    clearTimeout(callbacks[guid].to);
+                    delete callbacks[guid];
+                    callback(err,result);
+                });
+            } else {
+                callback(new Error(ERROR_DISCONNECTED));
+            }
+        }
         return {
             openDatabase: openDatabase,
             closeDatabase: closeDatabase,
@@ -671,7 +688,8 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
             deleteProject: deleteProject,
             openProject: openProject,
             simpleRequest: simpleRequest,
-            simpleResult: simpleResult
+            simpleResult: simpleResult,
+            getToken: getToken
         };
     }
     return Database;
