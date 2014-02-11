@@ -197,18 +197,19 @@ define(['js/Constants',
 
     };
 
-    SVGDecoratorCore.prototype._getSVGContent = function (svgFile) {
-        if (svgCache[svgFile]) {
-            return svgCache[svgFile].clone();
-        } else {
-            return defaultSVG.clone();
-        }
-    };
-
     SVGDecoratorCore.prototype._updateSVGContent = function (svg) {
+        var svgIcon;
         //set new content
         this.$svgContent.empty();
-        this.$svgContent.append(this._getSVGContent(svg));
+
+        if (svgCache[svg]) {
+            svgIcon = svgCache[svg].clone();
+        } else {
+            svgIcon = defaultSVG.clone();
+            $(svgIcon.find('text')).html('!!! ' + svg + ' !!!');
+        }
+
+        this.$svgContent.append(svgIcon);
 
         this._discoverConnectionAreas();
         this._generateConnectors();
