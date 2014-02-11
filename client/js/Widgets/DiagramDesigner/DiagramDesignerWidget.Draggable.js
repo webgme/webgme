@@ -44,7 +44,12 @@ define(['js/DragDrop/DragSource',
                     //we need to check if the target element is SVGElement or not
                     //because jQuery does not work well on SVGElements
                     if (event.originalEvent.target instanceof SVGElement) {
-                        ret = event.originalEvent.target.getAttribute("class").split(' ').indexOf(DiagramDesignerWidgetConstants.CONNECTOR_CLASS) === -1;
+                        var classDef = event.originalEvent.target.getAttribute("class");
+                        if (classDef) {
+                            ret = classDef.split(' ').indexOf(DiagramDesignerWidgetConstants.CONNECTOR_CLASS) === -1;
+                        } else {
+                            ret = true;
+                        }
                     } else {
                         ret = !$(event.originalEvent.target).hasClass(DiagramDesignerWidgetConstants.CONNECTOR_CLASS);
                     }
