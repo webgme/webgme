@@ -104,8 +104,10 @@ define(['logManager'], function (logManager) {
 
     var _captureFocusOnBody = function (event) {
         var tagName = event && event.target && event.target.tagName;
+        var activeElementName = document.activeElement && document.activeElement.nodeName;
         var noCapture = ['INPUT', 'TEXTAREA', 'SELECT'];
-        if (noCapture.indexOf(tagName) === -1) {
+        if (noCapture.indexOf(tagName) === -1 &&
+            noCapture.indexOf(activeElementName) === -1) {
             _captureFocus();
         }
     };
