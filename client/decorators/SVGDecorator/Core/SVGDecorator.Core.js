@@ -172,33 +172,36 @@ define(['js/Constants',
             svgFile = nodeObj.getAttribute('svg');
         }
 
-        if (svgFile) {
-            if (svgCache[svgFile]) {
-                this._updateSVGContent(svgFile);
-            } else {
-                // get the svg from the server in SYNC mode, may take some time
-                svgURL = SVG_DIR + svgFile;
-                $.ajax(svgURL, {'async': false})
-                    .done(function ( data ) {
-                        // downloaded successfully
-                        // cache the content if valid
-                        var svgElements = $(data).find('svg');
-                        if (svgElements.length > 0) {
-                            svgCache[svgFile] = svgElements.first();
+        if (this._SVGFile !== svgFile) {
+            if (svgFile) {
+                if (svgCache[svgFile]) {
+                    this._updateSVGContent(svgFile);
+                } else {
+                    // get the svg from the server in SYNC mode, may take some time
+                    svgURL = SVG_DIR + svgFile;
+                    $.ajax(svgURL, {'async': false})
+                        .done(function ( data ) {
+                            // downloaded successfully
+                            // cache the content if valid
+                            var svgElements = $(data).find('svg');
+                            if (svgElements.length > 0) {
+                                svgCache[svgFile] = svgElements.first();
+                                self._updateSVGContent(svgFile);
+                            } else {
+                                self._updateSVGContent(undefined);
+                            }
+                        })
+                        .fail(function () {
+                            // download failed for this type
+                            logger.error('Failed to download SVG file: ' + svgFile);
                             self._updateSVGContent(svgFile);
-                        } else {
-                            self._updateSVGContent(undefined);
-                        }
-                    })
-                    .fail(function () {
-                        // download failed for this type
-                        logger.error('Failed to download SVG file: ' + svgFile);
-                        self._updateSVGContent(svgFile);
-                    });
+                        });
+                }
+            } else {
+                logger.error('Invalid SVG file: "' + svgFile + '"');
+                this._updateSVGContent(undefined);
             }
-        } else {
-            logger.error('Invalid SVG file: "' + svgFile + '"');
-            this._updateSVGContent(undefined);
+            this._SVGFile = svgFile;
         }
     };
 
