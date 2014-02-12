@@ -110,8 +110,9 @@ define(['logManager',
                 if (panels.length > 0) {
                     loadPanels(panels);
                 } else {
-                    client.connectToDatabaseAsync({'open': true,
-                                                    'project': projectToLoad || CONFIG.project}, function (err) {
+                    projectToLoad = projectToLoad === "" ? CONFIG.project : projectToLoad;
+                    client.connectToDatabaseAsync({'open': projectToLoad,
+                                                    'project': projectToLoad}, function (err) {
                         if (err) {
                             logger.error(err);
                         } else {

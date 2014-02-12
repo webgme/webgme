@@ -94,8 +94,6 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
             this._refreshConnData(idList);
         }
 
-        this._updateConnectionPorts( idList );
-
         //no matter what, we want the id's of all the connections
         //not just the ones that explicitly needs rerouting
         idList = this.diagramDesigner.connectionIds.slice(0);
@@ -174,9 +172,6 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
             this.insertConnection(connIdList[i]);
         }
 
-        //Next, I will update the ports as necessary
-        this._updateConnectionPorts(connIdList);
-       
         this._initialized = true;
 
     };
@@ -307,27 +302,6 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         //Update Box 
         this.autorouter.setBox(this._autorouterBoxes[objId], newBox);
 
-    };
-
-    ConnectionRouteManager3.prototype._updateConnectionPorts = function (idList) {
-        var canvas = this.diagramDesigner,
-            connId,
-            srcObjId,
-            srcSubCompId,
-            dstObjId,
-            dstSubCompId,
-            i = idList.length;
-
-        while(i--){
-            connId = idList[i];
-            srcObjId = canvas.connectionEndIDs[connId].srcObjId;
-            srcSubCompId = canvas.connectionEndIDs[connId].srcSubCompId;
-            dstObjId = canvas.connectionEndIDs[connId].dstObjId;
-            dstSubCompId = canvas.connectionEndIDs[connId].dstSubCompId;
-
-            this._updatePort(srcObjId, srcSubCompId);
-            this._updatePort(dstObjId, dstSubCompId);
-        }
     };
 
     ConnectionRouteManager3.prototype._updatePort = function (objId, subCompId) {

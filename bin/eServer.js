@@ -97,6 +97,7 @@ requirejs(['logManager',
 
 
 
+
     //for session handling we save the user data to the memory and reuse them in case of need
     var _users = {};
     passport.serializeUser(function(user, done) {
@@ -128,8 +129,13 @@ requirejs(['logManager',
 
     function checkREST(req,res,next){
         if(_REST === null){
-            var protocolPrefix = parameters.httpsecure === true ? 'https://' : 'http://';
-            _REST = new REST({host:parameters.mongoip,port:parameters.mongoport,database:parameters.mongodatabase,baseUrl:protocolPrefix+req.headers.host+'/rest'});
+            var restAuthorization,
+                baseUrl = parameters.httpsecure === true ? 'https://' : 'http://'+req.headers.host+'/rest';
+            if(parameters.secureREST === true){
+                restAuthorization = gme.tokenAuthorization;
+                baseUrl += '/token';
+            }
+            _REST = new REST({host:parameters.mongoip,port:parameters.mongoport,database:parameters.mongodatabase,baseUrl:baseUrl,authorization:restAuthorization});
         }
         return next();
     }
@@ -241,17 +247,31 @@ requirejs(['logManager',
         }
     });
     //rest functionality
+    //rest token generation
+    app.get('/gettoken',ensureAuthenticated,function(req,res){
+        gme.getToken(req.session.id,function(err,token){
+            if(err){
+                res.send(err);
+            } else {
+                res.send(token);
+            }
+        });
+    });
+    //rest requests
     app.get('/rest/*',checkREST,function(req,res){
 
-        var urlArray = req.url.split('/');
-        if(urlArray.length > 2){
-            var command = urlArray[2];
-            var parameters = urlArray.slice(3);
+        var commandpos = CONFIG.secureREST === true ? 3 : 2,
+            minlength = CONFIG.secureREST === true ? 3 : 2,
+            urlArray = req.url.split('/');
+        if(urlArray.length > minlength){
+            var command = urlArray[commandpos],
+                token = CONFIG.secureREST === true ? urlArray[2] : "",
+                parameters = urlArray.slice(commandpos+1);
             _REST.initialize(function(err){
                 if(err){
                     res.send(500);
                 } else {
-                    _REST.doRESTCommand(_REST.request.GET,command,parameters,function(httpStatus,object){
+                    _REST.doRESTCommand(_REST.request.GET,command,token,parameters,function(httpStatus,object){
                         if(command === _REST.command.etf){
                             var filename = 'exportedNode.json';
                             if(parameters[3]){
@@ -326,6 +346,7 @@ requirejs(['logManager',
     __storageOptions.port = parameters.mongoport;
     __storageOptions.database = parameters.mongodatabase;
     __storageOptions.log = logManager.create('combined-server-storage');
+    __storageOptions.getToken = gme.getToken;
 
     __storageOptions.basedir =  __dirname + "/..";
 

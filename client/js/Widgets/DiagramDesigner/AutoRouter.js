@@ -88,79 +88,87 @@ define(['logManager'], function (logManager) {
     };
 
     var getClosestPorts = function(srcPorts, dstPorts, segmentPoints){
-        var i,
-            j,
-            dx,
-            dy,
-            srcP,
-            dstP,
-            minLength = -1,
-            srcConnectionPoints = [],
-            dstConnectionPoints = [],
-            cLength;
+        //I will get the dx, dy that to the src/dst target and then I will calculate
+        // a priority value that will rate the ports as candidates for the 
+        //given path
+        var srcC = new ArPoint(), //src center
+            dstC = new ArPoint(), //dst center
+            vectors = [],
+            srcTgt, //src target
+            dstTgt,//dst target 
+            srcPort,
+            dstPort,
+            maxP = 0,
+            i; 
 
-        //Make sure srcPorts, dstPorts are arrays of ports
-        if( srcPorts instanceof AutoRouterBox )
-            srcPorts = srcPorts.getPortList(); 
-        else if( srcPorts.ports && srcPorts.ports[0] instanceof AutoRouterPort )
-            srcPorts = srcPorts.ports; 
-        else
-            srcPorts = srcPorts instanceof Array ? srcPorts : [ srcPorts ];
-
-        if( dstPorts instanceof AutoRouterBox )
-            dstPorts = dstPorts.getPortList(); 
-        else if( dstPorts.ports && dstPorts.ports[0] instanceof AutoRouterPort )
-            dstPorts = dstPorts.ports; 
-        else
-            dstPorts = dstPorts instanceof Array ? dstPorts : [ dstPorts ];
-
+        //Get the center points of the src,dst ports
         for(i = 0; i < srcPorts.length; i++){
-            srcConnectionPoints.push(srcPorts[i].getRect().getCenter());
+            var sPoint = srcPorts[i].getRect().getCenter();
+            srcC.x += sPoint.x;
+            srcC.y += sPoint.y;
         }
         for(i = 0; i < dstPorts.length; i++){
-            dstConnectionPoints.push(dstPorts[i].getRect().getCenter());
+            var dPoint = dstPorts[i].getRect().getCenter();
+            dstC.x += dPoint.x;
+            dstC.y += dPoint.y;
         }
 
+        //Get the average center point of src, dst
+        srcC.x = srcC.x/srcPorts.length;
+        srcC.y = srcC.y/srcPorts.length;
+        dstC.x = dstC.x/dstPorts.length;
+        dstC.y = dstC.y/dstPorts.length;
 
+        //Adjust if there are segment points
         if (segmentPoints && segmentPoints.length > 0) {
-            for (i = 0; i < srcConnectionPoints.length; i += 1) {
-                for (j = 0; j < dstConnectionPoints.length; j += 1) {
-                    dx = { "src": Math.abs(srcConnectionPoints[i].x - segmentPoints[0][1]),
-                        "dst": Math.abs(dstConnectionPoints[j].x - segmentPoints[segmentPoints.length - 1][0])};
+            srcTgt = new ArPoint(segmentPoints[0].getX(), segmentPoints[0].getY());
+            dstTgt = new ArPoint(segmentPoints[segmentPoints.length-1].getX(), segmentPoints[segmentPoints.length-1].getY());
+        }else{
+            srcTgt = dstC;
+            dstTgt = srcC;
+        }
 
-                    dy =  { "src": Math.abs(srcConnectionPoints[i].y - segmentPoints[0][1]),
-                        "dst": Math.abs(dstConnectionPoints[j].y - segmentPoints[segmentPoints.length - 1][1])};
+        //Get the directions
+        vectors.push(srcTgt.minus(srcC).getArray());
+        vectors.push(dstTgt.minus(dstC).getArray());
 
-                    cLength = Math.sqrt(dx.src * dx.src + dy.src * dy.src) + Math.sqrt(dx.dst * dx.dst + dy.dst * dy.dst);
+        //Create priority function
+        function createPriority(port, center, vector){
+            var priority = 0,
+                point = [ port.getRect().getCenter().x - center.x, port.getRect().getCenter().y - center.y],
+                major = Math.abs(vector[0]) > Math.abs(vector[1]) ? 0 : 1,
+                minor = (major+1)%2;
 
-                    if (minLength === -1 || minLength > cLength) {
-                        minLength = cLength;
-                        srcP = i;
-                        dstP = j;
-                    }
-                }
-            }
-        } else {
-            for (i = 0; i < srcConnectionPoints.length; i += 1) {
-                for (j = 0; j < dstConnectionPoints.length; j += 1) {
-                    dx = Math.abs(srcConnectionPoints[i].x - dstConnectionPoints[j].x);
-                    dy = Math.abs(srcConnectionPoints[i].y - dstConnectionPoints[j].y);
 
-                    cLength = Math.sqrt(dx * dx + dy * dy);
+            if(point[major] > 0 === vector[major] > 0)//If they have the same parity, assign the priority to maximize that is > 1
+                priority = (1/Math.abs(vector[major] - point[major])) * Math.pow(Math.abs(vector[major]), 2); 
+            //It is squared to further emphasized the major direction
 
-                    if (minLength === -1 || minLength > cLength) {
-                        minLength = cLength;
-                        srcP = i;
-                        dstP = j;
-                    }
-                }
+            if(point[minor] > 0 === vector[minor] > 0)//If they have the same parity, assign the priority to maximize that is < 1
+                priority += 1/Math.abs(vector[minor] - point[minor]); 
+
+            return priority;
+        }
+
+        //Create priority values for each port.
+        for(i = 0; i < srcPorts.length; i++){
+            var priority = createPriority(srcPorts[i], srcC, vectors[0]);
+            if( priority >= maxP ){
+                srcPort = srcPorts[i];
+                maxP = priority;
             }
         }
 
-        if(srcPorts[srcP].getOwner() === dstPorts[dstP].getOwner() && srcPorts.length-1 )
-            srcP = srcP + 1 % srcPorts.length;
+        maxP = 0;
+        for(i = 0; i < dstPorts.length; i++){
+            var priority = createPriority(dstPorts[i], dstC, vectors[1]);
+            if( priority >= maxP && srcPort.getOwner() !== dstPorts[i].getOwner()){
+                dstPort = dstPorts[i];
+                maxP = priority;
+            }
+        }
 
-        return { "src": srcPorts[ srcP ], "dst": dstPorts[ dstP ] };
+        return { "src": srcPort, "dst": dstPort };
     };
 
 
@@ -1932,32 +1940,24 @@ if(DEBUG && ArPointList.length > 0){
             this.cx = x;
             this.cy = y;
 
-            //functions
-            this.equals = equals;
-            this.add = add;
-            this.subtract = subtract;
-            this.plus = plus;
-            this.minus = minus;
-            this.assign = assign;
-
-            function equals(otherSize){
+            this.equals = function(otherSize){
                 if( this.cx === otherSize.cx && this.cy === otherSize.cy)
                     return true;
 
                 return false;
             }
 
-            function add(otherSize){ //equivalent to +=
+            this.add = function(otherSize){ //equivalent to +=
                 this.cx += otherSize.cx;
                 this.cy += otherSize.cy;
             }
 
-            function subtract(otherSize){
+            this.subtract = function(otherSize){
                 this.cx -= otherSize.cx;
                 this.cy -= otherSize.cy;
             }
 
-            function plus(otherObject){ //equivalent to +
+            this.plus = function(otherObject){ //equivalent to +
                 var objectCopy = undefined;
 
                 if(otherObject instanceof ArSize){
@@ -1978,7 +1978,7 @@ if(DEBUG && ArPointList.length > 0){
                 return objectCopy;
             }
 
-            function minus(otherObject){ //equivalent to +
+            this.minus = function(otherObject){ //equivalent to -
                 var objectCopy = undefined;
 
                 if(otherObject instanceof ArSize){
@@ -1999,9 +1999,16 @@ if(DEBUG && ArPointList.length > 0){
                 return objectCopy;
             }
 
-            function assign(otherSize){
+            this.assign = function(otherSize){
                 this.cx = otherSize.cx;
                 this.cy = otherSize.cy;
+            }
+
+            this.getArray = function(){
+                var res = [];
+                res.push(this.cx);
+                res.push(this.cy);
+                return res;
             }
         };
 
@@ -2131,8 +2138,8 @@ if(DEBUG && ArPointList.length > 0){
                 assert(index !== -1, "ARBox.deletePort: index !== -1 FAILED");
 
                 graph.deleteEdges(port);
-                delPort = ports.splice(index, 1);
-                delPort.setOwner(null);
+                delPort = ports.splice(index, 1)[0];
+                delPort.destroy();
                 delPort = null;
 
                 atomic = false;
@@ -3020,7 +3027,8 @@ if(DEBUG && ArPointList.length > 0){
             };        
 
              this.dumpEdges = function(msg){
-                var edge = order_first;
+                var edge = order_first,
+                    total = 1;
                 console.log(msg);
 
                 while( edge !== null ){
@@ -3028,8 +3036,21 @@ if(DEBUG && ArPointList.length > 0){
                         + '\t\t\t(' + (edge.getEdgeFixed() ? "FIXED" : "MOVEABLE" ) + ')\t\t' 
                         + (edge.getBracketClosing() ? "Bracket Closing" : (edge.getBracketOpening() ? "Bracket Opening" : "")));
                     edge = edge.getOrderNext();
+                    total++;
                 }
+
+                console.log("Total Edges: " + total);
             };
+
+             this.getEdgeCount = function(){
+                 var edge = order_first,
+                     total = 1;
+                 while(edge !== null){
+                     edge = edge.getOrderNext();
+                     total++;
+                 }
+                 return total;
+             };
                    
                 //--Private Functions
             function position_GetRealY(edge, y){
@@ -3297,10 +3318,7 @@ if(DEBUG && ArPointList.length > 0){
                 assert( edge !== null, "AREdgeList.Delete: edge !== null FAILED" );
 
                 self.remove(edge);
-
                 edge.setOwner(null);
-
-                edge = undefined;
             };
 
                 //-- Private
@@ -4204,6 +4222,8 @@ if(DEBUG && ArPointList.length > 0){
             selfPoints.push(new ArPoint(ED_MAXCOORD, ED_MAXCOORD));
             selfPoints.push(new ArPoint(ED_MINCOORD, ED_MAXCOORD));
 
+            this.deleteEdges = deleteEdges;
+
             this.getSelfPoints = function(){
                 return selfPoints;
             }
@@ -4261,7 +4281,7 @@ if(DEBUG && ArPointList.length > 0){
 
                     delete boxes[box.getID()];
 
-                }else{ //ARPath
+                }else if(box instanceof AutoRouterPath){ //ARPath
                     var path = box;
                     deleteEdges(path);
 
@@ -4271,6 +4291,7 @@ if(DEBUG && ArPointList.length > 0){
                     assert( iter > -1, "ARGraph.remove: Path does not exist");
 
                     paths.splice(iter, 1);
+                }else{//port FIXME
                 }
             }
 
@@ -5995,7 +6016,9 @@ if(DEBUG && ArPointList.length > 0){
             };
 
             this.autoRoute = function(){
+var oldTime = new Date().getTime();
                 connectAllDisconnectedPaths();
+//console.log("1: " + (new Date().getTime() - oldTime));oldTime = new Date().getTime();
 
                 var updated = 0,
                     last = 0,       // identifies the last change to the path
@@ -6005,6 +6028,7 @@ if(DEBUG && ArPointList.length > 0){
 
                 while( c > 0 )
                 {
+//console.log("2: " + (new Date().getTime() - oldTime));oldTime = new Date().getTime();
                     if( c > 0 )
                     {
                         if( last === 1 )
@@ -6018,6 +6042,7 @@ if(DEBUG && ArPointList.length > 0){
                         }
                     }
 
+//console.log("3: " + (new Date().getTime() - oldTime));oldTime = new Date().getTime();
                     if( c > 0 )
                     {
                         if( last === 2 )
@@ -6041,6 +6066,7 @@ if(DEBUG && ArPointList.length > 0){
                         }
                     }
 
+//console.log("4: " + (new Date().getTime() - oldTime));oldTime = new Date().getTime();
                     if( c > 0 )
                     {
                         if( last === 3 )
@@ -6064,6 +6090,7 @@ if(DEBUG && ArPointList.length > 0){
                         }
                     }
 
+//console.log("5: " + (new Date().getTime() - oldTime));oldTime = new Date().getTime();
                     if( c > 0 )
                     {
                         if( last === 4 )
@@ -6087,6 +6114,7 @@ if(DEBUG && ArPointList.length > 0){
                         }
                     }
 
+//console.log("6: " + (new Date().getTime() - oldTime));oldTime = new Date().getTime();
                     if( c > 0 )
                     {
                         if( last === 5 )
@@ -6110,6 +6138,7 @@ if(DEBUG && ArPointList.length > 0){
                         }
                     }
 
+//console.log("7: " + (new Date().getTime() - oldTime));oldTime = new Date().getTime();
                     if( c > 0 )
                     {
                         if( last === 6 )
@@ -6123,6 +6152,7 @@ if(DEBUG && ArPointList.length > 0){
                         }
                     }
 
+//console.log("8: " + (new Date().getTime() - oldTime));oldTime = new Date().getTime();
                     if( c > 0 )
                     {
                         if( last === 7 )
@@ -6150,6 +6180,7 @@ if(DEBUG && ArPointList.length > 0){
                 var pathiter = 0;
 
                 //		HRESULT hr = S_OK;
+//console.log("9: " + (new Date().getTime() - oldTime));oldTime = new Date().getTime();
                 while (pathiter < paths.length)
                 {
                     var path = paths[pathiter];
@@ -6182,6 +6213,7 @@ if(DEBUG && ArPointList.length > 0){
                     pathiter++;
                 }
 
+//console.log("END: " + (new Date().getTime() - oldTime));oldTime = new Date().getTime();
                 _logger.info("c has been decremented " + (100 - c) + " times\nlast is " + last + 
                 "\nd is " + d + "\ndm is " + dm);
                 return updated;
@@ -7915,8 +7947,10 @@ if(DEBUG && ArPointList.length > 0){
             ports;
     
     
-        while( oldPorts.length ){
-            box.deletePort(oldPorts[0]);
+        for(var oldPort in oldPorts){
+            if(oldPorts.hasOwnProperty(oldPort)){
+                box.deletePort(oldPorts[oldPort]);
+            }
         }
     
         ports = this.addPort(box, connArea);

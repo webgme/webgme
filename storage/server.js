@@ -374,6 +374,11 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                     getWorkerResult(resultId,callback);
                 });
 
+                //token for REST
+                socket.on('getToken',function(callback){
+                    parameters.getToken(getSessionID(socket),callback);
+                });
+
                 socket.on('disconnect',function(){
                     //TODO temporary the disconnect function has been removed
                 });
