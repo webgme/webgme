@@ -154,6 +154,10 @@ define([ "util/assert" ], function (ASSERT) {
             logger.debug('simpleResult('+resultId+')');
             _database.simpleResult(resultId,callback);
         }
+        function getToken(callback){
+            logger.debug('getToken()');
+            _database.getToken(callback);
+        }
 		return {
 			openDatabase: openDatabase,
 			closeDatabase: closeDatabase,
@@ -165,7 +169,8 @@ define([ "util/assert" ], function (ASSERT) {
 			openProject: openProject,
 			deleteProject: deleteProject,
             simpleRequest: simpleRequest,
-            simpleResult: simpleResult
+            simpleResult: simpleResult,
+            getToken: getToken
 		};
 	}
 

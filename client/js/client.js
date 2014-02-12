@@ -4,12 +4,6 @@ define([
     'util/guid',
     'core/core',
     'storage/clientstorage',
-    'storage/hashcheck',
-    'storage/cache',
-    'storage/failsafe',
-    'storage/client',
-    'storage/log',
-    'storage/commit',
     'logManager',
     'util/url',
     'coreclient/meta',
@@ -26,12 +20,6 @@ define([
         GUID,
         Core,
         Storage,
-        HashCheck,
-        Cache,
-        Failsafe,
-        SocketIOClient,
-        Log,
-        Commit,
         LogManager,
         URL,
         BaseMeta,
@@ -83,8 +71,7 @@ define([
                 _commitCache = null,
                 _offline = false,
                 _networkWatcher = null,
-                _userName = URL.parseCookie(document.cookie).webgme || _configuration.user,
-                _privateKey = 4,
+                _TOKEN = null;
                 META = new GuiMeta(new BaseMeta());
 
             function print_nodes(pretext){
@@ -203,6 +190,22 @@ define([
                 _recentCommits.unshift(commitHash);
                 if(_recentCommits.length > 10){
                     _recentCommits.pop();
+                }
+            }
+
+            function tokenWathcer(){
+                var token = null;
+                var refreshToken = function(){
+                    _database.getToken(function(err,t){
+                        if(!err){
+                            token = t;
+                        }
+                    });
+                };
+                setInterval(refreshToken,10000); //maybe it could be configurable
+
+                return {
+                    getToken: function(){return token;}
                 }
             }
 
@@ -1148,6 +1151,11 @@ define([
                 }
             }
             function connectToDatabaseAsync(options,callback){
+                var oldcallback = callback;
+                callback = function(err){
+                    _TOKEN = tokenWathcer();
+                    oldcallback(err);
+                }; //we add tokenWatcher start at this point
                 options = options || {};
                 callback = callback || function(){};
                 options.open = (options.open !== undefined || options.open !== null) ? options.open : false;
@@ -1831,9 +1839,15 @@ define([
                     //return _core.getPointerPath(_nodes[_id].node,name);
                     return {to:_core.getPointerPath(_nodes[_id].node,name),from:[]};
                 };
+                var getOwnPointer = function(name){
+                    return {to:_core.getOwnPointerPath(_nodes[_id].node,name),from:[]};
+                };
 
                 var getPointerNames = function(){
                     return _core.getPointerNames(_nodes[_id].node);
+                };
+                var getOwnPointerNames = function(){
+                    return _core.getOwnPointerNames(_nodes[_id].node);
                 };
 
                 var getAttributeNames = function(){
@@ -1960,6 +1974,8 @@ define([
                         getRegistryNames : getRegistryNames,
                         getOwnAttributeNames : getOwnAttributeNames,
                         getOwnRegistryNames : getOwnRegistryNames,
+                        getOwnPointer : getOwnPointer,
+                        getOwnPointerNames : getOwnPointerNames,
 
                         //SetFunctions
                         getMemberIds               : getMemberIds,
@@ -2093,7 +2109,7 @@ define([
             function getDumpURL(path,filepath){
                 filepath = filepath || _projectName+'_'+_branch+'_'+URL.addSpecialChars(path);
                 if(window && window.location && window.location && _nodes && _nodes[ROOT_PATH]){
-                    return window.location.protocol + '//' + window.location.host +'/rest/etf/'+_projectName+'/'+URL.addSpecialChars(_core.getHash(_nodes[ROOT_PATH].node))+'/'+URL.addSpecialChars(path)+'/'+filepath;
+                    return window.location.protocol + '//' + window.location.host +'/rest'+(_TOKEN.getToken() === null ? '' : '/'+_TOKEN.getToken())+'/etf/'+_projectName+'/'+URL.addSpecialChars(_core.getHash(_nodes[ROOT_PATH].node))+'/'+URL.addSpecialChars(path)+'/'+filepath;
                 }
                 return null;
             }
