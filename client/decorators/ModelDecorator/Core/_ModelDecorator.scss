@@ -122,5 +122,10 @@ $abstract-class-name-color: #AAAAAA;
         color: $abstract-class-name-color;
       }
     }
+
+    img.embeddedsvg {
+      width: 40px;
+      position: relative;
+    }
   }
 }

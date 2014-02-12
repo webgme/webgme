@@ -21,7 +21,9 @@ define(['js/Constants',
                          displayFormat) {
 
     var ModelDecoratorCore,
-        ABSTRACT_CLASS = 'abstract';
+        ABSTRACT_CLASS = 'abstract',
+        SVG_DIR = '/decorators/SVGDecorator/SVG/',
+        EMBEDDED_SVG_CLASS = 'embeddedsvg';
 
 
     ModelDecoratorCore = function () {
@@ -39,7 +41,8 @@ define(['js/Constants',
             "$portsContainerLeft": undefined,
             "$portsContainerRight": undefined,
             "$portsContainerCenter": undefined,
-            "$ref": undefined};
+            "$ref": undefined,
+            "$imgSVG": undefined};
 		
 		this._displayConnectors = false;			
 		if (params && params.connectors) {
@@ -106,6 +109,7 @@ define(['js/Constants',
         this._updatePorts();
         this._updateReference();
         this._updateAbstract();
+        this._updateSVG();
     };
 
     ModelDecoratorCore.prototype._updateColors = function () {
@@ -466,6 +470,68 @@ define(['js/Constants',
             }
         } else {
             this.$el.removeClass(ABSTRACT_CLASS);
+        }
+    };
+
+    /***** UPDATE THE SVG ICON OF THE NODE *****/
+    ModelDecoratorCore.prototype._updateSVG = function () {
+        var client = this._control._client,
+            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
+            svgFile = "",
+            svgURL,
+            self = this,
+            logger = this.logger,
+            TOP_OFFSET = 5;
+
+        var svgReady = function () {
+            var svgHeight = self.skinParts.$imgSVG.outerHeight(),
+                portsHeight = self.skinParts.$portsContainer.outerHeight(),
+                marginTop = -portsHeight + TOP_OFFSET;
+
+            self.skinParts.$imgSVG.css('margin-top', marginTop);
+
+            self.skinParts.$imgSVG.off('load');
+            self.skinParts.$imgSVG.off('error');
+
+            self.calculateDimension();
+            if (self.hostDesignerItem.canvas) {
+                var sel = self.hostDesignerItem.canvas.selectionManager.getSelectedElements();
+                if (sel.length === 1 &&
+                    sel[0] === self.hostDesignerItem.id) {
+                    self.hostDesignerItem.canvas.selectNone();
+                    self.hostDesignerItem.canvas.select([self.hostDesignerItem.id]);
+                }
+            }
+        };
+
+        if (nodeObj) {
+            svgFile = nodeObj.getAttribute('svg');
+        }
+
+        delete this._imgSVGUpdated;
+
+        if (svgFile) {
+            // get the svg from the server in SYNC mode, may take some time
+            svgURL = SVG_DIR + svgFile;
+            if (!this.skinParts.$imgSVG) {
+                this.skinParts.$imgSVG = $('<img>', {'class': EMBEDDED_SVG_CLASS});
+                this.$el.append(this.skinParts.$imgSVG);
+            }
+            if (this.skinParts.$imgSVG.attr('src') !== svgURL) {
+                this.skinParts.$imgSVG.attr('src', svgURL);
+                this._imgSVGUpdated = true;
+                this.skinParts.$imgSVG.on('load', function (event) {
+                    svgReady();
+                });
+                this.skinParts.$imgSVG.on('error', function (event) {
+                    svgReady();
+                });
+            }
+        } else {
+            if (this.skinParts.$imgSVG) {
+                this.skinParts.$imgSVG.remove();
+                this.skinParts.$imgSVG = undefined;
+            }
         }
     };
 

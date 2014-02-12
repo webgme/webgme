@@ -105,6 +105,9 @@
   .model-decorator.abstract .name {
     font-style: italic;
     color: #aaaaaa; }
+  .model-decorator img.embeddedsvg {
+    width: 40px;
+    position: relative; }
 
 .model-decorator .connector {
   background-color: #fefefe;
