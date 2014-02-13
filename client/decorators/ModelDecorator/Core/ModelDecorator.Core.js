@@ -22,7 +22,7 @@ define(['js/Constants',
 
     var ModelDecoratorCore,
         ABSTRACT_CLASS = 'abstract',
-        SVG_DIR = '/decorators/SVGDecorator/SVG/',
+        SVG_DIR = CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER,
         EMBEDDED_SVG_CLASS = 'embeddedsvg';
 
 
@@ -480,12 +480,10 @@ define(['js/Constants',
             svgFile = "",
             svgURL,
             self = this,
-            logger = this.logger,
             TOP_OFFSET = 5;
 
         var svgReady = function () {
-            var svgHeight = self.skinParts.$imgSVG.outerHeight(),
-                portsHeight = self.skinParts.$portsContainer.outerHeight(),
+            var portsHeight = self.skinParts.$portsContainer.outerHeight(),
                 marginTop = -portsHeight + TOP_OFFSET;
 
             self.skinParts.$imgSVG.css('margin-top', marginTop);
@@ -517,10 +515,10 @@ define(['js/Constants',
             }
             if (this.skinParts.$imgSVG.attr('src') !== svgURL) {
                 this.skinParts.$imgSVG.attr('src', svgURL);
-                this.skinParts.$imgSVG.on('load', function (event) {
+                this.skinParts.$imgSVG.on('load', function (/*event*/) {
                     svgReady();
                 });
-                this.skinParts.$imgSVG.on('error', function (event) {
+                this.skinParts.$imgSVG.on('error', function (/*event*/) {
                     svgReady();
                 });
             }

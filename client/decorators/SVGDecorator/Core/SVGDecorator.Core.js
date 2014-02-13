@@ -20,7 +20,7 @@ define(['js/Constants',
 
     var SVGDecoratorCore,
         ABSTRACT_CLASS = 'abstract',
-        SVG_DIR = '/decorators/SVGDecorator/SVG/',
+        SVG_DIR = CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER,
         CONNECTION_AREA_CLASS = 'connection-area',
         DATA_LEN = 'len',
         DATA_ANGLE = 'angle',
