@@ -17,11 +17,10 @@ define(["ifexists!bin/decorators"], function (LOCAL_DECORATORS) {
 
     var DECORATORS = {
         'DiagramDesigner': [
-            'CircleDecorator',
             'DefaultDecorator',
             'ModelDecorator',
             'UMLStateMachineDecorator',
-	    'SVGDecorator']
+    	    'SVGDecorator']
     };
 
     if (LOCAL_DECORATORS) {
