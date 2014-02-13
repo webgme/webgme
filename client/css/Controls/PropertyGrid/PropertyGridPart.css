@@ -59,6 +59,10 @@
           width: 40%;
           overflow: hidden;
           text-overflow: ellipsis; }
+          .pgp ul li.cr .property-name i.btn-reset {
+            margin-left: 3px; }
+            .pgp ul li.cr .property-name i.btn-reset:hover {
+              cursor: pointer; }
         .pgp ul li.cr .c {
           float: left;
           width: 60%;

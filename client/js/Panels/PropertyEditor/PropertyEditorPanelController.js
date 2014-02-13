@@ -12,7 +12,11 @@ define(['logManager',
                                         DecoratorDB,
                                         CONSTANTS) {
 
-    var PropertyEditorController;
+    var PropertyEditorController,
+        ENABLED_REGISTRY_KEYS = [REGISTRY_KEYS.DECORATOR,
+                                    REGISTRY_KEYS.IS_PORT,
+                                    REGISTRY_KEYS.IS_ABSTRACT,
+                                    REGISTRY_KEYS.DISPLAY_FORMAT];
 
     PropertyEditorController = function (client, propertyGrid) {
         this._client = client;
@@ -35,6 +39,10 @@ define(['logManager',
 
         this._propertyGrid.onFinishChange(function (args) {
             self._onPropertyChanged(args);
+        });
+
+        this._propertyGrid.onReset(function (propertyName) {
+            self._onReset(propertyName);
         });
     };
 
@@ -79,21 +87,36 @@ define(['logManager',
             commonRegs = {},
             commonPointers = {},
             noCommonValueColor = "#f89406",
-            _getNodePropertyValues, //fn
+            _getNodeAttributeValues, //fn
+            _getNodeRegistryValues, //fn
             _filterCommon, //fn
             _addItemsToResultList,  //fn
             _getPointerInfo,
             commonAttrMeta = {},
             buildCommonAttrMeta,     //fn
-            _client = this._client;
+            _client = this._client,
+            _isResetableAttribute,
+            _isResetableRegistry;
 
-        _getNodePropertyValues = function (node, propNameFn, propValueFn) {
+        _getNodeAttributeValues = function (node) {
             var result =  {},
-                attrNames = node[propNameFn](),
+                attrNames = node.getAttributeNames(),
                 len = attrNames.length;
 
             while (--len >= 0) {
-                result[attrNames[len]] = node[propValueFn](attrNames[len]);
+                result[attrNames[len]] = node.getAttribute(attrNames[len]);
+            }
+
+            return util.flattenObject(result);
+        };
+
+        _getNodeRegistryValues = function (node) {
+            var result =  {},
+                registryNames = ENABLED_REGISTRY_KEYS,
+                len = registryNames.length;
+
+            while (--len >= 0) {
+                result[registryNames[len]] = node.getRegistry(registryNames[len]);
             }
 
             return util.flattenObject(result);
@@ -238,12 +261,12 @@ define(['logManager',
                 cNode = this._client.getNode(selectedObjIDs[i]);
 
                 if (cNode) {
-                    flattenedAttrs = _getNodePropertyValues(cNode, "getAttributeNames", "getAttribute");
+                    flattenedAttrs = _getNodeAttributeValues(cNode);
                     buildCommonAttrMeta(cNode, i === selectionLength - 1);
 
                     _filterCommon(commonAttrs, flattenedAttrs, i === selectionLength - 1);
 
-                    flattenedRegs = _getNodePropertyValues(cNode, "getRegistryNames", "getRegistry");
+                    flattenedRegs = _getNodeRegistryValues(cNode);
 
                     _filterCommon(commonRegs, flattenedRegs, i === selectionLength - 1);
 
@@ -253,7 +276,83 @@ define(['logManager',
                 }
             }
 
-            _addItemsToResultList = function (srcList, prefix, dstList, isAttribute) {
+            _isResetableAttribute = function (attrName) {
+                var resetable = true,
+                    i = selectionLength,
+                    ownAttrNames,
+                    baseNode;
+
+                while (i--) {
+                    cNode = _client.getNode(selectedObjIDs[i]);
+
+                    if (cNode) {
+                        //get parentnode
+                        baseNode = _client.getNode(cNode.getBaseId());
+
+                        //get own attribute names
+                        ownAttrNames = cNode.getOwnAttributeNames();
+
+                        if (ownAttrNames.indexOf(attrName) !== -1) {
+                            //there are 1 options:
+                            //#1: the attribute is defined on this level, and that's why it is in the onwAttributeNames list
+                            //#2: the attribute is inherited and overridden on this level (but defined somewhere up in the hierarchy)
+                            if (baseNode) {
+                                resetable = baseNode.getAttributeNames().indexOf(attrName) !== -1;
+                            } else {
+                                resetable = false;
+                            }
+                        } else {
+                            resetable = false;
+                        }
+                    }
+
+                    if (!resetable) {
+                        break;
+                    }
+                }
+
+                return resetable;
+            };
+
+            _isResetableRegistry = function (regName) {
+                var resetable = true,
+                    i = selectionLength,
+                    ownRegistryNames,
+                    baseNode;
+
+                while (i--) {
+                    cNode = _client.getNode(selectedObjIDs[i]);
+
+                    if (cNode) {
+                        //get parentnode
+                        baseNode = _client.getNode(cNode.getBaseId());
+
+                        //get own registry names
+                        ownRegistryNames = cNode.getOwnRegistryNames();
+
+                        if (ownRegistryNames.indexOf(regName) !== -1) {
+                            //there are 1 options:
+                            //#1: the registry is defined on this level, and that's why it is in the ownRegistryNames list
+                            //#2: the registry is inherited and overridden on this level (but defined somewhere up in the hierarchy)
+                            if (baseNode) {
+                                resetable = baseNode.getRegistryNames().indexOf(regName) !== -1;
+                            } else {
+                                resetable = false;
+                            }
+                        } else {
+                            resetable = false;
+                        }
+                    }
+
+                    if (!resetable) {
+                        break;
+                    }
+                }
+
+                return resetable;
+            };
+
+            _addItemsToResultList = function (srcList, prefix, dstList, isAttribute, isRegistry) {
                 var i,
                     extKey,
                     keyParts,
@@ -293,13 +392,12 @@ define(['logManager',
                                 dstList[extKey].options = {"textColor": noCommonValueColor};
                             }
 
-                            //possible inherited style --> italic
-                            /*if (extKey.indexOf(".x") > -1) {
-                                //let's say its inherited, make it italic
+                            //is it inherited??? if so, it can be reseted to the inherited value
+                            if (isAttribute && _isResetableAttribute(keyParts[0]) ||
+                                isRegistry && _isResetableRegistry(keyParts[0])) {
                                 dstList[extKey].options = dstList[extKey].options || {};
-                                dstList[extKey].options.textItalic = true;
-                                dstList[extKey].options.textBold = true;
-                            }*/
+                                dstList[extKey].options.resetable = true;
+                            }
 
                             //decorator value should be rendered as an option list
                             if (i === REGISTRY_KEYS.DECORATOR) {
@@ -338,43 +436,11 @@ define(['logManager',
                 "text": "Pointers",
                 "value": undefined};
 
-            _addItemsToResultList(commonAttrs, "Attributes", propList, true);
+            _addItemsToResultList(commonAttrs, "Attributes", propList, true, false);
 
-            //modify registry
-            //filter out everything form the registry, except:
-            //#1: decorator
-            //#2: isPort
-            //#3: isAbstract
-            //#4: DisplayFormat
-            var displayReg = false;
-            var enabledRegistryKeys = [];
-            enabledRegistryKeys.push(REGISTRY_KEYS.DECORATOR);
-            enabledRegistryKeys.push(REGISTRY_KEYS.IS_PORT);
-            enabledRegistryKeys.push(REGISTRY_KEYS.IS_ABSTRACT);
-            enabledRegistryKeys.push(REGISTRY_KEYS.DISPLAY_FORMAT);
-            for (var it in commonRegs) {
-                if (commonRegs.hasOwnProperty(it)) {
-                    if (commonRegs.hasOwnProperty(it)) {
-                        displayReg = false;
+            _addItemsToResultList(commonRegs, "Registry", propList, false, true);
 
-                        i = enabledRegistryKeys.length;
-                        while (i--) {
-                            if (it.indexOf(enabledRegistryKeys[i]) === 0) {
-                                displayReg = true;
-                                break;
-                            }
-                        }
-
-                        if (!displayReg) {
-                            delete commonRegs[it];
-                        }
-                    }
-                }
-            }
-
-            _addItemsToResultList(commonRegs, "Registry", propList);
-
-            //filter out ros from Pointers
+            //filter out from Pointers
             for (var it in commonPointers) {
                 if (commonPointers.hasOwnProperty(it)) {
                     if (commonPointers.hasOwnProperty(it)) {
@@ -382,7 +448,7 @@ define(['logManager',
                     }
                 }
             }
-            _addItemsToResultList(commonPointers, "Pointers", propList);
+            _addItemsToResultList(commonPointers, "Pointers", propList, false, false);
         }
 
         return propList;
@@ -439,6 +505,33 @@ define(['logManager',
             //save back object
             this._client[setterFn](gmeID, path, propObject);
         }
+        this._client.completeTransaction();
+    };
+
+    PropertyEditorController.prototype._onReset = function (propertyName) {
+        var selectedObjIDs = this._idList,
+            i = selectedObjIDs.length,
+            keyArr,
+            delFn,
+            gmeID,
+            path;
+
+        this._client.startTransaction();
+        while (--i >= 0) {
+            gmeID = selectedObjIDs[i];
+
+            keyArr = propertyName.split(".");
+            if (keyArr[0] === "Attributes") {
+                delFn = "delAttributes";
+            } else {
+                delFn = "delRegistry";
+            }
+
+            keyArr.splice(0, 1);
+
+            path = keyArr[0];
+            this._client[delFn](gmeID, path);
+  }
         this._client.completeTransaction();
     };
 

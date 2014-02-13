@@ -105,6 +105,14 @@ $input-color: lighten($background-color, 18.5%);
           width: 40%;
           overflow: hidden;
           text-overflow: ellipsis;
+
+          i.btn-reset {
+            margin-left: 3px;
+
+            &:hover {
+              cursor: pointer;
+            }
+          }
         }
 
         /** Controllers */
