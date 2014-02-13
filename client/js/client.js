@@ -2094,7 +2094,7 @@ define([
                 //if called on an existing project, it will ruin it!!! - although the old commits will be untouched
                 createProjectAsync(projectname,function(err){
                     selectProjectAsync(projectname,function(err){
-                        Import(_core,null,jNode,function(err,root){
+                        MergeImport(_core,null,jNode,function(err,root){
                             if(err){
                                 callback(err);
                             } else {
