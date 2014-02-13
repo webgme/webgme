@@ -5,12 +5,14 @@ define(['logManager',
     'js/NodePropertyNames',
     'js/RegistryKeys',
     'js/Decorators/DecoratorDB',
-    'js/Constants'], function (logManager,
+    'js/Constants',
+    'assets/decoratorSVG'], function (logManager,
                                         util,
                                         nodePropertyNames,
                                         REGISTRY_KEYS,
                                         DecoratorDB,
-                                        CONSTANTS) {
+                                        CONSTANTS,
+                                        decoratorSVG) {
 
     var PropertyEditorController,
         META_REGISTRY_KEYS = [REGISTRY_KEYS.IS_PORT,
@@ -21,7 +23,8 @@ define(['logManager',
         PROPERTY_GROUP_META = 'META',
         PROPERTY_GROUP_PREFERENCES = 'Preferences',
         PROPERTY_GROUP_ATTRIBUTES = 'Attributes',
-        PROPERTY_GROUP_POINTERS = 'Pointers';
+        PROPERTY_GROUP_POINTERS = 'Pointers',
+        DecoratorSVGIconList = [''].concat(decoratorSVG.DecoratorSVGIconList.slice(0));
 
     PropertyEditorController = function (client, propertyGrid) {
         this._client = client;
@@ -417,6 +420,14 @@ define(['logManager',
                                 dstList[extKey].valueItems = commonAttrMeta[i].enum.slice(0);
                                 dstList[extKey].valueItems.sort();
                             }
+
+                            //if it is the SVG decorator's SVG Icon name
+                            //list the
+                            if (i === REGISTRY_KEYS.SVG_ICON) {
+                                //TODO: needs to be fixed
+                                dstList[extKey].valueItems = DecoratorSVGIconList;
+                            }
+
                         }
                     }
                 }
