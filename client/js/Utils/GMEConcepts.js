@@ -183,6 +183,7 @@ define(['jquery',
         var FCO_ID = _client.createChild({'parentId': CONSTANTS.PROJECT_ROOT_ID});
         _client.setAttributes(FCO_ID, nodePropertyNames.Attributes.name, 'FCO');
         _client.setRegistry(FCO_ID, REGISTRY_KEYS.DECORATOR, "");
+        _client.setRegistry(FCO_ID, REGISTRY_KEYS.SVG_ICON, "");
         _client.setRegistry(FCO_ID, REGISTRY_KEYS.IS_PORT, false);
         _client.setRegistry(FCO_ID, REGISTRY_KEYS.IS_ABSTRACT, false);
 

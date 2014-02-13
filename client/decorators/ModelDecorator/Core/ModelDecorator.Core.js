@@ -505,10 +505,8 @@ define(['js/Constants',
         };
 
         if (nodeObj) {
-            svgFile = nodeObj.getAttribute('svg');
+            svgFile = nodeObj.getRegistry(REGISTRY_KEYS.SVG_ICON);
         }
-
-        delete this._imgSVGUpdated;
 
         if (svgFile) {
             // get the svg from the server in SYNC mode, may take some time
@@ -519,7 +517,6 @@ define(['js/Constants',
             }
             if (this.skinParts.$imgSVG.attr('src') !== svgURL) {
                 this.skinParts.$imgSVG.attr('src', svgURL);
-                this._imgSVGUpdated = true;
                 this.skinParts.$imgSVG.on('load', function (event) {
                     svgReady();
                 });

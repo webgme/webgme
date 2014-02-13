@@ -169,11 +169,11 @@ define(['js/Constants',
             logger = this.logger;
 
         if (nodeObj) {
-            svgFile = nodeObj.getAttribute('svg');
+            svgFile = nodeObj.getRegistry(REGISTRY_KEYS.SVG_ICON);
         }
 
-        if (this._SVGFile !== svgFile) {
-            if (svgFile) {
+        if (svgFile) {
+            if (this._SVGFile !== svgFile) {
                 if (svgCache[svgFile]) {
                     this._updateSVGContent(svgFile);
                 } else {
@@ -197,11 +197,15 @@ define(['js/Constants',
                             self._updateSVGContent(svgFile);
                         });
                 }
-            } else {
+                this._SVGFile = svgFile;
+            }
+        } else {
+            if (svgFile !== "") {
                 logger.error('Invalid SVG file: "' + svgFile + '"');
                 this._updateSVGContent(undefined);
+            } else {
+                this._updateSVGContent('');
             }
-            this._SVGFile = svgFile;
         }
     };
 
@@ -217,7 +221,9 @@ define(['js/Constants',
             svgIcon = svgCache[svg].clone();
         } else {
             svgIcon = defaultSVG.clone();
-            $(svgIcon.find('text')).html('!!! ' + svg + ' !!!');
+            if (svg !== '') {
+                $(svgIcon.find('text')).html('!!! ' + svg + ' !!!');
+            }
         }
 
         this.$svgContent.append(svgIcon);

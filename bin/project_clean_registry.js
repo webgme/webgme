@@ -34,7 +34,8 @@ requirejs([ "util/common", "util/assert", "core/tasync", "util/guid", "client/js
                                     REGISTRY_KEYS.IS_PORT,
                                     REGISTRY_KEYS.DECORATOR,
                                     REGISTRY_KEYS.DISPLAY_FORMAT,
-                                    REGISTRY_KEYS.POSITION
+                                    REGISTRY_KEYS.POSITION,
+                                    REGISTRY_KEYS.SVG_ICON
                                 ];
 
     //these registry keys will be saved in the setmembers' registry
