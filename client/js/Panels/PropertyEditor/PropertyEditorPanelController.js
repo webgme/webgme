@@ -13,10 +13,14 @@ define(['logManager',
                                         CONSTANTS) {
 
     var PropertyEditorController,
-        ENABLED_REGISTRY_KEYS = [REGISTRY_KEYS.DECORATOR,
-                                    REGISTRY_KEYS.IS_PORT,
-                                    REGISTRY_KEYS.IS_ABSTRACT,
-                                    REGISTRY_KEYS.DISPLAY_FORMAT];
+        META_REGISTRY_KEYS = [REGISTRY_KEYS.IS_PORT,
+                                    REGISTRY_KEYS.IS_ABSTRACT],
+        PREFERENCES_REGISTRY_KEYS = [REGISTRY_KEYS.DECORATOR,
+            REGISTRY_KEYS.DISPLAY_FORMAT],
+        PROPERTY_GROUP_META = 'META',
+        PROPERTY_GROUP_PREFERENCES = 'Preferences',
+        PROPERTY_GROUP_ATTRIBUTES = 'Attributes',
+        PROPERTY_GROUP_POINTERS = 'Pointers';
 
     PropertyEditorController = function (client, propertyGrid) {
         this._client = client;
@@ -81,10 +85,12 @@ define(['logManager',
             cNode,
             i,
             flattenedAttrs,
-            flattenedRegs,
+            flattenedPreferences,
+            flattenedMeta,
             flattenedPointers,
             commonAttrs = {},
-            commonRegs = {},
+            commonPreferences = {},
+            commonMeta = {},
             commonPointers = {},
             noCommonValueColor = "#f89406",
             _getNodeAttributeValues, //fn
@@ -110,9 +116,8 @@ define(['logManager',
             return util.flattenObject(result);
         };
 
-        _getNodeRegistryValues = function (node) {
+        _getNodeRegistryValues = function (node, registryNames) {
             var result =  {},
-                registryNames = ENABLED_REGISTRY_KEYS,
                 len = registryNames.length;
 
             while (--len >= 0) {
@@ -263,15 +268,15 @@ define(['logManager',
                 if (cNode) {
                     flattenedAttrs = _getNodeAttributeValues(cNode);
                     buildCommonAttrMeta(cNode, i === selectionLength - 1);
-
                     _filterCommon(commonAttrs, flattenedAttrs, i === selectionLength - 1);
 
-                    flattenedRegs = _getNodeRegistryValues(cNode);
+                    flattenedPreferences = _getNodeRegistryValues(cNode, PREFERENCES_REGISTRY_KEYS);
+                    _filterCommon(commonPreferences, flattenedPreferences, i === selectionLength - 1);
 
-                    _filterCommon(commonRegs, flattenedRegs, i === selectionLength - 1);
+                    flattenedMeta = _getNodeRegistryValues(cNode, META_REGISTRY_KEYS);
+                    _filterCommon(commonMeta, flattenedMeta, i === selectionLength - 1);
 
                     flattenedPointers = _getPointerInfo(cNode);
-
                     _filterCommon(commonPointers, flattenedPointers, i === selectionLength - 1);
                 }
             }
@@ -424,21 +429,27 @@ define(['logManager',
                     "readOnly": true};
             }
 
-            propList["Attributes"] = { "name": 'Attributes',
-                "text": "Attributes",
+            propList[PROPERTY_GROUP_ATTRIBUTES] = { "name": PROPERTY_GROUP_ATTRIBUTES,
+                "text": PROPERTY_GROUP_ATTRIBUTES,
                 "value": undefined};
 
-            propList["Registry"] = { "name": 'Registry',
-                "text": "Registry",
+            propList[PROPERTY_GROUP_PREFERENCES] = { "name": PROPERTY_GROUP_PREFERENCES,
+                "text": PROPERTY_GROUP_PREFERENCES,
                 "value": undefined};
 
-            propList["Pointers"] = { "name": 'Pointers',
-                "text": "Pointers",
+            propList[PROPERTY_GROUP_META] = { "name": PROPERTY_GROUP_META,
+                "text": PROPERTY_GROUP_META,
                 "value": undefined};
 
-            _addItemsToResultList(commonAttrs, "Attributes", propList, true, false);
+            propList[PROPERTY_GROUP_POINTERS] = { "name": PROPERTY_GROUP_POINTERS,
+                "text": PROPERTY_GROUP_POINTERS,
+                "value": undefined};
 
-            _addItemsToResultList(commonRegs, "Registry", propList, false, true);
+            _addItemsToResultList(commonAttrs, PROPERTY_GROUP_ATTRIBUTES, propList, true, false);
+
+            _addItemsToResultList(commonPreferences, PROPERTY_GROUP_PREFERENCES, propList, false, true);
+
+            _addItemsToResultList(commonMeta, PROPERTY_GROUP_META, propList, false, true);
 
             //filter out from Pointers
             for (var it in commonPointers) {
@@ -448,7 +459,7 @@ define(['logManager',
                     }
                 }
             }
-            _addItemsToResultList(commonPointers, "Pointers", propList, false, false);
+            _addItemsToResultList(commonPointers, PROPERTY_GROUP_POINTERS, propList, false, false);
         }
 
         return propList;
@@ -470,40 +481,44 @@ define(['logManager',
             gmeID = selectedObjIDs[i];
 
             keyArr = args.id.split(".");
-            if (keyArr[0] === "Attributes") {
+            setterFn = undefined;
+            getterFn = undefined;
+            if (keyArr[0] === PROPERTY_GROUP_ATTRIBUTES) {
                 setterFn = "setAttributes";
                 getterFn = "getEditableAttribute";
-            } else {
+            } else if (keyArr[0] === PROPERTY_GROUP_PREFERENCES || keyArr[0] === PROPERTY_GROUP_META) {
                 setterFn = "setRegistry";
                 getterFn = "getEditableRegistry";
             }
 
-            keyArr.splice(0, 1);
+            if (setterFn && getterFn) {
+                keyArr.splice(0, 1);
 
-            //get property object from node
-            path = keyArr[0];
-            propObject = this._client.getNode(gmeID)[getterFn](path);
+                //get property object from node
+                path = keyArr[0];
+                propObject = this._client.getNode(gmeID)[getterFn](path);
 
-            //get root object
-            propPointer = propObject;
-            keyArr.splice(0, 1);
+                //get root object
+                propPointer = propObject;
+                keyArr.splice(0, 1);
 
-            if(keyArr.length < 1){
-                //simple value so just set it
-                propObject = args.newValue;
-            } else {
-                //dig down to leaf property
-                while (keyArr.length > 1) {
-                    propPointer = propPointer[keyArr[0]];
-                    keyArr.splice(0, 1);
+                if(keyArr.length < 1){
+                    //simple value so just set it
+                    propObject = args.newValue;
+                } else {
+                    //dig down to leaf property
+                    while (keyArr.length > 1) {
+                        propPointer = propPointer[keyArr[0]];
+                        keyArr.splice(0, 1);
+                    }
+
+                    //set value
+                    propPointer[keyArr[0]] = args.newValue;
                 }
 
-                //set value
-                propPointer[keyArr[0]] = args.newValue;
+                //save back object
+                this._client[setterFn](gmeID, path, propObject);
             }
-
-            //save back object
-            this._client[setterFn](gmeID, path, propObject);
         }
         this._client.completeTransaction();
     };
@@ -521,17 +536,20 @@ define(['logManager',
             gmeID = selectedObjIDs[i];
 
             keyArr = propertyName.split(".");
-            if (keyArr[0] === "Attributes") {
+            delFn = undefined;
+            if (keyArr[0] === PROPERTY_GROUP_ATTRIBUTES) {
                 delFn = "delAttributes";
-            } else {
+            } else if (keyArr[0] === PROPERTY_GROUP_PREFERENCES || keyArr[0] === PROPERTY_GROUP_META) {
                 delFn = "delRegistry";
             }
 
-            keyArr.splice(0, 1);
+            if (delFn) {
+                keyArr.splice(0, 1);
 
-            path = keyArr[0];
-            this._client[delFn](gmeID, path);
-  }
+                path = keyArr[0];
+                this._client[delFn](gmeID, path);
+            }
+        }
         this._client.completeTransaction();
     };
 
