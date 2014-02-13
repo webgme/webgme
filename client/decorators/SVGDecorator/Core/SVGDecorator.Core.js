@@ -100,7 +100,7 @@ define(['js/Constants',
         if (this.fillColor) {
             fillColorElements.css({'fill': this.fillColor});
         } else {
-            this.$el.css({'fill': ''});
+            fillColorElements.css({'fill': ''});
         }
 
         if (this.borderColor) {
