@@ -90,9 +90,6 @@ define(['js/Constants',
         }
     };
 
-//    ModelicaDecoratorDiagramDesignerWidget.prototype.calculateDimension = function () {
-//    };
-
     ModelicaDecoratorDiagramDesignerWidget.prototype.update = function () {
         //TODO: there might be some optimization here not just blindly rerender everything...
         this._renderContent();
