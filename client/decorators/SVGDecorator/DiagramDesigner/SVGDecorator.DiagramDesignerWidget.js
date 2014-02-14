@@ -69,17 +69,12 @@ define(['js/Constants',
 
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
-    SVGDecoratorDiagramDesignerWidget.prototype.calculateDimension = function () {
-        this._paddingTop = parseInt(this.$el.css('padding-top'), 10);
-        this._borderTop = parseInt(this.$el.css('border-top-width'), 10);
-
-        if (this.hostDesignerItem) {
-            this.hostDesignerItem.setSize(this.$el.outerWidth(true), this.$el.outerHeight(true));
-        }
-
+    SVGDecoratorDiagramDesignerWidget.prototype.onRenderGetLayoutInfo = function () {
         this.svgContainerWidth = this.$svgContent.outerWidth(true);
         this.svgWidth = this.$svgContent.find('svg').outerWidth(true);
         this.svgHeight = this.$svgContent.find('svg').outerHeight(true);
+
+        DiagramDesignerWidgetDecoratorBase.prototype.onRenderGetLayoutInfo.call(this);
     };
 
     SVGDecoratorDiagramDesignerWidget.prototype.onRenderSetLayoutInfo = function () {
