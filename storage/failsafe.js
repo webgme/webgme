@@ -485,7 +485,8 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
 			openProject: openProject,
 			deleteProject: deleteProject,
             simpleRequest: _database.simpleRequest,
-            simpleResult: _database.simpleResult
+            simpleResult: _database.simpleResult,
+            getToken: _database.getToken
 		};
 	}
 

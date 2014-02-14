@@ -300,6 +300,10 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 
 			return Object.keys(merged);
 		};
+        core.getOwnPointerNames = function(node){
+            ASSERT(isValidNode(node));
+            return oldcore.getPointerNames(node);
+        };
 
         core.getPointerPath = function (node, name) {
             ASSERT(isValidNode(node) && typeof name === "string");
@@ -392,6 +396,9 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
                 target = coretree.joinPaths(oldcore.getPath(node), target);
             }
             return target || basePath || (hasNullTarget ? null : undefined);
+        };
+        core.getOwnPointerPath = function(node,name){
+            oldcore.getPointerPath(node,name);
         };
 
 		core._getPointerPath = function(node, name) {

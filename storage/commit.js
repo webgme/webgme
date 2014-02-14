@@ -78,7 +78,8 @@ define([ "util/assert", "util/sha1", "util/canon" ], function (ASSERT, SHA1, CAN
 			openProject: openProject,
 			deleteProject: _database.deleteProject,
             simpleRequest: _database.simpleRequest,
-            simpleResult: _database.simpleResult
+            simpleResult: _database.simpleResult,
+            getToken: _database.getToken
 		};
 	}
 
