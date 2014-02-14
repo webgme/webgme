@@ -8,10 +8,13 @@ var requirejs = require("requirejs");
 
 requirejs.config({
     nodeRequire: require,
-    baseUrl: __dirname + "/.."
+    baseUrl: __dirname + "/..",
+    paths: {
+        "underscore": 'client/lib/underscore/underscore-min'
+    }
 });
 
-requirejs([ "util/common", "util/assert", "core/tasync", "util/guid", "client/js/RegistryKeys" ], function (COMMON, ASSERT, TASYNC,GUID, REGISTRY_KEYS) {
+requirejs([ "util/common", "util/assert", "core/tasync", "util/guid", "client/js/RegistryKeys", "client/js/Constants" ], function (COMMON, ASSERT, TASYNC,GUID, REGISTRY_KEYS, CONSTANTS) {
     "use strict";
 
     TASYNC.trycatch(main, function (error) {
@@ -26,6 +29,13 @@ requirejs([ "util/common", "util/assert", "core/tasync", "util/guid", "client/js
         _branch = null,
         _projectName = null,
         _outFile = null;
+
+    var FCO_REGISTRY_KEYS = [REGISTRY_KEYS.DECORATOR,  REGISTRY_KEYS.SVG_ICON, REGISTRY_KEYS.IS_PORT, REGISTRY_KEYS.IS_ABSTRACT];
+    var FCO_REGISTRY_VALUES = {};
+    FCO_REGISTRY_VALUES[REGISTRY_KEYS.DECORATOR] = "";
+    FCO_REGISTRY_VALUES[REGISTRY_KEYS.SVG_ICON] = "";
+    FCO_REGISTRY_VALUES[REGISTRY_KEYS.IS_PORT] = false;
+    FCO_REGISTRY_VALUES[REGISTRY_KEYS.IS_ABSTRACT] = false;
 
     //these registry keys will be saved in the item's registry
     var _protectedRegistryKeys = [REGISTRY_KEYS.PROJECT_REGISTRY,
@@ -155,15 +165,40 @@ requirejs([ "util/common", "util/assert", "core/tasync", "util/guid", "client/js
         }, done);
     }
 
+    var __FCOID;
     function updateNode(core,node){ //TODO this method should be always up-to-date...
-        var objID = core.getPath(node,core.getRoot(node)) + ' ('+core.getAttribute(node,"name")+"): ";
-        console.log(objID);
+        if (!__FCOID) {
+            __FCOID = core.getRegistry(core.getRoot(node), REGISTRY_KEYS.PROJECT_REGISTRY)[CONSTANTS.PROJECT_FCO_ID];
+        }
+
+        var objID = core.getPath(node,core.getRoot(node));
+        var objName = objID + ' ('+core.getAttribute(node,"name")+"): ";
+        console.log(objName);
 
         //clear item's global registry values
         var registryKeys = core.getRegistryNames(node) || [];
+        var rk;
+        var msg;
+
+        //make sure that the FCO has all the necessary REGISTRY fields
+        if (objID === __FCOID) {
+            console.log("Checking project's FCO's registry:");
+            var fcoRegKeyLen = FCO_REGISTRY_KEYS.length;
+
+            while (fcoRegKeyLen--) {
+                rk = FCO_REGISTRY_KEYS[fcoRegKeyLen];
+                msg = '\t' + rk + ': ';
+                if (registryKeys.indexOf(rk) !== -1) {
+                    msg += 'OK';
+                } else {
+                    core.setRegistry(node, rk, FCO_REGISTRY_VALUES[rk]);
+                    msg += 'was missing, created with value: "' + FCO_REGISTRY_VALUES[rk] + '"';
+                }
+                console.log(msg);
+            }
+        }
         var len = registryKeys.length;
         var removedRegKeys = "";
-        var rk;
         while (len--) {
             //remove all that's not defined as protected
             rk = registryKeys[len];
@@ -223,6 +258,7 @@ requirejs([ "util/common", "util/assert", "core/tasync", "util/guid", "client/js
         };
         return TASYNC.call(traverseChildren,core,children);
     }
+
     function updateProject(core,roothash){
         var root = core.loadRoot(roothash);
         var done = TASYNC.call(traverseNode,core,root);
