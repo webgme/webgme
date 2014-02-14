@@ -64,6 +64,7 @@ requirejs(['logManager',
     var sitekey = null;
     var sitecertificate = null;
     var _REST = null;
+    var canCheckToken = true;
     if(parameters.httpsecure){
         sitekey = require('fs').readFileSync("proba-key.pem");
         sitecertificate = require('fs').readFileSync("proba-cert.pem");
@@ -164,6 +165,11 @@ requirejs(['logManager',
         }
     }
 
+    function prepClientLogin(req,res,next){
+        req.__gmeAuthFailUrl__ = '/login/client/fail';
+        next(null);
+    }
+
 
     var staticclientdirpath = path.resolve(__dirname+'./../client');
     var staticdirpath = path.resolve(__dirname+'./..');
@@ -208,6 +214,14 @@ requirejs(['logManager',
     app.post('/login',gme.authenticate,function(req,res){
         res.cookie('webgme',req.session.udmId);
         res.redirect('/');
+    });
+    app.post('/login/client',prepClientLogin,gme.authenticate,function(req,res){
+        res.cookie('webgme',req.session.udmId);
+        res.send(200);
+    });
+    app.get('/login/client/fail',function(req,res){
+        res.clearCookie('webgme');
+        res.send(401);
     });
     app.get('/login/google',checkGoogleAuthentication,passport.authenticate('google'));
     app.get('/login/google/return',gme.authenticate,function(req,res){
@@ -256,6 +270,27 @@ requirejs(['logManager',
                 res.send(token);
             }
         });
+    });
+    app.get('/checktoken/*',function(req,res){
+        if(canCheckToken == true){
+            var token = req.url.split('/');
+            if(token.length === 3){
+                token = token[2];
+                setTimeout(function(){canCheckToken = true;},60000);
+                canCheckToken = false;
+                gme.checkToken(token,function(isValid){
+                    if(isValid === true){
+                        res.send(200);
+                    } else {
+                        res.send(403);
+                    }
+                });
+            } else {
+                res.send(400);
+            }
+        } else {
+            res.send(403);
+        }
     });
     //rest requests
     app.get('/rest/*',checkREST,function(req,res){

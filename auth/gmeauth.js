@@ -293,7 +293,9 @@ define(["storage/mongo", "storage/commit", "core/core", "util/guid"],function(Mo
         function authenticate(req,res,next){
             var userId = req.body[_userField],
                 password = req.body[_passwordField],
-                gmail = false;
+                gmail = false,
+                returnUrl = req.__gmeAuthFailUrl__ || "/";
+            delete req.__gmeAuthFailUrl__;
             //gmail based authentication - no authentication just user search
             if(userId === null || userId === undefined){
                 userId = req.query['openid.ext1.value.email'];
@@ -314,11 +316,11 @@ define(["storage/mongo", "storage/commit", "core/core", "util/guid"],function(Mo
                             req.session.userType = 'GME';
                             next(null);
                         } else {
-                            res.redirect('/');
+                            res.redirect(returnUrl);
                         }
                     }
                 } else {
-                    res.redirect('/');
+                    res.redirect(returnUrl);
                 }
             };
             if(userId.indexOf('@')>0){
@@ -520,13 +522,23 @@ define(["storage/mongo", "storage/commit", "core/core", "util/guid"],function(Mo
                 }
             });
         }
+        function checkToken(token,callback){
+            getUserNodeByToken(token,function(err,user){
+                if(!err){
+                    callback(true);
+                } else {
+                    callback(false);
+                }
+            });
+        }
         return {
             authenticate: authenticate,
             authorize: authorize,
             getAuthorizationInfo: getAuthorizationInfo,
             tokenAuthorization: tokenAuthorization,
             generateToken: generateToken,
-            getToken: getToken
+            getToken: getToken,
+            checkToken: checkToken
         }
     }
 
