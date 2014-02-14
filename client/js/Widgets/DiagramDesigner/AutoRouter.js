@@ -8130,7 +8130,7 @@ var oldTime = new Date().getTime();
         var pathObjects = this.boxId2Path[boxObject.box.getID()],
             oldPorts = boxObject.ports,
             box = boxObject.box,
-            i = pathObjects.in.length,
+            i = pathObjects.out.length,
             ports;
     
         ports = this.addPort(box, connArea);//Get new ports
@@ -8138,45 +8138,45 @@ var oldTime = new Date().getTime();
         while(i--){//Update the paths with deleted ports
             var hasSrc = false;//Used to see if the path should be removed
 
-            for(var srcPort in pathObjects.in[i].srcPorts){
-                if(pathObjects.in[i].srcPorts.hasOwnProperty(srcPort)){
+            for(var srcPort in pathObjects.out[i].srcPorts){
+                if(pathObjects.out[i].srcPorts.hasOwnProperty(srcPort)){
                     if(ports.hasOwnProperty(srcPort)){
-                        pathObjects.in[i].srcPorts[srcPort] = ports[srcPort];
+                        pathObjects.out[i].srcPorts[srcPort] = ports[srcPort];
                         hasSrc = true;
                     }else{
-                        delete pathObjects.in[i].srcPorts[srcPort];
+                        delete pathObjects.out[i].srcPorts[srcPort];
                     }
                 }
             }
             if(!hasSrc){
-                this.remove(pathObjects.in[i].id);
+                this.remove(pathObjects.out[i].id);
             }else{
-                this.router.disconnect(pathObjects.in[i].path);
-                pathObjects.in[i].updateSrcPorts();
+                this.router.disconnect(pathObjects.out[i].path);
+                pathObjects.out[i].updateSrcPorts();
             }
         }
 
-        i = pathObjects.out.length;
+        i = pathObjects.in.length;
         while(i--){
 
             var hasDst = false;
-            for(var dstPort in pathObjects.out[i].dstPorts){
-                if(pathObjects.out[i].dstPorts.hasOwnProperty(dstPort)){
+            for(var dstPort in pathObjects.in[i].dstPorts){
+                if(pathObjects.in[i].dstPorts.hasOwnProperty(dstPort)){
                     if(ports.hasOwnProperty(dstPort)){
-                        pathObjects.out[i].dstPorts[dstPort] = ports[dstPort];
+                        pathObjects.in[i].dstPorts[dstPort] = ports[dstPort];
                         hasDst = true;
                     }else{
-                        delete pathObjects.out[i].dstPorts[dstPort];
+                        delete pathObjects.in[i].dstPorts[dstPort];
                     }
                 }
             }
 
             //Remove path if applicable
             if(!hasDst){
-                this.remove(pathObjects.out[i].id);
+                this.remove(pathObjects.in[i].id);
             }else{
-                this.router.disconnect(pathObjects.out[i].path);
-                pathObjects.out[i].updateDstPorts();
+                this.router.disconnect(pathObjects.in[i].path);
+                pathObjects.in[i].updateDstPorts();
             }
         }
     
