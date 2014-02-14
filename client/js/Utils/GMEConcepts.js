@@ -15,12 +15,14 @@ define(['jquery',
         'util/guid',
         'js/Constants',
         'js/NodePropertyNames',
+        'js/RegistryKeys',
         'js/Utils/METAAspectHelper',
         'js/Panels/MetaEditor/MetaEditorConstants'], function (_jquery,
                                                                logManager,
                                                                generateGuid,
                                            CONSTANTS,
                                            nodePropertyNames,
+                                           REGISTRY_KEYS,
                                            METAAspectHelper,
                                            MetaEditorConstants) {
 
@@ -180,17 +182,18 @@ define(['jquery',
         //create FCO, META, PROJECT_BASE
         var FCO_ID = _client.createChild({'parentId': CONSTANTS.PROJECT_ROOT_ID});
         _client.setAttributes(FCO_ID, nodePropertyNames.Attributes.name, 'FCO');
-        _client.setRegistry(FCO_ID, nodePropertyNames.Registry.decorator, "");
-        _client.setRegistry(FCO_ID, nodePropertyNames.Registry.isPort, false);
-        _client.setRegistry(FCO_ID, nodePropertyNames.Registry.isAbstract, false);
+        _client.setRegistry(FCO_ID, REGISTRY_KEYS.DECORATOR, "");
+        _client.setRegistry(FCO_ID, REGISTRY_KEYS.SVG_ICON, "");
+        _client.setRegistry(FCO_ID, REGISTRY_KEYS.IS_PORT, false);
+        _client.setRegistry(FCO_ID, REGISTRY_KEYS.IS_ABSTRACT, false);
 
         var projectRegistry = {};
         projectRegistry[CONSTANTS.PROJECT_FCO_ID] = FCO_ID;
-        _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, nodePropertyNames.Registry.ProjectRegistry, projectRegistry);
+        _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, REGISTRY_KEYS.PROJECT_REGISTRY, projectRegistry);
 
         //FCO has a DisplayAttr registry field that controls what Attribute's value should be displayed
         //by default the Attributes.name is the to-be-displayed attribute
-        _client.setRegistry(FCO_ID, nodePropertyNames.Registry.DisplayFormat, CONSTANTS.DISPLAY_FORMAT_ATTRIBUTE_MARKER + nodePropertyNames.Attributes.name);
+        _client.setRegistry(FCO_ID, REGISTRY_KEYS.DISPLAY_FORMAT, CONSTANTS.DISPLAY_FORMAT_ATTRIBUTE_MARKER + nodePropertyNames.Attributes.name);
 
         //set META rules accordingly
 
@@ -209,7 +212,7 @@ define(['jquery',
 
         //set META ASPECT to show FCO
         _client.addMember(CONSTANTS.PROJECT_ROOT_ID, FCO_ID, MetaEditorConstants.META_ASPECT_SET_NAME);
-        _client.setMemberRegistry(CONSTANTS.PROJECT_ROOT_ID, FCO_ID, MetaEditorConstants.META_ASPECT_SET_NAME, CONSTANTS.MEMBER_POSITION_REGISTRY_KEY, {'x': 100, 'y': 100} );
+        _client.setMemberRegistry(CONSTANTS.PROJECT_ROOT_ID, FCO_ID, MetaEditorConstants.META_ASPECT_SET_NAME, REGISTRY_KEYS.POSITION, {'x': 100, 'y': 100} );
 
         //create a default MetaSheet
         var defaultMetaSheetID = MetaEditorConstants.META_ASPECT_SHEET_NAME_PREFIX + generateGuid();
@@ -219,18 +222,18 @@ define(['jquery',
             'order': 0,
             'title': 'META'};
 
-        _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, MetaEditorConstants.META_SHEET_REGISTRY_KEY, [defaultMetaSheetDesc]);
+        _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, REGISTRY_KEYS.META_SHEETS, [defaultMetaSheetDesc]);
 
         //add the FCO to the default META sheet
         _client.addMember(CONSTANTS.PROJECT_ROOT_ID, FCO_ID, defaultMetaSheetID);
-        _client.setMemberRegistry(CONSTANTS.PROJECT_ROOT_ID, FCO_ID, defaultMetaSheetID, CONSTANTS.MEMBER_POSITION_REGISTRY_KEY, {'x': 100, 'y': 100} );
+        _client.setMemberRegistry(CONSTANTS.PROJECT_ROOT_ID, FCO_ID, defaultMetaSheetID, REGISTRY_KEYS.POSITION, {'x': 100, 'y': 100} );
 
         _client.completeTransaction();
     };
 
     var _isProjectRegistryValue = function (key, objID) {
         var rootNode = _client.getNode(CONSTANTS.PROJECT_ROOT_ID),
-            projectRegistry = rootNode.getRegistry(nodePropertyNames.Registry.ProjectRegistry),
+            projectRegistry = rootNode.getRegistry(REGISTRY_KEYS.PROJECT_REGISTRY),
             value = projectRegistry ?  projectRegistry[key] : null;
 
         return objID === value;
@@ -265,7 +268,7 @@ define(['jquery',
             while (len--) {
                 node = _client.getNode(baseIdList[len]);
                 if (node) {
-                    if (node.getRegistry(nodePropertyNames.Registry.isAbstract) === true) {
+                    if (node.getRegistry(REGISTRY_KEYS.IS_ABSTRACT) === true) {
                         baseIdList.splice(len, 1);
                     }
                 }
@@ -461,7 +464,7 @@ define(['jquery',
             obj = _client.getNode(objID);
 
         if (obj) {
-            isAbstract = obj.getRegistry(nodePropertyNames.Registry.isAbstract);
+            isAbstract = obj.getRegistry(REGISTRY_KEYS.IS_ABSTRACT);
         }
 
         return isAbstract === true;

@@ -1,0 +1,9 @@
+<svg width="70" height="40" xmlns="http://www.w3.org/2000/svg">
+    <g>
+        <ellipse class='fill-color border-color' cx="35" cy="20" rx="34" ry="19" stroke="#000" fill="#FFFFFF"/>
+        <line id='ca_N' class='connection-area' x1="30" y1="0" x2="40" y2="0" />
+        <line id='ca_S' class='connection-area' x1="40" y1="40" x2="30" y2="40" />
+        <line id='ca_E' class='connection-area' x1="70" y1="15" x2="70" y2="25" />
+        <line id='ca_W' class='connection-area' x1="0" y1="25" x2="0" y2="15" />
+    </g>
+</svg>

@@ -105,6 +105,9 @@
   .model-decorator.abstract .name {
     font-style: italic;
     color: #aaaaaa; }
+  .model-decorator img.embeddedsvg {
+    width: 40px;
+    position: relative; }
 
 .model-decorator .connector {
   background-color: #fefefe;
@@ -137,6 +140,6 @@
 .selected .model-decorator {
   border: 1px solid #52a8ec;
   background-color: #dbeafc;
-  -webkit-box-shadow: 0px 0px 7px 0px #1276d4 inset;
-  -moz-box-shadow: 0px 0px 7px 0px #1276d4 inset;
-  box-shadow: 0px 0px 7px 0px #1276d4 inset; }
+  -webkit-box-shadow: 0px 0px 15px 0px #1276d4 !important;
+  -moz-box-shadow: 0px 0px 15px 0px #1276d4 !important;
+  box-shadow: 0px 0px 15px 0px #1276d4 !important; }

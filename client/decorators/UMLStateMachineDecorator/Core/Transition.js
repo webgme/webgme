@@ -8,9 +8,13 @@
 
 define(['raphaeljs',
         'js/NodePropertyNames',
-        'js/Constants'], function (_raphaeljs,
+        'js/RegistryKeys',
+        'js/Constants',
+        'js/Utils/GMEVisualConcepts'], function (_raphaeljs,
                                    nodePropertyNames,
-                                   CONSTANTS) {
+                                   REGISTRY_KEYS,
+                                   CONSTANTS,
+                                   GMEVisualConcepts) {
 
     var Transition,
         WIDTH = 120,
@@ -24,10 +28,6 @@ define(['raphaeljs',
     };
 
     Transition.prototype._getTransitionLineStyle = function () {
-        var client = this._control._client,
-            nodeObj = client.getNode(this._gmeID),
-            lineStyleRegistry;
-
         this._lineStyle = {};
         this._lineStyle[CONSTANTS.LINE_STYLE.WIDTH] = DEFAULT_STROKE_WIDTH;
         this._lineStyle[CONSTANTS.LINE_STYLE.COLOR] = DEFAULT_COLOR;
@@ -36,17 +36,7 @@ define(['raphaeljs',
         this._lineStyle[CONSTANTS.LINE_STYLE.START_ARROW] = CONSTANTS.LINE_STYLE.LINE_ARROWS.NONE;
         this._lineStyle[CONSTANTS.LINE_STYLE.END_ARROW] = CONSTANTS.LINE_STYLE.LINE_ARROWS.NONE;
 
-        if (nodeObj) {
-            lineStyleRegistry = nodeObj.getRegistry(nodePropertyNames.Registry.lineStyle);
-
-            if (lineStyleRegistry) {
-                this._lineStyle[CONSTANTS.LINE_STYLE.WIDTH] = parseInt(lineStyleRegistry[CONSTANTS.LINE_STYLE.WIDTH], 10) || this._lineStyle[CONSTANTS.LINE_STYLE.WIDTH];
-                this._lineStyle[CONSTANTS.LINE_STYLE.COLOR] = lineStyleRegistry[CONSTANTS.LINE_STYLE.COLOR] || this._lineStyle[CONSTANTS.LINE_STYLE.COLOR];
-                this._lineStyle[CONSTANTS.LINE_STYLE.PATTERN] = lineStyleRegistry[CONSTANTS.LINE_STYLE.PATTERN] || this._lineStyle[CONSTANTS.LINE_STYLE.PATTERN];
-                this._lineStyle[CONSTANTS.LINE_STYLE.START_ARROW] = lineStyleRegistry[CONSTANTS.LINE_STYLE.START_ARROW] || this._lineStyle[CONSTANTS.LINE_STYLE.START_ARROW];
-                this._lineStyle[CONSTANTS.LINE_STYLE.END_ARROW] = lineStyleRegistry[CONSTANTS.LINE_STYLE.END_ARROW] || this._lineStyle[CONSTANTS.LINE_STYLE.END_ARROW];
-            }
-        }
+        _.extend(this._lineStyle, GMEVisualConcepts.getConnectionVisualProperties(this._gmeID));
     };
 
     Transition.prototype._getDisplayFormat = function () {
@@ -55,7 +45,7 @@ define(['raphaeljs',
             displayFormat;
 
         if (nodeObj) {
-            displayFormat = nodeObj.getRegistry(nodePropertyNames.Registry.DisplayFormat) || "";
+            displayFormat = nodeObj.getRegistry(REGISTRY_KEYS.DISPLAY_FORMAT) || "";
         }
 
         return displayFormat;

@@ -3,18 +3,22 @@ define(['logManager',
     'js/Constants',
     'js/Utils/GMEConcepts',
     'js/NodePropertyNames',
+    'js/RegistryKeys',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     './MetaEditorControl.DiagramDesignerWidgetEventHandlers',
     './MetaRelations',
-    './MetaEditorConstants'], function (logManager,
+    './MetaEditorConstants',
+    'js/Utils/PreferencesHelper'], function (logManager,
                                                         util,
                                                         CONSTANTS,
                                                         GMEConcepts,
                                                         nodePropertyNames,
+                                                        REGISTRY_KEYS,
                                                         DiagramDesignerWidgetConstants,
                                                         MetaEditorControlDiagramDesignerWidgetEventHandlers,
                                                         MetaRelations,
-                                                        MetaEditorConstants) {
+                                                        MetaEditorConstants,
+                                                        PreferencesHelper) {
 
     "use strict";
 
@@ -84,7 +88,9 @@ define(['logManager',
     MetaEditorControl.prototype._loadMetaAspectContainerNode = function () {
         var self = this;
 
-        this.logger.debug("_loadMetaAspectContainerNode: '" + META_RULES_CONTAINER_NODE_ID + "'");
+        this.metaAspectContainerNodeID = META_RULES_CONTAINER_NODE_ID;
+
+        this.logger.debug("_loadMetaAspectContainerNode: '" + this.metaAspectContainerNodeID + "'");
 
         this._initializeSelectedSheet();
 
@@ -92,8 +98,6 @@ define(['logManager',
         if (this._territoryId) {
             this._client.removeUI(this._territoryId);
         }
-
-        this.metaAspectContainerNodeID = META_RULES_CONTAINER_NODE_ID;
 
         //put new node's info into territory rules
         this._selfPatterns = {};
@@ -259,7 +263,7 @@ define(['logManager',
         this._metaAspectMembersCoordinatesGlobal = {};
         while (len--) {
             gmeID =  this._metaAspectMembersAll[len];
-            this._metaAspectMembersCoordinatesGlobal[gmeID] = aspectNode.getMemberRegistry(MetaEditorConstants.META_ASPECT_SET_NAME, gmeID, CONSTANTS.MEMBER_POSITION_REGISTRY_KEY);
+            this._metaAspectMembersCoordinatesGlobal[gmeID] = aspectNode.getMemberRegistry(MetaEditorConstants.META_ASPECT_SET_NAME, gmeID, REGISTRY_KEYS.POSITION);
         }
 
         //process the sheets
@@ -293,7 +297,9 @@ define(['logManager',
         }
 
         //check all other nodes for position change
-        diff = positionsUpdated;//_.intersection(this._selectedMetaAspectSheetMembers, selectedSheetMembers);
+        //or any other change that could have happened (local registry modifications)
+        //diff = positionsUpdated;//_.intersection(this._selectedMetaAspectSheetMembers, selectedSheetMembers);
+        diff = _.intersection(this._selectedMetaAspectSheetMembers, selectedSheetMembers);
         len = diff.length;
         while (len--) {
             gmeID = diff[len];
@@ -346,6 +352,9 @@ define(['logManager',
             objDesc.control = this;
             objDesc.metaInfo = {};
             objDesc.metaInfo[CONSTANTS.GME_ID] = gmeID;
+            //each meta specific registry customization will be stored in the MetaContainer node's main META SET (MetaEditorConstants.META_ASPECT_SET_NAME)
+            objDesc.preferencesHelper = PreferencesHelper.getPreferences([{'containerID': this.metaAspectContainerNodeID,
+                                                                            'setID': MetaEditorConstants.META_ASPECT_SET_NAME }]);
 
             uiComponent = this.diagramDesigner.createDesignerItem(objDesc);
 
@@ -788,6 +797,8 @@ define(['logManager',
             decClass = this._client.decoratorManager.getDecoratorForWidget(META_DECORATOR, WIDGET_NAME);
 
             objDesc.decoratorClass = decClass;
+            objDesc.preferencesHelper = PreferencesHelper.getPreferences([{'containerID': this.metaAspectContainerNodeID,
+                'setID': MetaEditorConstants.META_ASPECT_SET_NAME }]);
 
             this.diagramDesigner.updateDesignerItem(componentID, objDesc);
 
@@ -1122,7 +1133,6 @@ define(['logManager',
                             ]
                         });
                         self._client.makePointer(sourceID,userSelectedPointerName,null);
-                        self._updateObjectConnectionVisualStyles(sourceID);
                     } else {
                         //pointer list
                         self._client.setPointerMeta(sourceID,userSelectedPointerName,{
@@ -1138,7 +1148,6 @@ define(['logManager',
                     if (isPointerList !== true) {
                         //single pointer
                         self._client.updateValidTargetItem(sourceID,userSelectedPointerName,{id:targetID,max:1});
-                        self._updateObjectConnectionVisualStyles(sourceID);
                     } else {
                         //pointer list
                         self._client.updateValidTargetItem(sourceID,userSelectedPointerName,{id:targetID});
@@ -1166,7 +1175,6 @@ define(['logManager',
                     //single pointer
                     this._client.deleteMetaPointer(sourceID,pointerName);
                     this._client.delPointer(sourceID,pointerName);
-                    this._updateObjectConnectionVisualStyles(sourceID);
                 } else {
                     //pointer list
                     this._client.deleteMetaPointer(sourceID,pointerName);
@@ -1550,33 +1558,6 @@ define(['logManager',
         this._toolbarInitialized = true;
     };
 
-    //if the object is a validConnectionType and does not have the connection style visual properties in Registry, add them
-    //if it's not and has, remove them
-    MetaEditorControl.prototype._updateObjectConnectionVisualStyles = function(objectID) {
-        var isConnectionType = GMEConcepts.isConnectionType(objectID),
-            nodeObj = this._client.getNode(objectID),
-            existingLineStyle = nodeObj.getEditableRegistry(nodePropertyNames.Registry.lineStyle),
-            resultLineStyle = {},
-            DEFAULT_LINE_STYLE = {};
-
-        DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.WIDTH] = 1;
-        DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.COLOR] = "#000000";
-        DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.PATTERN] = "";
-        DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.TYPE] = "";
-        DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.START_ARROW] = "none";
-        DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.END_ARROW] = "none";
-        DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.POINTS] = [];
-
-        if (isConnectionType) {
-            _.extend(resultLineStyle, DEFAULT_LINE_STYLE, existingLineStyle);
-            this._client.setRegistry(objectID, nodePropertyNames.Registry.lineStyle, resultLineStyle);
-        } else {
-            //not connection type
-            //remove registry settings
-            this._client.setRegistry(objectID, nodePropertyNames.Registry.lineStyle, {});
-        }
-    };
-
     MetaEditorControl.prototype._getAssociatedConnections =  function (objectID) {
         var result = {'src': [], 'dst': []},
             otherID,
@@ -1614,7 +1595,7 @@ define(['logManager',
 
     MetaEditorControl.prototype._processMetaAspectSheetsRegistry = function () {
         var aspectNode = this._client.getNode(this.metaAspectContainerNodeID),
-            metaAspectSheetsRegistry = aspectNode.getEditableRegistry(MetaEditorConstants.META_SHEET_REGISTRY_KEY) || [],
+            metaAspectSheetsRegistry = aspectNode.getEditableRegistry(REGISTRY_KEYS.META_SHEETS) || [],
             i,
             len,
             sheetID,
@@ -1665,7 +1646,7 @@ define(['logManager',
             j = this._metaAspectMembersPerSheet[setName].length;
             while (j--) {
                 gmeID =  this._metaAspectMembersPerSheet[setName][j];
-                this._metaAspectMembersCoordinatesPerSheet[setName][gmeID] = aspectNode.getMemberRegistry(setName, gmeID, CONSTANTS.MEMBER_POSITION_REGISTRY_KEY);
+                this._metaAspectMembersCoordinatesPerSheet[setName][gmeID] = aspectNode.getMemberRegistry(setName, gmeID, REGISTRY_KEYS.POSITION);
                 this._metaAspectSheetsPerMember[gmeID] = this._metaAspectSheetsPerMember[gmeID] || [];
                 this._metaAspectSheetsPerMember[gmeID].push(setName);
             }

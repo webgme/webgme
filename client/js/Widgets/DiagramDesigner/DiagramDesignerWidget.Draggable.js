@@ -40,9 +40,19 @@ define(['js/DragDrop/DragSource',
                 //enable drag mode only in
                 //- DESIGN MODE
                 //- if the mousedown is not on a connection drawing start point
-                if (self.mode === self.OPERATING_MODES.DESIGN &&
-                    !$(event.originalEvent.target).hasClass(DiagramDesignerWidgetConstants.CONNECTOR_CLASS)) {
-                    ret = true;
+                if (self.mode === self.OPERATING_MODES.DESIGN) {
+                    //we need to check if the target element is SVGElement or not
+                    //because jQuery does not work well on SVGElements
+                    if (event.originalEvent.target instanceof SVGElement) {
+                        var classDef = event.originalEvent.target.getAttribute("class");
+                        if (classDef) {
+                            ret = classDef.split(' ').indexOf(DiagramDesignerWidgetConstants.CONNECTOR_CLASS) === -1;
+                        } else {
+                            ret = true;
+                        }
+                    } else {
+                        ret = !$(event.originalEvent.target).hasClass(DiagramDesignerWidgetConstants.CONNECTOR_CLASS);
+                    }
                 }
                 return ret;
             }

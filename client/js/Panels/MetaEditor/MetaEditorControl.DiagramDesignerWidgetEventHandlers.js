@@ -5,6 +5,7 @@ define(['logManager',
     'util/guid',
     'js/Constants',
     'js/NodePropertyNames',
+    'js/RegistryKeys',
     'js/Utils/GMEConcepts',
     './MetaRelations',
     './MetaEditorConstants',
@@ -14,6 +15,7 @@ define(['logManager',
                                         generateGuid,
                                         CONSTANTS,
                                         nodePropertyNames,
+                                        REGISTRY_KEYS,
                                         GMEConcepts,
                                         MetaRelations,
                                         MetaEditorConstants,
@@ -68,10 +70,6 @@ define(['logManager',
             self._onSelectionChanged(selectedIds);
         };
 
-        this.diagramDesigner.onSetConnectionProperty = function (params) {
-            self._onSetConnectionProperty(params);
-        };
-
         //oeverriding this just to avoid warning message from DiagramDesignerWidget
         //we don't need to filter it, everybody can be connected to everybody
         this.diagramDesigner.onFilterNewConnectionDroppableEnds = function (params) {
@@ -96,6 +94,18 @@ define(['logManager',
 
         this.diagramDesigner.onTabsSorted = function (newTabIDOrder) {
             self._onTabsSorted(newTabIDOrder);
+        };
+
+        this.diagramDesigner.onSelectionFillColorChanged = function (selectedElements, color) {
+            self._onSelectionFillColorChanged(selectedElements, color);
+        };
+
+        this.diagramDesigner.onSelectionBorderColorChanged = function (selectedElements, color) {
+            self._onSelectionBorderColorChanged(selectedElements, color);
+        };
+
+        this.diagramDesigner.onSelectionTextColorChanged = function (selectedElements, color) {
+            self._onSelectionTextColorChanged(selectedElements, color);
         };
 
         this.logger.debug("attachDesignerCanvasEventHandlers finished");
@@ -172,7 +182,7 @@ define(['logManager',
 
                     posX = position.x + params.positions[i].x;
                     posY = position.y + params.positions[i].y;
-                    _client.setMemberRegistry(aspectNodeID, i, this._selectedMetaAspectSet, CONSTANTS.MEMBER_POSITION_REGISTRY_KEY, {'x': posX, 'y': posY} );
+                    _client.setMemberRegistry(aspectNodeID, i, this._selectedMetaAspectSet, REGISTRY_KEYS.POSITION, {'x': posX, 'y': posY} );
 
                     componentID = this._GMEID2ComponentID[i];
 
@@ -218,12 +228,12 @@ define(['logManager',
                         }
 
                         _client.addMember(aspectNodeID, componentID, this._selectedMetaAspectSet);
-                        _client.setMemberRegistry(aspectNodeID, componentID, this._selectedMetaAspectSet, CONSTANTS.MEMBER_POSITION_REGISTRY_KEY, {'x': posX, 'y': posY} );
+                        _client.setMemberRegistry(aspectNodeID, componentID, this._selectedMetaAspectSet, REGISTRY_KEYS.POSITION, {'x': posX, 'y': posY} );
 
                         //if this item has not been part of the META Aspect at all, add it
                         if (this._metaAspectMembersAll.indexOf(componentID) === -1) {
                             _client.addMember(aspectNodeID, componentID, MetaEditorConstants.META_ASPECT_SET_NAME);
-                            _client.setMemberRegistry(aspectNodeID, componentID, MetaEditorConstants.META_ASPECT_SET_NAME, CONSTANTS.MEMBER_POSITION_REGISTRY_KEY, {'x': posX, 'y': posY} );
+                            _client.setMemberRegistry(aspectNodeID, componentID, MetaEditorConstants.META_ASPECT_SET_NAME, REGISTRY_KEYS.POSITION, {'x': posX, 'y': posY} );
                         }
                     }
                 }
@@ -392,10 +402,11 @@ define(['logManager',
             }
         }
 
-        this.diagramDesigner.toolbarItems.ddbtnConnectionArrowStart.enabled(onlyConnectionTypeSelected);
+        /*this.diagramDesigner.toolbarItems.ddbtnConnectionArrowStart.enabled(onlyConnectionTypeSelected);
         this.diagramDesigner.toolbarItems.ddbtnConnectionPattern.enabled(onlyConnectionTypeSelected);
         this.diagramDesigner.toolbarItems.ddbtnConnectionArrowEnd.enabled(onlyConnectionTypeSelected);
         this.diagramDesigner.toolbarItems.ddbtnConnectionLineType.enabled(onlyConnectionTypeSelected);
+        this.diagramDesigner.toolbarItems.ddbtnConnectionLineWidth.enabled(onlyConnectionTypeSelected);*/
 
         //nobody is selected on the canvas
         //set the active selection to the opened guy
@@ -408,38 +419,16 @@ define(['logManager',
         }
     };
 
-    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSetConnectionProperty = function (params) {
-        var items = params.items,
-            visualParams = params.params,
-            len = items.length,
-            id,
-            connRegLineStyle;
-
-        this._client.startTransaction();
-
-        while (len--) {
-            id = this._ComponentID2GMEID[items[len]];
-            if (id && GMEConcepts.isConnectionType(id)) {
-                connRegLineStyle = this._client.getNode(id).getEditableRegistry(nodePropertyNames.Registry.lineStyle);
-                if (connRegLineStyle && !_.isEmpty(connRegLineStyle)) {
-                    _.extend(connRegLineStyle, visualParams);
-                    this._client.setRegistry(id, nodePropertyNames.Registry.lineStyle, connRegLineStyle);
-                }
-            }
-        }
-
-        this._client.completeTransaction();
-    };
-
     //adding new meta aspect sheet
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onTabAddClicked = function () {
         var aspectNodeID = this.metaAspectContainerNodeID,
             aspectNode = this._client.getNode(aspectNodeID),
-            metaAspectSheetsRegistry = aspectNode.getEditableRegistry(MetaEditorConstants.META_SHEET_REGISTRY_KEY) || [],
+            metaAspectSheetsRegistry = aspectNode.getEditableRegistry(REGISTRY_KEYS.META_SHEETS) || [],
             i,
             len,
             newSetID,
-            componentID;
+            componentID,
+            pos;
 
         metaAspectSheetsRegistry.sort(function (a, b) {
             if (a.order < b.order) {
@@ -468,16 +457,25 @@ define(['logManager',
         metaAspectSheetsRegistry.push(newSheetDesc);
 
         //migrating projects that already have META aspect members but did not have sheets before
+        //TODO: not needed in the future, but before version 0.4.3 users were able to create META definitions without meta sheets
+        //TODO: that needed to be carried over
+        //TODO: can be removed sometimes in the future
         if (metaAspectSheetsRegistry.length === 1) {
             len = this._metaAspectMembersAll.length;
+            pos = 100;
             while (len--) {
                 componentID = this._metaAspectMembersAll[len];
                 this._client.addMember(aspectNodeID, componentID, newSetID);
-                this._client.setMemberRegistry(aspectNodeID, componentID, newSetID, CONSTANTS.MEMBER_POSITION_REGISTRY_KEY, {'x': this._metaAspectMembersCoordinatesGlobal[componentID].x, 'y': this._metaAspectMembersCoordinatesGlobal[componentID].y} );
+                if (this._metaAspectMembersCoordinatesGlobal[componentID]) {
+                    this._client.setMemberRegistry(aspectNodeID, componentID, newSetID, REGISTRY_KEYS.POSITION, {'x': this._metaAspectMembersCoordinatesGlobal[componentID].x, 'y': this._metaAspectMembersCoordinatesGlobal[componentID].y} );
+                } else {
+                    this._client.setMemberRegistry(aspectNodeID, componentID, newSetID, REGISTRY_KEYS.POSITION, {'x': pos, 'y': pos} );
+                    pos += 30;
+                }
             }
         }
 
-        this._client.setRegistry(aspectNodeID, MetaEditorConstants.META_SHEET_REGISTRY_KEY, metaAspectSheetsRegistry);
+        this._client.setRegistry(aspectNodeID, REGISTRY_KEYS.META_SHEETS, metaAspectSheetsRegistry);
 
         //force switching to the new sheet
         this._selectedMetaAspectSet = newSetID;
@@ -489,7 +487,7 @@ define(['logManager',
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onTabTitleChanged = function (tabID, oldValue, newValue) {
         var aspectNodeID = this.metaAspectContainerNodeID,
             aspectNode = this._client.getNode(aspectNodeID),
-            metaAspectSheetsRegistry = aspectNode.getEditableRegistry(MetaEditorConstants.META_SHEET_REGISTRY_KEY) || [],
+            metaAspectSheetsRegistry = aspectNode.getEditableRegistry(REGISTRY_KEYS.META_SHEETS) || [],
             i,
             len,
             setID;
@@ -505,7 +503,7 @@ define(['logManager',
                 }
             }
 
-            this._client.setRegistry(aspectNodeID, MetaEditorConstants.META_SHEET_REGISTRY_KEY, metaAspectSheetsRegistry);
+            this._client.setRegistry(aspectNodeID, REGISTRY_KEYS.META_SHEETS, metaAspectSheetsRegistry);
         }
     };
 
@@ -527,7 +525,7 @@ define(['logManager',
             itemsOfAspect = this._metaAspectMembersPerSheet[aspectToDelete],
             aspectNodeID = this.metaAspectContainerNodeID,
             aspectNode = this._client.getNode(aspectNodeID),
-            metaAspectSheetsRegistry = aspectNode.getEditableRegistry(MetaEditorConstants.META_SHEET_REGISTRY_KEY) || [],
+            metaAspectSheetsRegistry = aspectNode.getEditableRegistry(REGISTRY_KEYS.META_SHEETS) || [],
             len,
             gmeID,
             idx,
@@ -570,7 +568,7 @@ define(['logManager',
                 metaAspectSheetsRegistry[i].order = i;
             }
 
-            _client.setRegistry(aspectNodeID, MetaEditorConstants.META_SHEET_REGISTRY_KEY, metaAspectSheetsRegistry);
+            _client.setRegistry(aspectNodeID, REGISTRY_KEYS.META_SHEETS, metaAspectSheetsRegistry);
 
             //finally delete the sheet's SET
             _client.deleteSet(aspectNodeID, aspectToDelete);
@@ -630,7 +628,7 @@ define(['logManager',
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onTabsSorted = function (newTabIDOrder) {
         var aspectNodeID = this.metaAspectContainerNodeID,
             aspectNode = this._client.getNode(aspectNodeID),
-            metaAspectSheetsRegistry = aspectNode.getEditableRegistry(MetaEditorConstants.META_SHEET_REGISTRY_KEY) || [],
+            metaAspectSheetsRegistry = aspectNode.getEditableRegistry(REGISTRY_KEYS.META_SHEETS) || [],
             i,
             j,
             setID;
@@ -656,7 +654,37 @@ define(['logManager',
         });
 
         this._client.startTransaction();
-        this._client.setRegistry(aspectNodeID, MetaEditorConstants.META_SHEET_REGISTRY_KEY, metaAspectSheetsRegistry);
+        this._client.setRegistry(aspectNodeID, REGISTRY_KEYS.META_SHEETS, metaAspectSheetsRegistry);
+        this._client.completeTransaction();
+    };
+
+
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionFillColorChanged = function (selectedElements, color) {
+        this._onSelectionSetColor(selectedElements, color, REGISTRY_KEYS.COLOR);
+    };
+
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionBorderColorChanged = function (selectedElements, color) {
+        this._onSelectionSetColor(selectedElements, color, REGISTRY_KEYS.BORDER_COLOR);
+    };
+
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionTextColorChanged = function (selectedElements, color) {
+        this._onSelectionSetColor(selectedElements, color, REGISTRY_KEYS.TEXT_COLOR);
+    };
+
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionSetColor = function (selectedIds, color, regKey) {
+        var i = selectedIds.length,
+            gmeID;
+
+        this._client.startTransaction();
+        while(i--) {
+            gmeID = this._ComponentID2GMEID[selectedIds[i]];
+
+            if (color) {
+                this._client.setMemberRegistry(this.metaAspectContainerNodeID, gmeID, MetaEditorConstants.META_ASPECT_SET_NAME, regKey, color);
+            } else {
+                this._client.delMemberRegistry(this.metaAspectContainerNodeID, gmeID, MetaEditorConstants.META_ASPECT_SET_NAME, regKey);
+            }
+        }
         this._client.completeTransaction();
     };
 

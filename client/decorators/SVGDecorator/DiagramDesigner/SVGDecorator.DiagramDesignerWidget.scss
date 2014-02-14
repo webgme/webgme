@@ -1,0 +1,54 @@
+/*
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ * 
+ * Author: Robert Kereskenyi
+ */
+
+//imports
+@import "../Core/_SVGDecorator";
+@import "../../../scss/Widgets/DiagramDesigner/Connector";
+
+//include SVGDecoratorCore style
+@include svg_decorator_core;
+
+//overwrite / extend with local modifications
+.designer-item {
+  .svg-decorator {
+    .svg-content {
+      svg {
+        border: $border;
+
+        .connector {
+          fill: $connector-background-color;
+          stroke: $connection-border-color;
+          stroke-width: $connector-border-width;
+
+          &:hover {
+            stroke: $connector-hover-border-color;
+          }
+        }
+      }
+    }
+
+    .connector {
+      @include connector_basics;
+
+      margin-left: $connector-size / -2;
+      margin-top: $connector-size / -2;
+    }
+  }
+
+  &.selected {
+    .svg-decorator {
+      .svg-content {
+        svg {
+          border: $selected-border;
+          background-color: $selected-background-color;
+          -webkit-box-shadow: $selected-box-shadow;
+          -moz-box-shadow: $selected-box-shadow;
+          box-shadow: $selected-box-shadow;
+        }
+      }
+    }
+  }
+}

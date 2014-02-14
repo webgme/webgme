@@ -187,8 +187,8 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
             connMetaInfo = canvas.items[connId].getMetaInfo(),
             srcConnAreas = canvas.items[srcObjId].getConnectionAreas(srcSubCompId, false, connMetaInfo),
             dstConnAreas = canvas.items[dstObjId].getConnectionAreas(dstSubCompId, true, connMetaInfo),
-            srcPorts = [],
-            dstPorts = [],
+            srcPorts = {},
+            dstPorts = {},
             j;
 
         this._updatePort(srcObjId, srcSubCompId);//Adding ports for connection
@@ -197,12 +197,14 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         //Get available ports for this connection
         j = srcConnAreas.length;
         while(j--){
-            srcPorts.push(this._autorouterBoxes[sId].ports[srcConnAreas[j].id]);
+            srcPorts[srcConnAreas[j].id] = this._autorouterBoxes[sId].ports[srcConnAreas[j].id];
+            //srcPorts.push(this._autorouterBoxes[sId].ports[srcConnAreas[j].id]);
         }
         
         j = dstConnAreas.length;
         while(j--){
-            dstPorts.push(this._autorouterBoxes[tId].ports[dstConnAreas[j].id]);
+            dstPorts[dstConnAreas[j].id] = this._autorouterBoxes[tId].ports[dstConnAreas[j].id];
+            //dstPorts.push(this._autorouterBoxes[tId].ports[dstConnAreas[j].id]);
         }
 
         //If it has both a src and dst

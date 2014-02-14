@@ -12,6 +12,7 @@ define(['logManager',
     DiagramDesignerWidgetDecoratorBase = function (params) {
 
         this.hostDesignerItem = params.host;
+        this.preferencesHelper = params.preferencesHelper;
         this.logger = params.logger || logManager.create(this.DECORATORID);
 
         this.skinParts = {};

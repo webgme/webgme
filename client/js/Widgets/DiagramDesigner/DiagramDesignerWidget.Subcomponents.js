@@ -12,7 +12,9 @@ define([], function () {
         this._itemSubcomponentsMap[objID] = this._itemSubcomponentsMap[objID] || [];
         this._itemSubcomponentsMap[objID].push(sCompID);
 
-        this.onRegisterSubcomponent(objID, sCompID, metaInfo);
+        if (_.isFunction(this.onRegisterSubcomponent)) {
+            this.onRegisterSubcomponent(objID, sCompID, metaInfo);
+        }
     };
 
     DiagramDesignerWidgetSubcomponents.prototype.unregisterSubcomponent = function (objID, sCompID) {
@@ -28,7 +30,9 @@ define([], function () {
             this._itemSubcomponentsMap[objID].splice(idx,1);
         }
 
-        this.onUnregisterSubcomponent(objID, sCompID);
+        if (_.isFunction(this.onUnregisterSubcomponent)) {
+            this.onUnregisterSubcomponent(objID, sCompID);
+        }
     };
 
     DiagramDesignerWidgetSubcomponents.prototype.unregisterAllSubcomponents = function (objID) {

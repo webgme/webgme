@@ -4,11 +4,15 @@ define(['logManager',
     'js/Constants',
     'js/Utils/GMEConcepts',
     'js/NodePropertyNames',
-    'js/Utils/METAAspectHelper'], function (logManager,
+    'js/RegistryKeys',
+    'js/Utils/METAAspectHelper',
+    'js/Utils/PreferencesHelper'], function (logManager,
                              CONSTANTS,
                              GMEConcepts,
                              nodePropertyNames,
-                             METAAspectHelper) {
+                             REGISTRY_KEYS,
+                             METAAspectHelper,
+                             PreferencesHelper) {
 
     var PartBrowserControl,
         WIDGET_NAME = 'PartBrowser',
@@ -75,7 +79,7 @@ define(['logManager',
             objDescriptor = {};
 
             objDescriptor.id = nodeObj.getId();
-            objDescriptor.decorator = nodeObj.getRegistry(nodePropertyNames.Registry.decorator) || DEFAULT_DECORATOR;
+            objDescriptor.decorator = nodeObj.getRegistry(REGISTRY_KEYS.DECORATOR) || DEFAULT_DECORATOR;
             objDescriptor.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name);
         }
 
@@ -219,6 +223,7 @@ define(['logManager',
         desc.control = this;
         desc.metaInfo = {};
         desc.metaInfo[CONSTANTS.GME_ID] = id;
+        desc.preferencesHelper = PreferencesHelper.getPreferences();
 
         return desc;
     };

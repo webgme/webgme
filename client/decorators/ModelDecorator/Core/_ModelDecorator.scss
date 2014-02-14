@@ -7,7 +7,7 @@ $padding: 3px;
 $background-color: #ECECEC;
 $box-shadow: 0px 0px 7px 0px #444 inset;
 $selected-background-color: #DBEAFC;
-$selected-box-shadow: 0px 0px 7px 0px #1276D4 inset;
+$selected-box-shadow: 0px 0px 15px 0px #1276D4 !important;
 $selected-border: 1px solid #52A8EC;
 $ports-background-color: #000000;
 $left-ports-background-color: rgba(255, 255, 0, 0.5);
@@ -121,6 +121,11 @@ $abstract-class-name-color: #AAAAAA;
         font-style:italic;
         color: $abstract-class-name-color;
       }
+    }
+
+    img.embeddedsvg {
+      width: 40px;
+      position: relative;
     }
   }
 }

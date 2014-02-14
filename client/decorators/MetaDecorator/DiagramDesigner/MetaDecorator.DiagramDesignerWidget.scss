@@ -12,10 +12,13 @@ $selected-background-color: lighten($background-color, 10);
 $selected-border: 1px solid #52A8EC;
 $attributes-add-new-hover-background-color: #DBEAFC;
 $selected-attributes-add-new-hover-background-color: #FFFFC0;
+$selected-attributes-add-new-hover-color: #000000;
 $attribute-height: 16px;
 $hover-background-color: #EEE;
 $section-title-background-color: #F3F3F3;
+$section-title-color: #000000;
 $abstract-class-name-color: #AAAAAA;
+$selected-box-shadow: 0px 0px 15px 0px #1276D4 !important;
 
 .meta-decorator {
   min-width: $min-width;
@@ -93,6 +96,7 @@ $abstract-class-name-color: #AAAAAA;
 
     &:hover {
       background-color: $attributes-add-new-hover-background-color;
+      color: $selected-attributes-add-new-hover-color;
     }
   }
 
@@ -103,6 +107,7 @@ $abstract-class-name-color: #AAAAAA;
     text-transform: uppercase;
     text-align: center;
     background-color: $section-title-background-color;
+    color: $section-title-color;
     line-height: 13px;
   }
 
@@ -155,6 +160,9 @@ $abstract-class-name-color: #AAAAAA;
   .meta-decorator {
     border: $selected-border;
     background-color: $selected-background-color;
+    -webkit-box-shadow: $selected-box-shadow;
+    -moz-box-shadow: $selected-box-shadow;
+    box-shadow: $selected-box-shadow;
 
     .add-new-attribute,
     .add-new-constraint {
