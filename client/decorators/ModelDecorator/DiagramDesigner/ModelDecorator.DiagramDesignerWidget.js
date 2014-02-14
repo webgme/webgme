@@ -87,13 +87,11 @@ define(['js/Constants',
 
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
-    ModelDecoratorDiagramDesignerWidget.prototype.calculateDimension = function () {
+    ModelDecoratorDiagramDesignerWidget.prototype.onRenderGetLayoutInfo = function () {
         this._paddingTop = parseInt(this.$el.css('padding-top'), 10);
         this._borderTop = parseInt(this.$el.css('border-top-width'), 10);
 
-        if (this.hostDesignerItem) {
-            this.hostDesignerItem.setSize(this.$el.outerWidth(true), this.$el.outerHeight(true));
-        }
+        DiagramDesignerWidgetDecoratorBase.prototype.onRenderGetLayoutInfo.call(this);
     };
 
 
@@ -278,7 +276,7 @@ define(['js/Constants',
 
     /**** Override from ModelDecoratorCore ****/
     ModelDecoratorDiagramDesignerWidget.prototype._portPositionChanged = function (portId) {
-        this.calculateDimension();
+        this.onRenderGetLayoutInfo();
         this.hostDesignerItem.canvas.dispatchEvent(this.hostDesignerItem.canvas.events.ITEM_SUBCOMPONENT_POSITION_CHANGED, {"ItemID": this.hostDesignerItem.id,
             "SubComponentID": portId});
     };

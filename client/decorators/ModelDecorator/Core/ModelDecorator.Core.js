@@ -491,7 +491,7 @@ define(['js/Constants',
             self.skinParts.$imgSVG.off('load');
             self.skinParts.$imgSVG.off('error');
 
-            self.calculateDimension();
+            self.onRenderGetLayoutInfo();
             if (self.hostDesignerItem.canvas) {
                 var sel = self.hostDesignerItem.canvas.selectionManager.getSelectedElements();
                 if (sel.length === 1 &&
