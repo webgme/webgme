@@ -7676,21 +7676,23 @@ var oldTime = new Date().getTime();
             this.path = p;
             this.srcPorts = s;
             this.dstPorts = d;
+            var srcBox = calcBoxId(s),
+                dstBox = calcBoxId(d);
 
-            this.getSrcBoxId = function(){
-                for(var i in this.srcPorts){
-                    if(this.srcPorts.hasOwnProperty(i)){
-                        return this.srcPorts[i].getOwner().getID();
+            function calcBoxId(ports){
+                for(var i in ports){
+                    if(ports.hasOwnProperty(i)){
+                        return ports[i].getOwner().getID();
                     }
                 }
+            }
+
+            this.getSrcBoxId = function(){
+                return srcBox;
             };
 
             this.getDstBoxId = function(){
-                for(var i in this.dstPorts){
-                    if(this.dstPorts.hasOwnProperty(i)){
-                        return this.dstPorts[i].getOwner().getID();
-                    }
-                }
+                return dstBox;
             };
 
             this.updateSrcPorts = function(){
@@ -7702,6 +7704,7 @@ var oldTime = new Date().getTime();
                 }
 
                 this.path.setStartPorts(src);
+                srcBox = calcBoxId(this.srcPorts);
             };
 
             this.updateDstPorts = function(){
@@ -7713,6 +7716,7 @@ var oldTime = new Date().getTime();
                 }
 
                 this.path.setEndPorts(dst);
+                dstBox = calcBoxId(this.dstPorts);
             };
         };
 
