@@ -212,7 +212,7 @@ define(['js/Constants',
         if (isPort) {
             this._ports[portId] = new Port(portId, { "title": portNode.getAttribute(nodePropertyNames.Attributes.name),
                 "decorator": this,
-                "svg": portNode.getRegistry(REGISTRY_KEYS.SVG_ICON)});
+                "svg": portNode.getRegistry(REGISTRY_KEYS.PORT_SVG_ICON)});
 
             this._portIDs.push(portId);
             this._addPortToContainer(portNode);
@@ -298,7 +298,7 @@ define(['js/Constants',
             //port already, should it stay one?
             if (isPort === true) {
                 this._ports[portId].update({"title": portNode.getAttribute(nodePropertyNames.Attributes.name),
-                    "svg": portNode.getRegistry(REGISTRY_KEYS.SVG_ICON)});
+                    "svg": portNode.getRegistry(REGISTRY_KEYS.PORT_SVG_ICON)});
                 this._updatePortPosition(portId);
             } else {
                 this._removePort(portId);
