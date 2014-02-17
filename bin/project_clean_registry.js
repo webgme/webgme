@@ -8,13 +8,29 @@ var requirejs = require("requirejs");
 
 requirejs.config({
     nodeRequire: require,
-    baseUrl: __dirname + "/..",
+    baseUrl: __dirname + "/../",
     paths: {
-        "underscore": 'client/lib/underscore/underscore-min'
+        "underscore": 'client/lib/underscore/underscore-min',
+        "js/Constants": 'client/js/Constants',  //need to set this path override bcos of GMEConcepts.FCO requires this but from a different base folder
+        "js/NodePropertyNames": 'client/js/NodePropertyNames', //need to set this path override bcos of GMEConcepts.FCO requires this but from a different base folder
+        "js/RegistryKeys": 'client/js/RegistryKeys' //need to set this path override bcos of GMEConcepts.FCO requires this but from a different base folder
     }
 });
 
-requirejs([ "util/common", "util/assert", "core/tasync", "util/guid", "client/js/RegistryKeys", "client/js/Constants" ], function (COMMON, ASSERT, TASYNC,GUID, REGISTRY_KEYS, CONSTANTS) {
+
+requirejs([ "util/common",
+            "util/assert",
+            "core/tasync",
+            "util/guid",
+            "js/RegistryKeys",
+            "js/Constants",
+            "client/js/Utils/GMEConcepts.FCO"], function (COMMON,
+                                                      ASSERT,
+                                                      TASYNC,
+                                                      GUID,
+                                                      REGISTRY_KEYS,
+                                                      CONSTANTS,
+                                                      GMEConceptsFCO) {
     "use strict";
 
     TASYNC.trycatch(main, function (error) {
@@ -30,28 +46,31 @@ requirejs([ "util/common", "util/assert", "core/tasync", "util/guid", "client/js
         _projectName = null,
         _outFile = null;
 
-    var FCO_REGISTRY_KEYS = [REGISTRY_KEYS.DECORATOR,  REGISTRY_KEYS.SVG_ICON, REGISTRY_KEYS.IS_PORT, REGISTRY_KEYS.IS_ABSTRACT];
-    var FCO_REGISTRY_VALUES = {};
-    FCO_REGISTRY_VALUES[REGISTRY_KEYS.DECORATOR] = "";
-    FCO_REGISTRY_VALUES[REGISTRY_KEYS.SVG_ICON] = "";
-    FCO_REGISTRY_VALUES[REGISTRY_KEYS.IS_PORT] = false;
-    FCO_REGISTRY_VALUES[REGISTRY_KEYS.IS_ABSTRACT] = false;
-
     //these registry keys will be saved in the item's registry
     var _protectedRegistryKeys = [REGISTRY_KEYS.PROJECT_REGISTRY,
                                     REGISTRY_KEYS.META_SHEETS,
-                                    REGISTRY_KEYS.IS_ABSTRACT,
-                                    REGISTRY_KEYS.IS_PORT,
-                                    REGISTRY_KEYS.DECORATOR,
-                                    REGISTRY_KEYS.DISPLAY_FORMAT,
-                                    REGISTRY_KEYS.POSITION,
-                                    REGISTRY_KEYS.SVG_ICON
-                                ];
+                                    REGISTRY_KEYS.POSITION];
+
+    //add the mandatory FCO registry keys to the protected list
+    for (var rk in GMEConceptsFCO.FCO_REGISTRY) {
+        if (GMEConceptsFCO.FCO_REGISTRY.hasOwnProperty(rk)) {
+            if (_protectedRegistryKeys.indexOf(rk) === -1) {
+                _protectedRegistryKeys.push(rk);
+            }
+        }
+    }
+
+    _protectedRegistryKeys.sort();
+    console.log('\nPROTECTED REGISTRY KEYS:');
+    console.log('\t' + _protectedRegistryKeys.join('\n\t'));
 
     //these registry keys will be saved in the setmembers' registry
     var _protectedSetMemberRegistryKeys = [REGISTRY_KEYS.POSITION];
+    _protectedSetMemberRegistryKeys.sort();
+    console.log('\nPROTECTED SET-MEMBER REGISTRY KEYS:');
+    console.log('\t' + _protectedSetMemberRegistryKeys.join('\n\t'));
 
-
+    console.log('\n\n');
 
     function main () {
         var args = COMMON.getParameters(null);
@@ -78,9 +97,13 @@ requirejs([ "util/common", "util/assert", "core/tasync", "util/guid", "client/js
         } else {
             _branch = "master";
         }
+
         _projectName = COMMON.getParameters("proj");
         if(_projectName){
             _projectName = _projectName[0];
+        } else {
+            console.log('*** PROJECTNAME is not defined !!!');
+            return;
         }
 
         var done = TASYNC.call(COMMON.openDatabase);
@@ -183,18 +206,18 @@ requirejs([ "util/common", "util/assert", "core/tasync", "util/guid", "client/js
         //make sure that the FCO has all the necessary REGISTRY fields
         if (objID === __FCOID) {
             console.log("Checking project's FCO's registry:");
-            var fcoRegKeyLen = FCO_REGISTRY_KEYS.length;
 
-            while (fcoRegKeyLen--) {
-                rk = FCO_REGISTRY_KEYS[fcoRegKeyLen];
-                msg = '\t' + rk + ': ';
-                if (registryKeys.indexOf(rk) !== -1) {
-                    msg += 'OK';
-                } else {
-                    core.setRegistry(node, rk, FCO_REGISTRY_VALUES[rk]);
-                    msg += 'was missing, created with value: "' + FCO_REGISTRY_VALUES[rk] + '"';
+            for (rk in GMEConceptsFCO.FCO_REGISTRY) {
+                if (GMEConceptsFCO.FCO_REGISTRY.hasOwnProperty(rk)) {
+                    msg = '\t' + rk + ': ';
+                    if (registryKeys.indexOf(rk) !== -1) {
+                        msg += 'OK';
+                    } else {
+                        core.setRegistry(node, rk, GMEConceptsFCO.FCO_REGISTRY[rk]);
+                        msg += 'was missing, created with value: "' + GMEConceptsFCO.FCO_REGISTRY[rk] + '"';
+                    }
+                    console.log(msg);
                 }
-                console.log(msg);
             }
         }
         var len = registryKeys.length;

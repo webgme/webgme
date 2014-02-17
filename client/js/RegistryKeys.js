@@ -31,6 +31,7 @@ define([], function () {
         PROJECT_REGISTRY: "ProjectRegistry",
         DISPLAY_FORMAT: "DisplayFormat",
         SVG_ICON : "SVGIcon",
+        PORT_SVG_ICON : "PortSVGIcon",
 
         /*
          * META_SHEETS_METADATA (title, order, setID, etc)

@@ -11,23 +11,22 @@
  */
 
 define(['jquery',
-        'logManager',
         'util/guid',
         'js/Constants',
         'js/NodePropertyNames',
         'js/RegistryKeys',
-        'js/Utils/METAAspectHelper',
+        './GMEConcepts.FCO',
+        './METAAspectHelper',
         'js/Panels/MetaEditor/MetaEditorConstants'], function (_jquery,
-                                                               logManager,
                                                                generateGuid,
                                            CONSTANTS,
                                            nodePropertyNames,
                                            REGISTRY_KEYS,
+                                           GMEConceptsFCO,
                                            METAAspectHelper,
                                            MetaEditorConstants) {
 
-    var _client,
-        _logger = logManager.create('GMEConcepts');
+    var _client;
 
     var _initialize = function (client) {
         if (!_client) {
@@ -171,6 +170,7 @@ define(['jquery',
     };
 
     var _createBasicProjectSeed = function () {
+        var it;
         var metaRuleBase = {
             "children": {},
             "attributes": {},
@@ -181,19 +181,24 @@ define(['jquery',
 
         //create FCO, META, PROJECT_BASE
         var FCO_ID = _client.createChild({'parentId': CONSTANTS.PROJECT_ROOT_ID});
-        _client.setAttributes(FCO_ID, nodePropertyNames.Attributes.name, 'FCO');
-        _client.setRegistry(FCO_ID, REGISTRY_KEYS.DECORATOR, "");
-        _client.setRegistry(FCO_ID, REGISTRY_KEYS.SVG_ICON, "");
-        _client.setRegistry(FCO_ID, REGISTRY_KEYS.IS_PORT, false);
-        _client.setRegistry(FCO_ID, REGISTRY_KEYS.IS_ABSTRACT, false);
+
+        //set attributes for FCO
+        for (it in GMEConceptsFCO.FCO_ATTRIBUTES) {
+            if (GMEConceptsFCO.FCO_ATTRIBUTES.hasOwnProperty(it)) {
+                _client.setAttributes(FCO_ID, it, GMEConceptsFCO.FCO_ATTRIBUTES[it]);
+            }
+        }
+
+        //set base registry for FCO
+        for (it in GMEConceptsFCO.FCO_REGISTRY) {
+            if (GMEConceptsFCO.FCO_REGISTRY.hasOwnProperty(it)) {
+                _client.setRegistry(FCO_ID, it, GMEConceptsFCO.FCO_REGISTRY[it]);
+            }
+        }
 
         var projectRegistry = {};
         projectRegistry[CONSTANTS.PROJECT_FCO_ID] = FCO_ID;
         _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, REGISTRY_KEYS.PROJECT_REGISTRY, projectRegistry);
-
-        //FCO has a DisplayAttr registry field that controls what Attribute's value should be displayed
-        //by default the Attributes.name is the to-be-displayed attribute
-        _client.setRegistry(FCO_ID, REGISTRY_KEYS.DISPLAY_FORMAT, CONSTANTS.DISPLAY_FORMAT_ATTRIBUTE_MARKER + nodePropertyNames.Attributes.name);
 
         //set META rules accordingly
 
