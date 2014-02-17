@@ -118,6 +118,14 @@ define(['logManager',
         this._widget.onConnectionSegmentPointsChange = function (params) {
             self._onConnectionSegmentPointsChange(params);
         };
+
+        this._widget.onRegisterSubcomponent = function (objID, sCompID, metaInfo) {
+            self._onRegisterSubcomponent(objID, sCompID, metaInfo);
+        };
+
+        this._widget.onUnregisterSubcomponent = function (objID, sCompID) {
+            self._onUnregisterSubcomponent(objID, sCompID);
+        };
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.selectedObjectChanged = function (nodeId) {
@@ -600,6 +608,9 @@ define(['logManager',
         //clean up local hash map
         this._GMEID2ComponentID = {};
         this._ComponentID2GMEID = {};
+
+        this._GMEID2Subcomponent = {};
+        this._Subcomponent2GMEID = {};
 
         this._connectionWaitingListByDstGMEID = {};
         this._connectionWaitingListBySrcGMEID = {};
@@ -1571,6 +1582,24 @@ define(['logManager',
             } else {
                 this._client.delMemberRegistry(containerID, gmeID, setID, regKey);
             }
+        }
+    };
+
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onRegisterSubcomponent = function (objID, sCompID, metaInfo) {
+        //store that a subcomponent with a given ID has been added to object with objID
+        this._GMEID2Subcomponent[metaInfo[CONSTANTS.GME_ID]] = this._GMEID2Subcomponent[metaInfo[CONSTANTS.GME_ID]] || {};
+        this._GMEID2Subcomponent[metaInfo[CONSTANTS.GME_ID]][objID] = sCompID;
+
+        this._Subcomponent2GMEID[objID] = this._Subcomponent2GMEID[objID] || {};
+        this._Subcomponent2GMEID[objID][sCompID] = metaInfo[CONSTANTS.GME_ID];
+    };
+
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onUnregisterSubcomponent = function (objID, sCompID) {
+        var gmeID = this._Subcomponent2GMEID[objID][sCompID];
+
+        delete this._Subcomponent2GMEID[objID][sCompID];
+        if (this._GMEID2Subcomponent[gmeID]) {
+            delete this._GMEID2Subcomponent[gmeID][objID];
         }
     };
 
