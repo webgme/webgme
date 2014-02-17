@@ -6611,7 +6611,7 @@ var oldTime = new Date().getTime();
                 startport = getOptimalPorts2(srcPorts, tgt);
 
                 //Create a startpoint at the port
-                var startdir = path.getStartDir(),
+                var startdir = this.getStartDir(),
                     startportHasLimited = false,
                     startportCanHave = true;
 
@@ -6621,7 +6621,7 @@ var oldTime = new Date().getTime();
                 }
                 if( startdir === Dir_None ||							// recalc startdir if empty
                         startportHasLimited && !startportCanHave){		// or is limited and userpref is invalid
-                    startdir = startport.getStartEndDirTo(endport.getCenter(), true);
+                    startdir = startport.getStartEndDirTo(tgt, true);
                 }
 
                 startpoint = startport.createStartEndPointTo(tgt, startdir);
@@ -6681,7 +6681,7 @@ var oldTime = new Date().getTime();
                 }
                 if( enddir === Dir_None ||							// like above
                         endportHasLimited && !endportCanHave){
-                    enddir = endport.getStartEndDirTo(startport.getCenter(), false, startport === endport ? startdir : Dir_None );
+                    enddir = endport.getStartEndDirTo(tgt, false, startport === endport ? startdir : Dir_None );
                 }
 
                 endpoint = endport.createStartEndPointTo(tgt, enddir);
@@ -6725,7 +6725,7 @@ var oldTime = new Date().getTime();
             };
 
             this.getEndPoint = function(){
-                if(points){
+                if(points.getLength()){
                     assert( points.getLength() >= 2, "ARPath.getEndPoint: points.getLength() >= 2 FAILED");
                     assert(endpoint === points.get(points.getLength() - 1)[0], "ARPath.getEndPoint: endpoint === points.get(points.getLength() - 1)[0] FAILED");
                     return points.get(points.getLength() - 1)[0];
