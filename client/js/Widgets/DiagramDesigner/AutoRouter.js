@@ -1386,17 +1386,19 @@ if(DEBUG && ArPointList.length > 0){
 
            this.getHeadEdgePtrs = function(start, end){
                 if( ArPointList.length < 2 )
-                    return ArPointList.length;
+                    return { 'pos': ArPointList.length };
 
-                var pos = 0;
+                var start,
+                    end,
+                    pos = 0;
                 assert( pos < ArPointList.length, "ArPointListPath.getHeadEdgePtrs: pos < ArPointList.length FAILED");
 
-                start.assign(ArPointList[pos++]); //&
+                start = ArPointList[pos++];
                 assert( pos < ArPointList.length, "ArPointListPath.getHeadEdgePtrs: pos < ArPointList.length FAILED");
 
-                end.assign(ArPointList[pos]); //&
+                end = ArPointList[pos]; 
 
-                return pos;
+                return { 'pos': pos, 'start': start, 'end': end };
             };
 
            this.getTailEdgePtrs = function(){
@@ -1520,11 +1522,11 @@ if(DEBUG && ArPointList.length > 0){
                 return pos;
             };
 
-           this.getEdgePosForStartPoint = function(startpoint){
+           this.getEdgePosForStartPoint = function(start){
                 var pos = 0;
                 while( pos < ArPointList.length )
                 {
-                    if( ArPointList[pos++] === startpoint )
+                    if( ArPointList[pos++] === start)
                     {
                         assert( pos < ArPointList.length, "ArPointListPath.getEdgePosForStartPoint: pos < ArPointList.length FAILED" );
                         pos--;
@@ -4780,38 +4782,13 @@ if(DEBUG && ArPointList.length > 0){
                 var ports = path.calculateStartEndPorts(),
                     startport = ports.src,
                     endport = ports.dst,
-                    startdir = path.getStartDir(),
-                    startportHasLimited = false,
-                    startportCanHave = true,
-                    startpoint,
-                    endpoint;
+                    startpoint = path.getStartPoint(),
+                    endpoint = path.getEndPoint();
 
-                if (startdir != Dir_None) {
-                    startportHasLimited = startport.hasLimitedDirs();
-                    startportCanHave = startport.canHaveStartEndPointOn(startdir, true);
-                }
-                if( startdir === Dir_None ||							// recalc startdir if empty
-                        startportHasLimited && !startportCanHave)		// or is limited and userpref is invalid
-                {
-                    startdir = startport.getStartEndDirTo(endport.getCenter(), true);
-                }
+                //TODO FIXME If already has a startpoint, use that instead
 
-                var enddir = path.getEndDir(),
-                    endportHasLimited = false,
-                    endportCanHave = true;
-
-                if (enddir != Dir_None) {
-                    endportHasLimited = endport.hasLimitedDirs();
-                    endportCanHave = endport.canHaveStartEndPointOn(enddir, false);
-                }
-                if( enddir === Dir_None ||							// like above
-                        endportHasLimited && !endportCanHave)
-                {
-                    enddir = endport.getStartEndDirTo(startport.getCenter(), false, startport === endport ? startdir : Dir_None );
-                }
-
-                startpoint = startport.createStartEndPointTo(endport.getCenter(), startdir);
-                endpoint = endport.createStartEndPointTo(startpoint, enddir);
+                assert(startport.hasPoint(startpoint), "ARGraph.connect: startport.hasPoint(startpoint) FAILED");
+                assert(endport.hasPoint(endpoint), "ARGraph.connect: endport.hasPoint(endpoint) FAILED");
 
                 if( startpoint.equals(endpoint) )
                     stepOneInDir(startpoint, nextClockwiseDir(startdir));
@@ -6476,6 +6453,8 @@ var oldTime = new Date().getTime();
 
     var AutoRouterPath = function (){
             var owner = null,
+                startpoint,
+                endpoint,
                 startports,
                 endports,
                 startport = null,
@@ -6486,8 +6465,7 @@ var oldTime = new Date().getTime();
                 customPathData = [],
                 customizationType = "Points",
                 pathDataToDelete = [],
-                points = new ArPointListPath(),
-                self = this;
+                points = new ArPointListPath();
 
             //Functions
 
@@ -6599,6 +6577,11 @@ var oldTime = new Date().getTime();
 
                 assert(startports.length > 0, "ArPath.calculateStartEndPorts: startports cannot be empty!");
 
+                //Remove startpoint
+                if(startpoint)
+                    startport.removePoint(startpoint);
+
+                //Get available ports
                 while(i--){
                     assert(startports[i].getOwner(), "ARPath.calculateStartEndPorts: startport has invalid owner!");
                     if(startports[i].isAvailable())
@@ -6624,7 +6607,25 @@ var oldTime = new Date().getTime();
                     tgt = new ArPoint(x/endports.length, y/endports.length);
                 }
 
-                return startport = getOptimalPorts2(srcPorts, tgt);
+                //Get the optimal port to the target
+                startport = getOptimalPorts2(srcPorts, tgt);
+
+                //Create a startpoint at the port
+                var startdir = path.getStartDir(),
+                    startportHasLimited = false,
+                    startportCanHave = true;
+
+                if (startdir !== Dir_None) {
+                    startportHasLimited = startport.hasLimitedDirs();
+                    startportCanHave = startport.canHaveStartEndPointOn(startdir, true);
+                }
+                if( startdir === Dir_None ||							// recalc startdir if empty
+                        startportHasLimited && !startportCanHave){		// or is limited and userpref is invalid
+                    startdir = startport.getStartEndDirTo(endport.getCenter(), true);
+                }
+
+                startpoint = startport.createStartEndPointTo(tgt, startdir);
+                return startport;
             };
 
             this.calculateEndPorts = function(){
@@ -6635,6 +6636,11 @@ var oldTime = new Date().getTime();
 
                 assert(endports.length > 0, "ArPath.calculateStartEndPorts: endports cannot be empty!");
 
+                //Remove old endpoint
+                if(endpoint)
+                    endport.removePoint(endpoint);
+
+                //Get available ports
                 while(i--){
                     assert(endports[i].getOwner(), "ARPath.calculateStartEndPorts: endport has invalid owner!");
                     if(endports[i].isAvailable())
@@ -6661,7 +6667,25 @@ var oldTime = new Date().getTime();
                     tgt = new ArPoint(x/startports.length, y/startports.length);
                 }
 
-                return endport = getOptimalPorts2(dstPorts, tgt);
+                //Get the optimal port to the target
+                endport = getOptimalPorts2(dstPorts, tgt);
+
+                //Create endpoint at the port
+                var enddir = this.getEndDir(),
+                    endportHasLimited = false,
+                    endportCanHave = true;
+
+                if (enddir !== Dir_None) {
+                    endportHasLimited = endport.hasLimitedDirs();
+                    endportCanHave = endport.canHaveStartEndPointOn(enddir, false);
+                }
+                if( enddir === Dir_None ||							// like above
+                        endportHasLimited && !endportCanHave){
+                    enddir = endport.getStartEndDirTo(startport.getCenter(), false, startport === endport ? startdir : Dir_None );
+                }
+
+                endpoint = endport.createStartEndPointTo(tgt, enddir);
+                return endport;
             };
 
             this.isConnected = function(){
@@ -6691,12 +6715,22 @@ var oldTime = new Date().getTime();
 
             this.getStartPoint = function(){
                 //assert( points.getLength() >= 2, "ARPath.getStartPoint: points.getLength() >= 2 FAILED");
-                return points.get(0)[0];
+//RETURN
+                if(points && points.get(0)){
+                    assert(startpoint === points.get(0)[0], "ARPath.getEndPoint: startpoint === points.get(0)[0] FAILED");
+                    return points.get(0)[0];
+                }
+
+                return startpoint;
             };
 
             this.getEndPoint = function(){
-                assert( points.getLength() >= 2, "ARPath.getEndPoint: points.getLength() >= 2 FAILED");
-                return points.get(points.getLength() - 1)[0];
+                if(points){
+                    assert( points.getLength() >= 2, "ARPath.getEndPoint: points.getLength() >= 2 FAILED");
+                    assert(endpoint === points.get(points.getLength() - 1)[0], "ARPath.getEndPoint: endpoint === points.get(points.getLength() - 1)[0] FAILED");
+                    return points.get(points.getLength() - 1)[0];
+                }
+                return endpoint;
             };
 
             this.getStartBox = function(){
@@ -6997,9 +7031,9 @@ var oldTime = new Date().getTime();
                 }
 
                 var currEdgeIndex = 0,
-                    tmp = points.getHeadEdgePtrs(startpoint, endpoint),
-                    endpoint = tmp.end,
-                    startpoint = tmp.start,
+                    tmp = points.getHeadEdgePtrs(),
+                    end = tmp.end,
+                    start = tmp.start,
                     pos = tmp.pos;
 
                 while (pos < points.getLength()){
@@ -7008,7 +7042,7 @@ var oldTime = new Date().getTime();
                         var increment = true;
                         if (currEdgeIndex === (customPathData[ii]).getEdgeIndex()) {
                             if ((customPathData[ii]).getType() === SimpleEdgeDisplacement) {
-                                var dir = getDir(endpoint.minus(startpoint)),
+                                var dir = getDir(end.minus(start)),
                                     isHorizontalVar = (isHorizontal(dir) != 0),
                                     doNotApply = false;
                                 if ((customPathData[ii]).isHorizontalOrVertical() === isHorizontalVar) {
@@ -7031,11 +7065,11 @@ var oldTime = new Date().getTime();
                                     }
                                     if (!doNotApply) {
                                         if ((customPathData[ii]).isHorizontalOrVertical()) {
-                                            startpoint.y = yToSet;
-                                            endpoint.y = yToSet;
+                                            start.y = yToSet;
+                                            end.y = yToSet;
                                         } else {
-                                            startpoint.x = xToSet;
-                                            endpoint.x = xToSet;
+                                            start.x = xToSet;
+                                            end.x = xToSet;
                                         }
                                     }
                                 }
@@ -7052,10 +7086,10 @@ var oldTime = new Date().getTime();
                             ++ii;
                     }
 
-                    var tmp = points.getNextEdgePtrs(pos, startpoint, endpoint);
+                    var tmp = points.getNextEdgePtrs(pos, start, end);
                     pos = tmp.pos; 
-                    startpoint = tmp.start;
-                    endpoint = tmp.end;
+                    start = tmp.start;
+                    end = tmp.end;
 
                     currEdgeIndex++;
                 }
@@ -7681,18 +7715,22 @@ var oldTime = new Date().getTime();
 
             function calcBoxId(ports){
                 for(var i in ports){
-                    if(ports.hasOwnProperty(i)){
+                    if(ports.hasOwnProperty(i) && ports[i].getOwner()){
                         return ports[i].getOwner().getID();
                     }
                 }
             }
 
             this.getSrcBoxId = function(){
-                return srcBox;
+                if(this.srcPorts && calcBoxId(this.srcPorts))
+                    return srcBox;
+                return null;
             };
 
             this.getDstBoxId = function(){
-                return dstBox;
+                if(this.dstPorts && calcBoxId(this.dstPorts))
+                    return dstBox;
+                return null;
             };
 
             this.updateSrcPorts = function(){
@@ -8205,6 +8243,9 @@ var oldTime = new Date().getTime();
     
         }else if(this.paths[item] !== undefined){
             if(this.paths[item].path instanceof AutoRouterPath){
+//TODO REMOVE
+console.log("REMOVING " + item);
+//REMOVE_END
                 var pathData = this.paths[item],
                     path = pathData.path,
                     srcBoxId = pathData.getSrcBoxId(),
