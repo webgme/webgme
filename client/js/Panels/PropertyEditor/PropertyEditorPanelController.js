@@ -19,7 +19,8 @@ define(['logManager',
                                     REGISTRY_KEYS.IS_ABSTRACT],
         PREFERENCES_REGISTRY_KEYS = [REGISTRY_KEYS.DECORATOR,
             REGISTRY_KEYS.DISPLAY_FORMAT,
-            REGISTRY_KEYS.SVG_ICON],
+            REGISTRY_KEYS.SVG_ICON,
+            REGISTRY_KEYS.PORT_SVG_ICON],
         PROPERTY_GROUP_META = 'META',
         PROPERTY_GROUP_PREFERENCES = 'Preferences',
         PROPERTY_GROUP_ATTRIBUTES = 'Attributes',
@@ -423,7 +424,8 @@ define(['logManager',
 
                             //if it is the SVG decorator's SVG Icon name
                             //list the
-                            if (i === REGISTRY_KEYS.SVG_ICON) {
+                            if (i === REGISTRY_KEYS.SVG_ICON ||
+                                i === REGISTRY_KEYS.PORT_SVG_ICON) {
                                 //TODO: needs to be fixed
                                 dstList[extKey].valueItems = DecoratorSVGIconList;
                             }
