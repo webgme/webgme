@@ -55,6 +55,11 @@ define(['js/Constants',
             return;
         }
 
+        //do not enter edit mode if there is no connection area defined at all
+        if (this.getConnectionAreas().length === 0) {
+            return;
+        }
+
         this._connAreaEditBackground = $('<div/>', { 'class': CONN_AREA_EDIT_BACKGROUND});
         this._connAreaEditBackground.css({'left': -shiftVal + 'px',
             'top': -shiftVal + 'px'});
