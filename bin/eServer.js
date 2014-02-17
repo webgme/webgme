@@ -276,7 +276,7 @@ requirejs(['logManager',
             var token = req.url.split('/');
             if(token.length === 3){
                 token = token[2];
-                setTimeout(function(){canCheckToken = true;},60000);
+                setTimeout(function(){canCheckToken = true;},10000);
                 canCheckToken = false;
                 gme.checkToken(token,function(isValid){
                     if(isValid === true){
