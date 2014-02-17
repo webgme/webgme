@@ -23,7 +23,8 @@
     width: 10px;
     position: absolute;
     cursor: pointer;
-    border: 1px solid blue; }
+    border: 1px solid blue;
+    z-index: 10; }
     .uml-state-machine .initial-state .connector:hover {
       border-color: rgba(82, 168, 236, 0.8);
       -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
@@ -73,7 +74,8 @@
     width: 10px;
     position: absolute;
     cursor: pointer;
-    border: 1px solid blue; }
+    border: 1px solid blue;
+    z-index: 10; }
     .uml-state-machine .end-state .connector:hover {
       border-color: rgba(82, 168, 236, 0.8);
       -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
@@ -119,6 +121,7 @@
     position: absolute;
     cursor: pointer;
     border: 1px solid blue;
+    z-index: 10;
     margin-left: -6px;
     left: 50%; }
     .uml-state-machine .connector:hover {

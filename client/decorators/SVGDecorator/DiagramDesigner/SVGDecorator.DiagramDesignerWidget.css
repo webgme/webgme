@@ -41,6 +41,7 @@
   position: absolute;
   cursor: pointer;
   border: 1px solid blue;
+  z-index: 10;
   margin-left: -6px;
   margin-top: -6px; }
   .designer-item .svg-decorator .connector:hover {
