@@ -137,6 +137,7 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
         var widget,
             container = $('<div/>'),
             spnName = $('<span/>', {"class": "property-name"}),
+            divReset = $('<div/>', {"class": "p-reset"}),
             li,
             self = this,
             extraCss = {};
@@ -164,6 +165,7 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
         });
 
         spnName.text(widget.propertyText || widget.propertyName);
+        spnName.attr('title', widget.propertyText || widget.propertyName);
 
         if (propertyDesc.options) {
             if (propertyDesc.options.textColor) {
@@ -183,7 +185,9 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
             //resetable
             if (propertyDesc.options.resetable === true) {
                 var resetBtn = $('<i class="icon-remove-circle btn-reset" title="Reset value"/>');
-                spnName.append(resetBtn);
+                divReset.append(resetBtn);
+
+                spnName.addClass('p-reset');
 
                 resetBtn.on('click', function (event) {
                     self._reset(propertyDesc.id);
@@ -193,7 +197,7 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
             }
         }
 
-        container.append(spnName).append(widget.el);
+        container.append(spnName).append(divReset).append(widget.el);
 
         li = this._addRow(undefined, container, undefined);
 
