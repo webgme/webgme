@@ -704,7 +704,7 @@ define(['logManager',
                     while (j--) {
                         if (this._delayedConnections[j].ID === e.eid) {
                             this.logger.debug('Removing ' + e.eid + ' from delayed connections...');
-                            this._delayedConnections[j].splice(j, 1);
+                            this._delayedConnections.splice(j, 1);
                         }
                     }
                 } else if ( e.etype === CONSTANTS.TERRITORY_EVENT_UPDATE &&
