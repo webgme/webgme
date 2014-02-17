@@ -698,8 +698,7 @@ define(['logManager',
             i = events.length;
             while (i--) {
                 e = events[i];
-                if (e.etype === CONSTANTS.TERRITORY_EVENT_UNLOAD &&
-                    e.desc.isConnection === true) {
+                if (e.etype === CONSTANTS.TERRITORY_EVENT_UNLOAD) {
                     //if it's an unload, remove the delayed connection entry
                     j = this._delayedConnections.length;
                     while (j--) {
