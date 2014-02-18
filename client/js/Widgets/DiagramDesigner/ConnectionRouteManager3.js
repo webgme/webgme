@@ -298,7 +298,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         i = connAreas.length;
         while (i--) {
             //Building up the ConnectionAreas obiect
-            newBox.ConnectionAreas.push([ [ connAreas[i].x1, connAreas[i].y1 ], [ connAreas[i].x2, connAreas[i].y2 ] ]);
+            newBox.ConnectionAreas.push({ 'id': connAreas[i].id, 'area': [ [ connAreas[i].x1, connAreas[i].y1 ], [ connAreas[i].x2, connAreas[i].y2 ] ] });
         }
 
         //Update Box 

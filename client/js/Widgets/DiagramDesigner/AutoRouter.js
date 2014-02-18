@@ -6428,9 +6428,6 @@ var oldTime = new Date().getTime();
             };
 
             this.setStartPorts = function(newPorts){
-                if(!(newPorts instanceof Array))
-                    newPorts = [newPorts];
-
                 startports = newPorts;
 
                 if(startport)
@@ -6438,9 +6435,6 @@ var oldTime = new Date().getTime();
             };
 
             this.setEndPorts = function(newPorts){
-                if(!(newPorts instanceof Array))
-                    newPorts = [newPorts];
-
                 endports = newPorts;
 
                 if(endport)
@@ -8063,33 +8057,38 @@ var oldTime = new Date().getTime();
     
     AutoRouter.prototype.setBox = function(boxObject, size){
         var box = boxObject.box,
-            ports = boxObject.ports,
             x1 = size.x1 !== undefined ? size.x1 : (size.x2 - size.width),
             x2 = size.x2 !== undefined ? size.x2 : (size.x1 + size.width),
             y1 = size.y1 !== undefined ? size.y1 : (size.y2 - size.height),
             y2 = size.y2 !== undefined ? size.y2 : (size.y1 + size.height),
-            connInfo = size.ConnectionInfo,
+            connInfo = size.ConnectionAreas,
             rect = new ArRect(x1, y1, x2, y2),
             paths = { "in": this.boxId2Path[ box.getID() ].in, "out": this.boxId2Path[ box.getID() ].out },
-            i = paths.in.length;
+            i = paths.in.length,
+            ports;
     
         //Remove and Add Ports
         box.deleteAllPorts();
         boxObject.ports = [];
         this.router.setBoxRect(box, rect);
         this.setConnectionInfo(boxObject, connInfo);
+        ports = boxObject.ports; //get the new ports
     
         //Reconnect paths to ports
         while( i-- ){
             var pathSrc = paths.in[i].path.getStartPorts();
-                paths.in[i].path.setEndPorts( ports );
+                //paths.in[i].path.setEndPorts( ports );
+                paths.in[i].dstPorts = ports;
+                paths.in[i].updateDstPorts();
                 this.router.disconnect( paths.in[i].path );
         }
     
         i = paths.out.length;
         while( i-- ){
             var pathDst = paths.out[i].path.getEndPorts();
-                paths.out[i].path.setStartPorts( ports );
+                //paths.out[i].path.setStartPorts( ports );
+                paths.out[i].srcPorts = ports;
+                paths.out[i].updateSrcPorts();
                 this.router.disconnect( paths.out[i].path );
         }
     };
