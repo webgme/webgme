@@ -2,6 +2,7 @@
 
 define(['js/Constants',
     'js/NodePropertyNames',
+    'js/RegistryKeys',
     '../../DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesignerWidget',
     'text!./MetaDecorator.DiagramDesignerWidget.html',
     './Attribute',
@@ -11,6 +12,7 @@ define(['js/Constants',
     './MetaTextEditorDialog',
     'css!./MetaDecorator.DiagramDesignerWidget'], function (CONSTANTS,
                                                           nodePropertyNames,
+                                                          REGISTRY_KEYS,
                                                           DefaultDecoratorDiagramDesignerWidget,
                                                           MetaDecoratorTemplate,
                                                           Attribute,
@@ -78,7 +80,6 @@ define(['js/Constants',
 
     MetaDecoratorDiagramDesignerWidget.prototype._renderContent = function () {
         var client = this._control._client,
-            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
             self = this;
 
         //render GME-ID in the DOM, for debugging
@@ -95,7 +96,6 @@ define(['js/Constants',
                 var attrName = $(this).find('.n').text().replace(":", ""),
                     attrNames,
                     dialog = new AttributeDetailsDialog(),
-                    /*desc = _.extend({}, nodeObj.getAttributeDescriptor(attrName));*/
                     atrMeta = client.getAttributeSchema(self._metaInfo[CONSTANTS.GME_ID],attrName);
                 var desc = _.extend({},{name:attrName,type:atrMeta.type,defaultValue:atrMeta.default});
                 if(atrMeta.enum && atrMeta.enum.length >0){
@@ -144,16 +144,7 @@ define(['js/Constants',
             this._skinParts.$addConstraintContainer.detach();
         }
 
-        /* FILL WITH DATA */
-        if (nodeObj) {
-            this.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name) || "";
-            this._refreshName();
-
-            this._updateAttributes();
-            this._updateConstraints();
-            this._updateAbstract();
-        }
-
+        this.update();
     };
 
     MetaDecoratorDiagramDesignerWidget.prototype.update = function () {
@@ -169,10 +160,44 @@ define(['js/Constants',
                 this._refreshName();
             }
 
+            this._updateColors();
             this._updateAttributes();
             this._updateConstraints();
             this._updateAbstract();
         }
+    };
+
+    MetaDecoratorDiagramDesignerWidget.prototype._updateColors = function () {
+        this._getNodeColorsFromRegistry();
+
+        if (this.fillColor) {
+            this.$el.css({'background-color': this.fillColor});
+        } else {
+            this.$el.css({'background-color': ''});
+        }
+
+        if (this.borderColor) {
+            this.$el.css({'border-color': this.borderColor});
+            this._skinParts.$name.css({'border-color': this.borderColor});
+        } else {
+            this.$el.css({'border-color': '',
+                'box-shadow': ''});
+            this._skinParts.$name.css({'border-color': ''});
+        }
+
+        if (this.textColor) {
+            this.$el.css({'color': this.textColor});
+        } else {
+            this.$el.css({'color': ''});
+        }
+    };
+
+    MetaDecoratorDiagramDesignerWidget.prototype._getNodeColorsFromRegistry = function () {
+        var objID = this._metaInfo[CONSTANTS.GME_ID];
+
+        this.fillColor = this.preferencesHelper.getRegistry(objID, REGISTRY_KEYS.COLOR, false);
+        this.borderColor = this.preferencesHelper.getRegistry(objID, REGISTRY_KEYS.BORDER_COLOR, false);
+        this.textColor = this.preferencesHelper.getRegistry(objID, REGISTRY_KEYS.TEXT_COLOR, false);
     };
 
     MetaDecoratorDiagramDesignerWidget.prototype._refreshName = function () {
@@ -185,7 +210,7 @@ define(['js/Constants',
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]);
 
         if (nodeObj) {
-            if (nodeObj.getRegistry(nodePropertyNames.Registry.isAbstract) === true) {
+            if (nodeObj.getRegistry(REGISTRY_KEYS.IS_ABSTRACT) === true) {
                 this.$el.addClass(ABSTRACT_CLASS);
             } else {
                 this.$el.removeClass(ABSTRACT_CLASS);

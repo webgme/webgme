@@ -4,6 +4,7 @@ $dot-radius : 4px;
 $dot-width: 3px;
 $dot-height: 8px;
 $dot-border-width: 1px;
+$icon-padding: 2px;
 
 @mixin port($ports-width, $padding) {
   .port {
@@ -23,6 +24,13 @@ $dot-border-width: 1px;
       text-overflow: ellipsis;
     }
 
+    img.svg-icon {
+      height: $port-height;
+      width: $port-height;
+      position: absolute;
+      display: inline-block;
+    }
+
     span.dot {
       position: absolute;
       display: inline-block;
@@ -32,12 +40,22 @@ $dot-border-width: 1px;
       height: $dot-height;
       top: ($port-height - $dot-height - 2 * $dot-border-width)/2;
     }
+
+    &.w-icon {
+      span.dot {
+        display: none;
+      }
+    }
   }
 
   .left {
     .port {
       .title-wrapper {
         text-align: left;
+      }
+
+      img.svg-icon {
+        left: -$port-height - $padding;
       }
 
       span.dot {
@@ -52,6 +70,10 @@ $dot-border-width: 1px;
     .port {
       .title-wrapper {
         text-align: right;
+      }
+
+      img.svg-icon {
+        right: -$port-height - $padding;
       }
 
       span.dot {

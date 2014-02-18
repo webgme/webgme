@@ -105,12 +105,28 @@ $input-color: lighten($background-color, 18.5%);
           width: 40%;
           overflow: hidden;
           text-overflow: ellipsis;
+          
+          &.p-reset {
+            width: 30%;
+          }
+        }
+
+        .p-reset {
+          float: left;
+          i.btn-reset {
+            margin-left: 1px;
+            margin-right: 1px;
+
+            &:hover {
+              cursor: pointer;
+            }
+          }
         }
 
         /** Controllers */
         /** Controller-half (right) */
         .c {
-          float: left;
+          float: right;
           width: 60%;
           height: $row-height;
           overflow: hidden;

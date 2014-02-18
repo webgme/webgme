@@ -121,7 +121,7 @@ define([
         }
     }
     function importPointer(node,jNode,pName,callback){
-        if(jNode.pointers[pName].to){
+        if(jNode.pointers[pName].to && jNode.pointers[pName].to.length > 0){
             var needed = jNode.pointers[pName].to.length,
                 i,
                 error = null;
@@ -144,7 +144,53 @@ define([
         }
     }
     function importSet(node,jNode,sName, callback){
-        if(jNode.pointers[sName].to && jNode.pointers[sName].from){
+        if(jNode.pointers[sName].to && jNode.pointers[sName].to.length > 0){
+            var needed = 0,
+                importSetRegAndAtr = function(sOwner,sMember,atrAndReg){
+                    _core.addMember(sOwner,sName,sMember);
+                    var mPath = _core.getPath(sMember);
+                    atrAndReg.attributes = atrAndReg.attributes || {};
+                    for(var i in atrAndReg.attributes){
+                        _core.setMemberAttribute(sOwner,sName,mPath,i,atrAndReg.attributes[i]);
+                    }
+                    atrAndReg.registry = atrAndReg.registry || {};
+                    for(var i in atrAndReg.registry){
+                        _core.setMemberRegistry(sOwner,sName,mPath,i,atrAndReg.registry[i]);
+                    }
+                },
+                importSetReference = function(isTo,index,cb){
+                    var jObj = isTo === true ? jNode.pointers[sName].to[index] : jNode.pointers[sName].from[index];
+                    getReferenceNode(jObj,function(err,sNode){
+                        if(err){
+                            cb(err);
+                        } else {
+                            if(sNode){
+                                var sOwner = isTo === true ? node : sNode,
+                                    sMember = isTo === true ? sNode : node;
+                                importSetRegAndAtr(sOwner,sMember,jObj);
+                            }
+                            cb(null);
+                        }
+                    });
+                },
+                error = null;
+
+            _core.createSet(node,sName);
+            needed = jNode.pointers[sName].to.length;
+            for(var i=0;i<jNode.pointers[sName].to.length;i++){
+                importSetReference(true,i,function(err){
+                    error = error || err;
+                    if(--needed === 0){
+                        callback(error);
+                    }
+                });
+            }
+        } else {
+            callback(null); //TODO now we just simply try to ignore faulty data import
+        }
+    }
+    function _importSet(node,jNode,sName, callback){
+        if(jNode.pointers[sName].to){
             var needed = 0,
                 importSetRegAndAtr = function(sOwner,sMember,atrAndReg){
                     _core.addMember(sOwner,sName,sMember);

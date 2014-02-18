@@ -31,9 +31,10 @@ define([ "util/assert"], function (ASSERT) {
                 ownPath = innerCore.getPath(node);
                 ownPath = ownPath.substring(0,ownPath.indexOf('/_')); //TODO this is a hack and should be solved some other way if possible
             }
+            memberPath = innerCore.getPointerPath(setElementNode,REL_ID);
 
 
-            return ownPath;
+            return memberPath;
 
         };
         var getMemberRelId = function(node,setName,memberPath){

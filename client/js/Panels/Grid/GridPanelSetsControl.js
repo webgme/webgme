@@ -73,6 +73,8 @@ define(['logManager',
             k,
             title = " (" + this._setContainerID + ")";
 
+        this._dataGridWidget.clear();
+
         this._insertList = [];
 
         if (setContainer) {

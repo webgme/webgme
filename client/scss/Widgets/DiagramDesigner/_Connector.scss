@@ -1,6 +1,7 @@
 $connector-background-color: #FEFEFE;
 $connector-border-width: 1px;
-$connector-border: $connector-border-width solid #0000FF;
+$connection-border-color: #0000FF;
+$connector-border: $connector-border-width solid $connection-border-color;
 $connector-size: 12px;
 $connector-hover-border-color: rgba(82, 168, 236, 0.8);
 $connector-hover-shadow-color-start: rgba(0, 0, 0, 0.075);
@@ -13,6 +14,7 @@ $connector-hover-shadow-color-end: rgba(82, 168, 236, 0.6);
   position: absolute;
   cursor: pointer;
   border: $connector-border;
+  z-index: 10;
 
   &:hover {
     border-color: $connector-hover-border-color;

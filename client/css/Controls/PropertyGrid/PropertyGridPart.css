@@ -59,8 +59,17 @@
           width: 40%;
           overflow: hidden;
           text-overflow: ellipsis; }
+          .pgp ul li.cr .property-name.p-reset {
+            width: 30%; }
+        .pgp ul li.cr .p-reset {
+          float: left; }
+          .pgp ul li.cr .p-reset i.btn-reset {
+            margin-left: 1px;
+            margin-right: 1px; }
+            .pgp ul li.cr .p-reset i.btn-reset:hover {
+              cursor: pointer; }
         .pgp ul li.cr .c {
-          float: left;
+          float: right;
           width: 60%;
           height: 27px;
           overflow: hidden;

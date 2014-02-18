@@ -7,8 +7,10 @@
 "use strict";
 
 define(['js/Constants',
+    'js/RegistryKeys',
     'raphaeljs',
-    'css!/css/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase.ConnectionArea'], function (CONSTANTS) {
+    'css!/css/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase.ConnectionArea'], function (CONSTANTS,
+                                                                                                      REGISTRY_KEYS) {
 
     var DiagramDesignerWidgetDecoratorBaseConnectionArea,
         EVENT_POSTFIX = 'DiagramDesignerWidgetDecoratorBaseConnectionArea',
@@ -18,7 +20,7 @@ define(['js/Constants',
         DISABLED = 'disabled',
         DATA_CONN_AREA_ID = 'CONN_AREA_ID',
         CONN_AREA_SIZE = 8,
-        DIAGRAM_DESIGNER_WIDGET_DECORATOR_DISABLED_CONNECTION_AREAS_REGISTRY_KEY = 'DIAGRAM_DESIGNER_WIDGET_DECORATOR_DISABLED_CONNECTION_AREAS_REGISTRY_KEY';
+        DIAGRAM_DESIGNER_WIDGET_DECORATOR_DISABLED_CONNECTION_AREAS_REGISTRY_KEY = REGISTRY_KEYS.DIAGRAM_DESIGNER_WIDGET_DECORATOR_DISABLED_CONNECTION_AREAS;
 
     DiagramDesignerWidgetDecoratorBaseConnectionArea = function () {
     };
@@ -50,6 +52,11 @@ define(['js/Constants',
 
         //do not edit in ReadOnly mode
         if (this.hostDesignerItem.canvas.getIsReadOnlyMode() === true) {
+            return;
+        }
+
+        //do not enter edit mode if there is no connection area defined at all
+        if (this.getConnectionAreas().length === 0) {
             return;
         }
 
@@ -106,10 +113,16 @@ define(['js/Constants',
             a.y2 += shiftVal;
 
             //if the area is too small, enlarge it
-            if (a.x2 - a.x1 < CONN_AREA_SIZE &&
-                a.y2 - a.y1 < CONN_AREA_SIZE) {
-                a.x1 -= CONN_AREA_SIZE / 2;
-                a.x2 += CONN_AREA_SIZE / 2;
+            if (Math.abs(a.x2 - a.x1) < CONN_AREA_SIZE &&
+                Math.abs(a.y2 - a.y1) < CONN_AREA_SIZE) {
+                if (a.x2 > a.x1) {
+                    a.x1 -= CONN_AREA_SIZE / 2;
+                    a.x2 += CONN_AREA_SIZE / 2;
+                } else {
+                    a.x2 -= CONN_AREA_SIZE / 2;
+                    a.x1 += CONN_AREA_SIZE / 2;
+                }
+
             }
 
             var path = this._svg.path('M ' + a.x1 + ',' + a.y1 + 'L' + a.x2 + ',' + a.y2);
@@ -152,34 +165,30 @@ define(['js/Constants',
     };
 
     DiagramDesignerWidgetDecoratorBaseConnectionArea.prototype._getDisabledConnectionAreas = function () {
-        var result = [],
-            client = this._control._client,
-            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
+        var objID = this._metaInfo[CONSTANTS.GME_ID],
             decoratorID = this.DECORATORID,
-            diagramDesignerWidgetDecoratorDisabledConnectionAreasRegistry;
+            result = [],
+            regKey = DIAGRAM_DESIGNER_WIDGET_DECORATOR_DISABLED_CONNECTION_AREAS_REGISTRY_KEY + decoratorID,
+            registry = this.preferencesHelper.getRegistry(objID, regKey, true) || [];
 
-        if (nodeObj) {
-            diagramDesignerWidgetDecoratorDisabledConnectionAreasRegistry = nodeObj.getRegistry(DIAGRAM_DESIGNER_WIDGET_DECORATOR_DISABLED_CONNECTION_AREAS_REGISTRY_KEY) || {};
-            if (diagramDesignerWidgetDecoratorDisabledConnectionAreasRegistry[decoratorID]) {
-                result = diagramDesignerWidgetDecoratorDisabledConnectionAreasRegistry[decoratorID].slice(0);
-            }
+        if (registry) {
+            result = registry.slice(0);
         }
 
         return result;
     };
 
     DiagramDesignerWidgetDecoratorBaseConnectionArea.prototype._setDisabledConnectionAreas = function (disabledAreaIdList) {
-        var client = this._control._client,
-            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
+        var objID = this._metaInfo[CONSTANTS.GME_ID],
             decoratorID = this.DECORATORID,
-            diagramDesignerWidgetDecoratorDisabledConnectionAreasRegistry;
+            regKey = DIAGRAM_DESIGNER_WIDGET_DECORATOR_DISABLED_CONNECTION_AREAS_REGISTRY_KEY + decoratorID;
 
-        if (nodeObj) {
-            diagramDesignerWidgetDecoratorDisabledConnectionAreasRegistry = nodeObj.getEditableRegistry(DIAGRAM_DESIGNER_WIDGET_DECORATOR_DISABLED_CONNECTION_AREAS_REGISTRY_KEY) || {};
-            diagramDesignerWidgetDecoratorDisabledConnectionAreasRegistry[decoratorID] = disabledAreaIdList.slice(0);
-
-            client.setRegistry(this._metaInfo[CONSTANTS.GME_ID], DIAGRAM_DESIGNER_WIDGET_DECORATOR_DISABLED_CONNECTION_AREAS_REGISTRY_KEY, diagramDesignerWidgetDecoratorDisabledConnectionAreasRegistry);
+        if (disabledAreaIdList.length === 0) {
+            this.preferencesHelper.delRegistry(objID, regKey);
+        } else {
+            this.preferencesHelper.setRegistry(objID, regKey, disabledAreaIdList.slice(0));
         }
+
     };
 
 

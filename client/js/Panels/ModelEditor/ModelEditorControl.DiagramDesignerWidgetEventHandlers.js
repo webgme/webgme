@@ -4,6 +4,7 @@ define(['logManager',
     'clientUtil',
     'js/Constants',
     'js/NodePropertyNames',
+    'js/RegistryKeys',
     'js/Utils/GMEConcepts',
     'js/Utils/ExportManager',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
@@ -11,6 +12,7 @@ define(['logManager',
                                                         util,
                                                         CONSTANTS,
                                                         nodePropertyNames,
+                                                        REGISTRY_KEYS,
                                                         GMEConcepts,
                                                         ExportManager,
                                                         DiagramDesignerWidgetConstants,
@@ -134,6 +136,18 @@ define(['logManager',
             self._onSelectionContextMenu(selectedIds, mousePos);
         };
 
+        this.designerCanvas.onSelectionFillColorChanged = function (selectedElements, color) {
+            self._onSelectionFillColorChanged(selectedElements, color);
+        };
+
+        this.designerCanvas.onSelectionBorderColorChanged = function (selectedElements, color) {
+            self._onSelectionBorderColorChanged(selectedElements, color);
+        };
+
+        this.designerCanvas.onSelectionTextColorChanged = function (selectedElements, color) {
+            self._onSelectionTextColorChanged(selectedElements, color);
+        };
+
         this.logger.debug("attachDiagramDesignerWidgetEventHandlers finished");
     };
 
@@ -143,7 +157,7 @@ define(['logManager',
         this._client.startTransaction();
         for (id in repositionDesc) {
             if (repositionDesc.hasOwnProperty(id)) {
-                this._client.setRegistry(this._ComponentID2GmeID[id], nodePropertyNames.Registry.position, { "x": repositionDesc[id].x, "y": repositionDesc[id].y });
+                this._client.setRegistry(this._ComponentID2GmeID[id], REGISTRY_KEYS.POSITION, { "x": repositionDesc[id].x, "y": repositionDesc[id].y });
             }
         }
         this._client.completeTransaction();
@@ -166,7 +180,7 @@ define(['logManager',
                 copyOpts[gmeID][ATTRIBUTES_STRING] = {};
                 copyOpts[gmeID][REGISTRY_STRING] = {};
 
-                copyOpts[gmeID][REGISTRY_STRING][nodePropertyNames.Registry.position] = { "x": desc.posX, "y": desc.posY };
+                copyOpts[gmeID][REGISTRY_STRING][REGISTRY_KEYS.POSITION] = { "x": desc.posX, "y": desc.posY };
 
                 //remove the component from UI
                 //it will be recreated when the GME client calls back with the result
@@ -372,7 +386,7 @@ define(['logManager',
                     case DragHelper.DRAG_EFFECTS.DRAG_MOVE:
                         //check to see if dragParams.parentID and this.parentID are the same
                         //if so, it's not a real move, it is a reposition
-                        if ((dragParams && dragParams.parentID && dragParams.parentID === parentID) ||
+                        if ((dragParams && dragParams.parentID === parentID) ||
                             GMEConcepts.canCreateChildren(parentID, items)) {
                             dragAction = {'dragEffect': dragEffects[i]};
                             possibleDropActions.push(dragAction);
@@ -508,7 +522,7 @@ define(['logManager',
 
                     oldPos = dragParams && dragParams.positions[gmeID] || {'x':0, 'y': 0};
                     params[gmeID][REGISTRY_STRING] = {};
-                    params[gmeID][REGISTRY_STRING][nodePropertyNames.Registry.position] = { "x": position.x + oldPos.x, "y": position.y + oldPos.y };
+                    params[gmeID][REGISTRY_STRING][REGISTRY_KEYS.POSITION] = { "x": position.x + oldPos.x, "y": position.y + oldPos.y };
                 }
                 this._client.startTransaction();
                 this._client.copyMoreNodes(params);
@@ -517,7 +531,7 @@ define(['logManager',
             case DragHelper.DRAG_EFFECTS.DRAG_MOVE:
                 //check to see if dragParams.parentID and this.parentID are the same
                 //if so, it's not a real move, it is a reposition
-                if (dragParams && dragParams.parentID && dragParams.parentID === parentID) {
+                if (dragParams && dragParams.parentID === parentID) {
                     //it is a reposition
                     this._repositionItems(items, dragParams.positions, position);
                 } else {
@@ -532,7 +546,7 @@ define(['logManager',
 
                         oldPos = dragParams && dragParams.positions[gmeID] || {'x':0, 'y': 0};
                         params[gmeID][REGISTRY_STRING] = {};
-                        params[gmeID][REGISTRY_STRING][nodePropertyNames.Registry.position] = { "x": position.x + oldPos.x, "y": position.y + oldPos.y };
+                        params[gmeID][REGISTRY_STRING][REGISTRY_KEYS.POSITION] = { "x": position.x + oldPos.x, "y": position.y + oldPos.y };
                     }
 
                     this._client.startTransaction();
@@ -543,30 +557,9 @@ define(['logManager',
             case DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE:
                 params = { "parentId": parentID };
                 i = items.length;
-                /*this._client.startTransaction();
-                while (i--) {
-                    params.baseId = items[i];
-
-                    gmeID = this._client.createChild(params);
-
-                    if (gmeID) {
-                        //check if old position is in drag-params
-                        oldPos = dragParams && dragParams.positions[items[i]] || {'x':0, 'y': 0};
-                        //store new position
-                        this._client.setRegistry(gmeID, nodePropertyNames.Registry.position, {'x': position.x + oldPos.x,
-                            'y': position.y + oldPos.y});
-
-                        //old position is not in drag-params
-                        if (!(dragParams && dragParams.positions[items[i]])) {
-                            position.x += POS_INC;
-                            position.y += POS_INC;
-                        }
-                    }
-                }
-                this._client.completeTransaction();*/
                 while(i--){
-                    oldPos = dragParams && dragParams.positions[items[i]] || {'x':0, 'y': 0};
-                    params[items[i]] = {registry:{position:{x:position.x+oldPos.x,y:position.y+oldPos.y}}};
+                    oldPos = dragParams && dragParams.positions[items[i]] || {'x': 0, 'y': 0};
+                    params[items[i]] = { registry: { position:{ x: position.x + oldPos.x, y: position.y + oldPos.y }}};
                     //old position is not in drag-params
                     if (!(dragParams && dragParams.positions[items[i]])) {
                         position.x += POS_INC;
@@ -574,7 +567,6 @@ define(['logManager',
                     }
                 }
                 this._client.createChildren(params);
-                
                 break;
             case DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE:
                 if (items.length === 1) {
@@ -589,7 +581,7 @@ define(['logManager',
                         //check if old position is in drag-params
                         oldPos = dragParams && dragParams.positions[items[0]] || {'x':0, 'y': 0};
                         //store new position
-                        this._client.setRegistry(gmeID, nodePropertyNames.Registry.position, {'x': position.x + oldPos.x,
+                        this._client.setRegistry(gmeID, REGISTRY_KEYS.POSITION, {'x': position.x + oldPos.x,
                             'y': position.y + oldPos.y});
 
                         //set reference
@@ -654,7 +646,7 @@ define(['logManager',
                     if (!oldPos) {
                         oldPos = {'x': 0, 'y': 0};
                     }
-                    self._client.setRegistry(gmeID, nodePropertyNames.Registry.position, { "x": dropPosition.x + oldPos.x, "y": dropPosition.y + oldPos.y });
+                    self._client.setRegistry(gmeID, REGISTRY_KEYS.POSITION, { "x": dropPosition.x + oldPos.x, "y": dropPosition.y + oldPos.y });
                 }
 
                 self._client.completeTransaction();
@@ -666,41 +658,28 @@ define(['logManager',
         var gmeIDs = [],
             len = selectedIds.length,
             id,
-            connectionSelected = false,
-            allHasRegistrylineStyle = selectedIds.length > 0,
-            nodeObj,
-            lineStyle;
+            onlyConnectionSelected =  selectedIds.length > 0;
 
         while (len--) {
             id = this._ComponentID2GmeID[selectedIds[len]];
             if (id) {
                 gmeIDs.push(id);
 
-                nodeObj = this._client.getNode(id);
-
-                if (allHasRegistrylineStyle && nodeObj) {
-                    lineStyle = nodeObj.getRegistry(nodePropertyNames.Registry.lineStyle);
-                    allHasRegistrylineStyle = lineStyle && !_.isEmpty(lineStyle);
-                } else {
-                    allHasRegistrylineStyle = false;
-                }
-            }
-
-            if (this.designerCanvas.connectionIds.indexOf(selectedIds[len]) !== -1) {
-                connectionSelected = true;
+                onlyConnectionSelected = onlyConnectionSelected && GMEConcepts.isConnectionType(id);
             }
         }
 
-        this.designerCanvas.toolbarItems.ddbtnConnectionArrowStart.enabled(allHasRegistrylineStyle);
-        this.designerCanvas.toolbarItems.ddbtnConnectionPattern.enabled(allHasRegistrylineStyle);
-        this.designerCanvas.toolbarItems.ddbtnConnectionArrowEnd.enabled(allHasRegistrylineStyle);
-        this.designerCanvas.toolbarItems.ddbtnConnectionLineType.enabled(allHasRegistrylineStyle);
+        this.designerCanvas.toolbarItems.ddbtnConnectionArrowStart.enabled(onlyConnectionSelected);
+        this.designerCanvas.toolbarItems.ddbtnConnectionPattern.enabled(onlyConnectionSelected);
+        this.designerCanvas.toolbarItems.ddbtnConnectionArrowEnd.enabled(onlyConnectionSelected);
+        this.designerCanvas.toolbarItems.ddbtnConnectionLineType.enabled(onlyConnectionSelected);
+        this.designerCanvas.toolbarItems.ddbtnConnectionLineWidth.enabled(onlyConnectionSelected);
 
-        this.$btnConnectionRemoveSegmentPoints.enabled(connectionSelected);
+        this.$btnConnectionRemoveSegmentPoints.enabled(onlyConnectionSelected);
 
         //nobody is selected on the canvas
         //set the active selection to the opened guy
-        if (gmeIDs.length === 0 && this.currentNodeInfo.id) {
+        if (gmeIDs.length === 0 && (this.currentNodeInfo.id || this.currentNodeInfo.id === CONSTANTS.PROJECT_ROOT_ID)) {
             gmeIDs.push(this.currentNodeInfo.id);
         }
 
@@ -736,16 +715,12 @@ define(['logManager',
         var connID = params.connectionID,
             points = params.points,
             gmeID = this._ComponentID2GmeID[connID],
-            nodeObj,
-            lineStyle;
+            nodeObj;
 
         if (gmeID) {
             nodeObj = this._client.getNode(gmeID);
             if (nodeObj) {
-                lineStyle = nodeObj.getEditableRegistry(nodePropertyNames.Registry.lineStyle) || {};
-                lineStyle[DiagramDesignerWidgetConstants.LINE_POINTS] = points;
-
-                this._client.setRegistry(gmeID, nodePropertyNames.Registry.lineStyle, lineStyle);
+                this._client.setRegistry(gmeID, REGISTRY_KEYS.LINE_CUSTOM_POINTS, points);
             }
         }
     };
@@ -865,7 +840,7 @@ define(['logManager',
             result = true;
 
         if (nodeObj) {
-            result = this._client.canSetRegistry(nodeObj.getId(), nodePropertyNames.Registry.position);
+            result = this._client.canSetRegistry(nodeObj.getId(), REGISTRY_KEYS.POSITION);
         }
 
         return result;
@@ -895,7 +870,7 @@ define(['logManager',
         this._client.startTransaction();
         while(i--) {
             gmeID = this._ComponentID2GmeID[selectedIds[i]];
-            regDegree = this._client.getNode(gmeID).getEditableRegistry(nodePropertyNames.Registry.rotation);
+            regDegree = this._client.getNode(gmeID).getEditableRegistry(REGISTRY_KEYS.ROTATION);
 
             if (degree === DiagramDesignerWidgetConstants.ROTATION_RESET ) {
                 regDegree = 0;
@@ -903,7 +878,7 @@ define(['logManager',
                 regDegree = ((regDegree || 0) + degree) % 360;
             }
 
-            this._client.setRegistry(gmeID, nodePropertyNames.Registry.rotation, regDegree);
+            this._client.setRegistry(gmeID, REGISTRY_KEYS.ROTATION, regDegree);
         }
         this._client.completeTransaction();
     };
@@ -914,7 +889,15 @@ define(['logManager',
             gmeIDs = [],
             len = items.length,
             id,
-            connRegLineStyle;
+            connRegLineStyle,
+            setObjRegistry,
+            client = this._client;
+
+        setObjRegistry = function (objID, paramKey, registryKey) {
+            if (visualParams.hasOwnProperty(paramKey)) {
+                client.setRegistry(objID, registryKey, visualParams[paramKey]);
+            }
+        };
 
         while (len--) {
             id = this._ComponentID2GmeID[items[len]];
@@ -929,11 +912,12 @@ define(['logManager',
 
             while(len--) {
                 id = gmeIDs[len];
-                connRegLineStyle = this._client.getNode(id).getEditableRegistry(nodePropertyNames.Registry.lineStyle);
-                if (connRegLineStyle && !_.isEmpty(connRegLineStyle)) {
-                    _.extend(connRegLineStyle, visualParams);
-                    this._client.setRegistry(id, nodePropertyNames.Registry.lineStyle, connRegLineStyle);
-                }
+                //set visual properties
+                setObjRegistry(id, CONSTANTS.LINE_STYLE.START_ARROW, REGISTRY_KEYS.LINE_START_ARROW);
+                setObjRegistry(id, CONSTANTS.LINE_STYLE.END_ARROW, REGISTRY_KEYS.LINE_END_ARROW);
+                setObjRegistry(id, CONSTANTS.LINE_STYLE.TYPE, REGISTRY_KEYS.LINE_TYPE);
+                setObjRegistry(id, CONSTANTS.LINE_STYLE.PATTERN, REGISTRY_KEYS.LINE_STYLE);
+                setObjRegistry(id, CONSTANTS.LINE_STYLE.WIDTH, REGISTRY_KEYS.LINE_WIDTH);
             }
 
             this._client.completeTransaction();
@@ -959,7 +943,7 @@ define(['logManager',
             nodeObj = this._client.getNode(gmeID);
             if (nodeObj) {
                 obj.Name = nodeObj.getAttribute(nodePropertyNames.Attributes.name);
-                obj.Position = nodeObj.getRegistry(nodePropertyNames.Registry.position);
+                obj.Position = nodeObj.getRegistry(REGISTRY_KEYS.POSITION);
             }
 
             res.push(obj);
@@ -1065,11 +1049,43 @@ define(['logManager',
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._exportItems = function (selectedIds) {
-        var i = selectedIds.length;
+        var i = selectedIds.length,
+            gmeIDs = [];
 
         while(i--) {
-            ExportManager.export(this._ComponentID2GmeID[selectedIds[i]]);
+            gmeIDs.push(this._ComponentID2GmeID[selectedIds[i]]);
         }
+
+        ExportManager.exportMultiple(gmeIDs);
+    };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionFillColorChanged = function (selectedElements, color) {
+        this._onSelectionSetColor(selectedElements, color, REGISTRY_KEYS.COLOR);
+    };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionBorderColorChanged = function (selectedElements, color) {
+        this._onSelectionSetColor(selectedElements, color, REGISTRY_KEYS.BORDER_COLOR);
+    };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionTextColorChanged = function (selectedElements, color) {
+        this._onSelectionSetColor(selectedElements, color, REGISTRY_KEYS.TEXT_COLOR);
+    };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionSetColor = function (selectedIds, color, regKey) {
+        var i = selectedIds.length,
+            gmeID;
+
+        this._client.startTransaction();
+        while(i--) {
+            gmeID = this._ComponentID2GmeID[selectedIds[i]];
+
+            if (color) {
+                this._client.setRegistry(gmeID, regKey, color);
+            } else {
+                this._client.delRegistry(gmeID, regKey);
+            }
+        }
+        this._client.completeTransaction();
     };
 
     return ModelEditorControlDiagramDesignerWidgetEventHandlers;

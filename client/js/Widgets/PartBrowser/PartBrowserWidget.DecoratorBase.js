@@ -7,7 +7,7 @@ define(['logManager'], function (logManager) {
 
     PartBrowserWidgetDecoratorBase = function (params) {
         this.logger = params.logger || logManager.create(this.DECORATORID);
-
+        this.preferencesHelper = params.preferencesHelper;
         this.skinParts = {};
 
         this._initialize();

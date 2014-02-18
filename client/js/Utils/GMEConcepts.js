@@ -11,21 +11,22 @@
  */
 
 define(['jquery',
-        'logManager',
         'util/guid',
         'js/Constants',
         'js/NodePropertyNames',
-        'js/Utils/METAAspectHelper',
+        'js/RegistryKeys',
+        './GMEConcepts.FCO',
+        './METAAspectHelper',
         'js/Panels/MetaEditor/MetaEditorConstants'], function (_jquery,
-                                                               logManager,
                                                                generateGuid,
                                            CONSTANTS,
                                            nodePropertyNames,
+                                           REGISTRY_KEYS,
+                                           GMEConceptsFCO,
                                            METAAspectHelper,
                                            MetaEditorConstants) {
 
-    var _client,
-        _logger = logManager.create('GMEConcepts');
+    var _client;
 
     var _initialize = function (client) {
         if (!_client) {
@@ -169,6 +170,7 @@ define(['jquery',
     };
 
     var _createBasicProjectSeed = function () {
+        var it;
         var metaRuleBase = {
             "children": {},
             "attributes": {},
@@ -179,18 +181,24 @@ define(['jquery',
 
         //create FCO, META, PROJECT_BASE
         var FCO_ID = _client.createChild({'parentId': CONSTANTS.PROJECT_ROOT_ID});
-        _client.setAttributes(FCO_ID, nodePropertyNames.Attributes.name, 'FCO');
-        _client.setRegistry(FCO_ID, nodePropertyNames.Registry.decorator, "");
-        _client.setRegistry(FCO_ID, nodePropertyNames.Registry.isPort, false);
-        _client.setRegistry(FCO_ID, nodePropertyNames.Registry.isAbstract, false);
+
+        //set attributes for FCO
+        for (it in GMEConceptsFCO.FCO_ATTRIBUTES) {
+            if (GMEConceptsFCO.FCO_ATTRIBUTES.hasOwnProperty(it)) {
+                _client.setAttributes(FCO_ID, it, GMEConceptsFCO.FCO_ATTRIBUTES[it]);
+            }
+        }
+
+        //set base registry for FCO
+        for (it in GMEConceptsFCO.FCO_REGISTRY) {
+            if (GMEConceptsFCO.FCO_REGISTRY.hasOwnProperty(it)) {
+                _client.setRegistry(FCO_ID, it, GMEConceptsFCO.FCO_REGISTRY[it]);
+            }
+        }
 
         var projectRegistry = {};
         projectRegistry[CONSTANTS.PROJECT_FCO_ID] = FCO_ID;
-        _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, nodePropertyNames.Registry.ProjectRegistry, projectRegistry);
-
-        //FCO has a DisplayAttr registry field that controls what Attribute's value should be displayed
-        //by default the Attributes.name is the to-be-displayed attribute
-        _client.setRegistry(FCO_ID, nodePropertyNames.Registry.DisplayFormat, CONSTANTS.DISPLAY_FORMAT_ATTRIBUTE_MARKER + nodePropertyNames.Attributes.name);
+        _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, REGISTRY_KEYS.PROJECT_REGISTRY, projectRegistry);
 
         //set META rules accordingly
 
@@ -209,7 +217,7 @@ define(['jquery',
 
         //set META ASPECT to show FCO
         _client.addMember(CONSTANTS.PROJECT_ROOT_ID, FCO_ID, MetaEditorConstants.META_ASPECT_SET_NAME);
-        _client.setMemberRegistry(CONSTANTS.PROJECT_ROOT_ID, FCO_ID, MetaEditorConstants.META_ASPECT_SET_NAME, CONSTANTS.MEMBER_POSITION_REGISTRY_KEY, {'x': 100, 'y': 100} );
+        _client.setMemberRegistry(CONSTANTS.PROJECT_ROOT_ID, FCO_ID, MetaEditorConstants.META_ASPECT_SET_NAME, REGISTRY_KEYS.POSITION, {'x': 100, 'y': 100} );
 
         //create a default MetaSheet
         var defaultMetaSheetID = MetaEditorConstants.META_ASPECT_SHEET_NAME_PREFIX + generateGuid();
@@ -219,18 +227,18 @@ define(['jquery',
             'order': 0,
             'title': 'META'};
 
-        _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, MetaEditorConstants.META_SHEET_REGISTRY_KEY, [defaultMetaSheetDesc]);
+        _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, REGISTRY_KEYS.META_SHEETS, [defaultMetaSheetDesc]);
 
         //add the FCO to the default META sheet
         _client.addMember(CONSTANTS.PROJECT_ROOT_ID, FCO_ID, defaultMetaSheetID);
-        _client.setMemberRegistry(CONSTANTS.PROJECT_ROOT_ID, FCO_ID, defaultMetaSheetID, CONSTANTS.MEMBER_POSITION_REGISTRY_KEY, {'x': 100, 'y': 100} );
+        _client.setMemberRegistry(CONSTANTS.PROJECT_ROOT_ID, FCO_ID, defaultMetaSheetID, REGISTRY_KEYS.POSITION, {'x': 100, 'y': 100} );
 
         _client.completeTransaction();
     };
 
     var _isProjectRegistryValue = function (key, objID) {
         var rootNode = _client.getNode(CONSTANTS.PROJECT_ROOT_ID),
-            projectRegistry = rootNode.getRegistry(nodePropertyNames.Registry.ProjectRegistry),
+            projectRegistry = rootNode.getRegistry(REGISTRY_KEYS.PROJECT_REGISTRY),
             value = projectRegistry ?  projectRegistry[key] : null;
 
         return objID === value;
@@ -265,7 +273,7 @@ define(['jquery',
             while (len--) {
                 node = _client.getNode(baseIdList[len]);
                 if (node) {
-                    if (node.getRegistry(nodePropertyNames.Registry.isAbstract) === true) {
+                    if (node.getRegistry(REGISTRY_KEYS.IS_ABSTRACT) === true) {
                         baseIdList.splice(len, 1);
                     }
                 }
@@ -433,7 +441,7 @@ define(['jquery',
                 if (maxPerType.hasOwnProperty(baseId)) {
                     //check all the members if it's this type
                     for (i = 0; i < members.length; i += 1) {
-                        if (_client.isTypeOf(members[i]), baseId) {
+                        if (_client.isTypeOf(members[i], baseId)) {
                             maxPerType[baseId] -= 1;
                         }
                     }
@@ -456,6 +464,17 @@ define(['jquery',
         return result;
     };
 
+    var _isAbstract = function (objID) {
+        var isAbstract = false,
+            obj = _client.getNode(objID);
+
+        if (obj) {
+            isAbstract = obj.getRegistry(REGISTRY_KEYS.IS_ABSTRACT);
+        }
+
+        return isAbstract === true;
+    };
+
     //return utility functions
     return {
         initialize: _initialize,
@@ -472,6 +491,7 @@ define(['jquery',
         canDeleteNode: _canDeleteNode,
         getMETAAspectMergedValidChildrenTypes: _getMETAAspectMergedValidChildrenTypes,
         getValidConnectionTypesInParent: _getValidConnectionTypesInParent,
-        canAddToPointerList: _canAddToPointerList
+        canAddToPointerList: _canAddToPointerList,
+        isAbstract: _isAbstract
     }
 });

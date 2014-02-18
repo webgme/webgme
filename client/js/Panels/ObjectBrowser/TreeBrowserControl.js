@@ -289,7 +289,15 @@ define(['logManager',
             menuItems["importNode"] = { // Import...
                 "name": "Import here...",
                 "callback": function(/*key, options*/) {
-                    ImportManager.import(nodeId);
+                    ImportManager.import(nodeId, undefined, false);
+                },
+                "icon": false
+            };
+
+            menuItems["mergeNode"] = { // Merge...
+                "name": "Merge here...",
+                "callback": function(/*key, options*/) {
+                    ImportManager.import(nodeId, undefined, true);
                 },
                 "icon": false
             }

@@ -19,6 +19,7 @@
     position: absolute;
     cursor: pointer;
     border: 1px solid blue;
+    z-index: 10;
     margin-left: -6px;
     left: 50%; }
     .default-decorator .connector:hover {

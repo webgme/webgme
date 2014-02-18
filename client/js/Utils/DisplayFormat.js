@@ -10,12 +10,14 @@
  */
 
 define(['js/Constants',
-    'js/NodePropertyNames'], function (CONSTANTS,
-                                       nodePropertyNames) {
+    'js/NodePropertyNames',
+    'js/RegistryKeys'], function (CONSTANTS,
+                                       nodePropertyNames,
+                                       REGISTRY_KEYS) {
 
     var ATTRIBUTE_MARKER = CONSTANTS.DISPLAY_FORMAT_ATTRIBUTE_MARKER;
 
-    var displayFormatKey = nodePropertyNames.Registry.DisplayFormat;
+    var displayFormatKey = REGISTRY_KEYS.DISPLAY_FORMAT;
 
     var _resolve = function (obj) {
         var result = "",

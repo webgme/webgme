@@ -4,11 +4,15 @@ define(['logManager',
     'js/Constants',
     'js/Utils/GMEConcepts',
     'js/NodePropertyNames',
-    'js/Utils/METAAspectHelper'], function (logManager,
+    'js/RegistryKeys',
+    'js/Utils/METAAspectHelper',
+    'js/Utils/PreferencesHelper'], function (logManager,
                              CONSTANTS,
                              GMEConcepts,
                              nodePropertyNames,
-                             METAAspectHelper) {
+                             REGISTRY_KEYS,
+                             METAAspectHelper,
+                             PreferencesHelper) {
 
     var PartBrowserControl,
         WIDGET_NAME = 'PartBrowser',
@@ -75,7 +79,7 @@ define(['logManager',
             objDescriptor = {};
 
             objDescriptor.id = nodeObj.getId();
-            objDescriptor.decorator = nodeObj.getRegistry(nodePropertyNames.Registry.decorator) || DEFAULT_DECORATOR;
+            objDescriptor.decorator = nodeObj.getRegistry(REGISTRY_KEYS.DECORATOR) || DEFAULT_DECORATOR;
             objDescriptor.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name);
         }
 
@@ -219,6 +223,7 @@ define(['logManager',
         desc.control = this;
         desc.metaInfo = {};
         desc.metaInfo[CONSTANTS.GME_ID] = id;
+        desc.preferencesHelper = PreferencesHelper.getPreferences();
 
         return desc;
     };
@@ -332,10 +337,12 @@ define(['logManager',
 
         //filter out the types that doesn't need to be displayed for whatever reason:
         // - don't display validConnectionTypes
+        // - don't display abstract items
         i = this._validChildrenTypeIDs.length;
         while (i--) {
             id = this._validChildrenTypeIDs[i];
-            if (GMEConcepts.isConnectionType(id) === false) {
+            if (GMEConcepts.isConnectionType(id) === false &&
+                GMEConcepts.isAbstract(id) === false) {
                 childrenTypeToDisplay.push(id);
 
                 objDesc = this._getObjectDescriptor(id);

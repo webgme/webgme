@@ -1,8 +1,8 @@
 "use strict";
 
 var DEBUG = false;
-var _webGME_jquery_ver = '2.0.3';
-var _webGME_jqueryui_ver = '1.10.3';
+var _webGME_jquery_ver = '2.1.0';
+var _webGME_jqueryui_ver = '1.10.4';
 
 // configure require path and modules
 require.config({
@@ -15,7 +15,7 @@ require.config({
 
         //jQuery and stuff
         "jquery": 'lib/jquery/jquery-' + _webGME_jquery_ver + '.min',
-        "jquery-ui": 'lib/jquery/jquery-ui-' + _webGME_jqueryui_ver + '.custom.min',
+        "jquery-ui": 'lib/jquery/jquery-ui-' + _webGME_jqueryui_ver + '.min',
         "jquery-ui-iPad": 'lib/jquery/jquery.ui.ipad',
         "jquery-WebGME": 'js/jquery.WebGME',
         "jquery-dataTables": 'lib/jquery/jquery.dataTables.min',

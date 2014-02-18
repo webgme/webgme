@@ -52,7 +52,8 @@
     cursor: pointer; }
     .meta-decorator .add-new-attribute:hover,
     .meta-decorator .add-new-constraint:hover {
-      background-color: #dbeafc; }
+      background-color: #dbeafc;
+      color: black; }
   .meta-decorator .attributes-title,
   .meta-decorator .constraints-title {
     font-size: 9px;
@@ -60,6 +61,7 @@
     text-transform: uppercase;
     text-align: center;
     background-color: #f3f3f3;
+    color: black;
     line-height: 13px; }
   .meta-decorator .constraints-title {
     border-top: 1px dashed #999999; }
@@ -74,6 +76,7 @@
     position: absolute;
     cursor: pointer;
     border: 1px solid blue;
+    z-index: 10;
     margin-left: -6px;
     left: 50%; }
     .meta-decorator .connector:hover {
@@ -99,7 +102,10 @@
 
 .selected .meta-decorator {
   border: 1px solid #52a8ec;
-  background-color: white; }
+  background-color: white;
+  -webkit-box-shadow: 0px 0px 15px 0px #1276d4 !important;
+  -moz-box-shadow: 0px 0px 15px 0px #1276d4 !important;
+  box-shadow: 0px 0px 15px 0px #1276d4 !important; }
   .selected .meta-decorator .add-new-attribute:hover,
   .selected .meta-decorator .add-new-constraint:hover {
     background-color: #ffffc0; }

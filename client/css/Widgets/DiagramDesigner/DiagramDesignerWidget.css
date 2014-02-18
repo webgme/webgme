@@ -64,6 +64,7 @@
       position: absolute;
       cursor: pointer;
       border: 1px solid blue;
+      z-index: 10;
       background-color: white;
       border-radius: 12px;
       margin-left: -6px;
@@ -88,6 +89,7 @@
       position: absolute;
       cursor: pointer;
       border: 1px solid blue;
+      z-index: 10;
       margin-top: -6px;
       margin-left: -6px;
       line-height: 10px;
@@ -174,6 +176,9 @@ div.css-zoom.diagram-designer-zoom {
   position: absolute;
   top: 30px;
   left: 10px; }
+
+.w-tabs div.css-zoom.diagram-designer-zoom {
+  top: 57px; }
 
 div.diagram-designer-drag-outline {
   white-space: nowrap; }

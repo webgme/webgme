@@ -32,7 +32,7 @@ define(['js/Widgets/DiagramDesigner/DesignerItem'], function (DesignerItem) {
         newComponent.moveTo(objDescriptor.position.x, objDescriptor.position.y);
         newComponent.rotateTo(objDescriptor.rotation);
 
-        newComponent.__setDecorator(objDescriptor.decorator, objDescriptor.decoratorClass, objDescriptor.control, objDescriptor.metaInfo);
+        newComponent.__setDecorator(objDescriptor.decorator, objDescriptor.decoratorClass, objDescriptor.control, objDescriptor.metaInfo, objDescriptor.preferencesHelper);
         newComponent.addToDocFragment(this._documentFragment);
 
         return newComponent;

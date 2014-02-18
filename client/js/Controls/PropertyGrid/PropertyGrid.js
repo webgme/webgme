@@ -24,6 +24,7 @@ define(['logManager',
 
         this.__onChange = null;
         this.__onFinishChange = null;
+        this.__onReset = null;
 
         this._gui = new PropertyGridPart({"el": this.$el});
         this._gui.onChange(function (args) {
@@ -37,6 +38,13 @@ define(['logManager',
             self._logger.debug("onFinishChange: " + JSON.stringify(args));
             if (self.__onFinishChange) {
                 self.__onFinishChange.call(self, args);
+            }
+        });
+
+        this._gui.onReset(function (propertyName) {
+            self._logger.debug("onReset: " + propertyName);
+            if (self.__onReset) {
+                self.__onReset.call(self, propertyName);
             }
         });
 
@@ -116,6 +124,10 @@ define(['logManager',
 
     PropertyGrid.prototype.onFinishChange = function (fnc) {
         this.__onFinishChange = fnc;
+    };
+
+    PropertyGrid.prototype.onReset = function (fnc) {
+        this.__onReset = fnc;
     };
 
     PropertyGrid.prototype.destroy = function () {

@@ -21,6 +21,9 @@ define(['logManager',
         params = params || {};
         params.loggerName = "MetaEditorWidget";
 
+        //disable line style parameter controls in toolbar
+        params.lineStyleControls = false;
+
         params.tabsEnabled = true;
         params.addTabs = true;
         params.deleteTabs = true;

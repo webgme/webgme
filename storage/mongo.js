@@ -387,7 +387,10 @@ define([ "mongodb", "util/assert", "util/canon" ], function (MONGODB, ASSERT, CA
 			getDatabaseStatus: getDatabaseStatus,
 			getProjectNames: getProjectNames,
 			openProject: openProject,
-			deleteProject: deleteProject
+			deleteProject: deleteProject,
+            simpleRequest: function(){}, //placeholder as this function doesn't reach this level
+            simpleResult:function(){}, //placeholder
+            getToken:function(){} //placeholder
 		};
 	}
 

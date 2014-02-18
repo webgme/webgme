@@ -27,29 +27,31 @@ define(['js/Dialogs/Import/ImportDialog',
         }
     };
 
-    var _doImport = function (objID, jsonContent) {
+    var _doImport = function (objID, jsonContent, isMerge) {
+        var fn = isMerge === true ? 'mergeNodeAsync' : 'importNodeAsync',
+            msgPrefix = isMerge === true ? 'Merge' : 'Import';
         _loader.start();
 
         setTimeout(function () {
-            _client.importNodeAsync(objID, jsonContent, function (err) {
+            _client[fn](objID, jsonContent, function (err) {
                 if (err) {
-                    _displayMessage('Import failed: ' + err, true);
+                    _displayMessage(msgPrefix + ' failed: ' + err, true);
                 } else {
-                    _displayMessage('Imported successfully...', false);
+                    _displayMessage(msgPrefix + 'ed successfully...', false);
                 }
                 _loader.stop();
             });
         }, 10);
     };
 
-    var _import = function (objID, jsonContent) {
+    var _import = function (objID, jsonContent, isMerge) {
         if (jsonContent) {
-            _doImport(objID, jsonContent);
+            _doImport(objID, jsonContent, isMerge);
         } else {
             //JSON content to import is not defined, show FileOpenDialog
             var d = new ImportDialog();
             d.show(function (fileContent) {
-                _doImport(objID, fileContent);
+                _doImport(objID, fileContent, isMerge);
             });
         }
     };

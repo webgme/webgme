@@ -41,7 +41,7 @@ define(['underscore', 'common/Constants'], function (underscore, COMMON_CONSTANT
                                BEZIER: 'bezier'},
                       START_ARROW: 'start-arrow',
                       END_ARROW: 'end-arrow',
-                      POINTS: 'points',
+                      CUSTOM_POINTS: 'custom-points',
                       LINE_ARROWS: { NONE: 'none',
                             DIAMOND: 'diamond',
                             BLOCK: 'block',
@@ -50,7 +50,12 @@ define(['underscore', 'common/Constants'], function (underscore, COMMON_CONSTANT
                             OVAL: 'oval',
                             DIAMOND2: 'diamond2',
                             INHERITANCE: 'inheritance'}
-        }
+        },
+
+        DISPLAY_FORMAT_ATTRIBUTE_MARKER: '$',
+
+        //the path to the SVGs that can be used by the decorators supporting SVG_Icon
+        ASSETS_DECORATOR_SVG_FOLDER: 'assets/DecoratorSVG/'
     });
 
 

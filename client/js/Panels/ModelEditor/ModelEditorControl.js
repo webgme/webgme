@@ -3,16 +3,20 @@
 define(['logManager',
     'js/Constants',
     'js/NodePropertyNames',
+    'js/RegistryKeys',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     './ModelEditorControl.DiagramDesignerWidgetEventHandlers',
     'js/Utils/GMEConcepts',
-    'js/Utils/GMEVisualConcepts'], function (logManager,
+    'js/Utils/GMEVisualConcepts',
+    'js/Utils/PreferencesHelper'], function (logManager,
                                                         CONSTANTS,
                                                         nodePropertyNames,
+                                                        REGISTRY_KEYS,
                                                         DiagramDesignerWidgetConstants,
                                                         ModelEditorControlDiagramDesignerWidgetEventHandlers,
                                                         GMEConcepts,
-                                                        GMEVisualConcepts) {
+                                                        GMEVisualConcepts,
+                                                        PreferencesHelper) {
 
     var ModelEditorControl,
         GME_ID = "GME_ID",
@@ -104,11 +108,7 @@ define(['logManager',
                 this.currentNodeInfo.parentId = desc.parentId;
             }
 
-            if (this.currentNodeInfo.parentId) {
-                this.$btnModelHierarchyUp.show();
-            } else {
-                this.$btnModelHierarchyUp.hide();
-            }
+            this._refreshBtnModelHierarchyUp();
 
             //put new node's info into territory rules
             this._selfPatterns = {};
@@ -139,7 +139,8 @@ define(['logManager',
         var nodeObj = this._client.getNode(nodeId),
             objDescriptor,
             pos,
-            defaultPos = 0;
+            defaultPos = 0,
+            customPoints;
 
         if (nodeObj) {
             objDescriptor = {};
@@ -157,9 +158,15 @@ define(['logManager',
 
                     //get all the other visual properties of the connection
                     _.extend(objDescriptor, GMEVisualConcepts.getConnectionVisualProperties(nodeId));
+
+                    //get custom points from the node object
+                    customPoints = nodeObj.getRegistry(REGISTRY_KEYS.LINE_CUSTOM_POINTS);
+                    if (customPoints && _.isArray(customPoints)) {
+                        objDescriptor[CONSTANTS.LINE_STYLE.CUSTOM_POINTS] = $.extend(true, [], customPoints); //JSON.parse(JSON.stringify(customPoints));
+                    }
                 } else {
                     objDescriptor.kind = "MODEL";
-                    pos = nodeObj.getRegistry(nodePropertyNames.Registry.position);
+                    pos = nodeObj.getRegistry(REGISTRY_KEYS.POSITION);
 
                     if (pos) {
                         objDescriptor.position = { "x": pos.x, "y": pos.y };
@@ -179,8 +186,8 @@ define(['logManager',
                         objDescriptor.position.y = defaultPos;
                     }
 
-                    objDescriptor.decorator = nodeObj.getRegistry(nodePropertyNames.Registry.decorator) || "";
-                    objDescriptor.rotation = parseInt(nodeObj.getRegistry(nodePropertyNames.Registry.rotation), 10) || 0;
+                    objDescriptor.decorator = nodeObj.getRegistry(REGISTRY_KEYS.DECORATOR) || "";
+                    objDescriptor.rotation = parseInt(nodeObj.getRegistry(REGISTRY_KEYS.ROTATION), 10) || 0;
                 }
             }
         }
@@ -520,6 +527,7 @@ define(['logManager',
                         objDesc.control = this;
                         objDesc.metaInfo = {};
                         objDesc.metaInfo[CONSTANTS.GME_ID] = gmeID;
+                        objDesc.preferencesHelper = PreferencesHelper.getPreferences();
 
                         uiComponent = this.designerCanvas.createDesignerItem(objDesc);
 
@@ -612,6 +620,7 @@ define(['logManager',
                                 decClass = this._getItemDecorator(objDesc.decorator);
 
                                 objDesc.decoratorClass = decClass;
+                                objDesc.preferencesHelper = PreferencesHelper.getPreferences();
 
                                 this.designerCanvas.updateDesignerItem(componentID, objDesc);
                             }
@@ -747,7 +756,8 @@ define(['logManager',
     };
 
     ModelEditorControl.prototype._onModelHierarchyUp = function () {
-        if (this.currentNodeInfo.parentId) {
+        if (this.currentNodeInfo.parentId ||
+            this.currentNodeInfo.parentId === CONSTANTS.PROJECT_ROOT_ID) {
             this._client.setSelectedObjectId(this.currentNodeInfo.parentId);
         }
     };
@@ -755,8 +765,7 @@ define(['logManager',
     ModelEditorControl.prototype._removeConnectionSegmentPoints = function () {
         var idList = this.designerCanvas.selectionManager.getSelectedElements(),
             len = idList.length,
-            nodeObj,
-            existingLineStyle;
+            nodeObj;
 
 
         this._client.startTransaction();
@@ -766,11 +775,7 @@ define(['logManager',
                 nodeObj = this._client.getNode(this._ComponentID2GmeID[idList[len]]);
 
                 if (nodeObj) {
-                    existingLineStyle = nodeObj.getEditableRegistry(nodePropertyNames.Registry.lineStyle) || {};
-
-                    existingLineStyle[CONSTANTS.LINE_STYLE.POINTS] = [];
-
-                    this._client.setRegistry(nodeObj.getId(), nodePropertyNames.Registry.lineStyle, existingLineStyle);
+                    this._client.delRegistry(nodeObj.getId(), REGISTRY_KEYS.LINE_CUSTOM_POINTS);
                 }
             }
         }
@@ -915,6 +920,8 @@ define(['logManager',
                 this._toolbarItems[i].show();
             }
         }
+
+        this._refreshBtnModelHierarchyUp();
     };
 
     ModelEditorControl.prototype._hideToolbarItems = function () {
@@ -978,6 +985,15 @@ define(['logManager',
 
     ModelEditorControl.prototype.getNodeID = function () {
         return this.currentNodeInfo.id;
+    };
+
+    ModelEditorControl.prototype._refreshBtnModelHierarchyUp = function () {
+        if (this.currentNodeInfo.parentId ||
+            this.currentNodeInfo.parentId === CONSTANTS.PROJECT_ROOT_ID) {
+            this.$btnModelHierarchyUp.show();
+        } else {
+            this.$btnModelHierarchyUp.hide();
+        }
     };
 
     //attach ModelEditorControl - DesignerCanvas event handler functions

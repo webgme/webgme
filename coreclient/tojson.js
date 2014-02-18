@@ -345,8 +345,11 @@ define([
             }
             for(var i=0;i<tArray.length;i++){
                 var coll = core.getCollectionPaths(node,tArray[i]);
-                var pointer = {to:[],from:[],set:false};
-                pointer.to.push(getRefObj(core.getPointerPath(node,tArray[i])));
+                var pointer = {to:[],from:[],set:false},
+                    pPath = core.getPointerPath(node,tArray[i]);
+                if(pPath !== undefined){
+                    pointer.to.push(getRefObj(pPath));
+                }
                 for(var j=0;j<coll.length;j++){
                     pointer.from.push(getRefObj(coll[j]));
                 }

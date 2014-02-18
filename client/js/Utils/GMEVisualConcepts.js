@@ -11,21 +11,20 @@
  */
 
 define(['jquery',
-        'logManager',
         'js/Constants',
         'js/NodePropertyNames',
+        'js/RegistryKeys',
         'js/Utils/METAAspectHelper',
         'js/Panels/MetaEditor/MetaEditorConstants',
         'js/Utils/DisplayFormat'], function (_jquery,
-                                           logManager,
                                            CONSTANTS,
                                            nodePropertyNames,
+                                           REGISTRY_KEYS,
                                            METAAspectHelper,
                                            MetaEditorConstants,
                                            displayFormat) {
 
     var _client,
-        _logger = logManager.create('GMEVisualConcepts'),
         DEFAULT_LINE_STYLE = {};
 
     DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.WIDTH] = 1;
@@ -34,7 +33,7 @@ define(['jquery',
     DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.TYPE] = CONSTANTS.LINE_STYLE.TYPES.NONE;
     DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.START_ARROW] = CONSTANTS.LINE_STYLE.LINE_ARROWS.NONE;
     DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.END_ARROW] = CONSTANTS.LINE_STYLE.LINE_ARROWS.NONE;
-    DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.POINTS] = [];
+    DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.CUSTOM_POINTS] = [];
 
     var _initialize = function (client) {
         if (!_client) {
@@ -45,55 +44,87 @@ define(['jquery',
     var _getConnectionVisualProperties = function (objID) {
         var obj = _client.getNode(objID),
             result = {},
-            regLineStyle,
-            getValue;
+            getValue,
+            val;
 
-        getValue = function (srcObj, key, dstObj, type) {
+        getValue = function (srcObj, regKey, type) {
+            var result,
+                regValue;
+
             if (srcObj) {
-                if (srcObj[key]) {
+                regValue = srcObj.getRegistry(regKey);
+                if (regValue) {
                     switch(type) {
                         case 'int':
                             try {
-                                dstObj[key] = parseInt(srcObj[key], 10);
+                                result = parseInt(regValue, 10);
                             } catch (e) {
-
+                                result = undefined;
                             }
                             break;
                         case 'array':
                             try {
-                                if (!_.isArray(srcObj[key])) {
-                                    dstObj[key] = JSON.parse(srcObj[key]);
+                                if (!_.isArray(regValue)) {
+                                    result = JSON.parse(regValue);
                                 } else {
-                                    dstObj[key] = srcObj[key].slice(0);
+                                    result = regValue.slice(0);
                                 }
 
-                                if (!_.isArray(dstObj[key])) {
-                                    delete dstObj[key];
+                                if (!_.isArray(result)) {
+                                    result = undefined;
                                 }
                             } catch (e) {
-
+                                result = undefined;
                             }
                             break;
                         default:
-                            dstObj[key] = srcObj[key];
+                            result = regValue;
                     }
                 }
             }
+
+            return result;
         };
 
         if (obj) {
             _.extend(result, DEFAULT_LINE_STYLE);
             result.name = displayFormat.resolve(obj);
 
-            regLineStyle =  obj.getRegistry(nodePropertyNames.Registry.lineStyle);
+            //line width
+            val = getValue(obj, REGISTRY_KEYS.LINE_WIDTH, 'int');
+            if (val) {
+                result[CONSTANTS.LINE_STYLE.WIDTH] = val;
+            }
 
-            getValue(regLineStyle, CONSTANTS.LINE_STYLE.WIDTH, result, 'int');
-            getValue(regLineStyle, CONSTANTS.LINE_STYLE.COLOR, result);
-            getValue(regLineStyle, CONSTANTS.LINE_STYLE.PATTERN, result);
-            getValue(regLineStyle, CONSTANTS.LINE_STYLE.TYPE, result);
-            getValue(regLineStyle, CONSTANTS.LINE_STYLE.START_ARROW, result);
-            getValue(regLineStyle, CONSTANTS.LINE_STYLE.END_ARROW, result);
-            getValue(regLineStyle, CONSTANTS.LINE_STYLE.POINTS, result, 'array');
+            //color
+            val = getValue(obj, REGISTRY_KEYS.COLOR);
+            if (val && val !== "") {
+                result[CONSTANTS.LINE_STYLE.COLOR] = val;
+            }
+
+            //pattern
+            val = getValue(obj, REGISTRY_KEYS.LINE_STYLE);
+            if (val !== undefined && val !== null) {
+                result[CONSTANTS.LINE_STYLE.PATTERN] = val;
+            }
+
+            //line type
+            val = getValue(obj, REGISTRY_KEYS.LINE_TYPE);
+            if (val !== undefined && val !== null) {
+                result[CONSTANTS.LINE_STYLE.TYPE] = val;
+            }
+
+            //start arrow
+            val = getValue(obj, REGISTRY_KEYS.LINE_START_ARROW);
+            if (val) {
+                result[CONSTANTS.LINE_STYLE.START_ARROW] = val;
+            }
+
+            //end arrow
+            val = getValue(obj, REGISTRY_KEYS.LINE_END_ARROW);
+            if (val) {
+                result[CONSTANTS.LINE_STYLE.END_ARROW] = val;
+            }
         }
 
         return result;

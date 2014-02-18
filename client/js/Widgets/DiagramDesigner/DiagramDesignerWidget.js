@@ -64,10 +64,10 @@ define(['logManager',
     var DiagramDesignerWidget,
         CANVAS_EDGE = 100,
         WIDGET_CLASS = 'diagram-designer',  // must be same as scss/Widgets/DiagramDesignerWidget.scss
-        DEFAULT_CONNECTION_ROUTE_MANAGER = ConnectionRouteManager2,
+        DEFAULT_CONNECTION_ROUTE_MANAGER = ConnectionRouteManager3,
         GUID_DIGITS = 6,
         BACKGROUND_TEXT_COLOR = '#DEDEDE',
-        BACKGROUND_TEXT_SIZE = 30
+        BACKGROUND_TEXT_SIZE = 30;
 
     var defaultParams = {'loggerName': 'DiagramDesignerWidget',
                          'gridSize': 10,
@@ -892,6 +892,32 @@ define(['logManager',
             if (this.toolbarItems.ddbtnConnectionLineType) {
                 this.toolbarItems.ddbtnConnectionLineType.enabled(connectionSelected);
             }
+
+            if (this.toolbarItems.ddbtnConnectionLineWidth) {
+                this.toolbarItems.ddbtnConnectionLineWidth.enabled(connectionSelected);
+            }
+
+            if (selectedIds.length > 0) {
+                if (this.toolbarItems.cpFillColor) {
+                    this.toolbarItems.cpFillColor.enabled(true);
+                }
+                if (this.toolbarItems.cpBorderColor) {
+                    this.toolbarItems.cpBorderColor.enabled(!connectionSelected);
+                }
+                if (this.toolbarItems.cpTextColor) {
+                    this.toolbarItems.cpTextColor.enabled(true);
+                }
+            } else {
+                if (this.toolbarItems.cpFillColor) {
+                    this.toolbarItems.cpFillColor.enabled(false);
+                }
+                if (this.toolbarItems.cpBorderColor) {
+                    this.toolbarItems.cpBorderColor.enabled(false);
+                }
+                if (this.toolbarItems.cpTextColor) {
+                    this.toolbarItems.cpTextColor.enabled(false);
+                }
+            }
         }
 
         this.onSelectionChanged(selectedIds);
@@ -1344,6 +1370,18 @@ define(['logManager',
 
     DiagramDesignerWidget.prototype.onDeactivate = function () {
         this._hideToolbarItems();
+    };
+
+    DiagramDesignerWidget.prototype.onSelectionFillColorChanged = function (selectedElements, color) {
+        this.logger.warning("DiagramDesignerWidget.prototype.onSelectionFillColorChanged(selectedElements, color) IS NOT OVERRIDDEN IN CONTROLLER. color: " + color);
+    };
+
+    DiagramDesignerWidget.prototype.onSelectionBorderColorChanged = function (selectedElements, color) {
+        this.logger.warning("DiagramDesignerWidget.prototype.onSelectionBorderColorChanged(selectedElements, color) IS NOT OVERRIDDEN IN CONTROLLER. color: " + color);
+    };
+
+    DiagramDesignerWidget.prototype.onSelectionTextColorChanged = function (selectedElements, color) {
+        this.logger.warning("DiagramDesignerWidget.prototype.onSelectionTextColorChanged(selectedElements, color) IS NOT OVERRIDDEN IN CONTROLLER. color: " + color);
     };
 
     /************** END OF - API REGARDING TO MANAGERS ***********************/

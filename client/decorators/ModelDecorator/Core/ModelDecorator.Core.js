@@ -8,18 +8,25 @@
 
 define(['js/Constants',
     'js/NodePropertyNames',
+    'js/RegistryKeys',
     'loaderProgressBar',
     './Port',
     './ModelDecorator.Constants',
-    'js/Utils/DisplayFormat'], function (CONSTANTS,
+    'js/Utils/DisplayFormat',
+    'js/Utils/GMEConcepts'], function (CONSTANTS,
                          nodePropertyNames,
+                         REGISTRY_KEYS,
                          LoaderProgressBar,
                          Port,
                          ModelDecoratorConstants,
-                         displayFormat) {
+                         displayFormat,
+                         GMEConcepts) {
 
     var ModelDecoratorCore,
-        ABSTRACT_CLASS = 'abstract';
+        ABSTRACT_CLASS = 'abstract',
+        SVG_DIR = CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER,
+        EMBEDDED_SVG_CLASS = 'embeddedsvg',
+        CONNECTION_TYPE_CLASS = 'conn-type';
 
 
     ModelDecoratorCore = function () {
@@ -37,7 +44,8 @@ define(['js/Constants',
             "$portsContainerLeft": undefined,
             "$portsContainerRight": undefined,
             "$portsContainerCenter": undefined,
-            "$ref": undefined};
+            "$ref": undefined,
+            "$imgSVG": undefined};
 		
 		this._displayConnectors = false;			
 		if (params && params.connectors) {
@@ -99,12 +107,47 @@ define(['js/Constants',
     };
 	
 	ModelDecoratorCore.prototype._update = function () {
+        this._updateColors();
         this._updateName();
         this._updatePorts();
         this._updateReference();
         this._updateAbstract();
+        this._updateSVG();
+        this._updateConnectionType();
     };
 
+    ModelDecoratorCore.prototype._updateColors = function () {
+        this._getNodeColorsFromRegistry();
+
+        if (this.fillColor) {
+            this.$el.css({'background-color': this.fillColor});
+        } else {
+            this.$el.css({'background-color': ''});
+        }
+
+        if (this.borderColor) {
+            this.$el.css({'border-color': this.borderColor,
+                          'box-shadow': '0px 0px 7px 0px ' + this.borderColor + ' inset'});
+            this.skinParts.$name.css({'border-color': this.borderColor});
+        } else {
+            this.$el.css({'border-color': '',
+                'box-shadow': ''});
+            this.skinParts.$name.css({'border-color': ''});
+        }
+
+        if (this.textColor) {
+            this.$el.css({'color': this.textColor});
+        } else {
+            this.$el.css({'color': ''});
+        }
+    };
+
+    ModelDecoratorCore.prototype._getNodeColorsFromRegistry = function () {
+        var objID = this._metaInfo[CONSTANTS.GME_ID];
+        this.fillColor = this.preferencesHelper.getRegistry(objID, REGISTRY_KEYS.COLOR, true);
+        this.borderColor = this.preferencesHelper.getRegistry(objID, REGISTRY_KEYS.BORDER_COLOR, true);
+        this.textColor = this.preferencesHelper.getRegistry(objID, REGISTRY_KEYS.TEXT_COLOR, true);
+    };
 
     /***** UPDATE THE NAME OF THE NODE *****/
     ModelDecoratorCore.prototype._updateName = function () {
@@ -122,6 +165,25 @@ define(['js/Constants',
 
         this.skinParts.$name.text(this.formattedName);
         this.skinParts.$name.attr("title", this.formattedName);
+    };
+
+    ModelDecoratorCore.prototype._updateConnectionType = function () {
+        var isConnectionType = GMEConcepts.isConnectionType(this._metaInfo[CONSTANTS.GME_ID]);
+
+        this.skinParts.$name.text(this.formattedName);
+        this.skinParts.$name.attr("title", this.formattedName);
+        if (isConnectionType) {
+            if (!this.skinParts.$divConnType) {
+                this.skinParts.$divConnType = $('<div/>', {class: CONNECTION_TYPE_CLASS });
+                this.skinParts.$divConnType.insertAfter(this.skinParts.$name);
+                this.skinParts.$divConnType.text('<< Connection >>');
+            }
+        } else {
+            if (this.skinParts.$divConnType) {
+                this.skinParts.$divConnType.remove();
+                delete this.skinParts.$divConnTyp;
+            }
+        }
     };
 
 
@@ -157,7 +219,7 @@ define(['js/Constants',
         var isPort = false;
 
         if (portNode) {
-            isPort = portNode.getRegistry(nodePropertyNames.Registry.isPort);
+            isPort = portNode.getRegistry(REGISTRY_KEYS.IS_PORT);
             isPort = (isPort === true || isPort === false) ? isPort : false;
         }
 
@@ -172,7 +234,8 @@ define(['js/Constants',
 
         if (isPort) {
             this._ports[portId] = new Port(portId, { "title": portNode.getAttribute(nodePropertyNames.Attributes.name),
-                "decorator": this});
+                "decorator": this,
+                "svg": portNode.getRegistry(REGISTRY_KEYS.PORT_SVG_ICON)});
 
             this._portIDs.push(portId);
             this._addPortToContainer(portNode);
@@ -197,7 +260,7 @@ define(['js/Constants',
         var portId = portNode.getId(),
             portOrientation = "W",
             portContainer = this.skinParts.$portsContainerLeft,
-            portPosition = portNode.getRegistry(nodePropertyNames.Registry.position) || { "x": 0, "y": 0 },
+            portPosition = portNode.getRegistry(REGISTRY_KEYS.POSITION) || { "x": 0, "y": 0 },
             portToAppendBefore = null,
             i,
             changed;
@@ -257,7 +320,8 @@ define(['js/Constants',
         if (idx !== -1) {
             //port already, should it stay one?
             if (isPort === true) {
-                this._ports[portId].update({"title": portNode.getAttribute(nodePropertyNames.Attributes.name)});
+                this._ports[portId].update({"title": portNode.getAttribute(nodePropertyNames.Attributes.name),
+                    "svg": portNode.getRegistry(REGISTRY_KEYS.PORT_SVG_ICON)});
                 this._updatePortPosition(portId);
             } else {
                 this._removePort(portId);
@@ -270,7 +334,7 @@ define(['js/Constants',
 
     ModelDecoratorCore.prototype._updatePortPosition = function (portId) {
         var portNode = this._control._client.getNode(portId),
-            portPosition = portNode.getRegistry(nodePropertyNames.Registry.position) || { "x": 0, "y": 0 };
+            portPosition = portNode.getRegistry(REGISTRY_KEYS.POSITION) || { "x": 0, "y": 0 };
 
         //check if is has changed at all
         if ((this._ports[portId].position.x !== portPosition.x) ||
@@ -424,13 +488,70 @@ define(['js/Constants',
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]);
 
         if (nodeObj) {
-            if (nodeObj.getRegistry(nodePropertyNames.Registry.isAbstract) === true) {
+            if (nodeObj.getRegistry(REGISTRY_KEYS.IS_ABSTRACT) === true) {
                 this.$el.addClass(ABSTRACT_CLASS);
             } else {
                 this.$el.removeClass(ABSTRACT_CLASS);
             }
         } else {
             this.$el.removeClass(ABSTRACT_CLASS);
+        }
+    };
+
+    /***** UPDATE THE SVG ICON OF THE NODE *****/
+    ModelDecoratorCore.prototype._updateSVG = function () {
+        var client = this._control._client,
+            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
+            svgFile = "",
+            svgURL,
+            self = this,
+            TOP_OFFSET = 5;
+
+        var svgReady = function () {
+            var portsHeight = self.skinParts.$portsContainer.outerHeight(),
+                marginTop = -portsHeight + TOP_OFFSET;
+
+            self.skinParts.$imgSVG.css('margin-top', marginTop);
+
+            self.skinParts.$imgSVG.off('load');
+            self.skinParts.$imgSVG.off('error');
+
+            self.onRenderGetLayoutInfo();
+            if (self.hostDesignerItem.canvas) {
+                var sel = self.hostDesignerItem.canvas.selectionManager.getSelectedElements();
+                if (sel.length === 1 &&
+                    sel[0] === self.hostDesignerItem.id) {
+                    self.hostDesignerItem.canvas.selectNone();
+                    self.hostDesignerItem.canvas.select([self.hostDesignerItem.id]);
+                }
+            }
+        };
+
+        if (nodeObj) {
+            svgFile = nodeObj.getRegistry(REGISTRY_KEYS.SVG_ICON);
+        }
+
+        if (svgFile) {
+            // get the svg from the server in SYNC mode, may take some time
+            svgURL = SVG_DIR + svgFile;
+            if (!this.skinParts.$imgSVG) {
+                this.skinParts.$imgSVG = $('<img>', {'class': EMBEDDED_SVG_CLASS});
+                this.$el.append(this.skinParts.$imgSVG);
+            }
+            if (this.skinParts.$imgSVG.attr('src') !== svgURL) {
+                this.skinParts.$imgSVG.attr('src', svgURL);
+                this.skinParts.$imgSVG.on('load', function (/*event*/) {
+                    svgReady();
+                });
+                this.skinParts.$imgSVG.on('error', function (/*event*/) {
+                    svgReady();
+                });
+            }
+        } else {
+            if (this.skinParts.$imgSVG) {
+                this.skinParts.$imgSVG.remove();
+                this.skinParts.$imgSVG = undefined;
+            }
         }
     };
 

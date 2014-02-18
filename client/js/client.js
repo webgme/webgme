@@ -4,19 +4,15 @@ define([
     'util/guid',
     'core/core',
     'storage/clientstorage',
-    'storage/hashcheck',
-    'storage/cache',
-    'storage/failsafe',
-    'storage/client',
-    'storage/log',
-    'storage/commit',
     'logManager',
     'util/url',
     'coreclient/meta',
     'coreclient/metaforgui',
     'coreclient/tojson',
     'coreclient/dump',
-    'coreclient/import'
+    'coreclient/dumpmore',
+    'coreclient/import',
+    'coreclient/copyimport'
 ],
     function (
         ASSERT,
@@ -24,18 +20,14 @@ define([
         GUID,
         Core,
         Storage,
-        HashCheck,
-        Cache,
-        Failsafe,
-        SocketIOClient,
-        Log,
-        Commit,
         LogManager,
         URL,
         BaseMeta,
         GuiMeta,
         ToJson,
         Dump,
+        DumpMore,
+        MergeImport,
         Import
         ) {
 
@@ -50,7 +42,7 @@ define([
 
         function getNewCore(project){
             //return new NullPointerCore(new DescriptorCore(new SetCore(new GuidCore(new Core(project)))));
-            return Core(project,{autopersist: true,usertype:'nodejs'});
+            return Core(project,{autopersist: true,usertype:'nodejs',corerel:2});
         }
         function Client(_configuration){
             var _self = this,
@@ -79,8 +71,7 @@ define([
                 _commitCache = null,
                 _offline = false,
                 _networkWatcher = null,
-                _userName = URL.parseCookie(document.cookie).webgme || _configuration.user,
-                _privateKey = 4,
+                _TOKEN = null;
                 META = new GuiMeta(new BaseMeta());
 
             function print_nodes(pretext){
@@ -199,6 +190,22 @@ define([
                 _recentCommits.unshift(commitHash);
                 if(_recentCommits.length > 10){
                     _recentCommits.pop();
+                }
+            }
+
+            function tokenWathcer(){
+                var token = null;
+                var refreshToken = function(){
+                    _database.getToken(function(err,t){
+                        if(!err){
+                            token = t;
+                        }
+                    });
+                };
+                setInterval(refreshToken,10000); //maybe it could be configurable
+
+                return {
+                    getToken: function(){return token;}
                 }
             }
 
@@ -1144,6 +1151,11 @@ define([
                 }
             }
             function connectToDatabaseAsync(options,callback){
+                var oldcallback = callback;
+                callback = function(err){
+                    _TOKEN = tokenWathcer();
+                    oldcallback(err);
+                }; //we add tokenWatcher start at this point
                 options = options || {};
                 callback = callback || function(){};
                 options.open = (options.open !== undefined || options.open !== null) ? options.open : false;
@@ -1782,9 +1794,19 @@ define([
                 var getAttribute = function(name){
                     return _core.getAttribute(_nodes[_id].node,name);
                 };
+                var getOwnAttribute = function(name){
+                    return _core.getOwnAttribute(_nodes[_id].node,name);
+                };
 
                 var getEditableAttribute = function(name){
                     var value = _core.getAttribute(_nodes[_id].node,name);
+                    if(typeof value === 'object'){
+                        return JSON.parse(JSON.stringify(value));
+                    }
+                    return value;
+                };
+                var getOwnEditableAttribute = function(name){
+                    var value = _core.getOwnAttribute(_nodes[_id].node,name);
                     if(typeof value === 'object'){
                         return JSON.parse(JSON.stringify(value));
                     }
@@ -1794,9 +1816,19 @@ define([
                 var getRegistry = function(name){
                     return _core.getRegistry(_nodes[_id].node,name);
                 };
+                var getOwnRegistry = function(name){
+                    return _core.getOwnRegistry(_nodes[_id].node,name);
+                };
 
                 var getEditableRegistry = function(name){
                     var value = _core.getRegistry(_nodes[_id].node,name);
+                    if(typeof value === 'object'){
+                        return JSON.parse(JSON.stringify(value));
+                    }
+                    return value;
+                };
+                var getOwnEditableRegistry = function(name){
+                    var value = _core.getOwnRegistry(_nodes[_id].node,name);
                     if(typeof value === 'object'){
                         return JSON.parse(JSON.stringify(value));
                     }
@@ -1807,17 +1839,30 @@ define([
                     //return _core.getPointerPath(_nodes[_id].node,name);
                     return {to:_core.getPointerPath(_nodes[_id].node,name),from:[]};
                 };
+                var getOwnPointer = function(name){
+                    return {to:_core.getOwnPointerPath(_nodes[_id].node,name),from:[]};
+                };
 
                 var getPointerNames = function(){
                     return _core.getPointerNames(_nodes[_id].node);
+                };
+                var getOwnPointerNames = function(){
+                    return _core.getOwnPointerNames(_nodes[_id].node);
                 };
 
                 var getAttributeNames = function(){
                     return _core.getAttributeNames(_nodes[_id].node);
                 };
+                var getOwnAttributeNames = function(){
+                    return _core.getOwnAttributeNames(_nodes[_id].node);
+                };
+
 
                 var getRegistryNames = function(){
                     return _core.getRegistryNames(_nodes[_id].node);
+                };
+                var getOwnRegistryNames = function(){
+                    return _core.getOwnRegistryNames(_nodes[_id].node);
                 };
 
                 //SET
@@ -1919,10 +1964,18 @@ define([
                         getEditableAttribute: getEditableAttribute,
                         getRegistry : getRegistry,
                         getEditableRegistry : getEditableRegistry,
+                        getOwnAttribute : getOwnAttribute,
+                        getOwnEditableAttribute: getOwnEditableAttribute,
+                        getOwnRegistry : getOwnRegistry,
+                        getOwnEditableRegistry : getOwnEditableRegistry,
                         getPointer : getPointer,
                         getPointerNames : getPointerNames,
                         getAttributeNames : getAttributeNames,
                         getRegistryNames : getRegistryNames,
+                        getOwnAttributeNames : getOwnAttributeNames,
+                        getOwnRegistryNames : getOwnRegistryNames,
+                        getOwnPointer : getOwnPointer,
+                        getOwnPointerNames : getOwnPointerNames,
 
                         //SetFunctions
                         getMemberIds               : getMemberIds,
@@ -1974,6 +2027,36 @@ define([
             }
 
             //export and import functions
+            function exportItems(paths,callback){
+                var nodes = [];
+                for(var i=0;i<paths.length;i++){
+                    if(_nodes[paths[i]]){
+                        nodes.push(_nodes[paths[i]].node);
+                    } else {
+                        callback('invalid node');
+                        return;
+                    }
+                }
+
+                //DumpMore(_core,nodes,"",'guid',callback);
+                _database.simpleRequest({command:'dumpMoreNodes',name:_projectName,hash:_core.getHash(_nodes[ROOT_PATH].node),nodes:paths},function(err,resId){
+                    if(err){
+                        callback(err);
+                        _database.simpleResult(resId,callback);
+                    } else {
+                        _database.simpleResult(resId,callback);
+                    }
+                });
+            }
+            function getExportItemsUrlAsync(paths,filename,callback){
+                _database.simpleRequest({command:'dumpMoreNodes',name:_projectName,hash:_core.getHash(_nodes[ROOT_PATH].node),nodes:paths},function(err,resId){
+                    if(err){
+                        callback(err);
+                    } else {
+                        callback(null,window.location.protocol + '//' + window.location.host +'/worker/simpleResult/'+resId+'/'+filename);
+                    }
+                });
+            }
             function dumpNodeAsync(path,callback){
                 if(_nodes[path]){
                     Dump(_core,_nodes[path].node,"",'guid',callback);
@@ -1981,7 +2064,6 @@ define([
                     callback('unknown object',null);
                 }
             }
-
             function importNodeAsync(parentPath,jNode,callback){
                 var node = null;
                 if(_nodes[parentPath]){
@@ -1995,11 +2077,24 @@ define([
                     }
                 });
             }
+            function mergeNodeAsync(parentPath,jNode,callback){
+                var node = null;
+                if(_nodes[parentPath]){
+                    node = _nodes[parentPath].node;
+                }
+                MergeImport(_core,_nodes[parentPath].node,jNode,function(err){
+                    if(err){
+                        callback(err);
+                    } else {
+                        saveRoot('importNode under '+parentPath, callback);
+                    }
+                });
+            }
             function createProjectFromFileAsync(projectname,jNode,callback){
                 //if called on an existing project, it will ruin it!!! - although the old commits will be untouched
                 createProjectAsync(projectname,function(err){
                     selectProjectAsync(projectname,function(err){
-                        Import(_core,null,jNode,function(err,root){
+                        MergeImport(_core,null,jNode,function(err,root){
                             if(err){
                                 callback(err);
                             } else {
@@ -2014,7 +2109,7 @@ define([
             function getDumpURL(path,filepath){
                 filepath = filepath || _projectName+'_'+_branch+'_'+URL.addSpecialChars(path);
                 if(window && window.location && window.location && _nodes && _nodes[ROOT_PATH]){
-                    return window.location.protocol + '//' + window.location.host +'/rest/etf/'+_projectName+'/'+URL.addSpecialChars(_core.getHash(_nodes[ROOT_PATH].node))+'/'+URL.addSpecialChars(path)+'/'+filepath;
+                    return window.location.protocol + '//' + window.location.host +'/rest'+(_TOKEN.getToken() === null ? '' : '/'+_TOKEN.getToken())+'/etf/'+_projectName+'/'+URL.addSpecialChars(_core.getHash(_nodes[ROOT_PATH].node))+'/'+URL.addSpecialChars(path)+'/'+filepath;
                 }
                 return null;
             }
@@ -2164,8 +2259,11 @@ define([
                 //end of META functions
 
                 //JSON functions
+                exportItems: exportItems,
+                getExportItemsUrlAsync: getExportItemsUrlAsync,
                 dumpNodeAsync: dumpNodeAsync,
                 importNodeAsync: importNodeAsync,
+                mergeNodeAsync: mergeNodeAsync,
                 createProjectFromFileAsync: createProjectFromFileAsync,
                 getDumpURL: getDumpURL,
 

@@ -4,13 +4,14 @@
  * Author: Tamas Kecskes
  */
 
-define(["storage/mongo", "storage/commit", "core/core"],function(Mongo,Commit,Core){
+define(["storage/mongo", "storage/commit", "core/core", "util/guid"],function(Mongo,Commit,Core,GUID){
     function GMEAuth(_options){
         var _collection = _options.collection || 'users',
             _session = _options.session,
-            _validity = _options.validity,
+            _validity = _options.validity || 60000,
             _userField = _options.user || 'username',
             _passwordField = _options.password || 'password',
+            _tokenExpiration = _options.tokenTime || 0;
             _guest = _options.guest === true ? true : false,
             _storage = new Commit(new Mongo(
                 {
@@ -22,6 +23,17 @@ define(["storage/mongo", "storage/commit", "core/core"],function(Mongo,Commit,Co
             _core = null,
             _cachedUserData = {};
 
+        function isTokenValid (creationTime){
+            if(_tokenExpiration === 0){
+                return true;
+            }
+
+            if(creationTime+_tokenExpiration < (new Date()).getDate()){
+                return true;
+            }
+
+            return false;
+        }
         function getProjectId (userId,projectName){
             return ""+userId+"/"+projectName;
         }
@@ -142,6 +154,40 @@ define(["storage/mongo", "storage/commit", "core/core"],function(Mongo,Commit,Co
                 }
             });
         }
+        function getUserNodeByToken(tokenId,callback){
+            getLatestCommit(function(err,commit){
+                if(!err && commit){
+                    _core.loadRoot(commit.root,function(err,root){
+                        if(!err && root){
+                            _core.loadChildren(root,function(err,children){
+                                if(!err && children && children.length>0){
+                                    for(var i=0;i<children.length;i++){
+                                        var token = _core.getAttribute(children[i],'token');
+                                        if(token !== undefined && token !== null){
+                                            if(tokenId === token.id && isTokenValid(token.created) === true){
+                                                callback(null,children[i]);
+                                                return;
+                                            }
+                                        }
+                                    }
+                                    err = err || 'no such user found';
+                                    callback(err);
+                                } else {
+                                    err = err || 'no such user found';
+                                    callback(err);
+                                }
+                            });
+                        } else {
+                            err = err || 'cannot find user manager\'s root';
+                            callback(err);
+                        }
+                    });
+                } else {
+                    err = err || 'cannot open user data';
+                    callback(err);
+                }
+            });
+        }
         function getUser(id,callback){
             if(_cachedUserData[id]){
                 callback(null,_cachedUserData[id]);
@@ -158,15 +204,15 @@ define(["storage/mongo", "storage/commit", "core/core"],function(Mongo,Commit,Co
             }
         }
         function getUserProject(id,projectName,callback){
-            if(_cachedUserData[id]){
-                callback(null,_cachedUserData[id]);
+            var pId = getProjectId(id,projectName);
+            if(_cachedUserData[pId]){
+                callback(null,_cachedUserData[pId]);
             } else {
                 getUserNode(id,function(err,node){
                     if(!err){
-                        var projId = getProjectId(id,projectName);
-                        _cachedUserData[projId] = _core.getRegistry(node,'projects')[projectName];
-                        setTimeout(clearData,_validity,projId);
-                        return callback(null,_cachedUserData[projId]);
+                        _cachedUserData[pId] = _core.getRegistry(node,'projects')[projectName];
+                        setTimeout(clearData,_validity,pId);
+                        return callback(null,_cachedUserData[pId]);
                     } else {
                         callback(err);
                     }
@@ -247,7 +293,9 @@ define(["storage/mongo", "storage/commit", "core/core"],function(Mongo,Commit,Co
         function authenticate(req,res,next){
             var userId = req.body[_userField],
                 password = req.body[_passwordField],
-                gmail = false;
+                gmail = false,
+                returnUrl = req.__gmeAuthFailUrl__ || "/";
+            delete req.__gmeAuthFailUrl__;
             //gmail based authentication - no authentication just user search
             if(userId === null || userId === undefined){
                 userId = req.query['openid.ext1.value.email'];
@@ -268,11 +316,11 @@ define(["storage/mongo", "storage/commit", "core/core"],function(Mongo,Commit,Co
                             req.session.userType = 'GME';
                             next(null);
                         } else {
-                            res.redirect('/');
+                            res.redirect(returnUrl);
                         }
                     }
                 } else {
-                    res.redirect('/');
+                    res.redirect(returnUrl);
                 }
             };
             if(userId.indexOf('@')>0){
@@ -393,10 +441,104 @@ define(["storage/mongo", "storage/commit", "core/core"],function(Mongo,Commit,Co
                 }
             });
         }
+
+        function tokenAuthorization(tokenId,projectName,callback){ //TODO currently we expect only reads via token usage!!!
+            getUserNodeByToken(tokenId,function(err,userNode){
+                if(err){
+                    callback(err,false);
+                } else {
+                    var userId = _core.getAttribute(userNode,'name');
+                    if(typeof userId === 'string'){
+                        getUserProject(userId,projectName,function(err,projInfo){
+                            if(err){
+                                callback(err,false);
+                            } else {
+                                if(projInfo){
+                                    callback(null,projInfo['read'] || false);
+                                } else {
+                                    callback(null,false);
+                                }
+                            }
+                        });
+
+                    }
+                }
+            });
+        }
+
+        function generateToken(sessionId,callback){
+            _session.getSessionUser(sessionId,function(err,userID){
+                if(!err && userID){
+                    getUserNode(userID,function(err,userNode){
+                        if(!err && userNode){
+                            var token = GUID()+'token';
+                            _core.setAttribute(userNode,'token',{id:token,created:(new Date()).getDate()});
+                            _core.persist(_core.getRoot(userNode),function(){});
+                            var newHash = _core.getHash(_core.getRoot(userNode));
+                            getLatestCommit(function(err,oldCommit){
+                                if(!err && oldCommit){
+                                    var newCommitHash = _project.makeCommit([oldCommit.root],newHash,'token for user '+userID+' have been created',function(err){});
+                                    _project.setBranchHash('master',oldCommit['_id'],newCommitHash,function(err){
+                                        if(!err){
+                                            callback(null,token);
+                                        } else {
+                                            callback(err,null);
+                                        }
+                                    });
+                                } else {
+                                    callback(err);
+                                }
+                            });
+                        } else {
+                            callback(err,null);
+                        }
+                    });
+                } else {
+                    callback(err,null);
+                }
+            });
+        }
+        function getToken(sessionId,callback){
+            _session.getSessionUser(sessionId,function(err,userID){
+                if(!err && userID){
+                    getUserNode(userID,function(err,userNode){
+                        if(!err && userNode){
+                            var token = _core.getAttribute(userNode,'token');
+                            if(token !== null && token !== undefined){
+                                if(isTokenValid(token.created) === true){
+                                    callback(null,token.id);
+                                } else {
+                                    generateToken(sessionId,callback);
+                                }
+                            } else {
+                                generateToken(sessionId,callback);
+                            }
+                        } else {
+                            callback(err,null);
+                        }
+                    });
+                } else {
+                    callback(err,null);
+                }
+            });
+        }
+        function checkToken(token,callback){
+            getUserNodeByToken(token,function(err,user){
+                if(!err){
+                    callback(true);
+                } else {
+                    callback(false);
+                }
+            });
+        }
         return {
             authenticate: authenticate,
             authorize: authorize,
-            getAuthorizationInfo: getAuthorizationInfo
+            getAuthorizationInfo: getAuthorizationInfo,
+            tokenAuthorization: tokenAuthorization,
+            generateToken: generateToken,
+            getToken: getToken,
+            checkToken: checkToken
         }
     }
 

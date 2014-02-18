@@ -1,0 +1,26 @@
+<svg width="50" height="50" xmlns="http://www.w3.org/2000/svg">
+    <g>
+        <!-- Core SVG content -->
+        <rect class='fill-color border-color' transform="rotate(45 25 25)" id="svg_6" height="34" width="34" y="8" x="8" fill-opacity="null" stroke-opacity="null" stroke="#000" fill="#ffff00"/>
+        <line stroke-width="1.5" stroke-linecap="null" stroke-linejoin="null" id="svg_7" y2="34" x2="33.812417" y1="16" x1="16.18758" fill-opacity="null" stroke-opacity="null" stroke="#000" fill="none"/>
+        <line transform="rotate(90 25 25)" stroke-width="1.5" stroke-linecap="null" stroke-linejoin="null" id="svg_8" y2="34.000001" x2="34" y1="16.000001" x1="16" fill-opacity="null" stroke-opacity="null" stroke="#000" fill="none"/>
+        <text x="25" y="20" class='text-color' text-anchor="middle">EX</text>
+
+        <!-- Connection area definitions
+           - The svg element has to be marked with class='connection-area'
+           - The following paramteres are optional:
+                data-len: the length of the stem
+                data-angle: the angle of the stem OR
+                data-angle1 and data-angle2: the angle range of the stem
+        -->
+        <line id='ca_0' class='connection-area' data-len='20' data-angle1='315' data-angle2='315' x1="28" y1="4" x2="46" y2="22"></line>
+        <line id='ca_1' class='connection-area' data-angle='135' x1="22" y1="46" x2="4" y2="28"></line>
+
+        <!-- Connector definitions
+            - The svg element has to be marked with class='connector'
+        -->
+        <rect class='connector' x="32.5" y="7.5" width="10" height="10" />
+        <rect class='connector' x="7.5" y="31.5" width="10" height="10" />
+        <ellipse class='connector' cx="25" cy="25" rx="5" ry="10" />
+    </g>
+</svg>

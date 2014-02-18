@@ -1,17 +1,9 @@
 /*
-The decision whether a pointer is pointer or set should be based upon the node's META info.
-If the META info doesn't contains anything about the given pointer then the importer should ignore it.
-One exception from this rule is when the pointer is 'base' as that should be handled in all nodes.
-Other exception is when we import a root. In this case we assume that every non 'base' named pointer is a set (or we introduce an exception list for pointers...).
-Regarding the META, the multiplicity will show us whether a pointer is a set or not.
-This means that if a META was given badly in the first place, then the importer would change it!!!
-
-Other important thing is that the node must have a base pointer, the only exception again if the node is the root itself. - this option may be switchable TODO
-
-As we have the possibility to import a subtree inside the same project, this means that the nodes that are inside the import will loose their GUID.
-
-Currently we expect to have 'GUID enhanced' reference objects (or internal referring standard ones) and we will not search for the GUID, but only check against the found node on the given path. TODO
-
+this type of import is for merge purposes
+it tries to import not only the outgoing relations but the incoming ones as well
+it also tries to keep both the GUID and the relid's
+if it finds the same guid in the same place then it overwrites the node with the imported one!!!
+it not searches for GUID!!! so be careful when to use this method
 */
 
 define([
@@ -360,6 +352,23 @@ define([
             }
         });
     }
+    function clearOldNode(relid,guid,parentNode,callback){
+        var relids = _core.getChildrenRelids(parentNode);
+        if(relids.indexOf(relid) !== -1){
+            _core.loadChild(parentNode,relid,function(err,oldChild){
+                if(err){
+                    callback(err);
+                } else {
+                    if(_core.getGuid(oldChild) === guid){
+                        _core.deleteNode(oldChild);
+                    }
+                    callback(null);
+                }
+            });
+        } else {
+            callback(null);
+        }
+    }
     function importNode(jNode,parentNode,intPath,callback){
         //return callback('not implemented');
         //first we have to get the base of the node
@@ -368,20 +377,26 @@ define([
                 if(err){
                     callback(err);
                 } else {
-                    //now we are ready to create the node itself
-                    var node = _core.createNode({base:base,parent:parentNode});
-                    internalRefCreated(intPath,node);
-                    importAttributes(node,jNode);
-                    importRegistry(node,jNode);
-                    importChildren(node,jNode,intPath,function(err){
+                    clearOldNode(jNode.RELID,jNode.GUID,parentNode,function(err){
                         if(err){
                             callback(err);
                         } else {
-                            importRelations(node,jNode,function(err){
+                            //now we are ready to create the node itself
+                            var node = _core.createNode({base:base,parent:parentNode,relid:jNode.RELID,guid:jNode.GUID});
+                            internalRefCreated(intPath,node);
+                            importAttributes(node,jNode);
+                            importRegistry(node,jNode);
+                            importChildren(node,jNode,intPath,function(err){
                                 if(err){
                                     callback(err);
                                 } else {
-                                    importMeta(node,jNode,callback);
+                                    importRelations(node,jNode,function(err){
+                                        if(err){
+                                            callback(err);
+                                        } else {
+                                            importMeta(node,jNode,callback);
+                                        }
+                                    });
                                 }
                             });
                         }
@@ -392,7 +407,7 @@ define([
             callback('wrong import format: base info is wrong');
         }
     }
-    function importing(core,parent,jNode,callback){
+    function _importing(core,parent,jNode,callback){
         _core = core;
         _cache = {};
         _underImport = {};
@@ -405,6 +420,43 @@ define([
             importNode(jNode,parent,'#',callback);
         } else {
             importRoot(jNode,callback);
+        }
+    }
+
+    function importing(core,parent,jNode,callback){
+        _core = core;
+        _cache = {};
+        _underImport = {};
+        _internalRefHash = {};
+        META.initialize(_core,_cache,function(){});
+
+        if(jNode.length){
+            //multiple objects
+            if(parent){
+                var needed = jNode.length,
+                    error = null;
+                _cache[core.getPath(parent)] = parent;
+                _root = core.getRoot(parent);
+                for(var i=0;i<jNode.length;i++){
+                    importNode(jNode[i],parent,'#['+i+']',function(err){
+                        error = error || err;
+                        if(--needed === 0){
+                            callback(error);
+                        }
+                    });
+                }
+            } else {
+                callback('no parent given!!!');
+            }
+        } else {
+            //single object
+            if(parent){
+                _cache[core.getPath(parent)] = parent;
+                _root = core.getRoot(parent);
+                importNode(jNode,parent,'#',callback);
+            } else {
+                importRoot(jNode,callback);
+            }
         }
     }
 

@@ -30,6 +30,7 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
 
         this.__onChange = undefined;
         this.__onFinishChange = undefined;
+        this.__onReset = undefined;
 
         this._name = params.name || undefined;
 
@@ -105,6 +106,12 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
         }
     };
 
+    PropertyGridPart.prototype._reset = function (propertyName) {
+        if (this.__onReset) {
+            this.__onReset.call(this,  propertyName);
+        }
+    };
+
     PropertyGridPart.prototype._getAccumulatedName = function () {
         var parentName = this._parent ? this._parent._getAccumulatedName() : undefined;
 
@@ -130,6 +137,7 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
         var widget,
             container = $('<div/>'),
             spnName = $('<span/>', {"class": "property-name"}),
+            divReset = $('<div/>', {"class": "p-reset"}),
             li,
             self = this,
             extraCss = {};
@@ -157,6 +165,7 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
         });
 
         spnName.text(widget.propertyText || widget.propertyName);
+        spnName.attr('title', widget.propertyText || widget.propertyName);
 
         if (propertyDesc.options) {
             if (propertyDesc.options.textColor) {
@@ -172,9 +181,23 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
             }
 
             spnName.css(extraCss);
+
+            //resetable
+            if (propertyDesc.options.resetable === true) {
+                var resetBtn = $('<i class="icon-remove-circle btn-reset" title="Reset value"/>');
+                divReset.append(resetBtn);
+
+                spnName.addClass('p-reset');
+
+                resetBtn.on('click', function (event) {
+                    self._reset(propertyDesc.id);
+                    event.stopPropagation();
+                    event.preventDefault();
+                });
+            }
         }
 
-        container.append(spnName).append(widget.el);
+        container.append(spnName).append(divReset).append(widget.el);
 
         li = this._addRow(undefined, container, undefined);
 
@@ -209,6 +232,10 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
             self._finishChange(args);
         });
 
+        gui.onReset(function (propertyName) {
+            self._reset(propertyName);
+        });
+
         li = this._addRow(this, gui._el);
         li.addClass('folder');
         return gui;
@@ -224,7 +251,10 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
         return this;
     };
 
-
+    PropertyGridPart.prototype.onReset = function (fnc) {
+        this.__onReset = fnc;
+        return this;
+    };
 
     PropertyGridPart.prototype.clear = function () {
         var i;
