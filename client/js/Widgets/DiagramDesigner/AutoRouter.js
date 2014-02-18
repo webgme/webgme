@@ -7626,9 +7626,10 @@ var oldTime = new Date().getTime();
             //Stores a path with ports used 
             this.id = i;
             this.path = p;
-            this.srcPorts = s;
-            this.dstPorts = d;
-            var srcBox = calcBoxId(s),
+            
+            var srcPorts = s,
+                dstPorts = d,
+                srcBox = calcBoxId(s),
                 dstBox = calcBoxId(d);
 
             function calcBoxId(ports){
@@ -7639,14 +7640,48 @@ var oldTime = new Date().getTime();
                 }
             }
 
+            this.getSrcPorts = function(){
+                return srcPorts;
+            };
+
+            this.getDstPorts = function(){
+                return dstPorts;
+            };
+
+            this.setSrcPort = function(index, port){
+                assert(port instanceof AutoRouterPort, "ArPathObject.setSrcPort: port instanceof AutoRouterPort FAILED");
+                srcPorts[index] = port;
+            };
+
+            this.setDstPort = function(index, port){
+                assert(port instanceof AutoRouterPort, "ArPathObject.setDstPort: port instanceof AutoRouterPort FAILED");
+                dstPorts[index] = port;
+            };
+
+            this.setSrcPorts = function(s){
+                srcPorts = s;
+            };
+
+            this.setDstPorts = function(s){
+                dstPorts = s;
+            };
+
+            this.deleteSrcPort = function(index){
+                delete srcPorts[index];
+            };
+
+            this.deleteDstPort = function(index){
+                delete dstPorts[index];
+            };
+
             this.getSrcBoxId = function(){
-                if(this.srcPorts && calcBoxId(this.srcPorts))
+                if(srcPorts && calcBoxId(srcPorts))
                     return srcBox;
                 return null;
             };
 
             this.getDstBoxId = function(){
-                if(this.dstPorts && calcBoxId(this.dstPorts))
+                if(dstPorts && calcBoxId(dstPorts))
                     return dstBox;
                 return null;
             };
@@ -7654,27 +7689,27 @@ var oldTime = new Date().getTime();
             this.updateSrcPorts = function(){
                 var src = [];
 
-                for(var i in this.srcPorts){
-                    if(this.srcPorts.hasOwnProperty(i))
-                        assert( this.srcPorts[i] instanceof AutoRouterPort, "ArPathObject.updateSrcPorts: this.srcPorts[i] instanceof AutoRouterPort FAILED");
-                        src.push(this.srcPorts[i]);
+                for(var i in srcPorts){
+                    if(srcPorts.hasOwnProperty(i))
+                        assert( srcPorts[i] instanceof AutoRouterPort, "ArPathObject.updateSrcPorts: srcPorts[i] instanceof AutoRouterPort FAILED");
+                        src.push(srcPorts[i]);
                 }
 
                 this.path.setStartPorts(src);
-                srcBox = calcBoxId(this.srcPorts);
+                srcBox = calcBoxId(srcPorts);
             };
 
             this.updateDstPorts = function(){
                 var dst = [];
 
-                for(var i in this.dstPorts){
-                    if(this.dstPorts.hasOwnProperty(i))
-                        assert( this.dstPorts[i] instanceof AutoRouterPort, "ArPathObject.updateDstPorts: this.dstPorts[i] instanceof AutoRouterPort FAILED");
-                        dst.push(this.dstPorts[i]);
+                for(var i in dstPorts){
+                    if(dstPorts.hasOwnProperty(i))
+                        assert( dstPorts[i] instanceof AutoRouterPort, "ArPathObject.updateDstPorts: dstPorts[i] instanceof AutoRouterPort FAILED");
+                        dst.push(dstPorts[i]);
                 }
 
                 this.path.setEndPorts(dst);
-                dstBox = calcBoxId(this.dstPorts);
+                dstBox = calcBoxId(dstPorts);
             };
         };
 
@@ -8078,7 +8113,7 @@ var oldTime = new Date().getTime();
         while( i-- ){
             var pathSrc = paths.in[i].path.getStartPorts();
                 //paths.in[i].path.setEndPorts( ports );
-                paths.in[i].dstPorts = ports;
+                paths.in[i].setDstPorts(ports);
                 paths.in[i].updateDstPorts();
                 this.router.disconnect( paths.in[i].path );
         }
@@ -8087,7 +8122,7 @@ var oldTime = new Date().getTime();
         while( i-- ){
             var pathDst = paths.out[i].path.getEndPorts();
                 //paths.out[i].path.setStartPorts( ports );
-                paths.out[i].srcPorts = ports;
+                paths.out[i].setSrcPorts(ports);
                 paths.out[i].updateSrcPorts();
                 this.router.disconnect( paths.out[i].path );
         }
@@ -8103,21 +8138,20 @@ var oldTime = new Date().getTime();
         ports = this.addPort(box, connArea);//Get new ports
 
         while(i--){//Update the paths with deleted ports
-            var hasSrc = false;//Used to see if the path should be removed
+            var hasSrc = false,
+                srcPorts = pathObjects.out[i].getSrcPorts();//Used to see if the path should be removed
 
-            for(var srcPort in pathObjects.out[i].srcPorts){
-                if(pathObjects.out[i].srcPorts.hasOwnProperty(srcPort)){
+            for(var srcPort in srcPorts){
+                if(srcPorts.hasOwnProperty(srcPort)){
                     if(ports.hasOwnProperty(srcPort)){
-                        pathObjects.out[i].srcPorts[srcPort] = ports[srcPort];
+                        pathObjects.out[i].setSrcPort(srcPort, ports[srcPort]);
                         hasSrc = true;
                     }else{
-                        delete pathObjects.out[i].srcPorts[srcPort];
+                        pathObjects.out[i].deleteSrcPort(srcPort);
                     }
                 }
             }
-            if(!hasSrc){
-                this.remove(pathObjects.out[i].id);
-            }else{
+            if(hasSrc){//Adjust path if applicable
                 this.router.disconnect(pathObjects.out[i].path);
                 pathObjects.out[i].updateSrcPorts();
             }
@@ -8125,23 +8159,21 @@ var oldTime = new Date().getTime();
 
         i = pathObjects.in.length;
         while(i--){
+            var hasDst = false,
+                dstPorts = pathObjects.in[i].getDstPorts();
 
-            var hasDst = false;
-            for(var dstPort in pathObjects.in[i].dstPorts){
-                if(pathObjects.in[i].dstPorts.hasOwnProperty(dstPort)){
+            for(var dstPort in dstPorts){
+                if(dstPorts.hasOwnProperty(dstPort)){
                     if(ports.hasOwnProperty(dstPort)){
-                        pathObjects.in[i].dstPorts[dstPort] = ports[dstPort];
+                        pathObjects.in[i].setDstPort(dstPort, ports[dstPort]);
                         hasDst = true;
                     }else{
-                        delete pathObjects.in[i].dstPorts[dstPort];
+                        pathObjects.in[i].deleteDstPort(dstPort);
                     }
                 }
             }
 
-            //Remove path if applicable
-            if(!hasDst){
-                this.remove(pathObjects.in[i].id);
-            }else{
+            if(hasDst){//Adjust path if applicable
                 this.router.disconnect(pathObjects.in[i].path);
                 pathObjects.in[i].updateDstPorts();
             }

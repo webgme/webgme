@@ -268,10 +268,10 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
             var i = this._autorouterPorts[objId] ? this._autorouterPorts[objId].length : 0;
             while( i-- ){
                 var id = objId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + this._autorouterPorts[objId][i]; //ID of child port
-                this._autorouterBoxes[id] = undefined;
+                delete this._autorouterBoxes[id];
             }
 
-            this._autorouterBoxes[objId] = undefined;
+            delete this._autorouterBoxes[objId];
         }else if(connIds.indexOf(objId) !== -1){
             item = this._autorouterPaths[objId];//If objId is a connection
 
