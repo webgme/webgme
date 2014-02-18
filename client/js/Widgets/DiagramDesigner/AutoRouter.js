@@ -87,97 +87,7 @@ define(['logManager'], function (logManager) {
        this.router = new AutoRouterGraph();
     };
 
-    var getOptimalPorts = function(srcPorts, dstPorts, segmentPoints){
-        //I will get the dx, dy that to the src/dst target and then I will calculate
-        // a priority value that will rate the ports as candidates for the 
-        //given path
-        var srcC = new ArPoint(), //src center
-            dstC = new ArPoint(), //dst center
-            vectors = [],
-            tgt, //src target
-            dstTgt,//dst target 
-            srcPort,
-            dstPort,
-            maxP = 0,
-            i; 
-
-        //Get the center points of the src,dst ports
-        for(i = 0; i < srcPorts.length; i++){
-            var sPoint = srcPorts[i].getRect().getCenter();
-            srcC.x += sPoint.x;
-            srcC.y += sPoint.y;
-        }
-        for(i = 0; i < dstPorts.length; i++){
-            var dPoint = dstPorts[i].getRect().getCenter();
-            dstC.x += dPoint.x;
-            dstC.y += dPoint.y;
-        }
-
-        //Get the average center point of src, dst
-        srcC.x = srcC.x/srcPorts.length;
-        srcC.y = srcC.y/srcPorts.length;
-        dstC.x = dstC.x/dstPorts.length;
-        dstC.y = dstC.y/dstPorts.length;
-
-        //Adjust if there are segment points
-        if (segmentPoints && segmentPoints.length > 0) {
-            tgt = new ArPoint(segmentPoints[0].getX(), segmentPoints[0].getY());
-            dstTgt = new ArPoint(segmentPoints[segmentPoints.length-1].getX(), segmentPoints[segmentPoints.length-1].getY());
-        }else{
-            tgt = dstC;
-            dstTgt = srcC;
-        }
-
-        //Get the directions
-        vectors.push(tgt.minus(srcC).getArray());
-        vectors.push(dstTgt.minus(dstC).getArray());
-
-        //Create priority function
-        function createPriority(port, center, vector){
-            var priority = 0,
-                point = [ port.getRect().getCenter().x - center.x, port.getRect().getCenter().y - center.y],
-                major = Math.abs(vector[0]) > Math.abs(vector[1]) ? 0 : 1,
-                minor = (major+1)%2;
-
-
-            if(point[major] > 0 === vector[major] > 0)//If they have the same parity, assign the priority to maximize that is > 1
-                priority = (1/Math.abs(vector[major] - point[major])) * Math.abs(vector[major]) * 100 ; 
-                //priority = (1/Math.abs(vector[major] - point[major])) * Math.pow(Math.abs(vector[major]), 2); 
-            //It is squared to further emphasized the major direction
-
-            if(point[minor] > 0 === vector[minor] > 0)//If they have the same parity, assign the priority to maximize that is < 1
-                priority += vector[minor] !== point[minor] ? 1/Math.abs(vector[minor] - point[minor]) : 0; 
-
-            return priority;
-        }
-
-        //Create priority values for each port.
-        for(i = 0; i < srcPorts.length; i++){
-            var priority = createPriority(srcPorts[i], srcC, vectors[0]);
-            if( priority >= maxP ){
-                srcPort = srcPorts[i];
-                maxP = priority;
-            }
-        }
-
-        maxP = 0;
-        for(i = 0; i < dstPorts.length; i++){
-            var priority = createPriority(dstPorts[i], dstC, vectors[1]);
-            if( priority >= maxP && srcPort !== dstPorts[i]){
-                dstPort = dstPorts[i];
-                maxP = priority;
-            }
-        }
-
-        dstPort = !dstPort && dstPorts.length === 1 ? srcPort : dstPort;//Set it to srcPort if self connections with just one port
-
-        assert(srcPort && dstPort, "ARGraph.getOptimalPorts: srcPort, dstPort must be defined");
-        assert(srcPort.getOwner() && dstPort.getOwner(), "ARGraph.getOptimalPorts: srcPort, dstPort have invalid owner");
-
-        return { "src": srcPort, "dst": dstPort };
-    };
-
-    var getOptimalPorts2 = function(ports, tgt){
+    var getOptimalPorts = function(ports, tgt){
         //I will get the dx, dy that to the src/dst target and then I will calculate
         // a priority value that will rate the ports as candidates for the 
         //given path
@@ -185,7 +95,8 @@ define(['logManager'], function (logManager) {
             tgt, //src target
             vector,
             port, //result
-            maxP = 0,
+            maxP = -1,
+            maxArea = 0,
             i; 
 
         //Get the center points of the src,dst ports
@@ -193,25 +104,16 @@ define(['logManager'], function (logManager) {
             var sPoint = ports[i].getRect().getCenter();
             srcC.x += sPoint.x;
             srcC.y += sPoint.y;
+
+            //adjust maxArea
+            if(maxArea < ports[i].getTotalAvailableArea())
+                maxArea = ports[i].getTotalAvailableArea();
+
         }
 
         //Get the average center point of src
         srcC.x = srcC.x/ports.length;
         srcC.y = srcC.y/ports.length;
-
-/*
-        if(tgt instanceof Array){
-            var tgtC = new ArPoint(); //tgt center
-
-            for(i = 0; i < tgt.length; i++){
-                var dPoint = tgt[i].getRect().getCenter();
-                tgtC.x += dPoint.x;
-                tgtC.y += dPoint.y;
-            }
-
-            tgt = new ArPoint(tgtC.x/tgt.length, tgtC.y/tgt.length);
-        }
-*/
 
         //Get the directions
         vector = (tgt.minus(srcC).getArray());
@@ -220,18 +122,21 @@ define(['logManager'], function (logManager) {
         function createPriority(port, center){
             var priority = 0,
                 point = [ port.getRect().getCenter().x - center.x, port.getRect().getCenter().y - center.y],
+                lineCount = (port.getPointCount() || 1),
+                density = (port.getTotalAvailableArea()/lineCount)/maxArea,
                 major = Math.abs(vector[0]) > Math.abs(vector[1]) ? 0 : 1,
                 minor = (major+1)%2;
 
-//FIXME Add support for looking at lines at given port
-//Use exponential function...
-            if(point[major] > 0 === vector[major] > 0)//If they have the same parity, assign the priority to maximize that is > 1
-                priority = (1/Math.abs(vector[major] - point[major])) * Math.abs(vector[major]) * 100 ; 
-                //priority = (1/Math.abs(vector[major] - point[major])) * Math.pow(Math.abs(vector[major]), 2); 
-            //It is squared to further emphasized the major direction
+            if(point[major] > 0 === vector[major] > 0 //If they have the same parity, assign the priority to maximize that is > 1
+                    && (point[major] === 0) === (vector[major] === 0))//handling the === 0 error
+                priority = (Math.abs(vector[major])/Math.abs(vector[major] - point[major])) * 10 ; 
 
-            if(point[minor] > 0 === vector[minor] > 0)//If they have the same parity, assign the priority to maximize that is < 1
-                priority += vector[minor] !== point[minor] ? 1/Math.abs(vector[minor] - point[minor]) : 0; 
+            if(point[minor] > 0 === vector[minor] > 0//If they have the same parity, assign the priority to maximize that is < 1
+                    && (point[minor] === 0) === (vector[minor] === 0))//handling the === 0 error
+                priority += vector[minor] !== point[minor] ? (Math.abs(vector[minor])/Math.abs(vector[minor] - point[minor]))*5 : 0; 
+
+            //Adjust priority based on the density of the lines...
+            priority *= density;
 
             return priority;
         }
@@ -245,7 +150,7 @@ define(['logManager'], function (logManager) {
             }
         }
 
-        assert(port.getOwner(), "ARGraph.getOptimalPorts2: port have invalid owner");
+        assert(port.getOwner(), "ARGraph.getOptimalPorts: port have invalid owner");
 
         return port;
     };
@@ -6578,7 +6483,7 @@ var oldTime = new Date().getTime();
                 assert(startports.length > 0, "ArPath.calculateStartEndPorts: startports cannot be empty!");
 
                 //Remove startpoint
-                if(startpoint)
+                if(startport && startport.hasPoint(startpoint))
                     startport.removePoint(startpoint);
 
                 //Get available ports
@@ -6608,7 +6513,7 @@ var oldTime = new Date().getTime();
                 }
 
                 //Get the optimal port to the target
-                startport = getOptimalPorts2(srcPorts, tgt);
+                startport = getOptimalPorts(srcPorts, tgt);
 
                 //Create a startpoint at the port
                 var startdir = this.getStartDir(),
@@ -6637,7 +6542,7 @@ var oldTime = new Date().getTime();
                 assert(endports.length > 0, "ArPath.calculateStartEndPorts: endports cannot be empty!");
 
                 //Remove old endpoint
-                if(endpoint)
+                if(endport && endport.hasPoint(endpoint))
                     endport.removePoint(endpoint);
 
                 //Get available ports
@@ -6668,7 +6573,7 @@ var oldTime = new Date().getTime();
                 }
 
                 //Get the optimal port to the target
-                endport = getOptimalPorts2(dstPorts, tgt);
+                endport = getOptimalPorts(dstPorts, tgt);
 
                 //Create endpoint at the port
                 var enddir = this.getEndDir(),
@@ -6715,21 +6620,16 @@ var oldTime = new Date().getTime();
 
             this.getStartPoint = function(){
                 //assert( points.getLength() >= 2, "ARPath.getStartPoint: points.getLength() >= 2 FAILED");
-//RETURN
-                if(points && points.get(0)){
+                if(points.getLength())
                     assert(startpoint === points.get(0)[0], "ARPath.getEndPoint: startpoint === points.get(0)[0] FAILED");
-                    return points.get(0)[0];
-                }
 
                 return startpoint;
             };
 
             this.getEndPoint = function(){
-                if(points.getLength()){
-                    assert( points.getLength() >= 2, "ARPath.getEndPoint: points.getLength() >= 2 FAILED");
+                if(points.getLength())
                     assert(endpoint === points.get(points.getLength() - 1)[0], "ARPath.getEndPoint: endpoint === points.get(points.getLength() - 1)[0] FAILED");
-                    return points.get(points.getLength() - 1)[0];
-                }
+
                 return endpoint;
             };
 
@@ -7261,11 +7161,13 @@ var oldTime = new Date().getTime();
             this.createStartEndPointOn = createStartEndPointOn;
             this.removePoint = removePoint;
             this.getPoints = getPoints;
+            this.getPointCount = getPointCount;
 
             //AvailableAreas Methods
             this.isAvailable = isAvailable;
             this.resetAvailableArea = resetAvailableArea;
             this.adjustAvailableArea = adjustAvailableArea;
+            this.getTotalAvailableArea = getTotalAvailableArea;
 
             function calculateSelfPoints(){
                 selfPoints = [];
@@ -7632,7 +7534,6 @@ var oldTime = new Date().getTime();
                     _logger.warning("point (" + pt.x + ", " + pt.y + ") was not removed from port");
             }
 
-//DEBUGGING TOOL
             this.hasPoint = function(pt){
                 var i = 0;
 
@@ -7647,10 +7548,20 @@ var oldTime = new Date().getTime();
 
                 return false;
             };
-//DEBUGGING TOOL
 
             function getPoints(){
                 return points;
+            }
+
+            function getPointCount(){
+                var i = 0,
+                    count = 0;
+
+                while( i < 4 ){ //Check all sides for the point
+                    count += points[i++].length;
+                }
+
+                return count;
             }
 
             function resetAvailableArea(){
@@ -7690,6 +7601,18 @@ var oldTime = new Date().getTime();
                             availableArea.push([ intersection[1], line[1] ]);
                     }
                 }
+            }
+
+            function getTotalAvailableArea(){
+                var i = availableArea.length,
+                    length = new ArSize(); 
+
+                while(i--){
+                    length.add(availableArea[i][1].minus(availableArea[i][0]));
+                }
+
+                assert(length.cx === 0 || length.cy === 0, "ARPort.getTotalAvailableArea: length[0] === 0 || length[1] === 0 FAILED");
+                return length.cx || length.cy;
             }
 
             function isAvailable(){
@@ -8243,9 +8166,6 @@ var oldTime = new Date().getTime();
     
         }else if(this.paths[item] !== undefined){
             if(this.paths[item].path instanceof AutoRouterPath){
-//TODO REMOVE
-console.log("REMOVING " + item);
-//REMOVE_END
                 var pathData = this.paths[item],
                     path = pathData.path,
                     srcBoxId = pathData.getSrcBoxId(),
