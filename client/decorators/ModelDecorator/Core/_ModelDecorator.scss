@@ -21,6 +21,7 @@ $ref-hover-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 2
 $model-name-height: 16px;
 $abstract-class-name-color: #AAAAAA;
 
+
 @mixin model_decorator_core {
   .model-decorator {
     min-width: $min-width;
@@ -46,6 +47,12 @@ $abstract-class-name-color: #AAAAAA;
       border-bottom: 1px solid #000000;
       height: $model-name-height;
       line-height: $model-name-height;
+    }
+
+    div.conn-type {
+      font-size: 9px;
+      line-height: 12px;
+      color: $abstract-class-name-color;
     }
 
     .ports {

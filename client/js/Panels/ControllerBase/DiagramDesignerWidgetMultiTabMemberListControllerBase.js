@@ -350,12 +350,18 @@ define(['logManager',
             if (GMEConcepts.isConnection(diff[len]) === false) {
                 this._onUpdate(diff[len], {isConnection: false});
             } else {
-                desc = {isConnection: true};
-                obj = client.getNode(diff[len]);
-                if (obj) {
-                    desc.srcID  = obj.getPointer(SRC_POINTER_NAME).to;
-                    desc.dstID = obj.getPointer(DST_POINTER_NAME).to;
-                    this._onUpdate(diff[len], desc);
+                if (this._delayedConnectionsAsItems[diff[len]]) {
+                    //delayed connection, rendered as an item
+                    this._onUpdate(diff[len], {isConnection: false});
+                } else {
+                    //real connection
+                    desc = {isConnection: true};
+                    obj = client.getNode(diff[len]);
+                    if (obj) {
+                        desc.srcID  = obj.getPointer(SRC_POINTER_NAME).to;
+                        desc.dstID = obj.getPointer(DST_POINTER_NAME).to;
+                        this._onUpdate(diff[len], desc);
+                    }
                 }
             }
         }
@@ -693,6 +699,8 @@ define(['logManager',
 
         this.logger.debug("_dispatchEvents '" + events.length + "' items: " + JSON.stringify(events));
 
+        this._widget.beginUpdate();
+
         /********** ORDER EVENTS BASED ON DEPENDENCY ************/
         /** 1: items first, no dependency **/
         /** 2: connections second, dependency if a connection is connected to an other connection **/
@@ -702,7 +710,7 @@ define(['logManager',
 
         if (this._delayedConnections && this._delayedConnections.length > 0) {
             //if there are saved connections, first check if any UPDATE or UNLOAD event is about them
-            //if so, remove/update those information in delayed connections list
+            //if so, remove/update those information from delayed connections list
             i = events.length;
             while (i--) {
                 e = events[i];
@@ -713,6 +721,11 @@ define(['logManager',
                         if (this._delayedConnections[j].ID === e.eid) {
                             this.logger.debug('Removing ' + e.eid + ' from delayed connections...');
                             this._delayedConnections.splice(j, 1);
+
+                            //TODO: connection as box
+                            //remove the box that represents this connections
+                            this._widget.deleteComponent(this._delayedConnectionsAsItems[this._delayedConnections[j].ID]);
+                            delete this._delayedConnectionsAsItems[this._delayedConnections[j].ID];
                         }
                     }
                 } else if ( e.etype === CONSTANTS.TERRITORY_EVENT_UPDATE &&
@@ -724,6 +737,9 @@ define(['logManager',
                             this.logger.debug('Updating ' + e.eid + ' in delayed connections...');
                             this._delayedConnections[j].desc.srcID = e.desc.srcID;
                             this._delayedConnections[j].desc.dstID = e.desc.dstID;
+
+                            //remove this guy from the event list since it will be added to orderedConnectionEvents list
+                            events.splice(i, 1);
                         }
                     }
                 }
@@ -733,10 +749,16 @@ define(['logManager',
                 orderedConnectionEvents.push({'etype': CONSTANTS.TERRITORY_EVENT_LOAD,
                     'eid': this._delayedConnections[i].ID,
                     'desc': this._delayedConnections[i].desc});
+
+                //TODO: connection as box
+                //remove the box that represents this connections
+                this._widget.deleteComponent(this._delayedConnectionsAsItems[this._delayedConnections[i].ID]);
+                delete this._delayedConnectionsAsItems[this._delayedConnections[i].ID];
             }
         }
 
         this._delayedConnections = [];
+        this._delayedConnectionsAsItems = {};
 
         var unloadEvents = [];
         i = events.length;
@@ -827,7 +849,7 @@ define(['logManager',
 
         this._notifyPackage = {};
 
-        this._widget.beginUpdate();
+
 
         //item insert/update/unload & connection unload
         events = unloadEvents.concat(orderedItemEvents);
@@ -1056,6 +1078,9 @@ define(['logManager',
                     }
                     if (alreadySaved !== true) {
                         this._delayedConnections.push({'ID': gmeID, 'desc': desc});
+
+                        //create item for this connection just to display it on the screen
+                        this._displayConnectionAsItem(gmeID, desc);
                     }
                 }
             }
@@ -1205,13 +1230,18 @@ define(['logManager',
 
                         if (alreadyThere === false) {
                             connObj = this._client.getNode(connGMEID);
+                            var connDesc = { isConnection: true,
+                                decorator: connObj.getRegistry(REGISTRY_KEYS.DECORATOR),
+                                srcID: connObj.getPointer(SRC_POINTER_NAME).to,
+                                dstID: connObj.getPointer(DST_POINTER_NAME).to};
 
                             if (connObj) {
                                 this._delayedConnections.push({ID: connGMEID,
-                                    desc: { isConnection: true,
-                                            srcID: connObj.getPointer(SRC_POINTER_NAME).to,
-                                            dstID: connObj.getPointer(DST_POINTER_NAME).to}
+                                    desc: connDesc
                                 });
+
+                                //create item for this connection just to display it on the screen
+                                this._displayConnectionAsItem(connGMEID, connDesc);
                             }
                         }
 
@@ -1596,6 +1626,40 @@ define(['logManager',
         if (this._GMEID2Subcomponent[gmeID]) {
             delete this._GMEID2Subcomponent[gmeID][objID];
         }
+    };
+
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._displayConnectionAsItem = function (gmeID, desc) {
+        var uiComponent,
+            decClass,
+            objDesc = {};
+
+        decClass = this._getItemDecorator(desc.decorator);
+
+        objDesc.decoratorClass = decClass;
+        objDesc.control = this;
+        objDesc.metaInfo = {};
+        objDesc.metaInfo[CONSTANTS.GME_ID] = gmeID;
+
+        objDesc.position = { "x": 100,"y": 100 };
+
+        if (this._memberListMemberCoordinates[this._selectedMemberListID] &&
+            this._memberListMemberCoordinates[this._selectedMemberListID][gmeID]) {
+            objDesc.position.x = this._memberListMemberCoordinates[this._selectedMemberListID][gmeID].x;
+            objDesc.position.y = this._memberListMemberCoordinates[this._selectedMemberListID][gmeID].y;
+        }
+
+        //registry preferences here are:
+        //#1: local set membership registry
+        objDesc.preferencesHelper = PreferencesHelper.getPreferences([{'containerID': this._memberListContainerID,
+            'setID': this._selectedMemberListID }]);
+
+        uiComponent = this._widget.createDesignerItem(objDesc);
+
+        this._GMEID2ComponentID[gmeID] = this._GMEID2ComponentID[gmeID] || [];
+        this._GMEID2ComponentID[gmeID].push(uiComponent.id);
+        this._ComponentID2GMEID[uiComponent.id] = gmeID;
+
+        this._delayedConnectionsAsItems[gmeID] = uiComponent.id;
     };
 
     return DiagramDesignerWidgetMultiTabMemberListControllerBase;

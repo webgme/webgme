@@ -12,18 +12,21 @@ define(['js/Constants',
     'loaderProgressBar',
     './Port',
     './ModelDecorator.Constants',
-    'js/Utils/DisplayFormat'], function (CONSTANTS,
+    'js/Utils/DisplayFormat',
+    'js/Utils/GMEConcepts'], function (CONSTANTS,
                          nodePropertyNames,
                          REGISTRY_KEYS,
                          LoaderProgressBar,
                          Port,
                          ModelDecoratorConstants,
-                         displayFormat) {
+                         displayFormat,
+                         GMEConcepts) {
 
     var ModelDecoratorCore,
         ABSTRACT_CLASS = 'abstract',
         SVG_DIR = CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER,
-        EMBEDDED_SVG_CLASS = 'embeddedsvg';
+        EMBEDDED_SVG_CLASS = 'embeddedsvg',
+        CONNECTION_TYPE_CLASS = 'conn-type';
 
 
     ModelDecoratorCore = function () {
@@ -110,6 +113,7 @@ define(['js/Constants',
         this._updateReference();
         this._updateAbstract();
         this._updateSVG();
+        this._updateConnectionType();
     };
 
     ModelDecoratorCore.prototype._updateColors = function () {
@@ -161,6 +165,25 @@ define(['js/Constants',
 
         this.skinParts.$name.text(this.formattedName);
         this.skinParts.$name.attr("title", this.formattedName);
+    };
+
+    ModelDecoratorCore.prototype._updateConnectionType = function () {
+        var isConnectionType = GMEConcepts.isConnectionType(this._metaInfo[CONSTANTS.GME_ID]);
+
+        this.skinParts.$name.text(this.formattedName);
+        this.skinParts.$name.attr("title", this.formattedName);
+        if (isConnectionType) {
+            if (!this.skinParts.$divConnType) {
+                this.skinParts.$divConnType = $('<div/>', {class: CONNECTION_TYPE_CLASS });
+                this.skinParts.$divConnType.insertAfter(this.skinParts.$name);
+                this.skinParts.$divConnType.text('<< Connection >>');
+            }
+        } else {
+            if (this.skinParts.$divConnType) {
+                this.skinParts.$divConnType.remove();
+                delete this.skinParts.$divConnTyp;
+            }
+        }
     };
 
 
