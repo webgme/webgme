@@ -576,7 +576,7 @@ define([ "util/assert", "util/sha1", "core/future", "core/tasync", 'util/canon' 
 
 		var setProperty = function (node, name, data) {
 			ASSERT(typeof name === "string" && name !== ID_NAME);
-			ASSERT(!__isMutableData(data) && data !== null && data !== undefined);
+			ASSERT(!__isMutableData(data) /*&& data !== null*/ && data !== undefined); //TODO is the 'null' really can be a value of a property???
 
 			node = normalize(node);
 			if (!mutate(node)) {
