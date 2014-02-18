@@ -6577,6 +6577,7 @@ var oldTime = new Date().getTime();
 
                 //Create endpoint at the port
                 var enddir = this.getEndDir(),
+                    startdir = this.getStartDir(),
                     endportHasLimited = false,
                     endportCanHave = true;
 
