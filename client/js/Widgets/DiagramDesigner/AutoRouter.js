@@ -129,11 +129,11 @@ define(['logManager'], function (logManager) {
 
             if(point[major] > 0 === vector[major] > 0 //If they have the same parity, assign the priority to maximize that is > 1
                     && (point[major] === 0) === (vector[major] === 0))//handling the === 0 error
-                priority = (Math.abs(vector[major])/Math.abs(vector[major] - point[major])) * 10 ; 
+                priority = (Math.abs(vector[major])/Math.abs(vector[major] - point[major])) * 25 ; 
 
             if(point[minor] > 0 === vector[minor] > 0//If they have the same parity, assign the priority to maximize that is < 1
                     && (point[minor] === 0) === (vector[minor] === 0))//handling the === 0 error
-                priority += vector[minor] !== point[minor] ? (Math.abs(vector[minor])/Math.abs(vector[minor] - point[minor]))*5 : 0; 
+                priority += vector[minor] !== point[minor] ? (Math.abs(vector[minor])/Math.abs(vector[minor] - point[minor]))*1 : 0; 
 
             //Adjust priority based on the density of the lines...
             priority *= density;
