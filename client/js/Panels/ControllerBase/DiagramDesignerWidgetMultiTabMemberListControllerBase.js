@@ -246,8 +246,7 @@ define(['logManager',
             deleteTab,
             renameTab,
             j,
-            gmeID,
-            memberListMemberPositionsRegistryKey;
+            gmeID;
 
         this.logger.debug("_processMemberListContainer");
 
@@ -265,7 +264,6 @@ define(['logManager',
 
             //#2 - get pointer lists and display a tab for each one
             orderedMemberListInfo = this.getOrderedMemberListInfo(memberListContainerObj) || [];
-            memberListMemberPositionsRegistryKey = MEMBER_POSITION_REGISTRY_KEY;
 
             if (orderedMemberListInfo.length > 0) {
                 for (i = 0; i < orderedMemberListInfo.length; i += 1) {
@@ -286,7 +284,7 @@ define(['logManager',
                     j = this._memberListMembers[memberListID].length;
                     while (j--) {
                         gmeID = this._memberListMembers[memberListID][j];
-                        this._memberListMemberCoordinates[memberListID][gmeID] = memberListContainerObj.getMemberRegistry(memberListID, gmeID, memberListMemberPositionsRegistryKey);
+                        this._memberListMemberCoordinates[memberListID][gmeID] = memberListContainerObj.getMemberRegistry(memberListID, gmeID, MEMBER_POSITION_REGISTRY_KEY);
                     }
 
                     //#3 - set selected based on actual selection
@@ -498,8 +496,7 @@ define(['logManager',
             selectedIDs = [],
             componentID,
             posX,
-            posY,
-            memberListMemberPositionRegistryKey = MEMBER_POSITION_REGISTRY_KEY;
+            posY;
 
         //check to see it self drop and reposition or dropping from somewhere else
         if (params &&
@@ -517,7 +514,7 @@ define(['logManager',
                     posX = position.x + params.positions[i].x;
                     posY = position.y + params.positions[i].y;
 
-                    _client.setMemberRegistry(memberListContainerID, i, memberListToAddTo, memberListMemberPositionRegistryKey, {'x': posX, 'y': posY} );
+                    _client.setMemberRegistry(memberListContainerID, i, memberListToAddTo, MEMBER_POSITION_REGISTRY_KEY, {'x': posX, 'y': posY} );
 
                     componentID = this._GMEID2ComponentID[i];
 
@@ -555,7 +552,7 @@ define(['logManager',
                         }
 
                         _client.addMember(memberListContainerID, componentID, memberListToAddTo);
-                        _client.setMemberRegistry(memberListContainerID, componentID, memberListToAddTo, memberListMemberPositionRegistryKey, {'x': posX, 'y': posY} );
+                        _client.setMemberRegistry(memberListContainerID, componentID, memberListToAddTo, MEMBER_POSITION_REGISTRY_KEY, {'x': posX, 'y': posY} );
                     }
                 }
             }
@@ -976,9 +973,7 @@ define(['logManager',
             objDesc = {},
             sources = [],
             destinations = [],
-            territoryChanged = false,
-            customPoints,
-            memberListContainer;
+            territoryChanged = false;
 
         //component loaded
         //we are interested in the load of member items and their custom territory involvement
