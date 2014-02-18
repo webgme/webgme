@@ -7698,6 +7698,7 @@ var oldTime = new Date().getTime();
 
                 for(var i in this.srcPorts){
                     if(this.srcPorts.hasOwnProperty(i))
+                        assert( this.srcPorts[i] instanceof AutoRouterPort, "ArPathObject.updateSrcPorts: this.srcPorts[i] instanceof AutoRouterPort FAILED");
                         src.push(this.srcPorts[i]);
                 }
 
@@ -7709,6 +7710,7 @@ var oldTime = new Date().getTime();
 
                 for(var i in this.dstPorts){
                     if(this.dstPorts.hasOwnProperty(i))
+                        assert( this.dstPorts[i] instanceof AutoRouterPort, "ArPathObject.updateDstPorts: this.dstPorts[i] instanceof AutoRouterPort FAILED");
                         dst.push(this.dstPorts[i]);
                 }
 
