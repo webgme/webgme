@@ -443,11 +443,13 @@ define(['logManager',
                     "readOnly": true};
 
                 cNode = _client.getNode(selectedObjIDs[0]);
-                propList[" GUID"] = { "name": 'GUID',
-                    "value": cNode.getGuid(),
-                    "valueType": typeof selectedObjIDs[0],
-                    "isCommon": true,
-                    "readOnly": true};
+                if (cNode) {
+                    propList[" GUID"] = { "name": 'GUID',
+                        "value": cNode.getGuid(),
+                        "valueType": typeof selectedObjIDs[0],
+                        "isCommon": true,
+                        "readOnly": true};
+                }
             }
 
             propList[PROPERTY_GROUP_ATTRIBUTES] = { "name": PROPERTY_GROUP_ATTRIBUTES,
