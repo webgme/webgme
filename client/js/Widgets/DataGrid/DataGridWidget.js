@@ -33,6 +33,7 @@ define(['logManager',
         this._rowDelete = true;
         this._rowEdit = true;
         this._droppable = true;
+        this._noWrapColumns = [];
 
         this._displayCommonColumnsOnly = false;
 
@@ -478,7 +479,8 @@ i,
 
     DataGridWidget.prototype._extendColumnDefs = function () {
         var len = this._columns.length,
-            self = this;
+            self = this,
+            sClass;
 
         while (len--) {
             $.extend(this._columns[len], {
@@ -487,6 +489,15 @@ i,
                 },
                 "sDefaultContent" : DEFAULT_NON_EXISTING_VALUE
             });
+            if (this._noWrapColumns && this._noWrapColumns.indexOf(this._columns[len].mData) !== -1) {
+                sClass = this._columns[len].sClass || "";
+                sClass = sClass.split(' ');
+                if (sClass.indexOf('nowrap') === -1) {
+                    sClass.push('nowrap');
+                    sClass = sClass.join(' ');
+                }
+                this._columns[len].sClass = sClass;
+            }
         }
     };
 
@@ -1123,6 +1134,10 @@ i,
                 this.toolbarItems[i].destroy();
             }
         }
+    };
+
+    DataGridWidget.prototype.setNoWrapColumns = function (c) {
+        this._noWrapColumns = c.slice(0);
     };
 
 
