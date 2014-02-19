@@ -3,11 +3,13 @@
 define(['js/Utils/GMEConcepts',
     'js/DragDrop/DragHelper',
     'js/NodePropertyNames',
+    'js/RegistryKeys',
     './../ManualAspect/ManualAspectConstants',
     'js/Panels/ControllerBase/DiagramDesignerWidgetMultiTabMemberListControllerBase'], function (
                                                GMEConcepts,
                                                DragHelper,
                                                nodePropertyNames,
+                                               REGISTRY_KEYS,
                                                ManualAspectConstants,
                                                DiagramDesignerWidgetMultiTabMemberListControllerBase) {
 
@@ -27,7 +29,7 @@ define(['js/Utils/GMEConcepts',
     PointerListEditorController.prototype.getOrderedMemberListInfo = function (memberListContainerObject) {
         var result = [],
             setNames = memberListContainerObject.getSetNames() || [],
-            manualAspectsRegistry = memberListContainerObject.getRegistry(ManualAspectConstants.MANUAL_ASPECTS_REGISTRY_KEY) || [],
+            manualAspectsRegistry = memberListContainerObject.getRegistry(REGISTRY_KEYS.MANUAL_ASPECTS) || [],
             manualAspectSetNames = [],
             len;
 

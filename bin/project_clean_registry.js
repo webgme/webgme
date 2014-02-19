@@ -49,7 +49,8 @@ requirejs([ "util/common",
     //these registry keys will be saved in the item's registry
     var _protectedRegistryKeys = [REGISTRY_KEYS.PROJECT_REGISTRY,
                                     REGISTRY_KEYS.META_SHEETS,
-                                    REGISTRY_KEYS.POSITION];
+                                    REGISTRY_KEYS.POSITION,
+                                    REGISTRY_KEYS.MANUAL_ASPECTS];
 
     //add the mandatory FCO registry keys to the protected list
     for (var rk in GMEConceptsFCO.FCO_REGISTRY) {

@@ -39,6 +39,11 @@ define([], function () {
         META_SHEETS: 'MetaSheets',
 
         /*
+         * MANUAL_ASPECTS_META_INFO_REGISTRY_KEY
+         */
+        MANUAL_ASPECTS : 'ManualAspects',
+
+        /*
          * DISABLED CONNECTION AREAS FOR DIAGRAM-DESIGNER-WIDGET DECORATORS ARE STORED UNDER THIS REGISTRY KEY ON A PER DECORATOR BASIS
          */
         DIAGRAM_DESIGNER_WIDGET_DECORATOR_DISABLED_CONNECTION_AREAS: 'diagramDesignerWidgetDecoratorDisabledConnectionAreas_'
