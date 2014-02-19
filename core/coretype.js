@@ -113,8 +113,8 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
                     console.log('!!! ISFALSENODE PLEASE CHECK PROJECT STRUCTURE !!!: ' + core.getPath(node));
                     var root = core.getRoot(node);
                     core.deleteNode(node);
-                    //return TASYNC.call(function(){return null;},core.persist(root));
-                    return null;
+                    return TASYNC.call(function(){return null;},core.persist(root));
+                    //return null;
                 } else {
                     return TASYNC.call(__loadBase2, node, oldcore.loadPointer(node, "base"));
                 }
