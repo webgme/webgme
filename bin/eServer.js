@@ -41,7 +41,8 @@ requirejs(['logManager',
     'auth/sessionstore',
     'auth/vehicleforgeauth',
     'auth/gmeauth',
-    'util/newrest'],function(
+    'util/newrest',
+    'util/cJson'],function(
     logManager,
     CONFIG,
     Storage,
@@ -52,7 +53,8 @@ requirejs(['logManager',
     SStore,
     VFAUTH,
     GMEAUTH,
-    REST){
+    REST,
+    CANON){
     var parameters = CONFIG;
     var logLevel = parameters.loglevel || logManager.logLevels.WARNING;
     var logFile = parameters.logfile || 'server.log';
@@ -318,7 +320,8 @@ requirejs(['logManager',
                             res.header("Content-Type", "application/json");
                             res.header("Content-Disposition", "attachment;filename=\""+filename+"\"");
                             res.status(httpStatus);
-                            res.end(JSON.stringify(object,null,2));
+                            //res.end(JSON.stringify(object,null,2));
+                            res.end(CANON(object));
                         } else {
                             res.json(httpStatus, object || null);
                         }

@@ -176,7 +176,7 @@ define([
         var setsInfo = {};
         var createOneSetInfo = function(setName,callback){
             var needed,
-                members = core.getMemberPaths(node,setName),
+                members = (core.getMemberPaths(node,setName)).sort(), //TODO we should remove the sort part at some point
                 info = {from:[],to:[],set:true},
                 i,
                 error = null,

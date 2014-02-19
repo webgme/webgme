@@ -332,7 +332,7 @@ define([
     function importRoot(jNode,callback){
         //first we create the root node itself, then the other parts of the function is pretty much like the importNode
 
-        _root = _core.createNode();
+        _root = _core.createNode({guid:jNode.GUID});
         internalRefCreated('#',_root);
         importAttributes(_root,jNode);
         importRegistry(_root,jNode);
