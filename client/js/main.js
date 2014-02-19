@@ -20,6 +20,7 @@ require.config({
         "jquery-WebGME": 'js/jquery.WebGME',
         "jquery-dataTables": 'lib/jquery/jquery.dataTables.min',
         "jquery-dataTables-bootstrapped": 'lib/jquery/jquery.dataTables.bootstrapped',
+        "jquery-spectrum": 'lib/jquery/jquery.spectrum',
 
         //necessary 3rd party modules
         "bootstrap": 'lib/bootstrap/bootstrap.amd',
@@ -51,7 +52,8 @@ require.config({
         'jquery-dataTables': ['jquery'],
         'jquery-dataTables-bootstrapped': ['jquery-dataTables'],
         'WebGME': ['jquery-WebGME'],
-        'jquery-csszoom': ['jquery-ui']
+        'jquery-csszoom': ['jquery-ui'],
+        'jquery-spectrum': ['jquery']
     }
 });
 
