@@ -213,25 +213,23 @@ define(['./DiagramDesignerWidget.OperatingModes',
             }
 
             //add fill color, text color, border color controls
-            this.toolbarItems.lblFillColor = toolbar.addLabel();
-            this.toolbarItems.lblFillColor.text('Fill: ');
             this.toolbarItems.cpFillColor = toolbar.addColorPicker({'icon': 'icon-tint',
+                'title': 'Fill color',
                 'colorChangedFn': function (color) {
                     self.onSelectionFillColorChanged(self.selectionManager.getSelectedElements(), color);
                 }}
             );
 
-            this.toolbarItems.lblBorderColor = toolbar.addLabel();
-            this.toolbarItems.lblBorderColor.text('Border: ');
-            this.toolbarItems.cpBorderColor = toolbar.addColorPicker({'icon': 'icon-tint',
+            this.toolbarItems.cpBorderColor = toolbar.addColorPicker({
+                'icon':  btnIconBase.clone().css('background-image', 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAALHRFWHRDcmVhdGlvbiBUaW1lAFdlZCAxOSBGZWIgMjAxNCAxMzo1MjowNiAtMDYwMLm/hBUAAAAHdElNRQfeAhMTNg6sSN21AAAACXBIWXMAAAsSAAALEgHS3X78AAAABGdBTUEAALGPC/xhBQAAADNJREFUeNpjNDY2/s9AIjhz5gwjA0gjEDCgY0LiTKTaBgNDSCPjaKjSQCPZocoICiFyAADhMVpX3ZZoCgAAAABJRU5ErkJggg==)'),
+                'title': 'Border color',
                 'colorChangedFn': function (color) {
                     self.onSelectionBorderColorChanged(self.selectionManager.getSelectedElements(), color);
                 }}
             );
 
-            this.toolbarItems.lblTextColor = toolbar.addLabel();
-            this.toolbarItems.lblTextColor.text('Text: ');
-            this.toolbarItems.cpTextColor = toolbar.addColorPicker({'icon': 'icon-tint',
+            this.toolbarItems.cpTextColor = toolbar.addColorPicker({'icon': 'icon-font',
+                'title': 'Text color',
                 'colorChangedFn': function (color) {
                     self.onSelectionTextColorChanged(self.selectionManager.getSelectedElements(), color);
                 }}
