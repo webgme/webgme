@@ -123,7 +123,7 @@ define(['logManager'], function (logManager) {
             var priority = 0,
                 point = [ port.getRect().getCenter().x - center.x, port.getRect().getCenter().y - center.y],
                 lineCount = (port.getPointCount() || 1),
-                density = (port.getTotalAvailableArea()/lineCount)/maxArea,
+                density = (port.getTotalAvailableArea()/lineCount)/maxArea || 1, //If there is a problem with maxArea, just ignore density
                 major = Math.abs(vector[0]) > Math.abs(vector[1]) ? 0 : 1,
                 minor = (major+1)%2;
 
@@ -6490,6 +6490,16 @@ var oldTime = new Date().getTime();
                 if(srcPorts.length === 0)
                     srcPorts = startports;
 
+                //Preventing same start/endport
+                if(endport && srcPorts.length > 1){
+                    i = srcPorts.length;
+                    while(i--){
+                        if(srcPorts[i] === startport)
+                            srcPorts.splice(i, 1);
+                    }
+                }
+
+
                 //Getting target
                 if(customPathData.length){
                     tgt = new ArPoint(customPathData[0].getX(), customPathData[0].getY());
@@ -6548,6 +6558,15 @@ var oldTime = new Date().getTime();
 
                 if(dstPorts.length === 0)
                     dstPorts = endports;
+
+                //Preventing same start/endport
+                if(startport && dstPorts.length > 1){
+                    i = dstPorts.length;
+                    while(i--){
+                        if(dstPorts[i] === startport)
+                            dstPorts.splice(i, 1);
+                    }
+                }
 
                 //Getting target
                 if(customPathData.length){
