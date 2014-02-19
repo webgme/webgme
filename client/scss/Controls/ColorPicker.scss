@@ -4,7 +4,24 @@
  * Author: Robert Kereskenyi
  */
 
-.color-picker {
-  width: 100px;
-  font-weight: bold;
+$palette-thumb-size: 13px;
+$active-size: $palette-thumb-size + 2;
+
+.sp-container {
+  .sp-palette {
+    .sp-thumb-el {
+      width: $palette-thumb-size;
+      height: $palette-thumb-size;
+    }
+  }
+
+  .sp-thumb-active {
+    .sp-thumb-inner {
+      background-size: $active-size $active-size;
+    }
+  }
+
+  .sp-clear {
+    cursor: pointer;
+  }
 }

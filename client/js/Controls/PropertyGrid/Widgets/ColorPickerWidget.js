@@ -21,9 +21,6 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
             this.__colorPicker = new ColorPicker();
             this.__colorPicker.onColorChanged = function (color) {
                 _self.setValue(color);
-            };
-
-            this.__colorPicker.onEndColorPick = function () {
                 _self.fireFinishChange();
             };
 

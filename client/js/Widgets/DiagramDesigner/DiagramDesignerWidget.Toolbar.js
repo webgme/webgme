@@ -215,21 +215,27 @@ define(['./DiagramDesignerWidget.OperatingModes',
             //add fill color, text color, border color controls
             this.toolbarItems.lblFillColor = toolbar.addLabel();
             this.toolbarItems.lblFillColor.text('Fill: ');
-            this.toolbarItems.cpFillColor = toolbar.addColorPicker({'colorChangedFn': function (color) {
-                self.onSelectionFillColorChanged(self.selectionManager.getSelectedElements(), color);
-            }});
+            this.toolbarItems.cpFillColor = toolbar.addColorPicker({'icon': 'icon-tint',
+                'colorChangedFn': function (color) {
+                    self.onSelectionFillColorChanged(self.selectionManager.getSelectedElements(), color);
+                }}
+            );
 
             this.toolbarItems.lblBorderColor = toolbar.addLabel();
             this.toolbarItems.lblBorderColor.text('Border: ');
-            this.toolbarItems.cpBorderColor = toolbar.addColorPicker({'colorChangedFn': function (color) {
-                self.onSelectionBorderColorChanged(self.selectionManager.getSelectedElements(), color);
-            }});
+            this.toolbarItems.cpBorderColor = toolbar.addColorPicker({'icon': 'icon-tint',
+                'colorChangedFn': function (color) {
+                    self.onSelectionBorderColorChanged(self.selectionManager.getSelectedElements(), color);
+                }}
+            );
 
             this.toolbarItems.lblTextColor = toolbar.addLabel();
             this.toolbarItems.lblTextColor.text('Text: ');
-            this.toolbarItems.cpTextColor = toolbar.addColorPicker({'colorChangedFn': function (color) {
-                self.onSelectionTextColorChanged(self.selectionManager.getSelectedElements(), color);
-            }});
+            this.toolbarItems.cpTextColor = toolbar.addColorPicker({'icon': 'icon-tint',
+                'colorChangedFn': function (color) {
+                    self.onSelectionTextColorChanged(self.selectionManager.getSelectedElements(), color);
+                }}
+            );
 
             this.toolbarItems.cpFillColor.enabled(false);
             this.toolbarItems.cpBorderColor.enabled(false);
