@@ -1779,6 +1779,10 @@ define([
                     return _id;
                 };
 
+                var getGUID = function(){
+                    return _core.getGUID(_nodes[_id].node);
+                }
+
                 var getChildrenIds = function(){
                     return _core.getChildrenPaths(_nodes[_id].node);
                 };
@@ -1956,27 +1960,28 @@ define([
 
                 if(_nodes[_id]){
                     return {
-                        getParentId : getParentId,
-                        getId       : getId,
-                        getChildrenIds : getChildrenIds,
-                        getBaseId : getBaseId,
-                        getInheritorIds : getInheritorIds,
-                        getAttribute : getAttribute,
-                        getEditableAttribute: getEditableAttribute,
-                        getRegistry : getRegistry,
-                        getEditableRegistry : getEditableRegistry,
-                        getOwnAttribute : getOwnAttribute,
-                        getOwnEditableAttribute: getOwnEditableAttribute,
-                        getOwnRegistry : getOwnRegistry,
-                        getOwnEditableRegistry : getOwnEditableRegistry,
-                        getPointer : getPointer,
-                        getPointerNames : getPointerNames,
-                        getAttributeNames : getAttributeNames,
-                        getRegistryNames : getRegistryNames,
-                        getOwnAttributeNames : getOwnAttributeNames,
-                        getOwnRegistryNames : getOwnRegistryNames,
-                        getOwnPointer : getOwnPointer,
-                        getOwnPointerNames : getOwnPointerNames,
+                        getParentId             : getParentId,
+                        getId                   : getId,
+                        getGUID                 : getGUID,
+                        getChildrenIds          : getChildrenIds,
+                        getBaseId               : getBaseId,
+                        getInheritorIds         : getInheritorIds,
+                        getAttribute            : getAttribute,
+                        getEditableAttribute    : getEditableAttribute,
+                        getRegistry             : getRegistry,
+                        getEditableRegistry     : getEditableRegistry,
+                        getOwnAttribute         : getOwnAttribute,
+                        getOwnEditableAttribute : getOwnEditableAttribute,
+                        getOwnRegistry          : getOwnRegistry,
+                        getOwnEditableRegistry  : getOwnEditableRegistry,
+                        getPointer              : getPointer,
+                        getPointerNames         : getPointerNames,
+                        getAttributeNames       : getAttributeNames,
+                        getRegistryNames        : getRegistryNames,
+                        getOwnAttributeNames    : getOwnAttributeNames,
+                        getOwnRegistryNames     : getOwnRegistryNames,
+                        getOwnPointer           : getOwnPointer,
+                        getOwnPointerNames      : getOwnPointerNames,
 
                         //SetFunctions
                         getMemberIds               : getMemberIds,
@@ -1989,19 +1994,19 @@ define([
                         getEditableMemberRegistry  : getEditableMemberRegistry,
 
                         //META functions
-                        getValidChildrenTypes : getValidChildrenTypes,
-                        getAttributeDescriptor         : getAttributeDescriptor,
-                        getEditableAttributeDescriptor : getEditableAttributeDescriptor,
-                        getPointerDescriptor           : getPointerDescriptor,
-                        getEditablePointerDescriptor   : getEditablePointerDescriptor,
-                        getChildrenMetaDescriptor      : getChildrenMetaDescriptor,
-                        getEditableChildrenMetaDescriptor      : getEditableChildrenMetaDescriptor,
+                        getValidChildrenTypes             : getValidChildrenTypes,
+                        getAttributeDescriptor            : getAttributeDescriptor,
+                        getEditableAttributeDescriptor    : getEditableAttributeDescriptor,
+                        getPointerDescriptor              : getPointerDescriptor,
+                        getEditablePointerDescriptor      : getEditablePointerDescriptor,
+                        getChildrenMetaDescriptor         : getChildrenMetaDescriptor,
+                        getEditableChildrenMetaDescriptor : getEditableChildrenMetaDescriptor,
 
                         //constraint functions
                         getConstraintNames : getConstraintNames,
-                        getConstraint : getConstraint,
+                        getConstraint      : getConstraint,
 
-                        printData: printData
+                        printData : printData
 
                     }
                 }
