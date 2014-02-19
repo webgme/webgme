@@ -4,7 +4,7 @@
  * Author: Tamas Kecskes
  */
 
-define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
+define([ "util/assert", "util/guid", "core/tasync" ], function (ASSERT, GUID, TASYNC) {
 	"use strict";
 
 	var GUID_REGEXP = new RegExp("[a-z0-9]{8}(-[a-z0-9]{4}){3}-[a-z0-9]{12}", 'i');
@@ -69,27 +69,24 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
 			return toExternalGuid(outGuid);
 		};
 
-		_core.setGuid = function (node, guid, callback) {
-			ASSERT(GUID_REGEXP.test(guid));
-			_core.loadChildren(node, function (err, children) {
-				if (err) {
-					callback(err);
-				} else {
-					var newguid = toInternalGuid(guid);
-					for ( var i = 0; i < children.length; i++) {
-						var oldguid = toInternalGuid(_core.getGuid(children[i]));
-						_core.setAttribute(children[i], "_relguid", xorGuids(newguid, oldguid));
-					}
-					var parent = _core.getParent(node);
-					if (parent) {
-						_core.setAttribute(node, "_relguid", xorGuids(newguid, toInternalGuid(_core.getGuid(parent))));
-					} else {
-						_core.setAttribute(node, "_relguid", newguid);
-					}
-					callback(null);
-				}
-			});
-		};
+        _core.setGuid = function(node,guid){
+            ASSERT(GUID_REGEXP.test(guid));
+            var children = _core.loadChildren(node);
+            return TASYNC.call(function(nodeArray){
+                var newGuid = toInternalGuid(guid);
+                for ( var i = 0; i < nodeArray.length; i++) {
+                    var oldGuid = toInternalGuid(_core.getGuid(nodeArray[i]));
+                    _core.setAttribute(nodeArray[i], "_relguid", xorGuids(newGuid, oldGuid));
+                }
+                var parent = _core.getParent(node);
+                if (parent) {
+                    _core.setAttribute(node, "_relguid", xorGuids(newGuid, toInternalGuid(_core.getGuid(parent))));
+                } else {
+                    _core.setAttribute(node, "_relguid", newGuid);
+                }
+                return;
+            },children);
+        };
 
 		//modified functions
 		_core.createNode = function (parameters) {

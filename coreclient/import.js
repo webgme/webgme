@@ -360,9 +360,14 @@ define([
                     callback(err);
                 } else {
                     if(_core.getGuid(oldChild) === guid){
+                        var root = _core.getRoot(oldChild);
                         _core.deleteNode(oldChild);
+                        _core.persist(root,function(){
+                            callback(null)
+                        });
+                    } else {
+                        callback(null);
                     }
-                    callback(null);
                 }
             });
         } else {
@@ -377,7 +382,25 @@ define([
                 if(err){
                     callback(err);
                 } else {
-                    clearOldNode(jNode.RELID,jNode.GUID,parentNode,function(err){
+                    /*//now we are ready to create the node itself
+                    var node = _core.createNode({base:base,parent:parentNode,relid:jNode.RELID,guid:jNode.GUID});
+                    internalRefCreated(intPath,node);
+                    importAttributes(node,jNode);
+                    importRegistry(node,jNode);
+                    importChildren(node,jNode,intPath,function(err){
+                        if(err){
+                            callback(err);
+                        } else {
+                            importRelations(node,jNode,function(err){
+                                if(err){
+                                    callback(err);
+                                } else {
+                                    importMeta(node,jNode,callback);
+                                }
+                            });
+                        }
+                    });*/
+                   clearOldNode(jNode.RELID,jNode.GUID,parentNode,function(err){
                         if(err){
                             callback(err);
                         } else {

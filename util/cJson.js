@@ -12,6 +12,7 @@ define([], function() {
         string    : "[object String]",
         regexp    : "[object RegExp]",
         date      : "[object Date]",
+        boolean   : "[object Boolean]",
         undefined : "[object Undefined]"
         },
         _direction = {
@@ -53,9 +54,15 @@ define([], function() {
                 }
                 outStr += "\n"+indent+"}";
                 return outStr;
+            case _types.boolean:
+                if(value === true){
+                    return "true";
+                }
+                return "false";
             case _types.null:
                 return "null";
             case _types.number:
+                return ""+value;
             case _types.regexp:
             case _types.string:
             case _types.date: //we will lose the date type, but in our case it doesn't really matter as we never store a date really

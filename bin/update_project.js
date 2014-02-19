@@ -25,7 +25,8 @@ requirejs([ "util/common", "util/assert", "core/tasync", "util/guid" ], function
         _startHash = null,
         _branch = null,
         _projectName = null,
-        _outFile = null;
+        _outFile = null,
+        _guidCache = {};
 
     function main () {
         var args = COMMON.getParameters(null);
@@ -138,7 +139,7 @@ requirejs([ "util/common", "util/assert", "core/tasync", "util/guid" ], function
     }
 
     function updateNode(core,node){ //TODO this method should be always up-to-date...
-        var text = " - "+core.getPath(node,core.getRoot(node))+' : '+core.getAttribute(node,"name")+" - ";
+        /*var text = " - "+core.getPath(node,core.getRoot(node))+' : '+core.getAttribute(node,"name")+" - ";
         var basepath = core.getPointerPath(node,"base");
         if(basepath === undefined){
             core.setPointer(node,"base",null);
@@ -154,7 +155,16 @@ requirejs([ "util/common", "util/assert", "core/tasync", "util/guid" ], function
             text += " - guid checked";
         }
         console.log(text);
-        return;
+        return;*/
+        var guid = core.getGuid(node);
+        if(_guidCache[guid] != undefined){
+            var newGuid = GUID();
+            console.log(core.getPath(node),":",guid,":",newGuid);
+            _guidCache[newGuid] = true;
+            return core.setGuid(node,newGuid);
+        } else {
+            _guidCache[guid] = true;
+        }
     }
     function traverseNode (core,node){
         updateNode(core,node);
