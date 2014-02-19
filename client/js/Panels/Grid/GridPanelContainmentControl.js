@@ -16,6 +16,8 @@ define(['logManager',
         this._panel = options.panel;
         this._dataGridWidget = options.widget;
 
+        this._dataGridWidget.setNoWrapColumns(['ID', 'GUID']);
+
         this._currentNodeId = null;
 
         this._selectedObjectChanged = function (__project, nodeId) {
@@ -116,6 +118,7 @@ define(['logManager',
 
     GridPanelContainmentControl.prototype._discoverNode = function (gmeID) {
             var nodeDescriptor = {"ID": undefined,
+                                  "GUID": undefined,
                                   "ParentID": undefined,
                                   "Attributes": undefined,
                                   "Registry": undefined,
@@ -151,6 +154,7 @@ define(['logManager',
 
             if (cNode) {
                 nodeDescriptor.ID = gmeID;
+                nodeDescriptor.GUID = cNode.getGuid();
                 nodeDescriptor.ParentID = cNode.getParentId();
 
                 nodeDescriptor.Attributes = _getNodePropertyValues(cNode, "getAttributeNames", "getAttribute");
