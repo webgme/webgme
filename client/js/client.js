@@ -203,6 +203,7 @@ define([
                     });
                 };
                 setInterval(refreshToken,10000); //maybe it could be configurable
+                refreshToken();
 
                 return {
                     getToken: function(){return token;}
@@ -2109,7 +2110,8 @@ define([
             function getDumpURL(path,filepath){
                 filepath = filepath || _projectName+'_'+_branch+'_'+URL.addSpecialChars(path);
                 if(window && window.location && window.location && _nodes && _nodes[ROOT_PATH]){
-                    return window.location.protocol + '//' + window.location.host +'/rest'+(_TOKEN.getToken() === null ? '' : '/'+_TOKEN.getToken())+'/etf/'+_projectName+'/'+URL.addSpecialChars(_core.getHash(_nodes[ROOT_PATH].node))+'/'+URL.addSpecialChars(path)+'/'+filepath;
+                    var address = window.location.protocol + '//' + window.location.host +'/rest'+(_TOKEN.getToken() === null ? '' : '/'+_TOKEN.getToken())+'/etf/'+_projectName+'/'+URL.addSpecialChars(_core.getHash(_nodes[ROOT_PATH].node))+'/'+URL.addSpecialChars(path)+'/'+filepath;
+                    return address;
                 }
                 return null;
             }

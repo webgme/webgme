@@ -162,6 +162,7 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
         core.loadChildren = function(node) {
             ASSERT(isValidNode(node));
             var relids = core.getChildrenRelids(node);
+            relids = relids.sort(); //TODO this should be temporary
             var children = [];
             for(var i = 0; i< relids.length; i++)
                 children[i] = core.loadChild(node,relids[i]);

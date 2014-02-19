@@ -97,6 +97,7 @@ define([ "util/assert"], function (ASSERT) {
             var setNode = innerCore.getChild(innerCore.getChild(node,SETS_ID),setName);
             var members = [];
             var elements = innerCore.getChildrenRelids(setNode);
+            elements = elements.sort(); //TODO this should be removed at some point
             for(var i=0;i<elements.length;i++){
                 var path = getMemberPath(node,innerCore.getChild(setNode,elements[i]));
                 if(path){
