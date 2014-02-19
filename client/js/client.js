@@ -1779,9 +1779,9 @@ define([
                     return _id;
                 };
 
-                var getGUID = function(){
-                    return _core.getGUID(_nodes[_id].node);
-                }
+                var getGuid = function(){
+                    return _core.getGuid(_nodes[_id].node);
+                };
 
                 var getChildrenIds = function(){
                     return _core.getChildrenPaths(_nodes[_id].node);
@@ -1962,7 +1962,7 @@ define([
                     return {
                         getParentId             : getParentId,
                         getId                   : getId,
-                        getGUID                 : getGUID,
+                        getGuid                 : getGuid,
                         getChildrenIds          : getChildrenIds,
                         getBaseId               : getBaseId,
                         getInheritorIds         : getInheritorIds,
