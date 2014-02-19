@@ -287,7 +287,9 @@ class basenode:
             self.__outpointers = {}
             for pointerName in self.__json[KEY_POINTERS]:
                 if self.__json[KEY_POINTERS][pointerName]["set"] != True:
-                    pointerNode = self.__getNode(self.__json[KEY_POINTERS][pointerName]["to"][0])
+                    pointerNode = None
+                    if len(self.__json[KEY_POINTERS][pointerName]["to"]) == 1:
+                        pointerNode = self.__getNode(self.__json[KEY_POINTERS][pointerName]["to"][0])
                     if pointerNode != None:
                         self.__outpointers[pointerName] = pointerNode
 
@@ -347,6 +349,8 @@ class node:
         self.__inpointers = None
         self.__sets = None
         self.__collections = None
+        self.__tanconns = None
+        self.__referrers = None
     
     #this function always returns a typed gme object (node / connection / reference)
     def __getNode(self,base):
@@ -438,8 +442,36 @@ class node:
                     self.__collections[pointerName].append(self.__getNode(index))
         return self.__collections
 
+    @property
+    def relatedConnections(self):
+        if self.__tanconns == None:
+            self.__tanconns = []
+            inpointers = self.inPointers
+            if 'src' in inpointers:
+                for conn in inpointers['src']:
+                    self.__tanconns.append(conn)
+            if 'dst' in inpointers:
+                for conn in inpointers['dst']:
+                    self.__tanconns.append(conn)
+
+        return self.__tanconns
+
+    @property
+    def referrers(self):
+        if self.__referrers == None:
+            self.__referrers = []
+            inpointers = self.inPointers
+            if 'ref' in inpointers:
+                for ref in inpointers['ref']:
+                    self.__referrers.append(ref)
+        return self.__referrers
+
 #this is a suer class of the basic node with some extended functions
 class connection(node):
+    def __init__(self):
+        self.__endpoints = None
+        node.__init__(self)
+
     @property
     def source(self):
         outpointers = self.outPointers
@@ -450,6 +482,14 @@ class connection(node):
         outpointers = self.outPointers
         return outpointers["dst"]
     
+    @property
+    def endpoints(self):
+        if self.__endpoints == None:
+            self.__endpoints = []
+            self.__endpoints.append(self.source)
+            self.__endpoints.append(self.destination)
+        return self.__endpoints
+
 #this is the reference class similar to the connection
 class reference(node):
     @property

@@ -5,35 +5,20 @@ w = webgme.client("http://localhost","078dd342-6695-af73-b4cc-90aeb4820feetoken"
 
 db = w.connect()
 
-p = db.getProject('kecso')
-
-if p != None:
-    print ("yuheee")
-
-print(p.getBranches())
+p = db.getProject('kecso2')
 
 r = p.getRoot('master')
 
-if r != None:
-    print("yuheeee")
+nodeRoot = webgme.node(r)
 
-gmer = webgme.node(r)
-print(gmer.attributes)
-print(r.attributes)
+children = nodeRoot.children
 
-children = r.children
+sm1 = None
 for child in children:
-    print(child.guid + " : " + str(child))
-    print(child.attributes)
-    pointers = child.outPointers
-    if pointers != None:
-        for pointer in pointers:
-            print(pointer + " : " +str(pointers[pointer]))
+    if child.attributes['name'] == 'sm1':
+        sm1 = child
 
-    pointers = child.inPointers
-    if pointers != None:
-        for pointer in pointers:
-            print(pointer + " : " +str(pointers[pointer]))
-
-children = gmer.children
-print(children)
+if sm1 != None:
+    children = sm1.children
+    for child in children:
+        print(child.attributes["name"]+" : " + str(child.relatedConnections))
