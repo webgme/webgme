@@ -282,7 +282,7 @@ define([
     };
     var getPointersGUIDs = function(core,node,callback){
         var gHash = {},
-            pointerNames = core.getPointerNames(node),
+            pointerNames = core.getOwnPointerNames(node),
             collectionNames = core.getCollectionNames(node),
             needed = pointerNames.length+collectionNames.length,
             error = null;
@@ -336,7 +336,7 @@ define([
         };
         var initialized = function(){
             var pointers = {},
-                tArray = core.getPointerNames(node),
+                tArray = core.getOwnPointerNames(node),
                 t2Array = core.getCollectionNames(node);
             for(var i=0;i<t2Array.length;i++){
                 if(tArray.indexOf(t2Array[i]) === -1){
@@ -394,12 +394,12 @@ define([
         //RELID
         jNode.RELID = core.getRelid(node);
         //registry entries
-        tArray = core.getRegistryNames(node);
+        tArray = core.getOwnRegistryNames(node);
         for(i=0;i<tArray.length;i++){
             jNode['registry'][tArray[i]] = core.getRegistry(node,tArray[i]);
         }
         //attribute entries
-        tArray = core.getAttributeNames(node);
+        tArray = core.getOwnAttributeNames(node);
         for(i=0;i<tArray.length;i++){
             jNode['attributes'][tArray[i]] = core.getAttribute(node,tArray[i]);
         }

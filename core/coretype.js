@@ -402,17 +402,6 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
             oldcore.getPointerPath(node,name);
         };
 
-		core._getPointerPath = function(node, name) {
-			ASSERT(isValidNode(node));
-            var value;
-			do {
-				value = oldcore.getPointerPath(node, name);
-				node = node.base;
-			} while (typeof value === "undefined" && node !== null);
-
-			return value;
-		};
-
         core.setBase = function(node,base){
             ASSERT(isValidNode(node) && (base === undefined || base === null || isValidNode(base)));
             ASSERT(!base || core.getPath(core.getParent(node)) !== core.getPath(base));
