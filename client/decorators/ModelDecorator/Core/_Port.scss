@@ -5,6 +5,7 @@ $dot-width: 3px;
 $dot-height: 8px;
 $dot-border-width: 1px;
 $icon-padding: 2px;
+$icon-size: $port-height - 3;
 
 @mixin port($ports-width, $padding) {
   .port {
@@ -25,10 +26,11 @@ $icon-padding: 2px;
     }
 
     img.svg-icon {
-      height: $port-height;
-      width: $port-height;
+      height: $icon-size;
+      width: $icon-size;
       position: absolute;
       display: inline-block;
+      top: 1px;
     }
 
     span.dot {
@@ -55,7 +57,7 @@ $icon-padding: 2px;
       }
 
       img.svg-icon {
-        left: -$port-height - $padding;
+        left: -$icon-size - $padding;
       }
 
       span.dot {
@@ -73,7 +75,7 @@ $icon-padding: 2px;
       }
 
       img.svg-icon {
-        right: -$port-height - $padding;
+        right: -$icon-size - $padding;
       }
 
       span.dot {

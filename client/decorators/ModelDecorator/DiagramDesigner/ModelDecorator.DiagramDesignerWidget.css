@@ -64,10 +64,11 @@
         overflow: hidden;
         text-overflow: ellipsis; }
       .model-decorator .ports .port img.svg-icon {
-        height: 16px;
-        width: 16px;
+        height: 13px;
+        width: 13px;
         position: absolute;
-        display: inline-block; }
+        display: inline-block;
+        top: 1px; }
       .model-decorator .ports .port span.dot {
         position: absolute;
         display: inline-block;
@@ -81,7 +82,7 @@
     .model-decorator .ports .left .port .title-wrapper {
       text-align: left; }
     .model-decorator .ports .left .port img.svg-icon {
-      left: -19px; }
+      left: -16px; }
     .model-decorator .ports .left .port span.dot {
       left: -8px;
       border-top-left-radius: 4px;
@@ -89,7 +90,7 @@
     .model-decorator .ports .right .port .title-wrapper {
       text-align: right; }
     .model-decorator .ports .right .port img.svg-icon {
-      right: -19px; }
+      right: -16px; }
     .model-decorator .ports .right .port span.dot {
       left: 53px;
       border-top-right-radius: 4px;
