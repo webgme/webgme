@@ -5,7 +5,7 @@ w = webgme.client("http://localhost","078dd342-6695-af73-b4cc-90aeb4820feetoken"
 
 db = w.connect()
 
-p = db.getProject('kecso2')
+p = db.getProject('kecso')
 
 r = p.getRoot('master')
 
@@ -15,7 +15,7 @@ children = nodeRoot.children
 
 sm1 = None
 for child in children:
-    if child.attributes['name'] == 'sm1':
+    if child.attributes['name'] == 'simpleModel':
         sm1 = child
 
 if sm1 != None:

@@ -468,9 +468,9 @@ class node:
 
 #this is a suer class of the basic node with some extended functions
 class connection(node):
-    def __init__(self):
+    def __init__(self,baseNode):
         self.__endpoints = None
-        node.__init__(self)
+        node.__init__(self,baseNode)
 
     @property
     def source(self):
@@ -492,6 +492,8 @@ class connection(node):
 
 #this is the reference class similar to the connection
 class reference(node):
+    def __init__(self, baseNode):
+        return super().__init__(baseNode)
     @property
     def target(self):
         outpointers = self.outPointers

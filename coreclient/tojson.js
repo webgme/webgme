@@ -213,7 +213,6 @@ define([
 
             for(i in memberOfInfo){
                 if(memberOfInfo[i].indexOf(setName) !== -1){
-                    //containers.push(core.toActualPath(i)); kecso
                     containers.push(i);
                 }
             }
@@ -282,7 +281,7 @@ define([
     };
     var getPointersGUIDs = function(core,node,callback){
         var gHash = {},
-            pointerNames = core.getOwnPointerNames(node),
+            pointerNames = core.getPointerNames(node),
             collectionNames = core.getCollectionNames(node),
             needed = pointerNames.length+collectionNames.length,
             error = null;
@@ -336,7 +335,7 @@ define([
         };
         var initialized = function(){
             var pointers = {},
-                tArray = core.getOwnPointerNames(node),
+                tArray = core.getPointerNames(node),
                 t2Array = core.getCollectionNames(node);
             for(var i=0;i<t2Array.length;i++){
                 if(tArray.indexOf(t2Array[i]) === -1){
@@ -372,11 +371,19 @@ define([
             initialized();
         }
     };
+    var getOwnPartOfNode = function(core,node){
+        var own = {attributes:[],registry:[],pointers:[]};
+        own.attributes = core.getOwnAttributeNames(node);
+        own.registry = core.getOwnRegistryNames(node);
+        own.pointers = core.getOwnPointerNames(node);
+        return own;
+    } ;
     var getJsonNode = function(core,node,urlPrefix,refType,callback){
         var nodes = {},
             tArray,t2Array,
             i,j,
             jNode;
+
         if(refType === _refTypes.guid && typeof core.getGuid !== 'function'){
             callback(new Error('cannot provide GUIDs'),null);
         }
@@ -394,15 +401,18 @@ define([
         //RELID
         jNode.RELID = core.getRelid(node);
         //registry entries
-        tArray = core.getOwnRegistryNames(node);
+        tArray = core.getRegistryNames(node);
         for(i=0;i<tArray.length;i++){
             jNode['registry'][tArray[i]] = core.getRegistry(node,tArray[i]);
         }
         //attribute entries
-        tArray = core.getOwnAttributeNames(node);
+        tArray = core.getAttributeNames(node);
         for(i=0;i<tArray.length;i++){
             jNode['attributes'][tArray[i]] = core.getAttribute(node,tArray[i]);
         }
+
+        //own part of the node
+        jNode.OWN = getOwnPartOfNode(core,node);
 
 
         //now calling the relational parts

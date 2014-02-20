@@ -113,15 +113,31 @@ define([
     }
     function importAttributes(node,jNode){
         if(typeof jNode.attributes === 'object'){
-            for(var i in jNode.attributes){
-                _core.setAttribute(node,i,jNode.attributes[i]);
+            var names = Object.keys(jNode.attributes);
+            if(jNode.OWN){
+                names = jNode.OWN.attributes;
+            }
+
+            for(var i=0;i<names.length;i++){
+                var value = jNode.attributes[names[i]];
+                if(value !== undefined){
+                    _core.setAttribute(node,names[i],value);
+                }
             }
         }
     }
     function importRegistry(node,jNode){
         if(typeof jNode.registry === 'object'){
-            for(var i in jNode.registry){
-                _core.setRegistry(node,i,jNode.registry[i]);
+            var names = Object.keys(jNode.registry);
+            if(jNode.OWN){
+                names = jNode.OWN.registry;
+            }
+
+            for(var i=0;i<names.length;i++){
+                var value = jNode.registry[names[i]];
+                if(value !== undefined){
+                    _core.setRegistry(node,names[i],value);
+                }
             }
         }
     }
@@ -130,37 +146,48 @@ define([
             var needed = jNode.pointers[pName].to.length + jNode.pointers[pName].from.length,
                 i,
                 error = null;
-
-            for(i=0;i<jNode.pointers[pName].to.length;i++){
-                getReferenceNode(jNode.pointers[pName].to[i],function(err,target){
-                    error = error || err;
-                    _core.setPointer(node,pName,target);
-
-                    if(--needed === 0){
-                        callback(error);
-                    }
-                });
+            var ownPointer = true;
+            if(jNode.OWN){
+                if(jNode.OWN.pointers.indexOf(pName) === -1){
+                    ownPointer = false;
+                    needed -= jNode.pointers[pName].to.length;
+                }
             }
+            if(needed === 0){
+                callback(null);
+            } else {
+                if(ownPointer){
+                    for(i=0;i<jNode.pointers[pName].to.length;i++){
+                        getReferenceNode(jNode.pointers[pName].to[i],function(err,target){
+                            error = error || err;
+                            _core.setPointer(node,pName,target);
 
-            for(i=0;i<jNode.pointers[pName].from.length;i++){
-                if(!isInternalReference(jNode.pointers[pName].from[i])){
-                    getReferenceNode(jNode.pointers[pName].from[i],function(err,source){
-                        error = error || err;
-                        if(source){
-                            _core.setPointer(source,pName,node);
-                        }
+                            if(--needed === 0){
+                                callback(error);
+                            }
+                        });
+                    }
+                }
 
+                for(i=0;i<jNode.pointers[pName].from.length;i++){
+                    if(!isInternalReference(jNode.pointers[pName].from[i])){
+                        getReferenceNode(jNode.pointers[pName].from[i],function(err,source){
+                            error = error || err;
+                            if(source){
+                                _core.setPointer(source,pName,node);
+                            }
+
+                            if(--needed === 0){
+                                callback(error);
+                            }
+                        });
+                    } else {
                         if(--needed === 0){
                             callback(error);
                         }
-                    });
-                } else {
-                    if(--needed === 0){
-                        callback(error);
                     }
                 }
             }
-
         } else {
             callback(null);
         }
@@ -311,7 +338,7 @@ define([
                                     if(--needed === 0){
                                         cb(error);
                                     }
-                                })
+                                });
                             }
                         }
                     }
@@ -331,7 +358,6 @@ define([
     };
     function importRoot(jNode,callback){
         //first we create the root node itself, then the other parts of the function is pretty much like the importNode
-
         _root = _core.createNode({guid:jNode.GUID});
         internalRefCreated('#',_root);
         importAttributes(_root,jNode);
@@ -375,31 +401,12 @@ define([
         }
     }
     function importNode(jNode,parentNode,intPath,callback){
-        //return callback('not implemented');
         //first we have to get the base of the node
         if(jNode.pointers && jNode.pointers.base && jNode.pointers.base.to){
             getReferenceNode(jNode.pointers.base.to[0],function(err,base){
                 if(err){
                     callback(err);
                 } else {
-                    /*//now we are ready to create the node itself
-                    var node = _core.createNode({base:base,parent:parentNode,relid:jNode.RELID,guid:jNode.GUID});
-                    internalRefCreated(intPath,node);
-                    importAttributes(node,jNode);
-                    importRegistry(node,jNode);
-                    importChildren(node,jNode,intPath,function(err){
-                        if(err){
-                            callback(err);
-                        } else {
-                            importRelations(node,jNode,function(err){
-                                if(err){
-                                    callback(err);
-                                } else {
-                                    importMeta(node,jNode,callback);
-                                }
-                            });
-                        }
-                    });*/
                    clearOldNode(jNode.RELID,jNode.GUID,parentNode,function(err){
                         if(err){
                             callback(err);
@@ -417,7 +424,9 @@ define([
                                         if(err){
                                             callback(err);
                                         } else {
-                                            importMeta(node,jNode,callback);
+                                            importMeta(node,jNode,function(err){
+                                                callback(err);
+                                            });
                                         }
                                     });
                                 }
@@ -428,21 +437,6 @@ define([
             });
         } else {
             callback('wrong import format: base info is wrong');
-        }
-    }
-    function _importing(core,parent,jNode,callback){
-        _core = core;
-        _cache = {};
-        _underImport = {};
-        _internalRefHash = {};
-        META.initialize(_core,_cache,function(){});
-
-        if(parent){
-            _cache[core.getPath(parent)] = parent;
-            _root = core.getRoot(parent);
-            importNode(jNode,parent,'#',callback);
-        } else {
-            importRoot(jNode,callback);
         }
     }
 
