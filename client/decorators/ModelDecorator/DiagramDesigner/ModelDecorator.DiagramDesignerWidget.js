@@ -29,6 +29,7 @@ define(['js/Constants',
         var opts = _.extend( {}, options);
 
         DiagramDesignerWidgetDecoratorBase.apply(this, [opts]);
+        ModelDecoratorCore.apply(this, [opts]);
 
         this._initializeVariables({"connectors": true});
 
@@ -141,12 +142,12 @@ define(['js/Constants',
             //otherwise enabled
             var eastEnabled = true;
             var westEnabled = true;
-            for (var pId in this._ports) {
-                if (this._ports.hasOwnProperty(pId)) {
-                    if (this._ports[pId].orientation === "E") {
+            for (var pId in this.ports) {
+                if (this.ports.hasOwnProperty(pId)) {
+                    if (this.ports[pId].orientation === "E") {
                         eastEnabled = false;
                     }
-                    if (this._ports[pId].orientation === "W") {
+                    if (this.ports[pId].orientation === "W") {
                         westEnabled = false;
                     }
                 }
@@ -177,10 +178,10 @@ define(['js/Constants',
                     "len": LEN});
             }
 
-        } else if (this._ports[id]) {
+        } else if (this.ports[id]) {
             //subcomponent
-            var portConnArea = this._ports[id].getConnectorArea(),
-                idx = this._portIDs.indexOf(id);
+            var portConnArea = this.ports[id].getConnectorArea(),
+                idx = this.portIDs.indexOf(id);
 
             result.push( {"id": idx,
                 "x1": portConnArea.x1,
@@ -211,10 +212,10 @@ define(['js/Constants',
 
         if (!params) {
             this.$sourceConnectors.show();
-            if (this._portIDs) {
-                i = this._portIDs.length;
+            if (this.portIDs) {
+                i = this.portIDs.length;
                 while (i--) {
-                    this._ports[this._portIDs[i]].showConnectors();
+                    this.ports[this.portIDs[i]].showConnectors();
                 }
             }
         } else {
@@ -226,8 +227,8 @@ define(['js/Constants',
                     this.$sourceConnectors.show();
                 } else {
                     //one of the ports' connector should be displayed
-                    if (this._ports[connectors[i]]) {
-                        this._ports[connectors[i]].showConnectors();
+                    if (this.ports[connectors[i]]) {
+                        this.ports[connectors[i]].showConnectors();
                     }
                 }
             }
@@ -241,10 +242,10 @@ define(['js/Constants',
 
         this.$sourceConnectors.hide();
 
-        if (this._portIDs) {
-            i = this._portIDs.length;
+        if (this.portIDs) {
+            i = this.portIDs.length;
             while (i--) {
-                this._ports[this._portIDs[i]].hideConnectors();
+                this.ports[this.portIDs[i]].hideConnectors();
             }
         }
     };
@@ -283,42 +284,22 @@ define(['js/Constants',
 
 
     /**** Override from ModelDecoratorCore ****/
-    ModelDecoratorDiagramDesignerWidget.prototype._registerForNotification = function(portId) {
-        var partId = this._metaInfo[CONSTANTS.GME_ID];
+    ModelDecoratorDiagramDesignerWidget.prototype.renderPort = function (portId) {
+        this.__registerAsSubcomponent(portId);
 
-        this._control.registerComponentIDForPartID(portId, partId);
+        return ModelDecoratorCore.prototype.renderPort.call(this, portId);
     };
 
 
     /**** Override from ModelDecoratorCore ****/
-    ModelDecoratorDiagramDesignerWidget.prototype._unregisterForNotification = function(portId) {
-        var partId = this._metaInfo[CONSTANTS.GME_ID];
-
-        this._control.unregisterComponentIDFromPartID(portId, partId);
-    };
-
-
-    /**** Override from ModelDecoratorCore ****/
-    ModelDecoratorDiagramDesignerWidget.prototype._renderPort = function (portId) {
-        var isPort;
-
-        isPort = ModelDecoratorCore.prototype._renderPort.call(this, portId);
-
-        if (isPort) {
-            this.__registerAsSubcomponent(portId);
-        }
-    };
-
-
-    /**** Override from ModelDecoratorCore ****/
-    ModelDecoratorDiagramDesignerWidget.prototype._removePort = function (portId) {
-        var idx = this._portIDs.indexOf(portId);
+    ModelDecoratorDiagramDesignerWidget.prototype.removePort = function (portId) {
+        var idx = this.portIDs.indexOf(portId);
 
         if (idx !== -1) {
             this.__unregisterAsSubcomponent(portId);
         }
 
-        ModelDecoratorCore.prototype._removePort.call(this, portId);
+        ModelDecoratorCore.prototype.removePort.call(this, portId);
     };
 
 

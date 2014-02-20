@@ -21,6 +21,7 @@ define(['js/Constants',
         var opts = _.extend( {}, options);
 
         PartBrowserWidgetDecoratorBase.apply(this, [opts]);
+        ModelDecoratorCore.apply(this, [opts]);
 
         this._initializeVariables({"connectors": false});
 
@@ -75,22 +76,6 @@ define(['js/Constants',
             this._updatePort(componentList[len]);
         }
         this._checkTerritoryReady();
-    };
-
-
-    /**** Override from ModelDecoratorCore ****/
-    ModelDecoratorPartBrowserWidget.prototype._registerForNotification = function(portId) {
-        var partId = this._metaInfo[CONSTANTS.GME_ID];
-
-        this._control.registerComponentIDForPartID(portId, partId);
-    };
-
-
-    /**** Override from ModelDecoratorCore ****/
-    ModelDecoratorPartBrowserWidget.prototype._unregisterForNotification = function(portId) {
-        var partId = this._metaInfo[CONSTANTS.GME_ID];
-
-        this._control.unregisterComponentIDFromPartID(portId, partId);
     };
 
 

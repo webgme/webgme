@@ -12,6 +12,7 @@ define(['js/Constants',
     'loaderProgressBar',
     './Port',
     './ModelDecorator.Constants',
+    'js/Decorators/DecoratorWithPorts.Base',
     'js/Utils/DisplayFormat',
     'js/Utils/GMEConcepts'], function (CONSTANTS,
                          nodePropertyNames,
@@ -19,6 +20,7 @@ define(['js/Constants',
                          LoaderProgressBar,
                          Port,
                          ModelDecoratorConstants,
+                         DecoratorWithPortsBase,
                          displayFormat,
                          GMEConcepts) {
 
@@ -30,15 +32,17 @@ define(['js/Constants',
 
 
     ModelDecoratorCore = function () {
+        DecoratorWithPortsBase.apply(this, []);
     };
 
+    _.extend(ModelDecoratorCore.prototype, DecoratorWithPortsBase.prototype);
 
     ModelDecoratorCore.prototype._initializeVariables = function (params) {
         this.name = "";
         this.formattedName = "";
         this._refTo = undefined;
-        this._portIDs = [];
-        this._ports = {};
+        this.portIDs = [];
+        this.ports = {};
         this.skinParts = { "$name": undefined,
             "$portsContainer": undefined,
             "$portsContainerLeft": undefined,
@@ -54,21 +58,11 @@ define(['js/Constants',
     };
 
     /**** Override from *.WidgetDecoratorBase ****/
-	ModelDecoratorCore.prototype.getTerritoryQuery = function () {
-        var territoryRule = {};
-
-        territoryRule[this._metaInfo[CONSTANTS.GME_ID]] = { "children": 1 };
-
-        return territoryRule;
-    };
-
-
-    /**** Override from *.WidgetDecoratorBase ****/
     ModelDecoratorCore.prototype.destroy = function () {
-        var len = this._portIDs.length;
+        var len = this.portIDs.length;
         while (len--) {
-            this._unregisterForNotification(this._portIDs[len]);
-            this._removePort(this._portIDs[len]);
+            this.unregisterPortIdForNotification(this.portIDs[len]);
+            this.removePort(this.portIDs[len]);
         }
     };
 
@@ -79,17 +73,6 @@ define(['js/Constants',
 
         return (this.formattedName && this.formattedName.toLowerCase().indexOf(searchText) !== -1);
     };
-
-
-    //register NodeID for notification in the client
-    ModelDecoratorCore.prototype._registerForNotification = function(portId) {
-    };
-
-
-    //unregister NodeID from notification in the client
-    ModelDecoratorCore.prototype._unregisterForNotification = function(portId) {
-    };
-
 
     ModelDecoratorCore.prototype._renderContent = function () {
         //render GME-ID in the DOM, for debugging
@@ -181,7 +164,7 @@ define(['js/Constants',
         } else {
             if (this.skinParts.$divConnType) {
                 this.skinParts.$divConnType.remove();
-                delete this.skinParts.$divConnTyp;
+                delete this.skinParts.$divConnType;
             }
         }
     };
@@ -189,74 +172,25 @@ define(['js/Constants',
 
     /***** UPDATE THE PORTS OF THE NODE *****/
     ModelDecoratorCore.prototype._updatePorts = function () {
-        var client = this._control._client,
-            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
-            newChildrenIDs = nodeObj ?  nodeObj.getChildrenIds() : [],
-            len,
-            currentChildrenIDs = this._portIDs.slice(0),
-            addedChildren,
-            removedChildren;
-
-        removedChildren = _.difference(currentChildrenIDs, newChildrenIDs);
-        len = removedChildren.length;
-        while (len--) {
-            this._unregisterForNotification(removedChildren[len]);
-            this._removePort(removedChildren[len]);
-        }
-
-        addedChildren = _.difference(newChildrenIDs, currentChildrenIDs);
-        len = addedChildren.length;
-        while (len--) {
-            this._registerForNotification(addedChildren[len]);
-            this._renderPort(addedChildren[len]);
-        }
+        this.updatePortIDList();
 
         this._checkTerritoryReady();
     };
 
-
-    ModelDecoratorCore.prototype._isPort = function (portNode) {
-        var isPort = false;
-
-        if (portNode) {
-            isPort = portNode.getRegistry(REGISTRY_KEYS.IS_PORT);
-            isPort = (isPort === true || isPort === false) ? isPort : false;
-        }
-
-        return isPort;
-    };
-
-
-    ModelDecoratorCore.prototype._renderPort = function (portId) {
+    ModelDecoratorCore.prototype.renderPort = function (portId) {
         var client = this._control._client,
             portNode = client.getNode(portId),
-            isPort = this._isPort(portNode);
-
-        if (isPort) {
-            this._ports[portId] = new Port(portId, { "title": portNode.getAttribute(nodePropertyNames.Attributes.name),
+            portInstance = new Port(portId, { "title": portNode.getAttribute(nodePropertyNames.Attributes.name),
                 "decorator": this,
                 "svg": portNode.getRegistry(REGISTRY_KEYS.PORT_SVG_ICON)});
 
-            this._portIDs.push(portId);
-            this._addPortToContainer(portNode);
-        }
+        this._addPortToContainer(portNode, portInstance);
 
-        return isPort;
+        return portInstance;
     };
 
 
-    ModelDecoratorCore.prototype._removePort = function (portId) {
-        var idx = this._portIDs.indexOf(portId);
-
-        if (idx !== -1) {
-            this._ports[portId].destroy();
-            delete this._ports[portId];
-            this._portIDs.splice(idx,1);
-        }
-    };
-
-
-    ModelDecoratorCore.prototype._addPortToContainer = function (portNode) {
+    ModelDecoratorCore.prototype._addPortToContainer = function (portNode, portInstance) {
         var portId = portNode.getId(),
             portOrientation = "W",
             portContainer = this.skinParts.$portsContainerLeft,
@@ -271,20 +205,20 @@ define(['js/Constants',
             portContainer = this.skinParts.$portsContainerRight;
         }
 
-        changed = this._ports[portId].updateOrPos(portOrientation, portPosition);
+        changed = portInstance.updateOrPos(portOrientation, portPosition);
 
         //find its correct position
-        for (i in this._ports) {
-            if (this._ports.hasOwnProperty(i)) {
+        for (i in this.ports) {
+            if (this.ports.hasOwnProperty(i)) {
                 if (i !== portId) {
-                    if (this._ports[i].orientation === this._ports[portId].orientation) {
-                        if ((this._ports[portId].position.y < this._ports[i].position.y) ||
-                            ((this._ports[portId].position.y === this._ports[i].position.y) && (this._ports[portId].title < this._ports[i].title))) {
+                    if (this.ports[i].orientation === portInstance.orientation) {
+                        if ((portInstance.position.y < this.ports[i].position.y) ||
+                            ((portInstance.position.y === this.ports[i].position.y) && (portInstance.title < this.ports[i].title))) {
                             if (portToAppendBefore === null) {
                                 portToAppendBefore = i;
                             } else {
-                                if ((this._ports[i].position.y < this._ports[portToAppendBefore].position.y) ||
-                                    ((this._ports[i].position.y === this._ports[portToAppendBefore].position.y) && (this._ports[i].title < this._ports[portToAppendBefore].title))) {
+                                if ((this.ports[i].position.y < this.ports[portToAppendBefore].position.y) ||
+                                    ((this.ports[i].position.y === this.ports[portToAppendBefore].position.y) && (this.ports[i].title < this.ports[portToAppendBefore].title))) {
                                     portToAppendBefore = i;
                                 }
                             }
@@ -295,9 +229,9 @@ define(['js/Constants',
         }
 
         if (portToAppendBefore === null) {
-            portContainer.append(this._ports[portId].$el);
+            portContainer.append(portInstance.$el);
         } else {
-            this._ports[portId].$el.insertBefore(this._ports[portToAppendBefore].$el);
+            portInstance.$el.insertBefore(this.ports[portToAppendBefore].$el);
         }
 
         if (changed === true) {
@@ -311,23 +245,23 @@ define(['js/Constants',
 
 
     ModelDecoratorCore.prototype._updatePort = function (portId) {
-        var idx = this._portIDs.indexOf(portId),
+        var idx = this.portIDs.indexOf(portId),
             client = this._control._client,
             portNode = client.getNode(portId),
-            isPort = this._isPort(portNode);
+            isPort = this.isPort(portId);
 
         //check if it is already displayed as port
         if (idx !== -1) {
             //port already, should it stay one?
             if (isPort === true) {
-                this._ports[portId].update({"title": portNode.getAttribute(nodePropertyNames.Attributes.name),
+                this.ports[portId].update({"title": portNode.getAttribute(nodePropertyNames.Attributes.name),
                     "svg": portNode.getRegistry(REGISTRY_KEYS.PORT_SVG_ICON)});
                 this._updatePortPosition(portId);
             } else {
-                this._removePort(portId);
+                this.removePort(portId);
             }
         } else {
-            this._renderPort(portId);
+            this.renderPort(portId);
         }
     };
 
@@ -337,11 +271,11 @@ define(['js/Constants',
             portPosition = portNode.getRegistry(REGISTRY_KEYS.POSITION) || { "x": 0, "y": 0 };
 
         //check if is has changed at all
-        if ((this._ports[portId].position.x !== portPosition.x) ||
-            (this._ports[portId].position.y !== portPosition.y)) {
+        if ((this.ports[portId].position.x !== portPosition.x) ||
+            (this.ports[portId].position.y !== portPosition.y)) {
 
             //detach from DOM
-            this._ports[portId].$el.detach();
+            this.ports[portId].$el.detach();
 
             //reattach
             this._addPortToContainer(portNode);
