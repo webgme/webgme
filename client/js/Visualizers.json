@@ -37,5 +37,10 @@
     {"id": "GraphViz",
         "title": "Graph visualizer",
         "panel": "js/Panels/GraphViz/GraphVizPanel",
-        "DEBUG_ONLY": true}
+        "DEBUG_ONLY": true},
+
+    {"id": "SnapEditor",
+        "title": "Snap Editor",
+        "panel": "js/Panels/SnapEditor/SnapEditorPanel",
+        "DEBUG_ONLY": false}
 ]
