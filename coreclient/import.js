@@ -96,7 +96,7 @@ define([
             if(needed > 0){
                 var error = null;
                 for(var i=0;i<jNode.children.length;i++){
-                    importNode(jNode.children[i],node,pIntPath+'/children['+i+']',function(err){
+                    importNode(jNode.children[i],node,pIntPath+'/children['+i+']',true,function(err){
                         error = error || err;
                         if(--needed === 0){
                             callback(error);
@@ -400,19 +400,47 @@ define([
             callback(null);
         }
     }
-    function importNode(jNode,parentNode,intPath,callback){
+    function getEmptyNode(jNode,parentNode,baseNode,noClear,callback){
+        var relids = _core.getChildrenRelids(parentNode),
+            returnNewNode = function(){
+                var node = _core.createNode({base:baseNode,parent:parentNode,relid:jNode.RELID,guid:jNode.GUID});
+                callback(null,node);
+            };
+        if(relids.indexOf(jNode.RELID) != -1){
+            _core.loadChild(parentNode,jNode.RELID,function(err,oldChild){
+                if(err){
+                    callback(err,null);
+                } else {
+                    if(_core.getGuid(oldChild) === jNode.GUID){
+                        if(noClear === true){
+                            callback(null,oldChild);
+                        } else {
+                            var root = _core.getRoot(oldChild);
+                            _core.deleteNode(oldChild);
+                            _core.persist(root,function(){
+                                returnNewNode();
+                            });
+                        }
+                    } else {
+                        returnNewNode();
+                    }
+                }
+            });
+        } else {
+            returnNewNode();
+        }
+    }
+    function importNode(jNode,parentNode,intPath,noClear,callback){
         //first we have to get the base of the node
         if(jNode.pointers && jNode.pointers.base && jNode.pointers.base.to){
             getReferenceNode(jNode.pointers.base.to[0],function(err,base){
                 if(err){
                     callback(err);
                 } else {
-                   clearOldNode(jNode.RELID,jNode.GUID,parentNode,function(err){
+                   getEmptyNode(jNode,parentNode,base,noClear,function(err,node){
                         if(err){
                             callback(err);
                         } else {
-                            //now we are ready to create the node itself
-                            var node = _core.createNode({base:base,parent:parentNode,relid:jNode.RELID,guid:jNode.GUID});
                             internalRefCreated(intPath,node);
                             importAttributes(node,jNode);
                             importRegistry(node,jNode);
@@ -455,7 +483,7 @@ define([
                 _cache[core.getPath(parent)] = parent;
                 _root = core.getRoot(parent);
                 for(var i=0;i<jNode.length;i++){
-                    importNode(jNode[i],parent,'#['+i+']',function(err){
+                    importNode(jNode[i],parent,'#['+i+']',false,function(err){
                         error = error || err;
                         if(--needed === 0){
                             callback(error);
@@ -470,7 +498,7 @@ define([
             if(parent){
                 _cache[core.getPath(parent)] = parent;
                 _root = core.getRoot(parent);
-                importNode(jNode,parent,'#',callback);
+                importNode(jNode,parent,'#',false,callback);
             } else {
                 importRoot(jNode,callback);
             }
