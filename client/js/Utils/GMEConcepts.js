@@ -475,6 +475,17 @@ define(['jquery',
         return isAbstract === true;
     };
 
+    var _isPort = function (objID) {
+        var isPort = false,
+            obj = _client.getNode(objID);
+
+        if (obj) {
+            isPort = obj.getRegistry(REGISTRY_KEYS.IS_PORT);
+        }
+
+        return isPort === true;
+    };
+
     //return utility functions
     return {
         initialize: _initialize,
@@ -492,6 +503,7 @@ define(['jquery',
         getMETAAspectMergedValidChildrenTypes: _getMETAAspectMergedValidChildrenTypes,
         getValidConnectionTypesInParent: _getValidConnectionTypesInParent,
         canAddToPointerList: _canAddToPointerList,
-        isAbstract: _isAbstract
+        isAbstract: _isAbstract,
+        isPort: _isPort
     }
 });
