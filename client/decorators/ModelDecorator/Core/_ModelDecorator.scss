@@ -16,8 +16,8 @@ $center-ports-background-color: rgba(0, 255, 0, 0.5);
 $ports-width : 50px;
 $ports-separator-width: 15px;
 $accept-droppable-background-color: #00FF00;
-$ref-hover-background-color: rgba(82, 168, 236, 0.8);
-$ref-hover-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+$ptr-hover-background-color: rgba(82, 168, 236, 0.8);
+$ptr-hover-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
 $model-name-height: 16px;
 $abstract-class-name-color: #AAAAAA;
 
@@ -94,7 +94,7 @@ $abstract-class-name-color: #AAAAAA;
       }
     }
 
-    .ref {
+    .ptr {
       position: absolute;
       top: 0;
       right: 2px;
@@ -103,15 +103,15 @@ $abstract-class-name-color: #AAAAAA;
       margin-top: 2px;
       border-radius: 5px;
 
-      &.nonset {
+      &.ptr-nonset {
         opacity: 0.4;
       }
 
       &.inverse-on-hover:hover {
-        background-color: $ref-hover-background-color;
-        -webkit-box-shadow: $ref-hover-shadow;
-        -moz-box-shadow: $ref-hover-shadow;
-        box-shadow: $ref-hover-shadow;
+        background-color: $ptr-hover-background-color;
+        -webkit-box-shadow: $ptr-hover-shadow;
+        -moz-box-shadow: $ptr-hover-shadow;
+        box-shadow: $ptr-hover-shadow;
 
         [class^="icon-"]:not(.icon-white),
         [class*=" icon-"]:not(.icon-white) {

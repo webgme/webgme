@@ -99,7 +99,7 @@
     position: relative;
     left: 50%;
     margin-left: -8px; }
-  .model-decorator .ref {
+  .model-decorator .ptr {
     position: absolute;
     top: 0;
     right: 2px;
@@ -107,18 +107,18 @@
     width: 15px;
     margin-top: 2px;
     border-radius: 5px; }
-    .model-decorator .ref.nonset {
+    .model-decorator .ptr.ptr-nonset {
       opacity: 0.4; }
-    .model-decorator .ref.inverse-on-hover:hover {
+    .model-decorator .ptr.inverse-on-hover:hover {
       background-color: rgba(82, 168, 236, 0.8);
       -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
       -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
       box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6); }
-      .model-decorator .ref.inverse-on-hover:hover [class^="icon-"]:not(.icon-white),
-      .model-decorator .ref.inverse-on-hover:hover [class*=" icon-"]:not(.icon-white) {
+      .model-decorator .ptr.inverse-on-hover:hover [class^="icon-"]:not(.icon-white),
+      .model-decorator .ptr.inverse-on-hover:hover [class*=" icon-"]:not(.icon-white) {
         background-image: url("../../../img/glyphicons-halflings-white.png"); }
-    .model-decorator .ref [class^="icon-"],
-    .model-decorator .ref [class*=" icon-"] {
+    .model-decorator .ptr [class^="icon-"],
+    .model-decorator .ptr [class*=" icon-"] {
       margin-top: -2px; }
   .model-decorator.abstract .name {
     font-style: italic;

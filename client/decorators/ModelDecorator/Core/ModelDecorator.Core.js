@@ -14,7 +14,8 @@ define(['js/Constants',
     './ModelDecorator.Constants',
     'js/Decorators/DecoratorWithPorts.Base',
     'js/Utils/DisplayFormat',
-    'js/Utils/GMEConcepts'], function (CONSTANTS,
+    'js/Utils/GMEConcepts',
+    'js/Controls/ContextMenu'], function (CONSTANTS,
                          nodePropertyNames,
                          REGISTRY_KEYS,
                          LoaderProgressBar,
@@ -22,13 +23,15 @@ define(['js/Constants',
                          ModelDecoratorConstants,
                          DecoratorWithPortsBase,
                          displayFormat,
-                         GMEConcepts) {
+                         GMEConcepts,
+                         ContextMenu) {
 
     var ModelDecoratorCore,
         ABSTRACT_CLASS = 'abstract',
         SVG_DIR = CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER,
         EMBEDDED_SVG_CLASS = 'embeddedsvg',
-        CONNECTION_TYPE_CLASS = 'conn-type';
+        CONNECTION_TYPE_CLASS = 'conn-type',
+        EXCLUDED_POINTERS = [CONSTANTS.POINTER_BASE, CONSTANTS.POINTER_SOURCE, CONSTANTS.POINTER_TARGET];
 
 
     ModelDecoratorCore = function () {
@@ -40,7 +43,6 @@ define(['js/Constants',
     ModelDecoratorCore.prototype._initializeVariables = function (params) {
         this.name = "";
         this.formattedName = "";
-        this._refTo = undefined;
         this.portIDs = [];
         this.ports = {};
         this.skinParts = { "$name": undefined,
@@ -48,7 +50,7 @@ define(['js/Constants',
             "$portsContainerLeft": undefined,
             "$portsContainerRight": undefined,
             "$portsContainerCenter": undefined,
-            "$ref": undefined,
+            "$ptr": undefined,
             "$imgSVG": undefined};
 		
 		this._displayConnectors = false;			
@@ -93,7 +95,7 @@ define(['js/Constants',
         this._updateColors();
         this._updateName();
         this._updatePorts();
-        this._updateReference();
+        this._updatePointers();
         this._updateAbstract();
         this._updateSVG();
         this._updateConnectionType();
@@ -336,85 +338,168 @@ define(['js/Constants',
     };
 
 
-    ModelDecoratorCore.prototype._refUIDOMBase = $('<div class="' + ModelDecoratorConstants.REFERENCE_POINTER_CLASS + '"><i class="icon-share"></i></div>');
+    ModelDecoratorCore.prototype._ptrUIDOMBase = $('<div class="' + ModelDecoratorConstants.POINTER_CLASS + '"><i class="icon-share"></i></div>');
 
 
-    ModelDecoratorCore.prototype._updateReference = function () {
-        var refTo;
+    ModelDecoratorCore.prototype._updatePointers = function () {
+        var ptrTo;
 
-        if (this._hasReference()) {
-            this.skinParts.$ref = this.$el.find('.' + ModelDecoratorConstants.REFERENCE_POINTER_CLASS);
-            if (this.skinParts.$ref.length === 0) {
-                this.skinParts.$ref = this._refUIDOMBase.clone();
-                this.$el.append(this.skinParts.$ref);
+        if (this._getPointerNames().length > 0) {
+            this.skinParts.$ptr = this.$el.find('.' + ModelDecoratorConstants.POINTER_CLASS);
+            if (this.skinParts.$ptr.length === 0) {
+                this.skinParts.$ptr = this._ptrUIDOMBase.clone();
+                this.$el.append(this.skinParts.$ptr);
             }
 
-            refTo = this._getReferenceValue();
+            ptrTo = this._getPointerTargets();
 
-            if (refTo !== undefined) {
-                this.skinParts.$ref.removeClass(ModelDecoratorConstants.REFERENCE_POINTER_CLASS_NONSET);
+            if (ptrTo.length > 0) {
+                this.skinParts.$ptr.removeClass(ModelDecoratorConstants.POINTER_CLASS_NON_SET);
             } else {
-                this.skinParts.$ref.addClass(ModelDecoratorConstants.REFERENCE_POINTER_CLASS_NONSET);
-            }
-
-            //if the old value is different than the new
-            if (this._refTo !== refTo) {
-                var oldRefTo = this._refTo;
-                this._refTo = refTo;
-
-                this._refToChanged(oldRefTo, this._refTo);
+                this.skinParts.$ptr.addClass(ModelDecoratorConstants.POINTER_CLASS_NON_SET);
             }
         } else {
-            if (this.skinParts.$ref) {
-                this.skinParts.$ref.remove();
-                this.skinParts.$ref = undefined;
+            if (this.skinParts.$ptr) {
+                this.skinParts.$ptr.remove();
+                this.skinParts.$ptr = undefined;
             }
         }
     };
 
 
-    ModelDecoratorCore.prototype._refToChanged = function (oldValue, newValue) {
-    };
-
-
-    ModelDecoratorCore.prototype._hasReference = function () {
+    //return all the pointer names (set or unset for this item other than the excluded ones)
+    ModelDecoratorCore.prototype._getPointerNames = function () {
         var client = this._control._client,
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
-            hasRefPointer = false;
+            ptrNames = [];
 
         if (nodeObj) {
-            hasRefPointer = nodeObj.getPointerNames().indexOf(ModelDecoratorConstants.REFERENCE_POINTER_NAME) !== -1;
+            ptrNames = _.difference(nodeObj.getPointerNames().slice(0), EXCLUDED_POINTERS);
         }
 
-        return hasRefPointer;
+        return ptrNames;
     };
 
+    //return all the pointer names that are valid pointers for the given target
+    ModelDecoratorCore.prototype._getValidPointersForTarget = function (targetId) {
+        var client = this._control._client,
+            gmeID = this._metaInfo[CONSTANTS.GME_ID],
+            ptrNames = this._getPointerNames(),
+            len = ptrNames.length,
+            validPtrNames = [],
+            p;
 
-    ModelDecoratorCore.prototype._getReferenceValue = function () {
-        var res,
-            client = this._control._client,
-            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]);
-
-        if (nodeObj) {
-            res = nodeObj.getPointer(ModelDecoratorConstants.REFERENCE_POINTER_NAME);
-            if (res && res.to !== undefined && res.to !== null) {
-                res = res.to;
-            } else {
-                res = undefined;
+        while (len--) {
+            p = ptrNames[len];
+            if (client.isValidTarget(gmeID, p, targetId)) {
+                validPtrNames.push(p);
             }
         }
 
-        return res;
+        if (validPtrNames.length > 0) {
+            validPtrNames.sort(function (a, b) {
+                var ptrA = a.toLowerCase(),
+                    ptrB = b.toLowerCase();
+                if (ptrA < ptrB) {
+                    return -1;
+                } else if (ptrA > ptrB) {
+                    return 1;
+                }
+
+                //must be equal
+                return 0;
+            });
+        }
+
+        return validPtrNames;
     };
 
 
-    ModelDecoratorCore.prototype._setReferenceValue = function (val) {
-        var client = this._control._client,
-            nodeID = this._metaInfo[CONSTANTS.GME_ID];
+    //return all the set pointer names and targets
+    ModelDecoratorCore.prototype._getPointerTargets = function () {
+        var pointerTargets = [],
+            client = this._control._client,
+            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
+            ptrNames,
+            len,
+            ptrTo;
 
-        if (this._refTo !== val) {
-            client.makePointer(nodeID, ModelDecoratorConstants.REFERENCE_POINTER_NAME, val);
+        if (nodeObj) {
+            ptrNames = _.difference(nodeObj.getPointerNames().slice(0), EXCLUDED_POINTERS);
+            len = ptrNames.length;
+            while (len--) {
+                ptrTo = nodeObj.getPointer(ptrNames[len]);
+                if (ptrTo && ptrTo.to !== undefined && ptrTo.to !== null) {
+                    pointerTargets.push([ptrNames[len], ptrTo.to]);
+                }
+            }
+
+            if (pointerTargets.length > 0) {
+                pointerTargets.sort(function (a,b) {
+                    var ptrA = a[0].toLowerCase(),
+                        ptrB = b[0].toLowerCase();
+                    if (ptrA < ptrB) {
+                        return -1;
+                    } else if (ptrA > ptrB) {
+                        return 1;
+                    }
+
+                    //must be equal
+                    return 0;
+                });
+            }
         }
+
+        return pointerTargets;
+    };
+
+
+    ModelDecoratorCore.prototype._setPointerTarget = function (targetID, mousePos) {
+        var ptrNames = this._getValidPointersForTarget(targetID);
+
+        if (ptrNames.length > 0) {
+            //check to see if there is more than one potential pointer to set
+            if (ptrNames.length === 1) {
+                this._setPointer(ptrNames[0], targetID);
+            } else {
+                //there is multiple pointer names that are valid for this target
+                //let the user pick one
+                this._selectPointerForTarget(ptrNames, targetID, mousePos);
+            }
+        }
+    };
+
+    ModelDecoratorCore.prototype._setPointer = function (ptrName, targetID) {
+        var client = this._control._client,
+            gmeID = this._metaInfo[CONSTANTS.GME_ID],
+            nodeObj = client.getNode(gmeID),
+            ptrVal = nodeObj.getPointer(ptrName);
+
+        if (ptrVal !== targetID) {
+            client.makePointer(gmeID, ptrName, targetID);
+        }
+    };
+
+    ModelDecoratorCore.prototype._selectPointerForTarget = function (ptrNames, targetID, mousePos) {
+        var logger = this.logger,
+            menu,
+            self = this,
+            menuItems = {},
+            i;
+
+        for (i = 0; i < ptrNames.length; i += 1) {
+            menuItems[ptrNames[i]] = {
+                "name": "Set pointer '" + ptrNames[i] + "'"
+            };
+        }
+
+        menu = new ContextMenu({'items': menuItems,
+            'callback': function (key) {
+                logger.debug('_selectPointerForTarget: ' + key);
+                self._setPointer(key, targetID);
+            }});
+
+        menu.show({x: mousePos.left, y: mousePos.top});
     };
 
     ModelDecoratorCore.prototype._updateAbstract = function () {

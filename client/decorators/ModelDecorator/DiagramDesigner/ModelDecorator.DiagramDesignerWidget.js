@@ -9,6 +9,7 @@ define(['js/Constants',
     '../Core/ModelDecorator.Constants',
     'js/DragDrop/DragConstants',
     'js/DragDrop/DragHelper',
+    'js/Controls/ContextMenu',
     'css!./ModelDecorator.DiagramDesignerWidget'], function (CONSTANTS,
                                                           nodePropertyNames,
                                                           DiagramDesignerWidgetDecoratorBase,
@@ -17,7 +18,8 @@ define(['js/Constants',
                                                           ModelDecoratorCore,
                                                           ModelDecoratorConstants,
                                                           DragConstants,
-                                                          DragHelper) {
+                                                          DragHelper,
+                                                          ContextMenu) {
 
     var ModelDecoratorDiagramDesignerWidget,
         DECORATOR_ID = "ModelDecoratorDiagramDesignerWidget",
@@ -71,9 +73,9 @@ define(['js/Constants',
         });
 
         // reference icon on double-click
-        this.$el.on("dblclick.refDblClick", '.' + ModelDecoratorConstants.REFERENCE_POINTER_CLASS, function (event) {
-            if (!($(this).hasClass(ModelDecoratorConstants.REFERENCE_POINTER_CLASS_NONSET))) {
-                self.__navigateToReference();
+        this.$el.on("dblclick.ptrDblClick", '.' + ModelDecoratorConstants.POINTER_CLASS, function (event) {
+            if (!($(this).hasClass(ModelDecoratorConstants.POINTER_CLASS_NON_SET))) {
+                self.__onPointerDblClick({'x': event.clientX, 'y': event.clientY});
             }
             event.stopPropagation();
             event.preventDefault();
@@ -304,17 +306,17 @@ define(['js/Constants',
 
 
     /**** Override from ModelDecoratorCore ****/
-    ModelDecoratorDiagramDesignerWidget.prototype._updateReference = function () {
+    ModelDecoratorDiagramDesignerWidget.prototype._updatePointers = function () {
         var inverseClass = 'inverse-on-hover',
             self = this;
 
-        ModelDecoratorCore.prototype._updateReference.call(this);
+        ModelDecoratorCore.prototype._updatePointers.call(this);
 
-        if (this.skinParts.$ref) {
-            if (this.skinParts.$ref.hasClass(ModelDecoratorConstants.REFERENCE_POINTER_CLASS_NONSET)) {
-                this.skinParts.$ref.removeClass(inverseClass);
+        if (this.skinParts.$ptr) {
+            if (this.skinParts.$ptr.hasClass(ModelDecoratorConstants.POINTER_CLASS_NON_SET)) {
+                this.skinParts.$ptr.removeClass(inverseClass);
             } else {
-                this.skinParts.$ref.addClass(inverseClass);
+                this.skinParts.$ptr.addClass(inverseClass);
             }
 
             //edit droppable mode
@@ -332,25 +334,28 @@ define(['js/Constants',
                 .off('mouseleave.' + DRAGGABLE_MOUSE)
                 .off('mouseup.' + DRAGGABLE_MOUSE);
         }
+
+        this._setPointerTerritory(this._getPointerTargets());
     };
 
 
     /**** Override from ModelDecoratorCore ****/
-    ModelDecoratorDiagramDesignerWidget.prototype._refToChanged = function (oldValue, newValue) {
-        var logger = this.logger;
+    ModelDecoratorDiagramDesignerWidget.prototype._setPointerTerritory = function (pointerTargets) {
+        var logger = this.logger,
+            len = pointerTargets.length;
 
-        logger.debug('refToChanged from ' + oldValue + ' to ' + newValue);
+        this._selfPatterns = {};
 
-        if (oldValue) {
-            delete this._selfPatterns[oldValue];
-        }
-
-        if (newValue) {
-            this._territoryId = this._territoryId || this._control._client.addUI(this, function (events) {
-                //don't really care here, just want to make sure that the reference object is loaded in the client
-                logger.debug('onEvent: ' + JSON.stringify(events));
-            });
-            this._selfPatterns[newValue] = { "children": 0 };
+        if (len > 0) {
+            if (!this._territoryId) {
+                this._territoryId = this._control._client.addUI(this, function (events) {
+                    //don't really care here, just want to make sure that the reference object is loaded in the client
+                    logger.debug('onEvent: ' + JSON.stringify(events));
+                });
+            }
+            while (len--) {
+                this._selfPatterns[pointerTargets[len][1]] = { "children": 0 };
+            }
         }
 
         if (this._selfPatterns && !_.isEmpty(this._selfPatterns)) {
@@ -361,7 +366,6 @@ define(['js/Constants',
             }
         }
     };
-
 
     ModelDecoratorDiagramDesignerWidget.prototype.__onBackgroundDroppableOver = function (helper) {
         if (this.__onBackgroundDroppableAccept(helper) === true) {
@@ -380,7 +384,7 @@ define(['js/Constants',
 
         if (this.__acceptDroppable === true) {
             if (dragItems.length === 1 && dragEffects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE) !== -1) {
-                this._setReferenceValue(dragItems[0]);
+                this._setPointerTarget(dragItems[0], helper.offset());
             }
         }
 
@@ -390,12 +394,18 @@ define(['js/Constants',
     ModelDecoratorDiagramDesignerWidget.prototype.__onBackgroundDroppableAccept = function (helper) {
         var dragInfo = helper.data(DragConstants.DRAG_INFO),
             dragItems = DragHelper.getDragItems(dragInfo),
-            dragEffects = DragHelper.getDragEffects(dragInfo);
+            dragEffects = DragHelper.getDragEffects(dragInfo),
+            doAccept = false;
 
-        return dragItems.length === 1 &&
+        //check if there is only one item being dragged, it is not self,
+        //and that element can be a valid target of at least one pointer of this guy
+        if (dragItems.length === 1 &&
             dragItems[0] !== this._metaInfo[CONSTANTS.GME_ID] &&
-            dragEffects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE) !== -1 &&
-            this._control._client.isValidTarget(this._metaInfo[CONSTANTS.GME_ID],CONSTANTS.POINTER_REF,dragItems[0]);
+            dragEffects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE) !== -1) {
+            doAccept = this._getValidPointersForTarget(dragItems[0]).length > 0;
+        }
+
+        return doAccept;
     };
 
     ModelDecoratorDiagramDesignerWidget.prototype.__doAcceptDroppable = function (accept) {
@@ -462,20 +472,45 @@ define(['js/Constants',
     };
 
 
-    ModelDecoratorDiagramDesignerWidget.prototype.__navigateToReference = function () {
-        var client = this._control._client,
-            nodeObj;
+    ModelDecoratorDiagramDesignerWidget.prototype.__onPointerDblClick = function (mousePos) {
+        var pointerTargets = this._getPointerTargets(),
+            menu,
+            self = this,
+            menuItems = {},
+            i,
+            ptrTargets = {};
 
-        if (this._refTo) {
-            nodeObj = client.getNode(this._refTo);
-            if (nodeObj) {
-                if (nodeObj.getParentId()) {
-                    this._control._client.setSelectedObjectId(nodeObj.getParentId(), this._refTo);
-                } else {
-                    this._control._client.setSelectedObjectId(CONSTANTS.PROJECT_ROOT_ID, this._refTo);
-                }
+        if (pointerTargets.length > 0) {
+            if (pointerTargets.length === 1) {
+                this._navigateToPointerTarget(pointerTargets[0][1]);
             } else {
-                this.logger.warning('_navigateToReference client.getNode(' + this._refTo + ') returned null... :(');
+                for (i = 0; i < pointerTargets.length; i += 1) {
+                    menuItems[pointerTargets[i][0]] = {
+                        "name": "Follow pointer '" + pointerTargets[i][0] + "'"
+                    };
+                    ptrTargets[pointerTargets[i][0]] = pointerTargets[i][1];
+                }
+
+                menu = new ContextMenu({'items': menuItems,
+                    'callback': function (key) {
+                        self._navigateToPointerTarget(ptrTargets[key]);
+                    }});
+
+                menu.show(mousePos);
+            }
+        }
+    };
+
+    ModelDecoratorDiagramDesignerWidget.prototype._navigateToPointerTarget = function (targetID) {
+        var client = this._control._client,
+            targetNodeObj;
+
+        targetNodeObj = client.getNode(targetID);
+        if (targetNodeObj) {
+            if (targetNodeObj.getParentId() || targetNodeObj.getParentId() === CONSTANTS.PROJECT_ROOT_ID) {
+                this._control._client.setSelectedObjectId(targetNodeObj.getParentId(), targetID);
+            } else {
+                this._control._client.setSelectedObjectId(CONSTANTS.PROJECT_ROOT_ID, targetID);
             }
         }
     };

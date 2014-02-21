@@ -7,17 +7,11 @@ define([], function () {
 
     //return string constants
     return {
-
         /*
          * CLASS DEFINITIONS
          */
-        REFERENCE_POINTER_CLASS : 'ref',
-        REFERENCE_POINTER_CLASS_NONSET : 'nonset',
-        PROGRESS_BAR_CLASS : 'progress-bar',
-
-        /*
-        * REFERENCE POINTER NAME
-        */
-        REFERENCE_POINTER_NAME : 'ref'
+        POINTER_CLASS : 'ptr',
+        POINTER_CLASS_NON_SET : 'ptr-nonset',
+        PROGRESS_BAR_CLASS : 'progress-bar'
     };
 });
