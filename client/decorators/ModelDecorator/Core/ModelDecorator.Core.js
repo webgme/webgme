@@ -263,7 +263,7 @@ define(['js/Constants',
                 this.removePort(portId);
             }
         } else {
-            this.renderPort(portId);
+            this.addPort(portId);
         }
     };
 
@@ -280,7 +280,7 @@ define(['js/Constants',
             this.ports[portId].$el.detach();
 
             //reattach
-            this._addPortToContainer(portNode);
+            this._addPortToContainer(portNode, this.ports[portId]);
         }
     };
 
