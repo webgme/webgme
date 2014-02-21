@@ -1,11 +1,11 @@
 import requests
 
 #constants used throughout the module
-COMMAND_PROJECTS = "/projects"
-COMMAND_BRANCHES = "/branches"
-COMMAND_NODE     = "/node"
-COMMAND_COMMIT   = "/commit"
-COMMAND_COMMITS  = "/commits"
+COMMAND_PROJECTS = "projects"
+COMMAND_BRANCHES = "branches"
+COMMAND_NODE     = "node"
+COMMAND_COMMIT   = "commit"
+COMMAND_COMMITS  = "commits"
 
 REFERENCE_KEY = "$ref"
 
@@ -48,6 +48,7 @@ class client:
         self.__tokenPath = "/gettoken"
         self.__restPath = "/rest"
         self.__token = None
+        self.__tokenPostfix = None
         self.__session = requests.Session()
         self.__projects = []
         self.__authenticated = False 
@@ -71,6 +72,12 @@ class client:
             self.__token = response.content.decode("utf-8")
             self.__authenticated = True
             return True
+        elif response.status_code == 410:
+            print("successfull authentication")
+            self.__token = ""
+            self.__tokenPostfix = ""
+            self.__authenticated = True
+            return True
 
         print("authentication failed");
         return False
@@ -82,8 +89,12 @@ class client:
                 return
         else:
             response = self.__session.get(self.__urlBase+self.__tokenPath)
-            if response.status_code != requests.codes.ok:
+            if response.status_code == requests.codes.ok:
                 self.__token = response.content.decode("utf-8")
+                self.__tokenPostfix = "/"
+            elif response.status_code == 410:
+                self.__token = ""
+                self.__tokenPostfix = ""
 
     #this function gives the token of the user to the user of the library (so it can be than saved and reused)
     def getToken(self):
@@ -96,8 +107,15 @@ class client:
         response = self.__session.get(self.__urlBase+self.__checkPath+token)
         if response.status_code == requests.codes.ok:
             self.__token = token
+            self.__tokenPostfix = "/"
             self.__authenticated = True
             return True
+        elif response.status_code == 410:
+            self.__token = ""
+            self.__tokenPostfix = ""
+            self.__authenticated = True
+            return True
+
         return False
     
     #this function tries to connect to the database - if it fail to connect, then it would indicate an authentication
@@ -107,22 +125,22 @@ class client:
 
     #the following functions are try to represent the basic REST commands
     def getProjectList(self):
-        response = self.__session.get(self.__urlBase+self.__restPath+'/'+self.__token+COMMAND_PROJECTS)
+        response = self.__session.get(self.__urlBase+self.__restPath+'/'+self.__token+self.__tokenPostfix+COMMAND_PROJECTS)
         if response.status_code == requests.codes.ok:
             return response.json()
         return None
     def getProjectBranches(self,projectName):
-        response = self.__session.get(self.__urlBase+self.__restPath+'/'+self.__token+COMMAND_BRANCHES+"/"+projectName)
+        response = self.__session.get(self.__urlBase+self.__restPath+'/'+self.__token+self.__tokenPostfix+COMMAND_BRANCHES+"/"+projectName)
         if response.status_code == requests.codes.ok:
             return response.json()
         return None
     def getCommits(self,projectName,number):
-        response = self.__session.get(self.__urlBase+self.__restPath+'/'+self.__token+COMMAND_COMMITS+"/"+projectName+'/'+number)
+        response = self.__session.get(self.__urlBase+self.__restPath+'/'+self.__token+self.__tokenPostfix+COMMAND_COMMITS+"/"+projectName+'/'+number)
         if response.status_code == requests.codes.ok:
             return response.json()
         return None
     def getCommit(self,projectName,commitId):
-        response = self.__session.get(self.__urlBase+self.__restPath+'/'+self.__token+COMMANDS_COMMIT+"/"+projectName+'/'+commitId)
+        response = self.__session.get(self.__urlBase+self.__restPath+'/'+self.__token+self.__tokenPostfix+COMMANDS_COMMIT+"/"+projectName+'/'+commitId)
         if response.status_code == requests.codes.ok:
             return response.json()
         return None
@@ -198,6 +216,7 @@ class memorycache:
                 self.__refDir[guid] = reference(baseNode)
                 return self.__refDir[guid]
         return None
+
     def getNode(self,baseNode):
         if isinstance(baseNode,basenode):
             guid = baseNode.guid
@@ -216,7 +235,6 @@ class project:
         self.__commit = None
         self.__branchNames = []
         self.__branches = {}
-        self.__cache = memorycache(self.__client)
 
         branches = self.__client.getProjectBranches(self.__name)
         if branches != None:
@@ -236,7 +254,7 @@ class project:
             if commit != None:
                 jNode = self.__client.getURL(commit['root'][REFERENCE_KEY])
                 if jNode != None:
-                    return basenode(self.__client,jNode,self.__cache)
+                    return basenode(self.__client,jNode,memorycache(self.__client))
         return None
 
 #this is the totally basic node object which gives the simplest interface to check the data in the model
@@ -340,6 +358,10 @@ class basenode:
                                 self.__sets[pointerName].append(pointerNode)
         return self.__collections
 
+    @property
+    def meta(self):
+        return self.__json.meta;
+
 #this node class has the knowledge of connections and references so it can have nicer API - gives back type filterable lists and dictionaries
 class node:
     def __init__(self,baseNode):
@@ -353,6 +375,7 @@ class node:
         self.__collections = None
         self.__tanconns = None
         self.__referrers = None
+        self.__baseNode = None
     
     #this function always returns a typed gme object (node / connection / reference)
     def __getNode(self,base):
@@ -383,6 +406,14 @@ class node:
     def guid(self):
         return self.__base.guid
     
+    @property
+    def base(self):
+        if self.__baseNode == None:
+            pointers = self.outPointers
+            if "base" in pointers.keys():
+                self.__baseNode = pointers["base"]
+        return self.__baseNode
+
     @property
     def attributes(self):
         return self.__base.attributes

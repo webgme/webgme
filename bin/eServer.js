@@ -265,33 +265,41 @@ requirejs(['logManager',
     //rest functionality
     //rest token generation
     app.get('/gettoken',ensureAuthenticated,function(req,res){
-        gme.getToken(req.session.id,function(err,token){
-            if(err){
-                res.send(err);
-            } else {
-                res.send(token);
-            }
-        });
+        if(parameters.secureREST == true){
+            gme.getToken(req.session.id,function(err,token){
+                if(err){
+                    res.send(err);
+                } else {
+                    res.send(token);
+                }
+            });
+        } else {
+            res.send(410); //special error for the interpreters to know there is no need for token
+        }
     });
     app.get('/checktoken/*',function(req,res){
-        if(canCheckToken == true){
-            var token = req.url.split('/');
-            if(token.length === 3){
-                token = token[2];
-                setTimeout(function(){canCheckToken = true;},10000);
-                canCheckToken = false;
-                gme.checkToken(token,function(isValid){
-                    if(isValid === true){
-                        res.send(200);
-                    } else {
-                        res.send(403);
-                    }
-                });
+        if(parameters.secureREST == true){
+            if(canCheckToken == true){
+                var token = req.url.split('/');
+                if(token.length === 3){
+                    token = token[2];
+                    setTimeout(function(){canCheckToken = true;},10000);
+                    canCheckToken = false;
+                    gme.checkToken(token,function(isValid){
+                        if(isValid === true){
+                            res.send(200);
+                        } else {
+                            res.send(403);
+                        }
+                    });
+                } else {
+                    res.send(400);
+                }
             } else {
-                res.send(400);
+                res.send(403);
             }
         } else {
-            res.send(403);
+            res.send(410); //special error for the interpreters to know there is no need for token
         }
     });
     //rest requests
