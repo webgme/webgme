@@ -1,24 +1,32 @@
 import webgme
 
 #w = webclient("http://localhost","078dd342-6695-af73-b4cc-90aeb4820feetoken")
-w = webgme.client("http://localhost","078dd342-6695-af73-b4cc-90aeb4820feetoken")
+#w = webgme.client("http://localhost","078dd342-6695-af73-b4cc-90aeb4820feetoken")
+w = webgme.client("http://localhost","1504070a-d60c-9eaa-a6e0-9c0ddbb5e444token")
 
 db = w.connect()
 
-p = db.getProject('kecso')
+plist = db.getProjectList()
 
-r = p.getRoot('master')
-
-nodeRoot = webgme.node(r)
-
-children = nodeRoot.children
-
-sm1 = None
-for child in children:
-    if child.attributes['name'] == 'simpleModel':
-        sm1 = child
-
-if sm1 != None:
-    children = sm1.children
+def recPrint(item, indent):
+    print (indent+item.attributes["name"]+"  "+str(type(item)))
+    children = item.children
     for child in children:
-        print(child.attributes["name"]+" : " + str(child.relatedConnections))
+        recPrint(child,indent+"  ")
+
+if len(plist) > 0:
+    print("available projects:")
+    for i,j in enumerate(plist):
+        print(str(i)+". "+j)
+    index = input("please enter the number which project you want to open (to exit input an invalid value):")
+    index = int(index)
+    if index >=0 and index < len(plist):
+        project = db.getProject(plist[index])
+        root = project.getRoot("master")
+        rootNode = webgme.node(root)
+        recPrint(rootNode,"");
+    else:
+        quit()
+else:
+    print("there is no available project, program stops")
+    quit()

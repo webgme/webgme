@@ -149,6 +149,8 @@ class database:
             branches = self.__client.getProjectBranches(proj)
             if branches != None:
                 self.__projects.append(proj)
+    def getProjectList(self):
+        return self.__projects;
     def getProject(self,projectName):
         if projectName in self.__projects:
             return project(self.__client,projectName)
