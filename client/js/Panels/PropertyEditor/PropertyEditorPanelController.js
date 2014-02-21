@@ -6,12 +6,14 @@ define(['logManager',
     'js/RegistryKeys',
     'js/Decorators/DecoratorDB',
     'js/Constants',
+    'js/Utils/DisplayFormat',
     'assets/decoratorSVG'], function (logManager,
                                         util,
                                         nodePropertyNames,
                                         REGISTRY_KEYS,
                                         DecoratorDB,
                                         CONSTANTS,
+                                        displayFormat,
                                         decoratorSVG) {
 
     var PropertyEditorController,
@@ -163,14 +165,17 @@ define(['logManager',
         _getPointerInfo = function (node) {
             var result = {},
                 availablePointers = node.getPointerNames(),
-                len = availablePointers.length;
+                len = availablePointers.length,
+                ptrTo,
+                ptrToObj;
 
             while (len--) {
-                result[availablePointers[len]] = node.getPointer(availablePointers[len]).to || '';
-                if (availablePointers[len] === CONSTANTS.POINTER_BASE) {
-                    var baseNode = _client.getNode(result[availablePointers[len]]);
-                    if (baseNode) {
-                        result[availablePointers[len]] = baseNode.getAttribute(nodePropertyNames.Attributes.name) + ' (' + result[availablePointers[len]] + ')';
+                ptrTo = node.getPointer(availablePointers[len]).to;
+                result[availablePointers[len]] = ptrTo || '';
+                if (ptrTo) {
+                    ptrToObj = _client.getNode(result[availablePointers[len]]);
+                    if (ptrToObj) {
+                        result[availablePointers[len]] = displayFormat.resolve(ptrToObj) + ' (' + result[availablePointers[len]] + ')';
                     }
                 }
             }
