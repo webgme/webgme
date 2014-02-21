@@ -182,7 +182,8 @@ define(['js/Constants',
     ModelDecoratorCore.prototype.renderPort = function (portId) {
         var client = this._control._client,
             portNode = client.getNode(portId),
-            portInstance = new Port(portId, { "title": portNode.getAttribute(nodePropertyNames.Attributes.name),
+            portTitle = displayFormat.resolve(portNode),
+            portInstance = new Port(portId, { "title": portTitle,
                 "decorator": this,
                 "svg": portNode.getRegistry(REGISTRY_KEYS.PORT_SVG_ICON)});
 
@@ -250,13 +251,15 @@ define(['js/Constants',
         var idx = this.portIDs.indexOf(portId),
             client = this._control._client,
             portNode = client.getNode(portId),
-            isPort = this.isPort(portId);
+            isPort = this.isPort(portId),
+            portTitle;
 
         //check if it is already displayed as port
         if (idx !== -1) {
             //port already, should it stay one?
             if (isPort === true) {
-                this.ports[portId].update({"title": portNode.getAttribute(nodePropertyNames.Attributes.name),
+                portTitle = displayFormat.resolve(portNode);
+                this.ports[portId].update({"title": portTitle,
                     "svg": portNode.getRegistry(REGISTRY_KEYS.PORT_SVG_ICON)});
                 this._updatePortPosition(portId);
             } else {
