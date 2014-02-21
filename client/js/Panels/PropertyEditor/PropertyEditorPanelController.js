@@ -612,7 +612,7 @@ define(['logManager',
                 delFn = "delAttributes";
             } else if (keyArr[0] === PROPERTY_GROUP_PREFERENCES || keyArr[0] === PROPERTY_GROUP_META) {
                 delFn = "delRegistry";
-            } else if (keyArr[0] === PROPERTY_GROUP_POINTERS) {
+            } else if (keyArr[0] === PROPERTY_GROUP_POINTERS && NON_RESETABLE_POINTRS.indexOf(keyArr[1]) === -1) {
                 delFn = "delPointer";
             }
 
