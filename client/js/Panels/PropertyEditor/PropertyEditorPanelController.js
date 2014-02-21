@@ -25,7 +25,8 @@ define(['logManager',
         PROPERTY_GROUP_PREFERENCES = 'Preferences',
         PROPERTY_GROUP_ATTRIBUTES = 'Attributes',
         PROPERTY_GROUP_POINTERS = 'Pointers',
-        DecoratorSVGIconList = [''].concat(decoratorSVG.DecoratorSVGIconList.slice(0));
+        DecoratorSVGIconList = [''].concat(decoratorSVG.DecoratorSVGIconList.slice(0)),
+        NON_RESETABLE_POINTRS = [CONSTANTS.POINTER_BASE, CONSTANTS.POINTER_SOURCE, CONSTANTS.POINTER_TARGET];
 
     PropertyEditorController = function (client, propertyGrid) {
         this._client = client;
@@ -107,7 +108,8 @@ define(['logManager',
             buildCommonAttrMeta,     //fn
             _client = this._client,
             _isResetableAttribute,
-            _isResetableRegistry;
+            _isResetableRegistry,
+            _isResetablePointer;
 
         _getNodeAttributeValues = function (node) {
             var result =  {},
@@ -362,7 +364,45 @@ define(['logManager',
                 return resetable;
             };
 
-            _addItemsToResultList = function (srcList, prefix, dstList, isAttribute, isRegistry) {
+            _isResetablePointer = function (pointerName) {
+                var resetable = true,
+                    i = selectionLength,
+                    ownPointerNames,
+                    baseNode;
+
+                while (i--) {
+                    cNode = _client.getNode(selectedObjIDs[i]);
+
+                    if (cNode) {
+                        //get parentnode
+                        baseNode = _client.getNode(cNode.getBaseId());
+
+                        //get own registry names
+                        ownPointerNames = cNode.getOwnPointerNames();
+
+                        if (ownPointerNames.indexOf(pointerName) !== -1) {
+                            //there are 1 options:
+                            //#1: the registry is defined on this level, and that's why it is in the ownRegistryNames list
+                            //#2: the registry is inherited and overridden on this level (but defined somewhere up in the hierarchy)
+                            if (baseNode) {
+                                resetable = baseNode.getPointerNames().indexOf(pointerName) !== -1;
+                            } else {
+                                resetable = false;
+                            }
+                        } else {
+                            resetable = false;
+                        }
+                    }
+
+                    if (!resetable) {
+                        break;
+                    }
+                }
+
+                return resetable;
+            };
+
+            _addItemsToResultList = function (srcList, prefix, dstList, isAttribute, isRegistry, isPointer) {
                 var i,
                     extKey,
                     keyParts,
@@ -386,7 +426,8 @@ define(['logManager',
 
                             dstList[extKey] = { "name": keyParts[keyParts.length - 1],
                                 "value": srcList[i].value,
-                                "valueType": srcList[i].valueType};
+                                "valueType": srcList[i].valueType,
+                                "options":  srcList[i].options};
 
                             if (i === "position.x" || i === "position.y") {
                                 dstList[extKey].minValue = 0;
@@ -405,6 +446,13 @@ define(['logManager',
                             //is it inherited??? if so, it can be reseted to the inherited value
                             if (isAttribute && _isResetableAttribute(keyParts[0]) ||
                                 isRegistry && _isResetableRegistry(keyParts[0])) {
+                                dstList[extKey].options = dstList[extKey].options || {};
+                                dstList[extKey].options.resetable = true;
+                            }
+
+                            if (isPointer &&
+                                NON_RESETABLE_POINTRS.indexOf(keyParts[0]) === -1 &&
+                                _isResetablePointer(keyParts[0])) {
                                 dstList[extKey].options = dstList[extKey].options || {};
                                 dstList[extKey].options.resetable = true;
                             }
@@ -468,11 +516,11 @@ define(['logManager',
                 "text": PROPERTY_GROUP_POINTERS,
                 "value": undefined};
 
-            _addItemsToResultList(commonAttrs, PROPERTY_GROUP_ATTRIBUTES, propList, true, false);
+            _addItemsToResultList(commonAttrs, PROPERTY_GROUP_ATTRIBUTES, propList, true, false, false);
 
-            _addItemsToResultList(commonPreferences, PROPERTY_GROUP_PREFERENCES, propList, false, true);
+            _addItemsToResultList(commonPreferences, PROPERTY_GROUP_PREFERENCES, propList, false, true, false);
 
-            _addItemsToResultList(commonMeta, PROPERTY_GROUP_META, propList, false, true);
+            _addItemsToResultList(commonMeta, PROPERTY_GROUP_META, propList, false, true, false);
 
             //filter out from Pointers
             for (var it in commonPointers) {
@@ -482,7 +530,7 @@ define(['logManager',
                     }
                 }
             }
-            _addItemsToResultList(commonPointers, PROPERTY_GROUP_POINTERS, propList, false, false);
+            _addItemsToResultList(commonPointers, PROPERTY_GROUP_POINTERS, propList, false, false, true);
         }
 
         return propList;
@@ -564,6 +612,8 @@ define(['logManager',
                 delFn = "delAttributes";
             } else if (keyArr[0] === PROPERTY_GROUP_PREFERENCES || keyArr[0] === PROPERTY_GROUP_META) {
                 delFn = "delRegistry";
+            } else if (keyArr[0] === PROPERTY_GROUP_POINTERS) {
+                delFn = "delPointer";
             }
 
             if (delFn) {
