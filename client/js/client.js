@@ -1958,6 +1958,10 @@ define([
                     });
                 };
 
+                var toString = function () {
+                    return _core.getAttribute(_nodes[_id].node, 'name') + ' (' + _id +')';
+                };
+
                 if(_nodes[_id]){
                     return {
                         getParentId             : getParentId,
@@ -2006,7 +2010,8 @@ define([
                         getConstraintNames : getConstraintNames,
                         getConstraint      : getConstraint,
 
-                        printData : printData
+                        printData : printData,
+                        toString: toString
 
                     }
                 }
