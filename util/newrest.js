@@ -342,11 +342,15 @@ define([
             }
         }
 
+        function setBaseUrl(newUrl){
+            _parameters.baseUrl = newUrl;
+        }
         return {
             initialize: initialize,
             doRESTCommand: doRESTCommand,
             request: _requestTypes,
-            command: _commands
+            command: _commands,
+            setBaseUrl : setBaseUrl
         };
 
     }
