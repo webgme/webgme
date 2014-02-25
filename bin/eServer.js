@@ -131,14 +131,16 @@ requirejs(['logManager',
     }
 
     function checkREST(req,res,next){
+        var baseUrl = parameters.httpsecure === true ? 'https://' : 'http://'+req.headers.host+'/rest';
         if(_REST === null){
-            var restAuthorization,
-                baseUrl = parameters.httpsecure === true ? 'https://' : 'http://'+req.headers.host+'/rest';
+            var restAuthorization;
             if(parameters.secureREST === true){
                 restAuthorization = gme.tokenAuthorization;
                 baseUrl += '/token';
             }
             _REST = new REST({host:parameters.mongoip,port:parameters.mongoport,database:parameters.mongodatabase,baseUrl:baseUrl,authorization:restAuthorization});
+        } else {
+            _REST.setBaseUrl(baseUrl);
         }
         return next();
     }
