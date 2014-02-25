@@ -21,7 +21,8 @@ define(['logManager',
     './WebGME.History',
     'js/Utils/METAAspectHelper',
     'js/Utils/PreferencesHelper',
-    'js/ConstraintManager/ConstraintManager'], function (logManager,
+    'js/ConstraintManager/ConstraintManager',
+    'js/SnapInterpreter'], function (logManager,
                                             CONFIG,
                                             packagejson,
                                             Client,
@@ -38,7 +39,8 @@ define(['logManager',
                                             WebGMEHistory,
                                             METAAspectHelper,
                                             PreferencesHelper,
-                                            ConstraintManager) {
+                                            ConstraintManager,
+                                            SnapInterpreter) {
 
     var npmJSON = JSON.parse(packagejson);
     WebGMEGlobal.version = npmJSON.version;
@@ -110,6 +112,7 @@ define(['logManager',
                 if (panels.length > 0) {
                     loadPanels(panels);
                 } else {
+                    new SnapInterpreter(client);
                     projectToLoad = projectToLoad === "" ? CONFIG.project : projectToLoad;
                     client.connectToDatabaseAsync({'open': projectToLoad,
                                                     'project': projectToLoad}, function (err) {
