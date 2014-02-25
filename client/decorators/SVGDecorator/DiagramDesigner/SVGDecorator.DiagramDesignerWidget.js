@@ -20,6 +20,7 @@ define(['js/Constants',
         var opts = _.extend( {}, options);
 
         DiagramDesignerWidgetDecoratorBase.apply(this, [opts]);
+        SVGDecoratorCore.apply(this, [opts]);
 
         this._initializeVariables({"connectors": true});
 
@@ -73,15 +74,18 @@ define(['js/Constants',
         this.svgContainerWidth = this.$svgContent.outerWidth(true);
         this.svgWidth = this.$svgContent.find('svg').outerWidth(true);
         this.svgHeight = this.$svgContent.find('svg').outerHeight(true);
+        this.svgBorderWidth = parseInt(this.$svgContent.find('svg').css('border-width'), 10);
 
         DiagramDesignerWidgetDecoratorBase.prototype.onRenderGetLayoutInfo.call(this);
     };
 
     SVGDecoratorDiagramDesignerWidget.prototype.onRenderSetLayoutInfo = function () {
-        var xShift = (this.svgContainerWidth - this.svgWidth) / 2,
-            connectors = this.$el.find('.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS);
+        var xShift = Math.ceil((this.svgContainerWidth - this.svgWidth) / 2 + this.svgBorderWidth),
+            connectors = this.$el.find('> .' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS);
 
         connectors.css('transform', 'translateX(' + xShift + 'px)');
+
+        this._fixPortContainerPosition(xShift);
 
         DiagramDesignerWidgetDecoratorBase.prototype.onRenderSetLayoutInfo.call(this);
     };
@@ -127,25 +131,44 @@ define(['js/Constants',
                     "len": LEN} );
 
                 //East side
-                result.push({"id": "E",
-                    "x1": this.svgWidth + xShift,
-                    "y1": edge,
-                    "x2": this.svgWidth + xShift,
-                    "y2": this.svgHeight - edge,
-                    "angle1": 0,
-                    "angle2": 0,
-                    "len": LEN});
+                if (this._rightPorts !== true) {
+                    result.push({"id": "E",
+                        "x1": this.svgWidth + xShift,
+                        "y1": edge,
+                        "x2": this.svgWidth + xShift,
+                        "y2": this.svgHeight - edge,
+                        "angle1": 0,
+                        "angle2": 0,
+                        "len": LEN});
+                }
 
                 //West side
-                result.push({"id": "W",
-                    "x1": 0 + xShift,
-                    "y1": edge,
-                    "x2": 0 + xShift,
-                    "y2": this.svgHeight - edge,
-                    "angle1": 180,
-                    "angle2": 180,
-                    "len": LEN});
+                if (this._leftPorts !== true) {
+                    result.push({"id": "W",
+                        "x1": 0 + xShift,
+                        "y1": edge,
+                        "x2": 0 + xShift,
+                        "y2": this.svgHeight - edge,
+                        "angle1": 180,
+                        "angle2": 180,
+                        "len": LEN});
+                }
             }
+        } else if (this.ports[id]) {
+            //subcomponent
+            var portTop = this.ports[id].top,
+                isLeft = this.ports[id].isLeft,
+                x = this._portContainerXShift + (isLeft ? 1 : this.svgWidth - 1),
+                angle = isLeft ? 180 : 0;
+
+                result.push( {"id": id,
+                    "x1": x,
+                    "y1": portTop + this._PORT_HEIGHT / 2,
+                    "x2": x,
+                    "y2": portTop + this._PORT_HEIGHT / 2,
+                    "angle1": angle,
+                    "angle2": angle,
+                    "len": LEN} );
         }
 
         return result;
@@ -160,6 +183,12 @@ define(['js/Constants',
 
         if (!params) {
             this.$sourceConnectors.show();
+            if (this.portIDs) {
+                i = this.portIDs.length;
+                while (i--) {
+                    this.ports[this.portIDs[i]].showConnectors();
+                }
+            }
         } else {
             connectors = params.connectors;
             i = connectors.length;
@@ -168,6 +197,10 @@ define(['js/Constants',
                     //show connector for the represented item itself
                     this.$sourceConnectors.show();
                 } else {
+                    //one of the ports' connector should be displayed
+                    if (this.ports[connectors[i]]) {
+                        this.ports[connectors[i]].showConnectors();
+                    }
                 }
             }
         }
@@ -176,7 +209,16 @@ define(['js/Constants',
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     //Hides the 'connectors' - detaches them from the DOM
     SVGDecoratorDiagramDesignerWidget.prototype.hideSourceConnectors = function () {
+        var i;
+
         this.$sourceConnectors.hide();
+
+        if (this.portIDs) {
+            i = this.portIDs.length;
+            while (i--) {
+                this.ports[this.portIDs[i]].hideConnectors();
+            }
+        }
     };
 
 
@@ -198,6 +240,52 @@ define(['js/Constants',
         var client = this._control._client;
 
         client.setAttributes(this._metaInfo[CONSTANTS.GME_ID], nodePropertyNames.Attributes.name, newValue);
+    };
+
+    /**** Override from DiagramDesignerWidgetDecoratorBase ****/
+    //called when the designer item's subcomponent should be updated
+    SVGDecoratorDiagramDesignerWidget.prototype.updateSubcomponent = function (portId) {
+        this._updatePort(portId);
+    };
+
+
+    /**** Override from ModelDecoratorCore ****/
+    SVGDecoratorDiagramDesignerWidget.prototype.renderPort = function (portId) {
+        this.__registerAsSubcomponent(portId);
+
+        return SVGDecoratorCore.prototype.renderPort.call(this, portId);
+    };
+
+
+    /**** Override from ModelDecoratorCore ****/
+    SVGDecoratorDiagramDesignerWidget.prototype.removePort = function (portId) {
+        var idx = this.portIDs.indexOf(portId);
+
+        if (idx !== -1) {
+            this.__unregisterAsSubcomponent(portId);
+        }
+
+        SVGDecoratorCore.prototype.removePort.call(this, portId);
+    };
+
+    SVGDecoratorDiagramDesignerWidget.prototype.__registerAsSubcomponent = function(portId) {
+        if (this.hostDesignerItem) {
+            this.hostDesignerItem.registerSubcomponent(portId, {"GME_ID": portId});
+        }
+    };
+
+    SVGDecoratorDiagramDesignerWidget.prototype.__unregisterAsSubcomponent = function(portId) {
+        if (this.hostDesignerItem) {
+            this.hostDesignerItem.unregisterSubcomponent(portId);
+        }
+    };
+
+    /**** Override from DiagramDesignerWidgetDecoratorBase ****/
+    SVGDecoratorDiagramDesignerWidget.prototype.notifyComponentEvent = function (componentList) {
+        var len = componentList.length;
+        while (len--) {
+            this._updatePort(componentList[len].id);
+        }
     };
 
     return SVGDecoratorDiagramDesignerWidget;
