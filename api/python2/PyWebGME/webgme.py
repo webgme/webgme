@@ -360,7 +360,11 @@ class basenode:
 
     @property
     def meta(self):
-        return self.__json.meta;
+        return self.__json["meta"]
+
+    @property
+    def GUID(self):
+        return self.__json["GUID"]
 
 #this node class has the knowledge of connections and references so it can have nicer API - gives back type filterable lists and dictionaries
 class node:
@@ -436,8 +440,8 @@ class node:
         if self.__outpointers == None:
             self.__outpointers = {}
             outpointers = self.__base.outPointers
-            for pointerName in pointers:
-                self.__outpointers[pointerName] = self.__getNode(pointers[pointerName])
+            for pointerName in outpointers:
+                self.__outpointers[pointerName] = self.__getNode(outpointers[pointerName])
         return self.__outpointers
 
     @property
@@ -498,6 +502,9 @@ class node:
                 for ref in inpointers['ref']:
                     self.__referrers.append(ref)
         return self.__referrers
+    @property
+    def GUID(self):
+        return self.__base.GUID
 
 #this is a suer class of the basic node with some extended functions
 class connection(node):
