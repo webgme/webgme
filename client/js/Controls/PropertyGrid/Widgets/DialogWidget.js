@@ -10,7 +10,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'],
 
             var self = this;
 
-            this.__label = $('<span style="color: green"/>', {});
+            this.__label = $('<span/>', {});
             this.el.append(this.__label);
 
             if (propertyDesc.dialog) {
