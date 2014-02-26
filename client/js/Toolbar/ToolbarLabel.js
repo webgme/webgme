@@ -17,7 +17,9 @@ define(['./ToolbarItemBase'], function (ToolbarItemBase) {
     _.extend(ToolbarLabel.prototype, ToolbarItemBase.prototype);
 
     ToolbarLabel.prototype.text = function (text) {
-        this.el.text(text);
+        if (this.el) {
+            this.el.text(text);
+        }
     };
 
     return ToolbarLabel;
