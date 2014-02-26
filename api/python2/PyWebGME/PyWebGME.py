@@ -49,7 +49,7 @@ try:
     rootNode = webgme.node(root)
     mychild = None
     for child in rootNode.children:
-        if child.attributes['name'] == "kecso2":
+        if child.attributes['name'] == "kecso3":
             mychild = child
     if mychild != None:
         g = sf2graph.SignalFlowToGraphML(mychild)
