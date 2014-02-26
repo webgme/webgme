@@ -7,14 +7,16 @@ define(['logManager',
     'js/Decorators/DecoratorDB',
     'js/Constants',
     'js/Utils/DisplayFormat',
-    'assets/decoratorSVG'], function (logManager,
+    'js/Dialogs/DecoratorSVGExplorer/DecoratorSVGExplorerDialog',
+    'js/Controls/PropertyGrid/PropertyGridWidgets'], function (logManager,
                                         util,
                                         nodePropertyNames,
                                         REGISTRY_KEYS,
                                         DecoratorDB,
                                         CONSTANTS,
                                         displayFormat,
-                                        decoratorSVG) {
+                                        DecoratorSVGExplorerDialog,
+                                        PropertyGridWidgets) {
 
     var PropertyEditorController,
         META_REGISTRY_KEYS = [REGISTRY_KEYS.IS_PORT,
@@ -27,12 +29,17 @@ define(['logManager',
         PROPERTY_GROUP_PREFERENCES = 'Preferences',
         PROPERTY_GROUP_ATTRIBUTES = 'Attributes',
         PROPERTY_GROUP_POINTERS = 'Pointers',
-        DecoratorSVGIconList = [''].concat(decoratorSVG.DecoratorSVGIconList.slice(0)),
         NON_RESETABLE_POINTRS = [CONSTANTS.POINTER_BASE, CONSTANTS.POINTER_SOURCE, CONSTANTS.POINTER_TARGET];
 
     PropertyEditorController = function (client, propertyGrid) {
         this._client = client;
         this._propertyGrid = propertyGrid;
+
+        //it should be sorted aplahbetically
+        this._propertyGrid.setOrdered(true);
+
+        //set custom types here
+        this._propertyGrid.registerWidgetForType('boolean', 'iCheckBox');
 
         this._initEventHandlers();
 
@@ -479,8 +486,8 @@ define(['logManager',
                             //list the
                             if (i === REGISTRY_KEYS.SVG_ICON ||
                                 i === REGISTRY_KEYS.PORT_SVG_ICON) {
-                                //TODO: needs to be fixed
-                                dstList[extKey].valueItems = DecoratorSVGIconList;
+                                dstList[extKey].widget = PropertyGridWidgets.DIALOG_WIDGET;
+                                dstList[extKey].dialog = DecoratorSVGExplorerDialog;
                             }
 
                         }
