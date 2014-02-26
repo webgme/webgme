@@ -8,6 +8,7 @@ define([ "util/assert", "util/guid", "core/tasync" ], function (ASSERT, GUID, TA
 	"use strict";
 
 	var GUID_REGEXP = new RegExp("[a-z0-9]{8}(-[a-z0-9]{4}){3}-[a-z0-9]{12}", 'i');
+    var OWN_GUID = "_relguid";
 
 	function guidCore (_innerCore) {
 
@@ -31,6 +32,26 @@ define([ "util/assert", "util/guid", "core/tasync" ], function (ASSERT, GUID, TA
 			}
 			return array;
 		}
+
+        function getRelidGuid(node){
+            //TODO we always should know what structure we should expect as a relid, now we think it is a number so it can be converted to 0xsomething
+            var relid = _core.getRelid(node);
+            relid = Number(relid);
+            if (relid ==="NaN"){
+                return null
+            }
+            if (relid < 0){
+                relid = relid *(-1);
+            }
+
+            relid = relid.toString(16);
+
+            //now we should fill up with 0's in the beggining
+            while(relid.length<32){
+                relid=relid+"0"; //TODO we pad to the end so the final result will be more visible during debug
+            }
+            return relid
+        }
 
 		function xorGuids (a, b) {
 			var arrayA = guidToArray(a);
@@ -59,14 +80,20 @@ define([ "util/assert", "util/guid", "core/tasync" ], function (ASSERT, GUID, TA
 		}
 
 		//new functions
+        _core.getMiddleGuid = function(node){
+            var outGuid = _core.getAttribute(node, OWN_GUID);
+            var tempnode = _core.getParent(node);
+            while (tempnode) {
+                outGuid = xorGuids(outGuid, _core.getAttribute(tempnode, OWN_GUID));
+                tempnode = _core.getParent(tempnode);
+            }
+            return outGuid;
+        };
+
 		_core.getGuid = function (node) {
-			var outGuid = _core.getAttribute(node, "_relguid");
-			var tempnode = _core.getParent(node);
-			while (tempnode) {
-				outGuid = xorGuids(outGuid, _core.getAttribute(tempnode, "_relguid"));
-				tempnode = _core.getParent(tempnode);
-			}
-			return toExternalGuid(outGuid);
+            var middle = _core.getMiddleGuid(node),
+                relid = getRelidGuid(node);
+            return toExternalGuid(xorGuids(middle,relid));
 		};
 
         _core.setGuid = function(node,guid){
@@ -74,16 +101,22 @@ define([ "util/assert", "util/guid", "core/tasync" ], function (ASSERT, GUID, TA
             var children = _core.loadChildren(node);
             return TASYNC.call(function(nodeArray){
                 var newGuid = toInternalGuid(guid);
-                for ( var i = 0; i < nodeArray.length; i++) {
-                    var oldGuid = toInternalGuid(_core.getGuid(nodeArray[i]));
-                    _core.setAttribute(nodeArray[i], "_relguid", xorGuids(newGuid, oldGuid));
-                }
+                //first setting the node's OWN_GUID
+                var oldOwn = _core.getAttribute(node,OWN_GUID);
                 var parent = _core.getParent(node);
                 if (parent) {
-                    _core.setAttribute(node, "_relguid", xorGuids(newGuid, toInternalGuid(_core.getGuid(parent))));
+                    _core.setAttribute(node, OWN_GUID, xorGuids(newGuid,xorGuids(_core.getMiddleGuid(parent),getRelidGuid(node))));
                 } else {
-                    _core.setAttribute(node, "_relguid", newGuid);
+                    _core.setAttribute(node, OWN_GUID, xorGuids(newGuid,getRelidGuid(node)));
                 }
+                var newOwn = _core.getAttribute(node,OWN_GUID);
+                //now modify its children's
+                for ( var i = 0; i < nodeArray.length; i++) {
+                    var oldGuid = _core.getAttribute(nodeArray[i],OWN_GUID);
+                    _core.setAttribute(nodeArray[i], OWN_GUID, xorGuids(oldGuid,xorGuids(oldOwn,newOwn)));
+                }
+
+
                 return;
             },children);
         };
@@ -101,37 +134,22 @@ define([ "util/assert", "util/guid", "core/tasync" ], function (ASSERT, GUID, TA
 
 			var relguid = "";
 			if (parent) {
-				relguid = xorGuids(toInternalGuid(_core.getGuid(_core.getParent(node))), guid);
+				relguid = xorGuids(toInternalGuid(_core.getMiddleGuid(_core.getParent(node))),xorGuids(guid,getRelidGuid(node)));
 			} else {
-				relguid = guid;
+				relguid = xorGuids(guid,getRelidGuid(node));
 			}
-			_innerCore.setAttribute(node, "_relguid", relguid);
+			_innerCore.setAttribute(node, OWN_GUID, relguid);
 
 			return node;
 		};
 
-		_core.moveNode = function (node, parent) {
-			var newnode = _innerCore.moveNode(node, parent);
-			var newguid = toInternalGuid(_core.getGuid(_core.getParent(newnode)));
-			newguid = xorGuids(toInternalGuid(_core.getGuid(newnode)), newguid);
-			_core.setAttribute(newnode, "_relguid", newguid);
+        _core.moveNode = function(node,parent){
+            var oldGuid = toInternalGuid(_core.getGuid(node));
+            var newNode = _innerCore.moveNode(node,parent);
+            _core.setAttribute(newNode,OWN_GUID,xorGuids(_core.getMiddleGuid(parent),xorGuids(oldGuid,getRelidGuid(newNode))));
 
-			return newnode;
-		};
-
-		_core.copyNode = function (node, parent) {
-			var newnode = _innerCore.copyNode(node, parent);
-			_core.setAttribute(newnode, "_relguid", toInternalGuid(GUID()));
-
-			return newnode;
-		};
-
-		_core.getAttributeNames = function (node) {
-			var names = _innerCore.getAttributeNames(node);
-            //TODO: double check (theoretically no need to try to filter out)
-			//names.splice(names.indexOf("_relguid"), 1);
-			return names;
-		};
+            return newNode;
+        };
 
 		return _core;
 	}
