@@ -21,6 +21,7 @@ define(['js/Constants',
         var opts = _.extend( {}, options);
 
         PartBrowserWidgetDecoratorBase.apply(this, [opts]);
+        SVGDecoratorCore.apply(this, [opts]);
 
         this._initializeVariables({"connectors": false});
 
@@ -65,6 +66,24 @@ define(['js/Constants',
     /**** Override from PartBrowserWidgetDecoratorBase ****/
     SVGDecoratorPartBrowserWidget.prototype.update = function () {
         this._update();
+    };
+
+    SVGDecoratorPartBrowserWidget.prototype.afterAppend = function () {
+        this.svgContainerWidth = this.$svgContent.outerWidth(true);
+        this.svgWidth = this.$svgContent.find('svg').outerWidth(true);
+        this.svgHeight = this.$svgContent.find('svg').outerHeight(true);
+
+        var xShift = (this.svgContainerWidth - this.svgWidth) / 2;
+
+        this._fixPortContainerPosition(xShift);
+    };
+
+    /**** Override from PartBrowserWidgetDecoratorBase ****/
+    SVGDecoratorPartBrowserWidget.prototype.notifyComponentEvent = function (componentList) {
+        var len = componentList.length;
+        while (len--) {
+            this._updatePort(componentList[len]);
+        }
     };
 
 
