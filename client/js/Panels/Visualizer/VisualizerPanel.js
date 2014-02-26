@@ -83,6 +83,18 @@ define(['logManager',
             self.selectedObjectChanged(nodeId);
         });
 
+        this._client.addEventListener(this._client.events.PROJECT_CLOSED, function (__project, nodeId) {
+            self._p2Editor(false);
+        });
+
+        this._client.addEventListener(this._client.events.PROJECT_OPENED, function (__project, nodeId) {
+            self._p2Editor(false);
+        });
+
+        this._client.addEventListener(this._client.events.BRANCH_CHANGED, function (__project, nodeId) {
+            self._p2Editor(false);
+        });
+
         this._splitPanel = new SplitPanel();
         this._layoutManager.addPanel('visualizerSplitPanel', this._splitPanel, 'center');
     };
@@ -252,9 +264,11 @@ define(['logManager',
             this._activeVisualizer[panel] = null;
 
 
-            this._panel2VisContainer.remove();
-            this._panel2VisContainer = undefined;
-            this._splitPanel.deletePanel('p2');
+            if (this._panel2VisContainer) {
+                this._panel2VisContainer.remove();
+                this._panel2VisContainer = undefined;
+                this._splitPanel.deletePanel('p2');
+            }
         }
     };
 
