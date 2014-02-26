@@ -182,6 +182,12 @@ $input-color: lighten($background-color, 18.5%);
           select:not([disabled]) {
             background: $input-color;
           }
+
+          .btn-dialog-open {
+            margin-top: 2px;
+            position: absolute;
+            right: 2px;
+          }
         }
       }
     }

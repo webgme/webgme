@@ -107,6 +107,10 @@
             font-size: 11px; }
           .pgp ul li.cr .c select:not([disabled]) {
             background: white; }
+          .pgp ul li.cr .c .btn-dialog-open {
+            margin-top: 2px;
+            position: absolute;
+            right: 2px; }
     .pgp ul.closed li:not(.title),
     .pgp ul.closed ul li,
     .pgp ul.closed ul li > * {
