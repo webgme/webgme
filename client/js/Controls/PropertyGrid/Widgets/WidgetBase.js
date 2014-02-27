@@ -70,6 +70,7 @@ define([], function () {
     };
 
     WidgetBase.prototype.remove = function () {
+        this.destroy();
         this.__onChange = undefined;
         this.__onFinishChange = undefined;
         this.el.remove();
@@ -77,6 +78,9 @@ define([], function () {
 
     WidgetBase.prototype.setReadOnly = function (isReadOnly) {
         this._isReadOnly = isReadOnly;
+    };
+
+    WidgetBase.prototype.destroy = function () {
     };
 
     return WidgetBase;
