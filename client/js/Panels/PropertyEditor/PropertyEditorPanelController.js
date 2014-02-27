@@ -8,7 +8,8 @@ define(['logManager',
     'js/Constants',
     'js/Utils/DisplayFormat',
     'js/Dialogs/DecoratorSVGExplorer/DecoratorSVGExplorerDialog',
-    'js/Controls/PropertyGrid/PropertyGridWidgets'], function (logManager,
+    'js/Controls/PropertyGrid/PropertyGridWidgets',
+    './PointerWidget'], function (logManager,
                                         util,
                                         nodePropertyNames,
                                         REGISTRY_KEYS,
@@ -16,7 +17,8 @@ define(['logManager',
                                         CONSTANTS,
                                         displayFormat,
                                         DecoratorSVGExplorerDialog,
-                                        PropertyGridWidgets) {
+                                        PropertyGridWidgets,
+                                        PointerWidget) {
 
     var PropertyEditorController,
         META_REGISTRY_KEYS = [REGISTRY_KEYS.IS_PORT,
@@ -173,18 +175,11 @@ define(['logManager',
             var result = {},
                 availablePointers = node.getPointerNames(),
                 len = availablePointers.length,
-                ptrTo,
-                ptrToObj;
+                ptrTo;
 
             while (len--) {
                 ptrTo = node.getPointer(availablePointers[len]).to;
                 result[availablePointers[len]] = ptrTo || '';
-                if (ptrTo) {
-                    ptrToObj = _client.getNode(result[availablePointers[len]]);
-                    if (ptrToObj) {
-                        result[availablePointers[len]] = displayFormat.resolve(ptrToObj) + ' (' + result[availablePointers[len]] + ')';
-                    }
-                }
             }
 
             return util.flattenObject(result);
@@ -490,6 +485,12 @@ define(['logManager',
                                 dstList[extKey].dialog = DecoratorSVGExplorerDialog;
                             }
 
+                            //pointers have a custom widget that allows following the pointer
+                            if (isPointer === true) {
+                                dstList[extKey].widget = PointerWidget;
+                                //add custom widget specific values
+                                dstList[extKey].client = _client;
+                            }
                         }
                     }
                 }
@@ -534,14 +535,6 @@ define(['logManager',
 
             _addItemsToResultList(commonMeta, PROPERTY_GROUP_META, propList, false, true, false);
 
-            //filter out from Pointers
-            for (var it in commonPointers) {
-                if (commonPointers.hasOwnProperty(it)) {
-                    if (commonPointers.hasOwnProperty(it)) {
-                        commonPointers[it].readOnly = true;
-                    }
-                }
-            }
             _addItemsToResultList(commonPointers, PROPERTY_GROUP_POINTERS, propList, false, false, true);
         }
 
