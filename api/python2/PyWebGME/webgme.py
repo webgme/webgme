@@ -247,7 +247,10 @@ class project:
     def getRoot(self,commitId):
         commit = self.__client.getCommit(self.__name,commitId)
         if commit != None:
-            print (commit)
+            jNode = self.__client.getURL(commit['root'][REFERENCE_KEY])
+            if jNode != None:
+                return basenode(self.__client,jNode,memorycache(self.__client))
+        return None
     def getRoot(self,branchName):
         if branchName in self.__branchNames:
             commit = self.__client.getURL(self.__branches[branchName])
