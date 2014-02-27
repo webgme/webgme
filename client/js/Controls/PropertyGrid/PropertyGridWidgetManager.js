@@ -43,6 +43,9 @@ define([
                     case PropertyGridWidgets.DIALOG_WIDGET:
                         widget = new DialogWidget(propDesc);
                         break;
+                    default:
+                        widget = new _specificWidget(propDesc);
+                        break;
                 }
             } else if (_isOption){
                 widget = new OptionWidget(propDesc);
