@@ -122,6 +122,18 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager){
                     process.send({pid:process.pid,type:CONSTANT.msgTypes.request,error:'invalid parameters'});
                 }
                 break;
+            case CONSTANT.workerCommands.generateJsonURL:
+                resultId = GUID();
+                process.send({pid:process.pid,type:CONSTANT.msgTypes.request,error:null,resid:resultId});
+                if(resultRequested === true){
+                    initResult();
+                    process.send({pid:process.pid,type:CONSTANT.msgTypes.result,error:err,result:parameters.object});
+                } else {
+                    resultReady = true;
+                    error = null;
+                    result = parameters.object;
+                }
+                break;
             case CONSTANT.workerCommands.getResult:
                 if(resultReady === true){
                     var e = error,

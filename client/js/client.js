@@ -2068,6 +2068,22 @@ define([
                     }
                 });
             }
+            function getExternalInterpreterConfigUrlAsync(selectedItemsPath,filename,callback){
+                var config = {};
+                config.host = window.location.protocol+"//"+window.location.host;
+                config.project = _projectName;
+                config.token = _TOKEN.getToken();
+                config.selected = URL.addSpecialChars(selectedItemsPath || "")
+                config.commit = URL.addSpecialChars(_recentCommits[0] || "")
+                config.branch = _branch
+                _database.simpleRequest({command:'generateJsonURL',object:config},function(err,resId){
+                    if(err){
+                        callback(err);
+                    } else {
+                        callback(null,window.location.protocol + '//' + window.location.host +'/worker/simpleResult/'+resId+'/'+filename);
+                    }
+                });
+            }
             function dumpNodeAsync(path,callback){
                 if(_nodes[path]){
                     Dump(_core,_nodes[path].node,"",'guid',callback);
@@ -2273,6 +2289,7 @@ define([
                 //JSON functions
                 exportItems: exportItems,
                 getExportItemsUrlAsync: getExportItemsUrlAsync,
+                getExternalInterpreterConfigUrlAsync: getExternalInterpreterConfigUrlAsync,
                 dumpNodeAsync: dumpNodeAsync,
                 importNodeAsync: importNodeAsync,
                 mergeNodeAsync: mergeNodeAsync,
