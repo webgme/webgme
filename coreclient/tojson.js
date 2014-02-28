@@ -66,6 +66,31 @@ define([
                 return URL.urlToRefObject(null);
         }
     };
+    var getParentRefObject = function(refType,urlPrefix,core,node){
+        var parent = core.getParent(node),
+            path = null;
+        if(parent){
+            path = core.getPath(parent);
+        }
+        switch (refType){
+            case _refTypes.url:
+                if(path === null){
+                    return URL.urlToRefObject(null);
+                }
+                return URL.urlToRefObject(urlPrefix+'/'+URL.addSpecialChars(path));
+                break;
+            case _refTypes.path:
+                return URL.urlToRefObject(path);
+            case _refTypes.guid:
+                if(path === null){
+                    return URL.urlToRefObject(null);
+                } else {
+                    var refObj = URL.urlToRefObject(path);
+                    refObj.GUID = core.getGuid(parent);
+                    return refObj;
+                }
+        }
+    };
     var pathToRefObjAsync = function(refType,urlPrefix,path,core,root,callback){
         switch (refType){
             case _refTypes.url:
@@ -380,8 +405,8 @@ define([
     } ;
     var getJsonNode = function(core,node,urlPrefix,refType,callback){
         var nodes = {},
-            tArray,t2Array,
-            i,j,
+            tArray,
+            i,
             jNode;
 
         if(refType === _refTypes.guid && typeof core.getGuid !== 'function'){
@@ -413,6 +438,9 @@ define([
 
         //own part of the node
         jNode.OWN = getOwnPartOfNode(core,node);
+
+        //reference to parent
+        jNode.parent = getParentRefObject(refType,urlPrefix,core,node);
 
 
         //now calling the relational parts

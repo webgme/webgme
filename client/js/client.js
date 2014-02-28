@@ -2068,13 +2068,17 @@ define([
                     }
                 });
             }
+            /*function getExportItemsUrlAsync(paths,filename,callback){
+                getExternalInterpreterConfigUrlAsync(paths[0],"config_",callback);
+            }*/
             function getExternalInterpreterConfigUrlAsync(selectedItemsPath,filename,callback){
                 var config = {};
                 config.host = window.location.protocol+"//"+window.location.host;
                 config.project = _projectName;
                 config.token = _TOKEN.getToken();
-                config.selected = URL.addSpecialChars(selectedItemsPath || "")
-                config.commit = URL.addSpecialChars(_recentCommits[0] || "")
+                config.selected = plainUrl('node',selectedItemsPath || "");
+                config.commit = URL.addSpecialChars(_recentCommits[0] || "");
+                config.root = plainUrl('node',"");
                 config.branch = _branch
                 _database.simpleRequest({command:'generateJsonURL',object:config},function(err,resId){
                     if(err){
@@ -2133,10 +2137,16 @@ define([
                     });
                 });
             }
+            function plainUrl(command,path){
+                if(window && window.location && window.location && _nodes && _nodes[ROOT_PATH]){
+                    var address = window.location.protocol + '//' + window.location.host +'/rest'+(_TOKEN.getToken() === null ? '' : '/'+_TOKEN.getToken())+'/'+command+'/'+_projectName+'/'+URL.addSpecialChars(_core.getHash(_nodes[ROOT_PATH].node))+'/'+URL.addSpecialChars(path);
+                    return address;
+                }
+            }
             function getDumpURL(path,filepath){
                 filepath = filepath || _projectName+'_'+_branch+'_'+URL.addSpecialChars(path);
                 if(window && window.location && window.location && _nodes && _nodes[ROOT_PATH]){
-                    var address = window.location.protocol + '//' + window.location.host +'/rest'+(_TOKEN.getToken() === null ? '' : '/'+_TOKEN.getToken())+'/etf/'+_projectName+'/'+URL.addSpecialChars(_core.getHash(_nodes[ROOT_PATH].node))+'/'+URL.addSpecialChars(path)+'/'+filepath;
+                    var address = plainUrl('etf',path)+'/'+filepath;
                     return address;
                 }
                 return null;
