@@ -1,8 +1,10 @@
 "use strict";
 
 define(['logManager',
-    'js/Controls/DropDownMenu'], function (logManager,
-                                           DropDownMenu) {
+    'js/Controls/DropDownMenu',
+    'js/Controls/PopoverBox'], function (logManager,
+                                           DropDownMenu,
+                                           PopoverBox) {
 
     var BranchStatusWidget;
 
@@ -63,12 +65,21 @@ define(['logManager',
         this._ddBranchStatus.clear();
         this._ddBranchStatus.setTitle('IN SYNC');
         this._ddBranchStatus.setColor(DropDownMenu.prototype.COLORS.GREEN);
+
+        if (this._outOfSync === true) {
+            this._popoverBox.show('Branch in sync again...', this._popoverBox.alertLevels.SUCCESS, true);
+            delete this._outOfSync;
+        }
     };
 
     BranchStatusWidget.prototype._branchForked = function () {
         this._ddBranchStatus.clear();
         this._ddBranchStatus.setTitle('OUT OF SYNC');
         this._ddBranchStatus.setColor(DropDownMenu.prototype.COLORS.ORANGE);
+
+        this._outOfSync = true;
+        this._popoverBox = this._popoverBox || new PopoverBox(this._ddBranchStatus.getEl());
+        this._popoverBox.show('Branch out of sync...', this._popoverBox.alertLevels.WARNING, false);
     };
 
     return BranchStatusWidget;
