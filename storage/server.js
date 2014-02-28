@@ -15,6 +15,14 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
         options.authorization = options.authorization || function(sessionID,projectName,type,callback){callback(null,true);};
         options.sessioncheck = options.sessioncheck || function(sessionID,callback){callback(null,true);};
         options.authInfo = options.authInfo || function(sessionID,projectName,callback){callback(null,{'read':true,'write':true,'delete':true});};
+        options.log = options.log || {
+            debug: function (msg) {
+                console.log("DEBUG - " + msg);
+            },
+            error: function (msg) {
+                console.log("ERROR - " + msg);
+            }
+        };
         var _socket = null,
             _objects = {},
             _projects = {},
@@ -35,6 +43,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 _database.openDatabase(function(err){
                     if(err){
                         _databaseOpened = false;
+                        options.log.error(err);
                         callback(err);
                     } else {
                         callback(null);
