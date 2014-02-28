@@ -11,7 +11,7 @@ class SignalFlowToGraphML:
         self.__intermediatenodes = []
         self.__outedges = []
         self.__parent = {}
-        self.__parent[self.__root.GUID] = None
+        self.__parent[self.__root.guid] = None
         self.__loadGMENodes(self.__root)
         self.__getOutNodes()
         self.__getIntermediateNodes()
@@ -22,10 +22,10 @@ class SignalFlowToGraphML:
 
 
     def __loadGMENodes(self,node):
-        if not node.GUID in self.__gmeNodes.keys():
-            self.__gmeNodes[node.GUID] = node
+        if not node.guid in self.__gmeNodes.keys():
+            self.__gmeNodes[node.guid] = node
         for child in node.children:
-            self.__parent[child.GUID] = node.GUID
+            self.__parent[child.guid] = node.guid
             self.__loadGMENodes(child)
 
     def __getBaseNameList(self,node):
@@ -92,23 +92,23 @@ class SignalFlowToGraphML:
     def __createBasicEdges(self):
         for guid in self.__gmeConnections:
             conn = self.__gmeNodes[guid]
-            if conn.source.GUID in self.__intermediatenodes:
-                parent = self.__parent[conn.destination.GUID]
-                if conn.destination.GUID in self.__intermediatenodes:
-                    self.__outedges.append({'source':conn.source.GUID,'target':conn.destination.GUID})
+            if conn.source.guid in self.__intermediatenodes:
+                parent = self.__parent[conn.destination.guid]
+                if conn.destination.guid in self.__intermediatenodes:
+                    self.__outedges.append({'source':conn.source.guid,'target':conn.destination.guid})
                 elif parent in self.__outnodes or parent in self.__intermediatenodes:
-                    self.__outedges.append({'source':conn.source.GUID,'target':parent})
+                    self.__outedges.append({'source':conn.source.guid,'target':parent})
                 else:
                     print('DEBUG:how this can happened -1- ???')
-            elif conn.destination.GUID in self.__intermediatenodes:
-                parent = self.__parent[conn.source.GUID]
+            elif conn.destination.guid in self.__intermediatenodes:
+                parent = self.__parent[conn.source.guid]
                 if parent in self.__outnodes or parent in self.__intermediatenodes:
-                    self.__outedges.append({'source':parent,'target':conn.destination.GUID})
+                    self.__outedges.append({'source':parent,'target':conn.destination.guid})
                 else:
                     print('DEBUG:how this can happened -2- ???')
             else: #both end of the connection belongs to a primitive
-                sparent = self.__parent[conn.source.GUID]
-                tparent = self.__parent[conn.destination.GUID]
+                sparent = self.__parent[conn.source.guid]
+                tparent = self.__parent[conn.destination.guid]
                 if sparent in self.__outnodes and tparent in self.__outnodes:
                     self.__outedges.append({'source':sparent,'target':tparent})
                 else:
@@ -117,7 +117,7 @@ class SignalFlowToGraphML:
     def __isConnected(self,oneSignal, otherSignal):
         node = self.__gmeNodes[oneSignal]
         for connection in node.relatedConnections:
-            if connection.destination.GUID == otherSignal or connection.source.GUID == otherSignal:
+            if connection.destination.guid == otherSignal or connection.source.guid == otherSignal:
                 return True
         return False
 
@@ -126,7 +126,7 @@ class SignalFlowToGraphML:
             self.__signalAssociations[primitive] = []
             for child in self.__gmeNodes[primitive].children:
                 if self.__isInputSignal(child) or self.__isOutputSignal(child):
-                    self.__signalAssociations[primitive].append(child.GUID)
+                    self.__signalAssociations[primitive].append(child.guid)
 
             parent = self.__parent[primitive]
             while parent != None:
@@ -134,8 +134,8 @@ class SignalFlowToGraphML:
                     if self.__isInputSignal(child) or self.__isOutputSignal(child):
                         toadd = []
                         for signal in self.__signalAssociations[primitive]:
-                            if self.__isConnected(signal,child.GUID):
-                                toadd.append(child.GUID)
+                            if self.__isConnected(signal,child.guid):
+                                toadd.append(child.guid)
                         self.__signalAssociations[primitive] += toadd
                 parent = self.__parent[parent]
 
@@ -150,13 +150,13 @@ class SignalFlowToGraphML:
             for signal in self.__signalAssociations[node]:
                 for connection in self.__gmeNodes[signal].relatedConnections:
                     source = False
-                    if connection.source.GUID == signal:
+                    if connection.source.guid == signal:
                         source = True
                     for othernode in self.__outnodes:
                         if othernode != node:
-                            if source and connection.destination.GUID in self.__signalAssociations[othernode]:
+                            if source and connection.destination.guid in self.__signalAssociations[othernode]:
                                 self.__addNewEdge(node,othernode)
-                            elif not source and connection.source.GUID in self.__signalAssociations[othernode]:
+                            elif not source and connection.source.guid in self.__signalAssociations[othernode]:
                                 self.__addNewEdge(othernode,node)
 
 

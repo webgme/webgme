@@ -15,11 +15,16 @@ KEY_POINTERS = "pointers"
 KEY_META = "meta"
 KEY_CHILDREN = "children"
 KEY_GUID = "GUID"
+KEY_PARENT = "parent"
 
 TYPE_NODE = 'node'
 TYPE_CONNECTION = 'connection'
 TYPE_REFERENCE = 'reference'
 TYPE_NONE = 'none'
+
+POINTER_SOURCE = 'src'
+POINTER_DESTINATION = 'dst'
+POINTER_REFERENCE = 'ref'
 
 #libary wide functions
 def getType(nodeObject):
@@ -28,9 +33,9 @@ def getType(nodeObject):
         #now our priority order is collection -> reference -> node
         pointers = nodeObject.outPointers
         if pointers != None:
-            if "src" in pointers.keys() and "dst" in pointers.keys():
+            if POINTER_SOURCE in pointers.keys() and POINTER_DESTINATION in pointers.keys():
                 return TYPE_CONNECTION
-            elif "ref" in pointers.keys():
+            elif POINTER_REFERENCE in pointers.keys():
                 return TYPE_REFERENCE
         return TYPE_NODE
     elif isinstance(nodeObject, connection):
@@ -244,6 +249,7 @@ class project:
 
     def getBranches(self):
         return self.__branchNames
+
     def getRoot(self,commitId):
         commit = self.__client.getCommit(self.__name,commitId)
         if commit != None:
@@ -251,6 +257,7 @@ class project:
             if jNode != None:
                 return basenode(self.__client,jNode,memorycache(self.__client))
         return None
+
     def getRoot(self,branchName):
         if branchName in self.__branchNames:
             commit = self.__client.getURL(self.__branches[branchName])
@@ -260,12 +267,20 @@ class project:
                     return basenode(self.__client,jNode,memorycache(self.__client))
         return None
 
+    def getNode(self,nodeUrl):
+        jNode = self.__client.getURL(nodeUrl)
+        if jNode != None:
+            return basenode(self.__client,jNode,memorycache(self.__client))
+        return None
+
 #this is the totally basic node object which gives the simplest interface to check the data in the model
 class basenode:
     def __init__(self,wClient,jsonNode,cache):
         self.__client = wClient
         self.__json = jsonNode
         self.__cache = cache
+        self.__parent = None
+        self.__root = None
         self.__children = None
         self.__outpointers = None
         self.__inpointers = None
@@ -277,6 +292,7 @@ class basenode:
         if self.__cache == None:
             return basenode(self.__client,self.__client.getURL(referenceObject[REFERENCE_KEY]),None)
         return self.__cache.getBaseNode(referenceObject)
+    
     def getCache(self):
         return self.__cache
 
@@ -286,6 +302,11 @@ class basenode:
     @property
     def guid(self):
         return self.__json[KEY_GUID]
+    
+    @property
+    def meta(self):
+        return self.__json[KEY_META]
+    
     @property
     def attributes(self):
         return self.__json[KEY_ATTRIBUTES]
@@ -293,6 +314,23 @@ class basenode:
     @property
     def registry(self):
         return self.__json[KEY_REGISTRY]
+
+    @property
+    def parent(self):
+        if self.__parent == None:
+            parentNode = self.__getNode(self.__json[KEY_PARENT])
+            if paentNode != None:
+                self.__parent = parentNode
+        return self.__parent
+    
+    @property
+    def root(self):
+        if self.__root == None:
+            node = self
+            while node.parent != None:
+                node = node.parent
+            self.__root = node
+        return self.__node
 
     @property
     def children(self):
@@ -361,13 +399,6 @@ class basenode:
                                 self.__sets[pointerName].append(pointerNode)
         return self.__collections
 
-    @property
-    def meta(self):
-        return self.__json["meta"]
-
-    @property
-    def GUID(self):
-        return self.__json["GUID"]
 
 #this node class has the knowledge of connections and references so it can have nicer API - gives back type filterable lists and dictionaries
 class node:
@@ -409,10 +440,19 @@ class node:
 
     def getBaseNode(self):
         return self.__base
+    
     @property
     def guid(self):
         return self.__base.guid
     
+    @property
+    def parent(self):
+        return self.__base.parent
+
+    @property
+    def root(self):
+        return self.__base.root
+
     @property
     def base(self):
         if self.__baseNode == None:
@@ -487,11 +527,11 @@ class node:
         if self.__tanconns == None:
             self.__tanconns = []
             inpointers = self.inPointers
-            if 'src' in inpointers:
-                for conn in inpointers['src']:
+            if POINTER_SOURCE in inpointers:
+                for conn in inpointers[POINTER_SOURCE]:
                     self.__tanconns.append(conn)
-            if 'dst' in inpointers:
-                for conn in inpointers['dst']:
+            if POINTER_DESTINATION in inpointers:
+                for conn in inpointers[POINTER_DESTINATION]:
                     self.__tanconns.append(conn)
 
         return self.__tanconns
@@ -502,12 +542,11 @@ class node:
             self.__referrers = []
             inpointers = self.inPointers
             if 'ref' in inpointers:
-                for ref in inpointers['ref']:
+                for ref in inpointers[POINTER_REFERENCE]:
                     self.__referrers.append(ref)
         return self.__referrers
-    @property
-    def GUID(self):
-        return self.__base.GUID
+
+
 
 #this is a suer class of the basic node with some extended functions
 class connection(node):
@@ -518,12 +557,12 @@ class connection(node):
     @property
     def source(self):
         outpointers = self.outPointers
-        return outpointers["src"]
+        return outpointers[POINTER_SOURCE]
 
     @property
     def destination(self):
         outpointers = self.outPointers
-        return outpointers["dst"]
+        return outpointers[POINTER_DESTINATION]
     
     @property
     def endpoints(self):
@@ -540,4 +579,4 @@ class reference(node):
     @property
     def target(self):
         outpointers = self.outPointers
-        return outpointers["ref"]
+        return outpointers[POINTER_REFERENCE]

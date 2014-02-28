@@ -13,25 +13,30 @@ try:
         print(config)
 
     pName = None
-    mName = None
+    mUrl = None
     bName = None
     token = None
     host = None
     commit = None
+    rUrl = None
     if 'project' in config.keys():
         pName = config['project']
-    if 'model' in config.keys():
-        mName = config['model']
+    if 'selected' in config.keys():
+        mUrl = config['selected']
     if 'branch' in config.keys():
         bName = config['branch']
     if 'token' in config.keys():
         token = config['token']
+    if token == None:
+        token = ""
     if 'host' in config.keys():
         host = config['host']
     if 'commit' in config.keys():
         commit = config['commit']
+    if 'root' in config.keys():
+        commit = config['root']
 
-    if pName != None and mName != None and (bName != None or commit != None) and token and host:
+    if pName != None and mUrl != None and token != None and host != None:
         print('configuration read successfully')
         print('starting to generate graphml file')
         w = webgme.client(host,token)
@@ -40,24 +45,14 @@ try:
         graph = graphml()
         project = db.getProject(pName)
         if project != None:
-            if bName != None:
-                root = project.getRoot(bName)
+            if mUrl != None:
+                model = project.getNode(mUrl)
+                modelNode = webgme.node(model)
+                g = sf2graph.SignalFlowToGraphML(modelNode)
+                g.writeOut()
+                print('file generation completed')
             else:
-                root = project.getRoot(commit)
-            if root != None:
-                rootNode = webgme.node(root)
-                mychild = None
-                for child in rootNode.children:
-                    if child.attributes['name'] == mName:
-                        mychild = child
-                if mychild != None:
-                    g = sf2graph.SignalFlowToGraphML(mychild)
-                    g.writeOut()
-                    print('file generation completed')
-                else:
-                    print('the model is missing')
-            else:
-                print('cannot find the given branch or commit')
+                print('there is no selected model in the configuration')
         else:
             print('unable to find project')
     else:
