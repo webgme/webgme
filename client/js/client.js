@@ -7,7 +7,6 @@ define([
     'logManager',
     'util/url',
     'coreclient/meta',
-    'coreclient/metaforgui',
     'coreclient/tojson',
     'coreclient/dump',
     'coreclient/dumpmore',
@@ -23,7 +22,6 @@ define([
         LogManager,
         URL,
         BaseMeta,
-        GuiMeta,
         ToJson,
         Dump,
         DumpMore,
@@ -72,7 +70,7 @@ define([
                 _offline = false,
                 _networkWatcher = null,
                 _TOKEN = null;
-                META = new GuiMeta(new BaseMeta());
+                META = new BaseMeta();
 
             function print_nodes(pretext){
                 if(pretext){
