@@ -8,7 +8,7 @@ define(['clientUtil',
                                                                metaEditorPointerNamesDialogTemplate) {
 
     var MetaEditorPointerNamesDialog,
-        POPULAR_POINTER_NAMES = [CONSTANTS.POINTER_SOURCE, CONSTANTS.POINTER_TARGET, CONSTANTS.POINTER_REF];
+        POPULAR_POINTER_NAMES = [CONSTANTS.POINTER_SOURCE, CONSTANTS.POINTER_TARGET];
 
     MetaEditorPointerNamesDialog = function () {
       

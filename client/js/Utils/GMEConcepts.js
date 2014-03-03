@@ -26,7 +26,8 @@ define(['jquery',
                                            METAAspectHelper,
                                            MetaEditorConstants) {
 
-    var _client;
+    var _client,
+        EXCLUDED_POINTERS = [CONSTANTS.POINTER_BASE, CONSTANTS.POINTER_SOURCE, CONSTANTS.POINTER_TARGET];
 
     var _initialize = function (client) {
         if (!_client) {
@@ -357,21 +358,6 @@ define(['jquery',
         return result;
     };
 
-    var _getValidReferenceTypes = function (parentId, targetId) {
-        var validReferenceTypes = _getMETAAspectMergedValidChildrenTypes(parentId),
-            i;
-
-        i = validReferenceTypes.length;
-        while (i--) {
-            if (!_client.isValidTarget(validReferenceTypes[i], CONSTANTS.POINTER_REF, targetId) ||
-                !_canCreateChild(parentId, validReferenceTypes[i])) {
-                validReferenceTypes.splice(i, 1);
-            }
-        }
-
-        return validReferenceTypes;
-    };
-
     var _canDeleteNode = function (objID) {
         var result = false;
 
@@ -486,6 +472,34 @@ define(['jquery',
         return isPort === true;
     };
 
+    var _getValidPointerTypes = function (parentId, targetId) {
+        var validChildrenTypes = _getMETAAspectMergedValidChildrenTypes(parentId),
+            i,
+            childObj,
+            ptrNames,
+            j,
+            validPointerTypes = [];
+
+        i = validChildrenTypes.length;
+        while (i--) {
+            if (_canCreateChild(parentId, validChildrenTypes[i])) {
+                childObj = _client.getNode(validChildrenTypes[i]);
+                if (childObj) {
+                    ptrNames = _.difference(childObj.getPointerNames().slice(0), EXCLUDED_POINTERS);
+                    j = ptrNames.length;
+                    while (j--) {
+                        if (_client.isValidTarget(validChildrenTypes[i], ptrNames[j], targetId)) {
+                            validPointerTypes.push({'baseId': validChildrenTypes[i],
+                                                     'pointer': ptrNames[j]});
+                        }
+                    }
+                }
+            }
+        }
+
+        return validPointerTypes;
+    };
+
     //return utility functions
     return {
         initialize: _initialize,
@@ -498,12 +512,12 @@ define(['jquery',
         createBasicProjectSeed: _createBasicProjectSeed,
         isProjectFCO: _isProjectFCO,
         canCreateChildren: _canCreateChildren,
-        getValidReferenceTypes: _getValidReferenceTypes,
         canDeleteNode: _canDeleteNode,
         getMETAAspectMergedValidChildrenTypes: _getMETAAspectMergedValidChildrenTypes,
         getValidConnectionTypesInParent: _getValidConnectionTypesInParent,
         canAddToPointerList: _canAddToPointerList,
         isAbstract: _isAbstract,
-        isPort: _isPort
+        isPort: _isPort,
+        getValidPointerTypes: _getValidPointerTypes
     }
 });
