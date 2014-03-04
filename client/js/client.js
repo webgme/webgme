@@ -2083,12 +2083,12 @@ define([
             /*function getExportItemsUrlAsync(paths,filename,callback){
                 getExternalInterpreterConfigUrlAsync(paths[0],"config_",callback);
             }*/
-            function getExternalInterpreterConfigUrlAsync(selectedItemsPath,filename,callback){
+            function getExternalInterpreterConfigUrlAsync(selectedItemsPaths,filename,callback){
                 var config = {};
                 config.host = window.location.protocol+"//"+window.location.host;
                 config.project = _projectName;
                 config.token = _TOKEN.getToken();
-                config.selected = plainUrl('node',selectedItemsPath || "");
+                config.selected = plainUrl('node',selectedItemsPaths[0] || "");
                 config.commit = URL.addSpecialChars(_recentCommits[0] || "");
                 config.root = plainUrl('node',"");
                 config.branch = _branch

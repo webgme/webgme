@@ -1049,16 +1049,23 @@ define(['logManager',
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionContextMenu = function (selectedIds, mousePos) {
         var menuItems = {},
             MENU_EXPORT = 'export',
+            MENU_EXINTCONF = 'exintconf', //kecso
             self = this;
 
         menuItems[MENU_EXPORT] = {
             "name": 'Export selected...',
             "icon": 'icon-share'
         };
+        menuItems[MENU_EXINTCONF] = {
+            "name": 'Get config for external interpreters...',
+            "icon": 'icon-cog'
+        };
 
         this.designerCanvas.createMenu(menuItems, function (key) {
                 if (key === MENU_EXPORT) {
                     self._exportItems(selectedIds);
+                } else if (key === MENU_EXINTCONF){
+                    self._exIntConf(selectedIds)
                 }
             },
             this.designerCanvas.posToPageXY(mousePos.mX,
@@ -1075,6 +1082,18 @@ define(['logManager',
         }
 
         ExportManager.exportMultiple(gmeIDs);
+    };
+
+    //kecso
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._exIntConf = function (selectedIds) {
+        var i = selectedIds.length,
+            gmeIDs = [];
+
+        while(i--) {
+            gmeIDs.push(this._ComponentID2GmeID[selectedIds[i]]);
+        }
+
+        ExportManager.exIntConf(gmeIDs);
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionFillColorChanged = function (selectedElements, color) {
