@@ -7,15 +7,15 @@ define(['js/Constants',
     var CONTAINMENT_TYPE_LINE_END = "diamond2-xxwide-xxlong",
         POINTER_TYPE_LINE_END = "open-xwide-xlong",
         INHERITANCE_TYPE_LINE_END = "inheritance-xxwide-xxlong",
-        POINTERLIST_TYPE_LINE_END = "classic-xwide-xlong",
-        POINTERLIST_TYPE_LINE_START = "oval-wide-long",
+        SET_TYPE_LINE_END = "classic-xwide-xlong",
+        SET_TYPE_LINE_START = "oval-wide-long",
         NO_END = "none";
 
     var _meta_relations = {
             CONTAINMENT : "containment",
             POINTER : "pointer",
             INHERITANCE : "inheritance",
-            POINTERLIST : "pointerlist"
+            SET : "set"
     };
 
     var _connection_meta_info = {
@@ -47,11 +47,10 @@ define(['js/Constants',
                 params[DiagramDesignerWidgetConstants.LINE_END_ARROW] = NO_END;
                 params[DiagramDesignerWidgetConstants.LINE_COLOR] = "#FF0000";
                 break;
-            case _meta_relations.POINTERLIST:
-                params[DiagramDesignerWidgetConstants.LINE_START_ARROW] = POINTERLIST_TYPE_LINE_START;
-                params[DiagramDesignerWidgetConstants.LINE_END_ARROW] = POINTERLIST_TYPE_LINE_END;
+            case _meta_relations.SET:
+                params[DiagramDesignerWidgetConstants.LINE_START_ARROW] = SET_TYPE_LINE_START;
+                params[DiagramDesignerWidgetConstants.LINE_END_ARROW] = SET_TYPE_LINE_END;
                 params[DiagramDesignerWidgetConstants.LINE_COLOR] = "#FF00FF";
-                /*params[DiagramDesignerWidgetConstants.LINE_PATTERN] = DiagramDesignerWidgetConstants.LINE_PATTERNS.DASH;*/
                 break;
             default:
                 break;

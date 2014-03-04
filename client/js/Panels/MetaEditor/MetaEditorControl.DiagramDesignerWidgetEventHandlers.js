@@ -272,7 +272,7 @@ define(['logManager',
                 self._deletePointerRelationship(connDesc.GMESrcId, connDesc.GMEDstId, connDesc.name, false);
             } else if (connDesc.type === MetaRelations.META_RELATIONS.INHERITANCE) {
                 self._deleteInheritanceRelationship(connDesc.GMESrcId, connDesc.GMEDstId);
-            } else if (connDesc.type === MetaRelations.META_RELATIONS.POINTERLIST) {
+            } else if (connDesc.type === MetaRelations.META_RELATIONS.SET) {
                 self._deletePointerRelationship(connDesc.GMESrcId, connDesc.GMEDstId, connDesc.name, true);
             }
         };

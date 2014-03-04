@@ -2,19 +2,19 @@
 
 define(['js/PanelBase/PanelBaseWithHeader',
     'js/PanelManager/IActivePanel',
-    'js/Widgets/PointerListEditor/PointerListEditorWidget',
-    './PointerListEditorController'
+    'js/Widgets/SetEditor/SetEditorWidget',
+    './SetEditorController'
 ], function (PanelBaseWithHeader,
              IActivePanel,
-             PointerListEditorWidget,
-             PointerListEditorController) {
+             SetEditorWidget,
+             SetEditorController) {
 
-    var PointerListEditorPanel;
+    var SetEditorPanel;
 
-    PointerListEditorPanel = function (layoutManager, params) {
+    SetEditorPanel = function (layoutManager, params) {
         var options = {};
         //set properties from options
-        options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = "PointerListEditorPanel";
+        options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = "SetEditorPanel";
         options[PanelBaseWithHeader.OPTIONS.FLOATING_TITLE] = true;
 
         //call parent's constructor
@@ -25,14 +25,14 @@ define(['js/PanelBase/PanelBaseWithHeader',
         //initialize UI
         this._initialize();
 
-        this.logger.debug("PointerListEditorPanel ctor finished");
+        this.logger.debug("SetEditorPanel ctor finished");
     };
 
     //inherit from PanelBaseWithHeader
-    _.extend(PointerListEditorPanel.prototype, PanelBaseWithHeader.prototype);
-    _.extend(PointerListEditorPanel.prototype, IActivePanel.prototype);
+    _.extend(SetEditorPanel.prototype, PanelBaseWithHeader.prototype);
+    _.extend(SetEditorPanel.prototype, IActivePanel.prototype);
 
-    PointerListEditorPanel.prototype._initialize = function () {
+    SetEditorPanel.prototype._initialize = function () {
         var self = this;
 
         //remove title container
@@ -40,7 +40,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
             this.$panelHeaderTitle.remove();
         }*/
 
-        this.widget = new PointerListEditorWidget(this.$el, {'toolBar': this.toolBar});
+        this.widget = new SetEditorWidget(this.$el, {'toolBar': this.toolBar});
 
         this.widget.setTitle = function (title) {
             self.setTitle(title);
@@ -51,7 +51,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
             WebGMEGlobal.KeyboardManager.setListener(self.widget);
         };
 
-        this.control = new PointerListEditorController({"client": this._client,
+        this.control = new SetEditorController({"client": this._client,
             "widget": this.widget});
 
         this.onActivate();
@@ -59,7 +59,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
 
     /* OVERRIDE FROM WIDGET-WITH-HEADER */
     /* METHOD CALLED WHEN THE WIDGET'S READ-ONLY PROPERTY CHANGES */
-    PointerListEditorPanel.prototype.onReadOnlyChanged = function (isReadOnly) {
+    SetEditorPanel.prototype.onReadOnlyChanged = function (isReadOnly) {
         //apply parent's onReadOnlyChanged
         PanelBaseWithHeader.prototype.onReadOnlyChanged.call(this, isReadOnly);
 
@@ -67,12 +67,12 @@ define(['js/PanelBase/PanelBaseWithHeader',
         this.control.setReadOnly(isReadOnly);
     };
 
-    PointerListEditorPanel.prototype.onResize = function (width, height) {
+    SetEditorPanel.prototype.onResize = function (width, height) {
         this.logger.debug('onResize --> width: ' + width + ', height: ' + height);
         this.widget.onWidgetContainerResize(width, height);
     };
 
-    PointerListEditorPanel.prototype.destroy = function () {
+    SetEditorPanel.prototype.destroy = function () {
         this.control.destroy();
         this.widget.destroy();
 
@@ -82,7 +82,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
     };
 
     /* override IActivePanel.prototype.onActivate */
-    PointerListEditorPanel.prototype.onActivate = function () {
+    SetEditorPanel.prototype.onActivate = function () {
         this.widget.onActivate();
         this.control.onActivate();
         WebGMEGlobal.KeyboardManager.setListener(this.widget);
@@ -90,12 +90,12 @@ define(['js/PanelBase/PanelBaseWithHeader',
     };
 
     /* override IActivePanel.prototype.onDeactivate */
-    PointerListEditorPanel.prototype.onDeactivate = function () {
+    SetEditorPanel.prototype.onDeactivate = function () {
         this.widget.onDeactivate();
         this.control.onDeactivate();
         WebGMEGlobal.KeyboardManager.setListener(undefined);
         WebGMEGlobal.Toolbar.refresh();
     };
 
-    return PointerListEditorPanel;
+    return SetEditorPanel;
 });

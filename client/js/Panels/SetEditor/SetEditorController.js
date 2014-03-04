@@ -13,20 +13,20 @@ define(['js/Utils/GMEConcepts',
                                                ManualAspectConstants,
                                                DiagramDesignerWidgetMultiTabMemberListControllerBase) {
 
-    var PointerListEditorController;
+    var SetEditorController;
 
-    PointerListEditorController = function (options) {
+    SetEditorController = function (options) {
         options = options || {};
-        options.loggerName = "PointerListEditorController";
+        options.loggerName = "SetEditorController";
 
         DiagramDesignerWidgetMultiTabMemberListControllerBase.call(this, options);
 
-        this.logger.debug("PointerListEditorController ctor finished");
+        this.logger.debug("SetEditorController ctor finished");
     };
 
-    _.extend(PointerListEditorController.prototype, DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype);
+    _.extend(SetEditorController.prototype, DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype);
 
-    PointerListEditorController.prototype.getOrderedMemberListInfo = function (memberListContainerObject) {
+    SetEditorController.prototype.getOrderedMemberListInfo = function (memberListContainerObject) {
         var result = [],
             setNames = memberListContainerObject.getSetNames() || [],
             manualAspectsRegistry = memberListContainerObject.getRegistry(REGISTRY_KEYS.MANUAL_ASPECTS) || [],
@@ -63,14 +63,14 @@ define(['js/Utils/GMEConcepts',
     /**********************************************************/
     /*         HANDLE OBJECT DRAG & DROP ACCEPTANCE           */
     /**********************************************************/
-    PointerListEditorController.prototype._onBackgroundDroppableAccept = function(event, dragInfo) {
+    SetEditorController.prototype._onBackgroundDroppableAccept = function(event, dragInfo) {
         var gmeIDList = DragHelper.getDragItems(dragInfo),
             accept = DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onBackgroundDroppableAccept.call(this, event, dragInfo);
 
         if (accept === true) {
             //if based on the DiagramDesignerWidgetMultiTabMemberListControllerBase check it could be accepted, ie items are not members of the set so far
             //we need to see if we can accept them based on the META rules
-            accept = GMEConcepts.canAddToPointerList(this._memberListContainerID, this._selectedMemberListID, gmeIDList);
+            accept = GMEConcepts.canAddToSet(this._memberListContainerID, this._selectedMemberListID, gmeIDList);
         }
 
         return accept;
@@ -82,11 +82,11 @@ define(['js/Utils/GMEConcepts',
     /*
      * Overwrite 'no tab' warning message to the user
      */
-    PointerListEditorController.prototype.displayNoTabMessage = function () {
-        var msg = 'The currently selected object does not contain any pointer lists.';
+    SetEditorController.prototype.displayNoTabMessage = function () {
+        var msg = 'The currently selected object does not contain any sets.';
 
         this._widget.setBackgroundText(msg);
     };
 
-    return PointerListEditorController;
+    return SetEditorController;
 });

@@ -14,9 +14,9 @@
         "panel": "js/Panels/ManualAspect/ManualAspectPanel",
         "DEBUG_ONLY": false},
 
-    {"id": "PointerListEditor",
-        "title": "Pointer Lists",
-        "panel": "js/Panels/PointerListEditor/PointerListEditorPanel",
+    {"id": "SetEditor",
+        "title": "Set Editor",
+        "panel": "js/Panels/SetEditor/SetEditorPanel",
         "DEBUG_ONLY": false},
 
     {"id": "ContainmentGrid",

@@ -109,8 +109,8 @@ define(['logManager',
         this.$filterHeader.html('FILTER' + (all === on ? '' : ' *'));
     };
 
-    MetaEditorWidget.prototype.selectNewPointerName = function (existingPointerNames, notAllowedPointerNames, isPointerList, callBack) {
-       new MetaEditorPointerNamesDialog().show(existingPointerNames, notAllowedPointerNames, isPointerList, callBack);
+    MetaEditorWidget.prototype.selectNewPointerName = function (existingPointerNames, notAllowedPointerNames, isSet, callBack) {
+       new MetaEditorPointerNamesDialog().show(existingPointerNames, notAllowedPointerNames, isSet, callBack);
     };
 
     MetaEditorWidget.prototype.setFilterChecked = function (value) {
