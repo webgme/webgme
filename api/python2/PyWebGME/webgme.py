@@ -19,29 +19,23 @@ KEY_PARENT = "parent"
 
 TYPE_NODE = 'node'
 TYPE_CONNECTION = 'connection'
-TYPE_REFERENCE = 'reference'
 TYPE_NONE = 'none'
 
 POINTER_SOURCE = 'src'
 POINTER_DESTINATION = 'dst'
-POINTER_REFERENCE = 'ref'
 
 #libary wide functions
 def getType(nodeObject):
     if isinstance(nodeObject,basenode):
         #TODO what should we do in case of multiple types
-        #now our priority order is collection -> reference -> node
+        #now our priority order is collection -> node
         pointers = nodeObject.outPointers
         if pointers != None:
             if POINTER_SOURCE in pointers.keys() and POINTER_DESTINATION in pointers.keys():
                 return TYPE_CONNECTION
-            elif POINTER_REFERENCE in pointers.keys():
-                return TYPE_REFERENCE
         return TYPE_NODE
     elif isinstance(nodeObject, connection):
         return TYPE_CONNECTION
-    elif isinstance(nodeObject, reference):
-        return TYPE_REFERENCE
     else:
         return TYPE_NONE
 #this class represents the basic HTTP layer
@@ -186,7 +180,6 @@ class memorycache:
         self.__nodes = {}
         self.__guidDir = {}
         self.__connDir = {}
-        self.__refDir = {}
         self.__nodDir = {}
 
     def getBaseNode(self,referenceObject):
@@ -210,16 +203,6 @@ class memorycache:
             if getType(baseNode) == TYPE_CONNECTION:
                 self.__connDir[guid] = connection(baseNode)
                 return self.__connDir[guid]
-        return None
-
-    def getReference(self,baseNode):
-        if isinstance(baseNode,basenode):
-            guid = baseNode.guid
-            if guid in self.__refDir.keys():
-                return self.__refDir[guid]
-            if getType(baseNode) == TYPE_REFERENCE:
-                self.__refDir[guid] = reference(baseNode)
-                return self.__refDir[guid]
         return None
 
     def getNode(self,baseNode):
@@ -412,10 +395,9 @@ class node:
         self.__sets = None
         self.__collections = None
         self.__tanconns = None
-        self.__referrers = None
         self.__baseNode = None
     
-    #this function always returns a typed gme object (node / connection / reference)
+    #this function always returns a typed gme object (node / connection)
     def __getNode(self,base):
         
         type = getType(base)
@@ -425,11 +407,6 @@ class node:
                 return connection(base)
             else:
                 return self.__cache.getConnection(base)
-        elif type == TYPE_REFERENCE:
-            if self.__cache == None:
-                return reference(base)
-            else:
-                return self.__cache.getReference(base)
         elif type == TYPE_NODE:
             if self.__cache == None:
                 return node(base)
@@ -536,16 +513,6 @@ class node:
 
         return self.__tanconns
 
-    @property
-    def referrers(self):
-        if self.__referrers == None:
-            self.__referrers = []
-            inpointers = self.inPointers
-            if 'ref' in inpointers:
-                for ref in inpointers[POINTER_REFERENCE]:
-                    self.__referrers.append(ref)
-        return self.__referrers
-
 
 
 #this is a suer class of the basic node with some extended functions
@@ -571,12 +538,3 @@ class connection(node):
             self.__endpoints.append(self.source)
             self.__endpoints.append(self.destination)
         return self.__endpoints
-
-#this is the reference class similar to the connection
-class reference(node):
-    def __init__(self, baseNode):
-        return super().__init__(baseNode)
-    @property
-    def target(self):
-        outpointers = self.outPointers
-        return outpointers[POINTER_REFERENCE]

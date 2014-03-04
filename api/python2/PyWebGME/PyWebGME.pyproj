@@ -33,6 +33,7 @@
     <Compile Include="graphml.py" />
     <Compile Include="PyWebGME.py" />
     <Compile Include="sf2graph.py" />
+    <Compile Include="sfs2graphs.py" />
     <Compile Include="webgme.py" />
   </ItemGroup>
   <ItemGroup>

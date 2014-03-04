@@ -3,6 +3,7 @@ import sys
 import json
 from graphml import graphml
 import sf2graph
+import sfs2graphs
 try:
 
     config = {}
@@ -48,8 +49,15 @@ try:
             if mUrl != None:
                 model = project.getNode(mUrl)
                 modelNode = webgme.node(model)
-                g = sf2graph.SignalFlowToGraphML(modelNode)
-                g.writeOut()
+                system = False
+                for child in modelNode.children:
+                    if 'canrun' in child.sets.keys():
+                        system = True
+                if system:
+                    g = sfs2graphs.SignalFlowSystemToGraphML(modelNode)
+                else:
+                    g = sf2graph.SignalFlowToGraphML(modelNode)
+                    g.writeOut()
                 print('file generation completed')
             else:
                 print('there is no selected model in the configuration')
