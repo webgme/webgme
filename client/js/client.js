@@ -600,6 +600,18 @@ define([
                 return modifiedNodes;
             }
             //this is just a first brute implementation it needs serious optimization!!!
+            function fitsInPatternTypes(path,pattern){
+                if(pattern.items && pattern.items.length > 0){
+                    for(var i=0;i<pattern.items.length;i++){
+                        if(META.isTypeOf(path,items[i])){
+                            return true;
+                        }
+                    }
+                    return false;
+                } else {
+                    return true;
+                }
+            }
             function patternToPaths(patternId,pattern,pathsSoFar){
                 if(_nodes[patternId]){
                     pathsSoFar[patternId] = true;
@@ -608,7 +620,9 @@ define([
                         var subPattern = COPY(pattern);
                         subPattern.children--;
                         for(var i=0;i<children.length;i++){
-                            patternToPaths(children[i],subPattern,pathsSoFar);
+                            if(fitsInPatternTypes(children[i],pattern)){
+                                patternToPaths(children[i],subPattern,pathsSoFar);
+                            }
                         }
                     }
                 } else{
