@@ -603,7 +603,7 @@ define([
             function fitsInPatternTypes(path,pattern){
                 if(pattern.items && pattern.items.length > 0){
                     for(var i=0;i<pattern.items.length;i++){
-                        if(META.isTypeOf(path,items[i])){
+                        if(META.isTypeOf(path,pattern.items[i])){
                             return true;
                         }
                     }
