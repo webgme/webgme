@@ -181,7 +181,8 @@ define(['jquery',
         _client.startTransaction();
 
         //create FCO, META, PROJECT_BASE
-        var FCO_ID = _client.createChild({'parentId': CONSTANTS.PROJECT_ROOT_ID});
+        // now as we create FCO always on the same relid and with the same GUID project have a more interchangeable base...
+        var FCO_ID = _client.createChild({'parentId': CONSTANTS.PROJECT_ROOT_ID,'guid':"cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",'relid':"1"});
 
         //set attributes for FCO
         for (it in GMEConceptsFCO.FCO_ATTRIBUTES) {
