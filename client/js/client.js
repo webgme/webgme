@@ -1509,7 +1509,7 @@ define([
                         if(_nodes[parameters.baseId]){
                             baseNode = _nodes[parameters.baseId].node || baseNode;
                         }
-                        var child = _core.createNode({parent:_nodes[parameters.parentId].node, base:baseNode});
+                        var child = _core.createNode({parent:_nodes[parameters.parentId].node, base:baseNode, guid:parameters.guid, relid:parameters.relid});
                         if (parameters.position) {
                             _core.setRegistry(child,"position", { "x": parameters.position.x || 100, "y": parameters.position.y || 100});
                         } else {
