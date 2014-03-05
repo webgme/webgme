@@ -9,6 +9,7 @@ define(['js/Constants',
     './AttributeDetailsDialog',
     'js/Panels/MetaEditor/MetaRelations',
     './MetaDecorator.DiagramDesignerWidget.Constraints',
+    './MetaDecorator.DiagramDesignerWidget.Aspects',
     './MetaTextEditorDialog',
     'css!./MetaDecorator.DiagramDesignerWidget'], function (CONSTANTS,
                                                           nodePropertyNames,
@@ -19,6 +20,7 @@ define(['js/Constants',
                                                           AttributeDetailsDialog,
                                                           MetaRelations,
                                                           MetaDecoratorDiagramDesignerWidgetConstraints,
+                                                          MetaDecoratorDiagramDesignerWidgetAspects,
                                                           MetaTextEditorDialog) {
 
     var MetaDecoratorDiagramDesignerWidget,
@@ -38,7 +40,9 @@ define(['js/Constants',
                             "$attributesContainer": undefined,
                             "$addAttributeContainer": undefined,
                             "$constraintsContainer": undefined,
-                            "$addConstraintContainer": undefined};
+                            "$addConstraintContainer": undefined,
+                            "$aspectsContainer": undefined,
+                            "$addAspectContainer": undefined};
 
         this.logger.debug("MetaDecorator ctor");
     };
@@ -46,6 +50,7 @@ define(['js/Constants',
     _.extend(MetaDecoratorDiagramDesignerWidget.prototype, DefaultDecoratorDiagramDesignerWidget.prototype);
     MetaDecoratorDiagramDesignerWidget.prototype.DECORATORID = DECORATOR_ID;
     _.extend(MetaDecoratorDiagramDesignerWidget.prototype, MetaDecoratorDiagramDesignerWidgetConstraints.prototype);
+    _.extend(MetaDecoratorDiagramDesignerWidget.prototype, MetaDecoratorDiagramDesignerWidgetAspects.prototype);
 
     /*********************** OVERRIDE DECORATORBASE MEMBERS **************************/
 
@@ -128,6 +133,9 @@ define(['js/Constants',
         //call the Constraint's extension's init render code
         this._renderContentConstraints();
 
+        //call the Aspect's extension's init render code
+        this._renderContentAspects();
+
         //render text-editor based META editing UI piece
         this._skinParts.$textMetaEditorBtn = $('<i class="icon-cog text-meta"></i>');
         this.$el.append(this._skinParts.$textMetaEditorBtn);
@@ -142,6 +150,7 @@ define(['js/Constants',
         if (this.hostDesignerItem.canvas.getIsReadOnlyMode() === true) {
             this._skinParts.$addAttributeContainer.detach();
             this._skinParts.$addConstraintContainer.detach();
+            this._skinParts.$addAspectContainer.detach();
         }
 
         this.update();
@@ -164,6 +173,7 @@ define(['js/Constants',
             this._updateAttributes();
             this._updateConstraints();
             this._updateAbstract();
+            this._updateAspects();
         }
     };
 
@@ -223,7 +233,7 @@ define(['js/Constants',
     /***************  CUSTOM DECORATOR PART ****************************/
     MetaDecoratorDiagramDesignerWidget.prototype._updateAttributes = function () {
         var client = this._control._client,
-            newAttributes = this._control._client.getOwnValidAttributeNames(this._metaInfo[CONSTANTS.GME_ID]),
+            newAttributes = client.getOwnValidAttributeNames(this._metaInfo[CONSTANTS.GME_ID]),
             len,
             displayedAttributes = this._attributeNames.slice(0),
             diff,
@@ -257,7 +267,6 @@ define(['js/Constants',
 
     MetaDecoratorDiagramDesignerWidget.prototype._addAttribute = function (attrName) {
         var client = this._control._client,
-            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
             attrMetaDescriptor = client.getAttributeSchema(this._metaInfo[CONSTANTS.GME_ID],attrName) ? {name:attrName,type:client.getAttributeSchema(this._metaInfo[CONSTANTS.GME_ID],attrName).type || "null"} : null;
 
         if (attrMetaDescriptor) {
@@ -431,10 +440,12 @@ define(['js/Constants',
         if (readOnly === true) {
             this._skinParts.$addAttributeContainer.detach();
             this._skinParts.$addConstraintContainer.detach();
+            this._skinParts.$addAspectContainer.detach();
             this.$el.find('input.new-attr').val('').blur();
         } else {
             this._skinParts.$addAttributeContainer.insertAfter(this._skinParts.$attributesContainer);
             this._skinParts.$addConstraintContainer.insertAfter(this._skinParts.$constraintsContainer);
+            this._skinParts.$addAspectContainer.insertAfter(this._skinParts.$aspectsContainer);
         }
     };
 
