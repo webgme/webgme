@@ -145,7 +145,7 @@ define(['js/Constants',
         this.logger.debug("_onNewConstraintCreate: " + cName);
 
         //pass all the other attribute names to the dialog
-        constraintNames.splice(this._attributeNames.indexOf(cName), 1);
+        constraintNames.splice(this._constraintNames.indexOf(cName), 1);
 
         desc = {'name': cName,
             'script': SCRIPT_TEMPLATE,
