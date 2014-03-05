@@ -198,7 +198,8 @@ define([], function () {
                 }
 
                 if(meta.aspects){
-                    var aspectsNode = _core.getChild(metaNode,"aspects");
+                    var aspectsNode = _core.getChild(metaNode,"aspects"),
+                        aspectNames = [];
                     for(var i in meta.aspects){
                         _core.setPointer(aspectsNode,i,null);
                         var aspectNode = _core.getChild(aspectsNode,"_a_"+i);
@@ -210,6 +211,7 @@ define([], function () {
                                 }
                             }
                         }
+                        aspectNames.push(i);
                     }
                     if (aspectNames.length > 0){
                         meta.aspects = {};
@@ -678,8 +680,8 @@ define([], function () {
             if (rawMeta){
                 if(rawMeta.aspects[name]){
                     var aspect = {items:[]};
-                    for(var i=0;i<rawMeta.aspects[name].items;i++){
-                        aspect.items.push(refObjectToPath(rawMeta.apsects[name].items[i]));
+                    for(var i=0;i<rawMeta.aspects[name].items.length;i++){
+                        aspect.items.push(refObjectToPath(rawMeta.aspects[name].items[i]));
                     }
                     if (aspect.items.length === 0){
                         delete aspect.items;
@@ -694,10 +696,9 @@ define([], function () {
         function setMetaAspect(path,name,aspect){
             var rawMeta = getMeta(path);
             if(rawMeta){
-                if(rawMeta.aspects === undefined){
-                    rawMeta.aspects = {}
-                }
-                rawMeta.aspects[name] = {};
+
+                rawMeta.aspects = rawMeta.aspects || {};
+                rawMeta.aspects[name] = {'items': []};
                 for(var i=0;i<aspect.items.length;i++){
                     rawMeta.aspects[name].items.push(pathToRefObject(aspect.items[i]));
                 }
