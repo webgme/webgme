@@ -24,6 +24,8 @@ define([], function () {
          */
         PROJECT_ROOT_ID: '',
         PROJECT_FCO_ID: 'FCO_ID',
+        PROJECT_FCO_GUID: 'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045',
+        PROJECT_FCO_RELID: '1',
 
         /*
          * Dedicated POINTER names
