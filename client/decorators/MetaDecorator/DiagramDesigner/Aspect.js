@@ -21,7 +21,7 @@ define(['logManager'], function (logManager) {
     Aspect.prototype._render = function () {
         this.$el = this._DOMAspectBase.clone();
         this.$el.attr({"data-name": this.name,
-                      "title": this.name + ", priority: " + this.priority});
+                      "title": this.name + ", types: " + this.itemNum});
 
         this.$el.find(".n").text(this.name + ":");
         this.$el.find(".t").text(this.itemNum);
