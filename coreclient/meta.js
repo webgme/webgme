@@ -647,7 +647,33 @@ define([], function () {
             }
         }
 
-        function getAspectMeta(path,name){
+        function getMetaAspectNames(path){
+            var rawMeta = getMeta(path),
+                names = [];
+
+            if(rawMeta && rawMeta.aspects){
+                for(var i in rawMeta.aspects){
+                    names.push(i);
+                }
+            }
+            return names;
+        }
+
+        function getOwnMetaAspectNames(path){
+            var names = getMetaAspectNames(path),
+                ownNames = [];
+            if(_nodes[path]){
+                var parentNames = getMetaAspectNames(_core.getPath(_core.getParent(_nodes[path])));
+                for(var i=0;i<names.length;i++){
+                    if(parentNames.indexOf(names[i]) === -1){
+                        ownNames.push(names[i]);
+                    }
+                }
+            }
+            return ownNames;
+        }
+
+        function getMetaAspect(path,name){
             var rawMeta = getMeta(path);
             if (rawMeta){
                 if(rawMeta.aspects[name]){
@@ -665,7 +691,7 @@ define([], function () {
             return null;
         }
 
-        function setAspectMeta(path,name,aspect){
+        function setMetaAspect(path,name,aspect){
             var rawMeta = getMeta(path);
             if(rawMeta){
                 if(rawMeta.aspects === undefined){
@@ -680,38 +706,12 @@ define([], function () {
         }
 
         function getAspectTerritoryPattern(path,name){
-            var aspect = getAspectMeta(path,name);
+            var aspect = getMetaAspect(path,name);
             if( aspect !== null){
                 aspect.children = 1; //TODO now it is fixed, maybe we can change that in the future
                 return aspect;
             }
             return null;
-        }
-
-        function updateValidAspectItem(path,name,itemPath){
-            var aspect = getAspectMeta(path,name);
-            if(aspect){
-                if(aspect.items){
-                    if(aspect.items.indexOf(itemPath) === -1){
-                        aspect.items.push(itemPath);
-                        setAspectMeta(path,name,aspect);
-                    }
-                } else {
-                    aspect.items = [itemPath];
-                }
-                setAspectMeta(path,name,aspect);
-            }
-        }
-
-        function removeValidAspectItem(path,name,itemPath){
-            var aspect = getAspectMeta(path,name);
-            if(aspect && aspect.items){
-                var index = aspect.items.indexOf(itemPath);
-                if(index !== -1){
-                    aspect.items.splice(index,1);
-                    setAspectMeta(path,name,aspect);
-                }
-            }
         }
 
         function deleteMetaAspect(path,name){
@@ -771,11 +771,11 @@ define([], function () {
             deleteMetaPointer      : deleteMetaPointer,
 
             //aspect
-            getAspectMeta             : getAspectMeta,
-            setAspectMeta             : setAspectMeta,
+            getMetaAspectNames        : getMetaAspectNames,
+            getOwnMetaAspectNames     : getOwnMetaAspectNames,
+            getMetaAspect             : getMetaAspect,
+            setMetaAspect             : setMetaAspect,
             getAspectTerritoryPattern : getAspectTerritoryPattern,
-            updateValidAspectItem     : updateValidAspectItem,
-            removeValidAspectItem     : removeValidAspectItem,
             deleteMetaAspect          : deleteMetaAspect
 
         };

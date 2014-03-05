@@ -2306,12 +2306,12 @@ define([
                 isTypeOf                  : META.isTypeOf,
                 getValidAttributeNames    : META.getValidAttributeNames,
                 getOwnValidAttributeNames : META.getOwnValidAttributeNames,
-                getAspectMeta             : META.getAspectMeta,
-                setAspectMeta             : META.setAspectMeta,
+                getMetaAspectNames        : META.getMetaAspectNames,
+                getOwnMetaAspectNames     : META.getOwnMetaAspectNames,
+                getMetaAspect             : META.getMetaAspect,
+                setMetaAspect             : META.setMetaAspect,
                 deleteMetaAspect          : META.deleteMetaAspect,
                 getAspectTerritoryPattern : META.getAspectTerritoryPattern,
-                updateValidAspectItem     : META.updateValidAspectItem,
-                removeValidAspectItem     : META.removeValidAspectItem,
 
                 //end of META functions
 
