@@ -25,7 +25,8 @@ define(['js/Constants',
 
     var MetaDecoratorDiagramDesignerWidget,
         DECORATOR_ID = "MetaDecorator",
-        ABSTRACT_CLASS = 'abstract';
+        ABSTRACT_CLASS = 'abstract',
+        TEXT_META_EDIT_BTN_BASE = $('<i class="icon-cog text-meta"/>');
 
     MetaDecoratorDiagramDesignerWidget = function (options) {
 
@@ -137,7 +138,7 @@ define(['js/Constants',
         this._renderContentAspects();
 
         //render text-editor based META editing UI piece
-        this._skinParts.$textMetaEditorBtn = $('<i class="icon-cog text-meta"></i>');
+        this._skinParts.$textMetaEditorBtn = TEXT_META_EDIT_BTN_BASE.clone();
         this.$el.append(this._skinParts.$textMetaEditorBtn);
         this._skinParts.$textMetaEditorBtn.on('click', function (event) {
             if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
