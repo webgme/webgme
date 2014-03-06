@@ -17,7 +17,9 @@ define(['js/Toolbar/ToolbarButton',
         TAB_SCROLL = 200,
         TAB_ID = 'TAB_ID',
         TAB_RENAME = 'TAB_RENAME',
-        WITH_TABS_CLASS = 'w-tabs';
+        WITH_TABS_CLASS = 'w-tabs',
+        SELECTED_ICON = 'icon-ok',
+        DDL_SELECTED_TAB_ICON_BASE = $('<i class="' + SELECTED_ICON + '" />');
 
     DiagramDesignerWidgetTabs = function () {
     };
@@ -204,8 +206,7 @@ define(['js/Toolbar/ToolbarButton',
             allLi = this.$ulTabTab.find('li'),
             allDropDownLi = this.$ddlTabsList.el.find('li'),
             i,
-            li,
-            ddlSelectedIcon = 'icon-ok';
+            li;
 
         if (this._selectedTab !== tabID) {
             //select tab
@@ -236,8 +237,8 @@ define(['js/Toolbar/ToolbarButton',
             }
 
             if (liToSelect) {
-                this.$ddlTabsList.el.find('i.' + ddlSelectedIcon).remove();
-                liToSelect.find('a').prepend('<i class="' + ddlSelectedIcon + '" />');
+                this.$ddlTabsList.el.find('i.' + SELECTED_ICON).remove();
+                liToSelect.find('a').prepend(DDL_SELECTED_TAB_ICON_BASE.clone());
             }
 
             this._scrollSelectedTabIntoView();
