@@ -701,7 +701,9 @@ define(['logManager',
             gmeIDs.push(this.currentNodeInfo.id);
         }
 
+        this._settingActiveSelection = true;
         WebGMEGlobal.State.setActiveSelection(gmeIDs);
+        this._settingActiveSelection = false;
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onClipboardCopy = function (selectedIds) {

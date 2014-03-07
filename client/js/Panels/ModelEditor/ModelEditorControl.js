@@ -895,13 +895,21 @@ define(['logManager',
         this.selectedObjectChanged(activeObjectId);
     };
 
+    ModelEditorControl.prototype._stateActiveSelectionChanged = function (model, activeSelection) {
+        if (this._settingActiveSelection !== true) {
+            this.activeSelectionChanged(activeSelection);
+        }
+    };
+
     ModelEditorControl.prototype._attachClientEventListeners = function () {
         this._detachClientEventListeners();
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged, this);
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_SELECTION, this._stateActiveSelectionChanged, this);
     };
 
     ModelEditorControl.prototype._detachClientEventListeners = function () {
         WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged);
+        WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_SELECTION, this._stateActiveSelectionChanged);
     };
 
     ModelEditorControl.prototype.onActivate = function () {
@@ -996,6 +1004,19 @@ define(['logManager',
         } else {
             this.$btnModelHierarchyUp.hide();
         }
+    };
+
+    ModelEditorControl.prototype.activeSelectionChanged = function (activeSelection) {
+        var selectedIDs = [],
+            len = activeSelection.length;
+
+        while (len--) {
+            if (this._GmeID2ComponentID.hasOwnProperty(activeSelection[len])) {
+                selectedIDs = selectedIDs.concat(this._GmeID2ComponentID[activeSelection[len]]);
+            }
+        }
+
+        this.designerCanvas.select(selectedIDs);
     };
 
     //attach ModelEditorControl - DesignerCanvas event handler functions
