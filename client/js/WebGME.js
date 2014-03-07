@@ -67,7 +67,10 @@ define(['logManager',
 
             WebGMEGlobal.ConstraintManager = new ConstraintManager(client);
 
-            WebGMEGlobal.State = StateManager.initialize();
+            Object.defineProperty(WebGMEGlobal, 'State', {value : StateManager.initialize(),
+                writable : false,
+                enumerable : true,
+                configurable : false});
 
             WebGMEHistory.initialize();
 
