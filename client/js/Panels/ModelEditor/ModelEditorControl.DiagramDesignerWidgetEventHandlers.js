@@ -1057,7 +1057,7 @@ define(['logManager',
             "icon": 'icon-share'
         };
         menuItems[MENU_EXINTCONF] = {
-            "name": 'Get config for external interpreters...',
+            "name": 'Export model context...',
             "icon": 'icon-cog'
         };
 
