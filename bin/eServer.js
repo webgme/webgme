@@ -78,6 +78,20 @@ requirejs(['logManager',
     var forge = new VFAUTH({session:__sessionStore});
     var gme = new GMEAUTH({session:__sessionStore,host:parameters.mongoip,port:parameters.mongoport,database:parameters.mongodatabase,guest:parameters.guest});
 
+    //optional config file from command line arguments
+    if(process.argv.length === 3){
+        var cmdConfig = require('fs').readFileSync(process.argv[2]);
+        try{
+            cmdConfig = JSON.parse(cmdConfig);
+            for(var i in cmdConfig){
+                CONFIG[i] = cmdConfig[i];
+            }
+        } catch (e){
+            //TODO
+            logger.error("extra config file read failure: "+e);
+        }
+    }
+
     var globalAuthorization = function(sessionId,projectName,type,callback){
         __sessionStore.get(sessionId,function(err,data){
             if(!err && data){
