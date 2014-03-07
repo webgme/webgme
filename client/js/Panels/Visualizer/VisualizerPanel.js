@@ -79,8 +79,8 @@ define(['logManager',
             event.preventDefault();
         });
 
-        this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, function (__project, nodeId) {
-            self.selectedObjectChanged(nodeId);
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, function (model, activeObjectId) {
+            self.selectedObjectChanged(activeObjectId);
         });
 
         this._client.addEventListener(this._client.events.PROJECT_CLOSED, function (__project, nodeId) {

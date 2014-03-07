@@ -23,17 +23,13 @@ define(['logManager',
 
         this._logger = logManager.create("GridPanelSetsControl");
 
-        this._selectedObjectChanged = function (__project, nodeId) {
-            self.selectedObjectChanged(nodeId);
-        };
-
         this._logger.debug("Created");
     };
 
     GridPanelSetsControl.prototype.selectedObjectChanged = function (nodeId) {
         var self = this;
 
-        this._logger.debug("SELECTEDOBJECT_CHANGED nodeId '" + nodeId + "'");
+        this._logger.debug("activeObject nodeId '" + nodeId + "'");
 
         //remove current territory patterns
         if (this._territoryId) {
@@ -117,14 +113,17 @@ define(['logManager',
         this._panel.setTitle(title);
     };
 
+    GridPanelSetsControl.prototype._stateActiveObjectChanged = function (model, activeObjectId) {
+        this.selectedObjectChanged(activeObjectId);
+    };
 
     GridPanelSetsControl.prototype.attachClientEventListeners = function () {
         this.detachClientEventListeners();
-        this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged, this);
     };
 
     GridPanelSetsControl.prototype.detachClientEventListeners = function () {
-        this._client.removeEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
+        WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged);
     };
 
     return GridPanelSetsControl;

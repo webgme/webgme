@@ -52,11 +52,13 @@ define(['logManager',
     PropertyEditorController.prototype._initEventHandlers = function () {
         var self = this;
 
-        if (this._client) {
-            this._client.addEventListener(this._client.events.PROPERTY_EDITOR_SELECTION_CHANGED, function (__project, idList) {
-                self._selectedObjectsChanged(idList);
-            });
-        }
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_SELECTION, function (model, activeSelection) {
+            self._selectedObjectsChanged(activeSelection);
+        });
+
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, function (model, activeObjectId) {
+            self._selectedObjectsChanged([activeObjectId]);
+        });
 
         this._propertyGrid.onFinishChange(function (args) {
             self._onPropertyChanged(args);

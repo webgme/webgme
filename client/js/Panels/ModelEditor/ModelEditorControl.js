@@ -44,10 +44,6 @@ define(['logManager',
             throw ("ModelEditorControl can not be created");
         }
 
-        this._selectedObjectChanged = function (__project, nodeId) {
-            self.selectedObjectChanged(nodeId);
-        };
-
         if (this.designerCanvas === undefined) {
             this.logger.error("ModelEditorControl's DesignerCanvas is not specified...");
             throw ("ModelEditorControl can not be created");
@@ -78,7 +74,7 @@ define(['logManager',
             nodeName,
             self = this;
 
-        this.logger.debug("SELECTEDOBJECT_CHANGED nodeId '" + nodeId + "'");
+        this.logger.debug("activeObject '" + nodeId + "'");
 
         //delete everything from model editor
         this.designerCanvas.clear();
@@ -442,7 +438,7 @@ define(['logManager',
             this._firstLoad = false;
 
             //check if there is active selection set in client
-            var activeSelection = this._client.getActiveSelection();
+            var activeSelection = WebGMEGlobal.State.getActiveSelection();
 
             if (activeSelection && activeSelection.length > 0) {
                 i = activeSelection.length;
@@ -756,9 +752,11 @@ define(['logManager',
     };
 
     ModelEditorControl.prototype._onModelHierarchyUp = function () {
+        var myId = this.currentNodeInfo.id;
         if (this.currentNodeInfo.parentId ||
             this.currentNodeInfo.parentId === CONSTANTS.PROJECT_ROOT_ID) {
-            this._client.setSelectedObjectId(this.currentNodeInfo.parentId);
+            WebGMEGlobal.State.setActiveObject(this.currentNodeInfo.parentId);
+            WebGMEGlobal.State.setActiveSelection([myId]);
         }
     };
 
@@ -893,13 +891,17 @@ define(['logManager',
         }
     };
 
+    ModelEditorControl.prototype._stateActiveObjectChanged = function (model, activeObjectId) {
+        this.selectedObjectChanged(activeObjectId);
+    };
+
     ModelEditorControl.prototype._attachClientEventListeners = function () {
         this._detachClientEventListeners();
-        this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged, this);
     };
 
     ModelEditorControl.prototype._detachClientEventListeners = function () {
-        this._client.removeEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
+        WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged);
     };
 
     ModelEditorControl.prototype.onActivate = function () {

@@ -508,9 +508,11 @@ define(['js/Constants',
         targetNodeObj = client.getNode(targetID);
         if (targetNodeObj) {
             if (targetNodeObj.getParentId() || targetNodeObj.getParentId() === CONSTANTS.PROJECT_ROOT_ID) {
-                this._control._client.setSelectedObjectId(targetNodeObj.getParentId(), targetID);
+                WebGMEGlobal.State.setActiveObject(targetNodeObj.getParentId());
+                WebGMEGlobal.State.setActiveSelection([targetID]);
             } else {
-                this._control._client.setSelectedObjectId(CONSTANTS.PROJECT_ROOT_ID, targetID);
+                WebGMEGlobal.State.setActiveObject(CONSTANTS.PROJECT_ROOT_ID);
+                WebGMEGlobal.State.setActiveSelection([targetID]);
             }
         }
     };

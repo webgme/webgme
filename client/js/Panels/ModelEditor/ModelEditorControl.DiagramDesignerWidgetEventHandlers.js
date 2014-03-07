@@ -303,7 +303,7 @@ define(['logManager',
 
         if (gmeID) {
             this.logger.debug("Opening model with id '" + gmeID + "'");
-            this._client.setSelectedObjectId(gmeID);
+            WebGMEGlobal.State.setActiveObject(gmeID);
         }
     };
 
@@ -701,9 +701,7 @@ define(['logManager',
             gmeIDs.push(this.currentNodeInfo.id);
         }
 
-        if (gmeIDs.length !== 0) {
-            this._client.setPropertyEditorIdList(gmeIDs);
-        }
+        WebGMEGlobal.State.setActiveSelection(gmeIDs);
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onClipboardCopy = function (selectedIds) {
