@@ -110,7 +110,14 @@ requirejs(['logManager',
     passport.deserializeUser(function(id, done) {
         done(null,_users[id]);
     });
-
+    function storeQueryString(req,res,next){
+        if(req.session.originalQuery === undefined){
+            var index = req.url.indexOf('?');
+            req.session.originalQuery = index === -1 ? "" : req.url.substring(index);
+        }
+        console.log("kecso",req.session.originalQuery);
+        next();
+    }
     var googleAuthenticaitonSet = false;
     function checkGoogleAuthentication(req,res,next){
         if(googleAuthenticaitonSet === true){
@@ -151,6 +158,7 @@ requirejs(['logManager',
             if(req.isAuthenticated() || (req.session && true === req.session.authenticated)){
                 return next();
             }
+
             res.redirect('/login');
         } else {
             return next();
@@ -171,7 +179,7 @@ requirejs(['logManager',
 
     function prepClientLogin(req,res,next){
         req.__gmeAuthFailUrl__ = '/login/client/fail';
-        next(null);
+        next();
     }
 
 
@@ -194,7 +202,7 @@ requirejs(['logManager',
 
 
     //starting point
-    app.get('/',checkVF,ensureAuthenticated,function(req,res){
+    app.get('/',storeQueryString,checkVF,ensureAuthenticated,function(req,res){
         res.sendfile(staticclientdirpath+'/index.html',{user:req.user},function(err){
             res.send(404);
         });
@@ -210,14 +218,15 @@ requirejs(['logManager',
         req.session.userType = 'unknown';
         res.redirect('/');
     });
-    app.get('/login',function(req,res){
+    app.get('/login',storeQueryString,function(req,res){
+        res.location('/login');
         res.sendfile(staticclientdirpath+'/login.html',{},function(err){
             res.send(404);
         });
     });
-    app.post('/login',gme.authenticate,function(req,res){
+    app.post('/login',storeQueryString,gme.authenticate,function(req,res){
         res.cookie('webgme',req.session.udmId);
-        res.redirect('/');
+        res.redirect('/'+req.session.originalQuery || "");
     });
     app.post('/login/client',prepClientLogin,gme.authenticate,function(req,res){
         res.cookie('webgme',req.session.udmId);
@@ -227,12 +236,12 @@ requirejs(['logManager',
         res.clearCookie('webgme');
         res.send(401);
     });
-    app.get('/login/google',checkGoogleAuthentication,passport.authenticate('google'));
-    app.get('/login/google/return',gme.authenticate,function(req,res){
+    app.get('/login/google',storeQueryString,checkGoogleAuthentication,passport.authenticate('google'));
+    app.get('/login/google/return',storeQueryString,gme.authenticate,function(req,res){
         res.cookie('webgme',req.session.udmId);
-        res.redirect('/');
+        res.redirect('/'+req.session.originalQuery || "");
     });
-    app.get('/login/forge',forge.authenticate,function(req,res){
+    app.get('/login/forge',storeQueryString,forge.authenticate,function(req,res){
         res.cookie('webgme',req.session.udmId);
         res.redirect('/');
     });
