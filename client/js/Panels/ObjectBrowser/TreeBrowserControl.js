@@ -300,7 +300,15 @@ define(['logManager',
                     ImportManager.import(nodeId, undefined, true);
                 },
                 "icon": false
-            }
+            };
+
+            menuItems["exportContext"] = { //Export context for plugin
+                "name": "Export context...",
+                "callback": function(/*key, options*/){
+                    ExportManager.exIntConf([nodeId]);
+                },
+                "icon": false
+            };
         };
 
         //called from the TreeBrowserWidget when a create function is called from context menu
