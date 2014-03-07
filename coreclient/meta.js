@@ -665,9 +665,9 @@ define([], function () {
             var names = getMetaAspectNames(path),
                 ownNames = [];
             if(_nodes[path]){
-                var parentNames = getMetaAspectNames(_core.getPath(_core.getParent(_nodes[path])));
+                var baseNames = getMetaAspectNames(_core.getPath(_core.getBase(_nodes[path])));
                 for(var i=0;i<names.length;i++){
-                    if(parentNames.indexOf(names[i]) === -1){
+                    if(baseNames.indexOf(names[i]) === -1){
                         ownNames.push(names[i]);
                     }
                 }
