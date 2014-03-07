@@ -2132,6 +2132,10 @@ define([
                 }
                 return null;
             }
+
+            function getProjectObject(){
+                return _project;
+            }
             //initialization
             function initialize(){
                 _database = newDatabase();
@@ -2277,6 +2281,9 @@ define([
                 getAspectTerritoryPattern : META.getAspectTerritoryPattern,
 
                 //end of META functions
+
+                //interpreters
+                getProjectObject: getProjectObject,
 
                 //JSON functions
                 exportItems: exportItems,

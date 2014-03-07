@@ -22,7 +22,8 @@ define(['logManager',
     './WebGME.History',
     'js/Utils/METAAspectHelper',
     'js/Utils/PreferencesHelper',
-    'js/ConstraintManager/ConstraintManager'], function (logManager,
+    'js/ConstraintManager/ConstraintManager',
+    'js/Utils/InterpreterManager'], function (logManager,
                                             CONFIG,
                                             packagejson,
                                             Client,
@@ -40,7 +41,8 @@ define(['logManager',
                                             WebGMEHistory,
                                             METAAspectHelper,
                                             PreferencesHelper,
-                                            ConstraintManager) {
+                                            ConstraintManager,
+                                            InterpreterManager) {
 
     var npmJSON = JSON.parse(packagejson);
     WebGMEGlobal.version = npmJSON.version;
@@ -66,6 +68,8 @@ define(['logManager',
             client = new Client(CONFIG);
 
             WebGMEGlobal.ConstraintManager = new ConstraintManager(client);
+
+            WebGMEGlobal.InterpreterManager = new InterpreterManager(client);
 
             Object.defineProperty(WebGMEGlobal, 'State', {value : StateManager.initialize(),
                 writable : false,
