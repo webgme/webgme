@@ -36,9 +36,6 @@ define(['js/PanelBase/PanelBaseWithHeader',
         this._partBrowserWidget = new PartBrowserWidget(this.$el);
 
         var cControl = new PartBrowserPanelControl(this._client, this._partBrowserWidget);
-        this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, function (__project, nodeId) {
-            cControl.selectedObjectChanged(nodeId);
-        });
     };
 
     /* OVERRIDE FROM WIDGET-WITH-HEADER */

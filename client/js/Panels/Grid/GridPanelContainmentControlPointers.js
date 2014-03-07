@@ -23,10 +23,6 @@ define(['logManager',
 
         this._logger = logManager.create("GridPanelContainmentControPointers");
 
-        this._selectedObjectChanged = function (__project, nodeId) {
-            self.selectedObjectChanged(nodeId);
-        };
-
         //attach all the event handlers for event's coming from DesignerCanvas
         this.attachDataGridWidgetEventHandlers();
 
@@ -36,7 +32,7 @@ define(['logManager',
     GridPanelContainmentControPointers.prototype.selectedObjectChanged = function (nodeId) {
         var self = this;
 
-        this._logger.debug("SELECTEDOBJECT_CHANGED nodeId '" + nodeId + "'");
+        this._logger.debug("activeObject '" + nodeId + "'");
 
         //remove current territory patterns
         if (this._territoryId) {
@@ -152,13 +148,17 @@ define(['logManager',
             return nodeDescriptor;
     };
 
+    GridPanelContainmentControPointers.prototype._stateActiveObjectChanged = function (model, activeObjectId) {
+        this.selectedObjectChanged(activeObjectId);
+    };
+
     GridPanelContainmentControPointers.prototype.attachClientEventListeners = function () {
         this.detachClientEventListeners();
-        this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged, this);
     };
 
     GridPanelContainmentControPointers.prototype.detachClientEventListeners = function () {
-        this._client.removeEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
+        WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged);
     };
 
     //attach GridPanelContainmentControPointers - DataGridViewEventHandlers event handler functions

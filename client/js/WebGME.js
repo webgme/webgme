@@ -14,6 +14,7 @@ define(['logManager',
     'js/Utils/GMEVisualConcepts',
     'js/Utils/ExportManager',
     'js/Utils/ImportManager',
+    'js/Utils/StateManager',
     'js/LayoutManager/LayoutManager',
     'js/Decorators/DecoratorManager',
     'js/KeyboardManager/KeyboardManager',
@@ -31,6 +32,7 @@ define(['logManager',
                                             GMEVisualConcepts,
                                             ExportManager,
                                             ImportManager,
+                                            StateManager,
                                             LayoutManager,
                                             DecoratorManager,
                                             KeyboardManager,
@@ -65,7 +67,9 @@ define(['logManager',
 
             WebGMEGlobal.ConstraintManager = new ConstraintManager(client);
 
-            WebGMEHistory.setClient(client);
+            WebGMEGlobal.State = StateManager.initialize();
+
+            WebGMEHistory.initialize();
 
             GMEConcepts.initialize(client);
             GMEVisualConcepts.initialize(client);
@@ -82,6 +86,11 @@ define(['logManager',
             });
             client.addEventListener(client.events.PROJECT_OPENED, function (__project, projectName) {
                 lm.setPanelReadOnly(client.isProjectReadOnly());
+            });
+
+            //on project close clear the current state
+            client.addEventListener(client.events.PROJECT_CLOSED, function (__project, projectName) {
+                WebGMEGlobal.State.clear();
             });
 
             client.decoratorManager = new DecoratorManager();
@@ -139,7 +148,7 @@ define(['logManager',
                     objectToLoad = CONSTANTS.PROJECT_ROOT_ID;
                 }
                 setTimeout(function () {
-                    client.setSelectedObjectId(objectToLoad);
+                    WebGMEGlobal.State.setActiveObject(objectToLoad);
                 }, 1000);
             }
         };

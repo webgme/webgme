@@ -41,10 +41,6 @@ define(['logManager',
             throw ("DiagramDesignerWidgetMultiTabMemberListControllerBase can not be created");
         }
 
-        this._selectedObjectChanged = function (__project, nodeId) {
-            self.selectedObjectChanged(nodeId);
-        };
-
         if (this._widget === undefined) {
             this.logger.error("DiagramDesignerWidgetMultiTabMemberListControllerBase's widget is not specified...");
             throw ("DiagramDesignerWidgetMultiTabMemberListControllerBase can not be created");
@@ -132,7 +128,7 @@ define(['logManager',
         var self = this,
             pattern;
 
-        this.logger.debug("SELECTEDOBJECT_CHANGED nodeId '" + nodeId + "'");
+        this.logger.debug("activeObject nodeId '" + nodeId + "'");
 
         //delete everything from model editor
         this._widget.clear();
@@ -171,13 +167,17 @@ define(['logManager',
         }
     };
 
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._stateActiveObjectChanged = function (model, activeObjectId) {
+        this.selectedObjectChanged(activeObjectId);
+    };
+
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._attachClientEventListeners = function () {
         this._detachClientEventListeners();
-        this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged, this);
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._detachClientEventListeners = function () {
-        this._client.removeEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
+        WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged);
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.onActivate = function () {
@@ -1535,9 +1535,7 @@ define(['logManager',
             gmeIDs.push(this._memberListContainerID);
         }
 
-        if (gmeIDs.length !== 0) {
-            this._client.setPropertyEditorIdList(gmeIDs);
-        }
+        WebGMEGlobal.State.setActiveSelection(gmeIDs);
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.displayNoTabMessage = function () {

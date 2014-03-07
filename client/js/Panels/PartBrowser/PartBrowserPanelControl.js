@@ -41,12 +41,16 @@ define(['logManager',
         METAAspectHelper.addEventListener(METAAspectHelper.events.META_ASPECT_CHANGED, function () {
             self._processContainerNode(self._containerNodeId);
         });
+
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, function (model, activeObject) {
+            self.selectedObjectChanged(activeObject);
+        });
     };
 
     PartBrowserControl.prototype.selectedObjectChanged = function (nodeId) {
         var self = this;
 
-        this._logger.debug("SELECTEDOBJECT_CHANGED nodeId '" + nodeId + "'");
+        this._logger.debug("activeObject: '" + nodeId + "'");
 
         //remove current territory patterns
         if (this._territoryId) {

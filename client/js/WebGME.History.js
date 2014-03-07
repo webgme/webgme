@@ -10,12 +10,16 @@
  * Utility helper functions for saving WebGME state and reload on browser back
  */
 
-define(['jquery'], function () {
+define(['jquery',
+        'logManager'], function (_jquery,
+                                 logManager) {
 
     var _client,
         STATE_SELECTED_OBJECT_ID = 'selectedObjectId',
         STATE_ACTIVE_SELECTION = 'activeSelection',
-        _stateLoading = false;
+        _stateLoading = false,
+        _initialized = false,
+        logger = logManager.create("WebGME.History");
 
     var _saveState = function (stateObj) {
         if (_stateLoading === false) {
@@ -27,27 +31,24 @@ define(['jquery'], function () {
     var _onLoadState = function (stateObj) {
         _stateLoading = true;
 
-        if (_client && stateObj) {
-            if (stateObj[STATE_SELECTED_OBJECT_ID]) {
-                _client.setSelectedObjectId(stateObj[STATE_SELECTED_OBJECT_ID], stateObj[STATE_ACTIVE_SELECTION]);
-            }
-        }
+        //TODO: load state into WebGMEGlobal.State
 
         _stateLoading = false;
     };
 
 
-    var _setClient = function (c) {
-        _client = c;
+    var _initialize = function () {
+        if (_initialized) {
+            return;
+        }
 
-        _client.addEventListener(_client.events.SELECTEDOBJECT_CHANGED, function (__project, nodeId) {
+        WebGMEGlobal.State.on("all", function(eventName) {
             var stateObj = {};
-            stateObj[STATE_SELECTED_OBJECT_ID] = nodeId;
-            stateObj[STATE_ACTIVE_SELECTION] = _client.getActiveSelection();
-            _saveState(stateObj);
+            //TODO: save state  ---> persist WebGMEGlobal.State into stateObj
+            //_saveState(stateObj);
         });
 
-        _setClient = undefined;
+        logger.error('!!! NOT YET IMPLEMENTED !!!');
     };
 
     if (WebGMEGlobal.history !== true) {
@@ -59,6 +60,5 @@ define(['jquery'], function () {
 
 
     //return utility functions
-    return { saveState: _saveState,
-             setClient: _setClient};
+    return { initialize: _initialize};
 });

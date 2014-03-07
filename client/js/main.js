@@ -25,6 +25,7 @@ require.config({
         //necessary 3rd party modules
         "bootstrap": 'lib/bootstrap/bootstrap.amd',
         "underscore": 'lib/underscore/underscore-min',
+        "backbone": 'lib/backbone/backbone.min',
         "d3": 'lib/d3/d3.v3.min',
         "jscolor": 'lib/jscolor/jscolor',
 
@@ -47,6 +48,7 @@ require.config({
         'jquery-ui': ['jquery'],
         'jquery-ui-iPad': ['jquery','jquery-ui'],
         'bootstrap': ['jquery'],
+        'backbone': ['underscore'],
         'clientUtil': ['jquery'],
         'jquery-WebGME': ['bootstrap'],
         'jquery-dataTables': ['jquery'],
@@ -67,11 +69,12 @@ require(
         'jquery-dataTables-bootstrapped',
         'bootstrap',
         'underscore',
+        'backbone',
         'js/WebGME',
         'clientUtil',
         'bin/getconfig'
     ],
-    function (domReady, jQuery, jQueryUi, jQueryUiiPad, jqueryWebGME, jqueryDataTables, bootstrap, underscore, webGME, util, CONFIG) {
+    function (domReady, jQuery, jQueryUi, jQueryUiiPad, jqueryWebGME, jqueryDataTables, bootstrap, underscore, backbone, webGME, util, CONFIG) {
         domReady(function () {
             //#1 set debug info from config file
             if (CONFIG.hasOwnProperty('debug')) {
