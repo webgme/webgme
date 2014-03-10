@@ -148,6 +148,7 @@ define(['logManager',
         }
 
         this._memberListContainerID = nodeId;
+        this._selectedMemberListID = undefined;
 
         if (nodeId) {
             //put new node's info into territory rules
