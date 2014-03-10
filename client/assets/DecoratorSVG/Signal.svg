@@ -1,0 +1,18 @@
+<?xml version="1.0"?><svg width="120" height="120" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 170 170">
+ <defs>
+  <linearGradient id="linearGradient1722">
+   <stop stop-color="#ffffff" offset="0" id="stop1723"/>
+   <stop stop-color="#ffffff" stop-opacity="0" offset="1" id="stop1724"/>
+  </linearGradient>
+  <linearGradient y2="0.734375" y1="-0.460938" xlink:href="#linearGradient1722" x2="0.655172" x1="0.857143" id="linearGradient1721"/>
+ </defs>
+ <g>
+  <title>Layer 1</title>
+  <g id="svg_3">
+   <path fill="url(#linearGradient1721)" fill-rule="evenodd" stroke-width="1.0000000pt" id="path2658" d="m34.315468,56.866669c0,0 14.758831,39.427856 38.680077,33.570358c23.921234,-5.857498 55.396576,-9.371986 62.950638,12.886536c7.554092,22.258499 5.036057,21.087006 5.036057,21.087006l-100.128208,-1.171509l-6.538563,-66.372391z"/>
+   <path fill="none" fill-opacity="0.75" fill-rule="evenodd" stroke="#666666" stroke-width="1.875" id="path1522" d="m53.581955,103.164536l3.787285,0l3.967628,-31.5383l4.14798,52.563828l3.246246,-26.686249l5.230064,0"/>
+   <path id="svg_1" fill="none" fill-opacity="0.75" fill-rule="evenodd" stroke="#666666" stroke-width="1.875" d="m73.644226,97.188766l1.557175,0l1.631294,-11.137779l1.705482,18.562965l1.334702,-9.424271l2.150383,0"/>
+   <path id="svg_2" fill="none" fill-opacity="0.75" fill-rule="evenodd" stroke="#666666" stroke-width="1.875" d="m81.643799,94.789841l3.787292,0l3.96759,-35.738403l4.14801,59.563988l3.246216,-30.240166l5.230103,0"/>
+  </g>
+ </g>
+</svg>
