@@ -92,8 +92,9 @@ define([ "util/assert", "util/guid", "core/tasync" ], function (ASSERT, GUID, TA
 
 		_core.getGuid = function (node) {
             var middle = _core.getMiddleGuid(node),
-                relid = getRelidGuid(node);
-            return toExternalGuid(xorGuids(middle,relid));
+                relid = getRelidGuid(node),
+                guid = xorGuids(middle,relid);
+            return toExternalGuid(guid);
 		};
 
         _core.setGuid = function(node,guid){
@@ -144,10 +145,17 @@ define([ "util/assert", "util/guid", "core/tasync" ], function (ASSERT, GUID, TA
 		};
 
         _core.moveNode = function(node,parent){
-            var oldGuid = toInternalGuid(_core.getGuid(node));
-            var newNode = _innerCore.moveNode(node,parent);
+            var oldGuid = toInternalGuid(_core.getGuid(node)),
+                newNode = _innerCore.moveNode(node,parent);
+
             _core.setAttribute(newNode,OWN_GUID,xorGuids(_core.getMiddleGuid(parent),xorGuids(oldGuid,getRelidGuid(newNode))));
 
+            return newNode;
+        };
+
+        _core.copyNode = function(node,parent){
+            var newNode = _innerCore.copyNode(node,parent);
+            _core.setAttribute(newNode,OWN_GUID,toInternalGuid(GUID()));
             return newNode;
         };
 
