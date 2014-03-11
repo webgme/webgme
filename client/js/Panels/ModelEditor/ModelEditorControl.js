@@ -97,6 +97,8 @@ define(['logManager',
         this.currentNodeInfo.id = nodeId;
         this.currentNodeInfo.parentId = undefined;
 
+        this._selectedAspect = WebGMEGlobal.State.getActiveAspect();
+
         //since PROJECT_ROOT_ID is an empty string, it is considered false..
         if (nodeId || nodeId === CONSTANTS.PROJECT_ROOT_ID) {
             desc = this._getObjectDescriptor(nodeId);
@@ -584,6 +586,7 @@ define(['logManager',
         } else {
             //currently opened node
             this._updateSheetName(objD.name);
+            this._updateAspects();
         }
 
         return territoryChanged;
@@ -604,6 +607,7 @@ define(['logManager',
             //the interest about the parent is:
             // - name change
             this._updateSheetName(objDesc.name);
+            this._updateAspects();
         } else {
             if (objDesc) {
                 if (objDesc.parentId === this.currentNodeInfo.id) {
@@ -897,7 +901,11 @@ define(['logManager',
 
     ModelEditorControl.prototype._stateActiveSelectionChanged = function (model, activeSelection) {
         if (this._settingActiveSelection !== true) {
-            this.activeSelectionChanged(activeSelection);
+            if (activeSelection) {
+                this.activeSelectionChanged(activeSelection);
+            } else {
+                this.activeSelectionChanged([]);
+            }
         }
     };
 
@@ -1017,6 +1025,69 @@ define(['logManager',
         }
 
         this.designerCanvas.select(selectedIDs);
+    };
+
+    ModelEditorControl.prototype._updateAspects = function () {
+        var objId = this.currentNodeInfo.id,
+            aspects,
+            tabID,
+            i,
+            selectedTabID;
+
+        this._aspects = {};
+        this.designerCanvas.clearTabs();
+
+        if (objId || objId === CONSTANTS.PROJECT_ROOT_ID) {
+            aspects = this._client.getMetaAspectNames(objId) || [];
+
+            aspects.sort(function (a,b) {
+                var an = a.toLowerCase(),
+                    bn = b.toLowerCase();
+
+                return (an < bn) ? -1 : 1;
+            });
+
+            aspects.splice(0,0,CONSTANTS.ASPECT_ALL);
+
+            for (i = 0; i < aspects.length; i += 1) {
+                tabID = this.designerCanvas.addTab(aspects[i]);
+
+                this._aspects[tabID] = aspects[i];
+
+                if (this._selectedAspect &&
+                    this._selectedAspect === aspects[i]) {
+                    selectedTabID = tabID;
+                }
+            }
+        }
+
+        if (!selectedTabID) {
+            for (selectedTabID in this._aspects) {
+                if (this._aspects.hasOwnProperty(selectedTabID)) {
+                    break;
+                }
+            }
+        }
+
+        this.designerCanvas.selectTab(selectedTabID);
+    };
+
+    ModelEditorControl.prototype._initializeSelectedAspect = function () {
+        var aspect = this._selectedAspect,
+            nodeId = this.currentNodeInfo.id;
+
+        this._selfPatterns = {};
+
+        if (aspect === CONSTANTS.ASPECT_ALL) {
+            this._selfPatterns[nodeId] = { "children": 2 };
+        } else {
+            this._selfPatterns[nodeId] = this._client.getAspectTerritoryPattern(nodeId, aspect);
+            this._selfPatterns[nodeId].children = 2;
+        }
+
+        this._client.updateTerritory(this._territoryId, this._selfPatterns);
+
+        WebGMEGlobal.State.setActiveAspect(aspect);
     };
 
     //attach ModelEditorControl - DesignerCanvas event handler functions

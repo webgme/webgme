@@ -33,6 +33,9 @@ define(['logManager',
         //decorators can use it to ask for notifications about their registered sub IDs
         this._componentIDPartIDMap = {};
 
+        //by default handle the 'All' aspect
+        this._aspect = CONSTANTS.ASPECT_ALL;
+
         this._initDragDropFeatures();
 
         this._logger = logManager.create("PartBrowserControl");
@@ -44,6 +47,10 @@ define(['logManager',
 
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, function (model, activeObject) {
             self.selectedObjectChanged(activeObject);
+        });
+
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_ASPECT, function (model, activeAspect) {
+            self.selectedAspectChanged(activeAspect);
         });
     };
 
@@ -60,6 +67,8 @@ define(['logManager',
 
         this._containerNodeId = nodeId;
         this._validChildrenTypeIDs = [];
+
+        this._aspect = WebGMEGlobal.State.getActiveAspect();
 
         if (this._containerNodeId || this._containerNodeId === CONSTANTS.PROJECT_ROOT_ID) {
             //put new node's info into territory rules
@@ -132,7 +141,6 @@ define(['logManager',
     PartBrowserControl.prototype._onUnload = function (gmeID) {
         if (this._containerNodeId === gmeID) {
             this._logger.warning('Container node got unloaded...');
-            this._client.removeUI(this._territoryId);
             this._validChildrenTypeIDs = [];
             this._partBrowserView.clear();
         }
@@ -314,7 +322,8 @@ define(['logManager',
             getDecoratorTerritoryQueries,
             territoryChanged = false,
             _selfPatterns = this._selfPatterns,
-            partEnabled;
+            partEnabled,
+            _aspectTypes = undefined;
 
         getDecoratorTerritoryQueries = function (decorator) {
             var query,
@@ -339,22 +348,47 @@ define(['logManager',
         //clear view
         this._partBrowserView.clear();
 
+        //set aspect types
+        if (this._aspect !== CONSTANTS.ASPECT_ALL) {
+            var metaAspectDesc = this._client.getMetaAspect(this._containerNodeId, this._aspect);
+            if (metaAspectDesc) {
+                //metaAspectDesc.items contains the children types the user specified to participate in this aspect
+                _aspectTypes =  metaAspectDesc.items || [];
+            }
+        }
+
         //filter out the types that doesn't need to be displayed for whatever reason:
         // - don't display validConnectionTypes
         // - don't display abstract items
+        // - bcos they are not in the current aspects META rules
         i = this._validChildrenTypeIDs.length;
         while (i--) {
             id = this._validChildrenTypeIDs[i];
             if (GMEConcepts.isConnectionType(id) === false &&
                 GMEConcepts.isAbstract(id) === false) {
-                childrenTypeToDisplay.push(id);
 
-                objDesc = this._getObjectDescriptor(id);
-                if (names.indexOf(objDesc.name) === -1) {
-                    names.push(objDesc.name);
-                    mapNameID[objDesc.name] = [id];
+                if (_aspectTypes) {
+                    //user defined aspect
+                    //check if 'id' is descendant of any user defined aspect type
+                    j = _aspectTypes.length;
+                    while (j--) {
+                        if (this._client.isTypeOf(id, _aspectTypes[j])) {
+                            childrenTypeToDisplay.push(id);
+                            break;
+                        }
+                    }
                 } else {
-                    mapNameID[objDesc.name].push(id);
+                    childrenTypeToDisplay.push(id);
+                }
+
+                if (childrenTypeToDisplay.indexOf(id) !== -1) {
+                    objDesc = this._getObjectDescriptor(id);
+                    if (names.indexOf(objDesc.name) === -1) {
+                        names.push(objDesc.name);
+                        mapNameID[objDesc.name] = [id];
+                    } else {
+                        mapNameID[objDesc.name].push(id);
+                    }
                 }
             }
         }
@@ -391,6 +425,17 @@ define(['logManager',
 
         if (territoryChanged) {
             this._doUpdateTerritory(true);
+        }
+    };
+
+
+    PartBrowserControl.prototype.selectedAspectChanged = function (aspect) {
+        if (this._aspect !== aspect) {
+            this._aspect = aspect;
+
+            this._logger.debug("activeAspect: '" + aspect + "'");
+
+            this._refreshPartList();
         }
     };
 

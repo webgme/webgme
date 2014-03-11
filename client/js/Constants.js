@@ -59,7 +59,11 @@ define(['underscore', 'common/Constants'], function (underscore, COMMON_CONSTANT
 
         /*WebGME state constants*/
         STATE_ACTIVE_OBJECT: 'activeObject',
-        STATE_ACTIVE_SELECTION: 'activeSelection'
+        STATE_ACTIVE_SELECTION: 'activeSelection',
+        STATE_ACTIVE_ASPECT: 'activeAspect',
+
+        /* ASPECTs */
+        ASPECT_ALL: 'All'
     });
 
 

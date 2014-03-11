@@ -7,8 +7,10 @@
 "use strict";
 
 define(['clientUtil',
+    'js/Constants',
     'text!./AspectDetailsDialog.html',
     'css!./AspectDetailsDialog'], function ( util,
+                                             CONSTANTS,
                                              aspectDetailsDialogTemplate) {
 
     var AspectDetailsDialog,
@@ -79,7 +81,7 @@ define(['clientUtil',
         };
 
         isValidAspectName = function (name) {
-            return !(name === "" || aspectNames.indexOf(name) !== -1);
+            return !(name === "" || aspectNames.indexOf(name) !== -1 || name.toLowerCase() === CONSTANTS.ASPECT_ALL.toLowerCase());
         };
 
         this._dialog = $(aspectDetailsDialogTemplate);

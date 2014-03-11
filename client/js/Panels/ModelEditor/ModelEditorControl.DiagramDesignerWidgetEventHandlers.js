@@ -148,6 +148,10 @@ define(['logManager',
             self._onSelectionTextColorChanged(selectedElements, color);
         };
 
+        this.designerCanvas.onSelectedTabChanged = function (tabID) {
+            self._onSelectedTabChanged(tabID);
+        };
+
         this.logger.debug("attachDiagramDesignerWidgetEventHandlers finished");
     };
 
@@ -1123,6 +1127,16 @@ define(['logManager',
             }
         }
         this._client.completeTransaction();
+    };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectedTabChanged = function (tabID) {
+        if (this._aspects[tabID] && this._selectedAspect !== this._aspects[tabID]) {
+            this._selectedAspect = this._aspects[tabID];
+
+            this.logger.debug('selectedAspectChanged: ' + this._selectedAspect);
+
+            this._initializeSelectedAspect();
+        }
     };
 
     return ModelEditorControlDiagramDesignerWidgetEventHandlers;
