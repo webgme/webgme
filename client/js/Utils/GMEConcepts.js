@@ -272,18 +272,30 @@ define(['jquery',
         if(typeof parentId === 'string' && baseIdList && baseIdList.length > 0){
            result = true;
 
-            //FILTER OUT ABSTRACTS
+            //make sure that no basIDList is not derived from parentId
             len = baseIdList.length;
-            while (len--) {
-                node = _client.getNode(baseIdList[len]);
-                if (node) {
-                    if (node.getRegistry(REGISTRY_KEYS.IS_ABSTRACT) === true) {
-                        baseIdList.splice(len, 1);
-                    }
+            while (len-- && result === true) {
+                if (_client.isTypeOf(baseIdList[len], parentId)) {
+                    result = false;
                 }
             }
-            if (baseIdList.length === 0) {
-                result = false;
+
+
+            //FILTER OUT ABSTRACTS
+            if (result === true) {
+                //TODO: why just filter out, why not return false in the first place
+                len = baseIdList.length;
+                while (len--) {
+                    node = _client.getNode(baseIdList[len]);
+                    if (node) {
+                        if (node.getRegistry(REGISTRY_KEYS.IS_ABSTRACT) === true) {
+                            baseIdList.splice(len, 1);
+                        }
+                    }
+                }
+                if (baseIdList.length === 0) {
+                    result = false;
+                }
             }
             //END OF --- FILTER OUT ABSTRACTS
 
