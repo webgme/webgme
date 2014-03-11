@@ -219,7 +219,8 @@ define(['logManager',
             CONTEXT_POS_OFFSET = 10,
             menuItems = {},
             i,
-            connTypeObj;
+            connTypeObj,
+            aspect = this._selectedAspect;
 
         //local callback to create the connection
         createConnection = function (connTypeToCreate) {
@@ -250,7 +251,7 @@ define(['logManager',
         }
 
         //get the list of valid connection types
-        var validConnectionTypes = GMEConcepts.getValidConnectionTypes(sourceId, targetId, parentId);
+        var validConnectionTypes = GMEConcepts.getValidConnectionTypesInAspect(sourceId, targetId, parentId, aspect);
         //filter them to see which of those can actually be created as a child of the parent
         i = validConnectionTypes.length;
         while (i--) {
@@ -378,7 +379,8 @@ define(['logManager',
             validPointerTypes = [],
             baseTypeID,
             baseTypeNode,
-            dragAction;
+            dragAction,
+            aspect = this._selectedAspect;
 
         //check to see what DROP actions are possible
         if (items.length > 0) {
@@ -389,19 +391,19 @@ define(['logManager',
                         //check to see if dragParams.parentID and this.parentID are the same
                         //if so, it's not a real move, it is a reposition
                         if ((dragParams && dragParams.parentID === parentID) ||
-                            GMEConcepts.canCreateChildren(parentID, items)) {
+                            GMEConcepts.canCreateChildrenInAspect(parentID, items, aspect)) {
                             dragAction = {'dragEffect': dragEffects[i]};
                             possibleDropActions.push(dragAction);
                         }
                         break;
                     case DragHelper.DRAG_EFFECTS.DRAG_COPY:
-                        if (GMEConcepts.canCreateChildren(parentID, items)) {
+                        if (GMEConcepts.canCreateChildrenInAspect(parentID, items, aspect)) {
                             dragAction = {'dragEffect': dragEffects[i]};
                             possibleDropActions.push(dragAction);
                         }
                         break;
                     case DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE:
-                        if (GMEConcepts.canCreateChildren(parentID, items)) {
+                        if (GMEConcepts.canCreateChildrenInAspect(parentID, items, aspect)) {
                             dragAction = {'dragEffect': dragEffects[i]};
                             possibleDropActions.push(dragAction);
                         }
@@ -756,9 +758,9 @@ define(['logManager',
             targetId,
             validConnectionTypes,
             j,
-            canCreateChildOfConnectionType,
             parentID = this.currentNodeInfo.id,
-            client = this._client;
+            client = this._client,
+            aspect = this._selectedAspect;
 
         if (params.srcSubCompId !== undefined) {
             sourceId = this._Subcomponent2GMEID[params.srcId][params.srcSubCompId];
@@ -769,7 +771,7 @@ define(['logManager',
         //need to test for each source-destination pair if the connection can be made or not?
         //there is at least one valid connection type definition in the parent that could be created between the source and target
         //there is at least one valid connection type that really can be created in the parent (max chilren num...)
-        validConnectionTypes = GMEConcepts.getValidConnectionTypesInParent(sourceId, parentID);
+        validConnectionTypes = GMEConcepts.getValidConnectionTypesInParentInAspect(sourceId, parentID, aspect);
 
         while (i--) {
             var p = availableConnectionEnds[i];
@@ -982,7 +984,8 @@ define(['logManager',
             parentID = this.currentNodeInfo.id,
             params = { "parentId": parentID },
             projectName = this._client.getActiveProject(),
-            childrenIDs = [];
+            childrenIDs = [],
+            aspect = this._selectedAspect;
 
         if (parentID) {
             try {
@@ -1009,7 +1012,7 @@ define(['logManager',
                             }
                         }
 
-                        if (GMEConcepts.canCreateChildren(parentID, childrenIDs)) {
+                        if (GMEConcepts.canCreateChildrenInAspect(parentID, childrenIDs, aspect)) {
                             this._client.startTransaction();
                             this._client.copyMoreNodes(params);
                             this._client.completeTransaction();

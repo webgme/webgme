@@ -124,7 +124,7 @@ define(['jquery',
     };
 
     /*
-     * Determines if a GME Connection can be created between source and target in parent
+     * Determines the GME Connection can be created from a source in a parent
      */
     var _getValidConnectionTypesInParent = function (sourceID, parentID) {
         var validTypes = [],
@@ -515,6 +515,144 @@ define(['jquery',
         return validPointerTypes;
     };
 
+
+    var _canCreateChildrenInAspect = function (parentId, baseIdList, aspectName) {
+        var canCreateInAspect = true,
+            i,
+            j;
+
+        if (aspectName) {
+            if (aspectName !== CONSTANTS.ASPECT_ALL) {
+                //need to check in aspect
+                var metaAspectDesc = _client.getMetaAspect(parentId, aspectName);
+                if (metaAspectDesc) {
+                    //metaAspectDesc.items contains the children types the user specified to participate in this aspect
+                    var aspectTypes =  metaAspectDesc.items || [];
+
+                    if (aspectTypes.length > 0) {
+                        //each item in baseIdList has to be a descendant of any item in aspectTypes
+                        i = baseIdList.length;
+                        while (i-- && canCreateInAspect) {
+                            j  = aspectTypes.length;
+                            canCreateInAspect = false;
+                            while (j--) {
+                                if (_client.isTypeOf(baseIdList[i], aspectTypes[j])) {
+                                    canCreateInAspect = true;
+                                    break;
+                                }
+                            }
+                        }
+                    } else {
+                        //aspect types is empty
+                        canCreateInAspect = false;
+                    }
+                } else {
+                    //unknown aspect name
+                    canCreateInAspect = false;
+                }
+            }
+        } else {
+            //not a valid aspect name
+            canCreateInAspect = false;
+        }
+
+        if (canCreateInAspect) {
+            canCreateInAspect = _canCreateChildren(parentId, baseIdList);
+        }
+
+        return canCreateInAspect;
+    };
+
+    /*
+     * Determines the GME Connection can be created from a source in a parent in an aspect
+     */
+    var _getValidConnectionTypesInParentInAspect = function (sourceID, parentID, aspectName) {
+        var validTypes = [],
+            i,
+            j,
+            canCreateInAspect;
+
+        if (aspectName) {
+            if (aspectName !== CONSTANTS.ASPECT_ALL) {
+                //need to check in aspect
+                var metaAspectDesc = _client.getMetaAspect(parentID, aspectName);
+                if (metaAspectDesc) {
+                    //metaAspectDesc.items contains the children types the user specified to participate in this aspect
+                    var aspectTypes =  metaAspectDesc.items || [];
+
+                    if (aspectTypes.length > 0) {
+                        validTypes = _getValidConnectionTypesInParent(sourceID, parentID);
+                        //each item in validTypes has to be a descendant of any item in aspectTypes
+                        i = validTypes.length;
+                        while (i--) {
+                            j  = aspectTypes.length;
+                            canCreateInAspect = false;
+                            while (j--) {
+                                if (_client.isTypeOf(validTypes[i], aspectTypes[j])) {
+                                    canCreateInAspect = true;
+                                    break;
+                                }
+                            }
+
+                            if (!canCreateInAspect) {
+                                validTypes.splice(i, 1);
+                            }
+                        }
+                    }
+                }
+            } else {
+                validTypes = _getValidConnectionTypesInParent(sourceID, parentID);
+            }
+        }
+
+        return validTypes;
+    };
+
+    /*
+     * Determines if a GME Connection can be created between source and target in parent in an aspect
+     */
+    var _getValidConnectionTypesInAspect = function (sourceID, targetID, parentID, aspectName) {
+        var validTypes = [],
+            canCreateInAspect,
+            i,
+            j;
+
+        if (aspectName) {
+            if (aspectName !== CONSTANTS.ASPECT_ALL) {
+                //need to check in aspect
+                var metaAspectDesc = _client.getMetaAspect(parentID, aspectName);
+                if (metaAspectDesc) {
+                    //metaAspectDesc.items contains the children types the user specified to participate in this aspect
+                    var aspectTypes =  metaAspectDesc.items || [];
+
+                    if (aspectTypes.length > 0) {
+                        validTypes = _getValidConnectionTypes(sourceID, targetID, parentID);
+                        //each item in validTypes has to be a descendant of any item in aspectTypes
+                        i = validTypes.length;
+                        while (i--) {
+                            j  = aspectTypes.length;
+                            canCreateInAspect = false;
+                            while (j--) {
+                                if (_client.isTypeOf(validTypes[i], aspectTypes[j])) {
+                                    canCreateInAspect = true;
+                                    break;
+                                }
+                            }
+
+                            if (!canCreateInAspect) {
+                                validTypes.splice(i, 1);
+                            }
+                        }
+                    }
+                }
+            } else {
+                validTypes = _getValidConnectionTypes(sourceID, targetID, parentID);
+            }
+        }
+
+        return validTypes;
+    };
+
     //return utility functions
     return {
         initialize: _initialize,
@@ -533,6 +671,9 @@ define(['jquery',
         canAddToSet: _canAddToSet,
         isAbstract: _isAbstract,
         isPort: _isPort,
-        getValidPointerTypes: _getValidPointerTypes
+        getValidPointerTypes: _getValidPointerTypes,
+        canCreateChildrenInAspect: _canCreateChildrenInAspect,
+        getValidConnectionTypesInParentInAspect: _getValidConnectionTypesInParentInAspect,
+        getValidConnectionTypesInAspect: _getValidConnectionTypesInAspect
     }
 });
