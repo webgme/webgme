@@ -19,7 +19,9 @@ define(['js/Toolbar/ToolbarButton',
         TAB_RENAME = 'TAB_RENAME',
         WITH_TABS_CLASS = 'w-tabs',
         SELECTED_ICON = 'icon-ok',
-        DDL_SELECTED_TAB_ICON_BASE = $('<i class="' + SELECTED_ICON + '" />');
+        DDL_SELECTED_TAB_ICON_BASE = $('<i class="' + SELECTED_ICON + '" />'),
+        TAB_LI_BASE = $('<li class=""><a href="#" data-toggle="tab"><div class="tab-title"></div></a></li>'),
+        TAB_DELETE_ICON_BASE = $('<i class="icon-remove-circle"/>');
 
     DiagramDesignerWidgetTabs = function () {
     };
@@ -151,14 +153,14 @@ define(['js/Toolbar/ToolbarButton',
 
     DiagramDesignerWidgetTabs.prototype.addTab = function (title, deletable, renamable) {
         var self = this;
-        var li = $('<li class=""><a href="#" data-toggle="tab"></a></li>');
+        var li = TAB_LI_BASE.clone();
 
-        li.find('a').append('<div class="tab-title" title="' + title + '">' + title + '</div>');
+        li.find('.tab-title').attr('title', title).text(title);
         li.data(TAB_ID, this._tabCounter + "");
         this._tabCounter += 1;
 
         if (this._deleteTabs === true && deletable === true) {
-            li.find('a').append($('<i class="icon-remove-circle"/>'));
+            li.find('a').append(TAB_DELETE_ICON_BASE.clone());
             li.find('a').attr('title', 'Delete tab');
         }
 
