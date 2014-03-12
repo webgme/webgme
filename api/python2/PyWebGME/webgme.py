@@ -302,7 +302,7 @@ class basenode:
     def parent(self):
         if self.__parent == None:
             parentNode = self.__getNode(self.__json[KEY_PARENT])
-            if paentNode != None:
+            if parentNode != None:
                 self.__parent = parentNode
         return self.__parent
     
@@ -424,7 +424,7 @@ class node:
     
     @property
     def parent(self):
-        return self.__base.parent
+        return self.__getNode(self.__base.parent)
 
     @property
     def root(self):
