@@ -46,7 +46,8 @@ define(['clientUtil',
             typeEl,
             typeInfo,
             displayName,
-            chb;
+            chb,
+            checkSelected;
 
         _.extend(aDesc, ASPECT_DESC_BASE);
         _.extend(aDesc, aspectDesc);
@@ -82,6 +83,16 @@ define(['clientUtil',
 
         isValidAspectName = function (name) {
             return !(name === "" || aspectNames.indexOf(name) !== -1 || name.toLowerCase() === CONSTANTS.ASPECT_ALL.toLowerCase());
+        };
+
+        checkSelected = function () {
+            var checked = typesContainer.find('input[type=checkbox]:checked');
+
+            if (checked.length === 0) {
+                self._btnSave.addClass("disabled");
+            } else {
+                self._btnSave.removeClass("disabled");
+            }
         };
 
         this._dialog = $(aspectDetailsDialogTemplate);
@@ -133,8 +144,10 @@ define(['clientUtil',
             event.stopPropagation();
             event.preventDefault();
 
-            if (isValidAspectName(val)) {
-                closeSave();
+            if ($(this).hasClass('disabled') === false) {
+                if (isValidAspectName(val)) {
+                    closeSave();
+                }
             }
         });
 
@@ -174,6 +187,12 @@ define(['clientUtil',
 
             typesContainer.append(typeEl);
         }
+
+        this._pTypes.on('change', 'input[type=checkbox]', function () {
+            checkSelected();
+        });
+
+        checkSelected();
     };
 
 
