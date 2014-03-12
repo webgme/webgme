@@ -97,6 +97,7 @@ define(['logManager',
         this.currentNodeInfo.id = nodeId;
         this.currentNodeInfo.parentId = undefined;
 
+        this._delayedConnections = [];
         this._selectedAspect = WebGMEGlobal.State.getActiveAspect();
 
         //since PROJECT_ROOT_ID is an empty string, it is considered false..
