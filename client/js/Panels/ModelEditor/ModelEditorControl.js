@@ -110,7 +110,13 @@ define(['logManager',
 
             //put new node's info into territory rules
             this._selfPatterns = {};
-            this._selfPatterns[nodeId] = { "children": 2 };
+
+			 if (this._selectedAspect === CONSTANTS.ASPECT_ALL) {
+				this._selfPatterns[nodeId] = { "children": 2 };
+			} else {
+				this._selfPatterns[nodeId] = this._client.getAspectTerritoryPattern(nodeId, this._selectedAspect);
+				this._selfPatterns[nodeId].children = 2;
+			}
 
             this._firstLoad = true;
 
@@ -1073,21 +1079,9 @@ define(['logManager',
     };
 
     ModelEditorControl.prototype._initializeSelectedAspect = function () {
-        var aspect = this._selectedAspect,
-            nodeId = this.currentNodeInfo.id;
+        WebGMEGlobal.State.setActiveAspect(this._selectedAspect);
 
-        this._selfPatterns = {};
-
-        if (aspect === CONSTANTS.ASPECT_ALL) {
-            this._selfPatterns[nodeId] = { "children": 2 };
-        } else {
-            this._selfPatterns[nodeId] = this._client.getAspectTerritoryPattern(nodeId, aspect);
-            this._selfPatterns[nodeId].children = 2;
-        }
-
-        this._client.updateTerritory(this._territoryId, this._selfPatterns);
-
-        WebGMEGlobal.State.setActiveAspect(aspect);
+        this.selectedObjectChanged(this.currentNodeInfo.id);
     };
 
     //attach ModelEditorControl - DesignerCanvas event handler functions
