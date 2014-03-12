@@ -105,18 +105,12 @@ define(['jquery',
      */
     var _getValidConnectionTypes = function (sourceID, targetID, parentID) {
         var validTypes = [],
-            validChildrenTypes,
-            len,
-            childID;
-
-        validChildrenTypes = _getMETAAspectMergedValidChildrenTypes(parentID) || [];
-
-        len = validChildrenTypes.length;
+			validChildrenTypes = _getValidConnectionTypesFromSource(sourceID, parentID),
+			len = validChildrenTypes.length;
+        
         while (len--) {
-            childID = validChildrenTypes[len];
-            if (_client.isValidTarget(childID, CONSTANTS.POINTER_SOURCE, sourceID) &&
-                _client.isValidTarget(childID, CONSTANTS.POINTER_TARGET, targetID)) {
-                validTypes.push(childID);
+            if (_client.isValidTarget(validChildrenTypes[len], CONSTANTS.POINTER_TARGET, targetID)) {
+                validTypes.push(validChildrenTypes[len]);
             }
         }
 
@@ -126,7 +120,7 @@ define(['jquery',
     /*
      * Determines the GME Connection can be created from a source in a parent
      */
-    var _getValidConnectionTypesInParent = function (sourceID, parentID) {
+    var _getValidConnectionTypesFromSource = function (sourceID, parentID) {
         var validTypes = [],
             validChildrenTypes,
             len,
@@ -138,8 +132,7 @@ define(['jquery',
         while (len--) {
             childID = validChildrenTypes[len];
             if (_isConnectionType(childID) &&
-                _client.isValidTarget(childID, CONSTANTS.POINTER_SOURCE, sourceID) &&
-                _canCreateChild(parentID, childID)) {
+                _client.isValidTarget(childID, CONSTANTS.POINTER_SOURCE, sourceID)) {
                 validTypes.push(childID);
             }
         }
@@ -566,7 +559,7 @@ define(['jquery',
     /*
      * Determines the GME Connection can be created from a source in a parent in an aspect
      */
-    var _getValidConnectionTypesInParentInAspect = function (sourceID, parentID, aspectName) {
+    var _getValidConnectionTypesFromSourceInAspect = function (sourceID, parentID, aspectName) {
         var validTypes = [],
             i,
             j,
@@ -581,7 +574,7 @@ define(['jquery',
                     var aspectTypes =  metaAspectDesc.items || [];
 
                     if (aspectTypes.length > 0) {
-                        validTypes = _getValidConnectionTypesInParent(sourceID, parentID);
+                        validTypes = _getValidConnectionTypesFromSource(sourceID, parentID);
                         //each item in validTypes has to be a descendant of any item in aspectTypes
                         i = validTypes.length;
                         while (i--) {
@@ -601,7 +594,7 @@ define(['jquery',
                     }
                 }
             } else {
-                validTypes = _getValidConnectionTypesInParent(sourceID, parentID);
+                validTypes = _getValidConnectionTypesFromSource(sourceID, parentID);
             }
         }
 
@@ -659,7 +652,6 @@ define(['jquery',
         isConnection: _isConnection,
         isConnectionType: _isConnectionType,
         /*isValidConnectionSource: _isValidConnectionSource,*/
-        getValidConnectionTypes: _getValidConnectionTypes,
         canCreateChild: _canCreateChild,
         isValidConnection: _isValidConnection,
         createBasicProjectSeed: _createBasicProjectSeed,
@@ -667,13 +659,12 @@ define(['jquery',
         canCreateChildren: _canCreateChildren,
         canDeleteNode: _canDeleteNode,
         getMETAAspectMergedValidChildrenTypes: _getMETAAspectMergedValidChildrenTypes,
-        getValidConnectionTypesInParent: _getValidConnectionTypesInParent,
         canAddToSet: _canAddToSet,
         isAbstract: _isAbstract,
         isPort: _isPort,
         getValidPointerTypes: _getValidPointerTypes,
         canCreateChildrenInAspect: _canCreateChildrenInAspect,
-        getValidConnectionTypesInParentInAspect: _getValidConnectionTypesInParentInAspect,
+        getValidConnectionTypesFromSourceInAspect: _getValidConnectionTypesFromSourceInAspect,
         getValidConnectionTypesInAspect: _getValidConnectionTypesInAspect
     }
 });

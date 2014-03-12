@@ -753,7 +753,7 @@ define(['logManager',
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onFilterNewConnectionDroppableEnds = function (params) {
         var availableConnectionEnds = params.availableConnectionEnds,
             result = [],
-            i = availableConnectionEnds.length,
+            i,
             sourceId,
             targetId,
             validConnectionTypes,
@@ -771,8 +771,17 @@ define(['logManager',
         //need to test for each source-destination pair if the connection can be made or not?
         //there is at least one valid connection type definition in the parent that could be created between the source and target
         //there is at least one valid connection type that really can be created in the parent (max chilren num...)
-        validConnectionTypes = GMEConcepts.getValidConnectionTypesInParentInAspect(sourceId, parentID, aspect);
+        validConnectionTypes = GMEConcepts.getValidConnectionTypesFromSourceInAspect(sourceId, parentID, aspect);
 
+        //filter them to see which of those can actually be created as a child of the parent
+        i = validConnectionTypes.length;
+        while (i--) {
+            if (!GMEConcepts.canCreateChild(parentID, validConnectionTypes[i])) {
+                validConnectionTypes.splice(i, 1);
+            }
+        }
+
+        i = availableConnectionEnds.length;
         while (i--) {
             var p = availableConnectionEnds[i];
             if (p.dstSubCompID !== undefined) {
