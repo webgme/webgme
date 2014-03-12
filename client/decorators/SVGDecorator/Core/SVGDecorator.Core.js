@@ -100,7 +100,7 @@ define(['js/Constants',
     };
 
     SVGDecoratorCore.prototype._updateColors = function () {
-        var svg = this.$svgContent.find('svg'),
+        var svg = this.$svgElement,
             fillColorElements = svg.find('.' + FILL_COLOR_CLASS),
             borderColorElements = svg.find('.' + BORDER_COLOR_CLASS),
             textColorElements = svg.find('.' + TEXT_COLOR_CLASS);
@@ -242,13 +242,14 @@ define(['js/Constants',
         }
 
         this.$svgContent.append(svgIcon);
+        this.$svgElement = svgIcon;
 
         this._discoverConnectionAreas();
         this._generateConnectors();
     };
 
     SVGDecoratorCore.prototype._discoverConnectionAreas = function () {
-        var svgElement = this.$svgContent.find('svg'),
+        var svgElement = this.$svgElement,
             connAreas = svgElement.find('.' + CONNECTION_AREA_CLASS),
             len = connAreas.length,
             line,
@@ -338,9 +339,9 @@ define(['js/Constants',
     };
 
     SVGDecoratorCore.prototype._generateConnectors = function () {
-        var connectors = this.$svgContent.find('svg').find('.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS),
+        var connectors = this.$svgElement.find('.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS),
             c,
-            svg = this.$svgContent.find('svg'),
+            svg = this.$svgElement,
             svgWidth = parseInt(svg.attr('width'), 10),
             svgHeight = parseInt(svg.attr('height'), 10);
 
@@ -384,7 +385,7 @@ define(['js/Constants',
 
     /***** UPDATE THE PORTS OF THE NODE *****/
     SVGDecoratorCore.prototype._updatePorts = function () {
-        var svg = this.$svgContent.find('svg'),
+        var svg = this.$svgElement,
             svgWidth = parseInt(svg.attr('width'), 10),
             halfW = svgWidth / 2;
 
@@ -487,7 +488,7 @@ define(['js/Constants',
         //fix default SVG's dimensions to sorround the ports
         //defaultSVG only, nothing else
         if (this._defaultSVGUsed === true) {
-            var svg = this.$svgContent.find('svg');
+            var svg = this.$svgElement;
             var svgRect = svg.find('rect');
             var height = Math.max(leftPorts.length * PORT_HEIGHT, rightPorts.length * PORT_HEIGHT, DEFAULT_SVG_DEFAULT_HEIGHT);
             svg.attr('height', height);
