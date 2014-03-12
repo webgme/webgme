@@ -1077,6 +1077,30 @@ define(['logManager',
         }
 
         this.designerCanvas.selectTab(selectedTabID);
+
+        //check if the node's aspect rules has changed or not, and if so, initialize with that
+        if (this._selectedAspect !== CONSTANTS.ASPECT_ALL) {
+            var nodeId = this.currentNodeInfo.id;
+            var newAspectRules = this._client.getAspectTerritoryPattern(nodeId, this._selectedAspect);
+            var aspectRulesChanged = false;
+
+            if (this._selfPatterns[nodeId].items && newAspectRules.items) {
+                aspectRulesChanged = (_.difference(this._selfPatterns[nodeId].items, newAspectRules.items)).length > 0;
+                if (aspectRulesChanged === false) {
+                    aspectRulesChanged = (_.difference(newAspectRules.items, this._selfPatterns[nodeId].items)).length > 0;
+                }
+            } else {
+                if (!this._selfPatterns[nodeId].items && !newAspectRules.items) {
+                    //none of them has items, no change
+                } else {
+                    aspectRulesChanged = true;
+                }
+            }
+
+            if (aspectRulesChanged) {
+                this.selectedObjectChanged(nodeId);
+            }
+        }
     };
 
     ModelEditorControl.prototype._initializeSelectedAspect = function () {
