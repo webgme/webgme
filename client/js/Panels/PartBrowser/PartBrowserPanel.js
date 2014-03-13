@@ -13,7 +13,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         var options = {};
         //set properties from options
         options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = "PartBrowserPanel";
-        options[PanelBaseWithHeader.OPTIONS.HEADER_TITLE] = true;
+        options[PanelBaseWithHeader.OPTIONS.HEADER_TITLE] = false;
 
         //call parent's constructor
         __parent__.apply(this, [options]);
