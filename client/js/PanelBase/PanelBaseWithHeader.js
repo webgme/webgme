@@ -94,7 +94,6 @@ define(['js/PanelBase/PanelBase',
             this.$floatingTitle.append(this.$panelHeaderTitle);
             this.$_el.append(this.$floatingTitle);
         } else {
-            this.$_el.append(this.$panelHeader);
             this.$_el.append(this.$panelBody);
             this.$_el.append(this.$panelReadOnlyIndicator);
         }
