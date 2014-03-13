@@ -29,32 +29,56 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         this._onComponentUpdate = function(_canvas, ID) {//Boxes and lines
             if( self.diagramDesigner.itemIds.indexOf( ID ) !== -1 ){
                 if( self.diagramDesigner.items[ID].rotation !== self._autorouterBoxRotation[ID] ) //Item has been rotated
-                    self._resizeItem( ID );
+                    try{
+                        self._resizeItem( ID );
+                    }catch(e){
+                        this.logger.error('ConnectionRouteManager3.resizeItem failed with error: ' + e);
+                    }
             }
        };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_UPDATE, this._onComponentUpdate);
 
         this._onComponentCreate = function(_canvas, ID) {//Boxes and lines
-            if( self.diagramDesigner.itemIds.indexOf( ID ) !== -1 ){
+            if( self.diagramDesigner.itemIds.indexOf( ID ) !== -1 && self._autorouterBoxes[ID] === undefined ){
 
-                if( self._autorouterBoxes[ID] === undefined )
+                try{
                     self.insertBox( ID );
+                }catch(e){
+                    this.logger.error('ConnectionRouteManager3.insertBox failed with error: ' + e);
+                }
 
-            }else if( self.diagramDesigner.connectionIds.indexOf( ID ) !== -1 )
-                self.insertConnection( ID );
+            }else if( self.diagramDesigner.connectionIds.indexOf( ID ) !== -1 ){
+                try{
+                    self.insertConnection( ID );
+                }catch(e){
+                    this.logger.error('ConnectionRouteManager3.insertConnection failed with error: ' + e);
+                }
+            }
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_CREATE, this._onComponentCreate);
 
         this._onComponentResize = function(_canvas, ID) {
             if( self._autorouterBoxes[ID.ID] )
-                self._resizeItem( ID.ID );
+                try{
+                    self._resizeItem( ID.ID );
+                }catch(e){
+                    this.logger.error('ConnectionRouteManager3.resizeItem failed with error: ' + e);
+                }
             else
-                self.insertBox( ID.ID );
+                try{
+                    self.insertBox( ID.ID );
+                }catch(e){
+                    this.logger.error('ConnectionRouteManager3.insertBox failed with error: ' + e);
+                }
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ITEM_SIZE_CHANGED, this._onComponentResize);
 
         this._onComponentDelete = function(_canvas, ID) {//Boxes and lines
-            self.deleteItem( ID );
+            try{
+                self.deleteItem( ID );
+            }catch(e){
+                this.logger.error('ConnectionRouteManager3.deleteItem failed with error: ' + e);
+            }
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_DELETE, this._onComponentDelete);
         //ON_UNREGISTER_SUBCOMPONENT
@@ -64,13 +88,21 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
                 var x = self.diagramDesigner.items[eventArgs.ID].getBoundingBox().x,
                     y = self.diagramDesigner.items[eventArgs.ID].getBoundingBox().y;
 
-                self.autorouter.move(self._autorouterBoxes[eventArgs.ID].box, { "x": x, "y": y });
+                try{
+                    self.autorouter.move(self._autorouterBoxes[eventArgs.ID].box, { "x": x, "y": y });
+                }catch(e){
+                    this.logger.error('ConnectionRouteManager3.move failed with error: ' + e);
+                }
             }
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ITEM_POSITION_CHANGED, this._onItemPositionChanged);
 
         this._onClear = function(_canvas, eventArgs) {
-            self._clearGraph();
+            try{
+                self._clearGraph();
+            }catch(e){
+                this.logger.error('ConnectionRouteManager3.clearGraph failed with error: ' + e);
+            }
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_CLEAR, this._onClear);
 
@@ -98,15 +130,13 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         //not just the ones that explicitly needs rerouting
         idList = this.diagramDesigner.connectionIds.slice(0);
 
-        var i = idList.length;
-
         //1 - autoroute
         this.autorouter.autoroute();
 
         //2 - Get the path points and redraw
         var pathPoints,
             realPathPoints;
-        for (i = 0; i < idList.length; i += 1) {
+        for (var i = 0; i < idList.length; i ++) {
             if( this._autorouterPaths[idList[i]] ){
                 pathPoints = this.autorouter.getPathPoints(this._autorouterPaths[idList[i]]);
             }else{
@@ -249,7 +279,8 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
 
         while (j < areas.length) {
             //Building up the ConnectionInfo object
-            boxdefinition.ConnectionInfo.push({ 'id': areas[j].id, 'area': [ [ areas[j].x1, areas[j].y1 ], [ areas[j].x2, areas[j].y2 ] ] });
+            boxdefinition.ConnectionInfo.push({ 'id': areas[j].id, 'area': [ [ areas[j].x1, areas[j].y1 ], [ areas[j].x2, areas[j].y2 ] ], 
+                    'angles': [ areas[j].angle1, areas[j].angle2 ] });
             j++;
         }
 
@@ -262,6 +293,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         var item = this.diagramDesigner.items[objId],
             connIds = this.diagramDesigner.connectionIds,
             itemIds = this.diagramDesigner.itemIds;
+
         if(itemIds.indexOf(objId) !== -1){
             item = this._autorouterBoxes[objId];
 
@@ -298,7 +330,8 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         i = connAreas.length;
         while (i--) {
             //Building up the ConnectionAreas obiect
-            newBox.ConnectionAreas.push({ 'id': connAreas[i].id, 'area': [ [ connAreas[i].x1, connAreas[i].y1 ], [ connAreas[i].x2, connAreas[i].y2 ] ] });
+            newBox.ConnectionAreas.push({ 'id': connAreas[i].id, 'area': [ [ connAreas[i].x1, connAreas[i].y1 ], [ connAreas[i].x2, connAreas[i].y2 ] ],
+                    'angles': [ connAreas[i].angle1, connAreas[i].angle2 ] });
         }
 
         //Update Box 
@@ -311,7 +344,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
             canvas = this.diagramDesigner,
             connectionMetaInfo = null;
 
-        this._autorouterPorts[objId] = this._autorouterPorts[objId] === undefined ? [] : this._autorouterPorts[objId];
+        this._autorouterPorts[objId] = this._autorouterPorts[objId] || [];
         
 
         if( subCompId !== undefined ){
@@ -335,7 +368,8 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
 
             while (j--) {
                 //Building up the ConnectionInfo object
-                connInfo.push({ 'id': areas[j].id, 'area': [ [ areas[j].x1, areas[j].y1 ], [ areas[j].x2, areas[j].y2 ] ] });
+                connInfo.push({ 'id': areas[j].id, 'area': [ [ areas[j].x1, areas[j].y1 ], [ areas[j].x2, areas[j].y2 ] ],
+                    'angles': [ areas[j].angle1, areas[j].angle2 ] });
             }
             this._autorouterBoxes[objId] = this.autorouter.setConnectionInfo(this._autorouterBoxes[objId], connInfo);
         }

@@ -121,6 +121,7 @@ define(['logManager'], function (logManager) {
         //Create priority function
         function createPriority(port, center){
             var priority = 0,
+                //point = [  center.x - port.getRect().getCenter().x, center.y - port.getRect().getCenter().y],
                 point = [ port.getRect().getCenter().x - center.x, port.getRect().getCenter().y - center.y],
                 lineCount = (port.getPointCount() || 1),
                 density = (port.getTotalAvailableArea()/lineCount)/maxArea || 1, //If there is a problem with maxArea, just ignore density
@@ -5975,9 +5976,7 @@ if(DEBUG && ArPointList.length > 0){
             };
 
             this.autoRoute = function(){
-var oldTime = new Date().getTime();
                 connectAllDisconnectedPaths();
-//console.log("1: " + (new Date().getTime() - oldTime));oldTime = new Date().getTime();
 
                 var updated = 0,
                     last = 0,       // identifies the last change to the path
@@ -5987,7 +5986,6 @@ var oldTime = new Date().getTime();
 
                 while( c > 0 )
                 {
-//console.log("2: " + (new Date().getTime() - oldTime));oldTime = new Date().getTime();
                     if( c > 0 )
                     {
                         if( last === 1 )
@@ -6001,7 +5999,6 @@ var oldTime = new Date().getTime();
                         }
                     }
 
-//console.log("3: " + (new Date().getTime() - oldTime));oldTime = new Date().getTime();
                     if( c > 0 )
                     {
                         if( last === 2 )
@@ -6025,7 +6022,6 @@ var oldTime = new Date().getTime();
                         }
                     }
 
-//console.log("4: " + (new Date().getTime() - oldTime));oldTime = new Date().getTime();
                     if( c > 0 )
                     {
                         if( last === 3 )
@@ -6049,7 +6045,6 @@ var oldTime = new Date().getTime();
                         }
                     }
 
-//console.log("5: " + (new Date().getTime() - oldTime));oldTime = new Date().getTime();
                     if( c > 0 )
                     {
                         if( last === 4 )
@@ -6073,7 +6068,6 @@ var oldTime = new Date().getTime();
                         }
                     }
 
-//console.log("6: " + (new Date().getTime() - oldTime));oldTime = new Date().getTime();
                     if( c > 0 )
                     {
                         if( last === 5 )
@@ -6097,7 +6091,6 @@ var oldTime = new Date().getTime();
                         }
                     }
 
-//console.log("7: " + (new Date().getTime() - oldTime));oldTime = new Date().getTime();
                     if( c > 0 )
                     {
                         if( last === 6 )
@@ -6111,7 +6104,6 @@ var oldTime = new Date().getTime();
                         }
                     }
 
-//console.log("8: " + (new Date().getTime() - oldTime));oldTime = new Date().getTime();
                     if( c > 0 )
                     {
                         if( last === 7 )
@@ -6139,7 +6131,6 @@ var oldTime = new Date().getTime();
                 var pathiter = 0;
 
                 //		HRESULT hr = S_OK;
-//console.log("9: " + (new Date().getTime() - oldTime));oldTime = new Date().getTime();
                 while (pathiter < paths.length)
                 {
                     var path = paths[pathiter];
@@ -6172,7 +6163,6 @@ var oldTime = new Date().getTime();
                     pathiter++;
                 }
 
-//console.log("END: " + (new Date().getTime() - oldTime));oldTime = new Date().getTime();
                 _logger.info("c has been decremented " + (100 - c) + " times\nlast is " + last + 
                 "\nd is " + d + "\ndm is " + dm);
                 return updated;
@@ -6494,7 +6484,7 @@ var oldTime = new Date().getTime();
                 if(endport && srcPorts.length > 1){
                     i = srcPorts.length;
                     while(i--){
-                        if(srcPorts[i] === startport)
+                        if(srcPorts[i] === endport)
                             srcPorts.splice(i, 1);
                     }
                 }
@@ -7819,7 +7809,6 @@ var oldTime = new Date().getTime();
              * is clumsy. It isn't too bad unless you try to 
              * set specific attributes.
              *
-             *
              */
 
                 if(!(connAreas instanceof Array))
@@ -7827,7 +7816,8 @@ var oldTime = new Date().getTime();
 
                 connAreas.forEach(function (connData, i, list){
                         var id = connData.id,
-                            attr = 0,
+                            angles = connData.angles, //Incoming angles. If defined, it will set attr at the end
+                            attr = 0, //Set by angles. Defaults to guessing by location if angles undefined
                             type = "any", //Specify start, end, or any --Not fully implemented
                             j = 0,
                             port = box.createPort(),
@@ -7835,11 +7825,8 @@ var oldTime = new Date().getTime();
                                     [ connData.area ] : //Line
                                     [ connData.any, connData.in || connData.incoming, connData.out || connData.outgoing ];
 
-
-
                         do
                         {
-                            
                                 
                             if(connArea[j] instanceof Array){ 
                                 var isStart = 17,
@@ -7970,6 +7957,28 @@ var oldTime = new Date().getTime();
 
                                 assert(x1 < arx1 && y1 < ary1 && x2 > arx2 && y2 > ary2, "AutoRouter.addBox Cannot add port outside of the box");
                                 r = new ArRect(arx1, ary1, arx2, ary2); 
+
+                                //If 'angles' is defined, I will use it to set attr
+                                if(angles){
+                                    var a1 = angles[0], //min angle
+                                        a2 = angles[1], //max angle
+                                        rightAngle = 0,
+                                        topAngle = 90,
+                                        leftAngle = 180,
+                                        bottomAngle = 270;
+
+                                    if( rightAngle >= a1 && rightAngle <= a2 )
+                                        attr = ARPORT_StartOnRight + ARPORT_EndOnRight;
+
+                                    if( topAngle >= a1 && topAngle <= a2 )
+                                        attr += ARPORT_StartOnTop + ARPORT_EndOnTop;
+
+                                    if( leftAngle >= a1 && leftAngle <= a2 )
+                                        attr += ARPORT_StartOnLeft + ARPORT_EndOnLeft;
+
+                                    if( bottomAngle >= a1 && bottomAngle <= a2 )
+                                        attr += ARPORT_StartOnBottom + ARPORT_EndOnBottom;
+                                }
                 
                             }else if(typeof connArea[j] === "string") //Using words to designate connection area
                             {
@@ -8230,7 +8239,6 @@ var oldTime = new Date().getTime();
                     this.boxId2Path[srcBoxId].out.splice(i, 1);
                 }
 
-                //if(path.getEndPort() && path.getEndPort().getOwner() instanceof AutoRouterBox){
                 if(dstBoxId){
                     i = this.boxId2Path[dstBoxId].in.indexOf(pathData);
                     this.boxId2Path[dstBoxId].in.splice(i, 1);
