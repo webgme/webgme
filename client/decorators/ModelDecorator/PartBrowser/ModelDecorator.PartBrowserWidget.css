@@ -54,8 +54,8 @@
     .model-decorator .ports .port {
       white-space: nowrap;
       position: relative;
-      height: 16px;
-      line-height: 16px; }
+      height: 15px;
+      line-height: 15px; }
       .model-decorator .ports .port:hover {
         cursor: pointer; }
       .model-decorator .ports .port .title-wrapper {
@@ -64,7 +64,7 @@
         overflow: hidden;
         text-overflow: ellipsis; }
       .model-decorator .ports .port img.svg-icon {
-        height: 10px;
+        height: 11px;
         width: 5px;
         position: absolute;
         display: inline-block;
@@ -76,7 +76,7 @@
         border: 1px solid #666666;
         width: 3px;
         height: 8px;
-        top: 3px; }
+        top: 2.5px; }
       .model-decorator .ports .port.w-icon span.dot {
         display: none; }
     .model-decorator .ports .left .port .title-wrapper {
