@@ -145,7 +145,8 @@ define(['logManager',
             objDescriptor,
             pos,
             defaultPos = 0,
-            customPoints;
+            customPoints,
+            memberListContainerObj;
 
         if (nodeObj) {
             objDescriptor = {};
@@ -171,7 +172,14 @@ define(['logManager',
                     }
                 } else {
                     objDescriptor.kind = "MODEL";
-                    pos = nodeObj.getRegistry(REGISTRY_KEYS.POSITION);
+
+                    //aspect specific coordinate
+                    if (this._selectedAspect === CONSTANTS.ASPECT_ALL) {
+                        pos = nodeObj.getRegistry(REGISTRY_KEYS.POSITION);
+                    } else {
+                        memberListContainerObj = this._client.getNode(this.currentNodeInfo.id);
+                        pos = memberListContainerObj.getMemberRegistry(this._selectedAspect, nodeId, REGISTRY_KEYS.POSITION) || nodeObj.getRegistry(REGISTRY_KEYS.POSITION);
+                    }
 
                     if (pos) {
                         objDescriptor.position = { "x": pos.x, "y": pos.y };

@@ -634,7 +634,9 @@ define(['logManager',
             gmeID,
             selectedIDs = [],
             len,
-            self = this;
+            self = this,
+            modelID = this.currentNodeInfo.id,
+            selectedAspect = this._selectedAspect;
 
         if (dragPositions && !_.isEmpty(dragPositions)) {
             //update UI
@@ -670,7 +672,13 @@ define(['logManager',
                     if (!oldPos) {
                         oldPos = {'x': 0, 'y': 0};
                     }
-                    self._client.setRegistry(gmeID, REGISTRY_KEYS.POSITION, { "x": dropPosition.x + oldPos.x, "y": dropPosition.y + oldPos.y });
+                    //aspect specific coordinate
+                    if (selectedAspect === CONSTANTS.ASPECT_ALL) {
+                        self._client.setRegistry(gmeID, REGISTRY_KEYS.POSITION, { "x": dropPosition.x + oldPos.x, "y": dropPosition.y + oldPos.y });
+                    } else {
+                        self._client.addMember(modelID, gmeID, selectedAspect);
+                        self._client.setMemberRegistry(modelID, gmeID, selectedAspect, REGISTRY_KEYS.POSITION, {'x': dropPosition.x + oldPos.x, 'y': dropPosition.y + oldPos.y} );
+                    }
                 }
 
                 self._client.completeTransaction();
