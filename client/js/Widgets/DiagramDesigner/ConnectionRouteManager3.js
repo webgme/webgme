@@ -32,7 +32,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
                     try{
                         self._resizeItem( ID );
                     }catch(e){
-                        this.logger.error('ConnectionRouteManager3.resizeItem failed with error: ' + e);
+                        self.logger.error('ConnectionRouteManager3.resizeItem failed with error: ' + e);
                     }
             }
        };
@@ -44,14 +44,14 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
                 try{
                     self.insertBox( ID );
                 }catch(e){
-                    this.logger.error('ConnectionRouteManager3.insertBox failed with error: ' + e);
+                    self.logger.error('ConnectionRouteManager3.insertBox failed with error: ' + e);
                 }
 
             }else if( self.diagramDesigner.connectionIds.indexOf( ID ) !== -1 ){
                 try{
                     self.insertConnection( ID );
                 }catch(e){
-                    this.logger.error('ConnectionRouteManager3.insertConnection failed with error: ' + e);
+                    self.logger.error('ConnectionRouteManager3.insertConnection failed with error: ' + e);
                 }
             }
         };
@@ -62,13 +62,13 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
                 try{
                     self._resizeItem( ID.ID );
                 }catch(e){
-                    this.logger.error('ConnectionRouteManager3.resizeItem failed with error: ' + e);
+                    self.logger.error('ConnectionRouteManager3.resizeItem failed with error: ' + e);
                 }
             else
                 try{
                     self.insertBox( ID.ID );
                 }catch(e){
-                    this.logger.error('ConnectionRouteManager3.insertBox failed with error: ' + e);
+                    self.logger.error('ConnectionRouteManager3.insertBox failed with error: ' + e);
                 }
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ITEM_SIZE_CHANGED, this._onComponentResize);
@@ -77,7 +77,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
             try{
                 self.deleteItem( ID );
             }catch(e){
-                this.logger.error('ConnectionRouteManager3.deleteItem failed with error: ' + e);
+                self.logger.error('ConnectionRouteManager3.deleteItem failed with error: ' + e);
             }
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_DELETE, this._onComponentDelete);
@@ -91,7 +91,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
                 try{
                     self.autorouter.move(self._autorouterBoxes[eventArgs.ID].box, { "x": x, "y": y });
                 }catch(e){
-                    this.logger.error('ConnectionRouteManager3.move failed with error: ' + e);
+                    self.logger.error('ConnectionRouteManager3.move failed with error: ' + e);
                 }
             }
         };
@@ -101,7 +101,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
             try{
                 self._clearGraph();
             }catch(e){
-                this.logger.error('ConnectionRouteManager3.clearGraph failed with error: ' + e);
+                self.logger.error('ConnectionRouteManager3.clearGraph failed with error: ' + e);
             }
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_CLEAR, this._onClear);
