@@ -90,7 +90,12 @@
     .model-decorator .ports .right .port .title-wrapper {
       text-align: right; }
     .model-decorator .ports .right .port img.svg-icon {
-      right: -8px; }
+      right: -8px;
+      -webkit-transform: scaleX(-1);
+      -moz-transform: scaleX(-1);
+      -ms-transform: scaleX(-1);
+      -o-transform: scaleX(-1);
+      transform: scaleX(-1); }
     .model-decorator .ports .right .port span.dot {
       left: 53px;
       border-top-right-radius: 4px;
