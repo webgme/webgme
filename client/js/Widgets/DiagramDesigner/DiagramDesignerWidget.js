@@ -64,7 +64,7 @@ define(['logManager',
     var DiagramDesignerWidget,
         CANVAS_EDGE = 100,
         WIDGET_CLASS = 'diagram-designer',  // must be same as scss/Widgets/DiagramDesignerWidget.scss
-        DEFAULT_CONNECTION_ROUTE_MANAGER = ConnectionRouteManager2,
+        DEFAULT_CONNECTION_ROUTE_MANAGER = ConnectionRouteManager3,
         GUID_DIGITS = 6,
         BACKGROUND_TEXT_COLOR = '#DEDEDE',
         BACKGROUND_TEXT_SIZE = 30;
