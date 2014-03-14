@@ -2009,6 +2009,8 @@ if(DEBUG && ArPointList.length > 0){
                 atomic = false,
                 selfPoints = [],
                 ports = [],
+                childBoxes = [],//dependent boxes
+                mother = null,
                 id;
 
             //functions
@@ -2034,9 +2036,20 @@ if(DEBUG && ArPointList.length > 0){
             this.isBoxClip = isBoxClip;
             this.isBoxIn = isBoxIn;
             this.destroy = destroy;
+
+            //Ports
             this.deleteAllPorts = deleteAllPorts;
             this.resetPortAvailability = resetPortAvailability;
             this.adjustPortAvailability = adjustPortAvailability;
+
+            //Child Boxes
+            this.setParent = setParent;
+            this.getParent = getParent;
+            this.addChild = addChild;
+            this.removeChild = removeChild;
+            this.clearChildren = clearChildren;
+            this.getChildren = getChildren;
+
 
             calculateSelfPoints(); //Part of initialization
 
@@ -2171,10 +2184,18 @@ if(DEBUG && ArPointList.length > 0){
             function shiftBy(offset){
                 rect.add(offset);
 
-                for(var i = 0; i < ports.length; i++){
+                var i = ports.length;
+                while(i--){
                     ports[i].shiftBy(offset);
                 }
 
+/*
+This is not necessary; the ARGraph will shift all children
+                i = childBoxes.length;
+                while(i--){
+                    childBoxes[i].shiftBy(offset);
+                }
+*/
                 calculateSelfPoints();
             }
 
@@ -2188,6 +2209,37 @@ if(DEBUG && ArPointList.length > 0){
                 for(var i = 0; i < ports.length; i++){
                     ports[i].adjustAvailableArea(r);
                 }
+            }
+
+            function getParent(){
+                return mother;
+            }
+
+            function setParent(box){
+                mother = box;
+            }
+
+            function addChild(box){
+                assert(childBoxes.indexOf(box) === -1, "ARBox.addChild: box already is child of " + getID());
+                childBoxes.push(box);
+                box.setParent(this);
+            }
+
+            function removeChild(box){
+                var i = childBoxes.indexOf(box);
+                assert(i !== -1, "ARBox.removeChild: box isn't child of " + getID());
+                childBoxes.splice(i,1)[0].setParent(null);
+            }
+
+            function clearChildren(){
+                var i = childBoxes.length;
+                while(i--){
+                    removeChild(childBoxes[i]);
+                }
+            }
+
+            function getChildren(){
+                return childBoxes;
             }
 
             function getSelfPoints(){
@@ -2207,8 +2259,19 @@ if(DEBUG && ArPointList.length > 0){
             }
 
             function destroy(){
+                var i = childBoxes.length;
+
+                //notify mother of destruction
+                //if there is a mother, of course
+                if(mother)
+                    mother.removeChild(this);
+
                 this.setOwner(null);
                 deleteAllPorts();
+
+                while(i--){
+                    childBoxes[i].destroy();
+                }
             }
 
         };
@@ -4691,8 +4754,6 @@ if(DEBUG && ArPointList.length > 0){
                     startpoint = path.getStartPoint(),
                     endpoint = path.getEndPoint();
 
-                //TODO FIXME If already has a startpoint, use that instead
-
                 assert(startport.hasPoint(startpoint), "ARGraph.connect: startport.hasPoint(startpoint) FAILED");
                 assert(endport.hasPoint(endpoint), "ARGraph.connect: endport.hasPoint(endpoint) FAILED");
 
@@ -5930,6 +5991,13 @@ if(DEBUG && ArPointList.length > 0){
                 boxes[boxId] = box;
 
                 addBoxAndPortEdges(box);
+
+                //add children of the box
+                var children = box.getChildren(),
+                    i = children.length;
+                while(i--){
+                    this.addBox(children[i]);
+                }
             };
 
             this.deleteBox = function(box){
@@ -5939,6 +6007,18 @@ if(DEBUG && ArPointList.length > 0){
 
                 if( box.hasOwner() )
                 {
+                    var mother = box.getParent(),
+                        children = box.getChildren(),
+                        i = children.length;
+
+                    //notify the mother of the deletion
+                    if(mother)
+                        mother.removeChild(box);
+
+                    //remove children
+                    while(i--){
+                        this.deleteBox(children[i]);
+                    }
                     remove(box);
                 }
                 
@@ -5951,7 +6031,10 @@ if(DEBUG && ArPointList.length > 0){
                 if (box === null)
                     return;
 
-                var rect = box2bufferBox[box.getID()].box; 
+                var rect = box2bufferBox[box.getID()].box,
+                    children = box.getChildren(),
+                    i = children.length;
+
                 disconnectPathsClipping(rect); //redraw all paths clipping parent box.
 
                 deleteBoxAndPortEdges(box);
@@ -5962,6 +6045,10 @@ if(DEBUG && ArPointList.length > 0){
                 rect = box.getRect();
                 disconnectPathsClipping(rect);
                 disconnectPathsFrom(box);
+
+                while(i--){
+                    this.shiftBoxBy(children[i], offset);
+                }
             };
 
             this.setBoxRect = function(box, rect){
@@ -8124,7 +8211,7 @@ if(DEBUG && ArPointList.length > 0){
             x2 = size.x2 !== undefined ? size.x2 : (size.x1 + size.width),
             y1 = size.y1 !== undefined ? size.y1 : (size.y2 - size.height),
             y2 = size.y2 !== undefined ? size.y2 : (size.y1 + size.height),
-            connInfo = size.ConnectionAreas,
+            connInfo = size.ConnectionInfo,
             rect = new ArRect(x1, y1, x2, y2),
             paths = { "in": this.boxId2Path[ box.getID() ].in, "out": this.boxId2Path[ box.getID() ].out },
             i = paths.in.length,
@@ -8267,6 +8354,13 @@ if(DEBUG && ArPointList.length > 0){
         this.router.setBuffer( Math.floor(min/2) );
     };
     
+    AutoRouter.prototype.setComponent = function(pBoxObj, chBoxObj){
+        var mother = pBoxObj.box,
+            child = chBoxObj.box;
+
+        mother.addChild(child);
+    };
+
     AutoRouter.prototype.setPathCustomPoints = function( args ){ //args.points = [ [x, y], [x2, y2], ... ]
         var path = this.paths[args.path].path,
             points = [],
