@@ -8054,8 +8054,10 @@ This is not necessary; the ARGraph will shift all children
                                         leftAngle = 180,
                                         bottomAngle = 270;
 
+                                    attr = 0; //Throw away our guess of attr
+
                                     if( rightAngle >= a1 && rightAngle <= a2 )
-                                        attr = ARPORT_StartOnRight + ARPORT_EndOnRight;
+                                        attr += ARPORT_StartOnRight + ARPORT_EndOnRight;
 
                                     if( topAngle >= a1 && topAngle <= a2 )
                                         attr += ARPORT_StartOnTop + ARPORT_EndOnTop;
