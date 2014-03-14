@@ -105,18 +105,12 @@ define(['jquery',
      */
     var _getValidConnectionTypes = function (sourceID, targetID, parentID) {
         var validTypes = [],
-            validChildrenTypes,
-            len,
-            childID;
-
-        validChildrenTypes = _getMETAAspectMergedValidChildrenTypes(parentID) || [];
-
-        len = validChildrenTypes.length;
+			validChildrenTypes = _getValidConnectionTypesFromSource(sourceID, parentID),
+			len = validChildrenTypes.length;
+        
         while (len--) {
-            childID = validChildrenTypes[len];
-            if (_client.isValidTarget(childID, CONSTANTS.POINTER_SOURCE, sourceID) &&
-                _client.isValidTarget(childID, CONSTANTS.POINTER_TARGET, targetID)) {
-                validTypes.push(childID);
+            if (_client.isValidTarget(validChildrenTypes[len], CONSTANTS.POINTER_TARGET, targetID)) {
+                validTypes.push(validChildrenTypes[len]);
             }
         }
 
@@ -124,9 +118,9 @@ define(['jquery',
     };
 
     /*
-     * Determines if a GME Connection can be created between source and target in parent
+     * Determines the GME Connection can be created from a source in a parent
      */
-    var _getValidConnectionTypesInParent = function (sourceID, parentID) {
+    var _getValidConnectionTypesFromSource = function (sourceID, parentID) {
         var validTypes = [],
             validChildrenTypes,
             len,
@@ -138,8 +132,7 @@ define(['jquery',
         while (len--) {
             childID = validChildrenTypes[len];
             if (_isConnectionType(childID) &&
-                _client.isValidTarget(childID, CONSTANTS.POINTER_SOURCE, sourceID) &&
-                _canCreateChild(parentID, childID)) {
+                _client.isValidTarget(childID, CONSTANTS.POINTER_SOURCE, sourceID)) {
                 validTypes.push(childID);
             }
         }
@@ -515,13 +508,169 @@ define(['jquery',
         return validPointerTypes;
     };
 
+
+    var _canCreateChildrenInAspect = function (parentId, baseIdList, aspectName) {
+        var canCreateInAspect = true,
+            i,
+            j;
+
+        if (aspectName) {
+            if (aspectName !== CONSTANTS.ASPECT_ALL) {
+                //need to check in aspect
+                var metaAspectDesc = _client.getMetaAspect(parentId, aspectName);
+                if (metaAspectDesc) {
+                    //metaAspectDesc.items contains the children types the user specified to participate in this aspect
+                    var aspectTypes =  metaAspectDesc.items || [];
+
+                    if (aspectTypes.length > 0) {
+                        //each item in baseIdList has to be a descendant of any item in aspectTypes
+                        i = baseIdList.length;
+                        while (i-- && canCreateInAspect) {
+                            j  = aspectTypes.length;
+                            canCreateInAspect = false;
+                            while (j--) {
+                                if (_client.isTypeOf(baseIdList[i], aspectTypes[j])) {
+                                    canCreateInAspect = true;
+                                    break;
+                                }
+                            }
+                        }
+                    } else {
+                        //aspect types is empty
+                        canCreateInAspect = false;
+                    }
+                } else {
+                    //unknown aspect name
+                    canCreateInAspect = false;
+                }
+            }
+        } else {
+            //not a valid aspect name
+            canCreateInAspect = false;
+        }
+
+        if (canCreateInAspect) {
+            canCreateInAspect = _canCreateChildren(parentId, baseIdList);
+        }
+
+        return canCreateInAspect;
+    };
+
+    /*
+     * Determines the GME Connection can be created from a source in a parent in an aspect
+     */
+    var _getValidConnectionTypesFromSourceInAspect = function (sourceID, parentID, aspectName) {
+        var validTypes = [],
+            i,
+            j,
+            canCreateInAspect;
+
+        if (aspectName) {
+            if (aspectName !== CONSTANTS.ASPECT_ALL) {
+                //need to check in aspect
+                var metaAspectDesc = _client.getMetaAspect(parentID, aspectName);
+                if (metaAspectDesc) {
+                    //metaAspectDesc.items contains the children types the user specified to participate in this aspect
+                    var aspectTypes =  metaAspectDesc.items || [];
+
+                    if (aspectTypes.length > 0) {
+                        validTypes = _getValidConnectionTypesFromSource(sourceID, parentID);
+                        //each item in validTypes has to be a descendant of any item in aspectTypes
+                        i = validTypes.length;
+                        while (i--) {
+                            j  = aspectTypes.length;
+                            canCreateInAspect = false;
+                            while (j--) {
+                                if (_client.isTypeOf(validTypes[i], aspectTypes[j])) {
+                                    canCreateInAspect = true;
+                                    break;
+                                }
+                            }
+
+                            if (!canCreateInAspect) {
+                                validTypes.splice(i, 1);
+                            }
+                        }
+                    }
+                }
+            } else {
+                validTypes = _getValidConnectionTypesFromSource(sourceID, parentID);
+            }
+        }
+
+        return validTypes;
+    };
+
+    /*
+     * Determines if a GME Connection can be created between source and target in parent in an aspect
+     */
+    var _getValidConnectionTypesInAspect = function (sourceID, targetID, parentID, aspectName) {
+        var validTypes = [],
+            canCreateInAspect,
+            i,
+            j;
+
+        if (aspectName) {
+            if (aspectName !== CONSTANTS.ASPECT_ALL) {
+                //need to check in aspect
+                var metaAspectDesc = _client.getMetaAspect(parentID, aspectName);
+                if (metaAspectDesc) {
+                    //metaAspectDesc.items contains the children types the user specified to participate in this aspect
+                    var aspectTypes =  metaAspectDesc.items || [];
+
+                    if (aspectTypes.length > 0) {
+                        validTypes = _getValidConnectionTypes(sourceID, targetID, parentID);
+                        //each item in validTypes has to be a descendant of any item in aspectTypes
+                        i = validTypes.length;
+                        while (i--) {
+                            j  = aspectTypes.length;
+                            canCreateInAspect = false;
+                            while (j--) {
+                                if (_client.isTypeOf(validTypes[i], aspectTypes[j])) {
+                                    canCreateInAspect = true;
+                                    break;
+                                }
+                            }
+
+                            if (!canCreateInAspect) {
+                                validTypes.splice(i, 1);
+                            }
+                        }
+                    }
+                }
+            } else {
+                validTypes = _getValidConnectionTypes(sourceID, targetID, parentID);
+            }
+        }
+
+        return validTypes;
+    };
+
+    var _isValidTypeInAspect = function (objID, aspectContainerID, aspectName) {
+        var result = false,
+            aspectTerritoryPattern = _client.getAspectTerritoryPattern(aspectContainerID, aspectName),
+            aspectItems = aspectTerritoryPattern.items,
+            len;
+
+        if (aspectItems) {
+            len = aspectItems.length;
+            while (len--) {
+                if (_client.isTypeOf(objID, aspectItems[len])) {
+                    result = true;
+                    break;
+                }
+            }
+        }
+
+        return result;
+    };
+
     //return utility functions
     return {
         initialize: _initialize,
         isConnection: _isConnection,
         isConnectionType: _isConnectionType,
         /*isValidConnectionSource: _isValidConnectionSource,*/
-        getValidConnectionTypes: _getValidConnectionTypes,
         canCreateChild: _canCreateChild,
         isValidConnection: _isValidConnection,
         createBasicProjectSeed: _createBasicProjectSeed,
@@ -529,10 +678,13 @@ define(['jquery',
         canCreateChildren: _canCreateChildren,
         canDeleteNode: _canDeleteNode,
         getMETAAspectMergedValidChildrenTypes: _getMETAAspectMergedValidChildrenTypes,
-        getValidConnectionTypesInParent: _getValidConnectionTypesInParent,
         canAddToSet: _canAddToSet,
         isAbstract: _isAbstract,
         isPort: _isPort,
-        getValidPointerTypes: _getValidPointerTypes
+        getValidPointerTypes: _getValidPointerTypes,
+        canCreateChildrenInAspect: _canCreateChildrenInAspect,
+        getValidConnectionTypesFromSourceInAspect: _getValidConnectionTypesFromSourceInAspect,
+        getValidConnectionTypesInAspect: _getValidConnectionTypesInAspect,
+        isValidTypeInAspect: _isValidTypeInAspect
     }
 });

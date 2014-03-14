@@ -19,7 +19,10 @@ define(['jquery',
 
     WebGMEStateModel = Backbone.Model.extend({
         setActiveObject: function(objId) {
-            this.set(CONSTANTS.STATE_ACTIVE_OBJECT, objId);
+            var settings = {};
+            settings[CONSTANTS.STATE_ACTIVE_OBJECT] = objId;
+            settings[CONSTANTS.STATE_ACTIVE_ASPECT] = CONSTANTS.ASPECT_ALL;
+            this.set(settings);
         },
 
         getActiveObject: function() {
@@ -33,6 +36,14 @@ define(['jquery',
 
         getActiveSelection: function() {
             return this.get(CONSTANTS.STATE_ACTIVE_SELECTION);
+        },
+
+        setActiveAspect: function(aspect) {
+            this.set(CONSTANTS.STATE_ACTIVE_ASPECT, aspect);
+        },
+
+        getActiveAspect: function() {
+            return this.get(CONSTANTS.STATE_ACTIVE_ASPECT);
         }
     });
 

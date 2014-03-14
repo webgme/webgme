@@ -10,6 +10,11 @@ define(['js/DragDrop/DragHelper',
         params = params || {};
         params.loggerName = "ModelEditorWidget";
 
+        params.tabsEnabled = true;
+        params.addTabs = false;
+        params.deleteTabs = false;
+        params.reorderTabs = false;
+
         DiagramDesignerWidget.call(this, container, params);
 
         this.logger.debug("ModelEditorWidget ctor");

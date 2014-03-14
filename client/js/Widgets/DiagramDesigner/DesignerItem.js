@@ -47,7 +47,7 @@ define(['logManager',
         this._initializeUI();
     };
 
-    DesignerItem.prototype.__setDecorator = function (decoratorName, decoratorClass, control, metaInfo, preferencesHelper) {
+    DesignerItem.prototype.__setDecorator = function (decoratorName, decoratorClass, control, metaInfo, preferencesHelper, aspect) {
         if (decoratorClass === undefined) {
             //the required decorator is not available
             metaInfo = metaInfo || {};
@@ -67,7 +67,8 @@ define(['logManager',
             this._decoratorClass = decoratorClass;
 
             this._decoratorInstance = new decoratorClass({'host': this,
-                                                          'preferencesHelper': preferencesHelper});
+                                                          'preferencesHelper': preferencesHelper,
+                                                          'aspect': aspect});
             this._decoratorInstance.setControl(control);
             this._decoratorInstance.setMetaInfo(metaInfo);
         }
@@ -336,7 +337,7 @@ define(['logManager',
             var oldControl = this._decoratorInstance.getControl();
             var oldMetaInfo = this._decoratorInstance.getMetaInfo();
 
-            this.__setDecorator(objDescriptor.decorator, objDescriptor.decoratorClass, oldControl, oldMetaInfo, objDescriptor.preferencesHelper);
+            this.__setDecorator(objDescriptor.decorator, objDescriptor.decoratorClass, oldControl, oldMetaInfo, objDescriptor.preferencesHelper, objDescriptor.aspect);
 
             //attach new one
             this.$el.html(this._decoratorInstance.$el);

@@ -20,7 +20,7 @@ define(['logManager',
         var options = {};
         //set properties from options
         options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = "Visualizer";
-        options[PanelBaseWithHeader.OPTIONS.HEADER_TITLE] = true;
+        options[PanelBaseWithHeader.OPTIONS.HEADER_TITLE] = false;
 
         //call parent's constructor
         PanelBaseWithHeader.apply(this, [options]);

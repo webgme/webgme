@@ -29,6 +29,16 @@ class SignalFlowSystemToGraphML:
             for member in node.sets['assign']:
                 self.__parent[member.guid] = None
                 self.__loadGMENodes(member)
+            #now we should add all flow connections between the already loaded top level nodes
+            checkedParents = []
+            for member in node.sets['assign']:
+                parent = member.parent
+                if not (parent.guid in self.__gmeNodes.keys() or parent.guid in checkedParents):
+                    checkedParents.append(parent.guid)
+                    for child in parent.children:
+                        if self.__isDataFlowConn(child) and child.source.guid in self.__gmeNodes and child.destination.guid in self.__gmeNodes:
+                            self.__gmeNodes[child.guid] = child
+                            self.__parent[child.guid] = None
 
     def __loadGMENodes(self,node):
         if not node.guid in self.__gmeNodes.keys():

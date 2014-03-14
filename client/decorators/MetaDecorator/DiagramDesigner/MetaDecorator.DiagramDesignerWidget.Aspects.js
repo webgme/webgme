@@ -65,9 +65,10 @@ define(['js/Constants',
 
     MetaDecoratorDiagramDesignerWidgetAspects.prototype._onNewAspectClick = function () {
         var client = this._control._client,
-            objId = this._metaInfo[CONSTANTS.GME_ID];
+            objId = this._metaInfo[CONSTANTS.GME_ID],
+            existingNames = [CONSTANTS.ASPECT_ALL].concat(client.getMetaAspectNames(objId));
 
-        this._onNewClick(client.getMetaAspectNames(objId), this._skinParts.$aspectsContainer, this._skinParts.$addAspectContainer, this._onNewAspectCreate);
+        this._onNewClick(existingNames, this._skinParts.$aspectsContainer, this._skinParts.$addAspectContainer, this._onNewAspectCreate);
     };
 
     MetaDecoratorDiagramDesignerWidgetAspects.prototype._updateAspects = function () {

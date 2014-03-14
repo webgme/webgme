@@ -396,7 +396,10 @@ define(['logManager',
 
     ProjectsDialog.prototype._createProjectFromFile = function (projectName, jsonContent) {
         var _client = this._client,
-            _logger = this._logger;
+            _logger = this._logger,
+            _loader = new LoaderCircles({"containerElement": $('body')});
+
+        _loader.start();
 
         _client.createProjectFromFileAsync(projectName, jsonContent, function (err) {
             if (!err) {
@@ -404,6 +407,7 @@ define(['logManager',
             } else {
                 _logger.error('CAN NOT CREATE NEW PROJECT FROM FILE: ' + err.message);
             }
+            _loader.stop();
         });
     };
 

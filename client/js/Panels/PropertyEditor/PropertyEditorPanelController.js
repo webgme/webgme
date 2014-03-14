@@ -53,11 +53,20 @@ define(['logManager',
         var self = this;
 
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_SELECTION, function (model, activeSelection) {
-            self._selectedObjectsChanged(activeSelection);
+            if (activeSelection) {
+                self._selectedObjectsChanged(activeSelection);
+            } else {
+                self._selectedObjectsChanged([]);
+            }
         });
 
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, function (model, activeObjectId) {
-            self._selectedObjectsChanged([activeObjectId]);
+            if (activeObjectId || activeObjectId === CONSTANTS.PROJECT_ROOT_ID) {
+                self._selectedObjectsChanged([activeObjectId]);
+            } else {
+                self._selectedObjectsChanged([]);
+            }
+
         });
 
         this._propertyGrid.onFinishChange(function (args) {
@@ -90,6 +99,8 @@ define(['logManager',
                 self._refreshPropertyList();
             });
             this._client.updateTerritory(this._territoryId, patterns);
+        } else {
+            this._refreshPropertyList();
         }
     };
 

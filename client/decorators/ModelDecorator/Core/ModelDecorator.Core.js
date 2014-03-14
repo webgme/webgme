@@ -34,8 +34,12 @@ define(['js/Constants',
         EXCLUDED_POINTERS = [CONSTANTS.POINTER_BASE, CONSTANTS.POINTER_SOURCE, CONSTANTS.POINTER_TARGET];
 
 
-    ModelDecoratorCore = function () {
+    ModelDecoratorCore = function (params) {
         DecoratorWithPortsBase.apply(this, []);
+
+        if (params && params.aspect) {
+            this._aspect = params.aspect;
+        }
     };
 
     _.extend(ModelDecoratorCore.prototype, DecoratorWithPortsBase.prototype);
@@ -296,18 +300,21 @@ define(['js/Constants',
             childrenIDs,
             len;
 
-        if (nodeObj) {
-            childrenIDs = nodeObj.getChildrenIds();
-            len = childrenIDs.length;
-            while (len--) {
-                nodeObj = client.getNode(childrenIDs[len]);
-                if (!nodeObj) {
-                    tReady = false;
-                    break;
+        //TODO: hard to tell with the aspect info involved
+        if (this._aspect === CONSTANTS.ASPECT_ALL) {
+            if (nodeObj) {
+                childrenIDs = nodeObj.getChildrenIds();
+                len = childrenIDs.length;
+                while (len--) {
+                    nodeObj = client.getNode(childrenIDs[len]);
+                    if (!nodeObj) {
+                        tReady = false;
+                        break;
+                    }
                 }
+            } else {
+                tReady = false;
             }
-        } else {
-            tReady = false;
         }
 
         if (tReady === true) {

@@ -47,9 +47,9 @@ define([
         if(refObj && typeof refObj['$ref'] === 'string'){
             if(refObj['$ref'].indexOf('#') === 0){
                 //we assume that it is an internal reference
-                if(_internalRefHash[refObj['$ref']]){
+                if(_internalRefHash[refObj['$ref']] !== undefined){
                     callback(null,_cache[_internalRefHash[refObj['$ref']]]);
-                } else if(_underImport[refObj['$ref']]){
+                } else if(_underImport[refObj['$ref']] !== undefined){
                     _underImport[refObj['$ref']].push(callback);
                 } else {
                     _underImport[refObj['$ref']] = [callback]; //TODO we should check if the loading order is really finite this way

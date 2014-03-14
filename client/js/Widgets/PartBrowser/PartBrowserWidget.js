@@ -56,7 +56,8 @@ define(['logManager',
         if (partContainerDiv.length > 0) {
             return this.updatePart(partId, partDesc);
         } else {
-            decoratorInstance = new DecoratorClass({'preferencesHelper': partDesc.preferencesHelper});
+            decoratorInstance = new DecoratorClass({'preferencesHelper': partDesc.preferencesHelper,
+                'aspect': partDesc.aspect});
             decoratorInstance.setControl(partDesc.control);
             decoratorInstance.setMetaInfo(partDesc.metaInfo);
 
@@ -185,7 +186,8 @@ define(['logManager',
                 partDecoratorInstance.destroy();
 
                 //instantiate new one
-                partDecoratorInstance = new DecoratorClass({'preferencesHelper': partDesc.preferencesHelper});
+                partDecoratorInstance = new DecoratorClass({'preferencesHelper': partDesc.preferencesHelper,
+                    'aspect': partDesc.aspect});
                 partDecoratorInstance.setControl(oldControl);
                 partDecoratorInstance.setMetaInfo(oldMetaInfo);
 

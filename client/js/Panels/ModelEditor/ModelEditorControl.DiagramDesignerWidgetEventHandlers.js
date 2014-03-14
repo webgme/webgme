@@ -148,6 +148,10 @@ define(['logManager',
             self._onSelectionTextColorChanged(selectedElements, color);
         };
 
+        this.designerCanvas.onSelectedTabChanged = function (tabID) {
+            self._onSelectedTabChanged(tabID);
+        };
+
         this.logger.debug("attachDiagramDesignerWidgetEventHandlers finished");
     };
 
@@ -215,7 +219,8 @@ define(['logManager',
             CONTEXT_POS_OFFSET = 10,
             menuItems = {},
             i,
-            connTypeObj;
+            connTypeObj,
+            aspect = this._selectedAspect;
 
         //local callback to create the connection
         createConnection = function (connTypeToCreate) {
@@ -246,7 +251,7 @@ define(['logManager',
         }
 
         //get the list of valid connection types
-        var validConnectionTypes = GMEConcepts.getValidConnectionTypes(sourceId, targetId, parentId);
+        var validConnectionTypes = GMEConcepts.getValidConnectionTypesInAspect(sourceId, targetId, parentId, aspect);
         //filter them to see which of those can actually be created as a child of the parent
         i = validConnectionTypes.length;
         while (i--) {
@@ -374,7 +379,8 @@ define(['logManager',
             validPointerTypes = [],
             baseTypeID,
             baseTypeNode,
-            dragAction;
+            dragAction,
+            aspect = this._selectedAspect;
 
         //check to see what DROP actions are possible
         if (items.length > 0) {
@@ -385,19 +391,19 @@ define(['logManager',
                         //check to see if dragParams.parentID and this.parentID are the same
                         //if so, it's not a real move, it is a reposition
                         if ((dragParams && dragParams.parentID === parentID) ||
-                            GMEConcepts.canCreateChildren(parentID, items)) {
+                            GMEConcepts.canCreateChildrenInAspect(parentID, items, aspect)) {
                             dragAction = {'dragEffect': dragEffects[i]};
                             possibleDropActions.push(dragAction);
                         }
                         break;
                     case DragHelper.DRAG_EFFECTS.DRAG_COPY:
-                        if (GMEConcepts.canCreateChildren(parentID, items)) {
+                        if (GMEConcepts.canCreateChildrenInAspect(parentID, items, aspect)) {
                             dragAction = {'dragEffect': dragEffects[i]};
                             possibleDropActions.push(dragAction);
                         }
                         break;
                     case DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE:
-                        if (GMEConcepts.canCreateChildren(parentID, items)) {
+                        if (GMEConcepts.canCreateChildrenInAspect(parentID, items, aspect)) {
                             dragAction = {'dragEffect': dragEffects[i]};
                             possibleDropActions.push(dragAction);
                         }
@@ -628,7 +634,9 @@ define(['logManager',
             gmeID,
             selectedIDs = [],
             len,
-            self = this;
+            self = this,
+            modelID = this.currentNodeInfo.id,
+            selectedAspect = this._selectedAspect;
 
         if (dragPositions && !_.isEmpty(dragPositions)) {
             //update UI
@@ -664,7 +672,13 @@ define(['logManager',
                     if (!oldPos) {
                         oldPos = {'x': 0, 'y': 0};
                     }
-                    self._client.setRegistry(gmeID, REGISTRY_KEYS.POSITION, { "x": dropPosition.x + oldPos.x, "y": dropPosition.y + oldPos.y });
+                    //aspect specific coordinate
+                    if (selectedAspect === CONSTANTS.ASPECT_ALL) {
+                        self._client.setRegistry(gmeID, REGISTRY_KEYS.POSITION, { "x": dropPosition.x + oldPos.x, "y": dropPosition.y + oldPos.y });
+                    } else {
+                        self._client.addMember(modelID, gmeID, selectedAspect);
+                        self._client.setMemberRegistry(modelID, gmeID, selectedAspect, REGISTRY_KEYS.POSITION, {'x': dropPosition.x + oldPos.x, 'y': dropPosition.y + oldPos.y} );
+                    }
                 }
 
                 self._client.completeTransaction();
@@ -747,14 +761,14 @@ define(['logManager',
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onFilterNewConnectionDroppableEnds = function (params) {
         var availableConnectionEnds = params.availableConnectionEnds,
             result = [],
-            i = availableConnectionEnds.length,
+            i,
             sourceId,
             targetId,
             validConnectionTypes,
             j,
-            canCreateChildOfConnectionType,
             parentID = this.currentNodeInfo.id,
-            client = this._client;
+            client = this._client,
+            aspect = this._selectedAspect;
 
         if (params.srcSubCompId !== undefined) {
             sourceId = this._Subcomponent2GMEID[params.srcId][params.srcSubCompId];
@@ -765,8 +779,17 @@ define(['logManager',
         //need to test for each source-destination pair if the connection can be made or not?
         //there is at least one valid connection type definition in the parent that could be created between the source and target
         //there is at least one valid connection type that really can be created in the parent (max chilren num...)
-        validConnectionTypes = GMEConcepts.getValidConnectionTypesInParent(sourceId, parentID);
+        validConnectionTypes = GMEConcepts.getValidConnectionTypesFromSourceInAspect(sourceId, parentID, aspect);
 
+        //filter them to see which of those can actually be created as a child of the parent
+        i = validConnectionTypes.length;
+        while (i--) {
+            if (!GMEConcepts.canCreateChild(parentID, validConnectionTypes[i])) {
+                validConnectionTypes.splice(i, 1);
+            }
+        }
+
+        i = availableConnectionEnds.length;
         while (i--) {
             var p = availableConnectionEnds[i];
             if (p.dstSubCompID !== undefined) {
@@ -978,7 +1001,8 @@ define(['logManager',
             parentID = this.currentNodeInfo.id,
             params = { "parentId": parentID },
             projectName = this._client.getActiveProject(),
-            childrenIDs = [];
+            childrenIDs = [],
+            aspect = this._selectedAspect;
 
         if (parentID) {
             try {
@@ -1005,7 +1029,7 @@ define(['logManager',
                             }
                         }
 
-                        if (GMEConcepts.canCreateChildren(parentID, childrenIDs)) {
+                        if (GMEConcepts.canCreateChildrenInAspect(parentID, childrenIDs, aspect)) {
                             this._client.startTransaction();
                             this._client.copyMoreNodes(params);
                             this._client.completeTransaction();
@@ -1123,6 +1147,16 @@ define(['logManager',
             }
         }
         this._client.completeTransaction();
+    };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectedTabChanged = function (tabID) {
+        if (this._aspects[tabID] && this._selectedAspect !== this._aspects[tabID]) {
+            this._selectedAspect = this._aspects[tabID];
+
+            this.logger.debug('selectedAspectChanged: ' + this._selectedAspect);
+
+            this._initializeSelectedAspect();
+        }
     };
 
     return ModelEditorControlDiagramDesignerWidgetEventHandlers;

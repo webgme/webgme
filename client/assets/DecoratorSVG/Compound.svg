@@ -52,21 +52,21 @@
      id="layer1"
      transform="matrix(0.26076738,0,0,0.26076738,1.1225206,2.5496227)">
     <rect
-       style="fill:#0000ff;fill-rule:evenodd;stroke:#000000;stroke-width:3.83483553px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="fill:#0a0af5;fill-rule:evenodd;stroke:#000000;stroke-width:3.83483553px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        height="70"
        width="150"
        x="1"
        y="101"
        id="rect4105" />
     <rect
-       style="fill:#ff2a2a;fill-rule:evenodd;stroke:#000000;stroke-width:3.83483553px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="fill:#0a0af5;fill-rule:evenodd;stroke:#000000;stroke-width:3.83483553px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        y="1"
        x="301"
        height="70"
        width="150"
        id="rect4107" />
     <rect
-       style="fill:#ff5555;fill-rule:evenodd;stroke:#000000;stroke-width:3.83483553px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="fill:#0a0af5;fill-rule:evenodd;stroke:#000000;stroke-width:3.83483553px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        height="70"
        width="150"
        x="301"
@@ -77,7 +77,7 @@
        x="301"
        height="70"
        width="150"
-       style="fill:#d4aa00;fill-rule:evenodd;stroke:#000000;stroke-width:3.83483553px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="fill:#0a0af5;fill-rule:evenodd;stroke:#000000;stroke-width:3.83483553px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        id="rect4111" />
     <path
        style="fill:none;stroke:#000000;stroke-width:19.17417717;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
