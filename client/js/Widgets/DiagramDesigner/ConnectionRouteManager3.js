@@ -428,9 +428,9 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
                 var a1 = angles[0], //min angle
                     a2 = angles[1], //max angle
                     rightAngle = 0,
-                    topAngle = 90,
+                    bottomAngle = 90,
                     leftAngle = 180,
-                    bottomAngle = 270;
+                    topAngle = 270;
 
                 if( rightAngle < a1 || rightAngle > a2 )
                     x2 += 5;
