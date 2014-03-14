@@ -646,6 +646,25 @@ define(['jquery',
         return validTypes;
     };
 
+    var _isValidTypeInAspect = function (objID, aspectContainerID, aspectName) {
+        var result = false,
+            aspectTerritoryPattern = _client.getAspectTerritoryPattern(aspectContainerID, aspectName),
+            aspectItems = aspectTerritoryPattern.items,
+            len;
+
+        if (aspectItems) {
+            len = aspectItems.length;
+            while (len--) {
+                if (_client.isTypeOf(objID, aspectItems[len])) {
+                    result = true;
+                    break;
+                }
+            }
+        }
+
+        return result;
+    };
+
     //return utility functions
     return {
         initialize: _initialize,
@@ -665,6 +684,7 @@ define(['jquery',
         getValidPointerTypes: _getValidPointerTypes,
         canCreateChildrenInAspect: _canCreateChildrenInAspect,
         getValidConnectionTypesFromSourceInAspect: _getValidConnectionTypesFromSourceInAspect,
-        getValidConnectionTypesInAspect: _getValidConnectionTypesInAspect
+        getValidConnectionTypesInAspect: _getValidConnectionTypesInAspect,
+        isValidTypeInAspect: _isValidTypeInAspect
     }
 });

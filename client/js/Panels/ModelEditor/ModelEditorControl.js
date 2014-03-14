@@ -540,7 +540,9 @@ define(['logManager',
                         objDesc.control = this;
                         objDesc.metaInfo = {};
                         objDesc.metaInfo[CONSTANTS.GME_ID] = gmeID;
+                        objDesc.metaInfo[CONSTANTS.ASPECT_CONTAINER_GME_ID] = this.currentNodeInfo.id;
                         objDesc.preferencesHelper = PreferencesHelper.getPreferences();
+                        objDesc.aspect = this._selectedAspect;
 
                         uiComponent = this.designerCanvas.createDesignerItem(objDesc);
 
@@ -636,6 +638,7 @@ define(['logManager',
 
                                 objDesc.decoratorClass = decClass;
                                 objDesc.preferencesHelper = PreferencesHelper.getPreferences();
+                                objDesc.aspect = this._selectedAspect;
 
                                 this.designerCanvas.updateDesignerItem(componentID, objDesc);
                             }

@@ -63,7 +63,10 @@ define(['underscore', 'common/Constants'], function (underscore, COMMON_CONSTANT
         STATE_ACTIVE_ASPECT: 'activeAspect',
 
         /* ASPECTs */
-        ASPECT_ALL: 'All'
+        ASPECT_ALL: 'All',
+
+        /* WHEREVER THE ASPECT CONTAINER NODE'S ID HAS TO BE PRESENT */
+        ASPECT_CONTAINER_GME_ID: 'ASPECT_CONTAINER_GME_ID'
     });
 
 
