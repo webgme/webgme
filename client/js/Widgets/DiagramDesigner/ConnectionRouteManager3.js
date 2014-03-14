@@ -109,7 +109,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         this._onUnregisterSubcomponent = function(sender, ids){
             var longid = ids.objectID + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + ids.subComponentID;
             try{
-                if(this._autorouterBoxes[longid])
+                if(self._autorouterBoxes[longid])
                     self.deleteItem(longid);
             }catch(e){
                 self.logger.error('ConnectionRouteManager3.deleteItem failed with error: ' + e);
