@@ -540,7 +540,6 @@ define(['logManager',
                         objDesc.control = this;
                         objDesc.metaInfo = {};
                         objDesc.metaInfo[CONSTANTS.GME_ID] = gmeID;
-                        objDesc.metaInfo[CONSTANTS.ASPECT_CONTAINER_GME_ID] = this.currentNodeInfo.id;
                         objDesc.preferencesHelper = PreferencesHelper.getPreferences();
                         objDesc.aspect = this._selectedAspect;
 

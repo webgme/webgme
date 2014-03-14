@@ -235,7 +235,6 @@ define(['logManager',
         desc.control = this;
         desc.metaInfo = {};
         desc.metaInfo[CONSTANTS.GME_ID] = id;
-        desc.metaInfo[CONSTANTS.ASPECT_CONTAINER_GME_ID] = this._containerNodeId;
         desc.preferencesHelper = PreferencesHelper.getPreferences();
         desc.aspect = this._aspect;
 
