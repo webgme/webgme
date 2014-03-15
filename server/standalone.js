@@ -365,7 +365,7 @@ define(['logManager',
                     if(err){
                         res.send(500);
                     } else {
-                        __REST.doRESTCommand(_REST.request.GET,command,token,parameters,function(httpStatus,object){
+                        __REST.doRESTCommand(__REST.request.GET,command,token,parameters,function(httpStatus,object){
                             if(command === __REST.command.etf){
                                 var filename = 'exportedNode.json';
                                 if(parameters[3]){
