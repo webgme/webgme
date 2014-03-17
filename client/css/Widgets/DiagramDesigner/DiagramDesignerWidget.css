@@ -147,6 +147,8 @@
         .diagram-designer .items div.c-t div.c-text .c-name {
           position: relative;
           left: -50%; }
+          .diagram-designer .items div.c-t div.c-text .c-name.v {
+            left: 1px; }
         .diagram-designer .items div.c-t div.c-text input {
           height: 20px !important;
           min-width: 50px; }

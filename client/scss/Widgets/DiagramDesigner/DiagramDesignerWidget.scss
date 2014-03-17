@@ -222,6 +222,10 @@ $tabs-container-height: 26px;
         .c-name {
           position: relative;
           left: -50%;
+
+          &.v {
+            left: 1px;
+          }
         }
 
         input {

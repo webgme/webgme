@@ -1418,11 +1418,16 @@ define(['logManager',
 
         if (this.name && this.name !== "") {
             this.skinParts.name = this._textNameBase.clone();
-            this.skinParts.name.css({ 'top': pathCenter.y + this.designerAttributes.width / 2,
+            this.skinParts.name.css({ 'top': pathCenter.y - 4/*+ this.designerAttributes.width / 2*/,
                 'left': pathCenter.x});
             this.skinParts.name.find('span').text(this.name);
             this.skinParts.textContainer.append(this.skinParts.name);
             hasText = true;
+
+            if ((pathCenter.alpha >= 45 && pathCenter.alpha <= 135) ||
+                (pathCenter.alpha >= 225 && pathCenter.alpha <= 315)) {
+                this.skinParts.name.find('span').addClass('v');
+            }
 
             // set title editable on double-click
             this.skinParts.name.find('span').on("dblclick.editOnDblClick", null, function (event) {
