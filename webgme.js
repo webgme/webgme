@@ -16,6 +16,7 @@ requirejs.config({
 module.exports = {
 	clientStorage: requirejs('storage/clientstorage'),
 	serverStorage: requirejs('storage/serverstorage'),
+    serverUserStorage: requirejs('storage/serveruserstorage'),
 	core: requirejs('core/core'),
     standaloneServer: requirejs('server/standalone')
 };
