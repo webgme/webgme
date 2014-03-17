@@ -228,7 +228,7 @@ define(['logManager',
         //called when the user double-cliked on a node in the tree
         treeBrowser.onNodeDoubleClicked = function (nodeId) {
             logger.debug("Firing onNodeDoubleClicked with nodeId: " + nodeId);
-            WebGMEGlobal.State.setActiveObject(nodeId);
+            WebGMEGlobal.State.setActiveObjectActiveAspect(nodeId, CONSTANTS.ASPECT_ALL);
         };
 
         //called from the TreeBrowserWidget when a create function is called from context menu

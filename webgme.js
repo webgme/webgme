@@ -7,11 +7,16 @@
 var requirejs = require('requirejs');
 requirejs.config({
 	nodeRequire: require,
-	baseUrl: __dirname
+	baseUrl: __dirname,
+    paths:{
+        "logManager": "common/LogManager"
+    }
 });
 
 module.exports = {
 	clientStorage: requirejs('storage/clientstorage'),
 	serverStorage: requirejs('storage/serverstorage'),
-	core: requirejs('core/core')
+    serverUserStorage: requirejs('storage/serveruserstorage'),
+	core: requirejs('core/core'),
+    standaloneServer: requirejs('server/standalone')
 };
