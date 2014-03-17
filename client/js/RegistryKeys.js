@@ -39,9 +39,9 @@ define([], function () {
         META_SHEETS: 'MetaSheets',
 
         /*
-         * MANUAL_ASPECTS_META_INFO_REGISTRY_KEY
+         * CROSSCUTS_META_INFO_REGISTRY_KEY
          */
-        MANUAL_ASPECTS : 'ManualAspects',
+        CROSSCUTS : 'CrossCuts',
 
         /*
          * DISABLED CONNECTION AREAS FOR DIAGRAM-DESIGNER-WIDGET DECORATORS ARE STORED UNDER THIS REGISTRY KEY ON A PER DECORATOR BASIS

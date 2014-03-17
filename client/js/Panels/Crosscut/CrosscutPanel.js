@@ -2,19 +2,19 @@
 
 define(['js/PanelBase/PanelBaseWithHeader',
     'js/PanelManager/IActivePanel',
-    'js/Widgets/ManualAspect/ManualAspectWidget',
-    './ManualAspectController'
+    'js/Widgets/Crosscut/CrosscutWidget',
+    './CrosscutController'
 ], function (PanelBaseWithHeader,
              IActivePanel,
-             ManualAspectWidget,
-             ManualAspectController) {
+             CrosscutWidget,
+             CrosscutController) {
 
-    var ManualAspectPanel;
+    var CrosscutPanel;
 
-    ManualAspectPanel = function (layoutManager, params) {
+    CrosscutPanel = function (layoutManager, params) {
         var options = {};
         //set properties from options
-        options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = "ManualAspectPanel";
+        options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = "CrosscutPanel";
         options[PanelBaseWithHeader.OPTIONS.FLOATING_TITLE] = true;
 
         //call parent's constructor
@@ -25,14 +25,14 @@ define(['js/PanelBase/PanelBaseWithHeader',
         //initialize UI
         this._initialize();
 
-        this.logger.debug("ManualAspectPanel ctor finished");
+        this.logger.debug("CrosscutPanel ctor finished");
     };
 
     //inherit from PanelBaseWithHeader
-    _.extend(ManualAspectPanel.prototype, PanelBaseWithHeader.prototype);
-    _.extend(ManualAspectPanel.prototype, IActivePanel.prototype);
+    _.extend(CrosscutPanel.prototype, PanelBaseWithHeader.prototype);
+    _.extend(CrosscutPanel.prototype, IActivePanel.prototype);
 
-    ManualAspectPanel.prototype._initialize = function () {
+    CrosscutPanel.prototype._initialize = function () {
         var self = this;
 
         //remove title container
@@ -40,7 +40,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
             this.$panelHeaderTitle.remove();
         }*/
 
-        this.widget = new ManualAspectWidget(this.$el, {'toolBar': this.toolBar});
+        this.widget = new CrosscutWidget(this.$el, {'toolBar': this.toolBar});
 
         this.widget.setTitle = function (title) {
             self.setTitle(title);
@@ -51,7 +51,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
             WebGMEGlobal.KeyboardManager.setListener(self.widget);
         };
 
-        this.control = new ManualAspectController({"client": this._client,
+        this.control = new CrosscutController({"client": this._client,
             "widget": this.widget});
 
         this.onActivate();
@@ -59,7 +59,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
 
     /* OVERRIDE FROM WIDGET-WITH-HEADER */
     /* METHOD CALLED WHEN THE WIDGET'S READ-ONLY PROPERTY CHANGES */
-    ManualAspectPanel.prototype.onReadOnlyChanged = function (isReadOnly) {
+    CrosscutPanel.prototype.onReadOnlyChanged = function (isReadOnly) {
         //apply parent's onReadOnlyChanged
         PanelBaseWithHeader.prototype.onReadOnlyChanged.call(this, isReadOnly);
 
@@ -67,12 +67,12 @@ define(['js/PanelBase/PanelBaseWithHeader',
         this.control.setReadOnly(isReadOnly);
     };
 
-    ManualAspectPanel.prototype.onResize = function (width, height) {
+    CrosscutPanel.prototype.onResize = function (width, height) {
         this.logger.debug('onResize --> width: ' + width + ', height: ' + height);
         this.widget.onWidgetContainerResize(width, height);
     };
 
-    ManualAspectPanel.prototype.destroy = function () {
+    CrosscutPanel.prototype.destroy = function () {
         this.control.destroy();
         this.widget.destroy();
 
@@ -82,7 +82,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
     };
 
     /* override IActivePanel.prototype.onActivate */
-    ManualAspectPanel.prototype.onActivate = function () {
+    CrosscutPanel.prototype.onActivate = function () {
         this.widget.onActivate();
         this.control.onActivate();
         WebGMEGlobal.KeyboardManager.setListener(this.widget);
@@ -90,12 +90,12 @@ define(['js/PanelBase/PanelBaseWithHeader',
     };
 
     /* override IActivePanel.prototype.onDeactivate */
-    ManualAspectPanel.prototype.onDeactivate = function () {
+    CrosscutPanel.prototype.onDeactivate = function () {
         this.widget.onDeactivate();
         this.control.onDeactivate();
         WebGMEGlobal.KeyboardManager.setListener(undefined);
         WebGMEGlobal.Toolbar.refresh();
     };
 
-    return ManualAspectPanel;
+    return CrosscutPanel;
 });

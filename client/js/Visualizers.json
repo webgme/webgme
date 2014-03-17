@@ -14,9 +14,9 @@
         "panel": "js/Panels/SetEditor/SetEditorPanel",
         "DEBUG_ONLY": false},
 
-    {"id": "ManualAspectEditor",
+    {"id": "Crosscut",
         "title": "Crosscut",
-        "panel": "js/Panels/ManualAspect/ManualAspectPanel",
+        "panel": "js/Panels/Crosscut/CrosscutPanel",
         "DEBUG_ONLY": false},
 
     {"id": "ContainmentGrid",

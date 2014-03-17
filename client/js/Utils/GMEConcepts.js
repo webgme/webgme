@@ -665,6 +665,27 @@ define(['jquery',
         return result;
     };
 
+    /*
+     *
+     */
+    var _isValidChildrenTypeInCrossCut = function (parentId, baseIdList) {
+        //Check if each single baseId is a valid children type of parentId
+        var i,
+            result = true,
+            baseId;
+
+        i = baseIdList.length;
+        while (i--) {
+            baseId = baseIdList[i];
+            if (!_client.isValidChild(parentId, baseId)) {
+                result = false;
+                break;
+            }
+        }
+
+        return result;
+    } ;
+
     //return utility functions
     return {
         initialize: _initialize,
@@ -685,6 +706,7 @@ define(['jquery',
         canCreateChildrenInAspect: _canCreateChildrenInAspect,
         getValidConnectionTypesFromSourceInAspect: _getValidConnectionTypesFromSourceInAspect,
         getValidConnectionTypesInAspect: _getValidConnectionTypesInAspect,
-        isValidTypeInAspect: _isValidTypeInAspect
+        isValidTypeInAspect: _isValidTypeInAspect,
+        isValidChildrenTypeInCrossCut: _isValidChildrenTypeInCrossCut
     }
 });

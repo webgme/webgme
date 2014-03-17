@@ -96,7 +96,7 @@ define(['js/NodePropertyNames',
                 cDef.mData === 'ParentID' ||
                 cDef.mData === 'GUID' ||
                 cDef.mData === 'Registry.' + REGISTRY_KEYS.META_SHEETS ||
-                cDef.mData === 'Registry.' + REGISTRY_KEYS.MANUAL_ASPECTS ||
+                cDef.mData === 'Registry.' + REGISTRY_KEYS.CROSSCUTS ||
                 cDef.mData.indexOf('Sets.') === 0 ||
                 cDef.mData.indexOf('Pointers.') === 0) {
                 cDef.bEditable = false;
