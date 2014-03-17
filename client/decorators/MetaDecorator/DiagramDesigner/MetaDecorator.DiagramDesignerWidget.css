@@ -55,7 +55,10 @@
   .meta-decorator .add-new-constraint,
   .meta-decorator .add-new-aspect {
     font-size: 10px;
-    cursor: pointer; }
+    cursor: pointer;
+    position: absolute;
+    top: 0px;
+    left: 3px; }
     .meta-decorator .add-new-attribute:hover,
     .meta-decorator .add-new-constraint:hover,
     .meta-decorator .add-new-aspect:hover {
@@ -70,7 +73,8 @@
     text-align: center;
     background-color: #f3f3f3;
     color: black;
-    line-height: 13px; }
+    line-height: 13px;
+    position: relative; }
   .meta-decorator .constraints-title,
   .meta-decorator .aspects-title {
     border-top: 1px dashed #999999; }

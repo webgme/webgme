@@ -43,7 +43,10 @@ define(['js/Constants',
                             "$constraintsContainer": undefined,
                             "$addConstraintContainer": undefined,
                             "$aspectsContainer": undefined,
-                            "$addAspectContainer": undefined};
+                            "$addAspectContainer": undefined,
+                            "$attributesTitle": undefined,
+                            "$constraintsTitle": undefined,
+                            "$aspectsTitle": undefined};
 
         this.logger.debug("MetaDecorator ctor");
     };
@@ -96,6 +99,10 @@ define(['js/Constants',
         this._skinParts.$name = this.$el.find(".name");
         this._skinParts.$attributesContainer = this.$el.find(".attributes");
         this._skinParts.$addAttributeContainer = this.$el.find(".add-new-attribute");
+
+        this._skinParts.$attributesTitle =  this.$el.find(".attributes-title");
+        this._skinParts.$constraintsTitle =  this.$el.find(".constraints-title");
+        this._skinParts.$aspectsTitle =  this.$el.find(".aspects-title");
 
         this._skinParts.$attributesContainer.on('dblclick', 'li', function (e) {
             if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
@@ -310,10 +317,10 @@ define(['js/Constants',
     MetaDecoratorDiagramDesignerWidget.prototype._onNewAttributeClick = function () {
         var client = this._control._client,
             objId = this._metaInfo[CONSTANTS.GME_ID];
-        this._onNewClick(client.getValidAttributeNames(objId), this._skinParts.$attributesContainer, this._skinParts.$addAttributeContainer, this._onNewAttributeCreate);
+        this._onNewClick(client.getValidAttributeNames(objId), this._skinParts.$attributesContainer, this._skinParts.$addAttributeContainer, this._skinParts.$attributesTitle, this._onNewAttributeCreate);
     };
 
-    MetaDecoratorDiagramDesignerWidget.prototype._onNewClick = function (existingNames, itemContainer, addNewContainer, saveFn) {
+    MetaDecoratorDiagramDesignerWidget.prototype._onNewClick = function (existingNames, itemContainer, addNewContainer, titleContainer, saveFn) {
         var inputCtrl,
             w = itemContainer.width(),
             cancel,
@@ -326,7 +333,7 @@ define(['js/Constants',
 
         endEdit = function () {
             ctrlGroup.remove();
-            addNewContainer.insertAfter(itemContainer);
+            titleContainer.append(addNewContainer);
         };
 
         cancel = function () {
@@ -396,6 +403,8 @@ define(['js/Constants',
         }).blur(function (/*event*/) {
             cancel();
         });
+
+        this.hostDesignerItem.canvas.selectNone();
     };
 
 
@@ -444,9 +453,9 @@ define(['js/Constants',
             this._skinParts.$addAspectContainer.detach();
             this.$el.find('input.new-attr').val('').blur();
         } else {
-            this._skinParts.$addAttributeContainer.insertAfter(this._skinParts.$attributesContainer);
-            this._skinParts.$addConstraintContainer.insertAfter(this._skinParts.$constraintsContainer);
-            this._skinParts.$addAspectContainer.insertAfter(this._skinParts.$aspectsContainer);
+            this._skinParts.$attributesTitle.append(this._skinParts.$addAttributeContainer);
+            this._skinParts.$constraintsTitle.append(this._skinParts.$addConstraintContainer);
+            this._skinParts.$aspectsTitle.append(this._skinParts.$addAspectContainer);
         }
     };
 
