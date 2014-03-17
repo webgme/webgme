@@ -75,6 +75,15 @@ define(['logManager',
             this._selfPatterns = {};
             this._selfPatterns[nodeId] = { "children": 1 };
 
+            if (this._aspect !== CONSTANTS.ASPECT_ALL) {
+                //make sure that the _aspect exist in the node, otherwise fallback to All
+                var aspectNames = this._client.getMetaAspectNames(nodeId) || [];
+                if (aspectNames.indexOf(this._aspect) === -1) {
+                    this._logger.warning('The currently selected aspect "' + this._aspect + '" does not exist in the object "' + nodeId + '", falling back to "All"');
+                    this._aspect = CONSTANTS.ASPECT_ALL;
+                }
+            }
+
             this._territoryId = this._client.addUI(this, function (events) {
                 self._eventCallback(events);
             });
