@@ -416,6 +416,38 @@ define(['logManager',
         });
 
 
+        __logger.info("creating list asset rules");
+        __app.get('/listAllDecorators',ensureAuthenticated,function(req,res){
+            var names = []; //TODO we add everything in the directories!!!
+            if(CONFIG.decoratorpaths && CONFIG.decoratorpaths.length){
+                for(var i=0;i<CONFIG.decoratorpaths.length;i++){
+                    var additional = FS.readdirSync(CONFIG.decoratorpaths[i]);
+                    for(var j=0;j<additional.length;j++){
+                        if(names.indexOf(additional[j]) === -1){
+                            names.push(additional[j]);
+                        }
+                    }
+                }
+            }
+            res.status(200);
+            res.end("define([],function(){ return "+JSON.stringify(names)+";});");
+        });
+        __app.get('/listAllInterpreters',ensureAuthenticated,function(req,res){
+            var names = []; //we add only the "*.js" files from the directories
+            if(CONFIG.interpreterpaths && CONFIG.interpreterpaths.length){
+                for(var i=0;i<CONFIG.interpreterpaths.length;i++){
+                    var additional = FS.readdirSync(CONFIG.interpreterpaths[i]);
+                    for(var j=0;j<additional.length;j++){
+                        if(names.indexOf(additional[j]) === -1 && additional[j].indexOf(".js") !== -1){
+                            names.push(additional[j]);
+                        }
+                    }
+                }
+            }
+            res.status(200);
+            res.end("define([],function(){ return "+JSON.stringify(names)+";});");
+        });
+
         __logger.info("creating all other request rule - error 400 -");
         __app.get('*',function(req,res){
             res.send(400);
