@@ -928,8 +928,12 @@ define(['logManager',
                         newMetaPointers.combinedNames.push(combinedName);
 
                         newMetaPointers[combinedName] = {'name': pointerNames[len],
-                            'target': pointerMetaDescriptor[lenTargets].id,
-                            'multiplicity': ""+(pointerMetaDescriptor[lenTargets].min || 0)+".."+(pointerMetaDescriptor[lenTargets].max || '*')};
+                            'target': pointerMetaDescriptor[lenTargets].id};
+
+                        if (isSet) {
+                            newMetaPointers[combinedName].multiplicity= ""+(pointerMetaDescriptor[lenTargets].min || 0)+".."+(pointerMetaDescriptor[lenTargets].max || '*');
+                        }
+
                     }
                 }
             }
