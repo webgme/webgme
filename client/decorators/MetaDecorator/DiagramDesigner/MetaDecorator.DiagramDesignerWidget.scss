@@ -94,6 +94,9 @@ $selected-box-shadow: 0px 0px 15px 0px #1276D4 !important;
   .add-new-aspect {
     font-size: 10px;
     cursor: pointer;
+    position: absolute;
+    top: 0px;
+    left: 3px;
 
     &:hover {
       background-color: $attributes-add-new-hover-background-color;
@@ -111,6 +114,7 @@ $selected-box-shadow: 0px 0px 15px 0px #1276D4 !important;
     background-color: $section-title-background-color;
     color: $section-title-color;
     line-height: 13px;
+    position: relative;
   }
 
   .constraints-title,

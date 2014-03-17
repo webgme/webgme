@@ -60,7 +60,7 @@ define(['js/Constants',
 
 
     MetaDecoratorDiagramDesignerWidgetConstraints.prototype._onNewConstraintClick = function () {
-        this._onNewClick(this._constraintNames, this._skinParts.$constraintsContainer, this._skinParts.$addConstraintContainer, this._onNewConstraintCreate);
+        this._onNewClick(this._constraintNames, this._skinParts.$constraintsContainer, this._skinParts.$addConstraintContainer, this._skinParts.$constraintsTitle, this._onNewConstraintCreate);
     };
 
     MetaDecoratorDiagramDesignerWidgetConstraints.prototype._updateConstraints = function () {
