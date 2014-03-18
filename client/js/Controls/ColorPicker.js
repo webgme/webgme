@@ -12,12 +12,13 @@ define(['jquery-spectrum',
     var ColorPicker;
 
     ColorPicker = function (params) {
-        var self = this;
+        var self = this,
+            initColor = params.color || '#dd3333';
 
         this.el = params.el;
 
         this.el.spectrum({
-            color: "#dd3333",
+            color: initColor,
             showPalette: true,
             showSelectionPalette: false,
             showInput: true,
@@ -50,12 +51,12 @@ define(['jquery-spectrum',
                 self._destroy();
             },
             change: function(color) {
+                self._destroy();
                 if (color) {
                     self.onColorChanged(color.toHexString());
                 } else {
                     self.onColorChanged();
                 }
-                self._destroy();
             }
         });
 

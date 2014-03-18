@@ -188,6 +188,14 @@ $input-color: lighten($background-color, 18.5%);
             position: absolute;
             right: 2px;
           }
+
+          div.color-picker {
+            height: 19px;
+            width: 100%;
+            margin-top: 4px;
+            cursor: pointer;
+            border-radius: 4px;
+          }
         }
       }
     }
