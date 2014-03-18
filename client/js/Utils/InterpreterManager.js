@@ -6,10 +6,11 @@ define(['core/core'], function (Core) {
     };
 
     var getContext = function(client,callback) {
-        var context = { storage: client.getProjectObject()};
+        var context = { storage: client.getProjectObject(), project:client.getProjectObject()};
         context.core = new Core(context.storage,{corerel:2});
         context.commitHash = client.getActualCommit();
-        context.selected = ""; //context.selected = "/-1/-2/-1/-1";
+        context.selected = WebGMEGlobal.State.getActiveSelection() || [];
+        context.selected = context.selected[0] || null; //TODO allow multiple objects in the selection and pass active object as well
         context.storage.loadObject(context.commitHash, function(err, commitObj) {
             context.core.loadRoot(commitObj.root, function(err, rootNode) {
                 if(!err){
@@ -34,21 +35,31 @@ define(['core/core'], function (Core) {
         });
     };
 
-    var getInterpreter = function(name){
-        //return new WEBGMEINTERPRETER(); //TODO something more 'official'
-        return {
-            run: function(context){
-                console.log(context);
+    var getInterpreter = function(name,callback){
+        require(['/interpreters/'+name+'/'+name],
+            function(InterpreterClass){
+                callback(null,new InterpreterClass());
+            },
+            function(err){
+                callback(err,null);
             }
-        }
+        );
     };
 
-    ClientInterpreterManager.prototype.run = function (name) {
+    ClientInterpreterManager.prototype.run = function (name,callback) {
 
-        var interpreter = getInterpreter(name);
-        getContext(this._client,function(err,context){
-            interpreter.run(context);
+        var self = this;
+        getInterpreter(name,function(err,interpreter){
+            if(!err && interpreter !== null){
+                getContext(self._client,function(err,context){
+                    interpreter.run(context,callback);
+                });
+            } else {
+                //TODO generate proper result
+                callback({error:err});
+            }
         });
+
     };
 
     //TODO somehow it would feel more right if we do run in async mode, but if not then we should provide getState and getResult synchronous functions as well

@@ -158,6 +158,18 @@ define(['logManager',
             next();
         }
 
+        function isGoodExtraAsset(name,path){
+            try{
+                var file = FS.readFileSync(path+'/'+name+'.js','utf-8');
+                if(file === undefined || file === null){
+                    return false;
+                } else {
+                    return true;
+                }
+            } catch(e){
+                return false;
+            }
+        }
         //here starts the main part
         //variables
         var __logger = null,
@@ -269,6 +281,26 @@ define(['logManager',
             var tryNext = function(index){
                 if(index<CONFIG.decoratorpaths.length){
                     res.sendfile(Path.join(CONFIG.decoratorpaths[index],req.url.substring(12)),function(err){
+                        tryNext(index+1);
+                    });
+                } else {
+                    res.send(404);
+                }
+            };
+
+            if(CONFIG.decoratorpaths && CONFIG.decoratorpaths.length){
+                tryNext(0);
+            } else {
+                res.send(404);
+            }
+        });
+
+        __logger.info("creating plug-in specific routing rules");
+        __app.get(/^\/interpreters\/.*/,ensureAuthenticated,function(req,res){
+            var tryNext = function(index){
+                if(index<CONFIG.interpreterpaths.length){
+                    console.log('interperter...',Path.join(CONFIG.interpreterpaths[index],req.url.substring(14)));
+                    res.sendfile(Path.join(CONFIG.interpreterpaths[index],req.url.substring(14))+'.js',function(err){
                         tryNext(index+1);
                     });
                 } else {
@@ -424,7 +456,9 @@ define(['logManager',
                     var additional = FS.readdirSync(CONFIG.decoratorpaths[i]);
                     for(var j=0;j<additional.length;j++){
                         if(names.indexOf(additional[j]) === -1){
-                            names.push(additional[j]);
+                            if(isGoodExtraAsset(additional[j],Path.join(CONFIG.decoratorpaths[i],additional[j]))){
+                                names.push(additional[j]);
+                            }
                         }
                     }
                 }
@@ -438,8 +472,10 @@ define(['logManager',
                 for(var i=0;i<CONFIG.interpreterpaths.length;i++){
                     var additional = FS.readdirSync(CONFIG.interpreterpaths[i]);
                     for(var j=0;j<additional.length;j++){
-                        if(names.indexOf(additional[j]) === -1 && additional[j].indexOf(".js") !== -1){
-                            names.push(additional[j]);
+                        if(names.indexOf(additional[j]) === -1){
+                            if(isGoodExtraAsset(additional[j],Path.join(CONFIG.interpreterpaths[i],additional[j]))){
+                                names.push(additional[j]);
+                            }
                         }
                     }
                 }

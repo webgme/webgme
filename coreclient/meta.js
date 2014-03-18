@@ -60,7 +60,10 @@ define([], function () {
 
         //getter setter functions
         function getMeta(path){
-            var meta = {children:{},attributes:{},pointers:{}};
+            var meta = {children:{},attributes:{},pointers:{},aspects:{}};
+            if(_nodes === null || _nodes === undefined){
+                return meta;
+            }
             var node = _nodes[path] || null;
             if(node){
                 var metaNode = _core.getChild(node,"_meta");

@@ -1025,6 +1025,27 @@ define(['logManager',
         this._toolbarItems.push(this.$btnConnectionRemoveSegmentPoints);
         this.$btnConnectionRemoveSegmentPoints.enabled(false);
 
+        /************** EXECUTE PLUG-IN BUTTON ****************/
+        this.$btnExecutePlugin = toolBar.addDropDownButton(
+            { "title": "Execute plug-in",
+                "icon": "icon-off",
+                "menuClass": "no-min-width"
+            });
+        //we get the list of plugins and put a button for every one of them
+        var pluginNames = this._client.getAvailableInterpreterNames();
+        for(var i=0; i<pluginNames.length;i++){
+            this.$btnExecutePlugin.addButton({
+                "title" : pluginNames[i],
+                "text" : pluginNames[i],
+                "data" : {name:pluginNames[i]},
+                "clickFn": function (data) {
+                    self._executePlugin(data.name);
+                }
+            });
+        }
+        this._toolbarItems.push(this.$btnExecutePlugin);
+        this.$btnExecutePlugin.enabled(true);
+
         this._toolbarInitialized = true;
     };
 
@@ -1127,6 +1148,12 @@ define(['logManager',
         WebGMEGlobal.State.setActiveAspect(this._selectedAspect);
 
         this.selectedObjectChanged(this.currentNodeInfo.id);
+    };
+
+    ModelEditorControl.prototype._executePlugin = function(name){
+        WebGMEGlobal.InterpreterManager.run(name,function(result){
+            console.log(result);
+        });
     };
 
     //attach ModelEditorControl - DesignerCanvas event handler functions
