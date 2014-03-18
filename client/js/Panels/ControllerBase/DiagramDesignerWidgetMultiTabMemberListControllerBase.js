@@ -140,15 +140,12 @@ define(['logManager',
             this._widget.clearTabs();
         }
 
-        //do not work on ROOT element
-        if (nodeId === CONSTANTS.PROJECT_ROOT_ID) {
-            nodeId = undefined;
-        }
+        nodeId = this._validateNodeId(nodeId);
 
         this._memberListContainerID = nodeId;
         this._selectedMemberListID = undefined;
 
-        if (nodeId) {
+        if (nodeId || nodeId === CONSTANTS.PROJECT_ROOT_ID) {
             //put new node's info into territory rules
             pattern = {};
             pattern[nodeId] = { "children": 0 };
@@ -164,6 +161,15 @@ define(['logManager',
         } else {
             this._widget.setBackgroundText("No object to display...");
         }
+    };
+
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._validateNodeId = function (nodeId) {
+        //do not work on ROOT element
+        if (nodeId === CONSTANTS.PROJECT_ROOT_ID) {
+            nodeId = undefined;
+        }
+
+        return nodeId;
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._stateActiveObjectChanged = function (model, activeObjectId) {

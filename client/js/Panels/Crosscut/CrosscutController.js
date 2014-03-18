@@ -2,11 +2,13 @@
 
 define(['logManager',
     'js/RegistryKeys',
+    'js/Constants',
     './CrosscutConstants',
     'js/DragDrop/DragHelper',
     'js/Utils/GMEConcepts',
     'js/Panels/ControllerBase/DiagramDesignerWidgetMultiTabMemberListControllerBase'], function (logManager,
                                              REGISTRY_KEYS,
+                                             CONSTANTS,
                                                CrosscutConstants,
                                                DragHelper,
                                                GMEConcepts,
@@ -24,6 +26,58 @@ define(['logManager',
     };
 
     _.extend(CrosscutController.prototype, DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype);
+
+    //enable every node
+    CrosscutController.prototype._validateNodeId = function (nodeId) {
+        return nodeId;
+    };
+
+    CrosscutController.prototype._updateSelectedMemberListMembersTerritoryPatterns = function () {
+        var currentlyDisplayedMembers = (this._selectedMemberListMembers || []).slice(0),
+            actualMembers = (this._memberListMembers[this._selectedMemberListID] || []).slice(0),
+            diff,
+            len,
+            territoryChanged = false,
+            territoryId = this._selectedMemberListMembersTerritoryId,
+            territoryPatterns = this._selectedMemberListMembersTerritoryPatterns,
+            client = this._client,
+            desc,
+            obj;
+
+        //let's see who has been deleted
+        diff = _.difference(currentlyDisplayedMembers, actualMembers);
+        len = diff.length;
+        while (len--) {
+            delete territoryPatterns[diff[len]];
+            territoryChanged = true;
+        }
+
+        //let's see who has been added
+        diff = _.difference(actualMembers, currentlyDisplayedMembers);
+        len = diff.length;
+        while (len--) {
+            territoryPatterns[diff[len]] = { "children": 0 };
+            territoryChanged = true;
+        }
+
+        //let's update the one that has not been changed but their position might have
+        diff = _.intersection(actualMembers, currentlyDisplayedMembers);
+        len = diff.length;
+        this._widget.beginUpdate();
+        while (len--) {
+            this._onUpdate(diff[len]);
+        }
+        this._widget.endUpdate();
+
+        //save current list of members
+        this._selectedMemberListMembers = actualMembers;
+
+        if (territoryChanged) {
+            setTimeout( function () {
+                client.updateTerritory(territoryId, territoryPatterns);
+            }, 10);
+        }
+    };
 
     CrosscutController.prototype.getOrderedMemberListInfo = function (memberListContainerObject) {
         var result = [],
