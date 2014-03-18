@@ -11,7 +11,9 @@ define([
     'coreclient/dump',
     'coreclient/dumpmore',
     'coreclient/import',
-    'coreclient/copyimport'
+    'coreclient/copyimport',
+    '/listAllDecorators',
+    '/listAllInterpreters'
 ],
     function (
         ASSERT,
@@ -26,7 +28,9 @@ define([
         Dump,
         DumpMore,
         MergeImport,
-        Import
+        Import,
+        AllDecorators,
+        AllInterpreters
         ) {
 
         var ROOT_PATH = '';
@@ -2049,9 +2053,7 @@ define([
                     }
                 });
             }
-            /*function getExportItemsUrlAsync(paths,filename,callback){
-                getExternalInterpreterConfigUrlAsync(paths[0],"config_",callback);
-            }*/
+
             function getExternalInterpreterConfigUrlAsync(selectedItemsPaths,filename,callback){
                 var config = {};
                 config.host = window.location.protocol+"//"+window.location.host;
@@ -2136,6 +2138,15 @@ define([
             function getProjectObject(){
                 return _project;
             }
+
+            function getAvailableInterpreterNames(){
+                return AllInterpreters;
+            }
+
+            function getAvailableDecoratorNames(){
+                return AllDecorators;
+            }
+
             //initialization
             function initialize(){
                 _database = newDatabase();
@@ -2282,7 +2293,10 @@ define([
 
                 //end of META functions
 
+                //decorators
+                getAvailableDecoratorNames: getAvailableDecoratorNames,
                 //interpreters
+                getAvailableInterpreterNames: getAvailableInterpreterNames,
                 getProjectObject: getProjectObject,
 
                 //JSON functions

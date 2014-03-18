@@ -4,7 +4,6 @@ define(['logManager',
     'clientUtil',
     'js/NodePropertyNames',
     'js/RegistryKeys',
-    'js/Decorators/DecoratorDB',
     'js/Constants',
     'js/Utils/DisplayFormat',
     'js/Dialogs/DecoratorSVGExplorer/DecoratorSVGExplorerDialog',
@@ -13,7 +12,6 @@ define(['logManager',
                                         util,
                                         nodePropertyNames,
                                         REGISTRY_KEYS,
-                                        DecoratorDB,
                                         CONSTANTS,
                                         displayFormat,
                                         DecoratorSVGExplorerDialog,
@@ -133,7 +131,16 @@ define(['logManager',
             _client = this._client,
             _isResetableAttribute,
             _isResetableRegistry,
-            _isResetablePointer;
+            _isResetablePointer,
+            decoratorNames = _client.getAvailableDecoratorNames();
+
+        decoratorNames.sort(function (a,b) {
+            if (a.toLowerCase() < b.toLowerCase()) {
+                return -1;
+            } else {
+                return 1;
+            }
+        });
 
         _getNodeAttributeValues = function (node) {
             var result =  {},
@@ -481,7 +488,7 @@ define(['logManager',
                             if (i === REGISTRY_KEYS.DECORATOR) {
                                 //dstList[extKey].valueType = "option";
                                 //TODO: only the decorators for DiagramDesigner are listed so far, needs to be fixed...
-                                dstList[extKey].valueItems = DecoratorDB.getDecoratorsByWidget('DiagramDesigner');
+                                dstList[extKey].valueItems = decoratorNames;
                             }
 
                             //if the attribute value is an enum, display the enum values
