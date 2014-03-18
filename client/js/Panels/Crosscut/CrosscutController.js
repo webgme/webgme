@@ -56,7 +56,7 @@ define(['logManager',
 
     CrosscutController.prototype.getNewSetNamePrefixDesc = function () {
         return {'SetID': CrosscutConstants.CROSSCUT_NAME_PREFIX,
-            'Title': 'Aspect '};
+            'Title': 'Crosscut '};
     };
 
     /*
