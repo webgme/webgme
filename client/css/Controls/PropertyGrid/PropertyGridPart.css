@@ -111,6 +111,12 @@
             margin-top: 2px;
             position: absolute;
             right: 2px; }
+          .pgp ul li.cr .c div.color-picker {
+            height: 19px;
+            width: 100%;
+            margin-top: 4px;
+            cursor: pointer;
+            border-radius: 4px; }
     .pgp ul.closed li:not(.title),
     .pgp ul.closed ul li,
     .pgp ul.closed ul li > * {
