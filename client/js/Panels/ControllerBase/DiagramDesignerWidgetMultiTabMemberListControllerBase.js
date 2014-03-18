@@ -27,8 +27,6 @@ define(['logManager',
         MEMBER_POSITION_REGISTRY_KEY = REGISTRY_KEYS.POSITION;
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase = function (options) {
-        var self = this;
-
         this.logger = logManager.create(options.loggerName || "DiagramDesignerWidgetMultiTabMemberListControllerBase");
 
         this._client = options.client;
