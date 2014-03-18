@@ -50,12 +50,12 @@ define(['jquery-spectrum',
                 self._destroy();
             },
             change: function(color) {
+                self._destroy();
                 if (color) {
                     self.onColorChanged(color.toHexString());
                 } else {
                     self.onColorChanged();
                 }
-                self._destroy();
             }
         });
 
