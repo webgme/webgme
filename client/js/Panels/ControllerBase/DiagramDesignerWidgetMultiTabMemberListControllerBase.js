@@ -651,47 +651,53 @@ define(['logManager',
         }
 
         this._selectedMemberListMembersTerritoryId = this._client.addUI(this, function (events) {
-            var decoratorsToDownload = [DEFAULT_DECORATOR],
-                len = events.length,
-                obj,
-                objDecorator;
-
-            while (len--) {
-                if ((events[len].etype === CONSTANTS.TERRITORY_EVENT_LOAD) || (events[len].etype === CONSTANTS.TERRITORY_EVENT_UPDATE)) {
-
-                    obj = client.getNode(events[len].eid);
-
-                    events[len].desc = { isConnection: GMEConcepts.isConnection(events[len].eid) };
-
-                    if (obj) {
-                        //if it is a connection find src and dst and do not care about decorator
-                        if (events[len].desc.isConnection === true) {
-                            events[len].desc.srcID  = obj.getPointer(SRC_POINTER_NAME).to;
-                            events[len].desc.dstID = obj.getPointer(DST_POINTER_NAME).to;
-                        } else {
-                            objDecorator = obj.getRegistry(REGISTRY_KEYS.DECORATOR);
-
-                            if (!objDecorator ||
-                                objDecorator === "") {
-                                objDecorator = DEFAULT_DECORATOR;
-                            }
-
-                            if (decoratorsToDownload.indexOf(objDecorator) === -1) {
-                                decoratorsToDownload.pushUnique(objDecorator);
-                            }
-
-                            events[len].desc.decorator = objDecorator;
-                        }
-                    }
-                }
-            }
-
-            client.decoratorManager.download(decoratorsToDownload, WIDGET_NAME, function () {
-                self._dispatchEvents(events);
-            });
+            self._memberListTerritoryCallback(events);
         });
 
         this._client.updateTerritory(this._selectedMemberListMembersTerritoryId, this._selectedMemberListMembersTerritoryPatterns);
+    };
+
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._memberListTerritoryCallback = function (events) {
+        var decoratorsToDownload = [DEFAULT_DECORATOR],
+            len = events.length,
+            obj,
+            objDecorator,
+            client = this._client,
+            self = this;
+
+        while (len--) {
+            if ((events[len].etype === CONSTANTS.TERRITORY_EVENT_LOAD) || (events[len].etype === CONSTANTS.TERRITORY_EVENT_UPDATE)) {
+
+                obj = client.getNode(events[len].eid);
+
+                events[len].desc = { isConnection: GMEConcepts.isConnection(events[len].eid) };
+
+                if (obj) {
+                    //if it is a connection find src and dst and do not care about decorator
+                    if (events[len].desc.isConnection === true) {
+                        events[len].desc.srcID  = obj.getPointer(SRC_POINTER_NAME).to;
+                        events[len].desc.dstID = obj.getPointer(DST_POINTER_NAME).to;
+                    } else {
+                        objDecorator = obj.getRegistry(REGISTRY_KEYS.DECORATOR);
+
+                        if (!objDecorator ||
+                            objDecorator === "") {
+                            objDecorator = DEFAULT_DECORATOR;
+                        }
+
+                        if (decoratorsToDownload.indexOf(objDecorator) === -1) {
+                            decoratorsToDownload.pushUnique(objDecorator);
+                        }
+
+                        events[len].desc.decorator = objDecorator;
+                    }
+                }
+            }
+        }
+
+        client.decoratorManager.download(decoratorsToDownload, WIDGET_NAME, function () {
+            self._dispatchEvents(events);
+        });
     };
 
 
