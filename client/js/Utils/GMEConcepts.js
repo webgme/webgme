@@ -174,8 +174,7 @@ define(['jquery',
         _client.startTransaction();
 
         //create extra registry entries for root - currently allowed interpreters
-        //TODO need proper contant value, and maybe other place
-        _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID,'validPlugins',"");
+        _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, REGISTRY_KEYS.VALID_PLUGINS, "");
 
         //create FCO, META, PROJECT_BASE
         // now as we create FCO always on the same relid and with the same GUID project have a more interchangeable base...
