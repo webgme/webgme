@@ -7,14 +7,16 @@ define(['logManager',
     'js/DragDrop/DragHelper',
     'js/Utils/GMEConcepts',
     'js/Panels/ControllerBase/DiagramDesignerWidgetMultiTabMemberListControllerBase',
-    'js/Panels/MetaEditor/MetaRelations'], function (logManager,
+    'js/Panels/MetaEditor/MetaRelations',
+    'js/NodePropertyNames'], function (logManager,
                                              REGISTRY_KEYS,
                                              CONSTANTS,
                                                CrosscutConstants,
                                                DragHelper,
                                                GMEConcepts,
                                                DiagramDesignerWidgetMultiTabMemberListControllerBase,
-                                               MetaRelations) {
+                                               MetaRelations,
+                                               nodePropertyNames) {
 
     var CrosscutController,
         DEFAULT_DECORATOR = "ModelDecorator",
@@ -33,6 +35,23 @@ define(['logManager',
     };
 
     _.extend(CrosscutController.prototype, DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype);
+
+    CrosscutController.prototype._attachDiagramDesignerWidgetEventHandlers = function () {
+        var self = this;
+
+        //cal base classes _attachDiagramDesignerWidgetEventHandlers
+        DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._attachDiagramDesignerWidgetEventHandlers.call(this);
+
+        //add own event handlers
+
+        this._widget.onFilterNewConnectionDroppableEnds = function (params) {
+            return self._onFilterNewConnectionDroppableEnds(params);
+        };
+
+        this._widget.onCreateNewConnection = function (params) {
+            self._onCreateNewConnection(params);
+        };
+    };
 
     //enable every node
     CrosscutController.prototype._validateNodeId = function (nodeId) {
@@ -715,6 +734,291 @@ define(['logManager',
     /****************************************************************************/
     /*  END OF --- REMOVES A SPECIFIC TYPE OF CONNECTION FROM 2 GME OBJECTS     */
     /****************************************************************************/
+
+
+    /*************************************************************/
+    /*  HANDLE OBJECT / CONNECTION DELETION IN THE ASPECT ASPECT */
+    /*************************************************************/
+    CrosscutController.prototype._onSelectionDelete = function (idList) {
+        var _client = this._client,
+            memberListContainerID = this._memberListContainerID,
+            memberListToRemoveFrom = this._selectedMemberListID,
+            len,
+            gmeID,
+            componentId;
+
+        _client.startTransaction();
+
+        len = idList.length;
+        while (len--) {
+            componentId = idList[len];
+            gmeID = this._ComponentID2GMEID[componentId];
+
+            //#1: deleting an item --> deleting a member
+            //  #1/a: if deleting a connection whose hierarchical parent is the membershipContainer, delete the connection from the hierarchy too
+            //#2:  deleting a line --> deleting a pointer
+            //  #2/a: deleting an src/dst pointer?? TODO!!!
+
+            _client.removeMember(memberListContainerID, gmeID, memberListToRemoveFrom);
+        }
+
+        _client.completeTransaction();
+    };
+    /************************************************************************/
+    /*  END OF --- HANDLE OBJECT / CONNECTION DELETION IN THE ASPECT ASPECT */
+    /************************************************************************/
+
+
+    CrosscutController.prototype._onFilterNewConnectionDroppableEnds = function (params) {
+        var availableConnectionEnds = params.availableConnectionEnds,
+            result = [],
+            i,
+            sourceId,
+            targetId,
+            j,
+            client = this._client,
+            validPointerTargetTypes,
+            validSetTargetTypes,
+            validConnectionEndTypes,
+            validConnectionTypes,
+            validEndTypes,
+            parentId = this._memberListContainerID,
+            pointerMetaDescriptor;
+
+        if (params.srcSubCompId !== undefined) {
+            sourceId = this._Subcomponent2GMEID[params.srcId][params.srcSubCompId];
+        } else {
+            sourceId = this._ComponentID2GMEID[params.srcId];
+        }
+
+        //need to figure out who are the potential end items for a 'connection'
+        //#1: all the items are potential 'connection' destination that could be a pointer target from this source
+        //#2: all the items are potential 'connection' destination that could be a set (pointerlist) target from this source
+        //#3: all the items are potential 'connection' destination where a WebGME-connection can be created between this source and that target and the connection can be created in this parent based on the META rules
+
+        //check #1:
+        validPointerTargetTypes = GMEConcepts.getValidPointerTargetTypesFromSource(sourceId, false);
+
+        //check #2:
+        validSetTargetTypes = GMEConcepts.getValidPointerTargetTypesFromSource(sourceId, true);
+
+        //check #3:
+        validConnectionTypes = GMEConcepts.getValidConnectionTypesFromSourceInAspect(sourceId, parentId, CONSTANTS.ASPECT_ALL);
+        validConnectionEndTypes = [];
+
+        //filter them to see which of those can actually be created as a child of the parent
+        //check what endpoint could be a potential endpoint of any of the connection types
+        i = validConnectionTypes.length;
+        while (i--) {
+            if (GMEConcepts.canCreateChild(parentId, validConnectionTypes[i])) {
+                pointerMetaDescriptor = this._client.getValidTargetItems(validConnectionTypes[i],CONSTANTS.POINTER_TARGET);
+                if (pointerMetaDescriptor && pointerMetaDescriptor.length > 0) {
+                    j = pointerMetaDescriptor.length;
+                    while (j--) {
+                        if (validConnectionEndTypes.indexOf(pointerMetaDescriptor[j].id) === -1) {
+                            validConnectionEndTypes.push(pointerMetaDescriptor[j].id);
+                        }
+                    }
+                }
+            }
+        }
+
+        //filter out the items on the screen
+        validEndTypes = _.union(validPointerTargetTypes, validSetTargetTypes, validConnectionEndTypes);
+        this.logger.warning('validEndTypes: ' + validEndTypes);
+
+        i = availableConnectionEnds.length;
+        while (i--) {
+            var p = availableConnectionEnds[i];
+            if (p.dstSubCompID !== undefined) {
+                targetId = this._Subcomponent2GMEID[p.dstItemID][p.dstSubCompID];
+            } else {
+                targetId = this._ComponentID2GMEID[p.dstItemID];
+            }
+
+            j = validEndTypes.length;
+            while (j--) {
+                if (client.isTypeOf(targetId, validEndTypes[j])) {
+                    result.push(availableConnectionEnds[i]);
+                    break;
+                }
+            }
+        }
+
+        return result;
+    };
+
+
+    CrosscutController.prototype._onCreateNewConnection = function (params) {
+        var sourceId,
+            targetId,
+            parentId = this._memberListContainerID,
+            _client = this._client,
+            CONTEXT_POS_OFFSET = 10,
+            menuItems = {},
+            i,
+            sourceObj,
+            targetObj,
+            connObj,
+            ptrAction = 'PTR',
+            setAction = 'SET',
+            connectionAction = 'CONN',
+            createPointer,
+            addToSet,
+            createConnection,
+            logger = this.logger,
+            aspect = this._selectedMemberListID,
+            dstPosition = this._widget.items[params.dst].getBoundingBox(),
+            srcPosition = this._widget.items[params.src].getBoundingBox();
+
+        createPointer = function (srcId, dstId, ptrName) {
+            logger.warning('createPointer srcId: ' + srcId + ', dstId: ' + dstId + ', ptrName: ' + ptrName);
+            _client.makePointer(srcId, ptrName, dstId);
+        };
+
+        addToSet = function (containerId, objId, setName) {
+            logger.warning('addToSet containerId: ' + containerId + ', objId: ' + objId + ', ptrName: ' + setName);
+            _client.addMember(containerId, objId, setName);
+        };
+
+        createConnection = function (srcId, dstId, connType) {
+            logger.warning('createConnection srcId: ' + srcId + ', dstId: ' + dstId + ', connType: ' + connType);
+            _client.startTransaction();
+
+            //create new object
+            var newConnID = _client.createChild({'parentId': parentId, 'baseId': connType});
+
+            //set source and target pointers
+            _client.makePointer(newConnID, CONSTANTS.POINTER_SOURCE, srcId);
+            _client.makePointer(newConnID, CONSTANTS.POINTER_TARGET, dstId);
+
+            //add new object to the current aspect ans store coordinate
+            _client.addMember(parentId, newConnID, aspect);
+            var dx = dstPosition.x - srcPosition.x;
+            var dy = dstPosition.y - srcPosition.y;
+            dx = srcPosition.x + dx / 2;
+            dy = srcPosition.y + dy / 2;
+            _client.setMemberRegistry(parentId, newConnID, aspect, REGISTRY_KEYS.POSITION, {'x': dx, 'y': dy});
+
+            _client.completeTransaction();
+        };
+
+        if (params.srcSubCompId !== undefined) {
+            sourceId = this._Subcomponent2GMEID[params.src][params.srcSubCompId];
+        } else {
+            sourceId = this._ComponentID2GMEID[params.src];
+        }
+
+        if (params.dstSubCompId !== undefined) {
+            targetId = this._Subcomponent2GMEID[params.dst][params.dstSubCompId];
+        } else {
+            targetId = this._ComponentID2GMEID[params.dst];
+        }
+
+        //need to figure out what this 'connection' could be
+        //#1: a pointer from the source to this target
+        //#2: a set membership where the source is the membership container and the target is the member
+        //#3: a new WebGME connection between the source and the target created in this parent
+
+        //#1: pointers
+        var validPointerTypes = GMEConcepts.getValidPointerTypesFromSourceToTarget(sourceId, targetId);
+
+        //#2: sets
+        var validSetTypes = GMEConcepts.getValidSetTypesFromContainerToMember(sourceId, targetId);
+
+        //#3: WebGME-connections
+        var validConnectionTypes = GMEConcepts.getValidConnectionTypesInAspect(sourceId, targetId, parentId, CONSTANTS.ASPECT_ALL);
+
+        //if there is any option at all
+        if (validPointerTypes.length  + validSetTypes.length + validConnectionTypes.length > 0) {
+            //if only 1 option, figure out automatically
+            if (validPointerTypes.length  + validSetTypes.length + validConnectionTypes.length === 1) {
+                //thre is only one possible choice, go with that
+                if (validPointerTypes.length === 1) {
+                    //create pointer from source to target
+                    createPointer(sourceId, targetId, validPointerTypes[0]);
+                } else if (validSetTypes.length === 1) {
+                    //add target to the set of source
+                    addToSet(sourceId, targetId, validSetTypes[0]);
+                } else if (validConnectionTypes.length === 1) {
+                    //create connection between source and target in this parent
+                    createConnection(sourceId, targetId, validConnectionTypes[0]);
+                }
+            } else {
+                //more options, show context menu
+                //show available pointers/sets/connection types to the user to select one
+                sourceObj = _client.getNode(sourceId);
+                targetObj = _client.getNode(targetId);
+
+                var sourceObjName = sourceObj.getAttribute(nodePropertyNames.Attributes.name);
+                var targetObjName = targetObj.getAttribute(nodePropertyNames.Attributes.name);
+
+                //'Create pointer'
+                for (i = 0; i < validPointerTypes.length; i += 1) {
+                    menuItems[ptrAction + validPointerTypes[i]] = {
+                        "name": 'Create pointer \'' + validPointerTypes[i] + '\' from \'' + sourceObjName + '\' to \'' + targetObjName + '\'',
+                        "icon": 'icon-share',
+                        "action": ptrAction,
+                        "type": validPointerTypes[i]
+                    };
+                }
+
+                //'Add to set'
+                for (i = 0; i < validSetTypes.length; i += 1) {
+                    menuItems[setAction + validSetTypes[i]] = {
+                        "name": 'Add \'' + targetObjName + '\' to set \'' + validSetTypes[i] + '\' of \'' + sourceObjName + '\'',
+                        "icon": false,
+                        "action": setAction,
+                        "type": validSetTypes[i]
+                    };
+                }
+
+                //'Create connection' in crosscut container
+                var connObjName = '';
+                for (i = 0; i < validConnectionTypes.length; i += 1) {
+                    connObj = _client.getNode(validConnectionTypes[i]);
+
+                    if (connObj) {
+                        connObjName = connObj.getAttribute(nodePropertyNames.Attributes.name);
+                    } else {
+                        connObjName = validConnectionTypes[i];
+                    }
+
+                    menuItems[connectionAction + validConnectionTypes[i]] = {
+                        "name": 'Create connection \'' + connObjName + '\' from \'' + sourceObjName + '\' to \'' + targetObjName + '\'',
+                        "icon": 'icon-resize-horizontal',
+                        "action": connectionAction,
+                        "type": validConnectionTypes[i]
+                    };
+                }
+
+                //show context menu
+                this._widget.createMenu(menuItems, function (key) {
+                        var menuItem = menuItems[key],
+                            type = menuItem.type,
+                            action = menuItem.action;
+
+                        switch (action) {
+                            case ptrAction:
+                                createPointer(sourceId, targetId, type);
+                                break;
+                            case setAction:
+                                addToSet(sourceId, targetId, type);
+                                break;
+                            case connectionAction:
+                                createConnection(sourceId, targetId, type);
+                                break;
+                            default:
+                                break;
+                        }
+                    },
+
+                    this._widget.posToPageXY(dstPosition.x - CONTEXT_POS_OFFSET,
+                        dstPosition.y - CONTEXT_POS_OFFSET)
+                );
+            }
+        }
+    };
 
     return CrosscutController;
 });

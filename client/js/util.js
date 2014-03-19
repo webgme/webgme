@@ -106,6 +106,14 @@ define([], function () {
 
         toSafeString: function (string) {
             return _span.text(string).html();
+        },
+
+        caseInsensitiveSort: function (a,b) {
+            if (a.toLowerCase() < b.toLowerCase()) {
+                return -1;
+            } else {
+                return 1;
+            }
         }
     }
 });
