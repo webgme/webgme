@@ -68,15 +68,12 @@ define([ "mongodb", "util/assert", "util/canon" ], function (MONGODB, ASSERT, CA
 		function closeDatabase (callback) {
 			if (mongo !== null) {
 				fsyncDatabase(function () {
-					/*mongo.close(function () {
+					mongo.close(function () {
 						mongo = null;
 						if (typeof callback === "function") {
 							callback(null);
 						}
-					});*/
-                    if (typeof callback === "function") {
-                        callback(null);
-                    }
+					});
 				});
 			} else if (typeof callback === "function") {
 				callback(null);
