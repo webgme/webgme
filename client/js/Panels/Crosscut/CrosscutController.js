@@ -607,7 +607,7 @@ define(['logManager',
                     _.extend(connDesc, connTexts);
                 }
 
-                /*if (connType === MetaRelations.POINTER && (connTexts.name === CONSTANTS.POINTER_SOURCE || connTexts.POINTER_TARGET)) {
+                /*if (connType === MetaRelations.META_RELATIONS.POINTER && (connTexts.name === CONSTANTS.POINTER_SOURCE || connTexts.POINTER_TARGET)) {
                     //this is a connection's pointer
                     //set the same color/pattern as defined in the node
                 }*/
@@ -745,7 +745,12 @@ define(['logManager',
             memberListToRemoveFrom = this._selectedMemberListID,
             len,
             gmeID,
-            componentId;
+            gmeObj,
+            componentId,
+            NON_DELETABLE_POINTERS = [CONSTANTS.POINTER_SOURCE, CONSTANTS.POINTER_TARGET],
+            lineDesc,
+            canDeletePointer,
+            logger = this.logger;
 
         _client.startTransaction();
 
@@ -757,9 +762,37 @@ define(['logManager',
             //#1: deleting an item --> deleting a member
             //  #1/a: if deleting a connection whose hierarchical parent is the membershipContainer, delete the connection from the hierarchy too
             //#2:  deleting a line --> deleting a pointer
-            //  #2/a: deleting an src/dst pointer?? TODO!!!
+            //  #2/a: do not let the user delete an src/dst pointer?? TODO!!!
 
-            _client.removeMember(memberListContainerID, gmeID, memberListToRemoveFrom);
+            if (gmeID) {
+                //deleting a box --> remove from crosscut's set
+                logger.warning('removeMember memberListContainerID: ' + memberListContainerID + ', gmeID: ' + gmeID + ', memberListToRemoveFrom: ' + memberListToRemoveFrom);
+                _client.removeMember(memberListContainerID, gmeID, memberListToRemoveFrom);
+
+                //check if this GME object is a connection and whether it's parent is the crosscut container
+                gmeObj = _client.getNode(gmeID);
+                if (GMEConcepts.isConnection(gmeID) && gmeObj.getParentId() === memberListContainerID) {
+                    if (GMEConcepts.canDeleteNode(gmeID)) {
+                        logger.warning('deleting connection from crosscut hierarchy too gmeID: ' + gmeID);
+                        _client.delMoreNodes([gmeID]);
+                    }
+                }
+            } else {
+                //deleting a line
+                lineDesc = this._connectionListByID[componentId];
+                if (lineDesc) {
+                    canDeletePointer = true;
+                    if (lineDesc.type === MetaRelations.META_RELATIONS.POINTER && NON_DELETABLE_POINTERS.indexOf(lineDesc.name) !== -1) {
+                        canDeletePointer = false;
+                    }
+
+                    if (canDeletePointer) {
+                        logger.warning('deleting pointer from: ' + lineDesc.GMESrcId + ', type: ' + lineDesc.name);
+                        //it's a pointer that's allowed to be deleted
+                        _client.delPointer(lineDesc.GMESrcId, lineDesc.name);
+                    }
+                }
+            }
         }
 
         _client.completeTransaction();
