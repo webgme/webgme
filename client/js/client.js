@@ -2140,7 +2140,15 @@ define([
             }
 
             function getAvailableInterpreterNames(){
-                return AllInterpreters;
+                var names = [];
+                var valids = _nodes[ROOT_PATH] ? _core.getRegistry(_nodes[ROOT_PATH].node,'validPlugins') : "";
+                valids = valids.split(" ");
+                for(var i=0; i<valids.length;i++){
+                    if(AllInterpreters.indexOf(valids[i]) !== -1){
+                        names.push(valids[i]);
+                    }
+                }
+                return names;
             }
 
             function getAvailableDecoratorNames(){

@@ -25,6 +25,7 @@ define([], function () {
         LINE_END_ARROW: 'lineEndArrow',     //start arrow of a line
         LINE_CUSTOM_POINTS: 'lineCustomPoints',  //custom routing points of a line
 
+        VALID_PLUGINS:'validPlugins', //space separated list of valid plugins for the project TODO maybe we should harmonize with project registry
         /*
          *  MISC
          */
