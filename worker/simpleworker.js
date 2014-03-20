@@ -3,21 +3,11 @@ requirejs.config({
     nodeRequire: require,
     baseUrl: __dirname + "/..",
     paths: {
-        "core":"core",
-        "logManager": "common/LogManager",
-        "util": "util",
-        "storage": "storage",
-        "user": "user",
-        "config": 'config',
-        "cli": 'cli',
-        "bin": 'bin',
-        "auth": 'auth',
-        "coreclient": 'coreclient',
-        "worker": 'worker'
+        "logManager": "common/LogManager"
     }
 });
-requirejs(['worker/constants','core/core','storage/serveruserstorage','util/guid','coreclient/dumpmore','logManager'],
-function(CONSTANT,Core,Storage,GUID,DUMP,logManager){
+requirejs(['worker/constants','core/core','storage/serveruserstorage','util/guid','coreclient/dumpmore','logManager','fs','path'],
+function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH){
     var storage = null,
         core = null,
         result = null,
@@ -25,7 +15,8 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager){
         resultRequested = false,
         resultId = null,
         error = null,
-        initialized = false;
+        initialized = false,
+        interpreterpaths = null;
 
     var initResult = function(){
         core = null;
@@ -38,6 +29,7 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager){
     var initialize = function(parameters){
         if(initialized !== true){
             initialized = true;
+            interpreterpaths = parameters.interpreterpaths;
             storage = new Storage({'host':parameters.ip,'port':parameters.port,'database':parameters.db,'log':logManager.create('SERVER-WORKER-'+process.pid)});
             storage.openDatabase(function(err){
                 if(err){
@@ -94,6 +86,90 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager){
             callback('no active data connecction');
         }
     };
+
+    //TODO the getContext should be refactored!!!
+    var getContext = function(context,callback){
+        context.storage = storage;
+        if(context.projectName){
+            storage.openProject(context.projectName,function(err,project){
+                if(!err){
+                    context.project = project;
+                    //get commitNode
+                    if(context.commitHash){
+                        project.loadObject(context.commitHash, function(err, commitObj) {
+                            if(!err && commitObj){
+                                context.rootHash = commitObj.root;
+                                context.core = new Core(project,{corerel:2});
+                                context.core.loadRoot(context.rootHash,function(err,root){
+                                    if(!err && root){
+                                        context.rootNode = root;
+                                        callback(null,context);
+                                    } else {
+                                        err = err || 'cannot found root object';
+                                        callback(err,{});
+                                    }
+                                })
+                            } else {
+                                err = err || 'the commit object was not found in the database';
+                                callback(err,{});
+                            }
+                        });
+                    } else {
+                        callback('no commit was found',{});
+                    }
+                } else {
+                    callback(err,{});
+                }
+            });
+        } else {
+            callback('no project name',{});
+        }
+    };
+    var getInterpreter = function(name){
+        var interpreterClass = null;
+        if(interpreterpaths){
+            var tryNext = function(index){
+                var path = null;
+                if(index<interpreterpaths.length){
+                    try{
+                        path = PATH.join(interpreterpaths[index],name+'/'+name);
+                        FS.readFileSync(path+'.js');
+                    } catch(e) {
+                        tryNext(index+1);
+                    }
+                } else {
+                    return null;
+                }
+            };
+
+            var path = tryNext(0);
+            if(path){
+               try {
+                   interpreterClass = requirejs(path);
+               } catch(e) {
+                   return null;
+               }
+            }
+
+        } else {
+            //we still can try the requirejs
+            try {
+                interpreterClass = requirejs('interpreters/'+name+'/'+name);
+            } catch(e) {
+                return null;
+            }
+        }
+
+        return new interpreterClass;
+    };
+    var runInterpreter = function(name,context,callback){
+        var interpreter = getInterpreter(name);
+        getContext(context,function(err,completeContext){
+            interpreter.run(context,function(result){
+                callback(null,result);
+            });
+        });
+    };
     //main message processing loop
     process.on('message',function(parameters){
         parameters = parameters || {};
@@ -143,6 +219,16 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager){
                     process.send({pid:process.pid,type:CONSTANT.msgTypes.result,error:e,result:r});
                 } else {
                     resultRequested = true;
+                }
+                break;
+            case CONSTANT.workerCommands.executePlugin:
+                if( typeof parameters.name === 'string' && typeof parameters.context === 'object'){
+                    runInterpreter(parameters.name,parameters.context,function(err,result){
+                        process.send({pid:process.pid,type:CONSTANT.msgTypes.result,error:err,result:result});
+                    });
+                } else {
+                    initResult();
+                    process.send({pid:process.pid,type:CONSTANT.msgTypes.result,error:'invalid parameters',result:{}});
                 }
                 break;
             default:

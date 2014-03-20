@@ -47,19 +47,28 @@ define(['core/core'], function (Core) {
     };
 
     ClientInterpreterManager.prototype.run = function (name,callback) {
-
+        //TODO now the foundtation of distinguishing is the preceeding srv in the plugin name
         var self = this;
-        getInterpreter(name,function(err,interpreter){
-            if(!err && interpreter !== null){
-                getContext(self._client,function(err,context){
-                    interpreter.run(context,callback);
-                });
-            } else {
-                //TODO generate proper result
-                callback({error:err});
-            }
-        });
-
+        if(name.indexOf('srv') === 0){
+            //we call the clients - runServerPlugin function
+            var context = {};
+            context.commitHash = self._client.getActualCommit();
+            context.projectName = self._client.getActiveProject();
+            self._client.runServerPlugin(name,context,function(result){
+                console.log(result);
+            });
+        } else {
+            getInterpreter(name,function(err,interpreter){
+                if(!err && interpreter !== null){
+                    getContext(self._client,function(err,context){
+                        interpreter.run(context,callback);
+                    });
+                } else {
+                    //TODO generate proper result
+                    callback({error:err});
+                }
+            });
+        }
     };
 
     //TODO somehow it would feel more right if we do run in async mode, but if not then we should provide getState and getResult synchronous functions as well

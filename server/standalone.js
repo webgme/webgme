@@ -308,7 +308,7 @@ define(['logManager',
                 }
             };
 
-            if(CONFIG.decoratorpaths && CONFIG.decoratorpaths.length){
+            if(CONFIG.interpreterpaths && CONFIG.interpreterpaths.length){
                 tryNext(0);
             } else {
                 res.send(404);

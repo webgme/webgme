@@ -19,7 +19,8 @@ function(){
             'initialize': 'initialize',
             'getResult': 'getResult',
             'dumpMoreNodes': 'dumpMoreNodes',
-            'generateJsonURL': 'generateJsonURL'
+            'generateJsonURL': 'generateJsonURL',
+            'executePlugin': 'executePlugin'
         }
     }
 });

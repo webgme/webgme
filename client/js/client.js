@@ -2141,7 +2141,7 @@ define([
 
             function getAvailableInterpreterNames(){
                 var names = [];
-                var valids = _nodes[ROOT_PATH] ? _core.getRegistry(_nodes[ROOT_PATH].node,'validPlugins') : "";
+                var valids = _nodes[ROOT_PATH] ? _core.getRegistry(_nodes[ROOT_PATH].node,'validPlugins') || "" : "";
                 valids = valids.split(" ");
                 for(var i=0; i<valids.length;i++){
                     if(AllInterpreters.indexOf(valids[i]) !== -1){
@@ -2149,6 +2149,13 @@ define([
                     }
                 }
                 return names;
+            }
+
+            function runServerPlugin(name,context,callback){
+                _database.simpleRequest({command:'executePlugin',name:name,context:context},function(err,result){
+                    result.error = result.error || err;
+                    callback(result);
+                });
             }
 
             function getAvailableDecoratorNames(){
@@ -2306,6 +2313,7 @@ define([
                 //interpreters
                 getAvailableInterpreterNames: getAvailableInterpreterNames,
                 getProjectObject: getProjectObject,
+                runServerPlugin: runServerPlugin,
 
                 //JSON functions
                 exportItems: exportItems,
