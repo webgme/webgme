@@ -20,7 +20,8 @@ define(['logManager',
 
     var CrosscutController,
         DEFAULT_DECORATOR = "ModelDecorator",
-        WIDGET_NAME = 'DiagramDesigner';
+        WIDGET_NAME = 'DiagramDesigner',
+        CONNECTION_DECORATOR = 'CircleDecorator';
 
     CrosscutController = function (options) {
         options = options || {};
@@ -130,7 +131,7 @@ define(['logManager',
                 if (obj) {
                     //if it is a connection find src and dst and do not care about decorator
                     if (events[len].desc.isConnection === true) {
-                        objDecorator = ""; //TODO: fix connectionDecorator
+                        objDecorator = CONNECTION_DECORATOR;
                         events[len].desc.isConnection = false;
                     } else {
                         objDecorator = obj.getRegistry(REGISTRY_KEYS.DECORATOR);
