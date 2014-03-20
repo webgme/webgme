@@ -19,7 +19,16 @@ define(['./ButtonBase',
             "class": "btn-group"
         });
 
-        delete params.clickFn;
+        var oClickFn;
+        if (params.clickFn) {
+            oClickFn = params.clickFn;
+            params.clickFnEventCancel = false;
+
+            params.clickFn = function () {
+                oClickFn();
+            };
+        }
+        //delete params.clickFn;
 
         this._dropDownBtn = buttonBase.createButton(params);
         var caret = $('<span class="caret"></span>');

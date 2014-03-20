@@ -55,7 +55,10 @@ define(['core/core'], function (Core) {
             context.commitHash = self._client.getActualCommit();
             context.projectName = self._client.getActiveProject();
             self._client.runServerPlugin(name,context,function(result){
-                console.log(result);
+                //console.log(result);
+                if (callback) {
+                    callback(result);
+                }
             });
         } else {
             getInterpreter(name,function(err,interpreter){
