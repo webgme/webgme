@@ -762,7 +762,7 @@ define(['logManager',
             //#1: deleting an item --> deleting a member
             //  #1/a: if deleting a connection whose hierarchical parent is the membershipContainer, delete the connection from the hierarchy too
             //#2:  deleting a line --> deleting a pointer
-            //  #2/a: do not let the user delete an src/dst pointer?? TODO!!!
+            //  #2/a: do not let the user delete an src/dst pointer??
 
             if (gmeID) {
                 //deleting a box --> remove from crosscut's set
@@ -782,6 +782,7 @@ define(['logManager',
                 lineDesc = this._connectionListByID[componentId];
                 if (lineDesc) {
                     canDeletePointer = true;
+                    //  #2/a: do not let the user delete an src/dst pointer??
                     if (lineDesc.type === MetaRelations.META_RELATIONS.POINTER && NON_DELETABLE_POINTERS.indexOf(lineDesc.name) !== -1) {
                         canDeletePointer = false;
                     }
