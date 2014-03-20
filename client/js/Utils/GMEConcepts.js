@@ -17,14 +17,16 @@ define(['jquery',
         'js/RegistryKeys',
         './GMEConcepts.FCO',
         './METAAspectHelper',
-        'js/Panels/MetaEditor/MetaEditorConstants'], function (_jquery,
+        'js/Panels/MetaEditor/MetaEditorConstants',
+        'clientUtil'], function (_jquery,
                                                                generateGuid,
                                            CONSTANTS,
                                            nodePropertyNames,
                                            REGISTRY_KEYS,
                                            GMEConceptsFCO,
                                            METAAspectHelper,
-                                           MetaEditorConstants) {
+                                           MetaEditorConstants,
+                                           clientUtil) {
 
     var _client,
         EXCLUDED_POINTERS = [CONSTANTS.POINTER_BASE, CONSTANTS.POINTER_SOURCE, CONSTANTS.POINTER_TARGET];
@@ -668,6 +670,91 @@ define(['jquery',
         return result;
     };
 
+    /*
+     *
+     */
+    var _isValidChildrenTypeInCrossCut = function (parentId, baseIdList) {
+        //Check if each single baseId is a valid children type of parentId
+        var i,
+            result = true,
+            baseId;
+
+        i = baseIdList.length;
+        while (i--) {
+            baseId = baseIdList[i];
+            if (!_client.isValidChild(parentId, baseId)) {
+                result = false;
+                break;
+            }
+        }
+
+        return result;
+    } ;
+
+    var _getValidPointerTargetTypesFromSource = function (objID, isSet) {
+        var result = [],
+            EXCLUDED_POINTERS = [CONSTANTS.POINTER_BASE],
+            EXCLUDED_SETS = [],
+            nodeObj = _client.getNode(objID),
+            pointerNames = isSet ? _.difference(nodeObj.getSetNames(), EXCLUDED_SETS) : _.difference(nodeObj.getPointerNames(), EXCLUDED_POINTERS),
+            len = pointerNames.length,
+            pointerMetaDescriptor,
+            i;
+
+        while (len--) {
+            pointerMetaDescriptor = _client.getValidTargetItems(objID,pointerNames[len]);
+            if (pointerMetaDescriptor && pointerMetaDescriptor.length > 0) {
+                i = pointerMetaDescriptor.length;
+                while (i--) {
+                    if (result.indexOf(pointerMetaDescriptor[i].id) === -1) {
+                        result.push(pointerMetaDescriptor[i].id);
+                    }
+                }
+            }
+        }
+
+        return result;
+    };
+
+
+    var _getValidPointerTypesFromSourceToTarget = function (sourceId, targetId) {
+        var result = [],
+            EXCLUDED_POINTERS = [CONSTANTS.POINTER_BASE],
+            nodeObj = _client.getNode(sourceId),
+            pointerNames = _.difference(nodeObj.getPointerNames(), EXCLUDED_POINTERS),
+            len = pointerNames.length;
+
+        while (len--) {
+            if (_client.isValidTarget(sourceId,pointerNames[len],targetId)) {
+                result.push(pointerNames[len]);
+            }
+        }
+
+        result.sort(clientUtil.caseInsensitiveSort);
+
+        return result;
+    };
+
+
+    var _getValidSetTypesFromContainerToMember = function (containerId, objId) {
+        var result = [],
+            EXCLUDED_SETS = [],
+            nodeObj = _client.getNode(containerId),
+            setNames = _.difference(nodeObj.getSetNames(), EXCLUDED_SETS),
+            len = setNames.length;
+
+        while (len--) {
+            if (_canAddToSet(containerId, setNames[len], [objId])) {
+                result.push(setNames[len]);
+            }
+        }
+
+        result.sort(clientUtil.caseInsensitiveSort);
+
+        return result;
+    };
+
+
     //return utility functions
     return {
         initialize: _initialize,
@@ -688,6 +775,10 @@ define(['jquery',
         canCreateChildrenInAspect: _canCreateChildrenInAspect,
         getValidConnectionTypesFromSourceInAspect: _getValidConnectionTypesFromSourceInAspect,
         getValidConnectionTypesInAspect: _getValidConnectionTypesInAspect,
-        isValidTypeInAspect: _isValidTypeInAspect
+        isValidTypeInAspect: _isValidTypeInAspect,
+        isValidChildrenTypeInCrossCut: _isValidChildrenTypeInCrossCut,
+        getValidPointerTargetTypesFromSource: _getValidPointerTargetTypesFromSource,
+        getValidPointerTypesFromSourceToTarget: _getValidPointerTypesFromSourceToTarget,
+        getValidSetTypesFromContainerToMember: _getValidSetTypesFromContainerToMember
     }
 });

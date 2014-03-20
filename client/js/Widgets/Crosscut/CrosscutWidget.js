@@ -4,29 +4,28 @@ define(['js/DragDrop/DragHelper',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget'], function (DragHelper,
                                                              DiagramDesignerWidget) {
 
-    var ManualAspectWidget;
+    var CrosscutWidget;
 
-    ManualAspectWidget = function (container, params) {
+    CrosscutWidget = function (container, params) {
         params = params || {};
-        params.loggerName = "ManualAspectWidget";
+        params.loggerName = "CrosscutWidget";
 
         params.tabsEnabled = true;
         params.addTabs = true;
         params.deleteTabs = true;
         params.reorderTabs = true;
         params.lineStyleControls = false;
-        params.enableConnectionDrawing = false;
 
         DiagramDesignerWidget.call(this, container, params);
 
-        this.logger.debug("ManualAspectWidget ctor");
+        this.logger.debug("CrosscutWidget ctor");
     };
 
-    _.extend(ManualAspectWidget.prototype, DiagramDesignerWidget.prototype);
+    _.extend(CrosscutWidget.prototype, DiagramDesignerWidget.prototype);
 
-    ManualAspectWidget.prototype._initializeUI = function (containerElement) {
+    CrosscutWidget.prototype._initializeUI = function (containerElement) {
         DiagramDesignerWidget.prototype._initializeUI.apply(this, arguments);
-        this.logger.debug("ManualAspectWidget._initializeUI");
+        this.logger.debug("CrosscutWidget._initializeUI");
 
         //TODO: disable connecting at all
 
@@ -34,13 +33,13 @@ define(['js/DragDrop/DragHelper',
         this._connectToConnection = false;
     };
 
-    ManualAspectWidget.prototype.getDragEffects = function (/*selectedElements, event*/) {
+    CrosscutWidget.prototype.getDragEffects = function (/*selectedElements, event*/) {
         //the only drag is a MOVE
         return [DragHelper.DRAG_EFFECTS.DRAG_MOVE];
     };
 
     /* OVERWRITE DiagramDesignerWidget.prototype._dragHelper */
-    ManualAspectWidget.prototype._dragHelper = function (el, event, dragInfo) {
+    CrosscutWidget.prototype._dragHelper = function (el, event, dragInfo) {
         var helperEl = DiagramDesignerWidget.prototype._dragHelper.apply(this, [el, event, dragInfo]);
 
         //clear out default 'Move' text from helperEl
@@ -49,5 +48,5 @@ define(['js/DragDrop/DragHelper',
         return helperEl;
     };
 
-    return ManualAspectWidget;
+    return CrosscutWidget;
 });

@@ -51,7 +51,8 @@ requirejs([ "util/common",
                                     REGISTRY_KEYS.META_SHEETS,
                                     REGISTRY_KEYS.POSITION,
                                     REGISTRY_KEYS.MANUAL_ASPECTS,
-                                    REGISTRY_KEYS.VALID_PLUGINS];
+                                    REGISTRY_KEYS.VALID_PLUGINS,
+                                    REGISTRY_KEYS.CROSSCUTS];
 
     //add the mandatory FCO registry keys to the protected list
     for (var rk in GMEConceptsFCO.FCO_REGISTRY) {

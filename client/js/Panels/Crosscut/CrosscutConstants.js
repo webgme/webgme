@@ -13,6 +13,6 @@ define([], function () {
 
     //return string constants
     return {
-        MANUAL_ASPECT_NAME_PREFIX : 'ManualAspect_'
+        CROSSCUT_NAME_PREFIX : 'Crosscut_'
     };
 });

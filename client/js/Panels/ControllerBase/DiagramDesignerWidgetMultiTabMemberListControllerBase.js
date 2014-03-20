@@ -27,8 +27,6 @@ define(['logManager',
         MEMBER_POSITION_REGISTRY_KEY = REGISTRY_KEYS.POSITION;
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase = function (options) {
-        var self = this;
-
         this.logger = logManager.create(options.loggerName || "DiagramDesignerWidgetMultiTabMemberListControllerBase");
 
         this._client = options.client;
@@ -142,15 +140,12 @@ define(['logManager',
             this._widget.clearTabs();
         }
 
-        //do not work on ROOT element
-        if (nodeId === CONSTANTS.PROJECT_ROOT_ID) {
-            nodeId = undefined;
-        }
+        nodeId = this._validateNodeId(nodeId);
 
         this._memberListContainerID = nodeId;
         this._selectedMemberListID = undefined;
 
-        if (nodeId) {
+        if (nodeId || nodeId === CONSTANTS.PROJECT_ROOT_ID) {
             //put new node's info into territory rules
             pattern = {};
             pattern[nodeId] = { "children": 0 };
@@ -166,6 +161,15 @@ define(['logManager',
         } else {
             this._widget.setBackgroundText("No object to display...");
         }
+    };
+
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._validateNodeId = function (nodeId) {
+        //do not work on ROOT element
+        if (nodeId === CONSTANTS.PROJECT_ROOT_ID) {
+            nodeId = undefined;
+        }
+
+        return nodeId;
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._stateActiveObjectChanged = function (model, activeObjectId) {
@@ -647,47 +651,53 @@ define(['logManager',
         }
 
         this._selectedMemberListMembersTerritoryId = this._client.addUI(this, function (events) {
-            var decoratorsToDownload = [DEFAULT_DECORATOR],
-                len = events.length,
-                obj,
-                objDecorator;
-
-            while (len--) {
-                if ((events[len].etype === CONSTANTS.TERRITORY_EVENT_LOAD) || (events[len].etype === CONSTANTS.TERRITORY_EVENT_UPDATE)) {
-
-                    obj = client.getNode(events[len].eid);
-
-                    events[len].desc = { isConnection: GMEConcepts.isConnection(events[len].eid) };
-
-                    if (obj) {
-                        //if it is a connection find src and dst and do not care about decorator
-                        if (events[len].desc.isConnection === true) {
-                            events[len].desc.srcID  = obj.getPointer(SRC_POINTER_NAME).to;
-                            events[len].desc.dstID = obj.getPointer(DST_POINTER_NAME).to;
-                        } else {
-                            objDecorator = obj.getRegistry(REGISTRY_KEYS.DECORATOR);
-
-                            if (!objDecorator ||
-                                objDecorator === "") {
-                                objDecorator = DEFAULT_DECORATOR;
-                            }
-
-                            if (decoratorsToDownload.indexOf(objDecorator) === -1) {
-                                decoratorsToDownload.pushUnique(objDecorator);
-                            }
-
-                            events[len].desc.decorator = objDecorator;
-                        }
-                    }
-                }
-            }
-
-            client.decoratorManager.download(decoratorsToDownload, WIDGET_NAME, function () {
-                self._dispatchEvents(events);
-            });
+            self._memberListTerritoryCallback(events);
         });
 
         this._client.updateTerritory(this._selectedMemberListMembersTerritoryId, this._selectedMemberListMembersTerritoryPatterns);
+    };
+
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._memberListTerritoryCallback = function (events) {
+        var decoratorsToDownload = [DEFAULT_DECORATOR],
+            len = events.length,
+            obj,
+            objDecorator,
+            client = this._client,
+            self = this;
+
+        while (len--) {
+            if ((events[len].etype === CONSTANTS.TERRITORY_EVENT_LOAD) || (events[len].etype === CONSTANTS.TERRITORY_EVENT_UPDATE)) {
+
+                obj = client.getNode(events[len].eid);
+
+                events[len].desc = { isConnection: GMEConcepts.isConnection(events[len].eid) };
+
+                if (obj) {
+                    //if it is a connection find src and dst and do not care about decorator
+                    if (events[len].desc.isConnection === true) {
+                        events[len].desc.srcID  = obj.getPointer(SRC_POINTER_NAME).to;
+                        events[len].desc.dstID = obj.getPointer(DST_POINTER_NAME).to;
+                    } else {
+                        objDecorator = obj.getRegistry(REGISTRY_KEYS.DECORATOR);
+
+                        if (!objDecorator ||
+                            objDecorator === "") {
+                            objDecorator = DEFAULT_DECORATOR;
+                        }
+
+                        if (decoratorsToDownload.indexOf(objDecorator) === -1) {
+                            decoratorsToDownload.pushUnique(objDecorator);
+                        }
+
+                        events[len].desc.decorator = objDecorator;
+                    }
+                }
+            }
+        }
+
+        client.decoratorManager.download(decoratorsToDownload, WIDGET_NAME, function () {
+            self._dispatchEvents(events);
+        });
     };
 
 

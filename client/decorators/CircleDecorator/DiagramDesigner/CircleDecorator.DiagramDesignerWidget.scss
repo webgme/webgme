@@ -1,0 +1,46 @@
+/*
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ *
+ * Author: Robert Kereskenyi
+ */
+
+//imports
+@import "../Core/_CircleDecorator";
+@import "../../../scss/Widgets/DiagramDesigner/Connector";
+
+$connector-size: $CIRCLE_SIZE;
+
+//include CircleDecoratorCore style
+div.designer-item {
+  @include circle_decorator_core;
+
+  .circle-decorator {
+    .name {
+      top: -10px;
+    }
+
+    .connector {
+      @include connector_basics;
+
+      position: absolute;
+      top: 0px;
+      left: 0px;
+    }
+  }
+
+  &.selected {
+    .circle-decorator {
+      svg {
+        circle {
+          fill: $selected-background-color;
+          stroke: $selected-border-color;
+        }
+      }
+
+      .circle-shadow {
+        display: block;
+      }
+    }
+  }
+}
+
