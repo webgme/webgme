@@ -767,14 +767,14 @@ define(['logManager',
 
             if (gmeID) {
                 //deleting a box --> remove from crosscut's set
-                logger.warning('removeMember memberListContainerID: ' + memberListContainerID + ', gmeID: ' + gmeID + ', memberListToRemoveFrom: ' + memberListToRemoveFrom);
+                logger.debug('removeMember memberListContainerID: ' + memberListContainerID + ', gmeID: ' + gmeID + ', memberListToRemoveFrom: ' + memberListToRemoveFrom);
                 _client.removeMember(memberListContainerID, gmeID, memberListToRemoveFrom);
 
                 //check if this GME object is a connection and whether it's parent is the crosscut container
                 gmeObj = _client.getNode(gmeID);
                 if (GMEConcepts.isConnection(gmeID) && gmeObj.getParentId() === memberListContainerID) {
                     if (GMEConcepts.canDeleteNode(gmeID)) {
-                        logger.warning('deleting connection from crosscut hierarchy too gmeID: ' + gmeID);
+                        logger.debug('deleting connection from crosscut hierarchy too gmeID: ' + gmeID);
                         _client.delMoreNodes([gmeID]);
                     }
                 }
@@ -789,7 +789,7 @@ define(['logManager',
                     }
 
                     if (canDeletePointer) {
-                        logger.warning('deleting pointer from: ' + lineDesc.GMESrcId + ', type: ' + lineDesc.name);
+                        logger.debug('deleting pointer from: ' + lineDesc.GMESrcId + ', type: ' + lineDesc.name);
                         //it's a pointer that's allowed to be deleted
                         _client.delPointer(lineDesc.GMESrcId, lineDesc.name);
                     }
@@ -860,7 +860,7 @@ define(['logManager',
 
         //filter out the items on the screen
         validEndTypes = _.union(validPointerTargetTypes, validSetTargetTypes, validConnectionEndTypes);
-        this.logger.warning('validEndTypes: ' + validEndTypes);
+        this.logger.debug('validEndTypes: ' + validEndTypes);
 
         i = availableConnectionEnds.length;
         while (i--) {
@@ -907,17 +907,17 @@ define(['logManager',
             srcPosition = this._widget.items[params.src].getBoundingBox();
 
         createPointer = function (srcId, dstId, ptrName) {
-            logger.warning('createPointer srcId: ' + srcId + ', dstId: ' + dstId + ', ptrName: ' + ptrName);
+            logger.debug('createPointer srcId: ' + srcId + ', dstId: ' + dstId + ', ptrName: ' + ptrName);
             _client.makePointer(srcId, ptrName, dstId);
         };
 
         addToSet = function (containerId, objId, setName) {
-            logger.warning('addToSet containerId: ' + containerId + ', objId: ' + objId + ', ptrName: ' + setName);
+            logger.debug('addToSet containerId: ' + containerId + ', objId: ' + objId + ', ptrName: ' + setName);
             _client.addMember(containerId, objId, setName);
         };
 
         createConnection = function (srcId, dstId, connType) {
-            logger.warning('createConnection srcId: ' + srcId + ', dstId: ' + dstId + ', connType: ' + connType);
+            logger.debug('createConnection srcId: ' + srcId + ', dstId: ' + dstId + ', connType: ' + connType);
             _client.startTransaction();
 
             //create new object
