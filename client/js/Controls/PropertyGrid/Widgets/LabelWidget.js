@@ -10,7 +10,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'],
 
             var _self = this;
 
-            this.__label = $('<span/>', {});
+            this.__label = $('<span/>', {'class': 'user-select-on'});
 
 
             this.updateDisplay();

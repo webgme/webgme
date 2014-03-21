@@ -20,7 +20,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
             this._div = $('<div/>', {'class': 'ptr-widget'});
             this.el.append(this._div);
 
-            this.__label = $('<span/>', {});
+            this.__label = $('<span/>', {'class': 'user-select-on'});
             this._div.append(this.__label);
 
 
