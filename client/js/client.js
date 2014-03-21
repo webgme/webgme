@@ -1700,34 +1700,48 @@ define([
             function removeUI(guid) {
                 delete _users[guid];
             }
+            function _updateTerritoryAllDone(guid, patterns, error) {
+                if(_users[guid]){
+                    _users[guid].PATTERNS = JSON.parse(JSON.stringify(patterns));
+                    if(!error){
+                        userEvents(guid,[]);
+                    }
+                }
+            }
             function updateTerritory(guid, patterns) {
                 if(_project){
                     if(_nodes[ROOT_PATH]){
-                        //this has to be optimized
+                        //TODO: this has to be optimized
                         var missing = 0;
                         var error = null;
-                        var allDone = function(){
+
+                        var patternLoaded = function (err) {
+                            error = error || err;
+                            if(--missing === 0){
+                                //allDone();
+                                _updateTerritoryAllDone(guid, patterns, error);
+                            }
+                        };
+
+                        //EXTRADTED OUT TO: _updateTerritoryAllDone
+                        /*var allDone = function(){
                             if(_users[guid]){
                                 _users[guid].PATTERNS = JSON.parse(JSON.stringify(patterns));
                                 if(!error){
                                     userEvents(guid,[]);
                                 }
                             }
-                        };
+                        };*/
                         for(var i in patterns){
                             missing++;
                         }
                         if(missing>0){
                             for(i in patterns){
-                                loadPattern(_core,i,patterns[i],_nodes,function(err){
-                                    error = error || err;
-                                    if(--missing === 0){
-                                        allDone();
-                                    }
-                                });
+                                loadPattern(_core,i,patterns[i],_nodes,patternLoaded);
                             }
                         } else {
-                            allDone();
+                            //allDone();
+                            _updateTerritoryAllDone(guid, patterns, error);
                         }
                     } else {
                         //something funny is going on
