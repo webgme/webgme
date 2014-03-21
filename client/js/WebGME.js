@@ -56,7 +56,9 @@ define(['logManager',
             projectToLoad = util.getURLParameterByName('project'),
             objectToLoad = util.getURLParameterByName('obj').toLowerCase(),
             logger = logManager.create('WebGME'),
-            selectObject;
+            selectObject,
+            loadBranch,
+            branchToLoad = util.getURLParameterByName('branch') || CONFIG.branch;
 
         lm = new LayoutManager();
         lm.loadLayout(layoutToLoad, function () {
@@ -132,7 +134,9 @@ define(['logManager',
                         if (err) {
                             logger.error(err);
                         } else {
-                            if (commitToLoad && commitToLoad !== "") {
+                            if (branchToLoad && branchToLoad !== '') {
+                                loadBranch(branchToLoad);
+                            } else  if (commitToLoad && commitToLoad !== "") {
                                 client.selectCommitAsync(commitToLoad, function (err) {
                                     if (err) {
                                         logger.error(err);
@@ -158,6 +162,14 @@ define(['logManager',
                     WebGMEGlobal.State.setActiveObject(objectToLoad);
                 }, 1000);
             }
+        };
+
+        loadBranch = function (branchName) {
+            client.selectBranchAsync(branchName, function (err) {
+                if (err) {
+                    logger.error(err);
+                }
+            });
         };
     };
 
