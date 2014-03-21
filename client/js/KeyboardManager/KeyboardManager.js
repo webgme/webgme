@@ -85,7 +85,6 @@ define(['logManager'], function (logManager) {
                 _txtArea.on("keydown.KeyboardManager keyup.KeyboardManager", _keyHandler);
 
                 $('body').on('mousedown.KeyboardManager', _captureFocusOnBody);
-                $('body').on('mouseup.KeyboardManager', _captureFocusOnBody);
 
                 _txtArea.on('copy.KeyboardManager', _onCopy);
                 _txtArea.on('paste.KeyboardManager', _onPaste);
@@ -94,7 +93,6 @@ define(['logManager'], function (logManager) {
                 _txtArea.off("keyup.KeyboardManager");
 
                 $('body').off('mousedown.KeyboardManager');
-                $('body').off('mouseup.KeyboardManager');
 
                 _txtArea.off('copy.KeyboardManager');
                 _txtArea.off('paste.KeyboardManager');
