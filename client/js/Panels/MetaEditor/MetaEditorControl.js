@@ -1626,6 +1626,7 @@ define(['logManager',
         });
 
         //here we have the metaAspectRegistry ordered by user defined order
+        this.diagramDesigner.addMultipleTabsBegin();
         len = metaAspectSheetsRegistry.length;
         for (i = 0; i < len; i += 1) {
             setName = metaAspectSheetsRegistry[i].SetID;
@@ -1660,6 +1661,7 @@ define(['logManager',
                 selectedSheetID = sheetID;
             }
         }
+        this.diagramDesigner.addMultipleTabsEnd();
 
         //figure out whose position has changed
         var positionUpdated = [];

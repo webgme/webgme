@@ -1076,6 +1076,8 @@ define(['logManager',
 
             aspects.splice(0,0,CONSTANTS.ASPECT_ALL);
 
+            this.designerCanvas.addMultipleTabsBegin();
+
             for (i = 0; i < aspects.length; i += 1) {
                 tabID = this.designerCanvas.addTab(aspects[i]);
 
@@ -1086,6 +1088,8 @@ define(['logManager',
                     selectedTabID = tabID;
                 }
             }
+
+            this.designerCanvas.addMultipleTabsEnd();
         }
 
         if (!selectedTabID) {

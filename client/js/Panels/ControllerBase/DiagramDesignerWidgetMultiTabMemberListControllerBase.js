@@ -271,6 +271,8 @@ define(['logManager',
             orderedMemberListInfo = this.getOrderedMemberListInfo(memberListContainerObj) || [];
 
             if (orderedMemberListInfo.length > 0) {
+                this._widget.addMultipleTabsBegin();
+
                 for (i = 0; i < orderedMemberListInfo.length; i += 1) {
                     memberListID = orderedMemberListInfo[i].memberListID;
                     tabTitle = orderedMemberListInfo[i].title;
@@ -299,6 +301,8 @@ define(['logManager',
                         selectedMemberListTabID = memberListTabID;
                     }
                 }
+
+                this._widget.addMultipleTabsEnd();
 
                 if (!selectedMemberListTabID) {
                     for (selectedMemberListTabID in this._tabIDMemberListID) {

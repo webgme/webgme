@@ -176,9 +176,25 @@ define(['js/Toolbar/ToolbarButton',
                 self.selectTab(data.TAB_ID);
             }});
 
-        this._refreshTabScrollButtons();
+        if (this._addingMultipleTabs !== true) {
+            this._refreshTabScrollButtons();
+        }
 
         return li.data(TAB_ID);
+    };
+
+    DiagramDesignerWidgetTabs.prototype.addMultipleTabsBegin = function () {
+        this._addingMultipleTabs = true;
+
+        this.$ulTabTab.hide();
+    };
+
+    DiagramDesignerWidgetTabs.prototype.addMultipleTabsEnd = function () {
+        this.$ulTabTab.show();
+
+        this._refreshTabScrollButtons();
+
+        this._addingMultipleTabs = false;
     };
 
     DiagramDesignerWidgetTabs.prototype._tabsScrollLeft = function () {
