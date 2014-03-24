@@ -7,7 +7,8 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
     var PropertyGridPart,
         CSS_NAMESPACE = 'pgp',
         CLASS_CLOSED = 'closed',
-        CLASS_CONTROLLER_ROW = 'cr';
+        CLASS_CONTROLLER_ROW = 'cr',
+        RESET_BUTTON_BASE = $('<i class="icon-remove-circle btn-reset" title="Reset value"/>');
 
     PropertyGridPart = function (params) {
         if (params.el) {
@@ -184,7 +185,7 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
 
             //resetable
             if (propertyDesc.options.resetable === true) {
-                var resetBtn = $('<i class="icon-remove-circle btn-reset" title="Reset value"/>');
+                var resetBtn = RESET_BUTTON_BASE.clone();
                 divReset.append(resetBtn);
 
                 spnName.addClass('p-reset');
