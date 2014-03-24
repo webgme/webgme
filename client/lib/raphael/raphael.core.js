@@ -1166,12 +1166,12 @@
                 sleep: 100
             };
         }
-        setTimeout(function () {
+        /*setTimeout(function () {*/
             for (var key in p) if (p[has](key) && key != ps) {
                 p[key].sleep--;
                 !p[key].sleep && delete p[key];
             }
-        });
+        /*});*/
         return p[ps];
     };
     /*\
