@@ -129,7 +129,7 @@ define(['logManager',
         var helperEl = DiagramDesignerWidget.prototype._dragHelper.apply(this, [el, event, dragInfo]);
 
         //clear out default 'Move' text from helperEl
-        helperEl.html('');
+        helperEl.empty();
 
         return helperEl;
     };
