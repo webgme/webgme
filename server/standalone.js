@@ -87,7 +87,7 @@ define(['logManager',
         }
 
         function storeQueryString(req,res,next){
-            if(req.session.originalQuery === undefined){
+            if( req && req.session && req.session.originalQuery === undefined){
                 var index = req.url.indexOf('?');
                 req.session.originalQuery = index === -1 ? "" : req.url.substring(index);
             }
