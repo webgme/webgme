@@ -277,6 +277,10 @@ define(['logManager',
         });
 
         __logger.info("creating decorator specific routing rules");
+        __app.get('/bin/getconfig/',ensureAuthenticated,function(req,res){
+            res.json(CONFIG);
+        });
+        __logger.info("creating decorator specific routing rules");
         __app.get(/^\/decorators\/.*/,ensureAuthenticated,function(req,res){
             var tryNext = function(index){
                 if(index<CONFIG.decoratorpaths.length){
