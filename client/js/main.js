@@ -32,6 +32,9 @@ require.config({
         //RaphaelJS family
         "eve": 'lib/raphael/eve',   //needed because of raphael.core.js uses require with 'eve'
         "raphaeljs": 'lib/raphael/raphael.amd',
+        "raphael_core": 'lib/raphael/raphael.core',
+        "raphael_svg": 'lib/raphael/raphael.svg_fixed',
+        "raphael_vml": 'lib/raphael/raphael.vml',
 
         //WebGME custom modules
         "logManager": 'common/LogManager',
@@ -55,7 +58,9 @@ require.config({
         'jquery-dataTables-bootstrapped': ['jquery-dataTables'],
         'WebGME': ['jquery-WebGME'],
         'jquery-csszoom': ['jquery-ui'],
-        'jquery-spectrum': ['jquery']
+        'jquery-spectrum': ['jquery'],
+        'raphael_svg': ['raphael_core'],
+        'raphael_vml': ['raphael_core']
     }
 });
 
