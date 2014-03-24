@@ -20,7 +20,9 @@ window.Raphael && window.Raphael.svg && function(R) {
         separator = /[, ]+/,
         eve = R.eve,
         E = "",
-        S = " ";
+        S = " ",
+        svgIDPrefix = "RaphaelSVG_",
+        svgCounter = 0;
     var xlink = "http://www.w3.org/1999/xlink",
         markers = {
             block: [{'path': "M5,0 0,2.5 5,5z" }],
@@ -1300,7 +1302,7 @@ window.Raphael && window.Raphael.svg && function(R) {
         if (!container) {
             throw new Error("SVG container not found.");
         }
-        var cnvs = $("svg"),
+        var cnvs = $("svg", {"id": svgIDPrefix + svgCounter++}),
             css = "overflow:hidden;",
             isFloating;
         x = x || 0;
