@@ -8,10 +8,11 @@
 
 define(['./ToolbarItemBase'], function (ToolbarItemBase) {
 
-    var ToolbarLabel;
+    var ToolbarLabel,
+        EL_BASE = $('<div class="toolbar-label"></div>');
 
     ToolbarLabel = function (params) {
-        this.el = $('<div class="toolbar-label"></div>');
+        this.el = EL_BASE.clone();
     };
 
     _.extend(ToolbarLabel.prototype, ToolbarItemBase.prototype);

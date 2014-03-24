@@ -16,13 +16,12 @@ define(['./ButtonBase',
         './ToolbarItemBase'], function (buttonBase,
                                         ToolbarItemBase) {
 
-    var ToolbarRadioButtonGroup;
+    var ToolbarRadioButtonGroup,
+        EL_BASE = $('<div/>', {"class": "btn-group"});
 
     ToolbarRadioButtonGroup = function (clickFn) {
         var btnGroup;
-        this.el = btnGroup = $('<div/>', {
-            "class": "btn-group"
-        });
+        this.el = btnGroup = EL_BASE.clone();
 
         if (clickFn) {
             btnGroup.on("click", ".btn", function (event) {

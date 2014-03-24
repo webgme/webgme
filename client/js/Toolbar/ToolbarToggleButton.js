@@ -10,7 +10,8 @@ define(['./ButtonBase',
         './ToolbarItemBase'], function (buttonBase,
                                         ToolbarItemBase) {
 
-    var ToolbarToggleButton;
+    var ToolbarToggleButton,
+        EL_BASE = $('<div class="toolbar-button"></div>');
 
     ToolbarToggleButton = function (params) {
         var oClickFn = params.clickFn,
@@ -27,7 +28,7 @@ define(['./ButtonBase',
         params.clickFn = toggleClickFn;
         btn = this._btn = buttonBase.createButton(params);
 
-        this.el = $('<div class="toolbar-button"></div>');
+        this.el = EL_BASE.clone();
         this.el.append(this._btn);
     };
 

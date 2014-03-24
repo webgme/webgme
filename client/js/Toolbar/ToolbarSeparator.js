@@ -8,10 +8,11 @@ define(['./ButtonBase',
         './ToolbarItemBase'], function (buttonBase,
                                         ToolbarItemBase) {
 
-    var ToolbarSeparator;
+    var ToolbarSeparator,
+        EL_BASE = $('<div class="separator"></div>');
 
     ToolbarSeparator = function () {
-        this.el = $('<div class="separator"></div>');
+        this.el = EL_BASE.clone();
     };
 
     _.extend(ToolbarSeparator.prototype, ToolbarItemBase.prototype);
