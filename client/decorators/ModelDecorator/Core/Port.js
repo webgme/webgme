@@ -145,7 +145,6 @@ define(['logManager',
     };
 
     Port.prototype.destroy = function () {
-        this.hideConnectors();
         //finally remove itself from DOM
         if (this.$el) {
             this.$el.remove();

@@ -31,7 +31,9 @@ define(['js/Constants',
         SVG_DIR = CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER,
         EMBEDDED_SVG_CLASS = 'embeddedsvg',
         CONNECTION_TYPE_CLASS = 'conn-type',
-        EXCLUDED_POINTERS = [CONSTANTS.POINTER_BASE, CONSTANTS.POINTER_SOURCE, CONSTANTS.POINTER_TARGET];
+        EXCLUDED_POINTERS = [CONSTANTS.POINTER_BASE, CONSTANTS.POINTER_SOURCE, CONSTANTS.POINTER_TARGET],
+        CONN_TYPE_BASE = $('<div/>', {class: CONNECTION_TYPE_CLASS }),
+        EMBEDDED_SVG_IMG_BASE = $('<img>', {'class': EMBEDDED_SVG_CLASS});
 
 
     ModelDecoratorCore = function (params) {
@@ -163,7 +165,7 @@ define(['js/Constants',
         this.skinParts.$name.attr("title", this.formattedName);
         if (isConnectionType) {
             if (!this.skinParts.$divConnType) {
-                this.skinParts.$divConnType = $('<div/>', {class: CONNECTION_TYPE_CLASS });
+                this.skinParts.$divConnType = CONN_TYPE_BASE.clone();
                 this.skinParts.$divConnType.insertAfter(this.skinParts.$name);
                 this.skinParts.$divConnType.text('<< Connection >>');
             }
@@ -533,31 +535,7 @@ define(['js/Constants',
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
             svgFile = "",
             svgURL,
-            self = this,
-            TOP_OFFSET = 5;
-
-        var svgReady = function () {
-            var portsHeight = self.skinParts.$portsContainer.outerHeight(),
-                marginTop = -portsHeight + TOP_OFFSET;
-
-            self.skinParts.$imgSVG.css('margin-top', marginTop);
-
-            self.skinParts.$imgSVG.off('load');
-            self.skinParts.$imgSVG.off('error');
-
-            if (_.isFunction(self.onRenderGetLayoutInfo)) {
-                self.onRenderGetLayoutInfo();
-            }
-            if (self.hostDesignerItem &&
-                self.hostDesignerItem.canvas) {
-                var sel = self.hostDesignerItem.canvas.selectionManager.getSelectedElements();
-                if (sel.length === 1 &&
-                    sel[0] === self.hostDesignerItem.id) {
-                    self.hostDesignerItem.canvas.selectNone();
-                    self.hostDesignerItem.canvas.select([self.hostDesignerItem.id]);
-                }
-            }
-        };
+            self = this;
 
         if (nodeObj) {
             svgFile = nodeObj.getRegistry(REGISTRY_KEYS.SVG_ICON);
@@ -567,22 +545,46 @@ define(['js/Constants',
             // get the svg from the server in SYNC mode, may take some time
             svgURL = SVG_DIR + svgFile;
             if (!this.skinParts.$imgSVG) {
-                this.skinParts.$imgSVG = $('<img>', {'class': EMBEDDED_SVG_CLASS});
+                this.skinParts.$imgSVG = EMBEDDED_SVG_IMG_BASE.clone();
                 this.$el.append(this.skinParts.$imgSVG);
             }
             if (this.skinParts.$imgSVG.attr('src') !== svgURL) {
-                this.skinParts.$imgSVG.attr('src', svgURL);
                 this.skinParts.$imgSVG.on('load', function (/*event*/) {
-                    svgReady();
+                    self._svgReady();
                 });
                 this.skinParts.$imgSVG.on('error', function (/*event*/) {
-                    svgReady();
+                    self._svgReady();
                 });
+                this.skinParts.$imgSVG.attr('src', svgURL);
             }
         } else {
             if (this.skinParts.$imgSVG) {
                 this.skinParts.$imgSVG.remove();
                 this.skinParts.$imgSVG = undefined;
+            }
+        }
+    };
+
+    ModelDecoratorCore.prototype._svgReady = function () {
+        var portsHeight = this.skinParts.$portsContainer.outerHeight(),
+            TOP_OFFSET = 5,
+            marginTop = -portsHeight + TOP_OFFSET;
+
+        this.skinParts.$imgSVG.css('margin-top', marginTop);
+
+        this.skinParts.$imgSVG.off('load');
+        this.skinParts.$imgSVG.off('error');
+
+        if (_.isFunction(this.onRenderGetLayoutInfo)) {
+            this.onRenderGetLayoutInfo();
+        }
+        if (this.hostDesignerItem &&
+            this.hostDesignerItem.canvas) {
+            var sel = this.hostDesignerItem.canvas.selectionManager.getSelectedElements();
+            if (sel.length === 1 &&
+                sel[0] === this.hostDesignerItem.id) {
+                this.hostDesignerItem.canvas.selectNone();
+                this.hostDesignerItem.canvas.select([this.hostDesignerItem.id]);
             }
         }
     };
