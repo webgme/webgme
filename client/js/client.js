@@ -553,7 +553,6 @@ define([
             function createEmptyProject(project,callback){
                 var core = getNewCore(project);
                 var root = core.createNode();
-                core.setAttribute(root,"name","ROOT");
                 core.persist(root,function(err){});
                 var rootHash = core.getHash(root);
                 var commitHash = project.makeCommit([],rootHash,'project creation commit',function(err){});
