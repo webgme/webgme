@@ -35,7 +35,8 @@ define(['js/Constants',
         BORDER_COLOR_CLASS = "border-color",
         TEXT_COLOR_CLASS = "text-color",
         PORT_HEIGHT = 13,   //must be same as SVGDecorator.scss 's $port-height
-        DEFAULT_SVG_DEFAULT_HEIGHT = 50;
+        DEFAULT_SVG_DEFAULT_HEIGHT = 50,
+        CONNECTOR_BASE = $('<div class="' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS + '"/>');
 
 
     /**
@@ -243,11 +244,11 @@ define(['js/Constants',
 
         }
 
-        this.$svgContent.append(svgIcon);
         this.$svgElement = svgIcon;
-
         this._getCustomConnectionAreas(svg);
         this._generateConnectors();
+
+        this.$svgContent.append(svgIcon);
     };
 
     SVGDecoratorCore.prototype._discoverCustomConnectionAreas = function (svgFile) {
@@ -357,13 +358,12 @@ define(['js/Constants',
                 this._customConnectionAreas.push(connA);
             }
         }
-
     };
 
     SVGDecoratorCore.prototype._generateConnectors = function () {
-        var connectors = this.$svgElement.find('.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS),
+        var svg = this.$svgElement,
+            connectors = svg.find('.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS),
             c,
-            svg = this.$svgElement,
             svgWidth = parseInt(svg.attr('width'), 10),
             svgHeight = parseInt(svg.attr('height'), 10);
 
@@ -374,25 +374,29 @@ define(['js/Constants',
                 //by default generate four: N, S, E, W
 
                 //NORTH
-                c = $('<div/>', { class: DiagramDesignerWidgetConstants.CONNECTOR_CLASS + ' cn' });
+                c = CONNECTOR_BASE.clone();
+                c.addClass('cn');
                 c.css({'top': 0,
                        'left': svgWidth / 2});
                 this.$el.append(c);
 
                 //SOUTH
-                c = $('<div/>', { class: DiagramDesignerWidgetConstants.CONNECTOR_CLASS + ' cs' });
+                c = CONNECTOR_BASE.clone();
+                c.addClass('cs');
                 c.css({'top': svgHeight,
                        'left': svgWidth / 2});
                 this.$el.append(c);
 
                 //EAST
-                c = $('<div/>', { class: DiagramDesignerWidgetConstants.CONNECTOR_CLASS + ' ce' });
+                c = CONNECTOR_BASE.clone();
+                c.addClass('ce');
                 c.css({'top': svgHeight / 2,
                        'left': svgWidth});
                 this.$el.append(c);
 
                 //WEST
-                c = $('<div/>', { class: DiagramDesignerWidgetConstants.CONNECTOR_CLASS + ' cw' });
+                c = CONNECTOR_BASE.clone();
+                c.addClass('cw');
                 c.css({'top': svgHeight / 2,
                     'left': 0});
                 this.$el.append(c);
