@@ -8046,7 +8046,7 @@ This is not necessary; the ARGraph will shift all children
                                 r = new ArRect(arx1, ary1, arx2, ary2); 
 
                                 //If 'angles' is defined, I will use it to set attr
-                                if(angles){
+                                if(angles[0] !== undefined && angles[1] !== undefined){
                                     var a1 = angles[0], //min angle
                                         a2 = angles[1], //max angle
                                         rightAngle = 0,
