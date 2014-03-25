@@ -28,6 +28,12 @@ define([], function () {
         PROJECT_FCO_RELID: '1',
 
         /*
+         * DEDICATED GME ROOT properties
+         */
+        PROJECT_ROOT_NAME: 'ROOT',
+
+
+        /*
          * Dedicated POINTER names
          */
          POINTER_SOURCE : 'src',     //dedicated connection source pointer name

@@ -184,24 +184,6 @@ define(['jquery',
             'guid': CONSTANTS.PROJECT_FCO_GUID,
             'relid': CONSTANTS.PROJECT_FCO_RELID});
 
-        //set attributes for FCO
-        for (it in GMEConceptsFCO.FCO_ATTRIBUTES) {
-            if (GMEConceptsFCO.FCO_ATTRIBUTES.hasOwnProperty(it)) {
-                _client.setAttributes(FCO_ID, it, GMEConceptsFCO.FCO_ATTRIBUTES[it]);
-            }
-        }
-
-        //set base registry for FCO
-        for (it in GMEConceptsFCO.FCO_REGISTRY) {
-            if (GMEConceptsFCO.FCO_REGISTRY.hasOwnProperty(it)) {
-                _client.setRegistry(FCO_ID, it, GMEConceptsFCO.FCO_REGISTRY[it]);
-            }
-        }
-
-        var projectRegistry = {};
-        projectRegistry[CONSTANTS.PROJECT_FCO_ID] = FCO_ID;
-        _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, REGISTRY_KEYS.PROJECT_REGISTRY, projectRegistry);
-
         //set META rules accordingly
 
         //ROOT's meta rules
@@ -216,6 +198,27 @@ define(['jquery',
         var fcoMeta = $.extend(true, {}, metaRuleBase);
         fcoMeta.attributes.name = {'type': 'string'};
         _client.setMeta(FCO_ID, fcoMeta);
+
+        //set attributes for FCO
+        for (it in GMEConceptsFCO.FCO_ATTRIBUTES) {
+            if (GMEConceptsFCO.FCO_ATTRIBUTES.hasOwnProperty(it)) {
+                _client.setAttributes(FCO_ID, it, GMEConceptsFCO.FCO_ATTRIBUTES[it]);
+            }
+        }
+
+        //set name of the ROOT
+        _client.setAttributes(CONSTANTS.PROJECT_ROOT_ID,nodePropertyNames.Attributes.name,CONSTANTS.PROJECT_ROOT_NAME);
+
+        //set base registry for FCO
+        for (it in GMEConceptsFCO.FCO_REGISTRY) {
+            if (GMEConceptsFCO.FCO_REGISTRY.hasOwnProperty(it)) {
+                _client.setRegistry(FCO_ID, it, GMEConceptsFCO.FCO_REGISTRY[it]);
+            }
+        }
+
+        var projectRegistry = {};
+        projectRegistry[CONSTANTS.PROJECT_FCO_ID] = FCO_ID;
+        _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, REGISTRY_KEYS.PROJECT_REGISTRY, projectRegistry);
 
         //set META ASPECT to show FCO
         _client.addMember(CONSTANTS.PROJECT_ROOT_ID, FCO_ID, MetaEditorConstants.META_ASPECT_SET_NAME);
