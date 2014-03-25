@@ -3,17 +3,16 @@
 define(['js/Controls/PropertyGrid/Widgets/WidgetBase'],
     function (WidgetBase) {
 
-        var BooleanWidget;
+        var BooleanWidget,
+            CHECKBOX_BASE = $('<input/>', {"type": "checkbox"});
 
         BooleanWidget  = function (propertyDesc) {
             var self = this;
 
             BooleanWidget.superclass.call(this, propertyDesc);
 
-            this.__checkbox = $('<input/>', {
-                "type": "checkbox",
-                "checked": this.propertyValue
-            });
+            this.__checkbox = CHECKBOX_BASE.clone();
+            this.__checkbox.prop('checked', this.propertyValue);
 
             this.__checkbox.on('change', function (e) {
                 self.setValue($(this).is(':checked'));

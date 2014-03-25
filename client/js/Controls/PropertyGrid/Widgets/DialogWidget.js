@@ -3,19 +3,20 @@
 define(['js/Controls/PropertyGrid/Widgets/WidgetBase'],
     function (WidgetBase) {
 
-        var DialogWidget;
+        var DialogWidget,
+            LABEL_BASE = $('<span/>', {}),
+            BTN_DIALOG_OPEN_BASE = $('<a class="btn btn-mini btn-dialog-open">...</a>');
 
         DialogWidget = function (propertyDesc) {
             DialogWidget.superclass.call(this, propertyDesc);
 
             var self = this;
 
-            this.__label = $('<span/>', {});
+            this.__label = LABEL_BASE.clone();
             this.el.append(this.__label);
 
             if (propertyDesc.dialog) {
-                this.__btnDialogOpen = $('<a/>', {class: 'btn btn-mini btn-dialog-open'});
-                this.__btnDialogOpen.text('...');
+                this.__btnDialogOpen = BTN_DIALOG_OPEN_BASE.clone();
                 this.el.append(this.__btnDialogOpen);
 
                 this.__btnDialogOpen.on('click', function (e) {

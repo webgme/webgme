@@ -2,8 +2,10 @@
 
 define([], function () {
 
+    var EL_BASE = $("<div/>");
+
     var WidgetBase = function (propertyDesc) {
-        this.el = $("<div/>");
+        this.el = EL_BASE.clone();
 
         this.propertyValue = propertyDesc.value;
         this.originalValue = propertyDesc.value;

@@ -3,17 +3,16 @@
 define(['js/Controls/PropertyGrid/Widgets/WidgetBase'],
     function (WidgetBase) {
 
-        var StringWidget;
+        var StringWidget,
+            INPUT_BASE = $('<input/>', {"type": "text"});
 
         StringWidget = function (propertyDesc) {
             StringWidget.superclass.call(this, propertyDesc);
 
             var _self = this;
 
-            this.__input = $('<input/>', {
-                "type": "text",
-                "value": this.propertyValue
-            });
+            this.__input = INPUT_BASE.clone();
+            this.__input.val(this.propertyValue);
 
             this.__input.on('keyup change', function (e) {
                 e.stopPropagation();

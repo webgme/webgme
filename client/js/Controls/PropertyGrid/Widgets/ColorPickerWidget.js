@@ -11,7 +11,9 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
     function (WidgetBase,
               ColorPicker) {
 
-        var ColorPickerWidget;
+        var ColorPickerWidget,
+            DIV_BASE = $('<div/>', {'id': 'cpw',
+                'class': 'color-picker'});
 
         ColorPickerWidget  = function (propertyDesc) {
             var _self = this;
@@ -20,8 +22,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
 
             ColorPickerWidget.superclass.call(this, propertyDesc);
 
-            this.__colorDiv = $('<div/>', {'id': 'cpw',
-                                            'class': 'color-picker'});
+            this.__colorDiv = DIV_BASE.clone();
 
             this.__colorDiv.on('click', function (event) {
                 event.preventDefault();
