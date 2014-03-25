@@ -57,6 +57,8 @@ define(['logManager',
 
             __storageOptions.basedir =  CONFIG.basedir;
 
+            __storageOptions.intoutdir = CONFIG.intoutdir;
+
             __storage = Storage(__storageOptions);
             //end of storage creation
             __storage.open();

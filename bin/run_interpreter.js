@@ -21,14 +21,14 @@ requirejs.config({
         "interpreter": "interpreter"
     }
 });
-requirejs(['core/core','storage/serveruserstorage'],
-    function(Core,Storage){
+requirejs(['core/corefroplugin','storage/serveruserstorage','plugin/PluginFSServer'],
+    function(Core,Storage, PluginFSServer){
         //somehow you should build up a config object for the interpreter
         //and get the name of the interpreter
         //now we start with a predefined ones
 
         var getContext = function(config,callback) {
-            var context = { storage: new Storage({'host':config.host, 'port':config.port, 'database':config.database})};
+            var context = { storage: new Storage({'host':config.host, 'port':config.port, 'database':config.database, 'FS':new PluginFSServer({})})};
             context.storage.openDatabase(function(err){
                     if (!err) {
                         context.storage.openProject(config.project,function(err,project){
