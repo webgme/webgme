@@ -165,7 +165,7 @@ define(['logManager',
     DesignerItem.prototype.addToDocFragment = function (docFragment) {
         this._callDecoratorMethod("on_addTo");
 
-        this.$el.html(this._decoratorInstance.$el);
+        this.$el.append(this._decoratorInstance.$el);
 
         docFragment.appendChild( this.$el[0] );
 
