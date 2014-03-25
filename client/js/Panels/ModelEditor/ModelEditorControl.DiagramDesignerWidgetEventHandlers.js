@@ -634,9 +634,7 @@ define(['logManager',
             gmeID,
             selectedIDs = [],
             len,
-            self = this,
-            modelID = this.currentNodeInfo.id,
-            selectedAspect = this._selectedAspect;
+            self = this;
 
         if (dragPositions && !_.isEmpty(dragPositions)) {
             //update UI
@@ -664,26 +662,37 @@ define(['logManager',
 
             //update object internals
             setTimeout(function () {
-                self._client.startTransaction();
-                i = items.length;
-                while (i--) {
-                    gmeID = items[i];
-                    oldPos = dragPositions[gmeID];
-                    if (!oldPos) {
-                        oldPos = {'x': 0, 'y': 0};
-                    }
-                    //aspect specific coordinate
-                    if (selectedAspect === CONSTANTS.ASPECT_ALL) {
-                        self._client.setRegistry(gmeID, REGISTRY_KEYS.POSITION, { "x": dropPosition.x + oldPos.x, "y": dropPosition.y + oldPos.y });
-                    } else {
-                        self._client.addMember(modelID, gmeID, selectedAspect);
-                        self._client.setMemberRegistry(modelID, gmeID, selectedAspect, REGISTRY_KEYS.POSITION, {'x': dropPosition.x + oldPos.x, 'y': dropPosition.y + oldPos.y} );
-                    }
-                }
-
-                self._client.completeTransaction();
+                self._saveReposition(items, dragPositions, dropPosition);
             }, 10);
         }
+    };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._saveReposition = function (items, dragPositions, dropPosition) {
+        var gmeID,
+            oldPos,
+            i,
+            modelID = this.currentNodeInfo.id,
+            selectedAspect = this._selectedAspect,
+            client = this._client;
+
+        client.startTransaction();
+        i = items.length;
+        while (i--) {
+            gmeID = items[i];
+            oldPos = dragPositions[gmeID];
+            if (!oldPos) {
+                oldPos = {'x': 0, 'y': 0};
+            }
+            //aspect specific coordinate
+            if (selectedAspect === CONSTANTS.ASPECT_ALL) {
+                client.setRegistry(gmeID, REGISTRY_KEYS.POSITION, { "x": dropPosition.x + oldPos.x, "y": dropPosition.y + oldPos.y });
+            } else {
+                client.addMember(modelID, gmeID, selectedAspect);
+                client.setMemberRegistry(modelID, gmeID, selectedAspect, REGISTRY_KEYS.POSITION, {'x': dropPosition.x + oldPos.x, 'y': dropPosition.y + oldPos.y} );
+            }
+        }
+
+        client.completeTransaction();
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionChanged = function (selectedIds) {
