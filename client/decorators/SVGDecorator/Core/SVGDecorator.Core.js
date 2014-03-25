@@ -195,7 +195,9 @@ define(['js/Constants',
                             // cache the content if valid
                             var svgElements = $(data).find('svg');
                             if (svgElements.length > 0) {
-                                svgCache[svgFile] = svgElements.first();
+                                svgCache[svgFile] = { 'el': svgElements.first(),
+                                                      'customConnectionAreas': undefined};
+                                self._discoverCustomConnectionAreas(svgFile);
                                 self._updateSVGContent(svgFile);
                             } else {
                                 self._updateSVGContent(undefined);
@@ -230,7 +232,7 @@ define(['js/Constants',
         this._defaultSVGUsed = false;
 
         if (svgCache[svg]) {
-            svgIcon = svgCache[svg].clone();
+            svgIcon = svgCache[svg].el.clone();
         } else {
             svgIcon = defaultSVG.clone();
             if (svg !== '') {
@@ -244,12 +246,12 @@ define(['js/Constants',
         this.$svgContent.append(svgIcon);
         this.$svgElement = svgIcon;
 
-        this._discoverConnectionAreas();
+        this._getCustomConnectionAreas(svg);
         this._generateConnectors();
     };
 
-    SVGDecoratorCore.prototype._discoverConnectionAreas = function () {
-        var svgElement = this.$svgElement,
+    SVGDecoratorCore.prototype._discoverCustomConnectionAreas = function (svgFile) {
+        var svgElement = svgCache[svgFile].el,
             connAreas = svgElement.find('.' + CONNECTION_AREA_CLASS),
             len = connAreas.length,
             line,
@@ -260,20 +262,20 @@ define(['js/Constants',
             alpha,
             svgWidth,
             viewBox,
-            ratio = 1;
-
-        svgWidth = parseInt(svgElement.attr('width'), 10);
-        viewBox = svgElement[0].getAttribute('viewBox');
-        if (viewBox) {
-            var vb0 = parseInt(viewBox.split(' ')[0], 10);
-            var vb1 = parseInt(viewBox.split(' ')[2], 10);
-            ratio = svgWidth / (vb1 - vb0);
-        }
-
-        delete this._customConnectionAreas;
+            ratio = 1,
+            customConnectionAreas;
 
         if (len > 0) {
-            this._customConnectionAreas = [];
+            svgWidth = parseInt(svgElement.attr('width'), 10);
+            viewBox = svgElement[0].getAttribute('viewBox');
+            if (viewBox) {
+                var vb0 = parseInt(viewBox.split(' ')[0], 10);
+                var vb1 = parseInt(viewBox.split(' ')[2], 10);
+                ratio = svgWidth / (vb1 - vb0);
+            }
+
+            svgCache[svgFile].customConnectionAreas = [];
+            customConnectionAreas = svgCache[svgFile].customConnectionAreas;
 
             while (len--) {
                 line = $(connAreas[len]);
@@ -329,10 +331,30 @@ define(['js/Constants',
                     connA.angle2 = alpha;
                 }
 
-                this._customConnectionAreas.push(connA);
+                customConnectionAreas.push(connA);
 
                 //finally remove the placeholder from the SVG
                 line.remove();
+            }
+        }
+    };
+
+    SVGDecoratorCore.prototype._getCustomConnectionAreas = function (svgFile) {
+        var connAreas = svgCache[svgFile].customConnectionAreas,
+            len = connAreas ? connAreas.length : 0,
+            connA;
+
+        delete this._customConnectionAreas;
+
+        if (len > 0) {
+            this._customConnectionAreas = [];
+
+            while (len--) {
+                connA = {};
+
+                _.extend(connA, connAreas[len]);
+
+                this._customConnectionAreas.push(connA);
             }
         }
 
