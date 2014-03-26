@@ -1,9 +1,10 @@
 define(["jszip",'plugin/PluginFSBase','fs'],function(ZIP,PluginFSBase,FS){
 
-    var PluginFSServer = function(parameters){
-        PluginFSBase.call(this,parameters);
-        this.prototype = PluginFSBase;
-    };
+    PluginFSServer.extends(PluginFSBase);
+
+    function PluginFSServer(parameters){
+        PluginFSBase.apply(this,parameters);
+    }
 
     PluginFSServer.prototype.createArtifact = function(name){
         if(this._artifactName === null){
@@ -14,6 +15,7 @@ define(["jszip",'plugin/PluginFSBase','fs'],function(ZIP,PluginFSBase,FS){
             return false;
         }
     };
+
     PluginFSServer.prototype.saveArtifact = function(){
         var data = this._artifactZip.generate({base64:false,compression:'DEFLATE'});
         try {
@@ -27,6 +29,7 @@ define(["jszip",'plugin/PluginFSBase','fs'],function(ZIP,PluginFSBase,FS){
             return false;
         }
     };
+
     PluginFSServer.prototype.addFile = function(path,data){
         if(this._artifactName !== null){
             this._artifactZip.file(path,data);
@@ -35,5 +38,6 @@ define(["jszip",'plugin/PluginFSBase','fs'],function(ZIP,PluginFSBase,FS){
             return false;
         }
     };
+
     return PluginFSServer;
 });
