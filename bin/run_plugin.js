@@ -15,11 +15,13 @@ var main = function(CONFIG) {
     // main code
     var requirejs = require("requirejs");
     var program = require('commander');
+    var path = require('path');
 
+    var requirejsBase = __dirname + '/..';
 
     requirejs.config({
         nodeRequire: require,
-        baseUrl: __dirname + '/..'
+        baseUrl: requirejsBase
     });
 
 
@@ -27,7 +29,7 @@ var main = function(CONFIG) {
     program.option('-c, --config <name>', 'Configuration file');
     program.option('-p, --project <name>', 'Name of the project.', 'PetriNet');
     program.option('-b, --branch <name>', 'Name of the branch.', 'master');
-    program.option('-i, --pluginPath <name>', 'Path to given plugin.', 'interpreters/RootChildDuplicator/RootChildDuplicator');
+    program.option('-i, --pluginPath <name>', 'Path to given plugin.', '../interpreters/RootChildDuplicator/RootChildDuplicator');
     program.option('-s, --selectedObjID <webGMEID>', 'ID to selected component.', '');
     program.parse(process.argv);
 
@@ -36,7 +38,6 @@ var main = function(CONFIG) {
     var configFilename = program.config;
     if (configFilename) {
         // TODO: check if file exists and it is json
-        var path = require('path');
         var resolvedFilename = path.resolve(configFilename);
         console.log('Given configuration file: ', resolvedFilename);
         var commanlineConfig = require(resolvedFilename);
@@ -50,11 +51,11 @@ var main = function(CONFIG) {
 
     var projectName = program.project;
     var branch = program.branch;
-    var pluginName = program.pluginPath;
+    var pluginName = path.relative(requirejsBase, path.resolve(program.pluginPath));
     var selectedID = program.selectedObjID;
 
     // TODO: logging
-    console.log('Given plugin : %j', pluginName);
+    console.log('Given plugin : ', pluginName);
 
     var config = {
         "host": CONFIG.mongoip,
@@ -70,10 +71,13 @@ var main = function(CONFIG) {
 
     var PluginManager = requirejs('plugin/PluginManagerBase');
     // TODO: move the downloader to PluginManager
+
     var Plugin = requirejs(pluginName);
 
     // FIXME: dependency does matter!
     var WebGME = require('../webgme');
+
+
 
     var Core = WebGME.core,
         Storage = WebGME.serverUserStorage;
