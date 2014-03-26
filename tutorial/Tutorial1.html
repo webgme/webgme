@@ -1,0 +1,51 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>Tutorial1</title></head><body><h1>Tutorial1</h1><h2>Creating our first project</h2>In
+this tutorial you will learn the basic features of WebGME. How to
+create projects, how to instentiate objects, how to define your own
+language and finally how to build a model according your language.
+Along the way you will also learn how to use the different features of
+our user-interface like the META&nbsp;and Composition modes.<br><h3>Main part of the user-interface</h3>Before
+we begin it would be wise to define the different parts of the
+user-interface so it would be easier to understand the tutorial later.
+So let's see a snapshot with the main areas of the interface:<br><img style="width: 1000px; height: 905px;" alt="" title="Important areas of the WebGME user-interface" src="./img/ui_parts_base.png"><br>So now we know how the different parts of the UI is called so let's begin with the real modeling!<br><h3>Creating an empty project</h3>The
+first step on the long path of modeling is to create an empty project.
+To do this you simply have to open the project dialog which can be done
+by pushing the <img style="width: 30px; height: 22px;" alt="" src="img/glyphicons_144_folder_open.png">
+button on the main toolbar. On the dialog simply push the 'Create
+empty...' button which gives you a textbox where you can type the
+desired name of your project (SignalFlow for example), then you can
+start the actual project creation by pressing the 'Create' button. In
+your new project you already have a so called basic seed, which is
+really the first building blocks which are essential for a project. You
+get a 'ROOT' object which will be the root of your conainment hierarchy
+and you will put all of your object under it. You also get an 'FCO'
+object (stands for First Class Object) which is the root of the
+inheritance hierarchy, which means that it will be the base of all your
+objects.<br><br><h3>Creating the 'Language' folder</h3>As in WebGME
+there is no distinction between your META objects and the actual model
+objects you probably would like to separate the building blocks of your
+language from the actual models you build with them. To be able to do
+this you need a 'place' (a well defined object) where you will be able
+to create the elements of your language. In the mode selector choose
+the Composition and on the Object Browser select the Root object (the
+single FCO object become visible on the main panel). Drag the FCO
+object from the Parts panel onto the main panel. Now you've just
+created an instance of your FCO! Select it and rename in the property
+editor to 'Language'. Now we have our object, but it doesn't have any
+rules which means it cannot contain any other object (as that is the
+default behaviour). To add a containment rule to our new object we have
+to first switch to the META mode (just click on the META label on the
+mode selection panel). In this mode the FCO is visible, but you can see
+that it is rendered differently (more like an UML class on a UML class
+diagram). This mode allows the manipulation of your language rules. To
+allow the Language object to have rules first you have to drag it onto
+the main panel from the object browser. After dragging the inheritance
+relation between Language and FCO becomes visible immediately. To be
+able to use the Language as a folder we will allow it to have any kind
+of children. To do this we will allow it to have FCO type children.
+Select the -diamond headed line - on the line bar and draw a line from
+the FCO to the Language object (your valid connection points become
+visible once your mouse is over an object, and when you start drawing
+your line all the possible endings of the line becomes visible). If we
+are done, we can start creating our own language objects. The current
+META mode shows the following picture:<br><img style="width: 1000px; height: 906px;" alt="" src="img/meta_language.png"></body></html>

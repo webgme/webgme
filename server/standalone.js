@@ -329,6 +329,14 @@ define(['logManager',
                 res.send(404);
             });
         });
+
+        //TODO remove this part as this is only temporary!!!
+        __app.get('/tutorial/*',function(req,res){
+            res.sendfile(Path.join(CONFIG.basedir,req.path),function(err){
+                res.send(404);
+            });
+        });
+
         //client contents - js/html/css
         //css classified as not secure content
         __app.get(/^\/.*\.(css|ico)$/,function(req,res){
@@ -513,6 +521,8 @@ define(['logManager',
         }
 
         __logger.info("standalone server initialization completed");
+
+
 
 
         return {
