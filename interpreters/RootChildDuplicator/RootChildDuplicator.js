@@ -1,9 +1,15 @@
-define([], function () {
+define(['plugin/PluginBase', 'plugin/PluginConfig'], function (PluginBase, PluginConfig) {
     "use strict";
 
     var RootChildduplicator = function () {};
 
-    RootChildduplicator.prototype.run = function (config, callback) {
+    RootChildduplicator.prototype = Object.create(PluginBase.prototype);
+
+    RootChildduplicator.getDefaultConfig = function () {
+        return new PluginConfig();
+    };
+
+    RootChildduplicator.prototype.main = function (config, callback) {
         var result = {commitHash:config.commitHash};
         if(config.rootNode && config.core){
             config.core.loadChildren(config.rootNode,function(err,children){
@@ -14,17 +20,17 @@ define([], function () {
                     }
                     config.core.persist(config.rootNode, function(err) {});
                     var newRootHash = config.core.getHash(config.rootNode);
-                    result.commitHash = config.project.makeCommit([result.commitHash], newRootHash, 'Interpreter \'RootChildDuplicator\' updated the model.', function(err) {});
+                    result.commitHash = config.project.makeCommit([result.commitHash], newRootHash, 'Plugin \'RootChildDuplicator\' updated the model.', function(err) {});
                     result.success = true;
-                    callback(result);
+                    callback(null, result);
                 } else {
                     result.success = false;
-                    callback(result);
+                    callback(err, result);
                 }
             });
         } else {
             result.success = false;
-            callback(result);
+            callback('root node or core is null or undefined', result);
         }
     };
 
