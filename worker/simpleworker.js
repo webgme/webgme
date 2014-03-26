@@ -6,8 +6,8 @@ requirejs.config({
         "logManager": "common/LogManager"
     }
 });
-requirejs(['worker/constants','core/core','storage/serveruserstorage','util/guid','coreclient/dumpmore','logManager','fs','path'],
-function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH){
+requirejs(['worker/constants','core/core','storage/serveruserstorage','util/guid','coreclient/dumpmore','logManager','fs','path','plugin/PluginFSServer'],
+function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,PluginFSServer){
     var storage = null,
         core = null,
         result = null,
@@ -16,7 +16,8 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH){
         resultId = null,
         error = null,
         initialized = false,
-        interpreterpaths = null;
+        interpreterpaths = null,
+        interpreteroutputdirectory = null;
 
     var initResult = function(){
         core = null;
@@ -30,6 +31,7 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH){
         if(initialized !== true){
             initialized = true;
             interpreterpaths = parameters.interpreterpaths;
+            interpreteroutputdirectory = parameters.interpreteroutputdirectory || "";
             storage = new Storage({'host':parameters.ip,'port':parameters.port,'database':parameters.db,'log':logManager.create('SERVER-WORKER-'+process.pid)});
             storage.openDatabase(function(err){
                 if(err){
@@ -90,6 +92,7 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH){
     //TODO the getContext should be refactored!!!
     var getContext = function(context,callback){
         context.storage = storage;
+        context.FS = new PluginFSServer({outputpath:interpreteroutputdirectory});
         if(context.projectName){
             storage.openProject(context.projectName,function(err,project){
                 if(!err){

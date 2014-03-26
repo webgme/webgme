@@ -393,7 +393,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 });
             });
 
-            _workerManager = new SWM({basedir:options.basedir,mongoip:options.host,mongoport:options.port,mongodb:options.database});
+            _workerManager = new SWM({basedir:options.basedir,mongoip:options.host,mongoport:options.port,mongodb:options.database,intoutdir:options.intoutdir});
         }
 
         function close(){
