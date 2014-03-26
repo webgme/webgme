@@ -1354,8 +1354,13 @@ define(['logManager',
 
     DiagramDesignerWidget.prototype._redrawConnections = function (connIDs) {
         var res;
+        /*var startTime;
+        var endTime;*/
         try {
+            //startTime = new Date();
             res = this.connectionRouteManager.redrawConnections(connIDs) || [];
+            //endTime = new Date();
+            //this.logger.debug('_redrawConnections: ' + (endTime - startTime));
         } catch (exp) {
             res = [];
             this.logger.error('connectionRouteManager.redrawConnections failed with error: ' + exp.stack);
