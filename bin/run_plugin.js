@@ -36,7 +36,10 @@ var main = function(CONFIG) {
     var configFilename = program.config;
     if (configFilename) {
         // TODO: check if file exists and it is json
-        var commanlineConfig = require('./' + configFilename);
+        var path = require('path');
+        var resolvedFilename = path.resolve(configFilename);
+        console.log('Given configuration file: ', resolvedFilename);
+        var commanlineConfig = require(resolvedFilename);
 
         // TODO: check if commanline config valid or not
         for (var key in commanlineConfig) {
