@@ -71,87 +71,72 @@ define(['./PluginBase', './PluginContext'], function (PluginBase, PluginContext)
 
         var self = this;
 
-        this._storage.openDatabase(function(err) {
-            console.log('database is open');
+        var pluginContext = new PluginContext();
 
-            if (!err) {
-                self._storage.openProject(managerConfiguration.project, function(err, project){
-                    if(!err){
-                        var pluginContext =  new PluginContext();
+        // TODO: initialize context
 
-                        // TODO: initialize context
+        // TODO: based on the string values get the node objects
+        // 1) Open project
+        // 2) Load commit hash
+        // 3) Load rootNode
+        // 4) Load selected object
+        // 5) Load selected objects
+        // 6) Update context
+        // 7) return
 
-                        // TODO: based on the string values get the node objects
-                        // 1) Open project
-                        // 2) Load commit hash
-                        // 3) Load rootNode
-                        // 4) Load selected object
-                        // 5) Load selected objects
-                        // 6) Update context
-                        // 7) return
+        //callback(null, pluginContext);
 
-                        //callback(null, pluginContext);
+        pluginContext.project = this._storage;
+        pluginContext.projectName = managerConfiguration.project;
+        pluginContext.core = new self._Core(pluginContext.project, {corerel: 2});
+        pluginContext.commitHash = managerConfiguration.commit;
+        pluginContext.selected = managerConfiguration.selected;
 
-                        pluginContext.project = project;
-                        pluginContext.projectName = managerConfiguration.project;
-                        pluginContext.core = new self._Core(pluginContext.project,{corerel:2});
-                        pluginContext.commitHash = managerConfiguration.commit;
-                        pluginContext.selected = managerConfiguration.selected;
-
-                        var loadCommitHashAndRun = function (commitHash) {
-                            pluginContext.project.loadObject(commitHash, function(err, commitObj) {
-                                if(!err && commitObj !== null && commitObj !== undefined){
-                                    pluginContext.core.loadRoot(commitObj.root, function(err, rootNode) {
-                                        if(!err){
-                                            pluginContext.rootNode = rootNode;
-                                            if(typeof pluginContext.selected === 'string'){
-                                                pluginContext.core.loadByPath(pluginContext.rootNode, pluginContext.selected, function (err, selectedNode) {
-                                                    if(!err){
-                                                        pluginContext.selectedNode = selectedNode;
-                                                        self.loadMetaNodes(pluginContext, callback);
-                                                    } else {
-                                                        callback("unable to load selected object", pluginContext);
-                                                    }
-                                                });
-                                            } else {
-                                                pluginContext.selectedNode = null;
-                                                self.loadMetaNodes(pluginContext, callback);
-                                            }
-                                        } else {
-                                            callback("unable to load root", pluginContext);
-                                        }
-                                    });
-                                } else {
-                                    callback('cannot find commit', pluginContext);
-                                }
-
-                            });
-                        };
-
-                        if (managerConfiguration.branchName) {
-                            pluginContext.project.getBranchNames(function (err, branchNames) {
-                                console.log(branchNames);
-                                if (branchNames.hasOwnProperty(managerConfiguration.branchName)) {
-                                    pluginContext.commitHash = branchNames[managerConfiguration.branchName];
-                                    console.log(pluginContext.commitHash);
-                                    loadCommitHashAndRun(pluginContext.commitHash);
-                                } else {
-                                    callback('cannot find branch', pluginContext);
-                                }
-                            });
+        var loadCommitHashAndRun = function (commitHash) {
+            pluginContext.project.loadObject(commitHash, function (err, commitObj) {
+                if (!err && commitObj !== null && commitObj !== undefined) {
+                    pluginContext.core.loadRoot(commitObj.root, function (err, rootNode) {
+                        if (!err) {
+                            pluginContext.rootNode = rootNode;
+                            if (typeof pluginContext.selected === 'string') {
+                                pluginContext.core.loadByPath(pluginContext.rootNode, pluginContext.selected, function (err, selectedNode) {
+                                    if (!err) {
+                                        pluginContext.selectedNode = selectedNode;
+                                        self.loadMetaNodes(pluginContext, callback);
+                                    } else {
+                                        callback("unable to load selected object", pluginContext);
+                                    }
+                                });
+                            } else {
+                                pluginContext.selectedNode = null;
+                                self.loadMetaNodes(pluginContext, callback);
+                            }
                         } else {
-                            loadCommitHashAndRun(pluginContext.commitHash);
+                            callback("unable to load root", pluginContext);
                         }
+                    });
+                } else {
+                    callback('cannot find commit', pluginContext);
+                }
 
+            });
+        };
 
-                    } else {
-                        callback("cannot openproject", pluginContext);
-                    }
-                });
-            } else {
-                callback("cannot open database", pluginContext);
-            }
-        });
+        if (managerConfiguration.branchName) {
+            pluginContext.project.getBranchNames(function (err, branchNames) {
+                console.log(branchNames);
+                if (branchNames.hasOwnProperty(managerConfiguration.branchName)) {
+                    pluginContext.commitHash = branchNames[managerConfiguration.branchName];
+                    console.log(pluginContext.commitHash);
+                    loadCommitHashAndRun(pluginContext.commitHash);
+                } else {
+                    callback('cannot find branch', pluginContext);
+                }
+            });
+        } else {
+            loadCommitHashAndRun(pluginContext.commitHash);
+        }
+
     };
 
     PluginManagerBase.prototype.executePlugin = function (name, managerConfiguration, done) {

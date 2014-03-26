@@ -11,7 +11,7 @@
  }
  */
 
-var main = function(CONFIG) {
+var main = function (CONFIG) {
     // main code
     var requirejs = require("requirejs");
     var program = require('commander');
@@ -23,7 +23,6 @@ var main = function(CONFIG) {
         nodeRequire: require,
         baseUrl: requirejsBase
     });
-
 
 
     program.option('-c, --config <name>', 'Configuration file');
@@ -78,18 +77,28 @@ var main = function(CONFIG) {
     var WebGME = require('../webgme');
 
 
-
     var Core = WebGME.core,
         Storage = WebGME.serverUserStorage;
-    var storage = new Storage({'host':config.host, 'port':config.port, 'database':config.database});
+    var storage = new Storage({'host': config.host, 'port': config.port, 'database': config.database});
 
     var plugins = {};
     plugins[pluginName] = Plugin;
 
-    var pluginManager = new PluginManager(storage, Core, plugins);
+    storage.openDatabase(function (err) {
+        console.log('database is open');
 
-    pluginManager.executePlugin(pluginName, config, function (err, result) {
-        console.log(result);
+        if (!err) {
+            storage.openProject(config.project, function (err, project) {
+                if (!err) {
+
+                    var pluginManager = new PluginManager(project, Core, plugins);
+
+                    pluginManager.executePlugin(pluginName, config, function (err, result) {
+                        console.log(result);
+                    });
+                }
+            });
+        }
     });
 };
 
