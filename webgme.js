@@ -18,5 +18,6 @@ module.exports = {
 	serverStorage: requirejs('storage/serverstorage'),
     serverUserStorage: requirejs('storage/serveruserstorage'),
 	core: requirejs('core/core'),
-    standaloneServer: requirejs('server/standalone')
+    standaloneServer: requirejs('server/standalone'),
+    logManager: requirejs('logManager')
 };
