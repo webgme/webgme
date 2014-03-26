@@ -73,7 +73,7 @@ define(['logManager',
         if (this._containerNodeId || this._containerNodeId === CONSTANTS.PROJECT_ROOT_ID) {
             //put new node's info into territory rules
             this._selfPatterns = {};
-            this._selfPatterns[nodeId] = { "children": 1 };
+            this._selfPatterns[nodeId] = { "children": 0 };
 
             if (this._aspect !== CONSTANTS.ASPECT_ALL) {
                 //make sure that the _aspect exist in the node, otherwise fallback to All
