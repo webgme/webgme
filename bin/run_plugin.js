@@ -47,6 +47,17 @@ var main = function (CONFIG) {
         }
     }
 
+    if (CONFIG.plugins && CONFIG.plugins.basePath) {
+
+        requirejs.config({
+            nodeRequire: require,
+            paths: {
+                'plugins': path.relative(requirejsBase, path.resolve(CONFIG.plugins.basePath))
+            },
+            baseUrl: requirejsBase
+        });
+    }
+
 
     var projectName = program.project;
     var branch = program.branch;
