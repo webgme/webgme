@@ -1,14 +1,32 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>Tutorial1</title></head>
-<body><h1>Tutorial1</h1><h2>Creating our first project</h2><div style="text-align: justify;">In
+<html><head>
+<meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>Learn to use WebGME</title>
+
+</head>
+<body>
+<h1>Lesson <span style="font-style: italic;">one</span>
+- creating our first project</h1>
+<div style="text-align: justify;">In
 this tutorial you will learn the basic features of WebGME. How to
 create projects, how to instentiate objects, how to define your own
 language and finally how to build a model according your language.
 Along the way you will also learn how to use the different features of
-our user-interface like the META&nbsp;and Composition modes.<br></div><h3>Main part of the user-interface</h3><div style="text-align: justify;">Before
+our user-interface like the META&nbsp;and Composition modes.<br>
+</div>
+<h2>Main part of the user-interface</h2>
+<div style="text-align: justify;">Before
 we begin it would be wise to define the different parts of the
 user-interface so it would be easier to understand the tutorial later.
-So let's see a snapshot with the main areas of the interface:<br></div><div style="text-align: center;"><img style="width: 600px; height: 543px;" alt="" title="Important areas of the WebGME user-interface" src="./img/ui_parts_base.png"><br></div><div style="text-align: justify;">So now we know how the different parts of the UI is called so let's begin with the real modeling!<br></div><h3>Creating an empty project</h3><div style="text-align: justify;">The
+So let's see a snapshot with the main areas of the interface:<br>
+</div>
+<div style="text-align: center;"><img style="width: 600px; height: 543px;" alt="" title="Important areas of the WebGME user-interface" src="./img/ui_parts_base.png"><br>
+</div>
+<div style="text-align: justify;">So now we know how the
+different parts of the UI is called so let's begin with the real
+modeling!<br>
+</div>
+<h2>Creating an empty project</h2>
+<div style="text-align: justify;">The
 first step on the long path of modeling is to create an empty project.
 To do this you simply have to open the project dialog which can be done
 by pushing the <img style="width: 30px; height: 22px;" alt="" src="img/glyphicons_144_folder_open.png">
@@ -22,7 +40,11 @@ get a 'ROOT' object which will be the root of your conainment hierarchy
 and you will put all of your object under it. You also get an 'FCO'
 object (stands for First Class Object) which is the root of the
 inheritance hierarchy, which means that it will be the base of all your
-objects.<br></div><br><h3>Creating the 'Language' folder</h3><div style="text-align: justify;">As in WebGME
+objects.<br>
+</div>
+<br>
+<h2>Creating the 'Language' folder</h2>
+<div style="text-align: justify;">As in WebGME
 there is no distinction between your META objects and the actual model
 objects you probably would like to separate the building blocks of your
 language from the actual models you build with them. To be able to do
@@ -49,7 +71,12 @@ the FCO to the Language object (your valid connection points become
 visible once your mouse is over an object, and when you start drawing
 your line all the possible endings of the line becomes visible). If we
 are done, we can start creating our own language objects. The current
-META mode shows the following picture:<br></div><div style="text-align: center;"><img style="width: 600px; height: 544px;" alt="" src="img/meta_language.png"><br><div style="text-align: justify;"><h3>Elements of the Signal Flow language</h3>When
+META mode shows the following picture:<br>
+</div>
+<div style="text-align: center;"><img style="width: 600px; height: 544px;" alt="" src="img/meta_language.png"><br>
+<div style="text-align: justify;">
+<h2>Elements of the Signal Flow language</h2>
+When
 we talk about signal flow we usually mean some kind of processing units
 which have some signals transmission from one another and usually they
 manipulate those signals. This means that for our language we will need
@@ -67,7 +94,9 @@ is part of our language now and it is derivate of FCO it cannot be a
 children of itself. But we can simply drag and drop the FCO three times
 onto the main panel and rename the three new object according our
 language. Now we again have our building blocks, but they also need
-rules and we must define the relation among them as well.<br><div style="text-align: center;"><img style="width: 600px; height: 574px;" alt="" src="img/sf_tut1_31.png"><br><div style="text-align: justify;">To
+rules and we must define the relation among them as well.<br>
+<div style="text-align: center;"><img style="width: 600px; height: 574px;" alt="" src="img/sf_tut1_31.png"><br>
+<div style="text-align: justify;">To
 define the rules we need to switch to our META mode. First to separate
 the different parts of our language definitions we create a new tab for
 our new rules as the existing ones are more generic and not really part
@@ -84,7 +113,8 @@ them (although they are siblings from inheritance point of view). As we
 already know how to create containment relation, we will start with
 that. Define the rule that a Processing unit can have Ports. Just as a
 remainder, you do this by selecting the containment relation and
-drawing a line from the contained object to the container.<br>Now we
+drawing a line from the contained object to the container.<br>
+Now we
 have to define that our Flow object can connect two Ports. In WebGME
 this means that the Flow object can have a pointer to a source Port and
 a destination Port. To define a pointer relation you simply choose the
@@ -97,7 +127,9 @@ pointers necessary for connection creation. Although you could create
 pointers with any name, our default visualizations look for these two
 when it comes to distinguishing between normal objects and connection
 objects. So after creating the two pointer relations our language looks
-like this:<br><div style="text-align: center;"><img style="width: 600px; height: 575px;" alt="" src="img/sf_tut_32.png"> <br><div style="text-align: justify;">Now
+like this:<br>
+<div style="text-align: center;"><img style="width: 600px; height: 575px;" alt="" src="img/sf_tut_32.png"> <br>
+<div style="text-align: justify;">Now
 we are done with the first version of our language and we are now able
 to create a model with these building blocks. Of course it can be seen
 that our language is rough-and-ready as we do not even have a container
@@ -108,4 +140,15 @@ units, like the ones that do the actual yet simple signal manipulating
 tasks and the more complex ones which can have many simple processing
 unit as a part and can implement difficult functionalities. So in the
 next tutorial we will do some fine-graining on our language and we will
-define some attributes as well.</div></div>&nbsp; </div></div></div></div></body></html>
+define some attributes as well.<br>
+<h1>Lesson <span style="font-style: italic;">two</span>
+- finegraining our language</h1>
+In this tutorial we will show how to fine-grain our riugh-and-ready
+language by defining attributes, subclasses. We also show how to create
+abstract objects.&nbsp; </div>
+</div>
+&nbsp; </div>
+</div>
+</div>
+</div>
+</body></html>
