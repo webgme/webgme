@@ -1,13 +1,14 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>Tutorial1</title></head><body><h1>Tutorial1</h1><h2>Creating our first project</h2>In
+<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>Tutorial1</title></head>
+<body><h1>Tutorial1</h1><h2>Creating our first project</h2><div style="text-align: justify;">In
 this tutorial you will learn the basic features of WebGME. How to
 create projects, how to instentiate objects, how to define your own
 language and finally how to build a model according your language.
 Along the way you will also learn how to use the different features of
-our user-interface like the META&nbsp;and Composition modes.<br><h3>Main part of the user-interface</h3>Before
+our user-interface like the META&nbsp;and Composition modes.<br></div><h3>Main part of the user-interface</h3><div style="text-align: justify;">Before
 we begin it would be wise to define the different parts of the
 user-interface so it would be easier to understand the tutorial later.
-So let's see a snapshot with the main areas of the interface:<br><img style="width: 1000px; height: 905px;" alt="" title="Important areas of the WebGME user-interface" src="./img/ui_parts_base.png"><br>So now we know how the different parts of the UI is called so let's begin with the real modeling!<br><h3>Creating an empty project</h3>The
+So let's see a snapshot with the main areas of the interface:<br></div><div style="text-align: center;"><img style="width: 600px; height: 543px;" alt="" title="Important areas of the WebGME user-interface" src="./img/ui_parts_base.png"><br></div><div style="text-align: justify;">So now we know how the different parts of the UI is called so let's begin with the real modeling!<br></div><h3>Creating an empty project</h3><div style="text-align: justify;">The
 first step on the long path of modeling is to create an empty project.
 To do this you simply have to open the project dialog which can be done
 by pushing the <img style="width: 30px; height: 22px;" alt="" src="img/glyphicons_144_folder_open.png">
@@ -21,7 +22,7 @@ get a 'ROOT' object which will be the root of your conainment hierarchy
 and you will put all of your object under it. You also get an 'FCO'
 object (stands for First Class Object) which is the root of the
 inheritance hierarchy, which means that it will be the base of all your
-objects.<br><br><h3>Creating the 'Language' folder</h3>As in WebGME
+objects.<br></div><br><h3>Creating the 'Language' folder</h3><div style="text-align: justify;">As in WebGME
 there is no distinction between your META objects and the actual model
 objects you probably would like to separate the building blocks of your
 language from the actual models you build with them. To be able to do
@@ -48,4 +49,63 @@ the FCO to the Language object (your valid connection points become
 visible once your mouse is over an object, and when you start drawing
 your line all the possible endings of the line becomes visible). If we
 are done, we can start creating our own language objects. The current
-META mode shows the following picture:<br><img style="width: 1000px; height: 906px;" alt="" src="img/meta_language.png"></body></html>
+META mode shows the following picture:<br></div><div style="text-align: center;"><img style="width: 600px; height: 544px;" alt="" src="img/meta_language.png"><br><div style="text-align: justify;"><h3>Elements of the Signal Flow language</h3>When
+we talk about signal flow we usually mean some kind of processing units
+which have some signals transmission from one another and usually they
+manipulate those signals. This means that for our language we will need
+a 'Processing' object, a 'Flow' object which represents the connection
+between the processing units and some kind of 'Port' which shows the
+source and the destination of flows as a processing unit can receive
+signals from different sources and can provide signals towards
+different targets. To achieve this we will create the three objects the
+same way we created our Language folder. First we select the
+Composition mode, than we navigate to our Language folder on the object
+browser. We see a totally blank main panel as currently the Language
+folder does not have any children. In the parts panel we see the usual
+FCO and a grayed Language object because although the Language object
+is part of our language now and it is derivate of FCO it cannot be a
+children of itself. But we can simply drag and drop the FCO three times
+onto the main panel and rename the three new object according our
+language. Now we again have our building blocks, but they also need
+rules and we must define the relation among them as well.<br><div style="text-align: center;"><img style="width: 600px; height: 574px;" alt="" src="img/sf_tut1_31.png"><br><div style="text-align: justify;">To
+define the rules we need to switch to our META mode. First to separate
+the different parts of our language definitions we create a new tab for
+our new rules as the existing ones are more generic and not really part
+of the Signal Flow language. To create a new tab in the META mode you
+have to push the <img style="width: 20px; height: 20px;" alt="" src="img/glyphicons_432_plus.png">
+button on the main panel's toolbar, then rename the 'New sheet' to your
+liking (to rename a sheet at any time you just simply have to double
+click on its name and an in-place editor will start). Now you can use
+the known method of dragging your objects from the object browser. You
+can notice that unlike the first time when we created the Language
+object there is no automatic inheritance relation on the sheet which is
+correct as these three object doesn't have inheritance relation among
+them (although they are siblings from inheritance point of view). As we
+already know how to create containment relation, we will start with
+that. Define the rule that a Processing unit can have Ports. Just as a
+remainder, you do this by selecting the containment relation and
+drawing a line from the contained object to the container.<br>Now we
+have to define that our Flow object can connect two Ports. In WebGME
+this means that the Flow object can have a pointer to a source Port and
+a destination Port. To define a pointer relation you simply choose the
+pointer relation type and draw a line from the owner of the relation to
+the target of the relation (so in our case from the Flow to the Port).
+Once you done with the drawing a pop-up dialog appears where you can
+give name to the pointer relation. There is two predefined name for
+pointers, 'src' and 'dst'. They represent the source and destination
+pointers necessary for connection creation. Although you could create
+pointers with any name, our default visualizations look for these two
+when it comes to distinguishing between normal objects and connection
+objects. So after creating the two pointer relations our language looks
+like this:<br><div style="text-align: center;"><img style="width: 600px; height: 575px;" alt="" src="img/sf_tut_32.png"> <br><div style="text-align: justify;">Now
+we are done with the first version of our language and we are now able
+to create a model with these building blocks. Of course it can be seen
+that our language is rough-and-ready as we do not even have a container
+object which would represent our model object (so we have to define our
+processing units directly under the ROOT object) and we know that it
+would be good if we would be able to have different kind of processing
+units, like the ones that do the actual yet simple signal manipulating
+tasks and the more complex ones which can have many simple processing
+unit as a part and can implement difficult functionalities. So in the
+next tutorial we will do some fine-graining on our language and we will
+define some attributes as well.</div></div>&nbsp; </div></div></div></div></body></html>
