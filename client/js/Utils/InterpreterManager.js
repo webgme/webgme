@@ -37,7 +37,7 @@ define(['core/core', 'plugin/PluginManagerBase'], function (Core, PluginManagerB
 //    };
 
     var getInterpreter = function(name,callback){
-        require(['/interpreters/'+name+'/'+name],
+        requirejs(['/plugin/'+name+'/'+name+'/'+name],
             function(InterpreterClass){
                 callback(null, InterpreterClass);
             },

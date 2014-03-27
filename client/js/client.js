@@ -13,7 +13,7 @@ define([
     'coreclient/import',
     'coreclient/copyimport',
     '/listAllDecorators',
-    '/listAllInterpreters'
+    '/listAllPlugins'
 ],
     function (
         ASSERT,
@@ -30,7 +30,7 @@ define([
         MergeImport,
         Import,
         AllDecorators,
-        AllInterpreters
+        AllPlugins
         ) {
 
         var ROOT_PATH = '';
@@ -2157,7 +2157,7 @@ define([
                 var valids = _nodes[ROOT_PATH] ? _core.getRegistry(_nodes[ROOT_PATH].node,'validPlugins') || "" : "";
                 valids = valids.split(" ");
                 for(var i=0; i<valids.length;i++){
-                    if(AllInterpreters.indexOf(valids[i]) !== -1){
+                    if(AllPlugins.indexOf(valids[i]) !== -1){
                         names.push(valids[i]);
                     }
                 }
