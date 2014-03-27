@@ -11,7 +11,7 @@
  }
  */
 
-var main = function (CONFIG) {
+var main = function(CONFIG) {
     // main code
     var requirejs = require("requirejs");
     var program = require('commander');
@@ -23,6 +23,7 @@ var main = function (CONFIG) {
         nodeRequire: require,
         baseUrl: requirejsBase
     });
+
 
 
     program.option('-c, --config <name>', 'Configuration file');
@@ -45,6 +46,17 @@ var main = function (CONFIG) {
         for (var key in commanlineConfig) {
             CONFIG[key] = commanlineConfig[key];
         }
+    }
+
+    if (CONFIG.plugins && CONFIG.plugins.basePath) {
+
+        requirejs.config({
+            nodeRequire: require,
+            paths: {
+                'plugins': path.relative(requirejsBase, path.resolve(CONFIG.plugins.basePath))
+            },
+            baseUrl: requirejsBase
+        });
     }
 
 
@@ -77,28 +89,18 @@ var main = function (CONFIG) {
     var WebGME = require('../webgme');
 
 
+
     var Core = WebGME.core,
         Storage = WebGME.serverUserStorage;
-    var storage = new Storage({'host': config.host, 'port': config.port, 'database': config.database});
+    var storage = new Storage({'host':config.host, 'port':config.port, 'database':config.database});
 
     var plugins = {};
     plugins[pluginName] = Plugin;
 
-    storage.openDatabase(function (err) {
-        console.log('database is open');
+    var pluginManager = new PluginManager(storage, Core, plugins);
 
-        if (!err) {
-            storage.openProject(config.project, function (err, project) {
-                if (!err) {
-
-                    var pluginManager = new PluginManager(project, Core, plugins);
-
-                    pluginManager.executePlugin(pluginName, config, function (err, result) {
-                        console.log(result);
-                    });
-                }
-            });
-        }
+    pluginManager.executePlugin(pluginName, config, function (err, result) {
+        console.log(result);
     });
 };
 
