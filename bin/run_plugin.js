@@ -94,7 +94,7 @@ var main = function (CONFIG) {
             if (!found) {
                 try {
                     var items = fs.readdirSync(CONFIG.pluginBasePaths[j]);
-                    if(items.indexOf(pluginNames[i] !== -1)){
+                    if(items.indexOf(pluginNames[i]) !== -1){
                         pluginPaths['plugin/' + pluginNames[i]] = path.relative(requirejsBase,path.resolve(CONFIG.pluginBasePaths[j]));
                         found = true;
                     }
