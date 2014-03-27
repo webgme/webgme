@@ -10,27 +10,62 @@
  "branch": <string> the name of the selected branch
  }
  */
+var fs = require('fs');
+var path = require('path');
+var requirejs = require("requirejs");
+var program = require('commander');
+
+var isGoodExtraAsset = function(name,filePath){
+    try{
+        var file = fs.readFileSync(filePath+'/'+name+'.js','utf-8');
+        if(file === undefined || file === null){
+            return false;
+        } else {
+            return true;
+        }
+    } catch(e){
+        return false;
+    }
+};
+var getPluginNames = function(basePaths){
+    var names = []; //we add only the "*.js" files from the directories
+    basePaths = basePaths || [];
+    for(var i=0;i<basePaths.length;i++){
+        var additional = fs.readdirSync(basePaths[i]);
+        for(var j=0;j<additional.length;j++){
+            if(names.indexOf(additional[j]) === -1){
+                if(isGoodExtraAsset(additional[j],path.join(basePaths[i],additional[j]))){
+                    names.push(additional[j]);
+                }
+            }
+        }
+    }
+    return names;
+};
 
 var main = function (CONFIG) {
     // main code
-    var requirejs = require("requirejs");
-    var program = require('commander');
-    var path = require('path');
+
+
 
     var requirejsBase = __dirname + '/..';
 
     requirejs.config({
         nodeRequire: require,
-        baseUrl: requirejsBase
+        baseUrl: path.resolve(requirejsBase)
     });
 
 
     program.option('-c, --config <name>', 'Configuration file');
-    program.option('-p, --project <name>', 'Name of the project.', 'PetriNet');
+    program.option('-p, --project <name>', 'Name of the project.', 'uj');
     program.option('-b, --branch <name>', 'Name of the branch.', 'master');
-    program.option('-i, --pluginPath <name>', 'Path to given plugin.', '../interpreters/RootChildDuplicator/RootChildDuplicator');
+    program.option('-n, --pluginName <name><mandatory>', 'Path to given plugin.');
     program.option('-s, --selectedObjID <webGMEID>', 'ID to selected component.', '');
     program.parse(process.argv);
+
+    if(program.pluginName === undefined){
+        program.help();
+    }
 
     CONFIG = CONFIG || requirejs('bin/getconfig');
 
@@ -47,21 +82,41 @@ var main = function (CONFIG) {
         }
     }
 
-    if (CONFIG.plugins && CONFIG.plugins.basePath) {
+    //TODO setting the paths in requirejs according to our config...
+    CONFIG.pluginBasePaths = CONFIG.pluginBasePaths || [];
+    var pluginNames = getPluginNames(CONFIG.pluginBasePaths);
 
-        requirejs.config({
-            nodeRequire: require,
-            paths: {
-                'plugins': path.relative(requirejsBase, path.resolve(CONFIG.plugins.basePath))
-            },
-            baseUrl: requirejsBase
-        });
+    //we go through every plugin and we check where we are able to find the main part of it so we can set the plugin/pluginName path according that in requirejs
+    var pluginPaths = {};
+    for(var i in pluginNames) {
+        var found = false;
+        for (var j = 0; j < CONFIG.pluginBasePaths.length; j++) {
+            if (!found) {
+                try {
+                    var items = fs.readdirSync(CONFIG.pluginBasePaths[j]);
+                    if(items.indexOf(pluginNames[i] !== -1)){
+                        pluginPaths['plugin/' + pluginNames[i]] = path.relative(requirejsBase,path.resolve(CONFIG.pluginBasePaths[j]));
+                        found = true;
+                    }
+                } catch (e) {
+                    //do nothing as we will go on anyway
+                    console.log(e);
+                }
+            } else {
+                break;
+            }
+        }
     }
+
+    requirejs.config({
+        paths: pluginPaths
+    });
+
 
 
     var projectName = program.project;
     var branch = program.branch;
-    var pluginName = path.relative(requirejsBase, path.resolve(program.pluginPath));
+    var pluginName = program.pluginName;
     var selectedID = program.selectedObjID;
 
     // TODO: logging
@@ -82,7 +137,7 @@ var main = function (CONFIG) {
     var PluginManager = requirejs('plugin/PluginManagerBase');
     // TODO: move the downloader to PluginManager
 
-    var Plugin = requirejs(pluginName);
+    var Plugin = requirejs('plugin/'+pluginName+'/'+pluginName+'/'+pluginName);
 
     // FIXME: dependency does matter!
     var WebGME = require('../webgme');
@@ -96,8 +151,6 @@ var main = function (CONFIG) {
     plugins[pluginName] = Plugin;
 
     storage.openDatabase(function (err) {
-        console.log('database is open');
-
         if (!err) {
             storage.openProject(config.project, function (err, project) {
                 if (!err) {
@@ -106,9 +159,16 @@ var main = function (CONFIG) {
 
                     pluginManager.executePlugin(pluginName, config, function (err, result) {
                         console.log(result);
+
+                        project.closeProject();
+                        storage.closeDatabase();
                     });
+                } else {
+                    console.error(err);
                 }
             });
+        } else {
+            console.error(err);
         }
     });
 };
