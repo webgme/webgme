@@ -279,20 +279,32 @@ define(['logManager',
                 }
             }
 
-            self._projectNames.sort(function compare(a, b) {
-                //same read access right, sort by name
-                if (self._projectList[a].read === self._projectList[b].read) {
-                    if (a.toLowerCase() < b.toLowerCase())
-                        return -1;
-                    if (a.toLowerCase() > b.toLowerCase())
-                        return 1;
+            var getProjectUserRightSortValue = function (projectRights) {
+                var val = 0;
 
-                    // a must be equal to b
-                    return 0;
-                } else {
-                    //different read access right
-                    //read-ony goes later in the order
-                    if (self._projectList[a].read === true) {
+                if (projectRights.write === true) {
+                    val = 2;
+                } else if (projectRights.read === true) {
+                    val = 1;
+                }
+
+                return val;
+            };
+
+            //order:
+            //1: read & write
+            //2: read only
+            //3: no read at all
+            self._projectNames.sort(function compare(a, b) {
+                var userRightA = getProjectUserRightSortValue(self._projectList[a]),
+                    userRightB = getProjectUserRightSortValue(self._projectList[b]);
+
+                if (userRightA > userRightB) {
+                    return -1;
+                } else if (userRightA < userRightB) {
+                    return 1;
+                } else if (userRightA === userRightB) {
+                    if (a.toLowerCase() < b.toLowerCase()) {
                         return -1;
                     } else {
                         return 1;
@@ -357,6 +369,8 @@ define(['logManager',
         });
     };
 
+    var LI_BASE = $('<li class="center pointer"><a class="btn-env"></a>');
+    var READ_ONLY_BASE = $('<span class="ro">[READ-ONLY]</span>');
     ProjectsDialog.prototype._updateProjectNameList = function () {
         var len = this._projectNames.length,
             i,
@@ -375,7 +389,8 @@ define(['logManager',
             }
 
             if (displayProject) {
-                li = $('<li class="center pointer"><a class="btn-env">' + this._projectNames[i] + '</a>');
+                li = LI_BASE.clone();
+                li.find('a').text(this._projectNames[i]);
                 li.data(DATA_PROJECT_NAME, this._projectNames[i]);
 
                 if (this._projectNames[i] === this._activeProject) {
@@ -385,6 +400,11 @@ define(['logManager',
                 //check to see if the user has READ access to this project
                 if (this._projectList[this._projectNames[i]].read !== true) {
                     li.addClass('disabled');
+                } else {
+                    //check if user has only READ rights for this project
+                    if (this._projectList[this._projectNames[i]].write !== true) {
+                        li.find('a.btn-env').append(READ_ONLY_BASE.clone());
+                    }
                 }
 
                 this._ul.append(li);
