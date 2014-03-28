@@ -588,7 +588,7 @@ define(['logManager',
             var command = $(this).attr("command");
             self.logger.debug("Selection button clicked with command: '" + command + "'");
 
-            self.onSelectionCommandClicked(command, self._selectedElements);
+            self.onSelectionCommandClicked(command, self._selectedElements, event);
 
             event.stopPropagation();
             event.preventDefault();
