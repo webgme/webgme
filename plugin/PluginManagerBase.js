@@ -3,10 +3,15 @@
  */
 
 'use strict';
-define(['./PluginBase', './PluginContext'], function (PluginBase, PluginContext) {
+define(['./PluginBase', './PluginContext', 'logManager'], function (PluginBase, PluginContext, LogManager) {
 
     var PluginManagerBase = function (storage, Core, plugins) {
 
+        LogManager.setLogLevel(LogManager.logLevels.ALL);
+        LogManager.useColors(true);
+        // TODO: Would be nice to log to file and to console at the same time.
+        //LogManager.setFileLogPath('PluginManager.log');
+        this.logger = LogManager.create("PluginManager");
         this._Core = Core;       // webgme core is used to operate on objects
         this._storage = storage; // webgme storage
         this._plugins = plugins; // key value pair of pluginName: pluginType - plugins are already loaded/downloaded
@@ -26,6 +31,10 @@ define(['./PluginBase', './PluginContext'], function (PluginBase, PluginContext)
     };
 
     PluginManagerBase.prototype.loadMetaNodes = function (pluginContext, callback) {
+        var self = this;
+
+        this.logger.debug('Loading meta nodes');
+
         // get meta members
         var metaIDs = pluginContext.core.getMemberPaths(pluginContext.rootNode, 'MetaAspectSet');
 
@@ -46,6 +55,9 @@ define(['./PluginBase', './PluginContext'], function (PluginBase, PluginContext)
             }
 
             pluginContext.META = nameObjMap;
+
+            self.logger.debug('Meta nodes are loaded');
+
             callback(null, pluginContext);
         };
 
@@ -93,6 +105,7 @@ define(['./PluginBase', './PluginContext'], function (PluginBase, PluginContext)
         pluginContext.selected = managerConfiguration.selected;
 
         var loadCommitHashAndRun = function (commitHash) {
+            self.logger.info('Loading commit ' + commitHash);
             pluginContext.project.loadObject(commitHash, function (err, commitObj) {
                 if (!err && commitObj !== null && commitObj !== undefined) {
                     pluginContext.core.loadRoot(commitObj.root, function (err, rootNode) {
@@ -124,10 +137,10 @@ define(['./PluginBase', './PluginContext'], function (PluginBase, PluginContext)
 
         if (managerConfiguration.branchName) {
             pluginContext.project.getBranchNames(function (err, branchNames) {
-                console.log(branchNames);
+                self.logger.debug(branchNames);
+
                 if (branchNames.hasOwnProperty(managerConfiguration.branchName)) {
                     pluginContext.commitHash = branchNames[managerConfiguration.branchName];
-                    console.log(pluginContext.commitHash);
                     loadCommitHashAndRun(pluginContext.commitHash);
                 } else {
                     callback('cannot find branch', pluginContext);
@@ -141,7 +154,7 @@ define(['./PluginBase', './PluginContext'], function (PluginBase, PluginContext)
 
     PluginManagerBase.prototype.executePlugin = function (name, managerConfiguration, done) {
         var Plugin = this.getPluginByName(name);
-        var plugin = new Plugin();
+        var plugin = new Plugin(LogManager);
 
         // TODO: if automation - get last config
         var pluginConfig = Plugin.getDefaultConfig();

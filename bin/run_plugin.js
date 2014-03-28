@@ -108,11 +108,13 @@ var main = function (CONFIG) {
         }
     }
 
+    pluginPaths['logManager'] = 'common/LogManager';
+
     requirejs.config({
         paths: pluginPaths
     });
 
-
+    console.log(pluginPaths);
 
     var projectName = program.project;
     var branch = program.branch;

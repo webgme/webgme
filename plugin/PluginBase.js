@@ -5,8 +5,12 @@
 'use strict';
 define(['./PluginConfig'], function (PluginConfig) {
 
-    var PluginBase = function () {
-
+    var PluginBase = function (LogManager) {
+        if (LogManager) {
+            this.logger = LogManager.create('Plugin.PluginBase');
+        } else {
+            this.logger = console;
+        }
     };
 
     PluginBase.prototype.doInteractiveConfig = function (preconfig, callback) {
