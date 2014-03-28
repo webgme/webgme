@@ -322,27 +322,30 @@ define(['logManager',
         __app.get(/^\/plugin\/.*/,ensureAuthenticated,function(req,res){
             //first we try to give back the common plugin/modules
             res.sendfile(Path.join(CONFIG.basedir,req.path),function(err){
-                //this means that it is probably plugin/pluginName or plugin/pluginName/relativePath format so we try to look for those in our config
-                //first we check if we have the plugin registered in our config
-                var urlArray = req.url.split('/'),
-                    pluginName = urlArray[2] || null,
-                    basePath = getPluginBasePathByName(pluginName),
-                    relPath = "";
-                urlArray.shift();
-                urlArray.shift();
-                urlArray.shift();
-                relPath = urlArray.join('/');
-                if(relPath.indexOf('.js') === -1){
-                    relPath+='.js';
-                }
+                if(err){
+                    //this means that it is probably plugin/pluginName or plugin/pluginName/relativePath format so we try to look for those in our config
+                    //first we check if we have the plugin registered in our config
+                    var urlArray = req.url.split('/'),
+                        pluginName = urlArray[2] || null,
+                        basePath = getPluginBasePathByName(pluginName),
+                        relPath = "";
+                    urlArray.shift();
+                    urlArray.shift();
+                    urlArray.shift();
+                    relPath = urlArray.join('/');
+                    if(relPath.indexOf('.js') === -1){
+                        relPath+='.js';
+                    }
 
-                if(basePath && relPath){
-                    res.sendfile(Path.join(basePath,relPath),function(err){
+                    if(typeof basePath === 'string' && typeof relPath === 'string'){
+                        res.sendfile(Path.join(basePath,relPath),function(err){
+                            if(err){
+                                res.send(404);
+                            }
+                        });
+                    } else {
                         res.send(404);
-                    });
-                } else {
-                    // TODO: log basePath and relPath?
-                    res.send(404);
+                    }
                 }
             });
         });
