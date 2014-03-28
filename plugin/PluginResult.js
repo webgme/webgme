@@ -7,12 +7,30 @@ define([], function () {
 
     // result object that is serializable.
     var PluginResult = function () {
+        this.success = false;
+        this.messages = []; // array of PluginMessages
 
     };
 
-    PluginResult.prototype.success = false;
-    PluginResult.prototype.error = '';
-    // context checker results
+    PluginResult.prototype.getSuccess = function() {
+        return this.success;
+    };
+
+    /**
+     *
+     * @returns {PluginMessage[]}
+     */
+    PluginResult.prototype.getMessages = function() {
+        return this.messages;
+    };
+
+    /**
+     *
+     * @param {PluginMessage} pluginMessage
+     */
+    PluginResult.prototype.addMessage = function(pluginMessage) {
+        this.messages.push(pluginMessage);
+    };
 
     return PluginResult;
 });
