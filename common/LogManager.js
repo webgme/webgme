@@ -18,12 +18,23 @@ define([], function () {
 		"WARNING": 2,
 		"ERROR": 1,
 		"OFF": 0
-	}, logColors = {
+	},
+    logColors = {
 		"DEBUG": "90",
 		"INFO": "36",
 		"WARNING": "33",
 		"ERROR": "31"
-	}, currentLogLevel = logLevels.WARNING, useColors = false, excludedComponents = [], FS = null, logFilePath = null, logFileBuffer = [], Logger, isComponentAllowedToLog, printLogMessageToFile, logMessage;
+	},
+    currentLogLevel = logLevels.WARNING,
+    useColors = false,
+    excludedComponents = [],
+    FS = null,
+    logFilePath = null,
+    logFileBuffer = [],
+    Logger,
+    isComponentAllowedToLog,
+    printLogMessageToFile,
+    logMessage;
 
 	isComponentAllowedToLog = function (componentName) {
 		var i, excludedComponentName;
@@ -139,58 +150,66 @@ define([], function () {
 		};
 	};
 
+    var _setLogLevel = function (level) {
+        if ((level >= 0) && (level <= logLevels.ALL)) {
+            currentLogLevel = level;
+        }
+    };
+
+    var _getLogLevel = function () {
+        return currentLogLevel;
+    };
+
+    var _setFileLogPath = function (logPath) {
+        if (FS === null) {
+            try {
+                FS = require('fs');
+                if (FS.appendFile) {
+                    logFilePath = logPath;
+                }
+            } catch (e) {
+                FS = {};
+                logFilePath = null;
+            }
+        } else {
+            if (FS.appendFile) {
+                logFilePath = logPath;
+            }
+        }
+    };
+
+    var _getFileLogPath = function () {
+        return logFilePath;
+    };
+
+    var _useColors = function (enabled) {
+        if ((enabled === true) || (enabled === false)) {
+            useColors = enabled;
+        } else {
+            useColors = false;
+        }
+    };
+
+    var _excludeComponent = function (componentName) {
+        if (excludedComponents.indexOf(componentName) === -1) {
+            excludedComponents.push(componentName);
+        }
+    };
+
 	return {
 		logLevels: logLevels,
-
-		setLogLevel: function (level) {
-			if ((level >= 0) && (level <= logLevels.ALL)) {
-				currentLogLevel = level;
-			}
-		},
-
-		getLogLevel: function () {
-			return currentLogLevel;
-		},
+		setLogLevel: _setLogLevel,
+		getLogLevel: _getLogLevel,
 
 		// this function is only for server side!!!
-		setFileLogPath: function (logPath) {
-			if (FS === null) {
-				try {
-					FS = require('fs');
-					if (FS.appendFile) {
-						logFilePath = logPath;
-					}
-				} catch (e) {
-					FS = {};
-					logFilePath = null;
-				}
-			} else {
-				if (FS.appendFile) {
-					logFilePath = logPath;
-				}
-			}
-		},
+		setFileLogPath:_setFileLogPath,
+		getFileLogPath: _getFileLogPath,
 
-		getFileLogPath: function () {
-			return logFilePath;
-		},
-
-		useColors: function (enabled) {
-			if ((enabled === true) || (enabled === false)) {
-				useColors = enabled;
-			} else {
-				useColors = false;
-			}
-		},
+		useColors: _useColors,
+        excludeComponent: _excludeComponent,
 
 		create: function (componentName) {
 			return new Logger(componentName);
-		},
-
-		excludeComponent: function (componentName) {
-			if (excludedComponents.indexOf(componentName) === -1) {
-				excludedComponents.push(componentName);
-			}
 		}
 	};
 });
