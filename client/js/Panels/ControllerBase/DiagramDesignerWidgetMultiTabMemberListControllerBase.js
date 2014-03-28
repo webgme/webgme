@@ -1472,7 +1472,7 @@ define(['logManager',
             i,
             newSetID;
 
-        if (memberListContainerID &&
+        if (this._canAddTab() &&
             memberListSetsRegistryKey &&
             memberListSetsRegistryKey !== '') {
             memberListContainer = this._client.getNode(memberListContainerID);
@@ -1520,6 +1520,12 @@ define(['logManager',
             //finish transaction
             this._client.completeTransaction();
         }
+    };
+
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._canAddTab = function () {
+        var memberListContainerID = this._memberListContainerID;
+
+        return (memberListContainerID && memberListContainerID !== CONSTANTS.PROJECT_ROOT_ID);
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.getNewSetNamePrefixDesc = function () {

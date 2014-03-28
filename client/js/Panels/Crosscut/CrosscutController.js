@@ -59,6 +59,12 @@ define(['logManager',
         return nodeId;
     };
 
+    CrosscutController.prototype._canAddTab = function () {
+        var memberListContainerID = this._memberListContainerID;
+
+        return (memberListContainerID || memberListContainerID === CONSTANTS.PROJECT_ROOT_ID);
+    };
+
     CrosscutController.prototype._updateSelectedMemberListMembersTerritoryPatterns = function () {
         var currentlyDisplayedMembers = (this._selectedMemberListMembers || []).slice(0),
             actualMembers = (this._memberListMembers[this._selectedMemberListID] || []).slice(0),
@@ -748,7 +754,7 @@ define(['logManager',
             gmeID,
             gmeObj,
             componentId,
-            NON_DELETABLE_POINTERS = [CONSTANTS.POINTER_SOURCE, CONSTANTS.POINTER_TARGET],
+            NON_DELETABLE_POINTERS = [CONSTANTS.POINTER_SOURCE, CONSTANTS.POINTER_TARGET, CONSTANTS.POINTER_BASE],
             lineDesc,
             canDeletePointer,
             logger = this.logger;
@@ -792,6 +798,8 @@ define(['logManager',
                         logger.debug('deleting pointer from: ' + lineDesc.GMESrcId + ', type: ' + lineDesc.name);
                         //it's a pointer that's allowed to be deleted
                         _client.delPointer(lineDesc.GMESrcId, lineDesc.name);
+                    } else {
+                        logger.warning('can not delete pointer from: ' + lineDesc.GMESrcId + ', type: ' + lineDesc.name);
                     }
                 }
             }
