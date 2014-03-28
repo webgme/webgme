@@ -1,9 +1,12 @@
-define(['core/core', 'plugin/PluginManagerBase'], function (Core, PluginManagerBase) {
+define(['core/core',
+        'plugin/PluginManagerBase',
+        'js/Dialogs/PluginConfig/PluginConfigDialog'], function (Core,
+                                               PluginManagerBase,
+                                               PluginConfigDialog) {
     "use strict";
 
     var ClientInterpreterManager = function (client) {
         this._client = client;
-
     };
 
 //    var getContext = function(client,callback) {
@@ -72,24 +75,35 @@ define(['core/core', 'plugin/PluginManagerBase'], function (Core, PluginManagerB
 
                     var pluginManager = new PluginManagerBase(self._client.getProjectObject(), Core, plugins);
 
-                    var config = {
-                        "project": self._client.getActiveProject(),
-                        "token": "",
-                        "selected": null,
-                        "commit": self._client.getActualCommit(), //"#668b3babcdf2ddcd7ba38b51acb62d63da859d90",
-                        //"root": ""
-                        "branchName": null
-                    };
+                    pluginManager.initialize(null, function (pluginConfigs, configSaveCallback) {
+                        //#1: display config to user
+                        var d = new PluginConfigDialog();
+                        d.show(pluginConfigs, function () {
+                            //when Save&Run is clicked in the dialog
 
-                    config.selected = WebGMEGlobal.State.getActiveSelection() || [];
-                    config.selected = config.selected[0] || null;
+                            //#2: save it back and run the plugin
+                            if (configSaveCallback) {
+                                configSaveCallback(pluginConfigs);
 
-                    pluginManager.executePlugin(name, config, function (err, result) {
-                        console.log(result);
-                        callback(result);
+                                var config = {
+                                    "project": self._client.getActiveProject(),
+                                    "token": "",
+                                    "selected": null,
+                                    "commit": self._client.getActualCommit(), //"#668b3babcdf2ddcd7ba38b51acb62d63da859d90",
+                                    //"root": ""
+                                    "branchName": null
+                                };
+
+                                config.selected = WebGMEGlobal.State.getActiveSelection() || [];
+                                config.selected = config.selected[0] || null;
+
+                                pluginManager.executePlugin(name, config, function (err, result) {
+                                    console.log(result);
+                                    callback(result);
+                                });
+                            }
+                        });
                     });
-
-
                 } else {
                     //TODO generate proper result
                     callback({error:err});

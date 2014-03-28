@@ -6,19 +6,56 @@
 define(['./PluginBase', './PluginContext', 'logManager'], function (PluginBase, PluginContext, LogManager) {
 
     var PluginManagerBase = function (storage, Core, plugins) {
-
-        LogManager.setLogLevel(LogManager.logLevels.ALL);
-        LogManager.useColors(true);
-        // TODO: Would be nice to log to file and to console at the same time.
-        //LogManager.setFileLogPath('PluginManager.log');
         this.logger = LogManager.create("PluginManager");
         this._Core = Core;       // webgme core is used to operate on objects
         this._storage = storage; // webgme storage
         this._plugins = plugins; // key value pair of pluginName: pluginType - plugins are already loaded/downloaded
     };
 
-    PluginManagerBase.prototype.initialize = function (managerConfiguration, callback) {
+    PluginManagerBase.prototype.initialize = function (managerConfiguration, configCallback, callbackContext) {
+        var plugins = this._plugins;
 
+        //#1: PluginManagerBase should load the plugins
+
+        //#2: PluginManagerBase iterates through each plugin and collects the config data
+        var pluginConfigs = {};
+
+        for (var p in plugins) {
+            if (plugins.hasOwnProperty(p)) {
+                pluginConfigs[p] = plugins[p].getConfigStructure();
+            }
+        }
+
+        if (configCallback) {
+            configCallback.call(callbackContext, pluginConfigs, function (updatedPluginConfig) {
+                var pluginConfigStructure,
+                    len,
+                    pConfig,
+                    cName,
+                    cValue;
+
+                for (var p in updatedPluginConfig) {
+                    if (updatedPluginConfig.hasOwnProperty(p)) {
+                        pluginConfigStructure = updatedPluginConfig[p];
+
+                        //build the config key-value pairs of the plugin
+                        //from the name and value of the config structure
+                        pConfig = {};
+
+                        len = pluginConfigStructure.length;
+                        while (len--) {
+                            cName = pluginConfigStructure[len].name;
+                            cValue = pluginConfigStructure[len].value;
+
+                            pConfig[cName] = cValue;
+                        }
+
+                        //save it back to the plugin
+                        plugins[p].setCurrentConfig(pConfig);
+                    }
+                }
+            });
+        }
     };
 
     /**
@@ -167,8 +204,16 @@ define(['./PluginBase', './PluginContext', 'logManager'], function (PluginBase, 
             } else {
                 pluginContext.setConfig(pluginConfig);
 
+                //set logging level at least to INFO level since the plugins write messages with INFO level onto the console
+                var logLevel = LogManager.getLogLevel();
+                LogManager.setLogLevel(LogManager.logLevels.INFO);
+                // TODO: Would be nice to log to file and to console at the same time.
+                //LogManager.setFileLogPath('PluginManager.log');
+
                 // TODO: provide implementation here
                 plugin.main(pluginContext, function (err, result) {
+                    //set loglevel back to previous value
+                    LogManager.setLogLevel(logLevel);
                     done(err, result);
                 });
             }
