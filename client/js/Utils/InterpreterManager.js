@@ -78,12 +78,12 @@ define(['core/core',
                     pluginManager.initialize(null, function (pluginConfigs, configSaveCallback) {
                         //#1: display config to user
                         var d = new PluginConfigDialog();
-                        d.show(pluginConfigs, function () {
+                        d.show(pluginConfigs, function (updatedConfig) {
                             //when Save&Run is clicked in the dialog
 
                             //#2: save it back and run the plugin
                             if (configSaveCallback) {
-                                configSaveCallback(pluginConfigs);
+                                configSaveCallback(updatedConfig);
 
                                 var config = {
                                     "project": self._client.getActiveProject(),

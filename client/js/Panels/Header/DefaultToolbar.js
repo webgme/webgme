@@ -122,6 +122,9 @@ define(['clientUtil',
         fillMenuItems = function () {
             var pluginNames = client.getAvailableInterpreterNames();
 
+            //TODO: remove
+            pluginNames.push('ChildrenConfig');
+
             //clear dropdown
             $btnExecutePlugin.clear();
 

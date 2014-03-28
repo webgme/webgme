@@ -28,30 +28,10 @@ define(['./PluginBase', './PluginContext', 'logManager'], function (PluginBase, 
 
         if (configCallback) {
             configCallback.call(callbackContext, pluginConfigs, function (updatedPluginConfig) {
-                var pluginConfigStructure,
-                    len,
-                    pConfig,
-                    cName,
-                    cValue;
-
                 for (var p in updatedPluginConfig) {
                     if (updatedPluginConfig.hasOwnProperty(p)) {
-                        pluginConfigStructure = updatedPluginConfig[p];
-
-                        //build the config key-value pairs of the plugin
-                        //from the name and value of the config structure
-                        pConfig = {};
-
-                        len = pluginConfigStructure.length;
-                        while (len--) {
-                            cName = pluginConfigStructure[len].name;
-                            cValue = pluginConfigStructure[len].value;
-
-                            pConfig[cName] = cValue;
-                        }
-
                         //save it back to the plugin
-                        plugins[p].setCurrentConfig(pConfig);
+                        plugins[p].setCurrentConfig(updatedPluginConfig[p]);
                     }
                 }
             });
