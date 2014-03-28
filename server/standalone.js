@@ -336,11 +336,12 @@ define(['logManager',
                     relPath+='.js';
                 }
 
-                if(basePath !== null){
+                if(basePath && relPath){
                     res.sendfile(Path.join(basePath,relPath),function(err){
                         res.send(404);
                     });
                 } else {
+                    // TODO: log basePath and relPath?
                     res.send(404);
                 }
             });
