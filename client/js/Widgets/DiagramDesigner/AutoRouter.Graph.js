@@ -226,7 +226,7 @@ define(['logManager',
         this._addEdges(path);
 
         if(CONSTANTS.DEBUG){
-            AssertValidPath(path);
+            this._assertValidPath(path);
         }
 
     };
@@ -757,11 +757,12 @@ define(['logManager',
                         pts = this._hugChildren( bufferObject, start, dir1, dir2, 
                                 //exitCondition is when you get to the dir1 side of the box or when you pass end
                                 function( pt, bo ) { return (pt.x === end.x || pt.y === end.y) && !UTILS.isLineClipRects(pt, end, bo.box); } ); //If you pass the endpoint, you need to have a way out.
-                        if( pts !== null ){
-                            //Add new points to the current list 
-                            ret.setArPointList( ret.concat(pts));
-                            retend += pts.length;
-                            ret.push([new ArPoint(start)]);
+                        if( pts !== null ){//There is a path from start -> end
+                            if( pts.length ){//Add new points to the current list 
+                                ret.setArPointList( ret.concat(pts));
+                                retend += pts.length;
+                                ret.push([new ArPoint(start)]);
+                            }
                             start.assign(end);
 
                         }else{ //Force to the endpoint
@@ -2192,7 +2193,7 @@ define(['logManager',
 
         while(i < this.paths.length)
         {
-            assertValidPath(paths[i]);
+            this._assertValidPath(paths[i]);
             ++i;
         }
     };
@@ -2204,7 +2205,7 @@ define(['logManager',
         assert (this.boxes[box.getID()] !== undefined, "ARGraph.assertValidBox: this.boxes[box.getID()] !== undefined FAILED");
     };
 
-    AutoRouterGraph.prototype.assertValidPath = function(path){
+    AutoRouterGraph.prototype._assertValidPath = function(path){
         path.assertValid();
         assert( path.getOwner().equals(this), "ARGraph.assertValidPath: path.getOwner().equals(this) FAILED");
 
