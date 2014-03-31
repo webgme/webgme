@@ -335,21 +335,19 @@ define(['logManager',
         assert( UTILS.getPointCoord (point, dir) != stophere, "ArGraph.goToNextBufferBox: UTILS.getPointCoord (point, dir) != stophere FAILED" );
 
         var boxby = null,
-            iter = 0,
+            i = -1,
             boxRect;
 
-        while (iter < this.bufferBoxes.length)
+        while(++i < this.bufferBoxes.length)
         {
-            boxRect = this.bufferBoxes[iter].box;
+            boxRect = this.bufferBoxes[i].box;
 
             if( !UTILS.isPointInDirFrom(point, boxRect, dir) && //Add support for entering the parent box
                     UTILS.isPointBetweenSides(point, boxRect, dir) &&     // if it will not put the point in a corner (relative to dir2)
-                    UTILS.isCoordInDirFrom(stophere, UTILS.getChildRectOuterCoordFrom (this.bufferBoxes[iter], dir, point).coord, dir) ){ //Return extreme (parent box) for this comparison
-                stophere = UTILS.getChildRectOuterCoordFrom (this.bufferBoxes[iter], dir, point).coord;
-                boxby = this.bufferBoxes[iter]; 
+                    UTILS.isCoordInDirFrom(stophere, UTILS.getChildRectOuterCoordFrom (this.bufferBoxes[i], dir, point).coord, dir) ){ //Return extreme (parent box) for this comparison
+                stophere = UTILS.getChildRectOuterCoordFrom (this.bufferBoxes[i], dir, point).coord;
+                boxby = this.bufferBoxes[i]; 
             }
-
-            ++iter;
         }
 
         if(UTILS.isHorizontal (dir))
@@ -673,6 +671,7 @@ define(['logManager',
         var thestart = new ArPoint( start ), 
             retend = ret.getLength(),
             bufferObject,
+            self = this,
             box,
             rect,
             dir1, 
@@ -736,21 +735,57 @@ define(['logManager',
                         start.x = end.x;
                     else
                         start.y = end.y;
-                }else if( bufferObject.box.ptInRect( end ) && !flipped ){
-                    oldEnd = new ArPoint(end);
-                    ret2 = new ArPointListPath();
-                    i;
+                }else if( bufferObject.box.ptInRect( end )){
+                    if( !flipped ){
+                        oldEnd = new ArPoint(end);
+                        ret2 = new ArPointListPath();
+                        i;
 
-                    this._connectPoints(ret2, end, start, hintenddir, dir1, true);
-                    i = ret2.getLength() - 1;
+                        this._connectPoints(ret2, end, start, hintenddir, dir1, true);
+                        i = ret2.getLength() - 1;
 
-                    while( i-- > 1){
-                        ret.push( ret2.get(i) );
+                        while( i-- > 1){
+                            ret.push( ret2.get(i) );
+                        }
+
+                        assert( start.equals(end), "ArGraph.connectPoints: start.equals(end) FAILED");
+                        old = CONSTANTS.EMPTY_POINT;
+                        start = end = oldEnd;
+                    }else{ //If we have flipped and both points are in the same bufferbox
+                       //We will hugchildren until we can connect both points. 
+                       //If we can't, force it
+                        pts = this._hugChildren( bufferObject, start, dir1, dir2, 
+                                //exitCondition is when you get to the dir1 side of the box or when you pass end
+                                function( pt, bo ) { return (pt.x === end.x || pt.y === end.y) && !UTILS.isLineClipRects(pt, end, bo.box); } ); //If you pass the endpoint, you need to have a way out.
+                        if( pts !== null ){
+                            //Add new points to the current list 
+                            ret.setArPointList( ret.concat(pts));
+                            retend += pts.length;
+                            ret.push([new ArPoint(start)]);
+                            start.assign(end);
+
+                        }else{ //Force to the endpoint
+                            assert( UTILS.isRightAngle (dir1), "ARGraph.connectPoints: UTILS.isRightAngle (dir1) FAILED");
+
+                            if(UTILS.isHorizontal(dir1))
+                                start.x = end.x;
+                            else
+                                start.y = end.y;
+
+                            ret.push([new ArPoint(start)]);
+
+                            if(!UTILS.isHorizontal(dir1))
+                                start.x = end.x;
+                            else
+                                start.y = end.y;
+
+                            ret.push([new ArPoint(start)]);
+
+                            assert(start.equals(end));//We are forcing out so these should be the same now
+
+                        }
+                            assert(!start.equals(old));//We are forcing out so these should be the same now
                     }
-
-                    assert( start.equals(end), "ArGraph.connectPoints: start.equals(end) FAILED");
-                    old = CONSTANTS.EMPTY_POINT;
-                    start = end = oldEnd;
                 } else if( UTILS.isPointInDirFrom(end, rect, dir2) )
                 {
                     assert( !UTILS.isPointInDirFrom(start, rect, dir2), "ARGraph.connectPoints: !UTILS.isPointInDirFrom(start, rect, dir2) FAILED");
@@ -850,7 +885,7 @@ define(['logManager',
                         pts = this._hugChildren( bufferObject, start, dir1, dir2, 
                                 //exitCondition is when you get to the dir1 side of the box or when you pass end
                                 function( pt, bo ) { return UTILS.getPointCoord( pt, dir1 ) === UTILS.getRectOuterCoord( bo.box, dir1) 
-                                || ( UTILS.isPointInDirFrom(pt, end, dir1)); } ); 
+                                || ( UTILS.isPointInDirFrom(pt, end, dir1) ); } ); //If you pass the endpoint, you need to have a way out.
                         if( pts !== null ){
 
                             //Add new points to the current list 
@@ -875,15 +910,16 @@ define(['logManager',
 
         ret.push([end]);
 
+        if(CONSTANTS.DEBUG)
+            ret.assertValid();//Check that all edges are horizontal are vertical
     };
 
     AutoRouterGraph.prototype._disconnectAll = function (){
-        var iter = 0;
+        var i = -1;
 
-        while(iter < this.paths.length)
+        while(++i < this.paths.length)
         {
-            this.disconnect(paths[iter]);
-            ++iter;
+            this.disconnect(paths[i]);
         }
     };
 
@@ -898,12 +934,12 @@ define(['logManager',
     };
 
     AutoRouterGraph.prototype._disconnectPathsClipping = function (rect){
-        var iter = this.paths.length;
+        var i = this.paths.length;
 
-        while(iter--)
+        while(i--)
         {
-            if( this.paths[iter].isPathClip(rect) )
-                this.disconnect(this.paths[iter]);
+            if( this.paths[i].isPathClip(rect) )
+                this.disconnect(this.paths[i]);
         }
     };
 

@@ -267,6 +267,15 @@ define(['./AutoRouter.Constants',
         return y1 <= y && y <= y2;
     };
 
+    var _isLineClipRects = function (start, end, rects){
+        var i = rects.length;
+        while(i--){
+            if(_isLineClipRect(start, end, rects[i]))
+                return true;
+        }
+        return false;
+    };
+
     var _isLineClipRect = function (start, end, rect){
         if( rect.ptInRect(start) || rect.ptInRect(end) )
             return true;
@@ -409,16 +418,16 @@ define(['./AutoRouter.Constants',
 
     var _getChildRectOuterCoordFrom = function (bufferObject, inDir, point){ //Point travels inDir until hits child box
         var children = bufferObject.children,
-            i = 0,
+            i = -1,
             box = null,
             res = _getRectOuterCoord(bufferObject.box, inDir);
 
         assert( _isRightAngle(inDir), "getChildRectOuterCoordFrom: _isRightAngle(inDir) FAILED"); 
         //The next assert fails if the point is in the opposite direction of the rectangle that it is checking.
         // e.g. The point is checking when it will hit the box from the right but the point is on the left
-        assert( !_isPointInDirFrom(point, bufferObject.box, (inDir)), "getChildRectOuterCoordFrom: !isPointInDirFrom(point, bufferObject.box.getRect(), (inDir)) FAILED"); 
+        assert( !_isPointInDirFrom(point, bufferObject.box, inDir), "getChildRectOuterCoordFrom: !isPointInDirFrom(point, bufferObject.box.getRect(), (inDir)) FAILED"); 
 
-        while( i < children.length ){
+        while( ++i < children.length ){
 
             if( _isPointInDirFrom( point, children[i], _reverseDir(inDir) ) && 
                     _isPointBetweenSides(point, children[i], inDir) &&
@@ -427,7 +436,6 @@ define(['./AutoRouter.Constants',
                 res = _getRectOuterCoord( children[i], _reverseDir(inDir) );
                 box = children[i];
             }
-            ++i;
         }
 
         return { "box": box , "coord": res };
@@ -882,6 +890,7 @@ define(['./AutoRouter.Constants',
              intersect : _intersect, 
              getLineClipRectIntersect:  _getLineClipRectIntersect,
              isLineClipRect : _isLineClipRect, 
+             isLineClipRects : _isLineClipRects, 
              //isLineMeetVLine : _isLineMeetVLine, 
              //isLineMeetHLine : _isLineMeetHLine, 
              isPointNearLine : _isPointNearLine, 
