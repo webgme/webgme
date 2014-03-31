@@ -28,6 +28,7 @@ define(['js/Utils/GMEConcepts',
 
     SetEditorController.prototype.getOrderedMemberListInfo = function (memberListContainerObject) {
         var result = [],
+            aspects = this._client.getMetaAspectNames(this._memberListContainerID) || [],
             setNames = memberListContainerObject.getSetNames() || [],
             manualAspectsRegistry = memberListContainerObject.getRegistry(REGISTRY_KEYS.CROSSCUTS) || [],
             manualAspectSetNames = [],
@@ -38,7 +39,7 @@ define(['js/Utils/GMEConcepts',
             manualAspectSetNames.push(element.SetID);
         });
 
-        setNames = _.difference(setNames, manualAspectSetNames);
+        setNames = _.difference(setNames, manualAspectSetNames, aspects);
 
         len = setNames.length;
         while (len--) {
