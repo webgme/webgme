@@ -112,10 +112,10 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
 
             _socket.set('authorization',function(data,accept){
                 //either the html header contains some webgme signed cookie with the sessionID
-                // or the data has a webgme member which should also contain the sessionID - currently the same as the cookie
+                // or the data has a webGMESession member which should also contain the sessionID - currently the same as the cookie
 
                 if (options.session === true){
-                    var sessionID = data.webgme;
+                    var sessionID = data.webGMESession;
                     if(sessionID === null || sessionID === undefined){
                         if(data.headers.cookie){
                             var cookie = URL.parseCookie(data.headers.cookie);
@@ -376,6 +376,9 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
 
                 //worker commands
                 socket.on('simpleRequest',function(parameters,callback){
+                    if(socket.handshake){
+                        parameters.webGMESessionId = socket.handshake.webGMESession || null;
+                    }
                     _workerManager.request(parameters,callback);
                 });
 
@@ -393,7 +396,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 });
             });
 
-            _workerManager = new SWM({basedir:options.basedir,mongoip:options.host,mongoport:options.port,mongodb:options.database,intoutdir:options.intoutdir});
+            _workerManager = new SWM({basedir:options.basedir,mongoip:options.host,mongoport:options.port,mongodb:options.database,intoutdir:options.intoutdir,pluginBasePaths:options.pluginBasePaths});
         }
 
         function close(){
