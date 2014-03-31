@@ -13,14 +13,14 @@ define(['clientUtil',
     'js/Dialogs/Projects/ProjectsDialog',
     'js/Dialogs/Commit/CommitDialog',
     'js/Dialogs/ProjectRepository/ProjectRepositoryDialog',
-    'text!html/Dialogs/InterpreterResults/InterpreterResultsDialog.html'], function (util,
-                                                 CONSTANTS,
-                                                                       METAAspectHelper,
-                                                                       ExportManager,
-                                                                       ProjectsDialog,
-                                                                       CommitDialog,
-                                                                       ProjectRepositoryDialog,
-                                                                       InterpreterResultsDialogTemplate) {
+    './PluginToolbar'], function (util,
+                                CONSTANTS,
+                               METAAspectHelper,
+                               ExportManager,
+                               ProjectsDialog,
+                               CommitDialog,
+                               ProjectRepositoryDialog,
+                               PluginToolbar) {
 
     var DefaultToolbar;
 
@@ -97,111 +97,10 @@ define(['clientUtil',
                 }
             }});
 
-        this._createInterpreterControls();
+        new PluginToolbar(this._client);
 
         //TODO: remove
         //this._createDummyControls();
-    };
-
-    DefaultToolbar.prototype._createInterpreterControls = function () {
-        var toolbar = WebGMEGlobal.Toolbar,
-            fillMenuItems,
-            $btnExecutePlugin,
-            executePlugin,
-            client = this._client,
-            unreadResults = 0,
-            BADGE_CLASS = 'label',
-            showResults,
-            setBadgeText,
-            results = [];
-
-        setBadgeText = function (text) {
-            $btnExecutePlugin.el.find('.' + BADGE_CLASS).text(text);
-        };
-
-        fillMenuItems = function () {
-            var pluginNames = client.getAvailableInterpreterNames();
-
-            //clear dropdown
-            $btnExecutePlugin.clear();
-
-            //add read menu if needed
-            if (results.length > 0) {
-                $btnExecutePlugin.addButton({
-                    "title" : 'Show results...',
-                    "text" : 'Show results...',
-                    "clickFn": function () {
-                        showResults();
-                    }
-                });
-                $btnExecutePlugin.addDivider();
-            }
-
-            //add plugin names
-            for(var i = 0; i < pluginNames.length ; i++){
-                $btnExecutePlugin.addButton({
-                    "title" : 'Run ' + pluginNames[i],
-                    "text" : 'Run ' + pluginNames[i],
-                    "data" : {name:pluginNames[i]},
-                    "clickFn": function (data) {
-                        executePlugin(data.name);
-                    }
-                });
-            }
-        };
-
-        executePlugin = function( name ){
-            WebGMEGlobal.InterpreterManager.run(name,function(result){
-                results.splice(0, 0, result);
-                unreadResults += 1;
-                if (unreadResults > 0) {
-                    setBadgeText(unreadResults);
-                }
-            });
-        };
-
-        showResults = function () {
-            var dialog = $(InterpreterResultsDialogTemplate),
-                singleMsg,
-                body = dialog.find('.modal-body'),
-                UNREAD_CSS = 'unread';
-
-            for (var i = 0; i < results.length; i += 1) {
-                singleMsg = $('<div/>');
-                if (i < unreadResults) {
-                    singleMsg.addClass(UNREAD_CSS);
-                }
-
-                singleMsg.text(JSON.stringify( results[i] ));
-                body.append(singleMsg);
-            }
-
-            unreadResults = 0;
-            setBadgeText('');
-
-            dialog.modal('show');
-
-            dialog.find('.btn-clear').on('click', function () {
-                body.empty();
-                results = [];
-            });
-        };
-
-        /************** EXECUTE PLUG-IN BUTTON ****************/
-        $btnExecutePlugin = toolbar.addDropDownButton(
-            { "title": "Execute plug-in",
-                "icon": "icon-play",
-                "menuClass": "no-min-width",
-                'clickFn': function () {
-                    fillMenuItems();
-                }
-            });
-
-        $btnExecutePlugin.el.find('a > i').css({'margin-top': '0px'});
-
-        var badge = $('<span class="label label-info"></span>');
-        badge.insertAfter($btnExecutePlugin.el.find('a > i'));
-        badge.css('margin-left', '3px');
     };
 
     DefaultToolbar.prototype._createDummyControls = function () {

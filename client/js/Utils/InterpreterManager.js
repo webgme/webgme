@@ -98,7 +98,7 @@ define(['core/core',
                                 config.selected = config.selected[0] || null;
 
                                 pluginManager.executePlugin(name, config, function (err, result) {
-                                    console.log(result);
+                                    //console.log(result);
                                     callback(result);
                                 });
                             }
