@@ -12,6 +12,7 @@ define([], function () {
         this.selectedObj = selectedObj;
         this.activeSelection = activeSelection;
         this.message = message;
+        // TODO: messsage type ERROR, WARNING, INFO, DEBUG
     };
 
     PluginMessage.prototype.serialize = function () {
