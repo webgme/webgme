@@ -45,7 +45,9 @@ require.config({
         "loaderProgressBar": "js/Loader/LoaderProgressBar",
 
         "codemirror": 'lib/codemirror/codemirror.amd',
-        "jquery-csszoom": 'lib/jquery/jquery.csszoom'
+        "jquery-csszoom": 'lib/jquery/jquery.csszoom',
+
+        "jszip": 'lib/jszip/jszip'
     },
     shim: {
         'jquery-ui': ['jquery'],

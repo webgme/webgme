@@ -1,12 +1,21 @@
 define(['core/core',
         'plugin/PluginManagerBase',
-        'js/Dialogs/PluginConfig/PluginConfigDialog'], function (Core,
+        'js/Dialogs/PluginConfig/PluginConfigDialog',
+        'plugin/PluginFSClient'], function (Core,
                                                PluginManagerBase,
-                                               PluginConfigDialog) {
+                                               PluginConfigDialog,
+                                               PluginFS) {
     "use strict";
 
     var ClientInterpreterManager = function (client) {
         this._client = client;
+
+        // Test PluginFS
+//        var pluginFS = new PluginFS();
+//        pluginFS.createArtifact('output');
+//        pluginFS.addFile('log.txt', 'Hello world\r\nNew line here...\r\n');
+//        pluginFS.saveArtifact();
+
     };
 
 //    var getContext = function(client,callback) {
