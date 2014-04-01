@@ -23,7 +23,8 @@ define(['logManager',
         GME_ATOM_CLASS = "gme-atom",
         GME_CONNECTION_CLASS = "gme-connection",
         GME_ROOT_ICON = "gme-root",
-        projectRootID = CONSTANTS.PROJECT_ROOT_ID;
+        projectRootID = CONSTANTS.PROJECT_ROOT_ID,
+        DEFAULT_VISUALIZER = 'ModelEditor';
 
     var TreeBrowserControl = function (client, treeBrowser) {
 
@@ -228,7 +229,11 @@ define(['logManager',
         //called when the user double-cliked on a node in the tree
         treeBrowser.onNodeDoubleClicked = function (nodeId) {
             logger.debug("Firing onNodeDoubleClicked with nodeId: " + nodeId);
-            WebGMEGlobal.State.setActiveObjectActiveAspect(nodeId, CONSTANTS.ASPECT_ALL);
+            var settings = {};
+            settings[CONSTANTS.STATE_ACTIVE_OBJECT] = nodeId;
+            settings[CONSTANTS.STATE_ACTIVE_ASPECT] = CONSTANTS.ASPECT_ALL;
+            settings[CONSTANTS.STATE_ACTIVE_VISUALIZER] = DEFAULT_VISUALIZER;
+            WebGMEGlobal.State.set(settings);
         };
 
         //called from the TreeBrowserWidget when a create function is called from context menu
