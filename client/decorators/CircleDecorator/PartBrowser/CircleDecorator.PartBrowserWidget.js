@@ -65,11 +65,13 @@ define(['js/Constants',
     CircleDecoratorPartBrowserWidget.prototype._updateName = function () {
         CircleDecoratorCore.prototype._updateName.call(this);
 
-        var nameWidth = this.skinParts.$name.outerWidth();
+        if (this.skinParts.$name) {
+            var nameWidth = this.skinParts.$name.outerWidth();
 
-        var shift = (this.circleSize - nameWidth) / 2;
+            var shift = (this.circleSize - nameWidth) / 2;
 
-        this.skinParts.$name.css({ "left": shift });
+            this.skinParts.$name.css({ "left": shift });
+        }
     };
 
     return CircleDecoratorPartBrowserWidget;

@@ -16,6 +16,9 @@ define(['js/Constants',
     CircleDecoratorCore = function () {
     };
 
+    /**** Override from WidgetDecoratorBase ****/
+    CircleDecoratorCore.prototype.DECORATOR_DEFAULT_PARAMS = {'displayName': true};
+
     CircleDecoratorCore.prototype._initializeVariables = function (params) {
         this.formattedName = "";
         this.circleSize = CIRCLE_SIZE;
@@ -47,6 +50,12 @@ define(['js/Constants',
         //find placeholders
         this.skinParts.$name = this.$el.find(".name");
 
+        if (this.decoratorParams.displayName === false) {
+
+            this.skinParts.$name.remove();
+            delete this.skinParts.$name;
+        }
+
         this._update();
     };
 
@@ -60,14 +69,16 @@ define(['js/Constants',
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
             noName = "(N/A)";
 
-        if (nodeObj) {
-            this.formattedName = displayFormat.resolve(nodeObj);
-        } else {
-            this.formattedName = noName;
-        }
+        if (this.skinParts.$name) {
+            if (nodeObj) {
+                this.formattedName = displayFormat.resolve(nodeObj);
+            } else {
+                this.formattedName = noName;
+            }
 
-        this.skinParts.$name.text(this.formattedName);
-        this.skinParts.$name.attr("title", this.formattedName);
+            this.skinParts.$name.text(this.formattedName);
+            this.skinParts.$name.attr("title", this.formattedName);
+        }
     };
 
     return CircleDecoratorCore;

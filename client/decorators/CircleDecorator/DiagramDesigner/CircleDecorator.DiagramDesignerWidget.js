@@ -49,14 +49,18 @@ define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase',
         //let the parent decorator class do its job first
         DiagramDesignerWidgetDecoratorBase.prototype.onRenderGetLayoutInfo.apply(this, arguments);
 
-        this.renderLayoutInfo.nameWidth = this.skinParts.$name.outerWidth();
+        if (this.skinParts.$name) {
+            this.renderLayoutInfo.nameWidth = this.skinParts.$name.outerWidth();
+        }
     };
 
     CircleDecoratorDiagramDesignerWidget.prototype.onRenderSetLayoutInfo = function () {
         if (this.renderLayoutInfo) {
-            var shift = (this.circleSize - this.renderLayoutInfo.nameWidth) / 2;
+            if (this.skinParts.$name) {
+                var shift = (this.circleSize - this.renderLayoutInfo.nameWidth) / 2;
 
-            this.skinParts.$name.css({ "left": shift });
+                this.skinParts.$name.css({ "left": shift });
+            }
         }
 
 
