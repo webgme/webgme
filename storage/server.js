@@ -15,6 +15,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
         options.authorization = options.authorization || function(sessionID,projectName,type,callback){callback(null,true);};
         options.sessioncheck = options.sessioncheck || function(sessionID,callback){callback(null,true);};
         options.authInfo = options.authInfo || function(sessionID,projectName,callback){callback(null,{'read':true,'write':true,'delete':true});};
+        options.webServerPort = options.webServerPort || 80;
         options.log = options.log || {
             debug: function (msg) {
                 console.log("DEBUG - " + msg);
@@ -403,7 +404,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 mongodb:options.database,
                 intoutdir:options.intoutdir,
                 pluginBasePaths:options.pluginBasePaths,
-                serverPort:options.port
+                serverPort:options.webServerPort
             });
         }
 

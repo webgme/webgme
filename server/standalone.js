@@ -60,6 +60,8 @@ define(['logManager',
             __storageOptions.intoutdir = CONFIG.intoutdir;
             __storageOptions.pluginBasePaths = CONFIG.pluginBasePaths;
 
+            __storageOptions.webServerPort = CONFIG.port;
+
             __storage = Storage(__storageOptions);
             //end of storage creation
             __storage.open();
