@@ -1,15 +1,18 @@
 define(['core/core',
         'plugin/PluginManagerBase',
+        'plugin/PluginResult',
         'plugin/PluginFSClient',
         'js/Dialogs/PluginConfig/PluginConfigDialog'
                                     ], function (Core,
                                                PluginManagerBase,
+                                               PluginResult,
                                                PluginFSClient,
                                                PluginConfigDialog) {
     "use strict";
 
     var ClientInterpreterManager = function (client) {
         this._client = client;
+        //this._manager = new PluginManagerBase();
 
         // Test PluginFS
 //        var pluginFS = new PluginFSClient();
@@ -49,7 +52,7 @@ define(['core/core',
 //        });
 //    };
 
-    var getInterpreter = function(name,callback){
+    var getPlugin = function(name,callback){
         requirejs(['/plugin/'+name+'/'+name+'/'+name],
             function(InterpreterClass){
                 callback(null, InterpreterClass);
@@ -61,69 +64,90 @@ define(['core/core',
     };
 
     ClientInterpreterManager.prototype.run = function (name,callback) {
-
-
-
-        //TODO now the foundtation of distinguishing is the preceeding srv in the plugin name
         var self = this;
-        if(name.indexOf('srv') === 0){
-            //we call the clients - runServerPlugin function
-            var context = {};
-            context.commitHash = self._client.getActualCommit();
-            context.projectName = self._client.getActiveProject();
-            self._client.runServerPlugin(name,context,function(result){
-                //console.log(result);
-                if (callback) {
-                    callback(result);
-                }
-            });
-        } else {
-            getInterpreter(name, function(err, interpreter) {
-                if(!err && interpreter !== null) {
-                    var plugins = {};
-                    plugins[name] = interpreter;
+        getPlugin(name,function(err,plugin){
+            if(!err && plugin) {
+                var plugins = {};
+                plugins[name] = plugin;
+                var pluginManager = new PluginManagerBase(self._client.getProjectObject(), Core, plugins);
+                pluginManager.initialize(null, function (pluginConfigs, configSaveCallback) {
+                    //#1: display config to user
+                    var d = new PluginConfigDialog();
+                    var hackedConfig = {
+                        'Global Options': [
+                            {
+                                "name": "runOnServer",
+                                "displayName": "Execute on Server",
+                                "description": '',
+                                "value": false, // this is the 'default config'
+                                "valueType": "boolean",
+                                "readOnly": false
+                            }
+                        ]
+                    };
+                    for (var i in pluginConfigs) {
+                        if (pluginConfigs.hasOwnProperty(i)) {
+                            hackedConfig[i] = pluginConfigs[i];
+                        }
+                    }
+                    d.show(hackedConfig, function (updatedConfig) {
+                        //when Save&Run is clicked in the dialog
+                        var globalconfig = updatedConfig['Global Options'];
+                        delete updatedConfig['Global Options'];
+                        //#2: save it back and run the plugin
+                        if (configSaveCallback) {
+                            configSaveCallback(updatedConfig);
 
-                    var pluginManager = new PluginManagerBase(self._client.getProjectObject(), Core, plugins);
+                            var config = {
+                                "project": self._client.getActiveProject(),
+                                "token": "",
+                                "selected": null,
+                                "commit": self._client.getActualCommit(), //"#668b3babcdf2ddcd7ba38b51acb62d63da859d90",
+                                //"root": ""
+                                "branchName": null
+                            };
 
-                    pluginManager.initialize(null, function (pluginConfigs, configSaveCallback) {
-                        //#1: display config to user
-                        var d = new PluginConfigDialog();
-                        d.show(pluginConfigs, function (updatedConfig) {
-                            //when Save&Run is clicked in the dialog
+                            // FIXME: selected object should be an array of objects
+                            // FIXME: active object should be a single object on which the interpreter was called
+                            config.selected = WebGMEGlobal.State.getActiveSelection() || [];
+                            config.selected = config.selected[0] || null;
 
-                            //#2: save it back and run the plugin
-                            if (configSaveCallback) {
-                                configSaveCallback(updatedConfig);
+                            //config.active = WebGMEGlobal.State.getActiveObject() || null;
 
-                                var config = {
-                                    "project": self._client.getActiveProject(),
-                                    "token": "",
-                                    "selected": null,
-                                    "commit": self._client.getActualCommit(), //"#668b3babcdf2ddcd7ba38b51acb62d63da859d90",
-                                    //"root": ""
-                                    "branchName": null
+                            if(globalconfig.runOnServer === "true"){
+                                var context = {
+                                    managerConfig: config,
+                                    pluginConfigs:updatedConfig
                                 };
-
-                                // FIXME: selected object should be an array of objects
-                                // FIXME: active object should be a single object on which the interpreter was called
-                                config.selected = WebGMEGlobal.State.getActiveSelection() || [];
-                                config.selected = config.selected[0] || null;
-
+                                self._client.runServerPlugin(name,context,function(err,result){
+                                    if(err){
+                                        console.error(err);
+                                        callback(new PluginResult()); //TODO return proper error result
+                                    } else {
+                                        var resultObject = new PluginResult();
+                                        resultObject.deserialize(result);
+                                        callback(resultObject);
+                                    }
+                                });
+                            } else {
                                 config.FS = new PluginFSClient();
 
                                 pluginManager.executePlugin(name, config, function (err, result) {
                                     //console.log(result);
+                                    if (err) {
+                                        console.error(err);
+                                    }
                                     callback(result);
                                 });
                             }
-                        });
+                        }
                     });
-                } else {
-                    //TODO generate proper result
-                    callback({error:err});
-                }
-            });
-        }
+                });
+            } else {
+                console.error('unable to load plugin');
+                callback(null); //TODO proper result
+            }
+        });
     };
 
     //TODO somehow it would feel more right if we do run in async mode, but if not then we should provide getState and getResult synchronous functions as well

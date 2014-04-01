@@ -7,8 +7,19 @@ requirejs.config({
         "logManager": "common/LogManager"
     }
 });
-requirejs(['worker/constants','core/core','storage/serveruserstorage','util/guid','coreclient/dumpmore','logManager','fs','path','plugin/PluginFSServer','storage/clientstorage'],
-function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,PluginFSServer,ConnectedStorage){
+requirejs(['worker/constants',
+        'core/core',
+        'storage/serveruserstorage',
+        'util/guid',
+        'coreclient/dumpmore',
+        'logManager',
+        'fs',
+        'path',
+        'plugin/PluginFSServer',
+        'plugin/PluginManagerBase',
+        'plugin/PluginResult',
+        'storage/clientstorage'],
+function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,PluginFSServer,PluginManagerBase,PluginResult,ConnectedStorage){
     var storage = null,
         core = null,
         result = null,
@@ -93,6 +104,26 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,PluginFSServer,Conne
     };
 
     //TODO the getContext should be refactored!!!
+    var getProject = function(projectName,callback){
+        var pluginStorage = new ConnectedStorage({type:'node',host:'127.0.0.1',port:serverPort,log:logManager.create('SERVER-WORKER-PLUGIN-'+process.pid)});
+        pluginStorage.openDatabase(function(err){
+            if(!err){
+                if(projectName) {
+                    pluginStorage.openProject(projectName, function (err, project) {
+                        if (!err) {
+                            callback(null, project);
+                        } else {
+                            callback(err);
+                        }
+                    });
+                } else {
+                    callback(new Error('invalid project name'));
+                }
+            } else {
+                callback(new Error('cannot open database'));
+            }
+        });
+    };
     var getContext = function(context,callback){
         //TODO get the configured parameters for webHost and webPort
         context.storage = new ConnectedStorage({type:'node',host:'127.0.0.1',port:serverPort,log:logManager.create('SERVER-WORKER-PLUGIN-'+process.pid)});
@@ -145,7 +176,6 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,PluginFSServer,Conne
             return false;
         }
     };
-
     var getPluginBasePathByName = function(pluginName){
         if(pluginBasePaths && pluginBasePaths.length){
             for(var i=0;i<pluginBasePaths.length;i++){
@@ -179,13 +209,42 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,PluginFSServer,Conne
         }
 
 
-        return new interpreterClass;
+        return interpreterClass;
     };
     var runInterpreter = function(name,sessionId,context,callback){
         var interpreter = getInterpreter(name);
-        getContext(context,function(err,completeContext){
-            interpreter.main(context,callback);
-        });
+        if(interpreter){
+            getProject(context.managerConfig.project,function(err,project){
+                if(!err){
+                    var plugins = {};
+                    plugins[name] = interpreter;
+                    var manager = new PluginManagerBase(project,Core,plugins);
+                    context.managerConfig.FS = new PluginFSServer({outputpath:interpreteroutputdirectory});
+
+                    manager.initialize(null, function (pluginConfigs, configSaveCallback) {
+                        if (configSaveCallback) {
+                            configSaveCallback(context.pluginConfigs);
+                        }
+
+                        manager.executePlugin(name,context.managerConfig,function(err,result){
+                            if(!err && result){
+                                callback(null,result.serialize());
+                            } else {
+                                var newErrorPluginResult = new PluginResult();
+                                callback(err,newErrorPluginResult.serialize());
+                            }
+                        });
+
+                    });
+                } else {
+                    var newErrorPluginResult = new PluginResult();
+                    callback(new Error('unable to get project'),newErrorPluginResult.serialize());
+                }
+            });
+        } else {
+            var newErrorPluginResult = new PluginResult();
+            callback(new Error('unable to load plugin'),newErrorPluginResult.serialize());
+        }
     };
     //main message processing loop
     process.on('message',function(parameters){

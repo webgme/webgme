@@ -2165,10 +2165,7 @@ define([
             }
 
             function runServerPlugin(name,context,callback){
-                _database.simpleRequest({command:'executePlugin',name:name,context:context},function(err,result){
-                    result.error = result.error || err;
-                    callback(result);
-                });
+                _database.simpleRequest({command:'executePlugin',name:name,context:context},callback);
             }
 
             function getAvailableDecoratorNames(){
