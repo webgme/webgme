@@ -101,6 +101,12 @@ $tabs-container-height: 26px;
           bottom: -13px;
           right: -13px;
         }
+
+        &.move {
+          top: -13px;
+          left: 50%;
+          margin-left: -13px;
+        }
       }
 
       .rotation-deg {

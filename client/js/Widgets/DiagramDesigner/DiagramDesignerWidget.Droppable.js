@@ -67,7 +67,7 @@ define(['js/DragDrop/DropTarget',
     DiagramDesignerWidgetDroppable.prototype._onDroppableOver = function (event, dragInfo) {
         this.logger.debug('_onDroppableOver: ' + JSON.stringify(dragInfo));
 
-        this.selectionManager.clear();
+        //this.selectionManager.clear();
 
         this._doAcceptDroppable(this.onBackgroundDroppableAccept(event, dragInfo), true);
     };

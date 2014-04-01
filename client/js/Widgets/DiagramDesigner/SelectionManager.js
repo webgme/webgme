@@ -562,10 +562,18 @@ define(['logManager',
         "command" : "contextmenu"
     });
     CONTEXT_MENU_BUTTON_BASE.html('<i class="icon-list-alt"></i>');
+
+    var MOVE_BUTTON_BASE = $('<div/>', {
+        "class" : "s-btn move",
+        "command" : "move"
+    });
+    MOVE_BUTTON_BASE.html('<i class="icon-move"></i>');
+
     SelectionManager.prototype._renderSelectionActions = function () {
         var self = this,
             deleteBtn,
-            contextMenuBtn;
+            contextMenuBtn,
+            moveBtn;
 
         if (this._diagramDesigner.getIsReadOnlyMode() === true) {
             return;
@@ -574,6 +582,10 @@ define(['logManager',
         if (this._diagramDesigner.getIsReadOnlyMode() !== true) {
             deleteBtn = DELETE_BUTTON_BASE.clone();
             this._diagramDesigner.skinParts.$selectionOutline.append(deleteBtn);
+
+            moveBtn = MOVE_BUTTON_BASE.clone();
+            this._diagramDesigner.skinParts.$selectionOutline.append(moveBtn);
+            this._diagramDesigner._makeDraggable({ '$el': moveBtn });
         }
 
         //context menu

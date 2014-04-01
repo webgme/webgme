@@ -47,6 +47,10 @@
         .diagram-designer .items .selection-outline .s-btn.contextmenu {
           bottom: -13px;
           right: -13px; }
+        .diagram-designer .items .selection-outline .s-btn.move {
+          top: -13px;
+          left: 50%;
+          margin-left: -13px; }
       .diagram-designer .items .selection-outline .rotation-deg {
         text-align: center;
         vertical-align: middle;
