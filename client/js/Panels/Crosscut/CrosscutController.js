@@ -165,7 +165,8 @@ define(['logManager',
 
     CrosscutController.prototype.getOrderedMemberListInfo = function (memberListContainerObject) {
         var result = [],
-            crosscutsRegistry = memberListContainerObject.getRegistry(REGISTRY_KEYS.CROSSCUTS) || [],
+            memberListContainerID = this._memberListContainerID,
+            crosscutsRegistry = GMEConcepts.getCrosscuts(memberListContainerID),
             len = crosscutsRegistry.length;
 
         while (len--) {
