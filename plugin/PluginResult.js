@@ -18,7 +18,7 @@ define([], function () {
 
     /**
      *
-     * @returns {PluginMessage[]}
+     * @returns {plugin.PluginMessage[]}
      */
     PluginResult.prototype.getMessages = function() {
         return this.messages;
@@ -26,7 +26,7 @@ define([], function () {
 
     /**
      *
-     * @param {PluginMessage} pluginMessage
+     * @param {plugin.PluginMessage} pluginMessage
      */
     PluginResult.prototype.addMessage = function(pluginMessage) {
         this.messages.push(pluginMessage);

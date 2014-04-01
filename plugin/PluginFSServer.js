@@ -21,7 +21,9 @@ define(["jszip",'plugin/PluginFSBase','fs','path'],function(ZIP,PluginFSBase,FS,
     };
 
     PluginFSServer.prototype.saveArtifact = function(){
-        var data = this._artifactZip.generate({base64:false,compression:'DEFLATE'});
+        // FIXME: Windows cannot extract compressed zip packages with 'DEFLATE' flag, 7-zip can
+        //var data = this._artifactZip.generate({base64:false,compression:'DEFLATE'});
+        var data = this._artifactZip.generate({base64:false});
         try {
             FS.writeFileSync(Path.join(this._parameters.outputpath, this._artifactName + ".zip"), data, 'binary');
             this._artifactName = null;
