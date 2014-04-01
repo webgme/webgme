@@ -139,6 +139,7 @@ define(['logManager',
                     if (events[len].desc.isConnection === true) {
                         objDecorator = CONNECTION_DECORATOR;
                         events[len].desc.isConnection = false;
+                        events[len].desc.decoratorParams = {'displayName': false};
                     } else {
                         objDecorator = obj.getRegistry(REGISTRY_KEYS.DECORATOR);
                     }

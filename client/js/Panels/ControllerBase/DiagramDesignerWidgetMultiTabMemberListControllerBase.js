@@ -1033,6 +1033,11 @@ define(['logManager',
                     objDesc.position.y = this._memberListMemberCoordinates[this._selectedMemberListID][gmeID].y;
                 }
 
+                objDesc.decoratorParams = {};
+                if (desc.decoratorParams) {
+                    _.extend(objDesc.decoratorParams, desc.decoratorParams);
+                }
+
                 //registry preferences here are:
                 //#1: local set membership registry
                 objDesc.preferencesHelper = PreferencesHelper.getPreferences([{'containerID': this._memberListContainerID,
@@ -1665,6 +1670,11 @@ define(['logManager',
             this._memberListMemberCoordinates[this._selectedMemberListID][gmeID]) {
             objDesc.position.x = this._memberListMemberCoordinates[this._selectedMemberListID][gmeID].x;
             objDesc.position.y = this._memberListMemberCoordinates[this._selectedMemberListID][gmeID].y;
+        }
+
+        objDesc.decoratorParams = {};
+        if (desc.decoratorParams) {
+            _.extend(objDesc.decoratorParams, desc.decoratorParams);
         }
 
         //registry preferences here are:
