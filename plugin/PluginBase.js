@@ -5,12 +5,21 @@
 'use strict';
 define(['./PluginConfig'], function (PluginConfig) {
 
-    var PluginBase = function (LogManager) {
-        if (LogManager) {
-            this.logger = LogManager.create('Plugin.PluginBase');
+    var PluginBase = function () {
+        this.logger = null;
+        this.fs = null;
+        this._currentConfig = null;
+    };
+
+
+    PluginBase.prototype.initialize = function (logger, fs) {
+        if (logger) {
+            this.logger = logger;
         } else {
             this.logger = console;
         }
+
+        this.fs = fs;
 
         this._currentConfig = null;
         // initialize default configuration
