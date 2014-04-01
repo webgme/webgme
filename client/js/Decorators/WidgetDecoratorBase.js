@@ -14,10 +14,13 @@ define(['logManager'], function (logManager) {
     WidgetDecoratorBase = function (params) {
         this.logger = params.logger || logManager.create(this.DECORATORID);
         this.preferencesHelper = params.preferencesHelper;
-        this.decoratorParams = params.decoratorParams;
+        this.decoratorParams = {};
+        _.extend(this.decoratorParams, this.DECORATOR_DEFAULT_PARAMS, params.decoratorParams);
     };
 
     WidgetDecoratorBase.prototype.DECORATORID = DECORATOR_ID;
+
+    WidgetDecoratorBase.prototype.DECORATOR_DEFAULT_PARAMS = {};
 
     return WidgetDecoratorBase;
 });
