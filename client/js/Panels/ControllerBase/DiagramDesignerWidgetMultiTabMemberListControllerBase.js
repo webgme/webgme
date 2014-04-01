@@ -531,7 +531,7 @@ define(['logManager',
 
                     _client.setMemberRegistry(memberListContainerID, i, memberListToAddTo, MEMBER_POSITION_REGISTRY_KEY, {'x': posX, 'y': posY} );
 
-                    componentID = this._GMEID2ComponentID[i];
+                    componentID = this._GMEID2ComponentID[i][0];
 
                     selectedIDs.push(componentID);
                     this._widget.updateDesignerItem(componentID, { "position": {'x': posX, 'y': posY}});
