@@ -1070,5 +1070,19 @@ define(['logManager',
         }
     };
 
+    CrosscutController.prototype._getDragItems = function (selectedElements) {
+        var res = [],
+            i = selectedElements.length;
+
+        while(i--) {
+            if (this._ComponentID2GMEID[selectedElements[i]]) {
+                res.push(this._ComponentID2GMEID[selectedElements[i]]);
+            }
+        }
+
+        return res;
+    };
+
+
     return CrosscutController;
 });
