@@ -587,7 +587,8 @@ define(['logManager',
     /****************************************************************************/
     CrosscutController.prototype._createConnection = function (gmeSrcId, gmeDstId, connType, connTexts) {
         var connDesc,
-            connComponent;
+            connComponent,
+            visualType;
         //need to check if the src and dst objects are displayed or not
         //if YES, create connection
         //if NO, store information in a waiting queue
@@ -608,7 +609,12 @@ define(['logManager',
                 };
 
                 //set visual properties
-                _.extend(connDesc, MetaRelations.getLineVisualDescriptor(connType));
+                visualType = connType;
+                if (connTexts &&
+                    connTexts.name === CONSTANTS.POINTER_BASE) {
+                    visualType = MetaRelations.META_RELATIONS.INHERITANCE;
+                }
+                _.extend(connDesc, MetaRelations.getLineVisualDescriptor(visualType));
 
                 //fill out texts
                 if (connTexts) {
@@ -651,7 +657,7 @@ define(['logManager',
         } else {
             //#3 - both gmeSrcId and gmeDstId is missing from the screen
             //NOTE: this should never happen!!!
-            this.logger.error('_saveConnectionToWaitingList both gmeSrcId and gmeDstId is undefined...');
+            //this.logger.error('_saveConnectionToWaitingList both gmeSrcId and gmeDstId is undefined...');
         }
     };
 
