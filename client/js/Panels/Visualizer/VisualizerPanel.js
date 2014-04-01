@@ -95,6 +95,13 @@ define(['logManager',
             self._p2Editor(false);
         });
 
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_VISUALIZER, function (model, activeVisualizer) {
+            if (self._settingVisualizer !== true) {
+                self.setActiveVisualizer(activeVisualizer);
+            }
+        });
+
+
         this._splitPanel = new SplitPanel();
         this._layoutManager.addPanel('visualizerSplitPanel', this._splitPanel, 'center');
     };
@@ -112,8 +119,9 @@ define(['logManager',
             ControlClass,
             panel = ul.attr('data-id');
 
-        if (this._activeVisualizer[panel] !== visualizer && this._visualizers.hasOwnProperty(visualizer)) {
+        this._settingVisualizer = true;
 
+        if (this._activeVisualizer[panel] !== visualizer && this._visualizers.hasOwnProperty(visualizer)) {
             //destroy current visualizer
             if (this._activePanel[panel]) {
                 this._activePanel[panel].destroy();
@@ -138,7 +146,18 @@ define(['logManager',
                     }
                 }
             }
+
+            WebGMEGlobal.State.setActiveVisualizer(visualizer);
         }
+
+        this._settingVisualizer = false;
+    };
+
+    VisualizerPanel.prototype.setActiveVisualizer = function (visualizer) {
+        var panel = WebGMEGlobal.PanelManager.getActivePanel() === this._activePanel['p1'] ? 'p1' : 'p2',
+            ul = panel === 'p1' ? this._ul1 : this._ul2;
+
+        this._setActiveVisualizer(visualizer, ul);
     };
 
     VisualizerPanel.prototype._removeLoader = function (li, loaderDiv) {
@@ -245,7 +264,8 @@ define(['logManager',
         if (enabled) {
             //show 2 panels
             this._panel2VisContainer = this._panel1VisContainer.clone();
-            this._panel2VisContainer.find('ul').attr("data-id", 'p2');
+            this._ul2 = this._panel2VisContainer.find('ul');
+            this._ul2.attr("data-id", 'p2');
             this._panel2VisContainer.find('.pp').text('Panel 2:');
             this.$el.append(this._panel2VisContainer);
             //find the selected on
@@ -268,6 +288,7 @@ define(['logManager',
                 this._panel2VisContainer.remove();
                 this._panel2VisContainer = undefined;
                 this._splitPanel.deletePanel('p2');
+                delete this._ul2;
             }
         }
     };
