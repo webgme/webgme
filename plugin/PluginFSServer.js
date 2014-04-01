@@ -1,10 +1,14 @@
-define(["jszip",'plugin/PluginFSBase','fs'],function(ZIP,PluginFSBase,FS){
+define(["jszip",'plugin/PluginFSBase','fs','path'],function(ZIP,PluginFSBase,FS, Path){
+
+
+
+    function PluginFSServer(parameters){
+        PluginFSBase.call(this, parameters);
+    }
 
     PluginFSServer.extends(PluginFSBase);
 
-    function PluginFSServer(parameters){
-        PluginFSBase.apply(this,parameters);
-    }
+    PluginFSServer.prototype.constructor = PluginFSServer;
 
     PluginFSServer.prototype.createArtifact = function(name){
         if(this._artifactName === null){
@@ -19,7 +23,7 @@ define(["jszip",'plugin/PluginFSBase','fs'],function(ZIP,PluginFSBase,FS){
     PluginFSServer.prototype.saveArtifact = function(){
         var data = this._artifactZip.generate({base64:false,compression:'DEFLATE'});
         try {
-            FS.writeFileSync(this._parameters.outputpath + this._artifactName + ".zip", data, 'binary');
+            FS.writeFileSync(Path.join(this._parameters.outputpath, this._artifactName + ".zip"), data, 'binary');
             this._artifactName = null;
             this._artifactZip = null;
             return true;

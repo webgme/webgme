@@ -1,17 +1,18 @@
 define(['core/core',
         'plugin/PluginManagerBase',
-        'js/Dialogs/PluginConfig/PluginConfigDialog',
-        'plugin/PluginFSClient'], function (Core,
+        'plugin/PluginFSClient',
+        'js/Dialogs/PluginConfig/PluginConfigDialog'
+                                    ], function (Core,
                                                PluginManagerBase,
-                                               PluginConfigDialog,
-                                               PluginFS) {
+                                               PluginFSClient,
+                                               PluginConfigDialog) {
     "use strict";
 
     var ClientInterpreterManager = function (client) {
         this._client = client;
 
         // Test PluginFS
-//        var pluginFS = new PluginFS();
+//        var pluginFS = new PluginFSClient();
 //        pluginFS.createArtifact('output');
 //        pluginFS.addFile('log.txt', 'Hello world\r\nNew line here...\r\n');
 //        pluginFS.saveArtifact();
@@ -105,6 +106,8 @@ define(['core/core',
 
                                 config.selected = WebGMEGlobal.State.getActiveSelection() || [];
                                 config.selected = config.selected[0] || null;
+
+                                config.FS = new PluginFSClient();
 
                                 pluginManager.executePlugin(name, config, function (err, result) {
                                     //console.log(result);

@@ -3,7 +3,10 @@
  */
 
 'use strict';
-define(['./PluginBase', './PluginContext', 'logManager'], function (PluginBase, PluginContext, LogManager) {
+define([
+    './PluginBase',
+    './PluginContext',
+    'logManager'], function (PluginBase, PluginContext, LogManager) {
 
     var PluginManagerBase = function (storage, Core, plugins) {
         this.logger = LogManager.create("PluginManager");
@@ -129,6 +132,7 @@ define(['./PluginBase', './PluginContext', 'logManager'], function (PluginBase, 
         pluginContext.core = new self._Core(pluginContext.project, {corerel: 2});
         pluginContext.commitHash = managerConfiguration.commit;
         pluginContext.selected = managerConfiguration.selected;
+        pluginContext.FS = managerConfiguration.FS;
 
         var loadCommitHashAndRun = function (commitHash) {
             self.logger.info('Loading commit ' + commitHash);
@@ -187,6 +191,10 @@ define(['./PluginBase', './PluginContext', 'logManager'], function (PluginBase, 
         //var pluginConfig = Plugin.getDefaultConfig();
 
         // TODO: plugin.doInteractiveConfig
+
+
+        managerConfiguration.FS.createArtifact(name + '-output');
+        // TODO: write some information about this execution into the output directory
 
         this.getPluginContext(managerConfiguration, function (err, pluginContext) {
             if (err) {

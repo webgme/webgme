@@ -1,10 +1,12 @@
 define(["jszip", 'plugin/PluginFSBase', 'lib/filesaver/FileSaver'], function(ZIP, PluginFSBase, FileSaver){
 
+    function PluginFSClient(parameters) {
+        PluginFSBase.call(this, parameters);
+    }
+
     PluginFSClient.extends(PluginFSBase);
 
-    function PluginFSClient(parameters){
-        PluginFSBase.apply(this,parameters);
-    }
+    PluginFSClient.prototype.constructor = PluginFSClient;
 
     PluginFSClient.prototype.createArtifact = function(name) {
         if(this._artifactName === null){

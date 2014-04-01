@@ -137,6 +137,7 @@ var main = function (CONFIG) {
     };
 
     var PluginManager = requirejs('plugin/PluginManagerBase');
+    var PluginFSServer = requirejs('plugin/PluginFSServer');
     // TODO: move the downloader to PluginManager
 
     var Plugin = requirejs('plugin/'+pluginName+'/'+pluginName+'/'+pluginName);
@@ -158,6 +159,14 @@ var main = function (CONFIG) {
                 if (!err) {
 
                     var pluginManager = new PluginManager(project, Core, plugins);
+
+                    // TODO: put this file to the right location
+                    var outputPath = path.resolve('.');
+
+                    console.log('Artifact path: ' + outputPath);
+
+                    // FIXME: for some reason this does not work.
+                    config.FS = new PluginFSServer({outputpath: outputPath});
 
                     pluginManager.executePlugin(pluginName, config, function (err, result) {
                         console.log(result);
