@@ -43,11 +43,12 @@ define(['jquery',
             return this.get(CONSTANTS.STATE_ACTIVE_ASPECT);
         },
 
-        setActiveObjectActiveAspect: function(objId, aspect) {
-            var settings = {};
-            settings[CONSTANTS.STATE_ACTIVE_OBJECT] = objId;
-            settings[CONSTANTS.STATE_ACTIVE_ASPECT] = aspect;
-            this.set(settings);
+        setActiveVisualizer: function(visualizer) {
+            this.set(CONSTANTS.STATE_ACTIVE_VISUALIZER, visualizer);
+        },
+
+        getActiveVisualizer: function() {
+            return this.get(CONSTANTS.STATE_ACTIVE_VISUALIZER);
         }
     });
 

@@ -61,6 +61,7 @@ define(['underscore', 'common/Constants'], function (underscore, COMMON_CONSTANT
         STATE_ACTIVE_OBJECT: 'activeObject',
         STATE_ACTIVE_SELECTION: 'activeSelection',
         STATE_ACTIVE_ASPECT: 'activeAspect',
+        STATE_ACTIVE_VISUALIZER: 'activeVisualizer',
 
         /* ASPECTs */
         ASPECT_ALL: 'All'
