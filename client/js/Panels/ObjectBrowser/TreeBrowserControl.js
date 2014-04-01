@@ -23,8 +23,11 @@ define(['logManager',
         GME_ATOM_CLASS = "gme-atom",
         GME_CONNECTION_CLASS = "gme-connection",
         GME_ROOT_ICON = "gme-root",
+        GME_ASPECT_ICON = "gme-aspect",
         projectRootID = CONSTANTS.PROJECT_ROOT_ID,
-        DEFAULT_VISUALIZER = 'ModelEditor';
+        DEFAULT_VISUALIZER = 'ModelEditor',
+        CROSSCUT_VISUALIZER = 'Crosscut',
+        SET_VISUALIZER = 'SetEditor';
 
     var TreeBrowserControl = function (client, treeBrowser) {
 
@@ -74,11 +77,16 @@ define(['logManager',
         };
 
         getNodeClass = function (nodeObj) {
-            var c = GME_ATOM_CLASS; //by default everyone is represented with the atom class
+            var objID = nodeObj.getId(),
+                c = GME_ATOM_CLASS; //by default everyone is represented with the atom class
 
-            if (nodeObj.getId() === projectRootID) {
+            if (objID === projectRootID) {
                 //if root object
                 c = GME_ROOT_ICON;
+            } else if (GMEConcepts.getCrosscuts(objID).length > 0) {
+                c = GME_ASPECT_ICON;
+            } else if (GMEConcepts.getSets(objID).length > 0) {
+                c = GME_ASPECT_ICON;
             } else if (GMEConcepts.isConnectionType(nodeObj.getId())) {
                 //if it's a connection, let it have the connection icon
                 c = GME_CONNECTION_CLASS;
@@ -314,6 +322,34 @@ define(['logManager',
                 },
                 "icon": false
             };
+
+            if (GMEConcepts.getCrosscuts(nodeId).length > 0) {
+                menuItems["openInCrossCut"] = { //Open in crosscuts
+                    "name": "Open in 'Crosscuts'",
+                    "callback": function(/*key, options*/){
+                        var settings = {};
+                        settings[CONSTANTS.STATE_ACTIVE_OBJECT] = nodeId;
+                        settings[CONSTANTS.STATE_ACTIVE_ASPECT] = CONSTANTS.ASPECT_ALL;
+                        settings[CONSTANTS.STATE_ACTIVE_VISUALIZER] = CROSSCUT_VISUALIZER;
+                        WebGMEGlobal.State.set(settings);
+                    },
+                    "icon": false
+                };
+            }
+
+            if (GMEConcepts.getSets(nodeId).length > 0) {
+                menuItems["openInSetEditor"] = { //Open in crosscuts
+                    "name": "Open in 'Set membership'",
+                    "callback": function(/*key, options*/){
+                        var settings = {};
+                        settings[CONSTANTS.STATE_ACTIVE_OBJECT] = nodeId;
+                        settings[CONSTANTS.STATE_ACTIVE_ASPECT] = CONSTANTS.ASPECT_ALL;
+                        settings[CONSTANTS.STATE_ACTIVE_VISUALIZER] = SET_VISUALIZER;
+                        WebGMEGlobal.State.set(settings);
+                    },
+                    "icon": false
+                };
+            }
         };
 
         //called from the TreeBrowserWidget when a create function is called from context menu
