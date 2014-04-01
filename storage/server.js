@@ -396,7 +396,15 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 });
             });
 
-            _workerManager = new SWM({basedir:options.basedir,mongoip:options.host,mongoport:options.port,mongodb:options.database,intoutdir:options.intoutdir,pluginBasePaths:options.pluginBasePaths});
+            _workerManager = new SWM({
+                basedir:options.basedir,
+                mongoip:options.host,
+                mongoport:options.port,
+                mongodb:options.database,
+                intoutdir:options.intoutdir,
+                pluginBasePaths:options.pluginBasePaths,
+                serverPort:options.port
+            });
         }
 
         function close(){

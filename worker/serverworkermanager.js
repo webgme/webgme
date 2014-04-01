@@ -86,7 +86,15 @@ function(ASSERT,Child,CONSTANTS){
                         break;
                     case CONSTANTS.msgTypes.initialize:
                         //this arrives when the worker seems ready for initialization
-                        worker.worker.send({command:CONSTANTS.workerCommands.initialize,ip:_parameters.mongoip,port:_parameters.mongoport,db:_parameters.mongodb,pluginBasePaths:_parameters.pluginBasePaths,interpreteroutputdirectory:_parameters.intoutdir});
+                        worker.worker.send({
+                            command:CONSTANTS.workerCommands.initialize,
+                            ip:_parameters.mongoip,
+                            port:_parameters.mongoport,
+                            db:_parameters.mongodb,
+                            pluginBasePaths:_parameters.pluginBasePaths,
+                            interpreteroutputdirectory:_parameters.intoutdir,
+                            serverPort:_parameters.serverPort
+                        });
                         break;
                     case CONSTANTS.msgTypes.initialized:
                         worker.state = CONSTANTS.workerStates.free;

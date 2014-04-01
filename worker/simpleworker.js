@@ -18,7 +18,8 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,PluginFSServer,Conne
         error = null,
         initialized = false,
         pluginBasePaths = null,
-        interpreteroutputdirectory = null;
+        interpreteroutputdirectory = null,
+        serverPort = 80;
 
     var initResult = function(){
         core = null;
@@ -32,6 +33,7 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,PluginFSServer,Conne
         if(initialized !== true){
             initialized = true;
             pluginBasePaths = parameters.pluginBasePaths;
+            serverPort = parameters.serverPort || 80;
             interpreteroutputdirectory = parameters.interpreteroutputdirectory || "";
             storage = new Storage({'host':parameters.ip,'port':parameters.port,'database':parameters.db,'log':logManager.create('SERVER-WORKER-'+process.pid)});
             storage.openDatabase(function(err){
@@ -93,7 +95,7 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,PluginFSServer,Conne
     //TODO the getContext should be refactored!!!
     var getContext = function(context,callback){
         //TODO get the configured parameters for webHost and webPort
-        context.storage = new ConnectedStorage({type:'node',host:'127.0.0.1',port:80,log:logManager.create('SERVER-WORKER-PLUGIN-'+process.pid)});
+        context.storage = new ConnectedStorage({type:'node',host:'127.0.0.1',port:serverPort,log:logManager.create('SERVER-WORKER-PLUGIN-'+process.pid)});
         //context.storage = storage;
         context.FS = new PluginFSServer({outputpath:interpreteroutputdirectory});
         if(context.projectName){
@@ -166,8 +168,12 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,PluginFSServer,Conne
             basePath = getPluginBasePathByName(name);
 
         if(basePath){
-            basePath+='/'+name+'/'+name;
-            interpreterClass = requirejs(PATH.relative(BASEPATH,basePath));
+            var path = {};
+            path['plugin/'+name] = PATH.relative(BASEPATH,basePath);
+            requirejs.config({
+                paths:path
+            });
+            interpreterClass = requirejs('plugin/'+name+'/'+name+'/'+name);
         } else {
             return null;
         }
@@ -178,9 +184,7 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,PluginFSServer,Conne
     var runInterpreter = function(name,sessionId,context,callback){
         var interpreter = getInterpreter(name);
         getContext(context,function(err,completeContext){
-            interpreter.run(context,function(result){
-                callback(null,result);
-            });
+            interpreter.main(context,callback);
         });
     };
     //main message processing loop
