@@ -104,6 +104,8 @@ define(['core/core',
                                     "branchName": null
                                 };
 
+                                // FIXME: selected object should be an array of objects
+                                // FIXME: active object should be a single object on which the interpreter was called
                                 config.selected = WebGMEGlobal.State.getActiveSelection() || [];
                                 config.selected = config.selected[0] || null;
 

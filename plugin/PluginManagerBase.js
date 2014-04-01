@@ -132,7 +132,6 @@ define([
         pluginContext.core = new self._Core(pluginContext.project, {corerel: 2});
         pluginContext.commitHash = managerConfiguration.commit;
         pluginContext.selected = managerConfiguration.selected;
-        pluginContext.FS = managerConfiguration.FS;
 
         var loadCommitHashAndRun = function (commitHash) {
             self.logger.info('Loading commit ' + commitHash);
@@ -183,18 +182,19 @@ define([
     };
 
     PluginManagerBase.prototype.executePlugin = function (name, managerConfiguration, done) {
-        var Plugin = this.getPluginByName(name);
-        var plugin = new Plugin(LogManager);
-        plugin.setCurrentConfig(this._pluginConfigs[name]);
+        var PluginClass = this.getPluginByName(name);
+
+        var plugin = new PluginClass();
+
+        var pluginLogger = LogManager.create('Plugin.' + name);
+        managerConfiguration.FS.createArtifact(name + '-output');
+        // TODO: write some information about this execution into the output directory
+
+        plugin.initialize(pluginLogger, managerConfiguration.FS);
 
         // TODO: if automation - get last config
         //var pluginConfig = Plugin.getDefaultConfig();
-
-        // TODO: plugin.doInteractiveConfig
-
-
-        managerConfiguration.FS.createArtifact(name + '-output');
-        // TODO: write some information about this execution into the output directory
+        plugin.setCurrentConfig(this._pluginConfigs[name]);
 
         this.getPluginContext(managerConfiguration, function (err, pluginContext) {
             if (err) {
