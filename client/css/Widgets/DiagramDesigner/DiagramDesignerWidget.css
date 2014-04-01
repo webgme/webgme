@@ -146,7 +146,8 @@
         white-space: nowrap; }
         .diagram-designer .items div.c-t div.c-text .c-name {
           position: relative;
-          left: -50%; }
+          left: -50%;
+          cursor: default; }
           .diagram-designer .items div.c-t div.c-text .c-name.v {
             left: 1px; }
         .diagram-designer .items div.c-t div.c-text input {
