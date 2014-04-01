@@ -11,10 +11,10 @@ define(['./PluginConfig'], function (PluginConfig) {
         } else {
             this.logger = console;
         }
-    };
 
-    PluginBase.prototype.doInteractiveConfig = function (preconfig, callback) {
-        callback({});
+        this._currentConfig = null;
+        // initialize default configuration
+        this.setCurrentConfig(this.getDefaultConfig());
     };
 
 
@@ -23,29 +23,28 @@ define(['./PluginConfig'], function (PluginConfig) {
     };
 
 
-    PluginBase.prototype.progress = function (percent, title, description) {
-        throw new Error('implement this function');
+    PluginBase.prototype.getDefaultConfig = function () {
+        var configStructure = this.getConfigStructure();
+
+        var defaultConfig = new PluginConfig();
+
+        for (var i = 0; i < configStructure.length; i += 1) {
+            defaultConfig[configStructure[i].name] = configStructure[i].value;
+        }
+
+        return defaultConfig;
     };
 
-
-    PluginBase.prototype.checkModel = function () {
-        throw new Error('implement this function');
+    PluginBase.prototype.getConfigStructure = function () {
+        return [];
     };
 
-    PluginBase.getName = function () {
-        throw new Error('implement this function');
+    PluginBase.prototype.getCurrentConfig = function () {
+        return this._currentConfig;
     };
 
-    PluginBase.getVersion = function () {
-        throw new Error('implement this function');
-    };
-
-    PluginBase.getSupportedContexts = function () {
-        throw new Error('implement this function');
-    };
-
-    PluginBase.getDefaultConfig = function () {
-        return new PluginConfig();
+    PluginBase.prototype.setCurrentConfig = function (newConfig) {
+        this._currentConfig = newConfig;
     };
 
     return PluginBase;

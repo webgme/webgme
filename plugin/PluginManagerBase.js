@@ -10,10 +10,18 @@ define(['./PluginBase', './PluginContext', 'logManager'], function (PluginBase, 
         this._Core = Core;       // webgme core is used to operate on objects
         this._storage = storage; // webgme storage
         this._plugins = plugins; // key value pair of pluginName: pluginType - plugins are already loaded/downloaded
+        this._pluginConfigs = {}; // keeps track of the current configuration for each plugins by name
+
+        var pluginNames = Object.keys(this._plugins);
+        for (var i = 0; i < pluginNames.length; i += 1) {
+            var p = new this._plugins[pluginNames[i]]();
+            this._pluginConfigs[pluginNames[i]] = p.getDefaultConfig();
+        }
     };
 
     PluginManagerBase.prototype.initialize = function (managerConfiguration, configCallback, callbackContext) {
-        var plugins = this._plugins;
+        var self = this,
+            plugins = this._plugins;
 
         //#1: PluginManagerBase should load the plugins
 
@@ -22,7 +30,8 @@ define(['./PluginBase', './PluginContext', 'logManager'], function (PluginBase, 
 
         for (var p in plugins) {
             if (plugins.hasOwnProperty(p)) {
-                pluginConfigs[p] = plugins[p].getConfigStructure();
+                var plugin = new plugins[p]();
+                pluginConfigs[p] = plugin.getConfigStructure();
             }
         }
 
@@ -31,7 +40,7 @@ define(['./PluginBase', './PluginContext', 'logManager'], function (PluginBase, 
                 for (var p in updatedPluginConfig) {
                     if (updatedPluginConfig.hasOwnProperty(p)) {
                         //save it back to the plugin
-                        plugins[p].setCurrentConfig(updatedPluginConfig[p]);
+                        self._pluginConfigs[p] = updatedPluginConfig[p];
                     }
                 }
             });
@@ -172,9 +181,10 @@ define(['./PluginBase', './PluginContext', 'logManager'], function (PluginBase, 
     PluginManagerBase.prototype.executePlugin = function (name, managerConfiguration, done) {
         var Plugin = this.getPluginByName(name);
         var plugin = new Plugin(LogManager);
+        plugin.setCurrentConfig(this._pluginConfigs[name]);
 
         // TODO: if automation - get last config
-        var pluginConfig = Plugin.getDefaultConfig();
+        //var pluginConfig = Plugin.getDefaultConfig();
 
         // TODO: plugin.doInteractiveConfig
 
@@ -182,7 +192,7 @@ define(['./PluginBase', './PluginContext', 'logManager'], function (PluginBase, 
             if (err) {
                 done(err, null);
             } else {
-                pluginContext.setConfig(pluginConfig);
+                //pluginContext.setConfig(pluginConfig);
 
                 //set logging level at least to INFO level since the plugins write messages with INFO level onto the console
                 var logLevel = LogManager.getLogLevel();
