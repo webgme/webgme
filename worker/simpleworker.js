@@ -46,6 +46,13 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,PluginFSServer,Plugi
             pluginBasePaths = parameters.pluginBasePaths;
             serverPort = parameters.serverPort || 80;
             interpreteroutputdirectory = parameters.interpreteroutputdirectory || "";
+            if(interpreteroutputdirectory){
+                try{
+                    FS.mkdirSync(PATH.resolve(interpreteroutputdirectory));
+                } catch(e){
+                    console.log('output directory cannot be created');
+                }
+            }
             storage = new Storage({'host':parameters.ip,'port':parameters.port,'database':parameters.db,'log':logManager.create('SERVER-WORKER-'+process.pid)});
             storage.openDatabase(function(err){
                 if(err){

@@ -352,6 +352,12 @@ define(['logManager',
                 }
             });
         });
+        __app.get(/^\/pluginoutput\/.*/,ensureAuthenticated,function(req,res){
+            var filepath = req.path.replace('/pluginoutput',CONFIG.intoutdir);
+            res.sendfile(filepath,function(err){
+                res.send(404);
+            });
+        });
 
         __logger.info("creating basic static content related routing rules");
         //static contents
