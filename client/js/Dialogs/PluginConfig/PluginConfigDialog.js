@@ -77,16 +77,19 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
     };
 
     var ENTRY_BASE = $('<div class="control-group"><label class="control-label">NAME</label><div class="controls"></div></div>');
+    var DESCRIPTION_BASE = $('<div class="desc muted"></div>');
     PluginConfigDialog.prototype._generatePluginSection = function (pluginName, pluginConfig, containerEl) {
         var len = pluginConfig.length,
             i,
             el,
             pluginConfigEntry,
-            widget;
+            widget,
+            descEl;
 
         this._widgets[pluginName] = {};
         for (i = 0; i < len; i += 1) {
             pluginConfigEntry = pluginConfig[i];
+            descEl = undefined;
 
             widget = this._propertyGridWidgetManager.getWidgetForProperty(pluginConfigEntry);
             this._widgets[pluginName][pluginConfigEntry.name] = widget;
@@ -96,6 +99,29 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
             el.find('.controls').append(widget.el);
 
             el.find('label.control-label').text(pluginConfigEntry.displayName);
+
+            if (pluginConfigEntry.description && pluginConfigEntry.description !== '') {
+                descEl = descEl || DESCRIPTION_BASE.clone();
+                descEl.text(pluginConfigEntry.description);
+            }
+
+            if (pluginConfigEntry.minValue !== undefined &&
+                pluginConfigEntry.minValue !== null &&
+                pluginConfigEntry.minValue !== '') {
+                descEl = descEl || DESCRIPTION_BASE.clone();
+                descEl.append(' The minimum value is: ' + pluginConfigEntry.minValue + '.');
+            }
+
+            if (pluginConfigEntry.maxValue !== undefined &&
+                pluginConfigEntry.maxValue !== null &&
+                pluginConfigEntry.maxValue !== '') {
+                descEl = descEl || DESCRIPTION_BASE.clone();
+                descEl.append(' The maximum value is: ' + pluginConfigEntry.maxValue + '.');
+            }
+
+            if (descEl) {
+                el.append(descEl);
+            }
 
             containerEl.append(el);
         }
