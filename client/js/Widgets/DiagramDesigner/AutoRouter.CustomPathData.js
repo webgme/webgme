@@ -2,23 +2,23 @@
 
 define(['logManager',
 	    'util/assert',
-        './AutoRouter.Utils'
+        './AutoRouter.Utils',
         './AutoRouter.Constants'], function (logManager,
 										        assert,
                                                 UTILS,
                                                 CONSTANTS) {
 
     var AutoRouterCustomPathData = function (_x, _y){
-        var version = CONSTANTS.CONNECTIONCUSTOMIZATIONDATAVERSION,
-            aspect = 0,
-            edgeIndex = 0,
-            edgeCount = 0,
-            type = CONSTANTS.CustomPointCustomization, //By default, it is a point
-            horizontalOrVerticalEdge = false,
-            x = _x,
-            y = _y,
-            l,
-            d;
+        this.version = CONSTANTS.CONNECTIONCUSTOMIZATIONDATAVERSION;
+        this.aspect = 0;
+        this.edgeIndex = 0;
+        this.edgeCount = 0;
+        this.type = CONSTANTS.CustomPointCustomization; //By default, it is a point
+        this.horizontalOrVerticalEdge = false;
+        this.x = _x;
+        this.y = _y;
+        this.l;
+        this.d;
     };
 
     //Functions
@@ -40,16 +40,16 @@ define(['logManager',
     AutoRouterCustomPathData.prototype.serialize = function(){
         var outChannel = (this.getVersion() + "," + this.getAspect() + "," + this.getEdgeIndex() + "," + this.getEdgeCount() + "," + this.getType());
 
-        outChannel += ("," + this.UTILS.isHorizontal OrVertical() ? 1 : 0 + "," + this.getX() + "," + this.getY() + "," + this.getLongDataCount());
+        outChannel += ("," + this.isHorizontalOrVertical() ? 1 : 0 + "," + this.getX() + "," + this.getY() + "," + this.getLongDataCount());
 
         for(var i = 0; i < this.getLongDataCount(); i++) {
-            outChannel += "," + l[i];
+            outChannel += "," + this.l[i];
         }
 
         outChannel += "," + this.getDoubleDataCount();
 
         for(var i = 0; i < this.getDoubleDataCount(); i++) {
-            outChannel += "," + d[i];
+            outChannel += "," + this.d[i];
         }
 
         return outChannel;
@@ -61,55 +61,55 @@ define(['logManager',
         var curSubPos = inChannel.indexOf(","),
             versionStr = inChannel.substr(0, curSubPos);
 
-        setVersion(Number(versionStr));
-        assert(getVersion() === CONSTANTS.CONNECTIONCUSTOMIZATIONDATAVERSION, "AutoRouterCustomPathData.deserialize: getVersion() === CONSTANTS.CONNECTIONCUSTOMIZATIONDATAVERSION FAILED");
+        this.setVersion(Number(versionStr));
+        assert(this.getVersion() === CONSTANTS.CONNECTIONCUSTOMIZATIONDATAVERSION, "AutoRouterCustomPathData.deserialize: getVersion() === CONSTANTS.CONNECTIONCUSTOMIZATIONDATAVERSION FAILED");
 
-        if (getVersion() != CONSTANTS.CONNECTIONCUSTOMIZATIONDATAVERSION) {
+        if (this.getVersion() != CONSTANTS.CONNECTIONCUSTOMIZATIONDATAVERSION) {
             // TODO: Convert from older version to newer
             return false;
         }
 
         curSubPos = inChannel.indexOf(",", ++curSubPos);
         var aspectStr = inChannel.substr(0, curSubPos);
-        setAspect(Number(aspectStr));
+        this.setAspect(Number(aspectStr));
 
         curSubPos = inChannel.indexOf(",", ++curSubPos);
         var edgeIndexStr = inChannel.substr(0, curSubPos);
-        setEdgeIndex(Number(edgeIndexStr));
+        this.setEdgeIndex(Number(edgeIndexStr));
 
         curSubPos = inChannel.indexOf(",", ++curSubPos);
         var edgeCountStr = inChannel.substr(0, curSubPos);
-        setEdgeCount(Number(edgeCountStr));
+        this.setEdgeCount(Number(edgeCountStr));
 
         curSubPos = inChannel.indexOf(",", ++curSubPos);
         var edgeCustomTypeStr = inChannel.substr(0, curSubPos);
-        setType(Number(edgeCustomTypeStr));
+        this.setType(Number(edgeCustomTypeStr));
 
         console.log("\tAsp " + getAspect() + ", Ind " + getEdgeIndex() + ", Cnt " + getEdgeCount() + ", Typ " + getType());
 
         curSubPos = inChannel.indexOf(",", ++curSubPos);
         var directionStr = inChannel.substr(0, curSubPos);
-        setHorizontalOrVertical(Number(directionStr));
+        this.setHorizontalOrVertical(Number(directionStr));
 
         curSubPos = inChannel.indexOf(",", ++curSubPos);
         var positionStr = inChannel.substr(0, curSubPos);
-        setX(Number(positionStr));
+        this.setX(Number(positionStr));
 
         curSubPos = inChannel.indexOf(",", ++curSubPos);
         positionStr = inChannel.substr(0, curSubPos);
-        setY(Number(positionStr));
+        this.setY(Number(positionStr));
 
         curSubPos = inChannel.indexOf(",", ++curSubPos);
         positionStr = inChannel.substr(0, curSubPos);
         var numOfExtraLongData = Number(positionStr);
         assert(numOfExtraLongData >= 0 && numOfExtraLongData <= 4, "AutoRouterCustomPathData.deserialize: numOfExtraLongData >= 0 && numOfExtraLongData <= 4 FAILED");
 
-        console.log(", Dir " + UTILS.isHorizontal OrVertical() + ", x " + getX() + ", y " + getY() + ", num " + numOfExtraLongData);
+        console.log(", Dir " + UTILS.isHorizontalOrVertical() + ", x " + getX() + ", y " + getY() + ", num " + numOfExtraLongData);
 
         for(var i = 0; i < numOfExtraLongData; i++) {
             positionStr = inChannel.substr(0, inChannel.indexOf(",", ++curSubPos));
-            AddLongData(Number(positionStr));
-            console.log(", l" + i + " " +  l[i])
+            this.addLongData(Number(positionStr));
+            console.log(", l" + i + " " +  l[i]);
         }
 
         positionStr = inChannel.substr(0, inChannel.indexOf(","));
@@ -118,106 +118,106 @@ define(['logManager',
         console.log(", num " + numOfExtraDoubleData);
         for(var i = 0; i < numOfExtraDoubleData; i++) {
             positionStr = inChannel.substr(0, inChannel.indexOf(",", ++curSubPos));
-            AddDoubleData(Number(positionStr));
+            this.addDoubleData(Number(positionStr));
             console.log(", l" + i + " " + d[i]);
         }
         return true;
     };
 
     AutoRouterCustomPathData.prototype.getVersion = function(){
-        return version;
+        return this.version;
     };
 
     AutoRouterCustomPathData.prototype.setVersion = function(_version){
-        version = _version;
+        this.version = _version;
     };
 
     AutoRouterCustomPathData.prototype.getAspect = function(){
-        return aspect;
+        return this.aspect;
     };
 
     AutoRouterCustomPathData.prototype.setAspect = function(_aspect){
-        aspect = _aspect;
+        this.aspect = _aspect;
     };
 
     AutoRouterCustomPathData.prototype.getEdgeIndex = function(){
-        return edgeIndex;
+        return this.edgeIndex;
     };
 
     AutoRouterCustomPathData.prototype.setEdgeIndex = function(index){
-        edgeIndex = index;
+        this.edgeIndex = index;
     };
 
     AutoRouterCustomPathData.prototype.getEdgeCount = function(){
-        return edgeCount;
+        return this.edgeCount;
     };
 
     AutoRouterCustomPathData.prototype.setEdgeCount = function(count){
-        edgeCount = count;
+        this.edgeCount = count;
     };
 
     AutoRouterCustomPathData.prototype.getType = function(){
-        return type;
+        return this.type;
     };
 
     AutoRouterCustomPathData.prototype.setType = function(_type){
-        type = _type;
+        this.type = _type;
     };
 
-    AutoRouterCustomPathData.prototype.UTILS.isHorizontal OrVertical = function(){
-        return horizontalOrVerticalEdge;
+    AutoRouterCustomPathData.prototype.isHorizontalOrVertical = function(){
+        return this.horizontalOrVerticalEdge;
     };
 
     AutoRouterCustomPathData.prototype.setHorizontalOrVertical = function(parity){
-        horizontalOrVerticalEdge = parity;
+        this.horizontalOrVerticalEdge = parity;
     };
 
     AutoRouterCustomPathData.prototype.getX = function(){
-        return x;
+        return this.x;
     };
 
     AutoRouterCustomPathData.prototype.setX = function(_x){
-        x = _x;
+        this.x = _x;
     };
 
     AutoRouterCustomPathData.prototype.getY = function(){
-        return y;
+        return this.y;
     };
 
     AutoRouterCustomPathData.prototype.setY = function(_y){
-        y = _y;
+        this.y = _y;
     };
 
     AutoRouterCustomPathData.prototype.getLongDataCount = function(){
-        return l.length;
+        return this.l.length;
     };
 
     AutoRouterCustomPathData.prototype.getLongData = function(index){
-        return l[index];
+        return this.l[index];
     };
 
     AutoRouterCustomPathData.prototype.setLongData = function(index, dat){
-        l[index] = dat;
+        this.l[index] = dat;
     };
 
     AutoRouterCustomPathData.prototype.addLongData = function(dat){
-        l.push(dat);
+        this.l.push(dat);
     };
 
     AutoRouterCustomPathData.prototype.getDoubleDataCount = function(){
-        return d.length;
+        return this.d.length;
     };
 
     AutoRouterCustomPathData.prototype.getDoubleData = function(index){
-        return d[index];
+        return this.d[index];
     };
 
     AutoRouterCustomPathData.prototype.setDoubleData = function(index, data){
-        d[index] = data;
+        this.d[index] = data;
     };
 
     AutoRouterCustomPathData.prototype.addDoubleData = function(data){
-        d.push(data);
+        this.d.push(data);
     };
 
     return AutoRouterCustomPathData;
