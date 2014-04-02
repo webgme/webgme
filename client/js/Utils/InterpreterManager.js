@@ -98,6 +98,7 @@ define(['core/core',
                         if (configSaveCallback) {
                             configSaveCallback(updatedConfig);
 
+                            // TODO: if global config says try to merge branch then we should pass the name of the branch
                             var config = {
                                 "project": self._client.getActiveProject(),
                                 "token": "",
