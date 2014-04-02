@@ -131,7 +131,9 @@ define([
         pluginContext.projectName = managerConfiguration.project;
         pluginContext.core = new self._Core(pluginContext.project, {corerel: 2});
         pluginContext.commitHash = managerConfiguration.commit;
-        pluginContext.selected = managerConfiguration.selected;
+        pluginContext.activeNode = managerConfiguration.selected;
+
+        // TODO: add activeNode and activeSelection
 
         var loadCommitHashAndRun = function (commitHash) {
             self.logger.info('Loading commit ' + commitHash);
@@ -140,17 +142,17 @@ define([
                     pluginContext.core.loadRoot(commitObj.root, function (err, rootNode) {
                         if (!err) {
                             pluginContext.rootNode = rootNode;
-                            if (typeof pluginContext.selected === 'string') {
-                                pluginContext.core.loadByPath(pluginContext.rootNode, pluginContext.selected, function (err, selectedNode) {
+                            if (typeof pluginContext.activeNode === 'string') {
+                                pluginContext.core.loadByPath(pluginContext.rootNode, pluginContext.activeNode, function (err, activeNode) {
                                     if (!err) {
-                                        pluginContext.selectedNode = selectedNode;
+                                        pluginContext.activeNode = activeNode;
                                         self.loadMetaNodes(pluginContext, callback);
                                     } else {
                                         callback("unable to load selected object", pluginContext);
                                     }
                                 });
                             } else {
-                                pluginContext.selectedNode = null;
+                                pluginContext.activeNode = null;
                                 self.loadMetaNodes(pluginContext, callback);
                             }
                         } else {
@@ -170,6 +172,7 @@ define([
 
                 if (branchNames.hasOwnProperty(managerConfiguration.branchName)) {
                     pluginContext.commitHash = branchNames[managerConfiguration.branchName];
+                    pluginContext.branchName = managerConfiguration.branchName;
                     loadCommitHashAndRun(pluginContext.commitHash);
                 } else {
                     callback('cannot find branch', pluginContext);
@@ -208,10 +211,18 @@ define([
                 // TODO: Would be nice to log to file and to console at the same time.
                 //LogManager.setFileLogPath('PluginManager.log');
 
+                plugin.configure(pluginContext);
+
                 // TODO: provide implementation here
-                plugin.main(pluginContext, function (err, result) {
+                plugin.main(function (err, result) {
                     //set loglevel back to previous value
                     LogManager.setLogLevel(logLevel);
+
+                    // set common information (meta info about the plugin and measured execution times
+
+                    result.setName(plugin.getName());
+                    result.setTime((new Date()).toISOString());
+
                     done(err, result);
                 });
             }

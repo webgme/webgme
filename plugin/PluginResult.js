@@ -13,6 +13,8 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
     PluginResult.prototype.initialize = function() {
         this.success = false;
         this.messages = []; // array of PluginMessages
+        this.pluginName = 'PluginName N/A';
+        this.finishTime = null;
     };
 
     PluginResult.prototype.getSuccess = function() {
@@ -35,12 +37,29 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
         this.messages.push(pluginMessage);
     };
 
+    PluginResult.prototype.getName = function() {
+        return this.pluginName;
+    };
+
+    PluginResult.prototype.setName = function(name) {
+        this.pluginName = name;
+    };
+
+    PluginResult.prototype.getTime = function() {
+        return this.finishTime;
+    };
+
+    PluginResult.prototype.setTime = function(time) {
+        this.finishTime = time;
+    };
 
 
     PluginResult.prototype.serialize = function() {
         var result = {
             success: this.success,
-            messages: []
+            messages: [],
+            pluginName: this.pluginName,
+            finishTime: this.finishTime
         };
 
         for (var i = 0; i < this.messages.length; i += 1) {
@@ -55,6 +74,8 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
 
         if (json) {
             this.success = json.success;
+            this.pluginName = json.pluginName;
+            this.finishTime = json.finishTime;
 
             for (var i = 0; i < json.messages.length; i += 1) {
                 var pluginMessage = new PluginMessage();
