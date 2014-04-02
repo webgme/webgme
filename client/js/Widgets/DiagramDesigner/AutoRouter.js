@@ -10,6 +10,7 @@ define(['logManager',
         './AutoRouter.Box',
         './AutoRouter.Port',
         './AutoRouter.Path',
+        './AutoRouter.CustomPathData',
         './AutoRouter.PathMap'], function (logManager,
 										   assert,
                                            CONSTANTS,
@@ -20,6 +21,7 @@ define(['logManager',
                                            AutoRouterBox,
                                            AutoRouterPort,
                                            AutoRouterPath,
+                                           CustomPathData,
                                            ArPathMap) {
 
     var AutoRouter;
