@@ -60,7 +60,8 @@ if (typeof define !== "function" && typeof require === "function" && typeof proc
             guest: false,
             sessioncookieid : 'webgmeSid',
             sessioncookiesecret : 'meWebGMEez',
-            debug: false
+            debug: false,
+            paths: {}
 		};
 
 		if (LOCAL) {
