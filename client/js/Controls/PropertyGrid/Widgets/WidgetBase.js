@@ -2,7 +2,7 @@
 
 define([], function () {
 
-    var EL_BASE = $("<div/>");
+    var EL_BASE = $("<div/>", {'class': 'widget'});
 
     var WidgetBase = function (propertyDesc) {
         this.el = EL_BASE.clone();
