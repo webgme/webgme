@@ -6,8 +6,10 @@
 
 "use strict";
 
-define(['text!html/Dialogs/PluginResults/PluginResultsDialog.html',
-    'css!/css/Dialogs/PluginResults/PluginResultsDialog'], function (pluginResultsDialogTemplate) {
+define(['clientUtil',
+    'text!html/Dialogs/PluginResults/PluginResultsDialog.html',
+    'css!/css/Dialogs/PluginResults/PluginResultsDialog'], function (clientUtil,
+                                                                     pluginResultsDialogTemplate) {
 
     var PluginResultsDialog,
         PLUGIN_RESULT_ENTRY_BASE = $('<div/>', { 'class': 'plugin-result' }),
@@ -76,14 +78,12 @@ define(['text!html/Dialogs/PluginResults/PluginResultsDialog.html',
                 resultHeader.append(ICON_ERROR.clone());
             }
 
-            //TODO: fix here
             var pluginName = result.getName ? result.getName() : 'PluginName N/A';
             spanResultTitle = RESULT_NAME_BASE.clone();
             spanResultTitle.text(pluginName);
             resultHeader.append(spanResultTitle);
 
-            //TODO: fix here
-            var pluginTime = result.getTime ? result.getTime() : 'Time: N/A';
+            var pluginTime = result.getTime ? clientUtil.formattedDate(new Date(result.getTime()), 'elapsed') : 'Time: N/A';
             spanResultTime = RESULT_TIME_BASE.clone();
             spanResultTime.text(pluginTime);
             resultHeader.append(spanResultTime);
