@@ -1960,6 +1960,10 @@ define([
                     return _core.getAttribute(_nodes[_id].node, 'name') + ' (' + _id +')';
                 };
 
+                var getCollectionPaths = function(name){
+                    return _core.getCollectionPaths(_nodes[_id].node,name);
+                };
+
                 if(_nodes[_id]){
                     return {
                         getParentId             : getParentId,
@@ -2009,7 +2013,9 @@ define([
                         getConstraint      : getConstraint,
 
                         printData : printData,
-                        toString: toString
+                        toString: toString,
+
+                        getCollectionPaths: getCollectionPaths
 
                     }
                 }
