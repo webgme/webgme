@@ -55,7 +55,7 @@ var main = function (CONFIG) {
         baseUrl: path.resolve(requirejsBase)
     });
 
-
+    // TODO: add commit hash as an input option
     program.option('-c, --config <name>', 'Configuration file');
     program.option('-p, --project <name>', 'Name of the project.', 'uj');
     program.option('-b, --branch <name>', 'Name of the branch.', 'master');
@@ -73,7 +73,6 @@ var main = function (CONFIG) {
     if (configFilename) {
         // TODO: check if file exists and it is json
         var resolvedFilename = path.resolve(configFilename);
-        console.log('Given configuration file: ', resolvedFilename);
         var commanlineConfig = require(resolvedFilename);
 
         // TODO: check if commanline config valid or not
@@ -100,7 +99,7 @@ var main = function (CONFIG) {
                     }
                 } catch (e) {
                     //do nothing as we will go on anyway
-                    console.log(e);
+                    //console.error(e);
                 }
             } else {
                 break;
@@ -114,15 +113,10 @@ var main = function (CONFIG) {
         paths: pluginPaths
     });
 
-    console.log(pluginPaths);
-
     var projectName = program.project;
     var branch = program.branch;
     var pluginName = program.pluginName;
     var selectedID = program.selectedObjID;
-
-    // TODO: logging
-    console.log('Given plugin : ', pluginName);
 
     var config = {
         "host": CONFIG.mongoip,
@@ -145,6 +139,13 @@ var main = function (CONFIG) {
     // FIXME: dependency does matter!
     var WebGME = require('../webgme');
 
+    var logger = WebGME.logManager.create('run_plugin');
+    // TODO: How to set this correctly
+    WebGME.logManager.setLogLevel(5);
+    console.log( WebGME.logManager.getLogLevel());
+    logger.info('Given plugin : ' + pluginName);
+    logger.info(JSON.stringify(config, null, 2));
+    logger.info(JSON.stringify(pluginPaths, null, 2));
 
     var Core = WebGME.core,
         Storage = WebGME.serverUserStorage;
@@ -163,23 +164,23 @@ var main = function (CONFIG) {
                     // TODO: put this file to the right location
                     var outputPath = path.resolve('.');
 
-                    console.log('Artifact path: ' + outputPath);
+                    logger.debug('Artifact path: ' + outputPath);
 
                     // FIXME: for some reason this does not work.
                     config.FS = new PluginFSServer({outputpath: outputPath});
 
                     pluginManager.executePlugin(pluginName, config, function (err, result) {
-                        console.log(result);
+                        logger.debug(JSON.stringify(result, null, 2));
 
                         project.closeProject();
                         storage.closeDatabase();
                     });
                 } else {
-                    console.error(err);
+                    logger.error(err);
                 }
             });
         } else {
-            console.error(err);
+            logger.error(err);
         }
     });
 };

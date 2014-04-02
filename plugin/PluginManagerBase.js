@@ -207,7 +207,9 @@ define([
 
                 //set logging level at least to INFO level since the plugins write messages with INFO level onto the console
                 var logLevel = LogManager.getLogLevel();
-                LogManager.setLogLevel(LogManager.logLevels.INFO);
+                if (logLevel < LogManager.logLevels.INFO) {
+                    LogManager.setLogLevel(LogManager.logLevels.INFO);
+                }
                 // TODO: Would be nice to log to file and to console at the same time.
                 //LogManager.setFileLogPath('PluginManager.log');
 
