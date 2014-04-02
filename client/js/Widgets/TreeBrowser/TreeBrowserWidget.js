@@ -44,6 +44,8 @@ define(['logManager',
         //by default use visual animations to reflect changes in the tree
         this._animation = true;
 
+        this._enableNodeRename = true;
+
         //generate control dynamically
         this._treeEl = $('<div/>', {});
 
@@ -494,6 +496,10 @@ define(['logManager',
 
         //can not edit 'loading...' node
         if (nodeToEdit.data.addClass === NODE_PROGRESS_CLASS) {
+            return;
+        }
+
+        if (this._enableNodeRename !== true) {
             return;
         }
 
