@@ -37,11 +37,15 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
             }
         });
 
+        this._dialog.on('shown', function () {
+            self._dialog.find('input').first().focus();
+        });
+
         this._dialog.modal('show');
     };
 
-    PluginConfigDialog.prototype._closeAndSave = function (newConfigs) {
-        this._updatedConfig = newConfigs;
+    PluginConfigDialog.prototype._closeAndSave = function () {
+        this._updatedConfig = this._readConfig();
         this._dialog.modal('hide');
     };
 
@@ -59,8 +63,7 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
         this._widgets = {};
 
         this._btnSave.on('click', function (event) {
-            var pluginConfigs = self._readConfig();
-            self._closeAndSave(pluginConfigs);
+            self._closeAndSave();
             event.stopPropagation();
             event.preventDefault();
         });
@@ -74,6 +77,15 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
                 this._generatePluginSection(p, pluginConfigs[p], pluginSectionEl.find('.form-horizontal'));
             }
         }
+
+        //save&run on CTRL + Enter
+        this._dialog.on('keydown.PluginConfigDialog', function (e) {
+            if (e.keyCode === 13 && (e.ctrlKey || e.metaKey)) {
+                e.stopPropagation();
+                e.preventDefault();
+                self._closeAndSave();
+            }
+        });
     };
 
     var ENTRY_BASE = $('<div class="control-group"><label class="control-label">NAME</label><div class="controls"></div></div>');
