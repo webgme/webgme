@@ -73,9 +73,9 @@ define(['plugin/PluginConfig',
 
     PluginBase.prototype.updateMETA = function (generatedMETA) {
         var name;
-        for (name in config.META) {
-            if (config.META.hasOwnProperty(name)) {
-                generatedMETA[name] = config.META[name];
+        for (name in this.META) {
+            if (this.META.hasOwnProperty(name)) {
+                generatedMETA[name] = this.META[name];
             }
         }
 

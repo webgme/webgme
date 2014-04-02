@@ -96,6 +96,20 @@ require(
                 DEBUG = false;
             }
 
+
+            // attach external libraries to extlib/*
+            var keys = Object.keys(CONFIG.paths);
+            for (var i = 0; i < keys.length; i += 1) {
+                // assume this is a relative path from the current working directory
+                CONFIG.paths[keys[i]] = 'extlib/' + CONFIG.paths[keys[i]];
+            }
+
+            // update client config to route the external lib requests
+            require.config({
+                paths: CONFIG.paths
+            });
+
+
             webGME.start();
         });
     }
