@@ -23,6 +23,7 @@ define(['plugin/PluginConfig',
         this.project = null;
         this.projectName = null;
         this.branchName = null;
+        this.branchHash = null;
         this.commitHash = null;
         this.currentHash = null;
         this.rootNode = null;
@@ -56,6 +57,7 @@ define(['plugin/PluginConfig',
         this.project = config.project;
         this.projectName = config.projectName;
         this.branchName = config.branchName;
+        this.branchHash = config.branchName ? config.commitHash : null;
         this.commitHash = config.commitHash;
         this.currentHash = config.commitHash;
         this.rootNode = config.rootNode;
@@ -125,23 +127,47 @@ define(['plugin/PluginConfig',
             // try to fast forward branch if there was a branch name defined
 
             // FIXME: what if master branch is already in a different state?
+
+            this.project.getBranchNames(function (err, branchNames) {
+                if (branchNames.hasOwnProperty(self.branchName)) {
+                    var branchHash = branchNames[self.branchName];
+                    if (branchHash === self.branchHash) {
+                        // the branch does not have any new commits
+                        // try to fast forward branch to the current commit
+                        self.project.setBranchHash(self.branchName, self.branchHash, self.currentHash, function(err) {
+                            if (err) {
+                                // fast forward failed
+                                self.logger.error(err);
+                                self.logger.info('"' + self.branchName + '" was NOT updated');
+                                self.logger.info('Project was saved to ' + self.currentHash + ' commit.');
+                            } else {
+                                // successful fast forward of branch to the new commit
+                                self.logger.info('"' + self.branchName + '" was updated to the new commit.');
+                                // roll starting point on success
+                                self.branchHash = self.currentHash;
+                            }
+                            callback(err);
+                        });
+                    } else {
+                        // branch has changes a merge is required
+                        // TODO: try auto-merge, if fails ...
+                        self.logger.warn('Cannot fast forward "' + self.branchName + '" branch. Merge is required but not supported yet.');
+                        self.logger.info('Project was saved to ' + self.currentHash + ' commit.');
+                        callback(null);
+                    }
+                } else {
+                    // branch was deleted or not found, do nothing
+                    self.logger.info('Project was saved to ' + self.currentHash + ' commit.');
+                    callback(null);
+                }
+            });
             // FIXME: is this call async??
             // FIXME: we are not tracking all commits that we make
-            this.project.setBranchHash(this.branchName, this.commitHash, this.currentHash, function(err) {
-                //TODO now what??? - could we screw up?
-                if (err) {
-                    self.logger.error(err);
-                    self.logger.info('"' + self.branchName + '" was NOT updated');
-                } else {
-                    self.logger.info('"' + self.branchName + '" was updated to the new commit.');
-                    // roll starting point on success
-                    self.commitHash = self.currentHash;
-                }
-                callback(err);
-            });
+
         } else {
+            // making commits, we have not started from a branch
             this.logger.info('Project was saved to ' + this.currentHash + ' commit.');
-            callback();
+            callback(null);
         }
     };
 
