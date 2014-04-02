@@ -3,3 +3,16 @@
  * 
  * Author: Robert Kereskenyi
  */
+.plugin-config-dialog .control-group .controls .widget span {
+  margin-top: 5px;
+  font-size: 14px;
+  line-height: 20px;
+  display: block; }
+.plugin-config-dialog .control-group .controls .widget .iCheckBox {
+  margin-top: 6px; }
+.plugin-config-dialog .control-group .controls .widget div.color-picker {
+  height: 30px;
+  width: 220px;
+  margin-top: 0px;
+  cursor: pointer;
+  border-radius: 4px; }

@@ -6,14 +6,18 @@
 
 "use strict";
 
-define(['text!html/Dialogs/PluginConfig/PluginConfigDialog.html',
-    'css!/css/Dialogs/PluginConfig/PluginConfigDialog'], function (pluginConfigDialogTemplate) {
+define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
+    'text!html/Dialogs/PluginConfig/PluginConfigDialog.html',
+    'css!/css/Dialogs/PluginConfig/PluginConfigDialog'], function (PropertyGridWidgetManager,
+                                                                   pluginConfigDialogTemplate) {
 
     var PluginConfigDialog,
         PLUGIN_DATA_KEY = 'plugin',
         ATTRIBUTE_DATA_KEY = 'attribute';
 
     PluginConfigDialog = function () {
+        this._propertyGridWidgetManager = new PropertyGridWidgetManager();
+        this._propertyGridWidgetManager.registerWidgetForType('boolean', 'iCheckBox');
     };
 
     PluginConfigDialog.prototype.show = function (pluginConfigs, fnCallback) {
@@ -52,7 +56,7 @@ define(['text!html/Dialogs/PluginConfig/PluginConfigDialog.html',
 
         this._divContainer = this._dialog.find('.modal-body');
 
-        //this._dialog.find('.modal-body').html(JSON.stringify(pluginConfigs, null, 2).replace(/\n/g, '<br>').replace(/  /g, '&nbsp;&nbsp;'));
+        this._widgets = {};
 
         this._btnSave.on('click', function (event) {
             var pluginConfigs = self._readConfig();
@@ -72,26 +76,25 @@ define(['text!html/Dialogs/PluginConfig/PluginConfigDialog.html',
         }
     };
 
-    var ENTRY_BASE = $('<div class="control-group"><label class="control-label" for="inputID">NAME</label><div class="controls"><input type="text" id="inputID"></div></div>');
+    var ENTRY_BASE = $('<div class="control-group"><label class="control-label">NAME</label><div class="controls"></div></div>');
     PluginConfigDialog.prototype._generatePluginSection = function (pluginName, pluginConfig, containerEl) {
         var len = pluginConfig.length,
             i,
             el,
             pluginConfigEntry,
-            inputID;
+            widget;
 
+        this._widgets[pluginName] = {};
         for (i = 0; i < len; i += 1) {
             pluginConfigEntry = pluginConfig[i];
-            inputID = 'input' + pluginConfigEntry.name;
+
+            widget = this._propertyGridWidgetManager.getWidgetForProperty(pluginConfigEntry);
+            this._widgets[pluginName][pluginConfigEntry.name] = widget;
 
             el = ENTRY_BASE.clone();
+            el.data(ATTRIBUTE_DATA_KEY, pluginConfigEntry.name);
+            el.find('.controls').append(widget.el);
 
-            el.find('input').attr('id', inputID);
-            el.find('input').data(PLUGIN_DATA_KEY, pluginName);
-            el.find('input').data(ATTRIBUTE_DATA_KEY, pluginConfigEntry.name);
-            el.find('input').val(pluginConfigEntry.value);
-
-            el.find('label.control-label').attr('for', inputID);
             el.find('label.control-label').text(pluginConfigEntry.displayName);
 
             containerEl.append(el);
@@ -99,16 +102,20 @@ define(['text!html/Dialogs/PluginConfig/PluginConfigDialog.html',
     };
 
     PluginConfigDialog.prototype._readConfig = function () {
-        var newConfig = {};
+        var newConfig = {},
+            plugin,
+            attrName;
 
-        this._divContainer.find('input').each(function() {
-            var plugin = $(this).data(PLUGIN_DATA_KEY),
-                attrName = $(this).data(ATTRIBUTE_DATA_KEY),
-                attrValue = $(this).val();
-
-            newConfig[plugin] = newConfig[plugin] || {};
-            newConfig[plugin][attrName] = attrValue;
-        });
+        for (plugin in this._widgets) {
+            if (this._widgets.hasOwnProperty(plugin)) {
+                for (attrName in this._widgets[plugin]) {
+                    if (this._widgets[plugin].hasOwnProperty(attrName)) {
+                        newConfig[plugin] = newConfig[plugin] || {};
+                        newConfig[plugin][attrName] = this._widgets[plugin][attrName].getValue();
+                    }
+                }
+            }
+        }
 
         return newConfig;
     };
