@@ -299,8 +299,9 @@ define(['logManager',
         });
 
         __logger.info("creating decorator specific routing rules");
-        __app.get('/bin/getconfig/',ensureAuthenticated,function(req,res){
-            res.json(CONFIG);
+        __app.get('/bin/getconfig.js',ensureAuthenticated,function(req,res){
+            res.status(200);
+            res.end("define([],function(){ return "+JSON.stringify(CONFIG)+";});");
         });
         __logger.info("creating decorator specific routing rules");
         __app.get(/^\/decorators\/.*/,ensureAuthenticated,function(req,res){
@@ -359,10 +360,28 @@ define(['logManager',
             });
         });
 
+
+        __logger.info("creating external library specific routing rules");
+        __app.get(/^\/extlib\/.*/,ensureAuthenticated,function(req,res){
+            //first we try to give back the common extlib/modules
+
+            var urlArray = req.path.split('/');
+            urlArray[1] = '.';
+            urlArray.shift();
+
+            var relPath = urlArray.join('/');
+
+            res.sendfile(relPath,function(err){
+                if(err){
+                    res.send(404);
+                }
+            });
+        });
+
         __logger.info("creating basic static content related routing rules");
         //static contents
         //javascripts - core and transportation related files
-        __app.get(/^\/(common|util|storage|core|config|auth|bin|coreclient|plugin)\/.*\.js$/,ensureAuthenticated,function(req,res){
+        __app.get(/^\/(common|util|storage|core|config|auth|bin|coreclient)\/.*\.js$/,ensureAuthenticated,function(req,res){
             res.sendfile(Path.join(CONFIG.basedir,req.path),function(err){
                 res.send(404);
             });

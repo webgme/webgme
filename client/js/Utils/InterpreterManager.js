@@ -115,7 +115,7 @@ define(['core/core',
 
                             //config.active = WebGMEGlobal.State.getActiveObject() || null;
 
-                            if(globalconfig.runOnServer === "true"){
+                            if(globalconfig.runOnServer === true){
                                 var context = {
                                     managerConfig: config,
                                     pluginConfigs:updatedConfig
