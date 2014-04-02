@@ -105,7 +105,7 @@ define(['core/core',
                                 "selected": null,
                                 "commit": self._client.getActualCommit(), //"#668b3babcdf2ddcd7ba38b51acb62d63da859d90",
                                 //"root": ""
-                                "branchName": null
+                                "branchName": self._client.getActualBranch() // this has priority over the commit
                             };
 
                             // FIXME: selected object should be an array of objects
