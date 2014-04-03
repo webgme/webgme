@@ -124,9 +124,9 @@ var main = function (CONFIG) {
         "database": CONFIG.mongodatabase,
         "project": projectName,
         "token": "",
-        "selected": selectedID,
+        "activeNode": selectedID,
+        "activeSelection": [],
         "commit": null, //"#668b3babcdf2ddcd7ba38b51acb62d63da859d90",
-        //"root": ""
         "branchName": branch
     };
 

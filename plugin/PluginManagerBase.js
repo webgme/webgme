@@ -110,28 +110,27 @@ define([
      */
     PluginManagerBase.prototype.getPluginContext = function (managerConfiguration, callback) {
 
+        // TODO: check if callback is a function
+
         var self = this;
 
         var pluginContext = new PluginContext();
 
-        // TODO: initialize context
-
-        // TODO: based on the string values get the node objects
+        // based on the string values get the node objects
         // 1) Open project
-        // 2) Load commit hash
+        // 2) Load branch OR commit hash
         // 3) Load rootNode
-        // 4) Load selected object
-        // 5) Load selected objects
+        // 4) Load active object
+        // 5) Load active selection
         // 6) Update context
         // 7) return
-
-        //callback(null, pluginContext);
 
         pluginContext.project = this._storage;
         pluginContext.projectName = managerConfiguration.project;
         pluginContext.core = new self._Core(pluginContext.project, {corerel: 2});
         pluginContext.commitHash = managerConfiguration.commit;
-        pluginContext.activeNode = managerConfiguration.selected;
+        pluginContext.activeNode = managerConfiguration.activeNode;
+        pluginContext.activeSelection = []; // managerConfiguration.activeSelection; // TODO: load all these objects
 
         // TODO: add activeNode and activeSelection
 
@@ -166,6 +165,7 @@ define([
             });
         };
 
+        // load commit hash and run based on branch name or commit hash
         if (managerConfiguration.branchName) {
             pluginContext.project.getBranchNames(function (err, branchNames) {
                 self.logger.debug(branchNames);
@@ -185,31 +185,34 @@ define([
     };
 
     PluginManagerBase.prototype.executePlugin = function (name, managerConfiguration, done) {
+        // TODO: check if done is a function
+
         var PluginClass = this.getPluginByName(name);
 
         var plugin = new PluginClass();
 
         var pluginLogger = LogManager.create('Plugin.' + name);
+
         managerConfiguration.FS.createArtifact(name + '-output');
         // TODO: write some information about this execution into the output directory
 
         plugin.initialize(pluginLogger, managerConfiguration.FS);
 
-        // TODO: if automation - get last config
-        //var pluginConfig = Plugin.getDefaultConfig();
         plugin.setCurrentConfig(this._pluginConfigs[name]);
 
         this.getPluginContext(managerConfiguration, function (err, pluginContext) {
             if (err) {
                 done(err, null);
+
             } else {
-                //pluginContext.setConfig(pluginConfig);
 
                 //set logging level at least to INFO level since the plugins write messages with INFO level onto the console
                 var logLevel = LogManager.getLogLevel();
                 if (logLevel < LogManager.logLevels.INFO) {
+                    // elevate log level if it is less then info
                     LogManager.setLogLevel(LogManager.logLevels.INFO);
                 }
+
                 // TODO: Would be nice to log to file and to console at the same time.
                 //LogManager.setFileLogPath('PluginManager.log');
 
@@ -220,7 +223,7 @@ define([
                     //set loglevel back to previous value
                     LogManager.setLogLevel(logLevel);
 
-                    // set common information (meta info about the plugin and measured execution times
+                    // set common information (meta info) about the plugin and measured execution times
 
                     result.setName(plugin.getName());
                     result.setTime((new Date()).toISOString());
