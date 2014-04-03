@@ -96,7 +96,23 @@ define(['logManager',
                 var index = req.url.indexOf('?');
                 req.session.originalQuery = index === -1 ? "" : req.url.substring(index);
             }
-            next();
+            if(typeof CONFIG.defaultUser === 'string' && req.session.authenticated !== true){
+                console.log(req.param('user'));
+                console.log(req.param('bla'));
+                //TODO: this has do be done in some other way
+                if(req.param('user') === CONFIG.defaultUser){
+                    req.session.udmId = CONFIG.defaultUser;
+                    req.session.authenticated = true;
+                    req.session.userType = 'GME';
+                    //probably this is the last step in authentication so we should set cookies as well
+                    res.cookie('webgme',req.session.udmId);
+                    next();
+                } else {
+                    next();
+                }
+            } else {
+                next();
+            }
         }
 
 

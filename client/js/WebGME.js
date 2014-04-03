@@ -55,6 +55,7 @@ define(['logManager',
             commitToLoad = util.getURLParameterByName('commit').toLowerCase(),
             projectToLoad = util.getURLParameterByName('project'),
             objectToLoad = util.getURLParameterByName('obj').toLowerCase(),
+            createNewProject = util.getURLParameterByName('create') === "true" ? true : false,
             logger = logManager.create('WebGME'),
             selectObject,
             loadBranch,
@@ -128,27 +129,80 @@ define(['logManager',
                 if (panels.length > 0) {
                     loadPanels(panels);
                 } else {
-                    projectToLoad = projectToLoad === "" ? CONFIG.project : projectToLoad;
-                    client.connectToDatabaseAsync({'open': projectToLoad,
-                                                    'project': projectToLoad}, function (err) {
-                        if (err) {
-                            logger.error(err);
-                        } else {
-                            if (branchToLoad && branchToLoad !== '') {
-                                loadBranch(branchToLoad);
-                            } else  if (commitToLoad && commitToLoad !== "") {
-                                client.selectCommitAsync(commitToLoad, function (err) {
-                                    if (err) {
+                    if(createNewProject && projectToLoad !== ""){
+                        client.connectToDatabaseAsync({},function(err){
+                            if(err){
+                                logger.error(err);
+                            } else {
+                                client.getAvailableProjectsAsync(function(err,projectArray){
+                                    if(err){
                                         logger.error(err);
                                     } else {
-                                        selectObject();
+                                        if(projectArray.indexOf(projectToLoad) !== -1){
+                                            //we fallback to loading
+                                            client.selectProjectAsync(projectToLoad,function(err){
+                                                if(err){
+                                                    logger.error(err);
+                                                } else {
+                                                    if (branchToLoad && branchToLoad !== '') {
+                                                        loadBranch(branchToLoad);
+                                                    } else  if (commitToLoad && commitToLoad !== "") {
+                                                        client.selectCommitAsync(commitToLoad, function (err) {
+                                                            if (err) {
+                                                                logger.error(err);
+                                                            } else {
+                                                                selectObject();
+                                                            }
+                                                        });
+                                                    } else {
+                                                        selectObject();
+                                                    }
+                                                }
+                                            });
+                                        } else {
+                                            //we create the project
+                                            client.createProjectAsync(projectToLoad,function(err){
+                                                if(err){
+                                                    logger.error(err);
+                                                } else {
+                                                    client.selectProjectAsync(projectToLoad,function(err) {
+                                                        if (err) {
+                                                            logger.error(err);
+                                                        } else {
+                                                            GMEConcepts.createBasicProjectSeed();
+                                                        }
+                                                        //otherwise we are pretty much done cause we ignore the other parameters
+                                                    });
+                                                }
+                                            });
+                                        }
                                     }
                                 });
-                            } else {
-                                selectObject();
                             }
-                        }
-                    });
+                        });
+                    } else {
+                        projectToLoad = projectToLoad === "" ? CONFIG.project : projectToLoad;
+                        client.connectToDatabaseAsync({'open': projectToLoad,
+                            'project': projectToLoad}, function (err) {
+                            if (err) {
+                                logger.error(err);
+                            } else {
+                                if (branchToLoad && branchToLoad !== '') {
+                                    loadBranch(branchToLoad);
+                                } else  if (commitToLoad && commitToLoad !== "") {
+                                    client.selectCommitAsync(commitToLoad, function (err) {
+                                        if (err) {
+                                            logger.error(err);
+                                        } else {
+                                            selectObject();
+                                        }
+                                    });
+                                } else {
+                                    selectObject();
+                                }
+                            }
+                        });
+                    }
                 }
             });
         };
