@@ -5,56 +5,109 @@
 'use strict';
 define(['plugin/PluginMessage'], function (PluginMessage) {
 
-    // result object that is serializable.
+    /**
+     * Initializes a new instance of a plugin result object.
+     *
+     * Note: this object is JSON serializable see serialize and deserialize methods.
+     *
+     * @constructor
+     */
     var PluginResult = function () {
         this.initialize();
     };
 
-    PluginResult.prototype.initialize = function() {
+    /**
+     * Initializes all properties of this object.
+     */
+    PluginResult.prototype.initialize = function () {
         this.success = false;
         this.messages = []; // array of PluginMessages
         this.pluginName = 'PluginName N/A';
         this.finishTime = null;
     };
 
-    PluginResult.prototype.getSuccess = function() {
+    /**
+     * Gets the success flag of this result object
+     *
+     * @returns {boolean}
+     */
+    PluginResult.prototype.getSuccess = function () {
         return this.success;
     };
 
     /**
+     * Sets the success flag of this result.
+     *
+     * @param {boolean} value
+     */
+    PluginResult.prototype.setSuccess = function (value) {
+        this.success = value;
+    };
+
+    /**
+     * Returns with the plugin messages.
      *
      * @returns {plugin.PluginMessage[]}
      */
-    PluginResult.prototype.getMessages = function() {
+    PluginResult.prototype.getMessages = function () {
         return this.messages;
     };
 
     /**
+     * Adds a new plugin message to the messages list.
      *
      * @param {plugin.PluginMessage} pluginMessage
      */
-    PluginResult.prototype.addMessage = function(pluginMessage) {
+    PluginResult.prototype.addMessage = function (pluginMessage) {
         this.messages.push(pluginMessage);
     };
 
-    PluginResult.prototype.getName = function() {
+    /**
+     * Gets the name of the plugin to which the result object belongs to.
+     *
+     * @returns {string}
+     */
+    PluginResult.prototype.getName = function () {
         return this.pluginName;
     };
 
-    PluginResult.prototype.setName = function(name) {
-        this.pluginName = name;
+    //------------------------------------------------------------------------------------------------------------------
+    //--------------- Methods used by the plugin manager
+
+    /**
+     * Sets the name of the plugin to which the result object belongs to.
+     *
+     * @param pluginName - name of the plugin
+     */
+    PluginResult.prototype.setName = function (pluginName) {
+        this.pluginName = pluginName;
     };
 
-    PluginResult.prototype.getTime = function() {
+    /**
+     * Gets the ISO 8601 representation of the time when the plugin finished its execution.
+     *
+     * @returns {string}
+     */
+    PluginResult.prototype.getTime = function () {
         return this.finishTime;
     };
 
-    PluginResult.prototype.setTime = function(time) {
+    /**
+     * Sets the ISO 8601 representation of the time when the plugin finished its execution.
+     *
+     * @param {string} time
+     */
+    PluginResult.prototype.setTime = function (time) {
         this.finishTime = time;
     };
 
 
-    PluginResult.prototype.serialize = function() {
+    /**
+     * Serializes this object to a JSON representation.
+     *
+     * @returns {{success: boolean, messages: plugin.PluginMessage[], pluginName: string, finishTime: stirng}}
+     */
+    PluginResult.prototype.serialize = function () {
         var result = {
             success: this.success,
             messages: [],
@@ -69,6 +122,11 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
         return result;
     };
 
+    /**
+     * Deserializes the given serialized plugin result object.
+     *
+     * @param {{success: boolean, messages: plugin.PluginMessage[], pluginName: string, finishTime: stirng}} json
+     */
     PluginResult.prototype.deserialize = function (json) {
         this.initialize();
 

@@ -1,17 +1,32 @@
-/**
- * Created by Zsolt on 3/28/14.
+/*
+ * Copyright (C) 2014 Vanderbilt University, All rights reserved.
+ *
+ * Author: Zsolt Lattmann
  */
 
 'use strict';
 define([], function () {
 
-    // result object that is serializable.
+    /**
+     * Initializes a new instance of plugin node description object.
+     *
+     * Note: this object is JSON serializable see serialize method.
+     *
+     * @param {string} name - name of the webGME object.
+     * @param {string} id - unique identifier of the webGME node object: core.getPath(node)
+     * @constructor
+     */
     var PluginNodeDescription = function (name, id) {
 
         this.name = name;
         this.id = id;
     };
 
+    /**
+     * Serializes this object to a JSON representation.
+     *
+     * @returns {{}}
+     */
     PluginNodeDescription.prototype.serialize = function() {
         var keys = Object.keys(this);
         var result = {};
@@ -24,6 +39,11 @@ define([], function () {
         return result;
     };
 
+    /**
+     * Deserializes the given serialized plugin node description object.
+     *
+     * @param {{}} json - serialized plugin node description object
+     */
     PluginNodeDescription.prototype.deserialize = function (json) {
         if (json) {
             var keys = Object.keys(json);

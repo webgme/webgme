@@ -1,13 +1,18 @@
-/**
- * Created by zsolt on 3/20/14.
+/*
+ * Copyright (C) 2014 Vanderbilt University, All rights reserved.
+ *
+ * Author: Zsolt Lattmann
  */
-
 
 'use strict';
 define([], function () {
 
-    // does not need to be JSON serializable.
-    // can contain logger
+    /**
+     * Initializes a new instance of PluginContext. This context is set through PluginBase.configure method for a given
+     * plugin instance and execution.
+     *
+     * @constructor
+     */
     var PluginContext = function () {
 
         // TODO: something like this
@@ -18,18 +23,7 @@ define([], function () {
 //        context.selected = config.selected;
 //        context.storage = null;
 
-
-        this._config = null;
     };
-
-    PluginContext.prototype.setConfig = function (config) {
-        this._config = config;
-    };
-
-    PluginContext.prototype.getConfig = function () {
-        return this._config;
-    };
-
 
 
     return PluginContext;
