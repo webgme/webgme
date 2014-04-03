@@ -192,9 +192,20 @@ define(['plugin/PluginConfig',
             // FIXME: is the parent always loaded?
             // FIXME: what if parentNode is null?
             var parentNode = this.core.getParent(node);
-            var parentDescriptor = new PluginNodeDescription(this.core.getAttribute(parentNode, 'name'), this.core.getPath(parentNode));
-            var activeDescriptor = [new PluginNodeDescription(this.core.getAttribute(node, 'name'), this.core.getPath(node))];
-            var pluginMessage = new PluginMessage(this.currentHash, parentDescriptor, activeDescriptor, message);
+            var parentDescriptor = new PluginNodeDescription({
+                    name: this.core.getAttribute(parentNode, 'name'),
+                    id: this.core.getPath(parentNode)
+                });
+            var activeDescriptor = [new PluginNodeDescription({
+                    name: this.core.getAttribute(node, 'name'),
+                    id: this.core.getPath(node)
+                })];
+            var pluginMessage = new PluginMessage({
+                    commitHash: this.currentHash,
+                    activeNode: parentDescriptor,
+                    activeSelection: activeDescriptor,
+                    message: message
+                });
 
             this.result.addMessage(pluginMessage);
         };

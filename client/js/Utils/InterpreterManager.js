@@ -82,8 +82,7 @@ define(['core/core',
                                         console.error(err);
                                         callback(new PluginResult()); //TODO return proper error result
                                     } else {
-                                        var resultObject = new PluginResult();
-                                        resultObject.deserialize(result);
+                                        var resultObject = new PluginResult(result);
                                         callback(resultObject);
                                     }
                                 });

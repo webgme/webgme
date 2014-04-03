@@ -8,22 +8,33 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
     /**
      * Initializes a new instance of a plugin result object.
      *
-     * Note: this object is JSON serializable see serialize and deserialize methods.
+     * Note: this object is JSON serializable see serialize method.
      *
+     * @param config - deserializes an existing configuration to this object.
      * @constructor
      */
-    var PluginResult = function () {
-        this.initialize();
-    };
+    var PluginResult = function (config) {
+        if (config) {
+            this.success = config.success;
+            this.pluginName = config.pluginName;
+            this.finishTime = config.finishTime;
+            this.messages = [];
 
-    /**
-     * Initializes all properties of this object.
-     */
-    PluginResult.prototype.initialize = function () {
-        this.success = false;
-        this.messages = []; // array of PluginMessages
-        this.pluginName = 'PluginName N/A';
-        this.finishTime = null;
+            for (var i = 0; i < config.messages.length; i += 1) {
+                var pluginMessage;
+                if (config.messages[i] instanceof PluginMessage) {
+                    pluginMessage = config.messages[i];
+                } else {
+                    pluginMessage = new PluginMessage(config.messages[i]);
+                }
+                this.messages.push(pluginMessage);
+            }
+        } else {
+            this.success = false;
+            this.messages = []; // array of PluginMessages
+            this.pluginName = 'PluginName N/A';
+            this.finishTime = null;
+        }
     };
 
     /**
@@ -120,27 +131,6 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
         }
 
         return result;
-    };
-
-    /**
-     * Deserializes the given serialized plugin result object.
-     *
-     * @param {{success: boolean, messages: plugin.PluginMessage[], pluginName: string, finishTime: stirng}} json
-     */
-    PluginResult.prototype.deserialize = function (json) {
-        this.initialize();
-
-        if (json) {
-            this.success = json.success;
-            this.pluginName = json.pluginName;
-            this.finishTime = json.finishTime;
-
-            for (var i = 0; i < json.messages.length; i += 1) {
-                var pluginMessage = new PluginMessage();
-                pluginMessage.deserialize(json.messages[i]);
-                this.messages.push(pluginMessage);
-            }
-        }
     };
 
     return PluginResult;

@@ -10,19 +10,40 @@ define(['plugin/PluginNodeDescription'], function (PluginNodeDescription) {
     /**
      * Initializes a new instance of plugin message.
      *
-     * @param {string} commitHash - commit in which the object IDs can be found
-     * @param {string} activeNode - context in which the message should be interpreted
-     * @param {string[]} activeSelection - involved objects
-     * @param {string} message - textual description of the message
+     * Note: this object is JSON serializable see serialize method.
+     *
+     * @param config - deserializes an existing configuration to this object.
      * @constructor
      */
-    var PluginMessage = function (commitHash, activeNode, activeSelection, message) {
+    var PluginMessage = function (config) {
+        if (config) {
+            this.commitHash = config.commitHash;
+            if (config.activeNode instanceof PluginNodeDescription) {
+                this.activeNode = config.activeNode;
+            } else {
+                this.activeNode = new PluginNodeDescription(config.activeNode);
+            }
 
-        this.commitHash = commitHash || '';
-        this.activeNode = activeNode || new PluginNodeDescription();
-        this.activeSelection = activeSelection || [];
-        this.message = message || '';
-        // TODO: message type ERROR, WARNING, INFO, DEBUG
+            this.message = config.message;
+            this.activeSelection = [];
+
+            for (var i = 0; i < config.activeSelection.length; i += 1) {
+                var activeObj;
+                if (config.activeSelection[i] instanceof PluginNodeDescription) {
+                    activeObj = config.activeSelection[i];
+                } else {
+                    activeObj = new PluginNodeDescription(config.activeSelection[i]);
+                }
+                this.activeSelection.push(activeObj);
+            }
+            // TODO: message type ERROR, WARNING, INFO, DEBUG
+        } else {
+            this.commitHash = '';
+            this.activeNode = new PluginNodeDescription();
+            this.activeSelection = [];
+            this.message = '';
+            // TODO: message type ERROR, WARNING, INFO, DEBUG
+        }
     };
 
     /**
@@ -43,32 +64,6 @@ define(['plugin/PluginNodeDescription'], function (PluginNodeDescription) {
         }
 
         return result;
-    };
-
-    /**
-     * Deserializes the given serialized plugin message object.
-     *
-     * @param {{}} json - serialized plugin message object
-     */
-    PluginMessage.prototype.deserialize = function (json) {
-        if (json) {
-            this.commitHash = json.commitHash;
-
-            var activeNode = new PluginNodeDescription();
-            activeNode.deserialize(json.activeNode);
-
-            this.activeNode = activeNode;
-            this.activeSelection = [];
-            this.message = json.message;
-
-
-            for (var i = 0; i < json.activeSelection.length; i += 1) {
-                var activeObj = new PluginNodeDescription();
-                activeObj.deserialize(json.activeSelection[i]);
-
-                this.activeSelection.push(activeObj);
-            }
-        }
     };
 
     return PluginMessage;

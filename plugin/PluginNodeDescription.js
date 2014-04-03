@@ -12,14 +12,17 @@ define([], function () {
      *
      * Note: this object is JSON serializable see serialize method.
      *
-     * @param {string} name - name of the webGME object.
-     * @param {string} id - unique identifier of the webGME node object: core.getPath(node)
+     * @param config - deserializes an existing configuration to this object.
      * @constructor
      */
-    var PluginNodeDescription = function (name, id) {
-
-        this.name = name;
-        this.id = id;
+    var PluginNodeDescription = function (config) {
+        if (config) {
+            this.name = config.name;
+            this.id = config.id;
+        } else {
+            this.name = '';
+            this.id = '';
+        }
     };
 
     /**
@@ -37,21 +40,6 @@ define([], function () {
         }
 
         return result;
-    };
-
-    /**
-     * Deserializes the given serialized plugin node description object.
-     *
-     * @param {{}} json - serialized plugin node description object
-     */
-    PluginNodeDescription.prototype.deserialize = function (json) {
-        if (json) {
-            var keys = Object.keys(json);
-            for (var i = 0; i < keys.length; i += 1) {
-                // TODO: check for type on deserialization
-                this[keys[i]] = json[keys[i]];
-            }
-        }
     };
 
     return PluginNodeDescription;
