@@ -221,7 +221,8 @@ define(['logManager',
             __googleStrategy = PassGoogle.Strategy,
             __REST = null,
             __canCheckToken = true,
-            __httpServer = null;
+            __httpServer = null,
+            __logoutUrl = CONFIG.logoutUrl || '/';
 
         //creating the logmanager
         LogManager.setLogLevel(CONFIG.loglevel || LogManager.logLevels.WARNING);
@@ -282,7 +283,7 @@ define(['logManager',
             req.logout();
             req.session.authenticated = false;
             req.session.userType = 'unknown';
-            res.redirect('/');
+            res.redirect(__logoutUrl);
         });
         __app.get('/login',storeQueryString,function(req,res){
             res.location('/login');
