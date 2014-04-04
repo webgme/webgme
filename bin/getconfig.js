@@ -61,7 +61,9 @@ if (typeof define !== "function" && typeof require === "function" && typeof proc
             sessioncookieid : 'webgmeSid',
             sessioncookiesecret : 'meWebGMEez',
             debug: false,
-            paths: {}
+            paths: {},
+            pluginBasePaths: [],
+            decoratorpaths:[]
 		};
 
 		if (LOCAL) {

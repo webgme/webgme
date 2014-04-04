@@ -356,7 +356,7 @@ define(['logManager',
                     }
 
                     if(typeof basePath === 'string' && typeof relPath === 'string'){
-                        res.sendfile(Path.join(basePath,relPath),function(err){
+                        res.sendfile(Path.resolve(Path.join(basePath,relPath)),function(err){
                             if(err){
                                 res.send(404);
                             }
