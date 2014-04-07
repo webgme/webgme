@@ -23,3 +23,5 @@
         max-width: 120px;
         overflow: hidden;
         text-overflow: ellipsis; }
+.object-browser .tab-content {
+  overflow: visible; }
