@@ -48,7 +48,7 @@ define(['logManager',
             this._territoryId = undefined;
         }
 
-        this._treeBrowser.deleteNode(this._nodes[PROJECT_ROOT_ID].treeNode);
+        this._treeBrowser.deleteNode(this._nodes[FCO_ID].treeNode);
 
         this._initialize();
     };
