@@ -44,6 +44,14 @@ var getPluginNames = function(basePaths){
 };
 
 var main = function (CONFIG, pluginConfig, callback) {
+    // TODO: Requirements
+    // 1) Be able to run it from command line with a set of arguments
+    // 2) Be able to specify the configuration and plugin configuration as commnad line parameters
+    // 3) Be able to call the main function from another module/test
+    // 4) Return in the callback with an ERROR and the plugin result
+    // 5) Use logManager for logging
+    // 6) Plugin name and projects are mandatory parameters
+
 
     // main code
 
@@ -142,6 +150,7 @@ var main = function (CONFIG, pluginConfig, callback) {
 
     var PluginManager = requirejs('plugin/PluginManagerBase');
     var PluginFSServer = requirejs('plugin/PluginFSServer');
+    var errorResult = requirejs('plugin/PluginResult');
     // TODO: move the downloader to PluginManager
 
     var Plugin = requirejs('plugin/'+pluginName+'/'+pluginName+'/'+pluginName);
@@ -185,20 +194,20 @@ var main = function (CONFIG, pluginConfig, callback) {
                         project.closeProject();
                         storage.closeDatabase();
                         if (callback) {
-                            callback(err);
+                            callback(err, result);
                         }
                     });
                 } else {
                     logger.error(err);
                     if (callback) {
-                        callback(err);
+                        callback(err, errorResult);
                     }
                 }
             });
         } else {
             logger.error(err);
             if (callback) {
-                callback(err);
+                callback(err, errorResult);
             }
         }
     });
