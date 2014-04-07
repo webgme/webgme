@@ -823,6 +823,6 @@ define(['jquery',
         getValidSetTypesFromContainerToMember: _getValidSetTypesFromContainerToMember,
         getCrosscuts: _getCrosscuts,
         getSets: _getSets,
-        getFCOId: _getFCOId,
+        getFCOId: _getFCOId
     }
 });
