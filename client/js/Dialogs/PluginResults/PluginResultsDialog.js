@@ -78,12 +78,12 @@ define(['clientUtil',
                 resultHeader.append(ICON_ERROR.clone());
             }
 
-            var pluginName = result.getName ? result.getName() : 'PluginName N/A';
+            var pluginName = result.getPluginName ? result.getPluginName() : 'PluginName N/A';
             spanResultTitle = RESULT_NAME_BASE.clone();
             spanResultTitle.text(pluginName);
             resultHeader.append(spanResultTitle);
 
-            var pluginTime = result.getTime ? clientUtil.formattedDate(new Date(result.getTime()), 'elapsed') : 'Time: N/A';
+            var pluginTime = result.getFinishTime ? clientUtil.formattedDate(new Date(result.getFinishTime()), 'elapsed') : 'Time: N/A';
             spanResultTime = RESULT_TIME_BASE.clone();
             spanResultTime.text(pluginTime);
             resultHeader.append(spanResultTime);

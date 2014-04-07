@@ -238,8 +238,8 @@ define([
 
                         // set common information (meta info) about the plugin and measured execution times
 
-                        result.setName(plugin.getName());
-                        result.setTime((new Date()).toISOString());
+                        result.setPluginName(plugin.getName());
+                        result.setFinishTime((new Date()).toISOString());
 
                         done(err, result);
                     });
