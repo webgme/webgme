@@ -15,7 +15,8 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
         SPACING_CLOSED_DESKTOP = 6,
         SPACING_OPEN = WebGMEGlobal.SUPPORTS_TOUCH ? SPACING_OPEN_TOUCH : SPACING_OPEN_DESKTOP,
         SPACING_CLOSED = WebGMEGlobal.SUPPORTS_TOUCH ? SPACING_CLOSED_TOUCH : SPACING_CLOSED_DESKTOP,
-        CONFIG = JSON.parse(DefaultLayoutConfigJSON);
+        CONFIG = JSON.parse(DefaultLayoutConfigJSON),
+        SIDE_PANEL_WIDTH = 202;
 
     DefaultLayout = function (params) {
         this._logger = (params && params.logger) || logManager.create('DefaultLayout');
@@ -58,8 +59,9 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
                 size: 27        //has to match footer CSS settings (height + border)
             }
             ,  east: {
-                size: 202,
-                resizable: false,
+                size: SIDE_PANEL_WIDTH,
+                minSize: SIDE_PANEL_WIDTH,
+                resizable: true,
                 slidable: false,
                 spacing_open: SPACING_OPEN,
                 spacing_closed: SPACING_CLOSED,
@@ -68,8 +70,9 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
                 }
             }
             ,  west: {
-                size: 202,
-                resizable: false,
+                size: SIDE_PANEL_WIDTH,
+                minSize: SIDE_PANEL_WIDTH,
+                resizable: true,
                 slidable: false,
                 spacing_open: SPACING_OPEN,
                 spacing_closed: SPACING_CLOSED,
