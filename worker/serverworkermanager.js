@@ -8,6 +8,10 @@ function(ASSERT,Child,CONSTANTS){
         _parameters.maxworkers = _parameters.maxworkers || 1;
 
         //helping functions
+        //TODO always check if this works properly
+        function getBaseDir(){
+            return requirejs.s.contexts._.config.baseUrl;
+        }
 
         function checkRequests(){
             //when this function called then probably some worker became free so we try to assign some job to it
@@ -119,7 +123,7 @@ function(ASSERT,Child,CONSTANTS){
                 //Set an unused port number.
                 process.execArgv.push('--debug-brk=' + (32000+i));
             }
-            var worker = Child.fork(_parameters.basedir+'/worker/simpleworker.js');
+            var worker = Child.fork(getBaseDir()+'/worker/simpleworker.js');
             _workers.push({pid:worker.pid,worker:worker,state:CONSTANTS.workerStates.initializing,resid:null}) - 1;
 
             worker.on('message', messageHandling);

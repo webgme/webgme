@@ -55,8 +55,6 @@ define(['logManager',
             __storageOptions.log = LogManager.create('StandAloneWebGMEServer-storage');
             __storageOptions.getToken = __gmeAuth.getToken;
 
-            __storageOptions.basedir =  CONFIG.basedir;
-
             __storageOptions.intoutdir = CONFIG.intoutdir;
             __storageOptions.pluginBasePaths = CONFIG.pluginBasePaths;
 
@@ -222,7 +220,9 @@ define(['logManager',
             __REST = null,
             __canCheckToken = true,
             __httpServer = null,
-            __logoutUrl = CONFIG.logoutUrl || '/';
+            __logoutUrl = CONFIG.logoutUrl || '/',
+            __baseDir = requirejs.s.contexts._.config.baseUrl, //TODO always check if this functions correctly
+            __clientBaseDir = __baseDir+'/client';
 
         //creating the logmanager
         LogManager.setLogLevel(CONFIG.loglevel || LogManager.logLevels.WARNING);
@@ -273,7 +273,7 @@ define(['logManager',
 
         __logger.info("creating login routing rules for the static server");
         __app.get('/',storeQueryString,checkVF,ensureAuthenticated,function(req,res){
-            res.sendfile(CONFIG.clientbasedir+'/index.html',{user:req.user},function(err){
+            res.sendfile(__clientBaseDir+'/index.html',{user:req.user},function(err){
                 res.send(404);
             });
         });
@@ -287,7 +287,7 @@ define(['logManager',
         });
         __app.get('/login',storeQueryString,function(req,res){
             res.location('/login');
-            res.sendfile(CONFIG.clientbasedir+'/login.html',{},function(err){
+            res.sendfile(__clientBaseDir+'/login.html',{},function(err){
                 res.send(404);
             });
         });
@@ -340,7 +340,7 @@ define(['logManager',
         __logger.info("creating plug-in specific routing rules");
         __app.get(/^\/plugin\/.*/,ensureAuthenticated,function(req,res){
             //first we try to give back the common plugin/modules
-            res.sendfile(Path.join(CONFIG.basedir,req.path),function(err){
+            res.sendfile(Path.join(__baseDir,req.path),function(err){
                 if(err){
                     //this means that it is probably plugin/pluginName or plugin/pluginName/relativePath format so we try to look for those in our config
                     //first we check if we have the plugin registered in our config
@@ -397,14 +397,14 @@ define(['logManager',
         //static contents
         //javascripts - core and transportation related files
         __app.get(/^\/(common|util|storage|core|config|auth|bin|coreclient)\/.*\.js$/,ensureAuthenticated,function(req,res){
-            res.sendfile(Path.join(CONFIG.basedir,req.path),function(err){
+            res.sendfile(Path.join(__baseDir,req.path),function(err){
                 res.send(404);
             });
         });
 
         //TODO remove this part as this is only temporary!!!
         __app.get('/docs/*',function(req,res){
-            res.sendfile(Path.join(CONFIG.basedir,req.path),function(err){
+            res.sendfile(Path.join(__baseDir,req.path),function(err){
                 res.send(404);
             });
         });
@@ -412,18 +412,18 @@ define(['logManager',
         //client contents - js/html/css
         //css classified as not secure content
         __app.get(/^\/.*\.(css|ico)$/,function(req,res){
-            res.sendfile(Path.join(CONFIG.clientbasedir,req.path),function(err){
+            res.sendfile(Path.join(__clientBaseDir,req.path),function(err){
                 res.send(404);
             });
         });
         __app.get(/^\/.*\.(js|html|gif|png|bmp|svg|json)$/,ensureAuthenticated,function(req,res){
             //package.json
             if(req.path === '/package.json') {
-                res.sendfile(Path.join(CONFIG.basedir,req.path),function(err){
+                res.sendfile(Path.join(__baseDir,req.path),function(err){
                     res.send(404);
                 });
             } else {
-                res.sendfile(Path.join(CONFIG.clientbasedir,req.path),function(err){
+                res.sendfile(Path.join(__clientBaseDir,req.path),function(err){
                     res.send(404);
                 });
             }

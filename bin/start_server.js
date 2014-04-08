@@ -1,21 +1,12 @@
-var requirejs = require("requirejs");
+var webgme = require('./../webgme'),
+    requirejs = require('requirejs'),//TODO baseUrl should be set by webgme...
+    PATH = require('path'),
+    baseDir = requirejs.s.contexts._.config.baseUrl, //TODO ALWAYS check!!!
+    clientBaseDir = baseDir+"/client";
 
+var config = webgme.BaseConfig;
+config.decoratorpaths.push(PATH.join(clientBaseDir,"/decorators"));
+config.pluginBasePaths.push(PATH.join(baseDir,"/coreplugins"));
 
-requirejs.config({
-    nodeRequire: require,
-    baseUrl: __dirname + "/..",
-    paths: {
-        "logManager": "common/LogManager"
-    }
-});
-requirejs(['bin/getconfig','server/standalone','path'],function(CONFIG,StandAloneServer,Path){
-
-    CONFIG.basedir = __dirname + "/..";
-    CONFIG.clientbasedir = Path.resolve(__dirname+'./../client');
-    CONFIG.decoratorpaths.push(Path.join(CONFIG.clientbasedir,"/decorators"));
-    CONFIG.intoutdir = Path.join(CONFIG.basedir,"/_poutputs_/");
-    CONFIG.pluginBasePaths.push(Path.join(CONFIG.basedir,"/coreplugins"));
-
-    var myServer = new StandAloneServer(CONFIG);
-    myServer.start();
-});
+var myServer = new webgme.standaloneServer(config);
+myServer.start();
