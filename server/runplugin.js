@@ -50,7 +50,7 @@ define([
         };
 
         var addPluginPathsToRequirejs = function(basepaths){
-            var requirejsBase = PATH.resolve(requirejs.s.contexts._.config.baseUrl),
+            var requirejsBase = webGMEGlobal.baseDir,
                 pluginNames = getPluginNames(basepaths);
 
             //we go through every plugin and we check where we are able to find the main part of it so we can set the plugin/pluginName path according that in requirejs

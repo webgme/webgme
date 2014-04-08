@@ -26,6 +26,52 @@ requirejs.config({
     paths:paths
 });
 
+var __CONFIG = requirejs('baseConfig');
+
+var getConfig = function(){
+    return JSON.parse(JSON.stringify(__CONFIG));
+};
+var setConfig = function(configObject){
+    var i;
+    //adding the paths
+    if(configObject.paths){
+        for(i in configObject.paths){
+            __CONFIG.paths[i] = configObject.paths[i];
+        }
+    }
+
+    //merge plugin base paths
+    if(configObject.pluginBasePaths && configObject.pluginBasePaths.length){
+        __CONFIG.pluginBasePaths = configObject.pluginBasePaths.concat(__CONFIG.pluginBasePaths);
+    }
+
+    //merge decorator base paths
+    if(configObject.decoratorpaths && configObject.decoratorpaths.length){
+        __CONFIG.decoratorpaths = configObject.decoratorpaths.concat(__CONFIG.decoratorpaths);
+    }
+
+    //merge visualizer descriptor paths
+    if(configObject.visualizerDescriptors && configObject.visualizerDescriptors.length){
+        __CONFIG.visualizerDescriptors = __CONFIG.visualizerDescriptors.concat(configObject.visualizerDescriptors);
+    }
+};
+
+//creating a global variable
+webGMEGlobal = {
+    baseDir : PATH.resolve(baseDir),
+    getConfig : getConfig,
+    setConfig : setConfig
+};
+
+//setting the default array elements
+//TODO this should be done already in getconfig !!!
+webGMEGlobal.setConfig({
+    decoratorpaths : [PATH.join(PATH.join(baseDir,'/client'),"/decorators")],
+    pluginBasePaths : [PATH.join(baseDir,"/coreplugins")],
+    visualizerDescriptors : [PATH.join(baseDir,"/client/js/Visualizers.json")]
+});
+
+
 module.exports = {
     clientStorage: requirejs('storage/clientstorage'),
     serverStorage: requirejs('storage/serverstorage'),
@@ -33,6 +79,5 @@ module.exports = {
     core: requirejs('core/core'),
     standaloneServer: requirejs('server/standalone'),
     logManager: requirejs('logManager'),
-    runPlugin: requirejs('server/runplugin'),
-    BaseConfig : requirejs('baseConfig')
+    runPlugin: requirejs('server/runplugin')
 };

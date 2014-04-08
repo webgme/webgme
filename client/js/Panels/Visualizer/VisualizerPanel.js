@@ -5,7 +5,7 @@ define(['logManager',
     'js/Constants',
     'js/PanelBase/PanelBaseWithHeader',
     'js/Panels/SplitPanel/SplitPanel',
-    'text!js/Visualizers.json',
+    '/listAllVisualizerDescriptors',
     'css!/css/Panels/Visualizer/VisualizerPanel'], function (logManager,
                                     LoaderProgressBar,
                                     CONSTANTS,
@@ -109,7 +109,7 @@ define(['logManager',
     VisualizerPanel.prototype._loadVisualizers = function () {
         var self = this;
 
-        this.addRange(JSON.parse(VisualizersJSON), function () {
+        this.addRange(VisualizersJSON, function () {
             self._setActiveVisualizer(DEFAULT_VISUALIZER, self._ul1);
         });
     };

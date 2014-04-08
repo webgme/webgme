@@ -32,6 +32,8 @@ define(['logManager',
     ){
 
     function StandAloneServer(CONFIG){
+        // if the config is not set we use the global
+        CONFIG = CONFIG || webGMEGlobal.getConfig();
         //public functions
         function start(){
             if(CONFIG.httpsecure){
@@ -204,6 +206,50 @@ define(['logManager',
                 return null;
             }
         }
+
+        function getVisualizersDescriptor(){
+            //we merge the contents of the CONFIG.visualizerDescriptors by id
+            var indexById = function(objectArray,id){
+                    var i,
+                        index = -1;
+                    for(i=0;i<objectArray.length;i++){
+                        if(objectArray[i].id === id){
+                            index = i;
+                            break;
+                        }
+                    }
+
+                    return index;
+                },
+                getVisualizerDescriptor = function(path){
+                    try{
+                        var descriptor = FS.readFileSync(path,'utf-8');
+                        descriptor = JSON.parse(descriptor);
+                        return descriptor;
+                    } catch (e) {
+                        //we do not care much of the error just give back an empty array
+                        return [];
+                    }
+                },
+                allVisualizersDescriptor = [],
+                i,j;
+
+            for(i=0;i<CONFIG.visualizerDescriptors.length;i++){
+                var descriptor = getVisualizerDescriptor(CONFIG.visualizerDescriptors[i]);
+                if(descriptor.length){
+                    for(j=0;j<descriptor.length;j++){
+                        var index = indexById(allVisualizersDescriptor,descriptor[j].id);
+                        if(index !== -1){
+                            allVisualizersDescriptor[index] = descriptor[j];
+                        } else {
+                            allVisualizersDescriptor.push(descriptor[j]);
+                        }
+                    }
+                }
+            }
+            return allVisualizersDescriptor;
+        }
+
         //here starts the main part
         //variables
         var __logger = null,
@@ -221,7 +267,7 @@ define(['logManager',
             __canCheckToken = true,
             __httpServer = null,
             __logoutUrl = CONFIG.logoutUrl || '/',
-            __baseDir = requirejs.s.contexts._.config.baseUrl, //TODO always check if this functions correctly
+            __baseDir = webGMEGlobal.baseDir,
             __clientBaseDir = __baseDir+'/client';
 
         //creating the logmanager
@@ -568,6 +614,11 @@ define(['logManager',
             }
             res.status(200);
             res.end("define([],function(){ return "+JSON.stringify(names)+";});");
+        });
+        __app.get('/listAllVisualizerDescriptors',ensureAuthenticated,function(req,res){
+            var allVisualizerDescriptors = getVisualizersDescriptor();
+            res.status(200);
+            res.end("define([],function(){ return "+JSON.stringify(allVisualizerDescriptors)+";});");
         });
 
         __logger.info("creating all other request rule - error 400 -");

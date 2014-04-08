@@ -63,10 +63,33 @@ if (typeof define !== "function" && typeof require === "function" && typeof proc
             debug: false,
             paths: {},
             pluginBasePaths: [],
-            decoratorpaths:[]
+            decoratorpaths:[],
+            visualizerDescriptors : []
 		};
 
+
 		if (LOCAL) {
+            //first we merge the paths
+            if(LOCAL.paths !== undefined){
+                for(var key in GLOBAL.paths){
+                    if(!LOCAL.paths.hasOwnProperty(key)){
+                        LOCAL.paths[key] = GLOBAL.paths[key];
+                    }
+                }
+            } else {
+                LOCAL.path = GLOBAL.path;
+            }
+            //now merge the array parts
+            LOCAL.pluginBasePaths = LOCAL.pluginBasePaths || [];
+            LOCAL.pluginBasePaths = LOCAL.pluginBasePaths.concat(GLOBAL.pluginBasePaths);
+
+            LOCAL.decoratorpaths = LOCAL.decoratorpaths || [];
+            LOCAL.decoratorpaths = LOCAL.decoratorpaths.concat(GLOBAL.decoratorpaths);
+
+            LOCAL.visualizerDescriptors = LOCAL.visualizerDescriptors || [];
+            LOCAL.visualizerDescriptors = GLOBAL.visualizerDescriptors.concat(LOCAL.visualizerDescriptors);
+
+            //now overwrite everything else
 			for ( var key in LOCAL) {
 				GLOBAL[key] = LOCAL[key];
 			}
