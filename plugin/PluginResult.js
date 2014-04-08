@@ -78,7 +78,7 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
      *
      * @returns {string}
      */
-    PluginResult.prototype.getName = function () {
+    PluginResult.prototype.getPluginName = function () {
         return this.pluginName;
     };
 
@@ -90,7 +90,7 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
      *
      * @param pluginName - name of the plugin
      */
-    PluginResult.prototype.setName = function (pluginName) {
+    PluginResult.prototype.setPluginName = function (pluginName) {
         this.pluginName = pluginName;
     };
 
@@ -99,7 +99,7 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
      *
      * @returns {string}
      */
-    PluginResult.prototype.getTime = function () {
+    PluginResult.prototype.getFinishTime = function () {
         return this.finishTime;
     };
 
@@ -108,7 +108,7 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
      *
      * @param {string} time
      */
-    PluginResult.prototype.setTime = function (time) {
+    PluginResult.prototype.setFinishTime = function (time) {
         this.finishTime = time;
     };
 

@@ -4,6 +4,13 @@
  * Author: Zsolt Lattmann
  */
 
+// TODO: Use PluginManagerConfiguration
+// TODO: Load ActiveSelection objects and pass it correctly
+// TODO: Add more statistics to the result object
+// TODO: Result object rename name -> pluginName, time -> finishTime)
+// TODO: Make this class testable
+// TODO: PluginManager should download the plugins
+
 'use strict';
 define([
     './PluginBase',
@@ -189,6 +196,8 @@ define([
         };
 
         PluginManagerBase.prototype.executePlugin = function (name, managerConfiguration, done) {
+            // TODO: check if name is a string
+            // TODO: check if managerConfiguration is an instance of PluginManagerConfiguration
             // TODO: check if done is a function
 
             var PluginClass = this.getPluginByName(name);
@@ -206,6 +215,7 @@ define([
 
             this.getPluginContext(managerConfiguration, function (err, pluginContext) {
                 if (err) {
+                    // TODO: this has to return with an empty PluginResult object and NOT with null.
                     done(err, null);
 
                 } else {
@@ -222,15 +232,14 @@ define([
 
                     plugin.configure(pluginContext);
 
-                    // TODO: provide implementation here
                     plugin.main(function (err, result) {
                         //set loglevel back to previous value
                         LogManager.setLogLevel(logLevel);
 
                         // set common information (meta info) about the plugin and measured execution times
 
-                        result.setName(plugin.getName());
-                        result.setTime((new Date()).toISOString());
+                        result.setPluginName(plugin.getName());
+                        result.setFinishTime((new Date()).toISOString());
 
                         done(err, result);
                     });

@@ -43,10 +43,17 @@ var getPluginNames = function(basePaths){
     return names;
 };
 
-var main = function (CONFIG) {
+var main = function (CONFIG, pluginConfig, callback) {
+    // TODO: Requirements
+    // 1) Be able to run it from command line with a set of arguments
+    // 2) Be able to specify the configuration and plugin configuration as commnad line parameters
+    // 3) Be able to call the main function from another module/test
+    // 4) Return in the callback with an ERROR and the plugin result
+    // 5) Use logManager for logging
+    // 6) Plugin name and projects are mandatory parameters
+
+
     // main code
-
-
 
     var requirejsBase = __dirname + '/..';
 
@@ -56,6 +63,7 @@ var main = function (CONFIG) {
     });
 
     // TODO: add commit hash as an input option
+    // TODO: add plugin config as an optional argument
     program.option('-c, --config <name>', 'Configuration file');
     program.option('-p, --project <name>', 'Name of the project.', 'uj');
     program.option('-b, --branch <name>', 'Name of the branch.', 'master');
@@ -63,10 +71,11 @@ var main = function (CONFIG) {
     program.option('-s, --selectedObjID <webGMEID>', 'ID to selected component.', '');
     program.parse(process.argv);
 
-    if(program.pluginName === undefined){
+    if(program.pluginName === undefined && !pluginConfig && !pluginConfig.pluginName){
         program.help();
     }
 
+    // TODO: get config and merge it with CONFIG
     CONFIG = CONFIG || requirejs('bin/getconfig');
 
     var configFilename = program.config;
@@ -117,6 +126,15 @@ var main = function (CONFIG) {
     var branch = program.branch;
     var pluginName = program.pluginName;
     var selectedID = program.selectedObjID;
+    var activeSelection = []; // TODO: get this as a list of IDs from command line
+
+    if (pluginConfig) {
+        projectName = pluginConfig.projectName || projectName;
+        branch = pluginConfig.branch || branch;
+        pluginName = pluginConfig.pluginName || pluginName;
+        selectedID = pluginConfig.selectedID || selectedID;
+        activeSelection = pluginConfig.activeSelection || activeSelection;
+    }
 
     var config = {
         "host": CONFIG.mongoip,
@@ -125,13 +143,14 @@ var main = function (CONFIG) {
         "project": projectName,
         "token": "",
         "activeNode": selectedID,
-        "activeSelection": [],
+        "activeSelection": activeSelection,
         "commit": null, //"#668b3babcdf2ddcd7ba38b51acb62d63da859d90",
         "branchName": branch
     };
 
     var PluginManager = requirejs('plugin/PluginManagerBase');
     var PluginFSServer = requirejs('plugin/PluginFSServer');
+    var errorResult = requirejs('plugin/PluginResult');
     // TODO: move the downloader to PluginManager
 
     var Plugin = requirejs('plugin/'+pluginName+'/'+pluginName+'/'+pluginName);
@@ -174,13 +193,22 @@ var main = function (CONFIG) {
 
                         project.closeProject();
                         storage.closeDatabase();
+                        if (callback) {
+                            callback(err, result);
+                        }
                     });
                 } else {
                     logger.error(err);
+                    if (callback) {
+                        callback(err, errorResult);
+                    }
                 }
             });
         } else {
             logger.error(err);
+            if (callback) {
+                callback(err, errorResult);
+            }
         }
     });
 };
@@ -188,3 +216,7 @@ var main = function (CONFIG) {
 if (require.main === module) {
     main();
 }
+
+module.exports = {
+    main: main
+};
