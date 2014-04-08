@@ -586,6 +586,7 @@ define(['logManager',
                                     delete objDesc.source;
                                     delete objDesc.target;
 
+                                    _.extend(objDesc, this.getConnectionDescriptor(gmeID));
                                     uiComponent = this.designerCanvas.createConnection(objDesc);
 
                                     this.logger.debug('Connection: ' + uiComponent.id + ' for GME object: ' + objDesc.id);
@@ -680,12 +681,14 @@ define(['logManager',
                                 if (len >= 0) {
                                     componentID =  this._GmeID2ComponentID[gmeID][len];
 
+                                    _.extend(objDesc, this.getConnectionDescriptor(gmeID));
                                     this.designerCanvas.updateConnection(componentID, objDesc);
 
                                     len -= 1;
                                 } else {
                                     this.logger.warning('Updating connections...Existing connections are less than the needed src-dst combo...');
                                     //let's create a connection
+                                    _.extend(objDesc, this.getConnectionDescriptor(gmeID));
                                     var uiComponent = this.designerCanvas.createConnection(objDesc);
                                     this.logger.debug('Connection: ' + uiComponent.id + ' for GME object: ' + objDesc.id);
                                     this._GmeID2ComponentID[gmeID].push(uiComponent.id);
@@ -1132,6 +1135,11 @@ define(['logManager',
 
         this.selectedObjectChanged(this.currentNodeInfo.id);
     };
+
+    ModelEditorControl.prototype.getConnectionDescriptor = function (gmeID) {
+        return {};
+    };
+
 
     //attach ModelEditorControl - DesignerCanvas event handler functions
     _.extend(ModelEditorControl.prototype, ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype);
