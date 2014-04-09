@@ -81,6 +81,25 @@ define([
             });
         };
 
+        var addToRequireJSPath = function (requireJSPaths) {
+            if (!requireJSPaths) {
+                return;
+            }
+
+            var requirejsBase = webGMEGlobal.baseDir,
+                configPaths = {};
+
+            var keys = Object.keys(requireJSPaths);
+
+            for (var i = 0; i < keys.length; i += 1) {
+                configPaths[keys[i]] = PATH.relative(requirejsBase,PATH.resolve(requireJSPaths[keys[i]]));
+            }
+
+            requirejs.config({
+                paths: configPaths
+            });
+        };
+
         var main = function(CONFIG,pluginConfig,callback) {
             ASSERT(pluginConfig && pluginConfig.pluginName);
 
@@ -108,6 +127,9 @@ define([
             };
 
             addPluginPathsToRequirejs(CONFIG.pluginBasePaths);
+
+            addToRequireJSPath(CONFIG.paths);
+
 
             Plugin = requirejs('plugin/' + pluginName + '/' + pluginName + '/' + pluginName);
 
