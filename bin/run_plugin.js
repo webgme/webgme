@@ -26,7 +26,7 @@ if(program.pluginName === undefined){
     projectName = program.project;
     branch = program.branch;
     pluginName = program.pluginName;
-    selectedID = program.selectedObjID;
+    activeNode = program.selectedObjID;
     configFilename = program.config;
 }
 
@@ -49,9 +49,13 @@ if (configFilename) {
 pluginConfig.projectName = projectName;
 pluginConfig.branch = branch;
 pluginConfig.pluginName = pluginName;
-pluginConfig.selectedID = selectedID;
+pluginConfig.activeNode = activeNode;
 pluginConfig.activeSelection = activeSelection;
 
 webGme.runPlugin.main(CONFIG,pluginConfig,function(err,result){
-    console.log('execution stopped:',err,result);
+    if (err) {
+        console.log('execution stopped:', err, result);
+    } else {
+        console.log('execution was successful:', err, result);
+    }
 });

@@ -105,10 +105,10 @@ define([
 
             var config,
                 projectName = pluginConfig.projectName,
-                branch = pluginConfig.branch,
+                branch = pluginConfig.branch || 'master',
                 pluginName = pluginConfig.pluginName,
-                selectedID = pluginConfig.selectedID,
-                activeSelection = pluginConfig.activeSelection,
+                activeNode = pluginConfig.activeNode,
+                activeSelection = pluginConfig.activeSelection || [],
                 Plugin,
                 logger = logManager.create('runPlugin'),
                 storage,
@@ -120,7 +120,7 @@ define([
                 "database": CONFIG.mongodatabase,
                 "project": projectName,
                 "token": "",
-                "activeNode": selectedID,
+                "activeNode": activeNode,
                 "activeSelection": activeSelection,
                 "commit": null,
                 "branchName": branch
