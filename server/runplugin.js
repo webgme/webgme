@@ -12,7 +12,7 @@ define([
     ASSERT,
     PluginManager,
     PluginFSServer,
-    errorResult,
+    PluginResult,
     Core,
     Storage,
     FS,
@@ -34,7 +34,8 @@ define([
                 Plugin,
                 logger = logManager.create('runPlugin'),
                 storage,
-                plugins = {};
+                plugins = {},
+                errorResult = new PluginResult();
 
             config = {
                 "host": CONFIG.mongoip,
