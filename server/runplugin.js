@@ -21,84 +21,6 @@ define([
     ){
 
     function RunPlugin(){
-        var isGoodExtraAsset = function(name,filePath){
-            try{
-                var file = FS.readFileSync(filePath+'/'+name+'.js','utf-8');
-                if(file === undefined || file === null){
-                    return false;
-                } else {
-                    return true;
-                }
-            } catch(e){
-                return false;
-            }
-        };
-        var getPluginNames = function(basePaths){
-            var names = []; //we add only the "*.js" files from the directories
-            basePaths = basePaths || [];
-            for(var i=0;i<basePaths.length;i++){
-                var additional = FS.readdirSync(basePaths[i]);
-                for(var j=0;j<additional.length;j++){
-                    if(names.indexOf(additional[j]) === -1){
-                        if(isGoodExtraAsset(additional[j],PATH.join(basePaths[i],additional[j]))){
-                            names.push(additional[j]);
-                        }
-                    }
-                }
-            }
-            return names;
-        };
-
-        var addPluginPathsToRequirejs = function(basepaths){
-            var requirejsBase = webGMEGlobal.baseDir,
-                pluginNames = getPluginNames(basepaths);
-
-            //we go through every plugin and we check where we are able to find the main part of it so we can set the plugin/pluginName path according that in requirejs
-            var pluginPaths = {};
-            for(var i in pluginNames) {
-                var found = false;
-                for (var j = 0; j < basepaths.length; j++) {
-                    if (!found) {
-                        try {
-                            var items = FS.readdirSync(basepaths[j]);
-                            if(items.indexOf(pluginNames[i]) !== -1){
-                                pluginPaths['plugin/' + pluginNames[i]] = PATH.relative(requirejsBase,PATH.resolve(basepaths[j]));
-                                found = true;
-                            }
-                        } catch (e) {
-                            //do nothing as we will go on anyway
-                            //console.error(e);
-                        }
-                    } else {
-                        break;
-                    }
-                }
-            }
-
-
-            requirejs.config({
-                paths: pluginPaths
-            });
-        };
-
-        var addToRequireJSPath = function (requireJSPaths) {
-            if (!requireJSPaths) {
-                return;
-            }
-
-            var requirejsBase = webGMEGlobal.baseDir,
-                configPaths = {};
-
-            var keys = Object.keys(requireJSPaths);
-
-            for (var i = 0; i < keys.length; i += 1) {
-                configPaths[keys[i]] = PATH.relative(requirejsBase,PATH.resolve(requireJSPaths[keys[i]]));
-            }
-
-            requirejs.config({
-                paths: configPaths
-            });
-        };
 
         var main = function(CONFIG,pluginConfig,callback) {
             ASSERT(pluginConfig && pluginConfig.pluginName);
@@ -126,10 +48,7 @@ define([
                 "branchName": branch
             };
 
-            addPluginPathsToRequirejs(CONFIG.pluginBasePaths);
-
-            addToRequireJSPath(CONFIG.paths);
-
+            // TODO: set WebGMEGlobalConfig if required
 
             Plugin = requirejs('plugin/' + pluginName + '/' + pluginName + '/' + pluginName);
 
