@@ -33,6 +33,20 @@ var getConfig = function(){
 };
 var setConfig = function(configObject){
     var i;
+
+    // updating values if defined (port/mongoip/secretkey/server log file, etc.)
+    for (i in __CONFIG) {
+        if (__CONFIG.hasOwnProperty(i) && configObject.hasOwnProperty(i)) {
+
+            if (typeof __CONFIG[i] === "number" ||
+                typeof __CONFIG[i] === "boolean" ||
+                typeof __CONFIG[i] === "string") {
+
+                __CONFIG[i] = configObject[i];
+            }
+        }
+    }
+
     //adding the paths
     if(configObject.paths){
         for(i in configObject.paths){
