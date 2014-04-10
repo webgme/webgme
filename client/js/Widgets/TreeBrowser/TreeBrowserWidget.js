@@ -257,6 +257,8 @@ define(['logManager',
         //by default we say there is nothing to update
         var nodeDataChanged = false;
 
+        var nodeNameChanged = false;
+
         //set new text value (if any)
         if (objDescriptor.text && node.data.title !== objDescriptor.text) {
             node.data.title = objDescriptor.text;
@@ -264,6 +266,7 @@ define(['logManager',
 
             //mark that change happened
             nodeDataChanged = true;
+            nodeNameChanged = true;
         }
 
         //set new children value (if any)
@@ -296,6 +299,35 @@ define(['logManager',
 
                 //mark that change happened
                 nodeDataChanged = true;
+            }
+        }
+
+        if (nodeNameChanged === true) {
+            //find it's new place based on alphabetical order
+            var parentNode = node.getParent();
+
+            if (parentNode) {
+                //find the new node's place in ABC order
+                var beforeNode = null;
+
+                var existingChildren = parentNode.getChildren();
+                if (existingChildren) {
+                    var i;
+
+                    for (i = existingChildren.length - 1; i >= 0; i -= 1) {
+                        if (existingChildren[i] !== node) {
+                            if (objDescriptor.text < existingChildren[i].data.title) {
+                                beforeNode = existingChildren[i];
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+
+                    if (beforeNode) {
+                        node.move(beforeNode, 'before');
+                    }
+                }
             }
         }
 
