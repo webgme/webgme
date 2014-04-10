@@ -197,7 +197,7 @@ define(['logManager',
             var i;
 
             for (i = existingChildren.length - 1; i >= 0; i -= 1) {
-                if (objDescriptor.name < existingChildren[i].data.title) {
+                if (objDescriptor.name.toLowerCase() < existingChildren[i].data.title.toLowerCase()) {
                     beforeNode = existingChildren[i];
                 } else {
                     break;
