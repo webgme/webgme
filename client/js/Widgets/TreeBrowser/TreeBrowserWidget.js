@@ -307,27 +307,7 @@ define(['logManager',
             var parentNode = node.getParent();
 
             if (parentNode) {
-                //find the new node's place in ABC order
-                var beforeNode = null;
-
-                var existingChildren = parentNode.getChildren();
-                if (existingChildren) {
-                    var i;
-
-                    for (i = existingChildren.length - 1; i >= 0; i -= 1) {
-                        if (existingChildren[i] !== node) {
-                            if (objDescriptor.text < existingChildren[i].data.title) {
-                                beforeNode = existingChildren[i];
-                            } else {
-                                break;
-                            }
-                        }
-                    }
-
-                    if (beforeNode) {
-                        node.move(beforeNode, 'before');
-                    }
-                }
+                parentNode.sortChildren();
             }
         }
 
