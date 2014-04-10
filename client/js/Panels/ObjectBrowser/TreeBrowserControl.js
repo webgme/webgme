@@ -430,7 +430,7 @@ define(['logManager',
                             objType = getNodeClass(updatedObject);
 
                             //create the node's descriptor for the tree-browser widget
-                            nodeDescriptor = {  "text" :  updatedObject.getAttribute("name"),
+                            nodeDescriptor = {  "name" :  updatedObject.getAttribute("name"),
                                 "hasChildren" : (updatedObject.getChildrenIds()).length > 0,
                                 "class" : objType };
 
@@ -450,7 +450,7 @@ define(['logManager',
 
                             //create the node's descriptor for the treebrowser widget
                             nodeDescriptor = {
-                                "text" : updatedObject.getAttribute("name"),
+                                "name" : updatedObject.getAttribute("name"),
                                 "hasChildren" : (updatedObject.getChildrenIds()).length > 0,
                                 "class" : objType
                             };

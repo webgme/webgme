@@ -260,9 +260,9 @@ define(['logManager',
         var nodeNameChanged = false;
 
         //set new text value (if any)
-        if (objDescriptor.text && node.data.title !== objDescriptor.text) {
-            node.data.title = objDescriptor.text;
-            node.data.tooltip = objDescriptor.text;
+        if (objDescriptor.name && node.data.title !== objDescriptor.name) {
+            node.data.title = objDescriptor.name;
+            node.data.tooltip = objDescriptor.name;
 
             //mark that change happened
             nodeDataChanged = true;

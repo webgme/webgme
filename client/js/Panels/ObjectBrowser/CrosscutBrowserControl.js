@@ -168,7 +168,7 @@ define(['logManager',
             nodeDescriptor;
 
         //create the node's descriptor for the tree-browser widget
-        nodeDescriptor = {  "text" :  nodeObj.getAttribute(nodePropertyNames.Attributes.name),
+        nodeDescriptor = {  "name" :  nodeObj.getAttribute(nodePropertyNames.Attributes.name),
             "hasChildren" : this._isExpandable(nodeId),
             "class" : GME_MODEL_CLASS };
 
@@ -451,7 +451,7 @@ define(['logManager',
         //only matters if it's already in the tree
         if (this._crosscutTreeNodes[fqCrosscutID]) {
             this._treeBrowser.updateNode(this._crosscutTreeNodes[fqCrosscutID], { "id": fqCrosscutID,
-                "text": crosscut.title });
+                "name": crosscut.title });
         }
     };
 
