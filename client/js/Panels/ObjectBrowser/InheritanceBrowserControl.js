@@ -100,6 +100,11 @@ define(['logManager',
         this._treeBrowser.onNodeDoubleClicked = function (nodeId) {
             self._onNodeDoubleClicked(nodeId);
         };
+
+        this._treeBrowser.onCreatingContextMenu = function (nodeId, contextMenuOptions) {
+            contextMenuOptions.rename = false;
+            contextMenuOptions.delete = false;
+        };
     };
 
     //called from the TreeBrowserWidget when a node is expanded by its expand icon

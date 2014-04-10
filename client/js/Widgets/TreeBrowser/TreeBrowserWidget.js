@@ -33,7 +33,8 @@ define(['logManager',
     TreeBrowserWidget.prototype._initialize = function () {
         var self = this,  //save this for later use
             lastSelection = { "nodeId" :  null, "time" : null },
-            lastDblClicked;
+            lastDblClicked,
+            dynamicContextMenuCreate;
 
         //clear container content
         this._el.html("");
@@ -52,8 +53,12 @@ define(['logManager',
         //add control to parent
         this._el.append(this._treeEl);
 
+        dynamicContextMenuCreate = function ($trigger) {
+            return self._createContextMenu($trigger);
+        };
+
         //hook up jquery.contextMenu
-        $.contextMenu({
+        this._treeEl.contextMenu({
             selector: '.dynatree-node',
             position: function(selector/*, x, y*/) {
                 var _offset = selector.$trigger.find('.dynatree-title').offset();
@@ -69,7 +74,7 @@ define(['logManager',
                             m = "clicked: '" + key + "' on '" + node.data.title + " (" + node.data.key + ")'";
                         alert(m);
                     },
-                    items: self._createContextMenu($trigger)
+                    items: dynamicContextMenuCreate($trigger)
                 };
             }
         });
@@ -491,18 +496,6 @@ define(['logManager',
 
     TreeBrowserWidget.prototype.DRAG_EFFECTS = dragSource.DRAG_EFFECTS;
 
-
-    TreeBrowserWidget.prototype._nodeCreate = function (nodeToEdit, childId) {
-
-        //can not edit 'loading...' node
-        if (nodeToEdit.data.addClass === NODE_PROGRESS_CLASS) {
-            return;
-        }
-
-        this._logger.debug("Create child for " + nodeToEdit.data.key);
-        this.onNodeCreate(nodeToEdit.data.key, childId);
-    };
-
     TreeBrowserWidget.prototype._nodeEdit = function (nodeToEdit) {
         var self = this;
 
@@ -598,10 +591,15 @@ define(['logManager',
     TreeBrowserWidget.prototype._createContextMenu = function($trigger) {
         var node = $.ui.dynatree.getNode($trigger),
             menuItems = {},
-            self = this;
+            self = this,
+            contextMenuOptions = {'rename': this._enableNodeRename,
+                                  'delete': true};
 
         //context menu is available for nodes that are not currently in 'loading' state
         if ($trigger.hasClass(NODE_PROGRESS_CLASS) !== true) {
+
+            self.onCreatingContextMenu(node.data.key, contextMenuOptions);
+            contextMenuOptions.rename = this._enableNodeRename;
 
             // The default set of available items :  Rename, Create, Copy, Paste, Delete
             menuItems = {
@@ -618,45 +616,30 @@ define(['logManager',
                         self.onNodeDoubleClicked.call(self, node.data.key);
                     },
                     "icon": false
-                },
-                "separator1": "-",
-                "rename": { // The "rename" menu item
+                }
+            };
+
+            if (contextMenuOptions.rename === true) {
+                menuItems.separatorRename = "-";
+                menuItems.rename = { // The "rename" menu item
                     "name": "Rename",
-                    callback: function(/*key, options*/) {
+                        callback: function(/*key, options*/) {
                         self._nodeEdit(node);
                     },
                     "icon": "edit"
-                },
-                "separator2": "-",
-                "addChild": { // The "create" menu item
-                    "name": "Create",
-                    "icon": "add",
-                    "items": {}
-                },
-                /*"separator3": "-",
-                "copy": { // The "copy" menu item
-                    "name": "Copy",
-                    callback: function(key, options) {
-                        self._nodeCopy();
-                    },
-                    "icon": "copy"
-                },
-                "paste": { // The "paste" menu item
-                    "name": "Paste",
-                    callback: function(key, options) {
-                        self._nodePaste(node);
-                    },
-                    "icon": "paste"
-                },*/
-                "separator4": "-",
-                "delete": { // The "delete" menu item
+                };
+            }
+
+            if (contextMenuOptions.delete === true) {
+                menuItems.separatorDelete = "-";
+                menuItems.delete = { // The "delete" menu item
                     "name": "Delete",
-                    callback: function(/*key, options*/) {
+                        callback: function(/*key, options*/) {
                         self._nodeDelete(node);
                     },
                     "icon": "delete"
-                }
-            };
+                };
+            }
 
             if ($trigger.hasClass('dynatree-has-children') === true) {
                 if(node.isExpanded()) {
@@ -664,24 +647,6 @@ define(['logManager',
                 }
             } else {
                 delete menuItems["toggleNode"];
-            }
-
-            var validChildren = self.onSetCreateSubMenu(node.data.key);
-            var cChild;
-            if (!validChildren || validChildren.length === 0) {
-                delete menuItems.separator2;
-                delete menuItems.addChild;
-            } else {
-                //iterate through each possible item and att it to the list
-                for (var i = 0; i < validChildren.length; i += 1) {
-                    cChild = validChildren[i];
-                    menuItems.addChild.items[cChild.id] = {
-                        name: cChild.title,
-                        callback: function(key, options) {
-                            self._nodeCreate(node, key);
-                        }
-                    }
-                }
             }
 
             self.onExtendMenuItems(node.data.key ,menuItems);
@@ -706,16 +671,13 @@ define(['logManager',
         return selectedIds;
     };
 
-    TreeBrowserWidget.prototype.onSetCreateSubMenu = function (nodeId) {
-        this._logger.warning('onSetCreateSubMenu is not overridden for node with ID: "' + nodeId + '". Returning default sub-item list...');
-        return [{id: 'item1ID',
-                 title: 'Item 1'},
-                {id: 'item2ID',
-                title: 'Item 2'}];
-    };
 
     TreeBrowserWidget.prototype.onExtendMenuItems = function (nodeId, menuItems) {
-        this._logger.warning('onExtendMenuItems is not overridden for node with ID: "' + nodeId + '".');
+        this._logger.debug('onExtendMenuItems is not overridden for node with ID: "' + nodeId + '".');
+    };
+
+    TreeBrowserWidget.prototype.onCreatingContextMenu = function (nodeId, contextMenuOptions) {
+        this._logger.debug('onCreatingContextMenu is not overridden for node with ID: "' + nodeId + '", contextMenuOptions: ' + JSON.stringify(contextMenuOptions));
     };
 
     _.extend(TreeBrowserWidget.prototype, TreeBrowserWidgetKeyboard.prototype);

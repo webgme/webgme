@@ -71,6 +71,11 @@ define(['logManager',
             self._onNodeDoubleClicked(nodeId);
         };
 
+        this._treeBrowser.onCreatingContextMenu = function (nodeId, contextMenuOptions) {
+            contextMenuOptions.rename = false;
+            contextMenuOptions.delete = false;
+        };
+
         //create territory
         this._territoryId = this._client.addUI(this, function (events) {
             self._territoryCallback(events);
