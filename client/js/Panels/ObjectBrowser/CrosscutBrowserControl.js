@@ -381,16 +381,19 @@ define(['logManager',
 
         if (this._crosscuts.hasOwnProperty(nodeId)) {
             settings[CONSTANTS.STATE_ACTIVE_OBJECT] = this._crosscuts[nodeId];
-            settings[CONSTANTS.STATE_ACTIVE_CROSSCUT] = this._getCrosscutID(nodeId, this._crosscuts[nodeId]);
         } else {
             settings[CONSTANTS.STATE_ACTIVE_OBJECT] = nodeId;
-            settings[CONSTANTS.STATE_ACTIVE_CROSSCUT] = undefined;
         }
 
         settings[CONSTANTS.STATE_ACTIVE_ASPECT] = CONSTANTS.ASPECT_ALL;
         settings[CONSTANTS.STATE_ACTIVE_VISUALIZER] = DEFAULT_VISUALIZER;
 
         WebGMEGlobal.State.set(settings);
+
+        if (this._crosscuts.hasOwnProperty(nodeId)) {
+            settings[CONSTANTS.STATE_ACTIVE_CROSSCUT] = this._getCrosscutID(nodeId, this._crosscuts[nodeId]);
+            WebGMEGlobal.State.set(settings);
+        }
     };
 
     CrosscutBrowserControl.prototype._isExpandable = function (objectId) {

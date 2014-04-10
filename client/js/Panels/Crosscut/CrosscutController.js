@@ -1085,5 +1085,33 @@ define(['logManager',
     };
 
 
+    CrosscutController.prototype._attachClientEventListeners = function () {
+        DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._attachClientEventListeners.call(this);
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_CROSSCUT, this._stateActiveCrosscutChanged, this);
+    };
+
+    CrosscutController.prototype._detachClientEventListeners = function () {
+        DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._detachClientEventListeners.call(this);
+        WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_CROSSCUT, this._stateActiveCrosscutChanged);
+    };
+
+    CrosscutController.prototype._stateActiveCrosscutChanged = function (model, activeCrosscutId) {
+        var tabKeys = Object.keys(this._tabIDMemberListID),
+            len = tabKeys.length,
+            tabToSelect;
+
+        while(len--) {
+            if (this._tabIDMemberListID[tabKeys[len]] === activeCrosscutId) {
+                tabToSelect = tabKeys[len];
+                break;
+            }
+        }
+
+        WebGMEGlobal.State.unset(CONSTANTS.STATE_ACTIVE_CROSSCUT, {'silent': true});
+        if (tabToSelect) {
+            this._widget.selectTab(tabToSelect);
+        }
+    };
+
     return CrosscutController;
 });
