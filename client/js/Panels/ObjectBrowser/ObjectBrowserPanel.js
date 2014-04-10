@@ -4,11 +4,13 @@ define(['js/PanelBase/PanelBaseWithHeader',
     'js/Constants',
     './TreeBrowserControl',
     './InheritanceBrowserControl',
+    './CrosscutBrowserControl',
     'js/Widgets/TreeBrowser/TreeBrowserWidget',
     'css!/css/Panels/ObjectBrowser/ObjectBrowserPanel'], function (PanelBaseWithHeader,
                                                           CONSTANTS,
                                                           TreeBrowserControl,
                                                           InheritanceBrowserControl,
+                                                          CrosscutBrowserControl,
                                                           TreeBrowserWidget) {
 
     var ObjectBrowserPanel,
@@ -48,11 +50,11 @@ define(['js/PanelBase/PanelBaseWithHeader',
         this.$el.html('<ul class="nav nav-tabs">' +
             '<li class="active"><a href="#composition" data-toggle="tab">Composition</a></li>' +
             '<li class=""><a href="#inheritance" data-toggle="tab">Inheritance</a></li>' +
-            /*'<li class=""><a href="#crosscut" data-toggle="tab">Crosscut</a></li>' +*/
+            '<li class=""><a href="#crosscut" data-toggle="tab">Crosscut</a></li>' +
         '</ul>' + '<div class="tab-content">'+
-            '<div class="tab-pane active" id="composition">composition</div>'+
+            '<div class="tab-pane active" id="composition">composition</div>' +
             '<div class="tab-pane" id="inheritance">inheritance</div>' +
-            /*'<div class="tab-pane" id="crosscut">crosscut</div>' +*/
+            '<div class="tab-pane" id="crosscut">crosscut</div>' +
         '</div>');
 
         //set Widget title
@@ -64,8 +66,8 @@ define(['js/PanelBase/PanelBaseWithHeader',
         inheritanceTreeBrowserWidget = new TreeBrowserWidget(this.$el.find('div#inheritance').first());
         inheritanceTreeBrowserControl = new InheritanceBrowserControl(this._client, inheritanceTreeBrowserWidget);
 
-        /*crosscutTreeBrowserWidget = new TreeBrowserWidget(this.$el.find('div#crosscut').first());
-        crosscutTreeBrowserControl = new TreeBrowserControl(this._client, crosscutTreeBrowserWidget);*/
+        crosscutTreeBrowserWidget = new TreeBrowserWidget(this.$el.find('div#crosscut').first());
+        crosscutTreeBrowserControl = new CrosscutBrowserControl(this._client, crosscutTreeBrowserWidget);
     };
 
     return ObjectBrowserPanel;
