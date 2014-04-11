@@ -27,6 +27,8 @@
     "socket.io": "=0.9.14",
     "requirejs": "=2.1.11",
     "express": "=3.4.0",
+    "mime": "=1.2.11",
+    "multiparty": "=3.2.4",
     "connect": "=2.10.0",
     "passport": "=0.1.10",
     "passport-google": "=0.3.0",

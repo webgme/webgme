@@ -20,3 +20,5 @@ bin/stderr.log
 bin/stdout.log
 bin/decorators.js
 bin/*.xme
+bin/blob-local-storage
+

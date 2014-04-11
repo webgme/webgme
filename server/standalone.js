@@ -12,7 +12,9 @@ define(['logManager',
     'path',
     'http',
     'https',
-    'os'
+    'os',
+    'mime',
+    'blob/BlobManagerFS'
     ],function(
         LogManager,
         Storage,
@@ -28,7 +30,9 @@ define(['logManager',
         Path,
         Http,
         Https,
-        OS
+        OS,
+        mime,
+        BlobManagerFS
     ){
 
     function StandAloneServer(CONFIG){
@@ -311,6 +315,7 @@ define(['logManager',
             __app.use(Express.cookieParser());
             __app.use(Express.bodyParser());
             __app.use(Express.methodOverride());
+            __app.use(Express.multipart({defer: true})); // required to upload files. (body parser should not be used!)
             __app.use(Express.session({store: __sessionStore, secret: CONFIG.sessioncookiesecret, key: CONFIG.sessioncookieid}));
             __app.use(Passport.initialize());
             __app.use(Passport.session());
@@ -622,16 +627,68 @@ define(['logManager',
         });
 
         __logger.info("creating blob related rules");
-        __app.get('/blob/info',ensureAuthenticated,function(req,res){
+        // TODO: pick here which blob manager to use based on the config.
+        var blobStorage = new BlobManagerFS();
+
+        __app.get('/blob',ensureAuthenticated,function(req,res){
             //TODO fill this up :)
+            blobStorage.loadInfos(null, function (err, infos) {
+                res.status(200);
+                res.end(JSON.stringify(infos, null, 4));
+            });
         });
-        __app.get('/blob/:id',ensureAuthenticated,function(req,res){
-            //TODO connect the real blob manager behind
-        });
+
+
         __app.post('/blob/create',ensureAuthenticated,function(req,res){
             //TODO
             //the structure of data should be something like {info:{},data:binary/string}
+            var uploadedFile = {};
+
+            var uploadedFileIDs = Object.keys(req.files);
+            if (uploadedFileIDs.length === 0) {
+                // TODO: nothing to store
+                res.send();
+            } else {
+                // FIXME: take the first one ONLY!
+                var uploadedFileID = uploadedFileIDs[0];
+
+                var hash = blobStorage.save({name:req.files[uploadedFileID].originalFilename}, FS.readFileSync(req.files[uploadedFileID].path), function (err, hash) {
+                    uploadedFile[hash] = blobStorage.getInfo(hash);
+                    // TODO: delete temp file
+
+                    console.log(uploadedFile);
+                    res.send(uploadedFile);
+                });
+            }
         });
+
+        // TODO: add /blob/:id/download support
+
+        __app.get('/blob/:id/download',ensureAuthenticated,function(req,res){
+
+            blobStorage.load(req.params.id, function (err, blob, filename) {
+                // FIXME: set the mime-type based on the info/file type
+                var mimetype = mime.lookup(filename);
+
+                res.setHeader('Content-disposition', 'attachment; filename=' + filename);
+                res.setHeader('Content-type', mimetype);
+
+                res.status(200);
+                res.end(blob);
+            });
+        });
+
+        __app.get('/blob/:id',ensureAuthenticated,function(req,res){
+            //TODO connect the real blob manager behind
+            blobStorage.load(req.params.id, function (err, blob, filename) {
+                // FIXME: set the mime-type based on the info/file type
+                var mimetype = mime.lookup(filename);
+                res.setHeader('Content-type', mimetype);
+                res.status(200);
+                res.end(blob);
+            });
+        });
+
 
         __logger.info("creating all other request rule - error 400 -");
         __app.get('*',function(req,res){
