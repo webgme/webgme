@@ -380,7 +380,7 @@ define(['logManager',
         }
 
         /** LOG ORDERED CONNECTION LIST ********************/
-        this.logger.debug('ITEMS: ');
+        /*this.logger.debug('ITEMS: ');
         var itemIDList = [];
         for (i = 0; i < orderedItemEvents.length; i += 1) {
             var x = orderedItemEvents[i];
@@ -393,7 +393,7 @@ define(['logManager',
             var x = orderedConnectionEvents[i];
             var connconn = itemIDList.indexOf(x.desc.source) === -1 && itemIDList.indexOf(x.desc.target) === -1;
             this.logger.debug("ID: " + x.desc.id + ", SRC: " + x.desc.source + ", DST: " + x.desc.target + (connconn ? " *****" : ""));
-        }
+        }*/
         /** END OF --- LOG ORDERED CONNECTION LIST ********************/
 
         //events = unloadEvents.concat(orderedItemEvents, orderedConnectionEvents);
