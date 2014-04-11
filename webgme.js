@@ -33,7 +33,7 @@ var getConfig = function(){
     return JSON.parse(JSON.stringify(__CONFIG));
 };
 var setConfig = function(configObject){
-    var i;
+    var keys, i,j;
     var isGoodExtraAsset = function(name,filePath){
         try{
             var file = FS.readFileSync(filePath+'/'+name+'.js','utf-8');
@@ -64,13 +64,14 @@ var setConfig = function(configObject){
 
     var addPluginPathsToRequirejs = function(basepaths){
         var requirejsBase = webGMEGlobal.baseDir,
-            pluginNames = getPluginNames(basepaths);
+            pluginNames = getPluginNames(basepaths),
+            i,j;
 
         //we go through every plugin and we check where we are able to find the main part of it so we can set the plugin/pluginName path according that in requirejs
         var pluginPaths = {};
-        for(var i in pluginNames) {
+        for(i in pluginNames) {
             var found = false;
-            for (var j = 0; j < basepaths.length; j++) {
+            for (j = 0; j < basepaths.length; j++) {
                 if (!found) {
                     try {
                         var items = FS.readdirSync(basepaths[j]);
@@ -113,16 +114,14 @@ var setConfig = function(configObject){
         });
     };
 
-    // updating values if defined (port/mongoip/secretkey/server log file, etc.)
-    for (i in __CONFIG) {
-        if (__CONFIG.hasOwnProperty(i) && configObject.hasOwnProperty(i)) {
+    //setting simple values
+    keys = Object.keys(configObject);
+    for(i=0;i<keys.length;i++){
+        if (typeof configObject[keys[i]] === "number" ||
+            typeof configObject[keys[i]] === "boolean" ||
+            typeof configObject[keys[i]] === "string") {
 
-            if (typeof __CONFIG[i] === "number" ||
-                typeof __CONFIG[i] === "boolean" ||
-                typeof __CONFIG[i] === "string") {
-
-                __CONFIG[i] = configObject[i];
-            }
+            __CONFIG[keys[i]] = configObject[keys[i]];
         }
     }
 
