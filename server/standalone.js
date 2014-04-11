@@ -621,6 +621,18 @@ define(['logManager',
             res.end("define([],function(){ return "+JSON.stringify(allVisualizerDescriptors)+";});");
         });
 
+        __logger.info("creating blob related rules");
+        __app.get('/blob/info',ensureAuthenticated,function(req,res){
+            //TODO fill this up :)
+        });
+        __app.get('/blob/:id',ensureAuthenticated,function(req,res){
+            //TODO connect the real blob manager behind
+        });
+        __app.post('/blob/create',ensureAuthenticated,function(req,res){
+            //TODO
+            //the structure of data should be something like {info:{},data:binary/string}
+        });
+
         __logger.info("creating all other request rule - error 400 -");
         __app.get('*',function(req,res){
             res.send(400);
