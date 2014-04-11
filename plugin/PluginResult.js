@@ -17,8 +17,10 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
         if (config) {
             this.success = config.success;
             this.pluginName = config.pluginName;
+            this.startTime = config.startTime;
             this.finishTime = config.finishTime;
             this.messages = [];
+            this.error = config.error;
 
             for (var i = 0; i < config.messages.length; i += 1) {
                 var pluginMessage;
@@ -33,7 +35,9 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
             this.success = false;
             this.messages = []; // array of PluginMessages
             this.pluginName = 'PluginName N/A';
+            this.startTime = null;
             this.finishTime = null;
+            this.error = null;
         }
     };
 
@@ -95,6 +99,24 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
     };
 
     /**
+     * Gets the ISO 8601 representation of the time when the plugin started its execution.
+     *
+     * @returns {string}
+     */
+    PluginResult.prototype.getStartTime = function () {
+        return this.startTime;
+    };
+
+    /**
+     * Sets the ISO 8601 representation of the time when the plugin started its execution.
+     *
+     * @param {string} time
+     */
+    PluginResult.prototype.setStartTime = function (time) {
+        this.startTime = time;
+    };
+
+    /**
      * Gets the ISO 8601 representation of the time when the plugin finished its execution.
      *
      * @returns {string}
@@ -112,6 +134,23 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
         this.finishTime = time;
     };
 
+    /**
+     * Gets error if any error occured during execution.
+     * FIXME: should this be an Error object?
+     * @returns {string}
+     */
+    PluginResult.prototype.getError = function () {
+        return this.error;
+    };
+
+    /**
+     * Sets the error string if any error occured during execution.
+     * FIXME: should this be an Error object?
+     * @param {string} time
+     */
+    PluginResult.prototype.setError = function (error) {
+        this.error = error;
+    };
 
     /**
      * Serializes this object to a JSON representation.
@@ -123,7 +162,9 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
             success: this.success,
             messages: [],
             pluginName: this.pluginName,
-            finishTime: this.finishTime
+            startTime: this.startTime,
+            finishTime: this.finishTime,
+            error: this.error
         };
 
         for (var i = 0; i < this.messages.length; i += 1) {

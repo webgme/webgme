@@ -232,14 +232,18 @@ define([
 
                     plugin.configure(pluginContext);
 
+                    var startTime = (new Date()).toISOString();
+
                     plugin.main(function (err, result) {
                         //set loglevel back to previous value
                         LogManager.setLogLevel(logLevel);
 
                         // set common information (meta info) about the plugin and measured execution times
+                        result.setFinishTime((new Date()).toISOString());
+                        result.setStartTime(startTime);
 
                         result.setPluginName(plugin.getName());
-                        result.setFinishTime((new Date()).toISOString());
+                        result.setError(err);
 
                         done(err, result);
                     });
