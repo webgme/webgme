@@ -631,10 +631,14 @@ define(['logManager',
         var blobStorage = new BlobManagerFS();
 
         __app.get('/blob',ensureAuthenticated,function(req,res){
-            //TODO fill this up :)
             blobStorage.loadInfos(null, function (err, infos) {
-                res.status(200);
-                res.end(JSON.stringify(infos, null, 4));
+                if (err) {
+                    res.send(500);
+                } else {
+                    res.status(200);
+                    res.end(JSON.stringify(infos, null, 4));
+
+                }
             });
         });
 
@@ -646,46 +650,58 @@ define(['logManager',
 
             var uploadedFileIDs = Object.keys(req.files);
             if (uploadedFileIDs.length === 0) {
-                // TODO: nothing to store
-                res.send();
+                // nothing to store
+                // bad request
+                res.status(400);
+                res.send('File was not posted.');
             } else {
-                // FIXME: take the first one ONLY!
+                // FIXME: save all files. We take the first one ONLY now!
                 var uploadedFileID = uploadedFileIDs[0];
 
-                var hash = blobStorage.save({name:req.files[uploadedFileID].originalFilename}, FS.readFileSync(req.files[uploadedFileID].path), function (err, hash) {
-                    uploadedFile[hash] = blobStorage.getInfo(hash);
-                    // TODO: delete temp file
+                blobStorage.save({name:req.files[uploadedFileID].originalFilename}, FS.readFileSync(req.files[uploadedFileID].path), function (err, hash) {
+                    if (err) {
+                        res.send(500);
+                    } else {
 
-                    console.log(uploadedFile);
-                    res.send(uploadedFile);
+                        uploadedFile[hash] = blobStorage.getInfo(hash);
+                        // TODO: delete temp file
+
+                        console.log(uploadedFile);
+                        res.send(uploadedFile);
+                    }
                 });
             }
         });
 
-        // TODO: add /blob/:id/download support
-
         __app.get('/blob/:id/download',ensureAuthenticated,function(req,res){
 
             blobStorage.load(req.params.id, function (err, blob, filename) {
-                // FIXME: set the mime-type based on the info/file type
-                var mimetype = mime.lookup(filename);
+                if (err) {
+                    res.send(500);
+                } else {
+                    // FIXME: set the mime-type based on the info/file type
+                    var mimetype = mime.lookup(filename);
 
-                res.setHeader('Content-disposition', 'attachment; filename=' + filename);
-                res.setHeader('Content-type', mimetype);
+                    res.setHeader('Content-disposition', 'attachment; filename=' + filename);
+                    res.setHeader('Content-type', mimetype);
 
-                res.status(200);
-                res.end(blob);
+                    res.status(200);
+                    res.end(blob);
+                }
             });
         });
 
         __app.get('/blob/:id',ensureAuthenticated,function(req,res){
             //TODO connect the real blob manager behind
             blobStorage.load(req.params.id, function (err, blob, filename) {
-                // FIXME: set the mime-type based on the info/file type
-                var mimetype = mime.lookup(filename);
-                res.setHeader('Content-type', mimetype);
-                res.status(200);
-                res.end(blob);
+                if (err) {
+                    res.send(500);
+                } else {
+                    var mimetype = mime.lookup(filename);
+                    res.setHeader('Content-type', mimetype);
+                    res.status(200);
+                    res.end(blob);
+                }
             });
         });
 
@@ -715,7 +731,15 @@ define(['logManager',
         __logger.info("standalone server initialization completed");
 
 
-
+        // other initializations
+        __logger.info("initializing blob storage");
+        blobStorage.initialize(function (err) {
+            if (err) {
+                __logger.error("failed to initialize blob storage");
+            } else {
+                __logger.info("blob storage is ready to use");
+            }
+        });
 
         return {
 

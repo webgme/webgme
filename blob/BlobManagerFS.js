@@ -3,33 +3,60 @@
  */
 define(['./BlobManagerBase', 'fs','crypto', 'path'], function (BlobManagerBase, fs, crypto, path) {
 
+
     var BlobManagerFS = function () {
         this.blobDir = path.join('./', 'blob-local-storage');
         this.indexFile = path.join(this.blobDir, 'index.json');
-        this.shaMethod = 'sha1';
-
-        if (fs.existsSync(this.blobDir) === false) {
-            fs.mkdirSync(this.blobDir);
-        }
-
         this.indexedFiles = {};
-
-        if (fs.existsSync(this.indexFile)) {
-            this.indexedFiles = JSON.parse(fs.readFileSync(this.indexFile));
-        }
+        this.shaMethod = 'sha1'; // in the future this may change to sha512 method
     };
 
-
-    // Inherits from BlobManagerBase
+// Inherits from BlobManagerBase
     BlobManagerFS.prototype = Object.create(BlobManagerBase.prototype);
 
-    // Override the constructor with this object's constructor
+// Override the constructor with this object's constructor
     BlobManagerFS.prototype.constructor = BlobManagerFS;
 
+    BlobManagerFS.prototype.initialize = function (callback) {
+        var self = this;
+
+        // TODO: use the async version here
+        self._ensureDirectory(self.blobDir, function (err) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+
+            // TODO: use the async version here
+
+            if (fs.existsSync(self.indexFile)) {
+                self.indexedFiles = JSON.parse(fs.readFileSync(self.indexFile));
+            }
+
+            // testing storage
+            self.save({name:'test'}, 'test storage', function (err, hash) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                self.load(hash, function (err) {
+                    if (err) {
+                        callback(err);
+                    } else {
+                        callback(null);
+                    }
+                });
+            });
+        });
+    };
 
     BlobManagerFS.prototype.save = function (info, blob, callback) {
-        // TODO: make this async and nicer
-        // TODO: add error handling
+        var self = this;
+
+        var size = blob.length;
+
         var shasum = crypto.createHash(this.shaMethod);
 
         shasum.update(blob);
@@ -38,28 +65,47 @@ define(['./BlobManagerBase', 'fs','crypto', 'path'], function (BlobManagerBase, 
 
         var objectFilename = path.join(this.blobDir, this._getObjectRelativeLocation(hash));
 
-        if (fs.existsSync(path.dirname(objectFilename)) === false) {
-            fs.mkdirSync(path.dirname(objectFilename));
-        }
+        self._ensureDirectory(path.dirname(objectFilename), function (err) {
+            if (err) {
+                callback(err);
+                return;
+            }
 
-        fs.writeFileSync(objectFilename, blob);
+            fs.writeFile(objectFilename, blob, function (err) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
 
-        this.indexedFiles[hash] = {
-            fullPath: info.name,
-            filename: path.basename(info.name),
-            type: path.extname(info.name),
-            created: (new Date()).toISOString()
-        };
+                self.indexedFiles[hash] = {
+                    fullPath: info.name,
+                    filename: path.basename(info.name),
+                    type: path.extname(info.name),
+                    created: (new Date()).toISOString(),
+                    size: size
+                };
 
-        fs.writeFileSync(this.indexFile, JSON.stringify(this.indexedFiles, null, 4));
+                // TODO: we need a lock if multiple processes are accessing to this file
+                fs.writeFileSync(self.indexFile, JSON.stringify(self.indexedFiles, null, 4));
+                callback(null, hash);
+            });
+        });
 
-        callback(null, hash);
+
     };
 
     BlobManagerFS.prototype.load = function (hash, callback) {
-        // TODO: make this async and nicer
-        // TODO: add error handling
-        callback(null, fs.readFileSync(path.join(this.blobDir, this._getObjectRelativeLocation(hash))), this.getInfo(hash).filename);
+        var self = this;
+
+        var filename = path.join(this.blobDir, this._getObjectRelativeLocation(hash));
+        fs.readFile(filename, function (err, data) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            callback(null, data, self.getInfo(hash).filename);
+        });
     };
 
     BlobManagerFS.prototype.loadInfos = function (query, callback) {
@@ -67,7 +113,17 @@ define(['./BlobManagerBase', 'fs','crypto', 'path'], function (BlobManagerBase, 
         callback(null, this.indexedFiles);
     };
 
+    BlobManagerFS.prototype._ensureDirectory = function (dirname, callback) {
+        // FIXME: this function does not create all missing directories in the path
 
+        if (fs.existsSync(dirname) === false) {
+            fs.mkdir(dirname, function (err) {
+                callback(err);
+            });
+        } else {
+            callback(null);
+        }
+    };
 
     BlobManagerFS.prototype._getObjectRelativeLocation = function (hash) {
         return hash.slice(0, 2) + '/' + hash.slice(2);
