@@ -11,10 +11,10 @@ define(['./BlobManagerBase', 'fs','crypto', 'path'], function (BlobManagerBase, 
         this.shaMethod = 'sha1'; // in the future this may change to sha512 method
     };
 
-// Inherits from BlobManagerBase
+    // Inherits from BlobManagerBase
     BlobManagerFS.prototype = Object.create(BlobManagerBase.prototype);
 
-// Override the constructor with this object's constructor
+    // Override the constructor with this object's constructor
     BlobManagerFS.prototype.constructor = BlobManagerFS;
 
     BlobManagerFS.prototype.initialize = function (callback) {
@@ -82,7 +82,9 @@ define(['./BlobManagerBase', 'fs','crypto', 'path'], function (BlobManagerBase, 
                     filename: path.basename(info.name),
                     type: path.extname(info.name),
                     created: (new Date()).toISOString(),
-                    size: size
+                    size: size,
+                    complex: info.complex || false,
+                    compressed: info.compressed || false
                 };
 
                 // TODO: we need a lock if multiple processes are accessing to this file
