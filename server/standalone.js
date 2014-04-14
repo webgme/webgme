@@ -643,6 +643,34 @@ define(['logManager',
         });
 
 
+        __app.put('/blob/create', function(req, res) {
+            var uploadedFile = {};
+
+            var uploadedFileIDs = Object.keys(req.files);
+            if (uploadedFileIDs.length === 0) {
+                // nothing to store
+                // bad request
+                res.status(400);
+                res.send('File was not posted.');
+            } else {
+                // FIXME: save all files. We take the first one ONLY now!
+                var uploadedFileID = uploadedFileIDs[0];
+
+                blobStorage.save({name:req.files[uploadedFileID].originalFilename}, FS.readFileSync(req.files[uploadedFileID].path), function (err, hash) {
+                    if (err) {
+                        res.send(500);
+                    } else {
+
+                        uploadedFile[hash] = blobStorage.getInfo(hash);
+                        // TODO: delete temp file
+
+                        console.log(uploadedFile);
+                        res.send(uploadedFile);
+                    }
+                });
+            }
+        });
+
         __app.post('/blob/create',ensureAuthenticated,function(req,res){
             //TODO
             //the structure of data should be something like {info:{},data:binary/string}
