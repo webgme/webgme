@@ -531,6 +531,15 @@ define(["storage/mongo", "storage/commit", "core/core", "util/guid"],function(Mo
                 }
             });
         }
+        function tokenAuth(token,callback){
+            getUserNodeByToken(token,function(err,user){
+                if(!err){
+                    callback(true,_core.getAttribute(user,'name'));
+                } else {
+                    callback(false,null);
+                }
+            });
+        }
         return {
             authenticate: authenticate,
             authorize: authorize,
@@ -538,7 +547,8 @@ define(["storage/mongo", "storage/commit", "core/core", "util/guid"],function(Mo
             tokenAuthorization: tokenAuthorization,
             generateToken: generateToken,
             getToken: getToken,
-            checkToken: checkToken
+            checkToken: checkToken,
+            tokenAuth: tokenAuth
         }
     }
 

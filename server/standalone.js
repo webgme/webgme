@@ -156,9 +156,23 @@ define(['logManager',
             if(true === CONFIG.authentication){
                 if(req.isAuthenticated() || (req.session && true === req.session.authenticated)){
                     return next();
+                } else{
+                    //request which use token may be authenticated directly
+                    if(req.params.token){
+                        __gmeAuth.checkToken(req.params.token,function(isOk,userId){
+                            if(isOk){
+                                req.session.authenticated = true;
+                                req.session.udmId = userId;
+                                res.cookie('webgme',req.session.udmId);
+                                return next();
+                            } else{
+                                res.send(400); //no use for redirecting in this case
+                            }
+                        });
+                    } else {
+                        res.redirect('/login');
+                    }
                 }
-
-                res.redirect('/login');
             } else {
                 return next();
             }
@@ -465,7 +479,7 @@ define(['logManager',
         // TODO: pick here which blob manager to use based on the config.
         var blobStorage = new BlobManagerFS();
 
-        __app.get('/blob/infos',ensureAuthenticated,function(req,res){
+        __app.get('rest/:token/blob/infos',ensureAuthenticated,function(req,res){
             blobStorage.loadInfos(null, function (err, infos) {
                 if (err) {
                     res.send(500);
@@ -527,16 +541,16 @@ define(['logManager',
 
         };
 
-        __app.put('/blob/create/:filename',ensureAuthenticated,function(req, res) {
+        __app.put('rest/:token/blob/create/:filename',ensureAuthenticated,function(req, res) {
             addFileToBlob(req, res);
         });
 
-        __app.post('/blob/create/:filename',ensureAuthenticated,function(req,res){
+        __app.post('rest/:token/blob/create/:filename',ensureAuthenticated,function(req,res){
             //the structure of data should be something like {info:{},data:binary/string}
             addFileToBlob(req, res);
         });
 
-        __app.get('/blob/download/:blob_hash',ensureAuthenticated,function(req,res){
+        __app.get('rest/:token/blob/download/:blob_hash',ensureAuthenticated,function(req,res){
             // TODO: use pipe/streams
             blobStorage.getContent(req.params.blob_hash, function (err, blob, filename) {
                 if (err) {
@@ -554,7 +568,7 @@ define(['logManager',
             });
         });
 
-        __app.get('/blob/info/:blob_hash',ensureAuthenticated,function(req,res){
+        __app.get('/rest/:token/blob/info/:blob_hash',ensureAuthenticated,function(req,res){
             // TODO: we should be able to ask only for a single hash
             blobStorage.loadInfos(null, function (err, infos) {
                 if (err) {
@@ -571,7 +585,7 @@ define(['logManager',
             });
         });
 
-        __app.get('/blob/view/:id',ensureAuthenticated,function(req,res){
+        __app.get('/rest/:token/blob/view/:id',ensureAuthenticated,function(req,res){
             // TODO: use pipe/streams
             blobStorage.load(req.params.id, function (err, blob, filename) {
                 if (err) {
@@ -693,6 +707,7 @@ define(['logManager',
             }
         });
 
+        //TODO: needs to refactor for the /rest/token/... format
         __logger.info("creating REST related routing rules");
         __app.get('/rest/*',checkREST,function(req,res){
 
