@@ -13,9 +13,9 @@
 
 'use strict';
 define([
-    './PluginBase',
-    './PluginContext',
-    'logManager'],
+        './PluginBase',
+        './PluginContext',
+        'logManager'],
     function (PluginBase, PluginContext, LogManager) {
 
         var PluginManagerBase = function (storage, Core, plugins) {
@@ -145,31 +145,31 @@ define([
 
             // add activeSelection
             var loadActiveSelectionAndMetaNodes = function () {
-                  if (managerConfiguration.activeSelection.length === 0) {
-                      self.loadMetaNodes(pluginContext, callback);
-                  } else {
-                      var remaining = managerConfiguration.activeSelection.length;
+                if (managerConfiguration.activeSelection.length === 0) {
+                    self.loadMetaNodes(pluginContext, callback);
+                } else {
+                    var remaining = managerConfiguration.activeSelection.length;
 
-                      for (var i = 0; i < managerConfiguration.activeSelection.length; i += 1) {
-                          (function(activeNodePath){
-                              pluginContext.core.loadByPath(pluginContext.rootNode, activeNodePath, function (err, activeNode) {
-                                  remaining -= 1;
+                    for (var i = 0; i < managerConfiguration.activeSelection.length; i += 1) {
+                        (function (activeNodePath) {
+                            pluginContext.core.loadByPath(pluginContext.rootNode, activeNodePath, function (err, activeNode) {
+                                remaining -= 1;
 
-                                  if (err) {
-                                      self.logger.error('unable to load active selection: ' + activeNodePath);
-                                      return;
-                                  }
+                                if (err) {
+                                    self.logger.error('unable to load active selection: ' + activeNodePath);
+                                    return;
+                                }
 
-                                  pluginContext.activeSelection.push(activeNode);
+                                pluginContext.activeSelection.push(activeNode);
 
-                                  if (remaining === 0) {
-                                      // all nodes from active selection are loaded
-                                      self.loadMetaNodes(pluginContext, callback);
-                                  }
-                              });
-                          })(managerConfiguration.activeSelection[i]);
-                      }
-                  }
+                                if (remaining === 0) {
+                                    // all nodes from active selection are loaded
+                                    self.loadMetaNodes(pluginContext, callback);
+                                }
+                            });
+                        })(managerConfiguration.activeSelection[i]);
+                    }
+                }
             };
 
             // add activeNode
@@ -208,7 +208,7 @@ define([
                             loadActiveSelectionAndMetaNodes();
                         }
                     });
-               });
+                });
             };
 
             // load commit hash and run based on branch name or commit hash
@@ -234,6 +234,7 @@ define([
             // TODO: check if name is a string
             // TODO: check if managerConfiguration is an instance of PluginManagerConfiguration
             // TODO: check if callback is a function
+            var self = this;
 
             var PluginClass = this.getPluginByName(name);
 
@@ -241,14 +242,14 @@ define([
 
             var pluginLogger = LogManager.create('Plugin.' + name);
 
+
             managerConfiguration.FS.createArtifact(name + '-output');
-            // TODO: write some information about this execution into the output directory
 
             plugin.initialize(pluginLogger, managerConfiguration.FS);
 
             plugin.setCurrentConfig(this._pluginConfigs[name]);
 
-            this.getPluginContext(managerConfiguration, function (err, pluginContext) {
+            self.getPluginContext(managerConfiguration, function (err, pluginContext) {
                 if (err) {
                     // TODO: this has to return with an empty PluginResult object and NOT with null.
                     callback(err, null);
@@ -285,6 +286,7 @@ define([
                 });
 
             });
+
         };
 
 

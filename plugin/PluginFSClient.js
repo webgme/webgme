@@ -4,10 +4,8 @@
  * Author: Zsolt Lattmann
  */
 
-define(["jszip",
-    'plugin/PluginFSBase',
-    'lib/filesaver/FileSaver'],
-    function (ZIP, PluginFSBase, FileSaver) {
+define(['plugin/PluginFSBase'],
+    function (PluginFSBase) {
 
         /**
          * Initializes a new instance of a client side file system object.
@@ -19,6 +17,7 @@ define(["jszip",
          */
         function PluginFSClient(parameters) {
             PluginFSBase.call(this, parameters);
+            this._artifactDescriptor = {};
         }
 
         // Inherits from PluginFSBase
@@ -35,7 +34,7 @@ define(["jszip",
         PluginFSClient.prototype.createArtifact = function (name) {
             if (this._artifactName === null) {
                 this._artifactName = name;
-                this._artifactZip = new ZIP();
+                this._artifactDescriptor = {};
                 return true;
             } else {
                 return false;
@@ -47,20 +46,27 @@ define(["jszip",
          *
          * @returns {boolean} true if successful otherwise false.
          */
-        PluginFSClient.prototype.saveArtifact = function () {
-            // NOTE: DEFLATE compression does not work for me.
-            var data = this._artifactZip.generate({base64: false, type: "blob"});
-            try {
-                window.saveAs(data, this._artifactName + ".zip");
+        PluginFSClient.prototype.saveArtifact = function (callback) {
+            var self = this;
+            var sortedDescriptor = {};
 
-                this._artifactName = null;
-                this._artifactZip = null;
-                return true;
-            } catch (e) {
-                this._artifactName = null;
-                this._artifactZip = null;
-                return false;
+            var fnames = Object.keys(this._artifactDescriptor);
+            fnames.sort();
+            for (var j = 0; j < fnames.length; j += 1) {
+                sortedDescriptor[fnames[j]] = this._artifactDescriptor[fnames[j]];
             }
+
+            // FIXME: in production mode do not indent the json file.
+//            this._blobStorage.save({name: this._artifactName + '.zip', complex: true}, JSON.stringify(sortedDescriptor, null, 4), function (err, hash) {
+//                if (err) {
+//                    callback(err);
+//                    return;
+//                }
+//
+//                callback(err, hash);
+//                self._artifactName = null;
+//                self._artifactDescriptor = null;
+//            });
         };
 
         /**
@@ -70,11 +76,25 @@ define(["jszip",
          * @param {string} data - file content as a string
          * @returns {boolean} true if successful otherwise false.
          */
-        PluginFSClient.prototype.addFile = function (path, data) {
+        PluginFSClient.prototype.addFile = function (path, data, callback) {
+            var self = this;
+
             if (this._artifactName !== null) {
-                this._artifactZip.file(path, data);
+
+//                this._blobStorage.save({name: PATH.basename(path)}, data, function (err, hash) {
+//                    if (err) {
+//                        callback(err);
+//                        return;
+//                    }
+//
+//                    self._artifactDescriptor[path] = hash;
+//                    callback(null, hash);
+//                });
+
+
                 return true;
             } else {
+                callback('Must call createArtifact first.');
                 return false;
             }
         };

@@ -24,6 +24,10 @@ define([], function () {
         this._artifactName = null;
     }
 
+    PluginFSBase.prototype.initialize = function (callback) {
+        callback(null);
+    };
+
     /**
      * Creates a new artifact with the given name.
      *
@@ -36,7 +40,7 @@ define([], function () {
     /**
      * Saves all files and the directory structure.
      */
-    PluginFSBase.prototype.saveArtifact = function () {
+    PluginFSBase.prototype.saveArtifact = function (callback) {
         throw new Error('not implemented');
     };
 
@@ -46,7 +50,7 @@ define([], function () {
      * @param {string} path - path to the file 'mydir1/subdir2/file.txt' or 'file.txt'
      * @param {string} data - file content as a string
      */
-    PluginFSBase.prototype.addFile = function (path, data) {
+    PluginFSBase.prototype.addFile = function (path, data, callback) {
         throw new Error('not implemented');
     };
 

@@ -4,11 +4,10 @@
  * Author: Zsolt Lattmann
  */
 
-define(["jszip",
-    'plugin/PluginFSBase',
-    'fs',
-    'path'],
-    function (ZIP, PluginFSBase, FS, Path) {
+define(['plugin/PluginFSBase',
+        'blob/BlobManagerFS',
+        'path'],
+    function (PluginFSBase, BlobManagerFS, PATH) {
 
         /**
          * Initializes a new instance of a server side file system object.
@@ -20,6 +19,8 @@ define(["jszip",
          */
         function PluginFSServer(parameters) {
             PluginFSBase.call(this, parameters);
+            this._artifactDescriptor = {};
+            this._blobStorage = new BlobManagerFS();
         }
 
         // Inherits from PluginFSBase
@@ -27,6 +28,10 @@ define(["jszip",
 
         // Override the constructor with this object's constructor
         PluginFSServer.prototype.constructor = PluginFSServer;
+
+        PluginFSServer.prototype.initialize = function (callback) {
+            this._blobStorage.initialize(callback);
+        };
 
         /**
          * Creates a new artifact with the given name.
@@ -36,7 +41,7 @@ define(["jszip",
         PluginFSServer.prototype.createArtifact = function (name) {
             if (this._artifactName === null) {
                 this._artifactName = name;
-                this._artifactZip = ZIP();
+                this._artifactDescriptor = {};
                 return true;
             } else {
                 return false;
@@ -49,20 +54,27 @@ define(["jszip",
          *
          * @returns {boolean} true if successful otherwise false.
          */
-        PluginFSServer.prototype.saveArtifact = function () {
-            // FIXME: Windows cannot extract compressed zip packages with 'DEFLATE' flag, 7-zip can
-            //var data = this._artifactZip.generate({base64:false,compression:'DEFLATE'});
-            var data = this._artifactZip.generate({base64: false});
-            try {
-                FS.writeFileSync(Path.join(this._parameters.outputpath, this._artifactName + ".zip"), data, 'binary');
-                this._artifactName = null;
-                this._artifactZip = null;
-                return true;
-            } catch (e) {
-                this._artifactName = null;
-                this._artifactZip = null;
-                return false;
+        PluginFSServer.prototype.saveArtifact = function (callback) {
+            var self = this;
+            var sortedDescriptor = {};
+
+            var fnames = Object.keys(this._artifactDescriptor);
+            fnames.sort();
+            for (var j = 0; j < fnames.length; j += 1) {
+                sortedDescriptor[fnames[j]] = this._artifactDescriptor[fnames[j]];
             }
+
+            // FIXME: in production mode do not indent the json file.
+            this._blobStorage.save({name: this._artifactName + '.zip', complex: true}, JSON.stringify(sortedDescriptor, null, 4), function (err, hash) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                callback(err, hash);
+                self._artifactName = null;
+                self._artifactDescriptor = null;
+            });
         };
 
         /**
@@ -72,11 +84,25 @@ define(["jszip",
          * @param {string} data - file content as a string
          * @returns {boolean} true if successful otherwise false.
          */
-        PluginFSServer.prototype.addFile = function (path, data) {
+        PluginFSServer.prototype.addFile = function (path, data, callback) {
+            var self = this;
+
             if (this._artifactName !== null) {
-                this._artifactZip.file(path, data);
+
+                this._blobStorage.save({name: PATH.basename(path)}, data, function (err, hash) {
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+
+                    self._artifactDescriptor[path] = hash;
+                    callback(null, hash);
+                });
+
+
                 return true;
             } else {
+                callback('Must call createArtifact first.');
                 return false;
             }
         };

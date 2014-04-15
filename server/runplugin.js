@@ -70,22 +70,26 @@ define([
 
                             var pluginManager = new PluginManager(project, Core, plugins);
 
-                            // TODO: put this file to the right location
-                            var outputPath = PATH.resolve('.');
+                            config.FS = new PluginFSServer();
 
-                            logger.debug('Artifact path: ' + outputPath);
-
-                            // FIXME: for some reason this does not work.
-                            config.FS = new PluginFSServer({outputpath: outputPath});
-
-                            pluginManager.executePlugin(pluginName, config, function (err, result) {
-                                logger.debug(JSON.stringify(result, null, 2));
-
-                                project.closeProject();
-                                storage.closeDatabase();
-                                if (callback) {
-                                    callback(err, result);
+                            config.FS.initialize(function (err) {
+                                if (err) {
+                                    logger.error(err);
+                                    if (callback) {
+                                        callback(err, errorResult);
+                                    }
+                                    return;
                                 }
+
+                                pluginManager.executePlugin(pluginName, config, function (err, result) {
+                                    logger.debug(JSON.stringify(result, null, 2));
+
+                                    project.closeProject();
+                                    storage.closeDatabase();
+                                    if (callback) {
+                                        callback(err, result);
+                                    }
+                                });
                             });
                         } else {
                             logger.error(err);
