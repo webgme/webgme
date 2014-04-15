@@ -56,6 +56,22 @@
           }
         }
       }
+
+      .artifacts {
+          margin-bottom: 5px;
+
+          .artifacts-title {
+            margin-top: 5px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #999999;
+            border-bottom: 1px solid #999999;
+          }
+
+          .artifacts-body {
+
+          }
+      }
     }
   }
 }

@@ -23,6 +23,8 @@ define(['clientUtil',
         RESULT_DETAILS_BTN_BASE = $('<span class="btn-details pull-right">Details</span>'),
         RESULT_DETAILS_BASE = $('<div/>', {'class': 'messages collapse'}),
         MESSAGE_ENTRY_BASE = $('<div class="msg"><div class="msg-title"></div><div class="msg-body"></div></div>'),
+        RESULT_ARTIFACTS_BASE = $('<div class="artifacts collapse"><div class="artifacts-title">Generated artifacts</div><div class="artifacts-body"><ul></ul></div></div>'),
+        ARTIFACT_ENTRY_BASE = $('<li><a href="#"></a></li>'),
         MESSAGE_PREFIX = 'Message #';
 
     PluginResultsDialog = function () {
@@ -57,7 +59,12 @@ define(['clientUtil',
             resultDetailsBtn,
             messageEntry,
             messages,
-            j;
+            j,
+            artifactsContainer,
+            artifacts,
+            artifactsUL,
+            artifactEntry,
+            artifactEntryA;
 
         for (var i = 0; i < pluginResults.length; i += 1) {
             result = pluginResults[i];
@@ -101,7 +108,42 @@ define(['clientUtil',
                 messageContainer.append(messageEntry);
             }
 
+            artifactsContainer = undefined;
+
+            ///TODO: this is not needed when the PluginResult can return the artifacts
+            resultEntry.getArtifacts = function () {
+                var hashList = [],
+                    i = 10;
+
+                while (i--) {
+                    hashList.push('Hash_' + (new Date()).getTime());
+                }
+
+                return hashList;
+            };
+            ///TODO: remove
+
+            artifacts = resultEntry.getArtifacts();
+            if (artifacts.length > 0) {
+                artifactsContainer = RESULT_ARTIFACTS_BASE.clone();
+                artifactsUL = artifactsContainer.find('ul');
+                for (j = 0; j < artifacts.length; j += 1) {
+                    artifactEntry = ARTIFACT_ENTRY_BASE.clone();
+                    artifactEntryA = artifactEntry.find('a');
+                    //TODO: set the correct URL here
+                    artifactEntryA.attr('href', artifacts[j]);
+                    //TODO: set the correct link text here
+                    artifactEntryA.text(artifacts[j]);
+                    artifactsUL.append(artifactEntry);
+                }
+            }
+
             resultEntry.append(resultHeader);
+
+            if (artifactsContainer) {
+                resultEntry.append(artifactsContainer);
+            }
+
             resultEntry.append(messageContainer);
 
             body.append(resultEntry);
@@ -114,9 +156,11 @@ define(['clientUtil',
 
         dialog.on('click', '.btn-details', function (event) {
             var detailsBtn = $(this),
-                messagesPanel = detailsBtn.parent().parent().find('.messages');
+                messagesPanel = detailsBtn.parent().parent().find('.messages'),
+                artifactsPanel = detailsBtn.parent().parent().find('.artifacts');
 
             messagesPanel.toggleClass('in');
+            artifactsPanel.toggleClass('in');
 
             event.stopPropagation();
             event.preventDefault();
