@@ -14,6 +14,12 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'],
             this.__input = INPUT_BASE.clone();
             this.__input.val(this.propertyValue);
 
+            if (propertyDesc.regex) {
+                propertyDesc.regexMessage = propertyDesc.regexMessage || 'Value has to match regex: ' + propertyDesc.regex;
+                this.__input.attr('pattern', propertyDesc.regex);
+                this.__input.attr('title', propertyDesc.regexMessage);
+            }
+
             this.__input.on('keyup change', function (e) {
                 e.stopPropagation();
                 e.preventDefault();

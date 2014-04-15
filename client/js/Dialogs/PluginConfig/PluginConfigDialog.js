@@ -45,8 +45,13 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
     };
 
     PluginConfigDialog.prototype._closeAndSave = function () {
-        this._updatedConfig = this._readConfig();
-        this._dialog.modal('hide');
+        var invalids = this._dialog.find('input:invalid');
+        if (invalids.length === 0) {
+            this._updatedConfig = this._readConfig();
+            this._dialog.modal('hide');
+        } else {
+            $(invalids[0]).focus();
+        }
     };
 
     var PLUGIN_CONFIG_SECTION_BASE = $('<div><fieldset><legend></legend><div class="form-horizontal"></div><fieldset></div>');
