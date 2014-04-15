@@ -643,19 +643,33 @@ define(['logManager',
         });
 
         var addFileToBlob = function (req, res) {
+            var filename = 'not_defined.txt';
+
+            if (req.params.filename !== null && req.params.filename !== '') {
+                filename = req.params.filename
+            }
+
             var uploadedFile = {};
+            var d;
+            var size;
 
-            var uploadedFileIDs = Object.keys(req.files);
-            if (uploadedFileIDs.length === 0) {
-                // nothing to store
-                // bad request
-                res.status(400);
-                res.send('File was not posted.');
-            } else {
-                // FIXME: save all files. We take the first one ONLY now!
-                var uploadedFileID = uploadedFileIDs[0];
+            req.on('data', function (data) {
+                // TODO: do not save data, just forward it to the place where it has to be stored.
+                // TODO: update hash here in place
+                if (d) {
+                    d += data;
+                } else {
+                    d = data;
+                }
 
-                blobStorage.save({name:req.files[uploadedFileID].originalFilename}, FS.readFileSync(req.files[uploadedFileID].path), function (err, hash) {
+                size += data.length;
+                //console.log('Got chunk: ' + data.length + ' total: ' + size);
+            });
+
+            req.on('end', function () {
+                //console.log("total size = " + size);
+
+                blobStorage.save({name:filename, complex: req.query.complex === 'true' || false}, d, function (err, hash) {
                     if (err) {
                         res.send(500);
                     } else {
@@ -667,14 +681,22 @@ define(['logManager',
                         res.send(uploadedFile);
                     }
                 });
-            }
+            });
+
+            req.on('error', function(e) {
+                //console.log("ERROR ERROR: " + e.message);
+            });
+
+            // FIXME: use pipe - i.e. streams
+
+
         };
 
-        __app.put('/blob/create',ensureAuthenticated,function(req, res) {
+        __app.put('/blob/create/:filename',ensureAuthenticated,function(req, res) {
             addFileToBlob(req, res);
         });
 
-        __app.post('/blob/create',ensureAuthenticated,function(req,res){
+        __app.post('/blob/create/:filename',ensureAuthenticated,function(req,res){
             //TODO
             //the structure of data should be something like {info:{},data:binary/string}
             addFileToBlob(req, res);

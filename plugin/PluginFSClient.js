@@ -56,17 +56,23 @@ define(['plugin/PluginFSBase'],
                 sortedDescriptor[fnames[j]] = this._artifactDescriptor[fnames[j]];
             }
 
+
+            var oReq = new XMLHttpRequest();
+            oReq.open("PUT", '/blob/create/' + this._artifactName + '.json?complex=true', true);
+            oReq.onload = function (oEvent) {
+                // Uploaded.
+                var response = JSON.parse(oEvent.target.response);
+                // TODO: handle error
+                var hash = Object.keys(response)[0];
+                callback(null, hash);
+                self._artifactName = null;
+                self._artifactDescriptor = null;
+            };
+
             // FIXME: in production mode do not indent the json file.
-//            this._blobStorage.save({name: this._artifactName + '.zip', complex: true}, JSON.stringify(sortedDescriptor, null, 4), function (err, hash) {
-//                if (err) {
-//                    callback(err);
-//                    return;
-//                }
-//
-//                callback(err, hash);
-//                self._artifactName = null;
-//                self._artifactDescriptor = null;
-//            });
+            var blob = new Blob([JSON.stringify(sortedDescriptor, null, 4)], {type: 'text/plain'});
+
+            oReq.send(blob);
         };
 
         /**
@@ -80,17 +86,21 @@ define(['plugin/PluginFSBase'],
             var self = this;
 
             if (this._artifactName !== null) {
+                var oReq = new XMLHttpRequest();
+                oReq.open("PUT", '/blob/create/' + path.substring(path.lastIndexOf('/') + 1), true);
+                oReq.onload = function (oEvent) {
+                    // Uploaded.
+                    var response = JSON.parse(oEvent.target.response);
+                    // TODO: handle error
+                    var hash = Object.keys(response)[0];
+                    self._artifactDescriptor[path] = hash;
+                    callback(null, hash);
+                };
 
-//                this._blobStorage.save({name: PATH.basename(path)}, data, function (err, hash) {
-//                    if (err) {
-//                        callback(err);
-//                        return;
-//                    }
-//
-//                    self._artifactDescriptor[path] = hash;
-//                    callback(null, hash);
-//                });
+                // FIXME: in production mode do not indent the json file.
+                var blob = new Blob([data], {type: 'text/plain'});
 
+                oReq.send(blob);
 
                 return true;
             } else {

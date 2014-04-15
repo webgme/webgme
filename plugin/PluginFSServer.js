@@ -65,7 +65,7 @@ define(['plugin/PluginFSBase',
             }
 
             // FIXME: in production mode do not indent the json file.
-            this._blobStorage.save({name: this._artifactName + '.zip', complex: true}, JSON.stringify(sortedDescriptor, null, 4), function (err, hash) {
+            this._blobStorage.save({name: this._artifactName + '.json', complex: true}, JSON.stringify(sortedDescriptor, null, 4), function (err, hash) {
                 if (err) {
                     callback(err);
                     return;
