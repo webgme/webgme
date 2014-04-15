@@ -460,171 +460,6 @@ define(['logManager',
             });
         });
 
-        //client contents - js/html/css
-        //css classified as not secure content
-        __app.get(/^\/.*\.(css|ico)$/,function(req,res){
-            res.sendfile(Path.join(__clientBaseDir,req.path),function(err){
-                res.send(404);
-            });
-        });
-        __app.get(/^\/.*\.(js|html|gif|png|bmp|svg|json)$/,ensureAuthenticated,function(req,res){
-            //package.json
-            if(req.path === '/package.json') {
-                res.sendfile(Path.join(__baseDir,req.path),function(err){
-                    res.send(404);
-                });
-            } else {
-                res.sendfile(Path.join(__clientBaseDir,req.path),function(err){
-                    res.send(404);
-                });
-            }
-        });
-
-        __logger.info("creating token related routing rules");
-        __app.get('/gettoken',ensureAuthenticated,function(req,res){
-            if(CONFIG.secureREST == true){
-                __gmeAuth.getToken(req.session.id,function(err,token){
-                    if(err){
-                        res.send(err);
-                    } else {
-                        res.send(token);
-                    }
-                });
-            } else {
-                res.send(410); //special error for the interpreters to know there is no need for token
-            }
-        });
-        __app.get('/checktoken/*',function(req,res){
-            if(CONFIG.secureREST == true){
-                if(__canCheckToken == true){
-                    var token = req.url.split('/');
-                    if(token.length === 3){
-                        token = token[2];
-                        setTimeout(function(){__canCheckToken = true;},10000);
-                        __canCheckToken = false;
-                        __gmeAuth.checkToken(token,function(isValid){
-                            if(isValid === true){
-                                res.send(200);
-                            } else {
-                                res.send(403);
-                            }
-                        });
-                    } else {
-                        res.send(400);
-                    }
-                } else {
-                    res.send(403);
-                }
-            } else {
-                res.send(410); //special error for the interpreters to know there is no need for token
-            }
-        });
-
-        __logger.info("creating REST related routing rules");
-        __app.get('/rest/*',checkREST,function(req,res){
-
-            var commandpos = CONFIG.secureREST === true ? 3 : 2,
-                minlength = CONFIG.secureREST === true ? 3 : 2,
-                urlArray = req.url.split('/');
-            if(urlArray.length > minlength){
-                var command = urlArray[commandpos],
-                    token = CONFIG.secureREST === true ? urlArray[2] : "",
-                    parameters = urlArray.slice(commandpos+1);
-                __REST.initialize(function(err){
-                    if(err){
-                        res.send(500);
-                    } else {
-                        __REST.doRESTCommand(__REST.request.GET,command,token,parameters,function(httpStatus,object){
-                            if(command === __REST.command.etf){
-                                var filename = 'exportedNode.json';
-                                if(parameters[3]){
-                                    filename = parameters[3];
-                                }
-                                if(filename.indexOf('.') === -1){
-                                    filename += '.json';
-                                }
-                                res.header("Content-Type", "application/json");
-                                res.header("Content-Disposition", "attachment;filename=\""+filename+"\"");
-                                res.status(httpStatus);
-                                res.end(CANON(object));
-                            } else {
-                                res.json(httpStatus, object || null);
-                            }
-                        });
-                    }
-                });
-            } else {
-                res.send(400);
-            }
-        });
-
-        __logger.info("creating server-worker related routing rules");
-        __app.get('/worker/simpleResult/*',function(req,res){
-            var urlArray = req.url.split('/');
-            if(urlArray.length > 3){
-                __storage.getWorkerResult(urlArray[3],function(err,result){
-                    if(err){
-                        res.send(500);
-                    } else {
-                        var filename = 'exportedNodes.json';
-                        if(urlArray[4]){
-                            filename = urlArray[4];
-                        }
-                        if(filename.indexOf('.') === -1){
-                            filename += '.json';
-                        }
-                        res.header("Content-Type", "application/json");
-                        res.header("Content-Disposition", "attachment;filename=\""+filename+"\"");
-                        res.status(200);
-                        res.end(JSON.stringify(result,null,2));
-                    }
-                });
-            } else {
-                res.send(404);
-            }
-        });
-
-
-        __logger.info("creating list asset rules");
-        __app.get('/listAllDecorators',ensureAuthenticated,function(req,res){
-            var names = []; //TODO we add everything in the directories!!!
-            if(CONFIG.decoratorpaths && CONFIG.decoratorpaths.length){
-                for(var i=0;i<CONFIG.decoratorpaths.length;i++){
-                    var additional = FS.readdirSync(CONFIG.decoratorpaths[i]);
-                    for(var j=0;j<additional.length;j++){
-                        if(names.indexOf(additional[j]) === -1){
-                            if(isGoodExtraAsset(additional[j],Path.join(CONFIG.decoratorpaths[i],additional[j]))){
-                                names.push(additional[j]);
-                            }
-                        }
-                    }
-                }
-            }
-            res.status(200);
-            res.end("define([],function(){ return "+JSON.stringify(names)+";});");
-        });
-        __app.get('/listAllPlugins',ensureAuthenticated,function(req,res){
-            var names = []; //we add only the "*.js" files from the directories
-            if(CONFIG.pluginBasePaths && CONFIG.pluginBasePaths.length){
-                for(var i=0;i<CONFIG.pluginBasePaths.length;i++){
-                    var additional = FS.readdirSync(CONFIG.pluginBasePaths[i]);
-                    for(var j=0;j<additional.length;j++){
-                        if(names.indexOf(additional[j]) === -1){
-                            if(isGoodExtraAsset(additional[j],Path.join(CONFIG.pluginBasePaths[i],additional[j]))){
-                                names.push(additional[j]);
-                            }
-                        }
-                    }
-                }
-            }
-            res.status(200);
-            res.end("define([],function(){ return "+JSON.stringify(names)+";});");
-        });
-        __app.get('/listAllVisualizerDescriptors',ensureAuthenticated,function(req,res){
-            var allVisualizerDescriptors = getVisualizersDescriptor();
-            res.status(200);
-            res.end("define([],function(){ return "+JSON.stringify(allVisualizerDescriptors)+";});");
-        });
 
         __logger.info("creating blob related rules");
         // TODO: pick here which blob manager to use based on the config.
@@ -797,6 +632,173 @@ define(['logManager',
                 }
             });
         });
+
+        //client contents - js/html/css
+        //css classified as not secure content
+        __app.get(/^\/.*\.(css|ico)$/,function(req,res){
+            res.sendfile(Path.join(__clientBaseDir,req.path),function(err){
+                res.send(404);
+            });
+        });
+        __app.get(/^\/.*\.(js|html|gif|png|bmp|svg|json)$/,ensureAuthenticated,function(req,res){
+            //package.json
+            if(req.path === '/package.json') {
+                res.sendfile(Path.join(__baseDir,req.path),function(err){
+                    res.send(404);
+                });
+            } else {
+                res.sendfile(Path.join(__clientBaseDir,req.path),function(err){
+                    res.send(404);
+                });
+            }
+        });
+
+        __logger.info("creating token related routing rules");
+        __app.get('/gettoken',ensureAuthenticated,function(req,res){
+            if(CONFIG.secureREST == true){
+                __gmeAuth.getToken(req.session.id,function(err,token){
+                    if(err){
+                        res.send(err);
+                    } else {
+                        res.send(token);
+                    }
+                });
+            } else {
+                res.send(410); //special error for the interpreters to know there is no need for token
+            }
+        });
+        __app.get('/checktoken/*',function(req,res){
+            if(CONFIG.secureREST == true){
+                if(__canCheckToken == true){
+                    var token = req.url.split('/');
+                    if(token.length === 3){
+                        token = token[2];
+                        setTimeout(function(){__canCheckToken = true;},10000);
+                        __canCheckToken = false;
+                        __gmeAuth.checkToken(token,function(isValid){
+                            if(isValid === true){
+                                res.send(200);
+                            } else {
+                                res.send(403);
+                            }
+                        });
+                    } else {
+                        res.send(400);
+                    }
+                } else {
+                    res.send(403);
+                }
+            } else {
+                res.send(410); //special error for the interpreters to know there is no need for token
+            }
+        });
+
+        __logger.info("creating REST related routing rules");
+        __app.get('/rest/*',checkREST,function(req,res){
+
+            var commandpos = CONFIG.secureREST === true ? 3 : 2,
+                minlength = CONFIG.secureREST === true ? 3 : 2,
+                urlArray = req.url.split('/');
+            if(urlArray.length > minlength){
+                var command = urlArray[commandpos],
+                    token = CONFIG.secureREST === true ? urlArray[2] : "",
+                    parameters = urlArray.slice(commandpos+1);
+                __REST.initialize(function(err){
+                    if(err){
+                        res.send(500);
+                    } else {
+                        __REST.doRESTCommand(__REST.request.GET,command,token,parameters,function(httpStatus,object){
+                            if(command === __REST.command.etf){
+                                var filename = 'exportedNode.json';
+                                if(parameters[3]){
+                                    filename = parameters[3];
+                                }
+                                if(filename.indexOf('.') === -1){
+                                    filename += '.json';
+                                }
+                                res.header("Content-Type", "application/json");
+                                res.header("Content-Disposition", "attachment;filename=\""+filename+"\"");
+                                res.status(httpStatus);
+                                res.end(CANON(object));
+                            } else {
+                                res.json(httpStatus, object || null);
+                            }
+                        });
+                    }
+                });
+            } else {
+                res.send(400);
+            }
+        });
+
+        __logger.info("creating server-worker related routing rules");
+        __app.get('/worker/simpleResult/*',function(req,res){
+            var urlArray = req.url.split('/');
+            if(urlArray.length > 3){
+                __storage.getWorkerResult(urlArray[3],function(err,result){
+                    if(err){
+                        res.send(500);
+                    } else {
+                        var filename = 'exportedNodes.json';
+                        if(urlArray[4]){
+                            filename = urlArray[4];
+                        }
+                        if(filename.indexOf('.') === -1){
+                            filename += '.json';
+                        }
+                        res.header("Content-Type", "application/json");
+                        res.header("Content-Disposition", "attachment;filename=\""+filename+"\"");
+                        res.status(200);
+                        res.end(JSON.stringify(result,null,2));
+                    }
+                });
+            } else {
+                res.send(404);
+            }
+        });
+
+
+        __logger.info("creating list asset rules");
+        __app.get('/listAllDecorators',ensureAuthenticated,function(req,res){
+            var names = []; //TODO we add everything in the directories!!!
+            if(CONFIG.decoratorpaths && CONFIG.decoratorpaths.length){
+                for(var i=0;i<CONFIG.decoratorpaths.length;i++){
+                    var additional = FS.readdirSync(CONFIG.decoratorpaths[i]);
+                    for(var j=0;j<additional.length;j++){
+                        if(names.indexOf(additional[j]) === -1){
+                            if(isGoodExtraAsset(additional[j],Path.join(CONFIG.decoratorpaths[i],additional[j]))){
+                                names.push(additional[j]);
+                            }
+                        }
+                    }
+                }
+            }
+            res.status(200);
+            res.end("define([],function(){ return "+JSON.stringify(names)+";});");
+        });
+        __app.get('/listAllPlugins',ensureAuthenticated,function(req,res){
+            var names = []; //we add only the "*.js" files from the directories
+            if(CONFIG.pluginBasePaths && CONFIG.pluginBasePaths.length){
+                for(var i=0;i<CONFIG.pluginBasePaths.length;i++){
+                    var additional = FS.readdirSync(CONFIG.pluginBasePaths[i]);
+                    for(var j=0;j<additional.length;j++){
+                        if(names.indexOf(additional[j]) === -1){
+                            if(isGoodExtraAsset(additional[j],Path.join(CONFIG.pluginBasePaths[i],additional[j]))){
+                                names.push(additional[j]);
+                            }
+                        }
+                    }
+                }
+            }
+            res.status(200);
+            res.end("define([],function(){ return "+JSON.stringify(names)+";});");
+        });
+        __app.get('/listAllVisualizerDescriptors',ensureAuthenticated,function(req,res){
+            var allVisualizerDescriptors = getVisualizersDescriptor();
+            res.status(200);
+            res.end("define([],function(){ return "+JSON.stringify(allVisualizerDescriptors)+";});");
+        });
+
 
         __logger.info("creating all other request rule - error 400 -");
         __app.get('*',function(req,res){
