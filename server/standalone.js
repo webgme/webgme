@@ -752,19 +752,51 @@ define(['logManager',
 
 
         // TODO: browse
-//        __app.get('/blob/browse/:id',ensureAuthenticated,function(req,res){
-//            //TODO connect the real blob manager behind
-//            blobStorage.load(req.params.id, function (err, blob, filename) {
-//                if (err) {
-//                    res.send(500);
-//                } else {
-//                    var mimetype = mime.lookup(filename);
-//                    res.setHeader('Content-type', mimetype);
-//                    res.status(200);
-//                    res.end(blob);
-//                }
-//            });
-//        });
+        // example: /blob/view/b3a23bf0eb934793a97426fd8d4b22a7d1dc089d/path/in/complex/content.txt
+        __app.get(/^\/blob\/view\/([0-9a-f]{40,40})\/(.+)$/,ensureAuthenticated,function(req,res){
+            var hash = req.params[0];
+            var subpartPath = req.params[1];
+            blobStorage.loadInfos(null, function (err, infos) {
+                if (err) {
+                    res.send(500);
+                } else {
+                    if (infos.hasOwnProperty(hash)) {
+                        if (infos[hash].complex) {
+
+                            blobStorage.load(hash, function (err, blob, filename) {
+                                if (err) {
+                                    res.send(500);
+                                    return;
+                                }
+                                var descriptor = JSON.parse(blob);
+                                // FIXME: how to deal with leading slashes?
+                                if (descriptor.hasOwnProperty(subpartPath)) {
+
+                                    blobStorage.load(descriptor[subpartPath], function (err, blob, filename) {
+                                        if (err) {
+                                            res.send(500);
+                                            return;
+                                        }
+
+                                        var mimetype = mime.lookup(filename);
+                                        res.setHeader('Content-type', mimetype);
+                                        res.status(200);
+                                        res.end(blob);
+                                    });
+                                } else {
+                                    // requested path does not exist in resource
+                                    res.send(404);
+                                }
+                            });
+                        } else {
+                            res.send(400);
+                        }
+                    } else {
+                        res.end(404);
+                    }
+                }
+            });
+        });
 
         __logger.info("creating all other request rule - error 400 -");
         __app.get('*',function(req,res){
