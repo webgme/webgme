@@ -630,7 +630,7 @@ define(['logManager',
         // TODO: pick here which blob manager to use based on the config.
         var blobStorage = new BlobManagerFS();
 
-        __app.get('/blob',ensureAuthenticated,function(req,res){
+        __app.get('/blob/infos',ensureAuthenticated,function(req,res){
             blobStorage.loadInfos(null, function (err, infos) {
                 if (err) {
                     res.send(500);
@@ -697,14 +697,13 @@ define(['logManager',
         });
 
         __app.post('/blob/create/:filename',ensureAuthenticated,function(req,res){
-            //TODO
             //the structure of data should be something like {info:{},data:binary/string}
             addFileToBlob(req, res);
         });
 
-        __app.get('/blob/:id/download',ensureAuthenticated,function(req,res){
-
-            blobStorage.load(req.params.id, function (err, blob, filename) {
+        __app.get('/blob/download/:blob_hash',ensureAuthenticated,function(req,res){
+            // TODO: use pipe/streams
+            blobStorage.getContent(req.params.blob_hash, function (err, blob, filename) {
                 if (err) {
                     res.send(500);
                 } else {
@@ -720,8 +719,25 @@ define(['logManager',
             });
         });
 
-        __app.get('/blob/:id',ensureAuthenticated,function(req,res){
-            //TODO connect the real blob manager behind
+        __app.get('/blob/info/:blob_hash',ensureAuthenticated,function(req,res){
+            // TODO: we should be able to ask only for a single hash
+            blobStorage.loadInfos(null, function (err, infos) {
+                if (err) {
+                    res.send(500);
+                } else {
+                    if (infos.hasOwnProperty(req.params.blob_hash)) {
+                        res.status(200);
+                        res.end(JSON.stringify(infos[req.params.blob_hash], null, 4));
+                    } else {
+                        res.end(404);
+                    }
+
+                }
+            });
+        });
+
+        __app.get('/blob/view/:id',ensureAuthenticated,function(req,res){
+            // TODO: use pipe/streams
             blobStorage.load(req.params.id, function (err, blob, filename) {
                 if (err) {
                     res.send(500);
@@ -734,6 +750,21 @@ define(['logManager',
             });
         });
 
+
+        // TODO: browse
+//        __app.get('/blob/browse/:id',ensureAuthenticated,function(req,res){
+//            //TODO connect the real blob manager behind
+//            blobStorage.load(req.params.id, function (err, blob, filename) {
+//                if (err) {
+//                    res.send(500);
+//                } else {
+//                    var mimetype = mime.lookup(filename);
+//                    res.setHeader('Content-type', mimetype);
+//                    res.status(200);
+//                    res.end(blob);
+//                }
+//            });
+//        });
 
         __logger.info("creating all other request rule - error 400 -");
         __app.get('*',function(req,res){
