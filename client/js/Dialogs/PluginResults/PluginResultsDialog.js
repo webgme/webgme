@@ -119,7 +119,7 @@ define(['clientUtil',
                 artifactsContainer = RESULT_ARTIFACTS_BASE.clone();
                 artifactsUL = artifactsContainer.find('ul');
                 for (j = 0; j < artifacts.length; j += 1) {
-                    (function(hash) {
+                    (function(hash, ulE) {
                         blobClient.getArtifact(hash, function (err, artifact) {
                             if (err) {
                                 console.error(err);
@@ -132,9 +132,9 @@ define(['clientUtil',
                             artifactEntryA.attr('href', '/rest/notoken/blob/download/' + hash);
                             //TODO: set the correct link text here
                             artifactEntryA.text(artifact.name);
-                            artifactsUL.append(artifactEntry);
+                            ulE.append(artifactEntry);
                         });
-                    })(artifacts[j]);
+                    })(artifacts[j], artifactsUL);
                 }
             }
 

@@ -19,6 +19,7 @@ define(['blob/BlobClient', 'http', 'https'],
          */
         function BlobServerClient() {
             BlobClient.call(this);
+            //console.log(webGMEGlobal.getConfig());
         }
 
         // Inherits from BlobClient
