@@ -242,10 +242,7 @@ define([
 
             var pluginLogger = LogManager.create('Plugin.' + name);
 
-
-            managerConfiguration.FS.createArtifact(name + '-output');
-
-            plugin.initialize(pluginLogger, managerConfiguration.FS);
+            plugin.initialize(pluginLogger, managerConfiguration.blobClient);
 
             plugin.setCurrentConfig(this._pluginConfigs[name]);
 

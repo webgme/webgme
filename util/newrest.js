@@ -47,6 +47,7 @@ define([
             };
 
         function printHelp(callback){
+            // TODO: add blob usage documentation here...
             callback(_HTTPError.ok,{
                 commands:{
                     'GET':{

@@ -7,8 +7,10 @@
 "use strict";
 
 define(['clientUtil',
+    'blob/BlobClient',
     'text!html/Dialogs/PluginResults/PluginResultsDialog.html',
     'css!/css/Dialogs/PluginResults/PluginResultsDialog'], function (clientUtil,
+                                                                     BlobClient,
                                                                      pluginResultsDialogTemplate) {
 
     var PluginResultsDialog,
@@ -110,31 +112,29 @@ define(['clientUtil',
 
             artifactsContainer = undefined;
 
-            ///TODO: this is not needed when the PluginResult can return the artifacts
-            resultEntry.getArtifacts = function () {
-                var hashList = [],
-                    i = 10;
+            var blobClient = new BlobClient();
 
-                while (i--) {
-                    hashList.push('Hash_' + (new Date()).getTime());
-                }
-
-                return hashList;
-            };
-            ///TODO: remove
-
-            artifacts = resultEntry.getArtifacts();
+            artifacts = result.getArtifacts();
             if (artifacts.length > 0) {
                 artifactsContainer = RESULT_ARTIFACTS_BASE.clone();
                 artifactsUL = artifactsContainer.find('ul');
                 for (j = 0; j < artifacts.length; j += 1) {
-                    artifactEntry = ARTIFACT_ENTRY_BASE.clone();
-                    artifactEntryA = artifactEntry.find('a');
-                    //TODO: set the correct URL here
-                    artifactEntryA.attr('href', artifacts[j]);
-                    //TODO: set the correct link text here
-                    artifactEntryA.text(artifacts[j]);
-                    artifactsUL.append(artifactEntry);
+                    (function(hash) {
+                        blobClient.getArtifact(hash, function (err, artifact) {
+                            if (err) {
+                                console.error(err);
+                                return;
+                            }
+
+                            artifactEntry = ARTIFACT_ENTRY_BASE.clone();
+                            artifactEntryA = artifactEntry.find('a');
+                            //TODO: set the correct URL here
+                            artifactEntryA.attr('href', '/rest/notoken/blob/download/' + hash);
+                            //TODO: set the correct link text here
+                            artifactEntryA.text(artifact.name);
+                            artifactsUL.append(artifactEntry);
+                        });
+                    })(artifacts[j]);
                 }
             }
 

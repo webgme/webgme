@@ -82,6 +82,8 @@ define(["jszip"], function (ZIP) {
         var self = this;
 
         var info = self.getInfo(hash);
+        // replace extension to zip
+        var filename = info.filename.substring(0, info.filename.lastIndexOf('.')) + '.zip';
 
         if (info.complex) {
             self.load(hash, function (err, content) {
@@ -90,6 +92,13 @@ define(["jszip"], function (ZIP) {
 
                 var keys = Object.keys(desc);
                 var remaining = keys.length;
+
+                if (remaining === 0) {
+                    // empty zip no files contained
+                    // FIXME: this empty zip is not handled correctly.
+                    callback(null, zip.generate({type:'nodeBuffer'}), filename);
+                    return;
+                }
 
                 for (var i = 0; i < keys.length; i += 1) {
                     (function(subpartHash, subpartName){
@@ -101,14 +110,12 @@ define(["jszip"], function (ZIP) {
                             zip.file(subpartName, subpartContent);
 
                             if (remaining === 0) {
-                                // replace extension to zip
-                                var filename = info.filename.substring(0, info.filename.lastIndexOf('.')) + '.zip';
-
                                 callback(null, zip.generate({type:'nodeBuffer'}), filename);
                             }
                         });
                     })(desc[keys[i]], keys[i])
                 }
+
 
             });
         } else {

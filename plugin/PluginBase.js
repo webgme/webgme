@@ -20,7 +20,7 @@ define(['plugin/PluginConfig',
         var PluginBase = function () {
             // set by initialize
             this.logger = null;
-            this.fs = null;
+            this.blobClient = null;
             this._currentConfig = null;
 
             // set by configure
@@ -300,16 +300,16 @@ define(['plugin/PluginConfig',
          * Initializes the plugin with objects that can be reused within the same plugin instance.
          *
          * @param {logManager} logger - logging capability to console (or file) based on PluginManager configuration
-         * @param {plugin.PluginFSBase} fs - virtual file system where files can be generated then saved as a zip file.
+         * @param {blob.BlobClient} blobClient - virtual file system where files can be generated then saved as a zip file.
          */
-        PluginBase.prototype.initialize = function (logger, fs) {
+        PluginBase.prototype.initialize = function (logger, blobClient) {
             if (logger) {
                 this.logger = logger;
             } else {
                 this.logger = console;
             }
 
-            this.fs = fs;
+            this.blobClient = blobClient;
 
             this._currentConfig = null;
             // initialize default configuration

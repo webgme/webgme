@@ -1,12 +1,12 @@
 define(['core/core',
         'plugin/PluginManagerBase',
         'plugin/PluginResult',
-        'plugin/PluginFSClient',
+        'blob/BlobClient',
         'js/Dialogs/PluginConfig/PluginConfigDialog'
                                     ], function (Core,
                                                PluginManagerBase,
                                                PluginResult,
-                                               PluginFSClient,
+                                               BlobClient,
                                                PluginConfigDialog) {
     "use strict";
 
@@ -87,7 +87,7 @@ define(['core/core',
                                     }
                                 });
                             } else {
-                                config.FS = new PluginFSClient();
+                                config.blobClient = new BlobClient();
 
                                 pluginManager.executePlugin(name, config, function (err, result) {
                                     if (err) {

@@ -465,7 +465,7 @@ define(['logManager',
         __logger.info("creating basic static content related routing rules");
         //static contents
         //javascripts - core and transportation related files
-        __app.get(/^\/(common|util|storage|core|config|auth|bin|coreclient)\/.*\.js$/,ensureAuthenticated,function(req,res){
+        __app.get(/^\/(common|util|storage|core|config|auth|bin|coreclient|blob)\/.*\.js$/,ensureAuthenticated,function(req,res){
             res.sendfile(Path.join(__baseDir,req.path),function(err){
                 res.send(404);
             });

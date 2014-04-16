@@ -70,9 +70,9 @@ define([
 
                             var pluginManager = new PluginManager(project, Core, plugins);
 
-                            config.FS = new PluginFSServer();
+                            config.blobClient = new PluginFSServer();
 
-                            config.FS.initialize(function (err) {
+                            config.blobClient.initialize(function (err) {
                                 if (err) {
                                     logger.error(err);
                                     if (callback) {

@@ -20,6 +20,7 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
             this.startTime = config.startTime;
             this.finishTime = config.finishTime;
             this.messages = [];
+            this.artifacts = config.artifacts;
             this.error = config.error;
 
             for (var i = 0; i < config.messages.length; i += 1) {
@@ -34,6 +35,7 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
         } else {
             this.success = false;
             this.messages = []; // array of PluginMessages
+            this.artifacts = []; // array of hashes
             this.pluginName = 'PluginName N/A';
             this.startTime = null;
             this.finishTime = null;
@@ -75,6 +77,14 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
      */
     PluginResult.prototype.addMessage = function (pluginMessage) {
         this.messages.push(pluginMessage);
+    };
+
+    PluginResult.prototype.getArtifacts = function () {
+        return this.artifacts;
+    };
+
+    PluginResult.prototype.addArtifact = function (hash) {
+        this.artifacts.push(hash);
     };
 
     /**
