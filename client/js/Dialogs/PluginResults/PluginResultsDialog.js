@@ -26,7 +26,7 @@ define(['clientUtil',
         RESULT_DETAILS_BASE = $('<div/>', {'class': 'messages collapse'}),
         MESSAGE_ENTRY_BASE = $('<div class="msg"><div class="msg-title"></div><div class="msg-body"></div></div>'),
         RESULT_ARTIFACTS_BASE = $('<div class="artifacts collapse"><div class="artifacts-title">Generated artifacts</div><div class="artifacts-body"><ul></ul></div></div>'),
-        ARTIFACT_ENTRY_BASE = $('<li><a href="#"></a></li>'),
+        ARTIFACT_ENTRY_BASE = $('<li><a href="#"></a>Loading...</li>'),
         MESSAGE_PREFIX = 'Message #';
 
     PluginResultsDialog = function () {
