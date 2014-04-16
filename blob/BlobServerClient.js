@@ -17,9 +17,10 @@ define(['blob/BlobClient', 'http', 'https'],
          * @param {{}} parameters
          * @constructor
          */
-        function BlobServerClient() {
+        function BlobServerClient(parameters) {
             BlobClient.call(this);
             //console.log(webGMEGlobal.getConfig());
+            this.serverPort = parameters.serverPort;
         }
 
         // Inherits from BlobClient
@@ -30,8 +31,8 @@ define(['blob/BlobClient', 'http', 'https'],
 
         BlobServerClient.prototype.getInfo = function (hash, callback) {
             var options = {
-                hostname: 'localhost',
-                port: 8888,
+                hostname: '127.0.0.1',
+                port: this.serverPort,
                 path: '/rest/notoken/blob/info' + hash,
                 method: 'GET'
             };
@@ -47,8 +48,8 @@ define(['blob/BlobClient', 'http', 'https'],
 
         BlobServerClient.prototype.getObject = function (hash, callback) {
             var options = {
-                hostname: 'localhost',
-                port: 8888,
+                hostname: '127.0.0.1',
+                port: this.serverPort,
                 path: '/rest/notoken/blob/view' + hash,
                 method: 'GET'
             };
@@ -73,8 +74,8 @@ define(['blob/BlobClient', 'http', 'https'],
             }
 
             var options = {
-                hostname: 'localhost',
-                port: 8888,
+                hostname: '127.0.0.1',
+                port: this.serverPort,
                 path: '/rest/notoken/blob/create/' + name + '.json?complex=true',
                 method: 'PUT'
             };
@@ -96,8 +97,8 @@ define(['blob/BlobClient', 'http', 'https'],
 
         BlobServerClient.prototype.addObject = function (name, data, callback) {
             var options = {
-                hostname: 'localhost',
-                port: 8888,
+                hostname: '127.0.0.1',
+                port: this.serverPort,
                 path: '/rest/notoken/blob/create/' + name,
                 method: 'PUT'
             };

@@ -135,7 +135,7 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
         //TODO get the configured parameters for webHost and webPort
         context.storage = new ConnectedStorage({type:'node',host:'127.0.0.1',port:serverPort,log:logManager.create('SERVER-WORKER-PLUGIN-'+process.pid)});
         //context.storage = storage;
-        context.blobClient = new BlobServerClient();
+        context.blobClient = new BlobServerClient({serverPort:serverPort});
         if(context.projectName){
             storage.openProject(context.projectName,function(err,project){
                 if(!err){
@@ -226,7 +226,7 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
                     var plugins = {};
                     plugins[name] = interpreter;
                     var manager = new PluginManagerBase(project,Core,plugins);
-                    context.managerConfig.blobClient = new BlobServerClient();
+                    context.managerConfig.blobClient = new BlobServerClient({serverPort:serverPort});
 
                     manager.initialize(null, function (pluginConfigs, configSaveCallback) {
                         if (configSaveCallback) {
