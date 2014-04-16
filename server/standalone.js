@@ -479,7 +479,7 @@ define(['logManager',
         // TODO: pick here which blob manager to use based on the config.
         var blobStorage = new BlobManagerFS();
 
-        __app.get('rest/:token/blob/infos',ensureAuthenticated,function(req,res){
+        __app.get('/rest/:token/blob/infos',ensureAuthenticated,function(req,res){
             blobStorage.loadInfos(null, function (err, infos) {
                 if (err) {
                     res.send(500);
@@ -541,16 +541,16 @@ define(['logManager',
 
         };
 
-        __app.put('rest/:token/blob/create/:filename',ensureAuthenticated,function(req, res) {
+        __app.put('/rest/:token/blob/create/:filename',ensureAuthenticated,function(req, res) {
             addFileToBlob(req, res);
         });
 
-        __app.post('rest/:token/blob/create/:filename',ensureAuthenticated,function(req,res){
+        __app.post('/rest/:token/blob/create/:filename',ensureAuthenticated,function(req,res){
             //the structure of data should be something like {info:{},data:binary/string}
             addFileToBlob(req, res);
         });
 
-        __app.get('rest/:token/blob/download/:blob_hash',ensureAuthenticated,function(req,res){
+        __app.get('/rest/:token/blob/download/:blob_hash',ensureAuthenticated,function(req,res){
             // TODO: use pipe/streams
             blobStorage.getContent(req.params.blob_hash, function (err, blob, filename) {
                 if (err) {
