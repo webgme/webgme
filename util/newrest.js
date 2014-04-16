@@ -344,6 +344,7 @@ define([
 
         function setBaseUrl(newUrl){
             _parameters.baseUrl = newUrl;
+            _baseUrl = newUrl;
         }
         return {
             initialize: initialize,

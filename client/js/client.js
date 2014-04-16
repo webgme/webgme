@@ -169,7 +169,7 @@ define([
                 var refreshToken = function(){
                     _database.getToken(function(err,t){
                         if(!err){
-                            token = t;
+                            token = t || "_";
                         }
                     });
                 };
@@ -2141,7 +2141,7 @@ define([
             }
             function plainUrl(command,path){
                 if(window && window.location && window.location && _nodes && _nodes[ROOT_PATH]){
-                    var address = window.location.protocol + '//' + window.location.host +'/rest'+(_TOKEN.getToken() === null ? '' : '/'+_TOKEN.getToken())+'/'+command+'/'+_projectName+'/'+URL.addSpecialChars(_core.getHash(_nodes[ROOT_PATH].node))+'/'+URL.addSpecialChars(path);
+                    var address = window.location.protocol + '//' + window.location.host +'/rest/'+_TOKEN.getToken()+'/'+command+'/'+_projectName+'/'+URL.addSpecialChars(_core.getHash(_nodes[ROOT_PATH].node))+'/'+URL.addSpecialChars(path);
                     return address;
                 }
             }

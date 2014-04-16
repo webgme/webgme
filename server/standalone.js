@@ -138,11 +138,15 @@ define(['logManager',
 
         function checkREST(req,res,next){
             var baseUrl = CONFIG.httpsecure === true ? 'https://' : 'http://'+req.headers.host+'/rest';
+            if(CONFIG.authentication === true){
+                baseUrl += '/token';
+            } else {
+                baseUrl +='/_';
+            }
             if(__REST === null){
                 var restAuthorization;
-                if(CONFIG.secureREST === true){
+                if(CONFIG.authentication === true){
                     restAuthorization = __gmeAuth.tokenAuthorization;
-                    baseUrl += '/token';
                 }
                 __REST = new REST({host:CONFIG.mongoip,port:CONFIG.mongoport,database:CONFIG.mongodatabase,baseUrl:baseUrl,authorization:restAuthorization});
             } else {
@@ -709,42 +713,35 @@ define(['logManager',
 
         //TODO: needs to refactor for the /rest/token/... format
         __logger.info("creating REST related routing rules");
-        __app.get('/rest/*',checkREST,function(req,res){
-
-            var commandpos = CONFIG.secureREST === true ? 3 : 2,
-                minlength = CONFIG.secureREST === true ? 3 : 2,
-                urlArray = req.url.split('/');
-            if(urlArray.length > minlength){
-                var command = urlArray[commandpos],
-                    token = CONFIG.secureREST === true ? urlArray[2] : "",
-                    parameters = urlArray.slice(commandpos+1);
-                __REST.initialize(function(err){
-                    if(err){
-                        res.send(500);
-                    } else {
-                        __REST.doRESTCommand(__REST.request.GET,command,token,parameters,function(httpStatus,object){
-                            if(command === __REST.command.etf){
-                                var filename = 'exportedNode.json';
-                                if(parameters[3]){
-                                    filename = parameters[3];
-                                }
-                                if(filename.indexOf('.') === -1){
-                                    filename += '.json';
-                                }
-                                res.header("Content-Type", "application/json");
-                                res.header("Content-Disposition", "attachment;filename=\""+filename+"\"");
-                                res.status(httpStatus);
-                                res.end(CANON(object));
-                            } else {
-                                res.json(httpStatus, object || null);
+        __app.get('/rest/:token/:command*',ensureAuthenticated,checkREST,function(req,res){
+            var parameters = req.url.split('/');
+            parameters.splice(0,4);
+            __REST.initialize(function(err){
+                if(err){
+                    res.send(500);
+                } else {
+                    __REST.doRESTCommand(__REST.request.GET,req.params.command,req.params.token,parameters,function(httpStatus,object){
+                        if(req.params.command === __REST.command.etf){
+                            var filename = 'exportedNode.json';
+                            if(parameters[3]){
+                                filename = parameters[3];
                             }
-                        });
-                    }
-                });
-            } else {
-                res.send(400);
-            }
+                            if(filename.indexOf('.') === -1){
+                                filename += '.json';
+                            }
+                            res.header("Content-Type", "application/json");
+                            res.header("Content-Disposition", "attachment;filename=\""+filename+"\"");
+                            res.status(httpStatus);
+                            res.end(CANON(object));
+                        } else {
+                            res.json(httpStatus, object || null);
+                        }
+                    });
+                }
+            });
         });
+
+
 
         __logger.info("creating server-worker related routing rules");
         __app.get('/worker/simpleResult/*',function(req,res){
