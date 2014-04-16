@@ -1,7 +1,7 @@
 define([
     'util/assert',
     'plugin/PluginManagerBase',
-    'plugin/PluginFSServer',
+    'blob/BlobRunPluginClient',
     'plugin/PluginResult',
     'core/coreforplugins',
     'storage/serveruserstorage',
@@ -11,7 +11,7 @@ define([
 ],function(
     ASSERT,
     PluginManager,
-    PluginFSServer,
+    BlobRunPluginClient,
     PluginResult,
     Core,
     Storage,
@@ -70,7 +70,7 @@ define([
 
                             var pluginManager = new PluginManager(project, Core, plugins);
 
-                            config.blobClient = new PluginFSServer();
+                            config.blobClient = new BlobRunPluginClient();
 
                             config.blobClient.initialize(function (err) {
                                 if (err) {

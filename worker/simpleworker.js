@@ -15,11 +15,11 @@ requirejs(['worker/constants',
         'logManager',
         'fs',
         'path',
-        'plugin/PluginFSServer',
+        'blob/BlobServerClient',
         'plugin/PluginManagerBase',
         'plugin/PluginResult',
         'storage/clientstorage'],
-function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,PluginFSServer,PluginManagerBase,PluginResult,ConnectedStorage){
+function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,PluginManagerBase,PluginResult,ConnectedStorage){
     var storage = null,
         core = null,
         result = null,
@@ -135,7 +135,7 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,PluginFSServer,Plugi
         //TODO get the configured parameters for webHost and webPort
         context.storage = new ConnectedStorage({type:'node',host:'127.0.0.1',port:serverPort,log:logManager.create('SERVER-WORKER-PLUGIN-'+process.pid)});
         //context.storage = storage;
-        context.blobClient = new PluginFSServer();
+        context.blobClient = new BlobServerClient();
         if(context.projectName){
             storage.openProject(context.projectName,function(err,project){
                 if(!err){
@@ -226,7 +226,7 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,PluginFSServer,Plugi
                     var plugins = {};
                     plugins[name] = interpreter;
                     var manager = new PluginManagerBase(project,Core,plugins);
-                    context.managerConfig.blobClient = new PluginFSServer();
+                    context.managerConfig.blobClient = new BlobServerClient();
 
                     manager.initialize(null, function (pluginConfigs, configSaveCallback) {
                         if (configSaveCallback) {
