@@ -171,6 +171,7 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
         var result = {
             success: this.success,
             messages: [],
+            artifacts: this.artifacts,
             pluginName: this.pluginName,
             startTime: this.startTime,
             finishTime: this.finishTime,

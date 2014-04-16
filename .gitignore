@@ -20,5 +20,7 @@ bin/stderr.log
 bin/stdout.log
 bin/decorators.js
 bin/*.xme
-bin/blob-local-storage
+
+# ignore file system blob storage files
+blob-local-storage
 
