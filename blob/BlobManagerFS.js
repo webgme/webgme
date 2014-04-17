@@ -1,7 +1,7 @@
 /**
  * Created by Zsolt on 4/11/2014.
  */
-define(['./BlobManagerBase', 'fs','crypto', 'path'], function (BlobManagerBase, fs, crypto, path) {
+define(['./BlobManagerBase', 'fs','crypto', 'path','util/guid'], function (BlobManagerBase, fs, crypto, path, GUID) {
 
 
     var BlobManagerFS = function () {
@@ -95,7 +95,58 @@ define(['./BlobManagerBase', 'fs','crypto', 'path'], function (BlobManagerBase, 
 
 
     };
+    BlobManagerFS.prototype.streamedSave = function(info,readStream,callback){
+        //TODO generate a GUID or something for the temporary filename to allow paralell functioning
+        var self = this,
+            tempName = GUID()+".tbf",
+            writeStream = fs.createWriteStream(tempName),
+            shasum = crypto.createHash(this.shaMethod),
+            size = 0;
 
+        writeStream.on('finish',function(){
+            //at this point the temporary file have been written out
+            //now the file have been written out
+            //finalizing hash and moving temporary file..
+            var hash = shasum.digest('hex'),
+                objectFilename = path.join(self.blobDir, self._getObjectRelativeLocation(hash));
+
+            self._ensureDirectory(path.dirname(objectFilename), function (err) {
+                if (err) {
+                    fs.unlink(tempName, function (e) {
+                        callback(err);
+                    });
+                } else {
+                    fs.rename(tempName, objectFilename, function (err) {
+                        if (err) {
+                            fs.unlink(tempName,function(e){
+                                callback(err);
+                            });
+                        } else {
+                            self.indexedFiles[hash] = {
+                                fullPath: info.name,
+                                filename: path.basename(info.name),
+                                type: path.extname(info.name),
+                                created: (new Date()).toISOString(),
+                                size: size,
+                                complex: info.complex || false,
+                                compressed: info.compressed || false
+                            };
+
+                            // TODO: we need a lock if multiple processes are accessing to this file
+                            fs.writeFileSync(self.indexFile, JSON.stringify(self.indexedFiles, null, 4));
+                            callback(null, hash);
+                        }
+                    });
+                }
+            });
+        });
+        readStream.pipe(writeStream);
+        //TODO this implementation should be moved to another class which inherits from writeablestream...
+        readStream.on('data',function(chunk){
+            shasum.update(chunk);
+            size += chunk.length; //TODO is it really have a length field always???
+        });
+    };
     BlobManagerFS.prototype.load = function (hash, callback) {
         var self = this;
 
@@ -108,6 +159,12 @@ define(['./BlobManagerBase', 'fs','crypto', 'path'], function (BlobManagerBase, 
 
             callback(null, data, self.getInfo(hash).filename);
         });
+    };
+    BlobManagerFS.prototype.streamedLoad = function(hash,writeStream){ //TODO do we need a callback???
+        var filename = path.join(this.blobDir, this._getObjectRelativeLocation(hash)),
+            readStream = fs.createReadStream(filename);
+
+        readStream.pipe(writeStream);
     };
 
     BlobManagerFS.prototype.loadInfos = function (query, callback) {
@@ -142,6 +199,8 @@ define(['./BlobManagerBase', 'fs','crypto', 'path'], function (BlobManagerBase, 
     BlobManagerFS.prototype.getHashes = function() {
         return Object.keys(this.indexedFiles);
     };
+
+
 
 
     return BlobManagerFS

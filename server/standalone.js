@@ -546,7 +546,21 @@ define(['logManager',
         };
 
         __app.put('/rest/:token/blob/create/:filename',ensureAuthenticated,function(req, res) {
-            addFileToBlob(req, res);
+            var filename = 'not_defined.txt';
+
+            if (req.params.filename !== null && req.params.filename !== '') {
+                filename = req.params.filename
+            }
+
+            blobStorage.streamedSave({name:filename, complex: req.query.complex === 'true' || false},req,function(err,hash){
+                if(err){
+                    res.send(500);
+                } else {
+                    var info = {};
+                    info[hash] = blobStorage.getInfo(hash);
+                   res.status(200).send(info); //TODO write it nicer
+                }
+            });
         });
 
         __app.post('/rest/:token/blob/create/:filename',ensureAuthenticated,function(req,res){
@@ -582,7 +596,7 @@ define(['logManager',
                         res.status(200);
                         res.end(JSON.stringify(infos[req.params.blob_hash], null, 4));
                     } else {
-                        res.end(404);
+                        res.send(404);
                     }
 
                 }
