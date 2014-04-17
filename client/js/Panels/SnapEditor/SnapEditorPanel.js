@@ -1,10 +1,10 @@
 "use strict";
 
 define(['js/PanelBase/PanelBaseWithHeader',
-    'js/PanelManager/IActivePanel',
-    'js/Widgets/ModelEditor/ModelEditorWidget',//FIXME 
-    './SnapEditorControl'
-], function (PanelBaseWithHeader,
+        'js/PanelManager/IActivePanel',
+        'js/Widgets/ModelEditor/ModelEditorWidget',//FIXME 
+        './SnapEditorControl'
+                                ], function (PanelBaseWithHeader,
              IActivePanel,
              SnapEditorWidget,
              SnapEditorControl) {

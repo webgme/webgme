@@ -6,16 +6,16 @@ define(['logManager',
     'js/RegistryKeys',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     './SnapEditorControl.DiagramDesignerWidgetEventHandlers',
-    'js/Utils/GMEConcepts',
-    'js/Utils/GMEVisualConcepts',
+    'js/Utils/GMEConcepts',//?
+    'js/Utils/GMEVisualConcepts',//?
     'js/Utils/PreferencesHelper'], function (logManager,
                                                         CONSTANTS,
                                                         nodePropertyNames,
                                                         REGISTRY_KEYS,
                                                         DiagramDesignerWidgetConstants,
                                                         SnapEditorControlDiagramDesignerWidgetEventHandlers,
-                                                        GMEConcepts,
-                                                        GMEVisualConcepts,
+                                                        GMEConcepts,//?
+                                                        GMEVisualConcepts,//?
                                                         PreferencesHelper) {
 
 /*
