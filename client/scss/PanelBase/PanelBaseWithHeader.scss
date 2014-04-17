@@ -137,7 +137,13 @@ $title-font-size: 14px;
     .panel-header-title {
       @include panel_header_title;
       margin-top: 3px;
+
+      &:empty {
+        display: none;
+      }
+
     }
+
   }
 
   &.read-only {
