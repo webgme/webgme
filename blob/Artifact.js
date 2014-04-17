@@ -27,7 +27,27 @@ define([], function () {
     };
 
     Artifact.prototype.addFiles = function (o, callback) {
-        throw new Error('not implemented yet.');
+        var self = this,
+            fileNames = Object.keys(o),
+            nbrOfFiles = fileNames.length,
+            hashes = [],
+            error = '',
+            i;
+
+        for (i = 0; i < fileNames.length; i += 1) {
+            self.addFile(fileNames[i], o[fileNames[i]], function (err, hash) {
+                error = err ? error + err : error;
+                nbrOfFiles -= 1;
+                hashes.push(hash);
+                if (nbrOfFiles === 0) {
+                    if (error) {
+                        callback('Failed adding files: ' + error, hashes);
+                        return;
+                    }
+                    callback(null, hashes);
+                }
+            });
+        }
     };
 
     Artifact.prototype.addHash = function (name, hash) {
