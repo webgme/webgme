@@ -14,10 +14,7 @@ define(['logManager',
         this.snapTypes = SnapMeta.TYPE_INFO;
         this.language = "python";
         this.currentObject;
-        var self = this,
-            terr = {};
-
-        terr[CONSTANTS.PROJECT_ROOT_ID] = { 'children': 10 };//TODO Set the necessary depth!
+        var self = this;
 
         this._createCodeMapping();
 
@@ -26,14 +23,7 @@ define(['logManager',
             if(this._languages.hasOwnProperty(lang)){
                 ddlist.addButton({ "title": "Generate " + lang + " code",
                         "text":lang, 
-                        "clickFn": function (){
-                        self._territoryId = self._client.addUI(self, function(events){
-                            self._client.removeUI(self._territoryId);
-                            self._runSnapInterpreter();
-                            });
-                        self._client.updateTerritory(self._territoryId, terr); 
-                        self.language = lang;    
-                        }
+                        "clickFn": self._clickFn(lang, self),
                         });
             }
         }
@@ -43,6 +33,18 @@ define(['logManager',
 
     };
 
+    SnapInterpreter.prototype._clickFn = function(lang, self){
+        var terr = {};
+        terr[CONSTANTS.PROJECT_ROOT_ID] = { 'children': 10 };//TODO Set the necessary depth!
+        return function(){
+            self._territoryId = self._client.addUI(self, function(events){
+                    self._client.removeUI(self._territoryId);
+                    self._runSnapInterpreter(lang);
+                    });
+            self._client.updateTerritory(self._territoryId, terr); 
+        }
+    };
+
     SnapInterpreter.prototype._createCodeMapping = function(){
         //Adding the mapping of node META name to code
         //% sign indicates it will be replaced with either 
@@ -50,25 +52,41 @@ define(['logManager',
         this._languages = {};
         this._languages['python'] = { 'bp': '#!/usr/bin/python2\n\n%code',
                                       'map': { 'Add': "%first + %second", 
-                                               'Write': "print '%text'",
+                                               'Subtract': "%first - %second", 
+                                               'Multiply': "(%first) * (%second)", 
+                                               'Divide': "(%first)/(%second)", 
+                                               'Less Than': "(%first) < (%second)", 
+                                               'Greater Than': "(%first) > (%second)", 
+                                               'Equals': "(%first) == (%second)", 
+                                               'Write': "print %text",
                                                'If': "if %cond:\n %true_next",
                                                'Variable': "%name",
                                                'Set': '%var = %value' },
+                                      'primitives': {'%var = %value': /[a-zA-Z\d._-]*/ },
                                       'ext': 'py' };
 
         //TODO use generated META as opposed to the hard coded types
         //Change the languages to be within the map
         this._languages['javascript'] = { 'bp': '#!/usr/bin/node\n\n%code',
                                           'map': { 'Add': "%first + %second", 
-                                                   'Write': "console.log('%text');",
+                                                   'Subtract': "%first - %second", 
+                                                   'Multiply': "(%first) * (%second)", 
+                                                   'Divide': "(%first)/(%second)", 
+                                                   'Less Than': "(%first) < (%second)", 
+                                                   'Greater Than': "(%first) > (%second)", 
+                                                   'Equals': "(%first) === (%second)", 
+                                                   'Write': "console.log(%text);",
                                                    'If': "if(%cond){\n %true_next\n}",
                                                    'Variable': "%name",
                                                    'Set': '%var = %value;' },
+                                          'primitives': { 'var %var = %value;': /^[a-zA-Z\d._-]*$/ },
                                           'ext': 'js' };
 
     };
 
-    SnapInterpreter.prototype._runSnapInterpreter = function(){
+    SnapInterpreter.prototype._runSnapInterpreter = function(lang){
+        this.language = lang;    
+        this.variables = [];
         
         if(this.currentObject !== undefined
                 && this.snapTypes.isProject(this.currentObject)){
@@ -91,7 +109,7 @@ define(['logManager',
             }
 
             code = this._languages[this.language].bp.replace("%code", code);
-            this._download({ 'name': "Generated Code", 'text': code });
+            this._download({ 'name': "generated_code", 'text': code });
         }
     };
 
@@ -101,21 +119,31 @@ define(['logManager',
             snippet = this._languages[this.language].map[typeName],//Get the code for the given node...
             ptrs = node.getPointerNames(),
             attributes = node.getAttributeNames(),
-            i = attributes.length;
+            i = ptrs.length;
 
-        //If the attribute name is in the snippet, substitute the attr name with the value
+        //If ptr name is present in the snippet, swap it out with the code from the tgt
+        //ptrs have precedence over attributes
         while(i--){
-            if(snippet.indexOf('%' + attributes[i]) !== -1){
-                snippet = snippet.replace('%' + attributes[i], node.getAttribute(attributes[i]));
+            if(node.getPointer(ptrs[i]).to && snippet.indexOf('%' + ptrs[i]) !== -1){
+                var nId = node.getPointer(ptrs[i]).to,
+                    dec = "";
+
+                if(this.snapTypes.isVariable(nId) && this.variables.indexOf(nId)){
+                    //Declare the variable
+
+                    var n = this._client.getNode(nId);
+                    dec = this._declareVar(n) + "\n"; //variable declaration
+                    this.variables.push(nId);
+                }
+                snippet = dec + snippet.replace('%' + ptrs[i], this._getBlockCode(nId));
             }
         }
 
-        //If ptr name is present in the snippet, swap it out with the code from the tgt
-        i = ptrs.length;
+        //If the attribute name is in the snippet, substitute the attr name with the value
+        i = attributes.length;
         while(i--){
-            if(snippet.indexOf('%' + ptrs[i]) !== -1){
-                var nId = node.getPointer(ptrs[i]).to;
-                snippet = snippet.replace('%' + ptrs[i], this._getBlockCode(nId));
+            if(snippet.indexOf('%' + attributes[i]) !== -1){
+                snippet = snippet.replace('%' + attributes[i], node.getAttribute(attributes[i]));
             }
         }
 
@@ -125,14 +153,17 @@ define(['logManager',
     SnapInterpreter.prototype._getBlockCode = function(nodeId){
         //Return code that is part of another block
 
-        if(this.snapTypes.isPredicate(nodeId))
+
+        if(this.snapTypes.isPredicate(nodeId)){
             //Return the snippet inline
             return this._generateCode(this._client.getNode(nodeId));
+
+        }
 
         if(this.snapTypes.isCommand(nodeId)){//Return the snippet with an indent
             var node = this._client.getNode(nodeId),
                 snippet = "\t" + this._generateCode(node);
-            
+
             while(node.getPointer('next').to 
                     && this.snapTypes.isCommand(node.getPointer('next').to)){
                 node = this._client.getNode(node.getPointer('next').to);
@@ -141,6 +172,25 @@ define(['logManager',
 
             return snippet;
         }
+    };
+
+    SnapInterpreter.prototype._declareVar = function(node){
+        var primitives = this._languages[this.language].primitives,
+            v = { 'name': node.getAttribute(nodePropertyNames.Attributes.name), //variable
+                  'val': node.getAttribute('value') };
+        if(primitives === null)//Not declaring variables
+            return "";
+
+        for(var type in primitives){
+            if(primitives.hasOwnProperty(type)){
+                //Find the var type
+                if(primitives[type].exec(v.val)[0] === v.val){//matches the regex
+                    var snippet = type.replace('%var', v.name);
+                    return snippet.replace("%value", v.val);
+                }
+            }
+        }
+
     };
 
     SnapInterpreter.prototype._download = function(data){
