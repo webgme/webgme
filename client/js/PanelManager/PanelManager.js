@@ -20,6 +20,10 @@ define(['logManager'], function (logManager) {
 
 
     PanelManager.prototype.setActivePanel = function (p) {
+        if (this._activePanel === p) {
+            return;
+        }
+
         if (this._activePanel) {
             //deactivate currently active panel
             this._activePanel.setActive(false);

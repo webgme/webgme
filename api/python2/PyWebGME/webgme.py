@@ -15,28 +15,27 @@ KEY_POINTERS = "pointers"
 KEY_META = "meta"
 KEY_CHILDREN = "children"
 KEY_GUID = "GUID"
+KEY_PARENT = "parent"
 
 TYPE_NODE = 'node'
 TYPE_CONNECTION = 'connection'
-TYPE_REFERENCE = 'reference'
 TYPE_NONE = 'none'
+
+POINTER_SOURCE = 'src'
+POINTER_DESTINATION = 'dst'
 
 #libary wide functions
 def getType(nodeObject):
     if isinstance(nodeObject,basenode):
         #TODO what should we do in case of multiple types
-        #now our priority order is collection -> reference -> node
+        #now our priority order is collection -> node
         pointers = nodeObject.outPointers
         if pointers != None:
-            if "src" in pointers.keys() and "dst" in pointers.keys():
+            if POINTER_SOURCE in pointers.keys() and POINTER_DESTINATION in pointers.keys():
                 return TYPE_CONNECTION
-            elif "ref" in pointers.keys():
-                return TYPE_REFERENCE
         return TYPE_NODE
     elif isinstance(nodeObject, connection):
         return TYPE_CONNECTION
-    elif isinstance(nodeObject, reference):
-        return TYPE_REFERENCE
     else:
         return TYPE_NONE
 #this class represents the basic HTTP layer
@@ -181,7 +180,6 @@ class memorycache:
         self.__nodes = {}
         self.__guidDir = {}
         self.__connDir = {}
-        self.__refDir = {}
         self.__nodDir = {}
 
     def getBaseNode(self,referenceObject):
@@ -205,16 +203,6 @@ class memorycache:
             if getType(baseNode) == TYPE_CONNECTION:
                 self.__connDir[guid] = connection(baseNode)
                 return self.__connDir[guid]
-        return None
-
-    def getReference(self,baseNode):
-        if isinstance(baseNode,basenode):
-            guid = baseNode.guid
-            if guid in self.__refDir.keys():
-                return self.__refDir[guid]
-            if getType(baseNode) == TYPE_REFERENCE:
-                self.__refDir[guid] = reference(baseNode)
-                return self.__refDir[guid]
         return None
 
     def getNode(self,baseNode):
@@ -244,10 +232,15 @@ class project:
 
     def getBranches(self):
         return self.__branchNames
+
     def getRoot(self,commitId):
         commit = self.__client.getCommit(self.__name,commitId)
         if commit != None:
-            print (commit)
+            jNode = self.__client.getURL(commit['root'][REFERENCE_KEY])
+            if jNode != None:
+                return basenode(self.__client,jNode,memorycache(self.__client))
+        return None
+
     def getRoot(self,branchName):
         if branchName in self.__branchNames:
             commit = self.__client.getURL(self.__branches[branchName])
@@ -257,12 +250,20 @@ class project:
                     return basenode(self.__client,jNode,memorycache(self.__client))
         return None
 
+    def getNode(self,nodeUrl):
+        jNode = self.__client.getURL(nodeUrl)
+        if jNode != None:
+            return basenode(self.__client,jNode,memorycache(self.__client))
+        return None
+
 #this is the totally basic node object which gives the simplest interface to check the data in the model
 class basenode:
     def __init__(self,wClient,jsonNode,cache):
         self.__client = wClient
         self.__json = jsonNode
         self.__cache = cache
+        self.__parent = None
+        self.__root = None
         self.__children = None
         self.__outpointers = None
         self.__inpointers = None
@@ -274,6 +275,7 @@ class basenode:
         if self.__cache == None:
             return basenode(self.__client,self.__client.getURL(referenceObject[REFERENCE_KEY]),None)
         return self.__cache.getBaseNode(referenceObject)
+    
     def getCache(self):
         return self.__cache
 
@@ -283,6 +285,11 @@ class basenode:
     @property
     def guid(self):
         return self.__json[KEY_GUID]
+    
+    @property
+    def meta(self):
+        return self.__json[KEY_META]
+    
     @property
     def attributes(self):
         return self.__json[KEY_ATTRIBUTES]
@@ -290,6 +297,23 @@ class basenode:
     @property
     def registry(self):
         return self.__json[KEY_REGISTRY]
+
+    @property
+    def parent(self):
+        if self.__parent == None:
+            parentNode = self.__getNode(self.__json[KEY_PARENT])
+            if parentNode != None:
+                self.__parent = parentNode
+        return self.__parent
+    
+    @property
+    def root(self):
+        if self.__root == None:
+            node = self
+            while node.parent != None:
+                node = node.parent
+            self.__root = node
+        return self.__node
 
     @property
     def children(self):
@@ -358,9 +382,6 @@ class basenode:
                                 self.__sets[pointerName].append(pointerNode)
         return self.__collections
 
-    @property
-    def meta(self):
-        return self.__json.meta;
 
 #this node class has the knowledge of connections and references so it can have nicer API - gives back type filterable lists and dictionaries
 class node:
@@ -374,10 +395,9 @@ class node:
         self.__sets = None
         self.__collections = None
         self.__tanconns = None
-        self.__referrers = None
         self.__baseNode = None
     
-    #this function always returns a typed gme object (node / connection / reference)
+    #this function always returns a typed gme object (node / connection)
     def __getNode(self,base):
         
         type = getType(base)
@@ -387,11 +407,6 @@ class node:
                 return connection(base)
             else:
                 return self.__cache.getConnection(base)
-        elif type == TYPE_REFERENCE:
-            if self.__cache == None:
-                return reference(base)
-            else:
-                return self.__cache.getReference(base)
         elif type == TYPE_NODE:
             if self.__cache == None:
                 return node(base)
@@ -402,10 +417,19 @@ class node:
 
     def getBaseNode(self):
         return self.__base
+    
     @property
     def guid(self):
         return self.__base.guid
     
+    @property
+    def parent(self):
+        return self.__getNode(self.__base.parent)
+
+    @property
+    def root(self):
+        return self.__base.root
+
     @property
     def base(self):
         if self.__baseNode == None:
@@ -436,8 +460,8 @@ class node:
         if self.__outpointers == None:
             self.__outpointers = {}
             outpointers = self.__base.outPointers
-            for pointerName in pointers:
-                self.__outpointers[pointerName] = self.__getNode(pointers[pointerName])
+            for pointerName in outpointers:
+                self.__outpointers[pointerName] = self.__getNode(outpointers[pointerName])
         return self.__outpointers
 
     @property
@@ -480,24 +504,16 @@ class node:
         if self.__tanconns == None:
             self.__tanconns = []
             inpointers = self.inPointers
-            if 'src' in inpointers:
-                for conn in inpointers['src']:
+            if POINTER_SOURCE in inpointers:
+                for conn in inpointers[POINTER_SOURCE]:
                     self.__tanconns.append(conn)
-            if 'dst' in inpointers:
-                for conn in inpointers['dst']:
+            if POINTER_DESTINATION in inpointers:
+                for conn in inpointers[POINTER_DESTINATION]:
                     self.__tanconns.append(conn)
 
         return self.__tanconns
 
-    @property
-    def referrers(self):
-        if self.__referrers == None:
-            self.__referrers = []
-            inpointers = self.inPointers
-            if 'ref' in inpointers:
-                for ref in inpointers['ref']:
-                    self.__referrers.append(ref)
-        return self.__referrers
+
 
 #this is a suer class of the basic node with some extended functions
 class connection(node):
@@ -508,12 +524,12 @@ class connection(node):
     @property
     def source(self):
         outpointers = self.outPointers
-        return outpointers["src"]
+        return outpointers[POINTER_SOURCE]
 
     @property
     def destination(self):
         outpointers = self.outPointers
-        return outpointers["dst"]
+        return outpointers[POINTER_DESTINATION]
     
     @property
     def endpoints(self):
@@ -522,12 +538,3 @@ class connection(node):
             self.__endpoints.append(self.source)
             self.__endpoints.append(self.destination)
         return self.__endpoints
-
-#this is the reference class similar to the connection
-class reference(node):
-    def __init__(self, baseNode):
-        return super().__init__(baseNode)
-    @property
-    def target(self):
-        outpointers = self.outPointers
-        return outpointers["ref"]

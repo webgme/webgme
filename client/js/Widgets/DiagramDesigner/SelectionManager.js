@@ -150,11 +150,10 @@ define(['logManager',
         }
     };
 
+    var RUBBERBAND_BASE = $('<div/>', {"class" : "rubberband"});
     SelectionManager.prototype._createRubberBand = function () {
         //create rubberband DOM element
-        var rubberBand = $('<div/>', {
-            "class" : "rubberband"
-        });
+        var rubberBand = RUBBERBAND_BASE.clone();
         rubberBand.css({"display": "none",
             "position": "absolute"});
 
@@ -439,6 +438,9 @@ define(['logManager',
     /*********************** COMPONENT DELETE HANDLER *******************/
 
     /*********************** SHOW SELECTION OUTLINE *********************************/
+    var SELECTION_OUTLINE_BASE = $('<div/>', {
+        "class" : "selection-outline"
+    });
     SelectionManager.prototype.showSelectionOutline = function () {
         var bBox = this._getSelectionBoundingBox(),
             cW = this._diagramDesigner._actualSize.w,
@@ -478,9 +480,7 @@ define(['logManager',
             if (this._diagramDesigner.skinParts.$selectionOutline) {
                 this._diagramDesigner.skinParts.$selectionOutline.empty();
             } else {
-                this._diagramDesigner.skinParts.$selectionOutline = $('<div/>', {
-                    "class" : "selection-outline"
-                });
+                this._diagramDesigner.skinParts.$selectionOutline = SELECTION_OUTLINE_BASE.clone();
 
                 this._diagramDesigner.skinParts.$itemsContainer.append(this._diagramDesigner.skinParts.$selectionOutline);
             }
@@ -551,31 +551,46 @@ define(['logManager',
     /************* END OF --- GET SELECTION OUTLINE COORDINATES AND DIMENSIONS ************************/
 
     /************* RENDER COMMAND BUTTONS ON SELECTION OUTLINE ************************/
+    var DELETE_BUTTON_BASE = $('<div/>', {
+        "class" : "s-btn delete",
+        "command" : "delete"
+    });
+    DELETE_BUTTON_BASE.html('<i class="icon-remove"></i>');
+
+    var CONTEXT_MENU_BUTTON_BASE = $('<div/>', {
+        "class" : "s-btn contextmenu",
+        "command" : "contextmenu"
+    });
+    CONTEXT_MENU_BUTTON_BASE.html('<i class="icon-list-alt"></i>');
+
+    var MOVE_BUTTON_BASE = $('<div/>', {
+        "class" : "s-btn move",
+        "command" : "move"
+    });
+    MOVE_BUTTON_BASE.html('<i class="icon-move"></i>');
+
     SelectionManager.prototype._renderSelectionActions = function () {
         var self = this,
             deleteBtn,
-            contextMenuBtn;
+            contextMenuBtn,
+            moveBtn;
 
         if (this._diagramDesigner.getIsReadOnlyMode() === true) {
             return;
         }
 
         if (this._diagramDesigner.getIsReadOnlyMode() !== true) {
-            deleteBtn = $('<div/>', {
-                "class" : "s-btn delete",
-                "command" : "delete"
-            });
+            deleteBtn = DELETE_BUTTON_BASE.clone();
             this._diagramDesigner.skinParts.$selectionOutline.append(deleteBtn);
-            deleteBtn.html('<i class="icon-remove"></i>');
+
+            moveBtn = MOVE_BUTTON_BASE.clone();
+            this._diagramDesigner.skinParts.$selectionOutline.append(moveBtn);
+            this._diagramDesigner._makeDraggable({ '$el': moveBtn });
         }
 
         //context menu
-        contextMenuBtn = $('<div/>', {
-            "class" : "s-btn contextmenu",
-            "command" : "contextmenu"
-        });
+        contextMenuBtn = CONTEXT_MENU_BUTTON_BASE.clone();
         this._diagramDesigner.skinParts.$selectionOutline.append(contextMenuBtn);
-        contextMenuBtn.html('<i class="icon-list-alt"></i>');
 
         //detach mousedown handler on selection outline
         this._diagramDesigner.skinParts.$selectionOutline.off("mousedown").off("click", ".s-btn");
@@ -594,21 +609,23 @@ define(['logManager',
         this._renderRotateHandlers();
     };
     /************* END OF --- RENDER COMMAND BUTTONS ON SELECTION OUTLINE ************************/
+    var ROTATION_BUTTON_BASE = $('<div/>', {
+        "class" : "s-btn rotate bottom"
+    });
+    ROTATION_BUTTON_BASE.html('<i class="icon-repeat"><div class="popover right nowrap" style="top: -10px; left: 22px; display: none;"><div class="arrow"></div><div class="popover-content narrow"><div class="btn-group"><a class="btn btn-small" id="rotate-left" title="Rotate left"><i class="icon-repeat flip-vertical"></i></a><a class="btn  btn-small" id="rotate-right" title="Rotate right"><i class="icon-repeat"></i></a><a class="btn  btn-small" id="rotate-reset" title="Reset rotation"><i class="icon-remove"></i></a></div></div></div></i>');
 
+    var ROTATION_DEGREE_BASE = $('<div/>', {
+        "class" : "rotation-deg"
+    });
     SelectionManager.prototype._renderRotateHandlers = function () {
         var rotateBtnBottom,
             self = this,
             rotateEnabled = !this._diagramDesigner.getIsReadOnlyMode() && this._rotationEnabled;
 
         if (rotateEnabled) {
-            rotateBtnBottom = $('<div/>', {
-                "class" : "s-btn rotate bottom"
-            });
-            rotateBtnBottom.html('<i class="icon-repeat"><div class="popover right nowrap" style="top: -10px; left: 22px; display: none;"><div class="arrow"></div><div class="popover-content narrow"><div class="btn-group"><a class="btn btn-small" id="rotate-left" title="Rotate left"><i class="icon-repeat flip-vertical"></i></a><a class="btn  btn-small" id="rotate-right" title="Rotate right"><i class="icon-repeat"></i></a><a class="btn  btn-small" id="rotate-reset" title="Reset rotation"><i class="icon-remove"></i></a></div></div></div></i>');
+            rotateBtnBottom = ROTATION_BUTTON_BASE.clone();
 
-            this._rotationDegree = $('<div/>', {
-                "class" : "rotation-deg"
-            });
+            this._rotationDegree = ROTATION_DEGREE_BASE.clone();
 
             this._diagramDesigner.skinParts.$selectionOutline.append(rotateBtnBottom);
             this._diagramDesigner.skinParts.$selectionOutline.append(this._rotationDegree);

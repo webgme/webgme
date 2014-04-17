@@ -8,7 +8,9 @@ define([
     'js/Controls/PropertyGrid/Widgets/iCheckBoxWidget',
     'js/Controls/PropertyGrid/Widgets/OptionWidget',
     'js/Controls/PropertyGrid/Widgets/ColorPickerWidget',
-    'js/Utils/ColorUtil'],
+    'js/Utils/ColorUtil',
+    'js/Controls/PropertyGrid/Widgets/DialogWidget',
+    './PropertyGridWidgets'],
     function (StringWidget,
               NumberBoxWidget,
               BooleanWidget,
@@ -16,7 +18,9 @@ define([
               iCheckBoxWidget,
               OptionWidget,
               ColorPickerWidget,
-              colorUtil) {
+              colorUtil,
+              DialogWidget,
+              PropertyGridWidgets) {
 
         var PropertyGridWidgetManager;
 
@@ -26,27 +30,40 @@ define([
 
         PropertyGridWidgetManager.prototype.getWidgetForProperty = function (propDesc) {
             var _type = propDesc.valueType || typeof propDesc.value,
-                _readOnly = propDesc.readOnly === true ?  true : false,
+                _readOnly = propDesc.readOnly === true,
                 _isOption = _.isArray(propDesc.valueItems),
-                _isColor = colorUtil.isColor(propDesc.value);
+                _isColor = colorUtil.isColor(propDesc.value),
+                _specificWidget = propDesc.widget,
+                widget;
 
             if (_readOnly) {
-                return new LabelWidget(propDesc);
+                widget = new LabelWidget(propDesc);
+            } else if (_specificWidget) {
+                switch (_specificWidget) {
+                    case PropertyGridWidgets.DIALOG_WIDGET:
+                        widget = new DialogWidget(propDesc);
+                        break;
+                    default:
+                        widget = new _specificWidget(propDesc);
+                        break;
+                }
             } else if (_isOption){
-                return new OptionWidget(propDesc);
+                widget = new OptionWidget(propDesc);
             } else if (_isColor) {
-                return new ColorPickerWidget(propDesc);
+                widget = new ColorPickerWidget(propDesc);
             } else {
                 if (this._registeredWidgets[_type]) {
-                    return new this._registeredWidgets[_type](propDesc);
+                    widget = new this._registeredWidgets[_type](propDesc);
                 } else if (_type === "number") {
-                    return new NumberBoxWidget(propDesc);
+                    widget = new NumberBoxWidget(propDesc);
                 } else if (_type === "boolean") {
-                    return new BooleanWidget(propDesc);
+                    widget = new BooleanWidget(propDesc);
                 } else {
-                    return new StringWidget(propDesc);
+                    widget = new StringWidget(propDesc);
                 }
             }
+
+            return widget;
         };
 
         PropertyGridWidgetManager.prototype.registerWidgetForType = function (type, widget) {
@@ -54,7 +71,8 @@ define([
                 switch (widget) {
                     case 'iCheckBox':
                         this.registerWidgetForType(type, iCheckBoxWidget);
-                };
+                        break;
+                }
             } else {
                 this._registeredWidgets[type] = widget;
             }

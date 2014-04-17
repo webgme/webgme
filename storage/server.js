@@ -15,6 +15,15 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
         options.authorization = options.authorization || function(sessionID,projectName,type,callback){callback(null,true);};
         options.sessioncheck = options.sessioncheck || function(sessionID,callback){callback(null,true);};
         options.authInfo = options.authInfo || function(sessionID,projectName,callback){callback(null,{'read':true,'write':true,'delete':true});};
+        options.webServerPort = options.webServerPort || 80;
+        options.log = options.log || {
+            debug: function (msg) {
+                console.log("DEBUG - " + msg);
+            },
+            error: function (msg) {
+                console.log("ERROR - " + msg);
+            }
+        };
         var _socket = null,
             _objects = {},
             _projects = {},
@@ -35,6 +44,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 _database.openDatabase(function(err){
                     if(err){
                         _databaseOpened = false;
+                        options.log.error(err);
                         callback(err);
                     } else {
                         callback(null);
@@ -103,10 +113,10 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
 
             _socket.set('authorization',function(data,accept){
                 //either the html header contains some webgme signed cookie with the sessionID
-                // or the data has a webgme member which should also contain the sessionID - currently the same as the cookie
+                // or the data has a webGMESession member which should also contain the sessionID - currently the same as the cookie
 
                 if (options.session === true){
-                    var sessionID = data.webgme;
+                    var sessionID = data.webGMESession;
                     if(sessionID === null || sessionID === undefined){
                         if(data.headers.cookie){
                             var cookie = URL.parseCookie(data.headers.cookie);
@@ -367,6 +377,9 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
 
                 //worker commands
                 socket.on('simpleRequest',function(parameters,callback){
+                    if(socket.handshake){
+                        parameters.webGMESessionId = socket.handshake.webGMESession || null;
+                    }
                     _workerManager.request(parameters,callback);
                 });
 
@@ -384,7 +397,15 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 });
             });
 
-            _workerManager = new SWM({basedir:options.basedir,mongoip:options.host,mongoport:options.port,mongodb:options.database});
+            _workerManager = new SWM({
+                basedir:options.basedir,
+                mongoip:options.host,
+                mongoport:options.port,
+                mongodb:options.database,
+                intoutdir:options.intoutdir,
+                pluginBasePaths:options.pluginBasePaths,
+                serverPort:options.webServerPort
+            });
         }
 
         function close(){

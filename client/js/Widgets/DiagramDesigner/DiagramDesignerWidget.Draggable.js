@@ -13,7 +13,10 @@ define(['js/DragDrop/DragSource',
                                                     DiagramDesignerWidgetConstants) {
 
     var DiagramDesignerWidgetDraggable,
-        DRAG_HELPER_CLASS = 'diagram-designer-drag-outline';
+        DRAG_HELPER_CLASS = 'diagram-designer-drag-outline',
+        DRAG_HELPER_EL_BASE = $('<div/>', {'class': DRAG_HELPER_CLASS}),
+        DRAG_HELPER_ICON_MOVE = $('<i class="icon-move"></i>'),
+        DRAG_HELPER_ICON_COPY = $('<i class="icon-plus"></i>');
 
     DiagramDesignerWidgetDraggable = function () {
     };
@@ -65,7 +68,7 @@ define(['js/DragDrop/DragSource',
 
     /* OVERWRITE DragSource.prototype.dragHelper */
     DiagramDesignerWidgetDraggable.prototype._dragHelper = function (el, event, dragInfo) {
-        var helperEl = $('<div/>', {'class': DRAG_HELPER_CLASS}),
+        var helperEl = DRAG_HELPER_EL_BASE.clone(),
             selectionBBox = this.selectionManager._getSelectionBoundingBox(),
             mousePos = this.getAdjustedMousePos(event),
             dragEffects = dragHelper.getDragEffects(dragInfo);
@@ -84,9 +87,9 @@ define(['js/DragDrop/DragSource',
 
             if (dragEffects.length === 1) {
                 if (dragEffects[0] === dragSource.DRAG_EFFECTS.DRAG_MOVE) {
-                    helperEl.append($('<i class="icon-move"></i>')).append(' Move...');
+                    helperEl.append(DRAG_HELPER_ICON_MOVE.clone()).append(' Move...');
                 } else if (dragEffects[0] === dragSource.DRAG_EFFECTS.DRAG_COPY) {
-                    helperEl.append($('<i class="icon-plus"></i>')).append(' Copy...');
+                    helperEl.append(DRAG_HELPER_ICON_COPY.clone()).append(' Copy...');
                 }
             }
         }

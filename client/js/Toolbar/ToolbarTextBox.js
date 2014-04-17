@@ -8,29 +8,28 @@
 
 define(['./ToolbarItemBase'], function (ToolbarItemBase) {
 
-    var ToolbarTextBox;
+    var ToolbarTextBox,
+        EL_BASE = $('<div class="toolbar-input"></div>'),
+        TXT_GROUP_BASE = $('<div/>', {"class": "input-prepend"}),
+        TEXTBOX_BASE = $('<input/>', {"class": "input-medium input-mini","type" :"text"}),
+        LABEL_BASE = $('<span/>', {"class":"add-on add-on-mini"});
 
     ToolbarTextBox = function (params) {
-        this.el = $('<div class="toolbar-input"></div>');
+        this.el = EL_BASE.clone();
 
-        var $txtGroup = $('<div/>', {
-                "class": "input-prepend"
-            }),
+        var $txtGroup = TXT_GROUP_BASE.clone(),
             $label,
-            $textBox = $('<input/>', {
-                "class": "input-medium input-mini",
-                "type" :"text"
-            });
+            $textBox = TEXTBOX_BASE.clone();
 
         this._textBox = $textBox;
 
         if (params && params.label) {
-            $label = $('<span/>', {"class":"add-on add-on-mini"});
+            $label = LABEL_BASE.clone();
             $label.text(params.label + ": ");
         }
 
         if (params && params.prependContent) {
-            $label = $('<span/>', {"class":"add-on add-on-mini"});
+            $label = LABEL_BASE.clone();
             $label.html(params.prependContent);
         }
 

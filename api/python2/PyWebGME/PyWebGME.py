@@ -1,35 +1,61 @@
 import webgme
-
+import sys
+import json
+from graphml import graphml
+import sfs2graphs
 try:
-    w = webgme.client("http://localhost","078dd342-6695-af73-b4cc-90aeb4820feetoken")
-    #w = webgme.client("http://localhost","1504070a-d60c-9eaa-a6e0-9c0ddbb5e444token")
 
-    db = w.connect()
+    config = {}
+    if len(sys.argv) == 2:
+        cFile = open(sys.argv[1])
+        config = json.load(cFile)
+        cFile.close()
+        print(config)
 
-    plist = db.getProjectList()
+    pName = None
+    mUrl = None
+    bName = None
+    token = None
+    host = None
+    commit = None
+    rUrl = None
+    if 'project' in config.keys():
+        pName = config['project']
+    if 'selected' in config.keys():
+        mUrl = config['selected']
+    if 'branch' in config.keys():
+        bName = config['branch']
+    if 'token' in config.keys():
+        token = config['token']
+    if token == None:
+        token = ""
+    if 'host' in config.keys():
+        host = config['host']
+    if 'commit' in config.keys():
+        commit = config['commit']
+    if 'root' in config.keys():
+        commit = config['root']
 
-    def recPrint(item, indent):
-        print (indent+item.attributes["name"]+"  "+str(type(item)))
-        children = item.children
-        for child in children:
-            recPrint(child,indent+"  ")
-
-    if len(plist) > 0:
-        print("available projects:")
-        for i,j in enumerate(plist):
-            print(str(i)+". "+j)
-        index = input("please enter the number which project you want to open (to exit input an invalid value):")
-        index = int(index)
-        if index >=0 and index < len(plist):
-            project = db.getProject(plist[index])
-            root = project.getRoot("master")
-            rootNode = webgme.node(root)
-            recPrint(rootNode,"");
+    if pName != None and mUrl != None and token != None and host != None:
+        print('configuration read successfully')
+        print('starting to generate graphml file')
+        w = webgme.client(host,token)
+        db = w.connect()
+        plist = db.getProjectList()
+        graph = graphml()
+        project = db.getProject(pName)
+        if project != None:
+            if mUrl != None:
+                model = project.getNode(mUrl)
+                modelNode = webgme.node(model)
+                g = sfs2graphs.SignalFlowSystemToGraphML(modelNode)
+                print('file generation completed')
+            else:
+                print('there is no selected model in the configuration')
         else:
-            exit()
+            print('unable to find project')
     else:
-        print("there is no available project, program stops")
-        exit()
+        print("the given configuration is unusable!!")
 except SystemExit as e:
     if not e.code == None:
          print(e);

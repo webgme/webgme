@@ -60,7 +60,7 @@ define(['js/Constants',
 
 
     MetaDecoratorDiagramDesignerWidgetConstraints.prototype._onNewConstraintClick = function () {
-        this._onNewClick(this._constraintNames, this._skinParts.$constraintsContainer, this._skinParts.$addConstraintContainer, this._onNewConstraintCreate);
+        this._onNewClick(this._constraintNames, this._skinParts.$constraintsContainer, this._skinParts.$addConstraintContainer, this._skinParts.$constraintsTitle, this._onNewConstraintCreate);
     };
 
     MetaDecoratorDiagramDesignerWidgetConstraints.prototype._updateConstraints = function () {
@@ -145,7 +145,7 @@ define(['js/Constants',
         this.logger.debug("_onNewConstraintCreate: " + cName);
 
         //pass all the other attribute names to the dialog
-        constraintNames.splice(this._attributeNames.indexOf(cName), 1);
+        constraintNames.splice(this._constraintNames.indexOf(cName), 1);
 
         desc = {'name': cName,
             'script': SCRIPT_TEMPLATE,

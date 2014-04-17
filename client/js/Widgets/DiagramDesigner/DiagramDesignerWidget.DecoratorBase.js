@@ -1,8 +1,8 @@
 "use strict";
 
-define(['logManager',
+define(['js/Decorators/WidgetDecoratorBase',
         './DiagramDesignerWidget.Constants',
-        './DiagramDesignerWidget.DecoratorBase.ConnectionArea'], function (logManager,
+        './DiagramDesignerWidget.DecoratorBase.ConnectionArea'], function (WidgetDecoratorBase,
                                                         DiagramDesignerWidgetConstants,
                                                         DiagramDesignerWidgetDecoratorBaseConnectionArea) {
 
@@ -10,10 +10,9 @@ define(['logManager',
         DECORATOR_ID = "DiagramDesignerWidgetDecoratorBase";
 
     DiagramDesignerWidgetDecoratorBase = function (params) {
+        WidgetDecoratorBase.call(this, params);
 
         this.hostDesignerItem = params.host;
-        this.preferencesHelper = params.preferencesHelper;
-        this.logger = params.logger || logManager.create(this.DECORATORID);
 
         this.skinParts = {};
         this.$sourceConnectors = null;
@@ -24,6 +23,7 @@ define(['logManager',
         this.logger.debug("Created");
     };
 
+    _.extend(DiagramDesignerWidgetDecoratorBase.prototype, WidgetDecoratorBase.prototype);
     _.extend(DiagramDesignerWidgetDecoratorBase.prototype, DiagramDesignerWidgetDecoratorBaseConnectionArea.prototype);
 
     DiagramDesignerWidgetDecoratorBase.prototype.DECORATORID = DECORATOR_ID;

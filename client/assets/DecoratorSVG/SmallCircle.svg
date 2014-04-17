@@ -1,0 +1,5 @@
+<svg width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+    <g>
+        <circle class='fill-color border-color' cx="10" cy="10" r="9" stroke="#000" fill="#FFFFFF"/>
+    </g>
+</svg>

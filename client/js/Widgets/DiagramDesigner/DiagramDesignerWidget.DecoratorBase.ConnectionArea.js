@@ -34,10 +34,11 @@ define(['js/Constants',
             var rightClick = event.which === 3;
 
             if (rightClick) {
-                self._editConnectionAreas();
-                event.preventDefault();
-                event.stopPropagation();
-                event.stopImmediatePropagation();
+                if (self._editConnectionAreas() === true) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    event.stopImmediatePropagation();
+                }
             }
         });
     };
@@ -52,12 +53,12 @@ define(['js/Constants',
 
         //do not edit in ReadOnly mode
         if (this.hostDesignerItem.canvas.getIsReadOnlyMode() === true) {
-            return;
+            return false;
         }
 
         //do not enter edit mode if there is no connection area defined at all
         if (this.getConnectionAreas().length === 0) {
-            return;
+            return false;
         }
 
         this._connAreaEditBackground = $('<div/>', { 'class': CONN_AREA_EDIT_BACKGROUND});
@@ -137,6 +138,8 @@ define(['js/Constants',
                 $(path.node).attr({ "class": CONN_AREA_EDIT_CLASS });
             }
         }
+
+        return true;
     };
 
     DiagramDesignerWidgetDecoratorBaseConnectionArea.prototype._endEditConnectionAreas = function () {

@@ -10,15 +10,17 @@
  * Utility helper functions for saving WebGME state and reload on browser back
  */
 
-define(['jquery'], function () {
+define(['jquery',
+        'logManager'], function (_jquery,
+                                 logManager) {
 
-    var _client,
-        STATE_SELECTED_OBJECT_ID = 'selectedObjectId',
-        STATE_ACTIVE_SELECTION = 'activeSelection',
-        _stateLoading = false;
+    var _stateLoading = false,
+        _initialized = false,
+        logger = logManager.create("WebGME.History");
 
     var _saveState = function (stateObj) {
         if (_stateLoading === false) {
+            logger.debug('saving state:' + JSON.stringify(stateObj));
             window.history.pushState(stateObj, null, null);
         }
     };
@@ -27,31 +29,34 @@ define(['jquery'], function () {
     var _onLoadState = function (stateObj) {
         _stateLoading = true;
 
-        if (_client && stateObj) {
-            if (stateObj[STATE_SELECTED_OBJECT_ID]) {
-                _client.setSelectedObjectId(stateObj[STATE_SELECTED_OBJECT_ID], stateObj[STATE_ACTIVE_SELECTION]);
-            }
-        }
+        //clear state in silent mode, it will not fire the clear event
+        WebGMEGlobal.State.clear({'silent': true});
+
+        //set the attributes from the saved state
+        logger.debug('loading state:' + JSON.stringify(stateObj));
+        WebGMEGlobal.State.set(stateObj);
 
         _stateLoading = false;
     };
 
 
-    var _setClient = function (c) {
-        _client = c;
+    var _initialize = function () {
+        if (_initialized) {
+            return;
+        }
 
-        _client.addEventListener(_client.events.SELECTEDOBJECT_CHANGED, function (__project, nodeId) {
-            var stateObj = {};
-            stateObj[STATE_SELECTED_OBJECT_ID] = nodeId;
-            stateObj[STATE_ACTIVE_SELECTION] = _client.getActiveSelection();
-            _saveState(stateObj);
+        _initialized = true;
+        WebGMEGlobal.State.on("change", function(model, options) {
+            _saveState(WebGMEGlobal.State.toJSON());
         });
-
-        _setClient = undefined;
     };
 
     if (WebGMEGlobal.history !== true) {
-        WebGMEGlobal.history = true;
+        Object.defineProperty(WebGMEGlobal, 'history', {value : true,
+            writable : false,
+            enumerable : true,
+            configurable : false});
+
         $(window).on('popstate', function(event) {
             _onLoadState(event.originalEvent.state);
         });
@@ -59,6 +64,5 @@ define(['jquery'], function () {
 
 
     //return utility functions
-    return { saveState: _saveState,
-             setClient: _setClient};
+    return { initialize: _initialize};
 });

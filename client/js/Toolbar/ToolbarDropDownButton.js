@@ -12,19 +12,33 @@ define(['./ButtonBase',
                                             iCheckBox,
                                             ToolbarItemBase) {
 
-    var ToolbarDropDownButton;
+    var ToolbarDropDownButton,
+        EL_BASE = $('<div/>', {"class": "btn-group"}),
+        CARET_BASE = $('<span class="caret"></span>'),
+        UL_BASE = $('<ul class="dropdown-menu"></ul>'),
+        DIVIDER_BASE = $('<li class="divider"></li>'),
+        CHK_LI_BASE = $('<li/>', {'class': 'chkbox'}),
+        CHK_LI_A_BASE = $('<a href="#"></a>'),
+        LI_BASE = $('<li></li>');
 
     ToolbarDropDownButton = function (params) {
-        this.el = $('<div/>', {
-            "class": "btn-group"
-        });
+        this.el = EL_BASE.clone();
 
-        delete params.clickFn;
+        var oClickFn;
+        if (params.clickFn) {
+            oClickFn = params.clickFn;
+            params.clickFnEventCancel = false;
+
+            params.clickFn = function () {
+                oClickFn();
+            };
+        }
+        //delete params.clickFn;
 
         this._dropDownBtn = buttonBase.createButton(params);
-        var caret = $('<span class="caret"></span>');
+        var caret = CARET_BASE.clone();
 
-        this._ulMenu = $('<ul class="dropdown-menu"></ul>');
+        this._ulMenu = UL_BASE.clone();
 
         if (params && params.menuClass) {
             this._ulMenu.addClass(params.menuClass);
@@ -55,7 +69,7 @@ define(['./ButtonBase',
     ToolbarDropDownButton.prototype.addButton = function (params) {
         var btn,
             oclickFn,
-            li = $('<li></li>'),
+            li = LI_BASE.clone(),
             dropDownBtn = this._dropDownBtn;
 
         if (params.clickFn) {
@@ -74,14 +88,14 @@ define(['./ButtonBase',
     };
 
     ToolbarDropDownButton.prototype.addDivider = function () {
-        var divider = $('<li class="divider"></li>');
+        var divider = DIVIDER_BASE.clone();
 
         this._ulMenu.append(divider);
     };
 
     ToolbarDropDownButton.prototype.addCheckBox = function (params) {
-        var chkLi = $('<li/>', {'class': 'chkbox'}),
-            a = $('<a href="#"></a>'),
+        var chkLi = CHK_LI_BASE.clone(),
+            a = CHK_LI_A_BASE.clone(),
             checkBox;
 
         if (params.text) {

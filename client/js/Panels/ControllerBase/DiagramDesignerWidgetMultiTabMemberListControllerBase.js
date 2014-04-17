@@ -27,8 +27,6 @@ define(['logManager',
         MEMBER_POSITION_REGISTRY_KEY = REGISTRY_KEYS.POSITION;
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase = function (options) {
-        var self = this;
-
         this.logger = logManager.create(options.loggerName || "DiagramDesignerWidgetMultiTabMemberListControllerBase");
 
         this._client = options.client;
@@ -40,10 +38,6 @@ define(['logManager',
             this.logger.error("DiagramDesignerWidgetMultiTabMemberListControllerBase's client is not specified...");
             throw ("DiagramDesignerWidgetMultiTabMemberListControllerBase can not be created");
         }
-
-        this._selectedObjectChanged = function (__project, nodeId) {
-            self.selectedObjectChanged(nodeId);
-        };
 
         if (this._widget === undefined) {
             this.logger.error("DiagramDesignerWidgetMultiTabMemberListControllerBase's widget is not specified...");
@@ -132,7 +126,7 @@ define(['logManager',
         var self = this,
             pattern;
 
-        this.logger.debug("SELECTEDOBJECT_CHANGED nodeId '" + nodeId + "'");
+        this.logger.debug("activeObject nodeId '" + nodeId + "'");
 
         //delete everything from model editor
         this._widget.clear();
@@ -146,14 +140,12 @@ define(['logManager',
             this._widget.clearTabs();
         }
 
-        //do not work on ROOT element
-        if (nodeId === CONSTANTS.PROJECT_ROOT_ID) {
-            nodeId = undefined;
-        }
+        nodeId = this._validateNodeId(nodeId);
 
         this._memberListContainerID = nodeId;
+        this._selectedMemberListID = undefined;
 
-        if (nodeId) {
+        if (nodeId || nodeId === CONSTANTS.PROJECT_ROOT_ID) {
             //put new node's info into territory rules
             pattern = {};
             pattern[nodeId] = { "children": 0 };
@@ -171,13 +163,26 @@ define(['logManager',
         }
     };
 
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._validateNodeId = function (nodeId) {
+        //do not work on ROOT element
+        if (nodeId === CONSTANTS.PROJECT_ROOT_ID) {
+            nodeId = undefined;
+        }
+
+        return nodeId;
+    };
+
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._stateActiveObjectChanged = function (model, activeObjectId) {
+        this.selectedObjectChanged(activeObjectId);
+    };
+
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._attachClientEventListeners = function () {
         this._detachClientEventListeners();
-        this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged, this);
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._detachClientEventListeners = function () {
-        this._client.removeEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
+        WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged);
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.onActivate = function () {
@@ -266,6 +271,8 @@ define(['logManager',
             orderedMemberListInfo = this.getOrderedMemberListInfo(memberListContainerObj) || [];
 
             if (orderedMemberListInfo.length > 0) {
+                this._widget.addMultipleTabsBegin();
+
                 for (i = 0; i < orderedMemberListInfo.length; i += 1) {
                     memberListID = orderedMemberListInfo[i].memberListID;
                     tabTitle = orderedMemberListInfo[i].title;
@@ -294,6 +301,8 @@ define(['logManager',
                         selectedMemberListTabID = memberListTabID;
                     }
                 }
+
+                this._widget.addMultipleTabsEnd();
 
                 if (!selectedMemberListTabID) {
                     for (selectedMemberListTabID in this._tabIDMemberListID) {
@@ -522,7 +531,7 @@ define(['logManager',
 
                     _client.setMemberRegistry(memberListContainerID, i, memberListToAddTo, MEMBER_POSITION_REGISTRY_KEY, {'x': posX, 'y': posY} );
 
-                    componentID = this._GMEID2ComponentID[i];
+                    componentID = this._GMEID2ComponentID[i][0];
 
                     selectedIDs.push(componentID);
                     this._widget.updateDesignerItem(componentID, { "position": {'x': posX, 'y': posY}});
@@ -646,47 +655,53 @@ define(['logManager',
         }
 
         this._selectedMemberListMembersTerritoryId = this._client.addUI(this, function (events) {
-            var decoratorsToDownload = [DEFAULT_DECORATOR],
-                len = events.length,
-                obj,
-                objDecorator;
-
-            while (len--) {
-                if ((events[len].etype === CONSTANTS.TERRITORY_EVENT_LOAD) || (events[len].etype === CONSTANTS.TERRITORY_EVENT_UPDATE)) {
-
-                    obj = client.getNode(events[len].eid);
-
-                    events[len].desc = { isConnection: GMEConcepts.isConnection(events[len].eid) };
-
-                    if (obj) {
-                        //if it is a connection find src and dst and do not care about decorator
-                        if (events[len].desc.isConnection === true) {
-                            events[len].desc.srcID  = obj.getPointer(SRC_POINTER_NAME).to;
-                            events[len].desc.dstID = obj.getPointer(DST_POINTER_NAME).to;
-                        } else {
-                            objDecorator = obj.getRegistry(REGISTRY_KEYS.DECORATOR);
-
-                            if (!objDecorator ||
-                                objDecorator === "") {
-                                objDecorator = DEFAULT_DECORATOR;
-                            }
-
-                            if (decoratorsToDownload.indexOf(objDecorator) === -1) {
-                                decoratorsToDownload.pushUnique(objDecorator);
-                            }
-
-                            events[len].desc.decorator = objDecorator;
-                        }
-                    }
-                }
-            }
-
-            client.decoratorManager.download(decoratorsToDownload, WIDGET_NAME, function () {
-                self._dispatchEvents(events);
-            });
+            self._memberListTerritoryCallback(events);
         });
 
         this._client.updateTerritory(this._selectedMemberListMembersTerritoryId, this._selectedMemberListMembersTerritoryPatterns);
+    };
+
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._memberListTerritoryCallback = function (events) {
+        var decoratorsToDownload = [DEFAULT_DECORATOR],
+            len = events.length,
+            obj,
+            objDecorator,
+            client = this._client,
+            self = this;
+
+        while (len--) {
+            if ((events[len].etype === CONSTANTS.TERRITORY_EVENT_LOAD) || (events[len].etype === CONSTANTS.TERRITORY_EVENT_UPDATE)) {
+
+                obj = client.getNode(events[len].eid);
+
+                events[len].desc = { isConnection: GMEConcepts.isConnection(events[len].eid) };
+
+                if (obj) {
+                    //if it is a connection find src and dst and do not care about decorator
+                    if (events[len].desc.isConnection === true) {
+                        events[len].desc.srcID  = obj.getPointer(SRC_POINTER_NAME).to;
+                        events[len].desc.dstID = obj.getPointer(DST_POINTER_NAME).to;
+                    } else {
+                        objDecorator = obj.getRegistry(REGISTRY_KEYS.DECORATOR);
+
+                        if (!objDecorator ||
+                            objDecorator === "") {
+                            objDecorator = DEFAULT_DECORATOR;
+                        }
+
+                        if (decoratorsToDownload.indexOf(objDecorator) === -1) {
+                            decoratorsToDownload.pushUnique(objDecorator);
+                        }
+
+                        events[len].desc.decorator = objDecorator;
+                    }
+                }
+            }
+        }
+
+        client.decoratorManager.download(decoratorsToDownload, WIDGET_NAME, function () {
+            self._dispatchEvents(events);
+        });
     };
 
 
@@ -1016,6 +1031,11 @@ define(['logManager',
                     this._memberListMemberCoordinates[this._selectedMemberListID][gmeID]) {
                     objDesc.position.x = this._memberListMemberCoordinates[this._selectedMemberListID][gmeID].x;
                     objDesc.position.y = this._memberListMemberCoordinates[this._selectedMemberListID][gmeID].y;
+                }
+
+                objDesc.decoratorParams = {};
+                if (desc.decoratorParams) {
+                    _.extend(objDesc.decoratorParams, desc.decoratorParams);
                 }
 
                 //registry preferences here are:
@@ -1457,7 +1477,7 @@ define(['logManager',
             i,
             newSetID;
 
-        if (memberListContainerID &&
+        if (this._canAddTab() &&
             memberListSetsRegistryKey &&
             memberListSetsRegistryKey !== '') {
             memberListContainer = this._client.getNode(memberListContainerID);
@@ -1507,6 +1527,12 @@ define(['logManager',
         }
     };
 
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._canAddTab = function () {
+        var memberListContainerID = this._memberListContainerID;
+
+        return (memberListContainerID && memberListContainerID !== CONSTANTS.PROJECT_ROOT_ID);
+    };
+
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.getNewSetNamePrefixDesc = function () {
         var result = {'SetID': 'SET_',
                       'Title': 'Tab '};
@@ -1535,9 +1561,7 @@ define(['logManager',
             gmeIDs.push(this._memberListContainerID);
         }
 
-        if (gmeIDs.length !== 0) {
-            this._client.setPropertyEditorIdList(gmeIDs);
-        }
+        WebGMEGlobal.State.setActiveSelection(gmeIDs);
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.displayNoTabMessage = function () {
@@ -1646,6 +1670,11 @@ define(['logManager',
             this._memberListMemberCoordinates[this._selectedMemberListID][gmeID]) {
             objDesc.position.x = this._memberListMemberCoordinates[this._selectedMemberListID][gmeID].x;
             objDesc.position.y = this._memberListMemberCoordinates[this._selectedMemberListID][gmeID].y;
+        }
+
+        objDesc.decoratorParams = {};
+        if (desc.decoratorParams) {
+            _.extend(objDesc.decoratorParams, desc.decoratorParams);
         }
 
         //registry preferences here are:

@@ -1,11 +1,12 @@
 $dot-color: #666666;
-$port-height: 16px;
+$port-height: 15px;
 $dot-radius : 4px;
 $dot-width: 3px;
-$dot-height: 8px;
+$dot-height: 7px;
 $dot-border-width: 1px;
 $icon-padding: 2px;
-$icon-size: $port-height - 3;
+$svg-icon-height: 11px;
+$svg-icon-width: 5px;
 
 @mixin port($ports-width, $padding) {
   .port {
@@ -26,11 +27,11 @@ $icon-size: $port-height - 3;
     }
 
     img.svg-icon {
-      height: $icon-size;
-      width: $icon-size;
+      height: $svg-icon-height;
+      width: $svg-icon-width;
       position: absolute;
       display: inline-block;
-      top: 1px;
+      top: 2px;
     }
 
     span.dot {
@@ -57,7 +58,7 @@ $icon-size: $port-height - 3;
       }
 
       img.svg-icon {
-        left: -$icon-size - $padding;
+        left: -$svg-icon-width - $padding;
       }
 
       span.dot {
@@ -75,7 +76,12 @@ $icon-size: $port-height - 3;
       }
 
       img.svg-icon {
-        right: -$icon-size - $padding;
+        right: -$svg-icon-width - $padding;
+        -webkit-transform: scaleX(-1);
+        -moz-transform: scaleX(-1);
+        -ms-transform: scaleX(-1);
+        -o-transform: scaleX(-1);
+        transform: scaleX(-1);
       }
 
       span.dot {

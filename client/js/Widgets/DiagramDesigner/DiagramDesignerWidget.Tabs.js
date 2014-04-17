@@ -17,7 +17,11 @@ define(['js/Toolbar/ToolbarButton',
         TAB_SCROLL = 200,
         TAB_ID = 'TAB_ID',
         TAB_RENAME = 'TAB_RENAME',
-        WITH_TABS_CLASS = 'w-tabs';
+        WITH_TABS_CLASS = 'w-tabs',
+        SELECTED_ICON = 'icon-ok',
+        DDL_SELECTED_TAB_ICON_BASE = $('<i class="' + SELECTED_ICON + '" />'),
+        TAB_LI_BASE = $('<li class=""><a href="#" data-toggle="tab"><div class="tab-title"></div></a></li>'),
+        TAB_DELETE_ICON_BASE = $('<i class="icon-remove-circle"/>');
 
     DiagramDesignerWidgetTabs = function () {
     };
@@ -149,14 +153,14 @@ define(['js/Toolbar/ToolbarButton',
 
     DiagramDesignerWidgetTabs.prototype.addTab = function (title, deletable, renamable) {
         var self = this;
-        var li = $('<li class=""><a href="#" data-toggle="tab"></a></li>');
+        var li = TAB_LI_BASE.clone();
 
-        li.find('a').append('<div class="tab-title" title="' + title + '">' + title + '</div>');
+        li.find('.tab-title').attr('title', title).text(title);
         li.data(TAB_ID, this._tabCounter + "");
         this._tabCounter += 1;
 
         if (this._deleteTabs === true && deletable === true) {
-            li.find('a').append($('<i class="icon-remove-circle"/>'));
+            li.find('a').append(TAB_DELETE_ICON_BASE.clone());
             li.find('a').attr('title', 'Delete tab');
         }
 
@@ -172,9 +176,25 @@ define(['js/Toolbar/ToolbarButton',
                 self.selectTab(data.TAB_ID);
             }});
 
-        this._refreshTabScrollButtons();
+        if (this._addingMultipleTabs !== true) {
+            this._refreshTabScrollButtons();
+        }
 
         return li.data(TAB_ID);
+    };
+
+    DiagramDesignerWidgetTabs.prototype.addMultipleTabsBegin = function () {
+        this._addingMultipleTabs = true;
+
+        this.$ulTabTab.hide();
+    };
+
+    DiagramDesignerWidgetTabs.prototype.addMultipleTabsEnd = function () {
+        this.$ulTabTab.show();
+
+        this._refreshTabScrollButtons();
+
+        this._addingMultipleTabs = false;
     };
 
     DiagramDesignerWidgetTabs.prototype._tabsScrollLeft = function () {
@@ -204,8 +224,7 @@ define(['js/Toolbar/ToolbarButton',
             allLi = this.$ulTabTab.find('li'),
             allDropDownLi = this.$ddlTabsList.el.find('li'),
             i,
-            li,
-            ddlSelectedIcon = 'icon-ok';
+            li;
 
         if (this._selectedTab !== tabID) {
             //select tab
@@ -236,8 +255,8 @@ define(['js/Toolbar/ToolbarButton',
             }
 
             if (liToSelect) {
-                this.$ddlTabsList.el.find('i.' + ddlSelectedIcon).remove();
-                liToSelect.find('a').prepend('<i class="' + ddlSelectedIcon + '" />');
+                this.$ddlTabsList.el.find('i.' + SELECTED_ICON).remove();
+                liToSelect.find('a').prepend(DDL_SELECTED_TAB_ICON_BASE.clone());
             }
 
             this._scrollSelectedTabIntoView();

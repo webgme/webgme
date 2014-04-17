@@ -14,6 +14,7 @@ define(['logManager',
     'js/Utils/GMEVisualConcepts',
     'js/Utils/ExportManager',
     'js/Utils/ImportManager',
+    'js/Utils/StateManager',
     'js/LayoutManager/LayoutManager',
     'js/Decorators/DecoratorManager',
     'js/KeyboardManager/KeyboardManager',
@@ -22,7 +23,8 @@ define(['logManager',
     'js/Utils/METAAspectHelper',
     'js/Utils/PreferencesHelper',
     'js/ConstraintManager/ConstraintManager',
-    'js/SnapInterpreter'], function (logManager,
+    'js/SnapInterpreter',
+    'js/Utils/InterpreterManager'], function (logManager,
                                             CONFIG,
                                             packagejson,
                                             Client,
@@ -32,6 +34,7 @@ define(['logManager',
                                             GMEVisualConcepts,
                                             ExportManager,
                                             ImportManager,
+                                            StateManager,
                                             LayoutManager,
                                             DecoratorManager,
                                             KeyboardManager,
@@ -40,7 +43,8 @@ define(['logManager',
                                             METAAspectHelper,
                                             PreferencesHelper,
                                             ConstraintManager,
-                                            SnapInterpreter) {
+                                            SnapInterpreter,
+                                            InterpreterManager) {
 
     var npmJSON = JSON.parse(packagejson);
     WebGMEGlobal.version = npmJSON.version;
@@ -53,8 +57,11 @@ define(['logManager',
             commitToLoad = util.getURLParameterByName('commit').toLowerCase(),
             projectToLoad = util.getURLParameterByName('project'),
             objectToLoad = util.getURLParameterByName('obj').toLowerCase(),
+            createNewProject = util.getURLParameterByName('create') === "true" ? true : false,
             logger = logManager.create('WebGME'),
-            selectObject;
+            selectObject,
+            loadBranch,
+            branchToLoad = util.getURLParameterByName('branch') || CONFIG.branch;
 
         lm = new LayoutManager();
         lm.loadLayout(layoutToLoad, function () {
@@ -67,7 +74,14 @@ define(['logManager',
 
             WebGMEGlobal.ConstraintManager = new ConstraintManager(client);
 
-            WebGMEHistory.setClient(client);
+            WebGMEGlobal.InterpreterManager = new InterpreterManager(client);
+
+            Object.defineProperty(WebGMEGlobal, 'State', {value : StateManager.initialize(),
+                writable : false,
+                enumerable : true,
+                configurable : false});
+
+            WebGMEHistory.initialize();
 
             GMEConcepts.initialize(client);
             GMEVisualConcepts.initialize(client);
@@ -84,6 +98,11 @@ define(['logManager',
             });
             client.addEventListener(client.events.PROJECT_OPENED, function (__project, projectName) {
                 lm.setPanelReadOnly(client.isProjectReadOnly());
+            });
+
+            //on project close clear the current state
+            client.addEventListener(client.events.PROJECT_CLOSED, function (__project, projectName) {
+                WebGMEGlobal.State.clear();
             });
 
             client.decoratorManager = new DecoratorManager();
@@ -113,25 +132,80 @@ define(['logManager',
                     loadPanels(panels);
                 } else {
                     new SnapInterpreter(client);
-                    projectToLoad = projectToLoad === "" ? CONFIG.project : projectToLoad;
-                    client.connectToDatabaseAsync({'open': projectToLoad,
-                                                    'project': projectToLoad}, function (err) {
-                        if (err) {
-                            logger.error(err);
-                        } else {
-                            if (commitToLoad && commitToLoad !== "") {
-                                client.selectCommitAsync(commitToLoad, function (err) {
-                                    if (err) {
+                    if(createNewProject && projectToLoad !== ""){
+                        client.connectToDatabaseAsync({},function(err){
+                            if(err){
+                                logger.error(err);
+                            } else {
+                                client.getAvailableProjectsAsync(function(err,projectArray){
+                                    if(err){
                                         logger.error(err);
                                     } else {
-                                        selectObject();
+                                        if(projectArray.indexOf(projectToLoad) !== -1){
+                                            //we fallback to loading
+                                            client.selectProjectAsync(projectToLoad,function(err){
+                                                if(err){
+                                                    logger.error(err);
+                                                } else {
+                                                    if (branchToLoad && branchToLoad !== '') {
+                                                        loadBranch(branchToLoad);
+                                                    } else  if (commitToLoad && commitToLoad !== "") {
+                                                        client.selectCommitAsync(commitToLoad, function (err) {
+                                                            if (err) {
+                                                                logger.error(err);
+                                                            } else {
+                                                                selectObject();
+                                                            }
+                                                        });
+                                                    } else {
+                                                        selectObject();
+                                                    }
+                                                }
+                                            });
+                                        } else {
+                                            //we create the project
+                                            client.createProjectAsync(projectToLoad,function(err){
+                                                if(err){
+                                                    logger.error(err);
+                                                } else {
+                                                    client.selectProjectAsync(projectToLoad,function(err) {
+                                                        if (err) {
+                                                            logger.error(err);
+                                                        } else {
+                                                            GMEConcepts.createBasicProjectSeed();
+                                                        }
+                                                        //otherwise we are pretty much done cause we ignore the other parameters
+                                                    });
+                                                }
+                                            });
+                                        }
                                     }
                                 });
-                            } else {
-                                selectObject();
                             }
-                        }
-                    });
+                        });
+                    } else {
+                        projectToLoad = projectToLoad === "" ? CONFIG.project : projectToLoad;
+                        client.connectToDatabaseAsync({'open': projectToLoad,
+                            'project': projectToLoad}, function (err) {
+                            if (err) {
+                                logger.error(err);
+                            } else {
+                                if (branchToLoad && branchToLoad !== '') {
+                                    loadBranch(branchToLoad);
+                                } else  if (commitToLoad && commitToLoad !== "") {
+                                    client.selectCommitAsync(commitToLoad, function (err) {
+                                        if (err) {
+                                            logger.error(err);
+                                        } else {
+                                            selectObject();
+                                        }
+                                    });
+                                } else {
+                                    selectObject();
+                                }
+                            }
+                        });
+                    }
                 }
             });
         };
@@ -142,9 +216,17 @@ define(['logManager',
                     objectToLoad = CONSTANTS.PROJECT_ROOT_ID;
                 }
                 setTimeout(function () {
-                    client.setSelectedObjectId(objectToLoad);
+                    WebGMEGlobal.State.setActiveObject(objectToLoad);
                 }, 1000);
             }
+        };
+
+        loadBranch = function (branchName) {
+            client.selectBranchAsync(branchName, function (err) {
+                if (err) {
+                    logger.error(err);
+                }
+            });
         };
     };
 

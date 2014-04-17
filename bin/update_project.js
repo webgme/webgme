@@ -139,6 +139,8 @@ requirejs([ "util/common", "util/assert", "core/tasync", "util/guid" ], function
     }
 
     function updateNode(core,node){ //TODO this method should be always up-to-date...
+        //SPECIAL UPDATE FOR EVERY SINGLE NODE
+
         /*var text = " - "+core.getPath(node,core.getRoot(node))+' : '+core.getAttribute(node,"name")+" - ";
         var basepath = core.getPointerPath(node,"base");
         if(basepath === undefined){
@@ -178,9 +180,18 @@ requirejs([ "util/common", "util/assert", "core/tasync", "util/guid" ], function
         };
         return TASYNC.call(traverseChildren,core,children);
     }
+    function updateRoot (core,root){
+        //SPECIAL UPDATE FOR THE ROOT NODE
+        var validPlugins = core.getRegistry(root,'validPlugins');
+        if(validPlugins === undefined){
+            console.log('adding valid plugins placeholder to registry');
+            core.setRegistry(root,'validPlugins',"");
+        }
+    }
     function updateProject(core,roothash){
         var root = core.loadRoot(roothash);
-        var done = TASYNC.call(traverseNode,core,root);
+        var done = TASYNC.call(updateRoot,core,root);
+        done = TASYNC.call(traverseNode,core,root,done);
         return TASYNC.call(saveChanges,core,root,done);
     }
     function saveChanges(core,root){

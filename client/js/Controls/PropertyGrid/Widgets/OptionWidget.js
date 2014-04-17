@@ -3,7 +3,10 @@
 define(['js/Controls/PropertyGrid/Widgets/WidgetBase'],
     function (WidgetBase) {
 
-        var OptionWidget;
+        var OptionWidget,
+            EMPTY_OPTION_BASE = $('<option value="empty"/>'),
+            OPTION_BASE = $('<option/>');
+
 
         OptionWidget = function (propertyDesc) {
             OptionWidget.superclass.call(this, propertyDesc);
@@ -15,13 +18,13 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'],
             this.__select = $('<select/>');
 
             if (propertyDesc.value === '') {
-                opt = $('<option value="empty"/>');
+                opt = EMPTY_OPTION_BASE.clone();
                 opt.text('');
                 this.__select.append(opt);
             }
 
             for (i = 0; i < this.valueItems.length; i += 1 ) {
-                opt = $('<option/>');
+                opt = OPTION_BASE.clone();
                 opt.text(this.valueItems[i]);
                 this.__select.append(opt);
             }

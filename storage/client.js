@@ -13,7 +13,12 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
         options.type = options.type || "browser";
         options.timeout = options.timeout || 10000;
 
-        var _hostAddress = window.location.protocol + '//' + window.location.host;
+        var _hostAddress = null;
+        if(options.type === "browser") {
+            _hostAddress = window.location.protocol + '//' + window.location.host;
+        } else {
+            _hostAddress = options.host + (options.port ? ':'+options.port : "");
+        }
 
 
         var socketConnected = false, socket = null, status = null, reconnect = false, getDbStatusCallbacks = {}, callbacks = {}, getBranchHashCallbacks = {}, IO = null, projects = {}, references = {}, ERROR_DISCONNECTED =

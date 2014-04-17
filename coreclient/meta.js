@@ -60,7 +60,10 @@ define([], function () {
 
         //getter setter functions
         function getMeta(path){
-            var meta = {children:{},attributes:{},pointers:{}};
+            var meta = {children:{},attributes:{},pointers:{},aspects:{}};
+            if(_nodes === null || _nodes === undefined){
+                return meta;
+            }
             var node = _nodes[path] || null;
             if(node){
                 var metaNode = _core.getChild(node,"_meta");
@@ -104,6 +107,22 @@ define([], function () {
 
                     meta.pointers[pointerNames[i]] = pointer;
                 }
+
+                //aspects
+                var aspectsNode = _core.getChild(metaNode,"aspects");
+                var aspectNames = _core.getPointerNames(aspectsNode);
+                if (aspectNames.length > 0){
+                    meta.aspects = {};
+                    for(var i=0;i<aspectNames.length;i++){
+                        var aspectNode = _core.getChild(aspectsNode,"_a_"+aspectNames[i]);
+                        meta.aspects[aspectNames[i]] = {items:[]};
+                        var items = _core.getMemberPaths(aspectNode,"items");
+                        for(var j=0;j<items.length;j++){
+                            meta.aspects[aspectNames[i]].items.push(pathToRefObject(items[j]));
+                        }
+                    }
+                }
+
                 return meta;
             } else {
                 return null;
@@ -130,7 +149,7 @@ define([], function () {
 
                         for(var i=0;i<meta.children.items.length;i++){
                             var targetPath = refObjectToPath(meta.children.items[i]);
-                            if(targetPath && _nodes[targetPath]){
+                            if(typeof targetPath ==='string' && _nodes[targetPath]){
                                 _core.addMember(childrenNode,"items",_nodes[targetPath]);
                                 if(meta.children.minItems[i] !== -1){
                                     _core.setMemberAttribute(childrenNode,"items",targetPath,"min",meta.children.minItems[i]);
@@ -166,7 +185,7 @@ define([], function () {
 
                             for(var j=0;j<meta.pointers[i].items.length;j++){
                                 var targetPath = refObjectToPath(meta.pointers[i].items[j]);
-                                if(targetPath && _nodes[targetPath]){
+                                if(typeof targetPath === 'string' && _nodes[targetPath]){
                                     _core.addMember(pointerNode,"items",_nodes[targetPath]);
                                     if(meta.pointers[i].minItems[j] !== -1){
                                         _core.setMemberAttribute(pointerNode,"items",targetPath,"min",meta.pointers[i].minItems[j]);
@@ -177,6 +196,35 @@ define([], function () {
                                 }
                             }
 
+                        }
+                    }
+                }
+
+                if(meta.aspects){
+                    var aspectsNode = _core.getChild(metaNode,"aspects"),
+                        aspectNames = [];
+                    for(var i in meta.aspects){
+                        _core.setPointer(aspectsNode,i,null);
+                        var aspectNode = _core.getChild(aspectsNode,"_a_"+i);
+                        if(meta.aspects[i].items){
+                            for(j=0;j<meta.aspects[i].items.length;j++){
+                                var member = _nodes[refObjectToPath(meta.aspects[i].items[j])];
+                                if(member){
+                                    _core.addMember(aspectNode,"items",member);
+                                }
+                            }
+                        }
+                        aspectNames.push(i);
+                    }
+                    if (aspectNames.length > 0){
+                        meta.aspects = {};
+                        for(var i=0;i<aspectNames.length;i++){
+                            var aspectNode = _core.getChild(aspectsNode,"_a_"+aspectNames[i]);
+                            meta.aspects[aspectNames[i]] = {items:[]};
+                            var items = _core.getMemberPaths(aspectNode,"items");
+                            for(var j=0;j<items.length;j++){
+                                meta.aspects[aspectNames[i]].items.push(pathToRefObject(items[j]));
+                            }
                         }
                     }
                 }
@@ -341,24 +389,399 @@ define([], function () {
             return names;
         }
 
+        function indexOfPathInRefObjArray(array,path){
+            var index = 0;
+            while(index < array.length){
+                if(path === refObjectToPath(array[index])){
+                    return index;
+                }
+                index++;
+            }
+            return -1;
+        }
+        function getChildrenMeta(path){
+            //the returned object structure is : {"min":0,"max":0,"items":[{"id":path,"min":0,"max":0},...]}
+            var rawMeta = getMeta(path);
+            if(rawMeta){
+                var childrenMeta = {};
+                childrenMeta.min = rawMeta.children.min;
+                childrenMeta.max = rawMeta.children.max;
+                childrenMeta.items = rawMeta.children.items;
+                if(childrenMeta.items !== null){
+                    for(var i=0;i<childrenMeta.items.length;i++){
+                        var child = {};
+                        child.id = refObjectToPath(childrenMeta.items[i]);
+                        if(rawMeta.children.minItems){
+                            child.min = rawMeta.children.minItems[i] === -1 ? undefined : rawMeta.children.minItems[i];
+                        }
+                        if(rawMeta.children.maxItems){
+                            child.max = rawMeta.children.maxItems[i] === -1 ? undefined : rawMeta.children.maxItems[i];
+                        }
+
+                        childrenMeta.items[i] = child;
+                    }
+                }
+
+                return childrenMeta;
+            }
+            return null;
+        }
+
+        function getChildrenMetaAttribute(path,attrName){
+            var childrenMeta = getChildrenMeta(path);
+            if(childrenMeta){
+                return childrenMeta.attrName;
+            }
+            return null;
+        }
+        function setChildrenMetaAttribute(path,attrName,value){
+            if(attrName !== "items"){
+                var rawMeta = getMeta(path);
+                rawMeta.children[attrName] = value;
+                setMeta(path,rawMeta);
+            }
+        }
+
+        function getValidChildrenItems(path){
+            var childrenMeta = getChildrenMeta(path);
+            if(childrenMeta){
+                return childrenMeta.items;
+            }
+            return null;
+        }
+
+        function updateValidChildrenItem(path,newTypeObj){
+            if(newTypeObj && newTypeObj.id){
+                var rawMeta = getMeta(path);
+                if(rawMeta){
+                    if(rawMeta.children.minItems === null || rawMeta.children.minItems == undefined){
+                        rawMeta.children.minItems = [];
+                        for(var i=0;i<rawMeta.children.items.length;i++){
+                            rawMeta.children.minItems.push(-1);
+                        }
+                    }
+                    if(rawMeta.children.maxItems === null || rawMeta.children.maxItems == undefined){
+                        rawMeta.children.maxItems = [];
+                        for(var i=0;i<rawMeta.children.items.length;i++){
+                            rawMeta.children.maxItems.push(-1);
+                        }
+                    }
+                    var refObj = pathToRefObject(newTypeObj.id);
+                    var index = indexOfPathInRefObjArray(rawMeta.children.items,newTypeObj.id);
+                    if(index === -1){
+                        index = rawMeta.children.items.length;
+                        rawMeta.children.items.push(refObj);
+                        rawMeta.children.minItems.push(-1);
+                        rawMeta.children.maxItems.push(-1);
+                    }
+                    (newTypeObj.min === null || newTypeObj.min === undefined) ? rawMeta.children.minItems[index] = -1 : rawMeta.children.minItems[index] = newTypeObj.min;
+                    (newTypeObj.max === null || newTypeObj.max === undefined) ? rawMeta.children.maxItems[index] = -1 : rawMeta.children.maxItems[index] = newTypeObj.max;
+
+                    setMeta(path,rawMeta);
+                }
+            }
+        }
+        function removeValidChildrenItem(path,typeId){
+            var rawMeta = getMeta(path);
+            if(rawMeta){
+                var refObj = pathToRefObject(typeId);
+                var index = indexOfPathInRefObjArray(rawMeta.children.items,typeId);
+                if(index !== -1){
+                    rawMeta.children.items.splice(index,1);
+                    if(rawMeta.children.minItems){
+                        rawMeta.children.minItems.splice(index,1);
+                    }
+                    if(rawMeta.children.maxItems){
+                        rawMeta.children.maxItems.splice(index,1);
+                    }
+                    setMeta(path,rawMeta);
+                }
+            }
+        }
+
+        function getAttributeSchema(path,name){
+            var rawMeta = getMeta(path);
+            if(rawMeta){
+                if(rawMeta.attributes[name]){
+                    return rawMeta.attributes[name];
+                }
+            }
+            return null;
+        }
+
+        function setAttributeSchema(path,name,schema){
+            var rawMeta = getMeta(path);
+            if(rawMeta){
+                //TODO check schema validity - but it is also viable to check it only during setMeta
+                rawMeta.attributes[name] = schema;
+                setMeta(path,rawMeta);
+            }
+        }
+
+        function removeAttributeSchema(path,name){
+            var rawMeta = getMeta(path);
+            if(rawMeta){
+                delete rawMeta.attributes[name];
+                setMeta(path,rawMeta);
+            }
+        }
+
+        function getPointerMeta(path,name){
+            //the returned object structure is : {"min":0,"max":0,"items":[{"id":path,"min":0,"max":0},...]}
+            var rawMeta = getMeta(path);
+            if(rawMeta && rawMeta.pointers[name]){
+                var pointerMeta = {};
+                pointerMeta.min = rawMeta.pointers[name].min;
+                pointerMeta.max = rawMeta.pointers[name].max;
+                pointerMeta.items = rawMeta.pointers[name].items;
+                if(pointerMeta.items !== null){
+                    for(var i=0;i<pointerMeta.items.length;i++){
+                        var child = {};
+                        child.id = refObjectToPath(pointerMeta.items[i]);
+                        if(rawMeta.pointers[name].minItems){
+                            child.min = rawMeta.pointers[name].minItems[i] === -1 ? undefined : rawMeta.pointers[name].minItems[i];
+                        }
+                        if(rawMeta.pointers[name].maxItems){
+                            child.max = rawMeta.pointers[name].maxItems[i] === -1 ? undefined : rawMeta.pointers[name].maxItems[i];
+                        }
+                        pointerMeta.items[i] = child;
+                    }
+                }
+                return pointerMeta;
+            }
+            return null;
+        }
+
+        function getValidTargetItems(path,name){
+            var pointerMeta = getPointerMeta(path,name);
+            if(pointerMeta){
+                return pointerMeta.items;
+            }
+            return null;
+        }
+
+        function updateValidTargetItem(path,name,targetObj){
+            var rawMeta = getMeta(path);
+            if(rawMeta && targetObj && targetObj.id){
+                var pointer = rawMeta.pointers[name] || null;
+                if(pointer === null){
+                    rawMeta.pointers[name] = {"items":[],"minItems":[],"maxItems":[]};
+                    pointer = rawMeta.pointers[name];
+                }
+                var refObj = pathToRefObject(targetObj.id);
+                var index = indexOfPathInRefObjArray(pointer.items,targetObj.id);
+                if(index === -1){
+                    index = pointer.items.length;
+                    pointer.items.push(refObj);
+                    pointer.minItems.push(-1);
+                    pointer.maxItems.push(-1);
+                }
+
+                (targetObj.min === null || targetObj.min === undefined) ? pointer.minItems[index] = -1 : pointer.minItems[index] = targetObj.min;
+                (targetObj.max === null || targetObj.max === undefined) ? pointer.maxItems[index] = -1 : pointer.maxItems[index] = targetObj.max;
+
+                setMeta(path,rawMeta);
+            }
+        }
+
+        function removeValidTargetItem(path,name,targetId){
+            var rawMeta = getMeta(path);
+            if(rawMeta){
+                var pointer = rawMeta.pointers[name] || null;
+                if(pointer !== null){
+                    var refObj = pathToRefObject(targetId);
+                    var index = indexOfPathInRefObjArray(pointer.items,targetId);
+                    if(index !== -1){
+                        pointer.items.splice(index,1);
+                        if(pointer.minItems){
+                            pointer.minItems.splice(index,1);
+                        }
+                        if(pointer.maxItems){
+                            pointer.maxItems.splice(index,1);
+                        }
+                        setMeta(path,rawMeta);
+                    }
+                }
+            }
+        }
+
+        function deleteMetaPointer(path,name){
+            var rawMeta = getMeta(path);
+            if(rawMeta){
+                delete rawMeta.pointers[name];
+                setMeta(path,rawMeta);
+            }
+        }
+
+        function setPointerMeta(path,name,meta){
+            var rawMeta = getMeta(path);
+            if(rawMeta){
+                var pointer = rawMeta.pointers[name] || null;
+                if(pointer === null){
+                    rawMeta.pointers[name] = {"items":[],"minItems":[],"maxItems":[]};
+                    pointer = rawMeta.pointers[name];
+                }
+                pointer.min = meta.min;
+                pointer.max = meta.max;
+                if(meta.items && meta.items.length){
+                    for(var i=0;i<meta.items.length;i++){
+                        pointer.items.push(pathToRefObject(meta.items[i].id));
+                        pointer.minItems.push(meta.items[i].min || -1);
+                        pointer.maxItems.push(meta.items[i].max || -1);
+                    }
+                }
+                setMeta(path,rawMeta);
+            }
+        }
+
+        function setChildrenMeta(path,name,meta){
+            var rawMeta = getMeta(path);
+            if(rawMeta){
+                var children = rawMeta.children;
+
+                children.min = meta.min;
+                children.max = meta.max;
+                if(meta.items && meta.items.length){
+                    for(var i=0;i<meta.items.length;i++){
+                        children.items.push(pathToRefObject(meta.items[i].id));
+                        children.minItems.push(meta.items[i].min || -1);
+                        children.maxItems.push(meta.items[i].max || -1);
+                    }
+                }
+                setMeta(path,rawMeta);
+            }
+        }
+
+        function getMetaAspectNames(path){
+            var rawMeta = getMeta(path),
+                names = [];
+
+            if(rawMeta && rawMeta.aspects){
+                for(var i in rawMeta.aspects){
+                    names.push(i);
+                }
+            }
+            return names;
+        }
+
+        function getOwnMetaAspectNames(path){
+            var names = getMetaAspectNames(path),
+                ownNames = [];
+            if(_nodes[path]){
+                var baseNames = getMetaAspectNames(_core.getPath(_core.getBase(_nodes[path])));
+                for(var i=0;i<names.length;i++){
+                    if(baseNames.indexOf(names[i]) === -1){
+                        ownNames.push(names[i]);
+                    }
+                }
+            }
+            return ownNames;
+        }
+
+        function getMetaAspect(path,name){
+            var rawMeta = getMeta(path);
+            if (rawMeta){
+                if(rawMeta.aspects[name]){
+                    var aspect = {items:[]};
+                    for(var i=0;i<rawMeta.aspects[name].items.length;i++){
+                        aspect.items.push(refObjectToPath(rawMeta.aspects[name].items[i]));
+                    }
+                    if (aspect.items.length === 0){
+                        delete aspect.items;
+                    }
+                    return aspect;
+                }
+                return null;
+            }
+            return null;
+        }
+
+        function setMetaAspect(path,name,aspect){
+            var rawMeta = getMeta(path);
+            if(rawMeta){
+
+                rawMeta.aspects = rawMeta.aspects || {};
+                rawMeta.aspects[name] = {'items': []};
+                for(var i=0;i<aspect.items.length;i++){
+                    rawMeta.aspects[name].items.push(pathToRefObject(aspect.items[i]));
+                }
+                setMeta(path,rawMeta);
+            }
+        }
+
+        function getAspectTerritoryPattern(path,name){
+            var aspect = getMetaAspect(path,name);
+            if( aspect !== null){
+                aspect.children = 1; //TODO now it is fixed, maybe we can change that in the future
+                return aspect;
+            }
+            return null;
+        }
+
+        function deleteMetaAspect(path,name){
+            var rawMeta = getMeta(path);
+            if(rawMeta){
+                if(rawMeta.aspects && rawMeta.aspects[name]){
+                    delete rawMeta.aspects[name];
+                    setMeta(path,rawMeta);
+                }
+            }
+        }
+
         return {
-            initialize: initialize,
             refObjectToPath : refObjectToPath,
             pathToRefObject : pathToRefObject,
-            getMeta : getMeta,
-            setMeta : setMeta,
-            isValidChild: isValidChild,
-            isValidTarget: isValidTarget,
-            isValidAttribute: isValidAttribute,
-            getValidChildrenTypes: getValidChildrenTypes,
-            getValidTargetTypes: getValidTargetTypes,
+
+
+
+
+
+            initialize      : initialize,
+            getMeta         : getMeta,
+            setMeta         : setMeta,
+            isTypeOf        : isTypeOf,
             hasOwnMetaRules : hasOwnMetaRules,
-            filterValidTarget : filterValidTarget,
-            getOwnValidChildrenTypes: getOwnValidChildrenTypes,
-            getOwnValidTargetTypes: getOwnValidTargetTypes,
-            isTypeOf: isTypeOf,
-            getValidAttributeNames :  getValidAttributeNames,
-            getOwnValidAttributeNames : getOwnValidAttributeNames
+
+            //containment
+            isValidChild             : isValidChild,
+            getChildrenMeta          : getChildrenMeta,
+            setChildrenMeta          : setChildrenMeta,
+            getChildrenMetaAttribute : getChildrenMetaAttribute,
+            setChildrenMetaAttribute : setChildrenMetaAttribute,
+            getValidChildrenTypes    : getValidChildrenTypes,
+            getOwnValidChildrenTypes : getOwnValidChildrenTypes,
+            getValidChildrenItems    : getValidChildrenItems,
+            updateValidChildrenItem  : updateValidChildrenItem,
+            removeValidChildrenItem  : removeValidChildrenItem,
+
+            //attribute
+            isValidAttribute          : isValidAttribute,
+            getAttributeSchema        : getAttributeSchema,
+            setAttributeSchema        : setAttributeSchema,
+            removeAttributeSchema     : removeAttributeSchema,
+            getValidAttributeNames    : getValidAttributeNames,
+            getOwnValidAttributeNames : getOwnValidAttributeNames,
+
+            //pointer
+            isValidTarget          : isValidTarget,
+            getPointerMeta         : getPointerMeta,
+            setPointerMeta         : setPointerMeta,
+            getValidTargetItems    : getValidTargetItems,
+            getValidTargetTypes    : getValidTargetTypes,
+            getOwnValidTargetTypes : getOwnValidTargetTypes,
+            filterValidTarget      : filterValidTarget,
+            updateValidTargetItem  : updateValidTargetItem,
+            removeValidTargetItem  : removeValidTargetItem,
+            deleteMetaPointer      : deleteMetaPointer,
+
+            //aspect
+            getMetaAspectNames        : getMetaAspectNames,
+            getOwnMetaAspectNames     : getOwnMetaAspectNames,
+            getMetaAspect             : getMetaAspect,
+            setMetaAspect             : setMetaAspect,
+            getAspectTerritoryPattern : getAspectTerritoryPattern,
+            deleteMetaAspect          : deleteMetaAspect
+
         };
     }
 

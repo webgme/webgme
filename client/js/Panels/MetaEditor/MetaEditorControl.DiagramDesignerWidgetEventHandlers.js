@@ -129,7 +129,7 @@ define(['logManager',
                 if (dragEffects.length === 1 &&
                     dragEffects[0] === DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE) {
                     //dragging from PartBrowser
-                    accept = false;
+                    accept = true;
                 } else {
                     //return true if there is at least one item among the dragged ones that is not on the sheet yet
                     if (gmeIDList.length > 0
@@ -164,7 +164,9 @@ define(['logManager',
             selectedIDs = [],
             componentID,
             posX,
-            posY;
+            posY,
+            dragEffects = DragHelper.getDragEffects(dragInfo),
+            createParams;
 
         //check to see it self drop and reposition or dropping from somewhere else
         if (params &&
@@ -198,50 +200,88 @@ define(['logManager',
                 _client.completeTransaction();
             }, 10);
         } else {
-            _client.startTransaction();
+            if (dragEffects.length === 1 &&
+                dragEffects[0] === DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE &&
+                gmeIDList.length === 1) {
+                //dragging from PartBrowser
+                //create instance of the dragged item with the parent being the MetaContainer, and add it to the current metasheet + allmetasheet
+                _client.startTransaction();
 
-            //if the item is not currently in the current META Aspect sheet, add it
-            if (gmeIDList.length > 0) {
-                for (i = 0; i < gmeIDList.length; i += 1) {
-                    componentID = gmeIDList[i];
-                    if (this._metaAspectMembersPerSheet[this._selectedMetaAspectSet].indexOf(componentID) === -1) {
+                //if the item is not currently in the current META Aspect sheet, add it
+                componentID = gmeIDList[0];
+                createParams = { "parentId": aspectNodeID,
+                    "baseId": componentID };
 
-                        posX = position.x;
-                        posY = position.y;
+                var newGmeID = _client.createChild(createParams);
 
-                        //when dragging between META ASPECT sheets, read position from dragParams
-                        if (params &&
-                            params.hasOwnProperty(DRAG_PARAMS_META_CONTAINER_ID) &&
-                            params[DRAG_PARAMS_META_CONTAINER_ID] === aspectNodeID &&
-                            params[DRAG_PARAMS_ACTIVE_META_ASPECT] !== this._selectedMetaAspectSet) {
+                if (newGmeID) {
+                    //store new position
+                    _client.setRegistry(newGmeID, REGISTRY_KEYS.POSITION, {'x': position.x,
+                        'y': position.y});
 
-                            if (params && params.positions && params.positions[componentID]) {
-                                posX += params.positions[componentID].x;
+                    //try to set name
+                    var origNode = _client.getNode(componentID);
+                    if (origNode) {
+                        var newName = origNode.getAttribute(nodePropertyNames.Attributes.name) + "_instance";
+                        _client.setAttributes(newGmeID, nodePropertyNames.Attributes.name, newName);
+                    }
+
+                    _client.addMember(aspectNodeID, newGmeID, this._selectedMetaAspectSet);
+                    _client.setMemberRegistry(aspectNodeID, newGmeID, this._selectedMetaAspectSet, REGISTRY_KEYS.POSITION, {'x': position.x, 'y': position.y} );
+
+                    //this item has not been part of the META Aspect at all, add it
+                    _client.addMember(aspectNodeID, newGmeID, MetaEditorConstants.META_ASPECT_SET_NAME);
+                    _client.setMemberRegistry(aspectNodeID, newGmeID, MetaEditorConstants.META_ASPECT_SET_NAME, REGISTRY_KEYS.POSITION, {'x': position.x, 'y': position.y} );
+                }
+
+                _client.completeTransaction();
+            } else {
+                //dragging from not the PartBrowser
+                _client.startTransaction();
+
+                //if the item is not currently in the current META Aspect sheet, add it
+                if (gmeIDList.length > 0) {
+                    for (i = 0; i < gmeIDList.length; i += 1) {
+                        componentID = gmeIDList[i];
+                        if (this._metaAspectMembersPerSheet[this._selectedMetaAspectSet].indexOf(componentID) === -1) {
+
+                            posX = position.x;
+                            posY = position.y;
+
+                            //when dragging between META ASPECT sheets, read position from dragParams
+                            if (params &&
+                                params.hasOwnProperty(DRAG_PARAMS_META_CONTAINER_ID) &&
+                                params[DRAG_PARAMS_META_CONTAINER_ID] === aspectNodeID &&
+                                params[DRAG_PARAMS_ACTIVE_META_ASPECT] !== this._selectedMetaAspectSet) {
+
+                                if (params && params.positions && params.positions[componentID]) {
+                                    posX += params.positions[componentID].x;
+                                }
+
+                                if (params && params.positions && params.positions[componentID]) {
+                                    posY += params.positions[componentID].y;
+                                }
+                            } else {
+                                position.x += 20;
+                                position.y += 20;
                             }
 
-                            if (params && params.positions && params.positions[componentID]) {
-                                posY += params.positions[componentID].y;
+                            _client.addMember(aspectNodeID, componentID, this._selectedMetaAspectSet);
+                            _client.setMemberRegistry(aspectNodeID, componentID, this._selectedMetaAspectSet, REGISTRY_KEYS.POSITION, {'x': posX, 'y': posY} );
+
+                            //if this item has not been part of the META Aspect at all, add it
+                            if (this._metaAspectMembersAll.indexOf(componentID) === -1) {
+                                _client.addMember(aspectNodeID, componentID, MetaEditorConstants.META_ASPECT_SET_NAME);
+                                _client.setMemberRegistry(aspectNodeID, componentID, MetaEditorConstants.META_ASPECT_SET_NAME, REGISTRY_KEYS.POSITION, {'x': posX, 'y': posY} );
                             }
-                        } else {
-                            position.x += 20;
-                            position.y += 20;
-                        }
-
-                        _client.addMember(aspectNodeID, componentID, this._selectedMetaAspectSet);
-                        _client.setMemberRegistry(aspectNodeID, componentID, this._selectedMetaAspectSet, REGISTRY_KEYS.POSITION, {'x': posX, 'y': posY} );
-
-                        //if this item has not been part of the META Aspect at all, add it
-                        if (this._metaAspectMembersAll.indexOf(componentID) === -1) {
-                            _client.addMember(aspectNodeID, componentID, MetaEditorConstants.META_ASPECT_SET_NAME);
-                            _client.setMemberRegistry(aspectNodeID, componentID, MetaEditorConstants.META_ASPECT_SET_NAME, REGISTRY_KEYS.POSITION, {'x': posX, 'y': posY} );
                         }
                     }
                 }
-            }
 
-            setTimeout(function () {
-                _client.completeTransaction();
-            }, 10);
+                setTimeout(function () {
+                    _client.completeTransaction();
+                }, 10);
+            }
         }
     };
     /**********************************************************/
@@ -272,7 +312,7 @@ define(['logManager',
                 self._deletePointerRelationship(connDesc.GMESrcId, connDesc.GMEDstId, connDesc.name, false);
             } else if (connDesc.type === MetaRelations.META_RELATIONS.INHERITANCE) {
                 self._deleteInheritanceRelationship(connDesc.GMESrcId, connDesc.GMEDstId);
-            } else if (connDesc.type === MetaRelations.META_RELATIONS.POINTERLIST) {
+            } else if (connDesc.type === MetaRelations.META_RELATIONS.SET) {
                 self._deletePointerRelationship(connDesc.GMESrcId, connDesc.GMEDstId, connDesc.name, true);
             }
         };
@@ -414,9 +454,7 @@ define(['logManager',
             gmeIDs.push(this.metaAspectContainerNodeID);
         }
 
-        if (gmeIDs.length !== 0) {
-            this._client.setPropertyEditorIdList(gmeIDs);
-        }
+        WebGMEGlobal.State.setActiveSelection(gmeIDs);
     };
 
     //adding new meta aspect sheet

@@ -1,8 +1,10 @@
 "use strict";
 
 define(['logManager',
-    'js/Controls/DropDownMenu'], function (logManager,
-                                           DropDownMenu) {
+    'js/Controls/DropDownMenu',
+    'js/Controls/PopoverBox'], function (logManager,
+                                        DropDownMenu,
+                                        PopoverBox) {
 
     var NetworkStatusWidget,
         ITEM_VALUE_CONNECT = 'connect';
@@ -62,6 +64,11 @@ define(['logManager',
         this._ddNetworkStatus.clear();
         this._ddNetworkStatus.setTitle('CONNECTED');
         this._ddNetworkStatus.setColor(DropDownMenu.prototype.COLORS.GREEN);
+
+        if (this._disconnected === true) {
+            this._popoverBox.show('Connection to the server has been restored...', this._popoverBox.alertLevels.SUCCESS, true);
+            delete this._disconnected;
+        }
     };
 
     NetworkStatusWidget.prototype._modeDisconnected = function () {
@@ -70,6 +77,10 @@ define(['logManager',
         this._ddNetworkStatus.addItem({"text": 'Connect...',
             "value": ITEM_VALUE_CONNECT});
         this._ddNetworkStatus.setColor(DropDownMenu.prototype.COLORS.ORANGE);
+
+        this._disconnected = true;
+        this._popoverBox = this._popoverBox || new PopoverBox(this._ddNetworkStatus.getEl());
+        this._popoverBox.show('Connection to the server has been lost...', this._popoverBox.alertLevels.WARNING, false);
     };
 
     return NetworkStatusWidget;

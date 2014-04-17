@@ -10,7 +10,7 @@ define([], function () {
     var dragEffects = {'DRAG_COPY': 'DRAG_COPY',
                        'DRAG_MOVE': 'DRAG_MOVE',
                        'DRAG_CREATE_INSTANCE': 'DRAG_CREATE_INSTANCE',
-                       'DRAG_CREATE_REFERENCE': 'DRAG_CREATE_REFERENCE'};
+                       'DRAG_CREATE_POINTER': 'DRAG_CREATE_POINTER'};
 
     return dragEffects;
 });

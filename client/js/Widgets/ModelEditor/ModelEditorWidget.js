@@ -10,6 +10,11 @@ define(['js/DragDrop/DragHelper',
         params = params || {};
         params.loggerName = "ModelEditorWidget";
 
+        params.tabsEnabled = true;
+        params.addTabs = false;
+        params.deleteTabs = false;
+        params.reorderTabs = false;
+
         DiagramDesignerWidget.call(this, container, params);
 
         this.logger.debug("ModelEditorWidget ctor");
@@ -28,7 +33,7 @@ define(['js/DragDrop/DragHelper',
         if (!ctrlKey && altKey && !shiftKey) {
             effects = [DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE];
         } else if (!ctrlKey && !altKey && shiftKey) {
-            effects = [DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE];
+            effects = [DragHelper.DRAG_EFFECTS.DRAG_CREATE_POINTER];
         }
 
         return effects;
@@ -42,8 +47,8 @@ define(['js/DragDrop/DragHelper',
         if (dragEffects.length === 1) {
             if (dragEffects[0] === DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE) {
                 helperEl.html($('<i class="icon-share-alt"></i>')).append(' Create instance...');
-            } else if (dragEffects[0] === DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE) {
-                helperEl.html($('<i class="icon-share"></i>')).append(' Create reference...');
+            } else if (dragEffects[0] === DragHelper.DRAG_EFFECTS.DRAG_CREATE_POINTER) {
+                helperEl.html($('<i class="icon-share"></i>')).append(' Create pointer...');
             }
         }
 

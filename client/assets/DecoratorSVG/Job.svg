@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="70"
+   height="40"
+   id="svg3342"
+   version="1.1"
+   inkscape:version="0.48.4 r9939"
+   sodipodi:docname="Job.svg">
+  <metadata
+     id="metadata3356">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs3354" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1364"
+     inkscape:window-height="747"
+     id="namedview3352"
+     showgrid="false"
+     inkscape:zoom="5.3142857"
+     inkscape:cx="35"
+     inkscape:cy="20"
+     inkscape:window-x="0"
+     inkscape:window-y="19"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg3342" />
+  <g
+     id="g3344">
+    <ellipse
+       class="fill-color border-color"
+       cx="35"
+       cy="20"
+       rx="34"
+       ry="19"
+       stroke="#000"
+       fill="#FFFFFF"
+       id="ellipse3346" />
+    <line
+       id="ca_N"
+       class="connection-area"
+       x1="30"
+       y1="0"
+       x2="40"
+       y2="0" />
+    <line
+       id="ca_S"
+       class="connection-area"
+       x1="40"
+       y1="40"
+       x2="30"
+       y2="40" />
+    <line
+       id="ca_E"
+       class="connection-area"
+       x1="70"
+       y1="15"
+       x2="70"
+       y2="25" />
+    <line
+       id="ca_W"
+       class="connection-area"
+       x1="0"
+       y1="25"
+       x2="0"
+       y2="15" />
+  </g>
+  <path
+     style="fill:#ff9955"
+     d="M 31.556452,38.27474 C 17.033172,37.458973 4.9407611,31.302403 2.2040527,23.330645 0.02026306,16.969485 4.3567735,10.28822 13.432262,6.0313335 22.478383,1.7882229 34.947731,0.49449405 46.045699,2.6476011 c 6.167474,1.1965464 12.10952,3.6566334 15.941356,6.5999364 9.537652,7.3260465 8.23279,17.0403615 -3.16693,23.5768465 -4.090932,2.345698 -9.666381,4.127574 -15.597007,4.984696 -1.731747,0.250282 -8.221155,0.718368 -8.844086,0.637932 -0.103494,-0.01336 -1.373656,-0.09089 -2.82258,-0.172272 l 0,0 z"
+     id="path3358"
+     inkscape:connector-curvature="0" />
+</svg>

@@ -3,11 +3,15 @@
  * 
  * Author: Robert Kereskenyi
  */
-.pre-body {
+.projects-dialog .pre-body {
   padding: 15px;
   padding-bottom: 0px; }
-  .pre-body .tabContainer ul.nav.nav-tabs {
+  .projects-dialog .pre-body .tabContainer ul.nav.nav-tabs {
     margin-bottom: 0px; }
-    .pre-body .tabContainer ul.nav.nav-tabs li {
+    .projects-dialog .pre-body .tabContainer ul.nav.nav-tabs li {
       width: 86px;
       text-align: center; }
+.projects-dialog .modal-body ul.nav-pills li a span.ro {
+  margin-left: 5px;
+  color: #999999;
+  font-size: 9px; }

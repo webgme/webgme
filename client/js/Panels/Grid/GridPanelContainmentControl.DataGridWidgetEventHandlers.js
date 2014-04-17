@@ -1,8 +1,10 @@
 "use strict";
 
 define(['js/NodePropertyNames',
-        'js/RegistryKeys'], function (nodePropertyNames,
-                                      REGISTRY_KEYS) {
+        'js/RegistryKeys',
+        'js/DragDrop/DragHelper'], function (nodePropertyNames,
+                                      REGISTRY_KEYS,
+                                      DragHelper) {
 
     var GridPanelContainmentControlEventHandlers;
 
@@ -27,6 +29,14 @@ define(['js/NodePropertyNames',
 
         this._dataGridWidget.onRowEdit = function (id, oData, nData) {
             self._onRowEdit(id, oData, nData);
+        };
+
+        this._dataGridWidget.onGridDroppableAccept = function (gridCellDesc, draggedData) {
+            return self._onGridDroppableAccept(gridCellDesc, draggedData);
+        };
+
+        this._dataGridWidget.onGridDrop = function (gridCellDesc, draggedData) {
+            self._onGridDrop(gridCellDesc, draggedData);
         };
 
         this._logger.debug("attachDataGridWidgetEventHandlers finished");
@@ -96,7 +106,7 @@ define(['js/NodePropertyNames',
                 cDef.mData === 'ParentID' ||
                 cDef.mData === 'GUID' ||
                 cDef.mData === 'Registry.' + REGISTRY_KEYS.META_SHEETS ||
-                cDef.mData === 'Registry.' + REGISTRY_KEYS.MANUAL_ASPECTS ||
+                cDef.mData === 'Registry.' + REGISTRY_KEYS.CROSSCUTS ||
                 cDef.mData.indexOf('Sets.') === 0 ||
                 cDef.mData.indexOf('Pointers.') === 0) {
                 cDef.bEditable = false;
@@ -146,6 +156,74 @@ define(['js/NodePropertyNames',
             return this._fetchData(object[k], a.join('.'));
         } else {
             return object[k];
+        }
+    };
+
+    GridPanelContainmentControlEventHandlers.prototype._onGridDroppableAccept = function (gridCellDesc, draggedData) {
+        if (DEBUG) {
+            return true;
+        }
+    };
+
+    var KEY_ATTRIBUTES = 'Attributes',
+        KEY_POINTERS = 'Pointers',
+        KEY_REGISTRY = 'Registry';
+
+    GridPanelContainmentControlEventHandlers.prototype._onGridDrop = function (gridCellDesc, draggedData) {
+        if (DEBUG) {
+            var idList = DragHelper.getDragItems(draggedData);
+            var gmeID = gridCellDesc.data.ID;
+            var key = gridCellDesc.mData;
+            var setterFn, getterFn;
+            var keyArr;
+            var path;
+            var propObject;
+            var client = this._client;
+            var propPointer;
+            var newVal;
+
+            keyArr = key.split(".");
+            setterFn = undefined;
+            getterFn = undefined;
+            if (keyArr[0] === KEY_ATTRIBUTES) {
+                setterFn = "setAttributes";
+                getterFn = "getEditableAttribute";
+            } else if (keyArr[0] === KEY_REGISTRY) {
+                setterFn = "setRegistry";
+                getterFn = "getEditableRegistry";
+            }
+
+            if (idList && idList.length === 1 && setterFn) {
+                newVal = idList[0];
+                if (setterFn && getterFn) {
+                    keyArr.splice(0, 1);
+
+                    //get property object from node
+                    path = keyArr[0];
+                    propObject = client.getNode(gmeID)[getterFn](path);
+
+                    //get root object
+                    propPointer = propObject;
+                    keyArr.splice(0, 1);
+
+                    if(keyArr.length < 1){
+                        //simple value so just set it
+                        propObject = newVal;
+                    } else {
+                        //dig down to leaf property
+                        while (keyArr.length > 1) {
+                            propPointer = propPointer[keyArr[0]];
+                            keyArr.splice(0, 1);
+                        }
+
+                        //set value
+                        propPointer[keyArr[0]] = newVal;
+                    }
+
+                    //save back object
+                    client[setterFn](gmeID, path, propObject);
+                }
+            }
         }
     };
 

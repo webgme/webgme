@@ -1276,6 +1276,18 @@ define(['logManager',
             this.skinParts.pathShadowArrowEnd.attr({ "stroke-width": this.designerAttributes.shadowEndArrowWidth,
                 "arrow-end": shadowArrowEnd});
         }
+
+        if (this.skinParts.name) {
+            this.skinParts.name.css({'color': this.designerAttributes.color});
+        }
+
+        if (this.skinParts.srcText) {
+            this.skinParts.srcText.css({'color': this.designerAttributes.color});
+        }
+
+        if (this.skinParts.dstText) {
+            this.skinParts.dstText.css({'color': this.designerAttributes.color});
+        }
     };
 
 
@@ -1418,11 +1430,17 @@ define(['logManager',
 
         if (this.name && this.name !== "") {
             this.skinParts.name = this._textNameBase.clone();
-            this.skinParts.name.css({ 'top': pathCenter.y + this.designerAttributes.width / 2,
-                'left': pathCenter.x});
+            this.skinParts.name.css({ 'top': pathCenter.y - 4/*+ this.designerAttributes.width / 2*/,
+                'left': pathCenter.x,
+                'color': this.designerAttributes.color});
             this.skinParts.name.find('span').text(this.name);
             this.skinParts.textContainer.append(this.skinParts.name);
             hasText = true;
+
+            if ((pathCenter.alpha >= 45 && pathCenter.alpha <= 135) ||
+                (pathCenter.alpha >= 225 && pathCenter.alpha <= 315)) {
+                this.skinParts.name.find('span').addClass('v');
+            }
 
             // set title editable on double-click
             this.skinParts.name.find('span').on("dblclick.editOnDblClick", null, function (event) {
@@ -1463,7 +1481,8 @@ define(['logManager',
             }
 
             this.skinParts.srcText.css({ 'top': pathBegin.y + dy,
-                'left': pathBegin.x + dx});
+                'left': pathBegin.x + dx,
+                'color': this.designerAttributes.color});
             this.skinParts.srcText.find('span').text(this.srcText);
             this.skinParts.textContainer.append(this.skinParts.srcText);
             hasText = true;
@@ -1509,7 +1528,8 @@ define(['logManager',
             }
 
             this.skinParts.dstText.css({ 'top': pathEnd.y + dy,
-                'left': pathEnd.x + dx});
+                'left': pathEnd.x + dx,
+                'color': this.designerAttributes.color});
             this.skinParts.dstText.find('span').text(this.dstText);
             this.skinParts.textContainer.append(this.skinParts.dstText);
             hasText = true;

@@ -4,21 +4,24 @@ define(['logManager',
     'clientUtil',
     'js/NodePropertyNames',
     'js/RegistryKeys',
-    'js/Decorators/DecoratorDB',
     'js/Constants',
     'js/Utils/DisplayFormat',
-    'assets/decoratorSVG'], function (logManager,
+    'js/Dialogs/DecoratorSVGExplorer/DecoratorSVGExplorerDialog',
+    'js/Controls/PropertyGrid/PropertyGridWidgets',
+    './PointerWidget'], function (logManager,
                                         util,
                                         nodePropertyNames,
                                         REGISTRY_KEYS,
-                                        DecoratorDB,
                                         CONSTANTS,
                                         displayFormat,
-                                        decoratorSVG) {
+                                        DecoratorSVGExplorerDialog,
+                                        PropertyGridWidgets,
+                                        PointerWidget) {
 
     var PropertyEditorController,
         META_REGISTRY_KEYS = [REGISTRY_KEYS.IS_PORT,
-                                    REGISTRY_KEYS.IS_ABSTRACT],
+            REGISTRY_KEYS.IS_ABSTRACT,
+            REGISTRY_KEYS.VALID_PLUGINS],
         PREFERENCES_REGISTRY_KEYS = [REGISTRY_KEYS.DECORATOR,
             REGISTRY_KEYS.DISPLAY_FORMAT,
             REGISTRY_KEYS.SVG_ICON,
@@ -27,12 +30,17 @@ define(['logManager',
         PROPERTY_GROUP_PREFERENCES = 'Preferences',
         PROPERTY_GROUP_ATTRIBUTES = 'Attributes',
         PROPERTY_GROUP_POINTERS = 'Pointers',
-        DecoratorSVGIconList = [''].concat(decoratorSVG.DecoratorSVGIconList.slice(0)),
         NON_RESETABLE_POINTRS = [CONSTANTS.POINTER_BASE, CONSTANTS.POINTER_SOURCE, CONSTANTS.POINTER_TARGET];
 
     PropertyEditorController = function (client, propertyGrid) {
         this._client = client;
         this._propertyGrid = propertyGrid;
+
+        //it should be sorted aplahbetically
+        this._propertyGrid.setOrdered(true);
+
+        //set custom types here
+        this._propertyGrid.registerWidgetForType('boolean', 'iCheckBox');
 
         this._initEventHandlers();
 
@@ -43,11 +51,22 @@ define(['logManager',
     PropertyEditorController.prototype._initEventHandlers = function () {
         var self = this;
 
-        if (this._client) {
-            this._client.addEventListener(this._client.events.PROPERTY_EDITOR_SELECTION_CHANGED, function (__project, idList) {
-                self._selectedObjectsChanged(idList);
-            });
-        }
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_SELECTION, function (model, activeSelection) {
+            if (activeSelection) {
+                self._selectedObjectsChanged(activeSelection);
+            } else {
+                self._selectedObjectsChanged([]);
+            }
+        });
+
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, function (model, activeObjectId) {
+            if (activeObjectId || activeObjectId === CONSTANTS.PROJECT_ROOT_ID) {
+                self._selectedObjectsChanged([activeObjectId]);
+            } else {
+                self._selectedObjectsChanged([]);
+            }
+
+        });
 
         this._propertyGrid.onFinishChange(function (args) {
             self._onPropertyChanged(args);
@@ -79,6 +98,8 @@ define(['logManager',
                 self._refreshPropertyList();
             });
             this._client.updateTerritory(this._territoryId, patterns);
+        } else {
+            this._refreshPropertyList();
         }
     };
 
@@ -111,7 +132,16 @@ define(['logManager',
             _client = this._client,
             _isResetableAttribute,
             _isResetableRegistry,
-            _isResetablePointer;
+            _isResetablePointer,
+            decoratorNames = _client.getAvailableDecoratorNames();
+
+        decoratorNames.sort(function (a,b) {
+            if (a.toLowerCase() < b.toLowerCase()) {
+                return -1;
+            } else {
+                return 1;
+            }
+        });
 
         _getNodeAttributeValues = function (node) {
             var result =  {},
@@ -166,18 +196,11 @@ define(['logManager',
             var result = {},
                 availablePointers = node.getPointerNames(),
                 len = availablePointers.length,
-                ptrTo,
-                ptrToObj;
+                ptrTo;
 
             while (len--) {
                 ptrTo = node.getPointer(availablePointers[len]).to;
                 result[availablePointers[len]] = ptrTo || '';
-                if (ptrTo) {
-                    ptrToObj = _client.getNode(result[availablePointers[len]]);
-                    if (ptrToObj) {
-                        result[availablePointers[len]] = displayFormat.resolve(ptrToObj) + ' (' + result[availablePointers[len]] + ')';
-                    }
-                }
             }
 
             return util.flattenObject(result);
@@ -466,7 +489,7 @@ define(['logManager',
                             if (i === REGISTRY_KEYS.DECORATOR) {
                                 //dstList[extKey].valueType = "option";
                                 //TODO: only the decorators for DiagramDesigner are listed so far, needs to be fixed...
-                                dstList[extKey].valueItems = DecoratorDB.getDecoratorsByWidget('DiagramDesigner');
+                                dstList[extKey].valueItems = decoratorNames;
                             }
 
                             //if the attribute value is an enum, display the enum values
@@ -479,10 +502,16 @@ define(['logManager',
                             //list the
                             if (i === REGISTRY_KEYS.SVG_ICON ||
                                 i === REGISTRY_KEYS.PORT_SVG_ICON) {
-                                //TODO: needs to be fixed
-                                dstList[extKey].valueItems = DecoratorSVGIconList;
+                                dstList[extKey].widget = PropertyGridWidgets.DIALOG_WIDGET;
+                                dstList[extKey].dialog = DecoratorSVGExplorerDialog;
                             }
 
+                            //pointers have a custom widget that allows following the pointer
+                            if (isPointer === true) {
+                                dstList[extKey].widget = PointerWidget;
+                                //add custom widget specific values
+                                dstList[extKey].client = _client;
+                            }
                         }
                     }
                 }
@@ -527,14 +556,6 @@ define(['logManager',
 
             _addItemsToResultList(commonMeta, PROPERTY_GROUP_META, propList, false, true, false);
 
-            //filter out from Pointers
-            for (var it in commonPointers) {
-                if (commonPointers.hasOwnProperty(it)) {
-                    if (commonPointers.hasOwnProperty(it)) {
-                        commonPointers[it].readOnly = true;
-                    }
-                }
-            }
             _addItemsToResultList(commonPointers, PROPERTY_GROUP_POINTERS, propList, false, false, true);
         }
 

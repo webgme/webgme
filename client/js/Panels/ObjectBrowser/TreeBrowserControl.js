@@ -11,19 +11,25 @@ define(['logManager',
         'js/Utils/ExportManager',
         'js/Utils/ImportManager',
         'js/Constants',
+        'js/RegistryKeys',
         'css!/css/Panels/ObjectBrowser/TreeBrowserControl'], function (logManager,
                                                                        GMEConcepts,
                                                                        nodePropertyNames,
                                                                        ExportManager,
                                                                        ImportManager,
-                                                                       CONSTANTS) {
+                                                                       CONSTANTS,
+                                                                       REGISTRY_KEYS) {
 
     var NODE_PROGRESS_CLASS = 'node-progress',
         GME_MODEL_CLASS = "gme-model",
         GME_ATOM_CLASS = "gme-atom",
         GME_CONNECTION_CLASS = "gme-connection",
         GME_ROOT_ICON = "gme-root",
-        projectRootID = CONSTANTS.PROJECT_ROOT_ID;
+        GME_ASPECT_ICON = "gme-aspect",
+        projectRootID = CONSTANTS.PROJECT_ROOT_ID,
+        DEFAULT_VISUALIZER = 'ModelEditor',
+        CROSSCUT_VISUALIZER = 'Crosscut',
+        SET_VISUALIZER = 'SetEditor';
 
     var TreeBrowserControl = function (client, treeBrowser) {
 
@@ -40,6 +46,9 @@ define(['logManager',
 
         //get logger instance for this component
         logger = logManager.create("TreeBrowserControl");
+        this._logger = logger;
+
+        this._client = client;
 
         initialize = function () {
             var rootNode = client.getNode(projectRootID); //TODO make this loaded from constants
@@ -73,11 +82,16 @@ define(['logManager',
         };
 
         getNodeClass = function (nodeObj) {
-            var c = GME_ATOM_CLASS; //by default everyone is represented with the atom class
+            var objID = nodeObj.getId(),
+                c = GME_ATOM_CLASS; //by default everyone is represented with the atom class
 
-            if (nodeObj.getId() === projectRootID) {
+            if (objID === projectRootID) {
                 //if root object
                 c = GME_ROOT_ICON;
+            } else if (GMEConcepts.getCrosscuts(objID).length > 0) {
+                c = GME_ASPECT_ICON;
+            } else if (GMEConcepts.getSets(objID).length > 0) {
+                c = GME_ASPECT_ICON;
             } else if (GMEConcepts.isConnectionType(nodeObj.getId())) {
                 //if it's a connection, let it have the connection icon
                 c = GME_CONNECTION_CLASS;
@@ -228,56 +242,38 @@ define(['logManager',
         //called when the user double-cliked on a node in the tree
         treeBrowser.onNodeDoubleClicked = function (nodeId) {
             logger.debug("Firing onNodeDoubleClicked with nodeId: " + nodeId);
-            client.setSelectedObjectId(nodeId);
-        };
-
-        //called from the TreeBrowserWidget when a create function is called from context menu
-        treeBrowser.onSetCreateSubMenu = function (nodeId) {
-            var result = [],
-                validChildrenTypes = GMEConcepts.getMETAAspectMergedValidChildrenTypes(nodeId), //get possible targets from MetaDescriptor
-                children = [],
-                len,
-                childObj,
-                childName,
-                childId,
-                id;
-
-            len = validChildrenTypes.length;
-            while (len--) {
-                //do not list connection types in Create...
-                id = validChildrenTypes[len];
-                if (GMEConcepts.isConnectionType(id) !== true &&
-                    GMEConcepts.canCreateChild(nodeId, id)) {
-                    childObj = client.getNode(id);
-
-                    childId = id + "";
-                    childName = childId;
-
-                    if (childObj) {
-                        childName = childObj.getAttribute(nodePropertyNames.Attributes.name);
-                    }
-
-                    children.push({'ID': childId, 'Title': childName});
-                }
-            }
-
-            children.sort(function(a,b) {
-                if (a.Title.toLowerCase() < b.Title.toLowerCase()) {
-                    return -1;
-                } else {
-                    return 1;
-                }
-            });
-
-            for (len = 0; len < children.length; len += 1) {
-                result.push({id: children[len].ID,
-                             title: children[len].Title});
-            }
-
-            return result;
+            var settings = {};
+            settings[CONSTANTS.STATE_ACTIVE_OBJECT] = nodeId;
+            settings[CONSTANTS.STATE_ACTIVE_ASPECT] = CONSTANTS.ASPECT_ALL;
+            settings[CONSTANTS.STATE_ACTIVE_VISUALIZER] = DEFAULT_VISUALIZER;
+            WebGMEGlobal.State.set(settings);
         };
 
         treeBrowser.onExtendMenuItems = function (nodeId, menuItems) {
+
+            //'create...' menu
+            var validChildren = self._getValidChildrenTypes(nodeId);
+            var cChild;
+            if (validChildren && validChildren.length > 0) {
+                menuItems.separatorCreate = "-";
+                menuItems.create = { // The "create" menu item
+                    "name": "Create...",
+                    "icon": "add",
+                    "items": {}
+                };
+
+                //iterate through each possible item and att it to the list
+                for (var i = 0; i < validChildren.length; i += 1) {
+                    cChild = validChildren[i];
+                    menuItems.create.items[cChild.id] = {
+                        name: cChild.title,
+                        callback: function(key, options) {
+                            self._createChild(nodeId, key);
+                        }
+                    }
+                }
+            }
+
             menuItems["exportNode"] = { // Export...
                 "name": "Export object...",
                 "callback": function(/*key, options*/) {
@@ -300,25 +296,49 @@ define(['logManager',
                     ImportManager.import(nodeId, undefined, true);
                 },
                 "icon": false
+            };
+
+            menuItems["exportContext"] = { //Export context for plugin
+                "name": "Export context...",
+                "callback": function(/*key, options*/){
+                    ExportManager.exIntConf([nodeId]);
+                },
+                "icon": false
+            };
+
+            if (GMEConcepts.getCrosscuts(nodeId).length > 0) {
+                menuItems["openInCrossCut"] = { //Open in crosscuts
+                    "name": "Open in 'Crosscuts'",
+                    "callback": function(/*key, options*/){
+                        var settings = {};
+                        settings[CONSTANTS.STATE_ACTIVE_OBJECT] = nodeId;
+                        settings[CONSTANTS.STATE_ACTIVE_ASPECT] = CONSTANTS.ASPECT_ALL;
+                        settings[CONSTANTS.STATE_ACTIVE_VISUALIZER] = CROSSCUT_VISUALIZER;
+                        WebGMEGlobal.State.set(settings);
+                    },
+                    "icon": false
+                };
+            }
+
+            if (GMEConcepts.getSets(nodeId).length > 0) {
+                menuItems["openInSetEditor"] = { //Open in crosscuts
+                    "name": "Open in 'Set membership'",
+                    "callback": function(/*key, options*/){
+                        var settings = {};
+                        settings[CONSTANTS.STATE_ACTIVE_OBJECT] = nodeId;
+                        settings[CONSTANTS.STATE_ACTIVE_ASPECT] = CONSTANTS.ASPECT_ALL;
+                        settings[CONSTANTS.STATE_ACTIVE_VISUALIZER] = SET_VISUALIZER;
+                        WebGMEGlobal.State.set(settings);
+                    },
+                    "icon": false
+                };
             }
         };
-
-        //called from the TreeBrowserWidget when a create function is called from context menu
-        treeBrowser.onNodeCreate = function (nodeId, childId) {
-            if (GMEConcepts.canCreateChild(nodeId, childId)) {
-                var params = { "parentId": nodeId };
-                params[childId] = {registry:{position:{x: 100, y: 100}}};
-                client.createChildren(params);
-            } else {
-                logger.warning("Can not create child instance of '" + childId + "', in parent object: '" + nodeId + "'");
-            }
-        };
-
 
         treeBrowser.getDragEffects = function (el) {
             return [treeBrowser.DRAG_EFFECTS.DRAG_COPY,
                 treeBrowser.DRAG_EFFECTS.DRAG_MOVE,
-                treeBrowser.DRAG_EFFECTS.DRAG_CREATE_REFERENCE,
+                treeBrowser.DRAG_EFFECTS.DRAG_CREATE_POINTER,
                 treeBrowser.DRAG_EFFECTS.DRAG_CREATE_INSTANCE];
         };
 
@@ -381,7 +401,7 @@ define(['logManager',
                             objType = getNodeClass(updatedObject);
 
                             //create the node's descriptor for the tree-browser widget
-                            nodeDescriptor = {  "text" :  updatedObject.getAttribute("name"),
+                            nodeDescriptor = {  "name" :  updatedObject.getAttribute("name"),
                                 "hasChildren" : (updatedObject.getChildrenIds()).length > 0,
                                 "class" : objType };
 
@@ -401,7 +421,7 @@ define(['logManager',
 
                             //create the node's descriptor for the treebrowser widget
                             nodeDescriptor = {
-                                "text" : updatedObject.getAttribute("name"),
+                                "name" : updatedObject.getAttribute("name"),
                                 "hasChildren" : (updatedObject.getChildrenIds()).length > 0,
                                 "class" : objType
                             };
@@ -562,6 +582,66 @@ define(['logManager',
         };
 
         setTimeout(initialize, 250);
+    };
+
+    TreeBrowserControl.prototype._getValidChildrenTypes = function (nodeId) {
+        var result = [],
+            validChildrenTypes = GMEConcepts.getMETAAspectMergedValidChildrenTypes(nodeId), //get possible targets from MetaDescriptor
+            children = [],
+            len,
+            childObj,
+            childName,
+            childId,
+            id,
+            client = this._client;
+
+        len = validChildrenTypes.length;
+        while (len--) {
+            //do not list connection types in Create...
+            id = validChildrenTypes[len];
+            if (GMEConcepts.isConnectionType(id) !== true &&
+                GMEConcepts.canCreateChild(nodeId, id)) {
+                childObj = client.getNode(id);
+
+                childId = id + "";
+                childName = childId;
+
+                if (childObj) {
+                    childName = childObj.getAttribute(nodePropertyNames.Attributes.name);
+                }
+
+                children.push({'ID': childId, 'Title': childName});
+            }
+        }
+
+        children.sort(function(a,b) {
+            if (a.Title.toLowerCase() < b.Title.toLowerCase()) {
+                return -1;
+            } else {
+                return 1;
+            }
+        });
+
+        for (len = 0; len < children.length; len += 1) {
+            result.push({id: children[len].ID,
+                title: children[len].Title});
+        }
+
+        return result;
+    };
+
+    TreeBrowserControl.prototype._createChild = function (nodeId, childId) {
+        var client = this._client,
+            logger = this._logger;
+
+        if (GMEConcepts.canCreateChild(nodeId, childId)) {
+            var params = { "parentId": nodeId };
+            params[childId] = {registry:{}};
+            params[childId]['registry'][REGISTRY_KEYS.POSITION] = {x: 100, y: 100};
+            client.createChildren(params);
+        } else {
+            logger.warning("Can not create child instance of '" + childId + "', in parent object: '" + nodeId + "'");
+        }
     };
 
     return TreeBrowserControl;

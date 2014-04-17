@@ -24,9 +24,17 @@ define(['js/Constants',
     * NOTE: can be overridden
     */
     DecoratorWithPortsBase.prototype.getTerritoryQuery = function () {
-        var territoryRule = {};
+        var territoryRule = {},
+            gmeID = this._metaInfo[CONSTANTS.GME_ID],
+            client = this._control._client,
+            hasAspect = this._aspect && this._aspect !== CONSTANTS.ASPECT_ALL && client.getMetaAspectNames(gmeID).indexOf(this._aspect) !== -1;
 
-        territoryRule[this._metaInfo[CONSTANTS.GME_ID]] = { "children": 1 };
+        if (hasAspect) {
+            territoryRule[gmeID] = client.getAspectTerritoryPattern(gmeID, this._aspect);
+            territoryRule[gmeID].children = 1;
+        } else {
+            territoryRule[gmeID] = { "children": 1 };
+        }
 
         return territoryRule;
     };
@@ -86,10 +94,23 @@ define(['js/Constants',
     DecoratorWithPortsBase.prototype.getPortIDs = function () {
         var client = this._control._client,
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
-            childrenIDs = [];
+            childrenIDs = [],
+            len,
+            gmeID = this._metaInfo[CONSTANTS.GME_ID],
+            hasAspect = this._aspect && this._aspect !== CONSTANTS.ASPECT_ALL && client.getMetaAspectNames(gmeID).indexOf(this._aspect) !== -1;
 
         if (nodeObj) {
             childrenIDs = nodeObj.getChildrenIds().slice(0);
+
+            //filter out the ones that are not part of the specified aspect
+            if (hasAspect) {
+                len = childrenIDs.length;
+                while (len--) {
+                    if (!GMEConcepts.isValidTypeInAspect(childrenIDs[len], gmeID, this._aspect)) {
+                       childrenIDs.splice(len, 1);
+                    }
+                }
+            }
         }
 
         return childrenIDs;

@@ -17,16 +17,19 @@ define(['jquery',
         'js/RegistryKeys',
         './GMEConcepts.FCO',
         './METAAspectHelper',
-        'js/Panels/MetaEditor/MetaEditorConstants'], function (_jquery,
+        'js/Panels/MetaEditor/MetaEditorConstants',
+        'clientUtil'], function (_jquery,
                                                                generateGuid,
                                            CONSTANTS,
                                            nodePropertyNames,
                                            REGISTRY_KEYS,
                                            GMEConceptsFCO,
                                            METAAspectHelper,
-                                           MetaEditorConstants) {
+                                           MetaEditorConstants,
+                                           clientUtil) {
 
-    var _client;
+    var _client,
+        EXCLUDED_POINTERS = [CONSTANTS.POINTER_BASE, CONSTANTS.POINTER_SOURCE, CONSTANTS.POINTER_TARGET];
 
     var _initialize = function (client) {
         if (!_client) {
@@ -104,18 +107,12 @@ define(['jquery',
      */
     var _getValidConnectionTypes = function (sourceID, targetID, parentID) {
         var validTypes = [],
-            validChildrenTypes,
-            len,
-            childID;
-
-        validChildrenTypes = _getMETAAspectMergedValidChildrenTypes(parentID) || [];
-
-        len = validChildrenTypes.length;
+			validChildrenTypes = _getValidConnectionTypesFromSource(sourceID, parentID),
+			len = validChildrenTypes.length;
+        
         while (len--) {
-            childID = validChildrenTypes[len];
-            if (_client.isValidTarget(childID, CONSTANTS.POINTER_SOURCE, sourceID) &&
-                _client.isValidTarget(childID, CONSTANTS.POINTER_TARGET, targetID)) {
-                validTypes.push(childID);
+            if (_client.isValidTarget(validChildrenTypes[len], CONSTANTS.POINTER_TARGET, targetID)) {
+                validTypes.push(validChildrenTypes[len]);
             }
         }
 
@@ -123,9 +120,9 @@ define(['jquery',
     };
 
     /*
-     * Determines if a GME Connection can be created between source and target in parent
+     * Determines the GME Connection can be created from a source in a parent
      */
-    var _getValidConnectionTypesInParent = function (sourceID, parentID) {
+    var _getValidConnectionTypesFromSource = function (sourceID, parentID) {
         var validTypes = [],
             validChildrenTypes,
             len,
@@ -137,8 +134,7 @@ define(['jquery',
         while (len--) {
             childID = validChildrenTypes[len];
             if (_isConnectionType(childID) &&
-                _client.isValidTarget(childID, CONSTANTS.POINTER_SOURCE, sourceID) &&
-                _canCreateChild(parentID, childID)) {
+                _client.isValidTarget(childID, CONSTANTS.POINTER_SOURCE, sourceID)) {
                 validTypes.push(childID);
             }
         }
@@ -179,26 +175,14 @@ define(['jquery',
 
         _client.startTransaction();
 
+        //create extra registry entries for root - currently allowed interpreters
+        _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, REGISTRY_KEYS.VALID_PLUGINS, "");
+
         //create FCO, META, PROJECT_BASE
-        var FCO_ID = _client.createChild({'parentId': CONSTANTS.PROJECT_ROOT_ID});
-
-        //set attributes for FCO
-        for (it in GMEConceptsFCO.FCO_ATTRIBUTES) {
-            if (GMEConceptsFCO.FCO_ATTRIBUTES.hasOwnProperty(it)) {
-                _client.setAttributes(FCO_ID, it, GMEConceptsFCO.FCO_ATTRIBUTES[it]);
-            }
-        }
-
-        //set base registry for FCO
-        for (it in GMEConceptsFCO.FCO_REGISTRY) {
-            if (GMEConceptsFCO.FCO_REGISTRY.hasOwnProperty(it)) {
-                _client.setRegistry(FCO_ID, it, GMEConceptsFCO.FCO_REGISTRY[it]);
-            }
-        }
-
-        var projectRegistry = {};
-        projectRegistry[CONSTANTS.PROJECT_FCO_ID] = FCO_ID;
-        _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, REGISTRY_KEYS.PROJECT_REGISTRY, projectRegistry);
+        // now as we create FCO always on the same relid and with the same GUID project have a more interchangeable base...
+        var FCO_ID = _client.createChild({'parentId': CONSTANTS.PROJECT_ROOT_ID,
+            'guid': CONSTANTS.PROJECT_FCO_GUID,
+            'relid': CONSTANTS.PROJECT_FCO_RELID});
 
         //set META rules accordingly
 
@@ -214,6 +198,27 @@ define(['jquery',
         var fcoMeta = $.extend(true, {}, metaRuleBase);
         fcoMeta.attributes.name = {'type': 'string'};
         _client.setMeta(FCO_ID, fcoMeta);
+
+        //set attributes for FCO
+        for (it in GMEConceptsFCO.FCO_ATTRIBUTES) {
+            if (GMEConceptsFCO.FCO_ATTRIBUTES.hasOwnProperty(it)) {
+                _client.setAttributes(FCO_ID, it, GMEConceptsFCO.FCO_ATTRIBUTES[it]);
+            }
+        }
+
+        //set name of the ROOT
+        _client.setAttributes(CONSTANTS.PROJECT_ROOT_ID,nodePropertyNames.Attributes.name,CONSTANTS.PROJECT_ROOT_NAME);
+
+        //set base registry for FCO
+        for (it in GMEConceptsFCO.FCO_REGISTRY) {
+            if (GMEConceptsFCO.FCO_REGISTRY.hasOwnProperty(it)) {
+                _client.setRegistry(FCO_ID, it, GMEConceptsFCO.FCO_REGISTRY[it]);
+            }
+        }
+
+        var projectRegistry = {};
+        projectRegistry[CONSTANTS.PROJECT_FCO_ID] = FCO_ID;
+        _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, REGISTRY_KEYS.PROJECT_REGISTRY, projectRegistry);
 
         //set META ASPECT to show FCO
         _client.addMember(CONSTANTS.PROJECT_ROOT_ID, FCO_ID, MetaEditorConstants.META_ASPECT_SET_NAME);
@@ -268,18 +273,30 @@ define(['jquery',
         if(typeof parentId === 'string' && baseIdList && baseIdList.length > 0){
            result = true;
 
-            //FILTER OUT ABSTRACTS
+            //make sure that no basIDList is not derived from parentId
             len = baseIdList.length;
-            while (len--) {
-                node = _client.getNode(baseIdList[len]);
-                if (node) {
-                    if (node.getRegistry(REGISTRY_KEYS.IS_ABSTRACT) === true) {
-                        baseIdList.splice(len, 1);
-                    }
+            while (len-- && result === true) {
+                if (_client.isTypeOf(baseIdList[len], parentId)) {
+                    result = false;
                 }
             }
-            if (baseIdList.length === 0) {
-                result = false;
+
+
+            //FILTER OUT ABSTRACTS
+            if (result === true) {
+                //TODO: why just filter out, why not return false in the first place
+                len = baseIdList.length;
+                while (len--) {
+                    node = _client.getNode(baseIdList[len]);
+                    if (node) {
+                        if (node.getRegistry(REGISTRY_KEYS.IS_ABSTRACT) === true) {
+                            baseIdList.splice(len, 1);
+                        }
+                    }
+                }
+                if (baseIdList.length === 0) {
+                    result = false;
+                }
             }
             //END OF --- FILTER OUT ABSTRACTS
 
@@ -357,21 +374,6 @@ define(['jquery',
         return result;
     };
 
-    var _getValidReferenceTypes = function (parentId, targetId) {
-        var validReferenceTypes = _getMETAAspectMergedValidChildrenTypes(parentId),
-            i;
-
-        i = validReferenceTypes.length;
-        while (i--) {
-            if (!_client.isValidTarget(validReferenceTypes[i], CONSTANTS.POINTER_REF, targetId) ||
-                !_canCreateChild(parentId, validReferenceTypes[i])) {
-                validReferenceTypes.splice(i, 1);
-            }
-        }
-
-        return validReferenceTypes;
-    };
-
     var _canDeleteNode = function (objID) {
         var result = false;
 
@@ -402,25 +404,25 @@ define(['jquery',
         return validChildrenTypes;
     };
 
-    var _canAddToPointerList = function (objID, pointerListName, itemIDList) {
+    var _canAddToSet = function (objID, setName, itemIDList) {
         var obj = _client.getNode(objID),
-            pointerListMeta = _client.getPointerMeta(objID, pointerListName),
-            members = obj.getMemberIds(pointerListName) || [],
+            setMeta = _client.getPointerMeta(objID, setName),
+            members = obj.getMemberIds(setName) || [],
             result = true,
             i,
             baseId;
 
         //check #1: global multiplicity
-        if (pointerListMeta.max !== undefined &&
-            pointerListMeta.max > -1 &&
-            members.length + itemIDList.length > pointerListMeta.max) {
+        if (setMeta.max !== undefined &&
+            setMeta.max > -1 &&
+            members.length + itemIDList.length > setMeta.max) {
             result = false;
         }
 
         //check #2: is every item a valid target of the pointer list
         if (result === true) {
             for (i = 0; i < itemIDList.length; i += 1) {
-                if (!_client.isValidTarget(objID, pointerListName, itemIDList[i])) {
+                if (!_client.isValidTarget(objID, setName, itemIDList[i])) {
                     result = false;
                     break;
                 }
@@ -430,10 +432,10 @@ define(['jquery',
         //check #3: multiplicity check for each type
         if (result === true) {
             var maxPerType = {};
-            for (i = 0; i < pointerListMeta.items.length; i += 1) {
-                if (pointerListMeta.items[i].max !== undefined &&
-                    pointerListMeta.items[i].max > -1) {
-                    maxPerType[pointerListMeta.items[i].id] = pointerListMeta.items[i].max;
+            for (i = 0; i < setMeta.items.length; i += 1) {
+                if (setMeta.items[i].max !== undefined &&
+                    setMeta.items[i].max > -1) {
+                    maxPerType[setMeta.items[i].id] = setMeta.items[i].max;
                 }
             }
 
@@ -486,24 +488,341 @@ define(['jquery',
         return isPort === true;
     };
 
+    var _getValidPointerTypes = function (parentId, targetId) {
+        var validChildrenTypes = _getMETAAspectMergedValidChildrenTypes(parentId),
+            i,
+            childObj,
+            ptrNames,
+            j,
+            validPointerTypes = [];
+
+        i = validChildrenTypes.length;
+        while (i--) {
+            if (_canCreateChild(parentId, validChildrenTypes[i])) {
+                childObj = _client.getNode(validChildrenTypes[i]);
+                if (childObj) {
+                    ptrNames = _.difference(childObj.getPointerNames().slice(0), EXCLUDED_POINTERS);
+                    j = ptrNames.length;
+                    while (j--) {
+                        if (_client.isValidTarget(validChildrenTypes[i], ptrNames[j], targetId)) {
+                            validPointerTypes.push({'baseId': validChildrenTypes[i],
+                                                     'pointer': ptrNames[j]});
+                        }
+                    }
+                }
+            }
+        }
+
+        return validPointerTypes;
+    };
+
+
+    var _canCreateChildrenInAspect = function (parentId, baseIdList, aspectName) {
+        var canCreateInAspect = true,
+            i,
+            j;
+
+        if (aspectName) {
+            if (aspectName !== CONSTANTS.ASPECT_ALL) {
+                //need to check in aspect
+                var metaAspectDesc = _client.getMetaAspect(parentId, aspectName);
+                if (metaAspectDesc) {
+                    //metaAspectDesc.items contains the children types the user specified to participate in this aspect
+                    var aspectTypes =  metaAspectDesc.items || [];
+
+                    if (aspectTypes.length > 0) {
+                        //each item in baseIdList has to be a descendant of any item in aspectTypes
+                        i = baseIdList.length;
+                        while (i-- && canCreateInAspect) {
+                            j  = aspectTypes.length;
+                            canCreateInAspect = false;
+                            while (j--) {
+                                if (_client.isTypeOf(baseIdList[i], aspectTypes[j])) {
+                                    canCreateInAspect = true;
+                                    break;
+                                }
+                            }
+                        }
+                    } else {
+                        //aspect types is empty
+                        canCreateInAspect = false;
+                    }
+                } else {
+                    //unknown aspect name
+                    canCreateInAspect = false;
+                }
+            }
+        } else {
+            //not a valid aspect name
+            canCreateInAspect = false;
+        }
+
+        if (canCreateInAspect) {
+            canCreateInAspect = _canCreateChildren(parentId, baseIdList);
+        }
+
+        return canCreateInAspect;
+    };
+
+    /*
+     * Determines the GME Connection can be created from a source in a parent in an aspect
+     */
+    var _getValidConnectionTypesFromSourceInAspect = function (sourceID, parentID, aspectName) {
+        var validTypes = [],
+            i,
+            j,
+            canCreateInAspect;
+
+        if (aspectName) {
+            if (aspectName !== CONSTANTS.ASPECT_ALL) {
+                //need to check in aspect
+                var metaAspectDesc = _client.getMetaAspect(parentID, aspectName);
+                if (metaAspectDesc) {
+                    //metaAspectDesc.items contains the children types the user specified to participate in this aspect
+                    var aspectTypes =  metaAspectDesc.items || [];
+
+                    if (aspectTypes.length > 0) {
+                        validTypes = _getValidConnectionTypesFromSource(sourceID, parentID);
+                        //each item in validTypes has to be a descendant of any item in aspectTypes
+                        i = validTypes.length;
+                        while (i--) {
+                            j  = aspectTypes.length;
+                            canCreateInAspect = false;
+                            while (j--) {
+                                if (_client.isTypeOf(validTypes[i], aspectTypes[j])) {
+                                    canCreateInAspect = true;
+                                    break;
+                                }
+                            }
+
+                            if (!canCreateInAspect) {
+                                validTypes.splice(i, 1);
+                            }
+                        }
+                    }
+                }
+            } else {
+                validTypes = _getValidConnectionTypesFromSource(sourceID, parentID);
+            }
+        }
+
+        return validTypes;
+    };
+
+    /*
+     * Determines if a GME Connection can be created between source and target in parent in an aspect
+     */
+    var _getValidConnectionTypesInAspect = function (sourceID, targetID, parentID, aspectName) {
+        var validTypes = [],
+            canCreateInAspect,
+            i,
+            j;
+
+        if (aspectName) {
+            if (aspectName !== CONSTANTS.ASPECT_ALL) {
+                //need to check in aspect
+                var metaAspectDesc = _client.getMetaAspect(parentID, aspectName);
+                if (metaAspectDesc) {
+                    //metaAspectDesc.items contains the children types the user specified to participate in this aspect
+                    var aspectTypes =  metaAspectDesc.items || [];
+
+                    if (aspectTypes.length > 0) {
+                        validTypes = _getValidConnectionTypes(sourceID, targetID, parentID);
+                        //each item in validTypes has to be a descendant of any item in aspectTypes
+                        i = validTypes.length;
+                        while (i--) {
+                            j  = aspectTypes.length;
+                            canCreateInAspect = false;
+                            while (j--) {
+                                if (_client.isTypeOf(validTypes[i], aspectTypes[j])) {
+                                    canCreateInAspect = true;
+                                    break;
+                                }
+                            }
+
+                            if (!canCreateInAspect) {
+                                validTypes.splice(i, 1);
+                            }
+                        }
+                    }
+                }
+            } else {
+                validTypes = _getValidConnectionTypes(sourceID, targetID, parentID);
+            }
+        }
+
+        return validTypes;
+    };
+
+    var _isValidTypeInAspect = function (objID, aspectContainerID, aspectName) {
+        var result = false,
+            aspectTerritoryPattern = _client.getAspectTerritoryPattern(aspectContainerID, aspectName),
+            aspectItems = aspectTerritoryPattern.items,
+            len;
+
+        if (aspectItems) {
+            len = aspectItems.length;
+            while (len--) {
+                if (_client.isTypeOf(objID, aspectItems[len])) {
+                    result = true;
+                    break;
+                }
+            }
+        }
+
+        return result;
+    };
+
+    /*
+     *
+     */
+    var _isValidChildrenTypeInCrossCut = function (parentId, baseIdList) {
+        //Check if each single baseId is a valid children type of parentId
+        var i,
+            result = true,
+            baseId;
+
+        i = baseIdList.length;
+        while (i--) {
+            baseId = baseIdList[i];
+            if (!_client.isValidChild(parentId, baseId)) {
+                result = false;
+                break;
+            }
+        }
+
+        return result;
+    } ;
+
+    var _getValidPointerTargetTypesFromSource = function (objID, isSet) {
+        var result = [],
+            EXCLUDED_POINTERS = [CONSTANTS.POINTER_BASE],
+            EXCLUDED_SETS = [],
+            nodeObj = _client.getNode(objID),
+            pointerNames = isSet ? _.difference(nodeObj.getSetNames(), EXCLUDED_SETS) : _.difference(nodeObj.getPointerNames(), EXCLUDED_POINTERS),
+            len = pointerNames.length,
+            pointerMetaDescriptor,
+            i;
+
+        while (len--) {
+            pointerMetaDescriptor = _client.getValidTargetItems(objID,pointerNames[len]);
+            if (pointerMetaDescriptor && pointerMetaDescriptor.length > 0) {
+                i = pointerMetaDescriptor.length;
+                while (i--) {
+                    if (result.indexOf(pointerMetaDescriptor[i].id) === -1) {
+                        result.push(pointerMetaDescriptor[i].id);
+                    }
+                }
+            }
+        }
+
+        return result;
+    };
+
+
+    var _getValidPointerTypesFromSourceToTarget = function (sourceId, targetId) {
+        var result = [],
+            EXCLUDED_POINTERS = [CONSTANTS.POINTER_BASE],
+            nodeObj = _client.getNode(sourceId),
+            pointerNames = _.difference(nodeObj.getPointerNames(), EXCLUDED_POINTERS),
+            len = pointerNames.length;
+
+        while (len--) {
+            if (_client.isValidTarget(sourceId,pointerNames[len],targetId)) {
+                result.push(pointerNames[len]);
+            }
+        }
+
+        result.sort(clientUtil.caseInsensitiveSort);
+
+        return result;
+    };
+
+
+    var _getValidSetTypesFromContainerToMember = function (containerId, objId) {
+        var result = [],
+            EXCLUDED_SETS = [],
+            nodeObj = _client.getNode(containerId),
+            setNames = _.difference(nodeObj.getSetNames(), EXCLUDED_SETS),
+            len = setNames.length;
+
+        while (len--) {
+            if (_canAddToSet(containerId, setNames[len], [objId])) {
+                result.push(setNames[len]);
+            }
+        }
+
+        result.sort(clientUtil.caseInsensitiveSort);
+
+        return result;
+    };
+
+    var _getCrosscuts = function (objID) {
+        var obj = _client.getNode(objID),
+            crosscuts = [];
+
+        if (obj) {
+            crosscuts = obj.getRegistry(REGISTRY_KEYS.CROSSCUTS) || [];
+        }
+
+        return crosscuts;
+    };
+
+    var _getSets = function (objID) {
+        var obj = _client.getNode(objID),
+            setNames = obj.getSetNames() || [],
+            aspects = _client.getMetaAspectNames(objID) || [],
+            crossCuts = _getCrosscuts(objID),
+            crossCutNames = [];
+
+        //filter out ManualAspects from the list
+        _.each(crossCuts, function (element/*, index, list*/) {
+            crossCutNames.push(element.SetID);
+        });
+
+        setNames = _.difference(setNames, crossCutNames, aspects);
+
+        return setNames;
+    };
+
+    var _getFCOId = function () {
+        var FCO_ID,
+            projectRootNode = _client.getNode(CONSTANTS.PROJECT_ROOT_ID);
+
+        if (projectRootNode) {
+            FCO_ID = projectRootNode.getRegistry(REGISTRY_KEYS.PROJECT_REGISTRY)[CONSTANTS.PROJECT_FCO_ID];
+        }
+
+        return FCO_ID;
+    };
+
     //return utility functions
     return {
         initialize: _initialize,
         isConnection: _isConnection,
         isConnectionType: _isConnectionType,
         /*isValidConnectionSource: _isValidConnectionSource,*/
-        getValidConnectionTypes: _getValidConnectionTypes,
         canCreateChild: _canCreateChild,
         isValidConnection: _isValidConnection,
         createBasicProjectSeed: _createBasicProjectSeed,
         isProjectFCO: _isProjectFCO,
         canCreateChildren: _canCreateChildren,
-        getValidReferenceTypes: _getValidReferenceTypes,
         canDeleteNode: _canDeleteNode,
         getMETAAspectMergedValidChildrenTypes: _getMETAAspectMergedValidChildrenTypes,
-        getValidConnectionTypesInParent: _getValidConnectionTypesInParent,
-        canAddToPointerList: _canAddToPointerList,
+        canAddToSet: _canAddToSet,
         isAbstract: _isAbstract,
-        isPort: _isPort
+        isPort: _isPort,
+        getValidPointerTypes: _getValidPointerTypes,
+        canCreateChildrenInAspect: _canCreateChildrenInAspect,
+        getValidConnectionTypesFromSourceInAspect: _getValidConnectionTypesFromSourceInAspect,
+        getValidConnectionTypesInAspect: _getValidConnectionTypesInAspect,
+        isValidTypeInAspect: _isValidTypeInAspect,
+        isValidChildrenTypeInCrossCut: _isValidChildrenTypeInCrossCut,
+        getValidPointerTargetTypesFromSource: _getValidPointerTargetTypesFromSource,
+        getValidPointerTypesFromSourceToTarget: _getValidPointerTypesFromSourceToTarget,
+        getValidSetTypesFromContainerToMember: _getValidSetTypesFromContainerToMember,
+        getCrosscuts: _getCrosscuts,
+        getSets: _getSets,
+        getFCOId: _getFCOId
     }
 });

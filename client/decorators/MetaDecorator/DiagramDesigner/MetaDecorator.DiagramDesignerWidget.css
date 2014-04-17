@@ -19,23 +19,27 @@
       line-height: 16px !important;
       font-size: 11px !important; }
   .meta-decorator .attributes,
-  .meta-decorator .constraints {
+  .meta-decorator .constraints,
+  .meta-decorator .aspects {
     font-size: 10px;
     min-height: 1px;
     margin-bottom: 0;
     padding: 0 3px 0 3px; }
     .meta-decorator .attributes li div,
-    .meta-decorator .constraints li div {
+    .meta-decorator .constraints li div,
+    .meta-decorator .aspects li div {
       white-space: nowrap;
       position: relative;
       height: 16px;
       line-height: 16px; }
       .meta-decorator .attributes li div:hover,
-      .meta-decorator .constraints li div:hover {
+      .meta-decorator .constraints li div:hover,
+      .meta-decorator .aspects li div:hover {
         cursor: pointer;
         background-color: #eeeeee; }
       .meta-decorator .attributes li div .n,
-      .meta-decorator .constraints li div .n {
+      .meta-decorator .constraints li div .n,
+      .meta-decorator .aspects li div .n {
         float: left;
         margin-right: 3px;
         max-width: 90px;
@@ -43,27 +47,36 @@
         text-overflow: ellipsis;
         text-align: left; }
       .meta-decorator .attributes li div .t,
-      .meta-decorator .constraints li div .t {
+      .meta-decorator .constraints li div .t,
+      .meta-decorator .aspects li div .t {
         float: right;
         text-align: right; }
   .meta-decorator .add-new-attribute,
-  .meta-decorator .add-new-constraint {
+  .meta-decorator .add-new-constraint,
+  .meta-decorator .add-new-aspect {
     font-size: 10px;
-    cursor: pointer; }
+    cursor: pointer;
+    position: absolute;
+    top: 0px;
+    left: 3px; }
     .meta-decorator .add-new-attribute:hover,
-    .meta-decorator .add-new-constraint:hover {
+    .meta-decorator .add-new-constraint:hover,
+    .meta-decorator .add-new-aspect:hover {
       background-color: #dbeafc;
       color: black; }
   .meta-decorator .attributes-title,
-  .meta-decorator .constraints-title {
+  .meta-decorator .constraints-title,
+  .meta-decorator .aspects-title {
     font-size: 9px;
     font-weight: bold;
     text-transform: uppercase;
     text-align: center;
     background-color: #f3f3f3;
     color: black;
-    line-height: 13px; }
-  .meta-decorator .constraints-title {
+    line-height: 13px;
+    position: relative; }
+  .meta-decorator .constraints-title,
+  .meta-decorator .aspects-title {
     border-top: 1px dashed #999999; }
   .meta-decorator input[type=text].new-attr {
     font-size: 10px; }
@@ -107,10 +120,12 @@
   -moz-box-shadow: 0px 0px 15px 0px #1276d4 !important;
   box-shadow: 0px 0px 15px 0px #1276d4 !important; }
   .selected .meta-decorator .add-new-attribute:hover,
-  .selected .meta-decorator .add-new-constraint:hover {
+  .selected .meta-decorator .add-new-constraint:hover,
+  .selected .meta-decorator .add-new-aspect:hover {
     background-color: #ffffc0; }
 
 .items.highlight-mode .meta-decorator .attributes li div:hover,
-.items.highlight-mode .meta-decorator .constraints li div:hover {
+.items.highlight-mode .meta-decorator .constraints li div:hover,
+.items.highlight-mode .meta-decorator .aspects li div:hover {
   cursor: default;
   background-color: white; }

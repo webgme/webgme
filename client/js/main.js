@@ -25,12 +25,16 @@ require.config({
         //necessary 3rd party modules
         "bootstrap": 'lib/bootstrap/bootstrap.amd',
         "underscore": 'lib/underscore/underscore-min',
+        "backbone": 'lib/backbone/backbone.min',
         "d3": 'lib/d3/d3.v3.min',
         "jscolor": 'lib/jscolor/jscolor',
 
         //RaphaelJS family
         "eve": 'lib/raphael/eve',   //needed because of raphael.core.js uses require with 'eve'
         "raphaeljs": 'lib/raphael/raphael.amd',
+        "raphael_core": 'lib/raphael/raphael.core',
+        "raphael_svg": 'lib/raphael/raphael.svg_fixed',
+        "raphael_vml": 'lib/raphael/raphael.vml',
 
         //WebGME custom modules
         "logManager": 'common/LogManager',
@@ -41,19 +45,24 @@ require.config({
         "loaderProgressBar": "js/Loader/LoaderProgressBar",
 
         "codemirror": 'lib/codemirror/codemirror.amd',
-        "jquery-csszoom": 'lib/jquery/jquery.csszoom'
+        "jquery-csszoom": 'lib/jquery/jquery.csszoom',
+
+        "jszip": 'lib/jszip/jszip'
     },
     shim: {
         'jquery-ui': ['jquery'],
         'jquery-ui-iPad': ['jquery','jquery-ui'],
         'bootstrap': ['jquery'],
+        'backbone': ['underscore'],
         'clientUtil': ['jquery'],
         'jquery-WebGME': ['bootstrap'],
         'jquery-dataTables': ['jquery'],
         'jquery-dataTables-bootstrapped': ['jquery-dataTables'],
         'WebGME': ['jquery-WebGME'],
         'jquery-csszoom': ['jquery-ui'],
-        'jquery-spectrum': ['jquery']
+        'jquery-spectrum': ['jquery'],
+        'raphael_svg': ['raphael_core'],
+        'raphael_vml': ['raphael_core']
     }
 });
 
@@ -67,11 +76,12 @@ require(
         'jquery-dataTables-bootstrapped',
         'bootstrap',
         'underscore',
+        'backbone',
         'js/WebGME',
         'clientUtil',
         'bin/getconfig'
     ],
-    function (domReady, jQuery, jQueryUi, jQueryUiiPad, jqueryWebGME, jqueryDataTables, bootstrap, underscore, webGME, util, CONFIG) {
+    function (domReady, jQuery, jQueryUi, jQueryUiiPad, jqueryWebGME, jqueryDataTables, bootstrap, underscore, backbone, webGME, util, CONFIG) {
         domReady(function () {
             //#1 set debug info from config file
             if (CONFIG.hasOwnProperty('debug')) {
@@ -85,6 +95,22 @@ require(
             } else if (d === 'rel') {
                 DEBUG = false;
             }
+
+            if (CONFIG.paths) {
+                // attach external libraries to extlib/*
+                var keys = Object.keys(CONFIG.paths);
+                for (var i = 0; i < keys.length; i += 1) {
+                    // assume this is a relative path from the current working directory
+                    CONFIG.paths[keys[i]] = 'extlib/' + CONFIG.paths[keys[i]];
+                }
+
+                // update client config to route the external lib requests
+                require.config({
+                    paths: CONFIG.paths
+                });
+
+            }
+
 
             webGME.start();
         });

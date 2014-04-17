@@ -7,7 +7,8 @@ define(['jquery',
         DEFAULT_CHECKED_TEXT = 'ON',
         DEFAULT_UNCHECKED_TEXT = 'OFF',
         CHECKED_CLASS = 'checked',
-        DISABLED_CLASS = 'disabled';
+        DISABLED_CLASS = 'disabled',
+        EL_BASE = $('<div class="iCheckBox checked"><div class="sw"></div><div class="txt"></div></div>');
 
     iCheckBox = function (options) {
         var self = this;
@@ -17,9 +18,10 @@ define(['jquery',
         this._uncheckedText = (options && options.uncheckedText) || DEFAULT_UNCHECKED_TEXT;
         this._uncheckedText = this._uncheckedText.toUpperCase();
 
-        this.el = $('<div class="iCheckBox checked"><div class="sw"></div><div class="txt">' + this._checkedText + '</div></div>');
+        this.el = EL_BASE.clone();
 
         this._txt = this.el.find('.txt').first();
+        this._txt.text(this._checkedText);
 
         if (options && options.hasOwnProperty("checked")) {
             this.setChecked(options.checked);

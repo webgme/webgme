@@ -49,7 +49,10 @@ define([
                 v = Math.round(v / this.__step) * this.__step;
             }
 
-            return NumberWidgetBase.superclass.prototype.setValue.call(this, v);
+            NumberWidgetBase.superclass.prototype.setValue.call(this, v);
+            this.updateDisplay();
+
+            return this;
         };
 
         /* DEFINE EXTRA PROPERTIES FOR NumberWidgetBase */

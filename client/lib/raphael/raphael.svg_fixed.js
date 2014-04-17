@@ -8,10 +8,7 @@
 // │ Licensed under the MIT (http://raphaeljs.com/license.html) license. │ \\
 // └─────────────────────────────────────────────────────────────────────┘ \\
 
-
-define(['./raphael.core'], function (R) {  
-    if (!R.svg) return;
-    
+window.Raphael && window.Raphael.svg && function(R) {
     var has = "hasOwnProperty",
         Str = String,
         toFloat = parseFloat,
@@ -35,8 +32,8 @@ define(['./raphael.core'], function (R) {
             oval: [{'path': "M2.5,0A2.5,2.5,0,0,1,2.5,5 2.5,2.5,0,0,1,2.5,0z" }],
             diamond2: [{'path': "M2.5,1 5,2.5 2.5,4 0,2.5z" }],
             inheritance:[{'path': "M5,0 0,2.5 5,5z"  },
-                         {'path': "M4.7,0.4 0.5,2.5 4.7,4.6 z",
-                          'attr': {'fill':"#FFFFFF"}}]
+                {'path': "M4.7,0.4 0.5,2.5 4.7,4.6 z",
+                    'attr': {'fill':"#FFFFFF"}}]
         },
         markerCounter = {};
     R.toString = function () {
@@ -339,7 +336,7 @@ define(['./raphael.core'], function (R) {
                     from = 0;
                     to = R.getTotalLength(attrs.path) - (o._.arrows.enddx * stroke || 0);
                 }
-                o._.arrows[se + "Path"] && $(node, {d: Raphael.getSubpath(attrs.path, from, to)});
+                o._.arrows[se + "Path"] && $(node, {d: R.getSubpath(attrs.path, from, to)});
                 delete o._.arrows[se + "Path"];
                 delete o._.arrows[se + "Marker"];
                 delete o._.arrows[se + "dx"];
@@ -395,8 +392,20 @@ define(['./raphael.core'], function (R) {
                     case "blur":
                         o.blur(value);
                         break;
-                    case "href":
                     case "title":
+                        var title = node.getElementsByTagName("title");
+
+                        // Use the existing <title>.
+                        if (title.length && (title = title[0])) {
+                          title.firstChild.nodeValue = value;
+                        } else {
+                          title = $("title");
+                          var val = R._g.doc.createTextNode(value);
+                          title.appendChild(val);
+                          node.appendChild(title);
+                        }
+                        break;
+                    case "href":
                     case "target":
                         var pn = node.parentNode;
                         if (pn.tagName.toLowerCase() != "a") {
@@ -939,7 +948,7 @@ define(['./raphael.core'], function (R) {
      * Element.remove
      [ method ]
      **
-     * Removes element form the paper.
+     * Removes element from the paper.
     \*/
     elproto.remove = function () {
         if (this.removed || !this.node.parentNode) {
@@ -998,7 +1007,7 @@ define(['./raphael.core'], function (R) {
      = (object) object of attributes if nothing is passed in.
      > Possible parameters
      # <p>Please refer to the <a href="http://www.w3.org/TR/SVG/" title="The W3C Recommendation for the SVG language describes these properties in detail.">SVG specification</a> for an explanation of these parameters.</p>
-     o arrow-end (string) arrowhead on the end of the path. The format for string is `<type>[-<width>[-<length>]]`. Possible types: `classic`, `block`, `open`, `oval`, `diamond`, `none`, width: `wide`, `narrow`, `midium`, length: `long`, `short`, `midium`.
+     o arrow-end (string) arrowhead on the end of the path. The format for string is `<type>[-<width>[-<length>]]`. Possible types: `classic`, `block`, `open`, `oval`, `diamond`, `none`, width: `wide`, `narrow`, `medium`, length: `long`, `short`, `midium`.
      o clip-rect (string) comma or space separated values: x, y, width and height
      o cursor (string) CSS type of the cursor
      o cx (number) the x-axis coordinate of the center of the circle, or ellipse
@@ -1217,6 +1226,7 @@ define(['./raphael.core'], function (R) {
             }
             t.node.removeAttribute("filter");
         }
+        return t;
     };
     R._engine.circle = function (svg, x, y, r) {
         var el = $("circle");
@@ -1430,7 +1440,5 @@ define(['./raphael.core'], function (R) {
                 });
             };
         })(method);
-    }       
-    
-    return R;
-});
+    }
+}(window.Raphael);

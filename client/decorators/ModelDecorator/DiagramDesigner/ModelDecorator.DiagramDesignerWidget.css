@@ -54,8 +54,8 @@
     .model-decorator .ports .port {
       white-space: nowrap;
       position: relative;
-      height: 16px;
-      line-height: 16px; }
+      height: 15px;
+      line-height: 15px; }
       .model-decorator .ports .port:hover {
         cursor: pointer; }
       .model-decorator .ports .port .title-wrapper {
@@ -64,25 +64,25 @@
         overflow: hidden;
         text-overflow: ellipsis; }
       .model-decorator .ports .port img.svg-icon {
-        height: 13px;
-        width: 13px;
+        height: 11px;
+        width: 5px;
         position: absolute;
         display: inline-block;
-        top: 1px; }
+        top: 2px; }
       .model-decorator .ports .port span.dot {
         position: absolute;
         display: inline-block;
         background: #666666;
         border: 1px solid #666666;
         width: 3px;
-        height: 8px;
+        height: 7px;
         top: 3px; }
       .model-decorator .ports .port.w-icon span.dot {
         display: none; }
     .model-decorator .ports .left .port .title-wrapper {
       text-align: left; }
     .model-decorator .ports .left .port img.svg-icon {
-      left: -16px; }
+      left: -8px; }
     .model-decorator .ports .left .port span.dot {
       left: -8px;
       border-top-left-radius: 4px;
@@ -90,7 +90,12 @@
     .model-decorator .ports .right .port .title-wrapper {
       text-align: right; }
     .model-decorator .ports .right .port img.svg-icon {
-      right: -16px; }
+      right: -8px;
+      -webkit-transform: scaleX(-1);
+      -moz-transform: scaleX(-1);
+      -ms-transform: scaleX(-1);
+      -o-transform: scaleX(-1);
+      transform: scaleX(-1); }
     .model-decorator .ports .right .port span.dot {
       left: 53px;
       border-top-right-radius: 4px;
@@ -147,7 +152,7 @@
   .model-decorator .connector.bottom {
     bottom: -6px; }
 .model-decorator .ports .port div.connector {
-  top: 2px; }
+  top: 1.5px; }
 .model-decorator .ports .left .port .connector {
   left: -7px; }
 .model-decorator .ports .right .port .connector {

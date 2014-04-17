@@ -18,7 +18,9 @@ function(){
         'workerCommands':{
             'initialize': 'initialize',
             'getResult': 'getResult',
-            'dumpMoreNodes': 'dumpMoreNodes'
+            'dumpMoreNodes': 'dumpMoreNodes',
+            'generateJsonURL': 'generateJsonURL',
+            'executePlugin': 'executePlugin'
         }
     }
 });

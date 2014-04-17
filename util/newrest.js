@@ -47,6 +47,7 @@ define([
             };
 
         function printHelp(callback){
+            // TODO: add blob usage documentation here...
             callback(_HTTPError.ok,{
                 commands:{
                     'GET':{
@@ -344,6 +345,7 @@ define([
 
         function setBaseUrl(newUrl){
             _parameters.baseUrl = newUrl;
+            _baseUrl = newUrl;
         }
         return {
             initialize: initialize,

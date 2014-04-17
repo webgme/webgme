@@ -43,8 +43,10 @@ define([], function () {
                 if (!$btn.hasClass("disabled")) {
                     params.clickFn.call(this, $(this).data());
                 }
-                event.stopPropagation();
-                event.preventDefault();
+                if (params.clickFnEventCancel !== false) {
+                    event.stopPropagation();
+                    event.preventDefault();
+                }
             });
         }
 

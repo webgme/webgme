@@ -25,6 +25,7 @@ define([], function () {
         LINE_END_ARROW: 'lineEndArrow',     //start arrow of a line
         LINE_CUSTOM_POINTS: 'lineCustomPoints',  //custom routing points of a line
 
+        VALID_PLUGINS:'validPlugins', //space separated list of valid plugins for the project TODO maybe we should harmonize with project registry
         /*
          *  MISC
          */
@@ -39,9 +40,9 @@ define([], function () {
         META_SHEETS: 'MetaSheets',
 
         /*
-         * MANUAL_ASPECTS_META_INFO_REGISTRY_KEY
+         * CROSSCUTS_META_INFO_REGISTRY_KEY
          */
-        MANUAL_ASPECTS : 'ManualAspects',
+        CROSSCUTS : 'CrossCuts',
 
         /*
          * DISABLED CONNECTION AREAS FOR DIAGRAM-DESIGNER-WIDGET DECORATORS ARE STORED UNDER THIS REGISTRY KEY ON A PER DECORATOR BASIS

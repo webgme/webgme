@@ -8,16 +8,16 @@ define(['clientUtil',
                                                                metaEditorPointerNamesDialogTemplate) {
 
     var MetaEditorPointerNamesDialog,
-        POPULAR_POINTER_NAMES = [CONSTANTS.POINTER_SOURCE, CONSTANTS.POINTER_TARGET, CONSTANTS.POINTER_REF];
+        POPULAR_POINTER_NAMES = [CONSTANTS.POINTER_SOURCE, CONSTANTS.POINTER_TARGET];
 
     MetaEditorPointerNamesDialog = function () {
       
     };
 
-    MetaEditorPointerNamesDialog.prototype.show = function (existingPointerNames, notAllowedPointerNames, isPointerList, callBack) {
+    MetaEditorPointerNamesDialog.prototype.show = function (existingPointerNames, notAllowedPointerNames, isSet, callBack) {
         var self = this;
 
-        this._initDialog(existingPointerNames, notAllowedPointerNames, isPointerList, callBack);
+        this._initDialog(existingPointerNames, notAllowedPointerNames, isSet, callBack);
 
         this._dialog.modal('show');
 
@@ -34,7 +34,7 @@ define(['clientUtil',
         });
     };
 
-    MetaEditorPointerNamesDialog.prototype._initDialog = function (existingPointerNames, notAllowedPointerNames, isPointerList, callBack) {
+    MetaEditorPointerNamesDialog.prototype._initDialog = function (existingPointerNames, notAllowedPointerNames, isSet, callBack) {
         var self = this,
             i,
             len = existingPointerNames.length,
@@ -58,11 +58,11 @@ define(['clientUtil',
 
         //by default the template is for single pointer
         //in case of pointer list, update labels in the dialog
-        if (isPointerList === true) {
-            this._dialog.find('.modal-header > h3').text('New pointer-list...');
-            this._dialog.find('.modal-body > .title').text('Pick one of the existing pointer-lists:');
-            this._dialog.find('.modal-footer .create').text('Or create a new pointer-list:');
-            this._dialog.find('.modal-footer .txt-pointer-name').attr('placeholder', 'New pointer-list name...');
+        if (isSet === true) {
+            this._dialog.find('.modal-header > h3').text('New set...');
+            this._dialog.find('.modal-body > .title').text('Pick one of the existing sets:');
+            this._dialog.find('.modal-footer .create').text('Or create a new set:');
+            this._dialog.find('.modal-footer .txt-pointer-name').attr('placeholder', 'New set name...');
         }
 
         //get controls
@@ -78,7 +78,7 @@ define(['clientUtil',
 
         //add most popular ones
         popularsAdded = false;
-        if (isPointerList !== true) {
+        if (isSet !== true) {
             len = POPULAR_POINTER_NAMES.length;
 
             for (i = 0; i < len ; i += 1) {

@@ -55,7 +55,17 @@ define(['underscore', 'common/Constants'], function (underscore, COMMON_CONSTANT
         DISPLAY_FORMAT_ATTRIBUTE_MARKER: '$',
 
         //the path to the SVGs that can be used by the decorators supporting SVG_Icon
-        ASSETS_DECORATOR_SVG_FOLDER: 'assets/DecoratorSVG/'
+        ASSETS_DECORATOR_SVG_FOLDER: 'assets/DecoratorSVG/',
+
+        /*WebGME state constants*/
+        STATE_ACTIVE_OBJECT: 'activeObject',
+        STATE_ACTIVE_SELECTION: 'activeSelection',
+        STATE_ACTIVE_ASPECT: 'activeAspect',
+        STATE_ACTIVE_VISUALIZER: 'activeVisualizer',
+        STATE_ACTIVE_CROSSCUT: 'activeCrosscut',
+
+        /* ASPECTs */
+        ASPECT_ALL: 'All'
     });
 
 

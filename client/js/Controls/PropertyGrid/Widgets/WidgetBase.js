@@ -2,8 +2,10 @@
 
 define([], function () {
 
+    var EL_BASE = $("<div/>", {'class': 'widget'});
+
     var WidgetBase = function (propertyDesc) {
-        this.el = $("<div/>");
+        this.el = EL_BASE.clone();
 
         this.propertyValue = propertyDesc.value;
         this.originalValue = propertyDesc.value;
@@ -70,6 +72,7 @@ define([], function () {
     };
 
     WidgetBase.prototype.remove = function () {
+        this.destroy();
         this.__onChange = undefined;
         this.__onFinishChange = undefined;
         this.el.remove();
@@ -77,6 +80,9 @@ define([], function () {
 
     WidgetBase.prototype.setReadOnly = function (isReadOnly) {
         this._isReadOnly = isReadOnly;
+    };
+
+    WidgetBase.prototype.destroy = function () {
     };
 
     return WidgetBase;

@@ -47,7 +47,7 @@ define(['logManager',
         this._initializeUI();
     };
 
-    DesignerItem.prototype.__setDecorator = function (decoratorName, decoratorClass, control, metaInfo, preferencesHelper) {
+    DesignerItem.prototype.__setDecorator = function (decoratorName, decoratorClass, control, metaInfo, preferencesHelper, aspect, decoratorParams) {
         if (decoratorClass === undefined) {
             //the required decorator is not available
             metaInfo = metaInfo || {};
@@ -67,7 +67,9 @@ define(['logManager',
             this._decoratorClass = decoratorClass;
 
             this._decoratorInstance = new decoratorClass({'host': this,
-                                                          'preferencesHelper': preferencesHelper});
+                                                          'preferencesHelper': preferencesHelper,
+                                                          'aspect': aspect,
+                                                          'decoratorParams': decoratorParams});
             this._decoratorInstance.setControl(control);
             this._decoratorInstance.setMetaInfo(metaInfo);
         }
@@ -164,7 +166,7 @@ define(['logManager',
     DesignerItem.prototype.addToDocFragment = function (docFragment) {
         this._callDecoratorMethod("on_addTo");
 
-        this.$el.html(this._decoratorInstance.$el);
+        this.$el.append(this._decoratorInstance.$el);
 
         docFragment.appendChild( this.$el[0] );
 
@@ -336,7 +338,7 @@ define(['logManager',
             var oldControl = this._decoratorInstance.getControl();
             var oldMetaInfo = this._decoratorInstance.getMetaInfo();
 
-            this.__setDecorator(objDescriptor.decorator, objDescriptor.decoratorClass, oldControl, oldMetaInfo, objDescriptor.preferencesHelper);
+            this.__setDecorator(objDescriptor.decorator, objDescriptor.decoratorClass, oldControl, oldMetaInfo, objDescriptor.preferencesHelper, objDescriptor.aspect, objDescriptor.decoratorParams);
 
             //attach new one
             this.$el.html(this._decoratorInstance.$el);

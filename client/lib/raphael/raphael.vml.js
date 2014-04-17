@@ -7,8 +7,8 @@
 // │ Copyright (c) 2008-2011 Sencha Labs (http://sencha.com)             │ \\
 // │ Licensed under the MIT (http://raphaeljs.com/license.html) license. │ \\
 // └─────────────────────────────────────────────────────────────────────┘ \\
-define(['./raphael.core'], function (R) {  
-    if (!R.vml) return;
+
+window.Raphael && window.Raphael.vml && function(R) {
     var has = "hasOwnProperty",
         Str = String,
         toFloat = parseFloat,
@@ -184,6 +184,7 @@ define(['./raphael.core'], function (R) {
                 rx = +a.rx || +a.r || 0,
                 ry = +a.ry || +a.r || 0;
             node.path = R.format("ar{0},{1},{2},{3},{4},{1},{4},{1}x", round((cx - rx) * zoom), round((cy - ry) * zoom), round((cx + rx) * zoom), round((cy + ry) * zoom), round(cx * zoom));
+            o._.dirty = 1;
         }
         if ("clip-rect" in params) {
             var rect = Str(params["clip-rect"]).split(separator);
@@ -305,7 +306,7 @@ define(['./raphael.core'], function (R) {
             params["stroke-linejoin"] && (stroke.joinstyle = params["stroke-linejoin"] || "miter");
             stroke.miterlimit = params["stroke-miterlimit"] || 8;
             params["stroke-linecap"] && (stroke.endcap = params["stroke-linecap"] == "butt" ? "flat" : params["stroke-linecap"] == "square" ? "square" : "round");
-            if (params["stroke-dasharray"]) {
+            if ("stroke-dasharray" in params) {
                 var dasharray = {
                     "-": "shortdash",
                     ".": "shortdot",
@@ -473,7 +474,7 @@ define(['./raphael.core'], function (R) {
             split,
             isGrad = ~Str(this.attrs.fill).indexOf("-"),
             isPatt = !Str(this.attrs.fill).indexOf("url(");
-        matrix.translate(-.5, -.5);
+        matrix.translate(1, 1);
         if (isPatt || isGrad || this.type == "image") {
             skew.matrix = "1 0 0 1";
             skew.offset = "0 0";
@@ -714,6 +715,7 @@ define(['./raphael.core'], function (R) {
             s.margin = 0;
             delete this.attrs.blur;
         }
+        return this;
     };
 
     R._engine.path = function (pathString, vml) {
@@ -971,5 +973,4 @@ define(['./raphael.core'], function (R) {
             };
         })(method);
     }
-    return R;
-});
+}(window.Raphael);

@@ -21,6 +21,7 @@ define([], function () {
 
         //non-string value can not be color
         if (typeof color === 'string') {
+            color = color.toUpperCase();
             //is it standard 6-char HEX color
             c = color.match(pattern6HEX);
             if (c) {

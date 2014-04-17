@@ -5,9 +5,13 @@ function(ASSERT,Child,CONSTANTS){
            _waitingRequests = [];
 
         _parameters = _parameters || {};
-        _parameters.maxworkers = _parameters.maxworkers || 10;
+        _parameters.maxworkers = _parameters.maxworkers || 1;
 
         //helping functions
+        //TODO always check if this works properly
+        function getBaseDir(){
+            return requirejs.s.contexts._.config.baseUrl;
+        }
 
         function checkRequests(){
             //when this function called then probably some worker became free so we try to assign some job to it
@@ -86,7 +90,15 @@ function(ASSERT,Child,CONSTANTS){
                         break;
                     case CONSTANTS.msgTypes.initialize:
                         //this arrives when the worker seems ready for initialization
-                        worker.worker.send({command:CONSTANTS.workerCommands.initialize,ip:_parameters.mongoip,port:_parameters.mongoport,db:_parameters.mongodb});
+                        worker.worker.send({
+                            command:CONSTANTS.workerCommands.initialize,
+                            ip:_parameters.mongoip,
+                            port:_parameters.mongoport,
+                            db:_parameters.mongodb,
+                            pluginBasePaths:_parameters.pluginBasePaths,
+                            interpreteroutputdirectory:_parameters.intoutdir,
+                            serverPort:_parameters.serverPort
+                        });
                         break;
                     case CONSTANTS.msgTypes.initialized:
                         worker.state = CONSTANTS.workerStates.free;
@@ -111,7 +123,7 @@ function(ASSERT,Child,CONSTANTS){
                 //Set an unused port number.
                 process.execArgv.push('--debug-brk=' + (32000+i));
             }
-            var worker = Child.fork(_parameters.basedir+'/worker/simpleworker.js');
+            var worker = Child.fork(getBaseDir()+'/worker/simpleworker.js');
             _workers.push({pid:worker.pid,worker:worker,state:CONSTANTS.workerStates.initializing,resid:null}) - 1;
 
             worker.on('message', messageHandling);

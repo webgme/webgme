@@ -5,7 +5,7 @@ define(['logManager',
     'js/Constants',
     'js/PanelBase/PanelBaseWithHeader',
     'js/Panels/SplitPanel/SplitPanel',
-    'text!js/Visualizers.json',
+    '/listAllVisualizerDescriptors',
     'css!/css/Panels/Visualizer/VisualizerPanel'], function (logManager,
                                     LoaderProgressBar,
                                     CONSTANTS,
@@ -20,7 +20,7 @@ define(['logManager',
         var options = {};
         //set properties from options
         options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = "Visualizer";
-        options[PanelBaseWithHeader.OPTIONS.HEADER_TITLE] = true;
+        options[PanelBaseWithHeader.OPTIONS.HEADER_TITLE] = false;
 
         //call parent's constructor
         PanelBaseWithHeader.apply(this, [options]);
@@ -79,9 +79,28 @@ define(['logManager',
             event.preventDefault();
         });
 
-        this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, function (__project, nodeId) {
-            self.selectedObjectChanged(nodeId);
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, function (model, activeObjectId) {
+            self.selectedObjectChanged(activeObjectId);
         });
+
+        this._client.addEventListener(this._client.events.PROJECT_CLOSED, function (__project, nodeId) {
+            self._p2Editor(false);
+        });
+
+        this._client.addEventListener(this._client.events.PROJECT_OPENED, function (__project, nodeId) {
+            self._p2Editor(false);
+        });
+
+        this._client.addEventListener(this._client.events.BRANCH_CHANGED, function (__project, nodeId) {
+            self._p2Editor(false);
+        });
+
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_VISUALIZER, function (model, activeVisualizer) {
+            if (self._settingVisualizer !== true) {
+                self.setActiveVisualizer(activeVisualizer);
+            }
+        });
+
 
         this._splitPanel = new SplitPanel();
         this._layoutManager.addPanel('visualizerSplitPanel', this._splitPanel, 'center');
@@ -90,7 +109,7 @@ define(['logManager',
     VisualizerPanel.prototype._loadVisualizers = function () {
         var self = this;
 
-        this.addRange(JSON.parse(VisualizersJSON), function () {
+        this.addRange(VisualizersJSON, function () {
             self._setActiveVisualizer(DEFAULT_VISUALIZER, self._ul1);
         });
     };
@@ -100,8 +119,9 @@ define(['logManager',
             ControlClass,
             panel = ul.attr('data-id');
 
-        if (this._activeVisualizer[panel] !== visualizer && this._visualizers.hasOwnProperty(visualizer)) {
+        this._settingVisualizer = true;
 
+        if (this._activeVisualizer[panel] !== visualizer && this._visualizers.hasOwnProperty(visualizer)) {
             //destroy current visualizer
             if (this._activePanel[panel]) {
                 this._activePanel[panel].destroy();
@@ -126,7 +146,18 @@ define(['logManager',
                     }
                 }
             }
+
+            WebGMEGlobal.State.setActiveVisualizer(visualizer);
         }
+
+        this._settingVisualizer = false;
+    };
+
+    VisualizerPanel.prototype.setActiveVisualizer = function (visualizer) {
+        var panel = WebGMEGlobal.PanelManager.getActivePanel() === this._activePanel['p1'] ? 'p1' : 'p2',
+            ul = panel === 'p1' ? this._ul1 : this._ul2;
+
+        this._setActiveVisualizer(visualizer, ul);
     };
 
     VisualizerPanel.prototype._removeLoader = function (li, loaderDiv) {
@@ -233,7 +264,8 @@ define(['logManager',
         if (enabled) {
             //show 2 panels
             this._panel2VisContainer = this._panel1VisContainer.clone();
-            this._panel2VisContainer.find('ul').attr("data-id", 'p2');
+            this._ul2 = this._panel2VisContainer.find('ul');
+            this._ul2.attr("data-id", 'p2');
             this._panel2VisContainer.find('.pp').text('Panel 2:');
             this.$el.append(this._panel2VisContainer);
             //find the selected on
@@ -252,9 +284,12 @@ define(['logManager',
             this._activeVisualizer[panel] = null;
 
 
-            this._panel2VisContainer.remove();
-            this._panel2VisContainer = undefined;
-            this._splitPanel.deletePanel('p2');
+            if (this._panel2VisContainer) {
+                this._panel2VisContainer.remove();
+                this._panel2VisContainer = undefined;
+                this._splitPanel.deletePanel('p2');
+                delete this._ul2;
+            }
         }
     };
 

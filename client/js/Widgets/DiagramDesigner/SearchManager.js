@@ -86,7 +86,9 @@ define(['logManager',
         len = diff.length;
         while (len--) {
             id = diff[len];
-            items[id].unHighlight();
+            if (items[id]) {
+                items[id].unHighlight();
+            }
             idx = this._highlightedElements.indexOf(id);
             this._highlightedElements.splice(idx, 1);
         }
@@ -96,7 +98,9 @@ define(['logManager',
         len = diff.length;
         while (len--) {
             id = diff[len];
-            items[id].highlight();
+            if (items[id]) {
+                items[id].highlight();
+            }
             this._highlightedElements.push(id);
         }
     };

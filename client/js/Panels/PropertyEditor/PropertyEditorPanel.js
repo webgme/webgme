@@ -37,9 +37,6 @@ define(['js/PanelBase/PanelBaseWithHeader',
         this.propertyGrid = new PropertyGrid();
         this.$el.append(this.propertyGrid.$el);
 
-        this.propertyGrid.registerWidgetForType('boolean', 'iCheckBox');
-        this.propertyGrid.setOrdered(true);
-
         //attach control to the PropertyGrid
         new PropertyEditorPanelController(this._client, this.propertyGrid);
     };

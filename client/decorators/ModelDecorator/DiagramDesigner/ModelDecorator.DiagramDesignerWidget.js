@@ -383,7 +383,7 @@ define(['js/Constants',
             dragEffects = DragHelper.getDragEffects(dragInfo);
 
         if (this.__acceptDroppable === true) {
-            if (dragItems.length === 1 && dragEffects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE) !== -1) {
+            if (dragItems.length === 1 && dragEffects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_CREATE_POINTER) !== -1) {
                 this._setPointerTarget(dragItems[0], helper.offset());
             }
         }
@@ -401,7 +401,7 @@ define(['js/Constants',
         //and that element can be a valid target of at least one pointer of this guy
         if (dragItems.length === 1 &&
             dragItems[0] !== this._metaInfo[CONSTANTS.GME_ID] &&
-            dragEffects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE) !== -1) {
+            dragEffects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_CREATE_POINTER) !== -1) {
             doAccept = this._getValidPointersForTarget(dragItems[0]).length > 0;
         }
 
@@ -508,9 +508,11 @@ define(['js/Constants',
         targetNodeObj = client.getNode(targetID);
         if (targetNodeObj) {
             if (targetNodeObj.getParentId() || targetNodeObj.getParentId() === CONSTANTS.PROJECT_ROOT_ID) {
-                this._control._client.setSelectedObjectId(targetNodeObj.getParentId(), targetID);
+                WebGMEGlobal.State.setActiveObject(targetNodeObj.getParentId());
+                WebGMEGlobal.State.setActiveSelection([targetID]);
             } else {
-                this._control._client.setSelectedObjectId(CONSTANTS.PROJECT_ROOT_ID, targetID);
+                WebGMEGlobal.State.setActiveObject(CONSTANTS.PROJECT_ROOT_ID);
+                WebGMEGlobal.State.setActiveSelection([targetID]);
             }
         }
     };

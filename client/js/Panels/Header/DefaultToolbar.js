@@ -12,13 +12,15 @@ define(['clientUtil',
     'js/Utils/ExportManager',
     'js/Dialogs/Projects/ProjectsDialog',
     'js/Dialogs/Commit/CommitDialog',
-    'js/Dialogs/ProjectRepository/ProjectRepositoryDialog'], function (util,
-                                                 CONSTANTS,
-                                                                       METAAspectHelper,
-                                                                       ExportManager,
-                                                                       ProjectsDialog,
-                                                                       CommitDialog,
-                                                                       ProjectRepositoryDialog) {
+    'js/Dialogs/ProjectRepository/ProjectRepositoryDialog',
+    './PluginToolbar'], function (util,
+                                CONSTANTS,
+                               METAAspectHelper,
+                               ExportManager,
+                               ProjectsDialog,
+                               CommitDialog,
+                               ProjectRepositoryDialog,
+                               PluginToolbar) {
 
     var DefaultToolbar;
 
@@ -94,6 +96,8 @@ define(['clientUtil',
                     alert('Something went wrong, METAAspectTypes are not available...');
                 }
             }});
+
+        new PluginToolbar(this._client);
 
         //TODO: remove
         //this._createDummyControls();

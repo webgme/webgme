@@ -21,6 +21,7 @@
       border: rgba(0, 0, 0, 0.5) dashed 1px;
       position: absolute;
       pointer-events: none;
+      z-index: 100;
       -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075) 0 0 8px rgba(0, 0, 0, 0.6);
       -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(0, 0, 0, 0.6);
       box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(0, 0, 0, 0.6); }
@@ -46,6 +47,10 @@
         .diagram-designer .items .selection-outline .s-btn.contextmenu {
           bottom: -13px;
           right: -13px; }
+        .diagram-designer .items .selection-outline .s-btn.move {
+          top: -13px;
+          left: 50%;
+          margin-left: -13px; }
       .diagram-designer .items .selection-outline .rotation-deg {
         text-align: center;
         vertical-align: middle;
@@ -146,7 +151,10 @@
         white-space: nowrap; }
         .diagram-designer .items div.c-t div.c-text .c-name {
           position: relative;
-          left: -50%; }
+          left: -50%;
+          cursor: default; }
+          .diagram-designer .items div.c-t div.c-text .c-name.v {
+            left: 1px; }
         .diagram-designer .items div.c-t div.c-text input {
           height: 20px !important;
           min-width: 50px; }
@@ -191,7 +199,7 @@ TABS CONTAINER
   top: 2px;
   width: 100%;
   height: 26px;
-  background-color: rgba(255, 255, 255, 0.3);
+  background-color: rgba(235, 235, 235, 0.8);
   padding-top: 2px; }
   .diagram-designer-tabs-container > div {
     display: table-cell;

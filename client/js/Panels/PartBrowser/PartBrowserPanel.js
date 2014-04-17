@@ -13,7 +13,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         var options = {};
         //set properties from options
         options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = "PartBrowserPanel";
-        options[PanelBaseWithHeader.OPTIONS.HEADER_TITLE] = true;
+        options[PanelBaseWithHeader.OPTIONS.HEADER_TITLE] = false;
 
         //call parent's constructor
         __parent__.apply(this, [options]);
@@ -36,9 +36,6 @@ define(['js/PanelBase/PanelBaseWithHeader',
         this._partBrowserWidget = new PartBrowserWidget(this.$el);
 
         var cControl = new PartBrowserPanelControl(this._client, this._partBrowserWidget);
-        this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, function (__project, nodeId) {
-            cControl.selectedObjectChanged(nodeId);
-        });
     };
 
     /* OVERRIDE FROM WIDGET-WITH-HEADER */

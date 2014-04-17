@@ -3,17 +3,22 @@
 define(['js/Controls/PropertyGrid/Widgets/WidgetBase'],
     function (WidgetBase) {
 
-        var StringWidget;
+        var StringWidget,
+            INPUT_BASE = $('<input/>', {"type": "text"});
 
         StringWidget = function (propertyDesc) {
             StringWidget.superclass.call(this, propertyDesc);
 
             var _self = this;
 
-            this.__input = $('<input/>', {
-                "type": "text",
-                "value": this.propertyValue
-            });
+            this.__input = INPUT_BASE.clone();
+            this.__input.val(this.propertyValue);
+
+            if (propertyDesc.regex) {
+                propertyDesc.regexMessage = propertyDesc.regexMessage || 'Value has to match regex: ' + propertyDesc.regex;
+                this.__input.attr('pattern', propertyDesc.regex);
+                this.__input.attr('title', propertyDesc.regexMessage);
+            }
 
             this.__input.on('keyup change', function (e) {
                 e.stopPropagation();

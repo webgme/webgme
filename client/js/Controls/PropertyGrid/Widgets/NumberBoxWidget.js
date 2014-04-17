@@ -2,7 +2,8 @@
 
 define(['js/Controls/PropertyGrid/Widgets/NumberWidgetBase'], function (NumberWidgetBase) {
 
-    var NumberBoxWidget;
+    var NumberBoxWidget,
+        INPUT_BASE = $('<input/>', {"type": "text"});
 
     NumberBoxWidget = function (propertyDesc) {
         var self = this;
@@ -11,10 +12,8 @@ define(['js/Controls/PropertyGrid/Widgets/NumberWidgetBase'], function (NumberWi
 
         NumberBoxWidget.superclass.call(this, propertyDesc);
 
-        this.__input = $('<input/>', {
-            "type": "text",
-            "value": this.propertyValue
-        });
+        this.__input = INPUT_BASE.clone();
+        this.__input.val(this.propertyValue);
 
         // Makes it so manually specified values are not truncated.
 

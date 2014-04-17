@@ -35,7 +35,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         var self = this;
 
         //set Widget title
-        this.setTitle("Graph visualizer");
+        this.setTitle("");
 
         this.widget = new GraphVizWidget(this.$el);
 

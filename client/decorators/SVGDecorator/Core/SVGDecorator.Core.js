@@ -35,7 +35,8 @@ define(['js/Constants',
         BORDER_COLOR_CLASS = "border-color",
         TEXT_COLOR_CLASS = "text-color",
         PORT_HEIGHT = 13,   //must be same as SVGDecorator.scss 's $port-height
-        DEFAULT_SVG_DEFAULT_HEIGHT = 50;
+        DEFAULT_SVG_DEFAULT_HEIGHT = 50,
+        CONNECTOR_BASE = $('<div class="' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS + '"/>');
 
 
     /**
@@ -100,7 +101,7 @@ define(['js/Constants',
     };
 
     SVGDecoratorCore.prototype._updateColors = function () {
-        var svg = this.$svgContent.find('svg'),
+        var svg = this.$svgElement,
             fillColorElements = svg.find('.' + FILL_COLOR_CLASS),
             borderColorElements = svg.find('.' + BORDER_COLOR_CLASS),
             textColorElements = svg.find('.' + TEXT_COLOR_CLASS);
@@ -195,7 +196,9 @@ define(['js/Constants',
                             // cache the content if valid
                             var svgElements = $(data).find('svg');
                             if (svgElements.length > 0) {
-                                svgCache[svgFile] = svgElements.first();
+                                svgCache[svgFile] = { 'el': svgElements.first(),
+                                                      'customConnectionAreas': undefined};
+                                self._discoverCustomConnectionAreas(svgFile);
                                 self._updateSVGContent(svgFile);
                             } else {
                                 self._updateSVGContent(undefined);
@@ -230,7 +233,7 @@ define(['js/Constants',
         this._defaultSVGUsed = false;
 
         if (svgCache[svg]) {
-            svgIcon = svgCache[svg].clone();
+            svgIcon = svgCache[svg].el.clone();
         } else {
             svgIcon = defaultSVG.clone();
             if (svg !== '') {
@@ -241,14 +244,15 @@ define(['js/Constants',
 
         }
 
-        this.$svgContent.append(svgIcon);
-
-        this._discoverConnectionAreas();
+        this.$svgElement = svgIcon;
+        this._getCustomConnectionAreas(svg);
         this._generateConnectors();
+
+        this.$svgContent.append(svgIcon);
     };
 
-    SVGDecoratorCore.prototype._discoverConnectionAreas = function () {
-        var svgElement = this.$svgContent.find('svg'),
+    SVGDecoratorCore.prototype._discoverCustomConnectionAreas = function (svgFile) {
+        var svgElement = svgCache[svgFile].el,
             connAreas = svgElement.find('.' + CONNECTION_AREA_CLASS),
             len = connAreas.length,
             line,
@@ -259,20 +263,20 @@ define(['js/Constants',
             alpha,
             svgWidth,
             viewBox,
-            ratio = 1;
-
-        svgWidth = parseInt(svgElement.attr('width'), 10);
-        viewBox = svgElement[0].getAttribute('viewBox');
-        if (viewBox) {
-            var vb0 = parseInt(viewBox.split(' ')[0], 10);
-            var vb1 = parseInt(viewBox.split(' ')[2], 10);
-            ratio = svgWidth / (vb1 - vb0);
-        }
-
-        delete this._customConnectionAreas;
+            ratio = 1,
+            customConnectionAreas;
 
         if (len > 0) {
-            this._customConnectionAreas = [];
+            svgWidth = parseInt(svgElement.attr('width'), 10);
+            viewBox = svgElement[0].getAttribute('viewBox');
+            if (viewBox) {
+                var vb0 = parseInt(viewBox.split(' ')[0], 10);
+                var vb1 = parseInt(viewBox.split(' ')[2], 10);
+                ratio = svgWidth / (vb1 - vb0);
+            }
+
+            svgCache[svgFile].customConnectionAreas = [];
+            customConnectionAreas = svgCache[svgFile].customConnectionAreas;
 
             while (len--) {
                 line = $(connAreas[len]);
@@ -328,19 +332,38 @@ define(['js/Constants',
                     connA.angle2 = alpha;
                 }
 
-                this._customConnectionAreas.push(connA);
+                customConnectionAreas.push(connA);
 
                 //finally remove the placeholder from the SVG
                 line.remove();
             }
         }
+    };
 
+    SVGDecoratorCore.prototype._getCustomConnectionAreas = function (svgFile) {
+        var connAreas = svgCache[svgFile].customConnectionAreas,
+            len = connAreas ? connAreas.length : 0,
+            connA;
+
+        delete this._customConnectionAreas;
+
+        if (len > 0) {
+            this._customConnectionAreas = [];
+
+            while (len--) {
+                connA = {};
+
+                _.extend(connA, connAreas[len]);
+
+                this._customConnectionAreas.push(connA);
+            }
+        }
     };
 
     SVGDecoratorCore.prototype._generateConnectors = function () {
-        var connectors = this.$svgContent.find('svg').find('.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS),
+        var svg = this.$svgElement,
+            connectors = svg.find('.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS),
             c,
-            svg = this.$svgContent.find('svg'),
             svgWidth = parseInt(svg.attr('width'), 10),
             svgHeight = parseInt(svg.attr('height'), 10);
 
@@ -351,25 +374,29 @@ define(['js/Constants',
                 //by default generate four: N, S, E, W
 
                 //NORTH
-                c = $('<div/>', { class: DiagramDesignerWidgetConstants.CONNECTOR_CLASS + ' cn' });
+                c = CONNECTOR_BASE.clone();
+                c.addClass('cn');
                 c.css({'top': 0,
                        'left': svgWidth / 2});
                 this.$el.append(c);
 
                 //SOUTH
-                c = $('<div/>', { class: DiagramDesignerWidgetConstants.CONNECTOR_CLASS + ' cs' });
+                c = CONNECTOR_BASE.clone();
+                c.addClass('cs');
                 c.css({'top': svgHeight,
                        'left': svgWidth / 2});
                 this.$el.append(c);
 
                 //EAST
-                c = $('<div/>', { class: DiagramDesignerWidgetConstants.CONNECTOR_CLASS + ' ce' });
+                c = CONNECTOR_BASE.clone();
+                c.addClass('ce');
                 c.css({'top': svgHeight / 2,
                        'left': svgWidth});
                 this.$el.append(c);
 
                 //WEST
-                c = $('<div/>', { class: DiagramDesignerWidgetConstants.CONNECTOR_CLASS + ' cw' });
+                c = CONNECTOR_BASE.clone();
+                c.addClass('cw');
                 c.css({'top': svgHeight / 2,
                     'left': 0});
                 this.$el.append(c);
@@ -384,7 +411,7 @@ define(['js/Constants',
 
     /***** UPDATE THE PORTS OF THE NODE *****/
     SVGDecoratorCore.prototype._updatePorts = function () {
-        var svg = this.$svgContent.find('svg'),
+        var svg = this.$svgElement,
             svgWidth = parseInt(svg.attr('width'), 10),
             halfW = svgWidth / 2;
 
@@ -487,7 +514,7 @@ define(['js/Constants',
         //fix default SVG's dimensions to sorround the ports
         //defaultSVG only, nothing else
         if (this._defaultSVGUsed === true) {
-            var svg = this.$svgContent.find('svg');
+            var svg = this.$svgElement;
             var svgRect = svg.find('rect');
             var height = Math.max(leftPorts.length * PORT_HEIGHT, rightPorts.length * PORT_HEIGHT, DEFAULT_SVG_DEFAULT_HEIGHT);
             svg.attr('height', height);

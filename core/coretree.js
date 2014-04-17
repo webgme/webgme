@@ -26,7 +26,7 @@ define([ "util/assert", "util/sha1", "core/future", "core/tasync", 'util/canon' 
 	};
 
 	// make relids deterministic
-	if (true) {
+	if (false) {
 		var nextRelid = 0;
 		createRelid = function (data) {
 			ASSERT(data && typeof data === "object");

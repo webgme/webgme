@@ -12,14 +12,14 @@ define([
         'path':'path',
         'guid':'guid'
         },
-        cache = {},
+        _cache = {},
         _rootPath = "",
         _refType = 'url',
         _core = null,
         META = new BaseMeta();
 
     var isRefObject = function(obj){
-        if(obj && obj['$ref']){
+        if(obj && typeof obj['$ref'] === 'string'){
             return true;
         }
         return false;
