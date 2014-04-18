@@ -125,7 +125,7 @@ define([
             }
 
             function newDatabase(){
-                return Storage({log:LogManager.create('client-storage')});
+                return Storage({log:LogManager.create('client-storage'),user:getUserId()});
             }
 
             function changeBranchState(newstate){

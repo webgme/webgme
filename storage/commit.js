@@ -8,7 +8,7 @@ define([ "util/assert", "util/sha1", "util/canon" ], function (ASSERT, SHA1, CAN
 	"use strict";
 	var HASH_REGEXP = new RegExp("^#[0-9a-zA-Z_]*$");
 
-	function Database (_database) {
+	function Database (_database,_options) {
 		ASSERT(typeof _database === "object");
 
 		function openProject (projectName, callback) {
@@ -46,7 +46,7 @@ define([ "util/assert", "util/sha1", "util/canon" ], function (ASSERT, SHA1, CAN
 				var commitObj = {
 					root: roothash,
 					parents: parents,
-					updater: [ 'TODO' ],
+					updater: [ _options.user ],
 					time: (new Date()).getTime(),
 					message: msg,
 					type: "commit"

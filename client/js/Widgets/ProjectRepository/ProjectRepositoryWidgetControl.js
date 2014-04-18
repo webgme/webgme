@@ -86,7 +86,7 @@ define(['logManager'], function (logManager) {
                                 "message": com.message,
                                 "parents": com.parents,
                                 "timestamp": com.time,
-                                "user": "N/A"};
+                                "user": com.updater.join(',')};
 
                             self._view.addCommit(commitObject);
                         }
