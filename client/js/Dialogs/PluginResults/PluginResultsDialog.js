@@ -129,7 +129,7 @@ define(['clientUtil',
                             artifactEntry = ARTIFACT_ENTRY_BASE.clone();
                             artifactEntryA = artifactEntry.find('a');
                             //TODO: set the correct URL here
-                            artifactEntryA.attr('href', '/rest/notoken/blob/download/' + hash);
+                            artifactEntryA.attr('href', (new BlobClient()).getDownloadURL(hash));
                             //TODO: set the correct link text here
                             artifactEntryA.text(artifact.name);
                             ulE.append(artifactEntry);

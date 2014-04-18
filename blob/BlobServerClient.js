@@ -33,7 +33,7 @@ define(['blob/BlobClient', 'http', 'https'],
             var options = {
                 hostname: '127.0.0.1',
                 port: this.serverPort,
-                path: '/rest/notoken/blob/info' + hash,
+                path: this.getInfoURL(hash),
                 method: 'GET'
             };
 
@@ -50,7 +50,7 @@ define(['blob/BlobClient', 'http', 'https'],
             var options = {
                 hostname: '127.0.0.1',
                 port: this.serverPort,
-                path: '/rest/notoken/blob/view' + hash,
+                path: this.getViewURL(hash),
                 method: 'GET'
             };
 
@@ -76,7 +76,7 @@ define(['blob/BlobClient', 'http', 'https'],
             var options = {
                 hostname: '127.0.0.1',
                 port: this.serverPort,
-                path: '/rest/notoken/blob/create/' + name + '.json?complex=true',
+                path: this.getCreateURL(name, true),
                 method: 'PUT'
             };
 
@@ -99,7 +99,7 @@ define(['blob/BlobClient', 'http', 'https'],
             var options = {
                 hostname: '127.0.0.1',
                 port: this.serverPort,
-                path: '/rest/notoken/blob/create/' + name,
+                path: this.getCreateURL(name),
                 method: 'PUT'
             };
 

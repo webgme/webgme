@@ -6,11 +6,41 @@ define(['./Artifact'], function (Artifact) {
 
     var BlobClient = function () {
         this.artifacts = [];
+
+        // TODO: TOKEN???
+        this.blobUrl = '/rest/notoken/blob/'; // TODO: any ways to ask for this or get it from the configuration?
     };
+
+
+    BlobClient.prototype.getInfosURL = function () {
+        return this.blobUrl + 'infos/';
+    };
+
+    BlobClient.prototype.getInfoURL = function (hash) {
+        return this.blobUrl + 'info/' + hash;
+    };
+
+    BlobClient.prototype.getViewURL = function (hash, subpath) {
+        var subpathURL = '';
+        if (subpath) {
+            subpathURL = subpath;
+        }
+        return this.blobUrl + 'view/' + hash + '/' + subpath;
+    };
+
+    BlobClient.prototype.getDownloadURL = function (hash) {
+        return this.blobUrl + 'download/' + hash;
+    };
+
+    BlobClient.prototype.getCreateURL = function (filename, complex) {
+        var complexUrl = complex ? '.json?complex=true' : '';
+        return this.blobUrl + 'create/' + filename + complexUrl;
+    };
+
 
     BlobClient.prototype.addObject = function (name, data, callback) {
         var oReq = new XMLHttpRequest();
-        oReq.open("PUT", '/rest/notoken/blob/create/' + name, true);
+        oReq.open("PUT", this.getCreateURL(name), true);
         oReq.onload = function (oEvent) {
             // Uploaded.
             var response = JSON.parse(oEvent.target.response);
@@ -35,7 +65,7 @@ define(['./Artifact'], function (Artifact) {
         }
 
         var oReq = new XMLHttpRequest();
-        oReq.open("PUT", '/rest/notoken/blob/create/' + name + '.json?complex=true', true);
+        oReq.open("PUT", this.getCreateURL(name, true), true);
         oReq.onload = function (oEvent) {
             // Uploaded.
             var response = JSON.parse(oEvent.target.response);
@@ -83,7 +113,7 @@ define(['./Artifact'], function (Artifact) {
 
     BlobClient.prototype.getObject = function (hash, callback) {
         var xhr = new XMLHttpRequest();
-        xhr.open("GET", "/rest/notoken/blob/view/" + hash, true);
+        xhr.open("GET", this.getViewURL(hash), true);
         xhr.onload = function (e) {
             if (xhr.readyState === 4) {
                 if (xhr.status === 200) {
@@ -102,7 +132,7 @@ define(['./Artifact'], function (Artifact) {
 
     BlobClient.prototype.getInfo = function (hash, callback) {
         var xhr = new XMLHttpRequest();
-        xhr.open("GET", "/rest/notoken/blob/info/" + hash, true);
+        xhr.open("GET", this.getInfoURL(hash), true);
         xhr.onload = function (e) {
             if (xhr.readyState === 4) {
                 if (xhr.status === 200) {
