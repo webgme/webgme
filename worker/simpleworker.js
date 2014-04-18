@@ -131,46 +131,6 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
             }
         });
     };
-    var getContext = function(context,callback){
-        //TODO get the configured parameters for webHost and webPort
-        context.storage = new ConnectedStorage({type:'node',host:'127.0.0.1',port:serverPort,log:logManager.create('SERVER-WORKER-PLUGIN-'+process.pid)});
-        //context.storage = storage;
-        context.blobClient = new BlobServerClient({serverPort:serverPort});
-        if(context.projectName){
-            storage.openProject(context.projectName,function(err,project){
-                if(!err){
-                    context.project = project;
-                    //get commitNode
-                    if(context.commitHash){
-                        project.loadObject(context.commitHash, function(err, commitObj) {
-                            if(!err && commitObj){
-                                context.rootHash = commitObj.root;
-                                context.core = new Core(project,{corerel:2});
-                                context.core.loadRoot(context.rootHash,function(err,root){
-                                    if(!err && root){
-                                        context.rootNode = root;
-                                        callback(null,context);
-                                    } else {
-                                        err = err || 'cannot found root object';
-                                        callback(err,{});
-                                    }
-                                })
-                            } else {
-                                err = err || 'the commit object was not found in the database';
-                                callback(err,{});
-                            }
-                        });
-                    } else {
-                        callback('no commit was found',{});
-                    }
-                } else {
-                    callback(err,{});
-                }
-            });
-        } else {
-            callback('no project name',{});
-        }
-    };
     var isGoodExtraAsset = function(name,path){
         try{
             var file = FS.readFileSync(path+'/'+name+'.js','utf-8');
@@ -218,11 +178,14 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
 
         return interpreterClass;
     };
-    var runInterpreter = function(name,sessionId,context,callback){
+    var runInterpreter = function(userId,name,sessionId,context,callback){
+        console.log('kecso',userId);
         var interpreter = getInterpreter(name);
         if(interpreter){
             getProject(context.managerConfig.project,function(err,project){
                 if(!err){
+                    project.setUser(userId);
+                    console.log('kecso2',userId);
                     var plugins = {};
                     plugins[name] = interpreter;
                     var manager = new PluginManagerBase(project,Core,plugins);
@@ -306,7 +269,7 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
                 break;
             case CONSTANT.workerCommands.executePlugin:
                 if( typeof parameters.name === 'string' && typeof parameters.context === 'object'){
-                    runInterpreter(parameters.name,parameters.webGMESessionId,parameters.context,function(err,result){
+                    runInterpreter(parameters.user,parameters.name,parameters.webGMESessionId,parameters.context,function(err,result){
                         process.send({pid:process.pid,type:CONSTANT.msgTypes.result,error:err,result:result});
                     });
                 } else {

@@ -38,8 +38,15 @@ function(ASSERT,Child,CONSTANTS){
             ASSERT(typeof parameters === 'object' && parameters !== null);
             ASSERT(typeof callback === 'function');
 
-            _waitingRequests.push({cb:callback,request:parameters});
-            checkRequests(); //no-one became free, but it is possible that we do not use all of our resources at this point so its worth to try
+            //put the userId into among the parameters based on the sessionId
+            _parameters.sessionToUser(parameters.webGMESessionId,function(err,userId){
+                if(err){
+                    userId = undefined;
+                }
+                parameters.user = userId;
+                _waitingRequests.push({cb:callback,request:parameters});
+                checkRequests(); //no-one became free, but it is possible that we do not use all of our resources at this point so its worth to try
+            });
         }
         function result(reqId,callback){
             for(var i=0;i<_workers.length;i++){

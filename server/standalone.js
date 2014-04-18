@@ -66,6 +66,8 @@ define(['logManager',
 
             __storageOptions.webServerPort = CONFIG.port;
 
+            __storageOptions.sessionToUser = __sessionStore.getSessionUser;
+
             __storage = Storage(__storageOptions);
             //end of storage creation
             __storage.open();

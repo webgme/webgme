@@ -122,6 +122,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                             var cookie = URL.parseCookie(data.headers.cookie);
                             if(cookie[options.cookieID] !== undefined || cookie[options.cookieID] !== null){
                                 sessionID = require('connect').utils.parseSignedCookie(cookie[options.cookieID],options.secret);
+                                data.webGMESession = sessionID;
                             }
                         } else {
                             console.log('DEBUG COOKIE INFO', JSON.stringify(data.headers));
@@ -378,7 +379,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 //worker commands
                 socket.on('simpleRequest',function(parameters,callback){
                     if(socket.handshake){
-                        parameters.webGMESessionId = socket.handshake.webGMESession || null;
+                        parameters.webGMESessionId = getSessionID(socket) || null;
                     }
                     _workerManager.request(parameters,callback);
                 });
@@ -404,7 +405,8 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 mongodb:options.database,
                 intoutdir:options.intoutdir,
                 pluginBasePaths:options.pluginBasePaths,
-                serverPort:options.webServerPort
+                serverPort:options.webServerPort,
+                sessionToUser:options.sessionToUser
             });
         }
 

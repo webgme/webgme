@@ -29,6 +29,7 @@ define([ "util/assert", "util/sha1", "util/canon" ], function (ASSERT, SHA1, CAN
 						setBranchHash: _project.setBranchHash,
 						getCommits: _project.getCommits,
 						makeCommit: makeCommit,
+                        setUser: setUser,
 						ID_NAME: _project.ID_NAME
 					});
 				} else {
@@ -65,6 +66,12 @@ define([ "util/assert", "util/sha1", "util/canon" ], function (ASSERT, SHA1, CAN
 
 				return id;
 			}
+
+            function setUser (userId){
+                if(typeof userId === 'string'){
+                    _options.user = userId;
+                };
+            }
 		}
 
 		return {
