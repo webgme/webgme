@@ -546,9 +546,7 @@ define(['logManager',
         };
 
         __app.put('/rest/:token/blob/create/:filename',ensureAuthenticated,function(req, res) {
-            addFileToBlob(req, res);
-
-            /*var filename = 'not_defined.txt';
+            var filename = 'not_defined.txt';
 
             if (req.params.filename !== null && req.params.filename !== '') {
                 filename = req.params.filename
@@ -562,7 +560,7 @@ define(['logManager',
                     info[hash] = blobStorage.getInfo(hash);
                    res.status(200).send(info); //TODO write it nicer
                 }
-            });*/
+            });
         });
 
         __app.post('/rest/:token/blob/create/:filename',ensureAuthenticated,function(req,res){
