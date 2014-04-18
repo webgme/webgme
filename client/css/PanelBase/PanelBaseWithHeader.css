@@ -9,7 +9,7 @@
   .panel-base-wh .panel-header {
     height: 0px;
     background-color: #efefef;
-    border-bottom: 3px solid transparent;
+    border-bottom: 3px solid rgba(0, 0, 0, 0);
     /*overflow: visible;
     overflow-x: hidden;*/
     white-space: nowrap;
@@ -68,7 +68,8 @@
     .panel-base-wh .floating-title .ro-icon {
       position: relative;
       top: -1px;
-      left: 2px; }
+      left: 2px;
+      margin-right: 1.2ex; }
     .panel-base-wh .floating-title .panel-header-title {
       font-size: 14px;
       line-height: 14px;
@@ -112,7 +113,7 @@
     padding: 3px;
     height: 15px;
     background-color: whitesmoke;
-    border-bottom: 3px solid transparent; }
+    border-bottom: 3px solid rgba(0, 0, 0, 0); }
     .side-panel .panel-base-wh .panel-header .ro-icon {
       position: relative;
       top: 0px;
