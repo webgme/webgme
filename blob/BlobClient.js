@@ -25,7 +25,7 @@ define(['./Artifact'], function (Artifact) {
         if (subpath) {
             subpathURL = subpath;
         }
-        return this.blobUrl + 'view/' + hash + '/' + subpath;
+        return this.blobUrl + 'view/' + hash + '/' + subpathURL;
     };
 
     BlobClient.prototype.getDownloadURL = function (hash) {
