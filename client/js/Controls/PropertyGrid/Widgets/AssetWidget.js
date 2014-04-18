@@ -172,7 +172,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
                             });
                         } else {
                             console.log('Uploading ' + names.length +' files...');
-                            var afName = self.propertyID + new Date().toISOString().replace(':', '-').replace('.', '-');
+                            var afName = self.propertyName + '-' + new Date().toISOString().replace(/:/g, '-').replace(/\./, '-');
                             var artifact = blobClient.createArtifact(afName);
                             self._addArtifactFiles(artifact, result, function (/*hashList*/) {
                                 artifact.save(function (err, hash) {
