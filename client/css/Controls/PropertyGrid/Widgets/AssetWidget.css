@@ -12,7 +12,9 @@ div.asset-widget {
   position: relative;
   border: 1px solid rgba(0, 0, 0, 0);
   overflow: hidden;
-  text-overflow: ellipsis; }
+  text-overflow: ellipsis;
+  background-color: rgba(0, 0, 0, 0.025);
+  border: 1px dashed #aaaaaa; }
   div.asset-widget .btn-dialog-open {
     position: absolute;
     right: 0px;
