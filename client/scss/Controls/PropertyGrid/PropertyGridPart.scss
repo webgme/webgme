@@ -196,6 +196,16 @@ $input-color: lighten($background-color, 18.5%);
             cursor: pointer;
             border-radius: 4px;
           }
+
+          div.asset-widget {
+            height: 27px;
+            line-height: 27px;
+
+            .btn-dialog-open {
+              top: -1px;
+              padding: 0 3px;
+            }
+          }
         }
       }
     }

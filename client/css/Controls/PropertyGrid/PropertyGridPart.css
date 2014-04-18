@@ -117,6 +117,12 @@
             margin-top: 4px;
             cursor: pointer;
             border-radius: 4px; }
+          .pgp ul li.cr .c div.asset-widget {
+            height: 27px;
+            line-height: 27px; }
+            .pgp ul li.cr .c div.asset-widget .btn-dialog-open {
+              top: -1px;
+              padding: 0 3px; }
     .pgp ul.closed li:not(.title),
     .pgp ul.closed ul li,
     .pgp ul.closed ul li > * {

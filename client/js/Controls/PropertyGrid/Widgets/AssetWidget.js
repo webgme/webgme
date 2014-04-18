@@ -1,37 +1,45 @@
 "use strict";
 
 define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
-        'blob/BlobClient'],
+        'blob/BlobClient',
+        'css!/css/Controls/PropertyGrid/Widgets/AssetWidget'],
     function (WidgetBase,
               BlobClient) {
 
         var AssetWidget,
-            LABEL_BASE = $('<span/>', {}),
             BTN_ATTACH = $('<a class="btn btn-mini btn-dialog-open"><i class="icon-file"/></a>'),
             INPUT_FILE_UPLOAD = $('<input type="file" />'),
             MAX_FILE_SIZE = 100000000,
-            FILE_DROP_TARGET = $('<div class="fdt" />');
+            ASSET_WIDGET_BASE = $('<div class="asset-widget" />'),
+            ASSET_LINK = $('<a href=""/>');
 
         AssetWidget = function (propertyDesc) {
             AssetWidget.superclass.call(this, propertyDesc);
 
-            var self = this;
+            this.__el = ASSET_WIDGET_BASE.clone();
+            this.el.append(this.__el);
 
-            this.__label = LABEL_BASE.clone();
-            this.el.append(this.__label);
+            this.__assetLink = ASSET_LINK.clone();
+            this.__el.append(this.__assetLink);
 
-            this.__fileDropTarget = FILE_DROP_TARGET.clone();
-            this.__fileDropTarget.css({'height': '22px',
-                                        'width': '30px',
-                                        'background-color': 'yellow',
-                                        'display': 'inline-block'});
-            this.el.append(this.__fileDropTarget);
+            this.__fileDropTarget = this.__el;
 
             this.__btnAttach = BTN_ATTACH.clone();
-            this.el.append(this.__btnAttach);
-
+            this.__el.append(this.__btnAttach);
 
             this.__fileUploadInput = INPUT_FILE_UPLOAD.clone();
+
+            this._attachFileDropHandlers();
+
+            this.updateDisplay();
+        };
+
+        AssetWidget.superclass = WidgetBase;
+
+        _.extend(AssetWidget.prototype, WidgetBase.prototype);
+
+        AssetWidget.prototype._attachFileDropHandlers = function () {
+            var self = this;
 
             this.__btnAttach.on('click', function (e) {
                 e.stopPropagation();
@@ -68,19 +76,50 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
             this.__fileDropTarget.on("drop", function (event) {
                 event.stopPropagation();
                 event.preventDefault();
+                self.__fileDropTarget.removeClass('hover');
                 self._fileSelectHandler(event.originalEvent);
             });
-
-            this.updateDisplay();
         };
 
-        AssetWidget.superclass = WidgetBase;
+        AssetWidget.prototype._detachFileDropHandlers = function () {
+            // file select
+            this.__fileUploadInput.off("change");
 
-        _.extend(AssetWidget.prototype, WidgetBase.prototype);
+            //filedrag
+            this.__fileDropTarget.off('dragover');
+            this.__fileDropTarget.off('dragenter');
+            this.__fileDropTarget.off('dragleave');
+            this.__fileDropTarget.off("drop");
+
+            this.__btnAttach.off('click');
+        };
+
+
 
         AssetWidget.prototype.updateDisplay = function () {
-            this.__label.text(this.propertyValue);
-            this.__label.attr('title', this.propertyValue);
+            var bc = new BlobClient();
+            var urlDownload = this.propertyValue ? bc.getDownloadURL(this.propertyValue) : '';
+            var text = this.propertyValue;
+
+            var self = this;
+
+            this.__assetLink.text(text);
+            this.__assetLink.attr('title', text);
+            this.__assetLink.attr('href', urlDownload);
+
+            if (this.propertyValue) {
+                bc.getInfo(this.propertyValue, function (err, fileInfo) {
+                    if (err) {
+                        //TODO: more meaningful error message
+                        text = "ERROR...";
+                    } else {
+                        text = fileInfo.filename + ' (' + fileInfo.size +' bytes)';
+                    }
+                    self.__assetLink.text(text);
+                    self.__assetLink.attr('title', text);
+                });
+            }
+
             return AssetWidget.superclass.prototype.updateDisplay.call(this);
         };
 
@@ -94,30 +133,30 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
                     this.__btnAttach.removeClass('disabled');
                 }
             }
+
+            this._detachFileDropHandlers();
+            if (isReadOnly !== true) {
+                this._attachFileDropHandlers();
+            }
         };
 
         AssetWidget.prototype._fileSelectHandler = function (event) {
-            var btnAttach = this.__btnAttach.addClass("disabled"),
-                self = this,
-                j,
+            var self = this,
                 file;
 
             // cancel event and hover styling
             event.stopPropagation();
             event.preventDefault();
-            //this._fileDropTarget.removeClass('hover');
-
-            btnAttach.addClass("disabled");
-            btnAttach.off('click');
 
             // fetch FileList object
             var files = event.target.files || event.dataTransfer.files;
 
             // process all File objects
             if (files && files.length > 0) {
+                this._detachFileDropHandlers(true);
+
                 this._readFilesAsync(files, function (result) {
                     var names = Object.keys(result),
-                        i,
                         blobClient = new BlobClient();
 
                     if (names && names.length > 0) {
@@ -129,23 +168,22 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
                                 } else {
                                     self.setValue(hash);
                                 }
+                                self._attachFileDropHandlers(false);
                             });
                         } else {
                             console.log('Uploading ' + names.length +' files...');
                             var afName = self.propertyID + new Date().toISOString().replace(':', '-').replace('.', '-');
                             var artifact = blobClient.createArtifact(afName);
-                            self._addArtifactFiles(artifact, result, function (hashList) {
-                                //self.setValue(JSON.stringify(hashList));
+                            self._addArtifactFiles(artifact, result, function (/*hashList*/) {
                                 artifact.save(function (err, hash) {
                                     self.setValue(hash);
+                                    self._attachFileDropHandlers(false);
                                 });
                             });
                         }
+                    } else {
+                        self._attachFileDropHandlers(false);
                     }
-
-                    /*for (i = 0; i < names.length; i += 1) {
-                        console.log(names[i] + ': ' + result[names[i]].size + ' bytes, content: ' + result[names[i]].content);
-                    }*/
                 });
             }
         };
