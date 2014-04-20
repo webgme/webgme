@@ -15,7 +15,7 @@ var BlobBackend = requirejs('blob/BlobS3Backend');
 var blobBackend = new BlobBackend();
 
 var filename = 'sample.js';
-blobBackend.addFile(filename, fs.createReadStream(filename), function (err, hash) {
+blobBackend.putFile(filename, fs.createReadStream(filename), function (err, hash) {
     if (err) {
         console.log(err);
         return;
@@ -45,7 +45,7 @@ var addFilesFromTestDir = function (testdir, callback) {
         var fname = path.join(testdir, sourceFiles[i]);
         (function (file) {
 
-            blobBackend.addFile(file, fs.createReadStream(file), function (err, hash) {
+            blobBackend.putFile(file, fs.createReadStream(file), function (err, hash) {
                 if (err) {
                     console.log(err);
                 }

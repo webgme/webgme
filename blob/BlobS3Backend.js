@@ -114,7 +114,10 @@ define(['./BlobBackendBase',
                 var hashes = [];
 
                 for (var i = 0; i < data.Contents.length; i += 1) {
-                    hashes.push(data.Contents[i].Key);
+                    hashes.push({
+                        hash: data.Contents[i].Key,
+                        lastModified: data.Contents[i].LastModified.toISOString(),
+                    });
                 }
 
                 callback(null, hashes);

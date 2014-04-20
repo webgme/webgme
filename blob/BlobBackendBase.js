@@ -3,9 +3,10 @@
  */
 
 define(['fs',
+    'mime',
     'util/guid',
     'util/StringStreamReader',
-    'util/StringStreamWriter'], function (fs, GUID, StringStreamReader, StringStreamWriter) {
+    'util/StringStreamWriter'], function (fs, mime, GUID, StringStreamReader, StringStreamWriter) {
 
     var BlobBackendBase = function () {
         this.contentBucket = 'wg-content';
@@ -30,8 +31,12 @@ define(['fs',
     };
 
     // -----------------------------------------------------------------------------------------------------------------
-    // common functionality
-    BlobBackendBase.prototype.addFile = function (name, readStream, callback) {
+    // COMMON FUNCTIONALITY
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // File handling functions
+
+    BlobBackendBase.prototype.putFile = function (name, readStream, callback) {
         // TODO: add content to storage
         // TODO: create metadata file (filename, size, object-hash, object-type, content-type)
         // TODO: add metadata to storage
@@ -50,22 +55,20 @@ define(['fs',
             var metadata = {
                 name: name,
                 size: length,
-                mime: 'application/xml',
+                mime: mime.lookup(name),
                 content: hash,
                 contentType: 'object'
             };
 
-            var stringStream = new StringStreamReader(JSON.stringify(metadata));
-
-            self.putObject(stringStream, self.metadataBucket, function (err, metadataHash) {
+            self.putMetadata(metadata, function (err, metadataHash) {
                 if (err) {
-                    // failed to save metadata
                     callback(err);
                     return;
                 }
 
                 callback(null, metadataHash);
             });
+
         });
     };
 
@@ -99,17 +102,40 @@ define(['fs',
         });
     };
 
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // Metadata functions
+
+    BlobBackendBase.prototype.putMetadata = function (metadata, callback) {
+        var self = this;
+        var stringStream = new StringStreamReader(JSON.stringify(metadata));
+
+        self.putObject(stringStream, self.metadataBucket, function (err, metadataHash) {
+            if (err) {
+                // failed to save metadata
+                callback(err);
+                return;
+            }
+
+            callback(null, metadataHash);
+        });
+    };
+
     BlobBackendBase.prototype.getMetadata = function (metadataHash, callback) {
         var self = this,
             writeStream = new StringStreamWriter();
 
-        self.getObject(metadataHash, writeStream, self.metadataBucket, function (err) {
+        self.getObject(metadataHash.hash, writeStream, self.metadataBucket, function (err) {
             if (err) {
                 callback(err);
                 return;
             }
 
-            callback(null, metadataHash, writeStream.toJSON());
+            // TODO: make a class for this object
+            var metadata = writeStream.toJSON();
+            metadata.lastModified = metadataHash.lastModified;
+
+            callback(null, metadataHash.hash, metadata);
         });
     };
 

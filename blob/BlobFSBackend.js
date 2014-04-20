@@ -6,9 +6,10 @@ define(['./BlobBackendBase',
     'fs',
     'crypto',
     'path',
+    'util',
     'util/guid',
     'util/ensureDir'],
-    function (BlobBackendBase, fs, crypto, path, GUID, ensureDir) {
+    function (BlobBackendBase, fs, crypto, path, util, GUID, ensureDir) {
 
     var BlobFSBackend = function () {
         BlobBackendBase.call(this);
@@ -101,7 +102,12 @@ define(['./BlobBackendBase',
             var hashes = [];
 
             for (var i = 0; i < found.files.length; i += 1) {
-                hashes.push(found.files[i].slice(bucketName.length).replace(/\//g,''));
+                var f = found.files[i];
+
+                hashes.push({
+                    hash: f.name.slice(bucketName.length).replace(/\//g,''),
+                    lastModified: f.mtime.toISOString(),
+                });
             }
 
             callback(null, hashes);
@@ -135,7 +141,7 @@ define(['./BlobBackendBase',
                             }
                         });
                     } else {
-                        found.files.push(abspath);
+                        found.files.push({name:abspath, mtime: stat.mtime});
                         if(++processed == total) {
                             callback(null, found);
                         }
