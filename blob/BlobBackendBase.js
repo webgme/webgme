@@ -15,7 +15,7 @@ define(['fs',
     };
 
     // -----------------------------------------------------------------------------------------------------------------
-    // Must be overriden in derived classes (low-level implementation specific API calls)
+    // Must be overridden in derived classes (low-level implementation specific API calls)
 
     BlobBackendBase.prototype.putObject = function (readStream, bucket, callback) {
         throw new Error('Not implemented yet.');
@@ -100,12 +100,50 @@ define(['fs',
     };
 
     BlobBackendBase.prototype.getMetadata = function (metadataHash, callback) {
-        throw new Error('Not implemented yet.');
+        var self = this,
+            writeStream = new StringStreamWriter();
+
+        self.getObject(metadataHash, writeStream, self.metadataBucket, function (err) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            callback(null, metadataHash, writeStream.toJSON());
+        });
     };
 
     BlobBackendBase.prototype.listAllMetadata = function (callback) {
-        throw new Error('Not implemented yet.');
+        var self = this,
+            allMetadata = {};
+
+        self.listObjects(self.metadataBucket, function (err, hashes) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            var remaining = hashes.length;
+
+            for (var i = 0; i < hashes.length; i += 1) {
+                self.getMetadata(hashes[i], function (err, hash, metadata) {
+                    remaining -= 1;
+
+                    if (err) {
+                        // concat error?
+                        return;
+                    }
+
+                    allMetadata[hash] = metadata;
+
+                    if (remaining === 0) {
+                        callback(null, allMetadata);
+                    }
+                });
+            }
+        });
     };
+
 
 
     BlobBackendBase.prototype.test = function (callback) {

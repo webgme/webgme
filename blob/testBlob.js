@@ -10,8 +10,8 @@ requirejs.config({
     nodeRequire: require
 });
 
-var BlobBackend = requirejs('blob/BlobFSBackend');
-//var BlobBackend = requirejs('blob/BlobS3Backend');
+//var BlobBackend = requirejs('blob/BlobFSBackend');
+var BlobBackend = requirejs('blob/BlobS3Backend');
 var blobBackend = new BlobBackend();
 
 var filename = 'sample.js';
@@ -33,14 +33,15 @@ blobBackend.addFile(filename, fs.createReadStream(filename), function (err, hash
     });
 });
 
-var addFilesFromTestDir = function (testdir) {
+var addFilesFromTestDir = function (testdir, callback) {
     var path = require('path');
     var sourceFiles = fs.readdirSync(testdir);
-    var remaining = sourceFiles.length;
+    var maxItems = 20;
+    var remaining = Math.min(sourceFiles.length, maxItems);
 
     var startTime = new Date();
 
-    for (var i = 0; i < Math.min(sourceFiles.length, 20000); i += 1) {
+    for (var i = 0; i < Math.min(sourceFiles.length, maxItems); i += 1) {
         var fname = path.join(testdir, sourceFiles[i]);
         (function (file) {
 
@@ -60,6 +61,7 @@ var addFilesFromTestDir = function (testdir) {
                     //done(numFiles, size);
                     var diff = (new Date()) - startTime;
                     console.log(diff / 1000 + 's');
+                    callback();
                 }
             });
         })(fname);
@@ -74,4 +76,25 @@ var addFilesFromTestDir = function (testdir) {
 
 // 2GB, 1025 files -> 19.2sec - FS
 // 2GB, 1025 files -> 51.4sec - fakeS3 (2GB file copyObject failed)
-addFilesFromTestDir('test-many-files');
+addFilesFromTestDir('test-many-files', function () {
+    done();
+});
+
+
+//blobBackend.listObjects(blobBackend.metadataBucket, function (err, hashes) {
+//    if (err) {
+//        console.log(err);
+//    }
+//
+//    console.log(hashes);
+//});
+
+var done = function() {
+    blobBackend.listAllMetadata(function (err, allMetadata) {
+        if (err) {
+            console.log(err);
+        }
+
+        console.log(allMetadata);
+    });
+};

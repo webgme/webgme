@@ -67,21 +67,25 @@ define(['./BlobBackendBase',
 
                 var hash = shasum.digest('hex');
 
-                self.s3.copyObject({CopySource: self.tempBucket + '/' + tempName, Bucket: bucket, Key: hash}, function (err, data) {
-                    if (err) {
-                        callback(err);
-                        return;
-                    }
-
-                    self.s3.deleteObject({ Bucket: self.tempBucket, Key: tempName}, function (err, data) {
+                // FIXME: this is a fakes3 workaround
+                // Since it does not create an empty bucket if the destination bucket does not exist on copy
+                self.s3.putObject({ Bucket: bucket, Key: hash, Body: '' }, function(err, data) {
+                    self.s3.copyObject({CopySource: self.tempBucket + '/' + tempName, Bucket: bucket, Key: hash}, function (err, data) {
                         if (err) {
                             callback(err);
                             return;
                         }
 
-                        callback(null, hash);
-                    });
+                        self.s3.deleteObject({ Bucket: self.tempBucket, Key: tempName}, function (err, data) {
+                            if (err) {
+                                callback(err);
+                                return;
+                            }
 
+                            callback(null, hash);
+                        });
+
+                    });
                 });
             });
 
@@ -100,7 +104,23 @@ define(['./BlobBackendBase',
         };
 
         BlobS3Backend.prototype.listObjects = function (bucket, callback) {
-            throw new Error('Not implemented yet.');
+            var self = this;
+
+            // FIXME: this returns only with the first 1000 objects
+            self.s3.listObjects({Bucket:bucket}, function (err, data) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                var hashes = [];
+
+                for (var i = 0; i < data.Contents.length; i += 1) {
+                    hashes.push(data.Contents[i].Key);
+                }
+
+                callback(null, hashes);
+            });
         };
 
         return BlobS3Backend;
