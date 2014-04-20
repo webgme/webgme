@@ -20,6 +20,8 @@ define(['./BlobBackendBase',
             };
             // NOTE: development mode
             // install https://github.com/jubos/fake-s3
+            // make sure you apply my patch: https://github.com/jubos/fake-s3/issues/53
+            // build and install it
             // Add to your /etc/hosts
             // 127.0.0.1 wg-content.localhost
             // 127.0.0.1 wg-metadata.localhost
@@ -67,25 +69,21 @@ define(['./BlobBackendBase',
 
                 var hash = shasum.digest('hex');
 
-                // FIXME: this is a fakes3 workaround
-                // Since it does not create an empty bucket if the destination bucket does not exist on copy
-                self.s3.putObject({ Bucket: bucket, Key: hash, Body: '' }, function(err, data) {
-                    self.s3.copyObject({CopySource: self.tempBucket + '/' + tempName, Bucket: bucket, Key: hash}, function (err, data) {
+                self.s3.copyObject({CopySource: self.tempBucket + '/' + tempName, Bucket: bucket, Key: hash}, function (err, data) {
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+
+                    self.s3.deleteObject({ Bucket: self.tempBucket, Key: tempName}, function (err, data) {
                         if (err) {
                             callback(err);
                             return;
                         }
 
-                        self.s3.deleteObject({ Bucket: self.tempBucket, Key: tempName}, function (err, data) {
-                            if (err) {
-                                callback(err);
-                                return;
-                            }
-
-                            callback(null, hash);
-                        });
-
+                        callback(null, hash);
                     });
+
                 });
             });
 
