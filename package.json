@@ -34,7 +34,8 @@
     "passport-google": "=0.3.0",
     "socket.io-client": "=0.9.10",
     "jszip": "=2.2.0",
-    "commander": "=2.1.0"
+    "commander": "=2.1.0",
+    "aws-sdk": "=1.18.0"
   },
   "devDependencies": {},
   "main": "webgme"
