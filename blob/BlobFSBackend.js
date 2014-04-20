@@ -25,47 +25,55 @@ define(['./BlobBackendBase',
     BlobFSBackend.prototype.putObject = function (readStream, bucket, callback) {
         // TODO generate a GUID or something for the temporary filename to allow parallel functioning
         var self = this,
-            tempName = GUID() + ".tbf",// TODO: create this in the system temp folder
-            writeStream = fs.createWriteStream(tempName),
+            tempName = path.join(self.blobDir, self.tempBucket, GUID() + ".tbf"),// TODO: create this in the system temp folder
             shasum = crypto.createHash(this.shaMethod),
             size = 0;
 
-        writeStream.on('finish', function () {
-            // at this point the temporary file have been written out
-            // now the file have been written out
-            // finalizing hash and moving temporary file..
-            var hash = shasum.digest('hex'),
-                objectFilename = path.join(self.blobDir, bucket, self._getObjectRelativeLocation(hash));
+        ensureDir(path.dirname(tempName), function (err) {
+            if (err) {
+                callback(err);
+                return;
+            }
 
-            ensureDir(path.dirname(objectFilename), function (err) {
-                if (err) {
-                    // FIXME: this code has to be reviewed.
-                    fs.unlink(tempName, function (e) {
-                        callback(err);
-                    });
-                    return;
-                }
+            var writeStream = fs.createWriteStream(tempName);
 
-                fs.rename(tempName, objectFilename, function (err) {
-                    // FIXME: this code has to be reviewed.
+            writeStream.on('finish', function () {
+                // at this point the temporary file have been written out
+                // now the file have been written out
+                // finalizing hash and moving temporary file..
+                var hash = shasum.digest('hex'),
+                    objectFilename = path.join(self.blobDir, bucket, self._getObjectRelativeLocation(hash));
+
+                ensureDir(path.dirname(objectFilename), function (err) {
                     if (err) {
+                        // FIXME: this code has to be reviewed.
                         fs.unlink(tempName, function (e) {
                             callback(err);
                         });
                         return;
                     }
 
-                    callback(null, hash, size);
+                    fs.rename(tempName, objectFilename, function (err) {
+                        // FIXME: this code has to be reviewed.
+                        if (err) {
+                            fs.unlink(tempName, function (e) {
+                                callback(err);
+                            });
+                            return;
+                        }
+
+                        callback(null, hash, size);
+                    });
                 });
             });
-        });
 
-        readStream.pipe(writeStream);
+            readStream.pipe(writeStream);
 
-        //TODO this implementation should be moved to another class which inherits from writeablestream...
-        readStream.on('data', function (chunk) {
-            shasum.update(chunk);
-            size += chunk.length; //TODO does it really have a length field always???
+            //TODO this implementation should be moved to another class which inherits from writeablestream...
+            readStream.on('data', function (chunk) {
+                shasum.update(chunk);
+                size += chunk.length; //TODO does it really have a length field always???
+            });
         });
     };
 

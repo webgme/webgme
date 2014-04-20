@@ -31,17 +31,31 @@ define(['path', 'fs'], function(path, fs) {
         var existsFunction = fs.exists || path.exists;
 
         existsFunction(dir, function (exists) {
-            if (exists) return callback(null);
+            if (exists) {
+                return callback(null);
+            }
 
             var current = path.resolve(dir);
             var parent = path.dirname(current);
 
             _ensureDir(parent, mode, function (err) {
-                if (err) return callback(err);
+                if (err) {
+                    return callback(err);
+                }
 
                 fs.mkdir(current, mode, function (err) {
-                    if (err) return callback(err);
-                    callback();
+                    if (err) {
+                        if (err.code === 'EEXIST') {
+                            // this is ok as long as the directory exists
+                            // FIXME: can it be a file?
+                            callback(null);
+                            return;
+                        } else {
+                            callback(err);
+                            return;
+                        }
+                    }
+                    callback(null);
                 });
             });
         });
