@@ -56,7 +56,6 @@ if (typeof define !== "function") {
             _branch = COMMON.getParameters("branch") || [];
             _branch = _branch[0] || "master";
 
-            console.log("kecso",_branch);
             _projectName = COMMON.getParameters("proj") || [];
             _projectName = _projectName[0] || "users";
 
@@ -119,7 +118,6 @@ if (typeof define !== "function") {
             return project.makeCommit([parentcommithash], newroothash, msg);
         }
         function writeBranch (oldhash,newhash) {
-            console.log("kecso",_branch,oldhash,newhash,typeof _branch,typeof oldhash,typeof newhash);
             var project = COMMON.getProject();
             var done = project.setBranchHash(_branch, oldhash, newhash);
             return TASYNC.call(function () {
