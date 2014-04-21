@@ -124,7 +124,8 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                         'connect timeout': 10,
                         'reconnection delay': 1,
                         'force new connection': true,
-                        'reconnect': false
+                        'reconnect': false,
+                        'query':"webGMESessionId="+options.webGMESessionId
                     });
 
                     socket.on('connect', function () {

@@ -33,7 +33,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
             _workerManager = null;
 
         function getSessionID(socket){
-            return socket.handshake.webGMESession;
+            return socket.handshake.webGMESessionId;
         }
 
         function checkDatabase(callback){
@@ -114,24 +114,29 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
             _socket.set('authorization',function(data,accept){
                 //either the html header contains some webgme signed cookie with the sessionID
                 // or the data has a webGMESession member which should also contain the sessionID - currently the same as the cookie
-
                 if (options.session === true){
-                    var sessionID = data.webGMESession;
+                    var sessionID;
+                    if(data.webGMESessionId === undefined){
+                        if(data.query.webGMESessionId && data.query.webGMESessionId !== 'undefined'){
+                            sessionID = data.query.webGMESessionId;
+                        }
+                    }
                     if(sessionID === null || sessionID === undefined){
                         if(data.headers.cookie){
                             var cookie = URL.parseCookie(data.headers.cookie);
                             if(cookie[options.cookieID] !== undefined || cookie[options.cookieID] !== null){
                                 sessionID = require('connect').utils.parseSignedCookie(cookie[options.cookieID],options.secret);
-                                data.webGMESession = sessionID;
+                                data.webGMESessionId = sessionID;
                             }
                         } else {
                             console.log('DEBUG COOKIE INFO', JSON.stringify(data.headers));
+                            console.log('DEBUG HANDSHAKE INFO', JSON.stringify(data.query));
                             return accept(null,false);
                         }
                     }
                     options.sessioncheck(sessionID,function(err,isOk){
                         if(!err && isOk === true){
-                            data.webGMESession = sessionID;
+                            data.webGMESessionId = sessionID;
                             return accept(null,true);
                         } else {
                             return accept(err,false);

@@ -111,8 +111,8 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
     };
 
     //TODO the getContext should be refactored!!!
-    var getProject = function(projectName,callback){
-        var pluginStorage = new ConnectedStorage({type:'node',host:'127.0.0.1',port:serverPort,log:logManager.create('SERVER-WORKER-PLUGIN-'+process.pid)});
+    var getProject = function(projectName,sessionId,callback){
+        var pluginStorage = new ConnectedStorage({type:'node',host:'127.0.0.1',port:serverPort,log:logManager.create('SERVER-WORKER-PLUGIN-'+process.pid),webGMESessionId:sessionId});
         pluginStorage.openDatabase(function(err){
             if(!err){
                 if(projectName) {
@@ -179,13 +179,11 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
         return interpreterClass;
     };
     var runInterpreter = function(userId,name,sessionId,context,callback){
-        console.log('kecso',userId);
         var interpreter = getInterpreter(name);
         if(interpreter){
-            getProject(context.managerConfig.project,function(err,project){
+            getProject(context.managerConfig.project,sessionId,function(err,project){
                 if(!err){
                     project.setUser(userId);
-                    console.log('kecso2',userId);
                     var plugins = {};
                     plugins[name] = interpreter;
                     var manager = new PluginManagerBase(project,Core,plugins);
