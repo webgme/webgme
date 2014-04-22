@@ -151,6 +151,10 @@ define(['fs',
 
             var remaining = hashes.length;
 
+            if (hashes.length === 0) {
+                callback(null, allMetadata);
+            }
+
             for (var i = 0; i < hashes.length; i += 1) {
                 self.getMetadata(hashes[i], function (err, hash, metadata) {
                     remaining -= 1;
