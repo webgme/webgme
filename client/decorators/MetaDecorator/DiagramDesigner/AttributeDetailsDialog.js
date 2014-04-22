@@ -79,7 +79,7 @@ define(['clientUtil',
                 attrDesc.defaultValue = self._el.find('#rbBooleanTrue').first().is(':checked');
                 delete attrDesc.isEnum;
             } else if (attrDesc.type === ASSET_TYPE) {
-                attrDesc.defaultValue = undefined;
+                attrDesc.defaultValue = '';
                 delete attrDesc.isEnum;
             }
 
