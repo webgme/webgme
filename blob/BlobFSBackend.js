@@ -105,8 +105,8 @@ define(['./BlobBackendBase',
                 var f = found.files[i];
 
                 hashes.push({
-                    hash: f.name.slice(bucketName.length).replace(/\//g,''),
-                    lastModified: f.mtime.toISOString(),
+                    hash: f.name.slice(bucketName.length).replace(/(\/|\\)/g,''),
+                    lastModified: f.mtime.toISOString()
                 });
             }
 

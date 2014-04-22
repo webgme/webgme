@@ -10,8 +10,8 @@ requirejs.config({
     nodeRequire: require
 });
 
-//var BlobBackend = requirejs('blob/BlobFSBackend');
-var BlobBackend = requirejs('blob/BlobS3Backend');
+var BlobBackend = requirejs('blob/BlobFSBackend');
+//var BlobBackend = requirejs('blob/BlobS3Backend');
 var blobBackend = new BlobBackend();
 
 var filename = 'sample.js';
@@ -41,6 +41,10 @@ var addFilesFromTestDir = function (testdir, callback) {
 
     var startTime = new Date();
 
+    if (sourceFiles.length === 0) {
+        callback();
+    }
+
     for (var i = 0; i < Math.min(sourceFiles.length, maxItems); i += 1) {
         var fname = path.join(testdir, sourceFiles[i]);
         (function (file) {
@@ -68,6 +72,16 @@ var addFilesFromTestDir = function (testdir, callback) {
     }
 };
 
+var done = function() {
+    blobBackend.listAllMetadata(function (err, allMetadata) {
+        if (err) {
+            console.log(err);
+        }
+
+        console.log(allMetadata);
+    });
+};
+
 
 // 4GB, 22 files -> 42sec - FS
 // 2GB, 21 files -> 18sec - FS
@@ -89,12 +103,3 @@ addFilesFromTestDir('test-many-files', function () {
 //    console.log(hashes);
 //});
 
-var done = function() {
-    blobBackend.listAllMetadata(function (err, allMetadata) {
-        if (err) {
-            console.log(err);
-        }
-
-        console.log(allMetadata);
-    });
-};

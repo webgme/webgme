@@ -1,4 +1,3 @@
-
 ## Binary Large Object storage ##
 
 ### Requirements ###
@@ -42,14 +41,59 @@
 
 ##### Data organization (buckets) #####
 
-* wg-content - webgme content bucket storage. All file content is stored in this bucket.
-* wg-metadata - webgme content descriptors, i.e. metadata. Each metadata has one or more links to either to a content (hard link) or to another metadata (soft link) or multiple links to content (complex content).
-* wg-temp - webgme temporary storage for content and metadata. All files gets stored first here, since we do not have the correct key name until we store the data. Once the key (content hash) is available we move (copy + delete) the temporary object. 
+* `wg-content` - webgme content bucket storage. All file content is stored in this bucket.
+* `wg-metadata` - webgme content descriptors, i.e. metadata. Each metadata has one or more links to either to a content (hard link) or to another metadata (soft link) or multiple links to content (complex content).
+* `wg-temp` - webgme temporary storage for content and metadata. All files gets stored first here, since we do not have the correct key name until we store the data. Once the key (content hash) is available we move (copy + delete) the temporary object. 
 
 
 ##### Metadata #####
 
-TODO: structure
+* `name` - file name
+* `size` - file size in Bytes
+* `mime` - mime-type of the file/content
+* `content` - HASH or object
+* `contentType` - `object`, (`softlink`) or `complex`
+* `lastModified` - last modified date and time in ISO 8601 format. 
+
+> Note: `lastModified` value is not stored in the storage, but it is part of the response.
+
+_File example_
+```json
+{
+    "name": "sample.js",
+    "size": 2093,
+    "mime": "application/javascript",
+    "content": "c2905bc187fbe55926e10bfd0baadad2f8493cbb",
+    "contentType": "object",
+    "lastModified": "2014-04-22T16:43:03.000Z"
+}
+```
+
+_Complex content example_
+```json
+{
+    "name": "sample.zip",
+    "size": 17591,
+    "mime": "application/zip, application/octet-stream",
+    "content": {
+        "a/b/sample.js": {
+            "content": "c2905bc187fbe55926e10bfd0baadad2f8493cbb",
+            "contentType": "object"
+        },
+        "sample.js": {
+            "content": "c2905bc187fbe55926e10bfd0baadad2f8493cbb",
+            "contentType": "object"
+        },
+        "sample.txt": {
+            "content": "5fabecff1352dfcc0ad040d8ab883fba31fa1030",
+            "contentType": "object"
+        }
+    },
+    "contentType": "complex",
+    "lastModified": "2014-04-22T16:43:03.000Z"
+}
+```
+
 
 ##### Functions #####
 
