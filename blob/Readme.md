@@ -1,4 +1,3 @@
-
 ## Binary Large Object storage ##
 
 ### Requirements ###
@@ -61,37 +60,37 @@
 _File example_
 ```json
 {
-    name: 'sample.js',
-    size: 2093,
-    mime: 'application/javascript',
-    content: 'c2905bc187fbe55926e10bfd0baadad2f8493cbb',
-    contentType: 'object',
-    lastModified: '2014-04-22T16:43:03.000Z'
+    "name": "sample.js",
+    "size": 2093,
+    "mime": "application/javascript",
+    "content": "c2905bc187fbe55926e10bfd0baadad2f8493cbb",
+    "contentType": "object",
+    "lastModified": "2014-04-22T16:43:03.000Z"
 }
 ```
 
 _Complex content example_
 ```json
 {
-    name: 'sample.js',
-    size: 2093,
-    mime: 'application/javascript',
-    content: {
-		'a/b/sample.js': {
-			content: 'c2905bc187fbe55926e10bfd0baadad2f8493cbb',
-			contentType: 'object'
-		},
-		'sample.js': {
-			content: 'c2905bc187fbe55926e10bfd0baadad2f8493cbb',
-			contentType: 'object'
-		},
-		'sample.txt': {
-			content: '5fabecff1352dfcc0ad040d8ab883fba31fa1030',
-			contentType: 'object'
-		}
-	},
-    contentType: 'complex',
-    lastModified: '2014-04-22T16:43:03.000Z'
+    "name": "sample.zip",
+    "size": 17591,
+    "mime": "application/zip, application/octet-stream",
+    "content": {
+        "a/b/sample.js": {
+            "content": "c2905bc187fbe55926e10bfd0baadad2f8493cbb",
+            "contentType": "object"
+        },
+        "sample.js": {
+            "content": "c2905bc187fbe55926e10bfd0baadad2f8493cbb",
+            "contentType": "object"
+        },
+        "sample.txt": {
+            "content": "5fabecff1352dfcc0ad040d8ab883fba31fa1030",
+            "contentType": "object"
+        }
+    },
+    "contentType": "complex",
+    "lastModified": "2014-04-22T16:43:03.000Z"
 }
 ```
 
