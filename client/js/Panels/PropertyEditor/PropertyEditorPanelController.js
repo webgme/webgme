@@ -172,9 +172,11 @@ define(['logManager',
             if (initPhase === true) {
                 for (it in otherList) {
                     if (otherList.hasOwnProperty(it)) {
-                        resultList[it] = { "value": otherList[it],
-                            "valueType": typeof otherList[it],
-                            "isCommon": true };
+                        if (commonAttrMeta.hasOwnProperty(it)) {
+                            resultList[it] = { "value": otherList[it],
+                                "valueType": commonAttrMeta[it].type,
+                                "isCommon": true };
+                        }
                     }
                 }
             } else {
