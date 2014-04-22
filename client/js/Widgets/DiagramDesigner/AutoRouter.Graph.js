@@ -2103,8 +2103,6 @@ define(['logManager',
             pathiter++;
         }
 
-        _logger.info("c has been decremented " + (100 - c) + " times\nlast is " + last + 
-                "\nd is " + d + "\ndm is " + dm);
         return updated;
     };
 
