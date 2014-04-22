@@ -198,8 +198,9 @@ $input-color: lighten($background-color, 18.5%);
           }
 
           div.asset-widget {
-            height: 27px;
-            line-height: 27px;
+            height: 25px;
+            line-height: 25px;
+            width: 98%;
 
             .btn-dialog-open {
               top: -1px;

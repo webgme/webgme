@@ -118,8 +118,9 @@
             cursor: pointer;
             border-radius: 4px; }
           .pgp ul li.cr .c div.asset-widget {
-            height: 27px;
-            line-height: 27px; }
+            height: 25px;
+            line-height: 25px;
+            width: 98%; }
             .pgp ul li.cr .c div.asset-widget .btn-dialog-open {
               top: -1px;
               padding: 0 3px; }
