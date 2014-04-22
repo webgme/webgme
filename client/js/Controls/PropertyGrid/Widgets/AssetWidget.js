@@ -167,6 +167,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
                                     //TODO: something went wrong, tell the user????
                                 } else {
                                     self.setValue(hash);
+                                    self.fireFinishChange();
                                 }
                                 self._attachFileDropHandlers(false);
                             });
@@ -177,6 +178,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
                             self._addArtifactFiles(artifact, result, function (/*hashList*/) {
                                 artifact.save(function (err, hash) {
                                     self.setValue(hash);
+                                    self.fireFinishChange();
                                     self._attachFileDropHandlers(false);
                                 });
                             });
