@@ -7,8 +7,8 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="70"
-   height="40"
+   width="49.498402"
+   height="28.2848"
    id="svg3342"
    version="1.1"
    inkscape:version="0.48.4 r9939"
@@ -35,60 +35,55 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="1364"
-     inkscape:window-height="747"
+     inkscape:window-width="1918"
+     inkscape:window-height="1179"
      id="namedview3352"
      showgrid="false"
      inkscape:zoom="5.3142857"
-     inkscape:cx="35"
-     inkscape:cy="20"
-     inkscape:window-x="0"
+     inkscape:cx="-10.062628"
+     inkscape:cy="14.1424"
+     inkscape:window-x="1920"
      inkscape:window-y="19"
      inkscape:window-maximized="1"
-     inkscape:current-layer="svg3342" />
+     inkscape:current-layer="svg3342"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0" />
   <g
-     id="g3344">
+     id="g3344"
+     transform="scale(0.70712,0.70712)">
     <ellipse
        class="fill-color border-color"
        cx="35"
        cy="20"
        rx="34"
        ry="19"
-       stroke="#000"
-       fill="#FFFFFF"
-       id="ellipse3346" />
+       id="ellipse3346"
+       sodipodi:cx="35"
+       sodipodi:cy="20"
+       sodipodi:rx="34"
+       sodipodi:ry="19"
+       style="fill:#ffffff;stroke:#000000"
+       d="M 69,20 C 69,30.49341 53.777681,39 35,39 16.222319,39 1,30.49341 1,20 1,9.5065898 16.222319,1 35,1 53.777681,1 69,9.5065898 69,20 z" />
     <line
        id="ca_N"
        class="connection-area"
-       x1="30"
+       x1="20"
        y1="0"
-       x2="40"
+       x2="30"
        y2="0" />
     <line
        id="ca_S"
        class="connection-area"
-       x1="40"
-       y1="40"
-       x2="30"
-       y2="40" />
-    <line
-       id="ca_E"
-       class="connection-area"
-       x1="70"
-       y1="15"
-       x2="70"
-       y2="25" />
-    <line
-       id="ca_W"
-       class="connection-area"
-       x1="0"
-       y1="25"
-       x2="0"
-       y2="15" />
+       x1="30"
+       y1="28"
+       x2="20"
+       y2="28" />
   </g>
   <path
      style="fill:#ff9955"
-     d="M 31.556452,38.27474 C 17.033172,37.458973 4.9407611,31.302403 2.2040527,23.330645 0.02026306,16.969485 4.3567735,10.28822 13.432262,6.0313335 22.478383,1.7882229 34.947731,0.49449405 46.045699,2.6476011 c 6.167474,1.1965464 12.10952,3.6566334 15.941356,6.5999364 9.537652,7.3260465 8.23279,17.0403615 -3.16693,23.5768465 -4.090932,2.345698 -9.666381,4.127574 -15.597007,4.984696 -1.731747,0.250282 -8.221155,0.718368 -8.844086,0.637932 -0.103494,-0.01336 -1.373656,-0.09089 -2.82258,-0.172272 l 0,0 z"
+     d="M 22.312934,27.076457 C 12.043232,26.499612 3.492447,22.146178 1.557266,16.509189 0.013064,12.011085 3.079498,7.286629 9.496957,4.2765 15.89365,1.2761113 24.710975,0.3612898 32.558571,1.8837948 c 4.361144,0.8461019 8.562883,2.5856782 11.272451,4.6669472 6.744265,5.180394 5.821571,12.04958 -2.239399,16.67166 -2.89278,1.65869 -6.835292,2.91869 -11.028956,3.524778 -1.224553,0.176979 -5.813343,0.507972 -6.25383,0.451094 -0.07318,-0.0094 -0.97134,-0.06427 -1.995903,-0.121817 l 0,0 z"
      id="path3358"
      inkscape:connector-curvature="0" />
 </svg>
