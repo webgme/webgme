@@ -562,36 +562,44 @@ define(['logManager',
 
         });
 
-        __app.get('/rest/blob/download/:metadataHash', ensureAuthenticated, function(req, res) {
-            res.send(500);
+        var sendBlobContent = function (req, res, metadataHash, subpartPath, download) {
+
+            blobBackend.getMetadata(metadataHash, function (err, hash, metadata) {
+                if (err) {
+                    res.send(500);
+                } else {
+                    if (download || metadata.mime === 'application/octet-stream') {
+                        res.setHeader('Content-disposition', 'attachment; filename=' + metadata.name);
+                    }
+                    res.setHeader('Content-type', metadata.mime);
+
+
+                    // TODO: we need to get the content and save as a local file.
+                    // if we just proxy the stream we cannot set errors correctly.
+
+                    blobBackend.getFile(metadataHash, subpartPath, res, function (err, hash) {
+                        if (err) {
+                            // give more precise description about the error type and message. Resource if not available etc.
+                            res.send(500);
+                        } else {
+                            //res.send(200);
+                        }
+                    });
+                }
+            });
+        };
+
+        __app.get(/^\/rest\/blob\/download\/([0-9a-f]{40,40})(\/.*)?$/, ensureAuthenticated, function(req, res) {
+            var metadataHash = req.params[0];
+            var subpartPath = req.params[1];
+            sendBlobContent(req, res, metadataHash, subpartPath, true);
         });
 
-//        __app.get('/rest/blob/view/:metadataHash', ensureAuthenticated, function(req, res) {
-//            // TODO: we need to get the content and save as a local file.
-//            // if we just proxy the stream we cannot set errors correctly.
-//            blobBackend.getFile(metadataHash, '', res, function (err, hash) {
-//               if (err) {
-//                   res.send(500);
-//               } else {
-//                   //res.send(200);
-//               }
-//            });
-//        });
-
-        __app.get(/^\/rest\/blob\/view\/([0-9a-f]{40,40})\/(.*)$/, ensureAuthenticated, function(req, res) {
+        __app.get(/^\/rest\/blob\/view\/([0-9a-f]{40,40})(\/.*)?$/, ensureAuthenticated, function(req, res) {
             var metadataHash = req.params[0];
             var subpartPath = req.params[1];
 
-            // TODO: we need to get the content and save as a local file.
-            // if we just proxy the stream we cannot set errors correctly.
-            blobBackend.getFile(metadataHash, subpartPath, res, function (err, hash) {
-                if (err) {
-                    // give more precise description about the error type and message. Resource if not available etc.
-                    res.send(500);
-                } else {
-                    //res.send(200);
-                }
-            });
+            sendBlobContent(req, res, metadataHash, subpartPath, false);
         });
 
         // end of blob rules
