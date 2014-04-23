@@ -3,11 +3,11 @@
  */
 
 define(['fs',
-    'zlib',
+    'jszip',
     'mime',
     'util/guid',
     'util/StringStreamReader',
-    'util/StringStreamWriter'], function (fs, zlib, mime, GUID, StringStreamReader, StringStreamWriter) {
+    'util/StringStreamWriter'], function (fs, jszip, mime, GUID, StringStreamReader, StringStreamWriter) {
 
     var BlobBackendBase = function () {
         this.contentBucket = 'wg-content';
@@ -100,8 +100,65 @@ define(['fs',
                 // 1) create a zip package
                 // 2) add all files from the descriptor to the zip
                 // 3) pipe the zip package to the stream
-                callback('not supported content type: ' + metadata.contentType);
 
+                // FIXME: can we use zlib???
+                // TODO: this code MUST be reimplemented!!!
+                var zip = new jszip();
+
+                var keys = Object.keys(metadata.content);
+                var remaining = keys.length;
+
+                if (remaining === 0) {
+                    // empty zip no files contained
+                    // FIXME: this empty zip is not handled correctly.
+                    callback(null, zip.generate({type:'nodeBuffer'}), metadata.name);
+                    return;
+                }
+
+                for (var i = 0; i < keys.length; i += 1) {
+                    (function(subpartHash, subpartName){
+                        // TODO: what if error?
+                        var contentTemp = GUID() + '.tmp';
+                        var writeStream2 = fs.createWriteStream(contentTemp);
+
+                        self.getObject(subpartHash, writeStream2, self.contentBucket, function (err) {
+
+
+                            fs.readFile(contentTemp, function (err, data) {
+                                zip.file(subpartName, data);
+
+                                remaining -= 1;
+
+                                if (remaining === 0) {
+                                    var nodeBuffer = zip.generate({type:'nodeBuffer'});
+                                    var tempFile = GUID() + '.zip';
+                                    fs.writeFile(tempFile, nodeBuffer, function (err) {
+                                        if (err) {
+                                            callback(err);
+                                            return;
+                                        }
+
+                                        var readStream = fs.createReadStream(tempFile);
+
+                                        writeStream.on('finish', function() {
+                                            callback(null, metadata);
+
+                                            fs.unlink(tempFile, function (){
+
+                                            });
+                                        });
+
+                                        readStream.pipe(writeStream);
+                                    });
+                                }
+
+                                fs.unlink(contentTemp, function (){
+
+                                });
+                            });
+                        });
+                    })(metadata.content[keys[i]].content, keys[i])
+                }
             } else {
                 // TODO: handle here the complex type and soft links
                 callback('not supported content type: ' + metadata.contentType);
