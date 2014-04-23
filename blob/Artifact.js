@@ -9,20 +9,39 @@ define([], function () {
     var Artifact = function (name, blobClient, descriptor) {
         this.name = name;
         this.blobClient = blobClient;
-        this.descriptor = descriptor || {}; // name and hash pairs
+        this.descriptor = descriptor || {
+            name: name + '.zip',
+            size: 0,
+            mime: 'application/zip',
+            content: {},
+            contentType: 'complex'
+        }; // name and hash pairs
     };
 
     Artifact.prototype.addFile = function (name, content, callback) {
         var self = this;
         var filename = name.substring(name.lastIndexOf('/') + 1);
-        this.blobClient.addObject(filename, content, function (err, hash) {
+
+        self.blobClient.addObject(filename, content, function (err, hash) {
             if (err) {
                 callback(err);
                 return;
             }
 
-            self.descriptor[name] = hash;
-            callback(null, hash);
+            self.blobClient.getInfo(hash, function (err, metadata) {
+                if (self.descriptor.content.hasOwnProperty(name)) {
+                    callback('Another content with the same name was already added. ' + JSON.stringify(self.descriptor.content[name]));
+
+                } else {
+                    self.descriptor.size += metadata.size;
+
+                    self.descriptor.content[name] = {
+                        content: metadata.content,
+                        contentType: 'object'
+                    };
+                    callback(null, hash);
+                }
+            });
         });
     };
 
@@ -50,12 +69,27 @@ define([], function () {
         }
     };
 
-    Artifact.prototype.addHash = function (name, hash) {
-        this.descriptor[name] = hash;
+    Artifact.prototype.addHash = function (name, hash, callback) {
+        var self = this;
+
+        self.blobClient.getInfo(hash, function (err, metadata) {
+            if (self.descriptor.content.hasOwnProperty(name)) {
+                callback('Another content with the same name was already added. ' + JSON.stringify(self.descriptor.content[name]));
+
+            } else {
+                self.descriptor.size += metadata.size;
+
+                self.descriptor.content[name] = {
+                    content: metadata.content,
+                    contentType: 'object'
+                };
+                callback(null, hash);
+            }
+        });
     };
 
     Artifact.prototype.save = function (callback) {
-        this.blobClient.addComplexObject(this.name, this.descriptor, callback);
+        this.blobClient.addComplexObject(this.descriptor, callback);
     };
 
 

@@ -506,6 +506,7 @@ define(['logManager',
                     res.send(500);
                 } else {
                     res.status(200);
+                    res.setHeader('Content-type', 'application/json');
                     res.end(JSON.stringify(metadata, null, 4));
 
                 }
@@ -530,6 +531,7 @@ define(['logManager',
                             res.send(500);
                         } else {
                             res.status(200);
+                            res.setHeader('Content-type', 'application/json');
                             var info = {};
                             info[hash] = metadata;
                             res.end(JSON.stringify(info, null, 4));
@@ -542,24 +544,32 @@ define(['logManager',
 
         __app.post('/rest/blob/createMetadata', ensureAuthenticated, function(req, res) {
 
-            blobBackend.putMetadata(JSON.parse(req.body), function (err, hash) {
-                if (err) {
-                    res.send(500);
-                } else {
-                    // FIXME: it should be enough to send back the hash only
-                    blobBackend.getMetadata(hash, function (err, metadataHash, metadata) {
-                        if (err) {
-                            res.send(500);
-                        } else {
-                            res.status(200);
-                            var info = {};
-                            info[hash] = metadata;
-                            res.end(JSON.stringify(info, null, 4));
-                        }
-                    });
-                }
+            var data = '';
+
+            req.addListener('data', function(chunk) {
+                data += chunk;
             });
 
+            req.addListener('end', function() {
+                blobBackend.putMetadata(JSON.parse(data), function (err, hash) {
+                    if (err) {
+                        res.send(500);
+                    } else {
+                        // FIXME: it should be enough to send back the hash only
+                        blobBackend.getMetadata(hash, function (err, metadataHash, metadata) {
+                            if (err) {
+                                res.send(500);
+                            } else {
+                                res.status(200);
+                                res.setHeader('Content-type', 'application/json');
+                                var info = {};
+                                info[hash] = metadata;
+                                res.end(JSON.stringify(info, null, 4));
+                            }
+                        });
+                    }
+                });
+            });
         });
 
         var sendBlobContent = function (req, res, metadataHash, subpartPath, download) {

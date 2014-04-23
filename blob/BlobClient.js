@@ -57,26 +57,27 @@ define(['./Artifact'], function (Artifact) {
         oReq.send(data);
     };
 
-    BlobClient.prototype.addComplexObject = function (name, complexObjectDescriptor, callback) {
-        var sortedDescriptor = {};
-
-        var fnames = Object.keys(complexObjectDescriptor);
+    BlobClient.prototype.addComplexObject = function (complexObjectDescriptor, callback) {
+        var fnames = Object.keys(complexObjectDescriptor.content);
         fnames.sort();
 
         var metadata = {
-            name: name + '.zip',
-            size: 0, // TODO: get the correct size
-            mime: 'application/zip',
+            name: complexObjectDescriptor.name,
+            size: complexObjectDescriptor.size,
+            mime: complexObjectDescriptor.mime,
             content: {},
-            contentType: 'object'
+            contentType: complexObjectDescriptor.contentType
         };
 
-        for (var j = 0; j < fnames.length; j += 1) {
-            metadata.content[fnames[j]] = {
-                contentType: 'object',
-                content: complexObjectDescriptor[fnames[j]]
-            };
+        if (complexObjectDescriptor.contentType === 'complex') {
+            for (var j = 0; j < fnames.length; j += 1) {
+                metadata.content[fnames[j]] = complexObjectDescriptor.content[fnames[j]];
+            }
+        } else {
+            callback('not supported metadata type');
+            return;
         }
+
 
         var oReq = new XMLHttpRequest();
         oReq.open("POST", this.getCreateURL(name, true), true);
@@ -90,7 +91,7 @@ define(['./Artifact'], function (Artifact) {
         };
 
         // FIXME: in production mode do not indent the json file.
-        var blob = new Blob([JSON.stringify(sortedDescriptor, null, 4)], {type: 'text/plain'});
+        var blob = new Blob([JSON.stringify(metadata, null, 4)], {type: 'text/plain'});
 
         oReq.send(blob);
     };
