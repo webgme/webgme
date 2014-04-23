@@ -53,10 +53,8 @@ define(['./Artifact'], function (Artifact) {
             callback(null, hash);
         };
 
-        // FIXME: mime type - test with image and pdf files
-        var blob = new Blob([data], {type: 'text/plain'});
-
-        oReq.send(blob);
+        // data is a file object or blob
+        oReq.send(data);
     };
 
     BlobClient.prototype.addComplexObject = function (name, complexObjectDescriptor, callback) {
@@ -64,8 +62,20 @@ define(['./Artifact'], function (Artifact) {
 
         var fnames = Object.keys(complexObjectDescriptor);
         fnames.sort();
+
+        var metadata = {
+            name: name + '.zip',
+            size: 0, // TODO: get the correct size
+            mime: 'application/zip',
+            content: {},
+            contentType: 'object'
+        };
+
         for (var j = 0; j < fnames.length; j += 1) {
-            sortedDescriptor[fnames[j]] = complexObjectDescriptor[fnames[j]];
+            metadata.content[fnames[j]] = {
+                contentType: 'object',
+                content: complexObjectDescriptor[fnames[j]]
+            };
         }
 
         var oReq = new XMLHttpRequest();

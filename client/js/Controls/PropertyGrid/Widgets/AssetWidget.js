@@ -113,7 +113,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
                         //TODO: more meaningful error message
                         text = "ERROR...";
                     } else {
-                        text = fileInfo.filename + ' (' + fileInfo.size +' bytes)';
+                        text = fileInfo.name + ' (' + fileInfo.size +' bytes)';
                     }
                     self.__assetLink.text(text);
                     self.__assetLink.attr('title', text);
@@ -142,6 +142,8 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
 
         AssetWidget.prototype._fileSelectHandler = function (event) {
             var self = this,
+                blobClient = new BlobClient(),
+                i,
                 file;
 
             // cancel event and hover styling
@@ -155,120 +157,37 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
             if (files && files.length > 0) {
                 this._detachFileDropHandlers(true);
 
-                this._readFilesAsync(files, function (result) {
-                    var names = Object.keys(result),
-                        blobClient = new BlobClient();
+                var afName = self.propertyName + '-' + new Date().toISOString().replace(/:/g, '-').replace(/\./, '-');
+                var artifact = blobClient.createArtifact(afName);
 
-                    if (names && names.length > 0) {
-                        if (names.length === 1) {
-                            console.log('Uploading 1 file...');
-                            blobClient.addObject(names[0], result[names[0]].content, function (err, hash) {
-                                if (err) {
-                                    //TODO: something went wrong, tell the user????
-                                } else {
-                                    self.setValue(hash);
-                                    self.fireFinishChange();
-                                }
-                                self._attachFileDropHandlers(false);
-                            });
+                var remainingFiles = files.length;
+
+                for (i = 0; i < files.length; i += 1) {
+                    file = files[i];
+                    artifact.addFile(file.name, file, function (err, hash) {
+                        remainingFiles -= 1;
+
+                        if (err) {
+                            //TODO: something went wrong, tell the user????
                         } else {
-                            console.log('Uploading ' + names.length +' files...');
-                            var afName = self.propertyName + '-' + new Date().toISOString().replace(/:/g, '-').replace(/\./, '-');
-                            var artifact = blobClient.createArtifact(afName);
-                            self._addArtifactFiles(artifact, result, function (/*hashList*/) {
-                                artifact.save(function (err, hash) {
-                                    self.setValue(hash);
+                            // successfully uploaded
+                        }
+
+                        if (remainingFiles === 0) {
+                            if (files.length > 1) {
+                                artifact.save(function (err, artifactHash) {
+                                    self.setValue(artifactHash);
                                     self.fireFinishChange();
                                     self._attachFileDropHandlers(false);
                                 });
-                            });
+
+                            } else {
+                                self.setValue(hash);
+                                self.fireFinishChange();
+                                self._attachFileDropHandlers(false);
+                            }
                         }
-                    } else {
-                        self._attachFileDropHandlers(false);
-                    }
-                });
-            }
-        };
-
-        AssetWidget.prototype._readFilesAsync = function (files, fnCallback, contents, fileNum) {
-            var file,
-                self = this;
-
-            contents = contents || {};
-
-            if (fileNum === undefined) {
-                fileNum = files.length - 1;
-            }
-
-            if (fileNum > -1) {
-                //get the first file from the list and read it async
-                file = files[fileNum];
-
-                this._readOneFilesAsync(file, function (err, fileContent) {
-                    contents[file.name] = {'err': err,
-                        'size': file.size,
-                        'content':  fileContent };
-                    self._readFilesAsync(files, fnCallback, contents, fileNum-1);
-                });
-            } else {
-                if (fnCallback) {
-                    fnCallback(contents);
-                }
-            }
-        };
-
-        AssetWidget.prototype._readOneFilesAsync = function (file, fnCallback) {
-            if (file.size > MAX_FILE_SIZE) {
-                fnCallback('File to large, maximum allowed size is ' + MAX_FILE_SIZE + ' bytes...', undefined);
-            } else {
-                //try to json parse it's content
-                var reader = new FileReader();
-                reader.onloadstart = function() {
-                };
-
-                reader.onloadend = function() {
-                };
-
-                reader.onerror = function(error) {
-                    fnCallback(error.message, undefined);
-                };
-
-                reader.onload = function(e) {
-                    if (e.target && e.target.result){
-                        fnCallback(undefined,  e.target.result);
-                    }
-                };
-
-                //read the file
-                setTimeout(function () {
-                    reader.readAsText(file);
-                }, 100);
-            }
-        };
-
-        AssetWidget.prototype._addArtifactFiles = function (artifact, files, fnCallback, hashList) {
-            var names = Object.keys(files),
-                fileName,
-                self = this;
-
-            hashList = hashList || {};
-
-            if (names.length > 0) {
-                fileName = names[0];
-                artifact.addFile(fileName, files[fileName].content, function (err, hash) {
-                    if (err) {
-                        //TODO: do what?
-                        console.log('AddArtifactFile failed: ' + fileName + ' --> ' + err);
-                    } else {
-                        hashList[fileName] = hash;
-                    }
-
-                    delete files[fileName];
-                    self._addArtifactFiles(artifact, files, fnCallback, hashList);
-                });
-            } else {
-                if (fnCallback) {
-                    fnCallback(hashList);
+                    });
                 }
             }
         };
