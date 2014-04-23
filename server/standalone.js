@@ -14,7 +14,6 @@ define(['logManager',
     'https',
     'os',
     'mime',
-    'blob/BlobManagerFS',
     'blob/BlobFSBackend',
     'blob/BlobS3Backend'
     ],function(
@@ -34,7 +33,6 @@ define(['logManager',
         Https,
         OS,
         mime,
-        BlobManagerFS,
         BlobFSBackend,
         BlobS3Backend
     ){
@@ -542,32 +540,25 @@ define(['logManager',
 
         });
 
-        __app.post('/rest/blob/createMetadata/:name', ensureAuthenticated, function(req, res) {
-            var filename = 'not_defined.zip';
+        __app.post('/rest/blob/createMetadata', ensureAuthenticated, function(req, res) {
 
-            if (req.params.name !== null && req.params.name !== '') {
-                filename = req.params.name
-            }
-
-            res.send(404);
-            // TODO: complex object and soft links
-//            blobBackend.putMetadata(filename, req, function (err, hash) {
-//                if (err) {
-//                    res.send(500);
-//                } else {
-//                    // FIXME: it should be enough to send back the hash only
-//                    blobBackend.getMetadata(hash, function (err, metadataHash, metadata) {
-//                        if (err) {
-//                            res.send(500);
-//                        } else {
-//                            res.status(200);
-//                            var info = {};
-//                            info[hash] = metadata;
-//                            res.end(JSON.stringify(info, null, 4));
-//                        }
-//                    });
-//                }
-//            });
+            blobBackend.putMetadata(JSON.parse(req.body), function (err, hash) {
+                if (err) {
+                    res.send(500);
+                } else {
+                    // FIXME: it should be enough to send back the hash only
+                    blobBackend.getMetadata(hash, function (err, metadataHash, metadata) {
+                        if (err) {
+                            res.send(500);
+                        } else {
+                            res.status(200);
+                            var info = {};
+                            info[hash] = metadata;
+                            res.end(JSON.stringify(info, null, 4));
+                        }
+                    });
+                }
+            });
 
         });
 
@@ -575,224 +566,35 @@ define(['logManager',
             res.send(500);
         });
 
-        __app.get('/rest/blob/view/:metadataHash', ensureAuthenticated, function(req, res) {
-            blobBackend.getMetadata(req.params.metadataHash, function (err, metadataHash, metadata) {
-                if (err) {
-                    res.send(500);
-                    return;
-                }
+//        __app.get('/rest/blob/view/:metadataHash', ensureAuthenticated, function(req, res) {
+//            // TODO: we need to get the content and save as a local file.
+//            // if we just proxy the stream we cannot set errors correctly.
+//            blobBackend.getFile(metadataHash, '', res, function (err, hash) {
+//               if (err) {
+//                   res.send(500);
+//               } else {
+//                   //res.send(200);
+//               }
+//            });
+//        });
 
-                if (metadata.contentType === 'object') {
-
-                    // TODO: we need to get the content and save as a local file.
-                    // if we just proxy the stream we cannot set errors correctly.
-                    blobBackend.getFile(metadataHash, res, function (err, hash) {
-                       if (err) {
-//                           res.send(500);
-                       } else {
-                           //res.send(200);
-                       }
-                    });
-                } else {
-                    // TODO: handle complex type and soft links
-                    res.send(500);
-                }
-
-            });
-        });
-
-        __app.get(/^\/rest\/blob\/view\/([0-9a-f]{40,40})\/(.+)$/, ensureAuthenticated, function(req, res) {
+        __app.get(/^\/rest\/blob\/view\/([0-9a-f]{40,40})\/(.*)$/, ensureAuthenticated, function(req, res) {
             var metadataHash = req.params[0];
             var subpartPath = req.params[1];
 
-            res.send(500);
-        });
-
-        // TODO: remove this old blob code
-        // TODO: pick here which blob manager to use based on the config.
-        var blobStorage = new BlobManagerFS();
-
-        __app.get('/rest/:token/blob/infos',ensureAuthenticated,function(req,res){
-            blobStorage.loadInfos(null, function (err, infos) {
+            // TODO: we need to get the content and save as a local file.
+            // if we just proxy the stream we cannot set errors correctly.
+            blobBackend.getFile(metadataHash, subpartPath, res, function (err, hash) {
                 if (err) {
+                    // give more precise description about the error type and message. Resource if not available etc.
                     res.send(500);
                 } else {
-                    res.status(200);
-                    res.end(JSON.stringify(infos, null, 4));
-
+                    //res.send(200);
                 }
             });
         });
 
-        var addFileToBlob = function (req, res) {
-            var filename = 'not_defined.txt';
-
-            if (req.params.filename !== null && req.params.filename !== '') {
-                filename = req.params.filename
-            }
-
-            var uploadedFile = {};
-            var d;
-            var size;
-
-            req.on('data', function (data) {
-                // TODO: do not save data, just forward it to the place where it has to be stored.
-                // TODO: update hash here in place
-                if (d) {
-                    d += data;
-                } else {
-                    d = data;
-                }
-
-                size += data.length;
-                //console.log('Got chunk: ' + data.length + ' total: ' + size);
-            });
-
-            req.on('end', function () {
-                //console.log("total size = " + size);
-
-                blobStorage.save({name:filename, complex: req.query.complex === 'true' || false}, d, function (err, hash) {
-                    if (err) {
-                        res.send(500);
-                    } else {
-
-                        uploadedFile[hash] = blobStorage.getInfo(hash);
-                        // TODO: delete temp file
-
-                        console.log(uploadedFile);
-                        res.send(uploadedFile);
-                    }
-                });
-            });
-
-            req.on('error', function(e) {
-                //console.log("ERROR ERROR: " + e.message);
-            });
-
-            // FIXME: use pipe - i.e. streams
-
-
-        };
-
-        __app.put('/rest/:token/blob/create/:filename',ensureAuthenticated,function(req, res) {
-            var filename = 'not_defined.txt';
-
-            if (req.params.filename !== null && req.params.filename !== '') {
-                filename = req.params.filename
-            }
-
-            blobStorage.streamedSave({name:filename, complex: req.query.complex === 'true' || false},req,function(err,hash){
-                if(err){
-                    res.send(500);
-                } else {
-                    var info = {};
-                    info[hash] = blobStorage.getInfo(hash);
-                   res.status(200).send(info); //TODO write it nicer
-                }
-            });
-        });
-
-        __app.post('/rest/:token/blob/create/:filename',ensureAuthenticated,function(req,res){
-            //the structure of data should be something like {info:{},data:binary/string}
-            addFileToBlob(req, res);
-        });
-
-        __app.get('/rest/:token/blob/download/:blob_hash',ensureAuthenticated,function(req,res){
-            // TODO: use pipe/streams
-            blobStorage.getContent(req.params.blob_hash, function (err, blob, filename) {
-                if (err) {
-                    res.send(500);
-                } else {
-                    // FIXME: set the mime-type based on the info/file type
-                    var mimetype = mime.lookup(filename);
-
-                    res.setHeader('Content-disposition', 'attachment; filename=' + filename);
-                    res.setHeader('Content-type', mimetype);
-
-                    res.status(200);
-                    res.end(blob);
-                }
-            });
-        });
-
-        __app.get('/rest/:token/blob/info/:blob_hash',ensureAuthenticated,function(req,res){
-            // TODO: we should be able to ask only for a single hash
-            blobStorage.loadInfos(null, function (err, infos) {
-                if (err) {
-                    res.send(500);
-                } else {
-                    if (infos.hasOwnProperty(req.params.blob_hash)) {
-                        res.status(200);
-                        res.end(JSON.stringify(infos[req.params.blob_hash], null, 4));
-                    } else {
-                        res.send(404);
-                    }
-
-                }
-            });
-        });
-
-        __app.get('/rest/:token/blob/view/:id',ensureAuthenticated,function(req,res){
-            // TODO: use pipe/streams
-            blobStorage.load(req.params.id, function (err, blob, filename) {
-                if (err) {
-                    res.send(500);
-                } else {
-                    var mimetype = mime.lookup(filename);
-                    res.setHeader('Content-type', mimetype);
-                    res.status(200);
-                    res.end(blob);
-                }
-            });
-        });
-
-
-        // TODO: browse
-        // example: /blob/view/b3a23bf0eb934793a97426fd8d4b22a7d1dc089d/path/in/complex/content.txt
-        __app.get(/^\/blob\/view\/([0-9a-f]{40,40})\/(.+)$/,ensureAuthenticated,function(req,res){
-            var hash = req.params[0];
-            var subpartPath = req.params[1];
-            blobStorage.loadInfos(null, function (err, infos) {
-                if (err) {
-                    res.send(500);
-                } else {
-                    if (infos.hasOwnProperty(hash)) {
-                        if (infos[hash].complex) {
-
-                            blobStorage.load(hash, function (err, blob, filename) {
-                                if (err) {
-                                    res.send(500);
-                                    return;
-                                }
-                                var descriptor = JSON.parse(blob);
-                                // FIXME: how to deal with leading slashes?
-                                if (descriptor.hasOwnProperty(subpartPath)) {
-
-                                    blobStorage.load(descriptor[subpartPath], function (err, blob, filename) {
-                                        if (err) {
-                                            res.send(500);
-                                            return;
-                                        }
-
-                                        var mimetype = mime.lookup(filename);
-                                        res.setHeader('Content-type', mimetype);
-                                        res.status(200);
-                                        res.end(blob);
-                                    });
-                                } else {
-                                    // requested path does not exist in resource
-                                    res.send(404);
-                                }
-                            });
-                        } else {
-                            res.send(400);
-                        }
-                    } else {
-                        res.end(404);
-                    }
-                }
-            });
-        });
+        // end of blob rules
 
         //client contents - js/html/css
         //css classified as not secure content
@@ -978,17 +780,6 @@ define(['logManager',
         }
 
         __logger.info("standalone server initialization completed");
-
-
-        // other initializations
-        __logger.info("initializing blob storage");
-        blobStorage.initialize(function (err) {
-            if (err) {
-                __logger.error("failed to initialize blob storage");
-            } else {
-                __logger.info("blob storage is ready to use");
-            }
-        });
 
         return {
 

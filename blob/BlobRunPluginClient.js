@@ -7,8 +7,8 @@
  */
 
 define(['blob/BlobClient',
-        'blob/BlobManagerFS'],
-    function (BlobClient, BlobManagerFS) {
+        'blob/BlobFSBackend'],
+    function (BlobClient, BlobFSBackend) {
 
         /**
          * Initializes a new instance of a server side file system object.
@@ -20,7 +20,8 @@ define(['blob/BlobClient',
          */
         function BlobRunPluginClient() {
             BlobClient.call(this);
-            this.blobStorage = new BlobManagerFS();
+            this.blobStorage = new BlobFSBackend(); // TODO: this type or instance should come as a parameter.
+            throw new Error('TODO: use the new implementation');
         }
 
         // Inherits from BlobClient

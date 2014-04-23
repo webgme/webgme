@@ -3,10 +3,11 @@
  */
 
 define(['fs',
+    'zlib',
     'mime',
     'util/guid',
     'util/StringStreamReader',
-    'util/StringStreamWriter'], function (fs, mime, GUID, StringStreamReader, StringStreamWriter) {
+    'util/StringStreamWriter'], function (fs, zlib, mime, GUID, StringStreamReader, StringStreamWriter) {
 
     var BlobBackendBase = function () {
         this.contentBucket = 'wg-content';
@@ -72,20 +73,19 @@ define(['fs',
         });
     };
 
-    BlobBackendBase.prototype.getFile = function (metadataHash, writeStream, callback) {
+    BlobBackendBase.prototype.getFile = function (metadataHash, subpath, writeStream, callback) {
         // TODO: get metadata
         // TODO: get all content based on metadata
         // TODO: write the stream after callback (error, metadata)
         var self = this;
         var stringStream = new StringStreamWriter();
 
-        self.getObject(metadataHash, stringStream, self.metadataBucket, function (err) {
+        self.getMetadata(metadataHash, function (err, metadataHash, metadata) {
             if (err) {
                 callback(err);
                 return;
             }
 
-            var metadata = stringStream.toJSON();
             if (metadata.contentType === 'object') {
                 self.getObject(metadata.content, writeStream, self.contentBucket, function (err) {
                     if (err) {
@@ -95,9 +95,16 @@ define(['fs',
 
                     callback(null, metadata);
                 });
+
+            } else if (metadata.contentType === 'complex') {
+                // 1) create a zip package
+                // 2) add all files from the descriptor to the zip
+                // 3) pipe the zip package to the stream
+                callback('not supported content type: ' + metadata.contentType);
+
             } else {
                 // TODO: handle here the complex type and soft links
-                callback('not supported content type');
+                callback('not supported content type: ' + metadata.contentType);
             }
         });
     };

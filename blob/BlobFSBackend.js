@@ -80,7 +80,14 @@ define(['./BlobBackendBase',
 
     BlobFSBackend.prototype.getObject = function (hash, writeStream, bucket, callback) {
         var filename = path.join(this.blobDir, bucket, this._getObjectRelativeLocation(hash)),
+            readStream;
+
+        if (fs.existsSync(filename)) {
             readStream = fs.createReadStream(filename);
+        } else {
+            callback('Requested object does not exist: ' + hash);
+            return;
+        }
 
         writeStream.on('finish', function () {
             // FIXME: any error handling here?
@@ -96,22 +103,28 @@ define(['./BlobBackendBase',
     BlobFSBackend.prototype.listObjects = function (bucket, callback) {
         var self = this;
         var bucketName = path.join(self.blobDir, bucket);
-        self._readDir(bucketName, function (err, found) {
-            if (err) {
-                callback(err);
-                return;
-            }
+        if (fs.existsSync(bucketName)) {
+            self._readDir(bucketName, function (err, found) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
 
-            var hashes = [];
+                var hashes = [];
 
-            for (var i = 0; i < found.files.length; i += 1) {
-                var f = found.files[i];
-                var hash = f.name.slice(bucketName.length).replace(/(\/|\\)/g,'');
-                hashes.push(hash);
-            }
+                for (var i = 0; i < found.files.length; i += 1) {
+                    var f = found.files[i];
+                    var hash = f.name.slice(bucketName.length).replace(/(\/|\\)/g, '');
+                    hashes.push(hash);
+                }
 
-            callback(null, hashes);
-        });
+                callback(null, hashes);
+            });
+
+        } else {
+            // metadata storage is empty
+            callback(null, []);
+        }
     };
 
     BlobFSBackend.prototype._getObjectRelativeLocation = function (hash) {

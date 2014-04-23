@@ -77,7 +77,7 @@ define(['blob/BlobClient', 'http', 'https'],
                 hostname: '127.0.0.1',
                 port: this.serverPort,
                 path: this.getCreateURL(name, true),
-                method: 'PUT'
+                method: 'POST'
             };
 
             this._sendHttpRequestWithContent(options, JSON.stringify(sortedDescriptor, null, 4), function (err, data) {
@@ -100,7 +100,7 @@ define(['blob/BlobClient', 'http', 'https'],
                 hostname: '127.0.0.1',
                 port: this.serverPort,
                 path: this.getCreateURL(name),
-                method: 'PUT'
+                method: 'POST'
             };
 
             this._sendHttpRequestWithContent(options, data, function (err, responseData) {

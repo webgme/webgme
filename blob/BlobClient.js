@@ -8,16 +8,16 @@ define(['./Artifact'], function (Artifact) {
         this.artifacts = [];
 
         // TODO: TOKEN???
-        this.blobUrl = '/rest/notoken/blob/'; // TODO: any ways to ask for this or get it from the configuration?
+        this.blobUrl = '/rest/blob/'; // TODO: any ways to ask for this or get it from the configuration?
     };
 
 
     BlobClient.prototype.getInfosURL = function () {
-        return this.blobUrl + 'infos/';
+        return this.blobUrl + 'metadata/';
     };
 
     BlobClient.prototype.getInfoURL = function (hash) {
-        return this.blobUrl + 'info/' + hash;
+        return this.blobUrl + 'metadata/' + hash + '/';
     };
 
     BlobClient.prototype.getViewURL = function (hash, subpath) {
@@ -33,14 +33,17 @@ define(['./Artifact'], function (Artifact) {
     };
 
     BlobClient.prototype.getCreateURL = function (filename, complex) {
-        var complexUrl = complex ? '.json?complex=true' : '';
-        return this.blobUrl + 'create/' + filename + complexUrl;
+        if (complex) {
+            return this.blobUrl + 'createMetadata/';
+        } else {
+            return this.blobUrl + 'createFile/' + filename;
+        }
     };
 
 
     BlobClient.prototype.addObject = function (name, data, callback) {
         var oReq = new XMLHttpRequest();
-        oReq.open("PUT", this.getCreateURL(name), true);
+        oReq.open("POST", this.getCreateURL(name), true);
         oReq.onload = function (oEvent) {
             // Uploaded.
             var response = JSON.parse(oEvent.target.response);
@@ -50,6 +53,7 @@ define(['./Artifact'], function (Artifact) {
             callback(null, hash);
         };
 
+        // FIXME: mime type - test with image and pdf files
         var blob = new Blob([data], {type: 'text/plain'});
 
         oReq.send(blob);
@@ -65,7 +69,7 @@ define(['./Artifact'], function (Artifact) {
         }
 
         var oReq = new XMLHttpRequest();
-        oReq.open("PUT", this.getCreateURL(name, true), true);
+        oReq.open("POST", this.getCreateURL(name, true), true);
         oReq.onload = function (oEvent) {
             // Uploaded.
             var response = JSON.parse(oEvent.target.response);
