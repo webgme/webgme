@@ -53,13 +53,13 @@ define(['./BlobBackendBase',
                 shasum.update(readStream);
                 size += readStream.length;
             } else {
-                //TODO this implementation should be moved to another class which inherits from writeablestream...
                 readStream.on('data', function (chunk) {
                     shasum.update(chunk);
                     size += chunk.length; //TODO does it really have a length field always???
                 });
             }
 
+            // TODO: S3 cannot handle streams except file stream!
             self.s3.putObject({ Bucket: self.tempBucket, Key: tempName, Body: readStream }, function(err, data) {
                 // TODO: error handling here
                 if (err) {
@@ -91,13 +91,26 @@ define(['./BlobBackendBase',
         };
 
         BlobS3Backend.prototype.getObject = function (hash, writeStream, bucket, callback) {
-            var self = this;
+            var self = this,
+                obj = {
+                    Bucket:bucket,
+                    Key: hash
+                };
 
-            self.s3.getObject({Bucket:bucket, Key: hash}).createReadStream().pipe(writeStream);
+            self.s3.getObject(obj).createReadStream().pipe(writeStream);
 
             writeStream.on('finish', function () {
                 // FIXME: any error handling here?
-                callback(null);
+                // FIXME: get the last modified date for the object
+                self.s3.headObject(obj, function (err, data) {
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+
+                    callback(null, {lastModified: (new Date(data.LastModified)).toISOString()});
+                });
+
             });
         };
 
@@ -114,10 +127,7 @@ define(['./BlobBackendBase',
                 var hashes = [];
 
                 for (var i = 0; i < data.Contents.length; i += 1) {
-                    hashes.push({
-                        hash: data.Contents[i].Key,
-                        lastModified: data.Contents[i].LastModified.toISOString(),
-                    });
+                    hashes.push(data.Contents[i].Key);
                 }
 
                 callback(null, hashes);

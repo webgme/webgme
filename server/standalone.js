@@ -503,7 +503,7 @@ define(['logManager',
         });
 
         __app.get('/rest/blob/metadata/:metadataHash', ensureAuthenticated, function(req, res) {
-            blobBackend.getMetadata(req.params.blob_hash, function (err, metadata) {
+            blobBackend.getMetadata(req.params.metadataHash, function (err, hash, metadata) {
                 if (err) {
                     res.send(500);
                 } else {
@@ -514,8 +514,61 @@ define(['logManager',
             });
         });
 
-        __app.post('/rest/blob/create/:filename', ensureAuthenticated, function(req, res) {
-            res.send(500);
+        __app.post('/rest/blob/createFile/:filename', ensureAuthenticated, function(req, res) {
+            var filename = 'not_defined.txt';
+
+            if (req.params.filename !== null && req.params.filename !== '') {
+                filename = req.params.filename
+            }
+
+            // regular file
+            blobBackend.putFile(filename, req, function (err, hash) {
+                if (err) {
+                    res.send(500);
+                } else {
+                    // FIXME: it should be enough to send back the hash only
+                    blobBackend.getMetadata(hash, function (err, metadataHash, metadata) {
+                        if (err) {
+                            res.send(500);
+                        } else {
+                            res.status(200);
+                            var info = {};
+                            info[hash] = metadata;
+                            res.end(JSON.stringify(info, null, 4));
+                        }
+                    });
+                }
+            });
+
+        });
+
+        __app.post('/rest/blob/createMetadata/:name', ensureAuthenticated, function(req, res) {
+            var filename = 'not_defined.zip';
+
+            if (req.params.name !== null && req.params.name !== '') {
+                filename = req.params.name
+            }
+
+            res.send(404);
+            // TODO: complex object and soft links
+//            blobBackend.putMetadata(filename, req, function (err, hash) {
+//                if (err) {
+//                    res.send(500);
+//                } else {
+//                    // FIXME: it should be enough to send back the hash only
+//                    blobBackend.getMetadata(hash, function (err, metadataHash, metadata) {
+//                        if (err) {
+//                            res.send(500);
+//                        } else {
+//                            res.status(200);
+//                            var info = {};
+//                            info[hash] = metadata;
+//                            res.end(JSON.stringify(info, null, 4));
+//                        }
+//                    });
+//                }
+//            });
+
         });
 
         __app.get('/rest/blob/download/:metadataHash', ensureAuthenticated, function(req, res) {
@@ -523,7 +576,29 @@ define(['logManager',
         });
 
         __app.get('/rest/blob/view/:metadataHash', ensureAuthenticated, function(req, res) {
-            res.send(500);
+            blobBackend.getMetadata(req.params.metadataHash, function (err, metadataHash, metadata) {
+                if (err) {
+                    res.send(500);
+                    return;
+                }
+
+                if (metadata.contentType === 'object') {
+
+                    // TODO: we need to get the content and save as a local file.
+                    // if we just proxy the stream we cannot set errors correctly.
+                    blobBackend.getFile(metadataHash, res, function (err, hash) {
+                       if (err) {
+//                           res.send(500);
+                       } else {
+                           //res.send(200);
+                       }
+                    });
+                } else {
+                    // TODO: handle complex type and soft links
+                    res.send(500);
+                }
+
+            });
         });
 
         __app.get(/^\/rest\/blob\/view\/([0-9a-f]{40,40})\/(.+)$/, ensureAuthenticated, function(req, res) {

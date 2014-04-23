@@ -125,7 +125,7 @@ define(['fs',
         var self = this,
             writeStream = new StringStreamWriter();
 
-        self.getObject(metadataHash.hash, writeStream, self.metadataBucket, function (err) {
+        self.getObject(metadataHash, writeStream, self.metadataBucket, function (err, fileInfo) {
             if (err) {
                 callback(err);
                 return;
@@ -133,9 +133,9 @@ define(['fs',
 
             // TODO: make a class for this object
             var metadata = writeStream.toJSON();
-            metadata.lastModified = metadataHash.lastModified;
+            metadata.lastModified = fileInfo.lastModified;
 
-            callback(null, metadataHash.hash, metadata);
+            callback(null, metadataHash, metadata);
         });
     };
 

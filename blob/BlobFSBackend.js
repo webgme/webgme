@@ -84,7 +84,10 @@ define(['./BlobBackendBase',
 
         writeStream.on('finish', function () {
             // FIXME: any error handling here?
-            callback(null);
+            fs.stat(filename, function(err, stat) {
+                // FIXME: any error handling here?
+                callback(null, {lastModified: stat.mtime.toISOString()});
+            });
         });
 
         readStream.pipe(writeStream);
@@ -103,11 +106,8 @@ define(['./BlobBackendBase',
 
             for (var i = 0; i < found.files.length; i += 1) {
                 var f = found.files[i];
-
-                hashes.push({
-                    hash: f.name.slice(bucketName.length).replace(/(\/|\\)/g,''),
-                    lastModified: f.mtime.toISOString()
-                });
+                var hash = f.name.slice(bucketName.length).replace(/(\/|\\)/g,'');
+                hashes.push(hash);
             }
 
             callback(null, hashes);
