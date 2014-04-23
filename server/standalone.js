@@ -14,7 +14,9 @@ define(['logManager',
     'https',
     'os',
     'mime',
-    'blob/BlobManagerFS'
+    'blob/BlobManagerFS',
+    'blob/BlobFSBackend',
+    'blob/BlobS3Backend'
     ],function(
         LogManager,
         Storage,
@@ -32,7 +34,9 @@ define(['logManager',
         Https,
         OS,
         mime,
-        BlobManagerFS
+        BlobManagerFS,
+        BlobFSBackend,
+        BlobS3Backend
     ){
 
     function StandAloneServer(CONFIG){
@@ -482,6 +486,54 @@ define(['logManager',
 
 
         __logger.info("creating blob related rules");
+
+        var blobBackend = new BlobFSBackend();
+        //var blobBackend = new BlobS3Backend();
+
+        __app.get('/rest/blob/metadata', ensureAuthenticated, function(req, res) {
+            blobBackend.listAllMetadata(function (err, metadata) {
+                if (err) {
+                    res.send(500);
+                } else {
+                    res.status(200);
+                    res.end(JSON.stringify(metadata, null, 4));
+
+                }
+            });
+        });
+
+        __app.get('/rest/blob/metadata/:metadataHash', ensureAuthenticated, function(req, res) {
+            blobBackend.getMetadata(req.params.blob_hash, function (err, metadata) {
+                if (err) {
+                    res.send(500);
+                } else {
+                    res.status(200);
+                    res.end(JSON.stringify(metadata, null, 4));
+
+                }
+            });
+        });
+
+        __app.post('/rest/blob/create/:filename', ensureAuthenticated, function(req, res) {
+            res.send(500);
+        });
+
+        __app.get('/rest/blob/download/:metadataHash', ensureAuthenticated, function(req, res) {
+            res.send(500);
+        });
+
+        __app.get('/rest/blob/view/:metadataHash', ensureAuthenticated, function(req, res) {
+            res.send(500);
+        });
+
+        __app.get(/^\/rest\/blob\/view\/([0-9a-f]{40,40})\/(.+)$/, ensureAuthenticated, function(req, res) {
+            var metadataHash = req.params[0];
+            var subpartPath = req.params[1];
+
+            res.send(500);
+        });
+
+        // TODO: remove this old blob code
         // TODO: pick here which blob manager to use based on the config.
         var blobStorage = new BlobManagerFS();
 
