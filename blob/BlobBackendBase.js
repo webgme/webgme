@@ -13,7 +13,7 @@ define(['fs',
         this.contentBucket = 'wg-content';
         this.metadataBucket = 'wg-metadata';
         this.tempBucket = 'wg-temp';
-        this.shaMethod = 'sha1';
+        this.shaMethod = 'sha1'; // TODO: in the future we may switch to sha512
     };
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -44,6 +44,11 @@ define(['fs',
         // TODO: return metadata's hash and content's hash
 
         var self = this;
+
+        if (typeof readStream === 'string') {
+            // if a string is given convert it to a readable stream object
+            readStream = new StringStreamReader(readStream);
+        }
 
         self.putObject(readStream, self.contentBucket, function (err, hash, length) {
             if (err) {

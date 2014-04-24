@@ -7,22 +7,14 @@ define([
     'storage/serveruserstorage',
     'fs',
     'path',
-    'logManager'
-],function(
-    ASSERT,
-    PluginManager,
-    BlobRunPluginClient,
-    PluginResult,
-    Core,
-    Storage,
-    FS,
-    PATH,
-    logManager
-    ){
+    'logManager',
+    'blob/BlobFSBackend',
+    'blob/BlobS3Backend'
+], function (ASSERT, PluginManager, BlobRunPluginClient, PluginResult, Core, Storage, FS, PATH, logManager, BlobFSBackend, BlobS3Backend) {
 
-    function RunPlugin(){
+    function RunPlugin() {
 
-        var main = function(CONFIG,pluginConfig,callback) {
+        var main = function (CONFIG, pluginConfig, callback) {
             ASSERT(pluginConfig && pluginConfig.pluginName);
 
             var config,
@@ -70,26 +62,19 @@ define([
 
                             var pluginManager = new PluginManager(project, Core, plugins);
 
-                            config.blobClient = new BlobRunPluginClient();
+                            var blobBackend = new BlobFSBackend();
+                            //var blobBackend  = new BlobS3Backend();
 
-                            config.blobClient.initialize(function (err) {
-                                if (err) {
-                                    logger.error(err);
-                                    if (callback) {
-                                        callback(err, errorResult);
-                                    }
-                                    return;
+                            config.blobClient = new BlobRunPluginClient(blobBackend);
+
+                            pluginManager.executePlugin(pluginName, config, function (err, result) {
+                                logger.debug(JSON.stringify(result, null, 2));
+
+                                project.closeProject();
+                                storage.closeDatabase();
+                                if (callback) {
+                                    callback(err, result);
                                 }
-
-                                pluginManager.executePlugin(pluginName, config, function (err, result) {
-                                    logger.debug(JSON.stringify(result, null, 2));
-
-                                    project.closeProject();
-                                    storage.closeDatabase();
-                                    if (callback) {
-                                        callback(err, result);
-                                    }
-                                });
                             });
                         } else {
                             logger.error(err);
@@ -109,7 +94,7 @@ define([
         };
 
         return {
-            main:main
+            main: main
         }
     }
 

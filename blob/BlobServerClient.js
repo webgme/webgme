@@ -64,13 +64,25 @@ define(['blob/BlobClient', 'http', 'https'],
         };
 
 
-        BlobServerClient.prototype.addComplexObject = function (name, complexObjectDescriptor, callback) {
-            var sortedDescriptor = {};
-
-            var fnames = Object.keys(complexObjectDescriptor);
+        BlobServerClient.prototype.addComplexObject = function (complexObjectDescriptor, callback) {
+            var fnames = Object.keys(complexObjectDescriptor.content);
             fnames.sort();
-            for (var j = 0; j < fnames.length; j += 1) {
-                sortedDescriptor[fnames[j]] = complexObjectDescriptor[fnames[j]];
+
+            var metadata = {
+                name: complexObjectDescriptor.name,
+                size: complexObjectDescriptor.size,
+                mime: complexObjectDescriptor.mime,
+                content: {},
+                contentType: complexObjectDescriptor.contentType
+            };
+
+            if (complexObjectDescriptor.contentType === 'complex') {
+                for (var j = 0; j < fnames.length; j += 1) {
+                    metadata.content[fnames[j]] = complexObjectDescriptor.content[fnames[j]];
+                }
+            } else {
+                callback('not supported metadata type');
+                return;
             }
 
             var options = {
@@ -80,7 +92,7 @@ define(['blob/BlobClient', 'http', 'https'],
                 method: 'POST'
             };
 
-            this._sendHttpRequestWithContent(options, JSON.stringify(sortedDescriptor, null, 4), function (err, data) {
+            this._sendHttpRequestWithContent(options, JSON.stringify(metadata, null, 4), function (err, data) {
                 if (err) {
                     callback(err);
                     return;
@@ -119,6 +131,7 @@ define(['blob/BlobClient', 'http', 'https'],
 
 
         BlobServerClient.prototype._sendHttpRequest = function (options, callback) {
+            // TODO: use the http or https
             var req = http.request(options, function(res) {
                 var d = '';
                 res.on('data', function (chunk) {
@@ -143,6 +156,7 @@ define(['blob/BlobClient', 'http', 'https'],
 
 
         BlobServerClient.prototype._sendHttpRequestWithContent = function (options, data, callback) {
+            // TODO: use the http or https
             var req = http.request(options, function(res) {
             //    console.log('STATUS: ' + res.statusCode);
             //    console.log('HEADERS: ' + JSON.stringify(res.headers));

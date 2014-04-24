@@ -6,9 +6,8 @@
  * Should be used only by developers in developer mode. Application server shall not run at the same time.
  */
 
-define(['blob/BlobClient',
-        'blob/BlobFSBackend'],
-    function (BlobClient, BlobFSBackend) {
+define(['blob/BlobClient'],
+    function (BlobClient) {
 
         /**
          * Initializes a new instance of a server side file system object.
@@ -18,10 +17,9 @@ define(['blob/BlobClient',
          * @param {{}} parameters
          * @constructor
          */
-        function BlobRunPluginClient() {
+        function BlobRunPluginClient(blobBackend) {
             BlobClient.call(this);
-            this.blobStorage = new BlobFSBackend(); // TODO: this type or instance should come as a parameter.
-            throw new Error('TODO: use the new implementation');
+            this.blobBackend = blobBackend;
         }
 
         // Inherits from BlobClient
@@ -30,42 +28,51 @@ define(['blob/BlobClient',
         // Override the constructor with this object's constructor
         BlobRunPluginClient.prototype.constructor = BlobRunPluginClient;
 
-        BlobRunPluginClient.prototype.initialize = function (callback) {
-            this.blobStorage.initialize(callback);
-        };
+        BlobRunPluginClient.prototype.getInfo = function (metadataHash, callback) {
+            var self = this;
 
+            self.blobBackend.getMetadata(metadataHash, function (err, hash, metadata) {
+                callback(err, metadata);
+            });
 
-        BlobRunPluginClient.prototype.getInfo = function (hash, callback) {
-            callback(null, this.blobStorage.getInfo(hash));
         };
 
         BlobRunPluginClient.prototype.getObject = function (hash, callback) {
-            this.blobStorage.load(hash, callback);
+            throw new Error('Not implemented yet.');
         };
 
 
-        BlobRunPluginClient.prototype.addComplexObject = function (name, complexObjectDescriptor, callback) {
-            var sortedDescriptor = {};
-
-            var fnames = Object.keys(complexObjectDescriptor);
+        BlobRunPluginClient.prototype.addComplexObject = function (complexObjectDescriptor, callback) {
+            var self = this;
+            var fnames = Object.keys(complexObjectDescriptor.content);
             fnames.sort();
-            for (var j = 0; j < fnames.length; j += 1) {
-                sortedDescriptor[fnames[j]] = complexObjectDescriptor[fnames[j]];
+
+            var metadata = {
+                name: complexObjectDescriptor.name,
+                size: complexObjectDescriptor.size,
+                mime: complexObjectDescriptor.mime,
+                content: {},
+                contentType: complexObjectDescriptor.contentType
+            };
+
+            if (complexObjectDescriptor.contentType === 'complex') {
+                for (var j = 0; j < fnames.length; j += 1) {
+                    metadata.content[fnames[j]] = complexObjectDescriptor.content[fnames[j]];
+                }
+            } else {
+                callback('not supported metadata type');
+                return;
             }
 
-            this.blobStorage.save({name: name + '.json', complex: true}, JSON.stringify(sortedDescriptor, null, 4), function (err, hash) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
-
+            self.blobBackend.putMetadata(metadata, function (err, hash) {
                 callback(err, hash);
             });
         };
 
 
         BlobRunPluginClient.prototype.addObject = function (name, data, callback) {
-            this.blobStorage.save({name: name}, data, function (err, hash) {
+
+            this.blobBackend.putFile(name, data, function (err, hash) {
                 if (err) {
                     callback(err);
                     return;
