@@ -169,33 +169,25 @@ define(['./Artifact'], function (Artifact) {
         return artifact;
     };
 
-    BlobClient.prototype.getArtifact = function (hash, callback) {
+    BlobClient.prototype.getArtifact = function (metadataHash, callback) {
         // TODO: get info check if complex flag is set to true.
         // TODO: get info get name.
         var self = this;
-        this.getInfo(hash, function (err, info) {
+        this.getInfo(metadataHash, function (err, info) {
             if (err) {
                 callback(err);
                 return;
             }
 
-            self.getObject(hash, function (err, data) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
-
-                // get rid of extension
-                var name = info.filename.substring(0, info.filename.lastIndexOf('.'));
-
-                // create a new artifact instance
-                //  - set name
-                //  - set client
-                //  - deserialize descriptor
-                var artifact = new Artifact(name, self, JSON.parse(data));
+            if (info.contentType === 'complex') {
+                var artifact = new Artifact(info.name, self, info);
                 self.artifacts.push(artifact);
                 callback(null, artifact);
-            });
+            } else {
+                callback('not supported contentType ' + JSON.stringify(info, null, 4));
+            }
+
+
         });
     };
 

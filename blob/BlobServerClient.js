@@ -88,7 +88,7 @@ define(['blob/BlobClient', 'http', 'https'],
             var options = {
                 hostname: '127.0.0.1',
                 port: this.serverPort,
-                path: this.getCreateURL(name, true),
+                path: this.getCreateURL(metadata.name, true),
                 method: 'POST'
             };
 
