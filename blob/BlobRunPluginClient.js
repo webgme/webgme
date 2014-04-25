@@ -6,8 +6,8 @@
  * Should be used only by developers in developer mode. Application server shall not run at the same time.
  */
 
-define(['blob/BlobClient', 'blob/BlobMetadata'],
-    function (BlobClient, BlobMetadata) {
+define(['blob/BlobClient', 'blob/BlobMetadata', 'util/StringStreamWriter'],
+    function (BlobClient, BlobMetadata, StringStreamWriter) {
 
         /**
          * Initializes a new instance of a server side file system object.
@@ -37,8 +37,21 @@ define(['blob/BlobClient', 'blob/BlobMetadata'],
 
         };
 
-        BlobRunPluginClient.prototype.getObject = function (hash, callback) {
-            throw new Error('Not implemented yet.');
+        BlobRunPluginClient.prototype.getObject = function (metadataHash, callback) {
+            var self = this;
+            var writeStream = new StringStreamWriter();
+
+            // TODO: we need to get the content and save as a local file.
+            // if we just proxy the stream we cannot set errors correctly.
+
+            self.blobBackend.getFile(metadataHash, '', writeStream, function (err, hash) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                callback(null, writeStream.toString());
+            });
         };
 
 
