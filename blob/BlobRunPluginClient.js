@@ -28,7 +28,7 @@ define(['blob/BlobClient', 'blob/BlobMetadata'],
         // Override the constructor with this object's constructor
         BlobRunPluginClient.prototype.constructor = BlobRunPluginClient;
 
-        BlobRunPluginClient.prototype.getInfo = function (metadataHash, callback) {
+        BlobRunPluginClient.prototype.getMetadata = function (metadataHash, callback) {
             var self = this;
 
             self.blobBackend.getMetadata(metadataHash, function (err, hash, metadata) {
@@ -42,17 +42,17 @@ define(['blob/BlobClient', 'blob/BlobMetadata'],
         };
 
 
-        BlobRunPluginClient.prototype.addComplexObject = function (complexObjectDescriptor, callback) {
+        BlobRunPluginClient.prototype.putMetadata = function (metadataDescriptor, callback) {
             var self = this;
-            var metadata = new BlobMetadata(complexObjectDescriptor);
+            var metadata = new BlobMetadata(metadataDescriptor);
 
-            self.blobBackend.putMetadata(metadata.serialize(), function (err, hash) {
+            self.blobBackend.putMetadata(metadata, function (err, hash) {
                 callback(err, hash);
             });
         };
 
 
-        BlobRunPluginClient.prototype.addObject = function (name, data, callback) {
+        BlobRunPluginClient.prototype.putFile = function (name, data, callback) {
 
             this.blobBackend.putFile(name, data, function (err, hash) {
                 if (err) {

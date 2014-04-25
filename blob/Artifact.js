@@ -22,13 +22,13 @@ define([], function () {
         var self = this;
         var filename = name.substring(name.lastIndexOf('/') + 1);
 
-        self.blobClient.addObject(filename, content, function (err, hash) {
+        self.blobClient.putFile(filename, content, function (err, hash) {
             if (err) {
                 callback(err);
                 return;
             }
 
-            self.blobClient.getInfo(hash, function (err, metadata) {
+            self.blobClient.getMetadata(hash, function (err, metadata) {
                 if (self.descriptor.content.hasOwnProperty(name)) {
                     callback('Another content with the same name was already added. ' + JSON.stringify(self.descriptor.content[name]));
 
@@ -77,7 +77,7 @@ define([], function () {
     Artifact.prototype.addHash = function (name, hash, callback) {
         var self = this;
 
-        self.blobClient.getInfo(hash, function (err, metadata) {
+        self.blobClient.getMetadata(hash, function (err, metadata) {
             if (err) {
                 callback(err);
                 return;
@@ -99,7 +99,7 @@ define([], function () {
     };
 
     Artifact.prototype.save = function (callback) {
-        this.blobClient.addComplexObject(this.descriptor, callback);
+        this.blobClient.putMetadata(this.descriptor, callback);
     };
 
 

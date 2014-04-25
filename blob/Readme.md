@@ -1,4 +1,4 @@
-## Binary Large Object storage ##
+## Binary Large Object Storage ##
 
 ### Requirements ###
 
@@ -46,13 +46,13 @@
 * `wg-temp` - webgme temporary storage for content and metadata. All files gets stored first here, since we do not have the correct key name until we store the data. Once the key (content hash) is available we move (copy + delete) the temporary object. 
 
 
-##### Metadata #####
+##### Metadata aka `BlobMetadata` #####
 
 * `name` - file name
 * `size` - file size in Bytes
 * `mime` - mime-type of the file/content
 * `content` - HASH or object
-* `contentType` - `object`, (`softlink`) or `complex`
+* `contentType` - `object`, (`soft-link`) or `complex`
 * `lastModified` - last modified date and time in ISO 8601 format. 
 
 > Note: `lastModified` value is not stored in the storage, but it is part of the response.

@@ -6,8 +6,8 @@
  * Server side BLOB client implementation.
  */
 
-define(['blob/BlobClient', 'http', 'https'],
-    function (BlobClient, http, https) {
+define(['blob/BlobClient', 'blob/BlobMetadata', 'http', 'https'],
+    function (BlobClient, BlobMetadata, http, https) {
 
         /**
          * Initializes a new instance of a server side file system object.
@@ -19,7 +19,6 @@ define(['blob/BlobClient', 'http', 'https'],
          */
         function BlobServerClient(parameters) {
             BlobClient.call(this);
-            //console.log(webGMEGlobal.getConfig());
             this.serverPort = parameters.serverPort;
         }
 
@@ -29,11 +28,11 @@ define(['blob/BlobClient', 'http', 'https'],
         // Override the constructor with this object's constructor
         BlobServerClient.prototype.constructor = BlobServerClient;
 
-        BlobServerClient.prototype.getInfo = function (hash, callback) {
+        BlobServerClient.prototype.getMetadata = function (hash, callback) {
             var options = {
                 hostname: '127.0.0.1',
                 port: this.serverPort,
-                path: this.getInfoURL(hash),
+                path: this.getMetadataURL(hash),
                 method: 'GET'
             };
 
@@ -64,26 +63,9 @@ define(['blob/BlobClient', 'http', 'https'],
         };
 
 
-        BlobServerClient.prototype.addComplexObject = function (complexObjectDescriptor, callback) {
-            var fnames = Object.keys(complexObjectDescriptor.content);
-            fnames.sort();
-
-            var metadata = {
-                name: complexObjectDescriptor.name,
-                size: complexObjectDescriptor.size,
-                mime: complexObjectDescriptor.mime,
-                content: {},
-                contentType: complexObjectDescriptor.contentType
-            };
-
-            if (complexObjectDescriptor.contentType === 'complex') {
-                for (var j = 0; j < fnames.length; j += 1) {
-                    metadata.content[fnames[j]] = complexObjectDescriptor.content[fnames[j]];
-                }
-            } else {
-                callback('not supported metadata type');
-                return;
-            }
+        BlobServerClient.prototype.putMetadata = function (metadataDescriptor, callback) {
+            var self = this;
+            var metadata = new BlobMetadata(metadataDescriptor);
 
             var options = {
                 hostname: '127.0.0.1',
@@ -92,7 +74,7 @@ define(['blob/BlobClient', 'http', 'https'],
                 method: 'POST'
             };
 
-            this._sendHttpRequestWithContent(options, JSON.stringify(metadata, null, 4), function (err, data) {
+            self._sendHttpRequestWithContent(options, JSON.stringify(metadata.serialize(), null, 4), function (err, data) {
                 if (err) {
                     callback(err);
                     return;
@@ -107,7 +89,7 @@ define(['blob/BlobClient', 'http', 'https'],
         };
 
 
-        BlobServerClient.prototype.addObject = function (name, data, callback) {
+        BlobServerClient.prototype.putFile = function (name, data, callback) {
             var options = {
                 hostname: '127.0.0.1',
                 port: this.serverPort,

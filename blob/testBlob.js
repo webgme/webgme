@@ -58,7 +58,7 @@ var addFilesFromTestDir = function (testdir, callback) {
 
                 remaining -= 1;
                 //numFiles += 1;
-                //size += blobStorage.getInfo(hash).size;
+                //size += blobStorage.getMetadata(hash).size;
 
                 if (remaining === 0) {
                     // done

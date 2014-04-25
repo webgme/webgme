@@ -2,12 +2,13 @@
  * Created by zsolt on 4/19/14.
  */
 
-define(['fs',
+define(['blob/BlobMetadata',
+    'fs',
     'jszip',
     'mime',
     'util/guid',
     'util/StringStreamReader',
-    'util/StringStreamWriter'], function (fs, jszip, mime, GUID, StringStreamReader, StringStreamWriter) {
+    'util/StringStreamWriter'], function (BlobMetadata, fs, jszip, mime, GUID, StringStreamReader, StringStreamWriter) {
 
     var BlobBackendBase = function () {
         this.contentBucket = 'wg-content';
@@ -57,14 +58,13 @@ define(['fs',
                 return;
             }
 
-            // TODO: make a class for this object
-            var metadata = {
+            var metadata = new BlobMetadata({
                 name: name,
                 size: length,
                 mime: mime.lookup(name),
                 content: hash,
-                contentType: 'object'
-            };
+                contentType: BlobMetadata.CONTENT_TYPES.OBJECT
+            });
 
             self.putMetadata(metadata, function (err, metadataHash) {
                 if (err) {
@@ -177,7 +177,7 @@ define(['fs',
 
     BlobBackendBase.prototype.putMetadata = function (metadata, callback) {
         var self = this;
-        var stringStream = new StringStreamReader(JSON.stringify(metadata));
+        var stringStream = new StringStreamReader(JSON.stringify(metadata.serialize()));
 
         self.putObject(stringStream, self.metadataBucket, function (err, metadataHash) {
             if (err) {
@@ -200,7 +200,7 @@ define(['fs',
                 return;
             }
 
-            // TODO: make a class for this object
+            // TODO: make a class for this object - how to handle dates...?
             var metadata = writeStream.toJSON();
             metadata.lastModified = fileInfo.lastModified;
 

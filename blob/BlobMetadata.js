@@ -29,11 +29,15 @@ define([], function(){
             size: this.size,
             mime: this.mime,
             tags: this.tags,
-            content: {},
+            content: this.content,
             contentType: this.contentType
         };
 
+        metadata.tags.sort();
+
         if (this.contentType === BlobMetadata.CONTENT_TYPES.COMPLEX) {
+            // override on  purpose to normalize content
+            metadata.content = {};
             var fnames = Object.keys(this.content);
             fnames.sort();
 
@@ -41,8 +45,6 @@ define([], function(){
                 metadata.content[fnames[j]] = this.content[fnames[j]];
             }
         }
-
-        metadata.tags.sort();
 
         return metadata;
     };

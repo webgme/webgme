@@ -16,7 +16,7 @@ define(['./Artifact', 'blob/BlobMetadata'], function (Artifact, BlobMetadata) {
         return this.blobUrl + 'metadata/';
     };
 
-    BlobClient.prototype.getInfoURL = function (hash) {
+    BlobClient.prototype.getMetadataURL = function (hash) {
         return this.blobUrl + 'metadata/' + hash + '/';
     };
 
@@ -32,8 +32,8 @@ define(['./Artifact', 'blob/BlobMetadata'], function (Artifact, BlobMetadata) {
         return this.blobUrl + 'download/' + hash;
     };
 
-    BlobClient.prototype.getCreateURL = function (filename, complex) {
-        if (complex) {
+    BlobClient.prototype.getCreateURL = function (filename, isMetadata) {
+        if (isMetadata) {
             return this.blobUrl + 'createMetadata/';
         } else {
             return this.blobUrl + 'createFile/' + filename;
@@ -41,7 +41,7 @@ define(['./Artifact', 'blob/BlobMetadata'], function (Artifact, BlobMetadata) {
     };
 
 
-    BlobClient.prototype.addObject = function (name, data, callback) {
+    BlobClient.prototype.putFile = function (name, data, callback) {
         var oReq = new XMLHttpRequest();
         oReq.open("POST", this.getCreateURL(name), true);
         oReq.onload = function (oEvent) {
@@ -57,9 +57,9 @@ define(['./Artifact', 'blob/BlobMetadata'], function (Artifact, BlobMetadata) {
         oReq.send(data);
     };
 
-    BlobClient.prototype.addComplexObject = function (complexObjectDescriptor, callback) {
+    BlobClient.prototype.putMetadata = function (metadataDescriptor, callback) {
         var self = this;
-        var metadata = new BlobMetadata(complexObjectDescriptor);
+        var metadata = new BlobMetadata(metadataDescriptor);
 
         var oReq = new XMLHttpRequest();
         oReq.open("POST", this.getCreateURL(name, true), true);
@@ -78,7 +78,7 @@ define(['./Artifact', 'blob/BlobMetadata'], function (Artifact, BlobMetadata) {
         oReq.send(blob);
     };
 
-    BlobClient.prototype.addObjects = function (o, callback) {
+    BlobClient.prototype.putFiles = function (o, callback) {
         var self = this;
 
         var filenames = Object.keys(o);
@@ -89,7 +89,7 @@ define(['./Artifact', 'blob/BlobMetadata'], function (Artifact, BlobMetadata) {
         for (var j = 0; j < filenames.length; j += 1) {
             (function(filename, data) {
 
-                self.addObject(filename, data, function (err, hash) {
+                self.putFile(filename, data, function (err, hash) {
                     remaining -= 1;
 
                     hashes[filename] = hash;
@@ -127,9 +127,9 @@ define(['./Artifact', 'blob/BlobMetadata'], function (Artifact, BlobMetadata) {
         xhr.send(null);
     };
 
-    BlobClient.prototype.getInfo = function (hash, callback) {
+    BlobClient.prototype.getMetadata = function (hash, callback) {
         var xhr = new XMLHttpRequest();
-        xhr.open("GET", this.getInfoURL(hash), true);
+        xhr.open("GET", this.getMetadataURL(hash), true);
         xhr.onload = function (e) {
             if (xhr.readyState === 4) {
                 if (xhr.status === 200) {
@@ -155,13 +155,13 @@ define(['./Artifact', 'blob/BlobMetadata'], function (Artifact, BlobMetadata) {
         // TODO: get info check if complex flag is set to true.
         // TODO: get info get name.
         var self = this;
-        this.getInfo(metadataHash, function (err, info) {
+        this.getMetadata(metadataHash, function (err, info) {
             if (err) {
                 callback(err);
                 return;
             }
 
-            if (info.contentType === 'complex') {
+            if (info.contentType === BlobMetadata.CONTENT_TYPES.COMPLEX) {
                 var artifact = new Artifact(info.name, self, info);
                 self.artifacts.push(artifact);
                 callback(null, artifact);
@@ -169,13 +169,17 @@ define(['./Artifact', 'blob/BlobMetadata'], function (Artifact, BlobMetadata) {
                 callback('not supported contentType ' + JSON.stringify(info, null, 4));
             }
 
-
         });
     };
 
     BlobClient.prototype.saveAllArtifacts = function (callback) {
         var remaining = this.artifacts.length;
         var hashes = [];
+
+        if (remaining === 0) {
+            callback(null, hashes);
+        }
+
         for (var i = 0; i < this.artifacts.length; i += 1) {
 
             this.artifacts[i].save(function(err, hash) {
@@ -194,5 +198,5 @@ define(['./Artifact', 'blob/BlobMetadata'], function (Artifact, BlobMetadata) {
         }
     };
 
-    return BlobClient
+    return BlobClient;
 });

@@ -14,6 +14,7 @@ define(['logManager',
     'https',
     'os',
     'mime',
+    'blob/BlobMetadata',
     'blob/BlobFSBackend',
     'blob/BlobS3Backend'
     ],function(
@@ -33,6 +34,7 @@ define(['logManager',
         Https,
         OS,
         mime,
+        BlobMetadata,
         BlobFSBackend,
         BlobS3Backend
     ){
@@ -551,7 +553,8 @@ define(['logManager',
             });
 
             req.addListener('end', function() {
-                blobBackend.putMetadata(JSON.parse(data), function (err, hash) {
+                var metadata = new BlobMetadata(JSON.parse(data));
+                blobBackend.putMetadata(metadata, function (err, hash) {
                     if (err) {
                         res.send(500);
                     } else {
