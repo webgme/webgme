@@ -2,7 +2,7 @@
  * Created by zsolt on 4/15/14.
  */
 
-define(['./Artifact'], function (Artifact) {
+define(['./Artifact', 'blob/BlobMetadata'], function (Artifact, BlobMetadata) {
 
     var BlobClient = function () {
         this.artifacts = [];
@@ -58,26 +58,8 @@ define(['./Artifact'], function (Artifact) {
     };
 
     BlobClient.prototype.addComplexObject = function (complexObjectDescriptor, callback) {
-        var fnames = Object.keys(complexObjectDescriptor.content);
-        fnames.sort();
-
-        var metadata = {
-            name: complexObjectDescriptor.name,
-            size: complexObjectDescriptor.size,
-            mime: complexObjectDescriptor.mime,
-            content: {},
-            contentType: complexObjectDescriptor.contentType
-        };
-
-        if (complexObjectDescriptor.contentType === 'complex') {
-            for (var j = 0; j < fnames.length; j += 1) {
-                metadata.content[fnames[j]] = complexObjectDescriptor.content[fnames[j]];
-            }
-        } else {
-            callback('not supported metadata type');
-            return;
-        }
-
+        var self = this;
+        var metadata = new BlobMetadata(complexObjectDescriptor);
 
         var oReq = new XMLHttpRequest();
         oReq.open("POST", this.getCreateURL(name, true), true);
@@ -91,7 +73,7 @@ define(['./Artifact'], function (Artifact) {
         };
 
         // FIXME: in production mode do not indent the json file.
-        var blob = new Blob([JSON.stringify(metadata, null, 4)], {type: 'text/plain'});
+        var blob = new Blob([JSON.stringify(metadata.serialize(), null, 4)], {type: 'text/plain'});
 
         oReq.send(blob);
     };

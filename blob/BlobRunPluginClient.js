@@ -6,8 +6,8 @@
  * Should be used only by developers in developer mode. Application server shall not run at the same time.
  */
 
-define(['blob/BlobClient'],
-    function (BlobClient) {
+define(['blob/BlobClient', 'blob/BlobMetadata'],
+    function (BlobClient, BlobMetadata) {
 
         /**
          * Initializes a new instance of a server side file system object.
@@ -44,27 +44,9 @@ define(['blob/BlobClient'],
 
         BlobRunPluginClient.prototype.addComplexObject = function (complexObjectDescriptor, callback) {
             var self = this;
-            var fnames = Object.keys(complexObjectDescriptor.content);
-            fnames.sort();
+            var metadata = new BlobMetadata(complexObjectDescriptor);
 
-            var metadata = {
-                name: complexObjectDescriptor.name,
-                size: complexObjectDescriptor.size,
-                mime: complexObjectDescriptor.mime,
-                content: {},
-                contentType: complexObjectDescriptor.contentType
-            };
-
-            if (complexObjectDescriptor.contentType === 'complex') {
-                for (var j = 0; j < fnames.length; j += 1) {
-                    metadata.content[fnames[j]] = complexObjectDescriptor.content[fnames[j]];
-                }
-            } else {
-                callback('not supported metadata type');
-                return;
-            }
-
-            self.blobBackend.putMetadata(metadata, function (err, hash) {
+            self.blobBackend.putMetadata(metadata.serialize(), function (err, hash) {
                 callback(err, hash);
             });
         };
