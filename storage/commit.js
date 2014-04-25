@@ -9,6 +9,7 @@ define([ "util/assert", "util/sha1", "util/canon" ], function (ASSERT, SHA1, CAN
 	var HASH_REGEXP = new RegExp("^#[0-9a-zA-Z_]*$");
 
 	function Database (_database,_options) {
+        _options = _options || {};
 		ASSERT(typeof _database === "object");
 
 		function openProject (projectName, callback) {
