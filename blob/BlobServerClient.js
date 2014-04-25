@@ -111,6 +111,8 @@ define(['blob/BlobClient', 'blob/BlobMetadata', 'http', 'https'],
             });
         };
 
+        // -------------------------------------------------------------------------------------------------------------
+        // Private helper functions
 
         BlobServerClient.prototype._sendHttpRequest = function (options, callback) {
             // TODO: use the http or https

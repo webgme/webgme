@@ -1,14 +1,22 @@
-/**
- * Created by zsolt on 4/15/14.
+/*
+ * Copyright (C) 2014 Vanderbilt University, All rights reserved.
  *
- * Represents a complex artifact in BLOB storage.
+ * Author: Zsolt Lattmann
  */
 
 define([], function () {
 
+    /**
+     * Creates a new instance of artifact, i.e. complex object, in memory. This object can be saved in the storage.
+     * @param {string} name Artifact's name without extension
+     * @param {blob.BlobClient} blobClient
+     * @param {blob.BlobMetadata} descriptor
+     * @constructor
+     */
     var Artifact = function (name, blobClient, descriptor) {
         this.name = name;
         this.blobClient = blobClient;
+        // TODO: use BlobMetadata class here
         this.descriptor = descriptor || {
             name: name + '.zip',
             size: 0,
@@ -18,6 +26,12 @@ define([], function () {
         }; // name and hash pairs
     };
 
+    /**
+     * Adds content to the artifact as a file.
+     * @param {string} name filename
+     * @param {Blob} content File object or Blob
+     * @param callback
+     */
     Artifact.prototype.addFile = function (name, content, callback) {
         var self = this;
         var filename = name.substring(name.lastIndexOf('/') + 1);
@@ -28,26 +42,20 @@ define([], function () {
                 return;
             }
 
-            self.blobClient.getMetadata(hash, function (err, metadata) {
-                if (self.descriptor.content.hasOwnProperty(name)) {
-                    callback('Another content with the same name was already added. ' + JSON.stringify(self.descriptor.content[name]));
-
-                } else {
-                    self.descriptor.size += metadata.size;
-
-                    self.descriptor.content[name] = {
-                        content: metadata.content,
-                        contentType: 'object'
-                    };
-                    callback(null, hash);
-                }
-            });
+            self.addHash(name, hash, function (err, hash) {
+                callback(err, hash);
+            })
         });
     };
 
-    Artifact.prototype.addFiles = function (o, callback) {
+    /**
+     * Adds multiple files.
+     * @param {Object.<string, Blob>} files files to add
+     * @param callback
+     */
+    Artifact.prototype.addFiles = function (files, callback) {
         var self = this,
-            fileNames = Object.keys(o),
+            fileNames = Object.keys(files),
             nbrOfFiles = fileNames.length,
             hashes = [],
             error = '',
@@ -59,7 +67,7 @@ define([], function () {
         }
 
         for (i = 0; i < fileNames.length; i += 1) {
-            self.addFile(fileNames[i], o[fileNames[i]], function (err, hash) {
+            self.addFile(fileNames[i], files[fileNames[i]], function (err, hash) {
                 error = err ? error + err : error;
                 nbrOfFiles -= 1;
                 hashes.push(hash);
@@ -74,6 +82,12 @@ define([], function () {
         }
     };
 
+    /**
+     * Adds a hash to the artifact using the given file path.
+     * @param {string} name Path to the file in the artifact. Note: 'a/b/c.txt'
+     * @param {string} hash Metadata hash that has to be added.
+     * @param callback
+     */
     Artifact.prototype.addHash = function (name, hash, callback) {
         var self = this;
 
@@ -98,10 +112,13 @@ define([], function () {
         });
     };
 
+    /**
+     * Saves this artifact and uploads the metadata to the server's storage.
+     * @param callback
+     */
     Artifact.prototype.save = function (callback) {
         this.blobClient.putMetadata(this.descriptor, callback);
     };
-
 
     return Artifact
 });

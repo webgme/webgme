@@ -1,5 +1,7 @@
-/**
- * Created by zsolt on 4/19/14.
+/*
+ * Copyright (C) 2014 Vanderbilt University, All rights reserved.
+ *
+ * Author: Zsolt Lattmann
  */
 
 define(['./BlobBackendBase',

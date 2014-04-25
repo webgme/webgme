@@ -1,5 +1,7 @@
-/**
- * Created by zsolt on 4/19/14.
+/*
+ * Copyright (C) 2014 Vanderbilt University, All rights reserved.
+ *
+ * Author: Zsolt Lattmann
  */
 
 define(['./BlobBackendBase',
@@ -21,7 +23,6 @@ define(['./BlobBackendBase',
 
     // Override the constructor with this object's constructor
     BlobFSBackend.prototype.constructor = BlobFSBackend;
-
 
     BlobFSBackend.prototype.putObject = function (readStream, bucket, callback) {
         // TODO generate a GUID or something for the temporary filename to allow parallel functioning
@@ -126,6 +127,9 @@ define(['./BlobBackendBase',
             callback(null, []);
         }
     };
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // Private helper functions
 
     BlobFSBackend.prototype._getObjectRelativeLocation = function (hash) {
         return hash.slice(0, 2) + '/' + hash.slice(2);

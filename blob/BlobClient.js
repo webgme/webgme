@@ -1,5 +1,7 @@
-/**
- * Created by zsolt on 4/15/14.
+/*
+ * Copyright (C) 2014 Vanderbilt University, All rights reserved.
+ *
+ * Author: Zsolt Lattmann
  */
 
 define(['./Artifact', 'blob/BlobMetadata'], function (Artifact, BlobMetadata) {
@@ -11,13 +13,13 @@ define(['./Artifact', 'blob/BlobMetadata'], function (Artifact, BlobMetadata) {
         this.blobUrl = '/rest/blob/'; // TODO: any ways to ask for this or get it from the configuration?
     };
 
-
-    BlobClient.prototype.getInfosURL = function () {
-        return this.blobUrl + 'metadata/';
-    };
-
     BlobClient.prototype.getMetadataURL = function (hash) {
-        return this.blobUrl + 'metadata/' + hash + '/';
+        var metadataBase = this.blobUrl + 'metadata';
+        if (hash) {
+            return metadataBase + '/' + hash;
+        } else {
+            return metadataBase;
+        }
     };
 
     BlobClient.prototype.getViewURL = function (hash, subpath) {
