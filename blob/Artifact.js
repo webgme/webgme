@@ -53,6 +53,11 @@ define([], function () {
             error = '',
             i;
 
+        if (nbrOfFiles === 0) {
+            callback(null, hashes);
+            return;
+        }
+
         for (i = 0; i < fileNames.length; i += 1) {
             self.addFile(fileNames[i], o[fileNames[i]], function (err, hash) {
                 error = err ? error + err : error;
@@ -73,6 +78,11 @@ define([], function () {
         var self = this;
 
         self.blobClient.getInfo(hash, function (err, metadata) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
             if (self.descriptor.content.hasOwnProperty(name)) {
                 callback('Another content with the same name was already added. ' + JSON.stringify(self.descriptor.content[name]));
 
