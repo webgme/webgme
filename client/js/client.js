@@ -164,20 +164,26 @@ define([
                 }
             }
 
-            function tokenWathcer(){
-                var token = null;
-                var refreshToken = function(){
-                    _database.getToken(function(err,t){
-                        if(!err){
-                            token = t || "_";
-                        }
-                    });
-                };
+            function tokenWatcher(){
+                var token = null,
+                    refreshToken = function(){
+                        _database.getToken(function(err,t){
+                            if(!err){
+                                token = t || "_";
+                            }
+                        });
+                    },
+                    getToken = function(){
+                        return token;
+                    };
+
                 setInterval(refreshToken,10000); //maybe it could be configurable
                 refreshToken();
 
+                //TODO check if this is okay to set it here
+                WebGMEGlobal.getToken = getToken;
                 return {
-                    getToken: function(){return token;}
+                    getToken: getToken
                 }
             }
 
@@ -1138,7 +1144,7 @@ define([
             function connectToDatabaseAsync(options,callback){
                 var oldcallback = callback;
                 callback = function(err){
-                    _TOKEN = tokenWathcer();
+                    _TOKEN = tokenWatcher();
                     oldcallback(err);
                 }; //we add tokenWatcher start at this point
                 options = options || {};
@@ -2141,14 +2147,14 @@ define([
             }
             function plainUrl(command,path){
                 if(window && window.location && window.location && _nodes && _nodes[ROOT_PATH]){
-                    var address = window.location.protocol + '//' + window.location.host +'/rest/'+_TOKEN.getToken()+'/'+command+'/'+_projectName+'/'+URL.addSpecialChars(_core.getHash(_nodes[ROOT_PATH].node))+'/'+URL.addSpecialChars(path);
+                    var address = window.location.protocol + '//' + window.location.host +'/rest/'+'/'+command+'?'+'project='+_projectName+'&root='+_core.getHash(_nodes[ROOT_PATH].node)+'&path='+path;
                     return address;
                 }
             }
             function getDumpURL(path,filepath){
                 filepath = filepath || _projectName+'_'+_branch+'_'+URL.addSpecialChars(path);
                 if(window && window.location && window.location && _nodes && _nodes[ROOT_PATH]){
-                    var address = plainUrl('etf',path)+'/'+filepath;
+                    var address = plainUrl('etf',path)+'&output='+filepath;
                     return address;
                 }
                 return null;

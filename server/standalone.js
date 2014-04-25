@@ -144,11 +144,6 @@ define(['logManager',
 
         function checkREST(req,res,next){
             var baseUrl = CONFIG.httpsecure === true ? 'https://' : 'http://'+req.headers.host+'/rest';
-            if(CONFIG.authentication === true){
-                baseUrl += '/token';
-            } else {
-                baseUrl +='/_';
-            }
             if(__REST === null){
                 var restAuthorization;
                 if(CONFIG.authentication === true){
@@ -167,9 +162,26 @@ define(['logManager',
                 if(req.isAuthenticated() || (req.session && true === req.session.authenticated)){
                     return next();
                 } else{
+                    //client oriented new session
+                    if(req.headers.webgmeclientsession){
+                        __sessionStore.get(req.headers.webgmeclientsession,function(err,clientSession){
+                            if(!err){
+                                if(clientSession.authenticated){
+                                    req.session.authenticated = true;
+                                    req.session.udmId = clientSession.udmId;
+                                    res.cookie('webgme',req.session.udmId);
+                                    return next();
+                                } else {
+                                    res.send(400); //TODO find proper error code
+                                }
+                            }    else{
+                                res.send(400); //TODO find proper error code
+                            }
+                        });
+                    }
                     //request which use token may be authenticated directly
-                    if(req.params.token){
-                        __gmeAuth.checkToken(req.params.token,function(isOk,userId){
+                    else if(req.headers.webGMEToken){
+                        __gmeAuth.checkToken(req.headers.webGMEToken,function(isOk,userId){
                             if(isOk){
                                 req.session.authenticated = true;
                                 req.session.udmId = userId;
@@ -674,24 +686,18 @@ define(['logManager',
                 res.send(410); //special error for the interpreters to know there is no need for token
             }
         });
-        __app.get('/checktoken/*',function(req,res){
-            if(CONFIG.secureREST == true){
+        __app.get('/checktoken/:token',function(req,res){
+            if(CONFIG.authenticated == true){
                 if(__canCheckToken == true){
-                    var token = req.url.split('/');
-                    if(token.length === 3){
-                        token = token[2];
-                        setTimeout(function(){__canCheckToken = true;},10000);
-                        __canCheckToken = false;
-                        __gmeAuth.checkToken(token,function(isValid){
-                            if(isValid === true){
-                                res.send(200);
-                            } else {
-                                res.send(403);
-                            }
-                        });
-                    } else {
-                        res.send(400);
-                    }
+                    setTimeout(function(){__canCheckToken = true;},10000);
+                    __canCheckToken = false;
+                    __gmeAuth.checkToken(req.params.token,function(isValid){
+                        if(isValid === true){
+                            res.send(200);
+                        } else {
+                            res.send(403);
+                        }
+                    });
                 } else {
                     res.send(403);
                 }
@@ -700,20 +706,18 @@ define(['logManager',
             }
         });
 
-        //TODO: needs to refactor for the /rest/token/... format
+        //TODO: needs to refactor for the /rest/... format
         __logger.info("creating REST related routing rules");
-        __app.get('/rest/:token/:command*',ensureAuthenticated,checkREST,function(req,res){
-            var parameters = req.url.split('/');
-            parameters.splice(0,4);
+        __app.get('/rest/:command',ensureAuthenticated,checkREST,function(req,res){
             __REST.initialize(function(err){
                 if(err){
                     res.send(500);
                 } else {
-                    __REST.doRESTCommand(__REST.request.GET,req.params.command,req.params.token,parameters,function(httpStatus,object){
+                    __REST.doRESTCommand(__REST.request.GET,req.params.command,req.headers.webGMEToken,req.query,function(httpStatus,object){
                         if(req.params.command === __REST.command.etf){
                             var filename = 'exportedNode.json';
-                            if(parameters[3]){
-                                filename = parameters[3];
+                            if(req.query.output){
+                                filename = req.query.output;
                             }
                             if(filename.indexOf('.') === -1){
                                 filename += '.json';

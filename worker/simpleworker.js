@@ -187,7 +187,7 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
                     var plugins = {};
                     plugins[name] = interpreter;
                     var manager = new PluginManagerBase(project,Core,plugins);
-                    context.managerConfig.blobClient = new BlobServerClient({serverPort:serverPort});
+                    context.managerConfig.blobClient = new BlobServerClient({serverPort:serverPort,sessionId:sessionId});
 
                     manager.initialize(null, function (pluginConfigs, configSaveCallback) {
                         if (configSaveCallback) {

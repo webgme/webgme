@@ -20,6 +20,7 @@ define(['blob/BlobClient', 'blob/BlobMetadata', 'http', 'https'],
         function BlobServerClient(parameters) {
             BlobClient.call(this);
             this.serverPort = parameters.serverPort;
+            this._clientSession = parameters.sessionId;
         }
 
         // Inherits from BlobClient
@@ -114,7 +115,31 @@ define(['blob/BlobClient', 'blob/BlobMetadata', 'http', 'https'],
         // -------------------------------------------------------------------------------------------------------------
         // Private helper functions
 
-        BlobServerClient.prototype._sendHttpRequest = function (options, callback) {
+        BlobServerClient.prototype._ensureAuthenticated = function(options,callback){
+            //this function enables the session of the client to be authenticated
+            //TODO curently this user does not have a session, so it has to upgrade the options always!!!
+            if(options.headers){
+                options.headers.webgmeclientsession = this._clientSession;
+            } else {
+                options.headers = {
+                    'webgmeclientsession':this._clientSession
+                }
+            }
+            callback(null,options);
+        };
+
+        BlobServerClient.prototype._sendHttpRequest = function(options,callback){
+            var self = this;
+            self._ensureAuthenticated(options,function(err,updatedOptions){
+                if(err){
+                    callback(err);
+                } else {
+                    self.__sendHttpRequest(updatedOptions,callback);
+                }
+            });
+        };
+
+        BlobServerClient.prototype.__sendHttpRequest = function (options, callback) {
             // TODO: use the http or https
             var req = http.request(options, function(res) {
                 var d = '';
@@ -138,8 +163,18 @@ define(['blob/BlobClient', 'blob/BlobMetadata', 'http', 'https'],
             req.end();
         };
 
+        BlobServerClient.prototype._sendHttpRequestWithContent = function(options,data,callback){
+            var self = this;
+            self._ensureAuthenticated(options,function(err,updatedOptions){
+                if(err){
+                    callback(err);
+                } else {
+                    self.__sendHttpRequestWithContent(updatedOptions,data,callback);
+                }
+            });
+        };
 
-        BlobServerClient.prototype._sendHttpRequestWithContent = function (options, data, callback) {
+        BlobServerClient.prototype.__sendHttpRequestWithContent = function (options, data, callback) {
             // TODO: use the http or https
             var req = http.request(options, function(res) {
             //    console.log('STATUS: ' + res.statusCode);
