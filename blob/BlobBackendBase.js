@@ -2,12 +2,13 @@
  * Created by zsolt on 4/19/14.
  */
 
-define(['fs',
+define(['blob/BlobMetadata',
+    'fs',
     'jszip',
     'mime',
     'util/guid',
     'util/StringStreamReader',
-    'util/StringStreamWriter'], function (fs, jszip, mime, GUID, StringStreamReader, StringStreamWriter) {
+    'util/StringStreamWriter'], function (BlobMetadata, fs, jszip, mime, GUID, StringStreamReader, StringStreamWriter) {
 
     var BlobBackendBase = function () {
         this.contentBucket = 'wg-content';
@@ -57,14 +58,13 @@ define(['fs',
                 return;
             }
 
-            // TODO: make a class for this object
-            var metadata = {
+            var metadata = new BlobMetadata({
                 name: name,
                 size: length,
                 mime: mime.lookup(name),
                 content: hash,
-                contentType: 'object'
-            };
+                contentType: BlobMetadata.CONTENT_TYPES.OBJECT
+            });
 
             self.putMetadata(metadata, function (err, metadataHash) {
                 if (err) {
@@ -91,7 +91,7 @@ define(['fs',
                 return;
             }
 
-            if (metadata.contentType === 'object') {
+            if (metadata.contentType === BlobMetadata.CONTENT_TYPES.OBJECT) {
                 self.getObject(metadata.content, writeStream, self.contentBucket, function (err) {
                     if (err) {
                         callback(err);
@@ -101,68 +101,90 @@ define(['fs',
                     callback(null, metadata);
                 });
 
-            } else if (metadata.contentType === 'complex') {
+            } else if (metadata.contentType === BlobMetadata.CONTENT_TYPES.COMPLEX) {
                 // 1) create a zip package
                 // 2) add all files from the descriptor to the zip
                 // 3) pipe the zip package to the stream
 
-                // FIXME: can we use zlib???
-                // TODO: this code MUST be reimplemented!!!
-                var zip = new jszip();
-
-                var keys = Object.keys(metadata.content);
-                var remaining = keys.length;
-
-                if (remaining === 0) {
-                    // empty zip no files contained
-                    // FIXME: this empty zip is not handled correctly.
-                    callback(null, zip.generate({type:'nodeBuffer'}), metadata.name);
-                    return;
-                }
-
-                for (var i = 0; i < keys.length; i += 1) {
-                    (function(subpartHash, subpartName){
-                        // TODO: what if error?
-                        var contentTemp = GUID() + '.tmp';
-                        var writeStream2 = fs.createWriteStream(contentTemp);
-
-                        self.getObject(subpartHash, writeStream2, self.contentBucket, function (err) {
-
-
-                            fs.readFile(contentTemp, function (err, data) {
-                                zip.file(subpartName, data);
-
-                                remaining -= 1;
-
-                                if (remaining === 0) {
-                                    var nodeBuffer = zip.generate({type:'nodeBuffer'});
-                                    var tempFile = GUID() + '.zip';
-                                    fs.writeFile(tempFile, nodeBuffer, function (err) {
-                                        if (err) {
-                                            callback(err);
-                                            return;
-                                        }
-
-                                        var readStream = fs.createReadStream(tempFile);
-
-                                        writeStream.on('finish', function() {
-                                            callback(null, metadata);
-
-                                            fs.unlink(tempFile, function (){
-
-                                            });
-                                        });
-
-                                        readStream.pipe(writeStream);
-                                    });
+                if (subpath) {
+                    if (metadata.content.hasOwnProperty(subpath)) {
+                        var contentObj = metadata.content[subpath];
+                        if (contentObj.contentType === BlobMetadata.CONTENT_TYPES.OBJECT) {
+                            self.getObject(contentObj.content, writeStream, self.contentBucket, function (err) {
+                                if (err) {
+                                    callback(err);
+                                    return;
                                 }
 
-                                fs.unlink(contentTemp, function (){
+                                callback(null, metadata);
+                            });
 
+                        } else {
+                            callback('subpath content type (' + contentObj.contentType + ') is not supported yet in content: ' + subpath);
+                        }
+                    } else {
+                        callback('subpath does not exist in content: ' + subpath);
+                    }
+                } else {
+                    // return with the full content as a zip package
+                    // FIXME: can we use zlib???
+                    // TODO: this code MUST be reimplemented!!!
+                    var zip = new jszip();
+
+                    var keys = Object.keys(metadata.content);
+                    var remaining = keys.length;
+
+                    if (remaining === 0) {
+                        // empty zip no files contained
+                        // FIXME: this empty zip is not handled correctly.
+                        callback(null, zip.generate({type:'nodeBuffer'}), metadata.name);
+                        return;
+                    }
+
+                    for (var i = 0; i < keys.length; i += 1) {
+                        (function(subpartHash, subpartName){
+                            // TODO: what if error?
+                            var contentTemp = GUID() + '.tmp';
+                            var writeStream2 = fs.createWriteStream(contentTemp);
+
+                            self.getObject(subpartHash, writeStream2, self.contentBucket, function (err) {
+
+
+                                fs.readFile(contentTemp, function (err, data) {
+                                    zip.file(subpartName, data);
+
+                                    remaining -= 1;
+
+                                    if (remaining === 0) {
+                                        var nodeBuffer = zip.generate({type:'nodeBuffer'});
+                                        var tempFile = GUID() + '.zip';
+                                        fs.writeFile(tempFile, nodeBuffer, function (err) {
+                                            if (err) {
+                                                callback(err);
+                                                return;
+                                            }
+
+                                            var readStream = fs.createReadStream(tempFile);
+
+                                            writeStream.on('finish', function() {
+                                                callback(null, metadata);
+
+                                                fs.unlink(tempFile, function (){
+
+                                                });
+                                            });
+
+                                            readStream.pipe(writeStream);
+                                        });
+                                    }
+
+                                    fs.unlink(contentTemp, function (){
+
+                                    });
                                 });
                             });
-                        });
-                    })(metadata.content[keys[i]].content, keys[i])
+                        })(metadata.content[keys[i]].content, keys[i])
+                    }
                 }
             } else {
                 // TODO: handle here the complex type and soft links
@@ -177,7 +199,7 @@ define(['fs',
 
     BlobBackendBase.prototype.putMetadata = function (metadata, callback) {
         var self = this;
-        var stringStream = new StringStreamReader(JSON.stringify(metadata));
+        var stringStream = new StringStreamReader(JSON.stringify(metadata.serialize()));
 
         self.putObject(stringStream, self.metadataBucket, function (err, metadataHash) {
             if (err) {
@@ -200,7 +222,7 @@ define(['fs',
                 return;
             }
 
-            // TODO: make a class for this object
+            // TODO: make a class for this object - how to handle dates...?
             var metadata = writeStream.toJSON();
             metadata.lastModified = fileInfo.lastModified;
 

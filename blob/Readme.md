@@ -1,4 +1,4 @@
-## Binary Large Object storage ##
+## Binary Large Object Storage ##
 
 ### Requirements ###
 
@@ -37,7 +37,7 @@
 
 * FileSystem - `BlobFSBackend`
 * AWS S3 - `BlobS3Backend`
-* (OpenStack Swift)
+* (OpenStack Swift - may work with `BlobS3Backend`)
 
 ##### Data organization (buckets) #####
 
@@ -46,13 +46,13 @@
 * `wg-temp` - webgme temporary storage for content and metadata. All files gets stored first here, since we do not have the correct key name until we store the data. Once the key (content hash) is available we move (copy + delete) the temporary object. 
 
 
-##### Metadata #####
+##### `BlobMetadata` #####
 
 * `name` - file name
 * `size` - file size in Bytes
 * `mime` - mime-type of the file/content
 * `content` - HASH or object
-* `contentType` - `object`, (`softlink`) or `complex`
+* `contentType` [`BlobMetadata.CONTENT_TYPES`] - `object`, (`soft-link`) or `complex`. Note: `soft-link` type is not supported yet.
 * `lastModified` - last modified date and time in ISO 8601 format. 
 
 > Note: `lastModified` value is not stored in the storage, but it is part of the response.
@@ -63,6 +63,7 @@ _File example_
     "name": "sample.js",
     "size": 2093,
     "mime": "application/javascript",
+    "tags": [],
     "content": "c2905bc187fbe55926e10bfd0baadad2f8493cbb",
     "contentType": "object",
     "lastModified": "2014-04-22T16:43:03.000Z"
@@ -75,6 +76,7 @@ _Complex content example_
     "name": "sample.zip",
     "size": 17591,
     "mime": "application/zip, application/octet-stream",
+    "tags": ["PluginResult"],
     "content": {
         "a/b/sample.js": {
             "content": "c2905bc187fbe55926e10bfd0baadad2f8493cbb",
@@ -94,12 +96,13 @@ _Complex content example_
 }
 ```
 
+##### `Blob_NAME_Backend` i.e. `BlobFSBackend` and `BlobS3Backend` #####
 
-##### Functions #####
+Inherits from `BlobBackendBase`.
 
-* putObject(readStream, bucket, callback)
-* getObject(hash, writeStream, bucket, callback)
-* listObjects(bucket, callback)
+* putObject([readable stream]readStream, [string] bucket, [Function(err, hash, size)] callback)
+* getObject([string] hash, [writeable stream] writeStream, [string] bucket, [Function(err, {lastModified: ...})] callback)
+* listObjects([stirng] bucket, [Function(err, string[])]callback)
 
 ##### Common backend functionality #####
 
@@ -108,8 +111,8 @@ _Complex content example_
 * `abstract` putObject(readStream, bucket, callback)
 * `abstract` getObject(hash, writeStream, bucket, callback)
 * `abstract` listObjects(bucket, callback)
-* putFile(name, readStream, callback)
-* getFile(metadataHash, writeStream, callback)
+* putFile(name, readStream, callback) - adds a content as a file to the storage
+* getFile(metadataHash, subpath, writeStream, callback) - gets a file or partial content from the storage based on the `metadataHash` and `subpart` path if the object is `complex`.
 * putMetadata(metadata, callback)
 * getMetadata(metadataHash, callback)
 * listAllMetadata(callback)
@@ -118,7 +121,14 @@ _Complex content example_
 
 #### Service ####
 
-TODO: GET/PUT/POST requests and return types etc.
+* `GET /rest/blob/metadata` - lists all metadata (in S3 case the first 1000)
+* `GET /rest/blob/metadata/METADATA_HASH` - gets a specific metadata descriptor based on the given `METADATA_HASH`
+* `GET /rest/blob/view/METADATA_HASH` - views the content that is associated with the `METADATA_HASH` in the browser, in case the browser cannot display it then the content gets downloaded.
+* `GET /rest/blob/view/METADATA_HASH/path/to/element.json` - returns with the specified file content from a `complex` object.
+* `GET /rest/blob/download/METADATA_HASH` - downloads the stored file with a name and correct extension, if the content is a `complex` object then a zip package is returned containing all contents.
+* `GET /rest/blob/download/METADATA_HASH/path/to/element.json` - downloads only a specific file from a `complex` content.
+* `POST /rest/blob/createFile/FILENAME.EXT` - creates a file descriptor with a given name and stores the sent `binary` content
+* `POST /rest/blob/createMetadata` - stores the sent JSON object as a metadata
 
 #### Client libraries ####
 
@@ -141,5 +151,6 @@ TODO: GET/PUT/POST requests and return types etc.
 ##### Assets #####
 
 `AssetWidget` is a user control that helps users to access (upload/download) assets associated with the model or plugin source data and plugin results.
+It supports a single file upload and mulitple file uploads as `complex` content, i.e. all files can be downloaded as a single zip package.
 
 `AssetWidget` uses the client side `BlobClient` class to access to stored files/artifacts and their metadata.

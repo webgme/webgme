@@ -14,6 +14,7 @@ define(['logManager',
     'https',
     'os',
     'mime',
+    'blob/BlobMetadata',
     'blob/BlobFSBackend',
     'blob/BlobS3Backend'
     ],function(
@@ -33,6 +34,7 @@ define(['logManager',
         Https,
         OS,
         mime,
+        BlobMetadata,
         BlobFSBackend,
         BlobS3Backend
     ){
@@ -491,7 +493,9 @@ define(['logManager',
         __app.get('/rest/blob/metadata', ensureAuthenticated, function(req, res) {
             blobBackend.listAllMetadata(function (err, metadata) {
                 if (err) {
-                    res.send(500);
+                    // FIXME: make sure we set the status code correctly like 404 etc.
+                    res.status(500);
+                    res.send(err);
                 } else {
                     res.status(200);
                     res.end(JSON.stringify(metadata, null, 4));
@@ -503,7 +507,9 @@ define(['logManager',
         __app.get('/rest/blob/metadata/:metadataHash', ensureAuthenticated, function(req, res) {
             blobBackend.getMetadata(req.params.metadataHash, function (err, hash, metadata) {
                 if (err) {
-                    res.send(500);
+                    // FIXME: make sure we set the status code correctly like 404 etc.
+                    res.status(500);
+                    res.send(err);
                 } else {
                     res.status(200);
                     res.setHeader('Content-type', 'application/json');
@@ -523,12 +529,16 @@ define(['logManager',
             // regular file
             blobBackend.putFile(filename, req, function (err, hash) {
                 if (err) {
-                    res.send(500);
+                    // FIXME: make sure we set the status code correctly like 404 etc.
+                    res.status(500);
+                    res.send(err);
                 } else {
                     // FIXME: it should be enough to send back the hash only
                     blobBackend.getMetadata(hash, function (err, metadataHash, metadata) {
                         if (err) {
-                            res.send(500);
+                            // FIXME: make sure we set the status code correctly like 404 etc.
+                            res.status(500);
+                            res.send(err);
                         } else {
                             res.status(200);
                             res.setHeader('Content-type', 'application/json');
@@ -551,14 +561,19 @@ define(['logManager',
             });
 
             req.addListener('end', function() {
-                blobBackend.putMetadata(JSON.parse(data), function (err, hash) {
+                var metadata = new BlobMetadata(JSON.parse(data));
+                blobBackend.putMetadata(metadata, function (err, hash) {
                     if (err) {
-                        res.send(500);
+                        // FIXME: make sure we set the status code correctly like 404 etc.
+                        res.status(500);
+                        res.send(err);
                     } else {
                         // FIXME: it should be enough to send back the hash only
                         blobBackend.getMetadata(hash, function (err, metadataHash, metadata) {
                             if (err) {
-                                res.send(500);
+                                // FIXME: make sure we set the status code correctly like 404 etc.
+                                res.status(500);
+                                res.send(err);
                             } else {
                                 res.status(200);
                                 res.setHeader('Content-type', 'application/json');
@@ -576,12 +591,22 @@ define(['logManager',
 
             blobBackend.getMetadata(metadataHash, function (err, hash, metadata) {
                 if (err) {
-                    res.send(500);
+                    // FIXME: make sure we set the status code correctly like 404 etc.
+                    res.status(500);
+                    res.send(err);
                 } else {
-                    if (download || metadata.mime === 'application/octet-stream') {
-                        res.setHeader('Content-disposition', 'attachment; filename=' + metadata.name);
+                    var filename = metadata.name;
+
+                    if (subpartPath) {
+                        filename = subpartPath.substring(subpartPath.lastIndexOf('/') + 1);
                     }
-                    res.setHeader('Content-type', metadata.mime);
+
+                    var mimeType = mime.lookup(filename);
+
+                    if (download || mimeType === 'application/octet-stream' || mimeType === 'application/zip') {
+                        res.setHeader('Content-disposition', 'attachment; filename=' + filename);
+                    }
+                    res.setHeader('Content-type', mimeType);
 
 
                     // TODO: we need to get the content and save as a local file.
@@ -599,15 +624,16 @@ define(['logManager',
             });
         };
 
-        __app.get(/^\/rest\/blob\/download\/([0-9a-f]{40,40})(\/.*)?$/, ensureAuthenticated, function(req, res) {
+        __app.get(/^\/rest\/blob\/download\/([0-9a-f]{40,40})(\/(.*))?$/, ensureAuthenticated, function(req, res) {
             var metadataHash = req.params[0];
-            var subpartPath = req.params[1];
+            var subpartPath = req.params[2];
+
             sendBlobContent(req, res, metadataHash, subpartPath, true);
         });
 
-        __app.get(/^\/rest\/blob\/view\/([0-9a-f]{40,40})(\/.*)?$/, ensureAuthenticated, function(req, res) {
+        __app.get(/^\/rest\/blob\/view\/([0-9a-f]{40,40})(\/(.*))?$/, ensureAuthenticated, function(req, res) {
             var metadataHash = req.params[0];
-            var subpartPath = req.params[1];
+            var subpartPath = req.params[2];
 
             sendBlobContent(req, res, metadataHash, subpartPath, false);
         });

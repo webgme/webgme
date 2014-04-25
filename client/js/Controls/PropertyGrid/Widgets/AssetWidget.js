@@ -108,7 +108,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
             this.__assetLink.attr('href', urlDownload);
 
             if (this.propertyValue) {
-                bc.getInfo(this.propertyValue, function (err, fileInfo) {
+                bc.getMetadata(this.propertyValue, function (err, fileInfo) {
                     if (err) {
                         //TODO: more meaningful error message
                         text = "ERROR...";

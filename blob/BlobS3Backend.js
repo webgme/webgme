@@ -3,11 +3,12 @@
  */
 
 define(['./BlobBackendBase',
+        'fs',
         'crypto',
         'util/guid',
         'aws-sdk',
         'util/StringStreamReader'],
-    function (BlobBackendBase, crypto, GUID, AWS, StringStreamReader) {
+    function (BlobBackendBase, fs, crypto, GUID, AWS, StringStreamReader) {
 
         var BlobS3Backend = function () {
             BlobBackendBase.call(this);
@@ -48,46 +49,68 @@ define(['./BlobBackendBase',
                 shasum = crypto.createHash(this.shaMethod),
                 size = 0;
 
-            if (readStream instanceof StringStreamReader) {
-                readStream = readStream.toString();
-                shasum.update(readStream);
-                size += readStream.length;
-            } else {
-                readStream.on('data', function (chunk) {
-                    shasum.update(chunk);
-                    size += chunk.length; //TODO does it really have a length field always???
-                });
-            }
-
-            // TODO: S3 cannot handle streams except file stream!
-            self.s3.putObject({ Bucket: self.tempBucket, Key: tempName, Body: readStream }, function(err, data) {
-                // TODO: error handling here
-                if (err) {
-                    callback(err);
-                    return;
-                }
-
-                var hash = shasum.digest('hex');
-
-                self.s3.copyObject({CopySource: self.tempBucket + '/' + tempName, Bucket: bucket, Key: hash}, function (err, data) {
+            // body must be a string or a readable file stream.
+            var ready = function(body) {
+                self.s3.putObject({ Bucket: self.tempBucket, Key: tempName, Body: body }, function (err, data) {
+                    // TODO: error handling here
                     if (err) {
                         callback(err);
                         return;
                     }
 
-                    self.s3.deleteObject({ Bucket: self.tempBucket, Key: tempName}, function (err, data) {
+                    var hash = shasum.digest('hex');
+
+                    self.s3.copyObject({CopySource: self.tempBucket + '/' + tempName, Bucket: bucket, Key: hash}, function (err, data) {
                         if (err) {
                             callback(err);
                             return;
                         }
 
-                        callback(null, hash);
+                        self.s3.deleteObject({ Bucket: self.tempBucket, Key: tempName}, function (err, data) {
+                            if (err) {
+                                callback(err);
+                                return;
+                            }
+
+                            callback(null, hash, size);
+                        });
+
+                    });
+                });
+            };
+
+            if (readStream instanceof StringStreamReader) {
+                readStream = readStream.toString();
+                shasum.update(readStream);
+                size += readStream.length;
+                ready(readStream);
+            } else if (readStream instanceof fs.ReadStream) {
+                readStream.on('data', function (chunk) {
+                    shasum.update(chunk);
+                    size += chunk.length; //TODO does it really have a length field always???
+                });
+                ready(readStream);
+            } else {
+                var contentTemp = GUID() + '.tmp';
+                var writeStream2 = fs.createWriteStream(contentTemp);
+
+                writeStream2.on('finish', function (){
+                    var readStream2 = fs.createReadStream(contentTemp);
+
+                    readStream2.on('data', function (chunk) {
+                        shasum.update(chunk);
+                        size += chunk.length; //TODO does it really have a length field always???
                     });
 
+                    readStream2.on('close', function() {
+                        fs.unlink(contentTemp);
+                    });
+
+                    ready(readStream2);
                 });
-            });
 
-
+                readStream.pipe(writeStream2);
+            }
         };
 
         BlobS3Backend.prototype.getObject = function (hash, writeStream, bucket, callback) {

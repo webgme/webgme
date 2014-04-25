@@ -42,7 +42,7 @@ blobManager.initialize(function (err) {
 
         for (var i = 0; i < savedContentHashes.length; i += 1) {
             var h = savedContentHashes[i];
-            var d = blobManager.getInfo(savedContentHashes[i]);
+            var d = blobManager.getMetadata(savedContentHashes[i]);
             (function(hash, desc) {
                 blobManager.getContent(hash, function (err, content) {
                    if (err) {
