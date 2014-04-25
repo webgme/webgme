@@ -76,7 +76,7 @@ _Complex content example_
     "name": "sample.zip",
     "size": 17591,
     "mime": "application/zip, application/octet-stream",
-    "tags": ["PluginResult"]
+    "tags": ["PluginResult"],
     "content": {
         "a/b/sample.js": {
             "content": "c2905bc187fbe55926e10bfd0baadad2f8493cbb",
