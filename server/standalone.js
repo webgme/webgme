@@ -532,6 +532,7 @@ define(['logManager',
         });
 
         __app.post('/rest/blob/createFile/:filename', ensureAuthenticated, function(req, res) {
+            __logger.info('file creation request: user['+req.session.udmId+'], filename['+req.params.filename+']');
             var filename = 'not_defined.txt';
 
             if (req.params.filename !== null && req.params.filename !== '') {
@@ -540,6 +541,7 @@ define(['logManager',
 
             // regular file
             blobBackend.putFile(filename, req, function (err, hash) {
+                __logger.info('file creation request finished: user['+req.session.udmId+'], filename['+req.params.filename+'], error['+err+'], hash:['+hash+']');
                 if (err) {
                     // FIXME: make sure we set the status code correctly like 404 etc.
                     res.status(500);
