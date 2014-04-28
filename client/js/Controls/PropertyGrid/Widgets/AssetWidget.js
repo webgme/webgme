@@ -157,7 +157,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
             if (files && files.length > 0) {
                 this._detachFileDropHandlers(true);
 
-                var afName = self.propertyName + '-' + new Date().toISOString().replace(/:/g, '-').replace(/\./, '-');
+                var afName = self.propertyName;
                 var artifact = blobClient.createArtifact(afName);
 
                 var remainingFiles = files.length;
