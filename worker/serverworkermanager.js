@@ -104,7 +104,8 @@ function(ASSERT,Child,CONSTANTS){
                             db:_parameters.mongodb,
                             pluginBasePaths:_parameters.pluginBasePaths,
                             interpreteroutputdirectory:_parameters.intoutdir,
-                            serverPort:_parameters.serverPort
+                            serverPort:_parameters.serverPort,
+                            paths: webGMEGlobal.getConfig().paths
                         });
                         break;
                     case CONSTANTS.msgTypes.initialized:

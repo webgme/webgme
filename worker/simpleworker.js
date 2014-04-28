@@ -41,8 +41,20 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
         error = null;
     };
     var initialize = function(parameters){
+        console.log('kecso',parameters);
         if(initialized !== true){
             initialized = true;
+            if(parameters.paths){
+                var configPaths = {},
+                    keys = Object.keys(parameters.paths);
+                for (var i = 0; i < keys.length; i += 1) {
+                    configPaths[keys[i]] = PATH.relative(BASEPATH,PATH.resolve(parameters.paths[keys[i]]));
+                }
+
+                requirejs.config({
+                    paths: configPaths
+                });
+            }
             pluginBasePaths = parameters.pluginBasePaths;
             serverPort = parameters.serverPort || 80;
             interpreteroutputdirectory = parameters.interpreteroutputdirectory || "";
