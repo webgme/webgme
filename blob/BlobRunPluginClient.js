@@ -50,6 +50,7 @@ define(['blob/BlobClient', 'blob/BlobMetadata', 'util/StringStreamWriter'],
                     return;
                 }
 
+                // TODO: use ArrayBuffer for consistency
                 callback(null, writeStream.toString());
             });
         };

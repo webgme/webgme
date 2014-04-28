@@ -59,6 +59,8 @@ define(['blob/BlobClient', 'blob/BlobMetadata', 'http', 'https'],
                     callback(err);
                     return;
                 }
+
+                // TODO: we should use arraybuffer here.
                 callback(null, data);
             });
         };

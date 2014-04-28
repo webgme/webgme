@@ -113,11 +113,13 @@ define(['./Artifact', 'blob/BlobMetadata'], function (Artifact, BlobMetadata) {
     BlobClient.prototype.getObject = function (hash, callback) {
         var xhr = new XMLHttpRequest();
         xhr.open("GET", this.getViewURL(hash), true);
+        xhr.responseType = "arraybuffer";
+
         xhr.onload = function (e) {
             if (xhr.readyState === 4) {
                 if (xhr.status === 200) {
                     // FIXME: should this be somehow a pipe/stream?
-                    callback(null, xhr.responseText);
+                    callback(null, xhr.response);
                 } else {
                     callback(xhr.status + ':' + xhr.statusText);
                 }
