@@ -106,7 +106,7 @@ define([
                             callback(_HTTPError.internalServerError,err);
                         } else {
                             for(var i in names){
-                                names[i] = URL.urlToRefObject(_baseUrl+'/commit/'+projectName+'/'+URL.addSpecialChars(names[i]));
+                                names[i] = URL.urlToRefObject(_baseUrl+'/commit?project='+projectName+'&commit='+URL.addSpecialChars(names[i]));
                             }
                             callback(_HTTPError.ok,names);
                         }
@@ -124,11 +124,11 @@ define([
                             callback(_HTTPError.internalServerError,err);
                         } else {
                             var myCommit = {};
-                            myCommit.self = URL.urlToRefObject(_baseUrl+'/commit/'+projectName+'/'+URL.addSpecialChars(commitHash));
-                            myCommit.root = URL.urlToRefObject(_baseUrl+'/node/'+projectName+'/'+URL.addSpecialChars(commit.root));
+                            myCommit.self = URL.urlToRefObject(_baseUrl+'/commit?ptoject='+projectName+'&commit='+URL.addSpecialChars(commitHash));
+                            myCommit.root = URL.urlToRefObject(_baseUrl+'/node?project='+projectName+'&root='+URL.addSpecialChars(commit.root));
                             myCommit.parents = [];
                             for(var i=0;i<commit.parents.length;i++){
-                                myCommit.parents.push(URL.urlToRefObject(_baseUrl+'/commit/'+projectName+'/'+URL.addSpecialChars(commit.parents[i])));
+                                myCommit.parents.push(URL.urlToRefObject(_baseUrl+'/commit?project='+projectName+'&commit='+URL.addSpecialChars(commit.parents[i])));
                             }
                             myCommit.message = commit.message;
 
@@ -148,7 +148,7 @@ define([
                             callback(_HTTPError.internalServerError,err);
                         } else {
                             for(var i=0;i<commits.length;i++){
-                                commits[i] = URL.urlToRefObject(_baseUrl+'/commit/'+projectName+'/'+URL.addSpecialChars(commits[i]['_id']));
+                                commits[i] = URL.urlToRefObject(_baseUrl+'/commit?project='+projectName+'&commit='+URL.addSpecialChars(commits[i]['_id']));
                             }
                             callback(_HTTPError.ok,commits);
                         }

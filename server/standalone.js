@@ -106,6 +106,9 @@ define(['logManager',
                 var index = req.url.indexOf('?');
                 req.session.originalQuery = index === -1 ? "" : req.url.substring(index);
             }
+            if( req && req.session && req.session.originalUrl === undefined){
+                req.session.originalUrl = req.url;
+            }
             if(typeof CONFIG.defaultUser === 'string' && req.session.authenticated !== true){
                 //TODO: this has do be done in some other way
                 if(req.param('user') === CONFIG.defaultUser){
@@ -372,15 +375,16 @@ define(['logManager',
             req.session.userType = 'unknown';
             res.redirect(__logoutUrl);
         });
-        __app.get('/login',storeQueryString,function(req,res){
+        __app.get('/login'/*,storeQueryString*/,function(req,res){
             res.location('/login');
             res.sendfile(__clientBaseDir+'/login.html',{},function(err){
                 res.send(404);
             });
         });
-        __app.post('/login',storeQueryString,__gmeAuth.authenticate,function(req,res){
+        __app.post('/login'/*,storeQueryString*/,__gmeAuth.authenticate,function(req,res){
             res.cookie('webgme',req.session.udmId);
-            res.redirect('/'+req.session.originalQuery || "");
+            //res.redirect('/'+req.session.originalQuery || "");
+            res.redirect(req.session.originalUrl);
         });
         __app.post('/login/client',prepClientLogin,__gmeAuth.authenticate,function(req,res){
             res.cookie('webgme',req.session.udmId);
@@ -390,12 +394,12 @@ define(['logManager',
             res.clearCookie('webgme');
             res.send(401);
         });
-        __app.get('/login/google',storeQueryString,checkGoogleAuthentication,Passport.authenticate('google'));
-        __app.get('/login/google/return',storeQueryString,__gmeAuth.authenticate,function(req,res){
+        __app.get('/login/google'/*,storeQueryString*/,checkGoogleAuthentication,Passport.authenticate('google'));
+        __app.get('/login/google/return'/*,storeQueryString*/,__gmeAuth.authenticate,function(req,res){
             res.cookie('webgme',req.session.udmId);
             res.redirect('/'+req.session.originalQuery || "");
         });
-        __app.get('/login/forge',storeQueryString,__forgeAuth.authenticate,function(req,res){
+        __app.get('/login/forge'/*,storeQueryString*/,__forgeAuth.authenticate,function(req,res){
             res.cookie('webgme',req.session.udmId);
             res.redirect('/');
         });
@@ -675,7 +679,7 @@ define(['logManager',
         });
 
         __logger.info("creating token related routing rules");
-        __app.get('/gettoken',ensureAuthenticated,function(req,res){
+        __app.get('/gettoken',storeQueryString,ensureAuthenticated,function(req,res){
             if(CONFIG.secureREST == true){
                 __gmeAuth.getToken(req.session.id,function(err,token){
                     if(err){
@@ -710,7 +714,7 @@ define(['logManager',
 
         //TODO: needs to refactor for the /rest/... format
         __logger.info("creating REST related routing rules");
-        __app.get('/rest/:command',ensureAuthenticated,checkREST,function(req,res){
+        __app.get('/rest/:command',storeQueryString,ensureAuthenticated,checkREST,function(req,res){
             __REST.initialize(function(err){
                 if(err){
                     res.send(500);
