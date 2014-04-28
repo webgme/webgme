@@ -41,7 +41,6 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
         error = null;
     };
     var initialize = function(parameters){
-        console.log('kecso',parameters);
         if(initialized !== true){
             initialized = true;
             if(parameters.paths){

@@ -2147,14 +2147,14 @@ define([
             }
             function plainUrl(command,path){
                 if(window && window.location && window.location && _nodes && _nodes[ROOT_PATH]){
-                    var address = window.location.protocol + '//' + window.location.host +'/rest/'+'/'+command+'?'+'project='+_projectName+'&root='+_core.getHash(_nodes[ROOT_PATH].node)+'&path='+path;
+                    var address = window.location.protocol + '//' + window.location.host +'/rest/'+command+'?'+'project='+_projectName+'&root='+URL.addSpecialChars(_core.getHash(_nodes[ROOT_PATH].node))+'&path='+URL.addSpecialChars(path);
                     return address;
                 }
             }
             function getDumpURL(path,filepath){
                 filepath = filepath || _projectName+'_'+_branch+'_'+URL.addSpecialChars(path);
                 if(window && window.location && window.location && _nodes && _nodes[ROOT_PATH]){
-                    var address = plainUrl('etf',path)+'&output='+filepath;
+                    var address = plainUrl('etf',path)+'&output='+URL.addSpecialChars(filepath);
                     return address;
                 }
                 return null;
