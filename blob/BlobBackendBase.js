@@ -173,7 +173,7 @@ define(['blob/BlobMetadata',
                                             var readStream = fs.createReadStream(tempFile);
 
                                             // FIXME: is finish/end/close the right event?
-                                            writeStream.on('close', function() {
+                                            writeStream.on('finish', function() {
                                                 callback(null, metadata);
 
                                                 fs.unlink(tempFile, function (){

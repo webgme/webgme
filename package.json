@@ -35,8 +35,7 @@
     "socket.io-client": "=0.9.10",
     "jszip": "=2.2.0",
     "commander": "=2.1.0",
-    "aws-sdk": "=1.18.0",
-    "bufferstream": "=0.6.2"
+    "aws-sdk": "=1.18.0"
   },
   "devDependencies": {},
   "main": "webgme"

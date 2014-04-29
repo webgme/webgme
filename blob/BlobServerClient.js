@@ -6,8 +6,8 @@
  * Server side BLOB client implementation.
  */
 
-define(['blob/BlobClient', 'blob/BlobMetadata', 'http', 'https', 'bufferstream'],
-    function (BlobClient, BlobMetadata, http, https, BufferStream) {
+define(['blob/BlobClient', 'blob/BlobMetadata', 'http', 'https', 'util/StringStreamWriter'],
+    function (BlobClient, BlobMetadata, http, https, StringStreamWriter) {
 
         /**
          * Initializes a new instance of a server side file system object.
@@ -144,7 +144,7 @@ define(['blob/BlobClient', 'blob/BlobMetadata', 'http', 'https', 'bufferstream']
         BlobServerClient.prototype.__sendHttpRequest = function (options, callback) {
             // TODO: use the http or https
             var req = http.request(options, function (res) {
-                var bufferStream = new BufferStream();
+                var bufferStream = new StringStreamWriter();
 
                 res.on('end', function () {
                     if (res.statusCode === 200) {

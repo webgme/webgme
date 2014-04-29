@@ -124,7 +124,7 @@ define(['./BlobBackendBase',
 
             self.s3.getObject(obj).createReadStream().pipe(writeStream);
 
-            writeStream.on('finish', function () {
+              writeStream.on('finish', function () {
                 // FIXME: any error handling here?
                 // FIXME: get the last modified date for the object
                 self.s3.headObject(obj, function (err, data) {
