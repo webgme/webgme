@@ -189,12 +189,10 @@ define(['plugin/PluginConfig',
             // TODO: node can be an object or objects within the same parent
             // FIXME: assume for now that node is not an array
 
-            // FIXME: is the parent always loaded?
-            // FIXME: what if parentNode is null?
             var parentNode = this.core.getParent(node);
             var parentDescriptor = new PluginNodeDescription({
-                    name: this.core.getAttribute(parentNode, 'name'),
-                    id: this.core.getPath(parentNode)
+                    name: parentNode === null ? "" : this.core.getAttribute(parentNode, 'name'),
+                    id: parentNode === null ? "" :this.core.getPath(parentNode)
                 });
             var activeDescriptor = [new PluginNodeDescription({
                     name: this.core.getAttribute(node, 'name'),
