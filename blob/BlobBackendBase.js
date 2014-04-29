@@ -41,10 +41,12 @@ define(['blob/BlobMetadata',
     // File handling functions
 
     BlobBackendBase.prototype.putFile = function (name, readStream, callback) {
-        // TODO: add content to storage
-        // TODO: create metadata file (filename, size, object-hash, object-type, content-type)
-        // TODO: add metadata to storage
-        // TODO: return metadata's hash and content's hash
+        // add content to storage
+        // create metadata file (filename, size, object-hash, object-type, content-type)
+        // add metadata to storage
+        // return metadata's hash and content's hash
+
+        // TODO: add tags and isPublic flag
 
         var self = this;
 
@@ -64,6 +66,8 @@ define(['blob/BlobMetadata',
                 name: name,
                 size: length,
                 mime: mime.lookup(name),
+                isPublic: false,
+                tags: [],
                 content: hash,
                 contentType: BlobMetadata.CONTENT_TYPES.OBJECT
             });
@@ -232,9 +236,11 @@ define(['blob/BlobMetadata',
         });
     };
 
-    BlobBackendBase.prototype.listAllMetadata = function (callback) {
+    BlobBackendBase.prototype.listAllMetadata = function (all, callback) {
         var self = this,
             allMetadata = {};
+
+        all = all || false;
 
         self.listObjects(self.metadataBucket, function (err, hashes) {
             if (err) {
@@ -257,7 +263,9 @@ define(['blob/BlobMetadata',
                         return;
                     }
 
-                    allMetadata[hash] = metadata;
+                    if (all || metadata.isPublic) {
+                        allMetadata[hash] = metadata;
+                    }
 
                     if (remaining === 0) {
                         callback(null, allMetadata);

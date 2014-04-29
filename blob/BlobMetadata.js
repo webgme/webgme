@@ -16,6 +16,7 @@ define([], function(){
             this.name = metadata.name;
             this.size = metadata.size || 0;
             this.mime = metadata.mime || '';
+            this.isPublic = metadata.isPublic || false;
             this.tags = metadata.tags || [];
             this.content = metadata.content;
             this.contentType = metadata.contentType || BlobMetadata.CONTENT_TYPES.OBJECT;
@@ -43,6 +44,7 @@ define([], function(){
             name: this.name,
             size: this.size,
             mime: this.mime,
+            isPublic: this.isPublic,
             tags: this.tags,
             content: this.content,
             contentType: this.contentType

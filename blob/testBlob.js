@@ -73,7 +73,7 @@ var addFilesFromTestDir = function (testdir, callback) {
 };
 
 var done = function() {
-    blobBackend.listAllMetadata(function (err, allMetadata) {
+    blobBackend.listAllMetadata(true, function (err, allMetadata) {
         if (err) {
             console.log(err);
         }

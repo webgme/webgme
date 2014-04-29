@@ -507,7 +507,7 @@ define(['logManager',
         //var blobBackend = new BlobS3Backend();
 
         __app.get('/rest/blob/metadata', ensureAuthenticated, function(req, res) {
-            blobBackend.listAllMetadata(function (err, metadata) {
+            blobBackend.listAllMetadata(req.query.all, function (err, metadata) {
                 if (err) {
                     // FIXME: make sure we set the status code correctly like 404 etc.
                     res.status(500);
@@ -544,6 +544,7 @@ define(['logManager',
             }
 
             // regular file
+            // TODO: add tags and isPublic flag
             blobBackend.putFile(filename, req, function (err, hash) {
                 __logger.info('file creation request finished: user['+req.session.udmId+'], filename['+req.params.filename+'], error['+err+'], hash:['+hash+']');
                 if (err) {

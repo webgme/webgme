@@ -51,6 +51,8 @@
 * `name` - file name
 * `size` - file size in Bytes
 * `mime` - mime-type of the file/content
+* `isPublic` - if `true` then the metadata shows up on listing, otherwise not. Default: `false`
+* `tags` - array of strings. Default: empty array `[]`
 * `content` - HASH or object
 * `contentType` [`BlobMetadata.CONTENT_TYPES`] - `object`, (`soft-link`) or `complex`. Note: `soft-link` type is not supported yet.
 * `lastModified` - last modified date and time in ISO 8601 format. 
@@ -63,6 +65,7 @@ _File example_
     "name": "sample.js",
     "size": 2093,
     "mime": "application/javascript",
+    "isPublic": false,
     "tags": [],
     "content": "c2905bc187fbe55926e10bfd0baadad2f8493cbb",
     "contentType": "object",
@@ -76,6 +79,7 @@ _Complex content example_
     "name": "sample.zip",
     "size": 17591,
     "mime": "application/zip, application/octet-stream",
+    "isPublic": true,
     "tags": ["PluginResult"],
     "content": {
         "a/b/sample.js": {
