@@ -25,6 +25,7 @@ define(['clientUtil',
         RESULT_DETAILS_BTN_BASE = $('<span class="btn-details pull-right">Details</span>'),
         RESULT_DETAILS_BASE = $('<div/>', {'class': 'messages collapse'}),
         MESSAGE_ENTRY_BASE = $('<div class="msg"><div class="msg-title"></div><div class="msg-body"></div></div>'),
+        MESSAGE_ENTRY_NODE_BTN_BASE = $('<span class="btn-node pull-right">Show node</span>'),
         RESULT_ARTIFACTS_BASE = $('<div class="artifacts collapse"><div class="artifacts-title">Generated artifacts</div><div class="artifacts-body"><ul></ul></div></div>'),
         ARTIFACT_ENTRY_BASE = $('<li><a href="#">Loading...</a></li>'),
         MESSAGE_PREFIX = 'Message #';
@@ -32,10 +33,11 @@ define(['clientUtil',
     PluginResultsDialog = function () {
     };
 
-    PluginResultsDialog.prototype.show = function (pluginResults) {
+    PluginResultsDialog.prototype.show = function (client,pluginResults) {
         var self = this;
 
         this._dialog = $(pluginResultsDialogTemplate);
+        this._client = client;
         this._initDialog(pluginResults);
 
         this._dialog.on('hidden', function () {
@@ -50,6 +52,7 @@ define(['clientUtil',
 
     PluginResultsDialog.prototype._initDialog = function (pluginResults) {
         var dialog = this._dialog,
+            client = this._client,
             resultEntry,
             body = dialog.find('.modal-body'),
             UNREAD_CSS = 'unread',
@@ -60,6 +63,7 @@ define(['clientUtil',
             messageContainer,
             resultDetailsBtn,
             messageEntry,
+            messageEntryBtn,
             messages,
             j,
             artifactsContainer,
@@ -106,7 +110,13 @@ define(['clientUtil',
             for (j = 0; j < messages.length; j += 1) {
                 messageEntry = MESSAGE_ENTRY_BASE.clone();
                 messageEntry.find('.msg-title').text(MESSAGE_PREFIX + (j+1));
-                messageEntry.find('.msg-body').html(JSON.stringify(messages[j], 0, 2).replace(/\n/g, '<br/>').replace(/  /g, '&nbsp;&nbsp;'));
+                if(messages[j].activeNode.id){
+                    messageEntryBtn = MESSAGE_ENTRY_NODE_BTN_BASE.clone();
+                    messageEntry.append(messageEntryBtn);
+                    messageEntry.find('.btn-node').attr('node-result-details', JSON.stringify(messages[j]));
+                }
+                //messageEntry.find('.msg-body').html(JSON.stringify(messages[j], 0, 2).replace(/\n/g, '<br/>').replace(/  /g, '&nbsp;&nbsp;'));
+                messageEntry.find('.msg-body').html(messages[j].message);
                 messageContainer.append(messageEntry);
             }
 
@@ -164,6 +174,22 @@ define(['clientUtil',
 
             event.stopPropagation();
             event.preventDefault();
+        });
+
+        dialog.on('click','.btn-node', function(event){
+            var nodeBtn = $(this),
+                resultEntry = JSON.parse(nodeBtn.attr('node-result-details')),
+                node = client.getNode(resultEntry.activeNode.id),
+                parentId = node ? node.getParentId() : null;
+
+            //TODO maybe this could be done in a more nicer way
+            if(typeof parentId === 'string'){
+                WebGMEGlobal.State.setActiveObject(parentId);
+                WebGMEGlobal.State.setActiveSelection([resultEntry.activeNode.id]);
+            } else {
+                WebGMEGlobal.State.setActiveObject(resultEntry.activeNode.id);
+            }
+            dialog.modal('hide');
         });
 
     };

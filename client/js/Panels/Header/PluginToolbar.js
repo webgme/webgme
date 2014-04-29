@@ -77,7 +77,7 @@ define(['js/Dialogs/PluginResults/PluginResultsDialog'], function (PluginResults
 
         showResults = function () {
             var dialog = new PluginResultsDialog();
-            dialog.show(results);
+            dialog.show(client,results);
             unreadResults = 0;
             setBadgeText('');
         };
