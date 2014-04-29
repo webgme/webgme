@@ -186,22 +186,15 @@ define(['plugin/PluginConfig',
          * @param {string} message - feedback to the user
          */
         PluginBase.prototype.createMessage = function (node, message) {
-            // TODO: node can be an object or objects within the same parent
-            // FIXME: assume for now that node is not an array
+            //this occurence of the function will always handle a single node
 
-            var parentNode = this.core.getParent(node);
-            var parentDescriptor = new PluginNodeDescription({
-                    name: parentNode === null ? "" : this.core.getAttribute(parentNode, 'name'),
-                    id: parentNode === null ? "" :this.core.getPath(parentNode)
-                });
-            var activeDescriptor = [new PluginNodeDescription({
+            var descriptor = new PluginNodeDescription({
                     name: this.core.getAttribute(node, 'name'),
                     id: this.core.getPath(node)
-                })];
+                });
             var pluginMessage = new PluginMessage({
                     commitHash: this.currentHash,
-                    activeNode: parentDescriptor,
-                    activeSelection: activeDescriptor,
+                    activeNode: descriptor,
                     message: message
                 });
 

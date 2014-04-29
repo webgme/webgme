@@ -25,22 +25,11 @@ define(['plugin/PluginNodeDescription'], function (PluginNodeDescription) {
             }
 
             this.message = config.message;
-            this.activeSelection = [];
 
-            for (var i = 0; i < config.activeSelection.length; i += 1) {
-                var activeObj;
-                if (config.activeSelection[i] instanceof PluginNodeDescription) {
-                    activeObj = config.activeSelection[i];
-                } else {
-                    activeObj = new PluginNodeDescription(config.activeSelection[i]);
-                }
-                this.activeSelection.push(activeObj);
-            }
             // TODO: message type ERROR, WARNING, INFO, DEBUG
         } else {
             this.commitHash = '';
             this.activeNode = new PluginNodeDescription();
-            this.activeSelection = [];
             this.message = '';
             // TODO: message type ERROR, WARNING, INFO, DEBUG
         }
@@ -55,13 +44,8 @@ define(['plugin/PluginNodeDescription'], function (PluginNodeDescription) {
         var result = {
             commitHash: this.commitHash,
             activeNode: this.activeNode.serialize(),
-            activeSelection: [],
             message: this.message
         };
-
-        for (var i = 0; i < this.activeSelection.length; i += 1) {
-            result.activeSelection.push(this.activeSelection[i].serialize());
-        }
 
         return result;
     };
