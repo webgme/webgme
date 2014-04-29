@@ -790,7 +790,9 @@ define(['jquery',
             projectRootNode = _client.getNode(CONSTANTS.PROJECT_ROOT_ID);
 
         if (projectRootNode) {
-            FCO_ID = projectRootNode.getRegistry(REGISTRY_KEYS.PROJECT_REGISTRY)[CONSTANTS.PROJECT_FCO_ID];
+            if(projectRootNode.getRegistryNames().indexOf(REGISTRY_KEYS.PROJECT_REGISTRY) !== -1){
+                FCO_ID = projectRootNode.getRegistry(REGISTRY_KEYS.PROJECT_REGISTRY)[CONSTANTS.PROJECT_FCO_ID];
+            }
         }
 
         return FCO_ID;
