@@ -118,7 +118,7 @@ define(['./Artifact', 'blob/BlobMetadata'], function (Artifact, BlobMetadata) {
         xhr.onload = function (e) {
             if (xhr.readyState === 4) {
                 if (xhr.status === 200) {
-                    // FIXME: should this be somehow a pipe/stream?
+                    // response is an arraybuffer
                     callback(null, xhr.response);
                 } else {
                     callback(xhr.status + ':' + xhr.statusText);

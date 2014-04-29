@@ -6,8 +6,8 @@
  * Server side BLOB client implementation.
  */
 
-define(['blob/BlobClient', 'blob/BlobMetadata', 'http', 'https'],
-    function (BlobClient, BlobMetadata, http, https) {
+define(['blob/BlobClient', 'blob/BlobMetadata', 'http', 'https', 'bufferstream'],
+    function (BlobClient, BlobMetadata, http, https, BufferStream) {
 
         /**
          * Initializes a new instance of a server side file system object.
@@ -117,71 +117,71 @@ define(['blob/BlobClient', 'blob/BlobMetadata', 'http', 'https'],
         // -------------------------------------------------------------------------------------------------------------
         // Private helper functions
 
-        BlobServerClient.prototype._ensureAuthenticated = function(options,callback){
+        BlobServerClient.prototype._ensureAuthenticated = function (options, callback) {
             //this function enables the session of the client to be authenticated
             //TODO curently this user does not have a session, so it has to upgrade the options always!!!
-            if(options.headers){
+            if (options.headers) {
                 options.headers.webgmeclientsession = this._clientSession;
             } else {
                 options.headers = {
-                    'webgmeclientsession':this._clientSession
+                    'webgmeclientsession': this._clientSession
                 }
             }
-            callback(null,options);
+            callback(null, options);
         };
 
-        BlobServerClient.prototype._sendHttpRequest = function(options,callback){
+        BlobServerClient.prototype._sendHttpRequest = function (options, callback) {
             var self = this;
-            self._ensureAuthenticated(options,function(err,updatedOptions){
-                if(err){
+            self._ensureAuthenticated(options, function (err, updatedOptions) {
+                if (err) {
                     callback(err);
                 } else {
-                    self.__sendHttpRequest(updatedOptions,callback);
+                    self.__sendHttpRequest(updatedOptions, callback);
                 }
             });
         };
 
         BlobServerClient.prototype.__sendHttpRequest = function (options, callback) {
             // TODO: use the http or https
-            var req = http.request(options, function(res) {
-                var d = '';
-                res.on('data', function (chunk) {
-                    d += chunk;
-                });
+            var req = http.request(options, function (res) {
+                var bufferStream = new BufferStream();
 
                 res.on('end', function () {
                     if (res.statusCode === 200) {
-                        callback(null, d);
+                        callback(null, bufferStream.toString());
                     } else {
-                        callback(res.statusCode, d);
+                        callback(res.statusCode, bufferStream.toString());
                     }
                 });
+
+                res.pipe(bufferStream);
+
             });
 
-            req.on('error', function(e) {
+            req.on('error', function (e) {
                 callback(e);
             });
 
             req.end();
         };
 
-        BlobServerClient.prototype._sendHttpRequestWithContent = function(options,data,callback){
+        BlobServerClient.prototype._sendHttpRequestWithContent = function (options, data, callback) {
             var self = this;
-            self._ensureAuthenticated(options,function(err,updatedOptions){
-                if(err){
+            self._ensureAuthenticated(options, function (err, updatedOptions) {
+                if (err) {
                     callback(err);
                 } else {
-                    self.__sendHttpRequestWithContent(updatedOptions,data,callback);
+                    self.__sendHttpRequestWithContent(updatedOptions, data, callback);
                 }
             });
         };
 
         BlobServerClient.prototype.__sendHttpRequestWithContent = function (options, data, callback) {
             // TODO: use the http or https
-            var req = http.request(options, function(res) {
-            //    console.log('STATUS: ' + res.statusCode);
-            //    console.log('HEADERS: ' + JSON.stringify(res.headers));
-            //    res.setEncoding('utf8');
+            var req = http.request(options, function (res) {
+                //    console.log('STATUS: ' + res.statusCode);
+                //    console.log('HEADERS: ' + JSON.stringify(res.headers));
+                //    res.setEncoding('utf8');
                 var d = '';
                 res.on('data', function (chunk) {
                     d += chunk;
@@ -196,7 +196,7 @@ define(['blob/BlobClient', 'blob/BlobMetadata', 'http', 'https'],
                 });
             });
 
-            req.on('error', function(e) {
+            req.on('error', function (e) {
                 callback(e);
             });
 
