@@ -16,7 +16,8 @@ define(['logManager',
     'mime',
     'blob/BlobMetadata',
     'blob/BlobFSBackend',
-    'blob/BlobS3Backend'
+    'blob/BlobS3Backend',
+    'util/guid'
     ],function(
         LogManager,
         Storage,
@@ -36,7 +37,8 @@ define(['logManager',
         mime,
         BlobMetadata,
         BlobFSBackend,
-        BlobS3Backend
+        BlobS3Backend,
+        GUID
     ){
 
     function StandAloneServer(CONFIG){
@@ -349,8 +351,19 @@ define(['logManager',
         __app = Express();
 
         __app.configure(function(){
+            //__app.use(Express.logger()),
             __app.use(function(req,res,next){
-                __logger.info("incoming request - "+req.protocol+"("+req.httpVersion+") - "+req.method+" - "+req.originalUrl+" - "+req.ip);
+                var infoguid = GUID(),
+                    infotxt = "request["+infoguid+"]:"+req.headers.host+" - "+req.protocol.toUpperCase()+"("+req.httpVersion+") - "+req.method.toUpperCase()+" - "+req.originalUrl+" - "+req.ip+" - "+req.headers['user-agent'],
+                    infoshort = "incoming["+infoguid+"]: "+req.originalUrl;
+                __logger.info(infoshort);
+                var end = res.end;
+                res.end = function(chunk,encoding){
+                    res.end = end;
+                    res.end(chunk,encoding);
+                    infotxt += " -> "+res.statusCode;
+                    __logger.info(infotxt);
+                };
                 next();
             }),
             __app.use(Express.cookieParser());
