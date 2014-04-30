@@ -189,8 +189,8 @@ define(['plugin/PluginConfig',
             //this occurence of the function will always handle a single node
 
             var descriptor = new PluginNodeDescription({
-                    name: this.core.getAttribute(node, 'name'),
-                    id: this.core.getPath(node)
+                    name: node ? this.core.getAttribute(node, 'name') : "",
+                    id: node ? this.core.getPath(node) : ""
                 });
             var pluginMessage = new PluginMessage({
                     commitHash: this.currentHash,
