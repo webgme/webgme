@@ -203,7 +203,6 @@ define(['logManager',
             }
         }
         function checkVF(req,res,next){
-            console.log('check Vehicle Forge framework');
             if(req.isAuthenticated() || (req.session && true === req.session.authenticated)){
                 return next();
             } else {
@@ -350,7 +349,10 @@ define(['logManager',
         __app = Express();
 
         __app.configure(function(){
-            __app.use(Express.logger());
+            __app.use(function(req,res,next){
+                __logger.info("incoming request - "+req.protocol+"("+req.httpVersion+") - "+req.method+" - "+req.originalUrl+" - "+req.ip);
+                next();
+            }),
             __app.use(Express.cookieParser());
             __app.use(Express.bodyParser());
             __app.use(Express.methodOverride());
