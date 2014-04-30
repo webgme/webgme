@@ -26,6 +26,7 @@
     font-size: 9px;
     cursor: pointer; }
   .plugin-results-dialog .modal-body div.plugin-result .messages .msg {
+    color: #999999;
     margin-bottom: 5px; }
     .plugin-results-dialog .modal-body div.plugin-result .messages .msg .msg-title {
       margin-top: 5px;
@@ -34,7 +35,7 @@
       color: #999999;
       border-bottom: 1px solid #999999; }
     .plugin-results-dialog .modal-body div.plugin-result .messages .msg .btn-node {
-        color: #999999;
+        color: #3a87ad;
         font-size: 9px;
         cursor: pointer; }
   .plugin-results-dialog .modal-body div.plugin-result .artifacts {
