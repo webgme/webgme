@@ -148,9 +148,9 @@ define(['blob/BlobClient', 'blob/BlobMetadata', 'http', 'https', 'util/StringStr
 
                 res.on('end', function () {
                     if (res.statusCode === 200) {
-                        callback(null, bufferStream.toString());
+                        callback(null, bufferStream.getBuffer());
                     } else {
-                        callback(res.statusCode, bufferStream.toString());
+                        callback(res.statusCode, bufferStream.getBuffer());
                     }
                 });
 
