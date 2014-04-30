@@ -44,6 +44,8 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 _database.openDatabase(function(err){
                     if(err){
                         _databaseOpened = false;
+                        //this error has to be put to console as well
+                        console.log('Error in mongoDB connection initiation!!! - ', err);
                         options.log.error(err);
                         callback(err);
                     } else {
@@ -145,6 +147,12 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 } else {
                     return accept(null,true);
                 }
+            });
+
+            //TODO check if this really helps
+            _socket.server.on('error',function(err){
+                console.log("Error have been raised on socket.io level!!! - ",err);
+                options.logger.error('error raised: ' + err);
             });
 
 
