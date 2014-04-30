@@ -156,8 +156,15 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 });
 
                 socket.on('closeDatabase', function(callback){
+                    //we ignore the close request from any client
+                    //TODO check how we should function
+                    /*
                     _databaseOpened = false;
                     _database.closeDatabase(callback);
+                    */
+                    if(typeof callback === 'function'){
+                        callback(null);
+                    }
                 });
 
                 socket.on('fsyncDatabase', function(callback){
