@@ -725,6 +725,10 @@
 		return first;
 	}
 
+        function isFuture(value){
+		return (value instanceof Future);
+        }
+
 	// ------- TASYNC -------
 
 	var TASYNC = {
@@ -737,7 +741,8 @@
 		wrap: wrap,
 		unwrap: unwrap,
 		throttle: throttle,
-		join: join
+		join: join,
+		isFuture: isFuture
 	};
 
 	if (typeof define === "function" && define.amd) {
