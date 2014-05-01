@@ -35,6 +35,14 @@
 * Data migration between storage backend should be provided.
 
 
+### Limitations ###
+
+- `complex` artifact cannot be bigger than 1GB. Storage can store it, but jszip cannot create a zip package to download it.
+ V8 max buffer size is 1GB (kMaxLength).
+ We need a different implementation to generate the zip.
+
+
+
 ### Design ###
 
 #### Backend ####
