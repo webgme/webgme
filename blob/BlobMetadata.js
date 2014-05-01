@@ -32,7 +32,7 @@ define([], function(){
     BlobMetadata.CONTENT_TYPES = {
         OBJECT: 'object',
         COMPLEX: 'complex',
-        SOFT_LINK: 'soft-link'
+        SOFT_LINK: 'softLink'
     };
 
     /**

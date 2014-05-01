@@ -1,5 +1,11 @@
 ## Binary Large Object Storage ##
 
+### TODO ###
+
+- test file upload bigger than 1MB through UI
+- gracefully log soft link circular references
+- add object compare function - complex objects might have the same content even though the hashes are not the same.
+
 ### Requirements ###
 
 1. Content shall be tracked

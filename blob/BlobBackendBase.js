@@ -91,6 +91,8 @@ define(['blob/BlobMetadata',
         var self = this;
         var stringStream = new StringStreamWriter();
 
+        var softLinkHashes = [];
+
         self.getMetadata(metadataHash, function (err, metadataHash, metadata) {
             if (err) {
                 callback(err);
@@ -107,6 +109,16 @@ define(['blob/BlobMetadata',
                     callback(null, metadata);
                 });
 
+            } else if  (metadata.contentType === BlobMetadata.CONTENT_TYPES.SOFT_LINK) {
+                if (softLinkHashes.indexOf(metadataHash) > -1) {
+                    // TODO: concat all soft link hashes
+                    callback('Circular references in softLinks: ' + metadataHash);
+                    return;
+                }
+
+                softLinkHashes.push(metadataHash);
+                self.getFile(metadata.content, '', writeStream, callback);
+
             } else if (metadata.contentType === BlobMetadata.CONTENT_TYPES.COMPLEX) {
                 // 1) create a zip package
                 // 2) add all files from the descriptor to the zip
@@ -115,7 +127,9 @@ define(['blob/BlobMetadata',
                 if (subpath) {
                     if (metadata.content.hasOwnProperty(subpath)) {
                         var contentObj = metadata.content[subpath];
+
                         if (contentObj.contentType === BlobMetadata.CONTENT_TYPES.OBJECT) {
+
                             self.getObject(contentObj.content, writeStream, self.contentBucket, function (err) {
                                 if (err) {
                                     callback(err);
@@ -125,6 +139,8 @@ define(['blob/BlobMetadata',
                                 callback(null, metadata);
                             });
 
+                        } else if (contentObj.contentType === BlobMetadata.CONTENT_TYPES.SOFT_LINK) {
+                            self.getFile(contentObj.content, '', writeStream, callback);
                         } else {
                             callback('subpath content type (' + contentObj.contentType + ') is not supported yet in content: ' + subpath);
                         }
@@ -148,13 +164,12 @@ define(['blob/BlobMetadata',
                     }
 
                     for (var i = 0; i < keys.length; i += 1) {
-                        (function(subpartHash, subpartName){
+                        (function(subpartHash, subpartType, subpartName){
                             // TODO: what if error?
                             var contentTemp = GUID() + '.tmp';
                             var writeStream2 = fs.createWriteStream(contentTemp);
 
-                            self.getObject(subpartHash, writeStream2, self.contentBucket, function (err) {
-
+                            var contentReadyCallback = function (err) {
 
                                 fs.readFile(contentTemp, function (err, data) {
                                     zip.file(subpartName, data);
@@ -189,12 +204,23 @@ define(['blob/BlobMetadata',
 
                                     });
                                 });
-                            });
-                        })(metadata.content[keys[i]].content, keys[i])
+                            };
+
+                            if (subpartType === BlobMetadata.CONTENT_TYPES.OBJECT) {
+                                self.getObject(subpartHash, writeStream2, self.contentBucket, contentReadyCallback);
+
+                            } else if (subpartType === BlobMetadata.CONTENT_TYPES.SOFT_LINK) {
+                                self.getFile(subpartHash, '', writeStream2, contentReadyCallback);
+
+                            } else {
+                                // complex part within complex part is not supported
+                                callback('Subpart content type is not supported: ' + subpartType + ' ' + subpartName + ' ' + subpartHash);
+                            }
+
+                        })(metadata.content[keys[i]].content, metadata.content[keys[i]].contentType, keys[i])
                     }
                 }
             } else {
-                // TODO: handle here the complex type and soft links
                 callback('not supported content type: ' + metadata.contentType);
             }
         });

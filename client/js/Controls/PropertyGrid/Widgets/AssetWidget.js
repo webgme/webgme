@@ -164,7 +164,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
 
                 for (i = 0; i < files.length; i += 1) {
                     file = files[i];
-                    artifact.addFile(file.name, file, function (err, hash) {
+                    artifact.addFileAsSoftLink(file.name, file, function (err, hash) {
                         remainingFiles -= 1;
 
                         if (err) {

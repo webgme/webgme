@@ -4,7 +4,7 @@
  * Author: Zsolt Lattmann
  */
 
-define([], function () {
+define(['blob/BlobMetadata'], function (BlobMetadata) {
 
     /**
      * Creates a new instance of artifact, i.e. complex object, in memory. This object can be saved in the storage.
@@ -42,7 +42,23 @@ define([], function () {
                 return;
             }
 
-            self.addHash(name, hash, function (err, hash) {
+            self.addObjectHash(name, hash, function (err, hash) {
+                callback(err, hash);
+            })
+        });
+    };
+
+    Artifact.prototype.addFileAsSoftLink = function (name, content, callback) {
+        var self = this;
+        var filename = name.substring(name.lastIndexOf('/') + 1);
+
+        self.blobClient.putFile(filename, content, function (err, hash) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            self.addMetadataHash(name, hash, function (err, hash) {
                 callback(err, hash);
             })
         });
@@ -88,7 +104,7 @@ define([], function () {
      * @param {string} hash Metadata hash that has to be added.
      * @param callback
      */
-    Artifact.prototype.addHash = function (name, hash, callback) {
+    Artifact.prototype.addObjectHash = function (name, hash, callback) {
         var self = this;
 
         self.blobClient.getMetadata(hash, function (err, metadata) {
@@ -105,7 +121,31 @@ define([], function () {
 
                 self.descriptor.content[name] = {
                     content: metadata.content,
-                    contentType: 'object'
+                    contentType: BlobMetadata.CONTENT_TYPES.OBJECT
+                };
+                callback(null, hash);
+            }
+        });
+    };
+
+    Artifact.prototype.addMetadataHash = function (name, hash, callback) {
+        var self = this;
+
+        self.blobClient.getMetadata(hash, function (err, metadata) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            if (self.descriptor.content.hasOwnProperty(name)) {
+                callback('Another content with the same name was already added. ' + JSON.stringify(self.descriptor.content[name]));
+
+            } else {
+                self.descriptor.size += metadata.size;
+
+                self.descriptor.content[name] = {
+                    content: hash,
+                    contentType: BlobMetadata.CONTENT_TYPES.SOFT_LINK
                 };
                 callback(null, hash);
             }
