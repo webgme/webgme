@@ -30,6 +30,7 @@ define(['logManager',
     'js/Utils/METAAspectHelper',
     'js/Utils/PreferencesHelper',
     'js/ConstraintManager/ConstraintManager',
+    'js/Dialogs/Projects/ProjectsDialog',
     'js/Utils/InterpreterManager'], function (logManager,
                                             CONFIG,
                                             packagejson,
@@ -49,6 +50,7 @@ define(['logManager',
                                             METAAspectHelper,
                                             PreferencesHelper,
                                             ConstraintManager,
+                                            ProjectsDialog,
                                             InterpreterManager) {
 
     "use strict";
@@ -63,7 +65,9 @@ define(['logManager',
             logger = logManager.create('WebGME'),
             selectObject,
             loadBranch,
-            initialThingsToDo = WebGMEUrlManager.parseInitialThingsToDoFromUrl();
+            initialThingsToDo = WebGMEUrlManager.parseInitialThingsToDoFromUrl(),
+            wasProjectOpeningError=false,
+            projectOpenDialog;
 
         initialThingsToDo.branchToLoad = initialThingsToDo.branchToLoad || CONFIG.branch;
 
@@ -153,6 +157,7 @@ define(['logManager',
                                             client.selectProjectAsync(initialThingsToDo.projectToLoad,function(err){
                                                 if(err){
                                                     logger.error(err);
+                                                    wasProjectOpeningError = true;
                                                 } else {
                                                     if (initialThingsToDo.branchToLoad) {
                                                         loadBranch(initialThingsToDo.branchToLoad);
@@ -217,7 +222,15 @@ define(['logManager',
                             }
                         });
 
-                        console.log(client);
+                    }
+
+                    // Throw upp project open dialog if no project opened
+
+                    if (!initialThingsToDo.projectToLoad || wasProjectOpeningError) {
+                        client.getAvailableProjectsAsync(function(err,projectArray){
+                            projectOpenDialog = new ProjectsDialog(client);
+                            projectOpenDialog.show();
+                        });
                     }
                 }
             });
