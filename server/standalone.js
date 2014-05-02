@@ -312,7 +312,10 @@ define(['logManager',
             __httpServer = null,
             __logoutUrl = CONFIG.logoutUrl || '/',
             __baseDir = webGMEGlobal.baseDir,
-            __clientBaseDir = __baseDir+'/client';
+            __clientBaseDir = __baseDir+'/client',
+            __requestCounter = 0,
+            __reportedRequestCounter = 0,
+            __requestCheckInterval = 2500;
 
         //creating the logmanager
         LogManager.setLogLevel(CONFIG.loglevel || LogManager.logLevels.WARNING);
@@ -351,7 +354,19 @@ define(['logManager',
         __app = Express();
 
         __app.configure(function(){
-            //__app.use(Express.logger()),
+            //counting of requests works only in debug mode
+            if(CONFIG.debug === true){
+                setInterval(function(){
+                    if(__reportedRequestCounter !== __requestCounter){
+                        __reportedRequestCounter = __requestCounter;
+                        console.log("...handled "+__reportedRequestCounter+" requests so far...");
+                    }
+                },__requestCheckInterval);
+                __app.use(function(req,res,next){
+                    __requestCounter++;
+                    next();
+                });
+            }
             __app.use(function(req,res,next){
                 var infoguid = GUID(),
                     infotxt = "request["+infoguid+"]:"+req.headers.host+" - "+req.protocol.toUpperCase()+"("+req.httpVersion+") - "+req.method.toUpperCase()+" - "+req.originalUrl+" - "+req.ip+" - "+req.headers['user-agent'],
@@ -365,7 +380,7 @@ define(['logManager',
                     __logger.info(infotxt);
                 };
                 next();
-            }),
+            });
             __app.use(Express.cookieParser());
             __app.use(Express.bodyParser());
             __app.use(Express.methodOverride());
