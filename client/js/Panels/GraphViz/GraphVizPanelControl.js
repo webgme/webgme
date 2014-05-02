@@ -46,7 +46,7 @@ define(['logManager',
 
         this._graphVizWidget.onBackgroundDblClick = function () {
             if (self._currentNodeParentId) {
-                WebGMEGlobal.State.setActiveObject(self._currentNodeParentId);
+                WebGMEGlobal.State.registerActiveObject(self._currentNodeParentId);
             }
         };
 
@@ -56,7 +56,7 @@ define(['logManager',
         };
 
         this._graphVizWidget.onNodeDblClick = function (id) {
-            WebGMEGlobal.State.setActiveObject(id);
+            WebGMEGlobal.State.registerActiveObject(id);
         };
 
         this._graphVizWidget.onNodeClose = function (id) {
@@ -284,7 +284,7 @@ define(['logManager',
             "title": "Go to parent",
             "icon": "glyphicon glyphicon-circle-arrow-up",
             "clickFn": function (/*data*/) {
-                WebGMEGlobal.State.setActiveObject(self._currentNodeParentId);
+                WebGMEGlobal.State.registerActiveObject(self._currentNodeParentId);
             }
         });
         this._toolbarItems.push(this.$btnModelHierarchyUp);

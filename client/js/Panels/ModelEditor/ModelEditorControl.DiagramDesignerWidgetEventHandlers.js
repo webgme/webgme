@@ -308,7 +308,7 @@ define(['logManager',
 
         if (gmeID) {
             this.logger.debug("Opening model with id '" + gmeID + "'");
-            WebGMEGlobal.State.setActiveObject(gmeID);
+            WebGMEGlobal.State.registerActiveObject(gmeID);
         }
     };
 
@@ -725,7 +725,7 @@ define(['logManager',
         }
 
         this._settingActiveSelection = true;
-        WebGMEGlobal.State.setActiveSelection(gmeIDs);
+        WebGMEGlobal.State.registerActiveSelection(gmeIDs);
         this._settingActiveSelection = false;
     };
 

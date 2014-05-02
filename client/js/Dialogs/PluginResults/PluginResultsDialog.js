@@ -186,10 +186,10 @@ define(['clientUtil',
 
             //TODO maybe this could be done in a more nicer way
             if(typeof parentId === 'string'){
-                WebGMEGlobal.State.setActiveObject(parentId);
-                WebGMEGlobal.State.setActiveSelection([resultEntry.activeNode.id]);
+                WebGMEGlobal.State.registerActiveObject(parentId);
+                WebGMEGlobal.State.registerActiveSelection([resultEntry.activeNode.id]);
             } else {
-                WebGMEGlobal.State.setActiveObject(resultEntry.activeNode.id);
+                WebGMEGlobal.State.registerActiveObject(resultEntry.activeNode.id);
             }
             dialog.modal('hide');
         });

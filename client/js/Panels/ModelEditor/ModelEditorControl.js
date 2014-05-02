@@ -115,7 +115,7 @@ define(['logManager',
                 if (aspectNames.indexOf(this._selectedAspect) === -1) {
                     this.logger.warning('The currently selected aspect "' + this._selectedAspect + '" does not exist in the object "' + desc.name + ' (' + nodeId + ')", falling back to "All"');
                     this._selectedAspect = CONSTANTS.ASPECT_ALL;
-                    WebGMEGlobal.State.setActiveAspect(CONSTANTS.ASPECT_ALL);
+                    WebGMEGlobal.State.registerActiveAspect(CONSTANTS.ASPECT_ALL);
                 }
             }
 
@@ -789,8 +789,8 @@ define(['logManager',
         var myId = this.currentNodeInfo.id;
         if (this.currentNodeInfo.parentId ||
             this.currentNodeInfo.parentId === CONSTANTS.PROJECT_ROOT_ID) {
-            WebGMEGlobal.State.setActiveObject(this.currentNodeInfo.parentId);
-            WebGMEGlobal.State.setActiveSelection([myId]);
+            WebGMEGlobal.State.registerActiveObject(this.currentNodeInfo.parentId);
+            WebGMEGlobal.State.registerActiveSelection([myId]);
         }
     };
 
@@ -1131,7 +1131,7 @@ define(['logManager',
     };
 
     ModelEditorControl.prototype._initializeSelectedAspect = function () {
-        WebGMEGlobal.State.setActiveAspect(this._selectedAspect);
+        WebGMEGlobal.State.registerActiveAspect(this._selectedAspect);
 
         this.selectedObjectChanged(this.currentNodeInfo.id);
     };

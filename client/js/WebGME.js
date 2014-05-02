@@ -55,7 +55,7 @@ define(['logManager',
     WebGMEGlobal.version = npmJSON.version;
 
     var _webGMEStart = function () {
-        var lm,
+        var layoutManager,
             client,
             loadPanels,
             layoutToLoad = util.getURLParameterByName('layout') || 'DefaultLayout',
@@ -68,10 +68,12 @@ define(['logManager',
             loadBranch,
             branchToLoad = util.getURLParameterByName('branch') || CONFIG.branch;
 
-        lm = new LayoutManager();
-        lm.loadLayout(layoutToLoad, function () {
+
+
+        layoutManager = new LayoutManager();
+        layoutManager.loadLayout(layoutToLoad, function () {
             var panels = [],
-                layoutPanels = lm._currentLayout.panels,
+                layoutPanels = layoutManager._currentLayout.panels,
                 len = layoutPanels ? layoutPanels.length : 0,
                 i;
 
@@ -81,10 +83,12 @@ define(['logManager',
 
             WebGMEGlobal.InterpreterManager = new InterpreterManager(client);
 
-            Object.defineProperty(WebGMEGlobal, 'State', {value : StateManager.initialize(),
+            Object.defineProperty(WebGMEGlobal, 'State', {
+                value : StateManager.initialize(),
                 writable : false,
                 enumerable : true,
-                configurable : false});
+                configurable : false}
+            );
 
             WebGMEHistory.initialize();
 
@@ -99,10 +103,10 @@ define(['logManager',
 
             //hook up branch changed to set read-only mode on panels
             client.addEventListener(client.events.BRANCH_CHANGED, function (__project, branchName) {
-                lm.setPanelReadOnly(client.isCommitReadOnly() || client.isProjectReadOnly());
+                layoutManager.setPanelReadOnly(client.isCommitReadOnly() || client.isProjectReadOnly());
             });
             client.addEventListener(client.events.PROJECT_OPENED, function (__project, projectName) {
-                lm.setPanelReadOnly(client.isProjectReadOnly());
+                layoutManager.setPanelReadOnly(client.isProjectReadOnly());
             });
 
             //on project close clear the current state
@@ -132,7 +136,7 @@ define(['logManager',
         loadPanels = function (panels) {
             var p = panels.splice(0, 1)[0];
 
-            lm.loadPanel(p, function () {
+            layoutManager.loadPanel(p, function () {
                 if (panels.length > 0) {
                     loadPanels(panels);
                 } else {
@@ -188,7 +192,11 @@ define(['logManager',
                             }
                         });
                     } else {
-                        projectToLoad = projectToLoad === "" ? CONFIG.project : projectToLoad;
+
+                        if ( projectToLoad === "") {
+                            projectToLoad = CONFIG.project;
+                        }
+
                         client.connectToDatabaseAsync({'open': projectToLoad,
                             'project': projectToLoad}, function (err) {
                             if (err) {
@@ -209,6 +217,8 @@ define(['logManager',
                                 }
                             }
                         });
+
+                        console.log(client);
                     }
                 }
             });
@@ -220,7 +230,7 @@ define(['logManager',
                     objectToLoad = CONSTANTS.PROJECT_ROOT_ID;
                 }
                 setTimeout(function () {
-                    WebGMEGlobal.State.setActiveObject(objectToLoad);
+                    WebGMEGlobal.State.registerActiveObject(objectToLoad);
                 }, 1000);
             }
         };
@@ -232,6 +242,7 @@ define(['logManager',
                 }
             });
         };
+
     };
 
     return {

@@ -105,7 +105,7 @@ define(['logManager',
 
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_VISUALIZER, function (model, activeVisualizer) {
             if (self._settingVisualizer !== true) {
-                self.setActiveVisualizer(activeVisualizer);
+                self.registerActiveVisualizer(activeVisualizer);
             }
         });
 
@@ -155,11 +155,12 @@ define(['logManager',
                 }
             }
 
-            WebGMEGlobal.State.setActiveVisualizer(visualizer);
+            WebGMEGlobal.State.registerActiveVisualizer(visualizer);
         }
 
         this._settingVisualizer = false;
     };
+
 
     VisualizerPanel.prototype.setActiveVisualizer = function (visualizer) {
         var panel = WebGMEGlobal.PanelManager.getActivePanel() === this._activePanel.p1 ? 'p1' : 'p2',

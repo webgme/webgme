@@ -111,11 +111,11 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
                 targetNodeObj = _client.getNode(ptrTo);
                 if (targetNodeObj) {
                     if (targetNodeObj.getParentId() || targetNodeObj.getParentId() === CONSTANTS.PROJECT_ROOT_ID) {
-                        WebGMEGlobal.State.setActiveObject(targetNodeObj.getParentId());
-                        WebGMEGlobal.State.setActiveSelection([ptrTo]);
+                        WebGMEGlobal.State.registerActiveObject(targetNodeObj.getParentId());
+                        WebGMEGlobal.State.registerActiveSelection([ptrTo]);
                     } else {
-                        WebGMEGlobal.State.setActiveObject(CONSTANTS.PROJECT_ROOT_ID);
-                        WebGMEGlobal.State.setActiveSelection([ptrTo]);
+                        WebGMEGlobal.State.registerActiveObject(CONSTANTS.PROJECT_ROOT_ID);
+                        WebGMEGlobal.State.registerActiveSelection([ptrTo]);
                     }
                 }
             }
