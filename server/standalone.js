@@ -422,6 +422,7 @@ define(['logManager',
         __logger.info("creating decorator specific routing rules");
         __app.get('/bin/getconfig.js',ensureAuthenticated,function(req,res){
             res.status(200);
+            res.setHeader('Content-type', 'application/json');
             res.end("define([],function(){ return "+JSON.stringify(CONFIG)+";});");
         });
         __logger.info("creating decorator specific routing rules");
@@ -801,6 +802,7 @@ define(['logManager',
                 }
             }
             res.status(200);
+            res.setHeader('Content-type', 'application/json');
             res.end("define([],function(){ return "+JSON.stringify(names)+";});");
         });
         __app.get('/listAllPlugins',ensureAuthenticated,function(req,res){
@@ -818,11 +820,13 @@ define(['logManager',
                 }
             }
             res.status(200);
+            res.setHeader('Content-type', 'application/json');
             res.end("define([],function(){ return "+JSON.stringify(names)+";});");
         });
         __app.get('/listAllVisualizerDescriptors',ensureAuthenticated,function(req,res){
             var allVisualizerDescriptors = getVisualizersDescriptor();
             res.status(200);
+            res.setHeader('Content-type', 'application/json');
             res.end("define([],function(){ return "+JSON.stringify(allVisualizerDescriptors)+";});");
         });
 
