@@ -275,7 +275,7 @@ define(['logManager',
 
         this._client.getFullProjectListAsync(function(err,projectList){
             var p;
-            self._activeProject = self._client.getActiveProject();
+            self._activeProject = self._client.getActiveProjectName();
             self._projectList = {};
             self._projectNames = [];
 

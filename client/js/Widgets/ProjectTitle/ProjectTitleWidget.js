@@ -43,7 +43,7 @@ define(['logManager',
 
     ProjectTitleWidget.prototype._refresh = function () {
         var client = this._client,
-            actualProject = client.getActiveProject(),
+            actualProject = client.getActiveProjectName(),
             actualBranch = client.getActualBranch(),
             readOnly = client.isProjectReadOnly() || client.isCommitReadOnly(),
             titleText = actualProject + " @ " + actualBranch,

@@ -981,7 +981,7 @@ define(['logManager',
             gmeID,
             obj,
             nodeObj,
-            cpData = {'project': this._client.getActiveProject(),
+            cpData = {'project': this._client.getActiveProjectName(),
                       'items' : []};
 
         while(i--) {
@@ -1009,7 +1009,7 @@ define(['logManager',
             objDesc,
             parentID = this.currentNodeInfo.id,
             params = { "parentId": parentID },
-            projectName = this._client.getActiveProject(),
+            projectName = this._client.getActiveProjectName(),
             childrenIDs = [],
             aspect = this._selectedAspect;
 

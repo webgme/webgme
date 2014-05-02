@@ -65,5 +65,5 @@ define(['jquery',
 
 
     //return utility functions
-    return { initialize: _initialize};
+    return { initialize: _initialize };
 });

@@ -49,20 +49,20 @@ define(['jquery',
                 return this.get(CONSTANTS.STATE_ACTIVE_VISUALIZER);
             },
 
-            registerActiveProject: function(project) {
-                this.set(CONSTANTS.STATE_ACTIVE_PROJECT, project);
+            registerActiveProjectName: function(projectName) {
+                this.set(CONSTANTS.STATE_ACTIVE_PROJECT_NAME, projectName);
             },
 
-            getActiveProject: function() {
-                return this.get(CONSTANTS.STATE_ACTIVE_PROJECT);
+            getActiveProjectName: function() {
+                return this.get(CONSTANTS.STATE_ACTIVE_PROJECT_NAME);
             },
 
-            registerActiveBranch: function(project) {
-                this.set(CONSTANTS.STATE_ACTIVE_BRANCH, project);
+            registerActiveBranchName: function(branchName) {
+                this.set(CONSTANTS.STATE_ACTIVE_BRANCH_NAME, branchName);
             },
 
             getActiveBranch: function() {
-                return this.get(CONSTANTS.STATE_ACTIVE_BRANCH);
+                return this.get(CONSTANTS.STATE_ACTIVE_BRANCH_NAME);
             },
 
             registerActiveCommit: function(project) {
