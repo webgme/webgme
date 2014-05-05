@@ -66,8 +66,8 @@ define(['logManager',
             selectObject,
             loadBranch,
             initialThingsToDo = WebGMEUrlManager.parseInitialThingsToDoFromUrl(),
-            wasProjectOpeningError=false,
-            projectOpenDialog;
+            projectOpenDialog,
+            openProjectLoadDialog;
 
         initialThingsToDo.branchToLoad = initialThingsToDo.branchToLoad || CONFIG.branch;
 
@@ -147,17 +147,19 @@ define(['logManager',
                         client.connectToDatabaseAsync({},function(err){
                             if(err){
                                 logger.error(err);
+                                openProjectLoadDialog();
                             } else {
                                 client.getAvailableProjectsAsync(function(err,projectArray){
                                     if(err){
                                         logger.error(err);
+                                        openProjectLoadDialog();
                                     } else {
                                         if(projectArray.indexOf(initialThingsToDo.projectToLoad) !== -1){
                                             //we fallback to loading
                                             client.selectProjectAsync(initialThingsToDo.projectToLoad,function(err){
                                                 if(err){
                                                     logger.error(err);
-                                                    wasProjectOpeningError = true;
+                                                    openProjectLoadDialog();
                                                 } else {
                                                     if (initialThingsToDo.branchToLoad) {
                                                         loadBranch(initialThingsToDo.branchToLoad);
@@ -179,10 +181,12 @@ define(['logManager',
                                             client.createProjectAsync(initialThingsToDo.projectToLoad,function(err){
                                                 if(err){
                                                     logger.error(err);
+                                                    openProjectLoadDialog();
                                                 } else {
                                                     client.selectProjectAsync(initialThingsToDo.projectToLoad,function(err) {
                                                         if (err) {
                                                             logger.error(err);
+                                                            openProjectLoadDialog();
                                                         } else {
                                                             GMEConcepts.createBasicProjectSeed();
                                                         }
@@ -199,39 +203,49 @@ define(['logManager',
 
                         initialThingsToDo.projectToLoad = initialThingsToDo.projectToLoad || CONFIG.project;
 
-                        client.connectToDatabaseAsync({
-                            'open': initialThingsToDo.projectToLoad,
-                            'project': initialThingsToDo.projectToLoad
-                        }, function (err) {
-                            if (err) {
-                                logger.error(err);
-                            } else {
-                                if (initialThingsToDo.branchToLoad) {
-                                    loadBranch(initialThingsToDo.branchToLoad);
-                                } else  if (initialThingsToDo.commitToLoad) {
-                                    client.selectCommitAsync(initialThingsToDo.commitToLoad, function (err) {
-                                        if (err) {
-                                            logger.error(err);
-                                        } else {
-                                            selectObject();
-                                        }
-                                    });
+                        if(!initialThingsToDo.projectToLoad){
+                            openProjectLoadDialog();
+                        } else {
+                            client.connectToDatabaseAsync({
+                                'open': initialThingsToDo.projectToLoad,
+                                'project': initialThingsToDo.projectToLoad
+                            }, function (err) {
+                                if (err) {
+                                    logger.error(err);
+                                    openProjectLoadDialog();
                                 } else {
-                                    selectObject();
+                                    if (initialThingsToDo.branchToLoad) {
+                                        loadBranch(initialThingsToDo.branchToLoad);
+                                    } else  if (initialThingsToDo.commitToLoad) {
+                                        client.selectCommitAsync(initialThingsToDo.commitToLoad, function (err) {
+                                            if (err) {
+                                                logger.error(err);
+                                                openProjectLoadDialog();
+                                            } else {
+                                                selectObject();
+                                            }
+                                        });
+                                    } else {
+                                        selectObject();
+                                    }
                                 }
-                            }
-                        });
-
+                            });
+                        }
                     }
+                }
+            });
+        };
 
-                    // Throw upp project open dialog if no project opened
-
-                    if (!initialThingsToDo.projectToLoad || wasProjectOpeningError) {
-                        client.getAvailableProjectsAsync(function(err,projectArray){
-                            projectOpenDialog = new ProjectsDialog(client);
-                            projectOpenDialog.show();
-                        });
-                    }
+        openProjectLoadDialog = function(){
+            //if initial project openings failed we shhow the project opening dialog
+            client.connectToDatabaseAsync({},function(err){
+                if(err){
+                    logger.error(err);
+                } else {
+                    client.getAvailableProjectsAsync(function(err,projectArray){
+                        projectOpenDialog = new ProjectsDialog(client);
+                        projectOpenDialog.show();
+                    });
                 }
             });
         };
@@ -251,6 +265,7 @@ define(['logManager',
             client.selectBranchAsync(branchName, function (err) {
                 if (err) {
                     logger.error(err);
+                    openProjectLoadDialog();
                 }
             });
         };
