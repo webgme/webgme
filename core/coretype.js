@@ -488,6 +488,8 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
                     if(core.getPath(parentsBase) !== core.getPath(basesParent)){
                         oldcore.deleteNode(node);
                     }
+                } else {
+                    oldcore.deleteNode(node);
                 }
             }
         };
