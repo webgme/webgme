@@ -294,6 +294,19 @@ define(['logManager',
             return allVisualizersDescriptor;
         }
 
+        function setupExternalRestModules(){
+            __logger.info('initializing external REST modules');
+            CONFIG.rextrast = CONFIG.rextrast || {};
+            var keys = Object.keys(CONFIG.rextrast),
+                i;
+            for(i=0;i<keys.length;i++){
+                var modul = require(CONFIG.rextrast[keys[i]]);
+                if(modul){
+                    __logger.info('adding RExtraST ['+CONFIG.rextrast[keys[i]]+'] to - /rest/external/'+keys[i]);
+                    __app.use('/rest/external/'+keys[i],modul);
+                }
+            }
+        }
         //here starts the main part
         //variables
         var __logger = null,
@@ -381,6 +394,7 @@ define(['logManager',
                 };
                 next();
             });
+
             __app.use(Express.cookieParser());
             __app.use(Express.bodyParser());
             __app.use(Express.methodOverride());
@@ -388,7 +402,8 @@ define(['logManager',
             __app.use(Express.session({store: __sessionStore, secret: CONFIG.sessioncookiesecret, key: CONFIG.sessioncookieid}));
             __app.use(Passport.initialize());
             __app.use(Passport.session());
-            __app.use(__app.router);
+
+            setupExternalRestModules();
         });
 
         __logger.info("creating login routing rules for the static server");
