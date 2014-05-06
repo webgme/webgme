@@ -41,7 +41,7 @@ define(['plugin/PluginConfig',
         };
 
         //--------------------------------------------------------------------------------------------------------------
-        //---------- Methods must be overriden by the derived classes
+        //---------- Methods must be overridden by the derived classes
 
         /**
          * Main function for the plugin to execute. This will perform the execution.
@@ -168,6 +168,41 @@ define(['plugin/PluginConfig',
 
             // TODO: check if names are not the same
             // TODO: log if META is out of date
+        };
+
+        /**
+         * Finds and returns the node object defining the meta type for the given node.
+         * @param node - Node to be checked for type.
+         * @returns {Object} - Node object defining the meta type of node.
+         */
+        PluginBase.prototype.getMetaType = function (node) {
+            var self = this,
+                name;
+            while (node) {
+                name = self.core.getAttribute(node, 'name');
+                if (self.META.hasOwnProperty(name) && self.META[name] === node) {
+                    break;
+                }
+                node = self.core.getBase(node);
+            }
+            return node;
+        };
+
+        /**
+         * Returns true if node is a direct instance of a meta-type node (or a meta-type node itself).
+         * @param node - Node to be checked.
+         * @returns {boolean}
+         */
+        PluginBase.prototype.baseIsMeta = function (node) {
+            var self = this,
+                baseName,
+                baseNode = self.core.getBase(node);
+            if (!baseNode) {
+                // FCO does not have a base node, by definition function returns true.
+                return true;
+            }
+            baseName = self.core.getAttribute(baseNode, 'name');
+            return self.META.hasOwnProperty(baseName) && self.META[baseName] === baseNode;
         };
 
         /**
