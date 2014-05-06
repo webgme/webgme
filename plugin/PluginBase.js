@@ -171,6 +171,24 @@ define(['plugin/PluginConfig',
         };
 
         /**
+         * Checks if the given node is of the given meta-type.
+         * Usage: <tt>self.isMetaTypeOf(aNode, self.META['FCO']);</tt>
+         * @param node - Node to be checked for type.
+         * @param metaNode - Node object defining the meta type.
+         * @returns {boolean} - True if the given object was of the META type.
+         */
+        PluginBase.prototype.isMetaTypeOf = function (node, metaNode) {
+            var self = this;
+            while (node) {
+                if (node === metaNode) {
+                    return true;
+                }
+                node = self.core.getBase(node);
+            }
+            return false;
+        };
+
+        /**
          * Finds and returns the node object defining the meta type for the given node.
          * @param node - Node to be checked for type.
          * @returns {Object} - Node object defining the meta type of node.
