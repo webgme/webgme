@@ -172,6 +172,12 @@ input[type="submit"].btn.btn-micro {
     *background-color: #747474;
 }
 
+.btn.disabled,
+.btn[disabled] {
+    opacity: .3;
+    filter: alpha(opacity=30);
+}
+
 .btn-gray:active,
 .btn-gray.active {
     background-color: #666666 \9;
