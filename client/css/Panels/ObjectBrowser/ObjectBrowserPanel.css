@@ -6,7 +6,8 @@
 .object-browser ul.nav {
   position: relative;
   margin-bottom: 0px;
-  height: 24px; }
+  height: 24px;
+  white-space: nowrap; }
   .object-browser ul.nav.nav-tabs > li {
     display: inline-block;
     float: none; }
