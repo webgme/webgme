@@ -14,8 +14,8 @@ require.config({
         "domReady":	'lib/require/domReady',
 
         //jQuery and stuff
-        "jquery": 'lib/jquery/jquery-' + _webGME_jquery_ver + '.min',
-        "jquery-ui": 'lib/jquery/jquery-ui-' + _webGME_jqueryui_ver + '.min',
+        "jquery": 'lib/jquery/jquery-' + _webGME_jquery_ver + ( DEBUG ? '.min' : '' ),
+        "jquery-ui": 'lib/jquery/jquery-ui-' + _webGME_jqueryui_ver + ( DEBUG ? '.min' : '' ),
         "jquery-ui-iPad": 'lib/jquery/jquery.ui.ipad',
         "jquery-WebGME": 'js/jquery.WebGME',
         "jquery-dataTables": 'lib/jquery/jquery.dataTables.min',
