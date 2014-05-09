@@ -14,7 +14,7 @@ define(['logManager',
                                     VisualizersJSON) {
 
     var VisualizerPanel,
-        DEFAULT_VISUALIZER = 'ModelEditor';
+        DEFAULT_VISUALIZER = 'SnapEditor';
 
     VisualizerPanel = function (layoutManager, params) {
         var options = {};
