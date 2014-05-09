@@ -61,6 +61,9 @@
           text-overflow: ellipsis; }
           .pgp ul li.cr .property-name.p-reset {
             width: 30%; }
+        .pgp ul li.cr div.p-reset {
+          width: 10%;
+          text-align: right; }
         .pgp ul li.cr .p-reset {
           float: left; }
           .pgp ul li.cr .p-reset i.btn-reset {

@@ -111,6 +111,11 @@ $input-color: lighten($background-color, 18.5%);
           }
         }
 
+        div.p-reset {
+          width: 10%;
+          text-align: right;
+        }
+
         .p-reset {
           float: left;
           i.btn-reset {
