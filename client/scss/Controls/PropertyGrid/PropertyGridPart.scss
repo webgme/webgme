@@ -115,7 +115,7 @@ $input-color: lighten($background-color, 18.5%);
           float: left;
           i.btn-reset {
             margin-left: 1px;
-            margin-right: 1px;
+            margin-right: 2px;
 
             &:hover {
               cursor: pointer;
@@ -126,7 +126,7 @@ $input-color: lighten($background-color, 18.5%);
         /** Controllers */
         /** Controller-half (right) */
         .c {
-          float: right;
+          float: left;
           width: 60%;
           height: $row-height;
           overflow: hidden;
