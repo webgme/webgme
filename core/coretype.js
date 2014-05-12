@@ -109,17 +109,18 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 			ASSERT(node === null || typeof node.base === "undefined" || typeof node.base === "object");
 
 			if (typeof node.base === "undefined") {
-                if(isFalseNode(node)){
-                    console.log('!!! ISFALSENODE PLEASE CHECK PROJECT STRUCTURE !!!: ' + core.getPath(node));
+                if(core.isEmpty(node)){
+                    //empty nodes do not have a base
+                    return null;
+                } else if(isFalseNode(node)){
                     var root = core.getRoot(node);
-                    core.deleteNode(node);
+                    oldcore.deleteNode(node);
                     return TASYNC.call(function(){return null;},core.persist(root));
-                    //return null;
                 } else {
                     return TASYNC.call(__loadBase2, node, oldcore.loadPointer(node, "base"));
                 }
 			} else if(node === null){
-                return node; //TODO we have to check if it can be allowed or we have to make the nullpointer otherwise
+                return node;
             } else {
                 var oldpath = core.getPath(node.base);
                 var newpath = core.getPointerPath(node,"base");
@@ -316,8 +317,6 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
             var source = "",
                 target,
                 coretree = core.getCoreTree(),
-                parentOfBase,
-                baseOfParent,
                 basePath,
                 hasNullTarget = false,
                 getProperty = function(node,name){
@@ -476,6 +475,25 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 
             return relids;
         };
+
+        core.deleteNode = function(node){
+            //currently we only check if the node is inherited from its parents children
+            if(node){
+                var parent = core.getParent(node),
+                    parentsBase = parent ? core.getBase(node) : null,
+                    base = core.getBase(node),
+                    basesParent = base ? core.getParent(node) : null;
+
+                if(parent && parentsBase && base && basesParent){
+                    if(core.getPath(parentsBase) !== core.getPath(basesParent)){
+                        oldcore.deleteNode(node);
+                    }
+                } else {
+                    oldcore.deleteNode(node);
+                }
+            }
+        };
+
         // -------- kecso
 
 		return core;

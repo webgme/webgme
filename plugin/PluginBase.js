@@ -41,7 +41,7 @@ define(['plugin/PluginConfig',
         };
 
         //--------------------------------------------------------------------------------------------------------------
-        //---------- Methods must be overriden by the derived classes
+        //---------- Methods must be overridden by the derived classes
 
         /**
          * Main function for the plugin to execute. This will perform the execution.
@@ -171,6 +171,59 @@ define(['plugin/PluginConfig',
         };
 
         /**
+         * Checks if the given node is of the given meta-type.
+         * Usage: <tt>self.isMetaTypeOf(aNode, self.META['FCO']);</tt>
+         * @param node - Node to be checked for type.
+         * @param metaNode - Node object defining the meta type.
+         * @returns {boolean} - True if the given object was of the META type.
+         */
+        PluginBase.prototype.isMetaTypeOf = function (node, metaNode) {
+            var self = this;
+            while (node) {
+                if (node === metaNode) {
+                    return true;
+                }
+                node = self.core.getBase(node);
+            }
+            return false;
+        };
+
+        /**
+         * Finds and returns the node object defining the meta type for the given node.
+         * @param node - Node to be checked for type.
+         * @returns {Object} - Node object defining the meta type of node.
+         */
+        PluginBase.prototype.getMetaType = function (node) {
+            var self = this,
+                name;
+            while (node) {
+                name = self.core.getAttribute(node, 'name');
+                if (self.META.hasOwnProperty(name) && self.META[name] === node) {
+                    break;
+                }
+                node = self.core.getBase(node);
+            }
+            return node;
+        };
+
+        /**
+         * Returns true if node is a direct instance of a meta-type node (or a meta-type node itself).
+         * @param node - Node to be checked.
+         * @returns {boolean}
+         */
+        PluginBase.prototype.baseIsMeta = function (node) {
+            var self = this,
+                baseName,
+                baseNode = self.core.getBase(node);
+            if (!baseNode) {
+                // FCO does not have a base node, by definition function returns true.
+                return true;
+            }
+            baseName = self.core.getAttribute(baseNode, 'name');
+            return self.META.hasOwnProperty(baseName) && self.META[baseName] === baseNode;
+        };
+
+        /**
          * Gets the current configuration of the plugin that was set by the user and plugin manager.
          *
          * @returns {object}
@@ -186,24 +239,15 @@ define(['plugin/PluginConfig',
          * @param {string} message - feedback to the user
          */
         PluginBase.prototype.createMessage = function (node, message) {
-            // TODO: node can be an object or objects within the same parent
-            // FIXME: assume for now that node is not an array
+            //this occurence of the function will always handle a single node
 
-            // FIXME: is the parent always loaded?
-            // FIXME: what if parentNode is null?
-            var parentNode = this.core.getParent(node);
-            var parentDescriptor = new PluginNodeDescription({
-                    name: this.core.getAttribute(parentNode, 'name'),
-                    id: this.core.getPath(parentNode)
+            var descriptor = new PluginNodeDescription({
+                    name: node ? this.core.getAttribute(node, 'name') : "",
+                    id: node ? this.core.getPath(node) : ""
                 });
-            var activeDescriptor = [new PluginNodeDescription({
-                    name: this.core.getAttribute(node, 'name'),
-                    id: this.core.getPath(node)
-                })];
             var pluginMessage = new PluginMessage({
                     commitHash: this.currentHash,
-                    activeNode: parentDescriptor,
-                    activeSelection: activeDescriptor,
+                    activeNode: descriptor,
                     message: message
                 });
 

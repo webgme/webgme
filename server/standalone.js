@@ -14,7 +14,10 @@ define(['logManager',
     'https',
     'os',
     'mime',
-    'blob/BlobManagerFS'
+    'blob/BlobMetadata',
+    'blob/BlobFSBackend',
+    'blob/BlobS3Backend',
+    'util/guid'
     ],function(
         LogManager,
         Storage,
@@ -32,7 +35,10 @@ define(['logManager',
         Https,
         OS,
         mime,
-        BlobManagerFS
+        BlobMetadata,
+        BlobFSBackend,
+        BlobS3Backend,
+        GUID
     ){
 
     function StandAloneServer(CONFIG){
@@ -65,6 +71,8 @@ define(['logManager',
             __storageOptions.pluginBasePaths = CONFIG.pluginBasePaths;
 
             __storageOptions.webServerPort = CONFIG.port;
+
+            __storageOptions.sessionToUser = __sessionStore.getSessionUser;
 
             __storage = Storage(__storageOptions);
             //end of storage creation
@@ -99,6 +107,9 @@ define(['logManager',
             if( req && req.session && req.session.originalQuery === undefined){
                 var index = req.url.indexOf('?');
                 req.session.originalQuery = index === -1 ? "" : req.url.substring(index);
+            }
+            if( req && req.session && req.session.originalUrl === undefined){
+                req.session.originalUrl = req.url;
             }
             if(typeof CONFIG.defaultUser === 'string' && req.session.authenticated !== true){
                 //TODO: this has do be done in some other way
@@ -138,11 +149,6 @@ define(['logManager',
 
         function checkREST(req,res,next){
             var baseUrl = CONFIG.httpsecure === true ? 'https://' : 'http://'+req.headers.host+'/rest';
-            if(CONFIG.authentication === true){
-                baseUrl += '/token';
-            } else {
-                baseUrl +='/_';
-            }
             if(__REST === null){
                 var restAuthorization;
                 if(CONFIG.authentication === true){
@@ -161,9 +167,26 @@ define(['logManager',
                 if(req.isAuthenticated() || (req.session && true === req.session.authenticated)){
                     return next();
                 } else{
+                    //client oriented new session
+                    if(req.headers.webgmeclientsession){
+                        __sessionStore.get(req.headers.webgmeclientsession,function(err,clientSession){
+                            if(!err){
+                                if(clientSession.authenticated){
+                                    req.session.authenticated = true;
+                                    req.session.udmId = clientSession.udmId;
+                                    res.cookie('webgme',req.session.udmId);
+                                    return next();
+                                } else {
+                                    res.send(400); //TODO find proper error code
+                                }
+                            }    else{
+                                res.send(400); //TODO find proper error code
+                            }
+                        });
+                    }
                     //request which use token may be authenticated directly
-                    if(req.params.token){
-                        __gmeAuth.checkToken(req.params.token,function(isOk,userId){
+                    else if(req.headers.webGMEToken){
+                        __gmeAuth.checkToken(req.headers.webGMEToken,function(isOk,userId){
                             if(isOk){
                                 req.session.authenticated = true;
                                 req.session.udmId = userId;
@@ -182,7 +205,6 @@ define(['logManager',
             }
         }
         function checkVF(req,res,next){
-            console.log('check Vehicle Forge framework');
             if(req.isAuthenticated() || (req.session && true === req.session.authenticated)){
                 return next();
             } else {
@@ -272,6 +294,19 @@ define(['logManager',
             return allVisualizersDescriptor;
         }
 
+        function setupExternalRestModules(){
+            __logger.info('initializing external REST modules');
+            CONFIG.rextrast = CONFIG.rextrast || {};
+            var keys = Object.keys(CONFIG.rextrast),
+                i;
+            for(i=0;i<keys.length;i++){
+                var modul = require(CONFIG.rextrast[keys[i]]);
+                if(modul){
+                    __logger.info('adding RExtraST ['+CONFIG.rextrast[keys[i]]+'] to - /rest/external/'+keys[i]);
+                    __app.use('/rest/external/'+keys[i],modul);
+                }
+            }
+        }
         //here starts the main part
         //variables
         var __logger = null,
@@ -290,7 +325,10 @@ define(['logManager',
             __httpServer = null,
             __logoutUrl = CONFIG.logoutUrl || '/',
             __baseDir = webGMEGlobal.baseDir,
-            __clientBaseDir = __baseDir+'/client';
+            __clientBaseDir = __baseDir+'/client',
+            __requestCounter = 0,
+            __reportedRequestCounter = 0,
+            __requestCheckInterval = 2500;
 
         //creating the logmanager
         LogManager.setLogLevel(CONFIG.loglevel || LogManager.logLevels.WARNING);
@@ -329,7 +367,34 @@ define(['logManager',
         __app = Express();
 
         __app.configure(function(){
-            __app.use(Express.logger());
+            //counting of requests works only in debug mode
+            if(CONFIG.debug === true){
+                setInterval(function(){
+                    if(__reportedRequestCounter !== __requestCounter){
+                        __reportedRequestCounter = __requestCounter;
+                        console.log("...handled "+__reportedRequestCounter+" requests so far...");
+                    }
+                },__requestCheckInterval);
+                __app.use(function(req,res,next){
+                    __requestCounter++;
+                    next();
+                });
+            }
+            __app.use(function(req,res,next){
+                var infoguid = GUID(),
+                    infotxt = "request["+infoguid+"]:"+req.headers.host+" - "+req.protocol.toUpperCase()+"("+req.httpVersion+") - "+req.method.toUpperCase()+" - "+req.originalUrl+" - "+req.ip+" - "+req.headers['user-agent'],
+                    infoshort = "incoming["+infoguid+"]: "+req.originalUrl;
+                __logger.info(infoshort);
+                var end = res.end;
+                res.end = function(chunk,encoding){
+                    res.end = end;
+                    res.end(chunk,encoding);
+                    infotxt += " -> "+res.statusCode;
+                    __logger.info(infotxt);
+                };
+                next();
+            });
+
             __app.use(Express.cookieParser());
             __app.use(Express.bodyParser());
             __app.use(Express.methodOverride());
@@ -337,7 +402,8 @@ define(['logManager',
             __app.use(Express.session({store: __sessionStore, secret: CONFIG.sessioncookiesecret, key: CONFIG.sessioncookieid}));
             __app.use(Passport.initialize());
             __app.use(Passport.session());
-            __app.use(__app.router);
+
+            setupExternalRestModules();
         });
 
         __logger.info("creating login routing rules for the static server");
@@ -354,15 +420,16 @@ define(['logManager',
             req.session.userType = 'unknown';
             res.redirect(__logoutUrl);
         });
-        __app.get('/login',storeQueryString,function(req,res){
+        __app.get('/login'/*,storeQueryString*/,function(req,res){
             res.location('/login');
             res.sendfile(__clientBaseDir+'/login.html',{},function(err){
                 res.send(404);
             });
         });
-        __app.post('/login',storeQueryString,__gmeAuth.authenticate,function(req,res){
+        __app.post('/login'/*,storeQueryString*/,__gmeAuth.authenticate,function(req,res){
             res.cookie('webgme',req.session.udmId);
-            res.redirect('/'+req.session.originalQuery || "");
+            //res.redirect('/'+req.session.originalQuery || "");
+            res.redirect(req.session.originalUrl);
         });
         __app.post('/login/client',prepClientLogin,__gmeAuth.authenticate,function(req,res){
             res.cookie('webgme',req.session.udmId);
@@ -372,12 +439,12 @@ define(['logManager',
             res.clearCookie('webgme');
             res.send(401);
         });
-        __app.get('/login/google',storeQueryString,checkGoogleAuthentication,Passport.authenticate('google'));
-        __app.get('/login/google/return',storeQueryString,__gmeAuth.authenticate,function(req,res){
+        __app.get('/login/google'/*,storeQueryString*/,checkGoogleAuthentication,Passport.authenticate('google'));
+        __app.get('/login/google/return'/*,storeQueryString*/,__gmeAuth.authenticate,function(req,res){
             res.cookie('webgme',req.session.udmId);
             res.redirect('/'+req.session.originalQuery || "");
         });
-        __app.get('/login/forge',storeQueryString,__forgeAuth.authenticate,function(req,res){
+        __app.get('/login/forge'/*,storeQueryString*/,__forgeAuth.authenticate,function(req,res){
             res.cookie('webgme',req.session.udmId);
             res.redirect('/');
         });
@@ -385,6 +452,7 @@ define(['logManager',
         __logger.info("creating decorator specific routing rules");
         __app.get('/bin/getconfig.js',ensureAuthenticated,function(req,res){
             res.status(200);
+            res.setHeader('Content-type', 'application/json');
             res.end("define([],function(){ return "+JSON.stringify(CONFIG)+";});");
         });
         __logger.info("creating decorator specific routing rules");
@@ -480,176 +548,162 @@ define(['logManager',
 
 
         __logger.info("creating blob related rules");
-        // TODO: pick here which blob manager to use based on the config.
-        var blobStorage = new BlobManagerFS();
 
-        __app.get('/rest/:token/blob/infos',ensureAuthenticated,function(req,res){
-            blobStorage.loadInfos(null, function (err, infos) {
+        var blobBackend = new BlobFSBackend();
+        //var blobBackend = new BlobS3Backend();
+
+        __app.get('/rest/blob/metadata', ensureAuthenticated, function(req, res) {
+            blobBackend.listAllMetadata(req.query.all, function (err, metadata) {
                 if (err) {
-                    res.send(500);
+                    // FIXME: make sure we set the status code correctly like 404 etc.
+                    res.status(500);
+                    res.send(err);
                 } else {
                     res.status(200);
-                    res.end(JSON.stringify(infos, null, 4));
+                    res.end(JSON.stringify(metadata, null, 4));
 
                 }
             });
         });
 
-        var addFileToBlob = function (req, res) {
+        __app.get('/rest/blob/metadata/:metadataHash', ensureAuthenticated, function(req, res) {
+            blobBackend.getMetadata(req.params.metadataHash, function (err, hash, metadata) {
+                if (err) {
+                    // FIXME: make sure we set the status code correctly like 404 etc.
+                    res.status(500);
+                    res.send(err);
+                } else {
+                    res.status(200);
+                    res.setHeader('Content-type', 'application/json');
+                    res.end(JSON.stringify(metadata, null, 4));
+
+                }
+            });
+        });
+
+        __app.post('/rest/blob/createFile/:filename', ensureAuthenticated, function(req, res) {
+            __logger.info('file creation request: user['+req.session.udmId+'], filename['+req.params.filename+']');
             var filename = 'not_defined.txt';
 
             if (req.params.filename !== null && req.params.filename !== '') {
                 filename = req.params.filename
             }
 
-            var uploadedFile = {};
-            var d;
-            var size;
-
-            req.on('data', function (data) {
-                // TODO: do not save data, just forward it to the place where it has to be stored.
-                // TODO: update hash here in place
-                if (d) {
-                    d += data;
+            // regular file
+            // TODO: add tags and isPublic flag
+            blobBackend.putFile(filename, req, function (err, hash) {
+                __logger.info('file creation request finished: user['+req.session.udmId+'], filename['+req.params.filename+'], error['+err+'], hash:['+hash+']');
+                if (err) {
+                    // FIXME: make sure we set the status code correctly like 404 etc.
+                    res.status(500);
+                    res.send(err);
                 } else {
-                    d = data;
+                    // FIXME: it should be enough to send back the hash only
+                    blobBackend.getMetadata(hash, function (err, metadataHash, metadata) {
+                        if (err) {
+                            // FIXME: make sure we set the status code correctly like 404 etc.
+                            res.status(500);
+                            res.send(err);
+                        } else {
+                            res.status(200);
+                            res.setHeader('Content-type', 'application/json');
+                            var info = {};
+                            info[hash] = metadata;
+                            res.end(JSON.stringify(info, null, 4));
+                        }
+                    });
                 }
-
-                size += data.length;
-                //console.log('Got chunk: ' + data.length + ' total: ' + size);
             });
 
-            req.on('end', function () {
-                //console.log("total size = " + size);
+        });
 
-                blobStorage.save({name:filename, complex: req.query.complex === 'true' || false}, d, function (err, hash) {
+        __app.post('/rest/blob/createMetadata', ensureAuthenticated, function(req, res) {
+
+            var data = '';
+
+            req.addListener('data', function(chunk) {
+                data += chunk;
+            });
+
+            req.addListener('end', function() {
+                var metadata = new BlobMetadata(JSON.parse(data));
+                blobBackend.putMetadata(metadata, function (err, hash) {
                     if (err) {
-                        res.send(500);
+                        // FIXME: make sure we set the status code correctly like 404 etc.
+                        res.status(500);
+                        res.send(err);
                     } else {
-
-                        uploadedFile[hash] = blobStorage.getInfo(hash);
-                        // TODO: delete temp file
-
-                        console.log(uploadedFile);
-                        res.send(uploadedFile);
+                        // FIXME: it should be enough to send back the hash only
+                        blobBackend.getMetadata(hash, function (err, metadataHash, metadata) {
+                            if (err) {
+                                // FIXME: make sure we set the status code correctly like 404 etc.
+                                res.status(500);
+                                res.send(err);
+                            } else {
+                                res.status(200);
+                                res.setHeader('Content-type', 'application/json');
+                                var info = {};
+                                info[hash] = metadata;
+                                res.end(JSON.stringify(info, null, 4));
+                            }
+                        });
                     }
                 });
             });
+        });
 
-            req.on('error', function(e) {
-                //console.log("ERROR ERROR: " + e.message);
+        var sendBlobContent = function (req, res, metadataHash, subpartPath, download) {
+
+            blobBackend.getMetadata(metadataHash, function (err, hash, metadata) {
+                if (err) {
+                    // FIXME: make sure we set the status code correctly like 404 etc.
+                    res.status(500);
+                    res.send(err);
+                } else {
+                    var filename = metadata.name;
+
+                    if (subpartPath) {
+                        filename = subpartPath.substring(subpartPath.lastIndexOf('/') + 1);
+                    }
+
+                    var mimeType = mime.lookup(filename);
+
+                    if (download || mimeType === 'application/octet-stream' || mimeType === 'application/zip') {
+                        res.setHeader('Content-disposition', 'attachment; filename=' + filename);
+                    }
+                    res.setHeader('Content-type', mimeType);
+
+
+                    // TODO: we need to get the content and save as a local file.
+                    // if we just proxy the stream we cannot set errors correctly.
+
+                    blobBackend.getFile(metadataHash, subpartPath, res, function (err, hash) {
+                        if (err) {
+                            // give more precise description about the error type and message. Resource if not available etc.
+                            res.send(500);
+                        } else {
+                            //res.send(200);
+                        }
+                    });
+                }
             });
-
-            // FIXME: use pipe - i.e. streams
-
-
         };
 
-        __app.put('/rest/:token/blob/create/:filename',ensureAuthenticated,function(req, res) {
-            addFileToBlob(req, res);
+        __app.get(/^\/rest\/blob\/download\/([0-9a-f]{40,40})(\/(.*))?$/, ensureAuthenticated, function(req, res) {
+            var metadataHash = req.params[0];
+            var subpartPath = req.params[2];
+
+            sendBlobContent(req, res, metadataHash, subpartPath, true);
         });
 
-        __app.post('/rest/:token/blob/create/:filename',ensureAuthenticated,function(req,res){
-            //the structure of data should be something like {info:{},data:binary/string}
-            addFileToBlob(req, res);
+        __app.get(/^\/rest\/blob\/view\/([0-9a-f]{40,40})(\/(.*))?$/, ensureAuthenticated, function(req, res) {
+            var metadataHash = req.params[0];
+            var subpartPath = req.params[2];
+
+            sendBlobContent(req, res, metadataHash, subpartPath, false);
         });
 
-        __app.get('/rest/:token/blob/download/:blob_hash',ensureAuthenticated,function(req,res){
-            // TODO: use pipe/streams
-            blobStorage.getContent(req.params.blob_hash, function (err, blob, filename) {
-                if (err) {
-                    res.send(500);
-                } else {
-                    // FIXME: set the mime-type based on the info/file type
-                    var mimetype = mime.lookup(filename);
-
-                    res.setHeader('Content-disposition', 'attachment; filename=' + filename);
-                    res.setHeader('Content-type', mimetype);
-
-                    res.status(200);
-                    res.end(blob);
-                }
-            });
-        });
-
-        __app.get('/rest/:token/blob/info/:blob_hash',ensureAuthenticated,function(req,res){
-            // TODO: we should be able to ask only for a single hash
-            blobStorage.loadInfos(null, function (err, infos) {
-                if (err) {
-                    res.send(500);
-                } else {
-                    if (infos.hasOwnProperty(req.params.blob_hash)) {
-                        res.status(200);
-                        res.end(JSON.stringify(infos[req.params.blob_hash], null, 4));
-                    } else {
-                        res.end(404);
-                    }
-
-                }
-            });
-        });
-
-        __app.get('/rest/:token/blob/view/:id',ensureAuthenticated,function(req,res){
-            // TODO: use pipe/streams
-            blobStorage.load(req.params.id, function (err, blob, filename) {
-                if (err) {
-                    res.send(500);
-                } else {
-                    var mimetype = mime.lookup(filename);
-                    res.setHeader('Content-type', mimetype);
-                    res.status(200);
-                    res.end(blob);
-                }
-            });
-        });
-
-
-        // TODO: browse
-        // example: /blob/view/b3a23bf0eb934793a97426fd8d4b22a7d1dc089d/path/in/complex/content.txt
-        __app.get(/^\/blob\/view\/([0-9a-f]{40,40})\/(.+)$/,ensureAuthenticated,function(req,res){
-            var hash = req.params[0];
-            var subpartPath = req.params[1];
-            blobStorage.loadInfos(null, function (err, infos) {
-                if (err) {
-                    res.send(500);
-                } else {
-                    if (infos.hasOwnProperty(hash)) {
-                        if (infos[hash].complex) {
-
-                            blobStorage.load(hash, function (err, blob, filename) {
-                                if (err) {
-                                    res.send(500);
-                                    return;
-                                }
-                                var descriptor = JSON.parse(blob);
-                                // FIXME: how to deal with leading slashes?
-                                if (descriptor.hasOwnProperty(subpartPath)) {
-
-                                    blobStorage.load(descriptor[subpartPath], function (err, blob, filename) {
-                                        if (err) {
-                                            res.send(500);
-                                            return;
-                                        }
-
-                                        var mimetype = mime.lookup(filename);
-                                        res.setHeader('Content-type', mimetype);
-                                        res.status(200);
-                                        res.end(blob);
-                                    });
-                                } else {
-                                    // requested path does not exist in resource
-                                    res.send(404);
-                                }
-                            });
-                        } else {
-                            res.send(400);
-                        }
-                    } else {
-                        res.end(404);
-                    }
-                }
-            });
-        });
+        // end of blob rules
 
         //client contents - js/html/css
         //css classified as not secure content
@@ -672,7 +726,7 @@ define(['logManager',
         });
 
         __logger.info("creating token related routing rules");
-        __app.get('/gettoken',ensureAuthenticated,function(req,res){
+        __app.get('/gettoken',storeQueryString,ensureAuthenticated,function(req,res){
             if(CONFIG.secureREST == true){
                 __gmeAuth.getToken(req.session.id,function(err,token){
                     if(err){
@@ -685,24 +739,18 @@ define(['logManager',
                 res.send(410); //special error for the interpreters to know there is no need for token
             }
         });
-        __app.get('/checktoken/*',function(req,res){
-            if(CONFIG.secureREST == true){
+        __app.get('/checktoken/:token',function(req,res){
+            if(CONFIG.authenticated == true){
                 if(__canCheckToken == true){
-                    var token = req.url.split('/');
-                    if(token.length === 3){
-                        token = token[2];
-                        setTimeout(function(){__canCheckToken = true;},10000);
-                        __canCheckToken = false;
-                        __gmeAuth.checkToken(token,function(isValid){
-                            if(isValid === true){
-                                res.send(200);
-                            } else {
-                                res.send(403);
-                            }
-                        });
-                    } else {
-                        res.send(400);
-                    }
+                    setTimeout(function(){__canCheckToken = true;},10000);
+                    __canCheckToken = false;
+                    __gmeAuth.checkToken(req.params.token,function(isValid){
+                        if(isValid === true){
+                            res.send(200);
+                        } else {
+                            res.send(403);
+                        }
+                    });
                 } else {
                     res.send(403);
                 }
@@ -711,20 +759,18 @@ define(['logManager',
             }
         });
 
-        //TODO: needs to refactor for the /rest/token/... format
+        //TODO: needs to refactor for the /rest/... format
         __logger.info("creating REST related routing rules");
-        __app.get('/rest/:token/:command*',ensureAuthenticated,checkREST,function(req,res){
-            var parameters = req.url.split('/');
-            parameters.splice(0,4);
+        __app.get('/rest/:command',storeQueryString,ensureAuthenticated,checkREST,function(req,res){
             __REST.initialize(function(err){
                 if(err){
                     res.send(500);
                 } else {
-                    __REST.doRESTCommand(__REST.request.GET,req.params.command,req.params.token,parameters,function(httpStatus,object){
+                    __REST.doRESTCommand(__REST.request.GET,req.params.command,req.headers.webGMEToken,req.query,function(httpStatus,object){
                         if(req.params.command === __REST.command.etf){
                             var filename = 'exportedNode.json';
-                            if(parameters[3]){
-                                filename = parameters[3];
+                            if(req.query.output){
+                                filename = req.query.output;
                             }
                             if(filename.indexOf('.') === -1){
                                 filename += '.json';
@@ -786,6 +832,7 @@ define(['logManager',
                 }
             }
             res.status(200);
+            res.setHeader('Content-type', 'application/json');
             res.end("define([],function(){ return "+JSON.stringify(names)+";});");
         });
         __app.get('/listAllPlugins',ensureAuthenticated,function(req,res){
@@ -803,11 +850,13 @@ define(['logManager',
                 }
             }
             res.status(200);
+            res.setHeader('Content-type', 'application/json');
             res.end("define([],function(){ return "+JSON.stringify(names)+";});");
         });
         __app.get('/listAllVisualizerDescriptors',ensureAuthenticated,function(req,res){
             var allVisualizerDescriptors = getVisualizersDescriptor();
             res.status(200);
+            res.setHeader('Content-type', 'application/json');
             res.end("define([],function(){ return "+JSON.stringify(allVisualizerDescriptors)+";});");
         });
 
@@ -835,17 +884,6 @@ define(['logManager',
         }
 
         __logger.info("standalone server initialization completed");
-
-
-        // other initializations
-        __logger.info("initializing blob storage");
-        blobStorage.initialize(function (err) {
-            if (err) {
-                __logger.error("failed to initialize blob storage");
-            } else {
-                __logger.info("blob storage is ready to use");
-            }
-        });
 
         return {
 

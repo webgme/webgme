@@ -1,3 +1,9 @@
+/*
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ *
+ * Author: Brian Broll
+ */
+
 "use strict"; 
 
 define(['./AutoRouter.Constants',
@@ -7,11 +13,6 @@ define(['./AutoRouter.Constants',
                                         assert,
                                         ArRect,
                                         ArPoint){
-
-    var _assert = function (condition, msg){
-        if(!condition)
-            throw msg || "Assert Failed";
-    };
 
     var _getOptimalPorts = function(ports, tgt){
         //I will get the dx, dy that to the src/dst target and then I will calculate
@@ -857,8 +858,7 @@ define(['./AutoRouter.Constants',
 
 
 
-    return { assert: _assert,
-             onWhichEdge: _onWhichEdge,
+    return { onWhichEdge: _onWhichEdge,
              isCoordInDirFrom : _isCoordInDirFrom,           
              //pointOnSide: _pointOnSide,
              isPointBetweenSides: _isPointBetweenSides,

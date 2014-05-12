@@ -16,7 +16,7 @@ define([
 
     function Rest(_parameters){
         _parameters.baseUrl = _parameters.baseUrl || "http://localhost/rest";
-        _parameters.authorization = _parameters.authorization || function(token,projectname,callback){callback(null,true);};
+        _parameters.authorization = /*_parameters.authorization || */function(token,projectname,callback){callback(null,true);}; //TODO temporary removal of second authorization check
         var _storage = new Storage({'host':_parameters.host,'port':_parameters.port,'database':_parameters.database,'log':logManager.create('REST-actor')}),
             _baseUrl = _parameters.baseUrl;
             _initialized = false,
@@ -61,27 +61,27 @@ define([
                         },
                         'branches':{
                             'description':"Responds with the branches of the given project and their commit URLs in a hash table.",
-                            'example': _baseUrl+'/branches/projectName'
+                            'example': _baseUrl+'/branches?project=projectName'
                         },
                         'commit':{
                             'description':"Responds with the projects asked commit object",
-                            'example': _baseUrl+'/commit/projectName/commitHash'
+                            'example': _baseUrl+'/commit?project=projectName&commit=commitHash'
                         },
                         'commits':{
                             'description':"Responds the URL array of the latest N commits. If no N is given then it returns the latest commit's URL in an array.",
-                            'example': _baseUrl+'/commits/projectName/N'
+                            'example': _baseUrl+'/commits?project=projectName&number=N'
                         },
                         'node':{
                             'description':"Responds with the JSON representation of the pointed node. All related nodes are presented with JSON reference objects.",
-                            'example': _baseUrl+'/node/projectName/rootHash/pathOfNode'
+                            'example': _baseUrl+'/node?project=projectName&root=rootHash&path=pathOfNode'
                         },
                         'dump':{
                             'description':"Responds with the JSON representation of the pointed node. All sub-nodes are extracted and outer relations of the sub-tree represented by JSON reference objects.",
-                            'example': _baseUrl+'/dump/projectName/rootHash/pathOfNode'
+                            'example': _baseUrl+'/dump?project=projectName&root=rootHash&path=pathOfNode'
                         },
                         'etf':{
                             'description':"Responds with the JSON representation of the pointed node. All sub-nodes are extracted and outer relations of the sub-tree represented by JSON reference objects. It forces file download.",
-                            'example': _baseUrl+'/etf/projectName/rootHash/pathOfNode/outputFileName'
+                            'example': _baseUrl+'/etf?project=projectName&root=rootHash&path=pathOfNode&output=outputFileName'
                         }
                     }
                 }
@@ -106,7 +106,7 @@ define([
                             callback(_HTTPError.internalServerError,err);
                         } else {
                             for(var i in names){
-                                names[i] = URL.urlToRefObject(_baseUrl+'/commit/'+projectName+'/'+URL.addSpecialChars(names[i]));
+                                names[i] = URL.urlToRefObject(_baseUrl+'/commit?project='+projectName+'&commit='+URL.addSpecialChars(names[i]));
                             }
                             callback(_HTTPError.ok,names);
                         }
@@ -124,11 +124,11 @@ define([
                             callback(_HTTPError.internalServerError,err);
                         } else {
                             var myCommit = {};
-                            myCommit.self = URL.urlToRefObject(_baseUrl+'/commit/'+projectName+'/'+URL.addSpecialChars(commitHash));
-                            myCommit.root = URL.urlToRefObject(_baseUrl+'/node/'+projectName+'/'+URL.addSpecialChars(commit.root));
+                            myCommit.self = URL.urlToRefObject(_baseUrl+'/commit?ptoject='+projectName+'&commit='+URL.addSpecialChars(commitHash));
+                            myCommit.root = URL.urlToRefObject(_baseUrl+'/node?project='+projectName+'&root='+URL.addSpecialChars(commit.root));
                             myCommit.parents = [];
                             for(var i=0;i<commit.parents.length;i++){
-                                myCommit.parents.push(URL.urlToRefObject(_baseUrl+'/commit/'+projectName+'/'+URL.addSpecialChars(commit.parents[i])));
+                                myCommit.parents.push(URL.urlToRefObject(_baseUrl+'/commit?project='+projectName+'&commit='+URL.addSpecialChars(commit.parents[i])));
                             }
                             myCommit.message = commit.message;
 
@@ -148,7 +148,7 @@ define([
                             callback(_HTTPError.internalServerError,err);
                         } else {
                             for(var i=0;i<commits.length;i++){
-                                commits[i] = URL.urlToRefObject(_baseUrl+'/commit/'+projectName+'/'+URL.addSpecialChars(commits[i]['_id']));
+                                commits[i] = URL.urlToRefObject(_baseUrl+'/commit?project='+projectName+'&commit='+URL.addSpecialChars(commits[i]['_id']));
                             }
                             callback(_HTTPError.ok,commits);
                         }
@@ -170,7 +170,7 @@ define([
                                 if(err){
                                     callback(_HTTPError.internalServerError,err);
                                 } else {
-                                    ToJson(core,node,_baseUrl+'/node/'+projectName+'/'+URL.addSpecialChars(rootHash),'url',function(err,jNode){
+                                    ToJson(core,node,_baseUrl+'/node?project='+projectName+'&root='+URL.addSpecialChars(rootHash),'url',function(err,jNode){
                                         if(err){
                                             callback(_HTTPError.internalServerError,err);
                                         } else {
@@ -221,12 +221,12 @@ define([
                     listAvailableProjects(callback);
                     break;
                 case _commands.branches:
-                    _parameters.authorization(token,parameters[0],function(err,canGo){
+                    _parameters.authorization(token,parameters.project,function(err,canGo){
                         if(err){
                             callback(_HTTPError.internalServerError,err);
                         } else {
                             if(canGo === true){
-                                listAvailableBranches(parameters[0],callback);
+                                listAvailableBranches(parameters.project,callback);
                             } else {
                                 callback(_HTTPError.forbidden);
                             }
@@ -234,12 +234,12 @@ define([
                     });
                     break;
                 case _commands.commits:
-                    _parameters.authorization(token,parameters[0],function(err,canGo){
+                    _parameters.authorization(token,parameters.project,function(err,canGo){
                         if(err){
                             callback(_HTTPError.internalServerError,err);
                         } else {
                             if(canGo === true){
-                                listCommits(parameters[0],Number(parameters[1]) === 'NaN' ? 1 : Number(parameters[1]),callback);
+                                listCommits(parameters.project,Number(parameters.number) === 'NaN' ? 1 : Number(parameters.number),callback);
                             } else {
                                 callback(_HTTPError.forbidden);
                             }
@@ -247,12 +247,12 @@ define([
                     });
                     break;
                 case _commands.commit:
-                    _parameters.authorization(token,parameters[0],function(err,canGo){
+                    _parameters.authorization(token,parameters.project,function(err,canGo){
                         if(err){
                             callback(_HTTPError.internalServerError,err);
                         } else {
                             if(canGo === true){
-                                printCommit(parameters[0],URL.removeSpecialChars(parameters[1] || ""),callback);
+                                printCommit(parameters.project,parameters.commit,callback);
                             } else {
                                 callback(_HTTPError.forbidden);
                             }
@@ -260,12 +260,12 @@ define([
                     });
                     break;
                 case _commands.node:
-                    _parameters.authorization(token,parameters[0],function(err,canGo){
+                    _parameters.authorization(token,parameters.project,function(err,canGo){
                         if(err){
                             callback(_HTTPError.internalServerError,err);
                         } else {
                             if(canGo === true){
-                                printNode(parameters[0],URL.removeSpecialChars(parameters[1] || ""),URL.removeSpecialChars(parameters[2] || ""),callback);
+                                printNode(parameters.project,parameters.root,parameters.path || "",callback);
                             } else {
                                 callback(_HTTPError.forbidden);
                             }
@@ -274,12 +274,12 @@ define([
                     break;
                 case _commands.dump:
                 case _commands.etf:
-                    _parameters.authorization(token,parameters[0],function(err,canGo){
+                    _parameters.authorization(token,parameters.project,function(err,canGo){
                         if(err){
                             callback(_HTTPError.internalServerError,err);
                         } else {
                             if(canGo === true){
-                                dumpNode(parameters[0],URL.removeSpecialChars(parameters[1] || ""),URL.removeSpecialChars(parameters[2] || ""),callback);
+                                dumpNode(parameters.project,parameters.root,parameters.path || "",callback);
                             } else {
                                 callback(_HTTPError.forbidden);
                             }

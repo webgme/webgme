@@ -10,6 +10,7 @@ define([
     'js/Controls/PropertyGrid/Widgets/ColorPickerWidget',
     'js/Utils/ColorUtil',
     'js/Controls/PropertyGrid/Widgets/DialogWidget',
+    'js/Controls/PropertyGrid/Widgets/AssetWidget',
     './PropertyGridWidgets'],
     function (StringWidget,
               NumberBoxWidget,
@@ -20,6 +21,7 @@ define([
               ColorPickerWidget,
               colorUtil,
               DialogWidget,
+              AssetWidget,
               PropertyGridWidgets) {
 
         var PropertyGridWidgetManager;
@@ -34,6 +36,7 @@ define([
                 _isOption = _.isArray(propDesc.valueItems),
                 _isColor = colorUtil.isColor(propDesc.value),
                 _specificWidget = propDesc.widget,
+                _isAsset = _type === 'asset',
                 widget;
 
             if (_readOnly) {
@@ -54,6 +57,8 @@ define([
             } else {
                 if (this._registeredWidgets[_type]) {
                     widget = new this._registeredWidgets[_type](propDesc);
+                } else if (_isAsset) {
+                    widget = new AssetWidget(propDesc);
                 } else if (_type === "number") {
                     widget = new NumberBoxWidget(propDesc);
                 } else if (_type === "boolean") {

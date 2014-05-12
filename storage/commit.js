@@ -8,7 +8,8 @@ define([ "util/assert", "util/sha1", "util/canon" ], function (ASSERT, SHA1, CAN
 	"use strict";
 	var HASH_REGEXP = new RegExp("^#[0-9a-zA-Z_]*$");
 
-	function Database (_database) {
+	function Database (_database,_options) {
+        _options = _options || {};
 		ASSERT(typeof _database === "object");
 
 		function openProject (projectName, callback) {
@@ -29,6 +30,7 @@ define([ "util/assert", "util/sha1", "util/canon" ], function (ASSERT, SHA1, CAN
 						setBranchHash: _project.setBranchHash,
 						getCommits: _project.getCommits,
 						makeCommit: makeCommit,
+                        setUser: setUser,
 						ID_NAME: _project.ID_NAME
 					});
 				} else {
@@ -46,7 +48,7 @@ define([ "util/assert", "util/sha1", "util/canon" ], function (ASSERT, SHA1, CAN
 				var commitObj = {
 					root: roothash,
 					parents: parents,
-					updater: [ 'TODO' ],
+					updater: [ _options.user ],
 					time: (new Date()).getTime(),
 					message: msg,
 					type: "commit"
@@ -65,6 +67,12 @@ define([ "util/assert", "util/sha1", "util/canon" ], function (ASSERT, SHA1, CAN
 
 				return id;
 			}
+
+            function setUser (userId){
+                if(typeof userId === 'string'){
+                    _options.user = userId;
+                };
+            }
 		}
 
 		return {

@@ -187,6 +187,7 @@ define(['logManager',
      * @param objDescriptor
      */
     TreeBrowserWidget.prototype.createNode = function (parentNode, objDescriptor) {
+        objDescriptor.name = objDescriptor.name || "";
         //check if the parentNode is null or not
         //when null, the new node belongs to the root
         if (parentNode === null) {

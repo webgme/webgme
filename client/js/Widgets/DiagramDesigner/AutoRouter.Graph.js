@@ -1,3 +1,9 @@
+/*
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ *
+ * Author: Brian Broll
+ */
+
 "use strict"; 
 
 define(['logManager',
@@ -2103,8 +2109,6 @@ define(['logManager',
             pathiter++;
         }
 
-        _logger.info("c has been decremented " + (100 - c) + " times\nlast is " + last + 
-                "\nd is " + d + "\ndm is " + dm);
         return updated;
     };
 

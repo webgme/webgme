@@ -1,16 +1,51 @@
-/**
- * Created by zsolt on 4/15/14.
+/*
+ * Copyright (C) 2014 Vanderbilt University, All rights reserved.
+ *
+ * Author: Zsolt Lattmann
  */
 
-define(['./Artifact'], function (Artifact) {
+define(['./Artifact', 'blob/BlobMetadata'], function (Artifact, BlobMetadata) {
 
     var BlobClient = function () {
         this.artifacts = [];
+
+        // TODO: TOKEN???
+        this.blobUrl = '/rest/blob/'; // TODO: any ways to ask for this or get it from the configuration?
     };
 
-    BlobClient.prototype.addObject = function (name, data, callback) {
+    BlobClient.prototype.getMetadataURL = function (hash) {
+        var metadataBase = this.blobUrl + 'metadata';
+        if (hash) {
+            return metadataBase + '/' + hash;
+        } else {
+            return metadataBase;
+        }
+    };
+
+    BlobClient.prototype.getViewURL = function (hash, subpath) {
+        var subpathURL = '';
+        if (subpath) {
+            subpathURL = subpath;
+        }
+        return this.blobUrl + 'view/' + hash + '/' + subpathURL;
+    };
+
+    BlobClient.prototype.getDownloadURL = function (hash) {
+        return this.blobUrl + 'download/' + hash;
+    };
+
+    BlobClient.prototype.getCreateURL = function (filename, isMetadata) {
+        if (isMetadata) {
+            return this.blobUrl + 'createMetadata/';
+        } else {
+            return this.blobUrl + 'createFile/' + filename;
+        }
+    };
+
+
+    BlobClient.prototype.putFile = function (name, data, callback) {
         var oReq = new XMLHttpRequest();
-        oReq.open("PUT", '/rest/notoken/blob/create/' + name, true);
+        oReq.open("POST", this.getCreateURL(name), true);
         oReq.onload = function (oEvent) {
             // Uploaded.
             var response = JSON.parse(oEvent.target.response);
@@ -20,22 +55,16 @@ define(['./Artifact'], function (Artifact) {
             callback(null, hash);
         };
 
-        var blob = new Blob([data], {type: 'text/plain'});
-
-        oReq.send(blob);
+        // data is a file object or blob
+        oReq.send(data);
     };
 
-    BlobClient.prototype.addComplexObject = function (name, complexObjectDescriptor, callback) {
-        var sortedDescriptor = {};
-
-        var fnames = Object.keys(complexObjectDescriptor);
-        fnames.sort();
-        for (var j = 0; j < fnames.length; j += 1) {
-            sortedDescriptor[fnames[j]] = complexObjectDescriptor[fnames[j]];
-        }
+    BlobClient.prototype.putMetadata = function (metadataDescriptor, callback) {
+        var self = this;
+        var metadata = new BlobMetadata(metadataDescriptor);
 
         var oReq = new XMLHttpRequest();
-        oReq.open("PUT", '/rest/notoken/blob/create/' + name + '.json?complex=true', true);
+        oReq.open("POST", this.getCreateURL(name, true), true);
         oReq.onload = function (oEvent) {
             // Uploaded.
             var response = JSON.parse(oEvent.target.response);
@@ -46,12 +75,12 @@ define(['./Artifact'], function (Artifact) {
         };
 
         // FIXME: in production mode do not indent the json file.
-        var blob = new Blob([JSON.stringify(sortedDescriptor, null, 4)], {type: 'text/plain'});
+        var blob = new Blob([JSON.stringify(metadata.serialize(), null, 4)], {type: 'text/plain'});
 
         oReq.send(blob);
     };
 
-    BlobClient.prototype.addObjects = function (o, callback) {
+    BlobClient.prototype.putFiles = function (o, callback) {
         var self = this;
 
         var filenames = Object.keys(o);
@@ -62,7 +91,7 @@ define(['./Artifact'], function (Artifact) {
         for (var j = 0; j < filenames.length; j += 1) {
             (function(filename, data) {
 
-                self.addObject(filename, data, function (err, hash) {
+                self.putFile(filename, data, function (err, hash) {
                     remaining -= 1;
 
                     hashes[filename] = hash;
@@ -83,12 +112,14 @@ define(['./Artifact'], function (Artifact) {
 
     BlobClient.prototype.getObject = function (hash, callback) {
         var xhr = new XMLHttpRequest();
-        xhr.open("GET", "/rest/notoken/blob/view/" + hash, true);
+        xhr.open("GET", this.getViewURL(hash), true);
+        xhr.responseType = "arraybuffer";
+
         xhr.onload = function (e) {
             if (xhr.readyState === 4) {
                 if (xhr.status === 200) {
-                    // FIXME: should this be somehow a pipe/stream?
-                    callback(null, xhr.responseText);
+                    // response is an arraybuffer
+                    callback(null, xhr.response);
                 } else {
                     callback(xhr.status + ':' + xhr.statusText);
                 }
@@ -100,9 +131,9 @@ define(['./Artifact'], function (Artifact) {
         xhr.send(null);
     };
 
-    BlobClient.prototype.getInfo = function (hash, callback) {
+    BlobClient.prototype.getMetadata = function (hash, callback) {
         var xhr = new XMLHttpRequest();
-        xhr.open("GET", "/rest/notoken/blob/info/" + hash, true);
+        xhr.open("GET", this.getMetadataURL(hash), true);
         xhr.onload = function (e) {
             if (xhr.readyState === 4) {
                 if (xhr.status === 200) {
@@ -124,39 +155,35 @@ define(['./Artifact'], function (Artifact) {
         return artifact;
     };
 
-    BlobClient.prototype.getArtifact = function (hash, callback) {
+    BlobClient.prototype.getArtifact = function (metadataHash, callback) {
         // TODO: get info check if complex flag is set to true.
         // TODO: get info get name.
         var self = this;
-        this.getInfo(hash, function (err, info) {
+        this.getMetadata(metadataHash, function (err, info) {
             if (err) {
                 callback(err);
                 return;
             }
 
-            self.getObject(hash, function (err, data) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
-
-                // get rid of extension
-                var name = info.filename.substring(0, info.filename.lastIndexOf('.'));
-
-                // create a new artifact instance
-                //  - set name
-                //  - set client
-                //  - deserialize descriptor
-                var artifact = new Artifact(name, self, JSON.parse(data));
+            if (info.contentType === BlobMetadata.CONTENT_TYPES.COMPLEX) {
+                var artifact = new Artifact(info.name, self, info);
                 self.artifacts.push(artifact);
                 callback(null, artifact);
-            });
+            } else {
+                callback('not supported contentType ' + JSON.stringify(info, null, 4));
+            }
+
         });
     };
 
     BlobClient.prototype.saveAllArtifacts = function (callback) {
         var remaining = this.artifacts.length;
         var hashes = [];
+
+        if (remaining === 0) {
+            callback(null, hashes);
+        }
+
         for (var i = 0; i < this.artifacts.length; i += 1) {
 
             this.artifacts[i].save(function(err, hash) {
@@ -175,5 +202,5 @@ define(['./Artifact'], function (Artifact) {
         }
     };
 
-    return BlobClient
+    return BlobClient;
 });

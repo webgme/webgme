@@ -6,9 +6,8 @@
  * Should be used only by developers in developer mode. Application server shall not run at the same time.
  */
 
-define(['blob/BlobClient',
-        'blob/BlobManagerFS'],
-    function (BlobClient, BlobManagerFS) {
+define(['blob/BlobClient', 'blob/BlobMetadata', 'util/StringStreamWriter'],
+    function (BlobClient, BlobMetadata, StringStreamWriter) {
 
         /**
          * Initializes a new instance of a server side file system object.
@@ -18,9 +17,9 @@ define(['blob/BlobClient',
          * @param {{}} parameters
          * @constructor
          */
-        function BlobRunPluginClient() {
+        function BlobRunPluginClient(blobBackend) {
             BlobClient.call(this);
-            this.blobStorage = new BlobManagerFS();
+            this.blobBackend = blobBackend;
         }
 
         // Inherits from BlobClient
@@ -29,42 +28,46 @@ define(['blob/BlobClient',
         // Override the constructor with this object's constructor
         BlobRunPluginClient.prototype.constructor = BlobRunPluginClient;
 
-        BlobRunPluginClient.prototype.initialize = function (callback) {
-            this.blobStorage.initialize(callback);
+        BlobRunPluginClient.prototype.getMetadata = function (metadataHash, callback) {
+            var self = this;
+
+            self.blobBackend.getMetadata(metadataHash, function (err, hash, metadata) {
+                callback(err, metadata);
+            });
+
         };
 
+        BlobRunPluginClient.prototype.getObject = function (metadataHash, callback) {
+            var self = this;
+            var writeStream = new StringStreamWriter();
 
-        BlobRunPluginClient.prototype.getInfo = function (hash, callback) {
-            callback(null, this.blobStorage.getInfo(hash));
-        };
+            // TODO: we need to get the content and save as a local file.
+            // if we just proxy the stream we cannot set errors correctly.
 
-        BlobRunPluginClient.prototype.getObject = function (hash, callback) {
-            this.blobStorage.load(hash, callback);
-        };
-
-
-        BlobRunPluginClient.prototype.addComplexObject = function (name, complexObjectDescriptor, callback) {
-            var sortedDescriptor = {};
-
-            var fnames = Object.keys(complexObjectDescriptor);
-            fnames.sort();
-            for (var j = 0; j < fnames.length; j += 1) {
-                sortedDescriptor[fnames[j]] = complexObjectDescriptor[fnames[j]];
-            }
-
-            this.blobStorage.save({name: name + '.json', complex: true}, JSON.stringify(sortedDescriptor, null, 4), function (err, hash) {
+            self.blobBackend.getFile(metadataHash, '', writeStream, function (err, hash) {
                 if (err) {
                     callback(err);
                     return;
                 }
 
+                callback(null, writeStream.getBuffer());
+            });
+        };
+
+
+        BlobRunPluginClient.prototype.putMetadata = function (metadataDescriptor, callback) {
+            var self = this;
+            var metadata = new BlobMetadata(metadataDescriptor);
+
+            self.blobBackend.putMetadata(metadata, function (err, hash) {
                 callback(err, hash);
             });
         };
 
 
-        BlobRunPluginClient.prototype.addObject = function (name, data, callback) {
-            this.blobStorage.save({name: name}, data, function (err, hash) {
+        BlobRunPluginClient.prototype.putFile = function (name, data, callback) {
+
+            this.blobBackend.putFile(name, data, function (err, hash) {
                 if (err) {
                     callback(err);
                     return;

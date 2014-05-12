@@ -132,12 +132,19 @@ $title-font-size: 14px;
       position: relative;
       top: -1px;
       left: 2px;
+      margin-right: 1.2ex
     }
 
     .panel-header-title {
       @include panel_header_title;
       margin-top: 3px;
+
+      &:empty {
+        display: none;
+      }
+
     }
+
   }
 
   &.read-only {

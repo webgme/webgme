@@ -77,6 +77,7 @@ define([ "util/assert" ], function (ASSERT) {
 						setBranchHash: setBranchHash,
 						getCommits: getCommits,
 						makeCommit: makeCommit,
+                        setUser: project.setUser,
 						ID_NAME: project.ID_NAME
 					});
 				} else {

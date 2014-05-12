@@ -33,7 +33,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
             _workerManager = null;
 
         function getSessionID(socket){
-            return socket.handshake.webGMESession;
+            return socket.handshake.webGMESessionId;
         }
 
         function checkDatabase(callback){
@@ -44,6 +44,8 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 _database.openDatabase(function(err){
                     if(err){
                         _databaseOpened = false;
+                        //this error has to be put to console as well
+                        console.log('Error in mongoDB connection initiation!!! - ', err);
                         options.log.error(err);
                         callback(err);
                     } else {
@@ -114,23 +116,29 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
             _socket.set('authorization',function(data,accept){
                 //either the html header contains some webgme signed cookie with the sessionID
                 // or the data has a webGMESession member which should also contain the sessionID - currently the same as the cookie
-
                 if (options.session === true){
-                    var sessionID = data.webGMESession;
+                    var sessionID;
+                    if(data.webGMESessionId === undefined){
+                        if(data.query.webGMESessionId && data.query.webGMESessionId !== 'undefined'){
+                            sessionID = data.query.webGMESessionId;
+                        }
+                    }
                     if(sessionID === null || sessionID === undefined){
                         if(data.headers.cookie){
                             var cookie = URL.parseCookie(data.headers.cookie);
                             if(cookie[options.cookieID] !== undefined || cookie[options.cookieID] !== null){
                                 sessionID = require('connect').utils.parseSignedCookie(cookie[options.cookieID],options.secret);
+                                data.webGMESessionId = sessionID;
                             }
                         } else {
                             console.log('DEBUG COOKIE INFO', JSON.stringify(data.headers));
+                            console.log('DEBUG HANDSHAKE INFO', JSON.stringify(data.query));
                             return accept(null,false);
                         }
                     }
                     options.sessioncheck(sessionID,function(err,isOk){
                         if(!err && isOk === true){
-                            data.webGMESession = sessionID;
+                            data.webGMESessionId = sessionID;
                             return accept(null,true);
                         } else {
                             return accept(err,false);
@@ -139,6 +147,12 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 } else {
                     return accept(null,true);
                 }
+            });
+
+            //TODO check if this really helps
+            _socket.server.on('error',function(err){
+                console.log("Error have been raised on socket.io level!!! - ",err);
+                options.logger.error('error raised: ' + err);
             });
 
 
@@ -150,8 +164,15 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 });
 
                 socket.on('closeDatabase', function(callback){
+                    //we ignore the close request from any client
+                    //TODO check how we should function
+                    /*
                     _databaseOpened = false;
                     _database.closeDatabase(callback);
+                    */
+                    if(typeof callback === 'function'){
+                        callback(null);
+                    }
                 });
 
                 socket.on('fsyncDatabase', function(callback){
@@ -378,7 +399,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 //worker commands
                 socket.on('simpleRequest',function(parameters,callback){
                     if(socket.handshake){
-                        parameters.webGMESessionId = socket.handshake.webGMESession || null;
+                        parameters.webGMESessionId = getSessionID(socket) || null;
                     }
                     _workerManager.request(parameters,callback);
                 });
@@ -404,7 +425,8 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 mongodb:options.database,
                 intoutdir:options.intoutdir,
                 pluginBasePaths:options.pluginBasePaths,
-                serverPort:options.webServerPort
+                serverPort:options.webServerPort,
+                sessionToUser:options.sessionToUser
             });
         }
 

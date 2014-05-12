@@ -13,7 +13,7 @@ define(['core/core',
     var ClientInterpreterManager = function (client) {
         this._client = client;
         //this._manager = new PluginManagerBase();
-
+        this._savedConfigs = {};
     };
 
     var getPlugin = function(name,callback){
@@ -49,15 +49,36 @@ define(['core/core',
                             }
                         ]
                     };
+
                     for (var i in pluginConfigs) {
                         if (pluginConfigs.hasOwnProperty(i)) {
                             hackedConfig[i] = pluginConfigs[i];
+
+                            // retrieve user settings from previous run
+                            if (self._savedConfigs.hasOwnProperty(i)) {
+                                var iConfig = self._savedConfigs[i];
+                                var len = hackedConfig[i].length;
+
+                                while (len--) {
+                                    if (iConfig.hasOwnProperty(hackedConfig[i][len].name)) {
+                                        hackedConfig[i][len].value = iConfig[hackedConfig[i][len].name];
+                                    }
+                                }
+
+                            }
                         }
                     }
+
                     d.show(hackedConfig, function (updatedConfig) {
                         //when Save&Run is clicked in the dialog
                         var globalconfig = updatedConfig['Global Options'];
                         delete updatedConfig['Global Options'];
+
+                        // save config from user
+                        for (var i in updatedConfig) {
+                            self._savedConfigs[i] = updatedConfig[i];
+                        }
+
                         //#2: save it back and run the plugin
                         if (configSaveCallback) {
                             configSaveCallback(updatedConfig);

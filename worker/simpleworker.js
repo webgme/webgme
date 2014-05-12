@@ -43,6 +43,17 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
     var initialize = function(parameters){
         if(initialized !== true){
             initialized = true;
+            if(parameters.paths){
+                var configPaths = {},
+                    keys = Object.keys(parameters.paths);
+                for (var i = 0; i < keys.length; i += 1) {
+                    configPaths[keys[i]] = PATH.relative(BASEPATH,PATH.resolve(parameters.paths[keys[i]]));
+                }
+
+                requirejs.config({
+                    paths: configPaths
+                });
+            }
             pluginBasePaths = parameters.pluginBasePaths;
             serverPort = parameters.serverPort || 80;
             interpreteroutputdirectory = parameters.interpreteroutputdirectory || "";
@@ -111,8 +122,8 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
     };
 
     //TODO the getContext should be refactored!!!
-    var getProject = function(projectName,callback){
-        var pluginStorage = new ConnectedStorage({type:'node',host:'127.0.0.1',port:serverPort,log:logManager.create('SERVER-WORKER-PLUGIN-'+process.pid)});
+    var getProject = function(projectName,sessionId,callback){
+        var pluginStorage = new ConnectedStorage({type:'node',host:'127.0.0.1',port:serverPort,log:logManager.create('SERVER-WORKER-PLUGIN-'+process.pid),webGMESessionId:sessionId});
         pluginStorage.openDatabase(function(err){
             if(!err){
                 if(projectName) {
@@ -130,46 +141,6 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
                 callback(new Error('cannot open database'));
             }
         });
-    };
-    var getContext = function(context,callback){
-        //TODO get the configured parameters for webHost and webPort
-        context.storage = new ConnectedStorage({type:'node',host:'127.0.0.1',port:serverPort,log:logManager.create('SERVER-WORKER-PLUGIN-'+process.pid)});
-        //context.storage = storage;
-        context.blobClient = new BlobServerClient({serverPort:serverPort});
-        if(context.projectName){
-            storage.openProject(context.projectName,function(err,project){
-                if(!err){
-                    context.project = project;
-                    //get commitNode
-                    if(context.commitHash){
-                        project.loadObject(context.commitHash, function(err, commitObj) {
-                            if(!err && commitObj){
-                                context.rootHash = commitObj.root;
-                                context.core = new Core(project,{corerel:2});
-                                context.core.loadRoot(context.rootHash,function(err,root){
-                                    if(!err && root){
-                                        context.rootNode = root;
-                                        callback(null,context);
-                                    } else {
-                                        err = err || 'cannot found root object';
-                                        callback(err,{});
-                                    }
-                                })
-                            } else {
-                                err = err || 'the commit object was not found in the database';
-                                callback(err,{});
-                            }
-                        });
-                    } else {
-                        callback('no commit was found',{});
-                    }
-                } else {
-                    callback(err,{});
-                }
-            });
-        } else {
-            callback('no project name',{});
-        }
     };
     var isGoodExtraAsset = function(name,path){
         try{
@@ -218,15 +189,16 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
 
         return interpreterClass;
     };
-    var runInterpreter = function(name,sessionId,context,callback){
+    var runInterpreter = function(userId,name,sessionId,context,callback){
         var interpreter = getInterpreter(name);
         if(interpreter){
-            getProject(context.managerConfig.project,function(err,project){
+            getProject(context.managerConfig.project,sessionId,function(err,project){
                 if(!err){
+                    project.setUser(userId);
                     var plugins = {};
                     plugins[name] = interpreter;
                     var manager = new PluginManagerBase(project,Core,plugins);
-                    context.managerConfig.blobClient = new BlobServerClient({serverPort:serverPort});
+                    context.managerConfig.blobClient = new BlobServerClient({serverPort:serverPort,sessionId:sessionId});
 
                     manager.initialize(null, function (pluginConfigs, configSaveCallback) {
                         if (configSaveCallback) {
@@ -306,7 +278,7 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
                 break;
             case CONSTANT.workerCommands.executePlugin:
                 if( typeof parameters.name === 'string' && typeof parameters.context === 'object'){
-                    runInterpreter(parameters.name,parameters.webGMESessionId,parameters.context,function(err,result){
+                    runInterpreter(parameters.user,parameters.name,parameters.webGMESessionId,parameters.context,function(err,result){
                         process.send({pid:process.pid,type:CONSTANT.msgTypes.result,error:err,result:result});
                     });
                 } else {

@@ -39,10 +39,17 @@
 
 /*** MODAL extension ***/
 /* DISABLE DROP-SHADOW because it slows down scrolling :(  - especially on tablet*/
+/* ENABLE user selection*/
 .modal {
     -webkit-box-shadow: none;
     -moz-box-shadow: none;
     box-shadow: none;
+
+    -moz-user-select:-moz-all;
+    -webkit-user-select:all;
+    -o-user-select:all;
+    user-select:all;
+    -ms-user-select:element;
 }
 
 
@@ -163,6 +170,12 @@ input[type="submit"].btn.btn-micro {
     color: #ffffff;
     background-color: #818181;
     *background-color: #747474;
+}
+
+.btn.disabled,
+.btn[disabled] {
+    opacity: .3;
+    filter: alpha(opacity=30);
 }
 
 .btn-gray:active,

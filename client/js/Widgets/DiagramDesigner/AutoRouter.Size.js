@@ -1,3 +1,9 @@
+/*
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ *
+ * Author: Brian Broll
+ */
+
 "use strict"; 
 
 define(['logManager'

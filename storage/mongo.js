@@ -280,7 +280,6 @@ define([ "mongodb", "util/assert", "util/canon" ], function (MONGODB, ASSERT, CA
 					}
 				}).toArray(function (err, docs) {
 					if (err) {
-                        console.log('kecso',err);
 						callback(err);
 					} else {
 						var branches = {};

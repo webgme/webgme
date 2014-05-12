@@ -111,11 +111,16 @@ $input-color: lighten($background-color, 18.5%);
           }
         }
 
+        div.p-reset {
+          width: 10%;
+          text-align: right;
+        }
+
         .p-reset {
           float: left;
           i.btn-reset {
             margin-left: 1px;
-            margin-right: 1px;
+            margin-right: 2px;
 
             &:hover {
               cursor: pointer;
@@ -126,7 +131,7 @@ $input-color: lighten($background-color, 18.5%);
         /** Controllers */
         /** Controller-half (right) */
         .c {
-          float: right;
+          float: left;
           width: 60%;
           height: $row-height;
           overflow: hidden;
@@ -195,6 +200,17 @@ $input-color: lighten($background-color, 18.5%);
             margin-top: 4px;
             cursor: pointer;
             border-radius: 4px;
+          }
+
+          div.asset-widget {
+            height: 25px;
+            line-height: 25px;
+            width: 98%;
+
+            .btn-dialog-open {
+              top: -1px;
+              padding: 0 3px;
+            }
           }
         }
       }

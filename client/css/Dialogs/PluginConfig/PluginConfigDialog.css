@@ -16,5 +16,10 @@
   margin-top: 0px;
   cursor: pointer;
   border-radius: 4px; }
+.plugin-config-dialog .control-group .controls .widget div.asset-widget {
+  height: 30px;
+  line-height: 30px;
+  width: 220px;
+  margin-top: 0px; }
 .plugin-config-dialog .control-group div.desc {
   margin-left: 180px; }

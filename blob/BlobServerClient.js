@@ -6,8 +6,8 @@
  * Server side BLOB client implementation.
  */
 
-define(['blob/BlobClient', 'http', 'https'],
-    function (BlobClient, http, https) {
+define(['blob/BlobClient', 'blob/BlobMetadata', 'http', 'https', 'util/StringStreamWriter'],
+    function (BlobClient, BlobMetadata, http, https, StringStreamWriter) {
 
         /**
          * Initializes a new instance of a server side file system object.
@@ -19,8 +19,8 @@ define(['blob/BlobClient', 'http', 'https'],
          */
         function BlobServerClient(parameters) {
             BlobClient.call(this);
-            //console.log(webGMEGlobal.getConfig());
             this.serverPort = parameters.serverPort;
+            this._clientSession = parameters.sessionId;
         }
 
         // Inherits from BlobClient
@@ -29,11 +29,11 @@ define(['blob/BlobClient', 'http', 'https'],
         // Override the constructor with this object's constructor
         BlobServerClient.prototype.constructor = BlobServerClient;
 
-        BlobServerClient.prototype.getInfo = function (hash, callback) {
+        BlobServerClient.prototype.getMetadata = function (hash, callback) {
             var options = {
                 hostname: '127.0.0.1',
                 port: this.serverPort,
-                path: '/rest/notoken/blob/info' + hash,
+                path: this.getMetadataURL(hash),
                 method: 'GET'
             };
 
@@ -50,7 +50,7 @@ define(['blob/BlobClient', 'http', 'https'],
             var options = {
                 hostname: '127.0.0.1',
                 port: this.serverPort,
-                path: '/rest/notoken/blob/view' + hash,
+                path: this.getViewURL(hash),
                 method: 'GET'
             };
 
@@ -59,28 +59,25 @@ define(['blob/BlobClient', 'http', 'https'],
                     callback(err);
                     return;
                 }
+
+                // TODO: we should use arraybuffer here.
                 callback(null, data);
             });
         };
 
 
-        BlobServerClient.prototype.addComplexObject = function (name, complexObjectDescriptor, callback) {
-            var sortedDescriptor = {};
-
-            var fnames = Object.keys(complexObjectDescriptor);
-            fnames.sort();
-            for (var j = 0; j < fnames.length; j += 1) {
-                sortedDescriptor[fnames[j]] = complexObjectDescriptor[fnames[j]];
-            }
+        BlobServerClient.prototype.putMetadata = function (metadataDescriptor, callback) {
+            var self = this;
+            var metadata = new BlobMetadata(metadataDescriptor);
 
             var options = {
                 hostname: '127.0.0.1',
                 port: this.serverPort,
-                path: '/rest/notoken/blob/create/' + name + '.json?complex=true',
-                method: 'PUT'
+                path: this.getCreateURL(metadata.name, true),
+                method: 'POST'
             };
 
-            this._sendHttpRequestWithContent(options, JSON.stringify(sortedDescriptor, null, 4), function (err, data) {
+            self._sendHttpRequestWithContent(options, JSON.stringify(metadata.serialize(), null, 4), function (err, data) {
                 if (err) {
                     callback(err);
                     return;
@@ -95,12 +92,12 @@ define(['blob/BlobClient', 'http', 'https'],
         };
 
 
-        BlobServerClient.prototype.addObject = function (name, data, callback) {
+        BlobServerClient.prototype.putFile = function (name, data, callback) {
             var options = {
                 hostname: '127.0.0.1',
                 port: this.serverPort,
-                path: '/rest/notoken/blob/create/' + name,
-                method: 'PUT'
+                path: this.getCreateURL(name),
+                method: 'POST'
             };
 
             this._sendHttpRequestWithContent(options, data, function (err, responseData) {
@@ -117,36 +114,74 @@ define(['blob/BlobClient', 'http', 'https'],
             });
         };
 
+        // -------------------------------------------------------------------------------------------------------------
+        // Private helper functions
+
+        BlobServerClient.prototype._ensureAuthenticated = function (options, callback) {
+            //this function enables the session of the client to be authenticated
+            //TODO curently this user does not have a session, so it has to upgrade the options always!!!
+            if (options.headers) {
+                options.headers.webgmeclientsession = this._clientSession;
+            } else {
+                options.headers = {
+                    'webgmeclientsession': this._clientSession
+                }
+            }
+            callback(null, options);
+        };
 
         BlobServerClient.prototype._sendHttpRequest = function (options, callback) {
-            var req = http.request(options, function(res) {
-                var d = '';
-                res.on('data', function (chunk) {
-                    d += chunk;
-                });
+            var self = this;
+            self._ensureAuthenticated(options, function (err, updatedOptions) {
+                if (err) {
+                    callback(err);
+                } else {
+                    self.__sendHttpRequest(updatedOptions, callback);
+                }
+            });
+        };
+
+        BlobServerClient.prototype.__sendHttpRequest = function (options, callback) {
+            // TODO: use the http or https
+            var req = http.request(options, function (res) {
+                var bufferStream = new StringStreamWriter();
 
                 res.on('end', function () {
                     if (res.statusCode === 200) {
-                        callback(null, d);
+                        callback(null, bufferStream.getBuffer());
                     } else {
-                        callback(res.statusCode, d);
+                        callback(res.statusCode, bufferStream.getBuffer());
                     }
                 });
+
+                res.pipe(bufferStream);
+
             });
 
-            req.on('error', function(e) {
+            req.on('error', function (e) {
                 callback(e);
             });
 
             req.end();
         };
 
-
         BlobServerClient.prototype._sendHttpRequestWithContent = function (options, data, callback) {
-            var req = http.request(options, function(res) {
-            //    console.log('STATUS: ' + res.statusCode);
-            //    console.log('HEADERS: ' + JSON.stringify(res.headers));
-            //    res.setEncoding('utf8');
+            var self = this;
+            self._ensureAuthenticated(options, function (err, updatedOptions) {
+                if (err) {
+                    callback(err);
+                } else {
+                    self.__sendHttpRequestWithContent(updatedOptions, data, callback);
+                }
+            });
+        };
+
+        BlobServerClient.prototype.__sendHttpRequestWithContent = function (options, data, callback) {
+            // TODO: use the http or https
+            var req = http.request(options, function (res) {
+                //    console.log('STATUS: ' + res.statusCode);
+                //    console.log('HEADERS: ' + JSON.stringify(res.headers));
+                //    res.setEncoding('utf8');
                 var d = '';
                 res.on('data', function (chunk) {
                     d += chunk;
@@ -161,7 +196,7 @@ define(['blob/BlobClient', 'http', 'https'],
                 });
             });
 
-            req.on('error', function(e) {
+            req.on('error', function (e) {
                 callback(e);
             });
 

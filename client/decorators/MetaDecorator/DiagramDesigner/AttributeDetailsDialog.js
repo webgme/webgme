@@ -11,7 +11,8 @@ define(['clientUtil',
     'css!./AttributeDetailsDialog'], function ( util,
                                                 attributeDetailsDialogTemplate) {
 
-    var AttributeDetailsDialog;
+    var AttributeDetailsDialog,
+        ASSET_TYPE = 'asset';
 
     AttributeDetailsDialog = function () {
 
@@ -77,8 +78,10 @@ define(['clientUtil',
                 //BOOL - get the default value from the radio button's selection
                 attrDesc.defaultValue = self._el.find('#rbBooleanTrue').first().is(':checked');
                 delete attrDesc.isEnum;
+            } else if (attrDesc.type === ASSET_TYPE) {
+                attrDesc.defaultValue = '';
+                delete attrDesc.isEnum;
             }
-
 
             self._dialog.modal('hide');
 
@@ -138,6 +141,11 @@ define(['clientUtil',
                     self._pEnum.hide();
                     self._pEnumValues.hide();
                     self._pDefaultValueBoolean.show();
+                    break;
+                case ASSET_TYPE:
+                    self._pDefaultValue.hide();
+                    self._pEnum.hide();
+                    self._pEnumValues.hide();
                     break;
                 default:
                     break;
@@ -247,6 +255,9 @@ define(['clientUtil',
             if (attributeDesc.defaultValue !== true) {
                 this._el.find('#rbBooleanFalse').first().attr('checked', 'checked');
             }
+        } else if (attributeDesc.type === ASSET_TYPE) {
+            this._pDefaultValue.hide();
+            this._pEnum.hide();
         } else {
             this._inputDefaultValue.val(attributeDesc.defaultValue);
             if (attributeDesc.isEnum) {

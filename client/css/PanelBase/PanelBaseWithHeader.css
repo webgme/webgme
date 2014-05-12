@@ -68,7 +68,8 @@
     .panel-base-wh .floating-title .ro-icon {
       position: relative;
       top: -1px;
-      left: 2px; }
+      left: 2px;
+      margin-right: 1.2ex; }
     .panel-base-wh .floating-title .panel-header-title {
       font-size: 14px;
       line-height: 14px;
@@ -78,6 +79,8 @@
       margin-left: 5px;
       white-space: nowrap;
       margin-top: 3px; }
+      .panel-base-wh .floating-title .panel-header-title:empty {
+        display: none; }
   .panel-base-wh.read-only .ro-icon {
     display: inline-block; }
   .panel-base-wh.read-only .panel-body {

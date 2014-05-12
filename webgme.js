@@ -33,86 +33,84 @@ var getConfig = function(){
     return JSON.parse(JSON.stringify(__CONFIG));
 };
 var setConfig = function(configObject){
-    var keys, i,j;
-    var isGoodExtraAsset = function(name,filePath){
-        try{
-            var file = FS.readFileSync(filePath+'/'+name+'.js','utf-8');
-            if(file === undefined || file === null){
-                return false;
-            } else {
-                return true;
-            }
-        } catch(e){
-            return false;
-        }
-    };
-    var getPluginNames = function(basePaths){
-        var names = []; //we add only the "*.js" files from the directories
-        basePaths = basePaths || [];
-        for(var i=0;i<basePaths.length;i++){
-            var additional = FS.readdirSync(basePaths[i]);
-            for(var j=0;j<additional.length;j++){
-                if(names.indexOf(additional[j]) === -1){
-                    if(isGoodExtraAsset(additional[j],PATH.join(basePaths[i],additional[j]))){
-                        names.push(additional[j]);
-                    }
-                }
-            }
-        }
-        return names;
-    };
-
-    var addPluginPathsToRequirejs = function(basepaths){
-        var requirejsBase = webGMEGlobal.baseDir,
-            pluginNames = getPluginNames(basepaths),
-            i,j;
-
-        //we go through every plugin and we check where we are able to find the main part of it so we can set the plugin/pluginName path according that in requirejs
-        var pluginPaths = {};
-        for(i in pluginNames) {
-            var found = false;
-            for (j = 0; j < basepaths.length; j++) {
-                if (!found) {
-                    try {
-                        var items = FS.readdirSync(basepaths[j]);
-                        if(items.indexOf(pluginNames[i]) !== -1){
-                            pluginPaths['plugin/' + pluginNames[i]] = PATH.relative(requirejsBase,PATH.resolve(basepaths[j]));
-                            found = true;
-                        }
-                    } catch (e) {
-                        //do nothing as we will go on anyway
-                        //console.error(e);
-                    }
+    var keys, i, j,
+        isGoodExtraAsset = function(name,filePath){
+            try{
+                var file = FS.readFileSync(filePath+'/'+name+'.js','utf-8');
+                if(file === undefined || file === null){
+                    return false;
                 } else {
-                    break;
+                    return true;
+                }
+            } catch(e){
+                return false;
+            }
+        },
+        getPluginNames = function(basePaths){
+            var names = []; //we add only the "*.js" files from the directories
+            basePaths = basePaths || [];
+            for(var i=0;i<basePaths.length;i++){
+                var additional = FS.readdirSync(basePaths[i]);
+                for(var j=0;j<additional.length;j++){
+                    if(names.indexOf(additional[j]) === -1){
+                        if(isGoodExtraAsset(additional[j],PATH.join(basePaths[i],additional[j]))){
+                            names.push(additional[j]);
+                        }
+                    }
                 }
             }
-        }
+            return names;
+        },
+        addPluginPathsToRequirejs = function(basepaths){
+            var requirejsBase = webGMEGlobal.baseDir,
+                pluginNames = getPluginNames(basepaths),
+                i,j;
+
+            //we go through every plugin and we check where we are able to find the main part of it so we can set the plugin/pluginName path according that in requirejs
+            var pluginPaths = {};
+            for(i in pluginNames) {
+                var found = false;
+                for (j = 0; j < basepaths.length; j++) {
+                    if (!found) {
+                        try {
+                            var items = FS.readdirSync(basepaths[j]);
+                            if(items.indexOf(pluginNames[i]) !== -1){
+                                pluginPaths['plugin/' + pluginNames[i]] = PATH.relative(requirejsBase,PATH.resolve(basepaths[j]));
+                                found = true;
+                            }
+                        } catch (e) {
+                            //do nothing as we will go on anyway
+                            //console.error(e);
+                        }
+                    } else {
+                        break;
+                    }
+                }
+            }
 
 
-        requirejs.config({
-            paths: pluginPaths
+            requirejs.config({
+                paths: pluginPaths
         });
-    };
+        },
+        addToRequireJSPath = function (requireJSPaths) {
+            if (!requireJSPaths) {
+                return;
+            }
 
-    var addToRequireJSPath = function (requireJSPaths) {
-        if (!requireJSPaths) {
-            return;
-        }
+            var requirejsBase = webGMEGlobal.baseDir,
+                configPaths = {};
 
-        var requirejsBase = webGMEGlobal.baseDir,
-            configPaths = {};
+            var keys = Object.keys(requireJSPaths);
 
-        var keys = Object.keys(requireJSPaths);
+            for (var i = 0; i < keys.length; i += 1) {
+                configPaths[keys[i]] = PATH.relative(requirejsBase,PATH.resolve(requireJSPaths[keys[i]]));
+            }
 
-        for (var i = 0; i < keys.length; i += 1) {
-            configPaths[keys[i]] = PATH.relative(requirejsBase,PATH.resolve(requireJSPaths[keys[i]]));
-        }
-
-        requirejs.config({
-            paths: configPaths
-        });
-    };
+            requirejs.config({
+                paths: configPaths
+            });
+        };
 
     //setting simple values
     keys = Object.keys(configObject);
@@ -155,6 +153,16 @@ var setConfig = function(configObject){
         addToRequireJSPath(__CONFIG.paths);
     }
 
+    //merge rextrast moduls - keeping the older ones
+    if(configObject.rextrast){
+        keys = Object.keys(configObject.rextrast);
+        for(i=0;i<keys.length;i++){
+            __CONFIG.rextrast = __CONFIG.rextrast || {};
+            if(!__CONFIG.rextrast[keys[i]]){
+                __CONFIG.rextrast[keys[i]] = PATH.relative(webGMEGlobal.baseDir,PATH.resolve(configObject.rextrast[keys[i]]));
+            }
+        }
+    }
 };
 
 //creating a global variable
@@ -169,7 +177,10 @@ webGMEGlobal = {
 webGMEGlobal.setConfig({
     decoratorpaths : [PATH.join(PATH.join(baseDir,'/client'),"/decorators")],
     pluginBasePaths : [PATH.join(baseDir,"/coreplugins")],
-    visualizerDescriptors : [PATH.join(baseDir,"/client/js/Visualizers.json")]
+    visualizerDescriptors : [PATH.join(baseDir,"/client/js/Visualizers.json")]/*,
+    rextrast : {
+        'example' : PATH.join(baseDir,"/middlewares/exampleRExtraST")
+    }*/
 });
 
 

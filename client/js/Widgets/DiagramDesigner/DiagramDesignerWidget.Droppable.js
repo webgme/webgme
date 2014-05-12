@@ -69,7 +69,11 @@ define(['js/DragDrop/DropTarget',
 
         //this.selectionManager.clear();
 
-        this._doAcceptDroppable(this.onBackgroundDroppableAccept(event, dragInfo), true);
+        if (dragInfo) {
+            this._doAcceptDroppable(this.onBackgroundDroppableAccept(event, dragInfo), true);
+        } else {
+            this._doAcceptDroppable(false, false);
+        }
     };
 
 

@@ -57,7 +57,7 @@ define([
                 if(path === null){
                     return URL.urlToRefObject(null);
                 }
-                return URL.urlToRefObject(urlPrefix+'/'+URL.addSpecialChars(path));
+                return URL.urlToRefObject(urlPrefix+'&path='+URL.addSpecialChars(path));
                 break;
             case _refTypes.path:
                 return URL.urlToRefObject(path);
@@ -77,7 +77,7 @@ define([
                 if(path === null){
                     return URL.urlToRefObject(null);
                 }
-                return URL.urlToRefObject(urlPrefix+'/'+URL.addSpecialChars(path));
+                return URL.urlToRefObject(urlPrefix+'&path='+URL.addSpecialChars(path));
                 break;
             case _refTypes.path:
                 return URL.urlToRefObject(path);
@@ -97,7 +97,7 @@ define([
                 if(path === null){
                     callback(null,URL.urlToRefObject(null));
                 }
-                callback(null,URL.urlToRefObject(urlPrefix+'/'+URL.addSpecialChars(path)));
+                callback(null,URL.urlToRefObject(urlPrefix+'&path='+URL.addSpecialChars(path)));
                 break;
             case _refTypes.path:
                 callback(null,URL.urlToRefObject(path));
