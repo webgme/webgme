@@ -1,13 +1,19 @@
+/*
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ *
+ * Author: Brian Broll
+ */
+
 "use strict";
 
 define(['js/PanelBase/PanelBaseWithHeader',
         'js/PanelManager/IActivePanel',
-        'js/Widgets/ModelEditor/ModelEditorWidget',//FIXME 
+        'js/Widgets/SnapEditor/SnapEditorWidget',//FIXME 
         './SnapEditorControl'
                                 ], function (PanelBaseWithHeader,
-             IActivePanel,
-             SnapEditorWidget,
-             SnapEditorControl) {
+                                    IActivePanel,
+                                    SnapEditorWidget,
+                                    SnapEditorControl) {
 
     var SnapEditorPanel;
 /*
@@ -75,7 +81,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
 
     SnapEditorPanel.prototype.onResize = function (width, height) {
         this.logger.debug('onResize --> width: ' + width + ', height: ' + height);
-        this.widget.onWidgetContainerResize(width, height);
+        this.widget.setSize(width, height);
     };
 
     SnapEditorPanel.prototype.destroy = function () {
