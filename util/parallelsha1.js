@@ -2,7 +2,7 @@ define([],function(){
 
     function ParalellSHA1Calculator(_options){
         _options = _options || {};
-        _options.maxworker = _options.maxworker || 10;
+        _options.maxworker = _options.maxworker || 4;
         if(_options.maxworker <= 0){
             _options.maxworker = 1;
         }
