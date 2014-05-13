@@ -7,6 +7,16 @@
 define([ "util/assert"], function (ASSERT) {
     "use strict";
 
+    var xorHashes = function (a, b) {
+        var outHash = "";
+        if(a.length === b.length){
+            for(var i=0;i< a.length;i++){
+                outHash += (parseInt(a.charAt(i),16) ^ parseInt(b.charAt(i),16)).toString(16);
+            }
+        }
+        return outHash;
+    };
+
     var SETS_ID = '_sets';
     var REL_ID = 'member';
 
@@ -251,15 +261,7 @@ define([ "util/assert"], function (ASSERT) {
             //TODO this function only needed while the inheritance is not in its final form!!!
             //bb377d14fd57cbe2b0a2ad297a7a303b7a5fccf3
             ASSERT(setcore.isValidNode(node));
-            function xorHashes (a, b) {
-                var outHash = "";
-                if(a.length === b.length){
-                    for(var i=0;i< a.length;i++){
-                        outHash += (parseInt(a.charAt(i),16) ^ parseInt(b.charAt(i),16)).toString(16);
-                    }
-                }
-                return outHash;
-            }
+
             //var hash = "0000000000000000000000000000000000000000";
             var hash = innerCore.getSingleNodeHash(node);
 
@@ -274,6 +276,23 @@ define([ "util/assert"], function (ASSERT) {
             }
 
             return hash;
+        };
+
+        setcore.getDataForSingleHash = function(node){
+            ASSERT(setcore.isValidNode(node));
+            var datas = innerCore.getDataForSingleHash(node);
+
+            //now we should stir all the sets hashes into the node's hash to get changes deep inside
+            var names = setcore.getSetNames(node);
+            for(var i=0;i<names.length;i++){
+                var setNode = setcore.getChild(setcore.getChild(node,SETS_ID),names[i]);
+                var memberRelids = setcore.getChildrenRelids(setNode);
+                for(var j=0;j<memberRelids.length;j++){
+                    datas = datas.concat(innerCore.getDataForSingleHash(setcore.getChild(setNode,memberRelids[j])));
+                }
+            }
+
+            return datas;
         };
 
         return setcore;

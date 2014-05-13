@@ -260,6 +260,28 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
 			return SHA1(CANON.stringify(data));
 		}
 
+        function getDataForSingleHash(node) {
+            ASSERT(isValidNode(node));
+
+            var data = {
+                attributes: coretree.getProperty(node, ATTRIBUTES),
+                registry: coretree.getProperty(node, REGISTRY),
+                children: coretree.getKeys(node)
+            };
+            var prefix = "";
+
+            while (node) {
+                var overlays = coretree.getChild(node, OVERLAYS);
+                var rels = coretree.getProperty(overlays, prefix);
+                data[prefix] = rels;
+
+                prefix = "/" + coretree.getRelid(node) + prefix;
+                node = coretree.getParent(node);
+            }
+
+            return CANON.stringify(data);
+        }
+
 		function deleteNode(node) {
 			ASSERT(isValidNode(node));
 
@@ -800,6 +822,7 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
 		corerel.loadCollection = loadCollection;
 		
 		corerel.getSingleNodeHash = getSingleNodeHash;
+        corerel.getDataForSingleHash = getDataForSingleHash;
 		
 		corerel.getCoreTree = function() {
 			return coretree;
