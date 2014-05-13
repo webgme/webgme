@@ -686,7 +686,7 @@ define([
                 return path;
             }
 
-            function loadChildrenPattern(core,nodesSoFar,node,level,callback){
+            function _loadChildrenPattern(core,nodesSoFar,node,level,callback){
                 var path = core.getPath(node);
                 _metaNodes[path] = node;
                 if(!nodesSoFar[path]){
@@ -717,6 +717,55 @@ define([
                     }
                 } else {
                     callback(null);
+                }
+            }
+            //partially optimized
+            function loadChildrenPattern(core,nodesSoFar,node,level,callback){
+                var path = core.getPath(node),
+                    childrenPaths = core.getChildrenPaths(node),
+                    childrenRelids = core.getChildrenRelids(node),
+                    missing = childrenPaths.length,
+                    error = null,
+                    i;
+                _metaNodes[path] = node;
+                if(!nodesSoFar[path]){
+                    //nodesSoFar[path] = {node:node,hash:core.getSingleNodeHash(node),incomplete:true,basic:true};
+                    nodesSoFar[path] = {node:node,incomplete:true,basic:true};
+                    _SHACalculator.calculateHash(path,core.getDataForSingleHash(node));
+                }
+                if(level>0){
+                    if(missing>0){
+                        for(i=0;i<childrenPaths.length;i++){
+                            if(nodesSoFar[childrenPaths[i]]){
+                                loadChildrenPattern(core,nodesSoFar,nodesSoFar[childrenPaths[i]].node,level-1,function(err){
+                                    error = error || err;
+                                    if(--missing === 0){
+                                        callback(error);
+                                    }
+                                });
+                            } else {
+                                core.loadChild(node,childrenRelids[i],function(err,child){
+                                    if(err){
+                                        error = error || err;
+                                        if( --missing === 0){
+                                            callback(error);
+                                        }
+                                    } else {
+                                        loadChildrenPattern(core,nodesSoFar,child,level-1,function(err){
+                                            error = error || err;
+                                            if(--missing === 0){
+                                                callback(error);
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        }
+                    } else {
+                        callback(error);
+                    }
+                } else {
+                    callback(error);
                 }
             }
             function loadPattern(core,id,pattern,nodesSoFar,callback){
