@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon" ], function (ASSERT, CoreTree, SHA1, TASYNC, CANON) {
+define([ "util/assert", "core/coretree", "util/zssha1", "core/tasync", "util/canon" ], function (ASSERT, CoreTree, SHA1, TASYNC, CANON) {
 	"use strict";
 
 	// ----------------- RELID -----------------
@@ -13,6 +13,8 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
 	var REGISTRY = "reg";
 	var OVERLAYS = "ovr";
 	var COLLSUFFIX = "-inv";
+
+    var zsSHA = new SHA1();
 
 	function isPointerName(name) {
 		ASSERT(typeof name === "string");
@@ -257,7 +259,7 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
 				node = coretree.getParent(node);
 			}
 
-			return SHA1(CANON.stringify(data));
+			return zsSHA.getHash(CANON.stringify(data));
 		}
 
         function getDataForSingleHash(node) {

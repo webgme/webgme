@@ -4,13 +4,14 @@
  * Author: Miklos Maroti
  */
 
-define([ "util/assert", "util/sha1", "core/future", "core/tasync", 'util/canon' ], function (ASSERT, SHA1, FUTURE, TASYNC, CANON) {
+define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon' ], function (ASSERT, SHA1, FUTURE, TASYNC, CANON) {
 	"use strict";
 
 	var HASH_REGEXP = new RegExp("#[0-9a-f]{40}");
 	var isValidHash = function (key) {
 		return typeof key === "string" && key.length === 41 && HASH_REGEXP.test(key);
 	};
+    var zsSHA = new SHA1();
 
 	var MAX_RELID = Math.pow(2, 31);
 	var createRelid = function (data) {
@@ -707,7 +708,7 @@ define([ "util/assert", "util/sha1", "core/future", "core/tasync", 'util/canon' 
 				ASSERT(hash === "" || typeof hash === "undefined");
 
 				if (hash === "") {
-					hash = "#" + SHA1(CANON.stringify(data));
+					hash = "#" + zsSHA.getHash(CANON.stringify(data));
 					data[ID_NAME] = hash;
 
 					done = FUTURE.join(done, storage.insertObject(data));

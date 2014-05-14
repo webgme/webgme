@@ -73,7 +73,6 @@ define([
                 _offline = false,
                 _networkWatcher = null,
                 _TOKEN = null,
-                _singleNodeHash = 0;
                 META = new BaseMeta(),
                 _SHACalculator = new ParallelSHA1();
 
@@ -629,8 +628,6 @@ define([
             }
 
             function userEvents(userId,modifiedNodes){
-                //console.log(new Date().getTime(),'kecso','0010',userId);
-                console.log('kecso',modifiedNodes);
                 var newPaths = {};
                 var startErrorLevel = _loadError;
                 for(var i in _users[userId].PATTERNS){
@@ -664,7 +661,6 @@ define([
 
 
                 if(events.length>0){
-                    //console.log(new Date().getTime(),'kecso','0011',events.length);
                     if(_loadError > startErrorLevel){
                         // TODO events.push({etype:'incomplete',eid:null});
                     } else {
@@ -690,7 +686,6 @@ define([
                 var path = core.getPath(node);
                 _metaNodes[path] = node;
                 if(!nodesSoFar[path]){
-                    //nodesSoFar[path] = {node:node,hash:core.getSingleNodeHash(node),incomplete:true,basic:true};
                     nodesSoFar[path] = {node:node,incomplete:true,basic:true};
                     _SHACalculator.calculateHash(path,core.getDataForSingleHash(node));
                 }
@@ -729,7 +724,6 @@ define([
                     i;
                 _metaNodes[path] = node;
                 if(!nodesSoFar[path]){
-                    //nodesSoFar[path] = {node:node,hash:core.getSingleNodeHash(node),incomplete:true,basic:true};
                     nodesSoFar[path] = {node:node,incomplete:true,basic:true};
                     _SHACalculator.calculateHash(path,core.getDataForSingleHash(node));
                 }
@@ -794,7 +788,6 @@ define([
                             var path = core.getPath(node);
                             _metaNodes[path] = node;
                             if(!nodesSoFar[path]){
-                                //nodesSoFar[path] = {node:node,hash:core.getSingleNodeHash(node),incomplete:false,basic:true};
                                 nodesSoFar[path] = {node:node,incomplete:false,basic:true};
                                 _SHACalculator.calculateHash(path,core.getDataForSingleHash(node));
                             }
@@ -807,15 +800,12 @@ define([
                 }
             }
             function loadRoot(newRootHash,callback){
-                //console.log(new Date().getTime(),'kecso','0001',newRootHash);
                 _loadNodes = {};
                 _loadError = 0;
                 _core.loadRoot(newRootHash,function(err,root){
-                    //console.log(new Date().getTime(),'kecso','0002',err);
                     if(!err){
                         var missing = 0,
                             error = null;
-                        //_loadNodes[_core.getPath(root)] = {node:root,hash:_core.getSingleNodeHash(root),incomplete:true,basic:true};
                         _loadNodes[_core.getPath(root)] = {node:root,incomplete:true,basic:true};
                         _SHACalculator.calculateHash(_core.getPath(root),_core.getDataForSingleHash(root));
                         _metaNodes[_core.getPath(root)] = root;
@@ -831,25 +821,21 @@ define([
                                     loadPattern(_core,j,_users[i].PATTERNS[j],_loadNodes,function(err){
                                         error = error || err;
                                         if(--missing === 0){
-                                            //console.log(new Date().getTime(),'kecso','0003',error);
                                             callback(error);
                                         }
                                     });
                                 }
                             }
                         } else {
-                            //console.log(new Date().getTime(),'kecso','0004');
                             callback(error);
                         }
                     } else {
-                        //console.log(new Date().getTime(),'kecso','0005');
                         callback(err);
                     }
                 });
             }
             //this is just a first brute implementation it needs serious optimization!!!
             function loading(newRootHash,callback){
-                //console.log(new Date().getTime(),'kecso','0006',newRootHash);
                 callback = callback || function(){};
                 var incomplete = false;
                 var modifiedPaths = {};
@@ -858,7 +844,6 @@ define([
                     fillHashes(_loadNodes,_finalEvents);
                 };
                 var _finalEvents = function(){
-                    //console.log(new Date().getTime(),'kecso','0007');
                     if(_loadError > 0){
                         //we assume that our immediate load was only partial
                         modifiedPaths = getModifiedNodes(_loadNodes);
@@ -1788,7 +1773,6 @@ define([
                 delete _users[guid];
             }
             function __updateTerritoryAllDone(guid, patterns, error) {
-                //console.log(new Date().getTime(),'kecso','0008',guid);
                 if(_users[guid]){
                     _users[guid].PATTERNS = JSON.parse(JSON.stringify(patterns));
                     if(!error){
@@ -1803,7 +1787,6 @@ define([
                 });
             }
             function updateTerritory(guid, patterns) {
-                //console.log(new Date().getTime(),'kecso','0009',guid);
                 if(_project){
                     if(_nodes[ROOT_PATH]){
                         //TODO: this has to be optimized

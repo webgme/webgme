@@ -4,8 +4,10 @@
  * Author: Tamas Kecskes
  */
 
-define([ "util/assert", "util/sha1", "util/canon" ], function (ASSERT,SHA1,CANON) {
+define([ "util/assert", "util/zssha1", "util/canon" ], function (ASSERT,SHA1,CANON) {
     "use strict";
+
+    var zsSHA = new SHA1();
 
     function Database (_innerDb, options) {
         ASSERT(typeof options === "object" && typeof _innerDb === "object");
@@ -27,7 +29,7 @@ define([ "util/assert", "util/sha1", "util/canon" ], function (ASSERT,SHA1,CANON
                     project.insertObject = function(object, cb){
                         var inHash = object[project.ID_NAME];
                         object[project.ID_NAME] = "";
-                        var checkHash = "#" + SHA1(CANON.stringify(object));
+                        var checkHash = "#" + zsSHA.getHash(CANON.stringify(object));
                         object[project.ID_NAME] = inHash;
 
                         if(inHash !== checkHash){
