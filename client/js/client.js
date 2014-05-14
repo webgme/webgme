@@ -739,7 +739,7 @@ define([
                                 });
                             } else {
                                 core.loadChild(node,childrenRelids[i],function(err,child){
-                                    if(err){
+                                    if(err || child === null){
                                         error = error || err;
                                         if( --missing === 0){
                                             callback(error);
