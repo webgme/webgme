@@ -1,8 +1,10 @@
 "use strict";
 
-var DEBUG = false;
-var _webGME_jquery_ver = '2.1.0';
-var _webGME_jqueryui_ver = '1.10.4';
+var DEBUG = false,
+    _jqueryVersion = '2.1.0',
+    _jqueryUIVersion = '1.10.4',
+    _bootsrapVersion = '3.1.1';
+
 
 // configure require path and modules
 require.config({
@@ -14,8 +16,8 @@ require.config({
         "domReady":	'lib/require/domReady',
 
         //jQuery and stuff
-        "jquery": 'lib/jquery/jquery-' + _webGME_jquery_ver + ( DEBUG ? '.min' : '' ),
-        "jquery-ui": 'lib/jquery/jquery-ui-' + _webGME_jqueryui_ver + ( DEBUG ? '.min' : '' ),
+        "jquery": 'lib/jquery/jquery-' + _jqueryVersion + ( DEBUG ? '.min' : '' ),
+        "jquery-ui": 'lib/jquery/jquery-ui-' + _jqueryUIVersion + ( DEBUG ? '.min' : '' ),
         "jquery-ui-iPad": 'lib/jquery/jquery.ui.ipad',
         "jquery-WebGME": 'js/jquery.WebGME',
         "jquery-dataTables": 'lib/jquery/jquery.dataTables.min',
@@ -23,7 +25,7 @@ require.config({
         "jquery-spectrum": 'lib/jquery/jquery.spectrum',
 
         //necessary 3rd party modules
-        "bootstrap": 'lib/bootstrap/bootstrap.amd',
+        "bootstrap": 'lib/bootstrap/' + _bootsrapVersion + '/js/bootstrap.amd',
         "underscore": 'lib/underscore/underscore-min',
         "backbone": 'lib/backbone/backbone.min',
         "d3": 'lib/d3/d3.v3.min',
@@ -81,7 +83,8 @@ require(
         'clientUtil',
         'bin/getconfig'
     ],
-    function (domReady, jQuery, jQueryUi, jQueryUiiPad, jqueryWebGME, jqueryDataTables, bootstrap, underscore, backbone, webGME, util, CONFIG) {
+    function (domReady, jQuery, jQueryUi, jQueryUiiPad, jqueryWebGME, jqueryDataTables, bootstrap, underscore,
+              backbone, webGME, util, CONFIG) {
         domReady(function () {
             //#1 set debug info from config file
             if (CONFIG.hasOwnProperty('debug')) {
