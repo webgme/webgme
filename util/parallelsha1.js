@@ -7,30 +7,27 @@ define([],function(){
             _options.maxworker = 1;
         }
 
-        var _hashes = {},
+        var _hashes = {},//we will not clear it so it will always contain the latest results of all the nodes...
             _ongoingCalculations = 0,
-            _callback = null,
+            _callbacks = [],
             _error = null,
             _workers = [],
             _worker = 0,
             i;
 
-        function collectHashes(callback){
-            var hashes = _hashes,
-                error = _error;
-            //it also cleans the current results
-            _hashes = {};
-            _error = null;
-            _callback = null;
-            callback(error,hashes);
+        function collectHashes(){
+            var callbacks = _callbacks,
+                i;
+            _callbacks = [];
+            for(i=0;i<callbacks.length;i++){
+                callbacks[i](_error,_hashes);
+            }
         }
 
         function getHashes(callback){
-            if(_ongoingCalculations === 0){
-                collectHashes(callback);
-            } else {
-                //we will call the callback after the last result arrives
-                _callback = callback;
+            _callbacks.push(callback);
+            if(_ongoingCalculations === 0) {
+                collectHashes();
             }
         }
 
@@ -52,8 +49,8 @@ define([],function(){
             }
             _error = _error || event.data.error;
 
-            if(--_ongoingCalculations === 0 && _callback !== null){
-                collectHashes(_callback);
+            if(--_ongoingCalculations === 0 && _callbacks.length > 0){
+                collectHashes();
             }
         }
 
