@@ -53,16 +53,48 @@ function SHA1() {
         return i
     };
 }
+var hexMap = {
+    48:0,
+    49:1,
+    50:2,
+    51:3,
+    52:4,
+    53:5,
+    54:6,
+    55:7,
+    56:8,
+    57:9,
+    65:10,
+    66:11,
+    67:12,
+    68:13,
+    69:14,
+    70:15,
+    97:10,
+    98:11,
+    99:12,
+    100:13,
+    101:14,
+    102:15
+};
+var ssMap = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'];
+
 
 function xorHashes(a,b){
-    var outHash = "";
-    if(a.length === b.length){
-        for(var i=0;i< a.length;i++){
-            outHash += (parseInt(a.charAt(i),16) ^ parseInt(b.charAt(i),16)).toString(16);
+
+
+    var outHash = '';
+    if (a.length === b.length) {
+        for(var i = 0; i < a.length; i += 1) {
+            // 1. bitwise xor on every hex digit
+            // 2. single hex digit to string
+            outHash += ssMap[hexMap[a.charCodeAt(i)] ^ hexMap[b.charCodeAt(i)]];
         }
     }
+
     return outHash;
 }
+
 var zeroHash = "0000000000000000000000000000000000000000";
 var sha = new SHA1();
 function calculateHash(id,datas){
