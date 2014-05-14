@@ -13,7 +13,7 @@ define([],function(){
             _error = null,
             _workers = [],
             _worker = 0,
-            i,start;
+            i;
 
         function collectHashes(callback){
             var hashes = _hashes,
@@ -22,12 +22,10 @@ define([],function(){
             _hashes = {};
             _error = null;
             _callback = null;
-            console.log('waiting for result took ',new Date().getTime()-start);
             callback(error,hashes);
         }
 
         function getHashes(callback){
-            start = new Date().getTime();
             if(_ongoingCalculations === 0){
                 collectHashes(callback);
             } else {
