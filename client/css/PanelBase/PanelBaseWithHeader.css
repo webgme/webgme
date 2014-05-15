@@ -7,9 +7,8 @@
     top: 2px;
     left: 2px; }
   .panel-base-wh .panel-header {
-    height: 0px;
     background-color: #efefef;
-    border-bottom: 3px solid rgba(0, 0, 0, 0);
+    border-bottom: 3px solid transparent;
     /*overflow: visible;
     overflow-x: hidden;*/
     white-space: nowrap;
@@ -111,9 +110,8 @@
   background-color: whitesmoke; }
   .side-panel .panel-base-wh .panel-header {
     padding: 3px;
-    height: 15px;
     background-color: whitesmoke;
-    border-bottom: 3px solid rgba(0, 0, 0, 0); }
+    border-bottom: 3px solid transparent; }
     .side-panel .panel-base-wh .panel-header .ro-icon {
       position: relative;
       top: 0px;

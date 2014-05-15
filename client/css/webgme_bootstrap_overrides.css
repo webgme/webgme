@@ -83,10 +83,16 @@
     min-height: 26px;
 }
 
-.navbar-fixed-bottom .navbar-inner .iCheckBox  {
-    margin-top: 7px;
+.navbar-fixed-bottom .navbar-inner .iCheckBox {
+    margin-top: 4px;
     height: 16px;
 }
+
+.navbar-fixed-bottom .navbar-inner .btn-group {
+    margin-top: 3px;
+    height: 16px;
+}
+
 
 .navbar-fixed-bottom .navbar-inner .iCheckBox .sw  {
     height: 14px;
@@ -98,8 +104,7 @@
 }
 
 .navbar-text {
-    margin-top: 4px;
-    margin-bottom: 4px;
+    margin: 4px 0;
 }
 
 .navbar-fixed-bottom .navbar-text {
@@ -203,7 +208,6 @@ input[type="submit"].btn.btn-micro {
 
 /*** INPUT extension ***/
 input.input-mini {
-    height: 12px;
     line-height: 12px;
     font-size: 12px;
 }
