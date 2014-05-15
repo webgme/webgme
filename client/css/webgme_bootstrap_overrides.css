@@ -1,6 +1,6 @@
-/* WebGME's Twitter Bootstrap stylesheet extension */
+/* WebGME's Twitter Bootstrap stylesheet overrides */
 
-/*** ICON extension ***/
+/*** ICON overrides ***/
 .icon-white.inverse-on-hover:hover {
     background-image: url("../img/glyphicons-halflings.png");
 }
@@ -22,7 +22,7 @@
     transform: scaleX(-1);
 }
 
-/*** POPOVER extension ***/
+/*** POPOVER overrides ***/
 .popover {
     width: auto;
     max-width: 500px;
@@ -37,7 +37,7 @@
 }
 
 
-/*** MODAL extension ***/
+/*** MODAL overrides ***/
 /* DISABLE DROP-SHADOW because it slows down scrolling :(  - especially on tablet*/
 /* ENABLE user selection*/
 .modal {
@@ -53,7 +53,7 @@
 }
 
 
-/*** BUTTON extension ***/
+/*** BUTTON overrides ***/
 /* DISABLE DROP-SHADOW because it slows down scrolling :(  - especially on tablet*/
 .btn {
     -webkit-box-shadow: none;
@@ -62,7 +62,7 @@
 }
 
 
-/*** NAVBAR extension ***/
+/*** NAVBAR overrides ***/
 .navbar-fixed-top {
     height: 34px;
     min-height: 34px;
@@ -112,8 +112,13 @@
     margin-bottom: 1px;
 }
 
-/*** BTN-MICRO extension ***/
+/*** BTN-MICRO overrides ***/
 /*** micro size button ***/
+
+.navbar {
+    margin-bottom: 0;
+}
+
 .btn-micro {
     padding: 0 6px;
     font-size: 10.5px;
@@ -153,7 +158,7 @@ input[type="submit"].btn.btn-micro {
 }
 
 
-/*** DARK GRAY COLORED BUTTON extension ***/
+/*** DARK GRAY COLORED BUTTON overrides ***/
 .btn-gray.active
 {
     color: rgba(255, 255, 255, 0.75);
@@ -206,13 +211,13 @@ input[type="submit"].btn.btn-micro {
     border-bottom-color: #ffffff;
 }
 
-/*** INPUT extension ***/
+/*** INPUT overrides ***/
 input.input-mini {
     line-height: 12px;
     font-size: 12px;
 }
 
-/*** DROPDOWN-MENU extension **/
+/*** DROPDOWN-MENU overrides **/
 ul.dropdown-menu {
     max-height: 600px;
     overflow: auto;
