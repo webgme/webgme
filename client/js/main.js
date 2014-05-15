@@ -75,7 +75,10 @@ require.config({
         'jquery-WebGME': ['bootstrap'],
         'jquery-dataTables': ['jquery'],
         'jquery-dataTables-bootstrapped': ['jquery-dataTables'],
-        'js/WebGME': ['jquery-WebGME', 'css!/css/main.css'],
+        'js/WebGME': [
+            'jquery-WebGME',
+            'css!/css/main.css'
+        ],
         'jquery-csszoom': ['jquery-ui'],
         'jquery-spectrum': ['jquery'],
         'raphael_svg': ['raphael_core'],
