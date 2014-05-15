@@ -716,14 +716,15 @@ define(['logManager',
         // end of blob rules
 
         //client contents - js/html/css
-        //css classified as not secure content
-        __app.get(/^\/.*\.(css|ico)$/,function(req,res){
+        //stuff that considered not protected 
+        __app.get(/^\/.*\.(css|ico|ttf|woff)$/,function(req,res){
             res.sendfile(Path.join(__clientBaseDir,req.path),function(err){
                 if (err) {
                     res.send(404);
                 }
             });
         });
+
         __app.get(/^\/.*\.(js|html|gif|png|bmp|svg|json)$/,ensureAuthenticated,function(req,res){
             //package.json
             if(req.path === '/package.json') {
