@@ -9,11 +9,18 @@ var DEBUG = false,
 // configure require path and modules
 require.config({
     baseUrl: "/",
+
+    map: {
+         '*': {
+            'css': 'lib/require/require-css/css',
+            'text': 'lib/require/require-text/text'
+        }
+    },
+
+
     paths: {
-        //RequireJS plugins
-        "text":	'lib/require/text',
-        "css": 'lib/require/rcss',
-        "domReady":	'lib/require/domReady',
+
+        "domReady":	'lib/require/require-domready/domReady',
 
         //jQuery and stuff
         "jquery": 'lib/jquery/jquery-' + _jqueryVersion + ( DEBUG ? '.min' : '' ),
@@ -24,8 +31,10 @@ require.config({
         "jquery-dataTables-bootstrapped": 'lib/jquery/jquery.dataTables.bootstrapped',
         "jquery-spectrum": 'lib/jquery/jquery.spectrum',
 
-        //necessary 3rd party modules
-        "bootstrap": 'lib/bootstrap/' + _bootsrapVersion + '/js/bootstrap.amd',
+        //Bootsrap stuff
+        "bootstrap": 'lib/bootstrap/' + _bootsrapVersion + '/js/bootstrap' + ( DEBUG ? '.min' : '' ),
+
+        //Other modules
         "underscore": 'lib/underscore/underscore-min',
         "backbone": 'lib/backbone/backbone.min',
         "d3": 'lib/d3/d3.v3.min',
@@ -54,13 +63,19 @@ require.config({
     shim: {
         'jquery-ui': ['jquery'],
         'jquery-ui-iPad': ['jquery','jquery-ui'],
-        'bootstrap': ['jquery'],
+
+        'bootstrap': [
+            'jquery',
+            'css!lib/bootstrap/' + _bootsrapVersion + '/css/bootstrap.min.css',
+            'css!lib/bootstrap/' + _bootsrapVersion + '/css/bootstrap-theme.min.css'
+        ],
+
         'backbone': ['underscore'],
         'clientUtil': ['jquery'],
         'jquery-WebGME': ['bootstrap'],
         'jquery-dataTables': ['jquery'],
         'jquery-dataTables-bootstrapped': ['jquery-dataTables'],
-        'WebGME': ['jquery-WebGME'],
+        'js/WebGME': ['jquery-WebGME', 'css!/css/main.css'],
         'jquery-csszoom': ['jquery-ui'],
         'jquery-spectrum': ['jquery'],
         'raphael_svg': ['raphael_core'],
