@@ -1,4 +1,4 @@
-@import url("bootstrap_webgme_ext.css");
+@import url("webgme_bootstrap_overrides.css");
 @import url("jquery/jquery-ui-1.10.4.css");
 @import url("jquery/jquery.layout.css");
 @import url("jquery/jquery.layout.webgme.css");
@@ -114,8 +114,8 @@ div.toolbar-container {
     position: relative;
     /*overflow: hidden;*/
     overflow-x: visible;
-    top: 41px;
-    height: 27px;
+    top: 35px;
+    height: 34px;
     background-color: #F5F5F5;
 }
 

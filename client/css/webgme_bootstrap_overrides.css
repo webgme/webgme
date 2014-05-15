@@ -64,8 +64,8 @@
 
 /*** NAVBAR extension ***/
 .navbar-fixed-top {
-    height: 41px;
-    min-height: 41px;
+    height: 34px;
+    min-height: 34px;
 }
 
 .navbar-fixed-top .navbar-inner {
@@ -97,6 +97,15 @@
     line-height: 16px;
 }
 
+.navbar-text {
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+.navbar-fixed-bottom .navbar-text {
+    margin-top: 1px;
+    margin-bottom: 1px;
+}
 
 /*** BTN-MICRO extension ***/
 /*** micro size button ***/

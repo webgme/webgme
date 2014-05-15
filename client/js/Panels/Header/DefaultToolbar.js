@@ -39,7 +39,7 @@ define(['clientUtil',
         //#1: Projects
         if (projectsButtonDisabledForLayouts.indexOf(layoutToLoad) === -1) {
             toolbar.addButton({ "title": "Projects...",
-                "icon": "icon-folder-open",
+                "icon": "glyphicon glyphicon-folder-open",
                 "clickFn": function (/*data*/) {
                     var pd = new ProjectsDialog(_client);
                     pd.show();
@@ -48,14 +48,14 @@ define(['clientUtil',
 
         //#2: Project repository...
         toolbar.addButton({ "title": "Project repository...",
-            "icon": "icon-road",
+            "icon": "glyphicon glyphicon-time",
             "clickFn": function (/*data*/) {
                 var prd = new ProjectRepositoryDialog(_client);
                 prd.show();
             } });
 
         toolbar.addButton({ "title": "Commit...",
-            "icon": "icon-share-alt",
+            "icon": "glyphicon glyphicon-tag",
             "clickFn": function (/*data*/) {
                 var cd = new CommitDialog(_client);
                 cd.show();
@@ -66,7 +66,7 @@ define(['clientUtil',
         //EXPORT & IMPORT
 
         toolbar.addButton({ "title": "Export project...",
-            "icon": "icon-share",
+            "icon": "glyphicon glyphicon-export",
             "clickFn": function (/*data*/) {
                 ExportManager.export(CONSTANTS.PROJECT_ROOT_ID);
             } });
@@ -75,13 +75,13 @@ define(['clientUtil',
 
         //META ASPECT helper parts
         toolbar.addButton({ "title": "Display META entries...",
-            "icon": "icon-barcode",
+            "icon": "glyphicon glyphicon-barcode",
             "clickFn": function (/*data*/) {
                 alert('METAAspectTypes: \n' + JSON.stringify(METAAspectHelper.getMETAAspectTypesSorted(), undefined, 2));
             }});
 
         toolbar.addButton({ "title": "Download Domain's META javascript...",
-            "icon": "icon-download-alt",
+            "icon": "glyphicon glyphicon-download-alt",
             "clickFn": function (/*data*/) {
                 var meta = METAAspectHelper.generateMETAAspectJavaScript();
 
@@ -120,15 +120,15 @@ define(['clientUtil',
         });
 
         radioButtonGroup.addButton({ "title": "Radio button 1",
-            "icon": "icon-align-left",
+            "icon": "glyphicon glyphicon-align-left",
             "data": {'type': '1'}});
 
         radioButtonGroup.addButton({ "title": "Radio button 2",
-            "icon": "icon-align-center",
+            "icon": "glyphicon glyphicon-align-center",
             "data": {'type': '2'} });
 
         radioButtonGroup.addButton({ "title": "Radio button 3",
-            "icon": "icon-align-right",
+            "icon": "glyphicon glyphicon-align-right",
             "data": {'type': '3'} });
 
         var btnToggle1 = toolbar.addToggleButton({ "title": "Toggle button",
