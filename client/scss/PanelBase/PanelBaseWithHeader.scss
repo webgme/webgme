@@ -44,7 +44,6 @@ $title-font-size: 14px;
 
   .panel-header {
     //padding: 5px;
-    height: $panel-header-height - $panel-border-bottom-width;
     background-color: $panel-header-background-color;
     border-bottom: $panel-border-bottom-width solid rgba(0, 0, 0, 0);
     /*overflow: visible;
@@ -203,7 +202,6 @@ $title-font-size: 14px;
 
     .panel-header {
       padding: 3px;
-      height: $side-panel-header-height - $panel-border-bottom-width;
       background-color: $sidepane-panel-header-background-color;
       border-bottom: $panel-border-bottom-width solid rgba(0, 0, 0, 0);
 
