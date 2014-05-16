@@ -9,11 +9,16 @@ define(['logManager',
     'clientUtil',
     'loaderCircles',
     './ProjectRepositoryWidgetControl',
+    'moment',
     'raphaeljs',
-    'css!./styles/ProjectRepositoryWidget.css'], function (logManager,
-                                                        util,
-                                                        LoaderCircles,
-                                                        ProjectRepositoryWidgetControl) {
+    'css!./styles/ProjectRepositoryWidget.css'],
+        function (
+            logManager,
+            util,
+            LoaderCircles,
+            ProjectRepositoryWidgetControl,
+            moment
+    ) {
 
     "use strict";
 
@@ -405,7 +410,9 @@ define(['logManager',
         }
     };
 
-    ProjectRepositoryWidget.prototype._branchLabelDOMBase = $('<span class="label"><i data-branch="" class="icon-remove icon-white inverse-on-hover" title="Delete branch"></i></span>');
+    ProjectRepositoryWidget.prototype._branchLabelDOMBase = $(
+        '<span class="label"><i data-branch="" class="glyphicon glyphicon-remove icon-white" title="Delete branch"></i></span>'
+    );
 
     ProjectRepositoryWidget.prototype._applyBranchHeaderLabel = function (commit, branchName, sync) {
         var label = this._branchLabelDOMBase.clone(),
@@ -469,7 +476,8 @@ define(['logManager',
         var itemObj,
             tr,
             btn,
-            firstRow = this._tBody.children().length === 0;
+            firstRow = this._tBody.children().length === 0,
+            when;
 
         itemObj =  $('<div/>', {
             "class" : COMMIT_CLASS,
@@ -498,10 +506,19 @@ define(['logManager',
             $(tr[0].cells[0]).append(this._graphPlaceHolder);
         }
 
+        when = new Date(parseInt(params.timestamp, 10));
+
         $(tr[0].cells[this._tableCellCommitIDIndex]).append(params.id);
         $(tr[0].cells[this._tableCellMessageIndex]).find('div.' + MESSAGE_DIV_CLASS).text(params.message);
         $(tr[0].cells[this._tableCellUserIndex]).append(params.user || '');
-        $(tr[0].cells[this._tableCellTimeStampIndex]).append( util.formattedDate(new Date(parseInt(params.timestamp, 10)), 'elapsed'));
+        $(tr[0].cells[this._tableCellTimeStampIndex]).append(
+            //util.formattedDate(new Date(parseInt(params.timestamp, 10)), 'elapsed')
+            moment(when).fromNow()
+        );
+
+        $(tr[0].cells[this._tableCellTimeStampIndex]).attr(
+            'title', moment( when ).local().format("dddd, MMMM Do YYYY, h:mm:ss a")
+        );
 
         //generate 'Create branch from here' button
         btn = this._createBranhcBtnDOMBase.clone();

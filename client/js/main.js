@@ -58,7 +58,9 @@ require.config({
         "codemirror": 'lib/codemirror/codemirror.amd',
         "jquery-csszoom": 'lib/jquery/jquery.csszoom',
 
-        "jszip": 'lib/jszip/jszip'
+        "jszip": 'lib/jszip/jszip',
+
+        "moment": 'lib/moment/moment.min'
     },
     shim: {
         'jquery-ui': ['jquery'],
