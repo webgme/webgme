@@ -409,7 +409,9 @@ define(['logManager',
         __logger.info("creating login routing rules for the static server");
         __app.get('/',storeQueryString,checkVF,ensureAuthenticated,function(req,res){
             res.sendfile(__clientBaseDir+'/index.html',{user:req.user},function(err){
-                res.send(404);
+                if (err) {
+                    res.send(404);
+                }
             });
         });
         __app.get('/logout', function(req, res){
@@ -423,7 +425,9 @@ define(['logManager',
         __app.get('/login'/*,storeQueryString*/,function(req,res){
             res.location('/login');
             res.sendfile(__clientBaseDir+'/login.html',{},function(err){
-                res.send(404);
+                if (err) {
+                    res.send(404);
+                }
             });
         });
         __app.post('/login'/*,storeQueryString*/,__gmeAuth.authenticate,function(req,res){
@@ -508,7 +512,9 @@ define(['logManager',
         __app.get(/^\/pluginoutput\/.*/,ensureAuthenticated,function(req,res){
             var filepath = req.path.replace('/pluginoutput',CONFIG.intoutdir);
             res.sendfile(filepath,function(err){
-                res.send(404);
+                if (err) {
+                    res.send(404);
+                }
             });
         });
 
@@ -535,14 +541,18 @@ define(['logManager',
         //javascripts - core and transportation related files
         __app.get(/^\/(common|util|storage|core|config|auth|bin|coreclient|blob)\/.*\.js$/,ensureAuthenticated,function(req,res){
             res.sendfile(Path.join(__baseDir,req.path),function(err){
-                res.send(404);
+                if (err) {
+                    res.send(404);
+                }
             });
         });
 
         //TODO remove this part as this is only temporary!!!
         __app.get('/docs/*',function(req,res){
             res.sendfile(Path.join(__baseDir,req.path),function(err){
-                res.send(404);
+                if (err) {
+                    res.send(404);
+                }
             });
         });
 
@@ -706,21 +716,28 @@ define(['logManager',
         // end of blob rules
 
         //client contents - js/html/css
-        //css classified as not secure content
-        __app.get(/^\/.*\.(css|ico)$/,function(req,res){
+        //stuff that considered not protected 
+        __app.get(/^\/.*\.(css|ico|ttf|woff)$/,function(req,res){
             res.sendfile(Path.join(__clientBaseDir,req.path),function(err){
-                res.send(404);
+                if (err) {
+                    res.send(404);
+                }
             });
         });
+
         __app.get(/^\/.*\.(js|html|gif|png|bmp|svg|json)$/,ensureAuthenticated,function(req,res){
             //package.json
             if(req.path === '/package.json') {
                 res.sendfile(Path.join(__baseDir,req.path),function(err){
-                    res.send(404);
+                    if (err) {
+                        res.send(404);
+                    }
                 });
             } else {
                 res.sendfile(Path.join(__clientBaseDir,req.path),function(err){
-                    res.send(404);
+                    if (err) {
+                        res.send(404);
+                    }
                 });
             }
         });
