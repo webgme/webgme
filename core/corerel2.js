@@ -269,6 +269,7 @@ define([ "util/assert", "core/coretree", "util/zssha1", "core/tasync", "util/can
                 attributes: coretree.getProperty(node, ATTRIBUTES),
                 registry: coretree.getProperty(node, REGISTRY),
                 children: coretree.getKeys(node)
+                //own: node.data['_id']
             };
             var prefix = "";
 
@@ -281,7 +282,8 @@ define([ "util/assert", "core/coretree", "util/zssha1", "core/tasync", "util/can
                 node = coretree.getParent(node);
             }
 
-            return CANON.stringify(data);
+            data = JSON.stringify(data);
+            return data;
         }
 
 		function deleteNode(node) {

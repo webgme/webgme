@@ -569,7 +569,18 @@ define([
             }
 
             //loading functions
+            //var stringHash = 0;
+            function getStringHash(node){
+                var datas = _core.getDataForSingleHash(node),
+                    i,hash="";
+                for(i=0;i<datas.length;i++){
+                    hash+=datas[i];
+                }
+                return hash;
+                //return ++stringHash;
+            }
             function fillHashes(nodes,callback){
+                var start = new Date().getTime();
                 _SHACalculator.getHashes(function(error,hashes){
                     if(error){
                         callback(error);
@@ -580,6 +591,7 @@ define([
                                 nodes[keys[i]].hash = hashes[keys[i]];
                             }
                         }
+                        console.log('*PERF* waited for hash calculation',new Date().getTime()-start);
                         callback(null);
                     }
                 });
@@ -686,8 +698,8 @@ define([
                 var path = core.getPath(node);
                 _metaNodes[path] = node;
                 if(!nodesSoFar[path]){
-                    nodesSoFar[path] = {node:node,incomplete:true,basic:true};
-                    _SHACalculator.calculateHash(path,core.getDataForSingleHash(node));
+                    nodesSoFar[path] = {node:node,incomplete:true,basic:true,hash:getStringHash(node)};
+                    //_SHACalculator.calculateHash(path,core.getDataForSingleHash(node));
                 }
                 if(level>0){
                     if(core.getChildrenRelids(nodesSoFar[path].node).length>0){
@@ -724,8 +736,8 @@ define([
                     i;
                 _metaNodes[path] = node;
                 if(!nodesSoFar[path]){
-                    nodesSoFar[path] = {node:node,incomplete:true,basic:true};
-                    _SHACalculator.calculateHash(path,core.getDataForSingleHash(node));
+                    nodesSoFar[path] = {node:node,incomplete:true,basic:true,hash:getStringHash(node)};
+                    //_SHACalculator.calculateHash(path,core.getDataForSingleHash(node));
                 }
                 if(level>0){
                     if(missing>0){
@@ -788,8 +800,8 @@ define([
                             var path = core.getPath(node);
                             _metaNodes[path] = node;
                             if(!nodesSoFar[path]){
-                                nodesSoFar[path] = {node:node,incomplete:false,basic:true};
-                                _SHACalculator.calculateHash(path,core.getDataForSingleHash(node));
+                                nodesSoFar[path] = {node:node,incomplete:false,basic:true,hash:getStringHash(node)};
+                                //_SHACalculator.calculateHash(path,core.getDataForSingleHash(node));
                             }
                             base = node;
                             baseLoaded();
@@ -806,8 +818,8 @@ define([
                     if(!err){
                         var missing = 0,
                             error = null;
-                        _loadNodes[_core.getPath(root)] = {node:root,incomplete:true,basic:true};
-                        _SHACalculator.calculateHash(_core.getPath(root),_core.getDataForSingleHash(root));
+                        _loadNodes[_core.getPath(root)] = {node:root,incomplete:true,basic:true,hash:getStringHash(root)};
+                        //_SHACalculator.calculateHash(_core.getPath(root),_core.getDataForSingleHash(root));
                         _metaNodes[_core.getPath(root)] = root;
 
                         for(var i in _users){
@@ -836,7 +848,8 @@ define([
             }
             //this is just a first brute implementation it needs serious optimization!!!
             function loading(newRootHash,callback){
-                callback = callback || function(){};
+                var time = new Date().getTime();
+                callback = callback || function(){console.log('*PERF* loading took',new Date().getTime()-time)};
                 var incomplete = false;
                 var modifiedPaths = {};
                 var missing = 2;
@@ -844,6 +857,7 @@ define([
                     fillHashes(_loadNodes,_finalEvents);
                 };
                 var _finalEvents = function(){
+                    console.log('*PERF* last eventing round',new Date().getTime()-time);
                     if(_loadError > 0){
                         //we assume that our immediate load was only partial
                         modifiedPaths = getModifiedNodes(_loadNodes);
@@ -885,16 +899,18 @@ define([
                     counter++;
                 }
                 hasEnoughNodes = limit <= counter;
-                if(/*hasEnoughNodes*/false){
+                if(hasEnoughNodes){
                     modifiedPaths = getModifiedNodes(_loadNodes);
                     _nodes = {};
                     for(i in _loadNodes){
                         _nodes[i] = _loadNodes[i];
                     }
 
+                    console.log('*PERF* first eventing round start',new Date().getTime()-time);
                     for(i in _users){
                         userEvents(i,modifiedPaths);
                     }
+                    console.log('*PERF* first eventing round end',new Date().getTime()-time);
 
                     if(--missing === 0){
                         finalEvents();
@@ -927,7 +943,7 @@ define([
                         });
                         loading(newRootHash);
                     } else {
-                        _core.persist(_nodes[ROOT_PATH].node,function(err){});
+                       // _core.persist(_nodes[ROOT_PATH].node,function(err){});
                     }
                 } else {
                     _msg="";
