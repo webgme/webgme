@@ -1,6 +1,5 @@
-/* WebGME's Twitter Bootstrap stylesheet overrides */
+/* Icons */
 
-/*** ICON overrides ***/
 .icon-white.inverse-on-hover:hover {
     background-image: url("../img/glyphicons-halflings.png");
 }
@@ -22,7 +21,8 @@
     transform: scaleX(-1);
 }
 
-/*** POPOVER overrides ***/
+/* Popower */
+
 .popover {
     width: auto;
     max-width: 500px;
@@ -37,10 +37,9 @@
 }
 
 
-/*** MODAL overrides ***/
-/* DISABLE DROP-SHADOW because it slows down scrolling :(  - especially on tablet*/
-/* ENABLE user selection*/
-.modal {
+/* Modals */
+
+.modal-content {
     -webkit-box-shadow: none;
     -moz-box-shadow: none;
     box-shadow: none;
@@ -52,71 +51,42 @@
     -ms-user-select:element;
 }
 
+.modal-body {
+    overflow: auto;
+    max-height: 200px;
+}
 
-/*** BUTTON overrides ***/
-/* DISABLE DROP-SHADOW because it slows down scrolling :(  - especially on tablet*/
+@media(min-height:700px) {
+
+    .modal-body {
+        max-height: 400px;
+    }
+
+}
+
+
+@media(min-height:850px) {
+
+    .modal-body {
+        max-height: 600px;
+    }
+
+}
+
+@media(min-height:1200px) {
+
+    .modal-body {
+        max-height: 900px;
+    }
+
+}
+
+/* Buttons */
+
 .btn {
     -webkit-box-shadow: none;
     -moz-box-shadow: none;
     box-shadow: none;
-}
-
-
-/*** NAVBAR overrides ***/
-.navbar-fixed-top {
-    height: 34px;
-    min-height: 34px;
-}
-
-.navbar-fixed-top .navbar-inner {
-    height: 40px;
-    min-height: 40px;
-}
-
-.navbar-fixed-bottom {
-    height: 27px;
-    min-height: 27px;
-}
-
-.navbar-fixed-bottom .navbar-inner {
-    height: 26px;
-    min-height: 26px;
-}
-
-.navbar-fixed-bottom .navbar-inner .iCheckBox {
-    margin-top: 4px;
-    height: 16px;
-}
-
-.navbar-fixed-bottom .navbar-inner .btn-group {
-    margin-top: 3px;
-    height: 16px;
-}
-
-
-.navbar-fixed-bottom .navbar-inner .iCheckBox .sw  {
-    height: 14px;
-}
-
-.navbar-fixed-bottom .navbar-inner .iCheckBox .txt  {
-    height: 16px;
-    line-height: 16px;
-}
-
-.navbar-text {
-    margin: 4px 0;
-}
-
-.navbar-fixed-bottom .navbar-text {
-    margin-top: 1px;
-    margin-bottom: 1px;
-}
-
-/*** BTN-MICRO overrides ***/
-/*** micro size button ***/
-
-.navbar {
-    margin-bottom: 0;
 }
 
 .btn-micro {
@@ -157,8 +127,6 @@ input[type="submit"].btn.btn-micro {
     top: 0;
 }
 
-
-/*** DARK GRAY COLORED BUTTON overrides ***/
 .btn-gray.active
 {
     color: rgba(255, 255, 255, 0.75);
@@ -211,13 +179,71 @@ input[type="submit"].btn.btn-micro {
     border-bottom-color: #ffffff;
 }
 
-/*** INPUT overrides ***/
+/* Navbars */
+
+.navbar-fixed-top {
+    height: 34px;
+    min-height: 34px;
+}
+
+.navbar-fixed-top .navbar-inner {
+    height: 40px;
+    min-height: 40px;
+}
+
+.navbar-fixed-bottom {
+    height: 27px;
+    min-height: 27px;
+}
+
+.navbar-fixed-bottom .navbar-inner {
+    height: 26px;
+    min-height: 26px;
+}
+
+.navbar-fixed-bottom .navbar-inner .iCheckBox {
+    margin-top: 4px;
+    height: 16px;
+}
+
+.navbar-fixed-bottom .navbar-inner .btn-group {
+    margin-top: 3px;
+    height: 16px;
+}
+
+
+.navbar-fixed-bottom .navbar-inner .iCheckBox .sw  {
+    height: 14px;
+}
+
+.navbar-fixed-bottom .navbar-inner .iCheckBox .txt  {
+    height: 16px;
+    line-height: 16px;
+}
+
+.navbar-text {
+    margin: 4px 0;
+}
+
+.navbar-fixed-bottom .navbar-text {
+    margin-top: 1px;
+    margin-bottom: 1px;
+}
+
+
+.navbar {
+    margin-bottom: 0;
+}
+
+
+
+/* Forms */
+
 input.input-mini {
     line-height: 12px;
     font-size: 12px;
 }
 
-/*** DROPDOWN-MENU overrides **/
 ul.dropdown-menu {
     max-height: 600px;
     overflow: auto;
@@ -243,4 +269,5 @@ ul.dropdown-menu {
 }
 
 input.no-focus-collapse:not(:focus) {
-    width: 30px; }
+    width: 30px;
+}
