@@ -25,7 +25,7 @@ define(['loaderCircles',
 
         this._initDialog();
 
-        this._dialog.on('hidden', function () {
+        this._dialog.on('hide.bs.modal', function () {
             self._dialog.remove();
             self._dialog.empty();
             self._dialog = undefined;

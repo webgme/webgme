@@ -41,7 +41,7 @@ define(['logManager',
 
         this._dialog.modal('show');
 
-        this._dialog.on('hidden', function () {
+        this._dialog.on('hidden.bs.model', function () {
             self._loader.destroy();
             self._dialog.remove();
             self._dialog.empty();
