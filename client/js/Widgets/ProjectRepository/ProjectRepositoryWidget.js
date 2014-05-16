@@ -1,14 +1,21 @@
-"use strict";
+/*globals define, Raphael*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
+ */
 
 define(['logManager',
     'clientUtil',
     'loaderCircles',
     './ProjectRepositoryWidgetControl',
     'raphaeljs',
-    'css!/css/Widgets/ProjectRepository/ProjectRepositoryWidget'], function (logManager,
+    'css!./styles/ProjectRepositoryWidget.css'], function (logManager,
                                                         util,
                                                         LoaderCircles,
                                                         ProjectRepositoryWidgetControl) {
+
+    "use strict";
 
     var ProjectRepositoryWidget,
         MASTER_BRANCH_NAME = 'master',
