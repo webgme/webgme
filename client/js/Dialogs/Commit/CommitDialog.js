@@ -1,8 +1,19 @@
-"use strict";
+/*globals define*/
 
-define(['logManager',
-    'text!html/Dialogs/Commit/CommitDialog.html'], function (logManager,
-                                                           commitDialogTemplate) {
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
+ */
+
+define([
+    'logManager',
+    'text!./templates/CommitDialog.html',
+    'css!./styles/CommitDialog.css'
+], function (logManager,
+        commitDialogTemplate) {
+
+    "use strict";
+
 
     var CommitDialog;
 
