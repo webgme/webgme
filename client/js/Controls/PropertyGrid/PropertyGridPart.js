@@ -8,7 +8,7 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
         CSS_NAMESPACE = 'pgp',
         CLASS_CLOSED = 'closed',
         CLASS_CONTROLLER_ROW = 'cr',
-        RESET_BUTTON_BASE = $('<i class="icon-remove-circle btn-reset" title="Reset value"/>');
+        RESET_BUTTON_BASE = $('<i class="glyphicon glyphicon-remove-circle btn-reset" title="Reset value"/>');
 
     PropertyGridPart = function (params) {
         if (params.el) {

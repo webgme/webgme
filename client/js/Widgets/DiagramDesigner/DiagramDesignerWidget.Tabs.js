@@ -21,7 +21,7 @@ define(['js/Toolbar/ToolbarButton',
         SELECTED_ICON = 'icon-ok',
         DDL_SELECTED_TAB_ICON_BASE = $('<i class="' + SELECTED_ICON + '" />'),
         TAB_LI_BASE = $('<li class=""><a href="#" data-toggle="tab"><div class="tab-title"></div></a></li>'),
-        TAB_DELETE_ICON_BASE = $('<i class="icon-remove-circle"/>');
+        TAB_DELETE_ICON_BASE = $('<i class="glyphicon glyphicon-remove-circle"/>');
 
     DiagramDesignerWidgetTabs = function () {
     };

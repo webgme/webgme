@@ -110,7 +110,7 @@ define(['clientUtil',
 
         //DEMO controls
         var btnCommit1 = toolbar.addButton({ "title": "Commit1...",
-            "icon": "icon-share",
+            "icon": "glyphicon glyphicon-share",
             "clickFn": function () {
                 console.log('Commit1...');
             }});

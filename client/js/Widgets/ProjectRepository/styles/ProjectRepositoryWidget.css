@@ -42,11 +42,12 @@
     font-size: 12px;
     white-space: nowrap;
     vertical-align: middle; }
-    .project-repository-widget table th div.cMessage,
-    .project-repository-widget table td div.cMessage {
+    .project-repository-widget table th div.commit-message,
+    .project-repository-widget table td div.commit-message {
       overflow: hidden;
       text-overflow: ellipsis;
-      display: inline-block; }
+      display: inline-block;
+      max-width: 600px; }
     .project-repository-widget table th .branch-label,
     .project-repository-widget table td .branch-label {
       margin-right: 2px; }

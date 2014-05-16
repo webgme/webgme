@@ -71,10 +71,11 @@ $table-row-height: 25px; //equals Widgets/ProjectRepository/ProjectRepositoryWid
       white-space: nowrap;
       vertical-align: middle;
 
-      div.cMessage {
+      div.commit-message {
         overflow: hidden;
         text-overflow: ellipsis;
         display: inline-block;
+        max-width: 600px;
       }
 
       .branch-label {

@@ -24,7 +24,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
             this._div.append(this.__label);
 
 
-            this.__iconFollowPointer = $('<i/>', {class: 'icon-share'});
+            this.__iconFollowPointer = $('<i/>', {class: 'glyphicon glyphicon-share'});
             this.__iconFollowPointer.attr('title', 'Follow pointer');
             this._div.append(this.__iconFollowPointer);
 

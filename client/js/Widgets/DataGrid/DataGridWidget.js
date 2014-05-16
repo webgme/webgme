@@ -106,7 +106,7 @@ define(['logManager',
 
         //check if any action is enabled for the rows
         if (this._rowEdit === true) {
-            actionBtnColContent = '<i class="icon-edit pointer rowCommandBtn" data-action="' + ROW_COMMAND_EDIT + '" title="' + ROW_COMMAND_EDIT_TITLE + '"></i>';
+            actionBtnColContent = '<i class="glyphicon glyphicon-edit pointer rowCommandBtn" data-action="' + ROW_COMMAND_EDIT + '" title="' + ROW_COMMAND_EDIT_TITLE + '"></i>';
             this._actionButtonsInFirstColumn = true;
         }
 
@@ -114,7 +114,7 @@ define(['logManager',
             if (actionBtnColContent !== "") {
                 actionBtnColContent += " ";
             }
-            actionBtnColContent += '<i class="icon-trash pointer rowCommandBtn" data-action="' + ROW_COMMAND_DELETE  + '" title="' + ROW_COMMAND_DELETE_TITLE + '">';
+            actionBtnColContent += '<i class="glyphicon glyphicon-trash pointer rowCommandBtn" data-action="' + ROW_COMMAND_DELETE  + '" title="' + ROW_COMMAND_DELETE_TITLE + '">';
             this._actionButtonsInFirstColumn = true;
         }
 
@@ -616,7 +616,7 @@ i,
         this.onRowDelete(id, aData);
     };
 
-    DataGridWidget.prototype.$_editSaveCancel = $('<i class="icon-ok editSave"></i> <i class="icon-remove editCancel"></i>');
+    DataGridWidget.prototype.$_editSaveCancel = $('<i class="icon-ok editSave"></i> <i class="glyphicon glyphicon-remove editCancel"></i>');
 
     DataGridWidget.prototype._onRowEdit = function (rowIndex, id, aData) {
         var nRow = this._oTable.fnGetNodes(rowIndex),

@@ -66,8 +66,6 @@ define(['logManager',
                 //dW,
                 dH;
 
-            console.log('ehh');
-
             //make it almost full screen
             //dW = wW - 2 * WINDOW_PADDING;
             dH = wH - 2 * WINDOW_PADDING;

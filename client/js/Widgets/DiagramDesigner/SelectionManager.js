@@ -555,7 +555,7 @@ define(['logManager',
         "class" : "s-btn delete",
         "command" : "delete"
     });
-    DELETE_BUTTON_BASE.html('<i class="icon-remove"></i>');
+    DELETE_BUTTON_BASE.html('<i class="glyphicon glyphicon-remove"></i>');
 
     var CONTEXT_MENU_BUTTON_BASE = $('<div/>', {
         "class" : "s-btn contextmenu",
@@ -612,7 +612,7 @@ define(['logManager',
     var ROTATION_BUTTON_BASE = $('<div/>', {
         "class" : "s-btn rotate bottom"
     });
-    ROTATION_BUTTON_BASE.html('<i class="icon-repeat"><div class="popover right nowrap" style="top: -10px; left: 22px; display: none;"><div class="arrow"></div><div class="popover-content narrow"><div class="btn-group"><a class="btn btn-small" id="rotate-left" title="Rotate left"><i class="icon-repeat flip-vertical"></i></a><a class="btn  btn-small" id="rotate-right" title="Rotate right"><i class="icon-repeat"></i></a><a class="btn  btn-small" id="rotate-reset" title="Reset rotation"><i class="icon-remove"></i></a></div></div></div></i>');
+    ROTATION_BUTTON_BASE.html('<i class="icon-repeat"><div class="popover right nowrap" style="top: -10px; left: 22px; display: none;"><div class="arrow"></div><div class="popover-content narrow"><div class="btn-group"><a class="btn btn-small" id="rotate-left" title="Rotate left"><i class="icon-repeat flip-vertical"></i></a><a class="btn  btn-small" id="rotate-right" title="Rotate right"><i class="icon-repeat"></i></a><a class="btn  btn-small" id="rotate-reset" title="Reset rotation"><i class="glyphicon glyphicon-remove"></i></a></div></div></div></i>');
 
     var ROTATION_DEGREE_BASE = $('<div/>', {
         "class" : "rotation-deg"

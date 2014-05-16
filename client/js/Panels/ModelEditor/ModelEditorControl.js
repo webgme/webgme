@@ -1020,7 +1020,7 @@ define(['logManager',
         /************** REMOVE CONNECTION SEGMENTPOINTS BUTTON ****************/
         this.$btnConnectionRemoveSegmentPoints = toolBar.addButton(
             { "title": "Remove segment points",
-                "icon": "icon-remove-circle",
+                "icon": "glyphicon glyphicon-remove-circle",
                 "clickFn": function (/*data*/) {
                     self._removeConnectionSegmentPoints();
                 }

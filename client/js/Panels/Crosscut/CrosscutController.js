@@ -1008,7 +1008,7 @@ define(['logManager',
                 for (i = 0; i < validPointerTypes.length; i += 1) {
                     menuItems[ptrAction + validPointerTypes[i]] = {
                         "name": 'Create pointer \'' + validPointerTypes[i] + '\' from \'' + sourceObjName + '\' to \'' + targetObjName + '\'',
-                        "icon": 'icon-share',
+                        "icon": 'glyphicon glyphicon-share',
                         "action": ptrAction,
                         "type": validPointerTypes[i]
                     };

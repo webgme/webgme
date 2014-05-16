@@ -500,13 +500,13 @@ define(['logManager',
                     case DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE:
                         menuItems[i] = {
                             "name": "Create instance here",
-                            "icon": 'icon-share-alt'
+                            "icon": 'glyphicon glyphicon-share-alt'
                         };
                         break;
                     case DragHelper.DRAG_EFFECTS.DRAG_CREATE_POINTER:
                         menuItems[i] = {
                             "name": "Create pointer '" + possibleDropActions[i].pointer + "' of type '" + possibleDropActions[i].name + "'",
-                            "icon": 'icon-share'
+                            "icon": 'glyphicon glyphicon-share'
                         };
                         break;
                     default:
@@ -1087,7 +1087,7 @@ define(['logManager',
 
         menuItems[MENU_EXPORT] = {
             "name": 'Export selected...',
-            "icon": 'icon-share'
+            "icon": 'glyphicon glyphicon-share'
         };
         menuItems[MENU_EXINTCONF] = {
             "name": 'Export model context...',

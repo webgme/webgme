@@ -43,7 +43,7 @@ define(['logManager',
         BRANCH_LABEL_CLASS = 'branch-label',
         BTN_LOAD_COMMIT_CLASS = 'btnLoadCommit',
         COMMIT_IT = 'commitId',
-        MESSAGE_DIV_CLASS = 'cMessage';
+        MESSAGE_DIV_CLASS = 'commit-message';
 
     ProjectRepositoryWidget = function (container, client, params) {
         this._el = container;
@@ -159,19 +159,12 @@ define(['logManager',
 
     /******************* PRIVATE API *****************************/
 
-    ProjectRepositoryWidget.cMessageStyleStr = 'div.' + MESSAGE_DIV_CLASS + ' { max-width: __MW__px; }';
-
     ProjectRepositoryWidget.prototype._initializeUI = function () {
         var self = this;
 
         this._el.empty();
 
         this._el.addClass(REPOSITORY_LOG_VIEW_CLASS);
-
-        //initialize all containers
-        this._cMessageStyle = $('<style/>', {"type": "text/css"});
-        this._cMessageStyle.html(ProjectRepositoryWidget.cMessageStyleStr.replace('__MW__', '400'));
-        this._el.append(this._cMessageStyle);
 
         /*table layout*/
         this._table = $('<table/>', {"class": "table table-hover user-select-on"});
@@ -233,7 +226,7 @@ define(['logManager',
             self.onLoadCommit({"id": commitId});
         });
 
-        this._el.on("click.iconRemove", ".icon-remove", function (event) {
+        this._el.on("click.iconRemove", ".remove-branch-button", function (event) {
             var btn = $(this),
                 branch = btn.data("branch");
 
@@ -411,7 +404,7 @@ define(['logManager',
     };
 
     ProjectRepositoryWidget.prototype._branchLabelDOMBase = $(
-        '<span class="label"><i data-branch="" class="glyphicon glyphicon-remove icon-white" title="Delete branch"></i></span>'
+        '<span class="label"><i data-branch="" class="glyphicon glyphicon-remove icon-white remove-branch-button" title="Delete branch"></i></span>'
     );
 
     ProjectRepositoryWidget.prototype._applyBranchHeaderLabel = function (commit, branchName, sync) {
@@ -467,9 +460,15 @@ define(['logManager',
         this._branchListUpdated = true;
     };
 
-    ProjectRepositoryWidget.prototype._trDOMBase = $('<tr><td></td><td></td><td></td><td><div class="cMessage"></div></td><td></td><td></td></tr>');
-    ProjectRepositoryWidget.prototype._createBranhcBtnDOMBase = $('<a class="btn btn-mini btnCreateBranchFromCommit" href="#" title="Create new branch from here"><i class="icon-edit"></i></a>');
-    ProjectRepositoryWidget.prototype._loadCommitBtnDOMBase = $('<a class="btn btn-mini ' + BTN_LOAD_COMMIT_CLASS + '" href="#" title="Load this commit"><i class="icon-share"></i></a>');
+    ProjectRepositoryWidget.prototype._trDOMBase = $(
+        '<tr><td></td><td></td><td></td><td><div class="' + MESSAGE_DIV_CLASS + '"></div></td><td></td><td></td></tr>'
+    );
+    ProjectRepositoryWidget.prototype._createBranhcBtnDOMBase = $(
+        '<button class="btn btn-default btn-xs btnCreateBranchFromCommit" href="#" title="Create new branch from here"><i class="glyphicon glyphglyphicon glyphicon-edit"></i></button>'
+    );
+    ProjectRepositoryWidget.prototype._loadCommitBtnDOMBase = $('' +
+        '<button class="btn btn-default btn-xs ' + BTN_LOAD_COMMIT_CLASS + '" href="#" title="Load this commit"><i class="glyphicon glyphicon-share"></i></button>'
+    );
 
 
     ProjectRepositoryWidget.prototype._createItem = function (params) {
@@ -508,7 +507,9 @@ define(['logManager',
 
         when = new Date(parseInt(params.timestamp, 10));
 
-        $(tr[0].cells[this._tableCellCommitIDIndex]).append(params.id);
+        $(tr[0].cells[this._tableCellCommitIDIndex]).append( params.id.substr(0, 7));
+        $(tr[0].cells[this._tableCellCommitIDIndex]).attr( 'title', params.id);
+
         $(tr[0].cells[this._tableCellMessageIndex]).find('div.' + MESSAGE_DIV_CLASS).text(params.message);
         $(tr[0].cells[this._tableCellUserIndex]).append(params.user || '');
         $(tr[0].cells[this._tableCellTimeStampIndex]).append(
@@ -658,12 +659,6 @@ define(['logManager',
         //set the correct with for the 'Graph' column in the table to fit the drawn graph
         this._graphPlaceHolder.css("width", contentWidth);
 
-        //make it almost "full screen"
-        wW = wW - 2 * WINDOW_PADDING;
-        wH = wH - 2 * WINDOW_PADDING - DIALOG_HEADER_HEIGHT - DIALOG_FOOTER_HEIGHT;
-
-        this._cMessageStyle.html(ProjectRepositoryWidget.cMessageStyleStr.replace('__MW__', wW * 0.66));
-
         tWidth = this._table.width();
         this._showMoreContainer.css("width", tWidth);
     };
@@ -716,8 +711,8 @@ define(['logManager',
         var td = btn.parent(),
             createBranchHTML = $('<div class="input-append control-group"></div>'),
             txtInput = $('<input class="span2 input-mini" type="text">'),
-            btnSave = $('<button class="btn btn-mini" type="button" title="Create branch"><i class="icon-ok"></i></button>'),
-            btnCancel = $('<button class="btn btn-mini" type="button" title="Cancel"><i class="icon-remove"></i></button>'),
+            btnSave = $('<button class="btn btn-default btn-xs" type="button" title="Create branch"><i class="icon-ok"></i></button>'),
+            btnCancel = $('<button class="btn btn-default btn-xs" type="button" title="Cancel"><i class="glyphicon glyphicon-remove"></i></button>'),
             self = this;
 
         //find already displayed branch create control and 'cancel' it
