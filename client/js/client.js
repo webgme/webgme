@@ -13,8 +13,7 @@ define([
     'coreclient/import',
     'coreclient/copyimport',
     '/listAllDecorators',
-    '/listAllPlugins',
-    'util/parallelsha1'
+    '/listAllPlugins'
 ],
     function (
         ASSERT,
@@ -31,8 +30,7 @@ define([
         MergeImport,
         Import,
         AllDecorators,
-        AllPlugins,
-        ParallelSHA1
+        AllPlugins
         ) {
 
         var ROOT_PATH = '';
@@ -73,8 +71,7 @@ define([
                 _offline = false,
                 _networkWatcher = null,
                 _TOKEN = null,
-                META = new BaseMeta(),
-                _SHACalculator = new ParallelSHA1();
+                META = new BaseMeta();
 
             function print_nodes(pretext){
                 if(pretext){
@@ -317,8 +314,7 @@ define([
 
             function commitCache(){
                 var _cache = {},
-                    _timeOrder = [],
-                    _timeHash = {}
+                    _timeOrder = [];
                 function clearCache(){
                     _cache = {};
                     _timeOrder = [];
@@ -569,7 +565,6 @@ define([
             }
 
             //loading functions
-            //var stringHash = 0;
             function getStringHash(node){
                 var datas = _core.getDataForSingleHash(node),
                     i,hash="";
@@ -577,24 +572,6 @@ define([
                     hash+=datas[i];
                 }
                 return hash;
-                //return ++stringHash;
-            }
-            function fillHashes(nodes,callback){
-                var start = new Date().getTime();
-                _SHACalculator.getHashes(function(error,hashes){
-                    if(error){
-                        callback(error);
-                    } else {
-                        var keys = Object.keys(hashes);
-                        for(var i=0;i<keys.length;i++){
-                            if(nodes[keys[i]]){
-                                nodes[keys[i]].hash = hashes[keys[i]];
-                            }
-                        }
-                        console.log('*PERF* waited for hash calculation',new Date().getTime()-start);
-                        callback(null);
-                    }
-                });
             }
             function getModifiedNodes(newerNodes){
                 var modifiedNodes = [];
@@ -699,7 +676,6 @@ define([
                 _metaNodes[path] = node;
                 if(!nodesSoFar[path]){
                     nodesSoFar[path] = {node:node,incomplete:true,basic:true,hash:getStringHash(node)};
-                    //_SHACalculator.calculateHash(path,core.getDataForSingleHash(node));
                 }
                 if(level>0){
                     if(core.getChildrenRelids(nodesSoFar[path].node).length>0){
@@ -737,7 +713,6 @@ define([
                 _metaNodes[path] = node;
                 if(!nodesSoFar[path]){
                     nodesSoFar[path] = {node:node,incomplete:true,basic:true,hash:getStringHash(node)};
-                    //_SHACalculator.calculateHash(path,core.getDataForSingleHash(node));
                 }
                 if(level>0){
                     if(missing>0){
@@ -801,7 +776,6 @@ define([
                             _metaNodes[path] = node;
                             if(!nodesSoFar[path]){
                                 nodesSoFar[path] = {node:node,incomplete:false,basic:true,hash:getStringHash(node)};
-                                //_SHACalculator.calculateHash(path,core.getDataForSingleHash(node));
                             }
                             base = node;
                             baseLoaded();
@@ -819,7 +793,6 @@ define([
                         var missing = 0,
                             error = null;
                         _loadNodes[_core.getPath(root)] = {node:root,incomplete:true,basic:true,hash:getStringHash(root)};
-                        //_SHACalculator.calculateHash(_core.getPath(root),_core.getDataForSingleHash(root));
                         _metaNodes[_core.getPath(root)] = root;
 
                         for(var i in _users){
@@ -854,9 +827,6 @@ define([
                 var modifiedPaths = {};
                 var missing = 2;
                 var finalEvents = function(){
-                    fillHashes(_loadNodes,_finalEvents);
-                };
-                var _finalEvents = function(){
                     console.log('*PERF* last eventing round',new Date().getTime()-time);
                     if(_loadError > 0){
                         //we assume that our immediate load was only partial
@@ -1788,19 +1758,13 @@ define([
             function removeUI(guid) {
                 delete _users[guid];
             }
-            function __updateTerritoryAllDone(guid, patterns, error) {
+            function _updateTerritoryAllDone(guid, patterns, error) {
                 if(_users[guid]){
                     _users[guid].PATTERNS = JSON.parse(JSON.stringify(patterns));
                     if(!error){
                         userEvents(guid,[]);
                     }
                 }
-            }
-            function _updateTerritoryAllDone(guid,patterns,error) {
-                //first we need to set the hashes of nodes
-                fillHashes(_nodes,function(){
-                    __updateTerritoryAllDone(guid,patterns,error);
-                });
             }
             function updateTerritory(guid, patterns) {
                 if(_project){
