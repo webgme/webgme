@@ -5,7 +5,6 @@
  */
 .webgme-toolbar,
 .webgme-toolbar-ext {
-  padding-top: 2px;
   white-space: nowrap; }
   .webgme-toolbar .toolbar-button,
   .webgme-toolbar-ext .toolbar-button {
@@ -16,7 +15,8 @@
     .webgme-toolbar .toolbar-button .btn-mini [class*=" icon-"],
     .webgme-toolbar-ext .toolbar-button .btn-mini [class^="icon-"],
     .webgme-toolbar-ext .toolbar-button .btn-mini [class*=" icon-"] {
-      margin-top: 0px; }
+      margin-top: 0px;
+      padding: 5px 10px; }
   .webgme-toolbar .separator,
   .webgme-toolbar-ext .separator {
     margin-left: 5px;
@@ -66,7 +66,7 @@
     .webgme-toolbar-ext .toolbar-colorpicker input {
       margin: 0;
       width: 20px;
-      color: rgba(0, 0, 0, 0) !important; }
+      color: transparent !important; }
     .webgme-toolbar .toolbar-colorpicker.input-append, .webgme-toolbar .toolbar-colorpicker.input-prepend,
     .webgme-toolbar-ext .toolbar-colorpicker.input-append,
     .webgme-toolbar-ext .toolbar-colorpicker.input-prepend {

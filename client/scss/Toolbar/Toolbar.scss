@@ -13,7 +13,6 @@ $webgme-toolbar-ext-toggle-hover-background-color: #E6E6E6;
 
 .webgme-toolbar,
 .webgme-toolbar-ext {
-  padding-top: 2px;
   white-space: nowrap;
 
   .toolbar-button {
@@ -25,6 +24,7 @@ $webgme-toolbar-ext-toggle-hover-background-color: #E6E6E6;
       [class^="icon-"],
       [class*=" icon-"] {
         margin-top: 0px;
+        padding: 5px 10px;
       }
     }
   }
