@@ -724,10 +724,10 @@ define(['logManager',
 
             if (textVal === "" || self._branchNames.indexOf(textVal) !== -1 ) {
                 createBranchHTML.addClass("error");
-                btnSave.addClass('disabled');
+                btnSave.disable(true);
             } else {
                 createBranchHTML.removeClass("error");
-                btnSave.removeClass('disabled');
+                btnSave.disable(false);
             }
 
             switch (event.which) {

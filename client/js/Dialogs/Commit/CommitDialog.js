@@ -59,10 +59,10 @@ define(['logManager',
             var val = self._txtMessage.val();
             if (val === "") {
                 self._controlGroupMessage.addClass("error");
-                self._btnCommit.addClass('disabled');
+                self._btnCommit.disable(true);
             } else {
                 self._controlGroupMessage.removeClass("error");
-                self._btnCommit.removeClass('disabled');
+                self._btnCommit.disable(false);
             }
         });
 

@@ -118,9 +118,9 @@ define(['./ButtonBase',
 
         chkLi.setEnabled = function (enabled) {
             if (enabled) {
-                chkLi.removeClass('disabled');
+                chkLi.disable(false);
             } else {
-                chkLi.addClass('disabled');
+                chkLi.disable(true);
             }
 
             checkBox.setEnabled(enabled);

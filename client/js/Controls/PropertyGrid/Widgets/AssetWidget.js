@@ -128,9 +128,9 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
 
             if (this.__btnAttach) {
                 if (isReadOnly === true) {
-                    this.__btnAttach.addClass('disabled');
+                    this.__btnAttach.disable(true);
                 } else {
-                    this.__btnAttach.removeClass('disabled');
+                    this.__btnAttach.disable(false);
                 }
             }
 

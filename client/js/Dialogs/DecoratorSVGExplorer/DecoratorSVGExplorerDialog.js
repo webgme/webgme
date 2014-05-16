@@ -107,10 +107,10 @@ define(['js/Constants',
         this._modalBody.find('div.img.selected').removeClass('selected');
         if (fileName || fileName === '') {
             this._selectedSVG = fileName;
-            this._btnSelect.removeClass('disabled');
+            this._btnSelect.disable(false);
         } else {
             this._selectedSVG = undefined;
-            this._btnSelect.addClass('disabled');
+            this._btnSelect.disable(true);
         }
     };
 

@@ -93,7 +93,7 @@ define(['logManager',
         this._el = this._dialog.find('.modal-body').first();
         this._ul = this._el.find('ul').first();
 
-        this._panelPuttons = this._dialog.find(".panel-buttons");
+        this._panelButtons = this._dialog.find(".panel-buttons");
         this._panelCreateNew = this._dialog.find(".panel-create-new");
 
         this._btnOpen = this._dialog.find(".btn-open");
@@ -101,7 +101,7 @@ define(['logManager',
         this._btnCreateNew = this._dialog.find(".btn-create-new");
         this._btnCreateFromFile = this._dialog.find(".btn-import-file");
         this._btnRefresh = this._dialog.find(".btn-refresh");
-        
+
         this._btnNewProjectCancel = this._dialog.find(".btn-cancel");
         this._btnNewProjectCreate = this._dialog.find(".btn-save");
         this._btnNewProjectImport = this._dialog.find(".btn-import");
@@ -168,7 +168,7 @@ define(['logManager',
         this._btnCreateNew.on('click', function (event) {
             createType = CREATE_TYPE_EMPTY;
             self._txtNewProjectName.val('');
-            self._panelPuttons.hide();
+            self._panelButtons.hide();
             self._panelCreateNew.show();
             self._txtNewProjectName.focus();
             self._btnNewProjectImport.hide();
@@ -179,7 +179,7 @@ define(['logManager',
 
         this._btnNewProjectCancel.on('click', function (event) {
             createType = undefined;
-            self._panelPuttons.show();
+            self._panelButtons.show();
             self._panelCreateNew.hide();
             self._btnNewProjectCreate.show();
             self._btnNewProjectImport.show();
@@ -194,7 +194,7 @@ define(['logManager',
         this._btnCreateFromFile.on('click', function (event) {
             createType = CREATE_TYPE_IMPORT;
             self._txtNewProjectName.val('');
-            self._panelPuttons.hide();
+            self._panelButtons.hide();
             self._panelCreateNew.show();
             self._txtNewProjectName.focus();
             self._btnNewProjectCreate.hide();
@@ -263,7 +263,7 @@ define(['logManager',
         var self = this;
 
         this._loader.start();
-        this._btnRefresh.addClass('disabled');
+        this._btnRefresh.disable(true);
         this._btnRefresh.find('i').css('opacity', '0');
 
         this._client.getFullProjectListAsync(function(err,projectList){
@@ -316,34 +316,37 @@ define(['logManager',
 
             self._loader.stop();
             self._btnRefresh.find('i').css('opacity', '1');
-            self._btnRefresh.removeClass('disabled');
+            self._btnRefresh.disable(false);
         });
     };
 
     ProjectsDialog.prototype._showButtons = function (enabled, projectId) {
+
+
+
         if (enabled === true) {
             //btnOpen
             if (this._projectList[projectId].read === true) {
                 this._btnOpen.show();
-                this._btnOpen.removeClass('disabled');
+                this._btnOpen.disable(false);
             } else {
                 this._btnOpen.hide();
-                this._btnOpen.addClass('disabled');
+                this._btnOpen.disable(true);
             }
 
             //btnDelete
             if (this._projectList[projectId].delete === true) {
                 this._btnDelete.show();
-                this._btnDelete.removeClass('disabled');
+                this._btnDelete.disable(false);
             } else {
                 this._btnDelete.hide();
-                this._btnDelete.addClass('disabled');
+                this._btnDelete.disable(true);
             }
         } else {
             this._btnOpen.hide();
-            this._btnOpen.addClass('disabled');
+            this._btnOpen.disable(true);
             this._btnDelete.hide();
-            this._btnDelete.addClass('disabled');
+            this._btnDelete.disable(true);
         }
 
     };
@@ -399,7 +402,7 @@ define(['logManager',
 
                 //check to see if the user has READ access to this project
                 if (this._projectList[this._projectNames[i]].read !== true) {
-                    li.addClass('disabled');
+                    li.disable(true);
                 } else {
                     //check if user has only READ rights for this project
                     if (this._projectList[this._projectNames[i]].write !== true) {
