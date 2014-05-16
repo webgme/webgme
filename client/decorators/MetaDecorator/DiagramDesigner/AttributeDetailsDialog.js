@@ -182,10 +182,10 @@ define(['clientUtil',
 
             if (!isValidAttributeName(val)) {
                 self._pName.addClass("error");
-                self._btnSave.addClass("disabled");
+                self._btnSave.disable(true);
             } else {
                 self._pName.removeClass("error");
-                self._btnSave.removeClass("disabled");
+                self._btnSave.disable(false);
             }
         });
 

@@ -1,15 +1,22 @@
-"use strict";
+/*globals define*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
+ */
+
 
 define(['logManager',
         'loaderCircles',
         'js/Utils/GMEConcepts',
         'js/Dialogs/Import/ImportDialog',
-        'text!./html/ProjectsDialog.html',
-        'css!/css/Dialogs/Projects/ProjectsDialog'], function (logManager,
+        'text!./templates/ProjectsDialog.html',
+        'css!./styles/ProjectsDialog.css'], function (logManager,
                                                                LoaderCircles,
                                                                GMEConcepts,
                                                                ImportDialog,
                                                                projectsDialogTemplate) {
+    "use strict";
 
     var ProjectsDialog,
         DATA_PROJECT_NAME = "PROJECT_NAME",
@@ -61,7 +68,7 @@ define(['logManager',
             var val = self._txtNewProjectName.val();
 
             if (val !== "" && self._projectNames.indexOf(val) === -1) {
-                self._btnNewProjectCreate.addClass("disabled");
+                self._btnNewProjectCreate.disable(true);
                 self._createNewProject(val);
             }
         };
@@ -78,7 +85,7 @@ define(['logManager',
             var val = self._txtNewProjectName.val();
 
             if (val !== "" && self._projectNames.indexOf(val) === -1) {
-                self._btnNewProjectImport.addClass("disabled");
+                self._btnNewProjectImport.disable(true);
                 self._dialog.modal('hide');
                 var d = new ImportDialog();
                 d.show(function (fileContent) {
@@ -94,7 +101,7 @@ define(['logManager',
         this._ul = this._el.find('ul').first();
 
         this._panelButtons = this._dialog.find(".panel-buttons");
-        this._panelCreateNew = this._dialog.find(".panel-create-new");
+        this._panelCreateNew = this._dialog.find(".panel-create-new").hide();
 
         this._btnOpen = this._dialog.find(".btn-open");
         this._btnDelete = this._dialog.find(".btn-delete");
@@ -146,8 +153,8 @@ define(['logManager',
         });
 
         this._btnOpen.on('click', function (event) {
-            self._btnOpen.addClass("disabled");
-            self._btnDelete.addClass("disabled");
+            self._btnOpen.disable(true);
+            self._btnDelete.disable(true);
 
             event.stopPropagation();
             event.preventDefault();
@@ -156,8 +163,8 @@ define(['logManager',
         });
 
         this._btnDelete.on('click', function (event) {
-            self._btnOpen.addClass("disabled");
-            self._btnDelete.addClass("disabled");
+            self._btnOpen.disable(true);
+            self._btnDelete.disable(true);
 
             deleteProject(selectedId);
 
@@ -214,12 +221,12 @@ define(['logManager',
 
             if (!re.test(val) || self._projectNames.indexOf(val) !== -1) {
                 self._panelCreateNew.addClass("error");
-                self._btnNewProjectCreate.addClass("disabled");
-                self._btnNewProjectImport.addClass("disabled");
+                self._btnNewProjectCreate.disable(true);
+                self._btnNewProjectImport.disable(true);
             } else {
                 self._panelCreateNew.removeClass("error");
-                self._btnNewProjectCreate.removeClass("disabled");
-                self._btnNewProjectImport.removeClass("disabled");
+                self._btnNewProjectCreate.disable(false);
+                self._btnNewProjectImport.disable(false);
             }
         });
 
@@ -297,19 +304,23 @@ define(['logManager',
             //3: no read at all
             self._projectNames.sort(function compare(a, b) {
                 var userRightA = getProjectUserRightSortValue(self._projectList[a]),
-                    userRightB = getProjectUserRightSortValue(self._projectList[b]);
+                    userRightB = getProjectUserRightSortValue(self._projectList[b]),
+                    result;
 
                 if (userRightA > userRightB) {
-                    return -1;
+                    result = -1;
                 } else if (userRightA < userRightB) {
-                    return 1;
+                    result = 1;
                 } else if (userRightA === userRightB) {
                     if (a.toLowerCase() < b.toLowerCase()) {
-                        return -1;
+                        result = -1;
                     } else {
-                        return 1;
+                        result = 1;
                     }
                 }
+
+                return result;
+
             });
 
             self._updateProjectNameList();
@@ -414,7 +425,7 @@ define(['logManager',
             }
         }
 
-        this._showButtons(false);
+        this._showButtons(false, null);
     };
 
     ProjectsDialog.prototype._createProjectFromFile = function (projectName, jsonContent) {

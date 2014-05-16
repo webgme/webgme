@@ -60,9 +60,9 @@ define(['./ButtonBase',
 
     ToolbarDropDownButton.prototype.enabled = function (enabled) {
         if (enabled === true) {
-            this.el.find('.btn').removeClass("disabled");
+            this.el.find('.btn').disable(false);
         } else {
-            this.el.find('.btn').addClass("disabled");
+            this.el.find('.btn').disable(true);
         }
     };
 

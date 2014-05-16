@@ -13,6 +13,7 @@
   padding: 25px;
   text-align: center;
   font-size: 15px;
-  color: #bbbbbb; }
+  color: #bbbbbb;
+  margin-top: 20px; }
   .import-dialog .file-drop-target.hover {
     background-color: rgba(0, 255, 0, 0.2); }

@@ -89,9 +89,9 @@ define(['clientUtil',
             var checked = typesContainer.find('input[type=checkbox]:checked');
 
             if (checked.length === 0) {
-                self._btnSave.addClass("disabled");
+                self._btnSave.disable(true);
             } else {
-                self._btnSave.removeClass("disabled");
+                self._btnSave.disable(false);
             }
         };
 
@@ -117,10 +117,10 @@ define(['clientUtil',
 
             if (!isValidAspectName(val)) {
                 self._pName.addClass("error");
-                self._btnSave.addClass("disabled");
+                self._btnSave.disable(true);
             } else {
                 self._pName.removeClass("error");
-                self._btnSave.removeClass("disabled");
+                self._btnSave.disable(false);
             }
         });
 

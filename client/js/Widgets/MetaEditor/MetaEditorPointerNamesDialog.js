@@ -126,10 +126,10 @@ define(['clientUtil',
 
             if (!isValidPointerName(val)) {
                 self._panelCreateNew.addClass("error");
-                self._btnCreateNew.addClass("disabled");
+                self._btnCreateNew.disable(true);
             } else {
                 self._panelCreateNew.removeClass("error");
-                self._btnCreateNew.removeClass("disabled");
+                self._btnCreateNew.disable(false);
             }
         });
 
