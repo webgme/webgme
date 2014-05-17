@@ -251,6 +251,7 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 			var node = oldcore.createNode(parameters);
             node.base = base;
             oldcore.setPointer(node,"base",base);
+            _checkForHashingNeed(parent); //it is possible that it is a new child of an instance
 
 			return node;
 		};
@@ -542,15 +543,14 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
         };
 
         // --- now we should check when we have to make hashed child from an empty inherited child
-        function _setInstanceHashed(node){
-            var coretree = core.getCoreTree(),
-                parent = core.getParent(node);
-            coretree.setHashed(node,true);
-            core.setPointer(node,'base',core.getBase(node));
-            while(parent && !coretree.isHashed(parent)){
-                coretree.setHashed(parent,true);
-                core.setPointer(parent,'base',core.getBase(parent));
-                parent = core.getParent(parent);
+        function _checkForHashingNeed(node){
+            var coretree = core.getCoreTree();
+            while(node){
+                if(_isEmptyInheritedChild(node)){
+                    coretree.setHashed(node,true);
+                    core.setPointer(node,'base',core.getBase(node));
+                }
+                node = core.getParent(node);
             }
         }
         function _isEmptyInheritedChild(node){
@@ -584,23 +584,17 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 
         }
         core.setAttribute = function(node,name,value){
-            if(_isEmptyInheritedChild(node)){
-                _setInstanceHashed(node);
-            }
+            _checkForHashingNeed(node);
             oldcore.setAttribute(node,name,value);
         };
         core.setRegistry = function(node,name,value){
-            if(_isEmptyInheritedChild(node)){
-                _setInstanceHashed(node);
-            }
+            _checkForHashingNeed(node);
             oldcore.setRegistry(node,name,value);
         };
         core.setPointer = function(node,name,target){
             //unfortunate combine with the null pointer
             //TODO think the null pointer again!!!
-            if(_isEmptyInheritedChild(node)){
-                _setInstanceHashed(node);
-            }
+            _checkForHashingNeed(node);
             oldcore.setPointer(node,name,target);
         };
 
