@@ -465,6 +465,7 @@ define([
                                     for(var i in names){
                                         if(!firstName){
                                             firstName = i;
+                                            break;
                                         }
                                         if(i === 'master'){
                                             firstName = i;
@@ -500,7 +501,7 @@ define([
             }
 
             //internal functions
-            function cleanUsers(){
+            function cleanUsersTerritories(){
                 for(var i in _users){
                     var events = [];
                     for(var j in _users[i].PATHS){
@@ -513,7 +514,10 @@ define([
                     _users[i].PATTERNS = {};
                     _users[i].PATHS = {};
                     _users[i].SENDEVENTS = true;
-
+                }
+            }
+            function reLaunchUsers(){
+                for(var i in _users){
                     if(_users[i].UI.reLaunch){
                         _users[i].UI.reLaunch();
                     }
@@ -537,7 +541,7 @@ define([
                     _loadNodes = {};
                     _loadError = 0;
                     _offline = false;
-                    cleanUsers();
+                    cleanUsersTerritories();
                     _self.dispatchEvent(_self.events.PROJECT_CLOSED);
 
                     callback(e);
@@ -785,7 +789,7 @@ define([
                     });
                 }
             }
-            function loadRoot(newRootHash,callback){
+            /*function loadRoot(newRootHash,callback){
                 _loadNodes = {};
                 _loadError = 0;
                 _core.loadRoot(newRootHash,function(err,root){
@@ -813,6 +817,86 @@ define([
                             }
                         } else {
                             callback(error);
+                        }
+                    } else {
+                        callback(err);
+                    }
+                });
+            }*/
+            function orderStringArrayByElementLength(strArray){
+                var ordered = [],
+                    i, j,index;
+
+                for(i=0;i<strArray.length;i++){
+                    index = -1;
+                    j = 0;
+                    while(index === -1 && j < ordered.length){
+                        if(ordered[j].length>strArray[i].length){
+                            index = j;
+                        }
+                        j++;
+                    }
+
+                    if(index === -1){
+                        ordered.push(strArray[i]);
+                    } else {
+                        ordered.splice(index,0,strArray[i]);
+                    }
+                }
+                return ordered;
+            }
+
+            function loadRoot(newRootHash,callback){
+                //with the newer approach we try to optimize a bit the mechanizm of the loading and try to get rid of the paralellism behind it
+                var patterns = {},
+                    orderedPatternIds = [],
+                    error = null,
+                    i, j,keysi,keysj,
+                    loadNextPattern = function(index){
+                        if(index<orderedPatternIds.length){
+                            loadPattern(_core,orderedPatternIds[index],patterns[orderedPatternIds[index]],_loadNodes,function(err){
+                                error = error || err;
+                                loadNextPattern(index+1);
+                            });
+                        } else {
+                            callback(error);
+                        }
+                    };
+                _loadNodes = {};
+                _loadError = 0;
+
+                //gathering the patterns
+                keysi = Object.keys(_users);
+                for(i=0;i<keysi.length;i++){
+                    keysj = Object.keys(_users[keysi[i]].PATTERNS);
+                    for(j=0;j<keysj.length;j++){
+                        if(patterns[keysj[j]]){
+                            //we check if the range is bigger for the new definition
+                            if(patterns[keysj[j]].children < _users[keysi[i]].PATTERNS[keysj[j]].children){
+                                patterns[keysj[j]].children = _users[keysi[i]].PATTERNS[keysj[j]].children;
+                            }
+                        } else {
+                            patterns[keysj[j]] = _users[keysi[i]].PATTERNS[keysj[j]];
+                        }
+                    }
+                }
+                //getting an orderd keylist
+                orderedPatternIds = Object.keys(patterns);
+                orderedPatternIds = orderStringArrayByElementLength(orderedPatternIds);
+
+
+                //and now the one-by-one loading
+                _core.loadRoot(newRootHash,function(err,root){
+                    error = error || err;
+                    if(!err){
+                        _loadNodes[_core.getPath(root)] = {node:root,incomplete:true,basic:true,hash:getStringHash(root)};
+                        _metaNodes[_core.getPath(root)] = root;
+                        if(orderedPatternIds.length === 0 && Object.keys(_users) > 0){
+                            //we have user, but they do not interested in any object -> let's relaunch them :D
+                            callback(null);
+                            reLaunchUsers();
+                        } else {
+                            loadNextPattern(0);
                         }
                     } else {
                         callback(err);
@@ -869,7 +953,7 @@ define([
                     counter++;
                 }
                 hasEnoughNodes = limit <= counter;
-                if(hasEnoughNodes){
+                if(/*hasEnoughNodes*/false){
                     modifiedPaths = getModifiedNodes(_loadNodes);
                     _nodes = {};
                     for(i in _loadNodes){
@@ -981,7 +1065,11 @@ define([
                     } else {
                         closeOpenedProject(function(err){
                             //TODO what can we do with the error??
-                            openProject(projectname,callback);
+                            openProject(projectname,function(err){
+                                //TODO is there a meaningful error which we should propagate towards user???
+                                reLaunchUsers();
+                                callback();
+                            });
                         });
                     }
                 } else {
@@ -1203,6 +1291,7 @@ define([
                 var oldcallback = callback;
                 callback = function(err){
                     _TOKEN = tokenWatcher();
+                    reLaunchUsers();
                     oldcallback(err);
                 }; //we add tokenWatcher start at this point
                 options = options || {};
@@ -1515,7 +1604,7 @@ define([
             function deleteNode(path) {
                 if(_core && _nodes[path] && typeof _nodes[path].node === 'object'){
                     _core.deleteNode(_nodes[path].node);
-                    delete _nodes[path];
+                    //delete _nodes[path];
                     saveRoot('deleteNode('+path+')');
                 }
             }
@@ -1524,7 +1613,7 @@ define([
                     for(var i=0;i<paths.length;i++){
                         if(_nodes[paths[i]] && typeof _nodes[paths[i]].node === 'object'){
                             _core.deleteNode(_nodes[paths[i]].node);
-                            delete _nodes[paths[i]];
+                            //delete _nodes[paths[i]];
                         }
                     }
                     saveRoot('delMoreNodes('+paths+')');

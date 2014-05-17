@@ -75,7 +75,7 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 			return node;
 		}
 
-        core.loadChild = function(node,relid){
+        /*core.loadChild = function(node,relid){
             var child = TASYNC.call(__loadBase,oldcore.loadChild(node,relid));
             var base = core.getBase(node);
             var basechild = null;
@@ -92,6 +92,41 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
                 }
                 return TASYNC.call(function(child){return child;},ch,done);
             },child,basechild,node,relid);
+        };*/
+        /*function _childFinalization(child,basechild,node,relid){
+            ASSERT(child || basechild);
+            if(!child){
+                //creating in-memory empty child
+                child = core.getChild(node,relid);
+                child.base = basechild;
+            }
+            return child;
+        }*/
+
+        core.loadChild = function(node,relid){
+            var child = null,
+                base = core.getBase(node),
+                basechild = null;
+            if(base){
+                //the parent is inherited
+                if(oldcore.getChildrenRelids(base).indexOf(relid) !== -1) {
+                    //inherited child
+                    if (oldcore.getChildrenRelids(node).indexOf(relid) !== -1) {
+                        //but it is overwritten
+                        return TASYNC.call(__loadBase, oldcore.loadChild(node, relid));
+                    } else {
+                        //empty inherited child
+                        basechild = TASYNC.call(core.loadChild, base, relid);
+                        return TASYNC.call(function(b,n,r){
+                            child = core.getChild(n,r);
+                            child.base = b;
+                            return child;
+                        },basechild,node,relid);
+                    }
+                }
+            }
+            //normal child
+            return TASYNC.call(__loadBase,oldcore.loadChild(node,relid));
         };
 
         core.loadByPath = function(node,path){
@@ -504,6 +539,69 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
                     oldcore.deleteNode(node);
                 }
             }
+        };
+
+        // --- now we should check when we have to make hashed child from an empty inherited child
+        function _setInstanceHashed(node){
+            var coretree = core.getCoreTree(),
+                parent = core.getParent(node);
+            coretree.setHashed(node,true);
+            core.setPointer(node,'base',core.getBase(node));
+            while(parent && !coretree.isHashed(parent)){
+                coretree.setHashed(parent,true);
+                core.setPointer(parent,'base',core.getBase(parent));
+                parent = core.getParent(parent);
+            }
+        }
+        function _isEmptyInheritedChild(node){
+            var base = core.getBase(node),
+                parent = core.getParent(node),
+                coretree = core.getCoreTree();
+
+            if(base === null){
+                return false;
+            }
+
+            if(parent === null){
+                return false;
+            }
+
+            if(core.getChildrenRelids(parent).indexOf(core.getRelid(node)) === -1){
+                //probably not a real child
+                return false;
+            }
+
+            if(core.getPath(node).indexOf('_') !== -1){
+                //special child should never be hashed...
+                return false;
+            }
+
+            if(!coretree.isHashed(node)){
+                return true;
+            }
+
+            return false;
+
+        }
+        core.setAttribute = function(node,name,value){
+            if(_isEmptyInheritedChild(node)){
+                _setInstanceHashed(node);
+            }
+            oldcore.setAttribute(node,name,value);
+        };
+        core.setRegistry = function(node,name,value){
+            if(_isEmptyInheritedChild(node)){
+                _setInstanceHashed(node);
+            }
+            oldcore.setRegistry(node,name,value);
+        };
+        core.setPointer = function(node,name,target){
+            //unfortunate combine with the null pointer
+            //TODO think the null pointer again!!!
+            if(_isEmptyInheritedChild(node)){
+                _setInstanceHashed(node);
+            }
+            oldcore.setPointer(node,name,target);
         };
 
         // -------- kecso

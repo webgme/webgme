@@ -24,7 +24,7 @@ define([ "util/assert"], function (ASSERT) {
 
         //help functions
         var setModified = function(node){
-            //innerCore.setRegistry(node,'_sets_',(innerCore.getRegistry(node,'_sets_') || 0)+1);
+            innerCore.setRegistry(node,'_sets_',(innerCore.getRegistry(node,'_sets_') || 0)+1);
         };
         var getMemberPath = function(node,setElementNode){
             var ownPath = innerCore.getPath(node),
