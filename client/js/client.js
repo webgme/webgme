@@ -44,7 +44,7 @@ define([
 
         function getNewCore(project){
             //return new NullPointerCore(new DescriptorCore(new SetCore(new GuidCore(new Core(project)))));
-            return Core(project,{autopersist: true,usertype:'nodejs',corerel:2});
+            return Core(project,{autopersist: true,usertype:'nodejs'});
         }
         function Client(_configuration){
             var _self = this,

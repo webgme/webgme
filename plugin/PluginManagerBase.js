@@ -138,7 +138,7 @@ define([
 
             pluginContext.project = this._storage;
             pluginContext.projectName = managerConfiguration.project;
-            pluginContext.core = new self._Core(pluginContext.project, {corerel: 2});
+            pluginContext.core = new self._Core(pluginContext.project);
             pluginContext.commitHash = managerConfiguration.commit;
             pluginContext.activeNode = null;    // active object
             pluginContext.activeSelection = []; // selected objects

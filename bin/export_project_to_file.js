@@ -40,7 +40,7 @@ requirejs(['core/core','storage/serveruserstorage','coreclient/dump', 'fs'],
                     storage.openProject(projectname,function(err,p){
                         if(!err){
                             project = p;
-                            var core = new Core(project,{corerel:2});
+                            var core = new Core(project);
                             project.getBranchHash("master","#hack",function(err,commitHash){
                                 console.log(commitHash);
                                 if(!err){

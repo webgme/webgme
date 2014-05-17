@@ -82,7 +82,7 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
                     if(err){
                         callback(err);
                     } else {
-                        var core = new Core(project,{corerel:2});
+                        var core = new Core(project);
                         core.loadRoot(hash,function(err,root){
                             if(err){
                                 callback(err);
