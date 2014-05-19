@@ -300,7 +300,7 @@ define(['logManager',
             var keys = Object.keys(CONFIG.rextrast),
                 i;
             for(i=0;i<keys.length;i++){
-                var modul = require(CONFIG.rextrast[keys[i]]);
+                var modul = requirejs(CONFIG.rextrast[keys[i]]);
                 if(modul){
                     __logger.info('adding RExtraST ['+CONFIG.rextrast[keys[i]]+'] to - /rest/external/'+keys[i]);
                     __app.use('/rest/external/'+keys[i],modul);
