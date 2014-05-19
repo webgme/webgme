@@ -79,7 +79,8 @@ require.config({
         'jquery-dataTables-bootstrapped': ['jquery-dataTables'],
         'js/WebGME': [
             'jquery-WebGME',
-            'css!/css/main.css'
+            'css!/css/main.css',
+            'css!/lib/font-awesome/css/font-awesome.min.css'
         ],
         'jquery-csszoom': ['jquery-ui'],
         'jquery-spectrum': ['jquery'],

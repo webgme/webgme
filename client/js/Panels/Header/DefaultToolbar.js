@@ -132,14 +132,14 @@ define(['clientUtil',
             "data": {'type': '3'} });
 
         var btnToggle1 = toolbar.addToggleButton({ "title": "Toggle button",
-            "icon": "icon-plane",
+            "icon": "glyphicon glyphicon-plane",
             "clickFn": function (data, toggled) {
                 console.log('toggled: ' + toggled);
             }});
 
 
         var txtFind = toolbar.addTextBox({
-            "prependContent": '<i class="icon-search"></i>',
+            "prependContent": '<i class="glyphicon glyphicon-search"></i>',
             "placeholder": "Find...",
             "textChangedFn": function (oldVal, newVal) {
                 console.log(newVal);

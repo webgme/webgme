@@ -32,7 +32,7 @@ define(['logManager',
 
         //this.__checkbox.setChecked(false);
 
-        this.__checkbox.el.find('.sw').append('<i class="icon-keyboard"></i>');
+        this.__checkbox.el.find('.sw').append('<i class="fa fa-keyboard-o"></i>');
 
         this._el.append(this.__checkbox.el);
 

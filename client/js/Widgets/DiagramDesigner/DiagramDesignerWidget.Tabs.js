@@ -52,18 +52,18 @@ define(['js/Toolbar/ToolbarButton',
         }
 
         this.$ddlTabsList = new ToolbarDropDownButton({ "title": "Tab list",
-            "icon": "icon-list"});
+            "icon": "glyphicon glyphicon-list"});
         this.$divAddTab.append(this.$ddlTabsList.el);
 
         this.$btnScrollLeft = new ToolbarButton({ "title": "Scroll left",
-            "icon": "icon-chevron-left",
+            "icon": "glyphicon glyphicon-chevron-left",
             "clickFn": function (/*data*/) {
                 self._tabsScrollLeft();
             } });
         this.$divAddTab.append(this.$btnScrollLeft.el);
 
         this.$btnScrollRight = new ToolbarButton({ "title": "Scroll right",
-            "icon": "icon-chevron-right",
+            "icon": "glyphicon glyphicon-chevron-right",
             "clickFn": function (/*data*/) {
                 self._tabsScrollRight();
             } });

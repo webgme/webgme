@@ -1010,7 +1010,7 @@ define(['logManager',
 
         /************************ CONTSTRAINT VALIDATION ******************/
         this.$btnConstraintValidate = toolBar.addButton({ "title": "Constraint check...",
-            "icon": "icon-fire",
+            "icon": "glyphicon glyphicon-fire",
             "clickFn": function (/*data*/) {
                 self._constraintCheck();
             }

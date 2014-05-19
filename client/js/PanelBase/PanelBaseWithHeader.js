@@ -69,7 +69,7 @@ define(['js/PanelBase/PanelBase',
             "class" : "ro-icon",
             "title" : "READ-ONLY mode ON"
         });
-        this.$panelReadOnlyIndicator.append($('<i class="icon-lock"></i>'));
+        this.$panelReadOnlyIndicator.append($('<i class="glyphicon glyphicon-lock"></i>'));
 
         //TITLE IN HEADER BAR
         if (options[PanelBaseWithHeader.OPTIONS.HEADER_TITLE] === true) {

@@ -28,7 +28,7 @@ define(['./DiagramDesignerWidget.OperatingModes',
 
             if (DEBUG === true) {
                 this.toolbarItems.btnGridLayout = toolbar.addButton({ "title": "Grid layout",
-                     "icon": "icon-th",
+                     "icon": "glyphicon glyphicon-th",
                      "data": { "mode": "grid" },
                      "clickFn": function (data) {
                          self.itemAutoLayout(data.mode);
@@ -36,7 +36,7 @@ define(['./DiagramDesignerWidget.OperatingModes',
                 });
 
                 this.toolbarItems.btnCozyGridLayout = toolbar.addButton({ "title": "Cozy Grid layout",
-                    "icon": "icon-th-large",
+                    "icon": "glyphicon glyphicon-th-large",
                     "data": { "mode": "cozygrid" },
                     "clickFn": function (data) {
                         self.itemAutoLayout(data.mode);
@@ -74,7 +74,7 @@ define(['./DiagramDesignerWidget.OperatingModes',
             });
 
             this.toolbarItems.radioButtonGroupOperatingMode.addButton(
-                {"icon": "icon-lock",
+                {"icon": "glyphicon glyphicon-lock",
                     "title": "Read-only mode",
                     "data": {"mode": DiagramDesignerWidgetOperatingModes.prototype.OPERATING_MODES.READ_ONLY}
                 }
@@ -89,7 +89,7 @@ define(['./DiagramDesignerWidget.OperatingModes',
             );
 
             this.toolbarItems.radioButtonGroupOperatingMode.addButton(
-                {"icon": "icon-eye-open",
+                {"icon": "glyphicon glyphicon-eye-open",
                     "title": "Highlight mode",
                     "data": {"mode": DiagramDesignerWidgetOperatingModes.prototype.OPERATING_MODES.HIGHLIGHT}
                 }
@@ -106,9 +106,9 @@ define(['./DiagramDesignerWidget.OperatingModes',
 
             if (this._lineStyleControls === true) {
                 /************** END OF - VISUAL STYLE ARROWS *****************/
-                this.toolbarItems.ddbtnConnectionArrowStart = toolbar.addDropDownButton({ "title": "Line start marker", "icon": "icon-arrow-left", "menuClass": "no-min-width" });
-                this.toolbarItems.ddbtnConnectionPattern = toolbar.addDropDownButton({ "title": "Line pattern", "icon": "icon-minus", "menuClass": "no-min-width" });
-                this.toolbarItems.ddbtnConnectionArrowEnd = toolbar.addDropDownButton({ "title": "Line end marker","icon": "icon-arrow-right", "menuClass": "no-min-width" });
+                this.toolbarItems.ddbtnConnectionArrowStart = toolbar.addDropDownButton({ "title": "Line start marker", "icon": "glyphicon glyphicon-arrow-left", "menuClass": "no-min-width" });
+                this.toolbarItems.ddbtnConnectionPattern = toolbar.addDropDownButton({ "title": "Line pattern", "icon": "glyphicon glyphicon-minus", "menuClass": "no-min-width" });
+                this.toolbarItems.ddbtnConnectionArrowEnd = toolbar.addDropDownButton({ "title": "Line end marker","icon": "glyphicon glyphicon-arrow-right", "menuClass": "no-min-width" });
 
                 this.toolbarItems.ddbtnConnectionLineWidth = toolbar.addDropDownButton({
                     "title": "Line width",
@@ -241,7 +241,7 @@ define(['./DiagramDesignerWidget.OperatingModes',
 
             if (this._defaultSearchUI === true) {
                 this.toolbarItems.filterBox = toolbar.addTextBox(
-                    {"prependContent": '<i class="icon-search"></i>',
+                    {"prependContent": '<i class="glyphicon glyphicon-search"></i>',
                     "placeholder": "Find...",
                     "textChangedFn": function (oldVal, newVal) {
                         self.searchManager.filterItems(newVal);

@@ -57,8 +57,9 @@ define(['logManager',
         //add toolbar controls
         toolbar.addSeparator();
 
-        toolbar.addToggleButton({ "title": "Split view ON/OFF",
-            "icon": btnIconBase.clone().css('background-image', 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAIAAACQKrqGAAAALHRFWHRDcmVhdGlvbiBUaW1lAFR1ZSAxOSBOb3YgMjAxMyAxNjozNjo0NCAtMDYwMKaJVWgAAAAHdElNRQfdCxMWKDLaKUzZAAAACXBIWXMAAAsSAAALEgHS3X78AAAABGdBTUEAALGPC/xhBQAAAAZ0Uk5TAP8A/wD/N1gbfQAAAD5JREFUeNpj/P//PwMqMDExAZJnzpxBE2eBSMABsgo0KSYGogELskloxqBJsWBVgdUNo6bSyFTMZIFpJAQAAMcoMq0xIJLxAAAAAElFTkSuQmCC)'),
+        toolbar.addToggleButton({
+            "title": "Split view ON/OFF",
+            "icon": btnIconBase.clone().addClass('fa fa-columns'),
             "clickFn": function (data, toggled) {
                 self._p2Editor(toggled);
             }});
