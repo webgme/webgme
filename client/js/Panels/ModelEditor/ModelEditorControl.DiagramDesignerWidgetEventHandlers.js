@@ -494,7 +494,7 @@ define(['logManager',
                     case DragHelper.DRAG_EFFECTS.DRAG_MOVE:
                         menuItems[i] = {
                             "name": "Move here",
-                            "icon": 'icon-move'
+                            "icon": 'glyphicon glyphicon-move'
                         };
                         break;
                     case DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE:

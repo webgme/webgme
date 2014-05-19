@@ -15,7 +15,7 @@ define(['js/DragDrop/DragSource',
     var DiagramDesignerWidgetDraggable,
         DRAG_HELPER_CLASS = 'diagram-designer-drag-outline',
         DRAG_HELPER_EL_BASE = $('<div/>', {'class': DRAG_HELPER_CLASS}),
-        DRAG_HELPER_ICON_MOVE = $('<i class="icon-move"></i>'),
+        DRAG_HELPER_ICON_MOVE = $('<i class="glyphicon glyphicon-move"></i>'),
         DRAG_HELPER_ICON_COPY = $('<i class="icon-plus"></i>');
 
     DiagramDesignerWidgetDraggable = function () {

@@ -81,7 +81,7 @@ define(['./DiagramDesignerWidget.OperatingModes',
             );
 
             this.toolbarItems.radioButtonGroupOperatingMode.addButton(
-                {"icon": "icon-move",
+                {"icon": "glyphicon glyphicon-move",
                     "title": "Design mode",
                     "selected": true,
                     "data": {"mode": DiagramDesignerWidgetOperatingModes.prototype.OPERATING_MODES.DESIGN}
