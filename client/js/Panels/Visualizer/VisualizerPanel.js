@@ -59,7 +59,7 @@ define(['logManager',
 
         toolbar.addToggleButton({
             "title": "Split view ON/OFF",
-            "icon": btnIconBase.clone().addClass('fa fa-columns'),
+            "icon": btnIconBase.clone().addClass('webgme icon-two-columns'),
             "clickFn": function (data, toggled) {
                 self._p2Editor(toggled);
             }});

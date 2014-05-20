@@ -1,0 +1,58 @@
+@font-face {
+	font-family: 'webgme';
+	src:url('fonts/webgme.eot?7ubey7');
+	src:url('fonts/webgme.eot?#iefix7ubey7') format('embedded-opentype'),
+		url('fonts/webgme.woff?7ubey7') format('woff'),
+		url('fonts/webgme.ttf?7ubey7') format('truetype'),
+		url('fonts/webgme.svg?7ubey7#webgme') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+
+.webgme {
+	font-family: 'webgme';
+	speak: none;
+	font-style: normal;
+	font-weight: normal;
+	font-variant: normal;
+	text-transform: none;
+	line-height: 1;
+
+	/* Better Font Rendering =========== */
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+.icon-sharp-arrow-up:before {
+	content: "\e600";
+}
+.icon-lean-arrow-up:before {
+	content: "\e601";
+}
+.icon-diamond-head:before {
+	content: "\e602";
+}
+.icon-curvy:before {
+	content: "\e603";
+}
+.icon-grid:before {
+	content: "\e604";
+}
+.icon-two-columns:before {
+	content: "\e605";
+}
+.icon-line-around-another:before {
+	content: "\e606";
+}
+.icon-lines:before {
+	content: "\e607";
+}
+.icon-broken-arrow-with-box:before {
+	content: "\e608";
+}
+.icon-broken-arrow:before {
+	content: "\e609";
+}
+.icon-diagonal-arrow:before {
+	content: "\e60a";
+}

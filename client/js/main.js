@@ -80,7 +80,8 @@ require.config({
         'js/WebGME': [
             'jquery-WebGME',
             'css!/css/main.css',
-            'css!/lib/font-awesome/css/font-awesome.min.css'
+            'css!/fonts/font-awesome/css/font-awesome.min.css',
+            'css!/fonts/webgme-icons/style.css'
         ],
         'jquery-csszoom': ['jquery-ui'],
         'jquery-spectrum': ['jquery'],
