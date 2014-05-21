@@ -1,5 +1,11 @@
 "use strict";
 
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
+ */
+
+
 var DEBUG = false,
     _jqueryVersion = '2.1.0',
     _jqueryUIVersion = '1.10.4',
@@ -80,7 +86,8 @@ require.config({
         'js/WebGME': [
             'jquery-WebGME',
             'css!/css/main.css',
-            'css!/fonts/font-awesome/css/font-awesome.min.css',
+            'css!/css/themes/dawn.css',
+            //'css!/fonts/font-awesome/css/font-awesome.min.css',
             'css!/fonts/webgme-icons/style.css'
         ],
         'jquery-csszoom': ['jquery-ui'],
@@ -108,28 +115,30 @@ require(
     function (domReady, jQuery, jQueryUi, jQueryUiiPad, jqueryWebGME, jqueryDataTables, bootstrap, underscore,
               backbone, webGME, util, CONFIG) {
         domReady(function () {
-            //#1 set debug info from config file
+
+
             if (CONFIG.hasOwnProperty('debug')) {
-                DEBUG = CONFIG['debug'];
+                DEBUG = CONFIG.debug;
             }
 
-            //#2 check URL
-            var d = util.getURLParameterByName('d').toLowerCase();
-            if (d === 'debug') {
+            var d = util.getURLParameterByName('debug').toLowerCase();
+            if (d === 'true') {
                 DEBUG = true;
-            } else if (d === 'rel') {
-                DEBUG = false;
             }
 
             if (CONFIG.paths) {
+
                 // attach external libraries to extlib/*
+
                 var keys = Object.keys(CONFIG.paths);
                 for (var i = 0; i < keys.length; i += 1) {
+
                     // assume this is a relative path from the current working directory
                     CONFIG.paths[keys[i]] = 'extlib/' + CONFIG.paths[keys[i]];
                 }
 
                 // update client config to route the external lib requests
+
                 require.config({
                     paths: CONFIG.paths
                 });
