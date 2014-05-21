@@ -1,4 +1,9 @@
-"use strict";
+/*globals define, _, WebGMEGlobal, DEBUG*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
+ */
 
 define(['logManager',
     'loaderProgressBar',
@@ -12,6 +17,8 @@ define(['logManager',
                                     PanelBaseWithHeader,
                                     SplitPanel,
                                     VisualizersJSON) {
+
+    "use strict";
 
     var VisualizerPanel,
         DEFAULT_VISUALIZER = 'ModelEditor';
@@ -47,7 +54,7 @@ define(['logManager',
     VisualizerPanel.prototype._initialize = function () {
         var self = this,
             toolbar = WebGMEGlobal.Toolbar,
-            btnIconBase = $('<i style="display: inline-block;width: 14px;height: 14px;line-height: 14px;vertical-align: text-top;background-repeat: no-repeat;"></i>');;
+            btnIconBase = $('<i/>');
 
         //set Widget title
         this.setTitle("Visualizer");
@@ -59,7 +66,7 @@ define(['logManager',
 
         toolbar.addToggleButton({
             "title": "Split view ON/OFF",
-            "icon": btnIconBase.clone().addClass('webgme icon-two-columns'),
+            "icon": btnIconBase.clone().addClass('gme icon-gme_split-panels'),
             "clickFn": function (data, toggled) {
                 self._p2Editor(toggled);
             }});
@@ -155,7 +162,7 @@ define(['logManager',
     };
 
     VisualizerPanel.prototype.setActiveVisualizer = function (visualizer) {
-        var panel = WebGMEGlobal.PanelManager.getActivePanel() === this._activePanel['p1'] ? 'p1' : 'p2',
+        var panel = WebGMEGlobal.PanelManager.getActivePanel() === this._activePanel.p1 ? 'p1' : 'p2',
             ul = panel === 'p1' ? this._ul1 : this._ul2;
 
         this._setActiveVisualizer(visualizer, ul);
@@ -222,12 +229,12 @@ define(['logManager',
                         var msg = "Failed to download '" + err.requireModules[0] + "'";
                         //for any error store undefined in the list and the default decorator will be used on the canvas
                         self.logger.error(msg);
-                        a.append(' <i class="icon-warning-sign" title="' + msg + '"></i>');
+                        a.append(' <i class="glyphicon glyphicon-warning-sign" title="' + msg + '"></i>');
                         self._removeLoader(li, loaderDiv);
                         doCallBack();
                     });
             } else {
-                a.append(' <i class="icon-warning-sign"></i>');
+                a.append(' <i class="glyphicon glyphicon-warning-sign"></i>');
 
                 this.logger.warning("The visualizer with the ID '" + menuDesc.id + "' is missing 'panel' or 'control'");
 
@@ -248,7 +255,7 @@ define(['logManager',
                 if (queueLen === 0) {
                     callback();
                 }
-            }
+            };
         }
 
         for (i = 0; i < len; i += 1) {

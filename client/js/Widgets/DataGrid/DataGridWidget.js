@@ -18,7 +18,7 @@ define(['logManager',
         ROW_COMMAND_DELETE = "delete",
         ROW_COMMAND_EDIT = "edit",
         ROW_COMMAND_DELETE_TITLE = "Delete row",
-        ROW_COMMAND_EDIT_TITLE = "Edit row";
+        ROW_COMMAND_EDIT_TITLE = "edit row";
 
     DataGridWidget = function (container, params) {
         this.logger = logManager.create("DataGridWidget");
@@ -616,7 +616,7 @@ i,
         this.onRowDelete(id, aData);
     };
 
-    DataGridWidget.prototype.$_editSaveCancel = $('<i class="icon-ok editSave"></i> <i class="glyphicon glyphicon-remove editCancel"></i>');
+    DataGridWidget.prototype.$_editSaveCancel = $('<i class="glyphicon glyphicon-ok glyphicon glyphicon-ok editSave"></i> <i class="glyphicon glyphicon-remove editCancel"></i>');
 
     DataGridWidget.prototype._onRowEdit = function (rowIndex, id, aData) {
         var nRow = this._oTable.fnGetNodes(rowIndex),
@@ -629,7 +629,7 @@ i,
             col,
             row,
             editCtrl,
-            editCtrlClass = "edit",
+            editCtrlClass = "glyphicon glyphicon-edit",
             endEdit,
             self = this;
 

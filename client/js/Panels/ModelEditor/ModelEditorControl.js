@@ -998,7 +998,7 @@ define(['logManager',
 
         /************** GOTO PARENT IN HIERARCHY BUTTON ****************/
         this.$btnModelHierarchyUp = toolBar.addButton({ "title": "Go to parent",
-            "icon": "icon-circle-arrow-up",
+            "icon": "glyphicon glyphicon-circle-arrow-up",
             "clickFn": function (/*data*/) {
                 self._onModelHierarchyUp();
             }

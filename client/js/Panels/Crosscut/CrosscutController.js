@@ -1037,7 +1037,7 @@ define(['logManager',
 
                     menuItems[connectionAction + validConnectionTypes[i]] = {
                         "name": 'Create connection \'' + connObjName + '\' from \'' + sourceObjName + '\' to \'' + targetObjName + '\'',
-                        "icon": 'icon-resize-horizontal',
+                        "icon": 'glyphicon glyphicon-resize-horizontal',
                         "action": connectionAction,
                         "type": validConnectionTypes[i]
                     };

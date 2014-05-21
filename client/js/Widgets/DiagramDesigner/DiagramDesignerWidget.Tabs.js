@@ -42,7 +42,7 @@ define(['js/Toolbar/ToolbarButton',
 
         if (this._addTabs === true) {
             this.$btnAddTab = new ToolbarButton({ "title": "Add new tab...",
-                "icon": "icon-plus",
+                "icon": "glyphicon glyphicon-plus",
                 "clickFn": function (/*data*/) {
                     if (self.getIsReadOnlyMode() !== true) {
                         self.onTabAddClicked();

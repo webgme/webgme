@@ -1,4 +1,10 @@
-"use strict";
+/*globals define, _*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
+ */
+
 
 define(['js/Constants',
     'js/NodePropertyNames',
@@ -23,10 +29,12 @@ define(['js/Constants',
                                                           MetaDecoratorDiagramDesignerWidgetAspects,
                                                           MetaTextEditorDialog) {
 
+    "use strict";
+
     var MetaDecoratorDiagramDesignerWidget,
         DECORATOR_ID = "MetaDecorator",
         ABSTRACT_CLASS = 'abstract',
-        TEXT_META_EDIT_BTN_BASE = $('<i class="icon-cog text-meta"/>');
+        TEXT_META_EDIT_BTN_BASE = $('<i class="glyphicon glyphicon-cog text-meta"/>');
 
     MetaDecoratorDiagramDesignerWidget = function (options) {
 
@@ -533,7 +541,7 @@ define(['js/Constants',
 
         //by default return the bounding box edge's midpoints
 
-        if (id === undefined || id == this.hostDesignerItem.id) {
+        if (id === undefined || id === this.hostDesignerItem.id) {
             //NORTH
             cN = {"id": "0",
                 "x1": edge,

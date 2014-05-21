@@ -20,13 +20,6 @@ $webgme-toolbar-ext-toggle-hover-background-color: #E6E6E6;
     margin-left: $toolbar-item-margin-left;
     position: relative;
 
-    .btn-mini {
-      [class^="icon-"],
-      [class*=" icon-"] {
-        margin-top: 0px;
-        padding: 5px 10px;
-      }
-    }
   }
 
   .separator {

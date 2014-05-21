@@ -1,10 +1,9 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
+/*globals define, WebGMEGlobal, alert, _*/
 
-"use strict";
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
+ */
 
 define(['clientUtil',
     'js/Constants',
@@ -21,6 +20,8 @@ define(['clientUtil',
                                CommitDialog,
                                ProjectRepositoryDialog,
                                PluginToolbar) {
+
+    "use strict";
 
     var DefaultToolbar;
 
@@ -160,7 +161,7 @@ define(['clientUtil',
 
         var ddlCreate = toolbar.addDropDownButton({ "text": "Create..." });
         ddlCreate.addButton({ "title": "Create 1 item",
-            "icon": "icon-plus-sign",
+            "icon": "glyphicon glyphicon-plus-sign",
             "text": "1 item",
             "data": {'howmany': 1},
             "clickFn": function (data) {
@@ -170,7 +171,7 @@ define(['clientUtil',
         ddlCreate.addDivider();
 
         ddlCreate.addButton({ "title": "Create 10 items",
-            "icon": "icon-plus-sign",
+            "icon": "glyphicon glyphicon-plus-sign",
             "text": "10 items",
             "data": {'howmany': 10},
             "clickFn": function (data) {

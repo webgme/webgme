@@ -488,7 +488,7 @@ define(['logManager',
                     case DragHelper.DRAG_EFFECTS.DRAG_COPY:
                         menuItems[i] = {
                             "name": "Copy here",
-                            "icon": 'icon-plus'
+                            "icon": 'glyphicon glyphicon-plus'
                         };
                         break;
                     case DragHelper.DRAG_EFFECTS.DRAG_MOVE:
@@ -1091,7 +1091,7 @@ define(['logManager',
         };
         menuItems[MENU_EXINTCONF] = {
             "name": 'Export model context...',
-            "icon": 'icon-cog'
+            "icon": 'glyphicon glyphicon-cog'
         };
 
         this.designerCanvas.createMenu(menuItems, function (key) {

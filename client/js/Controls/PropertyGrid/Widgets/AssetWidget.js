@@ -7,7 +7,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
               BlobClient) {
 
         var AssetWidget,
-            BTN_ATTACH = $('<a class="btn btn-mini btn-dialog-open"><i class="icon-file"/></a>'),
+            BTN_ATTACH = $('<a class="btn btn-mini btn-dialog-open"><i class="glyphicon glyphicon-file"/></a>'),
             INPUT_FILE_UPLOAD = $('<input type="file" />'),
             MAX_FILE_SIZE = 100000000,
             ASSET_WIDGET_BASE = $('<div class="asset-widget" />'),

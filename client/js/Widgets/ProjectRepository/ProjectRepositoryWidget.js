@@ -711,7 +711,7 @@ define(['logManager',
         var td = btn.parent(),
             createBranchHTML = $('<div class="input-append control-group"></div>'),
             txtInput = $('<input class="span2 input-mini" type="text">'),
-            btnSave = $('<button class="btn btn-default btn-xs" type="button" title="Create branch"><i class="icon-ok"></i></button>'),
+            btnSave = $('<button class="btn btn-default btn-xs" type="button" title="Create branch"><i class="glyphicon glyphicon-ok"></i></button>'),
             btnCancel = $('<button class="btn btn-default btn-xs" type="button" title="Cancel"><i class="glyphicon glyphicon-remove"></i></button>'),
             self = this;
 

@@ -1,16 +1,16 @@
 @font-face {
-	font-family: 'webgme';
-	src:url('fonts/webgme.eot?7ubey7');
-	src:url('fonts/webgme.eot?#iefix7ubey7') format('embedded-opentype'),
-		url('fonts/webgme.woff?7ubey7') format('woff'),
-		url('fonts/webgme.ttf?7ubey7') format('truetype'),
-		url('fonts/webgme.svg?7ubey7#webgme') format('svg');
+	font-family: 'gme';
+	src:url('fonts/gme.eot?7eg9th');
+	src:url('fonts/gme.eot?#iefix7eg9th') format('embedded-opentype'),
+		url('fonts/gme.woff?7eg9th') format('woff'),
+		url('fonts/gme.ttf?7eg9th') format('truetype'),
+		url('fonts/gme.svg?7eg9th#gme') format('svg');
 	font-weight: normal;
 	font-style: normal;
 }
 
-.webgme {
-	font-family: 'webgme';
+.gme {
+	font-family: 'gme';
 	speak: none;
 	font-style: normal;
 	font-weight: normal;
@@ -18,41 +18,47 @@
 	text-transform: none;
 	line-height: 1;
 
+    position: relative;
+    top: 1px;
+
 	/* Better Font Rendering =========== */
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 }
 
-.icon-sharp-arrow-up:before {
+.icon-gme_straight-line:before {
 	content: "\e600";
 }
-.icon-lean-arrow-up:before {
+.icon-gme_split-panels:before {
 	content: "\e601";
 }
-.icon-diamond-head:before {
+.icon-gme_lines:before {
 	content: "\e602";
 }
-.icon-curvy:before {
+.icon-gme_grid:before {
 	content: "\e603";
 }
-.icon-grid:before {
+.icon-gme_dot-tailed-line:before {
 	content: "\e604";
 }
-.icon-two-columns:before {
+.icon-gme_diamond-headed-line:before {
 	content: "\e605";
 }
-.icon-line-around-another:before {
+.icon-gme_diagonal-arrow:before {
 	content: "\e606";
 }
-.icon-lines:before {
+.icon-gme_curvy-line:before {
 	content: "\e607";
 }
-.icon-broken-arrow-with-box:before {
+.icon-gme_crossing-lines:before {
 	content: "\e608";
 }
-.icon-broken-arrow:before {
+.icon-gme_broken-arrow-with-box:before {
 	content: "\e609";
 }
-.icon-diagonal-arrow:before {
+.icon-gme_broken-arow:before {
 	content: "\e60a";
+}
+.icon-gme_arrow-headed-line:before {
+	content: "\e60b";
 }
