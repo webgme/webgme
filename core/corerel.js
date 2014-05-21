@@ -240,28 +240,6 @@ define([ "util/assert", "core/coretree", "util/zssha1", "core/tasync", "util/can
 			return node;
 		}
 
-		function getSingleNodeHash(node) {
-			ASSERT(isValidNode(node));
-
-			var data = {
-				attributes: coretree.getProperty(node, ATTRIBUTES),
-				registry: coretree.getProperty(node, REGISTRY),
-				children: coretree.getKeys(node)
-			};
-			var prefix = "";
-
-			while (node) {
-				var overlays = coretree.getChild(node, OVERLAYS);
-				var rels = coretree.getProperty(overlays, prefix);
-				data[prefix] = rels;
-
-				prefix = "/" + coretree.getRelid(node) + prefix;
-				node = coretree.getParent(node);
-			}
-
-			return zsSHA.getHash(CANON.stringify(data));
-		}
-
         function getDataForSingleHash(node) {
             ASSERT(isValidNode(node));
 
@@ -823,8 +801,7 @@ define([ "util/assert", "core/coretree", "util/zssha1", "core/tasync", "util/can
 		corerel.getCollectionNames = getCollectionNames;
 		corerel.getCollectionPaths = getCollectionPaths;
 		corerel.loadCollection = loadCollection;
-		
-		corerel.getSingleNodeHash = getSingleNodeHash;
+
         corerel.getDataForSingleHash = getDataForSingleHash;
 		
 		corerel.getCoreTree = function() {

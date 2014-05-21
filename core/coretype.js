@@ -461,19 +461,6 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
             return newnode;
         };
 
-        core.getSingleNodeHash = function(node){
-            //TODO this function only needed while the inheritance is not in its final form!!!
-            //bb377d14fd57cbe2b0a2ad297a7a303b7a5fccf3
-            ASSERT(isValidNode(node));
-
-            var hash = "0000000000000000000000000000000000000000";
-            while( node ){
-                hash = xorHashes(hash,oldcore.getSingleNodeHash(node));
-                node = core.getBase(node);
-            }
-            return hash;
-        };
-
         core.getDataForSingleHash = function(node){
             ASSERT(isValidNode(node));
             var datas = [];

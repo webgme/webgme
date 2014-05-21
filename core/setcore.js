@@ -257,27 +257,6 @@ define([ "util/assert"], function (ASSERT) {
             return sets;
         };
 
-        setcore.getSingleNodeHash = function(node){
-            //TODO this function only needed while the inheritance is not in its final form!!!
-            //bb377d14fd57cbe2b0a2ad297a7a303b7a5fccf3
-            ASSERT(setcore.isValidNode(node));
-
-            //var hash = "0000000000000000000000000000000000000000";
-            var hash = innerCore.getSingleNodeHash(node);
-
-            //now we should stir all the sets hashes into the node's hash to get changes deep inside
-            var names = setcore.getSetNames(node);
-            for(var i=0;i<names.length;i++){
-                var setNode = setcore.getChild(setcore.getChild(node,SETS_ID),names[i]);
-                var memberRelids = setcore.getChildrenRelids(setNode);
-                for(var j=0;j<memberRelids.length;j++){
-                    hash = xorHashes(hash,innerCore.getSingleNodeHash(setcore.getChild(setNode,memberRelids[j])));
-                }
-            }
-
-            return hash;
-        };
-
         setcore.getDataForSingleHash = function(node){
             ASSERT(setcore.isValidNode(node));
             var datas = innerCore.getDataForSingleHash(node);
