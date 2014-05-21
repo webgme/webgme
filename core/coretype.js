@@ -75,34 +75,6 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 			return node;
 		}
 
-        /*core.loadChild = function(node,relid){
-            var child = TASYNC.call(__loadBase,oldcore.loadChild(node,relid));
-            var base = core.getBase(node);
-            var basechild = null;
-            if(base && oldcore.getChildrenRelids(base).indexOf(relid) !== -1){
-                basechild = TASYNC.call(__loadBase,oldcore.loadChild(base,relid));
-            }
-            return TASYNC.call(function(ch,bch,n,r){
-                var done = null;
-                if(ch === null){
-                    if(bch !== null){
-                        ch = core.createNode({base:bch,parent:n,relid:r});
-                        done = core.persist(core.getRoot(n));
-                    }
-                }
-                return TASYNC.call(function(child){return child;},ch,done);
-            },child,basechild,node,relid);
-        };*/
-        /*function _childFinalization(child,basechild,node,relid){
-            ASSERT(child || basechild);
-            if(!child){
-                //creating in-memory empty child
-                child = core.getChild(node,relid);
-                child.base = basechild;
-            }
-            return child;
-        }*/
-
         core.loadChild = function(node,relid){
             var child = null,
                 base = core.getBase(node),
@@ -112,17 +84,16 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
                 if(oldcore.getChildrenRelids(base).indexOf(relid) !== -1) {
                     //inherited child
                     if (oldcore.getChildrenRelids(node).indexOf(relid) !== -1) {
-                        //but it is overwritten
-                        return TASYNC.call(__loadBase, oldcore.loadChild(node, relid));
-                    } else {
-                        //empty inherited child
-                        basechild = TASYNC.call(core.loadChild, base, relid);
-                        return TASYNC.call(function(b,n,r){
-                            child = core.getChild(n,r);
-                            child.base = b;
-                            return child;
-                        },basechild,node,relid);
+                        //but it is overwritten so we should load it
+                        child = oldcore.loadChild(node, relid);
                     }
+                    basechild = core.loadChild( base, relid);
+                    return TASYNC.call(function(b,c,n,r){
+                        child = c || core.getChild(n,r);
+                        child.base = b;
+                        core.getCoreTree().setHashed(child,true);
+                        return child;
+                    },basechild,child,node,relid);
                 }
             }
             //normal child
@@ -160,7 +131,7 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
                 } else if(isFalseNode(node)){
                     var root = core.getRoot(node);
                     oldcore.deleteNode(node);
-                    return TASYNC.call(function(){return null;},core.persist(root));
+                    return null;
                 } else {
                     return TASYNC.call(__loadBase2, node, oldcore.loadPointer(node, "base"));
                 }
@@ -540,62 +511,6 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
                     oldcore.deleteNode(node);
                 }
             }
-        };
-
-        // --- now we should check when we have to make hashed child from an empty inherited child
-        function _checkForHashingNeed(node){
-            var coretree = core.getCoreTree();
-            while(node){
-                if(_isEmptyInheritedChild(node)){
-                    coretree.setHashed(node,true);
-                    core.setPointer(node,'base',core.getBase(node));
-                }
-                node = core.getParent(node);
-            }
-        }
-        function _isEmptyInheritedChild(node){
-            var base = core.getBase(node),
-                parent = core.getParent(node),
-                coretree = core.getCoreTree();
-
-            if(base === null){
-                return false;
-            }
-
-            if(parent === null){
-                return false;
-            }
-
-            if(core.getChildrenRelids(parent).indexOf(core.getRelid(node)) === -1){
-                //probably not a real child
-                return false;
-            }
-
-            if(core.getPath(node).indexOf('_') !== -1){
-                //special child should never be hashed...
-                return false;
-            }
-
-            if(!coretree.isHashed(node)){
-                return true;
-            }
-
-            return false;
-
-        }
-        core.setAttribute = function(node,name,value){
-            _checkForHashingNeed(node);
-            oldcore.setAttribute(node,name,value);
-        };
-        core.setRegistry = function(node,name,value){
-            _checkForHashingNeed(node);
-            oldcore.setRegistry(node,name,value);
-        };
-        core.setPointer = function(node,name,target){
-            //unfortunate combine with the null pointer
-            //TODO think the null pointer again!!!
-            _checkForHashingNeed(node);
-            oldcore.setPointer(node,name,target);
         };
 
         // -------- kecso
