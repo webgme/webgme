@@ -10,7 +10,7 @@ $sidepane-panel-body-background-color: #F5F5F5;
 $sidepane-panel-body-background-color-read-only: #FBFBFB;
 
 $sidepane-panel-border-color: #E9E9E9;
-$sidepane-panel-border-radius: 4px;
+$sidepane-panel-border-radius: 0;
 
 $panel-header-height: 3px;
 $side-panel-header-height: 18px;
@@ -194,7 +194,7 @@ $title-font-size: 14px;
     position: relative;
     padding: 0px;
     margin-bottom: 2px;
-    border: 1px solid $sidepane-panel-border-color;
+    border: 0;
     -webkit-border-radius: $sidepane-panel-border-radius;
     -moz-border-radius: $sidepane-panel-border-radius;
     border-radius: $sidepane-panel-border-radius;
@@ -227,10 +227,7 @@ $title-font-size: 14px;
 
     .panel-body {
       background-color: $sidepane-panel-body-background-color;
-      padding-top: 3px;
-      padding-bottom: 3px;
-      padding-left: 0px;
-      padding-right: 0px;
+      padding: 0;
     }
 
     &.read-only {
