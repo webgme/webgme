@@ -47,12 +47,15 @@ define(['./DiagramDesignerWidget.OperatingModes',
 
                 //progress text in toolbar for debug only
                 this.toolbarItems.progressText = toolbar.addLabel();
+
+                toolbar.addSeparator();
             }
 
             /************** ROUTING MANAGER SELECTION **************************/
             this.toolbarItems.radioButtonGroupRouteManager = toolbar.addRadioButtonGroup(function (data) {
                 self._onConnectionRouteManagerChanged(data.type);
             });
+
 
             this.toolbarItems.radioButtonGroupRouteManager.addButton({ "title": "Basic route manager",
                 "icon": btnIconBase.clone().addClass('gme icon-gme_diagonal-arrow'),
@@ -70,6 +73,8 @@ define(['./DiagramDesignerWidget.OperatingModes',
                 "data": { "type": "basic3"}
             });
             /************** END OF - ROUTING MANAGER SELECTION **************************/
+
+            toolbar.addSeparator();
 
             this.toolbarItems.radioButtonGroupOperatingMode = toolbar.addRadioButtonGroup(function (data) {
                 self.setOperatingMode(data.mode);
@@ -97,6 +102,7 @@ define(['./DiagramDesignerWidget.OperatingModes',
                 }
             );
 
+            toolbar.addSeparator();
 
             this.toolbarItems.btnXing = toolbar.addToggleButton({
                     "icon": btnIconBase.clone().addClass('gme icon-gme_crossing-lines'),
@@ -105,6 +111,8 @@ define(['./DiagramDesignerWidget.OperatingModes',
                         self._setConnectionXingJumpMode(isPressed);
                     }}
             );
+
+            toolbar.addSeparator();
 
             if (this._lineStyleControls === true) {
                 /************** END OF - VISUAL STYLE ARROWS *****************/

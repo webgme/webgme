@@ -1,5 +1,27 @@
+$toolbar-button-color: #00235b;
 
+.toolbar-container {
+  a {
+    color: $toolbar-button-color;
+    transition: background-color .2s;
+  }
 
+  a:hover,
+  a:active{
+    color: #fff;
+    background-color: #00235b;
+  }
+
+  .btn:active, .btn.active {
+    background-color: #eee;
+    box-shadow: inset 0 0 5px rgba(0,0,0,.125);
+  }
+
+  .btn.active:hover {
+    color: $toolbar-button-color;
+  }
+
+}
 
 
 

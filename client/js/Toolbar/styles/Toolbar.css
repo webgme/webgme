@@ -1,7 +1,6 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
  */
 .webgme-toolbar,
 .webgme-toolbar-ext {
@@ -9,26 +8,26 @@
   .webgme-toolbar .toolbar-button,
   .webgme-toolbar-ext .toolbar-button {
     display: inline-block;
-    margin-left: 3px;
+    margin-left: 0;
     position: relative; }
   .webgme-toolbar .separator,
   .webgme-toolbar-ext .separator {
-    margin-left: 5px;
-    margin-right: 2px;
-    background-color: #CCCCCC;
-    width: 1px;
-    height: 19px;
+    margin-left: 0;
+    margin-right: 0;
+    border-right: 1px dotted #9fb2d1;
+    width: 0;
+    height: 28px;
     display: inline-block;
     vertical-align: middle;
-    position: relative;
-    top: 1px; }
+    position: relative; }
   .webgme-toolbar .btn-group,
   .webgme-toolbar-ext .btn-group {
-    margin-left: 3px; }
+    margin-left: 0;
+    margin-right: 0; }
   .webgme-toolbar .toolbar-input,
   .webgme-toolbar-ext .toolbar-input {
     display: inline-block;
-    margin-left: 3px;
+    margin-left: 0;
     position: relative; }
     .webgme-toolbar .toolbar-input .input-append,
     .webgme-toolbar .toolbar-input .input-prepend,
@@ -38,7 +37,7 @@
   .webgme-toolbar .toolbar-label,
   .webgme-toolbar-ext .toolbar-label {
     display: inline-block;
-    margin-left: 3px;
+    margin-left: 0;
     position: relative;
     font-size: 12px;
     line-height: 22px;
@@ -47,7 +46,7 @@
   .webgme-toolbar .toolbar-checkbox,
   .webgme-toolbar-ext .toolbar-checkbox {
     display: inline-block;
-    margin-left: 3px;
+    margin-left: 0;
     position: relative;
     vertical-align: middle; }
   .webgme-toolbar .dropdown-menu li .iCheckBox,
@@ -108,3 +107,16 @@
     left: -3px; }
   .webgme-toolbar-ext-toggle > i:last-child {
     top: 11px; }
+
+div.toolbar-container {
+  position: relative;
+  /*overflow: hidden;*/
+  overflow-x: visible;
+  top: 34px;
+  height: 30px;
+  padding: 0; }
+
+div.toolbar-container .btn {
+  border: 1px solid #fff;
+  border-radius: 0;
+  padding: 4px 8px; }

@@ -1,11 +1,12 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
  */
 
-$toolbar-item-margin-left: 3px;
-$toolbar-separator-margin: 5px;
+$toolbar-item-margin-left: 0;
+$toolbar-separator-margin: 0;
+$separator-bg-color: #9fb2d1;
+
 
 $webgme-toolbar-ext-background-color: #F5F5F5;
 $webgme-toolbar-ext-border-color: rgb(187, 187, 187);
@@ -25,17 +26,17 @@ $webgme-toolbar-ext-toggle-hover-background-color: #E6E6E6;
   .separator {
     margin-left: $toolbar-separator-margin;
     margin-right: $toolbar-separator-margin - $toolbar-item-margin-left;
-    background-color: #CCCCCC;
-    width: 1px;
-    height: 19px;
+    border-right: 1px dotted $separator-bg-color;
+    width: 0;
+    height: 28px;
     display: inline-block;
     vertical-align: middle;
     position: relative;
-    top: 1px;
   }
 
   .btn-group {
-    margin-left: $toolbar-item-margin-left;
+    margin-left: $toolbar-separator-margin;
+    margin-right: $toolbar-separator-margin;
   }
 
   .toolbar-input {
@@ -146,4 +147,20 @@ $webgme-toolbar-ext-toggle-hover-background-color: #E6E6E6;
   >i:last-child {
     top: 11px;
   }
+}
+
+
+div.toolbar-container {
+    position: relative;
+    /*overflow: hidden;*/
+    overflow-x: visible;
+    top: 34px;
+    height: 30px;
+    padding: 0;
+}
+
+div.toolbar-container .btn {
+    border: 1px solid #fff;
+    border-radius: 0;
+    padding: 4px 8px;
 }

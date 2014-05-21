@@ -110,13 +110,9 @@ div.spacer {
     z-index: 10 !important;
 }
 
-div.toolbar-container {
-    position: relative;
-    /*overflow: hidden;*/
-    overflow-x: visible;
-    top: 35px;
-    height: 34px;
-    background-color: #F5F5F5;
+
+.ui-layout-pane {
+    border: 0;
 }
 
 /*FIX jquery context menu's z-index to be over the jqueryUI's layouting...*/
