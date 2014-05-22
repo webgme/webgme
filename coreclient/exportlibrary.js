@@ -139,7 +139,7 @@ define([],function(){
         }*/
         return {
             attributes:getAttributesOfNode(node),
-            meta:"TODO",
+            meta:_core.getOwnJsonMeta(node),
             pointers:getPointersOfNode(node),
             registry:getRegistryOfNode(node),
             sets:getSetsOfNode(node)

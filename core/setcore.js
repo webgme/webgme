@@ -7,16 +7,6 @@
 define([ "util/assert"], function (ASSERT) {
     "use strict";
 
-    var xorHashes = function (a, b) {
-        var outHash = "";
-        if(a.length === b.length){
-            for(var i=0;i< a.length;i++){
-                outHash += (parseInt(a.charAt(i),16) ^ parseInt(b.charAt(i),16)).toString(16);
-            }
-        }
-        return outHash;
-    };
-
     var SETS_ID = '_sets';
     var REL_ID = 'member';
 
