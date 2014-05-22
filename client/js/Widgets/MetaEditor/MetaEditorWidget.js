@@ -22,7 +22,7 @@ define(['logManager',
         params.loggerName = "MetaEditorWidget";
 
         //disable line style parameter controls in toolbar
-        params.lineStyleControls = false;
+        params.lineStyleControls = true;
 
         params.tabsEnabled = true;
         params.addTabs = true;
