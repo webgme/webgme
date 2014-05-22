@@ -64,6 +64,15 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 			return node.base;
 		};
 
+        core.getBaseRoot = function(node) {
+            ASSERT(isValidNode(node));
+            while (node.base !== null){
+                node = node.base;
+            }
+
+            return node;
+        };
+
 		core.loadRoot = function(hash) {
 			return TASYNC.call(__loadRoot2, oldcore.loadRoot(hash));
 		};
@@ -222,7 +231,6 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 			var node = oldcore.createNode(parameters);
             node.base = base;
             oldcore.setPointer(node,"base",base);
-            _checkForHashingNeed(parent); //it is possible that it is a new child of an instance
 
 			return node;
 		};
