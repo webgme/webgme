@@ -99,8 +99,8 @@
     line-height: 15px;
 }
 
-.btn-micro .caret{
-    margin-top: 5px;
+.btn-micro > i:empty{
+    margin-right: .75ex;
 }
 
 .btn-micro [class^="icon-"],
