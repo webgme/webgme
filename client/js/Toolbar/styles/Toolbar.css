@@ -8,15 +8,14 @@
   .webgme-toolbar .toolbar-button,
   .webgme-toolbar-ext .toolbar-button {
     display: inline-block;
-    margin-left: 0;
     position: relative; }
   .webgme-toolbar .separator,
   .webgme-toolbar-ext .separator {
     margin-left: 0;
-    margin-right: 0;
+    margin-right: -2px;
     border-right: 1px solid #9fb2d1;
     width: 0;
-    height: 12px;
+    height: 26px;
     display: inline-block;
     vertical-align: middle;
     position: relative; }
@@ -27,7 +26,7 @@
   .webgme-toolbar .toolbar-input,
   .webgme-toolbar-ext .toolbar-input {
     display: inline-block;
-    margin-left: 0;
+    margin-left: 2px;
     position: relative; }
     .webgme-toolbar .toolbar-input .input-append,
     .webgme-toolbar .toolbar-input .input-prepend,
@@ -37,7 +36,7 @@
   .webgme-toolbar .toolbar-label,
   .webgme-toolbar-ext .toolbar-label {
     display: inline-block;
-    margin-left: 0;
+    margin-left: 2px;
     position: relative;
     font-size: 12px;
     line-height: 22px;
@@ -46,7 +45,7 @@
   .webgme-toolbar .toolbar-checkbox,
   .webgme-toolbar-ext .toolbar-checkbox {
     display: inline-block;
-    margin-left: 0;
+    margin-left: 2px;
     position: relative;
     vertical-align: middle; }
   .webgme-toolbar .dropdown-menu li .iCheckBox,
@@ -119,5 +118,6 @@ div.toolbar-container {
 div.toolbar-container .btn {
   border: 1px solid #fff;
   border-radius: 0;
-  padding: 4px 8px;
+  padding: 1px 5px;
+  margin: 3px 5px !important;
   box-shadow: none; }
