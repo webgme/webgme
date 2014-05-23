@@ -195,15 +195,16 @@ div.css-zoom.diagram-designer-zoom {
 div.diagram-designer-drag-outline {
   white-space: nowrap; }
 
-/*
-TABS CONTAINER
-*/
+/* TABS CONTAINER */
+.active-panel .diagram-designer-tabs-container {
+  background-color: rgba(235, 235, 235, 0.8); }
+
 .diagram-designer-tabs-container {
   position: absolute;
   top: 3px;
   width: 100%;
   height: 26px;
-  background-color: rgba(235, 235, 235, 0.8);
+  background-color: rgba(248, 248, 248, 0.8);
   padding-top: 1px; }
   .diagram-designer-tabs-container > div {
     display: table-cell;

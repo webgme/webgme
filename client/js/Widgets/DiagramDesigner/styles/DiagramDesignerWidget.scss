@@ -306,15 +306,19 @@ div.diagram-designer-drag-outline {
   white-space: nowrap;
 }
 
-/*
-TABS CONTAINER
-*/
+/* TABS CONTAINER */
+
+.active-panel .diagram-designer-tabs-container {
+  background-color: rgba(235, 235, 235, 0.8);
+}
+
 .diagram-designer-tabs-container {
   position: absolute;
   top: 3px;
   width : 100%;
   height: $tabs-container-height;
-  background-color: rgba(235, 235, 235, 0.8);
+  background-color: rgba(248, 248, 248, 0.80);
+
   padding-top: 1px;
 
   > div {
