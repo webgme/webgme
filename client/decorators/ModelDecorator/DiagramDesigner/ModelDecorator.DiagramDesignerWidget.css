@@ -23,7 +23,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     width: 121px;
-    border-bottom: 1px solid #000000;
+    border-bottom: none;
     height: 16px;
     line-height: 16px; }
   .model-decorator div.conn-type {

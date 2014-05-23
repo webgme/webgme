@@ -43,7 +43,7 @@ $abstract-class-name-color: #AAAAAA;
       overflow: hidden;
       text-overflow: ellipsis;
       width: $ports-width * 2 + $ports-separator-width + $padding * 2;
-      border-bottom: 1px solid #000000;
+      border-bottom: none;
       height: $model-name-height;
       line-height: $model-name-height;
     }
