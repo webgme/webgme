@@ -1,16 +1,17 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
- * Author: Robert Kereskenyi
+/*globals define, Raphael, window*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-"use strict";
 
 define(['logManager',
     'clientUtil',
     './DiagramDesignerWidget.Constants'], function (logManager,
                             clientUtil,
                             DiagramDesignerWidgetConstants) {
+
+    "use strict";
 
     var SelectionManager,
         SELECTION_OVERLAP_RATIO = 0.5,
@@ -482,7 +483,7 @@ define(['logManager',
             } else {
                 this._diagramDesigner.skinParts.$selectionOutline = SELECTION_OUTLINE_BASE.clone();
 
-                this._diagramDesigner.skinParts.$itemsContainer.append(this._diagramDesigner.skinParts.$selectionOutline);
+                this._diagramDesigner.skinParts.$itemsContainer.prepend(this._diagramDesigner.skinParts.$selectionOutline);
             }
 
             this._diagramDesigner.skinParts.$selectionOutline.css({ "left": bBox.x,

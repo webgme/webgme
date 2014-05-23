@@ -37,7 +37,7 @@ a:hover {
 
 /* Selected styling */
 .selected > div {
-  box-shadow: 0 0 4px rgba(0, 35, 91, 0.75); }
+  box-shadow: 0 0 6px #ff7700; }
 
 .s-btn {
   background-color: #00235b !important;
