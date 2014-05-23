@@ -5,16 +5,16 @@
                 <button type="button" class="close" data-dismiss="modal">×</button>
                 <h3>Edit attribute parameters...</h3>
             </div>
-            <div class="modal-body form-horizontal">
-                <div class="control-group" id="pName">
-                    <label class="control-label" for="inputName">Name</label>
-                    <div class="controls">
+            <form class="modal-body form-horizontal" role="form">
+                <div class="form-group" id="pName">
+                    <label class="col-sm-4 control-label" for="inputName">Name</label>
+                    <div class="col-sm-8 controls">
                         <input type="text" id="inputName" placeholder="Name">
                     </div>
                 </div>
-                <div class="control-group">
-                    <label class="control-label" for="inputType">Type</label>
-                    <div class="controls">
+                <div class="form-group">
+                    <label class="col-sm-4 control-label" for="inputType">Type</label>
+                    <div class="col-sm-8 controls">
                         <select id="inputType">
                             <option>string</option>
                             <option>integer</option>
@@ -24,15 +24,15 @@
                         </select>
                     </div>
                 </div>
-                <div class="control-group" id="pDefaultValue">
-                    <label class="control-label" for="inputDefaultValue">Default value</label>
-                    <div class="controls">
+                <div class="form-group" id="pDefaultValue">
+                    <label class="col-sm-4 control-label" for="inputDefaultValue">Default value</label>
+                    <div class="col-sm-8 controls">
                         <input type="text" id="inputDefaultValue" placeholder="Default value">
                     </div>
                 </div>
                 <div class="control-group hide" id="pDefaultValueBoolean">
-                    <label class="control-label">Default value</label>
-                    <div class="controls">
+                    <label class="col-sm-4 control-label">Default value</label>
+                    <div class="col-sm-8 controls">
                         <label class="radio inline">
                             <input type="radio" name="rbBoolean" id="rbBooleanTrue" value="true" checked>
                             TRUE
@@ -43,21 +43,22 @@
                         </label>
                     </div>
                 </div>
-                <div class="control-group" id="pEnum">
-                    <div class="controls">
+                <div class="form-group" id="pEnum">
+                    <label class="col-sm-4 control-label"></label>
+                    <div class="col-sm-8 controls">
                         <label class="checkbox">
                             <input type="checkbox" id="cbEnum" value="">
                             Enumeration
                         </label>
                     </div>
                 </div>
-                <div id="pEnumValues" class="control-group hide">
-                    <label class="control-label" for="inputEnumValues">Values</label>
-                    <div class="controls">
+                <div id="pEnumValues" class="form-group hide">
+                    <label class="col-sm-4 control-label" for="inputEnumValues">Values</label>
+                    <div class="col-sm-8 controls">
                         <textarea rows="3" id="inputEnumValues" placeholder="Enter each value in separate line"></textarea>
                     </div>
                 </div>
-            </div>
+            </form>
             <div class="modal-footer">
                 <a href="#" class="btn btn-danger btn-delete pull-left">Delete</a>
                 <a href="#" class="btn btn-primary disabled btn-save">Save</a>
