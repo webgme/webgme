@@ -9,7 +9,8 @@ div.iCheckBox {
   background: -webkit-linear-gradient(top, #cbcbcb, white);
   background: -o-linear-gradient(top, #cbcbcb, white);
   background: linear-gradient(to bottom, #cbcbcb, white);
-  box-shadow: 0 0 2px rgba(0, 0, 0, 0.4); }
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.4), inset 0 0 2px rgba(0, 0, 0, 0.8);
+  transition: opacity .3s; }
   div.iCheckBox .sw {
     width: 50%;
     height: 100%;
@@ -40,10 +41,10 @@ div.iCheckBox {
     color: #666666;
     overflow: hidden; }
   div.iCheckBox.checked {
-    background: -moz-linear-gradient(top, #0787bd, #5bbce6);
-    background: -webkit-linear-gradient(top, #0787bd, #5bbce6);
-    background: -o-linear-gradient(top, #0787bd, #5bbce6);
-    background: linear-gradient(to bottom, #0787bd, #5bbce6); }
+    background: -moz-linear-gradient(top, #3160ab, #082c67);
+    background: -webkit-linear-gradient(top, #3160ab, #082c67);
+    background: -o-linear-gradient(top, #3160ab, #082c67);
+    background: linear-gradient(to bottom, #3160ab, #082c67); }
     div.iCheckBox.checked .sw {
       left: 31.4px; }
     div.iCheckBox.checked .txt {
@@ -51,3 +52,6 @@ div.iCheckBox {
       color: white; }
   div.iCheckBox.disabled {
     opacity: 0.5; }
+
+div.iCheckBox:hover {
+  opacity: .8; }

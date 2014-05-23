@@ -1,8 +1,8 @@
 $unchecked-background-gradient-top: #CBCBCB;
 $unchecked-background-gradient-bottom: #FFFFFF;
 
-$checked-background-gradient-top: #0787BD;
-$checked-background-gradient-bottom: #5BBCE6;
+$checked-background-gradient-top: #3160ab;
+$checked-background-gradient-bottom: #082c67;
 
 $switch-background-gradient-top: #D4D4D4;
 $switch-background-gradient-bottom: #FFFFFF;
@@ -28,7 +28,9 @@ div.iCheckBox {
   background: -webkit-linear-gradient( top, $unchecked-background-gradient-top, $unchecked-background-gradient-bottom );
   background: -o-linear-gradient( top, $unchecked-background-gradient-top, $unchecked-background-gradient-bottom );
   background: linear-gradient( to bottom, $unchecked-background-gradient-top, $unchecked-background-gradient-bottom );
-  box-shadow: 0 0 2px rgba(0,0,0,.4);
+  box-shadow: 0 0 2px rgba(0,0,0,.4), inset 0 0 2px rgba(0,0,0,.8);
+
+  transition: opacity .3s;
 
   .sw {
     width: 50%;
@@ -83,4 +85,8 @@ div.iCheckBox {
   &.disabled {
     opacity: 0.5;
   }
+}
+
+div.iCheckBox:hover {
+  opacity: .8;
 }
