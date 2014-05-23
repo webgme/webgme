@@ -1,0 +1,27 @@
+/*
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ * 
+ * Author: Robert Kereskenyi
+ */
+.popover.pobox .popover-content {
+  white-space: nowrap; }
+.popover.pobox.ddwa-warning {
+  background-color: #fcf8e3 !important;
+  color: #c09853 !important; }
+  .popover.pobox.ddwa-warning .arrow:after {
+    border-top-color: #fcf8e3 !important; }
+.popover.pobox.ddwa-success {
+  background-color: #dff0d8 !important;
+  color: #468847 !important; }
+  .popover.pobox.ddwa-success .arrow:after {
+    border-top-color: #dff0d8 !important; }
+.popover.pobox.ddwa-error {
+  background-color: #f2dede !important;
+  color: #b94a48 !important; }
+  .popover.pobox.ddwa-error .arrow:after {
+    border-top-color: #f2dede !important; }
+.popover.pobox.ddwa-info {
+  background-color: #d9edf7 !important;
+  color: #3a87ad !important; }
+  .popover.pobox.ddwa-info .arrow:after {
+    border-top-color: #d9edf7 !important; }

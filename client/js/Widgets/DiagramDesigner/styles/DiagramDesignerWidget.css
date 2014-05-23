@@ -264,3 +264,8 @@ div.diagram-designer-drag-outline {
 .read-only .diagram-designer-tabs-container div.tab-list-container ul.nav.nav-tabs > li.active > a [class^="icon-"],
 .read-only .diagram-designer-tabs-container div.tab-list-container ul.nav.nav-tabs > li.active > a [class*=" icon-"] {
   display: none; }
+
+.rotate-options {
+  top: -52px;
+  left: 16px;
+  display: none; }

@@ -609,10 +609,13 @@ define(['logManager',
         this._renderRotateHandlers();
     };
     /************* END OF --- RENDER COMMAND BUTTONS ON SELECTION OUTLINE ************************/
-    var ROTATION_BUTTON_BASE = $('<div/>', {
-        "class" : "s-btn rotate bottom"
-    });
-    ROTATION_BUTTON_BASE.html('<i class="glyphicon glyphicon-repeat"><div class="popover right nowrap" style="top: -10px; left: 22px; display: none;"><div class="arrow"></div><div class="popover-content narrow"><div class="btn-group"><a class="btn btn-small" id="rotate-left" title="Rotate left"><i class="glyphicon glyphicon-repeat flip-vertical"></i></a><a class="btn  btn-small" id="rotate-right" title="Rotate right"><i class="glyphicon glyphicon-repeat"></i></a><a class="btn  btn-small" id="rotate-reset" title="Reset rotation"><i class="glyphicon glyphicon-remove"></i></a></div></div></div></i>');
+    var ROTATION_BUTTON_BASE = $(
+        '<div/>', {
+            "class" : "s-btn rotate bottom"
+        });
+
+    ROTATION_BUTTON_BASE.html('' +
+        '<i class="glyphicon glyphicon-repeat"><div class="popover right nowrap rotate-options"><div class="arrow"></div><div class="popover-content narrow"><div class="btn-group"><a class="btn btn-small" id="rotate-left" title="Rotate left"><i class="glyphicon glyphicon-repeat flip-vertical"></i></a><a class="btn  btn-small" id="rotate-right" title="Rotate right"><i class="glyphicon glyphicon-repeat"></i></a><a class="btn  btn-small" id="rotate-reset" title="Reset rotation"><i class="glyphicon glyphicon-remove"></i></a></div></div></div></i>');
 
     var ROTATION_DEGREE_BASE = $('<div/>', {
         "class" : "rotation-deg"

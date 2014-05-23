@@ -287,3 +287,11 @@ ul.dropdown-menu {
 input.no-focus-collapse:not(:focus) {
     width: 30px;
 }
+
+.flip-vertical {
+    -webkit-transform:scaleX(-1);
+    -moz-transform:scaleX(-1);
+    -ms-transform:scaleX(-1);
+    -o-transform:scaleX(-1);
+    transform:scaleX(-1);
+}
