@@ -26,3 +26,6 @@ a:hover {
 
 .separator {
   border-color: #a5afbe; }
+
+.navbar-inverse {
+  background-image: linear-gradient(to bottom, #040524 0, #03071d 100%); }
