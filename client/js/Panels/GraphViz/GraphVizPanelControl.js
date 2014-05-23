@@ -1,4 +1,10 @@
-"use strict";
+/*globals define, _, WebGMEGlobal, DEBUG*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
+ */
+
 
 define(['logManager',
     'clientUtil',
@@ -9,6 +15,8 @@ define(['logManager',
                                        CONSTANTS,
                                        GMEConcepts,
                                        nodePropertyNames) {
+
+    "use strict";
 
     var GraphVizControl,
         MODEL = 'MODEL';
@@ -284,16 +292,16 @@ define(['logManager',
         /************** END OF - GOTO PARENT IN HIERARCHY BUTTON ****************/
 
         /************** MODEL / CONNECTION filter *******************/
-        this.$lblShowConnection = toolBar.addLabel();
-        this.$lblShowConnection.text('SHOW CONNECTIONS:');
-        this._toolbarItems.push(this.$lblShowConnection);
 
-        this.$cbShowConnection = toolBar.addCheckBox({ "title": "Go to parent",
+        this.$cbShowConnection = toolBar.addCheckBox({
+            "title": "Show connection",
+            "icon": "gme icon-gme_diagonal-arrow",
             "checkChangedFn": function(data, checked){
                 self._displayModelsOnly = !checked;
                 self._generateData();
             }
         });
+
         this._toolbarItems.push(this.$cbShowConnection);
         /************** END OF - MODEL / CONNECTION filter *******************/
 

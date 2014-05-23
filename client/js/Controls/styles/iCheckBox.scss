@@ -9,7 +9,7 @@ $switch-background-gradient-bottom: #FFFFFF;
 $switch-border-color: #C4C4C4;
 
 $checked-text-color: #FFFFFF;
-$unchecked-text-color: #797979;
+$unchecked-text-color: #666;
 
 $width: 60px;
 $height: $width * 0.3;
@@ -28,10 +28,11 @@ div.iCheckBox {
   background: -webkit-linear-gradient( top, $unchecked-background-gradient-top, $unchecked-background-gradient-bottom );
   background: -o-linear-gradient( top, $unchecked-background-gradient-top, $unchecked-background-gradient-bottom );
   background: linear-gradient( to bottom, $unchecked-background-gradient-top, $unchecked-background-gradient-bottom );
+  box-shadow: 0 0 2px rgba(0,0,0,.4);
 
   .sw {
-    width: $switch-width;
-    height: $height - 2 * $switch-border-width;
+    width: 50%;
+    height: 100%;
     background: -moz-linear-gradient( top, $switch-background-gradient-top, $switch-background-gradient-bottom );
     background: -webkit-linear-gradient( top, $switch-background-gradient-top, $switch-background-gradient-bottom );
     background: -o-linear-gradient( top, $switch-background-gradient-top, $switch-background-gradient-bottom );
@@ -44,7 +45,9 @@ div.iCheckBox {
 
     [class^="icon-"],
     [class*=" icon-"] {
-      margin-top: -2px;
+      font-size: 130%;
+      position: relative;
+      top: -6%;
     }
   }
 
@@ -59,7 +62,6 @@ div.iCheckBox {
     font-weight: bold;
     text-align: center;
     color: $unchecked-text-color;
-    text-shadow: 0px 0px 1px $unchecked-text-color;
     overflow: hidden;
   }
 
@@ -75,7 +77,6 @@ div.iCheckBox {
     .txt {
       left: 0px;
       color: $checked-text-color;
-      text-shadow: 0px 0px 1px $checked-text-color;
     }
   }
 

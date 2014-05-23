@@ -231,7 +231,7 @@ define(['./DiagramDesignerWidget.OperatingModes',
             );
 
             this.toolbarItems.cpBorderColor = toolbar.addColorPicker({
-                'icon':  btnIconBase.clone().addClass('gme icon-gme_grid'),
+                'icon':  btnIconBase.clone().addClass('gme icon-gme_pen'),
                 'title': 'Border color',
                 'colorChangedFn': function (color) {
                     self.onSelectionBorderColorChanged(self.selectionManager.getSelectedElements(), color);
