@@ -21,13 +21,13 @@ define(['clientUtil',
 
         this._dialog.modal('show');
 
-        this._dialog.on('shown', function () {
+        this._dialog.on('shown.bs.modal', function () {
             if (existingPointerNames.length === 0) {
-	        	self._txtNewPointerName.focus();
-	        }
+                self._txtNewPointerName.focus();
+            }
         });
 
-        this._dialog.on('hidden', function () {
+        this._dialog.on('hidden.bs.modal', function () {
             self._dialog.remove();
             self._dialog.empty();
             self._dialog = undefined;

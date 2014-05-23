@@ -30,7 +30,7 @@ define(['clientUtil',
 
         this._dialog.modal('show');
 
-        this._dialog.on('hidden', function () {
+        this._dialog.on('hidden.bs.modal', function () {
             self._dialog.remove();
             self._dialog.empty();
             self._dialog = undefined;

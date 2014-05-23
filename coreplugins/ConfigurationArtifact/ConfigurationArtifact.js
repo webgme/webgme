@@ -183,6 +183,7 @@ define(['plugin/PluginConfig',
 
         self.createMessage(null, 'No xml-file given, converted default xml-string.');
 
+        callback(null, self.result);
     };
 
     /**
