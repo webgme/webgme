@@ -442,11 +442,11 @@ define(['logManager',
             }
         }
 
-        /*this.diagramDesigner.toolbarItems.ddbtnConnectionArrowStart.enabled(onlyConnectionTypeSelected);
+        this.diagramDesigner.toolbarItems.ddbtnConnectionArrowStart.enabled(onlyConnectionTypeSelected);
         this.diagramDesigner.toolbarItems.ddbtnConnectionPattern.enabled(onlyConnectionTypeSelected);
         this.diagramDesigner.toolbarItems.ddbtnConnectionArrowEnd.enabled(onlyConnectionTypeSelected);
         this.diagramDesigner.toolbarItems.ddbtnConnectionLineType.enabled(onlyConnectionTypeSelected);
-        this.diagramDesigner.toolbarItems.ddbtnConnectionLineWidth.enabled(onlyConnectionTypeSelected);*/
+        this.diagramDesigner.toolbarItems.ddbtnConnectionLineWidth.enabled(onlyConnectionTypeSelected);
 
         //nobody is selected on the canvas
         //set the active selection to the opened guy
