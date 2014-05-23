@@ -48,7 +48,7 @@ define(['./DiagramDesignerWidget.OperatingModes',
                 //progress text in toolbar for debug only
                 this.toolbarItems.progressText = toolbar.addLabel();
 
-                toolbar.addSeparator();
+                this.toolbarItems.gridSeparator = toolbar.addSeparator();
             }
 
             /************** ROUTING MANAGER SELECTION **************************/
@@ -74,7 +74,7 @@ define(['./DiagramDesignerWidget.OperatingModes',
             });
             /************** END OF - ROUTING MANAGER SELECTION **************************/
 
-            toolbar.addSeparator();
+            this.toolbarItems.routingManagerSeparator = toolbar.addSeparator();
 
             this.toolbarItems.radioButtonGroupOperatingMode = toolbar.addRadioButtonGroup(function (data) {
                 self.setOperatingMode(data.mode);
@@ -102,7 +102,7 @@ define(['./DiagramDesignerWidget.OperatingModes',
                 }
             );
 
-            toolbar.addSeparator();
+            this.toolbarItems.modeSeparator = toolbar.addSeparator();
 
             this.toolbarItems.btnXing = toolbar.addToggleButton({
                     "icon": btnIconBase.clone().addClass('gme icon-gme_crossing-lines'),
@@ -112,7 +112,7 @@ define(['./DiagramDesignerWidget.OperatingModes',
                     }}
             );
 
-            toolbar.addSeparator();
+            this.toolbarItems.crossingLinesSeparator = toolbar.addSeparator();
 
             if (this._lineStyleControls === true) {
                 /************** END OF - VISUAL STYLE ARROWS *****************/
