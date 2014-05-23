@@ -1,12 +1,20 @@
-"use strict";
+/*globals define, WebGMEGlobal, alert, _*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
+ */
 
 define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
         'js/Utils/DisplayFormat',
         'js/Constants',
-        'css!/css/Panels/PropertyEditor/PointerWidget'],
+        'css!./styles/PointerWidget.css'],
+
     function (WidgetBase,
               displayFormat,
               CONSTANTS) {
+
+        "use strict";
 
         var PointerWidget;
 
