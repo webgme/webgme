@@ -8,9 +8,9 @@
 "use strict";
 
 define(['clientUtil',
-    'text!./ConstraintDetailsDialog.html',
+    'text!./templates/ConstraintDetailsDialog.html',
     'codemirror',
-    'css!./ConstraintDetailsDialog'], function ( util,
+    'css!./styles/ConstraintDetailsDialog.css'], function ( util,
                                                  constraintDetailsDialogTemplate,
                                                  CodeMirror) {
 

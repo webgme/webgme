@@ -8,8 +8,8 @@
 "use strict";
 
 define(['clientUtil',
-    'text!./AttributeDetailsDialog.html',
-    'css!./AttributeDetailsDialog'], function ( util,
+    'text!./templates/AttributeDetailsDialog.html',
+    'css!./styles/AttributeDetailsDialog.css'], function ( util,
                                                 attributeDetailsDialogTemplate) {
 
     var AttributeDetailsDialog,
