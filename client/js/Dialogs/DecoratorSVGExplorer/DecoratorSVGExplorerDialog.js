@@ -1,17 +1,19 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
- * Author: Robert Kereskenyi
+/*globals define, _, WebGMEGlobal, DEBUG*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
  */
 
-"use strict";
 
 define(['js/Constants',
     'assets/decoratorSVG',
-    'text!html/Dialogs/DecoratorSVGExplorer/DecoratorSVGExplorerDialog.html',
-    'css!/css/Dialogs/DecoratorSVGExplorer/DecoratorSVGExplorerDialog'], function (CONSTANTS,
+    'text!./templates/DecoratorSVGExplorerDialog.html',
+    'css!./styles/DecoratorSVGExplorerDialog.css'], function (CONSTANTS,
                                                                decoratorSVG,
                                                                DecoratorSVGExplorerDialogTemplate) {
+
+    "use strict";
 
     var DecoratorSVGExplorerDialog,
         IMG_BASE = $('<div class="img"><img src=""/><div class="desc">description</div></div>'),

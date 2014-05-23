@@ -1,15 +1,20 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
- * Author: Robert Kereskenyi
+/*globals define, WebGMEGlobal, alert, _*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
  */
 
-"use strict";
 
-define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
-    'text!html/Dialogs/PluginConfig/PluginConfigDialog.html',
-    'css!/css/Dialogs/PluginConfig/PluginConfigDialog'], function (PropertyGridWidgetManager,
-                                                                   pluginConfigDialogTemplate) {
+define([
+    'js/Controls/PropertyGrid/PropertyGridWidgetManager',
+    'text!./templates/PluginConfigDialog.html',
+    'css!./styles/PluginConfigDialog.css'],
+    function (
+        PropertyGridWidgetManager,
+        pluginConfigDialogTemplate) {
+
+    "use strict";
 
     var PluginConfigDialog,
         PLUGIN_DATA_KEY = 'plugin',

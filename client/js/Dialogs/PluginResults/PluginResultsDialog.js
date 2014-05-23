@@ -4,14 +4,15 @@
  * Author: Robert Kereskenyi
  */
 
-"use strict";
 
 define(['clientUtil',
     'blob/BlobClient',
-    'text!html/Dialogs/PluginResults/PluginResultsDialog.html',
-    'css!/css/Dialogs/PluginResults/PluginResultsDialog'], function (clientUtil,
+    'text!./templates/PluginResultsDialog.html',
+    'css!./styles/PluginResultsDialog.css'], function (clientUtil,
                                                                      BlobClient,
                                                                      pluginResultsDialogTemplate) {
+
+    "use strict";
 
     var PluginResultsDialog,
         PLUGIN_RESULT_ENTRY_BASE = $('<div/>', { 'class': 'plugin-result' }),
