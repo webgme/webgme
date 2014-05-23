@@ -1,6 +1,13 @@
 $panel-header-background-color: #EFEFEF;
-$panel-header-active-background-color: rgba(82, 168, 236, 0.8);
+$panel-header-active-background-color: #fff;
+$panel-header-active-border-color: #00235b;
+
+$floating-title-color: #555;
+$floating-title-active-color: #00235b;
+
+
 $panel-header-active-title-color: #FFF;
+
 $panel-body-background-color: #FFFFFF;
 $panel-body-background-color-read-only: #FBFBFB;
 
@@ -16,19 +23,18 @@ $panel-header-height: 3px;
 $side-panel-header-height: 18px;
 $panel-border-bottom-width: 3px;
 
-$floating-box-shadow: 0px 0px 5px 2px #CCC;
-$active-floating-box-shadow: 0px 0px 5px 2px $panel-header-active-background-color;
 
-$title-font-size: 14px;
+$title-font-size: 21px;
 
 @mixin panel_header_title {
   font-size: $title-font-size;
   line-height: $title-font-size;
-  font-weight: bold;
+  font-weight: 400;
   display: inline-block;
   margin-right: 10px;
   margin-left: 5px;
   white-space: nowrap;
+  margin-top: 8px;
 }
 
 .panel-base-wh {
@@ -43,18 +49,10 @@ $title-font-size: 14px;
   }
 
   .panel-header {
-    //padding: 5px;
+
     background-color: $panel-header-background-color;
     border-bottom: $panel-border-bottom-width solid rgba(0, 0, 0, 0);
-    /*overflow: visible;
-    overflow-x: hidden;*/
     white-space: nowrap;
-
-    /*.ro-icon {
-      display: none;
-      margin-right: 2px;
-      position: absolute;
-    }*/
 
     .panel-header-title {
       @include panel_header_title;
@@ -119,13 +117,12 @@ $title-font-size: 14px;
 
   .floating-title {
     position: absolute;
-    top: 0px;
-    left: 0px;
-    background-color: $panel-body-background-color;
-    border-bottom-right-radius: 10px;
-    -webkit-box-shadow: $floating-box-shadow;
-    -moz-box-shadow: $floating-box-shadow;
-    box-shadow: $floating-box-shadow;
+    left: 0;
+    box-shadow: 0;
+    text-shadow: 1.5px 1.5px 0 rgba(0,0,0,.15);
+    opacity: .65;
+
+    color: $floating-title-color;
 
     .ro-icon {
       position: relative;
@@ -136,7 +133,6 @@ $title-font-size: 14px;
 
     .panel-header-title {
       @include panel_header_title;
-      margin-top: 3px;
 
       &:empty {
         display: none;
@@ -156,25 +152,23 @@ $title-font-size: 14px;
     }
 
     .floating-title {
-      background-color: $panel-body-background-color-read-only;
+
     }
   }
 
   &.active-panel {
     .panel-header {
-      border-bottom-color: $panel-header-active-background-color;
+      border-bottom-color: $panel-header-active-border-color;
+      background: $panel-header-active-background-color;
     }
 
     .floating-title {
-      -webkit-box-shadow: $active-floating-box-shadow;
-      -moz-box-shadow: $active-floating-box-shadow;
-      box-shadow: $active-floating-box-shadow;
+      opacity: 0.85;
+      color: $floating-title-active-color;
     }
 
     .absolute-header {
-      -webkit-box-shadow: $active-floating-box-shadow;
-      -moz-box-shadow: $active-floating-box-shadow;
-      box-shadow: $active-floating-box-shadow;
+      border: 1px solid $panel-header-active-border-color;
     }
   }
 
@@ -238,7 +232,7 @@ $title-font-size: 14px;
 
     &.active-panel {
       .panel-header {
-        border-bottom-color: $panel-header-active-background-color;
+        border-bottom-color: $panel-header-active-border-color;
       }
     }
   }

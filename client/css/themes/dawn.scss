@@ -1,12 +1,15 @@
-$toolbar-button-color: #00235b;
+$light: #3160ab;
+$dark: #00235b;
+
+$toolbar-button-color: $dark;
 
 
 a{
-    color: #3160ab;
+    color: $light;
 }
 
 a:hover {
-    color: #00235b;
+    color: $dark;
 }
 
 
@@ -19,7 +22,7 @@ a:hover {
   a:hover,
   a:active{
     color: #fff;
-    background-color: #00235b;
+    background-color: $dark;
   }
 
   .btn:active, .btn.active {
@@ -36,7 +39,7 @@ a:hover {
 .nav-pills>li.active>a,
 .nav-pills>li.active>a:hover,
 .nav-pills>li.active>a:focus {
-  background: #00235b;
+  background: #A5AFBE;
   border-radius: 0;
 }
 
