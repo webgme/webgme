@@ -17,23 +17,28 @@ a:hover {
 
 .toolbar-container {
   a {
-    color: $toolbar-button-color;
-    transition: background-color .2s;
+      color: $toolbar-button-color;
+      transition: background-color .2s;
   }
 
   a:hover,
   a:active{
-    color: #fff;
-    background-color: $dark;
+      color: #fff;
+      background-color: $dark;
   }
 
-  .btn:active, .btn.active {
-    background-color: $palePale;
+   .btn:active, .btn.active {
+      background-color: $pale;
+      color: #fff;
+   }
+
+   .btn:active, .btn.active:hover {
+      background-color: $pale;
+      color: #fff;
   }
 
-  .btn.active:hover {
-    color: $toolbar-button-color;
-  }
+
+
 
 }
 

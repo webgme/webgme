@@ -2,6 +2,8 @@ $panel-header-background-color: #EFEFEF;
 $panel-header-active-background-color: #fff;
 $panel-header-active-border-color: #00235b;
 
+$palePale: #d3d8df;
+
 $floating-title-color: #555;
 $floating-title-active-color: #00235b;
 
@@ -155,6 +157,11 @@ $title-font-size: 21px;
 
     }
   }
+
+  .absolute-header {
+    border: 1px solid $palePale;
+  }
+
 
   &.active-panel {
     .panel-header {

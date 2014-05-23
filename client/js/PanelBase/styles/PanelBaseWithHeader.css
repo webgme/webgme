@@ -76,6 +76,8 @@
     display: inline-block; }
   .panel-base-wh.read-only .panel-body {
     background-color: #fbfbfb; }
+  .panel-base-wh .absolute-header {
+    border: 1px solid #d3d8df; }
   .panel-base-wh.active-panel .panel-header {
     border-bottom-color: #00235b;
     background: white; }
