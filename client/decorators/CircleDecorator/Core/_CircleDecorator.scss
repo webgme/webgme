@@ -6,8 +6,6 @@
 $CIRCLE_SIZE: 11px;
 
 $selected-background-color: #DBEAFC;
-$selected-box-shadow: 0px 0px 15px 0px #1276D4 !important;
-$selected-border-color: #52A8EC;
 
 @mixin circle_decorator_core {
   .circle-decorator {
@@ -37,9 +35,6 @@ $selected-border-color: #52A8EC;
       height: $CIRCLE_SIZE;
       border-radius: $CIRCLE_SIZE;
       z-index: -1;
-      -webkit-box-shadow: $selected-box-shadow;
-      -moz-box-shadow: $selected-box-shadow;
-      box-shadow: $selected-box-shadow;
     }
   }
 }

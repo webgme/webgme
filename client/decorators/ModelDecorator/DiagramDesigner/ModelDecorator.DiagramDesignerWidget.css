@@ -160,10 +160,3 @@
 .model-decorator.accept-droppable {
   background-color: lime;
   cursor: alias; }
-
-.selected .model-decorator {
-  border: 1px solid #52a8ec;
-  background-color: #dbeafc;
-  -webkit-box-shadow: 0px 0px 15px 0px #1276d4 !important;
-  -moz-box-shadow: 0px 0px 15px 0px #1276d4 !important;
-  box-shadow: 0px 0px 15px 0px #1276d4 !important; }

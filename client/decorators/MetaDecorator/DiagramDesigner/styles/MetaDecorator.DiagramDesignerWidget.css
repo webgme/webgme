@@ -113,16 +113,10 @@
     font-style: italic;
     color: #aaaaaa; }
 
-.selected .meta-decorator {
-  border: 1px solid #52a8ec;
-  background-color: white;
-  -webkit-box-shadow: 0px 0px 15px 0px #1276d4 !important;
-  -moz-box-shadow: 0px 0px 15px 0px #1276d4 !important;
-  box-shadow: 0px 0px 15px 0px #1276d4 !important; }
-  .selected .meta-decorator .add-new-attribute:hover,
-  .selected .meta-decorator .add-new-constraint:hover,
-  .selected .meta-decorator .add-new-aspect:hover {
-    background-color: #ffffc0; }
+.selected .meta-decorator .add-new-attribute:hover,
+.selected .meta-decorator .add-new-constraint:hover,
+.selected .meta-decorator .add-new-aspect:hover {
+  background-color: #ffffc0; }
 
 .items.highlight-mode .meta-decorator .attributes li div:hover,
 .items.highlight-mode .meta-decorator .constraints li div:hover,

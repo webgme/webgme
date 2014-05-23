@@ -250,7 +250,7 @@ input[type="submit"].btn.btn-micro {
     margin-left: .5ex;
     font-size: 110%;
     position: relative;
-    top: -20%;
+    top: -1px;
 }
 
 /* Forms */

@@ -2,7 +2,7 @@ a {
   color: #3160ab; }
 
 a:hover {
-  color: #00235b; }
+  color: #ff7700; }
 
 .toolbar-container a {
   color: #00235b;
@@ -29,3 +29,24 @@ a:hover {
 
 .navbar-inverse {
   background-image: linear-gradient(to bottom, #040524 0, #03071d 100%); }
+
+/* Selected styling */
+.selected > div {
+  box-shadow: 0 0 4px rgba(0, 35, 91, 0.75);
+  background-color: #fff; }
+
+.s-btn {
+  background-color: #00235b !important;
+  color: #fff !important; }
+  .s-btn:hover {
+    background-color: #ff7700 !important; }
+
+/*.selected {
+    .svg-decorator {
+      .svg-content {
+        svg {
+          box-shadow: 0 0 5px $dark;
+        }
+      }
+    }
+}*/
