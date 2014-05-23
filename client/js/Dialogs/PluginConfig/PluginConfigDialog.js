@@ -59,7 +59,7 @@ define([
         }
     };
 
-    var PLUGIN_CONFIG_SECTION_BASE = $('<div><fieldset><legend></legend><div class="form-horizontal"></div><fieldset></div>');
+    var PLUGIN_CONFIG_SECTION_BASE = $('<div><fieldset><legend></legend><form class="form-horizontal" role="form"></form><fieldset></div>');
     PluginConfigDialog.prototype._initDialog = function (pluginConfigs) {
         var self = this;
         var pluginSectionEl;
@@ -98,7 +98,7 @@ define([
         });
     };
 
-    var ENTRY_BASE = $('<div class="control-group"><label class="control-label">NAME</label><div class="controls"></div></div>');
+    var ENTRY_BASE = $('<div class="form-group"><label class="col-sm-4 control-label">NAME</label><div class="col-sm-8 controls"></div></div>');
     var DESCRIPTION_BASE = $('<div class="desc muted"></div>');
     PluginConfigDialog.prototype._generatePluginSection = function (pluginName, pluginConfig, containerEl) {
         var len = pluginConfig.length,
