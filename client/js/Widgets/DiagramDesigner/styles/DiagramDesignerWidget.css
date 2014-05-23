@@ -200,11 +200,11 @@ TABS CONTAINER
 */
 .diagram-designer-tabs-container {
   position: absolute;
-  top: 2px;
+  top: 3px;
   width: 100%;
   height: 26px;
   background-color: rgba(235, 235, 235, 0.8);
-  padding-top: 2px; }
+  padding-top: 1px; }
   .diagram-designer-tabs-container > div {
     display: table-cell;
     vertical-align: middle;
@@ -213,7 +213,7 @@ TABS CONTAINER
     border-bottom: 1px solid #ddd;
     padding-left: 3px;
     padding-right: 3px;
-    padding-bottom: 2px; }
+    padding-bottom: 0; }
   .diagram-designer-tabs-container div.add-tab-container > div {
     display: inline-block;
     margin-right: 3px; }
@@ -221,6 +221,8 @@ TABS CONTAINER
   .diagram-designer-tabs-container div.add-tab-container ul.dropdown-menu li a [class*=" icon-"] {
     margin-left: -17px;
     margin-right: 3px; }
+  .diagram-designer-tabs-container .btn {
+    padding: 0 12px; }
   .diagram-designer-tabs-container div.tab-list-container {
     width: 100%;
     overflow: hidden; }

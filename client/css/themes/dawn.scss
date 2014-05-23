@@ -1,5 +1,15 @@
 $toolbar-button-color: #00235b;
 
+
+a{
+    color: #3160ab;
+}
+
+a:hover {
+    color: #00235b;
+}
+
+
 .toolbar-container {
   a {
     color: $toolbar-button-color;
@@ -21,6 +31,13 @@ $toolbar-button-color: #00235b;
     color: $toolbar-button-color;
   }
 
+}
+
+.nav-pills>li.active>a,
+.nav-pills>li.active>a:hover,
+.nav-pills>li.active>a:focus {
+  background: #00235b;
+  border-radius: 0;
 }
 
 

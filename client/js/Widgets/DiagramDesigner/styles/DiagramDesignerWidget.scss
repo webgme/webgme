@@ -311,11 +311,11 @@ TABS CONTAINER
 */
 .diagram-designer-tabs-container {
   position: absolute;
-  top: 2px;
+  top: 3px;
   width : 100%;
   height: $tabs-container-height;
   background-color: rgba(235, 235, 235, 0.8);
-  padding-top: 2px;
+  padding-top: 1px;
 
   > div {
     display: table-cell;
@@ -327,7 +327,7 @@ TABS CONTAINER
     border-bottom: 1px solid #ddd;
     padding-left: 3px;
     padding-right: 3px;
-    padding-bottom: 2px;
+    padding-bottom: 0;
   }
 
   div.add-tab-container {
@@ -349,6 +349,10 @@ TABS CONTAINER
         }
       }
     }
+  }
+
+  .btn {
+    padding: 0 12px;
   }
 
   div.tab-list-container {
