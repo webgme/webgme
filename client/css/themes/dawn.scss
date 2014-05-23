@@ -33,18 +33,22 @@ a:hover {
       background-color: $dark;
   }
 
-   .btn:active, .btn.active {
+  .btn:active, .btn.active {
       background-color: $pale;
       color: #fff;
    }
 
-   .btn:active, .btn.active:hover {
+  .btn:active, .btn.active:hover {
       background-color: $pale;
       color: #fff;
   }
 
-
-
+  .btn[title="Pointer"]:hover,
+  .btn[title="Pointer"]:active,
+  .btn[title="Set"]:hover,
+  .btn[title="Set"]:active  {
+    background-color: $palePale;
+  }
 
 }
 

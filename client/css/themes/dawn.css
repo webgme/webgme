@@ -17,6 +17,11 @@ a:hover {
 .toolbar-container .btn:active, .toolbar-container .btn.active:hover {
   background-color: #a5afbe;
   color: #fff; }
+.toolbar-container .btn[title="Pointer"]:hover,
+.toolbar-container .btn[title="Pointer"]:active,
+.toolbar-container .btn[title="Set"]:hover,
+.toolbar-container .btn[title="Set"]:active {
+  background-color: #d3d8df; }
 
 .nav-pills > li.active > a,
 .nav-pills > li.active > a:hover,
