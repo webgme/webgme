@@ -1,10 +1,18 @@
-"use strict";
+/*globals define, _*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
+
 
 define(['js/Constants',
     './ConstraintDetailsDialog',
     './Constraint'], function (CONSTANTS,
                                             ConstraintDetailsDialog,
                                             Constraint) {
+
+
+    "use strict";
 
     var MetaDecoratorDiagramDesignerWidgetConstraints,
         SCRIPT_TEMPLATE = "function(client, node) {\n//return TRUE if the constraint is valid, otherwise return FALSE\nreturn true;\n}";

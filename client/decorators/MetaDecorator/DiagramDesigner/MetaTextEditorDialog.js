@@ -1,17 +1,17 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
+/*globals define, _*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-"use strict";
-
 define(['clientUtil',
-    'text!./MetaTextEditorDialog.html',
+    'text!./templates/MetaTextEditorDialog.html',
     'codemirror',
-    'css!./MetaTextEditorDialog'], function ( util,
+    'css!./styles/MetaTextEditorDialog.css'], function ( util,
                                                  metaTextEditorDialogTemplate,
                                                  CodeMirror) {
+
+    "use strict";
 
     var MetaTextEditorDialog;
 

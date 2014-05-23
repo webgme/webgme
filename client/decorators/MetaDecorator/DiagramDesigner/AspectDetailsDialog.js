@@ -1,17 +1,18 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
+/*globals define, _*/
 
-"use strict";
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['clientUtil',
     'js/Constants',
-    'text!./AspectDetailsDialog.html',
-    'css!./AspectDetailsDialog'], function ( util,
+    'text!./templates/AspectDetailsDialog.html',
+    'css!./styles/AspectDetailsDialog.css'], function ( util,
                                              CONSTANTS,
                                              aspectDetailsDialogTemplate) {
+
+    "use strict";
+
 
     var AspectDetailsDialog,
         ASPECT_DESC_BASE = {'name': undefined,

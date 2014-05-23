@@ -1,6 +1,6 @@
-"use strict";
-
 define(['logManager'], function (logManager) {
+
+    "use strict";
 
     var Aspect;
 
