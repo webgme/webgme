@@ -12,13 +12,15 @@ a:hover {
   color: #fff;
   background-color: #00235b; }
 .toolbar-container .btn:active, .toolbar-container .btn.active {
-  background-color: #eee;
-  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.125); }
+  background-color: #d3d8df; }
 .toolbar-container .btn.active:hover {
   color: #00235b; }
 
 .nav-pills > li.active > a,
 .nav-pills > li.active > a:hover,
 .nav-pills > li.active > a:focus {
-  background: #A5AFBE;
+  background: #a5afbe;
   border-radius: 0; }
+
+.separator {
+  border-color: #a5afbe; }

@@ -140,7 +140,7 @@ define(['clientUtil',
 
 
         var txtFind = toolbar.addTextBox({
-            "prependContent": '<i class="glyphicon glyphicon-search"></i>',
+            "prependContent": '<i class="glyphicon glyphicon-search"></i>&nbsp;',
             "placeholder": "Find...",
             "textChangedFn": function (oldVal, newVal) {
                 console.log(newVal);

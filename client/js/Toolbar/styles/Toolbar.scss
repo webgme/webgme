@@ -26,7 +26,7 @@ $webgme-toolbar-ext-toggle-hover-background-color: #E6E6E6;
   .separator {
     margin-left: $toolbar-separator-margin;
     margin-right: $toolbar-separator-margin - $toolbar-item-margin-left;
-    border-right: 1px dotted $separator-bg-color;
+    border-right: 1px solid $separator-bg-color;
     width: 0;
     height: 28px;
     display: inline-block;

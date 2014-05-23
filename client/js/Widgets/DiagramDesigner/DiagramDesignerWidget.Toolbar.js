@@ -251,11 +251,12 @@ define(['./DiagramDesignerWidget.OperatingModes',
 
             if (this._defaultSearchUI === true) {
                 this.toolbarItems.filterBox = toolbar.addTextBox(
-                    {"prependContent": '<i class="glyphicon glyphicon-search"></i>',
+                {
+                    "prependContent": '<i class="glyphicon glyphicon-search"></i>&nbsp;',
                     "placeholder": "Find...",
                     "textChangedFn": function (oldVal, newVal) {
                         self.searchManager.filterItems(newVal);
-                    }});
+                }});
             }
         }
 
