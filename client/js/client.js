@@ -905,13 +905,11 @@ define([
             }
             //this is just a first brute implementation it needs serious optimization!!!
             function loading(newRootHash,callback){
-                var time = new Date().getTime();
-                callback = callback || function(){console.log('*PERF* loading took',new Date().getTime()-time)};
+                callback = callback || function(){};
                 var incomplete = false;
                 var modifiedPaths = {};
                 var missing = 2;
                 var finalEvents = function(){
-                    console.log('*PERF* last eventing round',new Date().getTime()-time);
                     if(_loadError > 0){
                         //we assume that our immediate load was only partial
                         modifiedPaths = getModifiedNodes(_loadNodes);
@@ -960,11 +958,9 @@ define([
                         _nodes[i] = _loadNodes[i];
                     }
 
-                    console.log('*PERF* first eventing round start',new Date().getTime()-time);
                     for(i in _users){
                         userEvents(i,modifiedPaths);
                     }
-                    console.log('*PERF* first eventing round end',new Date().getTime()-time);
 
                     if(--missing === 0){
                         finalEvents();
