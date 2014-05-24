@@ -100,16 +100,17 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv" ], function(ASSER
         };
 
         core.isValidTargetOf = function(node,source,name){
-            if(!realNode(source)){
+            if(!realNode(source) || node === null){ //we position ourselves over the null-pointer layer
                 return true;
             }
-            var pointerMetaNode = MetaPointerNode(node,name);
+            var pointerMetaNode = MetaPointerNode(source,name);
             if(pointerMetaNode){
                 var validTargetTypePaths = core.getMemberPaths(pointerMetaNode,"items") || [];
                 while(node){
                     if(validTargetTypePaths.indexOf(core.getPath(node)) !== -1){
                         return true;
                     }
+                    node = core.getBase(node);
                 }
             }
             return false;
@@ -295,20 +296,9 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv" ], function(ASSER
         };
 
         core.createNode = function(parameters){
-            var valid = true,
-                validChildrenTypes = [];
-            if(parameters && parameters.parent){
-                if(parameters.base){
-                    valid = core.isValidChildOf(parameters.base,parameters.parent);
-                } else {
-                    validChildrenTypes = core.getMemberPaths(MetaChildrenNode(parameters.parent),"items");
-                    if(validChildrenTypes.length > 0){
-                        valid = false;
-                    }
-                }
-            }
+            //TODO currently we allow the creation of baseless child for every node - because we use this functionality and it cannot be used by a simple user
 
-            if(valid){
+            if(parameters && (!parameters.base || core.isValidChildOf(parameters.base,parameters.parent))){
                 return oldcore.createNode(parameters);
             } else {
                 return null; //TODO how to give back an error in this case??
