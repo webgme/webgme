@@ -28,7 +28,7 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv" ], function(ASSER
             return core.getChild(node,"_meta");
         };
         var MetaChildrenNode = function(node){
-            return core.getChild(core.getChild(node,"_meta"),"children");
+            return core.getChild(MetaNode(node),"children");
         };
         var MetaPointerNode = function(node,name){
             var meta = MetaNode(node),
@@ -67,40 +67,224 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv" ], function(ASSER
             return false;
         };
 
+        core.getValidPointerNames = function(node){
+            var validNames = core.getPointerNames(MetaNode(node)) || [],
+                i,
+                validPointerNames = [],
+                metaPointerNode;
+
+            for(i=0;i<validNames.length;i++){
+                metaPointerNode = MetaPointerNode(node,validNames[i]);
+                if(metaPointerNode.max === 1){ //TODO specify what makes something a pointer and what a set??? - can you extend a pointer to a set????
+                    validPointerNames.push(validNames[i]);
+                }
+            }
+
+            return validPointerNames;
+        };
+
+        core.getValidSetNames = function(node){
+            var validNames = core.getPointerNames(MetaNode(node)) || [],
+                i,
+                validSetNames = [],
+                metaPointerNode;
+
+            for(i=0;i<validNames.length;i++){
+                metaPointerNode = MetaPointerNode(node,validNames[i]);
+                if(metaPointerNode.max === undefined || metaPointerNode.max === -1 || metaPointerNode > 1){ //TODO specify what makes something a pointer and what a set??? - can you extend a pointer to a set????
+                    validSetNames.push(validNames[i]);
+                }
+            }
+
+            return validSetNames;
+        };
+
         core.isValidTargetOf = function(node,source,name){
-            if(!realNode(source)){
+            if(!realNode(source) || node === null){ //we position ourselves over the null-pointer layer
                 return true;
             }
-            var pointerMetaNode = MetaPointerNode(node,name);
+            var pointerMetaNode = MetaPointerNode(source,name);
             if(pointerMetaNode){
                 var validTargetTypePaths = core.getMemberPaths(pointerMetaNode,"items") || [];
                 while(node){
                     if(validTargetTypePaths.indexOf(core.getPath(node)) !== -1){
                         return true;
                     }
+                    node = core.getBase(node);
                 }
             }
             return false;
+        };
+
+        core.getValidAttributeNames = function(node){
+            var names = [];
+            if(realNode(node)){
+                names = core.getAttributeNames(MetaNode(node)) || [];
+            }
+            return names;
         };
 
         core.isValidAttributeValueOf = function(node,name,value){
+            //currently it only checks the name and the type
             if(!realNode(node)){
                 return true;
             }
-            var validator = JsonValidator(),
-                meta = MetaNode(node),
-                atrNames = core.getAttributeNames(meta) || [],
-                error = null;
-
-            if(atrNames.indexOf(name) !== -1){
-                validator.addSchema(name,core.getAttribute(meta,name));
-                error = validator.validate(name,value);
-                if(error === null){
-                    return true;
-                }
+            if(core.getValidAttributeNames(node).indexOf(name) === -1){
+                return false;
+            }
+            var meta = core.getAttribute(MetaNode(node),name);
+            switch(meta.type){
+                case "boolean":
+                    if(value === true || value === false){
+                        return true;
+                    }
+                    break;
+                case "string":
+                case "asset":
+                    if(typeof value === 'string'){
+                        return true;
+                    }
+                    break;
+                case "integer":
+                    if(!isNaN(parseInt(value)) && parseFloat(value) === parseInt(value)) {
+                        return true;
+                    }
+                    break;
+                case "float":
+                    if(!isNaN(parseFloat(value))) {
+                        return true;
+                    }
+                    break;
             }
             return false;
         };
+
+        var MetaAspectNode = function(node,name){
+            var aspectNode = core.getChild(MetaNode(node),'aspects'),
+                names = core.getPointerNames(aspectNode) ||[];
+            if(names.indexOf(name) !== -1){
+                return core.getChild(aspectNode,"_a_"+name);
+            }
+            return null;
+        };
+
+        core.getValidAspectNames = function(node){
+            return core.getPointerNames(core.getChild(MetaNode(node),'aspects')) ||[];
+        };
+
+        //additional meta functions for getting meta definitions
+        core.getJsonMeta = function(node){
+            var meta = {children:{},attributes:{},pointers:{},aspects:{}},
+                tempNode,
+                names,
+                pointer,
+                i,j;
+
+            //fill children part
+            tempNode = MetaChildrenNode(node);
+
+            meta.children.minItems = [];
+            meta.children.maxItems = [];
+            meta.children.items = core.getMemberPaths(tempNode,"items");
+            for(i=0;i<meta.children.items.length;i++){
+                meta.children.minItems.push(core.getMemberAttribute(tempNode,"items",meta.children.items[i],"min") || -1);
+                meta.children.maxItems.push(core.getMemberAttribute(tempNode,"items",meta.children.items[i],"max") || -1);
+            }
+            meta.children.min = core.getAttribute(tempNode,"min");
+            meta.children.max = core.getAttribute(tempNode,"max");
+
+            //attributes
+            names = core.getValidAttributeNames(node);
+            for(i=0;i<names.length;i++){
+                meta.attributes[names[i]] = core.getAttribute(MetaNode(node),names[i]);
+            }
+
+            //pointers
+            names = core.getPointerNames(MetaNode(node));
+            for(i=0;i<names.length;i++){
+                tempNode = MetaPointerNode(node,names[i]);
+                pointer = {};
+
+                pointer.items = core.getMemberPaths(tempNode,"items");
+                pointer.min = core.getAttribute(tempNode,"min");
+                pointer.max = core.getAttribute(tempNode,"max");
+                pointer.minItems = [];
+                pointer.maxItems = [];
+
+                for(var j=0;j<pointer.items.length;j++){
+                    pointer.minItems.push(core.getMemberAttribute(tempNode,"items",pointer.items[j],"min") || -1);
+                    pointer.maxItems.push(core.getMemberAttribute(tempNode,"items",pointer.items[j],"max") || -1);
+
+                }
+
+                meta.pointers[names[i]] = pointer;
+            }
+
+            //aspects
+            names = core.getValidAspectNames(node);
+
+            for(i=0;i<names.length;i++){
+                tempNode = MetaAspectNode(node,names[i]);
+                meta.aspects[names[i]] = core.getMemberPaths(tempNode,'items') || [];
+            }
+
+            return meta;
+        };
+
+        var isEmptyObject = function(object){
+            if(Object.keys(object).length === 0){
+                return true;
+            }
+            return false;
+        };
+        var getObjectDiff = function(bigger,smaller){
+            var diff = {},
+                names, i,temp;
+            if(smaller === null || smaller === undefined || isEmptyObject(smaller)){
+                if(bigger === null || bigger === undefined){
+                    return {};
+                }
+                return bigger;
+            }
+
+            names = Object.keys(bigger);
+            for(i=0;i<names.length;i++){
+                if(smaller[names[i]] === undefined){
+                    //extra attribute of the bigger object
+                    if(bigger[names[i]] !== undefined){
+                        diff[names[i]] = bigger[names[i]];
+                    } //if both are undefined, then they are equal :)
+                } else {
+                    //they share the attribute
+                    if(typeof smaller[names[i]] === 'object'){
+                        if(typeof bigger[names[i]] === 'object'){
+                            temp = getObjectDiff(bigger[names[i]],smaller[names[i]]);
+                            if(!isEmptyObject(temp)){
+                                diff[names[i]] = temp;
+                            }
+                        } else {
+                            diff[names[i]] = bigger[names[i]];
+                        }
+                    } else {
+                        if(JSON.stringify(smaller[names[i]]) !== JSON.stringify(bigger[names[i]])){
+                            diff[names[i]] = bigger[names[i]];
+                        }
+                    }
+                }
+            }
+
+            return diff;
+
+        };
+
+        core.getOwnJsonMeta = function(node){
+            var base = core.getBase(node),
+                baseMeta = base ? core.getJsonMeta(base) : {},
+                meta = core.getJsonMeta(node);
+
+            return getObjectDiff(meta,baseMeta);
+        };
+
 
         //now the overridden functions to check as many meta rules as possible before making the actual modification
         core.setAttribute = function(node,name,value){
@@ -112,20 +296,9 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv" ], function(ASSER
         };
 
         core.createNode = function(parameters){
-            var valid = true,
-                validChildrenTypes = [];
-            if(parameters && parameters.parent){
-                if(parameters.base){
-                    valid = core.isValidChildOf(parameters.base,parameters.parent);
-                } else {
-                    validChildrenTypes = core.getMemberPaths(MetaChildrenNode(parameters.parent),"items");
-                    if(validChildrenTypes.length > 0){
-                        valid = false;
-                    }
-                }
-            }
+            //TODO currently we allow the creation of baseless child for every node - because we use this functionality and it cannot be used by a simple user
 
-            if(valid){
+            if(parameters && (!parameters.base || core.isValidChildOf(parameters.base,parameters.parent))){
                 return oldcore.createNode(parameters);
             } else {
                 return null; //TODO how to give back an error in this case??

@@ -9,7 +9,17 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 
 	// ----------------- CoreType -----------------
 
-	var CoreType = function(oldcore) {
+	var xorHashes = function (a, b) {
+        var outHash = "";
+        if(a.length === b.length){
+            for(var i=0;i< a.length;i++){
+                outHash += (parseInt(a.charAt(i),16) ^ parseInt(b.charAt(i),16)).toString(16);
+            }
+        }
+        return outHash;
+    };
+
+    var CoreType = function(oldcore) {
 		// copy all operations
 		var core = {};
 		for ( var key in oldcore) {
@@ -54,6 +64,15 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 			return node.base;
 		};
 
+        core.getBaseRoot = function(node) {
+            ASSERT(isValidNode(node));
+            while (node.base !== null){
+                node = node.base;
+            }
+
+            return node;
+        };
+
 		core.loadRoot = function(hash) {
 			return TASYNC.call(__loadRoot2, oldcore.loadRoot(hash));
 		};
@@ -66,22 +85,28 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 		}
 
         core.loadChild = function(node,relid){
-            var child = TASYNC.call(__loadBase,oldcore.loadChild(node,relid));
-            var base = core.getBase(node);
-            var basechild = null;
-            if(base && oldcore.getChildrenRelids(base).indexOf(relid) !== -1){
-                basechild = TASYNC.call(__loadBase,oldcore.loadChild(base,relid));
-            }
-            return TASYNC.call(function(ch,bch,n,r){
-                var done = null;
-                if(ch === null){
-                    if(bch !== null){
-                        ch = core.createNode({base:bch,parent:n,relid:r});
-                        done = core.persist(core.getRoot(n));
+            var child = null,
+                base = core.getBase(node),
+                basechild = null;
+            if(base){
+                //the parent is inherited
+                if(oldcore.getChildrenRelids(base).indexOf(relid) !== -1) {
+                    //inherited child
+                    if (oldcore.getChildrenRelids(node).indexOf(relid) !== -1) {
+                        //but it is overwritten so we should load it
+                        child = oldcore.loadChild(node, relid);
                     }
+                    basechild = core.loadChild( base, relid);
+                    return TASYNC.call(function(b,c,n,r){
+                        child = c || core.getChild(n,r);
+                        child.base = b;
+                        core.getCoreTree().setHashed(child,true);
+                        return child;
+                    },basechild,child,node,relid);
                 }
-                return TASYNC.call(function(child){return child;},ch,done);
-            },child,basechild,node,relid);
+            }
+            //normal child
+            return TASYNC.call(__loadBase,oldcore.loadChild(node,relid));
         };
 
         core.loadByPath = function(node,path){
@@ -115,7 +140,7 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
                 } else if(isFalseNode(node)){
                     var root = core.getRoot(node);
                     oldcore.deleteNode(node);
-                    return TASYNC.call(function(){return null;},core.persist(root));
+                    return null;
                 } else {
                     return TASYNC.call(__loadBase2, node, oldcore.loadPointer(node, "base"));
                 }
@@ -444,25 +469,14 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
             return newnode;
         };
 
-        core.getSingleNodeHash = function(node){
-            //TODO this function only needed while the inheritance is not in its final form!!!
-            //bb377d14fd57cbe2b0a2ad297a7a303b7a5fccf3
+        core.getDataForSingleHash = function(node){
             ASSERT(isValidNode(node));
-            function xorHashes (a, b) {
-                var outHash = "";
-                if(a.length === b.length){
-                    for(var i=0;i< a.length;i++){
-                        outHash += (parseInt(a.charAt(i),16) ^ parseInt(b.charAt(i),16)).toString(16);
-                    }
-                }
-                return outHash;
-            }
-            var hash = "0000000000000000000000000000000000000000";
-            while( node ){
-                hash = xorHashes(hash,oldcore.getSingleNodeHash(node));
+            var datas = [];
+            while(node){
+                datas.push(oldcore.getDataForSingleHash(node));
                 node = core.getBase(node);
             }
-            return hash;
+            return datas;
         };
 
         core.getChildrenPaths = function(node){

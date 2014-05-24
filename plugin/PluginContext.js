@@ -18,7 +18,7 @@ define([], function () {
         // TODO: something like this
 //        context.project = project;
 //        context.projectName = config.project;
-//        context.core = new Core(context.project,{corerel:2});
+//        context.core = new Core(context.project);
 //        context.commitHash = config.commit;
 //        context.selected = config.selected;
 //        context.storage = null;
