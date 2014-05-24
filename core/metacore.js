@@ -297,8 +297,9 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv" ], function(ASSER
 
         core.createNode = function(parameters){
             //TODO currently we allow the creation of baseless child for every node - because we use this functionality and it cannot be used by a simple user
+            parameters = parameters || {};
 
-            if(parameters && (!parameters.base || core.isValidChildOf(parameters.base,parameters.parent))){
+            if(!parameters.base || !parameters.parent || core.isValidChildOf(parameters.base,parameters.parent)){
                 return oldcore.createNode(parameters);
             } else {
                 return null; //TODO how to give back an error in this case??
