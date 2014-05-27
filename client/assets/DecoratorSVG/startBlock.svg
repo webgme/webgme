@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   height="27.28125"
+   version="1.1"
+   width="126.87502"
+   style="overflow:hidden"
+   id="svg2"
+   inkscape:version="0.48.4 r9939"
+   sodipodi:docname="startBlock.svg">
+  <defs
+     id="defs16" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1918"
+     inkscape:window-height="1173"
+     id="namedview14"
+     showgrid="false"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     inkscape:zoom="11.403466"
+     inkscape:cx="44.056241"
+     inkscape:cy="18.768887"
+     inkscape:window-x="1920"
+     inkscape:window-y="25"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg2" />
+  <metadata
+     id="metadata14">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <rect
+     style="opacity:0.54863808000000003;fill:#ff2600;fill-opacity:0;stroke:#000000;stroke-width:1.38964819999999989;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none"
+     id="name-bounding-box"
+     width="71.90139"
+     height="8.850378"
+     x="6.0102367"
+     y="8.5621614"
+     inkscape:label="#rect2990" />
+  <g
+     style="fill:#ffdc40;stroke:#ffdc40"
+     id="colors"
+     transform="translate(-0.56247838,-9.25)">
+    <rect
+       id="rect10"
+       style="fill:#ffdc40;stroke:#ffdc40;stroke-width:1.1704185"
+       ry="0"
+       rx="0"
+       r="0"
+       height="14.555581"
+       width="125.67958"
+       y="14.384709"
+       x="1.1602092"
+       class="x-stretch-name y-stretch-name" />
+    <path
+       inkscape:connector-curvature="0"
+       class="y-shift-name"
+       id="path12"
+       style="fill:#ffdc40;stroke:#ffdc40;stroke-width:1.17999995"
+       d="m 1.165,28.8535 a 3.54,3.54 0 0 0 3.54,3.54 l 7.08,0 3.54,3.54 9.44,0 3.54,-3.54 0,-3.658" />
+    <path
+       inkscape:connector-curvature="0"
+       class="x-shift-name y-shift-name"
+       id="path15"
+       style="fill:#ffdc40;stroke:#ffdc40;stroke-width:1.14470196"
+       d="m 36.693908,32.23415 86.860252,0 0,0 a 3.2984904,3.5752978 0 0 0 3.29848,-3.5753 l -90.158732,0 0,3.5753" />
+    <rect
+       inkscape:label="#rect2995"
+       y="30.324615"
+       x="29.111773"
+       height="1.0256605"
+       width="7.3817625"
+       id="rectXStretchName"
+       style="fill:#ffdc40;stroke:#ffdc40;stroke-width:2.79649115;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       class="x-stretch-name y-shift-name" />
+    <path
+       style="fill:#ffdc40;stroke:#ffdc40;stroke-width:1.1485492;overflow:hidden"
+       d="m 4.0458179,13.506456 0,-3.5912402 A 3.294124,3.6041416 0 0 0 1.1434151,13.506456 l 2.9024028,0 z"
+       id="TRCorner"
+       inkscape:connector-curvature="0"
+       inkscape:label="#path15-9" />
+    <path
+       class="x-shift-name"
+       style="fill:#ffdc40;stroke:#ffdc40;stroke-width:1.13954341;overflow:hidden"
+       d="m 123.9207,13.432342 0,-3.5242091 a 3.3043452,3.5368685 0 0 1 2.91141,3.5242091 l -2.91141,0 z"
+       id="TLCorner"
+       inkscape:connector-curvature="0"
+       inkscape:label="#path15-9-2" />
+    <rect
+       inkscape:label="#rect2995"
+       y="11.840425"
+       x="7.1086512"
+       height="0.22929782"
+       width="113.7512"
+       id="TopBar"
+       style="fill:#ffdc40;stroke:#ffdc40;stroke-width:5.1905036;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;overflow:hidden"
+       class="x-stretch-name" />
+  </g>
+  <text
+     id="name"
+     x="5.9125214"
+     y="16.181499"
+     style="font-size:9.43999958px">DEFAULT NAME</text>
+</svg>
