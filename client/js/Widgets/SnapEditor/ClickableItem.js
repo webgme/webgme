@@ -9,8 +9,8 @@
 define(['logManager',
     './SnapEditorWidget.Constants',
     './ErrorDecorator'], function (logManager,
-                                 SnapEditorWidgetConstants,
-                                 ErrorDecorator) {
+                                   SnapEditorWidgetConstants,
+                                   ErrorDecorator) {
 
     var ClickableItem,
         EVENT_POSTFIX = "ClickableItem",
@@ -270,9 +270,9 @@ define(['logManager',
         this.selectedInMultiSelection = multiSelection;
         this.$el.addClass("selected");
 
-        //when selected, no connectors are available
+        //when selected, no clickable areas are available
         if (multiSelection === true) {
-            this.hideSourceConnectors();
+            //this.hideSourceConnectors();
         }
 
         //let the decorator know that this item became selected
@@ -293,7 +293,7 @@ define(['logManager',
 
         if (this._decoratorInstance) {
             if (_.isFunction(this._decoratorInstance[fnName])) {
-                result = this._decoratorInstance[fnName].apply(this._decoratorInstance, args);
+                result = this._decoratorInstance[fnName](args);
             } else {
                 this.logger.warning("DecoratorInstance '" + $.type(this._decoratorInstance) + "' does not have a method with name '" + fnName + "'...");
             }
@@ -425,12 +425,14 @@ define(['logManager',
 
     ClickableItem.prototype.showSourceConnectors = function (params) {
         if (this.canvas._enableConnectionDrawing === true) {
-            this._decoratorInstance.showSourceConnectors(params);
+            //this._decoratorInstance.showSourceConnectors(params);
+            //TODO Change this to be the clickable areas (connection areas)
         }
     };
 
     ClickableItem.prototype.hideSourceConnectors = function () {
-        this._decoratorInstance.hideSourceConnectors();
+        //this._decoratorInstance.hideSourceConnectors();
+        //TODO Change this to be the clickable areas (connection areas)
     };
 
     ClickableItem.prototype.showEndConnectors = function (params) {

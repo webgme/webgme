@@ -23,7 +23,7 @@ define(['./SnapEditorWidget.Constants'], function (SnapEditorWidgetConstants) {
         var self = this,
             logger = this.logger;
 
-        //handle click on designer-items
+        //handle click on clickable-items
         this.$el.on('mousedown.' + EVENT_POSTFIX, 'div.' + SnapEditorWidgetConstants.DESIGNER_ITEM_CLASS,  function (event) {
             var itemId = $(this).attr("id"),
                 eventDetails = self._processMouseEvent(event, true, true, true, true);
@@ -104,6 +104,30 @@ define(['./SnapEditorWidget.Constants'], function (SnapEditorWidgetConstants) {
 
         return eventDetails;
     };
+
+    SnapEditorWidgetMouse.prototype.trackMouseMoveMouseUp = function (fnMouseMove, fnMouseUp) {
+        var self = this;
+
+        $(document).on('mousemove.' + EVENT_POSTFIX, function (event) {
+            var mouseDetails = self._processMouseEvent(event, false, true, true, true);
+
+            if (fnMouseMove) {
+                fnMouseMove.call(self, mouseDetails);
+            }
+        });
+
+        $(document).on('mouseup.' + EVENT_POSTFIX, function (event) {
+            var mouseDetails = self._processMouseEvent(event, false, true, true, true);
+
+            $(document).off('mousemove.' + EVENT_POSTFIX);
+            $(document).off('mouseup.' + EVENT_POSTFIX);
+
+            if (fnMouseUp) {
+                fnMouseUp.call(self, mouseDetails);
+            }
+        });
+    };
+
 
     return SnapEditorWidgetMouse;
 });

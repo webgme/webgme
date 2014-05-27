@@ -21,7 +21,7 @@ define(['./ClickableItem'], function (ClickableItem) {
         objDescriptor.position.y = alignedPosition.y;
         objDescriptor.guid = componentId;
 
-        this._checkPositionOverlap(componentId, objDescriptor);
+        //this._checkPositionOverlap(componentId, objDescriptor);
 
         this.itemIds.push(componentId);
 
@@ -30,12 +30,37 @@ define(['./ClickableItem'], function (ClickableItem) {
 
         newComponent = this.items[componentId] = new ClickableItem(componentId, this);
         newComponent.moveTo(objDescriptor.position.x, objDescriptor.position.y);
-        newComponent.rotateTo(objDescriptor.rotation);
 
         newComponent.__setDecorator(objDescriptor.decorator, objDescriptor.decoratorClass, objDescriptor.control, objDescriptor.metaInfo, objDescriptor.preferencesHelper, objDescriptor.aspect, objDescriptor.decoratorParams);
         newComponent.addToDocFragment(this._documentFragment);
 
         return newComponent;
+    };
+
+    SnapEditorWidgetClickableItems.prototype._alignPositionToGrid = function (pX, pY) {
+        var posXDelta,
+            posYDelta;
+
+        if (pX < this.gridSize) {
+            pX = this.gridSize;
+        }
+
+        if (pY < this.gridSize) {
+            pY = this.gridSize;
+        }
+
+        if (this.gridSize > 1) {
+            posXDelta = pX % this.gridSize;
+            posYDelta = pY % this.gridSize;
+
+            if ((posXDelta !== 0) || (posYDelta !== 0)) {
+                pX += (posXDelta < Math.floor(this.gridSize / 2) + 1 ? -1 * posXDelta : this.gridSize - posXDelta);
+                pY += (posYDelta < Math.floor(this.gridSize / 2) + 1 ? -1 * posYDelta : this.gridSize - posYDelta);
+            }
+        }
+
+        return { "x": pX,
+            "y": pY };
     };
 
     SnapEditorWidgetClickableItems.prototype.updateClickableItem  = function (componentId, objDescriptor) {
