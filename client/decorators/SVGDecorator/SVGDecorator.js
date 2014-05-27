@@ -1,9 +1,11 @@
 "use strict";
 
 define(['js/Decorators/DecoratorBase',
+    './SnapEditor/SVGDecorator.SnapEditorWidget',
     './DiagramDesigner/SVGDecorator.DiagramDesignerWidget',
     './PartBrowser/SVGDecorator.PartBrowserWidget'], function (
                                                            DecoratorBase,
+                                                           SVGDecoratorSnapEditorWidget,
                                                            SVGDecoratorDiagramDesignerWidget,
                                                            SVGDecoratorPartBrowserWidget) {
 
@@ -25,7 +27,8 @@ define(['js/Decorators/DecoratorBase',
 
     SVGDecorator.prototype.initializeSupportedWidgetMap = function () {
         this.supportedWidgetMap = {'DiagramDesigner': SVGDecoratorDiagramDesignerWidget,
-            'PartBrowser': SVGDecoratorPartBrowserWidget};
+            'PartBrowser': SVGDecoratorPartBrowserWidget,
+            'SnapEditor': SVGDecoratorSnapEditorWidget };
     };
 
     return SVGDecorator;
