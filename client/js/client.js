@@ -462,15 +462,10 @@ define([
                                 if(!err && names){
                                     var firstName = null;
 
-                                    for(var i in names){
-                                        if(!firstName){
-                                            firstName = i;
-                                            break;
-                                        }
-                                        if(i === 'master'){
-                                            firstName = i;
-                                            break;
-                                        }
+                                    if(names['master']){
+                                        firstName = 'master';
+                                    } else {
+                                        firstName = Object.keys(names)[0] || null;
                                     }
 
                                     if(firstName){
