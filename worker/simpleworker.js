@@ -286,6 +286,13 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
                     process.send({pid:process.pid,type:CONSTANT.msgTypes.result,error:'invalid parameters',result:{}});
                 }
                 break;
+            case CONSTANT.workerCommands.exporLibrary:
+                if( typeof parameters.name === 'string' && typeof parameters.hash === 'string' && typeof parameters.path === 'string'){
+                    
+                } else {
+                    initResult();
+                    process.send({pid:process.pid,type:CONSTANT.msgTypes.request,error:'invalid parameters'});
+                }
             default:
                 process.send({error:'unknown command'});
         }

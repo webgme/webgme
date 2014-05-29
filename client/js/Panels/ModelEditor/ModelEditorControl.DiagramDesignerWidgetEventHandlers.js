@@ -7,6 +7,7 @@ define(['logManager',
     'js/RegistryKeys',
     'js/Utils/GMEConcepts',
     'js/Utils/ExportManager',
+    'js/Utils/ImportManager',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     'js/DragDrop/DragHelper'], function (logManager,
                                                         util,
@@ -15,6 +16,7 @@ define(['logManager',
                                                         REGISTRY_KEYS,
                                                         GMEConcepts,
                                                         ExportManager,
+                                                        ImportManager,
                                                         DiagramDesignerWidgetConstants,
                                                         DragHelper) {
 
@@ -1095,14 +1097,17 @@ define(['logManager',
             "name": 'Export model context...',
             "icon": 'icon-cog'
         };
-        menuItems[MENU_EXPLIB] = {
-            "name": 'Export library...',
-            "icon": 'icon-book'
-        };
-        menuItems[MENU_UPDLIB] = {
-            "name": 'Export library...',
-            "icon": 'icon-book'
-        };
+        if(selectedIds.length === 1){
+            menuItems[MENU_EXPLIB] = {
+                "name": 'Export library...',
+                "icon": 'icon-book'
+            };
+            menuItems[MENU_UPDLIB] = {
+                "name": 'Update library...',
+                "icon": 'icon-refresh'
+            };
+        }
+
 
         this.designerCanvas.createMenu(menuItems, function (key) {
                 if (key === MENU_EXPORT) {
@@ -1166,7 +1171,7 @@ define(['logManager',
 
         id = gmeIDs[0] || null;
 
-        //TODO update library call and open select file dialog...
+        ImportManager.importLibrary(id);
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionFillColorChanged = function (selectedElements, color) {
