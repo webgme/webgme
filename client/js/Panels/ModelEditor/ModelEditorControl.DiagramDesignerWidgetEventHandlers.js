@@ -1083,6 +1083,8 @@ define(['logManager',
         var menuItems = {},
             MENU_EXPORT = 'export',
             MENU_EXINTCONF = 'exintconf', //kecso
+            MENU_EXPLIB = 'exportlib', //kecso
+            MENU_UPDLIB = 'updatelib',
             self = this;
 
         menuItems[MENU_EXPORT] = {
@@ -1093,12 +1095,24 @@ define(['logManager',
             "name": 'Export model context...',
             "icon": 'icon-cog'
         };
+        menuItems[MENU_EXPLIB] = {
+            "name": 'Export library...',
+            "icon": 'icon-book'
+        };
+        menuItems[MENU_UPDLIB] = {
+            "name": 'Export library...',
+            "icon": 'icon-book'
+        };
 
         this.designerCanvas.createMenu(menuItems, function (key) {
                 if (key === MENU_EXPORT) {
                     self._exportItems(selectedIds);
                 } else if (key === MENU_EXINTCONF){
-                    self._exIntConf(selectedIds)
+                    self._exIntConf(selectedIds);
+                } else if(key === MENU_EXPLIB){
+                    self._expLib(selectedIds);
+                } else if(key == MENU_UPDLIB){
+                    self._updLib(selectedIds);
                 }
             },
             this.designerCanvas.posToPageXY(mousePos.mX,
@@ -1127,6 +1141,32 @@ define(['logManager',
         }
 
         ExportManager.exIntConf(gmeIDs);
+    };
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._expLib = function (selectedIds) {
+        var i = selectedIds.length,
+            gmeIDs = [],
+            id;
+
+        while(i--) {
+            gmeIDs.push(this._ComponentID2GmeID[selectedIds[i]]);
+        }
+
+        id = gmeIDs[0] || null;
+
+        ExportManager.expLib(id);
+    };
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._updLib = function (selectedIds) {
+        var i = selectedIds.length,
+            gmeIDs = [],
+            id;
+
+        while(i--) {
+            gmeIDs.push(this._ComponentID2GmeID[selectedIds[i]]);
+        }
+
+        id = gmeIDs[0] || null;
+
+        //TODO update library call and open select file dialog...
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionFillColorChanged = function (selectedElements, color) {
