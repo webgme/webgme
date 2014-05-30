@@ -9,15 +9,9 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 
 	// ----------------- CoreType -----------------
 
-	var xorHashes = function (a, b) {
-        var outHash = "";
-        if(a.length === b.length){
-            for(var i=0;i< a.length;i++){
-                outHash += (parseInt(a.charAt(i),16) ^ parseInt(b.charAt(i),16)).toString(16);
-            }
-        }
-        return outHash;
-    };
+    //FIXME TODO these stuff have been simply copied from lower layer, probably it should be put to some constant place
+    var OVERLAYS = "ovr";
+    var COLLSUFFIX = "-inv";
 
     var CoreType = function(oldcore) {
 		// copy all operations
@@ -203,7 +197,179 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
             },TASYNC.lift(children));
         };
 
-        //TODO now the collection paths doesn't take any kind of inheritance into account...
+        //collection handling and needed functions
+        function _isInheritedChild(node){
+            var parent = core.getParent(node),
+                base = core.getBase(node),
+                parentBase = parent ? core.getBase(parent) : null,
+                baseParent = base ? core.getParent(base) : null;
+
+            if(baseParent && parentBase && core.getPath(baseParent) === core.getPath(parentBase)){
+                return true;
+            }
+            return false;
+        }
+
+        function _getInstanceRoot(node){
+
+            while(_isInheritedChild(node)){
+                node = core.getParent(node);
+            }
+
+            return node;
+        }
+        //TODO copied function from corerel
+        function isPointerName(name) {
+            ASSERT(typeof name === "string");
+
+            return name.slice(-COLLSUFFIX.length) !== COLLSUFFIX;
+        }
+
+        function _getInheritedCollectionNames(node){
+            var target = "",
+                names = [],
+                coretree = core.getCoreTree(),
+                startNode = node,
+                endNode = _getInstanceRoot(node),
+                exit;
+
+            if(core.getPath(startNode) === core.getPath(endNode)){
+                return names;
+            }
+
+            do{
+                startNode = core.getBase(startNode);
+                endNode = core.getBase(endNode);
+                node = startNode;
+                exit = false;
+                target = "";
+                do {
+                    if(core.getPath(node) === core.getPath(endNode)){
+                        exit = true;
+                    }
+                    var child = coretree.getProperty(coretree.getChild(node, OVERLAYS), target);
+                    if (child) {
+                        for ( var name in child) {
+                            if (!isPointerName(name)) {
+                                name = name.slice(0, -COLLSUFFIX.length);
+                                if (names.indexOf(name) < 0) {
+                                    names.push(name);
+                                }
+                            }
+                        }
+                    }
+
+                    target = "/" + coretree.getRelid(node) + target;
+                    node = coretree.getParent(node);
+                } while (!exit);
+            } while (_isInheritedChild(startNode));
+
+            return names;
+        }
+        function _getInheritedCollectionPaths(node,name){
+            var target = "",
+                result = [],
+                coretree = core.getCoreTree(),
+                startNode = node,
+                endNode = _getInstanceRoot(node),
+                prefixStart = startNode,
+                prefixNode = prefixStart,
+                exit,
+                collName = name + COLLSUFFIX,
+                notOverwritten = function(sNode,eNode,source){
+                    var result = true,
+                        tNode = sNode,
+                        child,target;
+
+                    while(core.getPath(tNode) !== core.getPath(eNode)){
+                        child = coretree.getChild(tNode,OVERLAYS);
+                        child = coretree.getChild(child,source);
+                        if(child){
+                            target = coretree.getProperty(child,name);
+                            if(target){
+                                return false;
+                            }
+                        }
+                        tNode = core.getBase(tNode);
+                    }
+
+                    return result;
+                };
+
+            if(core.getPath(startNode) === core.getPath(endNode)){
+                return result;
+            }
+
+            do{
+                startNode = core.getBase(startNode);
+                endNode = core.getBase(endNode);
+                node = startNode;
+                prefixNode = prefixStart;
+                exit = false;
+                target = "";
+                do {
+                    if(core.getPath(node) === core.getPath(endNode)){
+                        exit = true;
+                    }
+                    var child = coretree.getChild(node, OVERLAYS);
+                    child = coretree.getChild(child,target);
+                    if (child) {
+                        var sources = coretree.getProperty(child, collName);
+                        if (sources) {
+                            ASSERT(Array.isArray(sources) && sources.length >= 1);
+
+                            var prefix = coretree.getPath(prefixNode);
+
+                            for ( var i = 0; i < sources.length; ++i) {
+                                if(notOverwritten(prefixNode,node,sources[i])){
+                                    result.push(coretree.joinPaths(prefix, sources[i]));
+                                }
+                            }
+                        }
+                    }
+
+                    target = "/" + coretree.getRelid(node) + target;
+                    node = coretree.getParent(node);
+                    prefixNode = core.getParent(prefixNode);
+                } while (!exit);
+            } while (_isInheritedChild(startNode));
+
+            return result;
+        }
+        core.getCollectionNames = function(node){
+            ASSERT(isValidNode(node));
+            var checkCollNames = function(draft){
+                    var i,filtered = [],sources;
+                    for(i=0;i<draft.length;i++){
+                        sources = core.getCollectionPaths(node,draft[i]);
+                        if(sources.length > 0){
+                            filtered.push(draft[i])
+                        }
+                    }
+                    return filtered;
+                },
+                ownNames = oldcore.getCollectionNames(node),
+                inhNames = checkCollNames(_getInheritedCollectionNames(node)),
+                i;
+            for(i=0;i<ownNames.length;i++){
+                if(inhNames.indexOf(ownNames[i]) < 0){
+                    inhNames.push(ownNames[i])
+                }
+            }
+
+            return inhNames;
+        };
+
+        core.getCollectionPaths = function(node,name){
+            ASSERT(isValidNode(node) && name);
+            var ownPaths = oldcore.getCollectionPaths(node,name),
+                inhPaths = _getInheritedCollectionPaths(node,name);
+
+            inhPaths = inhPaths.concat(ownPaths);
+
+            return inhPaths;
+        };
+
         core.loadCollection = function(node, name) {
             var root =  core.getRoot(node);
             var paths = core.getCollectionPaths(node,name);
