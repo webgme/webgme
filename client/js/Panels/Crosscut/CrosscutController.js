@@ -471,19 +471,43 @@ define(['logManager',
 
         len = pointerNames.length;
         while (len--) {
-            pointerTo = node.getPointer(pointerNames[len]).to;
+            if(pointerNames[len] !== CONSTANTS.POINTER_BASE){
+                pointerTo = node.getPointer(pointerNames[len]).to;
 
-            if (pointerTo) {
-                combinedName = gmeID + "_" + pointerNames[len] + "_" + pointerTo;
+                if (pointerTo) {
+                    combinedName = gmeID + "_" + pointerNames[len] + "_" + pointerTo;
 
-                newPointers.names.push(pointerNames[len]);
+                    newPointers.names.push(pointerNames[len]);
 
-                newPointers.combinedNames.push(combinedName);
+                    newPointers.combinedNames.push(combinedName);
 
-                newPointers[combinedName] = {'name': pointerNames[len],
-                    'target': pointerTo};
+                    newPointers[combinedName] = {'name': pointerNames[len],
+                        'target': pointerTo};
+                }
             }
         }
+
+        //base and parent are special relations and they also needs to be added when not checked for sets
+        if(!isSet){
+            pointerTo = node.getParentId();
+            if(typeof pointerTo === 'string'){
+                combinedName = gmeID + "_" + CONSTANTS.RELATION_CONTAINMENT + "_" + pointerTo;
+                newPointers.names.push(CONSTANTS.RELATION_CONTAINMENT);
+                newPointers.combinedNames.push(combinedName);
+                newPointers[combinedName] = {'name': CONSTANTS.RELATION_CONTAINMENT,'target': pointerTo};
+            }
+
+
+            pointerTo = node.getBaseId();
+            if(typeof pointerTo === 'string'){
+                combinedName = gmeID + "_" + CONSTANTS.POINTER_BASE + "_" + pointerTo;;
+                newPointers.names.push(CONSTANTS.POINTER_BASE);
+                newPointers.combinedNames.push(combinedName);
+                newPointers[combinedName] = {'name': CONSTANTS.POINTER_BASE,'target': pointerTo};
+            }
+        }
+
+
 
         //compute deleted pointers
         diff = _.difference(oldPointers.combinedNames, newPointers.combinedNames);
@@ -611,10 +635,21 @@ define(['logManager',
 
                 //set visual properties
                 visualType = connType;
-                if (connTexts &&
-                    connTexts.name === CONSTANTS.POINTER_BASE) {
-                    visualType = MetaRelations.META_RELATIONS.INHERITANCE;
+                if(connTexts){
+                    switch(connTexts.name){
+                        case CONSTANTS.POINTER_BASE:
+                            visualType = MetaRelations.META_RELATIONS.INHERITANCE;
+                            //TODO here the inheritance relations drawn in opposite direction so we have to switch src and dst to be able to use the same visual style
+                            connDesc.srcObjId =  this._GMEID2ComponentID[gmeDstId][0];
+                            connDesc.dstObjId = this._GMEID2ComponentID[gmeSrcId][0];
+                            break;
+                        case CONSTANTS.RELATION_CONTAINMENT:
+                            visualType = MetaRelations.META_RELATIONS.CONTAINMENT;
+                            connDesc.srcObjId =  this._GMEID2ComponentID[gmeDstId][0];
+                            connDesc.dstObjId = this._GMEID2ComponentID[gmeSrcId][0];
+                    }
                 }
+
                 _.extend(connDesc, MetaRelations.getLineVisualDescriptor(visualType));
 
                 //fill out texts
@@ -782,7 +817,7 @@ define(['logManager',
             if (gmeID) {
                 //deleting a box --> remove from crosscut's set
                 logger.debug('removeMember memberListContainerID: ' + memberListContainerID + ', gmeID: ' + gmeID + ', memberListToRemoveFrom: ' + memberListToRemoveFrom);
-                _client.removeMember(memberListContainerID, gmeID, memberListToRemoveFrom);
+                //_client.removeMember(memberListContainerID, gmeID, memberListToRemoveFrom);
 
                 //check if this GME object is a connection and whether it's parent is the crosscut container
                 gmeObj = _client.getNode(gmeID);
@@ -790,7 +825,11 @@ define(['logManager',
                     if (GMEConcepts.canDeleteNode(gmeID)) {
                         logger.debug('deleting connection from crosscut hierarchy too gmeID: ' + gmeID);
                         _client.delMoreNodes([gmeID]);
+                    } else {
+                        _client.removeMember(memberListContainerID, gmeID, memberListToRemoveFrom);
                     }
+                } else {
+                    _client.removeMember(memberListContainerID, gmeID, memberListToRemoveFrom);
                 }
             } else {
                 //deleting a line

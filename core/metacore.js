@@ -285,35 +285,6 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv" ], function(ASSER
             return getObjectDiff(meta,baseMeta);
         };
 
-
-        //now the overridden functions to check as many meta rules as possible before making the actual modification
-        core.setAttribute = function(node,name,value){
-            if(core.isValidAttributeValueOf(node,name,value)){
-                return oldcore.setAttribute(node,name,value);
-            } else {
-                return new Error('meta validation failed');
-            }
-        };
-
-        core.createNode = function(parameters){
-            //TODO currently we allow the creation of baseless child for every node - because we use this functionality and it cannot be used by a simple user
-            parameters = parameters || {};
-
-            if(!parameters.base || !parameters.parent || core.isValidChildOf(parameters.base,parameters.parent)){
-                return oldcore.createNode(parameters);
-            } else {
-                return null; //TODO how to give back an error in this case??
-            }
-        };
-
-        core.setPointer = function(node,name,target){
-            if(core.isValidTargetOf(target,node,name)){
-                return oldcore.setPointer(node,name,target);
-            } else {
-                return new Error('meta validation failed');
-            }
-        };
-
         return core;
 
     };

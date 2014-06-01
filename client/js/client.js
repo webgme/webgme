@@ -462,15 +462,10 @@ define([
                                 if(!err && names){
                                     var firstName = null;
 
-                                    for(var i in names){
-                                        if(!firstName){
-                                            firstName = i;
-                                            break;
-                                        }
-                                        if(i === 'master'){
-                                            firstName = i;
-                                            break;
-                                        }
+                                    if(names['master']){
+                                        firstName = 'master';
+                                    } else {
+                                        firstName = Object.keys(names)[0] || null;
                                     }
 
                                     if(firstName){
@@ -1984,6 +1979,10 @@ define([
 
                 var getPointer = function(name){
                     //return _core.getPointerPath(_nodes[_id].node,name);
+                    if(name === 'base'){
+                        //base is a special case as it complicates with inherited children
+                        return {to:_core.getPath(_core.getBase(_nodes[_id].node)),from:[]};
+                    }
                     return {to:_core.getPointerPath(_nodes[_id].node,name),from:[]};
                 };
                 var getOwnPointer = function(name){
