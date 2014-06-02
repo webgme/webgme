@@ -988,7 +988,7 @@ define([
                         });
                         loading(newRootHash);
                     } else {
-                       // _core.persist(_nodes[ROOT_PATH].node,function(err){});
+                        _core.persist(_nodes[ROOT_PATH].node,function(err){});
                     }
                 } else {
                     _msg="";
