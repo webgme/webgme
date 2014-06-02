@@ -285,6 +285,41 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv" ], function(ASSER
             return getObjectDiff(meta,baseMeta);
         };
 
+        core.clearMetaRules = function(node){
+            core.deleteNode(MetaNode(node));
+        };
+
+        core.setAttributeMeta = function(node,name,value){
+            ASSERT(typeof value === 'object' && typeof name === 'string' && name);
+
+            core.setAttribute(MetaNode(node),name,value);
+        };
+        core.delAttributeMeta = function(node,name){
+            core.delAttribute(MetaNode(node),name);
+        };
+        core.getAttributeMeta = function(node,name){
+            return core.getAttribute(MetaNode(node),name);
+        };
+
+        core.setChildMeta = function(node,child,min,max){
+            core.addMember(MetaChildrenNode(node),'items',child);
+            min = min || -1;
+            max = max || -1;
+            core.setMemberAttribute(MetaChildrenNode(node),'items',core.getPath(child),'min',min);
+            core.setMemberAttribute(MetaChildrenNode(node),'items',core.getPath(child),'max',max);
+        };
+        core.delChildMeta = function(node,childPath){
+            core.delMember(MetaChildrenNode(node),'items',childPath);
+        };
+        core.setChildrenMetaLimits = function(node,min,max){
+            if(min){
+                core.setAttribute(MetaChildrenNode(node),'min',min);
+            }
+            if(max){
+                core.setAttribute(MetaChildrenNode(node),'max',max);
+            }
+        };
+
         return core;
 
     };

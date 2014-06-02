@@ -1,4 +1,4 @@
-define([],function(){
+define(['util/assert'],function(ASSERT){
 
     var _nodes = {},
         _core = null,
@@ -147,12 +147,62 @@ define([],function(){
         return {
             attributes:getAttributesOfNode(node),
             base: _core.getBase(node) ? _core.getGuid(_core.getBase(node)) : null,
-            meta:_core.getOwnJsonMeta(node),
+            meta:pathsToGuids(_core.getOwnJsonMeta(node)),
             parent:_core.getParent(node) ? _core.getGuid(_core.getParent(node)) : null,
             pointers:getPointersOfNode(node),
             registry:getRegistryOfNode(node),
             sets:getSetsOfNode(node)
         };
+    }
+    function baseGuid(path){
+        var keys = Object.keys(_extraBasePaths),
+            i;
+        for(i=0;i<keys.length;i++){
+            if(_extraBasePaths[keys[i]] === path){
+                return keys[i];
+            }
+        }
+        return null;
+    }
+    function pathsToGuids(jsonObject){
+        if(typeof jsonObject === 'object'){
+            var keys = Object.keys(jsonObject),
+                i, j,toBeRemoved;
+            for(i=0;i<keys.length;i++){
+                if(keys[i] === 'items'){
+                    //here comes the transformation itself
+                    if(jsonObject.items.length){
+                        toBeRemoved = [];
+                        for(j=0;j<jsonObject.items.length;j++) {
+                            if (_pathToGuidMap[jsonObject.items[j]]) {
+                                jsonObject.items[j] = _pathToGuidMap[jsonObject.items[j]];
+                            } else if(baseGuid(jsonObject.items[j])) {
+                                jsonObject.items[j] = baseGuid(jsonObject.items[j]);
+                            }else {
+                                toBeRemoved.push(j);
+                            }
+                        }
+
+                        if(toBeRemoved.length>0){
+                            toBeRemoved = toBeRemoved.sort();
+                            toBeRemoved = toBeRemoved.reverse();
+                            for(j=0;j<toBeRemoved.length;j++){
+                                jsonObject.items.splice(toBeRemoved[j],1);
+                                jsonObject.minItems.splice(toBeRemoved[j],1);
+                                jsonObject.maxItems.splice(toBeRemoved[j],1);
+                            }
+                        }
+
+                    }
+                } else {
+                    if(typeof jsonObject[keys[i]] === 'object'){
+                         jsonObject[keys[i]] = pathsToGuids(jsonObject[keys[i]]);
+                    }
+                }
+            }
+
+        }
+        return jsonObject;
     }
     function getAttributesOfNode(node){
         var names = _core.getOwnAttributeNames(node).sort(),
@@ -295,13 +345,16 @@ define([],function(){
 
             //now we can add or modify the relations of the nodes - we go along the hierarchy chain
             updateRelations(_import.root.guid,_import.containment);
+            _core.persist(originLibraryRoot);
 
             //now update inheritance chain
             //we assume that our inheritance chain comes from the FCO and that it is identical everywhere
             updateInheritance(_core.getGuid(_core.getBaseRoot(originLibraryRoot)),null,_import.inheritance);
+            _core.persist(originLibraryRoot);
 
             //finally we need to update the meta rules of each node - again along the containment hierarchy
-            //updateMetaRules(_import.root.guid,null,_import.containment);
+            updateMetaRules(_import.root.guid,_import.containment);
+            _core.persist(originLibraryRoot);
 
             _core.persist(_core.getRoot(originLibraryRoot),callback);
             //callback(null);
@@ -437,6 +490,47 @@ define([],function(){
             for(i=0;i<keys.length;i++){
                 updateInheritance(keys[i],node,inheritanceTreeObject[keys[i]]);
             }
+        }
+    }
+
+    function updateMetaRules(guid,containmentTreeObject){
+
+        var keys,i;
+
+        updateMeta(guid);
+
+        keys = Object.keys(containmentTreeObject);
+        for(i=0;i<keys.length;i++){
+            updateMetaRules(keys[i],containmentTreeObject[keys[i]]);
+        }
+    }
+
+    function updateMeta(guid) {
+        _core.clearMetaRules(_nodes[guid]);
+
+        updateAttributeMeta(guid);
+        updateChildrenMeta(guid);
+    }
+
+    function updateAttributeMeta(guid){
+        var jsonMeta = _import.nodes[guid].meta.attributes || {},
+            node = _nodes[guid],
+            keys,i;
+
+        keys = Object.keys(jsonMeta);
+        for(i=0;i<keys.length;i++){
+            _core.setAttributeMeta(node,keys[i],jsonMeta[keys[i]]);
+        }
+    }
+
+    function updateChildrenMeta(guid){
+        var jsonMeta = _import.nodes[guid].meta.children || {items:[],minItems:[],maxItems:[]},
+            i;
+        ASSERT(jsonMeta.items.length === jsonMeta.minItems.length && jsonMeta.minItems.length === jsonMeta.maxItems.length);
+
+        _core.setChildrenMetaLimits(_nodes[guid],jsonMeta.min,jsonMeta.max);
+        for(i=0;i<jsonMeta.items.length;i++){
+            _core.setChildMeta(_nodes[guid],_nodes[jsonMeta.items[i]],jsonMeta.minItems[i],jsonMeta.maxItems[i]);
         }
     }
 
