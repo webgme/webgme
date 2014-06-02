@@ -13,7 +13,8 @@ define([
     'coreclient/import',
     'coreclient/copyimport',
     '/listAllDecorators',
-    '/listAllPlugins'
+    '/listAllPlugins',
+    'coreclient/serialization'
 ],
     function (
         ASSERT,
@@ -30,7 +31,8 @@ define([
         MergeImport,
         Import,
         AllDecorators,
-        AllPlugins
+        AllPlugins,
+        Serialization
         ) {
 
         var ROOT_PATH = '';
@@ -2233,6 +2235,30 @@ define([
                     }
                 });
             }
+
+            function getExportLibraryUrlAsync(libraryRootPath,filename,callback){
+                var command = {};
+                command.command = 'exportLibrary';
+                command.name = _projectName;
+                command.hash = _core.getHash(_nodes[ROOT_PATH].node);
+                command.path = libraryRootPath;
+                _database.simpleRequest(command,function(err,resId){
+                    if(err){
+                        callback(err);
+                    } else {
+                        callback(null,window.location.protocol + '//' + window.location.host +'/worker/simpleResult/'+resId+'/'+filename);
+                    }
+                });
+            }
+            function updateLibraryAsync(libraryRootPath,newLibrary,callback){
+                Serialization.import(_core,_nodes[libraryRootPath].node,newLibrary,function(err){
+                    if(err){
+                        return callback(err);
+                    }
+
+                    saveRoot("library have been updated...",callback);
+                });
+            }
             function dumpNodeAsync(path,callback){
                 if(_nodes[path]){
                     Dump(_core,_nodes[path].node,"",'guid',callback);
@@ -2483,6 +2509,8 @@ define([
                 mergeNodeAsync: mergeNodeAsync,
                 createProjectFromFileAsync: createProjectFromFileAsync,
                 getDumpURL: getDumpURL,
+                getExportLibraryUrlAsync: getExportLibraryUrlAsync,
+                updateLibraryAsync: updateLibraryAsync,
 
                 //constraint
                 setConstraint: setConstraint,

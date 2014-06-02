@@ -137,6 +137,7 @@ define([],function(){
         /*{
             //only the ones defined on this level
             attributes:{name:value},
+            base:GUID,
             registry:{name:value},
             parent:GUID,
             pointers:{name:targetGuid},
@@ -145,6 +146,7 @@ define([],function(){
         }*/
         return {
             attributes:getAttributesOfNode(node),
+            base: _core.getBase(node) ? _core.getGuid(_core.getBase(node)) : null,
             meta:_core.getOwnJsonMeta(node),
             parent:_core.getParent(node) ? _core.getGuid(_core.getParent(node)) : null,
             pointers:getPointersOfNode(node),
@@ -177,8 +179,8 @@ define([],function(){
             target;
         for(i=0;i<names.length;i++){
             target = _core.getPointerPath(node,names[i]);
-            if(_pathToGuidMap[target]){
-                result[names[i]] = _pathToGuidMap[target];
+            if(_pathToGuidMap[target] || _extraBasePaths[target]){
+                result[names[i]] = _pathToGuidMap[target] || _extraBasePaths[target];
             }
         }
         return result;
@@ -235,10 +237,13 @@ define([],function(){
     }
 
     function importLibrary(core,originLibraryRoot,updatedLibraryJson,callback){
+        _core = core;
         _import = updatedLibraryJson;
         _newNodeGuids = [];
         _updatedNodeGuids = [];
         _removedNodeGuids = [];
+
+        synchronizeRoots(originLibraryRoot,_import.root.guid);
         exportLibrary(core,originLibraryRoot,function(err){
             //we do not need the returned json object as that is stored in our global _export variable
             if(err){
@@ -286,18 +291,26 @@ define([],function(){
             //as a second step we should deal with the updated nodes
             //we should go among containment hierarchy
             updateNodes(_import.root.guid,null,_import.containment);
+            _core.persist(originLibraryRoot);
 
             //now we can add or modify the relations of the nodes - we go along the hierarchy chain
             updateRelations(_import.root.guid,_import.containment);
 
             //now update inheritance chain
-            updateInheritance(_import.root.guid,null,_import.inheritance);
+            //we assume that our inheritance chain comes from the FCO and that it is identical everywhere
+            updateInheritance(_core.getGuid(_core.getBaseRoot(originLibraryRoot)),null,_import.inheritance);
 
             //finally we need to update the meta rules of each node - again along the containment hierarchy
             //updateMetaRules(_import.root.guid,null,_import.containment);
+
+            _core.persist(_core.getRoot(originLibraryRoot),callback);
+            //callback(null);
         });
     }
 
+    function synchronizeRoots(oldRoot,newGuid){
+        _core.setGuid(oldRoot,newGuid);
+    }
     //it will update the modified nodes and create the new ones regarding their place in the hierarchy chain
     function updateNodes(guid,parent,containmentTreeObject){
         if(_updatedNodeGuids.indexOf(guid) !== -1){
@@ -341,9 +354,9 @@ define([],function(){
         for(i=0;i<keys.length;i++){
             _core.delRegistry(node,keys[i]);
         }
-        keys = Object.keys(jsonNode.attributes);
+        keys = Object.keys(jsonNode.registry);
         for(i=0;i<keys.length;i++){
-            _core.setRegistry(node,keys[i],jsonNode.attributes[keys[i]]);
+            _core.setRegistry(node,keys[i],jsonNode.registry[keys[i]]);
         }
     }
     function updateAttributes(guid){
@@ -412,17 +425,18 @@ define([],function(){
 
     function updateInheritance(guid,base,inheritanceTreeObject){
         var node = _nodes[guid],
-            oldBase = _core.getBase(node),
             keys,i;
 
-        if((oldBase === null && base !== null) || _core.getGuid(oldBase) !== _core.getGuid(base)){
-            //the base have been changed
+        if(_updatedNodeGuids.indexOf(guid) !== -1 || _newNodeGuids.indexOf(guid) !== -1){
+            //we only care for nodes we touch
             _core.setBase(node,base);
         }
 
-        keys = Object.keys(inheritanceTreeObject);
-        for(i=0;i<keys.length;i++){
-            updateInheritance(keys[i],node,inheritanceTreeObject[keys[i]]);
+        if(node){
+            keys = Object.keys(inheritanceTreeObject);
+            for(i=0;i<keys.length;i++){
+                updateInheritance(keys[i],node,inheritanceTreeObject[keys[i]]);
+            }
         }
     }
 
