@@ -312,7 +312,7 @@ define(['logManager',
             httpResult.sendfile(path,function(err){
                 //TODO we should check for all kind of error that should be handled differently
                 if (err && err.code !== 'ECONNRESET') {
-                    res.send(404);
+                    httpResult.send(404);
                 }
             });
         }
