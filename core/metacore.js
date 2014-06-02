@@ -38,7 +38,31 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv" ], function(ASSER
             }
             return null;
         };
+        var _MetaPointerNode = function(node,name){
+            //this function always gives back a node, use this if you just want to create the node as well
+            core.setPointer(MetaNode(node),name,null);
+            return core.getChild(MetaNode(node),"_p_"+name);
+        };
 
+        var MetaAspectsNode = function(node){
+            return core.getChild(MetaNode(node),'aspects');
+        };
+        var MetaAspectNode = function(node,name){
+            var aspectNode = MetaAspectsNode(node),
+                names = core.getPointerNames(aspectNode) ||[];
+            if(names.indexOf(name) !== -1){
+                return core.getChild(aspectNode,"_a_"+name);
+            }
+            return null;
+        };
+
+        var _MetaAspectNode = function(node,name){
+            //this function always gives back a node, use this if you just want to create the node as well
+            var aspectNode = core.getChild(MetaNode(node),'aspects');
+
+            core.setPointer(aspectNode,name,null);
+            return core.getChild(aspectNode,"_a_"+name);
+        };
         //now the additional functions
         core.isTypeOf = function(node, typeNode){
             if(!realNode(node)){
@@ -159,17 +183,10 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv" ], function(ASSER
             return false;
         };
 
-        var MetaAspectNode = function(node,name){
-            var aspectNode = core.getChild(MetaNode(node),'aspects'),
-                names = core.getPointerNames(aspectNode) ||[];
-            if(names.indexOf(name) !== -1){
-                return core.getChild(aspectNode,"_a_"+name);
-            }
-            return null;
-        };
+
 
         core.getValidAspectNames = function(node){
-            return core.getPointerNames(core.getChild(MetaNode(node),'aspects')) ||[];
+            return core.getPointerNames(MetaAspectsNode(node)) ||[];
         };
 
         //additional meta functions for getting meta definitions
@@ -211,7 +228,7 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv" ], function(ASSER
                 pointer.minItems = [];
                 pointer.maxItems = [];
 
-                for(var j=0;j<pointer.items.length;j++){
+                for(j=0;j<pointer.items.length;j++){
                     pointer.minItems.push(core.getMemberAttribute(tempNode,"items",pointer.items[j],"min") || -1);
                     pointer.maxItems.push(core.getMemberAttribute(tempNode,"items",pointer.items[j],"max") || -1);
 
@@ -320,8 +337,47 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv" ], function(ASSER
             }
         };
 
-        return core;
+        core.setPointerMetaTarget = function(node,name,target,min,max){
+            core.addMember(_MetaPointerNode(node,name),'items',target);
+            min = min || -1;
+            core.setMemberAttribute(_MetaPointerNode(node,name),'items',core.getPath(target),'min',min);
+            max = max || -1;
+            core.setMemberAttribute(_MetaPointerNode(node,name),'items',core.getPath(target),'max',max);
+        };
+        core.delPointerMetaTarget = function(node,name,targetPath){
+            var metaNode = MetaPointerNode(node,name);
+            if(metaNode){
+                core.delMember(metaNode,'items',targetPath);
+            }
+        };
+        core.setPointerMetaLimits = function(node,name,min,max){
+            if(min){
+                core.setAttribute(_MetaPointerNode(node,name),'min',min);
+            }
+            if(max){
+                core.setAttribute(_MetaPointerNode(node,name),'max',max);
+            }
+        };
+        core.delPointerMeta = function(node,name){
+            core.deletePointer(MetaNode(node),name);
+            core.deleteNode(_MetaPointerNode(node,name));
+        };
 
+        core.setAspectMetaTarget = function(node,name,target){
+            core.addMember(_MetaAspectNode(node,name),'items',target);
+        };
+        core.delAspectMetaTarget = function(node,name,targetPath){
+            var metaNode = MetaAspectNode(node,name);
+            if(metaNode){
+                core.delMember(metaNode,'items',targetPath);
+            }
+        };
+        core.delAspectMeta = function(node,name){
+            core.deletePointer(MetaAspectsNode(node),name);
+            core.deleteNode(_MetaAspectNode(node,name));
+        };
+
+        return core;
     };
 
     return MetaCore;

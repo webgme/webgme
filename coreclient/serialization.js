@@ -167,29 +167,52 @@ define(['util/assert'],function(ASSERT){
     function pathsToGuids(jsonObject){
         if(typeof jsonObject === 'object'){
             var keys = Object.keys(jsonObject),
-                i, j,toBeRemoved;
+                i, j, k,toDelete,tArray;
+
             for(i=0;i<keys.length;i++){
-                if(keys[i] === 'items'){
+                if(keys[i] === 'items') {
                     //here comes the transformation itself
-                    if(jsonObject.items.length){
-                        toBeRemoved = [];
-                        for(j=0;j<jsonObject.items.length;j++) {
-                            if (_pathToGuidMap[jsonObject.items[j]]) {
-                                jsonObject.items[j] = _pathToGuidMap[jsonObject.items[j]];
-                            } else if(baseGuid(jsonObject.items[j])) {
-                                jsonObject.items[j] = baseGuid(jsonObject.items[j]);
-                            }else {
-                                toBeRemoved.push(j);
+                    toDelete = [];
+                    for (j = 0; j < jsonObject.items.length; j++) {
+                        if (_pathToGuidMap[jsonObject.items[j]]) {
+                            jsonObject.items[j] = _pathToGuidMap[jsonObject.items[j]];
+                        } else if (baseGuid(jsonObject.items[j])) {
+                            jsonObject.items[j] = baseGuid(jsonObject.items[j]);
+                        } else {
+                            toDelete.push(j);
+                        }
+                    }
+
+                    if (toDelete.length > 0) {
+                        toDelete = toDelete.sort();
+                        toDelete = toDelete.reverse();
+                        for (j = 0; j < toDelete.length; j++) {
+                            jsonObject.items.splice(toDelete[j], 1);
+                            jsonObject.minItems.splice(toDelete[j], 1);
+                            jsonObject.maxItems.splice(toDelete[j], 1);
+                        }
+                    }
+                } else if(keys[i] === 'aspects'){
+                    //aspects are a bunch of named path list, so we have to handle them separately
+                    tArray = Object.keys(jsonObject[keys[i]]);
+                    for(j=0;j<tArray.length;j++){
+                        //here comes the transformation itself
+                        toDelete = [];
+                        for(k=0;k<jsonObject[keys[i]][tArray[j]].length;k++) {
+                            if (_pathToGuidMap[jsonObject[keys[i]][tArray[j]][k]]) {
+                                jsonObject[keys[i]][tArray[j]][k] = _pathToGuidMap[jsonObject[keys[i]][tArray[j]][k]];
+                            } else if (baseGuid(jsonObject[keys[i]][tArray[j]][k])) {
+                                jsonObject[keys[i]][tArray[j]][k] = baseGuid(jsonObject[keys[i]][tArray[j]][k]);
+                            } else {
+                                toDelete.push(j);
                             }
                         }
 
-                        if(toBeRemoved.length>0){
-                            toBeRemoved = toBeRemoved.sort();
-                            toBeRemoved = toBeRemoved.reverse();
-                            for(j=0;j<toBeRemoved.length;j++){
-                                jsonObject.items.splice(toBeRemoved[j],1);
-                                jsonObject.minItems.splice(toBeRemoved[j],1);
-                                jsonObject.maxItems.splice(toBeRemoved[j],1);
+                        if (toDelete.length > 0) {
+                            toDelete = toDelete.sort();
+                            toDelete = toDelete.reverse();
+                            for (k = 0; k < toDelete.length; k++) {
+                                jsonObject.items.splice(jsonObject[keys[i]][tArray[j]][k], 1);
                             }
                         }
 
@@ -229,8 +252,8 @@ define(['util/assert'],function(ASSERT){
             target;
         for(i=0;i<names.length;i++){
             target = _core.getPointerPath(node,names[i]);
-            if(_pathToGuidMap[target] || _extraBasePaths[target]){
-                result[names[i]] = _pathToGuidMap[target] || _extraBasePaths[target];
+            if(_pathToGuidMap[target] || _extraBasePaths[target] || target === null){
+                result[names[i]] = _pathToGuidMap[target] || _extraBasePaths[target] || null;
             }
         }
         return result;
@@ -330,7 +353,7 @@ define(['util/assert'],function(ASSERT){
             for(i=0;i<_removedNodeGuids.length;i++){
                 parent = _core.getParent(_nodes[_removedNodeGuids[i]]);
                 if(parent && _removedNodeGuids.indexOf(_core.getGuid(parent)) === -1){
-                    toDelete.push[_removedNodeGuids[i]];
+                    toDelete.push(_removedNodeGuids[i]);
                 }
             }
             //and as a final step we remove all that is needed
@@ -341,20 +364,18 @@ define(['util/assert'],function(ASSERT){
             //as a second step we should deal with the updated nodes
             //we should go among containment hierarchy
             updateNodes(_import.root.guid,null,_import.containment);
-            _core.persist(originLibraryRoot);
+            _core.persist(originLibraryRoot,function(){});
 
             //now we can add or modify the relations of the nodes - we go along the hierarchy chain
             updateRelations(_import.root.guid,_import.containment);
-            _core.persist(originLibraryRoot);
 
             //now update inheritance chain
             //we assume that our inheritance chain comes from the FCO and that it is identical everywhere
             updateInheritance(_core.getGuid(_core.getBaseRoot(originLibraryRoot)),null,_import.inheritance);
-            _core.persist(originLibraryRoot);
+            _core.persist(_core.getRoot(originLibraryRoot),function(){});
 
             //finally we need to update the meta rules of each node - again along the containment hierarchy
             updateMetaRules(_import.root.guid,_import.containment);
-            _core.persist(originLibraryRoot);
 
             _core.persist(_core.getRoot(originLibraryRoot),callback);
             //callback(null);
@@ -387,15 +408,6 @@ define(['util/assert'],function(ASSERT){
             }
             updateNodes(keys[i],node,containmentTreeObject[keys[i]]);
         }
-    }
-    function getNodePathFromJson(jsonLibrary,guid){
-        var path = "";
-
-        while(guid !== jsonLibrary.root.guid){
-            path = "/"+jsonLibrary.relids[guid]+path;
-            guid = jsonLibrary.nodes[guid].parent;
-        }
-        return path;
     }
 
     function updateRegistry(guid){
@@ -459,20 +471,30 @@ define(['util/assert'],function(ASSERT){
         //although it is possible that we set the base pointer at this point we should go through inheritance just to be sure
         var node = _nodes[guid],
             jsonNode = _import.nodes[guid],
-            keys, i,target;
+            keys, i,target,
+            needPersist = false;;
 
         keys = _core.getOwnPointerNames(node);
         for(i=0;i<keys.length;i++){
+            needPersist = true;
             _core.deletePointer(node,keys[i]);
         }
         keys = Object.keys(jsonNode.pointers);
         for(i=0;i<keys.length;i++){
             target = jsonNode.pointers[keys[i]];
-            if(_nodes[target] && _removedNodeGuids.indexOf(target) === -1){
+            if(target === null){
+                needPersist = true;
+                _core.setPointer(node,keys[i],null);
+            } else if(_nodes[target] && _removedNodeGuids.indexOf(target) === -1){
+                needPersist = true;
                 _core.setPointer(node,keys[i],_nodes[target]);
             } else {
                 console.log("error handling needed???!!!???");
             }
+        }
+
+        if(needPersist){
+            _core.persist(_core.getRoot(node),function(){});
         }
     }
 
@@ -510,6 +532,8 @@ define(['util/assert'],function(ASSERT){
 
         updateAttributeMeta(guid);
         updateChildrenMeta(guid);
+        updatePointerMeta(guid);
+        updateAspectMeta(guid);
     }
 
     function updateAttributeMeta(guid){
@@ -531,6 +555,31 @@ define(['util/assert'],function(ASSERT){
         _core.setChildrenMetaLimits(_nodes[guid],jsonMeta.min,jsonMeta.max);
         for(i=0;i<jsonMeta.items.length;i++){
             _core.setChildMeta(_nodes[guid],_nodes[jsonMeta.items[i]],jsonMeta.minItems[i],jsonMeta.maxItems[i]);
+        }
+    }
+
+    function updatePointerMeta(guid){
+        var jsonMeta = _import.nodes[guid].meta.pointers || {},
+            keys = Object.keys(jsonMeta),
+            i, j;
+
+        for(i=0;i<keys.length;i++){
+            ASSERT(jsonMeta[keys[i]].items.length === jsonMeta[keys[i]].minItems.length && jsonMeta[keys[i]].maxItems.length === jsonMeta[keys[i]].minItems.length);
+            for(j=0;j<jsonMeta[keys[i]].items.length;j++){
+                _core.setPointerMetaTarget(_nodes[guid],keys[i],_nodes[jsonMeta[keys[i]].items[j]],jsonMeta[keys[i]].minItems[j],jsonMeta[keys[i]].maxItems[j]);
+            }
+            _core.setPointerMetaLimits(_nodes[guid],keys[i],jsonMeta[keys[i]].min,jsonMeta[keys[i]].max);
+        }
+    }
+    function updateAspectMeta(guid){
+        var jsonMeta = _import.nodes[guid].meta.aspects || {},
+            keys = Object.keys(jsonMeta),
+            i,j;
+
+        for(i=0;i<keys.length;i++){
+            for(j=0;j<jsonMeta[keys[i]].length;j++){
+                _core.setAspectMetaTarget(_nodes[guid],keys[i],_nodes[jsonMeta[keys[i]][j]]);
+            }
         }
     }
 
