@@ -1,6 +1,8 @@
 "use strict";
 
-define(['./ClickableItem'], function (ClickableItem) {
+define(['./ClickableItem',
+        './SnapEditorWidget.Constants'], function (ClickableItem,
+                                                   CONSTANTS) {
 
     var SnapEditorWidgetClickableItems;
 
@@ -111,6 +113,42 @@ define(['./ClickableItem'], function (ClickableItem) {
             this._updatedClickableItemIDs.push(itemId);
             this.items[itemId].onItemComponentEvents(eventList);
         }
+    };
+
+    SnapEditorWidgetClickableItems.prototype.connect = function (id1, id2, ptrName) {
+        //This connects connArea1 and connArea2 on the screen as being connected. That is
+        //it positions the parents of connArea1 and connArea2 such that connArea1 and connArea2
+        //are overlapping and centered on each other.
+        //
+        //Note: This is done by moving connArea2 to connArea1.
+        var item1 = this.items[id1],
+            item2 = this.items[id2],
+            connArea1 = item1.getConnectionArea(ptrName, CONSTANTS.CONN_PASSING),
+            connArea2 = item2.getConnectionArea(ptrName, CONSTANTS.CONN_ACCEPTING),
+            c1 = { x: (connArea1.x2 + connArea1.x1)/2,//center of first area
+                   y: (connArea1.y2 + connArea1.y1)/2 },
+            c2 = { x: (connArea2.x2 + connArea2.x1)/2,//center of second area
+                   y: (connArea2.y2 + connArea2.y1)/2 },
+            dx = c1.x - c2.x,
+            dy = c1.y - c2.y;
+
+        item2.base = item1;
+        item1.dependents.push(item2);
+
+        item1.setPtrTo(item2, ptrName);
+        item2.setPtrFrom(item1, ptrName);
+
+        /*
+        if(ptrName === CONSTANTS.PTR_NEXT){
+            item1._nextItem = item2;
+        }
+        */
+
+        item2.moveBy(dx, dy);
+    };
+
+    SnapEditorWidgetClickableItems.prototype.itemHasPtr = function (id1, ptrName) {
+        return this.items[id1].hasPtr(ptrName);
     };
 
     return SnapEditorWidgetClickableItems;

@@ -23,6 +23,14 @@ define([], function () {
         DROP_REGION_ACCEPT_DROPPABLE_CLASS: 'accept-droppable',
         DROP_REGION_REJECT_DROPPABLE_CLASS: 'reject-droppable',
 
+        /*
+         * Clickable constants
+         */
+        CONN_ACCEPTING: "in",
+        CONN_PASSING: "out",
+        PTR_NEXT: "next",
+        NAME: "name", 
+
         /*DOM ELEMENT ATTRIBUTES*/
         DATA_ITEM_ID : 'data-oid',
         DATA_SUBCOMPONENT_ID : 'data-sid',

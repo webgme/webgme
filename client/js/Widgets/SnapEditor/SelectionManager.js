@@ -514,6 +514,7 @@ define(['logManager',
         var i = this._selectedElements.length,
             bBox,
             id,
+            child,
             childBBox,
             items = this._snapEditor.items;
 
@@ -529,19 +530,24 @@ define(['logManager',
                         "y2": 0};
                 }
 
-                childBBox = items[id].getBoundingBox();
+                child = items[id];
+                while(child){//Create the box from box and all 'next' pointers
+                    childBBox = child.getBoundingBox();
 
-                if (childBBox.x < bBox.x) {
-                    bBox.x = childBBox.x;
-                }
-                if (childBBox.y < bBox.y) {
-                    bBox.y = childBBox.y;
-                }
-                if (childBBox.x2 > bBox.x2) {
-                    bBox.x2 = childBBox.x2;
-                }
-                if (childBBox.y2 > bBox.y2) {
-                    bBox.y2 = childBBox.y2;
+                    if (childBBox.x < bBox.x) {
+                        bBox.x = childBBox.x;
+                    }
+                    if (childBBox.y < bBox.y) {
+                        bBox.y = childBBox.y;
+                    }
+                    if (childBBox.x2 > bBox.x2) {
+                        bBox.x2 = childBBox.x2;
+                    }
+                    if (childBBox.y2 > bBox.y2) {
+                        bBox.y2 = childBBox.y2;
+                    }
+
+                    child = child.getNextItem();
                 }
             }
         }

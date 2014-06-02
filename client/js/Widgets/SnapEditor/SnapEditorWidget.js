@@ -459,6 +459,11 @@ define(['logManager',
     /************************** DRAG ITEM ***************************/
     //TODO Update this to show "Clickable Regions"
     SnapEditorWidget.prototype.onClickableItemDragStart = function (draggedItemId, allDraggedItemIDs) {
+        /*
+         * Change the next couple methods to support Snap! like stuff
+         * This should trigger the displaying of the connection areas
+         * TODO
+         */
         this.selectionManager.hideSelectionOutline();
 
         this._preDragActualSize = {"w": this._actualSize.w,
@@ -726,7 +731,7 @@ define(['logManager',
         this._itemIDCounter = 0;
         this.updating = false;
 
-        this.items = [];
+        this.items = {};
 
         this._insertedClickableItemIDs = [];
         this._updatedClickableItemIDs = [];
