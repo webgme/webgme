@@ -242,6 +242,10 @@ define(['js/Constants',
 
     /***** FUNCTIONS TO OVERRIDE *****/
 
+    SVGDecoratorCore.prototype._updateExtras = function () {
+        //Can be overridden for custom functionality
+    };
+
     /***** PORT FUNCTIONALITY *****/
     //Overridden in SVGDecorator.Ports.js 
     SVGDecoratorCore.prototype._updatePorts = function () {

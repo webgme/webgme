@@ -11,14 +11,20 @@
 
 define(['../Core/SVGDecorator.Core',
         '../Core/SVGDecorator.Connections',
+        '../Core/SVGDecorator.Connectors',
         '../Core/SVGDecorator.Ports'], function (SVGDecoratorCore,
                                                  SVGDecoratorConnections,
+                                                 SVGDecoratorConnectors,
                                                  SVGDecoratorPorts) {
 
     var SVGDecorator = function (options) {
         var opts = _.extend( {}, options);
 
         SVGDecoratorCore.apply(this, [opts]);
+
+        this.setConnectionAreaDefaults({ 'angle1': 0, 
+                                         'angle2': 0,
+                                         'len': 20 });
         
     };
 

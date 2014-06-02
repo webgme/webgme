@@ -4,7 +4,7 @@
  * Author: Brian Broll
  *
  *
- * This file contains the connection relevant functions for the SVGDecorator.
+ * This file contains functions for getting connection areas.
  */
 
 "use strict";
@@ -18,68 +18,14 @@ define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'],
         DATA_ANGLE = 'angle',
         DATA_ANGLE1 = 'angle1',
         DATA_ANGLE2 = 'angle2',
-        DEFAULT_STEM_LENGTH = 20,
-        CONNECTOR_BASE = $('<div class="' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS + '"/>');
+        CONNECTOR_BASE = $('<div class="' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS + '"/>'),
+        CONN_AREA_DEFAULTS = {};
 
     SVGDecoratorConnections = function(){
     };
 
-    SVGDecoratorConnections.prototype._initializeConnVariables = function (params) {
-        //Figure out how to name this nicely
-        //TODO
-
-		this._displayConnectors = false;			
-		if (params && params.connectors) {
-			this._displayConnectors = params.connectors;			
-		}
-    };
-
-    SVGDecoratorConnections.prototype._generateConnectors = function () {
-        var svg = this.$svgElement,
-            connectors = svg.find('.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS),
-            c,
-            svgWidth = parseInt(svg.attr('width'), 10),
-            svgHeight = parseInt(svg.attr('height'), 10);
-
-        if (this._displayConnectors === true) {
-            //check if there are any connectors defined in the SVG itself
-            if (connectors.length === 0) {
-                //no dedicated connectors
-                //by default generate four: N, S, E, W
-
-                //NORTH
-                c = CONNECTOR_BASE.clone();
-                c.addClass('cn');
-                c.css({'top': 0,
-                       'left': svgWidth / 2});
-                this.$el.append(c);
-
-                //SOUTH
-                c = CONNECTOR_BASE.clone();
-                c.addClass('cs');
-                c.css({'top': svgHeight,
-                       'left': svgWidth / 2});
-                this.$el.append(c);
-
-                //EAST
-                c = CONNECTOR_BASE.clone();
-                c.addClass('ce');
-                c.css({'top': svgHeight / 2,
-                       'left': svgWidth});
-                this.$el.append(c);
-
-                //WEST
-                c = CONNECTOR_BASE.clone();
-                c.addClass('cw');
-                c.css({'top': svgHeight / 2,
-                    'left': 0});
-                this.$el.append(c);
-            }
-
-            this.initializeConnectors();
-        } else {
-            connectors.remove();
-        }
+    SVGDecoratorConnections.prototype.setConnectionAreaDefaults = function (attr) {
+        CONN_AREA_DEFAULTS = attr;
     };
 
     SVGDecoratorConnections.prototype._getCustomConnectionAreas = function (svgFile) {
@@ -135,30 +81,13 @@ define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'],
                     "x1": parseInt(line.attr('x1'), 10) * ratio,
                     "y1": parseInt(line.attr('y1'), 10) * ratio,
                     "x2": parseInt(line.attr('x2'), 10) * ratio,
-                    "y2": parseInt(line.attr('y2'), 10) * ratio,
-                    "angle1": 0,
-                    "angle2": 0,
-                    "len": DEFAULT_STEM_LENGTH};
+                    "y2": parseInt(line.attr('y2'), 10) * ratio};
 
                 //try to figure out meta info from the embedded SVG
                 lineData = line.data();
 
-                if (lineData.hasOwnProperty(DATA_LEN)) {
-                    connA.len = parseInt(lineData[DATA_LEN], 10) * ratio;
-                }
-
-                if (lineData.hasOwnProperty(DATA_ANGLE)) {
-                    connA.angle1 = parseInt(lineData[DATA_ANGLE], 10);
-                    connA.angle2 = parseInt(lineData[DATA_ANGLE], 10);
-                }
-
-                if (lineData.hasOwnProperty(DATA_ANGLE1)) {
-                    connA.angle1 = parseInt(lineData[DATA_ANGLE1], 10);
-                }
-
-                if (lineData.hasOwnProperty(DATA_ANGLE2)) {
-                    connA.angle2 = parseInt(lineData[DATA_ANGLE2], 10);
-                }
+                _.extend(connA, CONN_AREA_DEFAULTS);
+                _.extend(connA, lineData);
 
                 if (!lineData.hasOwnProperty(DATA_ANGLE) &&
                     !(lineData.hasOwnProperty(DATA_ANGLE1) && lineData.hasOwnProperty(DATA_ANGLE2))) {
