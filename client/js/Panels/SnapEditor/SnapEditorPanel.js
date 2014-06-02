@@ -16,18 +16,6 @@ define(['js/PanelBase/PanelBaseWithHeader',
                                     SnapEditorControl) {
 
     var SnapEditorPanel;
-/*
- * TODO:
- *
- * + Clear out ModelEditor specific code
- * + Create a SNAP-specific skeleton
- * + Find where the SNAP code handles the "snapping" functionality
- * + Try to port the SNAP code to the respective SNAP skeleton (at least as much as possible)
- * 
- * + Find the image rendering part of the SNAP code
- * + Move the image rendering part to a decorator or widget
- *
- */
 
     SnapEditorPanel = function (layoutManager, params) {
         var options = {};

@@ -8,12 +8,14 @@
 
 define(['logManager',
     'js/Constants',
+    'js/Widgets/SnapEditor/SnapEditorWidget.Constants',
     'js/NodePropertyNames',
     'js/RegistryKeys',
     'js/Utils/PreferencesHelper',
     './SnapEditorControl.WidgetEventHandlers',
     'js/Utils/GMEConcepts'], function (logManager,
                                         CONSTANTS,
+                                        SNAP_CONSTANTS,
                                         nodePropertyNames,
                                         REGISTRY_KEYS,
                                         PreferencesHelper,
@@ -196,7 +198,10 @@ console.log("Object changed to " + nodeId);
                 }
 
                 objDescriptor.decorator = nodeObj.getRegistry(REGISTRY_KEYS.DECORATOR) || "";
- 
+
+                if(nodeObj.getPointer(SNAP_CONSTANTS.PTR_NEXT)){
+                    objDescriptor.next = nodeObj.getPointer(SNAP_CONSTANTS.PTR_NEXT).to || "";
+                }
             }
         }
 
@@ -267,6 +272,7 @@ console.log("Object changed to " + nodeId);
         var i = events.length,
             e,
             territoryChanged = false,
+            loadEvents = [],
             self = this;
 
         this.logger.debug("_dispatchEvents '" + i + "' items");
@@ -321,7 +327,9 @@ console.log("Object changed to " + nodeId);
             e = events[i];
             switch (e.etype) {
                 case CONSTANTS.TERRITORY_EVENT_LOAD:
-                    territoryChanged = this._onLoad(e.eid, e.desc) || territoryChanged;
+                    //We collect all loading events and process them at once
+                    //to satisfy position dependencies caused by linking
+                    loadEvents.push(e);
                     break;
                 case CONSTANTS.TERRITORY_EVENT_UPDATE:
                     this._onUpdate(e.eid, e.desc);
@@ -333,6 +341,9 @@ console.log("Object changed to " + nodeId);
         }
 
         //this._handleDecoratorNotification();
+
+        //Now we handle all load events
+        this._onLoad(loadEvents);
 
         this.snapCanvas.endUpdate();
 
@@ -375,7 +386,120 @@ console.log("Object changed to " + nodeId);
     };
 
     // PUBLIC METHODS
-    SnapEditorControl.prototype._onLoad = function (gmeID, objD) {
+    SnapEditorControl.prototype._onLoad = function (events) {
+        //Here we will load all the items and find which are dependent on others
+        var independents = {},
+            objDesc = {},
+            i = events.length,
+            item,
+            nextItem,
+            items,
+            territoryChanged = false;
+
+        while(i--){
+            independents[events[i].eid] = {};
+            objDesc[events[i].eid] = events[i].desc;
+        }
+
+        //Remove any dependents
+        items = Object.keys(independents);
+
+        //Next, we will sort independents by the level of containment
+        items.sort(function(id1, id2){
+            if(id1.split('/').length < id2.split('/').length){
+                return -1;
+            }else{
+                return 1;
+            }
+        });
+
+        while(items.length){
+            nextItem = objDesc[items.pop()].next;
+
+            if(independents[nextItem]){
+                //Remove all dependents of the item
+                while(nextItem){
+                    delete independents[nextItem];
+                    nextItem = objDesc[nextItem].next;
+                }
+            }
+        }
+
+        //For each element of the independents:
+        //    - Create the independent node
+        //    - Set prevItem = independent node
+        //    - Set nextItem = objDesc.next
+        //    While nextItem is defined
+        //        - Create the nextItem
+        //        - Connect the next.out of the prevItem to next.in of nextItem
+        //        - Update prevItem and nextItem
+        
+        var prevItem,
+            connAreaPrev,
+            connAreaNext,
+            nextList = [],
+            i,
+            base,
+            node,
+            ptrs;
+
+        items = Object.keys(independents);
+        while(items.length){
+            prevItem = items.pop();
+            nextItem = objDesc[prevItem].next;
+            territoryChanged = this._onSingleLoad(prevItem, objDesc[prevItem]) || territoryChanged;
+
+            nextList = [prevItem];
+            while(nextItem){//Build up the nextList
+                nextList.push(nextItem);
+                prevItem = nextItem;
+                nextItem = objDesc[prevItem].next;
+            }
+
+            i = nextList.length - 1;
+
+            //Load the last item
+            territoryChanged = this._onSingleLoad(nextList[i], 
+                    objDesc[nextList[i]]) || territoryChanged;
+
+            //Load the items backwards
+            while(i--){
+                nextItem = nextList[i+1];
+                prevItem = nextList[i];
+
+                if(i !== 0){//First item has already been loaded
+                    territoryChanged = this._onSingleLoad(prevItem, objDesc[prevItem])
+                        || territoryChanged;
+                }
+
+                //connect the objects
+                if(this._GmeID2ComponentID[prevItem] && this._GmeID2ComponentID[nextItem]){
+                    this.snapCanvas.connect(this._GmeID2ComponentID[prevItem], 
+                            this._GmeID2ComponentID[nextItem], SNAP_CONSTANTS.PTR_NEXT);
+                }
+            }
+
+            //Connect the "independent" node to it's parent if needed
+            i = nextList[0].lastIndexOf('/');
+            base = nextList[0].substring(0,i);
+            if(base && base !== this.currentNodeInfo.id){
+                //find the pointer from it's parent
+                node = this._client.getNode(base);
+                ptrs = node.getPointerNames();
+                i = ptrs.length;
+                while(i--){
+                    if(this.snapCanvas.itemHasPtr(this._GmeID2ComponentID[base], ptrs[i])
+                            && node.getPointer(ptrs[i]).to === nextList[0]){
+                        //Connect them!
+                        this.snapCanvas.connect(this._GmeID2ComponentID[base], 
+                            this._GmeID2ComponentID[nextList[0]], ptrs[i]);
+                    }
+                }
+            }
+        }
+    };
+
+    SnapEditorControl.prototype._onSingleLoad = function (gmeID, objD) {
         var uiComponent,
             decClass,
             objDesc,
@@ -408,7 +532,7 @@ console.log("Object changed to " + nodeId);
         //we are interested in the load of sub_components of the opened component
         if (this.currentNodeInfo.id !== gmeID) {
             if (objD) {
-                if (objD.parentId == this.currentNodeInfo.id) {
+                //if (objD.parentId == this.currentNodeInfo.id) {
                     objDesc = _.extend({}, objD);
 
                     this._items.push(gmeID);
@@ -429,16 +553,15 @@ console.log("Object changed to " + nodeId);
 
                     getDecoratorTerritoryQueries(uiComponent._decoratorInstance);
 
-                } else {
+                //} else {
                     //supposed to be the grandchild of the currently open node
                     //--> load of port
                     /*if(this._GMEModels.indexOf(objD.parentId) !== -1){
                         this._onUpdate(objD.parentId,this._getObjectDescriptor(objD.parentId));
                     }*/
                     //this._checkComponentDependency(gmeID, CONSTANTS.TERRITORY_EVENT_LOAD);
-                    console.log("Found a child of a node... NEED TO IMPLEMENT UI SUPPORT!");
-                    //TODO
-                }
+                    //console.log("Found a child of a node... NEED TO IMPLEMENT UI SUPPORT!");
+                //}
             }
         } else {
             //currently opened node
