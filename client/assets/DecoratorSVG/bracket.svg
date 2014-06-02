@@ -31,9 +31,9 @@
      inkscape:window-height="1173"
      id="namedview27"
      showgrid="false"
-     inkscape:zoom="14.412214"
-     inkscape:cx="19.473931"
-     inkscape:cy="47.073334"
+     inkscape:zoom="81.527794"
+     inkscape:cx="26.728243"
+     inkscape:cy="36.030114"
      inkscape:window-x="1920"
      inkscape:window-y="25"
      inkscape:window-maximized="1"
@@ -257,4 +257,34 @@
      x="12.443769"
      y="16.493999"
      style="font-size:9.43999958px">Bracket</text>
+
+  <!-- connection areas -->
+  <line
+     class="connection-area"
+     data-ptr="next"
+     data-role="in"
+     x1="23"
+     y1="5"
+     x2="32"
+     y2="5"
+     id="next-in"/>
+  <line
+     class="connection-area"
+     data-ptr="next"
+     data-role="out"
+     x1="23"
+     y1="64"
+     x2="32"
+     y2="64"
+     id="next-out"/>
+
+  <line
+     class="connection-area"
+     data-ptr="true_next"
+     data-role="out"
+     x1="24"
+     y1="28"
+     x2="33"
+     y2="28"
+     id="true_next-out"/>
 </svg>
