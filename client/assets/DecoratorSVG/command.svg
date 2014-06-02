@@ -40,9 +40,9 @@
      inkscape:window-height="1173"
      id="namedview11"
      showgrid="false"
-     inkscape:zoom="8.1369529"
-     inkscape:cx="60.069902"
-     inkscape:cy="14.660421"
+     inkscape:zoom="92.059113"
+     inkscape:cx="19.35936"
+     inkscape:cy="2.4585044"
      inkscape:window-x="1920"
      inkscape:window-y="25"
      inkscape:window-maximized="1"
@@ -106,4 +106,23 @@
      x="5.9124999"
      y="16.025249"
      style="font-size:9.43999958px">DEFAULT NAME</text>
+  <line
+     class="connection-area"
+     data-ptr="next true_next false_next"
+     data-role="in"
+     x1="15"
+     y1="4"
+     x2="24"
+     y2="4"
+     id="next-in"/>
+     
+  <line
+     class="connection-area"
+     data-ptr="next"
+     data-role="out"
+     x1="15"
+     y1="27"
+     x2="24"
+     y2="27"
+     id="next-out"/>
 </svg>
