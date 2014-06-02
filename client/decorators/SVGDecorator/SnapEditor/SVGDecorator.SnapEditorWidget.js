@@ -32,6 +32,7 @@ define(['js/Constants',
      *      - "y-stretch-PTR_NAME"
      *      
      */
+
     var SVGDecoratorSnapEditorWidget,
         DECORATOR_ID = "SVGDecoratorSnapEditorWidget";
 
@@ -47,6 +48,15 @@ define(['js/Constants',
         
         this._transforms = {};//The current abs stretch of any class in the SVG
         this._minDims = {};
+
+        this.svgContainerWidth = 0;
+        this.svgWidth = 0;
+        this.svgHeight = 0;
+        this.svgBorderWidth = 0;
+
+        //Stuff about contained info
+        this.childIds = [];
+        this.children = {};
 
         this.logger.debug("SVGDecoratorSnapEditorWidget ctor");
     };
@@ -360,6 +370,26 @@ define(['js/Constants',
         return id;
     };
 
+    //Drawing the internal objects
+    //OVERRIDE FROM BASE
+    SVGDecoratorSnapEditorWidget.prototype._updateExtras = function () {
+        //Update the internal objects...
+        //May require redrawing of the current svg
+
+        //TODO
+    };
+
+    SVGDecoratorSnapEditorWidget.prototype._updateChildIDList = function () {
+        //Update children ID's
+        //TODO
+    };
+
+    SVGDecoratorSnapEditorWidget.prototype.renderChild = function () {
+        //Return the svg to be drawn...
+        //TODO
+        //return new SVGDecoratorSnapEditorWidget();
+    };
+
     SVGDecoratorSnapEditorWidget.prototype._updateSVGTransforms = function (svg, id) {
         var width = Math.max(this._minDims[id].width, this._transforms[id].width),
             height = Math.max(this._minDims[id].height, this._transforms[id].height);
@@ -399,61 +429,49 @@ define(['js/Constants',
 
         connectors.css('transform', 'translateX(' + xShift + 'px)');
 
-        this._fixPortContainerPosition(xShift);
-
         SnapEditorWidgetDecoratorBase.prototype.onRenderSetLayoutInfo.call(this);
     };
 
 
     /**** Override from SnapEditorWidgetDecoratorBase ****/
-    SVGDecoratorSnapEditorWidget.prototype.getConnectionAreas = function (id/*, isEnd, connectionMetaInfo*/) {
+    SVGDecoratorSnapEditorWidget.prototype.getConnectionAreas = function (/*, isEnd, connectionMetaInfo*/) {
         var result = [],
             edge = 10,
-            LEN = 20,
             xShift = (this.svgContainerWidth - this.svgWidth) / 2;
 
-        if (id === undefined || id === this.hostDesignerItem.id) {
-            if (this._customConnectionAreas && this._customConnectionAreas.length > 0) {
-                //custom connections are defined in the SVG itself
-                result = $.extend(true, [], this._customConnectionAreas);
-                var i = result.length;
-                while (i--) {
-                    result[i].x1 += xShift;
-                    result[i].x2 += xShift;
+        if (this._customConnectionAreas && this._customConnectionAreas.length > 0) {
+            //custom connections are defined in the SVG itself
+            result = $.extend(true, [], this._customConnectionAreas);
+            var i = result.length;
+            while (i--) {
+                if(result[i].role === SnapEditorWidgetConstants.CONN_ACCEPTING){
+                    //Accepting areas can have multiple possibilities for roles
+                    result[i].ptr = result[i].ptr.split(' ');
                 }
-            } else {
-                //no custom connection area defined in the SVG
-                //by default return the bounding box N, S, edges with a little bit of padding (variable 'edge') from the sides
-                //North side
-                result.push( {"id": "N",
-                    "x1": edge + xShift,
-                    "y1": 0,
-                    "x2": this.svgWidth - edge + xShift,
-                    "y2": 0} );
 
-                //South side
-                result.push( {"id": "S",
-                    "x1": edge + xShift,
-                    "y1": this.svgHeight,
-                    "x2": this.svgWidth - edge + xShift,
-                    "y2": this.svgHeight} );
-
+                result[i].x1 += xShift;
+                result[i].x2 += xShift;
             }
-        } else if (this.ports[id]) {
-            //subcomponent
-            var portTop = this.ports[id].top,
-                isLeft = this.ports[id].isLeft,
-                x = this._portContainerXShift + (isLeft ? 1 : this.svgWidth - 1),
-                angle = isLeft ? 180 : 0;
+        } else {
+            //no custom connection area defined in the SVG
+            //by default return the bounding box N, S, edges with a little bit of padding (variable 'edge') from the sides
+            //North side
+            result.push( {"id": "N",
+                "x1": edge + xShift,
+                "y1": 0,
+                "x2": this.svgWidth - edge + xShift,
+                "y2": 0,
+                "role": SnapEditorWidgetConstants.CONN_ACCEPTING,
+                "ptr": SnapEditorWidgetConstants.PTR_NEXT} );
 
-                result.push( {"id": id,
-                    "x1": x,
-                    "y1": portTop + this._PORT_HEIGHT / 2,
-                    "x2": x,
-                    "y2": portTop + this._PORT_HEIGHT / 2,
-                    "angle1": angle,
-                    "angle2": angle,
-                    "len": LEN} );
+            //South side
+            result.push( {"id": "S",
+                "x1": edge + xShift,
+                "y1": this.svgHeight,
+                "x2": this.svgWidth - edge + xShift,
+                "y2": this.svgHeight,
+                "role": SnapEditorWidgetConstants.CONN_PASSING,
+                "ptr": SnapEditorWidgetConstants.PTR_NEXT} );
         }
 
         return result;
@@ -498,7 +516,7 @@ define(['js/Constants',
     /**** Override from SnapEditorWidgetDecoratorBase ****/
     //called when the designer item's subcomponent should be updated
     SVGDecoratorSnapEditorWidget.prototype.updateSubcomponent = function (portId) {
-        this._updatePort(portId);
+        this._updatePort(portId);//FIXME
     };
 
 
@@ -508,9 +526,7 @@ define(['js/Constants',
         //TODO
         this.__registerAsSubcomponent(portId);
 
-        //return SVGDecoratorCore.prototype.renderPort.call(this, portId);
     };
-
 
     /**** Override from ModelDecoratorCore ****/
     SVGDecoratorSnapEditorWidget.prototype.removePort = function (portId) {

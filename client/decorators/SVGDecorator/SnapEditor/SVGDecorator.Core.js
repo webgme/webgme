@@ -10,14 +10,20 @@
 
 "use strict";
 
-define(['../Core/SVGDecorator.Core',
-        '../Core/SVGDecorator.Connections'], function (SVGDecoratorCore,
+define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants',
+        '../Core/SVGDecorator.Core',
+        '../Core/SVGDecorator.Connections'], function (CONSTANTS,
+                                                       SVGDecoratorCore,
                                                        SVGDecoratorConnections) {
+
 
     var SVGDecorator = function (options) {
         var opts = _.extend( {}, options);
 
         SVGDecoratorCore.apply(this, [opts]);
+
+        this.setConnectionAreaDefaults({'role': CONSTANTS.CONN_RECEIVING,
+                                        'ptr': ''});
         
     };
 
