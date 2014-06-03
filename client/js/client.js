@@ -1330,115 +1330,44 @@ define([
             }
 
             //MGA
-            function copyMoreNodesAsync(nodePaths,parentPath,callback){
-                var checkPaths = function(){
-                    var result = true;
-                    for(var i=0;i<nodePaths.length;i++){
-                        result = result && (_nodes[nodePaths[i]] && typeof _nodes[nodePaths[i]].node === 'object');
-                    }
-                    return result;
-                };
-
-                if(_nodes[parentPath] && typeof _nodes[parentPath].node === 'object' && checkPaths()){
-                    var helpArray = {},
-                        subPathArray = {},
-                        parent = _nodes[parentPath].node,
-                        returnArray = {};
-
-                    //creating the 'from' object
-                    var tempFrom = _core.createNode({parent:parent});
-                    //and moving every node under it
-                    for(var i=0;i<nodePaths.length;i++){
-                        helpArray[nodePaths[i]] = {};
-                        helpArray[nodePaths[i]].origparent = _core.getParent(_nodes[nodePaths[i]].node);
-                        helpArray[nodePaths[i]].tempnode = _core.moveNode(_nodes[nodePaths[i]].node,tempFrom);
-                        subPathArray[_core.getRelid(helpArray[nodePaths[i]].tempnode)] = nodePaths[i];
-                        delete _nodes[nodePaths[i]];
-                    }
-
-                    //do the copy
-                    var tempTo = _core.copyNode(tempFrom,parent);
-
-                    //moving back the temporary source
-                    for(var i=0;i<nodePaths.length;i++){
-                        helpArray[nodePaths[i]].node = _core.moveNode(helpArray[nodePaths[i]].tempnode,helpArray[nodePaths[i]].origparent);
-                        storeNode(helpArray[nodePaths[i]].node);
-                    }
-
-                    //gathering the destination nodes
-                    _core.loadChildren(tempTo,function(err,children){
-                        if(!err && children && children.length>0){
-                            for(i=0;i<children.length;i++){
-                                if(subPathArray[_core.getRelid(children[i])]){
-                                    var newNode = _core.moveNode(children[i],parent);
-                                    storeNode(newNode);
-                                    returnArray[subPathArray[_core.getRelid(children[i])]] = newNode;
-                                } else {
-                                    console.log('635 - should never happen!!!');
-                                }
-                            }
-                            _core.deleteNode(tempFrom);
-                            _core.deleteNode(tempTo);
-                            callback(null,returnArray);
-                        } else {
-                            //clean up the mess and return
-                            _core.deleteNode(tempFrom);
-                            _core.deleteNode(tempTo);
-                            callback(err,{});
-                        }
-                    });
-                }
-            }
-
             function copyMoreNodes(parameters){
-                var returnParameters = {},
-                    pathsToCopy = [];
-                for(var i in parameters){
-                    if(i !== 'parentId'){
-                        pathsToCopy.push(i);
+                //now we will use the multiple copy function of the core
+                var nodes = [],
+                    copiedNodes,
+                    i, j,paths,keys,
+                    parent = _nodes[parameters.parentId].node,
+                    resultMap = {};
+                keys = Object.keys(parameters);
+                keys.splice(keys.indexOf('parentId'),1);
+                paths = keys;
+                for(i=0;i<paths.length;i++){
+                    nodes.push(_nodes[paths[i]].node);
+                }
+
+                copiedNodes = _core.copyNodes(nodes,parent);
+
+                for(i=0;i<paths.length;i++){
+                    keys = Object.keys(parameters[paths[i]].attributes || {});
+                    for(j=0;j<keys.length;j++){
+                        _core.setAttribute(copiedNodes[i],keys[j],parameters[paths[i]].attributes[keys[j]]);
+                    }
+
+                    keys = Object.keys(parameters[paths[i]].registry || {});
+                    for(j=0;j<keys.length;j++){
+                        _core.setRegistry(copiedNodes[i],keys[j],parameters[paths[i]].registry[keys[j]]);
                     }
                 }
 
-                if(pathsToCopy.length > 0 && typeof parameters.parentId === 'string' && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
-                    //collecting nodes under tempFrom
-                    var tempFrom = _core.createNode({parent:_nodes[parameters.parentId].node});
-                    for(var i=0;i<pathsToCopy.length;i++){
-                        if(_nodes[pathsToCopy[i]] && typeof _nodes[pathsToCopy[i]].node === 'object'){
-                            returnParameters[pathsToCopy[i]] = {'1stparent':_core.getParent(_nodes[pathsToCopy[i]].node),'1st':_core.moveNode(_nodes[pathsToCopy[i]].node,tempFrom)};
-                            returnParameters[pathsToCopy[i]]['1strelid'] = _core.getRelid(returnParameters[pathsToCopy[i]]['1st']);
-                        }
-                    }
-                    var tempTo = _core.copyNode(tempFrom,_nodes[parameters.parentId].node);
 
-                    //clean up part of temporary mess
-                    for(var i in returnParameters){
-                        _core.moveNode(returnParameters[i]['1st'],returnParameters[i]['1stparent']);
-                        delete returnParameters[i]['1st'];
-                        delete returnParameters[i]['1stparent'];
-                    }
-                    _core.deleteNode(tempFrom);
-                    delete tempFrom;
 
-                    for(var i in returnParameters){
-                        var child = _core.getChild(tempTo,returnParameters[i]['1strelid']);
-                        var finalNode = _core.moveNode(child,_nodes[parameters.parentId].node);
-                        returnParameters[i] = storeNode(finalNode);
-                        if(parameters[i]){
-                            for(var j in parameters[i].attributes){
-                                _core.setAttribute(finalNode,j,parameters[i].attributes[j]);
-                            }
-                            for(j in parameters[i].registry){
-                                _core.setRegistry(finalNode,j,parameters[i].registry[j]);
-                            }
-                        }
-                    }
-                    _core.deleteNode(tempTo);
-                    delete tempTo;
-
-                    saveRoot('copyMoreNodes('+JSON.stringify(returnParameters)+')');
-                    return returnParameters;
+                //creating the result map and storing the nodes to our cache, so the user will know which path became which
+                for(i=0;i<paths.length;i++){
+                    resultMap[paths[i]] = storeNode(copiedNodes[i]);
                 }
+
+                return resultMap;
             }
+
             function moveMoreNodes(parameters){
                 var pathsToMove = [],
                     returnParams = {};
@@ -1503,57 +1432,7 @@ define([
                 saveRoot('createChildren('+JSON.stringify(returnParameters)+')');
                 return returnParameters;
             }
-            function _createChildren(parameters){
-                var returnParameters = {},
-                    pathsToCopy = [];
-                for(var i in parameters){
-                    if(i !== 'parentId'){
-                        pathsToCopy.push(i);
-                    }
-                }
-                
-                if(pathsToCopy.length > 0 && typeof parameters.parentId === 'string' && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
-                    //collecting nodes under tempFrom
-                    var tempFrom = _core.createNode({parent:_nodes[parameters.parentId].node,base:null});
-                    for(var i=0;i<pathsToCopy.length;i++){
-                        if(_nodes[pathsToCopy[i]] && typeof _nodes[pathsToCopy[i]].node === 'object'){
-                            returnParameters[pathsToCopy[i]] = {'1stparent':_core.getParent(_nodes[pathsToCopy[i]].node),'1st':_core.moveNode(_nodes[pathsToCopy[i]].node,tempFrom)};
-                            returnParameters[pathsToCopy[i]]['1strelid'] = _core.getRelid(returnParameters[pathsToCopy[i]]['1st']);
-                        }
-                    }
-                    var tempTo = _core.createNode({parent:_nodes[parameters.parentId].node, base:tempFrom});
 
-                    //clean up part of temporary mess
-                    for(var i in returnParameters){
-                        _core.moveNode(returnParameters[i]['1st'],returnParameters[i]['1stparent']);
-                        delete returnParameters[i]['1st'];
-                        delete returnParameters[i]['1stparent'];
-                    }
-
-                    _core.deleteNode(tempFrom);
-                    delete tempFrom;
-
-                    for(var i in returnParameters){
-                        var child = _core.getChild(tempTo,returnParameters[i]['1strelid']);
-                        var finalNode = _core.moveNode(child,_nodes[parameters.parentId].node);
-                        returnParameters[i] = storeNode(finalNode);
-                        if(parameters[i]){
-                            for(var j in parameters[i].attributes){
-                                _core.setAttribute(finalNode,j,parameters[i].attributes[j]);
-                            }
-                            for(j in parameters[i].registry){
-                                _core.setRegistry(finalNode,j,parameters[i].registry[j]);
-                            }
-                        }
-                    }
-                    _core.deleteNode(tempTo);
-                    delete tempTo;
-
-
-                    saveRoot('createChildren('+JSON.stringify(returnParameters)+')');
-                    return returnParameters;
-                }
-            }
 
             function startTransaction() {
                 if (_core) {
@@ -1652,53 +1531,6 @@ define([
                 }
             }
 
-
-            function _copyMoreNodes(parameters){
-                var pathestocopy = [];
-                if(typeof parameters.parentId === 'string' && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
-                    for(var i in parameters){
-                        if(i !== "parentId"){
-                            pathestocopy.push(i);
-                        }
-                    }
-
-                    if(pathestocopy.length < 1){
-                    } else if(pathestocopy.length === 1){
-                        var newNode = _core.copyNode(_nodes[pathestocopy[0]].node,_nodes[parameters.parentId].node);
-                        storeNode(newNode);
-                        if(parameters[pathestocopy[0]]){
-                            for(var j in parameters[pathestocopy[0]].attributes){
-                                _core.setAttribute(newNode,j,parameters[pathestocopy[0]].attributes[j]);
-                            }
-                            for(j in parameters[pathestocopy[0]].registry){
-                                _core.setRegistry(newNode,j,parameters[pathestocopy[0]].registry[j]);
-                            }
-                        }
-                        saveRoot('intellyPaste('+pathestocopy+','+parameters.parentId+')');
-                    } else {
-                        copyMoreNodesAsync(pathestocopy,parameters.parentId,function(err,copyarr){
-                            if(err){
-                                //rollBackModification();
-                            }
-                            else{
-                                for(var i in copyarr){
-                                    if(parameters[i]){
-                                        for(var j in parameters[i].attributes){
-                                            _core.setAttribute(copyarr[i],j,parameters[i].attributes[j]);
-                                        }
-                                        for(j in parameters[i].registry){
-                                            _core.setRegistry(copyarr[i],j,parameters[i].registry[j]);
-                                        }
-                                    }
-                                }
-                                saveRoot('intellyPaste('+pathestocopy+','+parameters.parentId+')');
-                            }
-                        });
-                    }
-                } else {
-                    console.log('wrong parameters for copy operation - denied -');
-                }
-            }
 
             //MGAlike - set functions
             function addMember(path,memberpath,setid){

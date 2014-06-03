@@ -619,6 +619,7 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
             return child;
         };
         core.moveNode = function(node,parent){
+            //TODO we have to check if the move is really allowed!!!
             var base = node.base;
             ASSERT(!base || core.getPath(base) !== core.getPath(parent));
 
@@ -632,7 +633,65 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 
             var newnode = oldcore.copyNode(node,parent);
             newnode.base = base;
+            oldcore.setPointer(newnode,'base',base);
             return newnode;
+        };
+        function _inheritedPointerNames(node){
+            var allNames = core.getPointerNames(node),
+                ownNames = core.getOwnPointerNames(node),
+                names = [],
+                i;
+
+            for(i=0;i<allNames.length;i++){
+                if(ownNames.indexOf(allNames[i]) === -1){
+                    names.push(allNames[i]);
+                }
+            }
+
+            return names;
+        }
+
+        core.copyNodes = function(nodes,parent){
+            var copiedNodes = oldcore.copyNodes(nodes,parent),
+                i, j,index,base,
+                relations = [],
+                names,pointer,
+                paths = [];
+
+            //here we also have to copy the inherited relations which points inside the copy area
+            for(i=0;i<nodes.length;i++){
+                paths.push(core.getPath(nodes[i]));
+            }
+
+            for(i=0;i<nodes.length;i++){
+                names = _inheritedPointerNames(nodes[i]);
+                pointer = {};
+                for(j=0;j<names.length;j++){
+                    index = paths.indexOf(core.getPointerPath(nodes[i],names[j]));
+                    if(index !== -1){
+                        pointer[names[j]] = index;
+                    }
+                }
+                relations.push(pointer);
+            }
+
+            //setting internal-inherited relations
+            for(i=0;i<nodes.length;i++){
+                names = Object.keys(relations[i]);
+                for(j=0;j<names.length;j++){
+                    core.setPointer(copiedNodes[i],names[j],copiedNodes[relations[i][names[j]]]);
+                }
+            }
+
+            //setting base relation
+            for(i=0;i<nodes.length;i++){
+                base = nodes[i].base;
+                copiedNodes[i].base = base;
+                oldcore.setPointer(copiedNodes[i],'base',base);
+            }
+
+
+            return copiedNodes;
         };
 
         core.getDataForSingleHash = function(node){

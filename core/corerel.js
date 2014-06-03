@@ -371,6 +371,46 @@ define([ "util/assert", "core/coretree", "util/zssha1", "core/tasync", "util/can
 			return newNode;
 		}
 
+        //kecso
+        function copyNodes(nodes,parent){
+            //copying multiple nodes at once for keeping their internal relations
+            var paths = [],
+                i, j,index,names,pointer,
+                copiedNodes = [],
+                internalRelationPaths=[]; //every single element will be an object with the internally pointing relations and the index of the target
+
+            for(i=0;i<nodes.length;i++){
+                paths.push(coretree.getPath(nodes[i]));
+            }
+
+            for(i=0;i<nodes.length;i++){
+                names = getPointerNames(nodes[i]);
+                pointer = {};
+                for(j=0;j<names.length;j++){
+                    index = paths.indexOf(getPointerPath(nodes[i],names[j]));
+                    if(index !== -1){
+                        pointer[names[j]] = index;
+                    }
+                }
+                internalRelationPaths.push(pointer);
+            }
+
+            //now we use our simple copy
+            for(i=0;i<nodes.length;i++){
+                copiedNodes.push(copyNode(nodes[i],parent));
+            }
+
+            //and now back to the relations
+            for(i=0;i<internalRelationPaths.length;i++){
+                names = Object.keys(internalRelationPaths[i]);
+                for(j=0;j<names.length;j++){
+                    setPointer(copiedNodes[i],names[j],copiedNodes[internalRelationPaths[i][names[j]]]);
+                }
+            }
+
+            return copiedNodes;
+        }
+
 		function moveNode(node, parent) {
 			ASSERT(isValidNode(node) && isValidNode(parent));
 
@@ -779,6 +819,7 @@ define([ "util/assert", "core/coretree", "util/zssha1", "core/tasync", "util/can
 		corerel.createNode = createNode;
 		corerel.deleteNode = deleteNode;
 		corerel.copyNode = copyNode;
+        corerel.copyNodes = copyNodes;
 		corerel.moveNode = moveNode;
 
 		corerel.getAttributeNames = getAttributeNames;
