@@ -1401,36 +1401,69 @@ define([
 
                 return returnParams;
             }
+            
             function createChildren(parameters){
-                var returnParameters = {},
-                    pathsToCopy = [];
-                for(var i in parameters){
-                    if(i !== 'parentId'){
-                        pathsToCopy.push(i);
+                //TODO we also have to check out what is happening with the sets!!!
+                var result = {},
+                    paths = [],
+                    nodes = [],node,
+                    parent = _nodes[parameters.parentId].node,
+                    names, i, j,index, keys,pointer,
+                    newChildren = [],relations=[];
+
+                //to allow 'meaningfull' instantiation of multiple objects we have to recreate the internal relations - except the base
+                paths = Object.keys(parameters);
+                paths.splice(paths.indexOf('parentId'),1);
+                for(i=0;i<paths.length;i++){
+                    node = _nodes[paths[i]].node;
+                    nodes.push(node);
+                    pointer = {};
+                    names = _core.getPointerNames(node);
+                    index = names.indexOf('base');
+                    if(index !== -1){
+                        names.splice(index,1);
                     }
-                }
-                if(pathsToCopy.length > 0 && typeof parameters.parentId === 'string' && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
-                    for(var i=0;i<pathsToCopy.length;i++){
-                        if(_nodes[pathsToCopy[i]] && typeof _nodes[pathsToCopy[i]].node === 'object'){
-                            var node = _core.createNode({parent:_nodes[parameters.parentId].node,base:_nodes[pathsToCopy[i]].node});
-                            var newPath = storeNode(node);
-                            returnParameters[pathsToCopy[i]] = newPath;
 
-                            if(parameters[pathsToCopy[i]]){
-                                for(var j in parameters[pathsToCopy[i]].attributes){
-                                    _core.setAttribute(node,j,parameters[pathsToCopy[i]].attributes[j]);
-                                }
-                                for(j in parameters[pathsToCopy[i]].registry){
-                                    _core.setRegistry(node,j,parameters[pathsToCopy[i]].registry[j]);
-                                }
-                            }
-
+                    for(j=0;j<names.length;j++){
+                        index = paths.indexOf(_core.getPointerPath(node,names[j]));
+                        if(index !== -1){
+                            pointer[names[j]] = index;
                         }
                     }
+                    relations.push(pointer);
                 }
 
-                saveRoot('createChildren('+JSON.stringify(returnParameters)+')');
-                return returnParameters;
+                //now the instantiation
+                for(i=0;i<nodes.length;i++){
+                    newChildren.push(_core.createNode({parent:parent,base:nodes[i]}));
+                }
+
+                //now for the storage and relation setting
+                for(i=0;i<paths.length;i++){
+                    //attributes
+                    names = Object.keys(parameters[paths[i]].attributes || {});
+                    for(j=0;j<names.length;j++){
+                        _core.setAttribute(newChildren[i],names[j],parameters[paths[i]].attributes[names[j]]);
+                    }
+                    //registry
+                    names = Object.keys(parameters[paths[i]].registry || {});
+                    for(j=0;j<names.length;j++){
+                        _core.setRegistry(newChildren[i],names[j],parameters[paths[i]].registry[names[j]]);
+                    }
+
+                    //relations
+                    names = Object.keys(relations[i]);
+                    for(j=0;j<names.length;j++){
+                        _core.setPointer(newChildren[i],names[j],newChildren[relations[i][names[j]]]);
+                    }
+
+                    //store
+                    result[paths[i]] = storeNode(newChildren[i]);
+
+                }
+
+                saveRoot('createChildren('+JSON.stringify(result)+')');
+                return result;
             }
 
 

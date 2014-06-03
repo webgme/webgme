@@ -128,27 +128,26 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 			ASSERT(node === null || typeof node.base === "undefined" || typeof node.base === "object");
 
 			if (typeof node.base === "undefined") {
-                if(core.isEmpty(node)){
+                if(core.isEmpty(node)) {
                     //empty nodes do not have a base
                     return null;
+                } else if(node.parent && node.parent.base && oldcore.getChildrenRelids(node.parent.base).indexOf(node.relid) !== -1) {
+                    //it is possible that the node is an inherited child
+                    return TASYNC.call(function(n,b){
+                        n.base = b;
+                        return n;
+                    },node,core.loadChild(node.parent.base,node.relid));
                 } else if(isFalseNode(node)){
                     var root = core.getRoot(node);
                     oldcore.deleteNode(node);
+                    core.persist(root);
                     return null;
                 } else {
                     return TASYNC.call(__loadBase2, node, oldcore.loadPointer(node, "base"));
                 }
-			} else if(node === null){
-                return node;
             } else {
-                var oldpath = core.getPath(node.base);
-                var newpath = core.getPointerPath(node,"base");
-                if(oldpath !== newpath){
-                    delete node.base;
-                    return __loadBase(node);
-                } else {
-                    return node;
-                }
+                //TODO can the base change at this point???
+                return node;
 			}
 		}
 
@@ -159,10 +158,10 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
             } else {
                 ASSERT(typeof node.base === "undefined" || node.base === null); //kecso
 
-                if(target === null){
+                if(target === null) {
                     node.base = null;
                     return node;
-                } else {
+                }  else {
                     return TASYNC.call(function(n,b){n.base = b; return n;},node,__loadBase(target));
                 }
             }
