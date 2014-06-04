@@ -651,7 +651,7 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
         }
 
         core.copyNodes = function(nodes,parent){
-            var copiedNodes = oldcore.copyNodes(nodes,parent),
+            var copiedNodes,
                 i, j,index,base,
                 relations = [],
                 names,pointer,
@@ -674,6 +674,9 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
                 relations.push(pointer);
             }
 
+            //making the actual copy
+            copiedNodes = oldcore.copyNodes(nodes,parent);
+            
             //setting internal-inherited relations
             for(i=0;i<nodes.length;i++){
                 names = Object.keys(relations[i]);
