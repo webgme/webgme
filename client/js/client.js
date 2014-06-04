@@ -1331,6 +1331,114 @@ define([
 
             //MGA
             function copyMoreNodes(parameters){
+                var pathestocopy = [];
+                if(typeof parameters.parentId === 'string' && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
+                    for(var i in parameters){
+                        if(i !== "parentId"){
+                            pathestocopy.push(i);
+                        }
+                    }
+
+                    if(pathestocopy.length < 1){
+                    } else if(pathestocopy.length === 1){
+                        var newNode = _core.copyNode(_nodes[pathestocopy[0]].node,_nodes[parameters.parentId].node);
+                        storeNode(newNode);
+                        if(parameters[pathestocopy[0]]){
+                            for(var j in parameters[pathestocopy[0]].attributes){
+                                _core.setAttribute(newNode,j,parameters[pathestocopy[0]].attributes[j]);
+                            }
+                            for(j in parameters[pathestocopy[0]].registry){
+                                _core.setRegistry(newNode,j,parameters[pathestocopy[0]].registry[j]);
+                            }
+                        }
+                        saveRoot('intellyPaste('+pathestocopy+','+parameters.parentId+')');
+                    } else {
+                        copyMoreNodesAsync(pathestocopy,parameters.parentId,function(err,copyarr){
+                            if(err){
+                                //rollBackModification();
+                            }
+                            else{
+                                for(var i in copyarr){
+                                    if(parameters[i]){
+                                        for(var j in parameters[i].attributes){
+                                            _core.setAttribute(copyarr[i],j,parameters[i].attributes[j]);
+                                        }
+                                        for(j in parameters[i].registry){
+                                            _core.setRegistry(copyarr[i],j,parameters[i].registry[j]);
+                                        }
+                                    }
+                                }
+                                saveRoot('intellyPaste('+pathestocopy+','+parameters.parentId+')');
+                            }
+                        });
+                    }
+                } else {
+                    console.log('wrong parameters for copy operation - denied -');
+                }
+            }
+
+
+            function copyMoreNodesAsync(nodePaths,parentPath,callback){
+                var checkPaths = function(){
+                    var result = true;
+                    for(var i=0;i<nodePaths.length;i++){
+                        result = result && (_nodes[nodePaths[i]] && typeof _nodes[nodePaths[i]].node === 'object');
+                    }
+                    return result;
+                };
+
+                if(_nodes[parentPath] && typeof _nodes[parentPath].node === 'object' && checkPaths()){
+                    var helpArray = {},
+                        subPathArray = {},
+                        parent = _nodes[parentPath].node,
+                        returnArray = {};
+
+                    //creating the 'from' object
+                    var tempFrom = _core.createNode({parent:parent});
+                    //and moving every node under it
+                    for(var i=0;i<nodePaths.length;i++){
+                        helpArray[nodePaths[i]] = {};
+                        helpArray[nodePaths[i]].origparent = _core.getParent(_nodes[nodePaths[i]].node);
+                        helpArray[nodePaths[i]].tempnode = _core.moveNode(_nodes[nodePaths[i]].node,tempFrom);
+                        subPathArray[_core.getRelid(helpArray[nodePaths[i]].tempnode)] = nodePaths[i];
+                        delete _nodes[nodePaths[i]];
+                    }
+
+                    //do the copy
+                    var tempTo = _core.copyNode(tempFrom,parent);
+
+                    //moving back the temporary source
+                    for(var i=0;i<nodePaths.length;i++){
+                        helpArray[nodePaths[i]].node = _core.moveNode(helpArray[nodePaths[i]].tempnode,helpArray[nodePaths[i]].origparent);
+                        storeNode(helpArray[nodePaths[i]].node);
+                    }
+
+                    //gathering the destination nodes
+                    _core.loadChildren(tempTo,function(err,children){
+                        if(!err && children && children.length>0){
+                            for(i=0;i<children.length;i++){
+                                if(subPathArray[_core.getRelid(children[i])]){
+                                    var newNode = _core.moveNode(children[i],parent);
+                                    storeNode(newNode);
+                                    returnArray[subPathArray[_core.getRelid(children[i])]] = newNode;
+                                } else {
+                                    console.log('635 - should never happen!!!');
+                                }
+                            }
+                            _core.deleteNode(tempFrom);
+                            _core.deleteNode(tempTo);
+                            callback(null,returnArray);
+                        } else {
+                            //clean up the mess and return
+                            _core.deleteNode(tempFrom);
+                            _core.deleteNode(tempTo);
+                            callback(err,{});
+                        }
+                    });
+                }
+            }
+
+            function _copyMoreNodes(parameters){
                 //now we will use the multiple copy function of the core
                 var nodes = [],
                     copiedNodes,
