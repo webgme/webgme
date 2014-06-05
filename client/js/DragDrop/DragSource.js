@@ -45,7 +45,7 @@ define(['./DragEffects',
             },
             drag: function( event, ui ) {
                 if (params && _.isFunction(params.drag)) {
-                    return params.drag.call(el, event);
+                    return params.drag.call(el, event, ui);
                 }
             },
             stop: function( event, ui ) {
