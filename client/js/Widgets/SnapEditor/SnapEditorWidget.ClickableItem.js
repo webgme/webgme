@@ -36,6 +36,9 @@ define(['./ClickableItem',
         newComponent.__setDecorator(objDescriptor.decorator, objDescriptor.decoratorClass, objDescriptor.control, objDescriptor.metaInfo, objDescriptor.preferencesHelper, objDescriptor.aspect, objDescriptor.decoratorParams);
         newComponent.addToDocFragment(this._documentFragment);
 
+        //set the item to be able to be "clicked" to 
+        this.setClickable(newComponent);
+
         return newComponent;
     };
 
@@ -122,29 +125,21 @@ define(['./ClickableItem',
         //
         //Note: This is done by moving connArea2 to connArea1.
         var item1 = this.items[id1],
-            item2 = this.items[id2],
-            connArea1 = item1.getConnectionArea(ptrName, CONSTANTS.CONN_PASSING),
-            connArea2 = item2.getConnectionArea(ptrName, CONSTANTS.CONN_ACCEPTING),
-            c1 = { x: (connArea1.x2 + connArea1.x1)/2,//center of first area
-                   y: (connArea1.y2 + connArea1.y1)/2 },
-            c2 = { x: (connArea2.x2 + connArea2.x1)/2,//center of second area
-                   y: (connArea2.y2 + connArea2.y1)/2 },
-            dx = c1.x - c2.x,
-            dy = c1.y - c2.y;
+            item2 = this.items[id2];
 
-        item2.base = item1;
-        item1.dependents.push(item2);
+        item2.connect(item1, ptrName);
+    };
 
-        item1.setPtrTo(item2, ptrName);
-        item2.setPtrFrom(item1, ptrName);
+    SnapEditorWidgetClickableItems.prototype.setToConnect = function (id1, id2, ptrName) {
+        //This sets the pointers for the relevant ids and sizes them but does not move them
+        var item1 = this.items[id1],
+            item2 = this.items[id2];
 
-        /*
-        if(ptrName === CONSTANTS.PTR_NEXT){
-            item1._nextItem = item2;
-        }
-        */
+        item2.setToConnect(item1, ptrName);
+    };
 
-        item2.moveBy(dx, dy);
+    SnapEditorWidgetClickableItems.prototype.updateItemDependents = function (id1, ptrName) {
+        this.items[id1].updateDependents();
     };
 
     SnapEditorWidgetClickableItems.prototype.itemHasPtr = function (id1, ptrName) {

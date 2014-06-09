@@ -37,13 +37,13 @@
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:window-width="1918"
-     inkscape:window-height="1173"
+     inkscape:window-height="1053"
      id="namedview18"
      showgrid="false"
-     inkscape:zoom="11.313709"
-     inkscape:cx="47.932846"
-     inkscape:cy="27.876339"
-     inkscape:window-x="1920"
+     inkscape:zoom="16.000001"
+     inkscape:cx="46.97776"
+     inkscape:cy="17.345694"
+     inkscape:window-x="0"
      inkscape:window-y="25"
      inkscape:window-maximized="1"
      inkscape:current-layer="svg2" />
@@ -165,4 +165,31 @@
      x="36.375652"
      y="14.179907"
      style="font-size:9.43999958px">OP</text>
+  <line
+     class="connection-area"
+     data-ptr="cond first second"
+     data-role="in"
+     x1="4.5"
+     y1="0"
+     x2="0"
+     y2="4.5"
+     id="conn-area-in"/>
+  <line
+     class="connection-area"
+     data-ptr="second"
+     data-role="out"
+     x1="60"
+     y1="3.5"
+     x2="55.5"
+     y2="8"
+     id="second-out"/>
+  <line
+     class="connection-area"
+     data-ptr="first"
+     data-role="out"
+     x1="16.5"
+     y1="3.5"
+     x2="14"
+     y2="8"
+     id="first-out"/>
 </svg>

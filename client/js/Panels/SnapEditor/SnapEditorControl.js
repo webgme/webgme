@@ -394,24 +394,18 @@ console.log("Object changed to " + nodeId);
             item,
             nextItem,
             items,
+            children = {},
             territoryChanged = false;
 
         while(i--){
-            independents[events[i].eid] = {};
-            objDesc[events[i].eid] = events[i].desc;
+            if(events[i].eid !== this.currentNodeInfo.id){
+                independents[events[i].eid] = {};
+                objDesc[events[i].eid] = events[i].desc;
+            }
         }
 
         //Remove any dependents
         items = Object.keys(independents);
-
-        //Next, we will sort independents by the level of containment
-        items.sort(function(id1, id2){
-            if(id1.split('/').length < id2.split('/').length){
-                return -1;
-            }else{
-                return 1;
-            }
-        });
 
         while(items.length){
             nextItem = objDesc[items.pop()].next;
@@ -425,63 +419,105 @@ console.log("Object changed to " + nodeId);
             }
         }
 
-        //For each element of the independents:
-        //    - Create the independent node
-        //    - Set prevItem = independent node
-        //    - Set nextItem = objDesc.next
-        //    While nextItem is defined
-        //        - Create the nextItem
-        //        - Connect the next.out of the prevItem to next.in of nextItem
-        //        - Update prevItem and nextItem
-        
+        //Next, we will remove children and put them in dictionary by parent id
+        items = Object.keys(independents);
+        i = items.length;
+        var parentId;
+        while(i--){
+            item = items[i];
+            parentId = item.substring(0, item.lastIndexOf('/'));
+            if(parentId !== this.currentNodeInfo.id){//must be a child of someone else...
+
+                if(children[parentId] === undefined){
+                    children[parentId] = [];
+                }
+                children[parentId].push(item);
+            }
+        }
+
+        //Next, we will sort independents by the level of containment
+        items.sort(function(id1, id2){
+            if(id1.split('/').length < id2.split('/').length){
+                return 1;
+            }else{
+                return -1;
+            }
+        });
+
         var prevItem,
             connAreaPrev,
             connAreaNext,
             nextList = [],
-            i,
             base,
             node,
-            ptrs;
+            ptrs,
+            j = items.length;
 
-        items = Object.keys(independents);
-        while(items.length){
-            prevItem = items.pop();
+        while(j--){//For each independent item
+            item = items[j];
+
+            prevItem = item;
             nextItem = objDesc[prevItem].next;
-            territoryChanged = this._onSingleLoad(prevItem, objDesc[prevItem]) || territoryChanged;
 
-            nextList = [prevItem];
-            while(nextItem){//Build up the nextList
-                nextList.push(nextItem);
-                prevItem = nextItem;
-                nextItem = objDesc[prevItem].next;
+            if(!this._GmeID2ComponentID[nextItem]){
+                territoryChanged = this._onSingleLoad(prevItem, objDesc[prevItem]) || territoryChanged;
             }
 
-            i = nextList.length - 1;
-
-            //Load the last item
-            territoryChanged = this._onSingleLoad(nextList[i], 
-                    objDesc[nextList[i]]) || territoryChanged;
-
-            //Load the items backwards
-            while(i--){
-                nextItem = nextList[i+1];
-                prevItem = nextList[i];
-
-                if(i !== 0){//First item has already been loaded
-                    territoryChanged = this._onSingleLoad(prevItem, objDesc[prevItem])
+            //Load all the dependent items 
+            while(nextItem){
+                
+                //Load the item if isn't available
+                if(!this._GmeID2ComponentID[nextItem]){
+                    territoryChanged = this._onSingleLoad(nextItem, objDesc[nextItem]) 
                         || territoryChanged;
+
+                    //connect the objects
+                    if(this._GmeID2ComponentID[prevItem] && this._GmeID2ComponentID[nextItem]){
+                        this.snapCanvas.setToConnect(this._GmeID2ComponentID[prevItem], 
+                                this._GmeID2ComponentID[nextItem], SNAP_CONSTANTS.PTR_NEXT);
+                    }else if(prevItem === null){//Connect to parent
+                        i = nextItem.lastIndexOf('/');
+                        base = nextItem.substring(0, i);
+
+                        node = this._client.getNode(base);
+                        ptrs = node.getPointerNames();
+                        i = ptrs.length;
+                        while(i--){
+                            if(this.snapCanvas.itemHasPtr(this._GmeID2ComponentID[base], ptrs[i])
+                                    && node.getPointer(ptrs[i]).to === nextItem){
+                                        //Connect them!
+                                        this.snapCanvas.setToConnect(this._GmeID2ComponentID[base], 
+                                                this._GmeID2ComponentID[nextItem], ptrs[i]);
+                                    }
+                        }
+
+                    }
                 }
 
-                //connect the objects
-                if(this._GmeID2ComponentID[prevItem] && this._GmeID2ComponentID[nextItem]){
-                    this.snapCanvas.connect(this._GmeID2ComponentID[prevItem], 
-                            this._GmeID2ComponentID[nextItem], SNAP_CONSTANTS.PTR_NEXT);
+                //If the nextItem is the parent of other nodes, load them next.
+
+                if(children[nextItem] && children[nextItem].length){
+                    prevItem = null;
+                    nextItem = children[nextItem].pop(); 
+                }else{
+                    prevItem = nextItem;
+                    nextItem = objDesc[prevItem].next;
+
+                    //if the nextItem is null, see if we can 'bubble' up to the parent
+                    if(!nextItem){
+                        i = prevItem.lastIndexOf('/');
+                        base = prevItem.substring(0, i);
+                        if(base !== this.currentNodeInfo.id){
+                            prevItem = base;
+                            nextItem = objDesc[base].next;
+                        }
+                    }
                 }
             }
 
             //Connect the "independent" node to it's parent if needed
-            i = nextList[0].lastIndexOf('/');
-            base = nextList[0].substring(0,i);
+            i = item.lastIndexOf('/');
+            base = item.substring(0,i);
             if(base && base !== this.currentNodeInfo.id){
                 //find the pointer from it's parent
                 node = this._client.getNode(base);
@@ -489,13 +525,18 @@ console.log("Object changed to " + nodeId);
                 i = ptrs.length;
                 while(i--){
                     if(this.snapCanvas.itemHasPtr(this._GmeID2ComponentID[base], ptrs[i])
-                            && node.getPointer(ptrs[i]).to === nextList[0]){
+                            && node.getPointer(ptrs[i]).to === item){
                         //Connect them!
-                        this.snapCanvas.connect(this._GmeID2ComponentID[base], 
-                            this._GmeID2ComponentID[nextList[0]], ptrs[i]);
+                        this.snapCanvas.setToConnect(this._GmeID2ComponentID[base], 
+                            this._GmeID2ComponentID[item], ptrs[i]);
                     }
                 }
             }
+        }
+        
+        //update dependents of the nodes
+        while(items.length){
+            this.snapCanvas.updateItemDependents(this._GmeID2ComponentID[items.pop()]);
         }
     };
 

@@ -591,7 +591,7 @@ define(['logManager',
 
             moveBtn = MOVE_BUTTON_BASE.clone();
             this._snapEditor.skinParts.$selectionOutline.append(moveBtn);
-            this._snapEditor._makeDraggable({ '$el': moveBtn });
+            this._snapEditor._makeDraggable({ 'items': this._selectedElements, '$el': moveBtn });
         }
 
         //context menu

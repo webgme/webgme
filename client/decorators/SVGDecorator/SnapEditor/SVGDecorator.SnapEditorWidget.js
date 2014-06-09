@@ -3,12 +3,14 @@
 define(['js/Constants',
     'js/NodePropertyNames',
     'js/Widgets/SnapEditor/SnapEditorWidget.DecoratorBase',
+    'js/Widgets/SnapEditor/SnapEditorWidget.DecoratorBase.ConnectionAreas',
     'js/Widgets/SnapEditor/SnapEditorWidget.Constants',
     'text!../Core/SVGDecorator.html',
     './SVGDecorator.Core',
     'css!./SVGDecorator.SnapEditorWidget'], function (CONSTANTS,
                                                       nodePropertyNames,
                                                       SnapEditorWidgetDecoratorBase,
+                                                      SnapEditorWidgetDecoratorBaseConnectionAreas,
                                                       SnapEditorWidgetConstants,
                                                       SVGDecoratorTemplate,
                                                       SVGDecoratorCore) {
@@ -63,6 +65,7 @@ define(['js/Constants',
 
     /************************ INHERITANCE *********************/
     _.extend(SVGDecoratorSnapEditorWidget.prototype, SnapEditorWidgetDecoratorBase.prototype);
+    _.extend(SVGDecoratorSnapEditorWidget.prototype, SnapEditorWidgetDecoratorBaseConnectionAreas.prototype);
     _.extend(SVGDecoratorSnapEditorWidget.prototype, SVGDecoratorCore.prototype);
 
     /**************** OVERRIDE INHERITED / EXTEND ****************/
@@ -145,18 +148,29 @@ define(['js/Constants',
         this.update();
     };
 
-    /**** Stretching the SVG ****/
+    /**** Manipulating the SVG ****/
+    SVGDecoratorSnapEditorWidget.prototype.stretch = function (id, x, y) {
+        //Get dx, dy from the x,y values
+        var dx = x,
+            dy = y;
+
+        //TODO
+        this.stretchHorizontal(id, dx);
+        this.stretchVertical(id, dy);
+    };
+
     SVGDecoratorSnapEditorWidget.prototype.stretchHorizontal = function (id, dx) {
-        var stretchClass = ".x-stretch-" + id,
-            shiftClass = ".x-shift-" + id,
-            stretchElements = this.$svgContent.find(stretchClass),
-            shiftElements = this.$svgContent.find(shiftClass),
+        var stretchClass = "x-stretch-" + id,
+            shiftClass = "x-shift-" + id,
+            stretchElements = this.$svgContent.find("." + stretchClass),
+            shiftElements = this.$svgContent.find("." + shiftClass),
             maxWidth = 0,
             width,
             height,
             svgId,
             i;
 
+        this._shiftConnectionAreas(shiftClass, { x: dx });
         
         i = stretchElements.length;
         while(i--){
@@ -227,7 +241,6 @@ define(['js/Constants',
                 throw "SVG should have an ID";
 
             //Update the stretch of the given svg element
-            //this._transforms[svgId].x.stretch += dx/width;
             this._transforms[svgId].width += dx;
 
             maxWidth = Math.max(maxWidth, this._transforms[svgId].width);
@@ -250,20 +263,24 @@ define(['js/Constants',
         //Adjust the overall svg if necessary
         var current_width = parseFloat(this.$svgElement[0].getAttribute("width")) + dx;
 
-        this.$svgElement[0].setAttribute("width", Math.max(current_width, maxWidth));//Expand if needed
+        if(stretchElements.length || shiftElements.length){
+            this.$svgElement[0].setAttribute("width", Math.max(current_width, maxWidth));//Expand if needed
+        }
     };
 
     //TODO Refactor this code...
     SVGDecoratorSnapEditorWidget.prototype.stretchVertical = function (id, dy) {
-        var stretchClass = ".y-stretch-" + id,
-            shiftClass = ".y-shift-" + id,
-            stretchElements = this.$svgContent.find(stretchClass),
-            shiftElements = this.$svgContent.find(shiftClass),
+        var stretchClass = "y-stretch-" + id,
+            shiftClass = "y-shift-" + id,
+            stretchElements = this.$svgContent.find("." + stretchClass),
+            shiftElements = this.$svgContent.find("." + shiftClass),
             maxHeight = 0,
             height,
+            width,
             svgId,
             i;
 
+        this._shiftConnectionAreas(shiftClass, { y: dy });
         
         i = stretchElements.length;
         while(i--){
@@ -304,15 +321,15 @@ define(['js/Constants',
 
             if(!this._transforms[svgId]){//Initialize transform if needed
 
-                if(stretchElements[i].tagName === "line"){
-                    width = parseFloat(stretchElements[i].getAttribute("x2")) 
-                        - parseFloat(stretchElements[i].getAttribute("x1"));
-                    height = parseFloat(stretchElements[i].getAttribute("y2")) 
-                        - parseFloat(stretchElements[i].getAttribute("y1"));
-                }else if(stretchElements[i].tagName === "rect"){
-                    width = parseFloat(stretchElements[i].getAttribute("width"));
-                    height = parseFloat(stretchElements[i].getAttribute("height"));
-                }else if(stretchElements[i].tagName === "path"){
+                if(shiftElements[i].tagName === "line"){
+                    width = parseFloat(shiftElements[i].getAttribute("x2")) 
+                        - parseFloat(shiftElements[i].getAttribute("x1"));
+                    height = parseFloat(shiftElements[i].getAttribute("y2")) 
+                        - parseFloat(shiftElements[i].getAttribute("y1"));
+                }else if(shiftElements[i].tagName === "rect"){
+                    width = parseFloat(shiftElements[i].getAttribute("width"));
+                    height = parseFloat(shiftElements[i].getAttribute("height"));
+                }else if(shiftElements[i].tagName === "path"){
                     width = null;
                     height = null;
                 }
@@ -356,7 +373,25 @@ define(['js/Constants',
         //Adjust the overall svg if necessary
         var current_height = parseFloat(this.$svgElement[0].getAttribute("height")) + dy;
 
-        this.$svgElement[0].setAttribute("height", Math.max(current_height, maxHeight));//Expand if needed
+        if(stretchElements.length || shiftElements.length){
+            this.$svgElement[0].setAttribute("height", Math.max(current_height, maxHeight));//Expand if needed
+        }
+    };
+
+    SVGDecoratorSnapEditorWidget.prototype._shiftConnectionAreas = function (shiftClass, shift) {
+        var i = this._customConnectionAreas.length;
+
+        while(i--){
+            if(this._customConnectionAreas[i].shift 
+                    && this._customConnectionAreas[i].shift.indexOf(shiftClass) !== -1){
+                //shift the connection area
+                this._customConnectionAreas[i].x1 += shift.x || 0;
+                this._customConnectionAreas[i].x2 += shift.x || 0;
+
+                this._customConnectionAreas[i].y1 += shift.y || 0;
+                this._customConnectionAreas[i].y2 += shift.y || 0;
+            }
+        }
     };
 
     SVGDecoratorSnapEditorWidget.prototype.genSVGId = function () {
@@ -475,6 +510,39 @@ define(['js/Constants',
         }
 
         return result;
+    };
+
+    //Get only unoccupied connection areas
+    SVGDecoratorSnapEditorWidget.prototype.getAvailableConnectionAreas = function () {
+        var areas = this.getConnectionAreas(),
+            result = [],
+            i = areas.length;
+
+        while(i--){
+            if(!areas[i].occupied){
+                result.push(areas[i]);
+            }
+        }
+
+        return result;
+    };
+
+    //Get a specific connection area
+    SVGDecoratorSnapEditorWidget.prototype.getConnectionArea = function (ptr, role) {
+        //Returns the first (and should be only) connection area of the given type
+        var areas = this.getConnectionAreas(),
+            area;
+
+        while(areas.length){
+            area = areas.pop();
+            //If the area has the role or is unspecified
+            if((!role || area.role === role) && (!ptr || area.ptr === ptr 
+                        || (area.ptr instanceof Array && area.ptr.indexOf(ptr) !== -1))){
+                return area;
+            }
+        }
+
+        return null;
     };
 
 

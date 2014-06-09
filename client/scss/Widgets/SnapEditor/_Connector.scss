@@ -1,0 +1,25 @@
+$connector-background-color: #FEFEFE;
+$connector-border-width: 1px;
+$connection-border-color: #0000FF;
+$connector-border: $connector-border-width solid $connection-border-color;
+$connector-size: 12px;
+$connector-hover-border-color: rgba(82, 168, 236, 0.8);
+$connector-hover-shadow-color-start: rgba(0, 0, 0, 0.075);
+$connector-hover-shadow-color-end: rgba(82, 168, 236, 0.6);
+
+@mixin connector_basics {
+  background-color: $connector-background-color;
+  height: $connector-size - $connector-border-width * 2;
+  width: $connector-size - $connector-border-width * 2;
+  position: absolute;
+  cursor: pointer;
+  border: $connector-border;
+  z-index: 10;
+
+  &:hover {
+    border-color: $connector-hover-border-color;
+    -webkit-box-shadow: inset 0 1px 1px $connector-hover-shadow-color-start, 0 0 8px $connector-hover-shadow-color-end;
+    -moz-box-shadow: inset 0 1px 1px $connector-hover-shadow-color-start, 0 0 8px $connector-hover-shadow-color-end;
+    box-shadow: inset 0 1px 1px $connector-hover-shadow-color-start, 0 0 8px $connector-hover-shadow-color-end;
+  }
+}

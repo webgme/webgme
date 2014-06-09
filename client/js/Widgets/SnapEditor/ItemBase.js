@@ -20,7 +20,7 @@ define(['logManager',
     };
 
     ItemBase.prototype._super = function (name, objId, canvas) {
-        EVENT_POSTFIX = name;
+        EVENT_POSTFIX = "ClickableItem";
         ITEM_CLASS = name;
 
         this.id = objId;
@@ -56,6 +56,9 @@ define(['logManager',
         //Override in inherited classes as needed
     };
 
+    //Need to override the following in the main item file
+    //ItemBase.prototype.$_DOMBase = $('<div/>').attr({ "class": CONSTANTS.DESIGNER_ITEM_CLASS });
+
     ItemBase.prototype.__setDecorator = function (decoratorName, decoratorClass, control, metaInfo, preferencesHelper, aspect, decoratorParams) {
         if (decoratorClass === undefined) {
             //the required decorator is not available
@@ -84,8 +87,6 @@ define(['logManager',
         }
     };
 
-    ItemBase.prototype.$_DOMBase = $('<div/>').attr({ "class": ITEM_CLASS });
-
     ItemBase.prototype._initializeUI = function () {
         //generate skin DOM and cache it
         this.$el = this.$_DOMBase.clone();
@@ -99,7 +100,7 @@ define(['logManager',
 
         this._attachUserInteractions();
 
-        if(this.canvas._makeDraggable){
+        if(this.canvas._makeDraggable !== undefined){
             this.canvas._makeDraggable(this);
         }
     };
@@ -322,7 +323,7 @@ define(['logManager',
         return bBox;
     };
 
-    ItemBase.prototype.onMouseEnter = function (/*event*/) {
+    ItemBase.prototype.onMouseEnter = function (event) {
         var classes = [];
 
         this.logger.debug("onMouseEnter: " + this.id);
@@ -332,19 +333,20 @@ define(['logManager',
         classes.push(SELECTABLE_CLASS);
 
         this.$el.addClass(classes.join(' '));
+        this.onHover(event);
 
         //sign we need the default preventDefault and stopPropagation to be executed
         return false;
     };
 
-    ItemBase.prototype.onMouseLeave = function (/*event*/) {
+    ItemBase.prototype.onMouseLeave = function (event) {
         var classes = [HOVER_CLASS, SELECTABLE_CLASS];
 
         this.logger.debug("onMouseLeave: " + this.id);
 
         this.$el.removeClass(classes.join(' '));
-            //Show Clickable areas?
-            //TODO FIXME
+
+        this.onUnHover(event);
 
         //sign we need the default preventDefault and stopPropagation to be executed
         return false;
@@ -410,6 +412,16 @@ define(['logManager',
                     "h": this._height});
             }
         };
+    };
+
+    /* * * * * * * FUNCTIONS TO OVERRIDE * * * * * * */
+
+    ItemBase.prototype.onHover = function (event) {
+        //OVERRIDE
+    };
+
+    ItemBase.prototype.onUnHover = function (event) {
+        //OVERRIDE
     };
 
 

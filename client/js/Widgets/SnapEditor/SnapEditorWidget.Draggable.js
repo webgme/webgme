@@ -1,16 +1,16 @@
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
- * Author: Robert Kereskenyi
+ * Author: Brian Broll
  */
 
 "use strict";
 
 define(['js/DragDrop/DragSource',
-    'js/DragDrop/DragHelper',
-    './SnapEditorWidget.Constants'], function (dragSource,
-                                               dragHelper,
-                                               SnapEditorWidgetConstants) {
+        'js/DragDrop/DragHelper',
+        './SnapEditorWidget.Constants'], function (dragSource,
+                                                   dragHelper,
+                                                   SnapEditorWidgetConstants) {
 
     var SnapEditorWidgetDraggable,
         DRAG_HELPER_CLASS = 'diagram-designer-drag-outline',
@@ -27,7 +27,13 @@ define(['js/DragDrop/DragSource',
 
         dragSource.makeDraggable(item.$el, {
             'helper': function (event, dragInfo) {
-                return self._dragHelper(this, event, dragInfo);
+                return self._dragHelper(item, event, dragInfo);
+            },
+            'drag': function(event, ui){
+                //Get the item being dragged
+                //TODO
+                //var droppable = $(".current-clickable");
+                //self.updateConnectionAreaHighlight(droppable, ui);
             },
             'dragItems': function (el) {
                 return self.getDragItems(self.selectionManager.getSelectedElements());
@@ -67,36 +73,69 @@ define(['js/DragDrop/DragSource',
     };
 
     /* OVERWRITE DragSource.prototype.dragHelper */
-    SnapEditorWidgetDraggable.prototype._dragHelper = function (el, event, dragInfo) {
-        var helperEl = DRAG_HELPER_EL_BASE.clone(),
-            selectionBBox = this.selectionManager._getSelectionBoundingBox(),
-            mousePos = this.getAdjustedMousePos(event),
-            dragEffects = dragHelper.getDragEffects(dragInfo);
+    SnapEditorWidgetDraggable.prototype._dragHelper = function (item, event, dragInfo) {
+        var firstItem = null,
+            items = {},
+            i,
+            dragElement = $('<div/>', {'id': "helper" });
 
-        this.logger.debug("_dragHelper's dragInfo: " + JSON.stringify(dragInfo));
+        if(!item.items){
+            firstItem = item.id;
+            items[item.id] = item;
 
-        if (selectionBBox) {
-            helperEl.css({'width': (selectionBBox.x2 - selectionBBox.x) * this._zoomRatio,
-                'height': (selectionBBox.y2 - selectionBBox.y) * this._zoomRatio,
-                'line-height': ((selectionBBox.y2 - selectionBBox.y) * this._zoomRatio) + "px",
-                'text-align': 'center',
-                'border': '2px dashed #666',
-                'background-color': 'rgba(100, 100, 100, 0.1)',
-                'margin-top': (selectionBBox.y - mousePos.mY + dragSource.DEFAULT_CURSOR_AT.top) * this._zoomRatio,
-                'margin-left': (selectionBBox.x - mousePos.mX + dragSource.DEFAULT_CURSOR_AT.left) * this._zoomRatio});
+        }else{//set of items are selected
+            i = item.items.length;
+            while(i--){
+                items[item.items[i].getId()] = item.items[i].id;
+            }
+        }
 
-            if (dragEffects.length === 1) {
-                if (dragEffects[0] === dragSource.DRAG_EFFECTS.DRAG_MOVE) {
-                    helperEl.append(DRAG_HELPER_ICON_MOVE.clone()).append(' Move...');
-                } else if (dragEffects[0] === dragSource.DRAG_EFFECTS.DRAG_COPY) {
-                    helperEl.append(DRAG_HELPER_ICON_COPY.clone()).append(' Copy...');
+        //Add all the "next" items
+        var keys = Object.keys(items),
+            deps,
+            nextItem;
+
+        while(keys.length){
+            deps = items[keys.pop()].getDependents();
+            while(deps.length){
+                nextItem = deps.pop();
+                if(nextItem && items[nextItem.id] === undefined){
+                    items[nextItem.id] = nextItem;
+                    keys.push(nextItem.id);
                 }
             }
         }
 
-        return helperEl;
-    };
+        //Create a element containing all these
+        var itemId,
+            itemElement,
+            shiftX,
+            shiftY,
+            x,
+            y;
 
+        //Fix cursor alignment
+        shiftX = event.pageX - item.$el.parent().offset().left;
+        shiftY = event.pageY - item.$el.parent().offset().top;
+
+        keys = Object.keys(items);
+        while(keys.length){
+            itemId = keys.pop();
+            itemElement = items[itemId].$el.clone();
+            itemElement.css({"position": "absolute",
+                "left": items[itemId].positionX - shiftX + "px",
+                "top": items[itemId].positionY - shiftY + "px"});
+            //Shift the element by shiftX, shiftY
+
+            if(itemId === firstItem){
+                //Inflate itemElement
+                //TODO
+            }
+
+            dragElement.append(itemElement);
+        }
+        return dragElement;
+    };
 
     SnapEditorWidgetDraggable.prototype.getDragItems = function (selectedElements) {
         this.logger.warning("SnapEditorWidgetDraggable.getDragItems is not overridden in the controller!!! selectedElements: " + selectedElements);

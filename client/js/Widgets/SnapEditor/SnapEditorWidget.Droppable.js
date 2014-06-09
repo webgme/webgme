@@ -11,7 +11,8 @@ define(['js/DragDrop/DropTarget',
                                                    SnapEditorWidgetConstants) {
 
     var SnapEditorWidgetDroppable,
-        DROP_REGION_MARGIN = 0;
+        DROP_REGION_MARGIN = 0,
+        CLICKABLE_CLASS = "clickable";
 
     SnapEditorWidgetDroppable = function () {
     };
@@ -19,6 +20,7 @@ define(['js/DragDrop/DropTarget',
 
     SnapEditorWidgetDroppable.prototype._initDroppable = function () {
         var self = this;
+        this.dropFocus = SnapEditorWidgetConstants.BACKGROUND;
 
         this._acceptDroppable = false;
 
@@ -34,7 +36,9 @@ define(['js/DragDrop/DropTarget',
                 self._onDroppableOut(/*event, dragInfo*/);
             },
             'drop': function( event, dragInfo ) {
-                self._onBackgroundDrop(event, dragInfo);
+                if (self.dropFocus === SnapEditorWidgetConstants.BACKGROUND){
+                    self._onBackgroundDrop(event, dragInfo);
+                }
             },
             'activate': function(/*event, dragInfo*/) {
                 self._onDroppableActivate(/*event, dragInfo*/);
@@ -142,6 +146,62 @@ define(['js/DragDrop/DropTarget',
         }
     };
 
+    /* * * * * * * * * * * * * Dropping on Clickable Item* * * * * * * * * * * * */
+
+    SnapEditorWidgetDroppable.prototype.setClickable = function (item) {
+        var self = this;
+        //Set the item to droppable
+        //item.$el.addClass(CLICKABLE_CLASS);
+        item.$el.droppable({
+            tolerance: "touch",//May switch to "touch" 
+            over: function(event, ui) {
+                var dragged = self.items[ui.draggable[0].id],
+                    pos = ui.helper.find("#" + dragged.id).position();
+
+                pos.left += event.pageX - ui.draggable.parent().offset().left;
+                pos.top += event.pageY - ui.draggable.parent().offset().top;
+
+                if(item.updateHighlight(dragged, pos)){
+                    self.dropFocus = SnapEditorWidgetConstants.ITEM;
+                }
+                //ui.draggable.data("current-clickable", $this);
+            },
+            out: function(event, ui) {
+                item.deactivateConnectionAreas();
+                self.dropFocus = SnapEditorWidgetConstants.BACKGROUND;
+            },
+            drop: function(event, ui) {
+                //connect the items (with the controller)
+                var dragged = self.items[ui.draggable[0].id];
+                dragged.connectToActive(item);
+                //TODO FIXME
+
+                //hide the conn areas
+                item.deactivateConnectionAreas();
+
+                //var $this = $(this);
+                //cleanupHighlight(ui, $this);
+                //var $new = $this.clone().children("td:first")
+            //.html(ui.draggable.html()).end();
+            /*
+        if (isInUpperHalf(ui, $this)) {
+            $new.insertBefore(this);
+        } else {
+            $new.insertAfter(this);
+        }
+        initDroppable($new);
+        */
+            }
+        });
+    };
+
+    SnapEditorWidgetDroppable.prototype.updateConnectionAreaHighlight = function (droppable, dragging) {
+        //Get the items and find the appropriate areas to highlight on "droppable"
+        //TODO
+        var highlightItem = this.items[droppable.id],
+            draggedItem = this.items[dragging.helper.id],
+            draggedPosition = { x: dragging.left, y: dragging.top };
+    };
 
     return SnapEditorWidgetDroppable;
 });

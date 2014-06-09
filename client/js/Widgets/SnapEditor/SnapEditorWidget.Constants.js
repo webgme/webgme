@@ -31,6 +31,12 @@ define([], function () {
         PTR_NEXT: "next",
         NAME: "name", 
 
+        /*
+         * Droppable constants
+         */
+        BACKGROUND: "background",
+        ITEM: "item",
+
         /*DOM ELEMENT ATTRIBUTES*/
         DATA_ITEM_ID : 'data-oid',
         DATA_SUBCOMPONENT_ID : 'data-sid',

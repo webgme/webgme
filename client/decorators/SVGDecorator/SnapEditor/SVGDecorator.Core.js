@@ -23,7 +23,8 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants',
         SVGDecoratorCore.apply(this, [opts]);
 
         this.setConnectionAreaDefaults({'role': CONSTANTS.CONN_RECEIVING,
-                                        'ptr': ''});
+                                        'ptr': '',
+                                        'occupied': false });
         
     };
 
