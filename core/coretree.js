@@ -1,17 +1,18 @@
 /*
  * Copyright (C) 2012 Vanderbilt University, All rights reserved.
- * 
+ *
  * Author: Miklos Maroti
  */
 
-define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon' ], function (ASSERT, SHA1, FUTURE, TASYNC, CANON) {
+define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon' ], function (ASSERT, ZSSHA1, FUTURE, TASYNC, CANON) {
 	"use strict";
 
 	var HASH_REGEXP = new RegExp("#[0-9a-f]{40}");
 	var isValidHash = function (key) {
 		return typeof key === "string" && key.length === 41 && HASH_REGEXP.test(key);
 	};
-    var zsSHA = new SHA1();
+
+	var SHA = new ZSSHA1();
 
 	var MAX_RELID = Math.pow(2, 31);
 	var createRelid = function (data) {
@@ -134,7 +135,7 @@ define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon
             second = splitPath(second);
 
             var common = [];
-            for ( var i = 0; first[i] === second[i] && i < first.length; ++i) {
+            for (var i = 0; first[i] === second[i] && i < first.length; ++i) {
                 common.push(first[i]);
             }
 
@@ -156,7 +157,7 @@ define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon
 			node.children = null;
 			node.age = MAX_AGE;
 
-			for ( var i = 0; i < children.length; ++i) {
+			for (var i = 0; i < children.length; ++i) {
 				__detachChildren(children[i]);
 			}
 		};
@@ -188,7 +189,7 @@ define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon
 		var __getChildNode = function (children, relid) {
 			ASSERT(children instanceof Array && typeof relid === "string");
 
-			for ( var i = 0; i < children.length; ++i) {
+			for (var i = 0; i < children.length; ++i) {
 				var child = children[i];
 				if (child.relid === relid) {
 					ASSERT(child.parent.age === 0);
@@ -399,7 +400,7 @@ define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon
 
 			path = path.split("/");
 
-			for ( var i = 1; i < path.length; ++i) {
+			for (var i = 1; i < path.length; ++i) {
 				node = getChild(node, path[i]);
 			}
 
@@ -434,7 +435,7 @@ define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon
 		};
 
 		var __isEmptyData = function (data) {
-			for ( var keys in data) {
+			for (var keys in data) {
 				return false;
 			}
 			return true;
@@ -461,7 +462,7 @@ define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon
 			if (autopersist && ++mutateCount > MAX_MUTATE) {
 				mutateCount = 0;
 
-				for ( var i = 0; i < roots.length; ++i) {
+				for (var i = 0; i < roots.length; ++i) {
 					if (__isMutableData(roots[i].data)) {
 						__saveData(roots[i].data);
 					}
@@ -477,7 +478,7 @@ define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon
 				_mutable: true
 			};
 
-			for ( var key in data) {
+			for (var key in data) {
 				copy[key] = data[key];
 			}
 
@@ -504,7 +505,7 @@ define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon
 		};
 
 		var __reloadChildrenData = function (node) {
-			for ( var i = 0; i < node.children.length; ++i) {
+			for (var i = 0; i < node.children.length; ++i) {
 				var child = node.children[i];
 
 				var data = __getChildData(node.data, child.relid);
@@ -571,7 +572,8 @@ define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon
 				data = node.data[name];
 			}
 
-			ASSERT(!__isMutableData(data));
+			// TODO: corerel uses getProperty to get the overlay content which can get mutable
+			// ASSERT(!__isMutableData(data));
 			return data;
 		};
 
@@ -686,7 +688,7 @@ define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon
 			var done = EMPTY_DATA;
 			delete data._mutable;
 
-			for ( var relid in data) {
+			for (var relid in data) {
 				var child = data[relid];
 				if (__isMutableData(child)) {
 					var sub = __saveData(child);
@@ -708,7 +710,7 @@ define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon
 				ASSERT(hash === "" || typeof hash === "undefined");
 
 				if (hash === "") {
-					hash = "#" + zsSHA.getHash(CANON.stringify(data));
+					hash = "#" + SHA.getHash(CANON.stringify(data));
 					data[ID_NAME] = hash;
 
 					done = FUTURE.join(done, storage.insertObject(data));
@@ -813,7 +815,7 @@ define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon
 				str += "null";
 			} else {
 				str += "[";
-				for ( var i = 0; i < node.children.length; ++i) {
+				for (var i = 0; i < node.children.length; ++i) {
 					if (i !== 0) {
 						str += ", ";
 					}
@@ -835,7 +837,7 @@ define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon
 		var checkValidTree = function (node) {
 			if (isValidNode(node)) {
 				if (node.children instanceof Array) {
-					for ( var i = 0; i < node.children.length; ++i) {
+					for (var i = 0; i < node.children.length; ++i) {
 						checkValidTree(node.children[i]);
 					}
 				}
