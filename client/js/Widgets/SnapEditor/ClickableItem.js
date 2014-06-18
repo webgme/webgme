@@ -8,9 +8,11 @@
 
 define(['logManager',
     './SnapEditorWidget.Constants',
+    'util/assert',
     './ItemBase',
     './ErrorDecorator'], function (logManager,
                                    CONSTANTS,
+                                   assert,
                                    ItemBase,
                                    ErrorDecorator) {
 
@@ -22,21 +24,101 @@ define(['logManager',
 
         //Clickable items that depend on this one for location
         //That is, the child nodes and the 'next' ptr
-        this.ptrs = { in: {}, out: {} };
+        this.ptrs = {};
+        this.ptrs[CONSTANTS.CONN_ACCEPTING] = {};
+        this.ptrs[CONSTANTS.CONN_PASSING] = {};
+
+        this.conn2Item = {};//item connected to sorted by connection area id
+        this.item2Conn = {};
         this.ptrNames = null;
         this.activeConnectionArea = null;
+
+        this._color = CONSTANTS.COLOR_PRIMARY;
     };
 
     _.extend(ClickableItem.prototype, ItemBase.prototype);
 
     ClickableItem.prototype.$_DOMBase = $('<div/>').attr({ "class": CONSTANTS.DESIGNER_ITEM_CLASS });
 
-    ClickableItem.prototype.setPtrTo = function (item, ptr) {
-        this.ptrs.out[ptr] = item;
+    /* * * * * * * * * * * * * POINTERS * * * * * * * * * * * * */ 
+    ClickableItem.prototype.isPositionDependent = function (ptrInfo) {
+        return Object.keys(this.ptrs[CONSTANTS.CONN_ACCEPTING]).length !== 0;
     };
 
-    ClickableItem.prototype.setPtrFrom = function (item, ptr) {
-        this.ptrs.in[ptr] = item;
+    ClickableItem.prototype.updatePtrs = function (ptrInfo) {
+        //Update the OUT pointers given a dictionary of ptrs
+        //Will need to update the other item as well
+        var ptrs = Object.keys(ptrInfo),
+            oldPtrs = Object.keys(this.ptrs[CONSTANTS.CONN_PASSING]),
+            i = ptrs.length,
+            otherItem,
+            oldItem,
+            k,
+            ptr;
+
+        while (i--){
+            ptr = ptrs[i];
+            k = oldPtrs.indexOf(ptr);
+
+            if (k === -1){//didn't have the pointer
+                //Add pointer
+                otherItem = this.canvas.items[ptrInfo[ptr]];
+                otherItem.setToConnect(this, ptr);
+            } else {
+                //Check that the pointer is correct
+                if (this.ptrs[CONSTANTS.CONN_PASSING][ptr].id !== ptrInfo[ptr]){
+                    oldItem = this.ptrs[CONSTANTS.CONN_PASSING][ptr];
+                    oldItem.removePtr(ptr, CONSTANTS.CONN_ACCEPTING, false);
+
+                    otherItem = this.canvas.items[ptrInfo[ptr]];
+                    this.setToConnect(otherItem, ptr);
+                }
+                oldPtrs.splice(k, 1);
+            }
+        }
+
+        //Remove old pointers
+        i = oldPtrs.length;
+        while (i--){
+            ptr = oldPtrs[i];
+            this.removePtr(ptr, CONSTANTS.CONN_PASSING, false);
+        }
+
+        //this.updateDependents();
+    };
+
+    ClickableItem.prototype.setPtr = function (ptr, role, item) {
+        var otherRole = role === CONSTANTS.CONN_ACCEPTING ? 
+                CONSTANTS.CONN_PASSING : CONSTANTS.CONN_ACCEPTING;
+
+        assert(item !== this, "Should never set a pointer to itself");
+
+        if (this.ptrs[role][ptr]){
+            this.removePtr(ptr, role);
+        }
+
+        this.ptrs[role][ptr] = item;
+        item.ptrs[otherRole][ptr] = this;
+
+        //Update the colors of the attaching item
+        if (role === CONSTANTS.CONN_PASSING){
+            this.updateColors();
+        } else {
+            item.updateColors();
+        }
+
+    };
+
+    ClickableItem.prototype.disconnectPtrs = function (role) {
+        //Disconnect the incoming or outgoing pointers and 
+        var keys = Object.keys(this.ptrs[role]),
+            ptr;
+
+        while (keys.length){
+            ptr = keys.pop();
+
+            this.removePtr(ptr, role);
+        }
     };
 
     ClickableItem.prototype.getPtrNames = function () {
@@ -45,7 +127,7 @@ define(['logManager',
             i = areas.length,
             ptrs = [];
 
-        while(i--){
+        while (i--){
             ptrs.push(areas[i].ptr);
         }
 
@@ -60,25 +142,144 @@ define(['logManager',
         return this.ptrNames.indexOf(ptr) !== -1;
     };
 
+    ClickableItem.prototype.removePtr = function (ptr, role, resize) {
+        //remove pointers and resize
+        var item = this.ptrs[role][ptr],
+            otherShrinkBox = item.getTotalSize(),
+            shrinkBox = this.getTotalSize(),
+            otherRole = role === CONSTANTS.CONN_ACCEPTING ? 
+                CONSTANTS.CONN_PASSING : CONSTANTS.CONN_ACCEPTING,
+            keys = Object.keys(shrinkBox),
+            key;
+
+        if(resize === true){
+
+            while (keys.length){
+                key = keys.pop();
+                if(_.isNumber(shrinkBox[key])){
+                    shrinkBox[key] *= -1;
+                    otherShrinkBox[key] *= -1;
+                }
+            }
+
+            this._resize(ptr, otherShrinkBox);
+            item._resize(ptr, shrinkBox);
+        }
+        
+        //free the connections
+        var connId = this.item2Conn[item.id],
+            otherConnId = item.item2Conn[this.id];
+
+        delete this.item2Conn[item.id];
+        delete this.conn2Item[connId];
+
+        delete item.item2Conn[this.id];
+        delete item.conn2Item[otherConnId];
+
+        //remove pointer
+        delete this.ptrs[role][ptr];
+        delete item.ptrs[otherRole][ptr];
+    };
+
+    ClickableItem.prototype.cleanConnectionAreas = function (ptrs) {
+        this._decoratorInstance.cleanConnections(ptrs);
+    };
+
+    /* * * * * * * * * * * * * COLORING * * * * * * * * * * * * */ 
+    ClickableItem.prototype.setColor = function () {
+        var keys = Object.keys(this.ptrs[CONSTANTS.CONN_ACCEPTING]);
+
+        if (keys.length){
+
+            var basePtr,
+                base,
+                color,
+                oldColor,
+                changed = false;
+
+            basePtr = keys[0]; 
+            base = this.ptrs[CONSTANTS.CONN_ACCEPTING][basePtr];
+            color = base._color;
+
+            //If the item has more than one object pointing in, then we won't know
+            //for sure where to place it as the object pointing in determines
+            //the item's location
+            assert(keys.length === 1, "Item should have only one object pointing into it");
+
+            //Need to check if they have the same svg or svg color. If so, check whether
+            //the item is set to it's PRIMARY or SECONDARY color and set this one accordingly
+            oldColor = this._color;
+            this._color = this._decoratorInstance.setColor(base._decoratorInstance, color);
+
+            changed = oldColor !== this._color;
+        }
+
+        return changed;
+    };
+
+    ClickableItem.prototype.updateColors = function () {
+        //Update this object and all children objects
+        //as long as their colors are being changed
+        if(this.setColor()){
+            //update the colors of dependents
+            var dependentKeys = Object.keys(this.ptrs[CONSTANTS.CONN_PASSING]),
+                i = dependentKeys.length;
+            while (i--){
+                this.ptrs[CONSTANTS.CONN_PASSING][dependentKeys[i]].updateColors();
+            }
+        }
+    };
+
+    /* * * * * * * * * * * * * CONNECTIONS * * * * * * * * * * * * */ 
+
+    ClickableItem.prototype.isOccupied = function (connId) {
+        return this.conn2Item[connId] !== undefined;
+    };
+
     ClickableItem.prototype.getNextItem = function () {
-        return this.ptrs.out[CONSTANTS.PTR_NEXT];
+        return this.ptrs[CONSTANTS.CONN_PASSING][CONSTANTS.PTR_NEXT];
     };
 
     ClickableItem.prototype.getDependents = function () {
         var deps = [],
-            keys = Object.keys(this.ptrs.out);
+            keys = Object.keys(this.ptrs[CONSTANTS.CONN_PASSING]);
 
-        while(keys.length){
-            deps.push(this.ptrs.out[keys.pop()]);
+        while (keys.length){
+            deps.push(this.ptrs[CONSTANTS.CONN_PASSING][keys.pop()]);
         }
 
         return deps;
     };
 
+    ClickableItem.prototype.getTotalSize = function () {
+        //Get the size of the object and the dependents
+        var result = this.getBoundingBox(),
+            deps = this.getDependents(),
+            dependent;
+
+        while (deps.length){
+            dependent = deps.pop().getBoundingBox();
+
+            result.x = Math.min(result.x, dependent.x);
+            result.x2 = Math.max(result.x2, dependent.x2);
+            result.y = Math.min(result.y, dependent.y);
+            result.y2 = Math.max(result.y2, dependent.y2);
+        }
+
+        //update width, height
+        result.width = result.x2 - result.x;
+        result.height = result.y2 - result.y;
+
+        return result;
+    };
+
     /******************** ALTER SVG  *********************/
     ClickableItem.prototype.resize = function (ptrName, item) {
 
-        var box = item.getBoundingBox();
+        var box = item.getTotalSize(),
+            newSize;
+
+        //resize by the box size
         if(box.width === 0 && box.height === 0){
             //Try to get width and height from the svg
             var svg = item._decoratorInstance.$svgElement[0],
@@ -91,6 +292,16 @@ define(['logManager',
             box.y2 += height;
         }
 
+
+        this._resize(ptrName, box);
+
+        //update the size of the bounding box
+        //this.setSize(newSize.width, newSize.height);
+        //this._width = newSize.width;
+        //this._height = newSize.height;
+    };
+
+    ClickableItem.prototype._resize = function (ptrName, box) {
         //stretch the decorator 
         var x = box.x2 - box.x,
             y = box.y2 - box.y;
@@ -99,81 +310,167 @@ define(['logManager',
          * Consider adding differing support for connections to 
          * contained items vs sibling items (children with the 
          * same parent anyway)
-         *
-        if(ptrName.indexOf(CONSTANTS.PTR_NEXT) !== -1){//for 'next' pointer
-            x = Math.max(box.x2 - this.positionX + this._width, 0);
-            this._decoratorInstance.stretch(ptrName, x, y);
-        }else{
          */
-            this._decoratorInstance.stretch(ptrName, x, y);
-        //}
+        return this._decoratorInstance.stretch(ptrName, x, y);
+        //this.updateDependents();
     };
 
     ClickableItem.prototype.updateDependents = function () {
         //Reconnect all the pointers that are going out of
         //this item
-        var ptrs = Object.keys(this.ptrs.out),
+        var ptrs = Object.keys(this.ptrs[CONSTANTS.CONN_PASSING]),
             i = ptrs.length;
 
-        while(i--){
-            this.ptrs.out[ptrs[i]].connect(this, ptrs[i], false);//Don't resize
-            this.ptrs.out[ptrs[i]].updateDependents();
+        while (i--){
+            this.ptrs[CONSTANTS.CONN_PASSING][ptrs[i]]
+                .connectByPointerName(this, ptrs[i], CONSTANTS.CONN_ACCEPTING, false);//Don't resize
+            this.ptrs[CONSTANTS.CONN_PASSING][ptrs[i]].updateDependents();
         }
     };
 
-    ClickableItem.prototype.setToConnect = function (otherItem, ptrName) {
+    ClickableItem.prototype.setToConnect = function (otherItem, ptr, r) {
         //Set this item to connect to another
         //Won't actually connect them until "updateDependents" is called
+        var role = r || CONSTANTS.CONN_ACCEPTING;
 
-        otherItem.setPtrTo(this, ptrName);
-        this.setPtrFrom(otherItem, ptrName);
+        this.setPtr(ptr, role, otherItem);
 
-        //Resize
-        otherItem.resize(ptrName, this);
-        this.resize(ptrName, otherItem);
+        //Resize to make sure 
+        otherItem.resize(ptr, this);
+        this.resize(ptr, otherItem);
 
     };
 
-    ClickableItem.prototype.connect = function (otherItem, ptrName, resize) {
+    ClickableItem.prototype.connectByPointerName = function (otherItem, ptrName, role, resize) {
         //Connect this item to another item
         //This item will be moved to fit in/next to the other one
         
-        var connArea1 = otherItem.getConnectionArea(ptrName, CONSTANTS.CONN_PASSING),
-            connArea2 = this.getConnectionArea(ptrName, CONSTANTS.CONN_ACCEPTING),
-            dis = this._getDistance(connArea1, connArea2);
+        var otherRole = role === CONSTANTS.CONN_ACCEPTING ? 
+                CONSTANTS.CONN_PASSING : CONSTANTS.CONN_ACCEPTING,
+            connArea1 = this.getConnectionArea(ptrName, role),
+            connArea2 = otherItem.getConnectionArea(ptrName, otherRole);
 
+        this._connect({ ptr: ptrName,
+                        role: CONSTANTS.CONN_ACCEPTING,
+                        area1: connArea1,
+                        area2: connArea2,
+                        otherItem: otherItem,
+                        resize: resize });
 
-        otherItem.setPtrTo(this, ptrName);
-        this.setPtrFrom(otherItem, ptrName);
-
-        this.moveByWithDependents(-dis.dx, -dis.dy);
-
-        if(resize !== false){
-            this.resize(ptrName, otherItem);
-            otherItem.resize(ptrName, this);
-        }
     };
 
     ClickableItem.prototype.connectToActive = function (otherItem) {
         //Connect this item to the otherItem's active connection area
         var ptr = otherItem.activeConnectionArea.ptr,
-            role = CONSTANTS.CONN_ACCEPTING;
+            role = CONSTANTS.CONN_ACCEPTING,
+            connArea,
+            fromItem,
+            nextItem = null;
 
         if(otherItem.activeConnectionArea.role === CONSTANTS.CONN_ACCEPTING) {
             role = CONSTANTS.CONN_PASSING;
         }
 
-        var connArea = this.getConnectionArea(ptr, role),
-            distance = this._getDistance(connArea, otherItem.activeConnectionArea);
+        //TODO Select the correct area for connArea
+        if(ptr instanceof Array){//Find the closest compatible area
+            var ptrs = ptr,
+                shortestDistance,
+                i = ptrs.length;
+            while (i--){
+                connArea = this.getConnectionArea(ptrs[i], role);
 
-        otherItem.setPtrTo(this, ptr);
-        this.setPtrFrom(otherItem, ptr);
+                if (connArea && (!shortestDistance || this.__getShiftedDistance(connArea, 
+                            otherItem.activeConnectionArea) < shortestDistance)){
+                                shortestDistance = this.__getShiftedDistance(connArea, 
+                                    otherItem.activeConnectionArea)
+                                ptr = ptrs[i];
+                }
+            }
+
+        }
+
+        connArea = this.getConnectionArea(ptr, role);
+
+        //If the active area is occupied, try to splice this item in between
+        //fromItem is the item at the end of the set of items to be spliced in
+        //nextItem is the item for fromItem to be connected to
+        /*
+        if (otherItem.isOccupied(otherItem.activeConnectionArea.id)){
+            nextItem = otherItem.conn2Item[otherItem.activeConnectionArea.id];
+
+            //Get fromItem
+            var oppRole = otherItem.activeConnectionArea.role,
+                next = this,
+                connId;
+
+            while (fromItem === undefined){
+                connId = next.getConnectionArea(ptr, oppRole).id;
+
+                if (connId && next.conn2Item[connId]){
+                    next = next.conn2Item[connId];
+                }else{
+                    fromItem = next;
+                }
+            }
+        }
+        */
+
+        this._connect({ ptr: ptr,
+                        role: role,
+                        area1: connArea,
+                        area2: otherItem.activeConnectionArea,
+                        otherItem: otherItem });
+
+
+        //Fire event to update database
+        var srcItem = role === CONSTANTS.CONN_PASSING ? this : otherItem,
+            dstItem = role === CONSTANTS.CONN_PASSING ? otherItem : this;
+
+        /*
+        this.canvas.dispatchEvent(this.canvas.events.ITEM_POINTER_CREATED, {"src": srcItem.id,
+            "dst": dstItem.id,
+            "ptr": ptr });
+        */
+
+        /*
+         * This should happen in the controller...
+         *
+        if (fromItem && nextItem){
+            var conn1 = nextItem.getConnectionArea(ptr, otherItem.activeConnectionArea.role),
+                conn2 = fromItem.getConnectionArea(ptr, role);
+
+            nextItem._connect({ ptr: ptr,
+                                role: otherItem.activeConnectionArea.role,
+                                area1: conn1,
+                                area2: conn2,
+                                otherItem: fromItem });
+        }
+        */
+    };
+
+    ClickableItem.prototype._connect = function (params) {
+        //Connect this item to another item given the connection areas
+        var distance = this._getDistance(params.area1, params.area2),
+            otherItem = params.otherItem,
+            ptr = params.ptr,
+            role = params.role;
 
         this.moveByWithDependents(distance.dx, distance.dy);
 
+        this.setPtr(ptr, role, otherItem);
+
         //resize as necessary
-        this.resize(ptr, otherItem);
-        otherItem.resize(ptr, this);
+        if( params.resize !== false){
+            this.resize(ptr, otherItem);
+            otherItem.resize(ptr, this);
+        }
+
+        //record the connection
+        otherItem.conn2Item[params.area2.id] = this;
+        this.conn2Item[params.area1.id] = otherItem;
+
+        otherItem.item2Conn[this.id] = params.area2.id;
+        this.item2Conn[otherItem.id] = params.area1.id;
     };
 
     ClickableItem.prototype._getDistance = function (connArea1, connArea2) {//Move first to second
@@ -212,8 +509,12 @@ define(['logManager',
     //Convenience method
     ClickableItem.prototype.getConnectionArea = function (ptr, role) {
         var area = this._decoratorInstance.getConnectionArea(ptr, role);
-        area.parentId = this.id;
 
+        if(area === null){//no connection area of specified type
+            return null;
+        }
+
+        area.parentId = this.id;
         return this._makeConnAreaAbsolute(area);
     };
 
@@ -222,6 +523,13 @@ define(['logManager',
         area.y1 += this.positionY;
         area.x2 += this.positionX;
         area.y2 += this.positionY;
+
+        //Make sure it is inside the box
+        var box = this.getBoundingBox();
+        if(box.height > 0 && box.width > 0){//If the box has been rendered
+            if(area.x1 >= box.x && area.x2 <= box.x2 && area.y1 >= box.y && area.y2 <= box.y2)
+               this.logger.debug("Connection Area is outside the clickable item's bounding box");
+        }
 
         return area;
     };
@@ -243,25 +551,38 @@ define(['logManager',
         //Closest compatible pointers determines the active conn area
         var shift = { x: position.left - draggedItem.positionX,
                       y: position.top - draggedItem.positionY },
-            openAreas = this._decoratorInstance.getAvailableConnectionAreas(),
+            openAreas = this.getConnectionAreas(),
             closestArea = null,
             closestIndex = null,
-            i = openAreas.length,
+            i,
             otherArea,
-            ptr,
+            ptrs,
             role;
 
+        i = openAreas.length;
+        while (i--){
+            //Remove any occupied areas
+            if (this.conn2Item[openAreas[i].id]){
+                openAreas.splice(i,1);
+            }
+        }
+
+        i = openAreas.length;
         //Check to find the 
-        while(i--){
-            ptr = openAreas[i].ptr;
+        while (i--){
+            ptrs = openAreas[i].ptr instanceof Array ?
+                openAreas[i].ptr.slice() : [openAreas[i].ptr];
             role = openAreas[i].role === CONSTANTS.CONN_ACCEPTING ? 
                 CONSTANTS.CONN_PASSING : CONSTANTS.CONN_ACCEPTING;
-            otherArea = draggedItem.getConnectionArea(ptr, role);
 
-            if(otherArea && !otherArea.occupied
-                    && (!closestIndex || this.__getShiftedDistance(openAreas[i], otherArea, shift))){
-                        closestIndex = i;
-                        closestArea = this.__getShiftedDistance(openAreas[i], otherArea, shift);
+            while(ptrs.length){
+                otherArea = draggedItem.getConnectionArea(ptrs.pop(), role);
+
+                if(otherArea && !otherArea.occupied
+                        && (!closestIndex || this.__getShiftedDistance(openAreas[i], otherArea, shift))){
+                            closestIndex = i;
+                            closestArea = this.__getShiftedDistance(openAreas[i], otherArea, shift);
+                        }
             }
         }
 
@@ -276,6 +597,10 @@ define(['logManager',
     ClickableItem.prototype.__getShiftedDistance = function (area1, area2, shift) {
         //Get the distance between connection areas
         //measuring from the centers
+        if(!shift){
+            shift = { x: 0, y: 0 };
+        }
+
         var x1 = (area1.x2 + area1.x1 + shift.x)/2,
             x2 = (area2.x2 + area2.x1 + shift.x)/2,
             y1 = (area1.y2 + area1.y1 + shift.y)/2,
@@ -286,7 +611,7 @@ define(['logManager',
 
     ClickableItem.prototype.setActiveConnectionArea = function (area) {
         this.activeConnectionArea = area;
-        this._decoratorInstance.displayConnectionArea(this.activeConnectionArea);
+        this._decoratorInstance.displayConnectionArea(this.activeConnectionArea.id);
     };
 
     ClickableItem.prototype.deactivateConnectionAreas = function () {
@@ -297,11 +622,11 @@ define(['logManager',
     ClickableItem.prototype.moveByWithDependents = function (dX, dY) {
         this.moveTo(this.positionX + dX, this.positionY + dY);
 
-        var dependents = Object.keys(this.ptrs.out),
+        var dependents = Object.keys(this.ptrs[CONSTANTS.CONN_PASSING]),
             i = dependents.length;
 
-        while(i--){
-            this.ptrs.out[dependents[i]].moveByWithDependents(dX, dY);
+        while (i--){
+            this.ptrs[CONSTANTS.CONN_PASSING][dependents[i]].moveByWithDependents(dX, dY);
         };
     };
 
@@ -309,16 +634,65 @@ define(['logManager',
         //Moving a clickable item will also move any of the 'next' pointers
         this.moveTo(this.positionX + dX, this.positionY + dY);
     };
+    
+    ClickableItem.prototype.moveTo = function (posX, posY) {
+        var positionChanged = false;
+        //check what might have changed
+
+        if (_.isNumber(posX) && _.isNumber(posY)) {
+            //location and dimension information
+            if (this.positionX !== posX) {
+                this.positionX = posX;
+                positionChanged = true;
+            }
+
+            if (this.positionY !== posY) {
+                this.positionY = posY;
+                positionChanged = true;
+            }
+
+            if (positionChanged) {
+                this.$el.css({"left": this.positionX,
+                    "top": this.positionY });
+
+                if (!this.isPositionDependent()) {//Only update database if position is independent
+
+                    this.canvas.dispatchEvent(this.canvas.events.ITEM_POSITION_CHANGED, {"ID": this.id,
+                        "x": this.positionX,
+                        "y": this.positionY});
+                }
+            }
+        }
+    };
+
 
     //OVERRIDE
     ClickableItem.prototype.update = function (objDescriptor) {
         //check what might have changed
         //update position
-        if (objDescriptor.position && _.isNumber(objDescriptor.position.x) && _.isNumber(objDescriptor.position.y)) {
+        if (this.isPositionDependent()){
+            //Click the item to it's parent
+            var basePtr = Object.keys(this.ptrs[CONSTANTS.CONN_ACCEPTING]);
+
+            assert(basePtr.length === 1);
+            basePtr = basePtr.pop();
+
+            this.ptrs[CONSTANTS.CONN_ACCEPTING][basePtr].updateDependents();
+
+        } else if (objDescriptor.position 
+                && _.isNumber(objDescriptor.position.x) && _.isNumber(objDescriptor.position.y)) {
             var dx = objDescriptor.position.x - this.positionX,
                 dy = objDescriptor.position.y - this.positionY;
 
             this.moveByWithDependents(dx, dy);
+        }
+
+        var oldMetaInfo = this._decoratorInstance.getMetaInfo();
+
+        //update gmeId if needed
+        if(oldMetaInfo[CONSTANTS.GME_ID] !== objDescriptor.id){
+            this._decoratorInstance.setGmeId(objDescriptor.id);
+            this.$el.html(this._decoratorInstance.$el);
         }
 
         //update decorator if needed
@@ -327,7 +701,6 @@ define(['logManager',
             this.logger.debug("decorator update: '" + this._decoratorID + "' --> '" + objDescriptor.decoratorClass.prototype.DECORATORID + "'...");
 
             var oldControl = this._decoratorInstance.getControl();
-            var oldMetaInfo = this._decoratorInstance.getMetaInfo();
 
             this.__setDecorator(objDescriptor.decorator, objDescriptor.decoratorClass, oldControl, oldMetaInfo, objDescriptor.preferencesHelper, objDescriptor.aspect, objDescriptor.decoratorParams);
 
@@ -345,6 +718,7 @@ define(['logManager',
             }
             this._decoratorInstance.update();
         }
+
     };
 
 

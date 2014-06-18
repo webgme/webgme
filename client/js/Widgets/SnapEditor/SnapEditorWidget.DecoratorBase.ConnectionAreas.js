@@ -18,10 +18,11 @@ define([], function (){
     };
 
     //Displaying Connection Area
-    SnapEditorWidgetDecoratorBaseConnectionAreas.prototype.displayConnectionArea = function (line) {
+    SnapEditorWidgetDecoratorBaseConnectionAreas.prototype.displayConnectionArea = function (id) {
         var w = this.$el.outerWidth(true),
             h = this.$el.outerHeight(true),
-            shiftVal = CONN_AREA_SIZE/2;
+            shiftVal = CONN_AREA_SIZE/2,
+            line = this._getConnectionAreaById(id);
 
         this.hideConnectionAreas();
 
@@ -38,8 +39,8 @@ define([], function (){
 
             //Create the connection area
             line.x1 += shiftVal;
-            line.y1 += shiftVal;
             line.x2 += shiftVal;
+            line.y1 += shiftVal;
             line.y2 += shiftVal;
 
             //if the area is too small, enlarge it
@@ -62,6 +63,19 @@ define([], function (){
 
             this.$el.append(this._connArea);
         }
+    };
+
+    SnapEditorWidgetDecoratorBaseConnectionAreas.prototype._getConnectionAreaById = function (id) {
+        var areas = this.getConnectionAreas(),
+            i = areas.length;
+
+        while (i--){
+            if (areas[i].id === id){
+                return areas[i];
+            }
+        }
+
+        return null;
     };
 
     SnapEditorWidgetDecoratorBaseConnectionAreas.prototype.hideConnectionAreas = function () {

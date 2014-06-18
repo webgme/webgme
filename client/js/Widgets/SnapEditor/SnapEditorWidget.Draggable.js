@@ -30,10 +30,6 @@ define(['js/DragDrop/DragSource',
                 return self._dragHelper(item, event, dragInfo);
             },
             'drag': function(event, ui){
-                //Get the item being dragged
-                //TODO
-                //var droppable = $(".current-clickable");
-                //self.updateConnectionAreaHighlight(droppable, ui);
             },
             'dragItems': function (el) {
                 return self.getDragItems(self.selectionManager.getSelectedElements());
@@ -45,6 +41,21 @@ define(['js/DragDrop/DragSource',
                 return self.getDragParams(self.selectionManager.getSelectedElements(), event);
             },
             'start': function (event) {
+                //Remove ptrs into item
+                self.dropFocus = SnapEditorWidgetConstants.BACKGROUND;
+                //Remove droppable functionality from dependents of selected stuff
+                /*
+                var selectedItems = item.getDependents();
+                selectedItems.push(item);
+
+                while (selectedItems.length){
+                    selectedItems.pop().$el.droppable("disable");
+                }
+                */
+
+                //TODO Remove this functionality from here...
+                //item.disconnectPtrs(SnapEditorWidgetConstants.CONN_ACCEPTING);
+
                 var ret = false;
                 //enable drag mode only in
                 //- DESIGN MODE
@@ -81,27 +92,30 @@ define(['js/DragDrop/DragSource',
 
         if(!item.items){
             firstItem = item.id;
-            items[item.id] = item;
+            items[item.id] = { item: item, z: 100000 };
 
         }else{//set of items are selected
             i = item.items.length;
             while(i--){
-                items[item.items[i].getId()] = item.items[i].id;
+                items[item.items[i].getId()] = { item: item.items[i], z: 100000 };
             }
         }
 
-        //Add all the "next" items
+        //Add all the dependent items
         var keys = Object.keys(items),
             deps,
-            nextItem;
+            dependent,
+            dragItem;
 
         while(keys.length){
-            deps = items[keys.pop()].getDependents();
+            dragItem = items[keys.pop()];
+            deps = dragItem.item.getDependents();
+
             while(deps.length){
-                nextItem = deps.pop();
-                if(nextItem && items[nextItem.id] === undefined){
-                    items[nextItem.id] = nextItem;
-                    keys.push(nextItem.id);
+                dependent = deps.pop();
+                if(dependent && items[dependent.id] === undefined){
+                    items[dependent.id] = { item: dependent, z: dragItem.z + 1 };
+                    keys.push(dependent.id);
                 }
             }
         }
@@ -121,10 +135,11 @@ define(['js/DragDrop/DragSource',
         keys = Object.keys(items);
         while(keys.length){
             itemId = keys.pop();
-            itemElement = items[itemId].$el.clone();
+            itemElement = items[itemId].item.$el.clone();
             itemElement.css({"position": "absolute",
-                "left": items[itemId].positionX - shiftX + "px",
-                "top": items[itemId].positionY - shiftY + "px"});
+                             "z-index": items[itemId].z,
+                             "left": items[itemId].item.positionX - shiftX + "px",
+                             "top": items[itemId].item.positionY - shiftY + "px"});
             //Shift the element by shiftX, shiftY
 
             if(itemId === firstItem){

@@ -15,7 +15,7 @@ define(['logManager',
                                          REGISTRY_KEYS,
                                          GMEConcepts,
                                          ExportManager,
-                                         SnapEditorWidgetConstants,
+                                         SNAP_CONSTANTS,
                                          DragHelper) {
 
     var SnapEditorControlWidgetEventHandlers,
@@ -53,6 +53,10 @@ define(['logManager',
 
         this.snapCanvas.onBackgroundDrop = function (event, dragInfo, position) {
             self._onBackgroundDrop(event, dragInfo, position);
+        };
+
+        this.snapCanvas.onItemDrop = function (dragged, receiver, ptr) {
+            self._onItemDrop(dragged, receiver, ptr);
         };
 
         this.snapCanvas.onSelectionChanged = function (selectedIds) {
@@ -418,11 +422,21 @@ define(['logManager',
             case DragHelper.DRAG_EFFECTS.DRAG_MOVE:
                 //check to see if dragParams.parentID and this.parentID are the same
                 //if so, it's not a real move, it is a reposition
-                if (dragParams && dragParams.parentID === parentID) {
+                
+                //We will remove pointers into the items
+                var isHierarchicalMove = dragParams && dragParams.parentID !== parentID;
+
+                //Is a hierarchical move if 
+                isHierarchicalMove = this._areContainedInAnother(items) || isHierarchicalMove;
+
+                this._removeExtraPointers(items);
+                if (!isHierarchicalMove) {
                     //it is a reposition
                     this._repositionItems(items, dragParams.positions, position);
                 } else {
                     //it is a real hierarchical move
+                    //This should move all nodes pointed to by any sibling_ptr also
+                    items = this._addSiblingDependents(items);
 
                     params = { "parentId": parentID };
                     i = items.length;
@@ -437,7 +451,9 @@ define(['logManager',
                     }
 
                     this._client.startTransaction();
-                    this._client.moveMoreNodes(params);
+                    var idMap = this._client.moveMoreNodes(params);
+                    //Update the Gme ids and component ids
+                    this._updateGmeAndComponentIds(items, idMap);
                     this._client.completeTransaction();
                 }
                 break;
@@ -486,6 +502,210 @@ define(['logManager',
 
                 break;
         }
+    };
+
+    SnapEditorControlWidgetEventHandlers.prototype._addSiblingDependents = function (items) {
+        //add sibling dependents to items using BFS
+        var ptrs = SNAP_CONSTANTS.SIBLING_PTRS,
+            j = -1,
+            node,
+            tgt,
+            i;
+
+        while (++j < items.length){
+            i = ptrs.length;
+            while (i--){
+                node = this._client.getNode(items[j]);
+                tgt = node.getPointer(ptrs[i]).to;
+                if (tgt && items.indexOf(tgt) === -1){
+                    items.push(tgt);
+                }
+            }
+        }
+
+        return items;
+    };
+
+    SnapEditorControlWidgetEventHandlers.prototype._updateGmeAndComponentIds = function (ids, idMap) {
+        //Update the id's of the node
+        var i = ids.length,
+            componentId,
+            newGmeId,
+            oldGmeId;
+
+        while (i--){
+            if (this._ComponentID2GmeID[ids[i]]){//ids[i] is a component id
+                componentId = ids[i];
+                oldGmeId = this._ComponentID2GmeID[ids[i]];
+            } else {//ids[i] is a Gme id
+                oldGmeId = ids[i];
+                componentId = this._GmeID2ComponentID[ids[i]];
+            }
+
+            newGmeId = idMap[oldGmeId];
+
+            //Update the dictionaries
+            delete this._GmeID2ComponentID[oldGmeId];
+            this._GmeID2ComponentID[newGmeId] = componentId;
+            this._ComponentID2GmeID[componentId] = newGmeId;
+        }
+    };
+
+    SnapEditorControlWidgetEventHandlers.prototype._onItemDrop = function (droppedItems, receiver, ptr) {
+        //Dropping the droppedItems on the receiver
+        //receiver has an activeConnectionArea
+        var receiverId = this._ComponentID2GmeID[receiver],
+            node = this._client.getNode(receiverId),
+            nextId = node.getPointer(ptr).to,//item currently pointed to by receiver
+            firstId,
+            lastId,
+            newIds,
+            i;
+
+        this._client.startTransaction();
+
+        //If the ptr is not PTR_NEXT, we should move all dragged items into the receiver
+        //in terms of hierarchy
+
+        if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1){
+            var params = { "parentId": receiverId },
+                i = droppedItems.length,
+                ptrs2Create = {},
+                gmeId,
+                newId,
+                oldId,
+                ptrs,
+                ptrInfo,
+                id,
+                p;
+
+            while (i--) {
+                gmeId = this._ComponentID2GmeID[droppedItems[i]];
+                params[gmeId] = {};
+
+                //Record pointers to create
+                node = this._client.getNode(gmeId);
+                ptrs = node.getPointerNames();
+                id = node.getId();
+                ptrs2Create[id] = [];
+
+                while (ptrs.length){
+                    p = ptrs.pop();
+                    ptrs2Create[id].push({ ptr: p, to: node.getPointer(p).to });
+                }
+            }
+
+            newIds = this._client.moveMoreNodes(params);
+            this._updateGmeAndComponentIds(droppedItems, newIds);
+            /*
+
+            //Update the id's of the node
+            i = droppedItems.length;
+            while (i--){
+                newId = newIds[this._ComponentID2GmeID[droppedItems[i]]];
+                oldId = this._ComponentID2GmeID[droppedItems[i]];
+
+                //Update the dictionaries
+                delete this._GmeID2ComponentID[oldId];
+                this._GmeID2ComponentID[newId] = droppedItems[i];
+                this._ComponentID2GmeID[droppedItems[i]] = newId;
+            }
+            */
+
+            //For each of the droppedItems, I will need to update the ptrs
+            var keys = Object.keys(ptrs2Create);
+
+            while (keys.length){
+                id = keys.pop();
+                ptrs = ptrs2Create[id];
+
+                while (ptrs.length){
+                    ptrInfo = ptrs.pop();
+                    oldId = ptrInfo.to;
+                    newId = newIds[oldId];
+
+                    if (newId){
+                        this._client.makePointer(newIds[id], ptrInfo.ptr, newId);
+                    }
+                }
+            }
+        }
+
+        firstId = this._ComponentID2GmeID[droppedItems[0]];
+        //check to see if we should splice 
+        /*
+        if (nextId){
+            var lastNode = this._client.getNode(lastId),
+                ptrs = lastNode.getPointerNames();
+
+            if(ptrs.indexOf(ptr) !== -1 && !lastNode.getPointer(ptr).to){//lastNode can be connected to 
+                this._client.makePointer(lastId, ptr, nextId);
+            }
+        }
+        */
+
+        //Set the first pointer
+        this._client.makePointer(receiverId, ptr, firstId);
+
+        this.snapCanvas.connect(droppedItems[0], receiver);
+
+        this._client.completeTransaction();
+    };
+
+    SnapEditorControlWidgetEventHandlers.prototype._areContainedInAnother = function (items) {
+        //This should tell us if the items are contained in another item rather than
+        //just the parentId
+        var i = items.length,
+            currentDepth = this.currentNodeInfo.id.split("/").length + 1;
+
+        while (i--){
+            if (items[i].split("/").length > currentDepth){
+                return true;
+            }
+            /*
+            id = this._GmeID2ComponentID[items[i]];
+            ptrs = this.snapCanvas.getItemsPointingTo(id);
+            j = ptrs.length;
+            while (j--){
+                if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(ptrs[j]) === -1){
+                    return true;
+                }
+            }
+            */
+        }
+        return false;
+    };
+
+    SnapEditorControlWidgetEventHandlers.prototype._removeExtraPointers = function (items) {
+        //Consider the set of items in 'items' and not in 'items'. This method will remove
+        //pointers from NOT 'items' into 'items'
+        var ptrs2Remove,
+            i = items.length,
+            ptrs,
+            keys,
+            gmeId,
+            id,
+            ptr;
+
+        this._client.startTransaction();
+        while (i--){
+            id = this._GmeID2ComponentID[items[i]];
+            ptrs2Remove = this.snapCanvas.getItemsPointingTo(id);
+            ptrs = Object.keys(ptrs2Remove);
+
+            //Update the database
+            while (ptrs.length){
+                ptr = ptrs.pop();
+                gmeId = this._ComponentID2GmeID[ptrs2Remove[ptr].id];
+
+                if (items.indexOf(gmeId) === -1){//Remove the ptr
+                    this._client.makePointer(gmeId, ptr, null);
+                    this.snapCanvas.removePtr(id, ptr, SNAP_CONSTANTS.CONN_ACCEPTING);
+                }
+            }
+        }
+
+        this._client.completeTransaction();
     };
 
     SnapEditorControlWidgetEventHandlers.prototype._repositionItems = function (items, dragPositions, dropPosition) {

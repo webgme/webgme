@@ -59,6 +59,11 @@
      x="6.0102367"
      y="8.5621614"
      inkscape:label="#rect2990" />
+  <filter id="secondary">
+    <feColorMatrix in="SourceGraphic"
+      type="hueRotate"
+      values="10" />
+  </filter>
   <g
      style="fill:#ffdc40;stroke:#ffdc40"
      id="colors"

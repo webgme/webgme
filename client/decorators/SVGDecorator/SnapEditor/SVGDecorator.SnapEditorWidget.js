@@ -130,6 +130,10 @@ define(['js/Constants',
     /**** Override from SnapEditorWidgetCore ****/
     SVGDecoratorSnapEditorWidget.prototype._renderContent = function () {
         this.$el.attr({"data-id": this._metaInfo[CONSTANTS.GME_ID]});
+        this.zIndex = this._metaInfo[CONSTANTS.GME_ID].split("/").length;
+
+        //Set z-index
+        this.$el[0].style.zIndex = this.zIndex;
 
         /* BUILD UI*/
         //find placeholders
@@ -148,15 +152,26 @@ define(['js/Constants',
         this.update();
     };
 
-    /**** Manipulating the SVG ****/
+    SVGDecoratorSnapEditorWidget.prototype.setGmeId = function (newId) {
+        this._metaInfo[CONSTANTS.GME_ID] = newId;
+        this.$el.attr("data-id", newId);
+        this.zIndex = newId.split("/").length;
+    };
+
+    /* * * * Manipulating the SVG * * * */
+    //Stretching
     SVGDecoratorSnapEditorWidget.prototype.stretch = function (id, x, y) {
         //Get dx, dy from the x,y values
         var dx = x,
-            dy = y;
+            dy = y,
+            w,
+            h;
 
         //TODO
-        this.stretchHorizontal(id, dx);
-        this.stretchVertical(id, dy);
+        w = this.stretchHorizontal(id, dx);
+        h = this.stretchVertical(id, dy);
+
+        return { width: w, height: h };
     };
 
     SVGDecoratorSnapEditorWidget.prototype.stretchHorizontal = function (id, dx) {
@@ -265,7 +280,10 @@ define(['js/Constants',
 
         if(stretchElements.length || shiftElements.length){
             this.$svgElement[0].setAttribute("width", Math.max(current_width, maxWidth));//Expand if needed
+            return Math.max(current_width, maxWidth);
         }
+
+        return current_width;
     };
 
     //TODO Refactor this code...
@@ -375,7 +393,10 @@ define(['js/Constants',
 
         if(stretchElements.length || shiftElements.length){
             this.$svgElement[0].setAttribute("height", Math.max(current_height, maxHeight));//Expand if needed
+            return Math.max(current_height, maxHeight);
         }
+
+            return current_height;
     };
 
     SVGDecoratorSnapEditorWidget.prototype._shiftConnectionAreas = function (shiftClass, shift) {
@@ -393,6 +414,49 @@ define(['js/Constants',
             }
         }
     };
+
+    //Zebra Coloring
+    SVGDecoratorSnapEditorWidget.prototype.setColor = function (otherDecorator, otherColor) {
+        //Check to see if it has a filter
+        //If so, 
+        var areSameColor = false,
+            hasFilter = this.$svgElement.find("#secondary").length === 1,
+            color = SnapEditorWidgetConstants.COLOR_PRIMARY,
+            filterName = "secondary",
+            colorGroup = this.$svgElement.find("#colors"),
+            otherColorGroup = otherDecorator.$svgElement.find("#colors");
+
+        //Figure out if the decorators are the same color
+        if (colorGroup.length && otherColorGroup.length){
+            colorGroup = colorGroup[0];
+            otherColorGroup = otherColorGroup[0];
+
+            areSameColor = colorGroup.getAttribute("style") === otherColorGroup.getAttribute("style");
+        }
+
+        if (areSameColor && hasFilter){//has filter and color group
+            switch(otherColor){
+                case SnapEditorWidgetConstants.COLOR_PRIMARY:
+                    colorGroup.setAttribute("filter", "url(#secondary)");
+                    color = SnapEditorWidgetConstants.COLOR_SECONDARY;
+                    break;
+
+                case SnapEditorWidgetConstants.COLOR_SECONDARY:
+                    if (colorGroup.hasAttribute("filter")){
+                        colorGroup.removeAttr("filter");
+                    }
+                    break;
+
+                default:
+                    //ERROR - COLOR NOT RECOGNIZED
+                    this.logger.debug("Decorator color not recognized: " + otherColor);
+            }
+        }
+
+        return color;
+    };
+
+    /* * * * * END of Manipulating the SVG * * * * * */
 
     SVGDecoratorSnapEditorWidget.prototype.genSVGId = function () {
         //Randomly generate ID between 0,10000
@@ -467,7 +531,6 @@ define(['js/Constants',
         SnapEditorWidgetDecoratorBase.prototype.onRenderSetLayoutInfo.call(this);
     };
 
-
     /**** Override from SnapEditorWidgetDecoratorBase ****/
     SVGDecoratorSnapEditorWidget.prototype.getConnectionAreas = function (/*, isEnd, connectionMetaInfo*/) {
         var result = [],
@@ -512,19 +575,15 @@ define(['js/Constants',
         return result;
     };
 
-    //Get only unoccupied connection areas
-    SVGDecoratorSnapEditorWidget.prototype.getAvailableConnectionAreas = function () {
-        var areas = this.getConnectionAreas(),
-            result = [],
-            i = areas.length;
-
-        while(i--){
-            if(!areas[i].occupied){
-                result.push(areas[i]);
+    //Remove any connection areas that have ptrs not allowed by META
+    SVGDecoratorSnapEditorWidget.prototype.cleanConnections = function (ptrs) {
+        var i = this._customConnectionAreas.length;
+        while (i--){
+            if (this._customConnectionAreas[i].role === SnapEditorWidgetConstants.CONN_PASSING
+                    && ptrs.indexOf(this._customConnectionAreas[i].ptr) === -1){
+                this._customConnectionAreas.splice(i, 1);
             }
         }
-
-        return result;
     };
 
     //Get a specific connection area

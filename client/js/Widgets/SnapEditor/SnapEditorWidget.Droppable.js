@@ -153,16 +153,25 @@ define(['js/DragDrop/DropTarget',
         //Set the item to droppable
         //item.$el.addClass(CLICKABLE_CLASS);
         item.$el.droppable({
-            tolerance: "touch",//May switch to "touch" 
+            tolerance: "touch",
             over: function(event, ui) {
+                //If the item doesn't exist, create it!
+                //TODO 
                 var dragged = self.items[ui.draggable[0].id],
+                    pos;
+
+                if (dragged === undefined){
+                    //dragging from an outside panel - dragged item hasn't been created yet
+                    self.logger.warn("Dragging item from outside panel is not supported yet!");
+                }else{
+
                     pos = ui.helper.find("#" + dragged.id).position();
+                    pos.left += event.pageX - ui.draggable.parent().offset().left;
+                    pos.top += event.pageY - ui.draggable.parent().offset().top;
 
-                pos.left += event.pageX - ui.draggable.parent().offset().left;
-                pos.top += event.pageY - ui.draggable.parent().offset().top;
-
-                if(item.updateHighlight(dragged, pos)){
-                    self.dropFocus = SnapEditorWidgetConstants.ITEM;
+                    if(item.updateHighlight(dragged, pos)){
+                        self.dropFocus = SnapEditorWidgetConstants.ITEM;
+                    }
                 }
                 //ui.draggable.data("current-clickable", $this);
             },
@@ -171,14 +180,7 @@ define(['js/DragDrop/DropTarget',
                 self.dropFocus = SnapEditorWidgetConstants.BACKGROUND;
             },
             drop: function(event, ui) {
-                //connect the items (with the controller)
-                var dragged = self.items[ui.draggable[0].id];
-                dragged.connectToActive(item);
-                //TODO FIXME
-
-                //hide the conn areas
-                item.deactivateConnectionAreas();
-
+                self._onItemDrop(item, event, ui);
                 //var $this = $(this);
                 //cleanupHighlight(ui, $this);
                 //var $new = $this.clone().children("td:first")
@@ -195,12 +197,60 @@ define(['js/DragDrop/DropTarget',
         });
     };
 
-    SnapEditorWidgetDroppable.prototype.updateConnectionAreaHighlight = function (droppable, dragging) {
-        //Get the items and find the appropriate areas to highlight on "droppable"
-        //TODO
-        var highlightItem = this.items[droppable.id],
-            draggedItem = this.items[dragging.helper.id],
-            draggedPosition = { x: dragging.left, y: dragging.top };
+    SnapEditorWidgetDroppable.prototype._onItemDrop = function (item, event, ui) {
+        //connect the items (with the controller)
+        if (item.activeConnectionArea){
+            var i = ui.helper.children().length,
+                draggedIds = [];
+            
+            while (i--){
+                draggedIds.push(ui.helper.children()[i].id);
+            }
+
+            //dragged.connectToActive(item);
+            var itemId = item.id,
+                ptr = item.activeConnectionArea.ptr;
+
+            //If multiple ptrs, select the closest compatible
+            //TODO Change this to allow clicking to other items
+            if(ptr instanceof Array){//Find the closest compatible area
+                var ptrs = ptr,
+                    shortestDistance,
+                    connArea,
+                    firstItem = this.items[draggedIds[0]],
+                    role = item.activeConnectionArea.role === SnapEditorWidgetConstants.CONN_ACCEPTING ?
+                        SnapEditorWidgetConstants.CONN_PASSING : SnapEditorWidgetConstants.CONN_ACCEPTING,
+                    i = ptrs.length;
+
+                while (i--){
+                    connArea = firstItem.getConnectionArea(ptrs[i], role);
+
+                    if (connArea && (!shortestDistance || firstItem.__getShiftedDistance(connArea, 
+                                    item.activeConnectionArea) < shortestDistance)){
+                                        shortestDistance = firstItem.__getShiftedDistance(connArea, 
+                                            item.activeConnectionArea)
+                                            ptr = ptrs[i];
+                                    }
+                }
+
+            }
+
+
+            this.onItemDrop(draggedIds, itemId, ptr);
+
+            //hide the conn areas
+            item.deactivateConnectionAreas();
+
+        }//else{//drop to background
+          //  this._onBackgroundDrop(event, dragInfo);
+        //}
+
+        this.selectionManager.clear();
+        this.dropFocus = SnapEditorWidgetConstants.BACKGROUND;
+    };
+
+    SnapEditorWidgetDroppable.prototype.onItemDrop = function (droppedItems, receiver) {
+        this.logger.warning("SnapEditorWidget.prototype.onItemDrop(event, dragInfo) not overridden in controller!!! dragInfo:" + JSON.stringify(dragInfo) + " , position: '" + JSON.stringify(position) + "'");
     };
 
     return SnapEditorWidgetDroppable;

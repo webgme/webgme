@@ -13,6 +13,7 @@ define(['eventDispatcher'], function (EventDispatcher) {
 
         this.events = {
             "ITEM_POSITION_CHANGED": "ITEM_POSITION_CHANGED", //{ ID, x, y}
+            "ITEM_POINTER_CREATED": "ITEM_POINTER_CREATED", //{ src, dst, ptr}
             "ON_COMPONENT_DELETE": "ON_COMPONENT_DELETE", // ID
             "ON_COMPONENT_CREATE": "ON_COMPONENT_CREATE", // ID
             "ON_COMPONENT_UPDATE": "ON_COMPONENT_UPDATE",  // ID

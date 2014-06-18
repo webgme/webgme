@@ -30,6 +30,7 @@ define([], function () {
         CONN_PASSING: "out",
         PTR_NEXT: "next",
         NAME: "name", 
+        SIBLING_PTRS: ["next"],//pointer names to ptrs on the same level
 
         /*
          * Droppable constants
@@ -40,5 +41,9 @@ define([], function () {
         /*DOM ELEMENT ATTRIBUTES*/
         DATA_ITEM_ID : 'data-oid',
         DATA_SUBCOMPONENT_ID : 'data-sid',
+
+        /*COLORING OF ITEMS*/
+        COLOR_PRIMARY: 'primary',
+        COLOR_SECONDARY: 'secondary'
     };
 });

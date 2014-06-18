@@ -425,8 +425,5 @@ define(['logManager',
     };
 
 
-
-
     return ItemBase;
-
 });

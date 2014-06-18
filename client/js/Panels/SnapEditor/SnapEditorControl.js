@@ -22,14 +22,6 @@ define(['logManager',
                                         SnapEditorEventHandlers,
                                         GMEConcepts){
 
-/*
- * TODO:
- *
- * Get the data from the data base
- * Create widgets that allow the objects to draw themselves
- *
- */
-
     var BACKGROUND_TEXT_COLOR = '#DEDEDE',
         BACKGROUND_TEXT_SIZE = 30,
         DEFAULT_DECORATOR = "ModelDecorator",
@@ -459,8 +451,11 @@ console.log("Object changed to " + nodeId);
             prevItem = item;
             nextItem = objDesc[prevItem].next;
 
-            if(!this._GmeID2ComponentID[nextItem]){
+            if(!this._GmeID2ComponentID[prevItem]){//Load the item if needed
                 territoryChanged = this._onSingleLoad(prevItem, objDesc[prevItem]) || territoryChanged;
+            }else{
+                this._onUpdate(prevItem, objDesc[prevItem]);
+                continue;
             }
 
             //Load all the dependent items 
@@ -535,8 +530,9 @@ console.log("Object changed to " + nodeId);
         }
         
         //update dependents of the nodes
-        while(items.length){
-            this.snapCanvas.updateItemDependents(this._GmeID2ComponentID[items.pop()]);
+        j = items.length;
+        while (j--){
+            this.snapCanvas.updateItemDependents(this._GmeID2ComponentID[items[j]]);
         }
     };
 
@@ -586,6 +582,7 @@ console.log("Object changed to " + nodeId);
                     objDesc.metaInfo[CONSTANTS.GME_ID] = gmeID;
                     objDesc.preferencesHelper = PreferencesHelper.getPreferences();
                     objDesc.aspect = this._selectedAspect;
+                    objDesc.ptrs = this._client.getNode(gmeID).getPointerNames();
 
                     uiComponent = this.snapCanvas.createClickableItem(objDesc);
 
@@ -658,8 +655,10 @@ console.log("Object changed to " + nodeId);
                 delete this._GmeID2ComponentID[gmeID];
 
             } else {
+                //the item is probably still being used as a different gme component
+                
                 //probably a subcomponent has been deleted - will be handled in the decorator
-                this._checkComponentDependency(gmeID, CONSTANTS.TERRITORY_EVENT_UNLOAD);
+                //this._checkComponentDependency(gmeID, CONSTANTS.TERRITORY_EVENT_UNLOAD);
             }
         }
 
@@ -668,10 +667,13 @@ console.log("Object changed to " + nodeId);
 
     SnapEditorControl.prototype._onUpdate = function (gmeID, objDesc) {
         var componentID,
-            len,
             decClass,
             objId,
-            sCompId;
+            sCompId,
+            ptrs,
+            node = this._client.getNode(gmeID),
+            id,
+            i;
 
         //self or child updated
         //check if the updated object is the opened node
@@ -683,8 +685,9 @@ console.log("Object changed to " + nodeId);
             this._updateAspects();
         } else {
             if (objDesc) {
-                if (objDesc.parentId === this.currentNodeInfo.id) {
-                    if(this._GmeID2ComponentID[gmeID]){
+                //Make sure that the node is somewhere in the project we are looking at
+                if (objDesc.parentId.indexOf(this.currentNodeInfo.id) !== -1) {
+                    if (this._GmeID2ComponentID[gmeID]){
                         componentID = this._GmeID2ComponentID[gmeID];
 
                         decClass = this._getItemDecorator(objDesc.decorator);
@@ -692,14 +695,19 @@ console.log("Object changed to " + nodeId);
                         objDesc.decoratorClass = decClass;
                         objDesc.preferencesHelper = PreferencesHelper.getPreferences();
                         objDesc.aspect = this._selectedAspect;
+                        //Get the pointer info
+                        objDesc.ptrInfo = {};
+                        ptrs = node.getPointerNames(gmeID);
+                        i = ptrs.length;
+                        while (i--){
+                            id = node.getPointer(ptrs[i]).to;
+                            if (id && this._GmeID2ComponentID[id]){
+                                objDesc.ptrInfo[ptrs[i]] = this._GmeID2ComponentID[id];
+                            }
+                        }
 
                         this.snapCanvas.updateClickableItem(componentID, objDesc);
                     }
-
-                    //there is a connection associated with this GMEID
-                } else {
-                    //update about a subcomponent - will be handled in the decorator
-                    this._checkComponentDependency(gmeID, CONSTANTS.TERRITORY_EVENT_UPDATE);
                 }
             }
         }

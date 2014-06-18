@@ -68,7 +68,6 @@ define(['logManager',
         this._updatedClickableItemIDs = [];
         this._deletedClickableItemIDs = [];
 
- 
         /* * * * * * * * * * UI Components * * * * * * * * * */
 
         //Default Size values

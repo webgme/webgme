@@ -36,6 +36,8 @@ define(['./ClickableItem',
         newComponent.__setDecorator(objDescriptor.decorator, objDescriptor.decoratorClass, objDescriptor.control, objDescriptor.metaInfo, objDescriptor.preferencesHelper, objDescriptor.aspect, objDescriptor.decoratorParams);
         newComponent.addToDocFragment(this._documentFragment);
 
+        newComponent.cleanConnectionAreas(objD.ptrs);
+
         //set the item to be able to be "clicked" to 
         this.setClickable(newComponent);
 
@@ -69,10 +71,17 @@ define(['./ClickableItem',
     };
 
     SnapEditorWidgetClickableItems.prototype.updateClickableItem  = function (componentId, objDescriptor) {
-        var alignedPosition;
+        var alignedPosition,
+            item;
 
         if (this.itemIds.indexOf(componentId) !== -1) {
             this.logger.debug("Updating model component with parameters: " + objDescriptor);
+            item = this.items[componentId];
+
+            //Update pointers
+            if (objDescriptor.ptrInfo){
+                item.updatePtrs(objDescriptor.ptrInfo);
+            }
 
             //adjust its position to this canvas
             if (objDescriptor.position && _.isNumber(objDescriptor.position.x) && _.isNumber(objDescriptor.position.y)) {
@@ -118,7 +127,7 @@ define(['./ClickableItem',
         }
     };
 
-    SnapEditorWidgetClickableItems.prototype.connect = function (id1, id2, ptrName) {
+    SnapEditorWidgetClickableItems.prototype.connect = function (id1, id2) {
         //This connects connArea1 and connArea2 on the screen as being connected. That is
         //it positions the parents of connArea1 and connArea2 such that connArea1 and connArea2
         //are overlapping and centered on each other.
@@ -127,7 +136,7 @@ define(['./ClickableItem',
         var item1 = this.items[id1],
             item2 = this.items[id2];
 
-        item2.connect(item1, ptrName);
+        item1.connectToActive(item2);
     };
 
     SnapEditorWidgetClickableItems.prototype.setToConnect = function (id1, id2, ptrName) {
@@ -144,6 +153,19 @@ define(['./ClickableItem',
 
     SnapEditorWidgetClickableItems.prototype.itemHasPtr = function (id1, ptrName) {
         return this.items[id1].hasPtr(ptrName);
+    };
+
+    SnapEditorWidgetClickableItems.prototype.getItemsPointingTo = function (id) {
+        var item = this.items[id],
+            result = {};
+
+        _.extend(result, item.ptrs[CONSTANTS.CONN_ACCEPTING]);
+
+        return result;
+    };
+
+    SnapEditorWidgetClickableItems.prototype.removePtr = function (itemId, ptr, role) {
+        this.items[itemId].removePtr(ptr, role, true);
     };
 
     return SnapEditorWidgetClickableItems;
