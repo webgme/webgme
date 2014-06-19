@@ -89,10 +89,10 @@ require(
             }
 
             //#2 check URL
-            var d = util.getURLParameterByName('d').toLowerCase();
-            if (d === 'debug') {
+            var d = util.getURLParameterByName('debug').toLowerCase();
+            if (d === 'true') {
                 DEBUG = true;
-            } else if (d === 'rel') {
+            } else if (d === 'false') {
                 DEBUG = false;
             }
 
