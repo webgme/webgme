@@ -99,7 +99,7 @@ define([ "util/assert", "storage/mongo", "storage/cache", "storage/commit", "cor
 
 		console.log("Opening project " + name);
 
-		TASYNC.call(openProject2, database.openProject(name));
+		return TASYNC.call(openProject2, database.openProject(name));
 	}
 
 	function openProject2 (p) {
