@@ -62,6 +62,7 @@ define(['logManager',
     SnapEditorControl.prototype.selectedObjectChanged = function(nodeId){
         var desc,
             nodeName,
+            depth = nodeId === CONSTANTS.PROJECT_ROOT_ID ? 1 : 1000000,
             self = this;
 
 //TODO REMOVE
@@ -118,10 +119,10 @@ console.log("Object changed to " + nodeId);
             this._selfPatterns = {};
 
 			 if (this._selectedAspect === CONSTANTS.ASPECT_ALL) {
-				this._selfPatterns[nodeId] = { "children": 2 };
+				this._selfPatterns[nodeId] = { "children": depth };
 			} else {
 				this._selfPatterns[nodeId] = this._client.getAspectTerritoryPattern(nodeId, this._selectedAspect);
-				this._selfPatterns[nodeId].children = 2;
+				this._selfPatterns[nodeId].children = depth;
 			}
 
             this._firstLoad = true;
@@ -455,7 +456,6 @@ console.log("Object changed to " + nodeId);
                 territoryChanged = this._onSingleLoad(prevItem, objDesc[prevItem]) || territoryChanged;
             }else{
                 this._onUpdate(prevItem, objDesc[prevItem]);
-                continue;
             }
 
             //Load all the dependent items 
@@ -487,6 +487,8 @@ console.log("Object changed to " + nodeId);
                         }
 
                     }
+                }else{
+                    this._onUpdate(nextItem, objDesc[nextItem]);
                 }
 
                 //If the nextItem is the parent of other nodes, load them next.
@@ -500,11 +502,12 @@ console.log("Object changed to " + nodeId);
 
                     //if the nextItem is null, see if we can 'bubble' up to the parent
                     if(!nextItem){
-                        i = prevItem.lastIndexOf('/');
-                        base = prevItem.substring(0, i);
-                        if(base !== this.currentNodeInfo.id){
+                        //Find the next item - bubble up as much as necessary
+                        while (base !== this.currentNodeInfo.id && !nextItem){
+                            i = prevItem.lastIndexOf('/');
+                            base = prevItem.substring(0, i);
                             prevItem = base;
-                            nextItem = objDesc[base].next;
+                            nextItem = objDesc[base] ? objDesc[base].next : null;
                         }
                     }
                 }
@@ -682,7 +685,7 @@ console.log("Object changed to " + nodeId);
             //the interest about the parent is:
             // - name change
             this._updateSheetName(objDesc.name);
-            this._updateAspects();
+            //this._updateAspects();
         } else {
             if (objDesc) {
                 //Make sure that the node is somewhere in the project we are looking at
