@@ -102,9 +102,9 @@ define(['logManager',
 
         //Update the colors of the attaching item
         if (role === CONSTANTS.CONN_PASSING){
-            this.updateColors();
-        } else {
             item.updateColors();
+        } else {
+            this.updateColors();
         }
 
     };
@@ -145,25 +145,15 @@ define(['logManager',
     ClickableItem.prototype.removePtr = function (ptr, role, resize) {
         //remove pointers and resize
         var item = this.ptrs[role][ptr],
-            otherShrinkBox = item.getTotalSize(),
-            shrinkBox = this.getTotalSize(),
             otherRole = role === CONSTANTS.CONN_ACCEPTING ? 
-                CONSTANTS.CONN_PASSING : CONSTANTS.CONN_ACCEPTING,
-            keys = Object.keys(shrinkBox),
-            key;
+                CONSTANTS.CONN_PASSING : CONSTANTS.CONN_ACCEPTING;
 
         if(resize === true){
-
-            while (keys.length){
-                key = keys.pop();
-                if(_.isNumber(shrinkBox[key])){
-                    shrinkBox[key] *= -1;
-                    otherShrinkBox[key] *= -1;
-                }
+            if (role === CONSTANTS.CONN_ACCEPTING){
+                item.updateSize(ptr, null);
+            } else {
+                this.updateSize(ptr, null);
             }
-
-            this._resize(ptr, otherShrinkBox);
-            item._resize(ptr, shrinkBox);
         }
         
         //free the connections
@@ -273,16 +263,18 @@ define(['logManager',
         return result;
     };
 
-    /******************** ALTER SVG  *********************/
-    ClickableItem.prototype.resize = function (ptrName, item) {
+    //Override
+    ClickableItem.prototype.getBoundingBox = function () {
+        var box = {"x": this.positionX,
+                "y": this.positionY,
+                "width": this._width,
+                "height": this._height,
+                "x2": this.positionX + this._width,
+                "y2":  this.positionY + this._height};
 
-        var box = item.getTotalSize(),
-            newSize;
-
-        //resize by the box size
         if(box.width === 0 && box.height === 0){
             //Try to get width and height from the svg
-            var svg = item._decoratorInstance.$svgElement[0],
+            var svg = this._decoratorInstance.$svgElement[0],
                 width = svg.width.baseVal.value,
                 height = svg.height.baseVal.value;
 
@@ -292,27 +284,15 @@ define(['logManager',
             box.y2 += height;
         }
 
-
-        this._resize(ptrName, box);
-
-        //update the size of the bounding box
-        //this.setSize(newSize.width, newSize.height);
-        //this._width = newSize.width;
-        //this._height = newSize.height;
+        return box;
     };
 
-    ClickableItem.prototype._resize = function (ptrName, box) {
-        //stretch the decorator 
-        var x = box.x2 - box.x,
-            y = box.y2 - box.y;
+    /******************** ALTER SVG  *********************/
+    ClickableItem.prototype.updateSize = function (ptrName, item) {
+        var box = item ? item.getTotalSize() : { width: 0, height: 0 };
 
-        /*
-         * Consider adding differing support for connections to 
-         * contained items vs sibling items (children with the 
-         * same parent anyway)
-         */
-        return this._decoratorInstance.stretch(ptrName, x, y);
-        //this.updateDependents();
+        //stretch the decorator 
+        return this._decoratorInstance.stretchTo(ptrName, box.width, box.height);
     };
 
     ClickableItem.prototype.updateDependents = function () {
@@ -323,7 +303,7 @@ define(['logManager',
 
         while (i--){
             this.ptrs[CONSTANTS.CONN_PASSING][ptrs[i]]
-                .connectByPointerName(this, ptrs[i], CONSTANTS.CONN_ACCEPTING, false);//Don't resize
+                .connectByPointerName(this, ptrs[i], CONSTANTS.CONN_ACCEPTING);
             this.ptrs[CONSTANTS.CONN_PASSING][ptrs[i]].updateDependents();
         }
     };
@@ -336,8 +316,11 @@ define(['logManager',
         this.setPtr(ptr, role, otherItem);
 
         //Resize to make sure 
-        otherItem.resize(ptr, this);
-        this.resize(ptr, otherItem);
+        if (role === CONSTANTS.CONN_ACCEPTING){
+            otherItem.updateSize(ptr, this);
+        } else {
+            this.updateSize(ptr, otherItem);
+        }
 
     };
 
@@ -379,9 +362,9 @@ define(['logManager',
             while (i--){
                 connArea = this.getConnectionArea(ptrs[i], role);
 
-                if (connArea && (!shortestDistance || this.__getShiftedDistance(connArea, 
+                if (connArea && (!shortestDistance || this.__getDistanceBetweenConnections(connArea, 
                             otherItem.activeConnectionArea) < shortestDistance)){
-                                shortestDistance = this.__getShiftedDistance(connArea, 
+                                shortestDistance = this.__getDistanceBetweenConnections(connArea, 
                                     otherItem.activeConnectionArea)
                                 ptr = ptrs[i];
                 }
@@ -455,15 +438,18 @@ define(['logManager',
             ptr = params.ptr,
             role = params.role;
 
+        //resize as necessary
+        if (params.resize !== false){
+            if (role === CONSTANTS.CONN_ACCEPTING){
+                otherItem.updateSize(ptr, this);
+            } else {
+                this.updateSize(ptr, otherItem);
+            }
+        }
+
         this.moveByWithDependents(distance.dx, distance.dy);
 
         this.setPtr(ptr, role, otherItem);
-
-        //resize as necessary
-        if( params.resize !== false){
-            this.resize(ptr, otherItem);
-            otherItem.resize(ptr, this);
-        }
 
         //record the connection
         otherItem.conn2Item[params.area2.id] = this;
@@ -542,6 +528,63 @@ define(['logManager',
             //this._decoratorInstance.hideConnectionAreas();
     };
 
+    ClickableItem.prototype.getClosestConnectionArea = function (draggedItem, position) {
+        //Calculate the closest connection area
+        //Return the area and distance
+        this.deactivateConnectionAreas();
+
+        //Get all empty pointers and compare with draggedItem's available pointers.
+        //Closest compatible pointers determines the active conn area
+        var shift = { x: position.left - draggedItem.positionX,
+                      y: position.top - draggedItem.positionY },
+            openAreas = this.getConnectionAreas(),
+            closestArea = null,
+            closestIndex = null,
+            i,
+            otherArea,
+            ptrs,
+            role;
+
+        i = openAreas.length;
+        while (i--){
+            //Remove any occupied areas
+            if (this.conn2Item[openAreas[i].id]){
+                openAreas.splice(i,1);
+            }
+        }
+
+        i = openAreas.length;
+        //Check to find the closest pair of connection areas
+        while (i--){
+            ptrs = openAreas[i].ptr instanceof Array ?
+                openAreas[i].ptr.slice() : [openAreas[i].ptr];
+            role = openAreas[i].role === CONSTANTS.CONN_ACCEPTING ? 
+                CONSTANTS.CONN_PASSING : CONSTANTS.CONN_ACCEPTING;
+
+            while(ptrs.length){
+                otherArea = draggedItem.getConnectionArea(ptrs.pop(), role);
+
+                if(otherArea){
+
+                    //Shift the area
+                    otherArea.x1 += shift.x;
+                    otherArea.x2 += shift.x;
+                    otherArea.y1 += shift.y;
+                    otherArea.y2 += shift.y;
+
+                    if (!closestIndex 
+                            || this.__getDistanceBetweenConnections(openAreas[i], otherArea) < closestArea){
+                        closestIndex = i;
+                        closestArea = this.__getDistanceBetweenConnections(openAreas[i], otherArea);
+                    }
+                }
+            }
+        }
+
+        return { area: openAreas[closestIndex], distance: closestArea };
+    };
+
+    /*
     ClickableItem.prototype.updateHighlight = function (draggedItem, position) {
         //Determine the active connection area
         //First, remove any old stuff
@@ -579,9 +622,9 @@ define(['logManager',
                 otherArea = draggedItem.getConnectionArea(ptrs.pop(), role);
 
                 if(otherArea && !otherArea.occupied
-                        && (!closestIndex || this.__getShiftedDistance(openAreas[i], otherArea, shift))){
+                        && (!closestIndex || this.__getDistanceBetweenConnections(openAreas[i], otherArea, shift))){
                             closestIndex = i;
-                            closestArea = this.__getShiftedDistance(openAreas[i], otherArea, shift);
+                            closestArea = this.__getDistanceBetweenConnections(openAreas[i], otherArea, shift);
                         }
             }
         }
@@ -593,18 +636,16 @@ define(['logManager',
         }
         return false;
     };
+    */
 
-    ClickableItem.prototype.__getShiftedDistance = function (area1, area2, shift) {
+    ClickableItem.prototype.__getDistanceBetweenConnections = function (area1, area2) {
         //Get the distance between connection areas
         //measuring from the centers
-        if(!shift){
-            shift = { x: 0, y: 0 };
-        }
-
-        var x1 = (area1.x2 + area1.x1 + shift.x)/2,
-            x2 = (area2.x2 + area2.x1 + shift.x)/2,
-            y1 = (area1.y2 + area1.y1 + shift.y)/2,
-            y2 = (area2.y2 + area2.y1 + shift.y)/2;
+        
+        var x1 = (area1.x2 + area1.x1)/2,
+            x2 = (area2.x2 + area2.x1)/2,
+            y1 = (area1.y2 + area1.y1)/2,
+            y2 = (area2.y2 + area2.y1)/2;
 
         return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
     };
