@@ -11,7 +11,7 @@ define(['js/Constants',
                                                       nodePropertyNames,
                                                       SnapEditorWidgetDecoratorBase,
                                                       SnapEditorWidgetDecoratorBaseConnectionAreas,
-                                                      SnapEditorWidgetConstants,
+                                                      SNAP_CONSTANTS,
                                                       SVGDecoratorTemplate,
                                                       SVGDecoratorCore) {
 
@@ -36,7 +36,8 @@ define(['js/Constants',
      */
 
     var SVGDecoratorSnapEditorWidget,
-        DECORATOR_ID = "SVGDecoratorSnapEditorWidget";
+        DECORATOR_ID = "SVGDecoratorSnapEditorWidget",
+        AXIS = { X:'x', Y:'y' };//constants for stretching
 
     SVGDecoratorSnapEditorWidget = function (options) {
         var opts = _.extend( {}, options);
@@ -48,7 +49,9 @@ define(['js/Constants',
 
         this._selfPatterns = {};
         
-        this._transforms = {};//The current abs stretch of any class in the SVG
+        //Stretching stuff
+        this._transforms = {};//The current abs stretch of any svg element in the SVG
+        this._classTransforms = {};//The current abs stretch of any class in the SVG
         this._minDims = {};
 
         this.svgContainerWidth = 0;
@@ -122,7 +125,7 @@ define(['js/Constants',
             }
 
             if(dx !== 0){
-                this.stretchHorizontal("name", dx);
+                this.stretch(SNAP_CONSTANTS.NAME, AXIS.X, dx);
             }
         }
     };
@@ -137,13 +140,13 @@ define(['js/Constants',
 
         /* BUILD UI*/
         //find placeholders
-        this.$name = this.$el.find(".name");
+        this.$name = this.$el.find("." + SNAP_CONSTANTS.NAME);
         this.$svgContent = this.$el.find(".svg-content");
 
         this._updateSVGFile();
 
         //If it has a "name" text id in the svg, use that instead of $name
-        var name = this.$svgContent.find("#name");
+        var name = this.$svgContent.find("#" + SNAP_CONSTANTS.NAME);
         if(name[0] !== undefined && name[0].tagName === "text"){
             this.$name.remove();
             this.$name = name;
@@ -155,96 +158,69 @@ define(['js/Constants',
     SVGDecoratorSnapEditorWidget.prototype.setGmeId = function (newId) {
         this._metaInfo[CONSTANTS.GME_ID] = newId;
         this.$el.attr("data-id", newId);
+
+        //Update the z-index
         this.zIndex = newId.split("/").length;
+        this.$el[0].style.zIndex = this.zIndex;
     };
 
     /* * * * Manipulating the SVG * * * */
     //Stretching
-    SVGDecoratorSnapEditorWidget.prototype.stretch = function (id, x, y) {
-        //Get dx, dy from the x,y values
-        var dx = x,
-            dy = y,
-            w,
-            h;
+    SVGDecoratorSnapEditorWidget.prototype.stretchTo = function (id, x, y) {
+        //Stretch according to the x,y values where x,y are
+        //dimensions of the items pointed to by "id"
+        var dx,
+            dy;
 
-        //TODO
-        w = this.stretchHorizontal(id, dx);
-        h = this.stretchVertical(id, dy);
+        if (x < 0 || y < 0){
+            this.logger.warn("Cannot resize svg to negative size!");
+        }
 
-        return { width: w, height: h };
+        //classTransforms keeps track of the current size of the stuff 
+        //associated with the given pointer
+        if (!this._classTransforms[id]){
+            this._classTransforms[id] = { x: 0, y: 0 };
+        }
+
+        dx = x - this._classTransforms[id].x;
+        dy = y - this._classTransforms[id].y;
+
+        //update size attached to ptr
+        this._classTransforms[id].y = y;
+        this._classTransforms[id].x = x;
+
+        if (dx){
+            this.stretch(id, AXIS.X, dx);
+        }
+
+        if (dy){
+            this.stretch(id, AXIS.Y, dy);
+        }
     };
 
-    SVGDecoratorSnapEditorWidget.prototype.stretchHorizontal = function (id, dx) {
-        var stretchClass = "x-stretch-" + id,
-            shiftClass = "x-shift-" + id,
+    SVGDecoratorSnapEditorWidget.prototype.stretch = function (id, axis, delta) {
+        var stretchClass = axis + "-stretch-" + id,
+            shiftClass = axis + "-shift-" + id,
             stretchElements = this.$svgContent.find("." + stretchClass),
             shiftElements = this.$svgContent.find("." + shiftClass),
-            maxWidth = 0,
+            maxSize = 0,
+            dim = axis === AXIS.X ? "width" : "height",
             width,
             height,
             svgId,
+            shift = {},
             i;
 
-        this._shiftConnectionAreas(shiftClass, { x: dx });
+        shift[axis] = delta;
+        this._shiftConnectionAreas(shiftClass, shift);
         
-        i = stretchElements.length;
-        while(i--){
-            svgId = stretchElements[i].getAttribute("id");
-
-            if(!svgId){
-                svgId = this.genSVGId();
-                stretchElements[i].setAttribute("id", svgId);
-            }
-
-            if(!this._transforms[svgId]){//Initialize transform if needed
-
-                if(stretchElements[i].tagName === "line"){
-                    width = parseFloat(stretchElements[i].getAttribute("x2")) 
-                        - parseFloat(stretchElements[i].getAttribute("x1"));
-                    height = parseFloat(stretchElements[i].getAttribute("y2")) 
-                        - parseFloat(stretchElements[i].getAttribute("y1"));
-                }else if(stretchElements[i].tagName === "rect"){
-                    width = parseFloat(stretchElements[i].getAttribute("width"));
-                    height = parseFloat(stretchElements[i].getAttribute("height"));
-                }else if(stretchElements[i].tagName === "path"){
-                    width = null;
-                    height = null;
-                }
-                    this._transforms[svgId] = { shift: { x: 0, y: 0 }, width: width, height: height };
-                    this._minDims[svgId] = { width: width, height: height };
-            }
-        }
-
-        i = shiftElements.length;
-        while(i--){
-            svgId = shiftElements[i].getAttribute("id");
-
-            if(!svgId){
-                svgId = this.genSVGId();
-                shiftElements[i].setAttribute("id", svgId);
-            }
-
-            if(!this._transforms[svgId]){//Initialize transform if needed
-
-                if(shiftElements[i].tagName === "line"){
-                    width = parseFloat(shiftElements[i].getAttribute("x2")) 
-                        - parseFloat(shiftElements[i].getAttribute("x1"));
-                    height = parseFloat(shiftElements[i].getAttribute("y2")) 
-                        - parseFloat(shiftElements[i].getAttribute("y1"));
-                }else if(shiftElements[i].tagName === "rect"){
-                    width = parseFloat(shiftElements[i].getAttribute("width"));
-                    height = parseFloat(shiftElements[i].getAttribute("height"));
-                }else if(shiftElements[i].tagName === "path"){
-                    width = null;
-                    height = null;
-                }
-                    this._transforms[svgId] = { shift: { x: 0, y: 0 }, width: width, height: height };
-                    this._minDims[svgId] = { width: width, height: height };
-            }
-        }
+        //Initialize elements as needed
+        this._initializeSvgElements(stretchElements);
+        this._initializeSvgElements(shiftElements);
+        //Done initializing
 
 
-        //Stretch the SVG by dx
+        //Stretch the SVG by delta
         var displacement = {},
             x,
             y;
@@ -253,73 +229,60 @@ define(['js/Constants',
             svgId = stretchElements[i].getAttribute("id");
 
             if(!svgId)
-                throw "SVG should have an ID";
+                this.logger.error("SVG should have an ID");
 
             //Update the stretch of the given svg element
-            this._transforms[svgId].width += dx;
-
-            maxWidth = Math.max(maxWidth, this._transforms[svgId].width);
+            this._transforms[svgId][dim] += delta;
+            maxSize = Math.max(maxSize, this._transforms[svgId][dim]);
 
             this._updateSVGTransforms( stretchElements[i], svgId);
         }    
 
-        var pathStart,
-            pathFragments,
-            k,
-            j;
-
         i = shiftElements.length;
         while(i--){
             svgId = shiftElements[i].getAttribute("id");
-            this._transforms[svgId].shift.x += dx;
+
+            this._transforms[svgId].shift[axis] += delta;
+
             this._updateSVGTransforms(shiftElements[i], svgId);
         }    
 
         //Adjust the overall svg if necessary
-        var current_width = parseFloat(this.$svgElement[0].getAttribute("width")) + dx;
+        var currentSVGSize = parseFloat(this.$svgElement[0].getAttribute(dim)) + delta;
 
         if(stretchElements.length || shiftElements.length){
-            this.$svgElement[0].setAttribute("width", Math.max(current_width, maxWidth));//Expand if needed
-            return Math.max(current_width, maxWidth);
+            this.$svgElement[0].setAttribute(dim, Math.max(currentSVGSize, maxSize));//Expand if needed
+            return Math.max(currentSVGSize, maxSize);
         }
 
-        return current_width;
+        return currentSVGSize;
     };
 
-    //TODO Refactor this code...
-    SVGDecoratorSnapEditorWidget.prototype.stretchVertical = function (id, dy) {
-        var stretchClass = "y-stretch-" + id,
-            shiftClass = "y-shift-" + id,
-            stretchElements = this.$svgContent.find("." + stretchClass),
-            shiftElements = this.$svgContent.find("." + shiftClass),
-            maxHeight = 0,
-            height,
+    SVGDecoratorSnapEditorWidget.prototype._initializeSvgElements = function (elements) {
+        var svgId,
             width,
-            svgId,
-            i;
+            height,
+            i = elements.length;
 
-        this._shiftConnectionAreas(shiftClass, { y: dy });
-        
-        i = stretchElements.length;
         while(i--){
-            svgId = stretchElements[i].getAttribute("id");
+            svgId = elements[i].getAttribute("id");
 
             if(!svgId){
                 svgId = this.genSVGId();
-                stretchElements[i].setAttribute("id", svgId);
+                elements[i].setAttribute("id", svgId);
             }
 
             if(!this._transforms[svgId]){//Initialize transform if needed
 
-                if(stretchElements[i].tagName === "line"){
-                    width = parseFloat(stretchElements[i].getAttribute("x2")) 
-                        - parseFloat(stretchElements[i].getAttribute("x1"));
-                    height = parseFloat(stretchElements[i].getAttribute("y2")) 
-                        - parseFloat(stretchElements[i].getAttribute("y1"));
-                }else if(stretchElements[i].tagName === "rect"){
-                    width = parseFloat(stretchElements[i].getAttribute("width"));
-                    height = parseFloat(stretchElements[i].getAttribute("height"));
-                }else if(stretchElements[i].tagName === "path"){
+                if(elements[i].tagName === "line"){
+                    width = parseFloat(elements[i].getAttribute("x2")) 
+                        - parseFloat(elements[i].getAttribute("x1"));
+                    height = parseFloat(elements[i].getAttribute("y2")) 
+                        - parseFloat(elements[i].getAttribute("y1"));
+                }else if(elements[i].tagName === "rect"){
+                    width = parseFloat(elements[i].getAttribute("width"));
+                    height = parseFloat(elements[i].getAttribute("height"));
+                }else if(elements[i].tagName === "path"){
                     width = null;
                     height = null;
                 }
@@ -327,90 +290,23 @@ define(['js/Constants',
                     this._minDims[svgId] = { width: width, height: height };
             }
         }
-
-        i = shiftElements.length;
-        while(i--){
-            svgId = shiftElements[i].getAttribute("id");
-
-            if(!svgId){
-                svgId = this.genSVGId();
-                shiftElements[i].setAttribute("id", svgId);
-            }
-
-            if(!this._transforms[svgId]){//Initialize transform if needed
-
-                if(shiftElements[i].tagName === "line"){
-                    width = parseFloat(shiftElements[i].getAttribute("x2")) 
-                        - parseFloat(shiftElements[i].getAttribute("x1"));
-                    height = parseFloat(shiftElements[i].getAttribute("y2")) 
-                        - parseFloat(shiftElements[i].getAttribute("y1"));
-                }else if(shiftElements[i].tagName === "rect"){
-                    width = parseFloat(shiftElements[i].getAttribute("width"));
-                    height = parseFloat(shiftElements[i].getAttribute("height"));
-                }else if(shiftElements[i].tagName === "path"){
-                    width = null;
-                    height = null;
-                }
-                    this._transforms[svgId] = { shift: { x: 0, y: 0 }, width: width, height: height };
-                    this._minDims[svgId] = { width: width, height: height };
-            }
-        }
-
-        //Stretch the SVG by dy
-        var displacement = {},
-            x,
-            y;
-        i = stretchElements.length;
-        while(i--){
-            svgId = stretchElements[i].getAttribute("id");
-
-            if(!svgId)
-                throw "SVG should have an ID";
-
-            //Update the stretch of the given svg element
-            //this._transforms[svgId].x.stretch += dx/width;
-            this._transforms[svgId].height += dy;
-
-            maxHeight = Math.max(maxHeight, this._transforms[svgId].height);
-
-            this._updateSVGTransforms( stretchElements[i], svgId);
-        }    
-
-        var pathStart,
-            pathFragments,
-            k,
-            j;
-
-        i = shiftElements.length;
-        while(i--){
-            svgId = shiftElements[i].getAttribute("id");
-            this._transforms[svgId].shift.y += dy;
-            this._updateSVGTransforms(shiftElements[i], svgId);
-        }    
-
-        //Adjust the overall svg if necessary
-        var current_height = parseFloat(this.$svgElement[0].getAttribute("height")) + dy;
-
-        if(stretchElements.length || shiftElements.length){
-            this.$svgElement[0].setAttribute("height", Math.max(current_height, maxHeight));//Expand if needed
-            return Math.max(current_height, maxHeight);
-        }
-
-            return current_height;
     };
 
     SVGDecoratorSnapEditorWidget.prototype._shiftConnectionAreas = function (shiftClass, shift) {
-        var i = this._customConnectionAreas.length;
+        if (this._customConnectionAreas){
 
-        while(i--){
-            if(this._customConnectionAreas[i].shift 
-                    && this._customConnectionAreas[i].shift.indexOf(shiftClass) !== -1){
-                //shift the connection area
-                this._customConnectionAreas[i].x1 += shift.x || 0;
-                this._customConnectionAreas[i].x2 += shift.x || 0;
+            var i = this._customConnectionAreas.length;
 
-                this._customConnectionAreas[i].y1 += shift.y || 0;
-                this._customConnectionAreas[i].y2 += shift.y || 0;
+            while(i--){
+                if(this._customConnectionAreas[i].shift 
+                   && this._customConnectionAreas[i].shift.indexOf(shiftClass) !== -1){
+                       //shift the connection area
+                       this._customConnectionAreas[i].x1 += shift.x || 0;
+                       this._customConnectionAreas[i].x2 += shift.x || 0;
+
+                       this._customConnectionAreas[i].y1 += shift.y || 0;
+                       this._customConnectionAreas[i].y2 += shift.y || 0;
+                   }
             }
         }
     };
@@ -421,7 +317,7 @@ define(['js/Constants',
         //If so, 
         var areSameColor = false,
             hasFilter = this.$svgElement.find("#secondary").length === 1,
-            color = SnapEditorWidgetConstants.COLOR_PRIMARY,
+            color = SNAP_CONSTANTS.COLOR_PRIMARY,
             filterName = "secondary",
             colorGroup = this.$svgElement.find("#colors"),
             otherColorGroup = otherDecorator.$svgElement.find("#colors");
@@ -436,14 +332,14 @@ define(['js/Constants',
 
         if (areSameColor && hasFilter){//has filter and color group
             switch(otherColor){
-                case SnapEditorWidgetConstants.COLOR_PRIMARY:
+                case SNAP_CONSTANTS.COLOR_PRIMARY:
                     colorGroup.setAttribute("filter", "url(#secondary)");
-                    color = SnapEditorWidgetConstants.COLOR_SECONDARY;
+                    color = SNAP_CONSTANTS.COLOR_SECONDARY;
                     break;
 
-                case SnapEditorWidgetConstants.COLOR_SECONDARY:
+                case SNAP_CONSTANTS.COLOR_SECONDARY:
                     if (colorGroup.hasAttribute("filter")){
-                        colorGroup.removeAttr("filter");
+                        colorGroup.removeAttribute("filter");
                     }
                     break;
 
@@ -524,7 +420,7 @@ define(['js/Constants',
 
     SVGDecoratorSnapEditorWidget.prototype.onRenderSetLayoutInfo = function () {
         var xShift = Math.ceil((this.svgContainerWidth - this.svgWidth) / 2 + this.svgBorderWidth),
-            connectors = this.$el.find('> .' + SnapEditorWidgetConstants.CONNECTOR_CLASS);
+            connectors = this.$el.find('> .' + SNAP_CONSTANTS.CONNECTOR_CLASS);
 
         connectors.css('transform', 'translateX(' + xShift + 'px)');
 
@@ -542,7 +438,7 @@ define(['js/Constants',
             result = $.extend(true, [], this._customConnectionAreas);
             var i = result.length;
             while (i--) {
-                if(result[i].role === SnapEditorWidgetConstants.CONN_ACCEPTING){
+                if(result[i].role === SNAP_CONSTANTS.CONN_ACCEPTING){
                     //Accepting areas can have multiple possibilities for roles
                     result[i].ptr = result[i].ptr.split(' ');
                 }
@@ -559,8 +455,8 @@ define(['js/Constants',
                 "y1": 0,
                 "x2": this.svgWidth - edge + xShift,
                 "y2": 0,
-                "role": SnapEditorWidgetConstants.CONN_ACCEPTING,
-                "ptr": SnapEditorWidgetConstants.PTR_NEXT} );
+                "role": SNAP_CONSTANTS.CONN_ACCEPTING,
+                "ptr": SNAP_CONSTANTS.PTR_NEXT} );
 
             //South side
             result.push( {"id": "S",
@@ -568,8 +464,8 @@ define(['js/Constants',
                 "y1": this.svgHeight,
                 "x2": this.svgWidth - edge + xShift,
                 "y2": this.svgHeight,
-                "role": SnapEditorWidgetConstants.CONN_PASSING,
-                "ptr": SnapEditorWidgetConstants.PTR_NEXT} );
+                "role": SNAP_CONSTANTS.CONN_PASSING,
+                "ptr": SNAP_CONSTANTS.PTR_NEXT} );
         }
 
         return result;
@@ -577,12 +473,16 @@ define(['js/Constants',
 
     //Remove any connection areas that have ptrs not allowed by META
     SVGDecoratorSnapEditorWidget.prototype.cleanConnections = function (ptrs) {
-        var i = this._customConnectionAreas.length;
-        while (i--){
-            if (this._customConnectionAreas[i].role === SnapEditorWidgetConstants.CONN_PASSING
+        if (this._customConnectionAreas){
+            var i = this._customConnectionAreas.length;
+            while (i--){
+                if (this._customConnectionAreas[i].role === SNAP_CONSTANTS.CONN_PASSING
                     && ptrs.indexOf(this._customConnectionAreas[i].ptr) === -1){
-                this._customConnectionAreas.splice(i, 1);
+                        this._customConnectionAreas.splice(i, 1);
+                    }
             }
+        } else {
+            //No connection areas found - item will not be able to connect to things
         }
     };
 
