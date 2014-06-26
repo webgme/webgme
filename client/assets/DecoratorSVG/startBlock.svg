@@ -7,9 +7,9 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   height="27.28125"
+   height="27.278328"
    version="1.1"
-   width="126.87502"
+   width="84.920898"
    style="overflow:hidden"
    id="svg2"
    inkscape:version="0.48.4 r9939"
@@ -26,18 +26,18 @@
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:window-width="1918"
-     inkscape:window-height="1173"
+     inkscape:window-height="1080"
      id="namedview14"
      showgrid="false"
      fit-margin-top="0"
      fit-margin-left="0"
      fit-margin-right="0"
      fit-margin-bottom="0"
-     inkscape:zoom="11.403466"
-     inkscape:cx="44.056241"
-     inkscape:cy="18.768887"
-     inkscape:window-x="1920"
-     inkscape:window-y="25"
+     inkscape:zoom="32.253873"
+     inkscape:cx="85.510902"
+     inkscape:cy="1.449457"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
      inkscape:window-maximized="1"
      inkscape:current-layer="svg2" />
   <metadata
@@ -52,32 +52,36 @@
     </rdf:RDF>
   </metadata>
   <rect
-     style="opacity:0.54863808000000003;fill:#ff2600;fill-opacity:0;stroke:#000000;stroke-width:1.38964819999999989;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none"
+     style="opacity:0.54863808;fill:#ff2600;fill-opacity:0;stroke:#000000;stroke-width:1.3896482;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none"
      id="name-bounding-box"
      width="71.90139"
      height="8.850378"
-     x="6.0102367"
-     y="8.5621614"
+     x="6.0035949"
+     y="8.5669889"
      inkscape:label="#rect2990" />
-  <filter id="secondary">
-    <feColorMatrix in="SourceGraphic"
-      type="hueRotate"
-      values="10" />
+  <filter
+     id="secondary"
+     color-interpolation-filters="sRGB">
+    <feColorMatrix
+       in="SourceGraphic"
+       type="hueRotate"
+       values="10"
+       id="feColorMatrix8" />
   </filter>
   <g
      style="fill:#ffdc40;stroke:#ffdc40"
      id="colors"
-     transform="translate(-0.56247838,-9.25)">
+     transform="translate(-0.56912015,-9.2451725)">
     <rect
        id="rect10"
-       style="fill:#ffdc40;stroke:#ffdc40;stroke-width:1.1704185"
+       style="fill:#ffdc40;stroke:#ffdc40;stroke-width:0.96320778"
        ry="0"
        rx="0"
        r="0"
-       height="14.555581"
-       width="125.67958"
-       y="14.384709"
-       x="1.1602092"
+       height="14.762793"
+       width="83.923454"
+       y="14.281104"
+       x="1.0566038"
        class="x-stretch-name y-stretch-name" />
     <path
        inkscape:connector-curvature="0"
@@ -85,12 +89,6 @@
        id="path12"
        style="fill:#ffdc40;stroke:#ffdc40;stroke-width:1.17999995"
        d="m 1.165,28.8535 a 3.54,3.54 0 0 0 3.54,3.54 l 7.08,0 3.54,3.54 9.44,0 3.54,-3.54 0,-3.658" />
-    <path
-       inkscape:connector-curvature="0"
-       class="x-shift-name y-shift-name"
-       id="path15"
-       style="fill:#ffdc40;stroke:#ffdc40;stroke-width:1.14470196"
-       d="m 36.693908,32.23415 86.860252,0 0,0 a 3.2984904,3.5752978 0 0 0 3.29848,-3.5753 l -90.158732,0 0,3.5753" />
     <rect
        inkscape:label="#rect2995"
        y="30.324615"
@@ -108,35 +106,49 @@
        inkscape:label="#path15-9" />
     <path
        class="x-shift-name"
-       style="fill:#ffdc40;stroke:#ffdc40;stroke-width:1.13954341;overflow:hidden"
-       d="m 123.9207,13.432342 0,-3.5242091 a 3.3043452,3.5368685 0 0 1 2.91141,3.5242091 l -2.91141,0 z"
+       style="fill:#ffdc40;stroke:#ffdc40;stroke-width:1.13584208;overflow:hidden"
+       d="m 81.975717,13.341181 0,-3.4969069 a 3.3085461,3.5094677 0 0 1 2.915111,3.4969069 l -2.915111,0 z"
        id="TLCorner"
        inkscape:connector-curvature="0"
        inkscape:label="#path15-9-2" />
     <rect
        inkscape:label="#rect2995"
-       y="11.840425"
-       x="7.1086512"
-       height="0.22929782"
-       width="113.7512"
+       y="11.782422"
+       x="7.0506492"
+       height="0.34530222"
+       width="72.197784"
        id="TopBar"
-       style="fill:#ffdc40;stroke:#ffdc40;stroke-width:5.1905036;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;overflow:hidden"
+       style="fill:#ffdc40;stroke:#ffdc40;stroke-width:5.07449913;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;overflow:hidden"
+       class="x-stretch-name" />
+    <path
+       class="x-shift-name"
+       style="fill:#ffdc40;stroke:#ffdc40;stroke-width:1.05383587;overflow:hidden"
+       d="m 81.965971,29.056373 0,2.927828 a 3.4016195,2.9383451 0 0 0 2.99711,-2.927828 l -2.99711,0 z"
+       id="TLCorner-0"
+       inkscape:connector-curvature="0"
+       inkscape:label="#path15-9-2" />
+    <rect
+       inkscape:label="#rect2995"
+       y="29.580215"
+       x="30.923111"
+       height="0.48673129"
+       width="48.404102"
+       id="TopBar-8"
+       style="fill:#ffdc40;stroke:#ffdc40;stroke-width:4.93307018;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;overflow:hidden"
        class="x-stretch-name" />
   </g>
   <text
      id="name"
-     x="5.9125214"
-     y="16.181499"
+     x="5.9058795"
+     y="16.186327"
      style="font-size:9.43999958px">DEFAULT NAME</text>
-
   <line
      class="connection-area"
      data-ptr="next"
      data-role="out"
-     x1="15"
-     y1="27"
-     x2="24"
-     y2="27"
-     id="next-out"/>
-
+     x1="14.993359"
+     y1="27.004827"
+     x2="23.993359"
+     y2="27.004827"
+     id="next-out" />
 </svg>

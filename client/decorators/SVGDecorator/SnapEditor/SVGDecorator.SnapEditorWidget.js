@@ -169,7 +169,8 @@ define(['js/Constants',
     SVGDecoratorSnapEditorWidget.prototype.stretchTo = function (id, x, y) {
         //Stretch according to the x,y values where x,y are
         //dimensions of the items pointed to by "id"
-        var dx,
+        var changed = false,
+            dx,
             dy;
 
         if (x < 0 || y < 0){
@@ -186,16 +187,25 @@ define(['js/Constants',
         dy = y - this._classTransforms[id].y;
 
         //update size attached to ptr
-        this._classTransforms[id].y = y;
-        this._classTransforms[id].x = x;
+        if (y !== null) {
+            this._classTransforms[id].y = y;
+        }
+
+        if (x !== null) {
+            this._classTransforms[id].x = x;
+        }
 
         if (dx){
             this.stretch(id, AXIS.X, dx);
+            changed = true;
         }
 
         if (dy){
             this.stretch(id, AXIS.Y, dy);
+            changed = true;
         }
+
+        return changed;
     };
 
     SVGDecoratorSnapEditorWidget.prototype.stretch = function (id, axis, delta) {
