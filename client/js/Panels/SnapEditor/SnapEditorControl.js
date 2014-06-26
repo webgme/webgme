@@ -533,10 +533,10 @@ console.log("Object changed to " + nodeId);
         }
         
         //update dependents of the nodes
-        j = items.length;
-        while (j--){
-            this.snapCanvas.updateItemDependents(this._GmeID2ComponentID[items[j]]);
-        }
+        //j = items.length;
+        //while (j--){
+            //this.snapCanvas.updateItemDependents(this._GmeID2ComponentID[items[j]]);
+        //}
     };
 
     SnapEditorControl.prototype._onSingleLoad = function (gmeID, objD) {

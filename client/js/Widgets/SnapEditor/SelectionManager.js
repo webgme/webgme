@@ -27,7 +27,7 @@ define(['logManager',
             throw ("SelectionManager can not be created");
         }
 
-        this._selectedElements = [];
+        this._selectedElement = null;
         this._rotationEnabled = true;
 
         this.logger.debug("SelectionManager ctor finished");
@@ -49,14 +49,8 @@ define(['logManager',
         this._snapEditor.onItemMouseDown = function (itemId, eventDetails) {
             if (self._snapEditor.mode === self._snapEditor.OPERATING_MODES.READ_ONLY ||
                 self._snapEditor.mode === self._snapEditor.OPERATING_MODES.DESIGN) {
-                self._setSelection([itemId], self._isMultiSelectionModifierKeyPressed(eventDetails));
-            }
-        };
-
-        this._snapEditor.onConnectionMouseDown = function (connId, eventDetails) {
-            if (self._snapEditor.mode === self._snapEditor.OPERATING_MODES.READ_ONLY ||
-                self._snapEditor.mode === self._snapEditor.OPERATING_MODES.DESIGN) {
-                self._setSelection([connId], self._isMultiSelectionModifierKeyPressed(eventDetails));
+                self._setSelection(itemId, false);
+                //self._setSelection([itemId], self._isMultiSelectionModifierKeyPressed(eventDetails));
             }
         };
 
@@ -85,7 +79,8 @@ define(['logManager',
     };
 
     SelectionManager.prototype.getSelectedElements = function () {
-        return this._selectedElements.slice(0);
+        //DragInfo calls this and requires an array
+        return [this._selectedElement];
     };
 
     SelectionManager.prototype.clear = function () {
@@ -115,6 +110,12 @@ define(['logManager',
     /*********************** RUBBERBAND SELECTION *************************************/
 
     SelectionManager.prototype._onBackgroundMouseDown = function (event) {
+        //Clear the current selection
+        this._clearSelection();
+
+
+        //Rubber band has been disabled
+        /*
         var mousePos = {'mX': event.mouseX, 'mY': event.mouseY},
             self = this,
             leftButton = event.rightClick !== true;
@@ -147,6 +148,7 @@ define(['logManager',
                 }
             );
         }
+       */
     };
 
     var RUBBERBAND_BASE = $('<div/>', {"class" : "rubberband"});
@@ -273,15 +275,13 @@ define(['logManager',
 
     /*********************** CLEAR SELECTION *********************************/
     SelectionManager.prototype._clearSelection = function () {
-        var i = this._selectedElements.length,
-            itemId,
+        var itemId,
             items = this._snapEditor.items,
             item,
             changed = false;
 
-        while (i--) {
-            itemId = this._selectedElements[i];
-            item = items[itemId];
+        if (this._selectedElement) {
+            item = items[this._selectedElement];
 
             if (item) {
                 if ($.isFunction(item.onDeselect)) {
@@ -292,37 +292,55 @@ define(['logManager',
             changed = true;
         }
 
-        this._selectedElements = [];
+        this._selectedElement = null;
 
         this.hideSelectionOutline();
 
         if (changed) {
-            this.onSelectionChanged(this._selectedElements);
+            this.onSelectionChanged(this._selectedElement);
         }
     };
     /*********************** END OF --- CLEAR SELECTION ****************************/
 
 
     /*********************** SET SELECTION *********************************/
-    SelectionManager.prototype._setSelection = function (idList, addToExistingSelection) {
+    SelectionManager.prototype._setSelection = function (id) {
         var i,
-            len = idList.length,
             item,
             items = this._snapEditor.items,
             itemId,
             changed = false;
 
-        this.logger.debug("setSelection: " + idList + ", addToExistingSelection: " + addToExistingSelection);
+        this.logger.debug("setSelection: " + id);
 
-        if (len > 0) {
+        if(this._selectedElement !== id){
+            changed = true;
+        }
+
+        if(this._selectedElement){
+            item = items[this._selectedElement];
+            if ($.isFunction(item.onDeselect)) {
+                item.onDeselect();
+            }
+        }
+
+        if(id){
+            this._selectedElement = id;
+            item = items[this._selectedElement];
+
+            if ($.isFunction(item.onSelect)) {
+                item.onSelect(true);
+            }
+        }
+        /*
+         if (id) {
             //check if the new selection has to be added to the existing selection
             if (addToExistingSelection === true) {
                 //if not in the selection yet, add IDs to the selection
 
                 //first let the already selected items know that they are participating in a multiple selection from now on
-                i = this._selectedElements.length;
-                while(i--) {
-                    item = items[this._selectedElements[i]];
+                if (this._selectedElement) {
+                    item = items[this._selectedElement];
 
                     if ($.isFunction(item.onDeselect)) {
                         item.onDeselect();
@@ -334,13 +352,13 @@ define(['logManager',
                 }
 
                 i = idList.length;
-                len = idList.length + this._selectedElements.length;
+                len = idList.length + this._selectedElement.length;
 
                 while (i--) {
                     itemId = idList[i];
 
-                    if (this._selectedElements.indexOf(itemId) === -1) {
-                        this._selectedElements.push(itemId);
+                    if (this._selectedElement.indexOf(itemId) === -1) {
+                        this._selectedElement.push(itemId);
 
                         item = items[itemId];
 
@@ -350,8 +368,8 @@ define(['logManager',
 
                         changed = true;
                     } else {
-                        var idx = this._selectedElements.indexOf(itemId);
-                        this._selectedElements.splice(idx, 1);
+                        var idx = this._selectedElement.indexOf(itemId);
+                        this._selectedElement.splice(idx, 1);
 
                         item = items[itemId];
 
@@ -363,8 +381,8 @@ define(['logManager',
                     }
                 }
 
-                if (this._selectedElements.length === 1) {
-                    item = items[this._selectedElements[0]];
+                if (this._selectedElement.length === 1) {
+                    item = items[this._selectedElement[0]];
                     if ($.isFunction(item.onSelect)) {
                         item.onSelect(false);
                     }
@@ -381,7 +399,7 @@ define(['logManager',
                         itemId = idList[i];
                         item = items[itemId];
 
-                        this._selectedElements.push(itemId);
+                        this._selectedElement.push(itemId);
 
                         if ($.isFunction(item.onSelect)) {
                             item.onSelect(true);
@@ -391,10 +409,10 @@ define(['logManager',
                     itemId = idList[0];
 
                     //if not yet in selection
-                    if (this._selectedElements.indexOf(itemId) === -1) {
+                    if (this._selectedElement.indexOf(itemId) === -1) {
                         this._clearSelection();
 
-                        this._selectedElements.push(itemId);
+                        this._selectedElement.push(itemId);
 
                         item = items[itemId];
 
@@ -409,31 +427,25 @@ define(['logManager',
         }
 
 
-        this.logger.debug("selected elements: " + this._selectedElements);
+        this.logger.debug("selected elements: " + this._selectedElement);
+       */
 
         this.showSelectionOutline();
 
         if (changed) {
-            this.onSelectionChanged(this._selectedElements);
+            this.onSelectionChanged(this._selectedElement);
         }
     };
     /*********************** END OF --- SET SELECTION *********************************/
 
     /*********************** COMPONENT DELETE HANDLER *******************/
     SelectionManager.prototype._onComponentDelete = function (componentId) {
-        var idx,
-            changed = false;
-
         //items are already deleted, we just need to remove them from the selectedIdList (if there)
-        idx = this._selectedElements.indexOf(componentId);
-        if (idx !== -1) {
-            this._selectedElements.splice(idx, 1);
-            changed = true;
+        if (componentId === this._selectedElement){
+            this._selectedElement = null;
+            this.onSelectionChanged(this._selectedElement);
         }
 
-        if (changed) {
-            this.onSelectionChanged(this._selectedElements);
-        }
     };
     /*********************** COMPONENT DELETE HANDLER *******************/
 
@@ -511,15 +523,14 @@ define(['logManager',
 
     /************* GET SELECTION OUTLINE COORDINATES AND DIMENSIONS ************************/
     SelectionManager.prototype._getSelectionBoundingBox = function () {
-        var i = this._selectedElements.length,
-            bBox,
+        var bBox,
             id,
             child,
             childBBox,
             items = this._snapEditor.items;
 
-        while (i--) {
-            id = this._selectedElements[i];
+        if (this._selectedElement) {
+            id = this._selectedElement;
 
             if (items[id]) {
 
@@ -591,7 +602,7 @@ define(['logManager',
 
             moveBtn = MOVE_BUTTON_BASE.clone();
             this._snapEditor.skinParts.$selectionOutline.append(moveBtn);
-            this._snapEditor._makeDraggable({ 'items': this._selectedElements, '$el': moveBtn });
+            this._snapEditor._makeDraggable({ 'items': this._selectedElement, '$el': moveBtn });
         }
 
         //context menu
@@ -606,7 +617,7 @@ define(['logManager',
             var command = $(this).attr("command");
             self.logger.debug("Selection button clicked with command: '" + command + "'");
 
-            self.onSelectionCommandClicked(command, self._selectedElements, event);
+            self.onSelectionCommandClicked(command, self._selectedElement, event);
 
             event.stopPropagation();
             event.preventDefault();

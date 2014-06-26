@@ -31,7 +31,8 @@ define(['logManager',
         BRANCH_LABEL_CLASS = 'branch-label',
         BTN_LOAD_COMMIT_CLASS = 'btnLoadCommit',
         COMMIT_IT = 'commitId',
-        MESSAGE_DIV_CLASS = 'cMessage';
+        MESSAGE_DIV_CLASS = 'cMessage',
+        BRANCH_REGEXP = new RegExp("^[0-9a-zA-Z_]*$"); //TODO these kind of rules should be at some centralized point
 
     ProjectRepositoryWidget = function (container, client, params) {
         this._el = container;
@@ -421,6 +422,7 @@ define(['logManager',
     };
 
     ProjectRepositoryWidget.prototype._addBranch = function (obj) {
+
         var branchName = obj.name,
             idx;
 
@@ -722,7 +724,7 @@ define(['logManager',
         txtInput.on("keyup", function (event) {
             var textVal = txtInput.val();
 
-            if (textVal === "" || self._branchNames.indexOf(textVal) !== -1 ) {
+            if (textVal === "" || self._branchNames.indexOf(textVal) !== -1 || !BRANCH_REGEXP.test(textVal)) {
                 createBranchHTML.addClass("error");
                 btnSave.addClass('disabled');
             } else {

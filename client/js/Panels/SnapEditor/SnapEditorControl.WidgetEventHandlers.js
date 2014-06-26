@@ -55,8 +55,8 @@ define(['logManager',
             self._onBackgroundDrop(event, dragInfo, position);
         };
 
-        this.snapCanvas.onItemDrop = function (dragged, receiver, ptr) {
-            self._onItemDrop(dragged, receiver, ptr);
+        this.snapCanvas.onItemDrop = function (dragged, receiver, ptr, role) {
+            self._onItemDrop(dragged, receiver, ptr, role);
         };
 
         this.snapCanvas.onSelectionChanged = function (selectedIds) {
@@ -381,8 +381,8 @@ define(['logManager',
             this.snapCanvas.createMenu(menuItems, function (key) {
                     selectedAction = possibleDropActions[parseInt(key, 10)];
                     self._handleDropAction(selectedAction, dragInfo, position);
-                },
-                this.snapCanvas.posToPageXY(position.x, position.y)
+                }, position
+                //this.snapCanvas.posToPageXY(position.x, position.y)
             );
         }
     };
@@ -551,24 +551,33 @@ define(['logManager',
         }
     };
 
-    SnapEditorControlWidgetEventHandlers.prototype._onItemDrop = function (droppedItems, receiver, ptr) {
+    SnapEditorControlWidgetEventHandlers.prototype._onItemDrop = function (droppedItem, receiver, ptr, role) {
         //Dropping the droppedItems on the receiver
         //receiver has an activeConnectionArea
         var receiverId = this._ComponentID2GmeID[receiver],
             node = this._client.getNode(receiverId),
+            receiverParentId = node.getParentId(),
             nextId = node.getPointer(ptr).to,//item currently pointed to by receiver
+            droppedItems = this._addSiblingDependents([this._ComponentID2GmeID[droppedItem]]),
+            droppedParentId,
             firstId,
             lastId,
             newIds,
             i;
 
+        node = this._client.getNode(this._ComponentID2GmeID[droppedItem]);
+        droppedParentId = node.getParentId();
+
         this._client.startTransaction();
 
         //If the ptr is not PTR_NEXT, we should move all dragged items into the receiver
         //in terms of hierarchy
+        this._removeExtraPointers([this._ComponentID2GmeID[droppedItem]]);
 
-        if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1){
-            var params = { "parentId": receiverId },
+        if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1 
+                || receiverParentId !== droppedParentId){
+
+            var params,
                 i = droppedItems.length,
                 ptrs2Create = {},
                 gmeId,
@@ -579,8 +588,14 @@ define(['logManager',
                 id,
                 p;
 
+            if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1){
+                params = { "parentId": receiverId };
+            } else {
+                params = { "parentId": receiverParentId };
+            }
+
             while (i--) {
-                gmeId = this._ComponentID2GmeID[droppedItems[i]];
+                gmeId = droppedItems[i];
                 params[gmeId] = {};
 
                 //Record pointers to create
@@ -631,7 +646,7 @@ define(['logManager',
             }
         }
 
-        firstId = this._ComponentID2GmeID[droppedItems[0]];
+        firstId = this._ComponentID2GmeID[droppedItem];
         //check to see if we should splice 
         /*
         if (nextId){
@@ -645,9 +660,13 @@ define(['logManager',
         */
 
         //Set the first pointer
-        this._client.makePointer(receiverId, ptr, firstId);
+        if (role === SNAP_CONSTANTS.CONN_ACCEPTING){
+            this._client.makePointer(firstId, ptr, receiverId);
+        } else {
+            this._client.makePointer(receiverId, ptr, firstId);
+        }
 
-        this.snapCanvas.connect(droppedItems[0], receiver);
+        this.snapCanvas.connect(droppedItem, receiver);
 
         this._client.completeTransaction();
     };
@@ -700,7 +719,7 @@ define(['logManager',
 
                 if (items.indexOf(gmeId) === -1){//Remove the ptr
                     this._client.makePointer(gmeId, ptr, null);
-                    this.snapCanvas.removePtr(id, ptr, SNAP_CONSTANTS.CONN_ACCEPTING);
+                    //this.snapCanvas.removePtr(id, ptr, SNAP_CONSTANTS.CONN_ACCEPTING);
                 }
             }
         }
@@ -773,27 +792,23 @@ define(['logManager',
         client.completeTransaction();
     };
 
-    SnapEditorControlWidgetEventHandlers.prototype._onSelectionChanged = function (selectedIds) {
-        var gmeIDs = [],
-            len = selectedIds.length,
-            id;
+    SnapEditorControlWidgetEventHandlers.prototype._onSelectionChanged = function (selectedId) {
+        var gmeID = null,
+            id = this._ComponentID2GmeID[selectedId];
 
-        while (len--) {
-            id = this._ComponentID2GmeID[selectedIds[len]];
-            if (id) {
-                gmeIDs.push(id);
+        if (id) {
+            gmeID = id;
 
-            }
         }
 
         //nobody is selected on the canvas
         //set the active selection to the opened guy
-        if (gmeIDs.length === 0 && (this.currentNodeInfo.id || this.currentNodeInfo.id === CONSTANTS.PROJECT_ROOT_ID)) {
-            gmeIDs.push(this.currentNodeInfo.id);
+        if (!gmeID && (this.currentNodeInfo.id || this.currentNodeInfo.id === CONSTANTS.PROJECT_ROOT_ID)) {
+            gmeID = this.currentNodeInfo.id;
         }
 
         this._settingActiveSelection = true;
-        WebGMEGlobal.State.setActiveSelection(gmeIDs);
+        WebGMEGlobal.State.setActiveSelection([gmeID]);
         this._settingActiveSelection = false;
     };
 

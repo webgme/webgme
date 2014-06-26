@@ -16,7 +16,8 @@ define(['js/DragDrop/DragSource',
         DRAG_HELPER_CLASS = 'diagram-designer-drag-outline',
         DRAG_HELPER_EL_BASE = $('<div/>', {'class': DRAG_HELPER_CLASS}),
         DRAG_HELPER_ICON_MOVE = $('<i class="icon-move"></i>'),
-        DRAG_HELPER_ICON_COPY = $('<i class="icon-plus"></i>');
+        DRAG_HELPER_ICON_COPY = $('<i class="icon-plus"></i>'),
+        DRAG_HELPER_BUFFER = 15;
 
     SnapEditorWidgetDraggable = function () {
     };
@@ -29,6 +30,7 @@ define(['js/DragDrop/DragSource',
             'helper': function (event, dragInfo) {
                 return self._dragHelper(item, event, dragInfo);
             },
+            'cursorAt': self._getCursorLocation(),//TODO
             'drag': function(event, ui){
             },
             'dragItems': function (el) {
@@ -88,7 +90,7 @@ define(['js/DragDrop/DragSource',
         var firstItem = null,
             items = {},
             i,
-            dragElement = $('<div/>', {'id': "helper" });
+            dragElement = $('<div/>', {'id': item.id });
 
         if(!item.items){
             firstItem = item.id;
@@ -138,14 +140,9 @@ define(['js/DragDrop/DragSource',
             itemElement = items[itemId].item.$el.clone();
             itemElement.css({"position": "absolute",
                              "z-index": items[itemId].z,
+                             //Shift the element by shiftX, shiftY
                              "left": items[itemId].item.positionX - shiftX + "px",
                              "top": items[itemId].item.positionY - shiftY + "px"});
-            //Shift the element by shiftX, shiftY
-
-            if(itemId === firstItem){
-                //Inflate itemElement
-                //TODO
-            }
 
             dragElement.append(itemElement);
         }
