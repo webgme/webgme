@@ -565,12 +565,21 @@ define([
 
             //loading functions
             function getStringHash(node){
+                //TODO there is a memory issue with the huge strings so we have to replace it with something
+                if(_nodes[_core.getPath(node)] && _nodes[_core.getPath(node)].hash){
+                    return _nodes[_core.getPath(node)].hash+1;
+                } else {
+                    return 0;
+                }
+                /*
                 var datas = _core.getDataForSingleHash(node),
                     i,hash="";
                 for(i=0;i<datas.length;i++){
                     hash+=datas[i];
                 }
                 return hash;
+                */
+
             }
             function getModifiedNodes(newerNodes){
                 var modifiedNodes = [];
@@ -622,6 +631,9 @@ define([
                     patternToPaths(i,_users[userId].PATTERNS[i],newPaths);
                 }
 
+                if(startErrorLevel !== _loadError){
+                    return; //we send events only when everything is there correctly
+                }
                 var events = [];
 
                 //deleted items
@@ -650,9 +662,9 @@ define([
 
                 if(events.length>0){
                     if(_loadError > startErrorLevel){
-                        // TODO events.push({etype:'incomplete',eid:null});
+                        // TODO events.unshift({etype:'incomplete',eid:null});
                     } else {
-                        // TODO events.push({etype:'complete',eid:null});
+                        // TODO events.unshift({etype:'complete',eid:null});
                     }
 
                     _users[userId].FN(events);
