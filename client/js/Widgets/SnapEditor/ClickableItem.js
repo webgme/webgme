@@ -154,9 +154,9 @@ define(['logManager',
 
         if(resize === true){
             if (role === CONSTANTS.CONN_ACCEPTING){
-                item.updateSize(ptr, null);
+                item._updateSize(ptr, null);
             } else {
-                this.updateSize(ptr, null);
+                this._updateSize(ptr, null);
             }
         }
         
@@ -282,15 +282,30 @@ define(['logManager',
         //Get the size of the object and the dependents
         var result = this.getBoundingBox(),
             deps = this.getDependents(),
+            siblingPtrs,
+            sibling,
+            box,
             dependent;
 
         while (deps.length){
-            dependent = deps.pop().getBoundingBox();
+            dependent = deps.pop();
+            box = dependent.getBoundingBox();
 
-            result.x = Math.min(result.x, dependent.x);
-            result.x2 = Math.max(result.x2, dependent.x2);
-            result.y = Math.min(result.y, dependent.y);
-            result.y2 = Math.max(result.y2, dependent.y2);
+            //add the dependent to the total size
+            result.x = Math.min(result.x, box.x);
+            result.x2 = Math.max(result.x2, box.x2);
+            result.y = Math.min(result.y, box.y);
+            result.y2 = Math.max(result.y2, box.y2);
+
+            //Add all siblings of the dependent -- BFS
+            siblingPtrs = Object.keys(dependent.ptrs[CONSTANTS.CONN_PASSING]);
+            for(var i = siblingPtrs.length - 1; i >= 0; i--){
+                if(CONSTANTS.SIBLING_PTRS.indexOf(siblingPtrs[i]) !== -1){//if it is a sibling
+                    sibling = dependent.ptrs[CONSTANTS.CONN_PASSING][siblingPtrs.pop()];
+                    deps.push(sibling);
+                }
+            }
+
         }
 
         //update width, height
@@ -325,7 +340,20 @@ define(['logManager',
     };
 
     /******************** ALTER SVG  *********************/
-    ClickableItem.prototype.updateSize = function (ptrName, item) {
+    ClickableItem.prototype.updateSize = function () {
+        //Update all pointers
+        var ptrs = Object.keys(this.ptrs[CONSTANTS.CONN_PASSING]),
+            i = ptrs.length,
+            changed = false;
+
+        while(i--){
+            changed = this._updateSize(ptrs[i], this.ptrs[CONSTANTS.CONN_PASSING][ptrs[i]]) || changed;
+        }
+
+        return changed;
+    };
+
+    ClickableItem.prototype._updateSize = function (ptrName, item) {
         var box = item ? item.getTotalSize() : { width: 0, height: 0 };
 
         if (CONSTANTS.SIBLING_PTRS.indexOf(ptrName) === -1){
@@ -452,9 +480,9 @@ define(['logManager',
         //resize as necessary. May need to resize after connecting
         if (params.resize !== false){
             if (role === CONSTANTS.CONN_ACCEPTING){
-                otherItem.updateSize(ptr, this);
+                otherItem._updateSize(ptr, this);
             } else {
-                this.updateSize(ptr, otherItem);
+                this._updateSize(ptr, otherItem);
             }
         }
 
