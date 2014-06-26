@@ -571,7 +571,9 @@ define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon
 				data = node.data[name];
 			}
 
-			ASSERT(!__isMutableData(data));
+			//TODO no need for assertion but needs proper testing
+			//ASSERT(!__isMutableData(data));
+
 			return data;
 		};
 
