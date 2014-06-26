@@ -19,7 +19,7 @@ define(['./DragEffects',
         el.draggable({
             zIndex: DEFAULT_Z_INDEX,
             appendTo: DEFAULT_APPEND_TO,
-            cursorAt: DEFAULT_CURSOR_AT,
+            cursorAt: params.cursorAt || DEFAULT_CURSOR_AT,
             helper: function (event) {
                 var helperEl,
                     dragInfo = _createDragInfo(el, params, event);

@@ -3,10 +3,6 @@
         "title": "Snap Editor",
         "panel": "js/Panels/SnapEditor/SnapEditorPanel",
         "DEBUG_ONLY": false},
-    {"id": "ModelEditor",
-        "title": "Composition",
-        "panel": "js/Panels/ModelEditor/ModelEditorPanel",
-        "DEBUG_ONLY": false},
 
     {"id": "METAAspect",
         "title": "Meta",

@@ -38,8 +38,10 @@ define(['./ClickableItem',
 
         newComponent.cleanConnectionAreas(objD.ptrs);
 
-        //set the item to be able to be "clicked" to 
+        //set the item to be able to be "clicked" to with drag'n'drop
         this.setClickable(newComponent);
+
+        this._clickableItems2Update[componentId] = true;
 
         return newComponent;
     };
@@ -72,6 +74,7 @@ define(['./ClickableItem',
 
     SnapEditorWidgetClickableItems.prototype.updateClickableItem  = function (componentId, objDescriptor) {
         var alignedPosition,
+            addToUpdateList = false,
             item;
 
         if (this.itemIds.indexOf(componentId) !== -1) {
@@ -79,8 +82,8 @@ define(['./ClickableItem',
             item = this.items[componentId];
 
             //Update pointers
-            if (objDescriptor.ptrInfo){
-                item.updatePtrs(objDescriptor.ptrInfo);
+            if (objDescriptor.hasOwnProperty("ptrInfo")){
+                addToUpdateList = item.updatePtrs(objDescriptor.ptrInfo) || addToUpdateList;
             }
 
             //adjust its position to this canvas
@@ -96,7 +99,11 @@ define(['./ClickableItem',
             //add to accounting queues for performance optimization
             this._updatedClickableItemIDs.push(componentId);
 
-            this.items[componentId].update(objDescriptor);
+            addToUpdateList = this.items[componentId].update(objDescriptor) || addToUpdateList;
+
+            if (addToUpdateList){
+                this._clickableItems2Update[componentId] = true;
+            }
         }
     };
 
@@ -144,7 +151,7 @@ define(['./ClickableItem',
         var item1 = this.items[id1],
             item2 = this.items[id2];
 
-        item2.setToConnect(item1, ptrName);
+        item2.setPtr(ptrName, CONSTANTS.CONN_ACCEPTING, item1);
     };
 
     SnapEditorWidgetClickableItems.prototype.updateItemDependents = function (id1, ptrName) {

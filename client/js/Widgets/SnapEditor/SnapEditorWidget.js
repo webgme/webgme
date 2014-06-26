@@ -68,6 +68,7 @@ define(['logManager',
         this._updatedClickableItemIDs = [];
         this._deletedClickableItemIDs = [];
 
+ 
         /* * * * * * * * * * UI Components * * * * * * * * * */
 
         //Default Size values
@@ -86,7 +87,7 @@ define(['logManager',
         this._init(container, params);
 
         //init zoom related UI and handlers
-        this._initZoom(params);
+        //this._initZoom(params);
 
         //Scroll and view info
         this._offset = { "left": 0, "top": 0 };
@@ -116,7 +117,7 @@ define(['logManager',
             this._reorderTabs = params.reorderTabs && true;
         }
 
-        this._initializeTabs();
+        //this._initializeTabs();
 
        //initiate Highlight Manager
         var self = this;
@@ -297,7 +298,7 @@ define(['logManager',
         //call our own resize handler
         this._resizeItemContainer();
 
-        this._refreshTabTabsScrollOnResize();
+        //this._refreshTabTabsScrollOnResize();
     };
 
     SnapEditorWidget.prototype.destroy = function () {
@@ -579,13 +580,113 @@ define(['logManager',
         this._updatedClickableItemIDs = [];
         this._deletedClickableItemIDs = [];
 
+        /*clickable item stuff*/
+        this._clickableItems2Update = {};
     };
 
     SnapEditorWidget.prototype.endUpdate = function () {
         this.logger.debug("endUpdate");
 
+        //Update all clickable items that need updating
+        this._updateClickableItems();
+        
         this._updating = false;
         this._tryRefreshScreen();
+    };
+
+    // This next method will find the scope of items that could be affected by
+    // the updates and update their size and position.
+    //
+    // That is, we have a tree of the dependents for a given item. A 
+    // dependent is an item on the screen that is being pointed to by
+    // the item; that is, a dependent item is dependent on the item
+    // for it's position. 
+    //
+    // This tree contains two different types of dependents: "siblings" 
+    // and "children". Children are items that are contained inside of
+    // the item (eg, command block inside of an "if" statement - these
+    // are usually rendered on top of the given item). Siblings are 
+    // items that are stored in the same node in the database - they
+    // are hierarchical siblings (eg, a command block connected to 
+    // another command block).
+    //
+    // Although both children and siblings are dependent on the given
+    // item for their position, the item's size is dependent on it's
+    // children's sizes (as it may need to graphically contain them).
+    //
+    // That being said, we will first follow the nodes that need to 
+    // be updated up their dependency tree to find the items possibly
+    // affected by any resize of the children. We will then remove any
+    // redundant items in the list that needs updating.
+    //
+    // Finally, we will update the items by first resizing them then moving. 
+    // We will create a list of items to resize by starting with the given
+    // item and recursively... 
+    //
+    //              - resize the children
+    //              - resize the siblings
+    //              - resize the item
+    //
+    // After resizing these items, we will iterate over the items in 
+    // the opposite order and move the items to their correct location.
+    
+    SnapEditorWidget.prototype._updateClickableItems = function () {
+        //First, finding the highest node in the dependency tree that could
+        //affected by the change
+        var items = Object.keys(this._clickableItems2Update),
+            item,
+            i = -1;
+
+        while (++i < items.length){
+            delete this._clickableItems2Update[items[i]];
+            item = items[i];
+
+            //get the "highest" item possibly affected
+            while (this.items[item].getParent() !== null){
+                item = this.items[item].getParent().id;
+            }
+
+            //Add item if not already there
+            this._clickableItems2Update[item] = true;
+        }
+
+        //For each of the items left:
+        //    + resize children dependents
+        //    + resize sibling dependents
+        //    + resize self
+        var resizeQueue,
+            moveQueue = [], 
+            dependents,
+            visited = {},
+            i;
+
+        items = Object.keys(this._clickableItems2Update);
+        while(items.length){
+            item = items.pop();
+
+            resizeQueue = [item];
+            while(resizeQueue.length){
+                dependents = this.items[resizeQueue[0]].getDependentsByType();
+                //Try to follow children
+                while(dependents.children && !visited[resizeQueue[0]]){
+                    visited[resizeQueue[0]] = true;
+                    resizeQueue = dependents.children.concat(dependents.siblings, resizeQueue);
+                    dependents = this.items[resizeQueue[0]].getDependentsByType();
+                }
+                //Else follow 'next' ptrs
+                moveQueue.push(resizeQueue.splice(0,1).pop());
+                this.items[moveQueue[moveQueue.length-1]].updateSize();
+                this.items[moveQueue[moveQueue.length-1]].updatePosition();
+            }
+        }
+
+        i = moveQueue.length;
+        while(i--){
+            //move the item to it's correct location
+            this.items[moveQueue[i]].updatePosition();
+        }
+
+        this._clickableItems2Update = {};
     };
 
     //TODO REMOVE CONNECTION STUFF FROM NEXT TWO METHODS
@@ -756,8 +857,8 @@ define(['logManager',
             //this.dragManager.deactivate();
             this.searchManager.deactivate();
             this._setComponentsReadOnly(true);
-            this._addTabsButtonEnabled(false);
-            this._destroyTabsSortable();
+            //this._addTabsButtonEnabled(false);
+            //this._destroyTabsSortable();
             switch (mode) {
                 case SnapEditorWidgetOperatingModes.prototype.OPERATING_MODES.READ_ONLY:
                     this.mode = this.OPERATING_MODES.READ_ONLY;
@@ -770,8 +871,8 @@ define(['logManager',
                     //this.dragManager.activate();
                     this.searchManager.activate();
                     this._setComponentsReadOnly(false);
-                    this._addTabsButtonEnabled(true);
-                    this._makeTabsSortable();
+                    //this._addTabsButtonEnabled(true);
+                    //this._makeTabsSortable();
                     break;
                 case SnapEditorWidgetOperatingModes.prototype.OPERATING_MODES.HIGHLIGHT:
                     this.mode = this.OPERATING_MODES.HIGHLIGHT;
@@ -818,13 +919,13 @@ define(['logManager',
 
 
     /* * * * * * * * * * * * * * Additional Functionality * * * * * * * * * * * * * */
-    _.extend(SnapEditorWidget.prototype, SnapEditorWidgetZoom.prototype);
+    //_.extend(SnapEditorWidget.prototype, SnapEditorWidgetZoom.prototype);
     _.extend(SnapEditorWidget.prototype, SnapEditorWidgetMouse.prototype);
     _.extend(SnapEditorWidget.prototype, SnapEditorWidgetKeyboard.prototype);
     _.extend(SnapEditorWidget.prototype, SnapEditorWidgetOperatingModes.prototype);
     _.extend(SnapEditorWidget.prototype, SnapEditorWidgetClickableItem.prototype);
     _.extend(SnapEditorWidget.prototype, SnapEditorWidgetEventDispatcher.prototype);
-    _.extend(SnapEditorWidget.prototype, SnapEditorWidgetTabs.prototype);
+    //_.extend(SnapEditorWidget.prototype, SnapEditorWidgetTabs.prototype);
     _.extend(SnapEditorWidget.prototype, SnapEditorWidgetDraggable.prototype);
     _.extend(SnapEditorWidget.prototype, SnapEditorWidgetDroppable.prototype);
 

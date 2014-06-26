@@ -12,7 +12,9 @@ define(['js/DragDrop/DropTarget',
 
     var SnapEditorWidgetDroppable,
         DROP_REGION_MARGIN = 0,
-        CLICKABLE_CLASS = "clickable";
+        CLICKABLE_CLASS = "clickable",
+        ITEM_TAG = "current_droppable_item",
+        DISTANCE_TAG = "connection_distance";
 
     SnapEditorWidgetDroppable = function () {
     };
@@ -157,30 +159,77 @@ define(['js/DragDrop/DropTarget',
             over: function(event, ui) {
                 //If the item doesn't exist, create it!
                 //TODO 
-                var dragged = self.items[ui.draggable[0].id],
+                var draggedUI = ui.helper,
+                    dragged = self.items[ui.draggable[0].id],
                     pos;
 
                 if (dragged === undefined){
                     //dragging from an outside panel - dragged item hasn't been created yet
                     self.logger.warn("Dragging item from outside panel is not supported yet!");
                 }else{
+                    //item has been created
+
+                    var draggedIds = [],
+                        i = ui.helper.children().length;
+
+                    while (i--){
+                        draggedIds.push(ui.helper.children()[i].id);
+                    }
 
                     pos = ui.helper.find("#" + dragged.id).position();
                     pos.left += event.pageX - ui.draggable.parent().offset().left;
                     pos.top += event.pageY - ui.draggable.parent().offset().top;
 
-                    if(item.updateHighlight(dragged, pos)){
-                        self.dropFocus = SnapEditorWidgetConstants.ITEM;
+                    if(draggedIds.indexOf(item.id) === -1){//If it isn't hovering over itself
+                        //if the ITEM_TAG is the item's id (or null) 
+                        //OR the connection distance is closer
+                        //THEN setActiveConnectionArea
+                        var connectionInfo = item.getClosestConnectionArea(dragged, pos),
+                            connectionDistance = connectionInfo.distance;
+
+                        if (connectionInfo.area && 
+                                (!draggedUI.data(ITEM_TAG) || draggedUI.data(ITEM_TAG) === item.id
+                                || draggedUI.data(DISTANCE_TAG) > connectionDistance)){
+
+                            //This connection area is the best choice
+                            item.setActiveConnectionArea(connectionInfo.area);
+                            self.dropFocus = SnapEditorWidgetConstants.ITEM;
+
+                            //Deactivate the previous connection area
+                            if (draggedUI.data(ITEM_TAG)){
+                                var otherItemId = draggedUI.data(ITEM_TAG);
+                                self.items[otherItemId].deactivateConnectionAreas();
+                            }
+
+                            //Store the data in the dragged object
+                            draggedUI.data(ITEM_TAG, item.id);
+                            draggedUI.data(DISTANCE_TAG, connectionDistance);
+                        }
+
+                        /*
+                        if (item.updateHighlight(dragged, pos)){// and has a compatible highlight
+                            self.dropFocus = SnapEditorWidgetConstants.ITEM;
+                        }
+                        */
                     }
                 }
                 //ui.draggable.data("current-clickable", $this);
             },
             out: function(event, ui) {
-                item.deactivateConnectionAreas();
-                self.dropFocus = SnapEditorWidgetConstants.BACKGROUND;
+
+                if (ui.helper.data(ITEM_TAG) === item.id){
+                    item.deactivateConnectionAreas();
+                    self.dropFocus = SnapEditorWidgetConstants.BACKGROUND;
+
+                    //Remove data from dragged ui
+                    ui.helper.removeData(ITEM_TAG);
+                }
             },
             drop: function(event, ui) {
-                self._onItemDrop(item, event, ui);
+                if (self.dropFocus === SnapEditorWidgetConstants.ITEM
+                        && ui.helper.data(ITEM_TAG) === item.id){
+                    self._onItemDrop(item, event, ui);
+                }
                 //var $this = $(this);
                 //cleanupHighlight(ui, $this);
                 //var $new = $this.clone().children("td:first")
@@ -201,11 +250,14 @@ define(['js/DragDrop/DropTarget',
         //connect the items (with the controller)
         if (item.activeConnectionArea){
             var i = ui.helper.children().length,
-                draggedIds = [];
-            
-            while (i--){
-                draggedIds.push(ui.helper.children()[i].id);
-            }
+                draggedId = ui.helper[0].id,
+                          r;
+
+            /*
+               while (i--){
+               draggedIds.push(ui.helper.children()[i].id);
+               }
+               */
 
             //dragged.connectToActive(item);
             var itemId = item.id,
@@ -216,33 +268,33 @@ define(['js/DragDrop/DropTarget',
             if(ptr instanceof Array){//Find the closest compatible area
                 var ptrs = ptr,
                     shortestDistance,
-                    connArea,
-                    firstItem = this.items[draggedIds[0]],
-                    role = item.activeConnectionArea.role === SnapEditorWidgetConstants.CONN_ACCEPTING ?
-                        SnapEditorWidgetConstants.CONN_PASSING : SnapEditorWidgetConstants.CONN_ACCEPTING,
-                    i = ptrs.length;
+                        connArea,
+                        draggedItem = this.items[draggedId],
+                        role = item.activeConnectionArea.role === SnapEditorWidgetConstants.CONN_ACCEPTING ?
+                            SnapEditorWidgetConstants.CONN_PASSING : SnapEditorWidgetConstants.CONN_ACCEPTING,
+                        i = ptrs.length;
 
                 while (i--){
-                    connArea = firstItem.getConnectionArea(ptrs[i], role);
+                    connArea = draggedItem.getConnectionArea(ptrs[i], role);
 
-                    if (connArea && (!shortestDistance || firstItem.__getShiftedDistance(connArea, 
+                    if (connArea && (!shortestDistance || draggedItem.__getDistanceBetweenConnections(connArea, 
                                     item.activeConnectionArea) < shortestDistance)){
-                                        shortestDistance = firstItem.__getShiftedDistance(connArea, 
-                                            item.activeConnectionArea)
-                                            ptr = ptrs[i];
+                                        shortestDistance = draggedItem.__getDistanceBetweenConnections(connArea, 
+                                                item.activeConnectionArea)
+                                        ptr = ptrs[i];
                                     }
                 }
 
             }
 
 
-            this.onItemDrop(draggedIds, itemId, ptr);
+            this.onItemDrop(draggedId, itemId, ptr, item.activeConnectionArea.role);
 
             //hide the conn areas
             item.deactivateConnectionAreas();
 
         }//else{//drop to background
-          //  this._onBackgroundDrop(event, dragInfo);
+        //  this._onBackgroundDrop(event, dragInfo);
         //}
 
         this.selectionManager.clear();

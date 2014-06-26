@@ -51,6 +51,7 @@ define(['logManager',
         var ptrs = Object.keys(ptrInfo),
             oldPtrs = Object.keys(this.ptrs[CONSTANTS.CONN_PASSING]),
             i = ptrs.length,
+            changed = false,
             otherItem,
             oldItem,
             k,
@@ -63,7 +64,8 @@ define(['logManager',
             if (k === -1){//didn't have the pointer
                 //Add pointer
                 otherItem = this.canvas.items[ptrInfo[ptr]];
-                otherItem.setToConnect(this, ptr);
+                otherItem.setPtr(ptr, CONSTANTS.CONN_ACCEPTING, this);
+                changed = true;
             } else {
                 //Check that the pointer is correct
                 if (this.ptrs[CONSTANTS.CONN_PASSING][ptr].id !== ptrInfo[ptr]){
@@ -71,7 +73,8 @@ define(['logManager',
                     oldItem.removePtr(ptr, CONSTANTS.CONN_ACCEPTING, false);
 
                     otherItem = this.canvas.items[ptrInfo[ptr]];
-                    this.setToConnect(otherItem, ptr);
+                    otherItem.setPtr(this, ptr, CONSTANTS.CONN_ACCEPTING);
+                    changed = true;
                 }
                 oldPtrs.splice(k, 1);
             }
@@ -82,9 +85,10 @@ define(['logManager',
         while (i--){
             ptr = oldPtrs[i];
             this.removePtr(ptr, CONSTANTS.CONN_PASSING, false);
+            changed = true;
         }
 
-        //this.updateDependents();
+        return changed;
     };
 
     ClickableItem.prototype.setPtr = function (ptr, role, item) {
@@ -102,9 +106,9 @@ define(['logManager',
 
         //Update the colors of the attaching item
         if (role === CONSTANTS.CONN_PASSING){
-            this.updateColors();
-        } else {
             item.updateColors();
+        } else {
+            this.updateColors();
         }
 
     };
@@ -145,25 +149,15 @@ define(['logManager',
     ClickableItem.prototype.removePtr = function (ptr, role, resize) {
         //remove pointers and resize
         var item = this.ptrs[role][ptr],
-            otherShrinkBox = item.getTotalSize(),
-            shrinkBox = this.getTotalSize(),
             otherRole = role === CONSTANTS.CONN_ACCEPTING ? 
-                CONSTANTS.CONN_PASSING : CONSTANTS.CONN_ACCEPTING,
-            keys = Object.keys(shrinkBox),
-            key;
+                CONSTANTS.CONN_PASSING : CONSTANTS.CONN_ACCEPTING;
 
         if(resize === true){
-
-            while (keys.length){
-                key = keys.pop();
-                if(_.isNumber(shrinkBox[key])){
-                    shrinkBox[key] *= -1;
-                    otherShrinkBox[key] *= -1;
-                }
+            if (role === CONSTANTS.CONN_ACCEPTING){
+                item.updateSize(ptr, null);
+            } else {
+                this.updateSize(ptr, null);
             }
-
-            this._resize(ptr, otherShrinkBox);
-            item._resize(ptr, shrinkBox);
         }
         
         //free the connections
@@ -240,6 +234,39 @@ define(['logManager',
         return this.ptrs[CONSTANTS.CONN_PASSING][CONSTANTS.PTR_NEXT];
     };
 
+    ClickableItem.prototype.getDependentsByType = function () {
+        //Return sibling/non-sibling dependents
+        var result = { siblings: [], children: [] },
+            ptrs = Object.keys(this.ptrs[CONSTANTS.CONN_PASSING]),
+            ptr;
+
+        while (ptrs.length){
+            ptr = ptrs.pop();
+
+            if (CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1){
+                result['siblings'].push(this.ptrs[CONSTANTS.CONN_PASSING][ptr].id);
+            } else {
+                result['children'].push(this.ptrs[CONSTANTS.CONN_PASSING][ptr].id);
+            }
+        }
+
+        return result;
+    };
+
+    ClickableItem.prototype.getParent = function () {
+        //get parent in dependency tree
+        var ptrs = Object.keys(this.ptrs[CONSTANTS.CONN_ACCEPTING]),
+            result = null;
+
+            assert(ptrs.length <= 1, "Item should have only one object pointing into it");
+
+            if (ptrs.length === 1){
+                result = this.ptrs[CONSTANTS.CONN_ACCEPTING][ptrs.pop()];
+            }
+
+            return result;
+    };
+
     ClickableItem.prototype.getDependents = function () {
         var deps = [],
             keys = Object.keys(this.ptrs[CONSTANTS.CONN_PASSING]);
@@ -273,16 +300,18 @@ define(['logManager',
         return result;
     };
 
-    /******************** ALTER SVG  *********************/
-    ClickableItem.prototype.resize = function (ptrName, item) {
+    //Override
+    ClickableItem.prototype.getBoundingBox = function () {
+        var box = {"x": this.positionX,
+                "y": this.positionY,
+                "width": this._width,
+                "height": this._height,
+                "x2": this.positionX + this._width,
+                "y2":  this.positionY + this._height};
 
-        var box = item.getTotalSize(),
-            newSize;
-
-        //resize by the box size
         if(box.width === 0 && box.height === 0){
             //Try to get width and height from the svg
-            var svg = item._decoratorInstance.$svgElement[0],
+            var svg = this._decoratorInstance.$svgElement[0],
                 width = svg.width.baseVal.value,
                 height = svg.height.baseVal.value;
 
@@ -292,27 +321,30 @@ define(['logManager',
             box.y2 += height;
         }
 
-
-        this._resize(ptrName, box);
-
-        //update the size of the bounding box
-        //this.setSize(newSize.width, newSize.height);
-        //this._width = newSize.width;
-        //this._height = newSize.height;
+        return box;
     };
 
-    ClickableItem.prototype._resize = function (ptrName, box) {
-        //stretch the decorator 
-        var x = box.x2 - box.x,
-            y = box.y2 - box.y;
+    /******************** ALTER SVG  *********************/
+    ClickableItem.prototype.updateSize = function (ptrName, item) {
+        var box = item ? item.getTotalSize() : { width: 0, height: 0 };
 
-        /*
-         * Consider adding differing support for connections to 
-         * contained items vs sibling items (children with the 
-         * same parent anyway)
-         */
-        return this._decoratorInstance.stretch(ptrName, x, y);
-        //this.updateDependents();
+        if (CONSTANTS.SIBLING_PTRS.indexOf(ptrName) === -1){
+            //stretch the decorator 
+            return this._decoratorInstance.stretchTo(ptrName, box.width, box.height);
+        }
+        return false;//return if it changed
+    };
+
+    ClickableItem.prototype.updatePosition = function () {
+        var ptrs = Object.keys(this.ptrs[CONSTANTS.CONN_ACCEPTING]);
+
+        assert(ptrs.length <= 1, "An item can only be connected to one other item");
+
+        //Connect this item to it's parent
+        if (this.isPositionDependent()){
+            this.connectByPointerName(this.ptrs[CONSTANTS.CONN_ACCEPTING][ptrs[0]], 
+                                      ptrs[0], CONSTANTS.CONN_ACCEPTING);
+        }
     };
 
     ClickableItem.prototype.updateDependents = function () {
@@ -323,22 +355,9 @@ define(['logManager',
 
         while (i--){
             this.ptrs[CONSTANTS.CONN_PASSING][ptrs[i]]
-                .connectByPointerName(this, ptrs[i], CONSTANTS.CONN_ACCEPTING, false);//Don't resize
+                .connectByPointerName(this, ptrs[i], CONSTANTS.CONN_ACCEPTING);
             this.ptrs[CONSTANTS.CONN_PASSING][ptrs[i]].updateDependents();
         }
-    };
-
-    ClickableItem.prototype.setToConnect = function (otherItem, ptr, r) {
-        //Set this item to connect to another
-        //Won't actually connect them until "updateDependents" is called
-        var role = r || CONSTANTS.CONN_ACCEPTING;
-
-        this.setPtr(ptr, role, otherItem);
-
-        //Resize to make sure 
-        otherItem.resize(ptr, this);
-        this.resize(ptr, otherItem);
-
     };
 
     ClickableItem.prototype.connectByPointerName = function (otherItem, ptrName, role, resize) {
@@ -379,9 +398,9 @@ define(['logManager',
             while (i--){
                 connArea = this.getConnectionArea(ptrs[i], role);
 
-                if (connArea && (!shortestDistance || this.__getShiftedDistance(connArea, 
+                if (connArea && (!shortestDistance || this.__getDistanceBetweenConnections(connArea, 
                             otherItem.activeConnectionArea) < shortestDistance)){
-                                shortestDistance = this.__getShiftedDistance(connArea, 
+                                shortestDistance = this.__getDistanceBetweenConnections(connArea, 
                                     otherItem.activeConnectionArea)
                                 ptr = ptrs[i];
                 }
@@ -421,31 +440,6 @@ define(['logManager',
                         area2: otherItem.activeConnectionArea,
                         otherItem: otherItem });
 
-
-        //Fire event to update database
-        var srcItem = role === CONSTANTS.CONN_PASSING ? this : otherItem,
-            dstItem = role === CONSTANTS.CONN_PASSING ? otherItem : this;
-
-        /*
-        this.canvas.dispatchEvent(this.canvas.events.ITEM_POINTER_CREATED, {"src": srcItem.id,
-            "dst": dstItem.id,
-            "ptr": ptr });
-        */
-
-        /*
-         * This should happen in the controller...
-         *
-        if (fromItem && nextItem){
-            var conn1 = nextItem.getConnectionArea(ptr, otherItem.activeConnectionArea.role),
-                conn2 = fromItem.getConnectionArea(ptr, role);
-
-            nextItem._connect({ ptr: ptr,
-                                role: otherItem.activeConnectionArea.role,
-                                area1: conn1,
-                                area2: conn2,
-                                otherItem: fromItem });
-        }
-        */
     };
 
     ClickableItem.prototype._connect = function (params) {
@@ -455,15 +449,18 @@ define(['logManager',
             ptr = params.ptr,
             role = params.role;
 
+        //resize as necessary. May need to resize after connecting
+        if (params.resize !== false){
+            if (role === CONSTANTS.CONN_ACCEPTING){
+                otherItem.updateSize(ptr, this);
+            } else {
+                this.updateSize(ptr, otherItem);
+            }
+        }
+
         this.moveByWithDependents(distance.dx, distance.dy);
 
         this.setPtr(ptr, role, otherItem);
-
-        //resize as necessary
-        if( params.resize !== false){
-            this.resize(ptr, otherItem);
-            otherItem.resize(ptr, this);
-        }
 
         //record the connection
         otherItem.conn2Item[params.area2.id] = this;
@@ -471,6 +468,25 @@ define(['logManager',
 
         otherItem.item2Conn[this.id] = params.area2.id;
         this.item2Conn[otherItem.id] = params.area1.id;
+    };
+
+    ClickableItem.prototype.updateSizeAndPosition = function () {
+        //Resize and connect to it's incoming connection
+        var ptrs = Object.keys(this.ptrs[CONSTANTS.CONN_ACCEPTING]), 
+            ptr = ptrs.pop(),
+            connArea = this.getConnectionArea(ptr, CONSTANTS.CONN_ACCEPTING),
+            otherItem = this.canvas.items[this.ptrs[CONSTANTS.CONN_ACCEPTING][ptr]];
+
+        if(ptrs.length){
+            this.logger.error("Item " + this.id + " has " + (ptrs.length + 1) + " incoming connections...");
+        }
+
+        this._connect({ ptr: ptr,
+                        role: CONSTANTS.CONN_ACCEPTING,
+                        area1: connArea,
+                        area2: otherItem.getConnectionArea(ptr, CONSTANTS.CONN_PASSING),
+                        otherItem: otherItem });
+
     };
 
     ClickableItem.prototype._getDistance = function (connArea1, connArea2) {//Move first to second
@@ -542,6 +558,63 @@ define(['logManager',
             //this._decoratorInstance.hideConnectionAreas();
     };
 
+    ClickableItem.prototype.getClosestConnectionArea = function (draggedItem, position) {
+        //Calculate the closest connection area
+        //Return the area and distance
+        this.deactivateConnectionAreas();
+
+        //Get all empty pointers and compare with draggedItem's available pointers.
+        //Closest compatible pointers determines the active conn area
+        var shift = { x: position.left - draggedItem.positionX,
+                      y: position.top - draggedItem.positionY },
+            openAreas = this.getConnectionAreas(),
+            closestArea = null,
+            closestIndex = null,
+            i,
+            otherArea,
+            ptrs,
+            role;
+
+        i = openAreas.length;
+        while (i--){
+            //Remove any occupied areas
+            if (this.conn2Item[openAreas[i].id]){
+                openAreas.splice(i,1);
+            }
+        }
+
+        i = openAreas.length;
+        //Check to find the closest pair of connection areas
+        while (i--){
+            ptrs = openAreas[i].ptr instanceof Array ?
+                openAreas[i].ptr.slice() : [openAreas[i].ptr];
+            role = openAreas[i].role === CONSTANTS.CONN_ACCEPTING ? 
+                CONSTANTS.CONN_PASSING : CONSTANTS.CONN_ACCEPTING;
+
+            while(ptrs.length){
+                otherArea = draggedItem.getConnectionArea(ptrs.pop(), role);
+
+                if(otherArea){
+
+                    //Shift the area
+                    otherArea.x1 += shift.x;
+                    otherArea.x2 += shift.x;
+                    otherArea.y1 += shift.y;
+                    otherArea.y2 += shift.y;
+
+                    if (!closestIndex 
+                            || this.__getDistanceBetweenConnections(openAreas[i], otherArea) < closestArea){
+                        closestIndex = i;
+                        closestArea = this.__getDistanceBetweenConnections(openAreas[i], otherArea);
+                    }
+                }
+            }
+        }
+
+        return { area: openAreas[closestIndex], distance: closestArea };
+    };
+
+    /*
     ClickableItem.prototype.updateHighlight = function (draggedItem, position) {
         //Determine the active connection area
         //First, remove any old stuff
@@ -579,9 +652,9 @@ define(['logManager',
                 otherArea = draggedItem.getConnectionArea(ptrs.pop(), role);
 
                 if(otherArea && !otherArea.occupied
-                        && (!closestIndex || this.__getShiftedDistance(openAreas[i], otherArea, shift))){
+                        && (!closestIndex || this.__getDistanceBetweenConnections(openAreas[i], otherArea, shift))){
                             closestIndex = i;
-                            closestArea = this.__getShiftedDistance(openAreas[i], otherArea, shift);
+                            closestArea = this.__getDistanceBetweenConnections(openAreas[i], otherArea, shift);
                         }
             }
         }
@@ -593,18 +666,16 @@ define(['logManager',
         }
         return false;
     };
+    */
 
-    ClickableItem.prototype.__getShiftedDistance = function (area1, area2, shift) {
+    ClickableItem.prototype.__getDistanceBetweenConnections = function (area1, area2) {
         //Get the distance between connection areas
         //measuring from the centers
-        if(!shift){
-            shift = { x: 0, y: 0 };
-        }
-
-        var x1 = (area1.x2 + area1.x1 + shift.x)/2,
-            x2 = (area2.x2 + area2.x1 + shift.x)/2,
-            y1 = (area1.y2 + area1.y1 + shift.y)/2,
-            y2 = (area2.y2 + area2.y1 + shift.y)/2;
+        
+        var x1 = (area1.x2 + area1.x1)/2,
+            x2 = (area2.x2 + area2.x1)/2,
+            y1 = (area1.y2 + area1.y1)/2,
+            y2 = (area2.y2 + area2.y1)/2;
 
         return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
     };
@@ -668,9 +739,11 @@ define(['logManager',
 
     //OVERRIDE
     ClickableItem.prototype.update = function (objDescriptor) {
+        var needToUpdateDependents = false;
+
         //check what might have changed
         //update position
-        if (this.isPositionDependent()){
+        /*if (this.isPositionDependent()){
             //Click the item to it's parent
             var basePtr = Object.keys(this.ptrs[CONSTANTS.CONN_ACCEPTING]);
 
@@ -679,12 +752,14 @@ define(['logManager',
 
             this.ptrs[CONSTANTS.CONN_ACCEPTING][basePtr].updateDependents();
 
-        } else if (objDescriptor.position 
+        } else */if (!this.isPositionDependent() && objDescriptor.position 
                 && _.isNumber(objDescriptor.position.x) && _.isNumber(objDescriptor.position.y)) {
             var dx = objDescriptor.position.x - this.positionX,
                 dy = objDescriptor.position.y - this.positionY;
 
-            this.moveByWithDependents(dx, dy);
+            //this.moveByWithDependents(dx, dy);
+            this.moveTo(objDescriptor.position.x, objDescriptor.position.y);
+            needToUpdateDependents = true;
         }
 
         var oldMetaInfo = this._decoratorInstance.getMetaInfo();
@@ -697,6 +772,7 @@ define(['logManager',
 
         //update decorator if needed
         if (objDescriptor.decoratorClass && this._decoratorID !== objDescriptor.decoratorClass.prototype.DECORATORID) {
+            needToUpdateDependents = true;
 
             this.logger.debug("decorator update: '" + this._decoratorID + "' --> '" + objDescriptor.decoratorClass.prototype.DECORATORID + "'...");
 
@@ -719,6 +795,7 @@ define(['logManager',
             this._decoratorInstance.update();
         }
 
+        return needToUpdateDependents;
     };
 
 

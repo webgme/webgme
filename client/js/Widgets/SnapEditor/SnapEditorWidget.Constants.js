@@ -28,6 +28,8 @@ define([], function () {
          */
         CONN_ACCEPTING: "in",
         CONN_PASSING: "out",
+
+        //Special "pointers"
         PTR_NEXT: "next",
         NAME: "name", 
         SIBLING_PTRS: ["next"],//pointer names to ptrs on the same level

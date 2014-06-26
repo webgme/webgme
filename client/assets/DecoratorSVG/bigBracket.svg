@@ -162,21 +162,21 @@
        id="spine"
        inkscape:label="#rect11-1-0" />
     <path
-       class="x-shift-name x-shift-false_next y-shift-false_next x-shift-true_next y-shift-true_next y-shift-name"
+       class="x-shift-name x-shift-false_next y-shift-false_next  y-shift-true_next y-shift-name"
        style="stroke-width:1.18324482;overflow:hidden"
        d="m 77.861058,0.59169395 0,3.52800605 16.606133,0 a 3.5627697,3.5367472 0 0 0 -3.58542,-3.52800605 l -13.020713,0 z"
        id="topRightCorner"
        inkscape:connector-curvature="0"
        inkscape:label="#path9-8" />
     <path
-       class="x-shift-name x-shift-false_next y-shift-false_next x-shift-true_next y-shift-true_next y-shift-name"
+       class="x-shift-name x-shift-false_next y-shift-false_next  y-shift-true_next y-shift-name"
        style="stroke-width:1.16730976;overflow:hidden"
        d="m 77.837466,19.177477 0,3.54394 13.163885,0 a 3.4518636,3.5527214 0 0 0 3.47381,-3.54394 l -16.637695,0 z"
        id="topBRcorner"
        inkscape:connector-curvature="0"
        inkscape:label="#path15-3" />
     <rect
-       class="x-shift-name x-shift-false_next y-shift-false_next x-shift-true_next y-shift-true_next y-shift-name"
+       class="x-shift-name x-shift-false_next y-shift-false_next  y-shift-true_next y-shift-name"
        x="77.481491"
        y="4.2670016"
        width="17.349634"
@@ -188,14 +188,14 @@
        id="topRightRect"
        inkscape:label="#rect10-9" />
     <path
-       class="x-shift-name x-shift-false_next y-shift-false_next x-shift-true_next y-shift-true_next y-shift-name"
+       class="x-shift-name x-shift-false_next y-shift-false_next  y-shift-true_next y-shift-name"
        style="stroke-width:1.18324482;overflow:hidden"
        d="m 77.442589,46.139983 0,3.528006 16.606128,0 a 3.5627697,3.5367472 0 0 0 -3.58542,-3.528006 l -13.020708,0 z"
        id="bottomTRcorner"
        inkscape:connector-curvature="0"
        inkscape:label="#path9-8-9" />
     <path
-       class="x-shift-name x-shift-false_next y-shift-false_next x-shift-true_next y-shift-true_next y-shift-name"
+       class="x-shift-name x-shift-false_next y-shift-false_next  y-shift-true_next y-shift-name"
        style="stroke-width:1.16730976;overflow:hidden"
        d="m 77.396901,56.95864 0,3.54394 13.163886,0 a 3.4518636,3.5527214 0 0 0 3.47381,-3.54394 l -16.637696,0 z"
        id="bottomRightCorner"
@@ -221,7 +221,7 @@
        id="bottomOutDent"
        inkscape:label="#path12-53" />
     <rect
-       class="x-shift-false_next x-shift-true_next x-shift-name"
+       class="x-shift-false_next  x-shift-name"
        style="opacity:0.54863808;fill:#ffffff;fill-opacity:1;stroke:#0000cc;stroke-width:0.03871261;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
        id="inputField"
        width="27.074053"
@@ -265,14 +265,14 @@
        id="spine-4"
        inkscape:label="#rect11-1-0" />
     <path
-       class="x-shift-false_next x-shift-true_next x-shift-name y-shift-name y-shift-true_next y-shift-false_next"
+       class="x-shift-false_next  x-shift-name y-shift-name y-shift-true_next y-shift-false_next"
        style="stroke-width:1.18324482;overflow:hidden"
        d="m 77.455128,82.866826 0,3.52801 16.606128,0 a 3.5627697,3.5367472 0 0 0 -3.585421,-3.52801 l -13.020707,0 z"
        id="bottomTRcorner-8"
        inkscape:connector-curvature="0"
        inkscape:label="#path9-8-9" />
     <path
-       class="x-shift-false_next x-shift-true_next x-shift-name y-shift-name y-shift-true_next y-shift-false_next"
+       class="x-shift-false_next  x-shift-name y-shift-name y-shift-true_next y-shift-false_next"
        style="stroke-width:1.16730976;overflow:hidden"
        d="m 77.40944,93.685486 0,3.54394 13.163885,0 a 3.4518636,3.5527214 0 0 0 3.473811,-3.54394 l -16.637696,0 z"
        id="bottomRightCorner-9"
