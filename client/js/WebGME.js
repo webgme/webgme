@@ -23,7 +23,6 @@ define(['logManager',
     'js/Utils/METAAspectHelper',
     'js/Utils/PreferencesHelper',
     'js/ConstraintManager/ConstraintManager',
-    'js/SnapInterpreter',
     'js/Utils/InterpreterManager'], function (logManager,
                                             CONFIG,
                                             packagejson,
@@ -43,7 +42,6 @@ define(['logManager',
                                             METAAspectHelper,
                                             PreferencesHelper,
                                             ConstraintManager,
-                                            SnapInterpreter,
                                             InterpreterManager) {
 
     var npmJSON = JSON.parse(packagejson);
@@ -131,7 +129,6 @@ define(['logManager',
                 if (panels.length > 0) {
                     loadPanels(panels);
                 } else {
-                    new SnapInterpreter(client);
                     if(createNewProject && projectToLoad !== ""){
                         client.connectToDatabaseAsync({},function(err){
                             if(err){
