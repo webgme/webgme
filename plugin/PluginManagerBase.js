@@ -138,7 +138,7 @@ define([
 
             pluginContext.project = this._storage;
             pluginContext.projectName = managerConfiguration.project;
-            pluginContext.core = new self._Core(pluginContext.project, {corerel: 2});
+            pluginContext.core = new self._Core(pluginContext.project);
             pluginContext.commitHash = managerConfiguration.commit;
             pluginContext.activeNode = null;    // active object
             pluginContext.activeSelection = []; // selected objects
@@ -245,7 +245,11 @@ define([
             plugin.initialize(pluginLogger, managerConfiguration.blobClient);
 
             plugin.setCurrentConfig(this._pluginConfigs[name]);
-
+            for (var key in managerConfiguration.pluginConfig) {
+                if (managerConfiguration.pluginConfig.hasOwnProperty(key) && plugin._currentConfig.hasOwnProperty(key)) {
+                    plugin._currentConfig[key] = managerConfiguration.pluginConfig[key];
+                }
+            }
             self.getPluginContext(managerConfiguration, function (err, pluginContext) {
                 if (err) {
                     // TODO: this has to return with an empty PluginResult object and NOT with null.

@@ -1,5 +1,6 @@
 var requirejs = require("requirejs"),
-    BASEPATH = __dirname + "/..";
+    BASEPATH = __dirname + "/..",
+    WEBGME = require(BASEPATH+'/webgme');
 requirejs.config({
     nodeRequire: require,
     baseUrl: BASEPATH,
@@ -41,9 +42,10 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
         error = null;
     };
     var initialize = function(parameters){
+        console.log(webGMEGlobal);
         if(initialized !== true){
             initialized = true;
-            if(parameters.paths){
+            /*if(parameters.paths){
                 var configPaths = {},
                     keys = Object.keys(parameters.paths);
                 for (var i = 0; i < keys.length; i += 1) {
@@ -53,8 +55,9 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
                 requirejs.config({
                     paths: configPaths
                 });
-            }
+            }*/
             pluginBasePaths = parameters.pluginBasePaths;
+            webGMEGlobal.setConfig({paths:parameters.paths,pluginBasePaths:parameters.pluginBasePaths});
             serverPort = parameters.serverPort || 80;
             interpreteroutputdirectory = parameters.interpreteroutputdirectory || "";
             if(interpreteroutputdirectory){
@@ -82,7 +85,7 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
                     if(err){
                         callback(err);
                     } else {
-                        var core = new Core(project,{corerel:2});
+                        var core = new Core(project);
                         core.loadRoot(hash,function(err,root){
                             if(err){
                                 callback(err);
@@ -175,6 +178,7 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
         var interpreterClass = null,
             basePath = getPluginBasePathByName(name);
 
+        /*
         if(basePath){
             var path = {};
             path['plugin/'+name] = PATH.relative(BASEPATH,basePath);
@@ -184,7 +188,8 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
             interpreterClass = requirejs('plugin/'+name+'/'+name+'/'+name);
         } else {
             return null;
-        }
+        }*/
+        interpreterClass = requirejs('plugin/'+name+'/'+name+'/'+name);
 
 
         return interpreterClass;

@@ -304,9 +304,22 @@ define(['logManager',
                 if(modul){
                     __logger.info('adding RExtraST ['+CONFIG.rextrast[keys[i]]+'] to - /rest/external/'+keys[i]);
                     __app.use('/rest/external/'+keys[i],modul);
+                } else {
+                    console.log("Loading " + CONFIG.rextrast[keys[i]] + " failed.");
+                    process.exit(2);
                 }
             }
         }
+
+        function expressFileSending(httpResult,path){
+            httpResult.sendfile(path,function(err){
+                //TODO we should check for all kind of error that should be handled differently
+                if (err && err.code !== 'ECONNRESET') {
+                    httpResult.send(404);
+                }
+            });
+        }
+
         //here starts the main part
         //variables
         var __logger = null,
@@ -408,11 +421,13 @@ define(['logManager',
 
         __logger.info("creating login routing rules for the static server");
         __app.get('/',storeQueryString,checkVF,ensureAuthenticated,function(req,res){
-            res.sendfile(__clientBaseDir+'/index.html',{user:req.user},function(err){
+            /*res.sendfile(__clientBaseDir+'/index.html',{user:req.user},function(err){
                 if (err) {
+                    console.log('fuck',err);
                     res.send(404);
                 }
-            });
+            });*/
+            expressFileSending(res,__clientBaseDir+'/index.html');
         });
         __app.get('/logout', function(req, res){
             res.clearCookie('webgme');
@@ -424,11 +439,7 @@ define(['logManager',
         });
         __app.get('/login'/*,storeQueryString*/,function(req,res){
             res.location('/login');
-            res.sendfile(__clientBaseDir+'/login.html',{},function(err){
-                if (err) {
-                    res.send(404);
-                }
-            });
+            expressFileSending(res,__clientBaseDir+'/login.html');
         });
         __app.post('/login'/*,storeQueryString*/,__gmeAuth.authenticate,function(req,res){
             res.cookie('webgme',req.session.udmId);
@@ -464,7 +475,9 @@ define(['logManager',
             var tryNext = function(index){
                 if(index<CONFIG.decoratorpaths.length){
                     res.sendfile(Path.join(CONFIG.decoratorpaths[index],req.url.substring(12)),function(err){
-                        tryNext(index+1);
+                        if(err && err.code !== 'ECONNRESET'){
+                            tryNext(index+1);
+                        }
                     });
                 } else {
                     res.send(404);
@@ -482,7 +495,7 @@ define(['logManager',
         __app.get(/^\/plugin\/.*/,ensureAuthenticated,function(req,res){
             //first we try to give back the common plugin/modules
             res.sendfile(Path.join(__baseDir,req.path),function(err){
-                if(err){
+                if(err && err.code !== 'ECONNRESET'){
                     //this means that it is probably plugin/pluginName or plugin/pluginName/relativePath format so we try to look for those in our config
                     //first we check if we have the plugin registered in our config
                     var urlArray = req.url.split('/'),
@@ -498,11 +511,7 @@ define(['logManager',
                     }
 
                     if(typeof basePath === 'string' && typeof relPath === 'string'){
-                        res.sendfile(Path.resolve(Path.join(basePath,relPath)),function(err){
-                            if(err){
-                                res.send(404);
-                            }
-                        });
+                        expressFileSending(res,Path.resolve(Path.join(basePath,relPath)));
                     } else {
                         res.send(404);
                     }
@@ -510,12 +519,7 @@ define(['logManager',
             });
         });
         __app.get(/^\/pluginoutput\/.*/,ensureAuthenticated,function(req,res){
-            var filepath = req.path.replace('/pluginoutput',CONFIG.intoutdir);
-            res.sendfile(filepath,function(err){
-                if (err) {
-                    res.send(404);
-                }
-            });
+            expressFileSending(res,req.path.replace('/pluginoutput',CONFIG.intoutdir));
         });
 
 
@@ -529,31 +533,19 @@ define(['logManager',
 
             var relPath = urlArray.join('/');
 
-            res.sendfile(relPath,function(err){
-                if(err){
-                    res.send(404);
-                }
-            });
+            expressFileSending(res,relPath);
         });
 
         __logger.info("creating basic static content related routing rules");
         //static contents
         //javascripts - core and transportation related files
         __app.get(/^\/(common|util|storage|core|config|auth|bin|coreclient|blob)\/.*\.js$/,ensureAuthenticated,function(req,res){
-            res.sendfile(Path.join(__baseDir,req.path),function(err){
-                if (err) {
-                    res.send(404);
-                }
-            });
+            expressFileSending(res,Path.join(__baseDir,req.path));
         });
 
         //TODO remove this part as this is only temporary!!!
         __app.get('/docs/*',function(req,res){
-            res.sendfile(Path.join(__baseDir,req.path),function(err){
-                if (err) {
-                    res.send(404);
-                }
-            });
+            expressFileSending(res,Path.join(__baseDir,req.path));
         });
 
 
@@ -718,27 +710,15 @@ define(['logManager',
         //client contents - js/html/css
         //stuff that considered not protected 
         __app.get(/^\/.*\.(css|ico|ttf|woff)$/,function(req,res){
-            res.sendfile(Path.join(__clientBaseDir,req.path),function(err){
-                if (err) {
-                    res.send(404);
-                }
-            });
+            expressFileSending(res,Path.join(__clientBaseDir,req.path));
         });
 
         __app.get(/^\/.*\.(js|html|gif|png|bmp|svg|json)$/,ensureAuthenticated,function(req,res){
             //package.json
             if(req.path === '/package.json') {
-                res.sendfile(Path.join(__baseDir,req.path),function(err){
-                    if (err) {
-                        res.send(404);
-                    }
-                });
+                expressFileSending(res,Path.join(__baseDir,req.path));
             } else {
-                res.sendfile(Path.join(__clientBaseDir,req.path),function(err){
-                    if (err) {
-                        res.send(404);
-                    }
-                });
+                expressFileSending(res,Path.join(__clientBaseDir,req.path));
             }
         });
 
