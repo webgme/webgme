@@ -5,35 +5,35 @@
                 <button type="button" class="close" data-dismiss="modal">×</button>
                 <h3>Edit constraint parameters...</h3>
             </div>
-            <div class="modal-body form-horizontal">
-                <div class="control-group" id="pName">
-                    <label class="control-label" for="inputName">Name</label>
-                    <div class="controls">
+            <form class="modal-body form-horizontal" role="form">
+                <div class="form-group" id="pName">
+                    <label class="col-sm-4 control-label" for="inputName">Name</label>
+                    <div class="col-sm-8 controls">
                         <input type="text" id="inputName" placeholder="Name">
                     </div>
                 </div>
-                <div class="control-group" id="pScript">
-                    <label class="control-label" for="inputScript">Script</label>
-                    <div class="controls">
+                <div class="form-group" id="pScript">
+                    <label class="col-sm-4 control-label">Script</label>
+                    <div class="col-sm-8 controls">
                     </div>
                 </div>
-                <div class="control-group" id="pMessage">
-                    <label class="control-label" for="inputMessage">Message</label>
-                    <div class="controls">
+                <div class="form-group" id="pMessage">
+                    <label class="col-sm-4 control-label" for="inputMessage">Message</label>
+                    <div class="col-sm-8 controls">
                         <input type="text" class="input-xxlarge" id="inputMessage" placeholder="Message on constraint violation...">
                     </div>
                 </div>
-                <div class="control-group" id="pPriority">
-                    <label class="control-label" for="inputPriority">Priority</label>
-                    <div class="controls">
+                <div class="form-group" id="pPriority">
+                    <label class="col-sm-4 control-label" for="inputPriority">Priority</label>
+                    <div class="col-sm-8 controls">
                         <input type="text" id="inputPriority" placeholder="Priority">
                     </div>
                 </div>
-            </div>
+            </form>
             <div class="modal-footer">
                 <a href="#" class="btn btn-danger btn-delete pull-left">Delete</a>
                 <a href="#" class="btn btn-primary disabled btn-save">Save</a>
-                <a href="#" class="btn" data-dismiss="modal">Cancel</a>
+                <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
             </div>
         </div>
     </div>
