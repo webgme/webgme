@@ -163,7 +163,10 @@ define(['clientUtil',
         this._el = this._dialog.find('.modal-body').first();
         this._cbEnum = this._el.find('#cbEnum').first();
         this._pEnum = this._el.find('#pEnum').first();
+
         this._pEnumValues = this._el.find('#pEnumValues').first();
+        this._pEnumValues.hide();
+
         this._pName = this._el.find('#pName').first();
 
         this._btnSave = this._dialog.find('.btn-save').first();
@@ -173,7 +176,10 @@ define(['clientUtil',
         this._inputType = this._el.find('#inputType').first();
         this._inputDefaultValue = this._el.find('#inputDefaultValue').first();
         this._pDefaultValue = this._el.find('#pDefaultValue').first();
+
         this._pDefaultValueBoolean = this._el.find('#pDefaultValueBoolean').first();
+        this._pDefaultValueBoolean.hide();
+
         this._inputEnumValues = this._el.find('#inputEnumValues').first();
 
         //hook up event handlers
