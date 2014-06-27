@@ -22,6 +22,7 @@ define(['util/assert'],function(ASSERT){
 
         //loading all library element
         gatherNodesSlowly(libraryRoot,function(err){
+
             if(err){
                 return callback(err);
             }
@@ -300,7 +301,7 @@ define(['util/assert'],function(ASSERT){
                 //registry
                 registryNames = _core.getMemberRegistryNames(node,names[i],path).sort();
                 for(k=0;k<registryNames.length;k++){
-                    memberInfo.registry[registryNames[k]] = _core.getMemberRegistry(node,names[i],path,registryNames);
+                    memberInfo.registry[registryNames[k]] = _core.getMemberRegistry(node,names[i],path,registryNames[k]);
                 }
 
                 result[names[i]].push(memberInfo);

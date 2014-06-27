@@ -73,7 +73,8 @@ define([
                 _offline = false,
                 _networkWatcher = null,
                 _TOKEN = null,
-                META = new BaseMeta();
+                META = new BaseMeta(),
+                _rootHash = null;
 
             function print_nodes(pretext){
                 if(pretext){
@@ -924,8 +925,10 @@ define([
                     callback(null);
                 };
 
+                _rootHash = newRootHash
                 loadRoot(newRootHash,function(err){
                     if(err){
+                        _rootHash = null;
                         callback(err);
                     } else {
                         if(--missing === 0){
@@ -2199,7 +2202,7 @@ define([
                 }
 
                 //DumpMore(_core,nodes,"",'guid',callback);
-                _database.simpleRequest({command:'dumpMoreNodes',name:_projectName,hash:_core.getHash(_nodes[ROOT_PATH].node),nodes:paths},function(err,resId){
+                _database.simpleRequest({command:'dumpMoreNodes',name:_projectName,hash:_rootHash || _core.getHash(_nodes[ROOT_PATH].node),nodes:paths},function(err,resId){
                     if(err){
                         callback(err);
                         _database.simpleResult(resId,callback);
@@ -2209,7 +2212,7 @@ define([
                 });
             }
             function getExportItemsUrlAsync(paths,filename,callback){
-                _database.simpleRequest({command:'dumpMoreNodes',name:_projectName,hash:_core.getHash(_nodes[ROOT_PATH].node),nodes:paths},function(err,resId){
+                _database.simpleRequest({command:'dumpMoreNodes',name:_projectName,hash:_rootHash || _core.getHash(_nodes[ROOT_PATH].node),nodes:paths},function(err,resId){
                     if(err){
                         callback(err);
                     } else {
@@ -2240,7 +2243,7 @@ define([
                 var command = {};
                 command.command = 'exportLibrary';
                 command.name = _projectName;
-                command.hash = _core.getHash(_nodes[ROOT_PATH].node);
+                command.hash = _rootHash || _core.getHash(_nodes[ROOT_PATH].node);
                 command.path = libraryRootPath;
                 _database.simpleRequest(command,function(err,resId){
                     if(err){
@@ -2292,7 +2295,21 @@ define([
                     }
                 });
             }
-            function createProjectFromFileAsync(projectname,jNode,callback){
+            function createProjectFromFileAsync(projectname,jProject,callback){
+                //if called on an existing project, it will ruin it!!! - although the old commits will be untouched
+                createProjectAsync(projectname,function(err){
+                    selectProjectAsync(projectname,function(err){
+                        Serialization.import(_core,_nodes[ROOT_PATH].node,jProject,function(err){
+                            if(err){
+                                return callback(err);
+                            }
+
+                            saveRoot("library have been updated...",callback);
+                        });
+                    });
+                });
+            }
+            function _createProjectFromFileAsync(projectname,jNode,callback){
                 //if called on an existing project, it will ruin it!!! - although the old commits will be untouched
                 createProjectAsync(projectname,function(err){
                     selectProjectAsync(projectname,function(err){
@@ -2310,7 +2327,7 @@ define([
             }
             function plainUrl(command,path){
                 if(window && window.location && window.location && _nodes && _nodes[ROOT_PATH]){
-                    var address = window.location.protocol + '//' + window.location.host +'/rest/'+command+'?'+'project='+_projectName+'&root='+URL.addSpecialChars(_core.getHash(_nodes[ROOT_PATH].node))+'&path='+URL.addSpecialChars(path);
+                    var address = window.location.protocol + '//' + window.location.host +'/rest/'+command+'?'+'project='+_projectName+'&root='+URL.addSpecialChars(_rootHash || _core.getHash(_nodes[ROOT_PATH].node))+'&path='+URL.addSpecialChars(path);
                     return address;
                 }
             }
