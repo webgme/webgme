@@ -8,8 +8,10 @@
 
 define(['js/DragDrop/DragSource',
         'js/DragDrop/DragHelper',
+        'util/assert',
         './SnapEditorWidget.Constants'], function (dragSource,
                                                    dragHelper,
+                                                   assert,
                                                    SnapEditorWidgetConstants) {
 
     var SnapEditorWidgetDraggable,
@@ -30,7 +32,7 @@ define(['js/DragDrop/DragSource',
             'helper': function (event, dragInfo) {
                 return self._dragHelper(item, event, dragInfo);
             },
-            'cursorAt': self._getCursorLocation(),//TODO
+            //'cursorAt': self._getCursorLocation(),//TODO
             'drag': function(event, ui){
             },
             'dragItems': function (el) {
@@ -42,22 +44,14 @@ define(['js/DragDrop/DragSource',
             'dragParams': function (el, event) {
                 return self.getDragParams(self.selectionManager.getSelectedElements(), event);
             },
-            'start': function (event) {
-                //Remove ptrs into item
+            'start': function (event, ui) {
                 self.dropFocus = SnapEditorWidgetConstants.BACKGROUND;
                 //Remove droppable functionality from dependents of selected stuff
-                /*
-                var selectedItems = item.getDependents();
-                selectedItems.push(item);
 
-                while (selectedItems.length){
-                    selectedItems.pop().$el.droppable("disable");
-                }
-                */
-
-                //TODO Remove this functionality from here...
-                //item.disconnectPtrs(SnapEditorWidgetConstants.CONN_ACCEPTING);
-
+                //Set cursorAt
+                //TODO
+                $(this).draggable("option", "cursorAt", self.getCursorLocation(event, ui));
+                
                 var ret = false;
                 //enable drag mode only in
                 //- DESIGN MODE
@@ -92,11 +86,13 @@ define(['js/DragDrop/DragSource',
             i,
             dragElement = $('<div/>', {'id': item.id });
 
+
         if(!item.items){
             firstItem = item.id;
             items[item.id] = { item: item, z: 100000 };
 
         }else{//set of items are selected
+            assert(false, "Can't select multiple items to drag");
             i = item.items.length;
             while(i--){
                 items[item.items[i].getId()] = { item: item.items[i], z: 100000 };
@@ -125,18 +121,25 @@ define(['js/DragDrop/DragSource',
         //Create a element containing all these
         var itemId,
             itemElement,
-            shiftX,
-            shiftY,
-            x,
-            y;
+            shiftX = item.positionX - DRAG_HELPER_BUFFER,
+            shiftY = item.positionY - DRAG_HELPER_BUFFER,
+            box,
+            maxX = 0,
+            maxY = 0;
 
         //Fix cursor alignment
-        shiftX = event.pageX - item.$el.parent().offset().left;
-        shiftY = event.pageY - item.$el.parent().offset().top;
+        //shiftX = event.pageX - item.$el.parent().offset().left;
+        //shiftY = event.pageY - item.$el.parent().offset().top;
 
         keys = Object.keys(items);
         while(keys.length){
             itemId = keys.pop();
+
+            //set maxX, maxY
+            box = this.items[itemId].getBoundingBox();
+            maxX = Math.max(maxX, box.x2);
+            maxY = Math.max(maxY, box.y2);
+            
             itemElement = items[itemId].item.$el.clone();
             itemElement.css({"position": "absolute",
                              "z-index": items[itemId].z,
@@ -146,7 +149,35 @@ define(['js/DragDrop/DragSource',
 
             dragElement.append(itemElement);
         }
+
+        //Set height, width of the helper
+        maxX += DRAG_HELPER_BUFFER - shiftX;
+        maxY += DRAG_HELPER_BUFFER - shiftY;
+
+        dragElement.width(maxX);
+        dragElement.height(maxY);
+
+        //DEBUGGING
+        //dragElement.css("background-color", "grey");
+        
         return dragElement;
+    };
+
+    SnapEditorWidgetDraggable.prototype.getCursorLocation = function (event, ui) {
+        //Get the correct cursor location
+        var location = {},
+            itemId = ui.helper[0].id,
+            item = this.items[itemId],
+            mouseX,
+            mouseY;
+
+        mouseX = event.pageX - item.$el.parent().offset().left;
+        mouseY = event.pageY - item.$el.parent().offset().top;
+
+        location.left = mouseX - item.positionX + DRAG_HELPER_BUFFER;
+        location.top = mouseY - item.positionY + DRAG_HELPER_BUFFER;
+
+        return location;
     };
 
     SnapEditorWidgetDraggable.prototype.getDragItems = function (selectedElements) {

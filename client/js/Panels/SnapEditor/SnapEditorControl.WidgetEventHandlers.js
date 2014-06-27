@@ -719,7 +719,6 @@ define(['logManager',
 
                 if (items.indexOf(gmeId) === -1){//Remove the ptr
                     this._client.makePointer(gmeId, ptr, null);
-                    //this.snapCanvas.removePtr(id, ptr, SNAP_CONSTANTS.CONN_ACCEPTING);
                 }
             }
         }

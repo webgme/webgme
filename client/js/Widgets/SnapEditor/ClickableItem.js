@@ -341,13 +341,24 @@ define(['logManager',
 
     /******************** ALTER SVG  *********************/
     ClickableItem.prototype.updateSize = function () {
-        //Update all pointers
-        var ptrs = Object.keys(this.ptrs[CONSTANTS.CONN_PASSING]),
-            i = ptrs.length,
+        //Update ALL pointers not just currently occupied
+        var ptrNames = this.getPtrNames(),
             changed = false;
 
-        while(i--){
-            changed = this._updateSize(ptrs[i], this.ptrs[CONSTANTS.CONN_PASSING][ptrs[i]]) || changed;
+        if(ptrNames.length){
+            var ptrs = [],
+                i = ptrNames.length;
+
+            while(i--){
+                if(!(ptrNames[i] instanceof Array)){
+                    ptrs.push(ptrNames[i]);
+                }
+            }
+
+            i = ptrs.length;
+            while(i--){
+                changed = this._updateSize(ptrs[i], this.ptrs[CONSTANTS.CONN_PASSING][ptrs[i]]) || changed;
+            }
         }
 
         return changed;
