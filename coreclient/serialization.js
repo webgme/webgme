@@ -445,7 +445,7 @@ define(['util/assert'],function(ASSERT){
 
         if(parent && _core.getParent(node) && _core.getGuid(parent) !== _core.getGuid(_core.getParent(node))){
             //parent changed so it has to be moved...
-            _core.moveNode(node,parent);
+            _nodes[guid] = _core.moveNode(node,parent);
         }
 
         updateAttributes(guid);
