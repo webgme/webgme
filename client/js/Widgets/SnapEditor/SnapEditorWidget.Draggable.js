@@ -30,6 +30,8 @@ define(['js/DragDrop/DragSource',
 
         dragSource.makeDraggable(item.$el, {
             'helper': function (event, dragInfo) {
+                //Set the cursorAt value
+                $(this).draggable("option", "cursorAt", self.getCursorLocation(event, item.id));
                 return self._dragHelper(item, event, dragInfo);
             },
             //'cursorAt': self._getCursorLocation(),//TODO
@@ -45,12 +47,8 @@ define(['js/DragDrop/DragSource',
                 return self.getDragParams(self.selectionManager.getSelectedElements(), event);
             },
             'start': function (event, ui) {
+                //Set the drop focus
                 self.dropFocus = SnapEditorWidgetConstants.BACKGROUND;
-                //Remove droppable functionality from dependents of selected stuff
-
-                //Set cursorAt
-                //TODO
-                $(this).draggable("option", "cursorAt", self.getCursorLocation(event, ui));
                 
                 var ret = false;
                 //enable drag mode only in
@@ -163,10 +161,9 @@ define(['js/DragDrop/DragSource',
         return dragElement;
     };
 
-    SnapEditorWidgetDraggable.prototype.getCursorLocation = function (event, ui) {
+    SnapEditorWidgetDraggable.prototype.getCursorLocation = function (event, itemId) {
         //Get the correct cursor location
         var location = {},
-            itemId = ui.helper[0].id,
             item = this.items[itemId],
             mouseX,
             mouseY;
