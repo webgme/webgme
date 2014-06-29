@@ -71,7 +71,8 @@ define([
                 _offline = false,
                 _networkWatcher = null,
                 _TOKEN = null,
-                META = new BaseMeta();
+                META = new BaseMeta(),
+                _gHash = 0;
 
             function print_nodes(pretext){
                 if(pretext){
@@ -566,11 +567,7 @@ define([
             //loading functions
             function getStringHash(node){
                 //TODO there is a memory issue with the huge strings so we have to replace it with something
-                if(_nodes[_core.getPath(node)] && _nodes[_core.getPath(node)].hash){
-                    return _nodes[_core.getPath(node)].hash+1;
-                } else {
-                    return 0;
-                }
+                return _gHash++;
                 /*
                 var datas = _core.getDataForSingleHash(node),
                     i,hash="";
@@ -628,7 +625,9 @@ define([
                 var newPaths = {};
                 var startErrorLevel = _loadError;
                 for(var i in _users[userId].PATTERNS){
-                    patternToPaths(i,_users[userId].PATTERNS[i],newPaths);
+                    if(_nodes[i]){ //TODO we only check pattern if its root is there...
+                        patternToPaths(i,_users[userId].PATTERNS[i],newPaths);
+                    }
                 }
 
                 if(startErrorLevel !== _loadError){
