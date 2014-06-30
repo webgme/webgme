@@ -181,7 +181,16 @@ define(['plugin/PluginConfig',
 //            addFilesAndSaveArtifact(xml2json.convertFromString(self.getDefaultXmlString()));
 //        }
 
-        self.createMessage(null, 'No xml-file given, converted default xml-string.');
+        if (self.activeNode) {
+            self.createMessage(self.activeNode, 'Active node was given');
+        }
+
+
+        if (currentConfig.xmlFile) {
+            self.result.setSuccess(true);
+        } else {
+            self.createMessage(null, 'No xml-file given, converted default xml-string.');
+        }
 
         callback(null, self.result);
     };
