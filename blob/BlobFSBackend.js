@@ -55,29 +55,31 @@ define(['./BlobBackendBase',
                         return;
                     }
 
-                    if (fs.existsSync(objectFilename)) {
+                    fs.exists(objectFilename, function (exists) {
                         // if already exists we do not need to move the content
-                        fs.unlink(tempName, function (e) {
-                            if (err) {
-                                callback(err);
-                                return;
-                            }
-
-                            callback(null, hash, size);
-                        });
-                    } else {
-                        fs.rename(tempName, objectFilename, function (err) {
-                            // FIXME: this code has to be reviewed.
-                            if (err) {
-                                fs.unlink(tempName, function (e) {
+                        if (exists) {
+                            fs.unlink(tempName, function (e) {
+                                if (err) {
                                     callback(err);
-                                });
-                                return;
-                            }
+                                    return;
+                                }
 
-                            callback(null, hash, size);
-                        });
-                    }
+                                callback(null, hash, size);
+                            });
+                        } else {
+                            fs.rename(tempName, objectFilename, function (err) {
+                            // FIXME: this code has to be reviewed.
+                                if (err) {
+                                    fs.unlink(tempName, function (e) {
+                                        callback(err);
+                                    });
+                                    return;
+                                }
+
+                                callback(null, hash, size);
+                            });
+                        }
+                    });
                 });
             });
 
