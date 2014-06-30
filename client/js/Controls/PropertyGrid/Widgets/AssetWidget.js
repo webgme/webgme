@@ -2,7 +2,7 @@
 
 define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
         'blob/BlobClient',
-        'css!/css/Controls/PropertyGrid/Widgets/AssetWidget'],
+        'css!./styles/AssetWidget'],
     function (WidgetBase,
               BlobClient) {
 
