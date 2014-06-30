@@ -51,7 +51,7 @@ define(['logManager',
         var ptrs = Object.keys(ptrInfo),
             oldPtrs = Object.keys(this.ptrs[CONSTANTS.CONN_PASSING]),
             i = ptrs.length,
-            changed = false,
+            changed = null,
             otherItem,
             oldItem,
             k,
@@ -61,22 +61,24 @@ define(['logManager',
             ptr = ptrs[i];
             k = oldPtrs.indexOf(ptr);
 
-            if (k === -1){//didn't have the pointer
-                //Add pointer
-                otherItem = this.canvas.items[ptrInfo[ptr]];
-                otherItem.setPtr(ptr, CONSTANTS.CONN_ACCEPTING, this);
-                changed = true;
-            } else {
-                //Check that the pointer is correct
-                if (this.ptrs[CONSTANTS.CONN_PASSING][ptr].id !== ptrInfo[ptr]){
-                    oldItem = this.ptrs[CONSTANTS.CONN_PASSING][ptr];
-                    oldItem.removePtr(ptr, CONSTANTS.CONN_ACCEPTING, false);
-
+            if (ptrInfo[ptr]){//If pointer is set
+                if (k === -1){//didn't have the pointer
+                    //Add pointer
                     otherItem = this.canvas.items[ptrInfo[ptr]];
-                    otherItem.setPtr(this, ptr, CONSTANTS.CONN_ACCEPTING);
-                    changed = true;
+                    otherItem.setPtr(ptr, CONSTANTS.CONN_ACCEPTING, this);
+                    changed = "added ptr";
+                } else {
+                    //Check that the pointer is correct
+                    if (this.ptrs[CONSTANTS.CONN_PASSING][ptr].id !== ptrInfo[ptr]){
+                        oldItem = this.ptrs[CONSTANTS.CONN_PASSING][ptr];
+                        oldItem.removePtr(ptr, CONSTANTS.CONN_ACCEPTING, false);
+
+                        otherItem = this.canvas.items[ptrInfo[ptr]];
+                        otherItem.setPtr(this, ptr, CONSTANTS.CONN_ACCEPTING);
+                        changed = "changed ptr";
+                    }
+                    oldPtrs.splice(k, 1);
                 }
-                oldPtrs.splice(k, 1);
             }
         }
 
@@ -85,7 +87,7 @@ define(['logManager',
         while (i--){
             ptr = oldPtrs[i];
             this.removePtr(ptr, CONSTANTS.CONN_PASSING, false);
-            changed = true;
+            changed = "removed ptr";
         }
 
         return changed;
@@ -483,6 +485,8 @@ define(['logManager',
 
     ClickableItem.prototype._connect = function (params) {
         //Connect this item to another item given the connection areas
+        assert(params.area1 && params.area2, "Connection Areas must both be defined");
+
         var distance = this._getDistance(params.area1, params.area2),
             otherItem = params.otherItem,
             ptr = params.ptr,
@@ -778,7 +782,7 @@ define(['logManager',
 
     //OVERRIDE
     ClickableItem.prototype.update = function (objDescriptor) {
-        var needToUpdateDependents = false;
+        var needToUpdateDependents = null;
 
         //check what might have changed
         //update position
@@ -798,20 +802,23 @@ define(['logManager',
 
             //this.moveByWithDependents(dx, dy);
             this.moveTo(objDescriptor.position.x, objDescriptor.position.y);
-            needToUpdateDependents = true;
+            needToUpdateDependents = "move";
         }
 
         var oldMetaInfo = this._decoratorInstance.getMetaInfo();
 
         //update gmeId if needed
-        if(oldMetaInfo[CONSTANTS.GME_ID] !== objDescriptor.id){
+        if(objDescriptor.id && oldMetaInfo[CONSTANTS.GME_ID] 
+           && oldMetaInfo[CONSTANTS.GME_ID] !== objDescriptor.id){
+            console.log("Changing " + oldMetaInfo[CONSTANTS.GME_ID] + " to " + objDescriptor.id);
             this._decoratorInstance.setGmeId(objDescriptor.id);
             this.$el.html(this._decoratorInstance.$el);
+            needToUpdateDependents = "changed id";
         }
 
         //update decorator if needed
         if (objDescriptor.decoratorClass && this._decoratorID !== objDescriptor.decoratorClass.prototype.DECORATORID) {
-            needToUpdateDependents = true;
+            needToUpdateDependents = "decorator";
 
             this.logger.debug("decorator update: '" + this._decoratorID + "' --> '" + objDescriptor.decoratorClass.prototype.DECORATORID + "'...");
 

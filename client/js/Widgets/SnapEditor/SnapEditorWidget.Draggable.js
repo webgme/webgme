@@ -34,7 +34,6 @@ define(['js/DragDrop/DragSource',
                 $(this).draggable("option", "cursorAt", self.getCursorLocation(event, item.id));
                 return self._dragHelper(item, event, dragInfo);
             },
-            //'cursorAt': self._getCursorLocation(),//TODO
             'drag': function(event, ui){
             },
             'dragItems': function (el) {

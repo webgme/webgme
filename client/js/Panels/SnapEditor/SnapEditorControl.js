@@ -316,14 +316,20 @@ console.log("Object changed to " + nodeId);
         this.snapCanvas.beginUpdate();
 
         //items
+        for (i = events.length - 1; i >= 0; i -= 1) {
+            if (events[i].etype === CONSTANTS.TERRITORY_EVENT_LOAD) {
+                //We collect all loading events and process them at once
+                //to satisfy position dependencies caused by linking
+                loadEvents.push(events.splice(i, 1).pop());
+            }
+        }
+
+        //Now we handle all load events
+        this._onLoad(loadEvents);
+
         for (i = 0; i < events.length; i += 1) {
             e = events[i];
             switch (e.etype) {
-                case CONSTANTS.TERRITORY_EVENT_LOAD:
-                    //We collect all loading events and process them at once
-                    //to satisfy position dependencies caused by linking
-                    loadEvents.push(e);
-                    break;
                 case CONSTANTS.TERRITORY_EVENT_UPDATE:
                     this._onUpdate(e.eid, e.desc);
                     break;
@@ -333,10 +339,8 @@ console.log("Object changed to " + nodeId);
             }
         }
 
-        //this._handleDecoratorNotification();
 
-        //Now we handle all load events
-        this._onLoad(loadEvents);
+        //this._handleDecoratorNotification();
 
         this.snapCanvas.endUpdate();
 
@@ -455,7 +459,7 @@ console.log("Object changed to " + nodeId);
             if(!this._GmeID2ComponentID[prevItem]){//Load the item if needed
                 territoryChanged = this._onSingleLoad(prevItem, objDesc[prevItem]) || territoryChanged;
             }else{
-                this._onUpdate(prevItem, objDesc[prevItem]);
+                //this._onUpdate(prevItem, objDesc[prevItem]);
             }
 
             //Load all the dependent items 
@@ -532,11 +536,6 @@ console.log("Object changed to " + nodeId);
             }
         }
         
-        //update dependents of the nodes
-        //j = items.length;
-        //while (j--){
-            //this.snapCanvas.updateItemDependents(this._GmeID2ComponentID[items[j]]);
-        //}
     };
 
     SnapEditorControl.prototype._onSingleLoad = function (gmeID, objD) {
@@ -567,6 +566,10 @@ console.log("Object changed to " + nodeId);
             }
         };
 
+        var node,
+            ptrs,
+            id,
+            i;
 
         //component loaded
         //we are interested in the load of sub_components of the opened component
@@ -585,7 +588,24 @@ console.log("Object changed to " + nodeId);
                     objDesc.metaInfo[CONSTANTS.GME_ID] = gmeID;
                     objDesc.preferencesHelper = PreferencesHelper.getPreferences();
                     objDesc.aspect = this._selectedAspect;
-                    objDesc.ptrs = this._client.getNode(gmeID).getPointerNames();
+
+                    //Getting the ptr info
+                    objDesc.ptrs = {};
+                    node = this._client.getNode(gmeID);
+                    ptrs = node.getPointerNames();
+                    i = ptrs.length;
+                    while (i--){
+                        id = node.getPointer(ptrs[i]).to;
+                        if (id){
+                            if (this._GmeID2ComponentID[id]){
+                                id = this._GmeID2ComponentID[id];
+                            } else {//If item hasn't been created, it won't have an id
+                                id = null;
+                            }
+                        }
+
+                        objDesc.ptrs[ptrs[i]] = id;
+                    }
 
                     uiComponent = this.snapCanvas.createClickableItem(objDesc);
 

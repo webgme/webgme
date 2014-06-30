@@ -36,12 +36,14 @@ define(['./ClickableItem',
         newComponent.__setDecorator(objDescriptor.decorator, objDescriptor.decoratorClass, objDescriptor.control, objDescriptor.metaInfo, objDescriptor.preferencesHelper, objDescriptor.aspect, objDescriptor.decoratorParams);
         newComponent.addToDocFragment(this._documentFragment);
 
-        newComponent.cleanConnectionAreas(objD.ptrs);
+        //Pointers/Connections
+        newComponent.cleanConnectionAreas(Object.keys(objD.ptrs));
+        newComponent.updatePtrs(objD.ptrs);
 
         //set the item to be able to be "clicked" to with drag'n'drop
         this.setClickable(newComponent);
 
-        this._clickableItems2Update[componentId] = true;
+        this._clickableItems2Update[componentId] = "created";
 
         return newComponent;
     };
@@ -74,7 +76,7 @@ define(['./ClickableItem',
 
     SnapEditorWidgetClickableItems.prototype.updateClickableItem  = function (componentId, objDescriptor) {
         var alignedPosition,
-            addToUpdateList = false,
+            addToUpdateList = null,
             item;
 
         if (this.itemIds.indexOf(componentId) !== -1) {
@@ -102,7 +104,7 @@ define(['./ClickableItem',
             addToUpdateList = this.items[componentId].update(objDescriptor) || addToUpdateList;
 
             if (addToUpdateList){
-                this._clickableItems2Update[componentId] = true;
+                this._clickableItems2Update[componentId] = addToUpdateList;
             }
         }
     };

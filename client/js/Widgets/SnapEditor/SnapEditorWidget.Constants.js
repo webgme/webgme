@@ -46,6 +46,9 @@ define([], function () {
 
         /*COLORING OF ITEMS*/
         COLOR_PRIMARY: 'primary',
-        COLOR_SECONDARY: 'secondary'
+        COLOR_SECONDARY: 'secondary',
+
+        /*GME*/
+        GME_ID: 'GME_ID'
     };
 });

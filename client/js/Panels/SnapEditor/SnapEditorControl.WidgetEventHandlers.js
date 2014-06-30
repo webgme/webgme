@@ -453,7 +453,7 @@ define(['logManager',
                     this._client.startTransaction();
                     var idMap = this._client.moveMoreNodes(params);
                     //Update the Gme ids and component ids
-                    this._updateGmeAndComponentIds(items, idMap);
+                    //this._updateGmeAndComponentIds(items, idMap);
                     this._client.completeTransaction();
                 }
                 break;
@@ -560,7 +560,7 @@ define(['logManager',
             nextId = node.getPointer(ptr).to,//item currently pointed to by receiver
             droppedItems = this._addSiblingDependents([this._ComponentID2GmeID[droppedItem]]),
             droppedParentId,
-            firstId,
+            firstId = this._ComponentID2GmeID[droppedItem],
             lastId,
             newIds,
             i;
@@ -611,7 +611,7 @@ define(['logManager',
             }
 
             newIds = this._client.moveMoreNodes(params);
-            this._updateGmeAndComponentIds(droppedItems, newIds);
+            //this._updateGmeAndComponentIds(droppedItems, newIds);
             /*
 
             //Update the id's of the node
@@ -644,9 +644,9 @@ define(['logManager',
                     }
                 }
             }
+            firstId = newIds[firstId];
         }
 
-        firstId = this._ComponentID2GmeID[droppedItem];
         //check to see if we should splice 
         /*
         if (nextId){
@@ -666,7 +666,7 @@ define(['logManager',
             this._client.makePointer(receiverId, ptr, firstId);
         }
 
-        this.snapCanvas.connect(droppedItem, receiver);
+        //this.snapCanvas.connect(droppedItem, receiver);
 
         this._client.completeTransaction();
     };
