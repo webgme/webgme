@@ -9,8 +9,16 @@ define(['util/assert'],function(ASSERT){
         _import = {},
         _newNodeGuids = [],
         _removedNodeGuids = [],
-        _updatedNodeGuids = [];
+        _updatedNodeGuids = [],
+        _log = "";
 
+    function log(txt){
+        if(_log){
+            _log+="\n"+txt;
+        } else {
+            _log = ""+txt;
+        }
+    }
     function exportLibrary(core,libraryRoot,callback){
         //initialization
         _core = core;
@@ -310,12 +318,21 @@ define(['util/assert'],function(ASSERT){
         return result;
     }
 
+    function logId(nodes,id){
+        var txtId = id+"";
+        if(nodes[id] && nodes[id].attributes && nodes[id].attributes.name){
+            txtId = nodes[id].attributes.name+"("+id+")";
+        }
+
+        return txtId;
+    }
     function importLibrary(core,originLibraryRoot,updatedLibraryJson,callback){
         _core = core;
         _import = updatedLibraryJson;
         _newNodeGuids = [];
         _updatedNodeGuids = [];
         _removedNodeGuids = [];
+        _log = "";
 
         synchronizeRoots(originLibraryRoot,_import.root.guid);
         exportLibrary(core,originLibraryRoot,function(err){
@@ -332,18 +349,21 @@ define(['util/assert'],function(ASSERT){
             //TODO now we make three rounds although one would be sufficient on ordered lists
             for(i=0;i<oldkeys.length;i++){
                 if(newkeys.indexOf(oldkeys[i]) === -1){
+                    log("node "+logId(_export.nodes,oldkeys[i])+", all of its sub-types and its children will be removed");
                     _removedNodeGuids.push(oldkeys[i]);
                 }
             }
 
             for(i=0;i<oldkeys.length;i++){
                 if(newkeys.indexOf(oldkeys[i]) !== -1){
+                    log("node "+logId(_export.nodes,oldkeys[i])+" will be updated")
                     _updatedNodeGuids.push(oldkeys[i]);
                 }
             }
 
             for(i=0;i<newkeys.length;i++){
                 if(oldkeys.indexOf(newkeys[i]) === -1){
+                    log("node "+logId(_import.nodes,newkeys[i])+" will be added")
                     _newNodeGuids.push(newkeys[i]);
                 }
             }
@@ -365,7 +385,6 @@ define(['util/assert'],function(ASSERT){
             //as a second step we should deal with the updated nodes
             //we should go among containment hierarchy
             updateNodes(_import.root.guid,null,_import.containment);
-            //_core.persist(originLibraryRoot,function(){});
 
             //now we can add or modify the relations of the nodes - we go along the hierarchy chain
             updateRelations(_import.root.guid,_import.containment);
@@ -373,13 +392,11 @@ define(['util/assert'],function(ASSERT){
             //now update inheritance chain
             //we assume that our inheritance chain comes from the FCO and that it is identical everywhere
             updateInheritance(_core.getGuid(_core.getBaseRoot(originLibraryRoot)),null,_import.inheritance);
-            //_core.persist(_core.getRoot(originLibraryRoot),function(){});
 
             //finally we need to update the meta rules of each node - again along the containment hierarchy
             updateMetaRules(_import.root.guid,_import.containment);
 
-            _core.persist(_core.getRoot(originLibraryRoot),callback);
-            callback(null);
+            callback(null,_log);
         });
     }
 

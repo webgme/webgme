@@ -2264,12 +2264,12 @@ define([
                 });
             }
             function updateLibraryAsync(libraryRootPath,newLibrary,callback){
-                Serialization.import(_core,_nodes[libraryRootPath].node,newLibrary,function(err){
+                Serialization.import(_core,_nodes[libraryRootPath].node,newLibrary,function(err,log){
                     if(err){
                         return callback(err);
                     }
 
-                    saveRoot("library have been updated...",callback);
+                    saveRoot("library update done\nlogs:\n"+log,callback);
                 });
             }
             function dumpNodeAsync(path,callback){
