@@ -21,10 +21,6 @@
     margin-left: 5px;
     color: #999999;
     font-size: 9px; }
-  .plugin-results-dialog .modal-body div.plugin-result .btn-details {
-    color: #999999;
-    font-size: 9px;
-    cursor: pointer; }
   .plugin-results-dialog .modal-body div.plugin-result .messages .msg {
     margin-bottom: 5px; }
     .plugin-results-dialog .modal-body div.plugin-result .messages .msg .msg-title {
