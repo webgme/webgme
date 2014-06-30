@@ -21,7 +21,8 @@
     color: #999999;
     font-size: 9px; }
   .plugin-results-dialog .modal-body div.plugin-result .messages .msg {
-    margin-bottom: 5px; }
+    margin-bottom: 5px;
+    padding-bottom: 15px; }
     .plugin-results-dialog .modal-body div.plugin-result .messages .msg .msg-title {
       margin-top: 5px;
       font-weight: bold;
