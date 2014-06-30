@@ -1604,11 +1604,11 @@ define([
                     saveRoot(msg);
                 }
             }
-            function completeTransaction(msg) {
+            function completeTransaction(msg,callback) {
                 _inTransaction = false;
                 if (_core) {
                     msg = msg || 'completeTransaction()';
-                    saveRoot(msg);
+                    saveRoot(msg,callback);
                 }
             }
             function setAttributes(path, name, value, msg) {
@@ -2272,6 +2272,17 @@ define([
                     saveRoot("library update done\nlogs:\n"+log,callback);
                 });
             }
+            function addLibraryAsync(libraryParentPath,newLibrary,callback){
+                startTransaction("creating library as a child of "+libraryParentPath);
+                var libraryRoot = createChild({parentId:libraryParentPath,baseId:null},"library placeholder");
+                Serialization.import(_core,_nodes[libraryRoot].node,newLibrary,function(err,log){
+                    if(err){
+                        return callback(err);
+                    }
+
+                    completeTransaction("library update done\nlogs:\n"+log,callback);
+                });
+            }
             function dumpNodeAsync(path,callback){
                 if(_nodes[path]){
                     Dump(_core,_nodes[path].node,"",'guid',callback);
@@ -2538,6 +2549,7 @@ define([
                 getDumpURL: getDumpURL,
                 getExportLibraryUrlAsync: getExportLibraryUrlAsync,
                 updateLibraryAsync: updateLibraryAsync,
+                addLibraryAsync: addLibraryAsync,
 
                 //constraint
                 setConstraint: setConstraint,

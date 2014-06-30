@@ -1083,20 +1083,15 @@ define(['logManager',
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionContextMenu = function (selectedIds, mousePos) {
         var menuItems = {},
-            MENU_EXPORT = 'export',
-            MENU_EXINTCONF = 'exintconf', //kecso
-            MENU_EXPLIB = 'exportlib', //kecso
+            //MENU_EXINTCONF = 'exintconf',
+            MENU_EXPLIB = 'exportlib',
             MENU_UPDLIB = 'updatelib',
             self = this;
 
-        menuItems[MENU_EXPORT] = {
-            "name": 'Export selected...',
-            "icon": 'icon-share'
-        };
-        menuItems[MENU_EXINTCONF] = {
+        /*menuItems[MENU_EXINTCONF] = {
             "name": 'Export model context...',
             "icon": 'icon-cog'
-        };
+        };*/
         if(selectedIds.length === 1){
             menuItems[MENU_EXPLIB] = {
                 "name": 'Export library...',
@@ -1110,9 +1105,7 @@ define(['logManager',
 
 
         this.designerCanvas.createMenu(menuItems, function (key) {
-                if (key === MENU_EXPORT) {
-                    self._exportItems(selectedIds);
-                } else if (key === MENU_EXINTCONF){
+                if (key === MENU_EXINTCONF){
                     self._exIntConf(selectedIds);
                 } else if(key === MENU_EXPLIB){
                     self._expLib(selectedIds);
@@ -1125,18 +1118,6 @@ define(['logManager',
         );
     };
 
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._exportItems = function (selectedIds) {
-        var i = selectedIds.length,
-            gmeIDs = [];
-
-        while(i--) {
-            gmeIDs.push(this._ComponentID2GmeID[selectedIds[i]]);
-        }
-
-        ExportManager.exportMultiple(gmeIDs);
-    };
-
-    //kecso
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._exIntConf = function (selectedIds) {
         var i = selectedIds.length,
             gmeIDs = [];

@@ -391,7 +391,9 @@ define(['util/assert'],function(ASSERT){
 
             //now update inheritance chain
             //we assume that our inheritance chain comes from the FCO and that it is identical everywhere
-            updateInheritance(_core.getGuid(_core.getBaseRoot(originLibraryRoot)),null,_import.inheritance);
+            if(Object.keys(_export.inheritance).length > 0){
+                updateInheritance(_core.getGuid(_core.getBaseRoot(originLibraryRoot)),null,_import.inheritance);
+            }
 
             //finally we need to update the meta rules of each node - again along the containment hierarchy
             updateMetaRules(_import.root.guid,_import.containment);

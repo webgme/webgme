@@ -55,7 +55,6 @@ define(['jquery',
         }
     };
 
-    //kecso
     var _exIntConf = function(objIDs) {
         var fileName = _client.getActiveProject() + "_" + _client.getActualBranch() + "_conf";
 

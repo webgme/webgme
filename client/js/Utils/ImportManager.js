@@ -66,13 +66,27 @@ define(['js/Dialogs/Import/ImportDialog',
                 }
                 _loader.stop();
             });
-        })
+        });
+    };
+
+    var _addLibrary = function(parentID){
+        var d = new ImportDialog();
+        d.show(function(fileContent){
+            _loader.start();
+            _client.addLibraryAsync(parentID,fileContent,function(err){
+                if(err) {
+                    _displayMessage("Library update failed: "+err, true);
+                }
+                _loader.stop();
+            });
+        });
     };
 
     //return utility functions
     return {
         initialize: _initialize,
         import: _import,
-        importLibrary: _importLibrary
+        importLibrary: _importLibrary,
+        addLibrary: _addLibrary
     };
 });
