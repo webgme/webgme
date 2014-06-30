@@ -55,17 +55,29 @@ define(['./BlobBackendBase',
                         return;
                     }
 
-                    fs.rename(tempName, objectFilename, function (err) {
-                        // FIXME: this code has to be reviewed.
-                        if (err) {
-                            fs.unlink(tempName, function (e) {
+                    if (fs.existsSync(objectFilename)) {
+                        // if already exists we do not need to move the content
+                        fs.unlink(tempName, function (e) {
+                            if (err) {
                                 callback(err);
-                            });
-                            return;
-                        }
+                                return;
+                            }
 
-                        callback(null, hash, size);
-                    });
+                            callback(null, hash, size);
+                        });
+                    } else {
+                        fs.rename(tempName, objectFilename, function (err) {
+                            // FIXME: this code has to be reviewed.
+                            if (err) {
+                                fs.unlink(tempName, function (e) {
+                                    callback(err);
+                                });
+                                return;
+                            }
+
+                            callback(null, hash, size);
+                        });
+                    }
                 });
             });
 
@@ -132,6 +144,7 @@ define(['./BlobBackendBase',
     // Private helper functions
 
     BlobFSBackend.prototype._getObjectRelativeLocation = function (hash) {
+        // FIXME: what if hash is null or emprty string. Hash validation is needed.
         return hash.slice(0, 2) + '/' + hash.slice(2);
     };
 

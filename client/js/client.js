@@ -73,8 +73,9 @@ define([
                 _offline = false,
                 _networkWatcher = null,
                 _TOKEN = null,
-                META = new BaseMeta(),
-                _rootHash = null;
+                META = new BaseMeta();
+                _rootHash = null,
+                _gHash = 0;
 
             function print_nodes(pretext){
                 if(pretext){
@@ -568,12 +569,17 @@ define([
 
             //loading functions
             function getStringHash(node){
+                //TODO there is a memory issue with the huge strings so we have to replace it with something
+                return _gHash++;
+                /*
                 var datas = _core.getDataForSingleHash(node),
                     i,hash="";
                 for(i=0;i<datas.length;i++){
                     hash+=datas[i];
                 }
                 return hash;
+                */
+
             }
             function getModifiedNodes(newerNodes){
                 var modifiedNodes = [];
@@ -622,9 +628,14 @@ define([
                 var newPaths = {};
                 var startErrorLevel = _loadError;
                 for(var i in _users[userId].PATTERNS){
-                    patternToPaths(i,_users[userId].PATTERNS[i],newPaths);
+                    if(_nodes[i]){ //TODO we only check pattern if its root is there...
+                        patternToPaths(i,_users[userId].PATTERNS[i],newPaths);
+                    }
                 }
 
+                if(startErrorLevel !== _loadError){
+                    return; //we send events only when everything is there correctly
+                }
                 var events = [];
 
                 //deleted items
@@ -653,9 +664,9 @@ define([
 
                 if(events.length>0){
                     if(_loadError > startErrorLevel){
-                        // TODO events.push({etype:'incomplete',eid:null});
+                        // TODO events.unshift({etype:'incomplete',eid:null});
                     } else {
-                        // TODO events.push({etype:'complete',eid:null});
+                        // TODO events.unshift({etype:'complete',eid:null});
                     }
 
                     _users[userId].FN(events);
@@ -977,7 +988,11 @@ define([
             function saveRoot(msg,callback){
                 callback = callback || function(){};
                 if(!_viewer && !_readOnlyProject){
-                    _msg +="\n"+msg;
+                    if(_msg){
+                        _msg +="\n"+msg;
+                    } else {
+                        _msg += msg;
+                    }
                     if(!_inTransaction){
                         ASSERT(_project && _core && _branch);
                         _core.persist(_nodes[ROOT_PATH].node,function(err){});
@@ -1335,6 +1350,55 @@ define([
             }
 
             //MGA
+            function copyMoreNodes(parameters,msg){
+                var pathestocopy = [];
+                if(typeof parameters.parentId === 'string' && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
+                    for(var i in parameters){
+                        if(i !== "parentId"){
+                            pathestocopy.push(i);
+                        }
+                    }
+
+                    msg = msg || 'copyMoreNodes('+pathestocopy+','+parameters.parentId+')';
+                    if(pathestocopy.length < 1){
+                    } else if(pathestocopy.length === 1){
+                        var newNode = _core.copyNode(_nodes[pathestocopy[0]].node,_nodes[parameters.parentId].node);
+                        storeNode(newNode);
+                        if(parameters[pathestocopy[0]]){
+                            for(var j in parameters[pathestocopy[0]].attributes){
+                                _core.setAttribute(newNode,j,parameters[pathestocopy[0]].attributes[j]);
+                            }
+                            for(j in parameters[pathestocopy[0]].registry){
+                                _core.setRegistry(newNode,j,parameters[pathestocopy[0]].registry[j]);
+                            }
+                        }
+                        saveRoot(msg);
+                    } else {
+                        copyMoreNodesAsync(pathestocopy,parameters.parentId,function(err,copyarr){
+                            if(err){
+                                //rollBackModification();
+                            }
+                            else{
+                                for(var i in copyarr){
+                                    if(parameters[i]){
+                                        for(var j in parameters[i].attributes){
+                                            _core.setAttribute(copyarr[i],j,parameters[i].attributes[j]);
+                                        }
+                                        for(j in parameters[i].registry){
+                                            _core.setRegistry(copyarr[i],j,parameters[i].registry[j]);
+                                        }
+                                    }
+                                }
+                                saveRoot(msg);
+                            }
+                        });
+                    }
+                } else {
+                    console.log('wrong parameters for copy operation - denied -');
+                }
+            }
+
+
             function copyMoreNodesAsync(nodePaths,parentPath,callback){
                 var checkPaths = function(){
                     var result = true;
@@ -1395,55 +1459,44 @@ define([
                 }
             }
 
-            function copyMoreNodes(parameters){
-                var returnParameters = {},
-                    pathsToCopy = [];
-                for(var i in parameters){
-                    if(i !== 'parentId'){
-                        pathsToCopy.push(i);
+            function _copyMoreNodes(parameters){
+                //now we will use the multiple copy function of the core
+                var nodes = [],
+                    copiedNodes,
+                    i, j,paths,keys,
+                    parent = _nodes[parameters.parentId].node,
+                    resultMap = {};
+                keys = Object.keys(parameters);
+                keys.splice(keys.indexOf('parentId'),1);
+                paths = keys;
+                for(i=0;i<paths.length;i++){
+                    nodes.push(_nodes[paths[i]].node);
+                }
+
+                copiedNodes = _core.copyNodes(nodes,parent);
+
+                for(i=0;i<paths.length;i++){
+                    keys = Object.keys(parameters[paths[i]].attributes || {});
+                    for(j=0;j<keys.length;j++){
+                        _core.setAttribute(copiedNodes[i],keys[j],parameters[paths[i]].attributes[keys[j]]);
+                    }
+
+                    keys = Object.keys(parameters[paths[i]].registry || {});
+                    for(j=0;j<keys.length;j++){
+                        _core.setRegistry(copiedNodes[i],keys[j],parameters[paths[i]].registry[keys[j]]);
                     }
                 }
 
-                if(pathsToCopy.length > 0 && typeof parameters.parentId === 'string' && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
-                    //collecting nodes under tempFrom
-                    var tempFrom = _core.createNode({parent:_nodes[parameters.parentId].node});
-                    for(var i=0;i<pathsToCopy.length;i++){
-                        if(_nodes[pathsToCopy[i]] && typeof _nodes[pathsToCopy[i]].node === 'object'){
-                            returnParameters[pathsToCopy[i]] = {'1stparent':_core.getParent(_nodes[pathsToCopy[i]].node),'1st':_core.moveNode(_nodes[pathsToCopy[i]].node,tempFrom)};
-                            returnParameters[pathsToCopy[i]]['1strelid'] = _core.getRelid(returnParameters[pathsToCopy[i]]['1st']);
-                        }
-                    }
-                    var tempTo = _core.copyNode(tempFrom,_nodes[parameters.parentId].node);
 
-                    //clean up part of temporary mess
-                    for(var i in returnParameters){
-                        _core.moveNode(returnParameters[i]['1st'],returnParameters[i]['1stparent']);
-                        delete returnParameters[i]['1st'];
-                        delete returnParameters[i]['1stparent'];
-                    }
-                    _core.deleteNode(tempFrom);
-                    delete tempFrom;
 
-                    for(var i in returnParameters){
-                        var child = _core.getChild(tempTo,returnParameters[i]['1strelid']);
-                        var finalNode = _core.moveNode(child,_nodes[parameters.parentId].node);
-                        returnParameters[i] = storeNode(finalNode);
-                        if(parameters[i]){
-                            for(var j in parameters[i].attributes){
-                                _core.setAttribute(finalNode,j,parameters[i].attributes[j]);
-                            }
-                            for(j in parameters[i].registry){
-                                _core.setRegistry(finalNode,j,parameters[i].registry[j]);
-                            }
-                        }
-                    }
-                    _core.deleteNode(tempTo);
-                    delete tempTo;
-
-                    saveRoot('copyMoreNodes('+JSON.stringify(returnParameters)+')');
-                    return returnParameters;
+                //creating the result map and storing the nodes to our cache, so the user will know which path became which
+                for(i=0;i<paths.length;i++){
+                    resultMap[paths[i]] = storeNode(copiedNodes[i]);
                 }
+
+                return resultMap;
             }
+
             function moveMoreNodes(parameters){
                 var pathsToMove = [],
                     returnParams = {};
@@ -1477,134 +1530,125 @@ define([
 
                 return returnParams;
             }
-            function createChildren(parameters){
-                var returnParameters = {},
-                    pathsToCopy = [];
-                for(var i in parameters){
-                    if(i !== 'parentId'){
-                        pathsToCopy.push(i);
+            
+            function createChildren(parameters,msg){
+                //TODO we also have to check out what is happening with the sets!!!
+                var result = {},
+                    paths = [],
+                    nodes = [],node,
+                    parent = _nodes[parameters.parentId].node,
+                    names, i, j,index, keys,pointer,
+                    newChildren = [],relations=[];
+
+                //to allow 'meaningfull' instantiation of multiple objects we have to recreate the internal relations - except the base
+                paths = Object.keys(parameters);
+                paths.splice(paths.indexOf('parentId'),1);
+                for(i=0;i<paths.length;i++){
+                    node = _nodes[paths[i]].node;
+                    nodes.push(node);
+                    pointer = {};
+                    names = _core.getPointerNames(node);
+                    index = names.indexOf('base');
+                    if(index !== -1){
+                        names.splice(index,1);
                     }
-                }
-                if(pathsToCopy.length > 0 && typeof parameters.parentId === 'string' && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
-                    for(var i=0;i<pathsToCopy.length;i++){
-                        if(_nodes[pathsToCopy[i]] && typeof _nodes[pathsToCopy[i]].node === 'object'){
-                            var node = _core.createNode({parent:_nodes[parameters.parentId].node,base:_nodes[pathsToCopy[i]].node});
-                            var newPath = storeNode(node);
-                            returnParameters[pathsToCopy[i]] = newPath;
 
-                            if(parameters[pathsToCopy[i]]){
-                                for(var j in parameters[pathsToCopy[i]].attributes){
-                                    _core.setAttribute(node,j,parameters[pathsToCopy[i]].attributes[j]);
-                                }
-                                for(j in parameters[pathsToCopy[i]].registry){
-                                    _core.setRegistry(node,j,parameters[pathsToCopy[i]].registry[j]);
-                                }
-                            }
-
+                    for(j=0;j<names.length;j++){
+                        index = paths.indexOf(_core.getPointerPath(node,names[j]));
+                        if(index !== -1){
+                            pointer[names[j]] = index;
                         }
                     }
+                    relations.push(pointer);
                 }
 
-                saveRoot('createChildren('+JSON.stringify(returnParameters)+')');
-                return returnParameters;
-            }
-            function _createChildren(parameters){
-                var returnParameters = {},
-                    pathsToCopy = [];
-                for(var i in parameters){
-                    if(i !== 'parentId'){
-                        pathsToCopy.push(i);
-                    }
+                //now the instantiation
+                for(i=0;i<nodes.length;i++){
+                    newChildren.push(_core.createNode({parent:parent,base:nodes[i]}));
                 }
-                
-                if(pathsToCopy.length > 0 && typeof parameters.parentId === 'string' && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
-                    //collecting nodes under tempFrom
-                    var tempFrom = _core.createNode({parent:_nodes[parameters.parentId].node,base:null});
-                    for(var i=0;i<pathsToCopy.length;i++){
-                        if(_nodes[pathsToCopy[i]] && typeof _nodes[pathsToCopy[i]].node === 'object'){
-                            returnParameters[pathsToCopy[i]] = {'1stparent':_core.getParent(_nodes[pathsToCopy[i]].node),'1st':_core.moveNode(_nodes[pathsToCopy[i]].node,tempFrom)};
-                            returnParameters[pathsToCopy[i]]['1strelid'] = _core.getRelid(returnParameters[pathsToCopy[i]]['1st']);
-                        }
-                    }
-                    var tempTo = _core.createNode({parent:_nodes[parameters.parentId].node, base:tempFrom});
 
-                    //clean up part of temporary mess
-                    for(var i in returnParameters){
-                        _core.moveNode(returnParameters[i]['1st'],returnParameters[i]['1stparent']);
-                        delete returnParameters[i]['1st'];
-                        delete returnParameters[i]['1stparent'];
+                //now for the storage and relation setting
+                for(i=0;i<paths.length;i++){
+                    //attributes
+                    names = Object.keys(parameters[paths[i]].attributes || {});
+                    for(j=0;j<names.length;j++){
+                        _core.setAttribute(newChildren[i],names[j],parameters[paths[i]].attributes[names[j]]);
+                    }
+                    //registry
+                    names = Object.keys(parameters[paths[i]].registry || {});
+                    for(j=0;j<names.length;j++){
+                        _core.setRegistry(newChildren[i],names[j],parameters[paths[i]].registry[names[j]]);
                     }
 
-                    _core.deleteNode(tempFrom);
-                    delete tempFrom;
-
-                    for(var i in returnParameters){
-                        var child = _core.getChild(tempTo,returnParameters[i]['1strelid']);
-                        var finalNode = _core.moveNode(child,_nodes[parameters.parentId].node);
-                        returnParameters[i] = storeNode(finalNode);
-                        if(parameters[i]){
-                            for(var j in parameters[i].attributes){
-                                _core.setAttribute(finalNode,j,parameters[i].attributes[j]);
-                            }
-                            for(j in parameters[i].registry){
-                                _core.setRegistry(finalNode,j,parameters[i].registry[j]);
-                            }
-                        }
+                    //relations
+                    names = Object.keys(relations[i]);
+                    for(j=0;j<names.length;j++){
+                        _core.setPointer(newChildren[i],names[j],newChildren[relations[i][names[j]]]);
                     }
-                    _core.deleteNode(tempTo);
-                    delete tempTo;
 
+                    //store
+                    result[paths[i]] = storeNode(newChildren[i]);
 
-                    saveRoot('createChildren('+JSON.stringify(returnParameters)+')');
-                    return returnParameters;
                 }
+
+                msg = msg || 'createChildren('+JSON.stringify(result)+')';
+                saveRoot(msg);
+                return result;
             }
 
-            function startTransaction() {
+
+            function startTransaction(msg) {
                 if (_core) {
                     _inTransaction = true;
-                    saveRoot('startTransaction()');
+                    msg = msg || 'startTransaction()';
+                    saveRoot(msg);
                 }
             }
-            function completeTransaction() {
+            function completeTransaction(msg) {
                 _inTransaction = false;
                 if (_core) {
-                    saveRoot('completeTransaction()');
+                    msg = msg || 'completeTransaction()';
+                    saveRoot(msg);
                 }
             }
-            function setAttributes(path, name, value) {
+            function setAttributes(path, name, value, msg) {
                 if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
                     _core.setAttribute(_nodes[path].node, name, value);
-                    saveRoot('setAttribute('+path+','+'name'+','+value+')');
+                    msg = msg || 'setAttribute('+path+','+name+','+value+')';
+                    saveRoot(msg);
                 }
             }
-            function delAttributes(path, name) {
+            function delAttributes(path, name, msg) {
                 if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
                     _core.delAttribute(_nodes[path].node, name);
-                    saveRoot('delAttribute('+path+','+'name'+')');
+                    msg = msg || 'delAttribute('+path+','+name+')';
+                    saveRoot(msg);
                 }
             }
-            function setRegistry(path, name, value) {
+            function setRegistry(path, name, value, msg) {
                 if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
                     _core.setRegistry(_nodes[path].node, name, value);
-                    saveRoot('setRegistry('+path+','+','+name+','+value+')');
+                    msg = msg || 'setRegistry('+path+','+','+name+','+value+')';
+                    saveRoot(msg);
                 }
             }
-            function delRegistry(path, name) {
+            function delRegistry(path, name, msg) {
                 if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
                     _core.delRegistry(_nodes[path].node, name);
-                    saveRoot('delRegistry('+path+','+','+name+')');
+                    msg = msg || 'delRegistry('+path+','+','+name+')';
+                    saveRoot(msg);
                 }
             }
 
-            function deleteNode(path) {
+            function deleteNode(path, msg) {
                 if(_core && _nodes[path] && typeof _nodes[path].node === 'object'){
                     _core.deleteNode(_nodes[path].node);
                     //delete _nodes[path];
-                    saveRoot('deleteNode('+path+')');
+                    msg = msg || 'deleteNode('+path+')';
+                    saveRoot(msg);
                 }
             }
-            function delMoreNodes(paths) {
+            function delMoreNodes(paths, msg) {
                 if(_core){
                     for(var i=0;i<paths.length;i++){
                         if(_nodes[paths[i]] && typeof _nodes[paths[i]].node === 'object'){
@@ -1612,11 +1656,12 @@ define([
                             //delete _nodes[paths[i]];
                         }
                     }
-                    saveRoot('delMoreNodes('+paths+')');
+                    msg = msg || 'delMoreNodes('+paths+')';
+                    saveRoot(msg);
                 }
             }
 
-            function createChild(parameters){
+            function createChild(parameters, msg){
                 var newID;
 
                 if(_core){
@@ -1633,14 +1678,15 @@ define([
                         }
                         storeNode(child);
                         newID = _core.getPath(child);
-                        saveRoot('createChild('+parameters.parentId+','+parameters.baseId+','+_core.getPath(child)+')');
+                        msg = msg || 'createChild('+parameters.parentId+','+parameters.baseId+','+newID+')';
+                        saveRoot(msg);
                     }
                 }
 
                 return newID;
             }
 
-            function makePointer(id, name, to) {
+            function makePointer(id, name, to, msg) {
                 if(to === null){
                     _core.setPointer(_nodes[id].node,name,to);
                 } else {
@@ -1648,114 +1694,78 @@ define([
 
                     _core.setPointer(_nodes[id].node,name,_nodes[to].node);
                 }
-                saveRoot('makePointer('+id+','+name+','+to+')');
+
+                msg = msg || 'makePointer('+id+','+name+','+to+')';
+                saveRoot(msg);
             }
-            function delPointer(path, name) {
+            function delPointer(path, name, msg) {
                 if(_core && _nodes[path] && typeof _nodes[path].node === 'object'){
                     _core.setPointer(_nodes[path].node,name,undefined);
-                    saveRoot('delPointer('+path+','+name+')');
+                    msg = msg || 'delPointer('+path+','+name+')';
+                    saveRoot(msg);
                 }
             }
 
-
-            function _copyMoreNodes(parameters){
-                var pathestocopy = [];
-                if(typeof parameters.parentId === 'string' && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
-                    for(var i in parameters){
-                        if(i !== "parentId"){
-                            pathestocopy.push(i);
-                        }
-                    }
-
-                    if(pathestocopy.length < 1){
-                    } else if(pathestocopy.length === 1){
-                        var newNode = _core.copyNode(_nodes[pathestocopy[0]].node,_nodes[parameters.parentId].node);
-                        storeNode(newNode);
-                        if(parameters[pathestocopy[0]]){
-                            for(var j in parameters[pathestocopy[0]].attributes){
-                                _core.setAttribute(newNode,j,parameters[pathestocopy[0]].attributes[j]);
-                            }
-                            for(j in parameters[pathestocopy[0]].registry){
-                                _core.setRegistry(newNode,j,parameters[pathestocopy[0]].registry[j]);
-                            }
-                        }
-                        saveRoot('intellyPaste('+pathestocopy+','+parameters.parentId+')');
-                    } else {
-                        copyMoreNodesAsync(pathestocopy,parameters.parentId,function(err,copyarr){
-                            if(err){
-                                //rollBackModification();
-                            }
-                            else{
-                                for(var i in copyarr){
-                                    if(parameters[i]){
-                                        for(var j in parameters[i].attributes){
-                                            _core.setAttribute(copyarr[i],j,parameters[i].attributes[j]);
-                                        }
-                                        for(j in parameters[i].registry){
-                                            _core.setRegistry(copyarr[i],j,parameters[i].registry[j]);
-                                        }
-                                    }
-                                }
-                                saveRoot('intellyPaste('+pathestocopy+','+parameters.parentId+')');
-                            }
-                        });
-                    }
-                } else {
-                    console.log('wrong parameters for copy operation - denied -');
-                }
-            }
 
             //MGAlike - set functions
-            function addMember(path,memberpath,setid){
+            function addMember(path,memberpath,setid,msg){
                 if(_nodes[path] &&
                     _nodes[memberpath] &&
                     typeof _nodes[path].node === 'object' &&
                     typeof _nodes[memberpath].node === 'object'){
                     _core.addMember(_nodes[path].node,setid,_nodes[memberpath].node);
-                    saveRoot('addMember('+path+','+memberpath+','+setid+')');
+                    msg = msg || 'addMember('+path+','+memberpath+','+setid+')';
+                    saveRoot(msg);
                 }
             }
-            function removeMember(path,memberpath,setid){
+            function removeMember(path,memberpath,setid,msg){
                 if(_nodes[path] &&
                     typeof _nodes[path].node === 'object'){
                     _core.delMember(_nodes[path].node,setid,memberpath);
-                    saveRoot('removeMember('+path+','+memberpath+','+setid+')');
+                    msg = msg || 'removeMember('+path+','+memberpath+','+setid+')';
+                    saveRoot(msg);
                 }
             }
-            function setMemberAttribute(path,memberpath,setid,name,value){
+            function setMemberAttribute(path,memberpath,setid,name,value,msg){
                 if(_nodes[path] && typeof _nodes[path].node === 'object'){
                     _core.setMemberAttribute(_nodes[path].node,setid,memberpath,name,value);
-                    saveRoot('setMemberAttribute('+path+","+memberpath+","+setid+","+name+","+value+")");
+                    msg = msg || 'setMemberAttribute('+path+","+memberpath+","+setid+","+name+","+value+")";
+                    saveRoot(msg);
                 }
             }
-            function delMemberAttribute(path,memberpath,setid,name){
+            function delMemberAttribute(path,memberpath,setid,name,msg){
                 if(_nodes[path] && typeof _nodes[path].node === 'object'){
                     _core.delMemberAttribute(_nodes[path].node,setid,memberpath,name);
-                    saveRoot('delMemberAttribute('+path+","+memberpath+","+setid+","+name+")");
+                    msg = msg || 'delMemberAttribute('+path+","+memberpath+","+setid+","+name+")";
+                    saveRoot(msg);
                 }
             }
-            function setMemberRegistry(path,memberpath,setid,name,value){
+            function setMemberRegistry(path,memberpath,setid,name,value,msg){
                 if(_nodes[path] && typeof _nodes[path].node === 'object'){
                     _core.setMemberRegistry(_nodes[path].node,setid,memberpath,name,value);
-                    saveRoot('setMemberRegistry('+path+","+memberpath+","+setid+","+name+","+value+")");
+                    msg = msg || 'setMemberRegistry('+path+","+memberpath+","+setid+","+name+","+value+")";
+                    saveRoot(msg);
                 }
             }
-            function delMemberRegistry(path,memberpath,setid,name){
+            function delMemberRegistry(path,memberpath,setid,name,msg){
                 if(_nodes[path] && typeof _nodes[path].node === 'object'){
                     _core.delMemberRegistry(_nodes[path].node,setid,memberpath,name);
-                    saveRoot('delMemberRegistry('+path+","+memberpath+","+setid+","+name+")");
+                    msg = msg || 'delMemberRegistry('+path+","+memberpath+","+setid+","+name+")";
+                    saveRoot(msg);
                 }
             }
-            function createSet(path, setid) {
+            function createSet(path, setid, msg) {
                 if(_nodes[path] && typeof _nodes[path].node === 'object'){
                     _core.createSet(_nodes[path].node,setid);
-                    saveRoot('createSet('+path+","+setid+")");
+                    msg = msg || 'createSet('+path+","+setid+")";
+                    saveRoot(msg);
                 }
             }
-            function deleteSet(path, setid) {
+            function deleteSet(path, setid, msg) {
                 if(_nodes[path] && typeof _nodes[path].node === 'object'){
                     _core.deleteSet(_nodes[path].node,setid);
-                    saveRoot('deleteSet('+path+","+setid+")");
+                    msg = msg || 'deleteSet('+path+","+setid+")";
+                    saveRoot(msg);
                 }
             }
 

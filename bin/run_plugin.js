@@ -15,6 +15,7 @@ var webGme = require('../webgme'),
 program.option('-c, --config <name>', 'Configuration file');
 program.option('-p, --project <name>', 'Name of the project.', 'uj');
 program.option('-b, --branch <name>', 'Name of the branch.', 'master');
+program.option('-j, --pluginConfigPath <name>', 'Path to json file with plugin options that should be overwritten.', '');
 program.option('-n, --pluginName <name><mandatory>', 'Path to given plugin.');
 program.option('-s, --selectedObjID <webGMEID>', 'ID to selected component.', '');
 program.parse(process.argv);
@@ -28,9 +29,17 @@ if(program.pluginName === undefined){
     pluginName = program.pluginName;
     activeNode = program.selectedObjID;
     configFilename = program.config;
+    pluginConfigFilename = program.pluginConfigPath;
 }
 
 console.log('executing '+pluginName+' plugin');
+
+if (pluginConfigFilename) {
+    resolvedPluginConfigFilename = PATH.resolve(pluginConfigFilename);
+    pluginConfigJson = require(resolvedPluginConfigFilename);
+} else {
+    pluginConfigJson = {};
+}
 
 if (configFilename) {
     // TODO: check if file exists and it is json
@@ -45,12 +54,14 @@ if (configFilename) {
     }
 }
 
+
 //setting plugin config
 pluginConfig.projectName = projectName;
 pluginConfig.branch = branch;
 pluginConfig.pluginName = pluginName;
 pluginConfig.activeNode = activeNode;
 pluginConfig.activeSelection = activeSelection;
+pluginConfig.pluginConfig = pluginConfigJson;
 
 webGme.runPlugin.main(CONFIG,pluginConfig,function(err,result){
     if (err) {

@@ -38,13 +38,13 @@ define([
                 "activeNode": activeNode,
                 "activeSelection": activeSelection,
                 "commit": null,
-                "branchName": branch
+                "branchName": branch,
+                "pluginConfig": pluginConfig.pluginConfig
             };
 
             // TODO: set WebGMEGlobalConfig if required
 
             Plugin = requirejs('plugin/' + pluginName + '/' + pluginName + '/' + pluginName);
-
 
             logManager.setLogLevel(5);
             logger.info('Given plugin : ' + pluginName);
@@ -61,7 +61,6 @@ define([
                         if (!err) {
 
                             var pluginManager = new PluginManager(project, Core, plugins);
-
                             var blobBackend = new BlobFSBackend();
                             //var blobBackend  = new BlobS3Backend();
 

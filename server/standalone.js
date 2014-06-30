@@ -304,6 +304,9 @@ define(['logManager',
                 if(modul){
                     __logger.info('adding RExtraST ['+CONFIG.rextrast[keys[i]]+'] to - /rest/external/'+keys[i]);
                     __app.use('/rest/external/'+keys[i],modul);
+                } else {
+                    console.log("Loading " + CONFIG.rextrast[keys[i]] + " failed.");
+                    process.exit(2);
                 }
             }
         }

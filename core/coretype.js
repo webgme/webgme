@@ -128,27 +128,26 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 			ASSERT(node === null || typeof node.base === "undefined" || typeof node.base === "object");
 
 			if (typeof node.base === "undefined") {
-                if(core.isEmpty(node)){
+                if(core.isEmpty(node)) {
                     //empty nodes do not have a base
                     return null;
+                } else if(node.parent && node.parent.base && oldcore.getChildrenRelids(node.parent.base).indexOf(node.relid) !== -1) {
+                    //it is possible that the node is an inherited child
+                    return TASYNC.call(function(n,b){
+                        n.base = b;
+                        return n;
+                    },node,core.loadChild(node.parent.base,node.relid));
                 } else if(isFalseNode(node)){
                     var root = core.getRoot(node);
                     oldcore.deleteNode(node);
+                    core.persist(root);
                     return null;
                 } else {
                     return TASYNC.call(__loadBase2, node, oldcore.loadPointer(node, "base"));
                 }
-			} else if(node === null){
-                return node;
             } else {
-                var oldpath = core.getPath(node.base);
-                var newpath = core.getPointerPath(node,"base");
-                if(oldpath !== newpath){
-                    delete node.base;
-                    return __loadBase(node);
-                } else {
-                    return node;
-                }
+                //TODO can the base change at this point???
+                return node;
 			}
 		}
 
@@ -159,10 +158,10 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
             } else {
                 ASSERT(typeof node.base === "undefined" || node.base === null); //kecso
 
-                if(target === null){
+                if(target === null) {
                     node.base = null;
                     return node;
-                } else {
+                }  else {
                     return TASYNC.call(function(n,b){n.base = b; return n;},node,__loadBase(target));
                 }
             }
@@ -633,6 +632,7 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
             return child;
         };
         core.moveNode = function(node,parent){
+            //TODO we have to check if the move is really allowed!!!
             var base = node.base;
             ASSERT(!base || core.getPath(base) !== core.getPath(parent));
 
@@ -646,7 +646,68 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 
             var newnode = oldcore.copyNode(node,parent);
             newnode.base = base;
+            oldcore.setPointer(newnode,'base',base);
             return newnode;
+        };
+        function _inheritedPointerNames(node){
+            var allNames = core.getPointerNames(node),
+                ownNames = core.getOwnPointerNames(node),
+                names = [],
+                i;
+
+            for(i=0;i<allNames.length;i++){
+                if(ownNames.indexOf(allNames[i]) === -1){
+                    names.push(allNames[i]);
+                }
+            }
+
+            return names;
+        }
+
+        core.copyNodes = function(nodes,parent){
+            var copiedNodes,
+                i, j,index,base,
+                relations = [],
+                names,pointer,
+                paths = [];
+
+            //here we also have to copy the inherited relations which points inside the copy area
+            for(i=0;i<nodes.length;i++){
+                paths.push(core.getPath(nodes[i]));
+            }
+
+            for(i=0;i<nodes.length;i++){
+                names = _inheritedPointerNames(nodes[i]);
+                pointer = {};
+                for(j=0;j<names.length;j++){
+                    index = paths.indexOf(core.getPointerPath(nodes[i],names[j]));
+                    if(index !== -1){
+                        pointer[names[j]] = index;
+                    }
+                }
+                relations.push(pointer);
+            }
+
+            //making the actual copy
+            copiedNodes = oldcore.copyNodes(nodes,parent);
+            
+            //setting internal-inherited relations
+            for(i=0;i<nodes.length;i++){
+                names = Object.keys(relations[i]);
+                for(j=0;j<names.length;j++){
+                    core.setPointer(copiedNodes[i],names[j],copiedNodes[relations[i][names[j]]]);
+                }
+            }
+
+            //setting base relation
+            for(i=0;i<nodes.length;i++){
+                base = nodes[i].base;
+                copiedNodes[i].base = base;
+                oldcore.setPointer(copiedNodes[i],'base',base);
+            }
+
+
+            return copiedNodes;
         };
 
         core.getDataForSingleHash = function(node){

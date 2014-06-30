@@ -27,6 +27,7 @@ define(['jquery',
 
 
     var _onLoadState = function (stateObj) {
+        stateObj = stateObj || window.history.state; //TODO check why it is null - probably jquery bug
         _stateLoading = true;
 
         //clear state in silent mode, it will not fire the clear event

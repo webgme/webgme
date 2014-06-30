@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "util/assert", "core/coretree", "util/zssha1", "core/tasync", "util/canon" ], function (ASSERT, CoreTree, SHA1, TASYNC, CANON) {
+define([ "util/assert", "core/coretree", "core/tasync", "util/canon" ], function (ASSERT, CoreTree, TASYNC, CANON) {
 	"use strict";
 
 	// ----------------- RELID -----------------
@@ -13,8 +13,6 @@ define([ "util/assert", "core/coretree", "util/zssha1", "core/tasync", "util/can
 	var REGISTRY = "reg";
 	var OVERLAYS = "ovr";
 	var COLLSUFFIX = "-inv";
-
-    var zsSHA = new SHA1();
 
 	function isPointerName(name) {
 		ASSERT(typeof name === "string");
@@ -184,12 +182,12 @@ define([ "util/assert", "core/coretree", "util/zssha1", "core/tasync", "util/can
 			var list = [];
 			var paths = coretree.getKeys(overlays);
 
-			for ( var i = 0; i < paths.length; ++i) {
+			for (var i = 0; i < paths.length; ++i) {
 				var path = paths[i];
 				if (path === prefix || path.substr(0, prefix2.length) === prefix2) {
 					var node = coretree.getChild(overlays, path);
 					var names = coretree.getKeys(node);
-					for ( var j = 0; j < names.length; ++j) {
+					for (var j = 0; j < names.length; ++j) {
 						var name = names[j];
 						if (isPointerName(name)) {
 							list.push({
@@ -202,7 +200,7 @@ define([ "util/assert", "core/coretree", "util/zssha1", "core/tasync", "util/can
 							var array = coretree.getProperty(node, name);
 							ASSERT(Array.isArray(array));
 							name = name.slice(0, -COLLSUFFIX.length);
-							for ( var k = 0; k < array.length; ++k) {
+							for (var k = 0; k < array.length; ++k) {
 								list.push({
 									s: array[k],
 									n: name,
@@ -227,7 +225,7 @@ define([ "util/assert", "core/coretree", "util/zssha1", "core/tasync", "util/can
 
 			ASSERT(!parent || isValidNode(parent));
 			ASSERT(!relid || typeof relid === 'string');
-			
+
 			var node;
 			if (parent) {
 				if (relid) {
@@ -279,7 +277,7 @@ define([ "util/assert", "core/coretree", "util/zssha1", "core/tasync", "util/can
 				var overlays = coretree.getChild(parent, OVERLAYS);
 
 				var list = overlayQuery(overlays, prefix);
-				for ( var i = 0; i < list.length; ++i) {
+				for (var i = 0; i < list.length; ++i) {
 					var entry = list[i];
 					overlayRemove(overlays, entry.s, entry.n, entry.t);
 				}
@@ -324,7 +322,7 @@ define([ "util/assert", "core/coretree", "util/zssha1", "core/tasync", "util/can
 
 					var relativePath = aboveAncestor < 0 ? coretree.getPath(base, ancestor) : coretree.getPath(ancestor, base);
 
-					for ( var i = 0; i < list.length; ++i) {
+					for (var i = 0; i < list.length; ++i) {
 						var entry = list[i];
 
 						if (entry.p) {
@@ -374,6 +372,46 @@ define([ "util/assert", "core/coretree", "util/zssha1", "core/tasync", "util/can
 			return newNode;
 		}
 
+        //kecso
+        function copyNodes(nodes,parent){
+            //copying multiple nodes at once for keeping their internal relations
+            var paths = [],
+                i, j,index,names,pointer,
+                copiedNodes = [],
+                internalRelationPaths=[]; //every single element will be an object with the internally pointing relations and the index of the target
+
+            for(i=0;i<nodes.length;i++){
+                paths.push(coretree.getPath(nodes[i]));
+            }
+
+            for(i=0;i<nodes.length;i++){
+                names = getPointerNames(nodes[i]);
+                pointer = {};
+                for(j=0;j<names.length;j++){
+                    index = paths.indexOf(getPointerPath(nodes[i],names[j]));
+                    if(index !== -1){
+                        pointer[names[j]] = index;
+                    }
+                }
+                internalRelationPaths.push(pointer);
+            }
+
+            //now we use our simple copy
+            for(i=0;i<nodes.length;i++){
+                copiedNodes.push(copyNode(nodes[i],parent));
+            }
+
+            //and now back to the relations
+            for(i=0;i<internalRelationPaths.length;i++){
+                names = Object.keys(internalRelationPaths[i]);
+                for(j=0;j<names.length;j++){
+                    setPointer(copiedNodes[i],names[j],copiedNodes[internalRelationPaths[i][names[j]]]);
+                }
+            }
+
+            return copiedNodes;
+        }
+
 		function moveNode(node, parent) {
 			ASSERT(isValidNode(node) && isValidNode(parent));
 
@@ -411,7 +449,7 @@ define([ "util/assert", "core/coretree", "util/zssha1", "core/tasync", "util/can
 
 				var relativePath = aboveAncestor < 0 ? coretree.getPath(base, ancestor) : coretree.getPath(ancestor, base);
 
-				for ( var i = 0; i < list.length; ++i) {
+				for (var i = 0; i < list.length; ++i) {
 					var entry = list[i];
 
 					overlayRemove(baseOverlays, entry.s, entry.n, entry.t);
@@ -487,7 +525,7 @@ define([ "util/assert", "core/coretree", "util/zssha1", "core/tasync", "util/can
 			var path = coretree.getPath(node);
 
 			var relids = getChildrenRelids(node);
-			for ( var i = 0; i < relids.length; ++i) {
+			for (var i = 0; i < relids.length; ++i) {
 				relids[i] = path + "/" + relids[i];
 			}
 
@@ -498,7 +536,7 @@ define([ "util/assert", "core/coretree", "util/zssha1", "core/tasync", "util/can
 			ASSERT(isValidNode(node));
 
 			var children = coretree.getKeys(node, isValidRelid);
-			for ( var i = 0; i < children.length; ++i) {
+			for (var i = 0; i < children.length; ++i) {
 				children[i] = coretree.loadChild(node, children[i]);
 			}
 
@@ -514,7 +552,7 @@ define([ "util/assert", "core/coretree", "util/zssha1", "core/tasync", "util/can
 			do {
 				var child = coretree.getProperty(coretree.getChild(node, OVERLAYS), source);
 				if (child) {
-					for ( var name in child) {
+					for (var name in child) {
 						ASSERT(names.indexOf(name) === -1);
 						if (isPointerName(name)) {
 							names.push(name);
@@ -649,7 +687,7 @@ define([ "util/assert", "core/coretree", "util/zssha1", "core/tasync", "util/can
 			do {
 				var child = coretree.getProperty(coretree.getChild(node, OVERLAYS), target);
 				if (child) {
-					for ( var name in child) {
+					for (var name in child) {
 						if (!isPointerName(name)) {
 							name = name.slice(0, -COLLSUFFIX.length);
 							if (names.indexOf(name) < 0) {
@@ -683,7 +721,7 @@ define([ "util/assert", "core/coretree", "util/zssha1", "core/tasync", "util/can
 					if (sources) {
 						ASSERT(Array.isArray(sources) && sources.length >= 1);
 
-						for ( var i = 0; i < sources.length; ++i) {
+						for (var i = 0; i < sources.length; ++i) {
 							collection.push(coretree.loadByPath(node, sources[i]));
 						}
 					}
@@ -715,7 +753,7 @@ define([ "util/assert", "core/coretree", "util/zssha1", "core/tasync", "util/can
 
 						var prefix = coretree.getPath(node);
 
-						for ( var i = 0; i < sources.length; ++i) {
+						for (var i = 0; i < sources.length; ++i) {
 							result.push(coretree.joinPaths(prefix, sources[i]));
 						}
 					}
@@ -782,13 +820,14 @@ define([ "util/assert", "core/coretree", "util/zssha1", "core/tasync", "util/can
 		corerel.createNode = createNode;
 		corerel.deleteNode = deleteNode;
 		corerel.copyNode = copyNode;
+        corerel.copyNodes = copyNodes;
 		corerel.moveNode = moveNode;
 
 		corerel.getAttributeNames = getAttributeNames;
 		corerel.getAttribute = getAttribute;
 		corerel.setAttribute = setAttribute;
 		corerel.delAttribute = delAttribute;
-		
+
 		corerel.getRegistryNames = getRegistryNames;
 		corerel.getRegistry = getRegistry;
 		corerel.setRegistry = setRegistry;
@@ -806,11 +845,11 @@ define([ "util/assert", "core/coretree", "util/zssha1", "core/tasync", "util/can
 		corerel.loadCollection = loadCollection;
 
         corerel.getDataForSingleHash = getDataForSingleHash;
-		
+
 		corerel.getCoreTree = function() {
 			return coretree;
 		};
-		
+
 		return corerel;
 	}
 

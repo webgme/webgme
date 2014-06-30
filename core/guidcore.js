@@ -159,6 +159,16 @@ define([ "util/assert", "util/guid", "core/tasync" ], function (ASSERT, GUID, TA
             return newNode;
         };
 
+        _core.copyNodes = function(nodes,parent){
+            var copiedNodes = _innerCore.copyNodes(nodes,parent),
+                i;
+            for(i=0;i<copiedNodes.length;i++){
+                _core.setAttribute(copiedNodes[i],OWN_GUID,toInternalGuid(GUID()));
+            }
+
+            return copiedNodes;
+        };
+
 		return _core;
 	}
 
