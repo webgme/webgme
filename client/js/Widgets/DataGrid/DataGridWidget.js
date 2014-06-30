@@ -1,15 +1,21 @@
-"use strict";
+/*globals define, Raphael, window, WebGMEGlobal, _*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
+
 
 define(['logManager',
     'clientUtil',
     'js/Constants',
     'js/Widgets/DataGrid/DataGridWidget.Droppable',
-    'text!html/Widgets/DataGrid/DataTableTemplate.html',
-    'css!/css/Widgets/DataGrid/DataGridWidget'], function (logManager,
+    'text!./templates/DataTableTemplate.html',
+    'css!./styles/DataGridWidget'], function (logManager,
                                                            util,
                                                           CONSTANTS,
                                                           DataGridWidgetDroppable,
                                                           dataTableTemplate) {
+    "use strict";
 
     var DataGridWidget,
         DEFAULT_DATAMEMBER_ID = "ID",
@@ -844,7 +850,7 @@ i,
     /****************** PUBLIC API / COMMON COLUMNS ONLY *************************/
 
     DataGridWidget.prototype.displayCommonColumnsOnly = function (commonColumnOnly) {
-        this._displayCommonColumnsOnly = commonColumnOnly === true ? true : false;
+        this._displayCommonColumnsOnly = commonColumnOnly === true;
         this.logger.debug("setting displayCommonColumnsOnly to: " + this._displayCommonColumnsOnly);
         this._applyCommonColumnFilter();
     };

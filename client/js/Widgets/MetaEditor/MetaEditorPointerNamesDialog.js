@@ -1,11 +1,17 @@
-"use strict";
+/*globals define, Raphael, window, WebGMEGlobal*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['clientUtil',
         'js/Constants',
-        'text!html/Widgets/MetaEditor/MetaEditorPointerNamesDialog.html',
-        'css!/css/Widgets/MetaEditor/MetaEditorPointerNamesDialog'], function ( util,
+        'text!./templates/MetaEditorPointerNamesDialog.html',
+        'css!./styles/MetaEditorPointerNamesDialog'], function ( util,
                                                                                 CONSTANTS,
                                                                metaEditorPointerNamesDialogTemplate) {
+
+    "use strict";
 
     var MetaEditorPointerNamesDialog,
         POPULAR_POINTER_NAMES = [CONSTANTS.POINTER_SOURCE, CONSTANTS.POINTER_TARGET];
@@ -43,11 +49,11 @@ define(['clientUtil',
             isValidPointerName;
 
         closeAndCallback = function (selectedName) {
-        	self._dialog.modal('hide');
+            self._dialog.modal('hide');
 
-        	if (callBack) {
-        		callBack.call(self, selectedName);
-        	}
+            if (callBack) {
+                callBack.call(self, selectedName);
+            }
         };
 
         isValidPointerName = function (name) {
@@ -101,7 +107,7 @@ define(['clientUtil',
 
         //hook up event handlers
         this._btnGroup.on('click', '.btn', function (event) {
-        	var selectedPointerName = $(this).text();
+        var selectedPointerName = $(this).text();
             
             event.stopPropagation();
             event.preventDefault();
@@ -146,13 +152,13 @@ define(['clientUtil',
         });
 
         this._btnCreateNew.on('click', function (event) {
-        	var selectedPointerName = self._txtNewPointerName.val();
+            var selectedPointerName = self._txtNewPointerName.val();
             
             event.stopPropagation();
             event.preventDefault();
 
             if (!($(this).hasClass('disabled'))) {
-            	closeAndCallback(selectedPointerName);
+                closeAndCallback(selectedPointerName);
             }
         });
     };

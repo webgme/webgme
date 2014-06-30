@@ -1,13 +1,14 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
+/*globals define, Raphael, window, WebGMEGlobal*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
  */
 
-"use strict";
-
 define(['jquery',
-    'css!/css/Controls/ContextMenu'], function () {
+    'css!./styles/ContextMenu'], function () {
+
+    "use strict";
 
     var ContextMenu,
         ID_MENU = 'context-menu',
@@ -81,7 +82,7 @@ define(['jquery',
                 li.data(DATA_KEY, i);
                 li.find('a').text(items[i].name);
                 if (items[i].icon) {
-                    li.find('a').prepend(' ')
+                    li.find('a').prepend(' ');
                     if (typeof items[i].icon === 'string') {
                         icon = $('<i/>', {'class': items[i].icon });
                         li.find('a').prepend(icon);
