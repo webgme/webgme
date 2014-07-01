@@ -105,7 +105,7 @@ define(['logManager',
 
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_VISUALIZER, function (model, activeVisualizer) {
             if (self._settingVisualizer !== true) {
-                self.registerActiveVisualizer(activeVisualizer);
+                WebGMEGlobal.State.registerActiveVisualizer(activeVisualizer);
             }
         });
 
