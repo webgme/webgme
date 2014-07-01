@@ -3,8 +3,3 @@
  * 
  * Author: Robert Kereskenyi
  */
-.meta-text-editor-dialog {
-  width: 760px !important;
-  margin-left: -380px !important; }
-  .meta-text-editor-dialog .modal-body {
-    max-height: 500px; }
