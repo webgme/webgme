@@ -48,6 +48,9 @@ define([], function () {
         COLOR_PRIMARY: 'primary',
         COLOR_SECONDARY: 'secondary',
 
+        /*CUSTOM HIGHLIGHTING*/
+        CONNECTION_HIGHLIGHT: 'connection-highlight',
+
         /*GME*/
         GME_ID: 'GME_ID'
     };

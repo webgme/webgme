@@ -12,7 +12,7 @@
    width="84.858749"
    style="overflow:hidden"
    id="svg2"
-   inkscape:version="0.48.4 r9939"
+   inkscape:version="0.48.5 r10040"
    sodipodi:docname="command.svg">
   <metadata
      id="metadata15">
@@ -37,14 +37,14 @@
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:window-width="1918"
-     inkscape:window-height="1080"
+     inkscape:window-height="1053"
      id="namedview11"
      showgrid="false"
      inkscape:zoom="11.507389"
-     inkscape:cx="78.858505"
+     inkscape:cx="23.959012"
      inkscape:cy="2.7932755"
      inkscape:window-x="0"
-     inkscape:window-y="0"
+     inkscape:window-y="25"
      inkscape:window-maximized="1"
      inkscape:current-layer="svg2"
      fit-margin-top="0"
@@ -125,9 +125,9 @@
      data-ptr="next true_next false_next"
      data-role="in"
      x1="14.9875"
-     y1="5.9047499"
+     y1="4.2219992"
      x2="23.987499"
-     y2="5.9047499"
+     y2="4.2219992"
      id="next-in" />
   <line
      class="connection-area"
@@ -136,6 +136,17 @@
      x1="14.9875"
      y1="26.904751"
      x2="23.987499"
+     y2="26.904751"
+     id="next-out" />
+<!-- custom highlighting areas are now supported - must be a line, however -->
+  <line
+     class="connection-highlight x-stretch-name"
+     style="stroke:#444444;stroke-width:10.10658169"
+     data-ptr="next"
+     data-role="out"
+     x1="4.4899535"
+     y1="26.904751"
+     x2="79.28933"
      y2="26.904751"
      id="next-out" />
 </svg>

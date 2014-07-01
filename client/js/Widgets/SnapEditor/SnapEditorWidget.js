@@ -321,8 +321,7 @@ define(['logManager',
 
     SnapEditorWidget.prototype._triggerUIActivity = function () {
         this.logger.info("MOUSE CLICK DETECTED");
-        //Have something meaningful happen
-        //TODO
+        this.onUIActivity();
     };
 
     SnapEditorWidget.prototype._getGuid = function () {

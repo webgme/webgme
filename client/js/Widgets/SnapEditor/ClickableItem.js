@@ -74,7 +74,7 @@ define(['logManager',
                         oldItem.removePtr(ptr, CONSTANTS.CONN_ACCEPTING, false);
 
                         otherItem = this.canvas.items[ptrInfo[ptr]];
-                        otherItem.setPtr(this, ptr, CONSTANTS.CONN_ACCEPTING);
+                        otherItem.setPtr(ptr, CONSTANTS.CONN_ACCEPTING, this);
                         changed = "changed ptr";
                     }
                     oldPtrs.splice(k, 1);
@@ -230,6 +230,10 @@ define(['logManager',
 
     ClickableItem.prototype.isOccupied = function (connId) {
         return this.conn2Item[connId] !== undefined;
+    };
+
+    ClickableItem.prototype.getItemAtConnId = function (connId) {
+        return this.conn2Item[connId];
     };
 
     ClickableItem.prototype.getNextItem = function () {
@@ -618,6 +622,9 @@ define(['logManager',
             ptrs,
             role;
 
+        /*
+         * Used before "splicing" capabilities were supported
+         *
         i = openAreas.length;
         while (i--){
             //Remove any occupied areas
@@ -625,6 +632,7 @@ define(['logManager',
                 openAreas.splice(i,1);
             }
         }
+       */
 
         i = openAreas.length;
         //Check to find the closest pair of connection areas

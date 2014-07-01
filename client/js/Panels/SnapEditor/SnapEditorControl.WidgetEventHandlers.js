@@ -578,7 +578,8 @@ define(['logManager',
                 || receiverParentId !== droppedParentId){
 
             var params,
-                i = droppedItems.length,
+                items2Move,
+                i,
                 ptrs2Create = {},
                 gmeId,
                 newId,
@@ -588,14 +589,29 @@ define(['logManager',
                 id,
                 p;
 
-            if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1){
-                params = { "parentId": receiverId };
+            //Set items2Move
+            if (role === SNAP_CONSTANTS.CONN_ACCEPTING){
+                items2Move = this._addSiblingDependents([receiverId]);//Get items of receiver and (sibling) dependents
+
+                if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1){
+                    params = { "parentId": firstId };
+                } else {
+                    params = { "parentId": droppedParentId };
+                }
+
             } else {
-                params = { "parentId": receiverParentId };
+                items2Move = droppedItems;
+
+                if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1){
+                    params = { "parentId": receiverId };
+                } else {
+                    params = { "parentId": receiverParentId };
+                }
             }
 
+            i = items2Move.length;
             while (i--) {
-                gmeId = droppedItems[i];
+                gmeId = items2Move[i];
                 params[gmeId] = {};
 
                 //Record pointers to create
@@ -611,7 +627,6 @@ define(['logManager',
             }
 
             newIds = this._client.moveMoreNodes(params);
-            //this._updateGmeAndComponentIds(droppedItems, newIds);
             /*
 
             //Update the id's of the node
@@ -644,20 +659,91 @@ define(['logManager',
                     }
                 }
             }
-            firstId = newIds[firstId];
+            //Update receiverId/firstId as needed
+            firstId = newIds[firstId] || firstId;
+            receiverId = newIds[receiverId] || receiverId;
         }
 
         //check to see if we should splice 
-        /*
-        if (nextId){
-            var lastNode = this._client.getNode(lastId),
-                ptrs = lastNode.getPointerNames();
+        var receiverItem = this.snapCanvas.items[receiver],
+            receiverConnId = receiverItem.activeConnectionArea.id,
+            tryToSplice = receiverItem.isOccupied(receiverConnId);
 
-            if(ptrs.indexOf(ptr) !== -1 && !lastNode.getPointer(ptr).to){//lastNode can be connected to 
-                this._client.makePointer(lastId, ptr, nextId);
+        if (tryToSplice){
+            //I will get the next item and try to create a pointer btwn
+            //the dropping item and the nextItem
+                var nextItem = this.snapCanvas.items[droppedItem],
+                canSplice = false,
+                conn = receiverItem.activeConnectionArea,
+                prevItem;
+
+            //Can we make a connection between them?
+            //Follow the connection from the dropping item
+            //if the connection doesn't exist -> don't splice
+            //if there isn't a 'nextItem' to go to -> splice on the open connection
+
+            while (nextItem && conn){
+                conn = nextItem.getConnectionArea(ptr, role);
+                if (conn){
+                    prevItem = nextItem;
+                    nextItem = nextItem.getItemAtConnId(conn.id);
+                }
+            }
+
+            canSplice = conn && !nextItem; //can splice if there is a connection without an item
+
+            if (canSplice){
+                //Make a connection between them
+                var prevGmeId = this._ComponentID2GmeID[prevItem.id],
+                    spliceToItem = this._ComponentID2GmeID[receiverItem.getItemAtConnId(receiverConnId).id];
+
+                //Look up new ids if either have been moved
+                prevGmeId = newIds[prevGmeId] || prevGmeId;
+                spliceToItem = newIds[spliceToItem] || spliceToItem;
+
+                if (role === SNAP_CONSTANTS.CONN_ACCEPTING){
+                    //If it isn't a sibling ptr, move the correct item...
+                    if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1){
+                        //move the recipient of the ptr to the child of the other
+                        var params = { parentId: spliceToItem },
+                            moveItems = this._addSiblingDependents([prevGmeId]),
+                            i = moveItems.length;
+
+                        while (i--){
+                            params[moveItems[i]] = {};
+                        }
+
+                        newIds = this._client.moveMoreNodes(params);
+
+                        //update the pointer names
+                        prevGmeId = newIds[prevGmeId];
+                    }
+
+                    this._client.makePointer(spliceToItem, ptr, prevGmeId);
+                } else {
+                    //If it isn't a sibling ptr, move the correct item...
+                    if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1){
+                        //move the recipient of the ptr to the child of the other
+                        var params = { parentId: prevGmeId },
+                            moveItems = this._addSiblingDependents([spliceToItem]),
+                            i = moveItems.length;
+
+                        while (i--){
+                            params[moveItems[i]] = {};
+                        }
+
+                        newIds = this._client.moveMoreNodes(params);
+
+                        //update the pointer names
+                        spliceToItem = newIds[spliceToItem];
+                    }
+
+                    this._client.makePointer(prevGmeId, ptr, spliceToItem);
+                }
+                firstId = newIds[firstId] || firstId;
+                receiverId = newIds[receiverId] || receiverId;
             }
         }
-        */
 
         //Set the first pointer
         if (role === SNAP_CONSTANTS.CONN_ACCEPTING){

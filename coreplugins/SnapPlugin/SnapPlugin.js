@@ -168,7 +168,6 @@ define(['plugin/PluginConfig',
                     callback(err,self.result);
                 } else {
                     //Download language files
-                    //TODO
                     self._saveOutput(self.generatedCode, function(err){
                         if(err){ 
                             self.result.success = false;

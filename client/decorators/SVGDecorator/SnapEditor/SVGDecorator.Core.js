@@ -12,7 +12,7 @@
 
 define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants',
         '../Core/SVGDecorator.Core',
-        '../Core/SVGDecorator.Connections'], function (CONSTANTS,
+        '../Core/SVGDecorator.Connections'], function (SNAP_CONSTANTS,
                                                        SVGDecoratorCore,
                                                        SVGDecoratorConnections) {
 
@@ -22,13 +22,35 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants',
 
         SVGDecoratorCore.apply(this, [opts]);
 
-        this.setConnectionAreaDefaults({'role': CONSTANTS.CONN_RECEIVING,
+        this.setConnectionAreaDefaults({'role': SNAP_CONSTANTS.CONN_RECEIVING,
                                         'ptr': '' });
         
     };
 
     _.extend(SVGDecorator.prototype, SVGDecoratorCore.prototype);
     _.extend(SVGDecorator.prototype, SVGDecoratorConnections.prototype);
+
+    SVGDecorator.prototype.processCustomSvgData = function () {
+        //Clean the line highlight data...
+        var i = this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT].length,
+            line;
+
+        while (i--){
+            if (this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].tagName === 'line'){//Only support lines for now
+                line = {};
+                line.x1 = this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].x1.baseVal.value;
+                line.x2 = this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].x2.baseVal.value;
+                line.y1 = this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].y1.baseVal.value;
+                line.y2 = this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].y2.baseVal.value;
+                line.id = this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].id;
+                line.class = this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].getAttribute('class');
+
+                this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i] = line;
+            } else {
+                this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT].splice(i,1);
+            }
+        }
+    };
 
     return SVGDecorator;
 

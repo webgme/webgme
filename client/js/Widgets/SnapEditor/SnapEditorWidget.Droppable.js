@@ -157,14 +157,15 @@ define(['js/DragDrop/DropTarget',
         item.$el.droppable({
             tolerance: "touch",
             over: function(event, ui) {
-                //If the item doesn't exist, create it!
-                //TODO 
                 var draggedUI = ui.helper,
-                    dragged = self.items[ui.draggable[0].id],
+                    draggedId = ui.draggable[0].id,
+                    dragged = self.items[draggedId],
                     pos;
 
                 if (dragged === undefined){
-                    //dragging from an outside panel - dragged item hasn't been created yet
+                    //Need to find the appropriate connection areas for a non-existent item...
+                    //Not sure how to do this yet...
+                    //TODO 
                     self.logger.warn("Dragging item from outside panel is not supported yet!");
                 }else{
                     //item has been created
@@ -206,14 +207,8 @@ define(['js/DragDrop/DropTarget',
                             draggedUI.data(DISTANCE_TAG, connectionDistance);
                         }
 
-                        /*
-                        if (item.updateHighlight(dragged, pos)){// and has a compatible highlight
-                            self.dropFocus = SnapEditorWidgetConstants.ITEM;
-                        }
-                        */
                     }
                 }
-                //ui.draggable.data("current-clickable", $this);
             },
             out: function(event, ui) {
 
@@ -230,18 +225,6 @@ define(['js/DragDrop/DropTarget',
                         && ui.helper.data(ITEM_TAG) === item.id){
                     self._onItemDrop(item, event, ui);
                 }
-                //var $this = $(this);
-                //cleanupHighlight(ui, $this);
-                //var $new = $this.clone().children("td:first")
-            //.html(ui.draggable.html()).end();
-            /*
-        if (isInUpperHalf(ui, $this)) {
-            $new.insertBefore(this);
-        } else {
-            $new.insertAfter(this);
-        }
-        initDroppable($new);
-        */
             }
         });
     };
@@ -250,21 +233,13 @@ define(['js/DragDrop/DropTarget',
         //connect the items (with the controller)
         if (item.activeConnectionArea){
             var i = ui.helper.children().length,
-                draggedId = ui.helper[0].id,
-                          r;
-
-            /*
-               while (i--){
-               draggedIds.push(ui.helper.children()[i].id);
-               }
-               */
+                draggedId = ui.helper[0].id;
 
             //dragged.connectToActive(item);
             var itemId = item.id,
                 ptr = item.activeConnectionArea.ptr;
 
             //If multiple ptrs, select the closest compatible
-            //TODO Change this to allow clicking to other items
             if(ptr instanceof Array){//Find the closest compatible area
                 var ptrs = ptr,
                     shortestDistance,

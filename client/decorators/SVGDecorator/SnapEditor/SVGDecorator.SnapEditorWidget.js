@@ -45,7 +45,7 @@ define(['js/Constants',
         SnapEditorWidgetDecoratorBase.apply(this, [opts]);
         SVGDecoratorCore.apply(this, [opts]);
 
-        this._initializeVariables({"connectors": false});
+        this._initializeVariables({ data: [SNAP_CONSTANTS.CONNECTION_HIGHLIGHT], "connectors": false});
 
         this._selfPatterns = {};
         
@@ -219,10 +219,14 @@ define(['js/Constants',
             height,
             svgId,
             shift = {},
+            stretch = {},
             i;
 
         shift[axis] = delta;
         this._shiftConnectionAreas(shiftClass, shift);
+
+        stretch[axis] = delta;
+        this._stretchCustomConnectionHighlightAreas(stretchClass, stretch);
         
         //Initialize elements as needed
         this._initializeSvgElements(stretchElements);
@@ -316,6 +320,43 @@ define(['js/Constants',
 
                        this._customConnectionAreas[i].y1 += shift.y || 0;
                        this._customConnectionAreas[i].y2 += shift.y || 0;
+                   }
+            }
+        }
+        
+        this._shiftCustomConnectionHighlightAreas(shiftClass, shift);
+    };
+
+    SVGDecoratorSnapEditorWidget.prototype._shiftCustomConnectionHighlightAreas = function (shiftClass, shift) {
+        if (this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT]){
+
+            var i = this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT].length;
+
+            while(i--){
+                if(this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].class 
+                   && this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].class.indexOf(shiftClass) !== -1){
+                       //shift the connection area highlight
+                       this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].x1 += shift.x || 0;
+                       this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].x2 += shift.x || 0;
+
+                       this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].y1 += shift.y || 0;
+                       this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].y2 += shift.y || 0;
+                   }
+            }
+        }
+    };
+
+    SVGDecoratorSnapEditorWidget.prototype._stretchCustomConnectionHighlightAreas = function (stretchClass, stretch) {
+        if (this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT]){
+
+            var i = this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT].length;
+
+            while(i--){
+                if(this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].class 
+                   && this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].class.indexOf(stretchClass) !== -1){
+                       //stretch the connection area highlight
+                       this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].x2 += stretch.x || 0;
+                       this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].y2 += stretch.y || 0;
                    }
             }
         }
