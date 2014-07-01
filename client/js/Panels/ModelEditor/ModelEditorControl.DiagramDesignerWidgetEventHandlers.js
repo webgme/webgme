@@ -1083,7 +1083,7 @@ define(['logManager',
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionContextMenu = function (selectedIds, mousePos) {
         var menuItems = {},
-            //MENU_EXINTCONF = 'exintconf',
+            MENU_EXINTCONF = 'exintconf',
             MENU_EXPLIB = 'exportlib',
             MENU_UPDLIB = 'updatelib',
             self = this;
