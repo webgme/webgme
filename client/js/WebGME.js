@@ -1,4 +1,9 @@
-"use strict";
+/*globals define, _, WebGMEGlobal, DEBUG*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
+ */
 
 var WebGMEGlobal = { 'version': 'x',    //will be set from Node's package.json
     'SUPPORTS_TOUCH': 'ontouchstart' in window || navigator.msMaxTouchPoints }; //touch device detection}
@@ -43,6 +48,8 @@ define(['logManager',
                                             PreferencesHelper,
                                             ConstraintManager,
                                             InterpreterManager) {
+
+    "use strict";
 
     var npmJSON = JSON.parse(packagejson);
     WebGMEGlobal.version = npmJSON.version;
