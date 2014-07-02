@@ -6,26 +6,32 @@
                 <h3>New pointer...</h3>
             </div>
             <form class="modal-body" role="form">
-                <div class="title">
-                    Pick one of the existing pointers:
+                <div class="form-group">
+                    <label class="col-sm-4 control-label">
+                        Pick one of the existing pointers:
+                    </label>
+                    <div class="col-sm-8 controls btn-group-existing btn-group btn-group-vertical">
+                    </div>
                 </div>
-                <div class="btn-group-existing btn-group btn-group-vertical">
+                <div class="panel-popular form-group">
+                     <label class="col-sm-4 control-label">
+                         Or pick a popular one:
+                     </label>
+                     <div class="col-sm-8 controls btn-group-popular btn-group">
+                     </div>
                 </div>
             </form>
             <div class="modal-footer">
-                <div class="panel-popular control-group">
-                    <div class="title">
-                        Or pick a popular one:
-                    </div>
-                    <div class="btn-group-popular btn-group">
-                    </div>
-                </div>
-                <div class="panel-create-new control-group">
-                    <div class="create">
+                <div class="panel-create-new form-group">
+                    <label class="col-sm-4 control-label">
                         Or create a new pointer:
+                    </label>
+                    <div class="col-sm-8 input-group">
+                        <input type="text" class="txt-pointer-name form-control" placeholder="New pointer name..."/>
+                        <div class="input-group-btn">
+                            <button href="#" class="btn btn-primary btn-create">Create</button>
+                        </div>
                     </div>
-                    <input type="text" class="input-xlarge pull-left txt-pointer-name" placeholder="New pointer name..."/>
-                    <a href="#" class="btn btn-primary disabled btn-create">Create</a>
                 </div>
             </div>
         </div>

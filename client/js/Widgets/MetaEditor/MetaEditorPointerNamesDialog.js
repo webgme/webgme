@@ -79,7 +79,7 @@ define(['clientUtil',
 		//fill pointer names
         existingPointerNames.sort();
         for (i = 0; i < len ; i += 1) {
-            this._btnGroup.append($('<button class="btn">' + util.toSafeString(existingPointerNames[i]) + '</button>'));
+            this._btnGroup.append($('<button class="btn btn-default">' + util.toSafeString(existingPointerNames[i]) + '</button>'));
         }
 
         //add most popular ones
@@ -89,7 +89,7 @@ define(['clientUtil',
 
             for (i = 0; i < len ; i += 1) {
                 if (existingPointerNames.indexOf(POPULAR_POINTER_NAMES[i]) === -1) {
-                    this._btnGroupPopular.append($('<button class="btn">' + POPULAR_POINTER_NAMES[i] + '</button>'));
+                    this._btnGroupPopular.append($('<button class="btn btn-default">' + POPULAR_POINTER_NAMES[i] + '</button>'));
                     popularsAdded = true;
                 }
             }
@@ -101,9 +101,9 @@ define(['clientUtil',
         }
 
         //create UI for new pointer name
-        this._txtNewPointerName =  this._dialog.find('.txt-pointer-name').first();
-        this._btnCreateNew = this._dialog.find('.btn-create').first();
-        this._panelCreateNew = this._dialog.find('.panel-create-new').first();
+        this._txtNewPointerName =  this._dialog.find('.txt-pointer-name');
+        this._btnCreateNew = this._dialog.find('.btn-create').disable(true);
+        this._panelCreateNew = this._dialog.find('.panel-create-new');
 
         //hook up event handlers
         this._btnGroup.on('click', '.btn', function (event) {
@@ -128,13 +128,11 @@ define(['clientUtil',
         this._txtNewPointerName.on('keyup', function () {
             var val = self._txtNewPointerName.val();
 
-            self._btnCreateNew.text('Create \'' + val +'\'');
-
             if (!isValidPointerName(val)) {
-                self._panelCreateNew.addClass("error");
+                self._panelCreateNew.addClass("has-error");
                 self._btnCreateNew.disable(true);
             } else {
-                self._panelCreateNew.removeClass("error");
+                self._panelCreateNew.removeClass("has-error");
                 self._btnCreateNew.disable(false);
             }
         });
