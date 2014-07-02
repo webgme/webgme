@@ -82,7 +82,8 @@
      inkscape:label="#rect3016" />
   <g
      id="colors"
-     style="fill:#fd3f49;stroke:#fd3f49">
+     style="fill:#fd3f49;stroke:#fd3f49"
+     data-secondary="fill:#fd5f49;stroke:#fd5f49">
     <rect
        inkscape:label="#rect11-1-0"
        id="bottomLeftBase"

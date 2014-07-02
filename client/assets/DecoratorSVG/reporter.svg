@@ -12,7 +12,7 @@
    width="86.981117"
    style="overflow:hidden"
    id="svg2"
-   inkscape:version="0.48.4 r9939"
+   inkscape:version="0.48.5 r10040"
    sodipodi:docname="reporter.svg">
   <metadata
      id="metadata22">
@@ -47,17 +47,17 @@
      inkscape:window-y="25"
      inkscape:window-maximized="1"
      inkscape:current-layer="svg2" />
-
+  <!--
   <filter id="secondary">
     <feColorMatrix in="SourceGraphic"
       type="hueRotate"
       values="25" />
   </filter>
-
+-->
   <g
      id="colors"
-     style="fill:#74e868;stroke:#74e868;">
-
+     style="fill:#74e868;stroke:#74e868;"
+     data-secondary="fill:#54b868;stroke:#54b868;">
     <rect
        inkscape:label="#rect3009"
        y="1.6086967"
@@ -143,7 +143,7 @@
        y="18.038546"
        class="x-shift-name y-shift-name x-stretch-second y-shift-second x-shift-first y-shift-first"
        inkscape:label="#RTRect-4" />
-<!-- Input Fields -->
+    <!-- Input Fields -->
     <rect
        class="y-shift-name x-shift-name x-shift-first"
        style="fill:#ffffff;fill-opacity:1;stroke:none;overflow:hidden"
@@ -160,17 +160,14 @@
        height="12.51503"
        x="13.434318"
        y="4.8144441" />
-
   </g>
-
-<!-- NAME AND CONNECTION INFO -->
+  <!-- NAME AND CONNECTION INFO -->
   <text
      class="x-shift-first"
      id="name"
      x="36.375652"
      y="14.179907"
      style="font-size:9.43999958px">OP</text>
-
   <rect
      style="opacity:0"
      id="name-bounding-box"
@@ -179,7 +176,6 @@
      x="35.972111"
      y="6.5785375"
      inkscape:label="#name-bounding-box" />
-
   <line
      class="connection-area"
      data-ptr="cond first second"
@@ -188,7 +184,7 @@
      y1="0"
      x2="0"
      y2="4.5"
-     id="conn-area-in"/>
+     id="conn-area-in" />
   <line
      class="connection-area"
      data-ptr="second"
@@ -198,14 +194,32 @@
      y1="3.5"
      x2="55.5"
      y2="8"
-     id="second-out"/>
+     id="second-out" />
   <line
      class="connection-area"
      data-ptr="first"
      data-role="out"
-     x1="16.5"
+     x1="10.5"
      y1="3.5"
-     x2="14"
+     x2="8"
      y2="8"
-     id="first-out"/>
+     id="first-out" />
+
+  <rect
+     data-ptr="second"
+     class="initial-measure"
+     width="25"
+     height="15"
+     x="0"
+     y="0"
+     inkscape:label="#rect3000" />
+  <rect
+     data-ptr="first"
+     class="initial-measure"
+     width="25"
+     height="15"
+     x="0"
+     y="0"
+     inkscape:label="#rect3000" />
+
 </svg>

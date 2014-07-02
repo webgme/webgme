@@ -59,6 +59,7 @@
      x="6.4315801"
      y="8.0343323"
      inkscape:label="#rect2992" />
+  <!--
   <filter
      id="secondary"
      color-interpolation-filters="sRGB">
@@ -67,11 +68,12 @@
        type="hueRotate"
        values="10"
        id="feColorMatrix8" />
-  </filter>
+  </filter>-->
   <g
      id="colors"
      style="fill:#856fd7;stroke:#856fd7"
-     transform="translate(-0.01249999,-0.09525007)">
+     transform="translate(-0.01249999,-0.09525007)"
+     data-secondary="fill:#858fd7;stroke:#858fd7">
     <path
        d="M 0.62683135,4.7909186 A 3.5336527,3.8448907 0 0 1 4.160484,0.94602796 l 7.067305,0 3.533653,3.84489064 9.423074,0 3.533653,-3.7167276 0,3.7167276"
        style="stroke-width:1.22866261"
@@ -138,7 +140,7 @@
      x2="23.987499"
      y2="26.904751"
      id="next-out" />
-<!-- custom highlighting areas are now supported - must be a line, however -->
+  <!-- custom highlighting areas are now supported - must be a line, however -->
   <line
      class="connection-highlight x-stretch-name"
      style="stroke:#444444;stroke-width:10.10658169"
@@ -148,5 +150,12 @@
      y1="26.904751"
      x2="79.28933"
      y2="26.904751"
-     id="next-out" />
+     id="line17" />
+  <rect
+     class="initial-measure"
+     data-ptr="name"
+     width="69"
+     height="19"
+     x="0"
+     y="0"/>
 </svg>
