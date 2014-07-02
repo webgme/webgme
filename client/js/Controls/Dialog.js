@@ -1,12 +1,13 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
+/*globals define, _*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-"use strict";
 
-define(['text!html/Controls/Dialog.html'], function (dialogTemplate) {
+define(['text!./templates/Dialog.html'], function (dialogTemplate) {
+
+    "use strict";
 
     var dialogBase = $(dialogTemplate);
 

@@ -5,12 +5,12 @@
  */
 
 
-"use strict";
 
 define(['clientUtil',
     'text!./templates/AttributeDetailsDialog.html',
     'css!./styles/AttributeDetailsDialog.css'], function ( util,
                                                 attributeDetailsDialogTemplate) {
+    "use strict";
 
     var AttributeDetailsDialog,
         ASSET_TYPE = 'asset';
