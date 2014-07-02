@@ -4,14 +4,16 @@ define([
     'coreclient/tojson',
     'coreclient/dump',
     'util/url',
-    'logManager'
+    'logManager',
+    'coreclient/serialization'
 ],function(
     Core,
     Storage,
     ToJson,
     Dump,
     URL,
-    logManager
+    logManager,
+    Serialization
     ){
 
     function Rest(_parameters){
@@ -212,6 +214,29 @@ define([
                 }
             });
         }
+
+        function exportProject(name,hash,callback){
+
+            _storage.openProject(name,function(err,project){
+                if(err){
+                    return callback(err);
+                }
+                var core = new Core(project);
+                core.loadRoot(hash,function(err,root){
+                    if(err){
+                        return callback(err);
+                    }
+                    Serialization.export(core,root,function(err,dump){
+                        if(err){
+                            callback(_HTTPError.internalServerError,err);
+                        } else {
+                            callback(_HTTPError.ok,dump);
+                        }
+                    });
+                });
+            });
+        }
+
         function doGET(command,token,parameters,callback){
             switch(command){
                 case _commands.help:
@@ -273,13 +298,25 @@ define([
                     });
                     break;
                 case _commands.dump:
-                case _commands.etf:
                     _parameters.authorization(token,parameters.project,function(err,canGo){
                         if(err){
                             callback(_HTTPError.internalServerError,err);
                         } else {
                             if(canGo === true){
                                 dumpNode(parameters.project,parameters.root,parameters.path || "",callback);
+                            } else {
+                                callback(_HTTPError.forbidden);
+                            }
+                        }
+                    });
+                    break;
+                case _commands.etf:
+                    _parameters.authorization(token,parameters.project,function(err,canGo){
+                        if(err){
+                            callback(_HTTPError.internalServerError,err);
+                        } else {
+                            if(canGo === true){
+                                exportProject(parameters.project,parameters.root,callback);
                             } else {
                                 callback(_HTTPError.forbidden);
                             }

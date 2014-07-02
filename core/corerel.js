@@ -16,7 +16,10 @@ define([ "util/assert", "core/coretree", "core/tasync", "util/canon" ], function
 
 	function isPointerName(name) {
 		ASSERT(typeof name === "string");
-
+        //TODO this is needed as now we work with modified data as well
+        if(name === "_mutable"){
+            return false;
+        }
 		return name.slice(-COLLSUFFIX.length) !== COLLSUFFIX;
 	}
 
