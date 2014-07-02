@@ -54,16 +54,25 @@ define(['./BlobBackendBase',
                         });
                         return;
                     }
-
                     fs.rename(tempName, objectFilename, function (err) {
-                        // FIXME: this code has to be reviewed.
+                    // FIXME: this code has to be reviewed.
                         if (err) {
-                            fs.unlink(tempName, function (e) {
-                                callback(err);
+                            fs.exists(objectFilename, function (exists) {
+                                fs.unlink(tempName, function (e) {
+                                    if (e) {
+                                        // The tempName could not be deleted, something is very wrong.
+                                        callback(e);
+                                    } else {
+                                        if (exists) {
+                                            callback(null, hash, size);
+                                        } else {
+                                            callback(err);
+                                        }
+                                    }
+                                });
                             });
                             return;
                         }
-
                         callback(null, hash, size);
                     });
                 });
@@ -132,6 +141,7 @@ define(['./BlobBackendBase',
     // Private helper functions
 
     BlobFSBackend.prototype._getObjectRelativeLocation = function (hash) {
+        // FIXME: what if hash is null or emprty string. Hash validation is needed.
         return hash.slice(0, 2) + '/' + hash.slice(2);
     };
 
