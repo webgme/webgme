@@ -43,7 +43,6 @@ define(['util/assert'],function(ASSERT){
             _export.root = getLibraryRootInfo(libraryRoot);
             _export.relids = getRelIdInfo();
             _export.containment = {}; fillContainmentTree(libraryRoot,_export.containment);
-            _export.inheritance = {}; fillInheritanceTree(_core.getBaseRoot(libraryRoot),_export.inheritance); //we expect that library root is descendant of FCO as every node
             _export.nodes = getNodesData();
 
             callback(null,_export);
@@ -326,6 +325,48 @@ define(['util/assert'],function(ASSERT){
 
         return txtId;
     }
+    function loadImportBases(guids,root,callback){
+        var needed = [],
+            error = null,
+            stillToGo = 0,
+            i,
+            guidList = Object.keys(guids),
+            loadBase = function(guid,path,cb){
+                _core.loadByPath(root,path,function(err,node){
+                    if(err){
+                        return cb(err);
+                    }
+                    if(_core.getGuid(node) !== guid){
+                        return cb("GUID mismatch");
+                    }
+
+                    _nodes[guid] = node;
+                    cb(null);
+                });
+            };
+
+        for(i=0;i<guidList.length;i++){
+            if(_nodes[guidList[i]] === undefined){
+                needed.push(guidList[i]);
+            }
+        }
+
+        if(needed.length > 0){
+            stillToGo = needed.length;
+            for(i=0;i<needed.length;i++){
+                loadBase(needed[i],guids[needed[i]],function(err){
+                    error = error || err;
+                    if(--stillToGo === 0){
+                        callback(error);
+                    }
+                });
+            }
+        } else {
+            return callback(null);
+        }
+
+
+    }
     function importLibrary(core,originLibraryRoot,updatedLibraryJson,callback){
         _core = core;
         _import = updatedLibraryJson;
@@ -341,64 +382,69 @@ define(['util/assert'],function(ASSERT){
                 return callback(err);
             }
 
-            //now we fill the insert/update/remove lists of GUIDs
-            var oldkeys = Object.keys(_export.nodes),
-                newkeys = Object.keys(_import.nodes),
-                i;
-
-            //TODO now we make three rounds although one would be sufficient on ordered lists
-            for(i=0;i<oldkeys.length;i++){
-                if(newkeys.indexOf(oldkeys[i]) === -1){
-                    log("node "+logId(_export.nodes,oldkeys[i])+", all of its sub-types and its children will be removed");
-                    _removedNodeGuids.push(oldkeys[i]);
+            //now we will search for the bases of the import and load them
+            loadImportBases(_import.bases,_core.getRoot(originLibraryRoot),function(err){
+                if(err){
+                    return callback(err);
                 }
-            }
 
-            for(i=0;i<oldkeys.length;i++){
-                if(newkeys.indexOf(oldkeys[i]) !== -1){
-                    log("node "+logId(_export.nodes,oldkeys[i])+" will be updated")
-                    _updatedNodeGuids.push(oldkeys[i]);
+                //now we fill the insert/update/remove lists of GUIDs
+                var oldkeys = Object.keys(_export.nodes),
+                    newkeys = Object.keys(_import.nodes),
+                    i;
+
+                //TODO now we make three rounds although one would be sufficient on ordered lists
+                for(i=0;i<oldkeys.length;i++){
+                    if(newkeys.indexOf(oldkeys[i]) === -1){
+                        log("node "+logId(_export.nodes,oldkeys[i])+", all of its sub-types and its children will be removed");
+                        _removedNodeGuids.push(oldkeys[i]);
+                    }
                 }
-            }
 
-            for(i=0;i<newkeys.length;i++){
-                if(oldkeys.indexOf(newkeys[i]) === -1){
-                    log("node "+logId(_import.nodes,newkeys[i])+" will be added")
-                    _newNodeGuids.push(newkeys[i]);
+                for(i=0;i<oldkeys.length;i++){
+                    if(newkeys.indexOf(oldkeys[i]) !== -1){
+                        log("node "+logId(_export.nodes,oldkeys[i])+" will be updated")
+                        _updatedNodeGuids.push(oldkeys[i]);
+                    }
                 }
-            }
 
-            //Now we normalize the removedGUIDs by containment and remove them
-            var toDelete = [],
-                parent;
-            for(i=0;i<_removedNodeGuids.length;i++){
-                parent = _core.getParent(_nodes[_removedNodeGuids[i]]);
-                if(parent && _removedNodeGuids.indexOf(_core.getGuid(parent)) === -1){
-                    toDelete.push(_removedNodeGuids[i]);
+                for(i=0;i<newkeys.length;i++){
+                    if(oldkeys.indexOf(newkeys[i]) === -1){
+                        log("node "+logId(_import.nodes,newkeys[i])+" will be added")
+                        _newNodeGuids.push(newkeys[i]);
+                    }
                 }
-            }
-            //and as a final step we remove all that is needed
-            for(i=0;i<toDelete.length;i++){
-                _core.deleteNode(_nodes[toDelete[i]]);
-            }
 
-            //as a second step we should deal with the updated nodes
-            //we should go among containment hierarchy
-            updateNodes(_import.root.guid,null,_import.containment);
+                //Now we normalize the removedGUIDs by containment and remove them
+                var toDelete = [],
+                    parent;
+                for(i=0;i<_removedNodeGuids.length;i++){
+                    parent = _core.getParent(_nodes[_removedNodeGuids[i]]);
+                    if(parent && _removedNodeGuids.indexOf(_core.getGuid(parent)) === -1){
+                        toDelete.push(_removedNodeGuids[i]);
+                    }
+                }
+                //and as a final step we remove all that is needed
+                for(i=0;i<toDelete.length;i++){
+                    _core.deleteNode(_nodes[toDelete[i]]);
+                }
 
-            //now we can add or modify the relations of the nodes - we go along the hierarchy chain
-            updateRelations(_import.root.guid,_import.containment);
+                //as a second step we should deal with the updated nodes
+                //we should go among containment hierarchy
+                updateNodes(_import.root.guid,null,_import.containment);
 
-            //now update inheritance chain
-            //we assume that our inheritance chain comes from the FCO and that it is identical everywhere
-            if(Object.keys(_export.inheritance).length > 0){
-                updateInheritance(_core.getGuid(_core.getBaseRoot(originLibraryRoot)),null,_import.inheritance);
-            }
+                //now we can add or modify the relations of the nodes - we go along the hierarchy chain
+                updateRelations(_import.root.guid,_import.containment);
 
-            //finally we need to update the meta rules of each node - again along the containment hierarchy
-            updateMetaRules(_import.root.guid,_import.containment);
+                //now update inheritance chain
+                //we assume that our inheritance chain comes from the FCO and that it is identical everywhere
+                updateInheritance();
 
-            callback(null,_log);
+                //finally we need to update the meta rules of each node - again along the containment hierarchy
+                updateMetaRules(_import.root.guid,_import.containment);
+
+                callback(null,_log);
+            });
         });
     }
 
@@ -491,48 +537,60 @@ define(['util/assert'],function(ASSERT){
         //although it is possible that we set the base pointer at this point we should go through inheritance just to be sure
         var node = _nodes[guid],
             jsonNode = _import.nodes[guid],
-            keys, i,target,
-            needPersist = false;;
+            keys, i, j, k,target,memberGuid;
 
+        //pointers
         keys = _core.getOwnPointerNames(node);
         for(i=0;i<keys.length;i++){
-            needPersist = true;
             _core.deletePointer(node,keys[i]);
         }
         keys = Object.keys(jsonNode.pointers);
         for(i=0;i<keys.length;i++){
             target = jsonNode.pointers[keys[i]];
             if(target === null){
-                needPersist = true;
                 _core.setPointer(node,keys[i],null);
             } else if(_nodes[target] && _removedNodeGuids.indexOf(target) === -1){
-                needPersist = true;
                 _core.setPointer(node,keys[i],_nodes[target]);
             } else {
                 console.log("error handling needed???!!!???");
             }
         }
 
-        if(needPersist){
-            //_core.persist(_core.getRoot(node),function(){});
+        //sets
+        keys = _core.getSetNames(node);
+        for(i=0;i<keys.length;i++){
+            _core.deleteSet(node,keys[i]);
+        }
+        keys = Object.keys(jsonNode.sets);
+        for(i=0;i<keys.length;i++){
+            //for every set we create it, go through its members...
+            _core.createSet(node,keys[i]);
+            for(j=0;j<jsonNode.sets[keys[i]].length;j++){
+                memberGuid = jsonNode.sets[keys[i]][j].guid;
+                if(_nodes[memberGuid]){
+                    _core.addMember(node,keys[i],_nodes[memberGuid]);
+                    for(k in jsonNode.sets[keys[i]][j].attributes){
+                        _core.setMemberAttribute(node,keys[i],_core.getPath(_nodes[memberGuid]),k,jsonNode.sets[keys[i]][j].attributes[k]);
+                    }
+                    for(k in jsonNode.sets[keys[i]][j].registry){
+                        _core.setMemberRegistry(node,keys[i],_core.getPath(_nodes[memberGuid]),k,jsonNode.sets[keys[i]][j].registry[k]);
+                    }
+                }
+            }
         }
     }
 
-    function updateInheritance(guid,base,inheritanceTreeObject){
-        var node = _nodes[guid],
-            keys,i;
-
-        if(_updatedNodeGuids.indexOf(guid) !== -1 || _newNodeGuids.indexOf(guid) !== -1){
-            //we only care for nodes we touch
-            _core.setBase(node,base);
-        }
-
-        if(node){
-            keys = Object.keys(inheritanceTreeObject);
-            for(i=0;i<keys.length;i++){
-                updateInheritance(keys[i],node,inheritanceTreeObject[keys[i]]);
+    function updateInheritance(){
+        var i,guidList = Object.keys(_import.nodes),base;
+        for(i=0;i<guidList.length;i++){
+            base = _core.getBase(_nodes[guidList[i]]);
+            if((base && _core.getGuid(base) !== _import.nodes[guidList[i]].base) || (base === null && _import.nodes[guidList[i]].base !== null)){
+                updateNodeInheritance(guidList[i]);
             }
         }
+    }
+    function updateNodeInheritance(guid){
+        _core.setBase(_nodes[guid],_nodes[_import.nodes[guid].base]);
     }
 
     function updateMetaRules(guid,containmentTreeObject){
