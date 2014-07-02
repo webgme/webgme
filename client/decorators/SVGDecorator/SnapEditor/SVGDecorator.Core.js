@@ -50,6 +50,31 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants',
                 this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT].splice(i,1);
             }
         }
+        
+        //Record the default measurements for various stretch areas by ptrName
+        var w = 0,
+            h = 0;
+
+        i = this[SNAP_CONSTANTS.INITIAL_MEASURE].length;
+        while (i--){
+            if (this[SNAP_CONSTANTS.INITIAL_MEASURE][i].tagName === 'line'){
+                //get line values
+                line = {};
+                line.x1 = this[SNAP_CONSTANTS.INITIAL_MEASURE][i].x1.baseVal.value;
+                line.x2 = this[SNAP_CONSTANTS.INITIAL_MEASURE][i].x2.baseVal.value;
+                line.y1 = this[SNAP_CONSTANTS.INITIAL_MEASURE][i].y1.baseVal.value;
+                line.y2 = this[SNAP_CONSTANTS.INITIAL_MEASURE][i].y2.baseVal.value;
+
+                //Record the measurements
+                w = line.x2 - line.x1;
+                h = line.y2 - line.y1;
+            } else if (this[SNAP_CONSTANTS.INITIAL_MEASURE][i].tagName === 'rect'){
+                w = this[SNAP_CONSTANTS.INITIAL_MEASURE][i].width.baseVal.value;
+                h = this[SNAP_CONSTANTS.INITIAL_MEASURE][i].height.baseVal.value;
+            }
+
+            this.svgInitialStretch[this[SNAP_CONSTANTS.INITIAL_MEASURE][i].getAttribute('data-ptr')] = { x: w, y: h };
+        }
     };
 
     return SVGDecorator;

@@ -37,6 +37,8 @@ define(['js/Constants',
 
     var SVGDecoratorSnapEditorWidget,
         DECORATOR_ID = "SVGDecoratorSnapEditorWidget",
+        SVG_COLOR_ID = "colors",
+        SVG_SECONDARY_COLOR_ID = "secondary",
         AXIS = { X:'x', Y:'y' };//constants for stretching
 
     SVGDecoratorSnapEditorWidget = function (options) {
@@ -45,7 +47,8 @@ define(['js/Constants',
         SnapEditorWidgetDecoratorBase.apply(this, [opts]);
         SVGDecoratorCore.apply(this, [opts]);
 
-        this._initializeVariables({ data: [SNAP_CONSTANTS.CONNECTION_HIGHLIGHT], "connectors": false});
+        this._initializeVariables({ data: [SNAP_CONSTANTS.CONNECTION_HIGHLIGHT, 
+                                  SNAP_CONSTANTS.INITIAL_MEASURE], "connectors": false});
 
         this._selfPatterns = {};
         
@@ -58,6 +61,7 @@ define(['js/Constants',
         this.svgWidth = 0;
         this.svgHeight = 0;
         this.svgBorderWidth = 0;
+        this.svgInitialStretch = {};//Initial stretch values to allow for snug fit
 
         //Stuff about contained info
         this.childIds = [];
@@ -117,14 +121,17 @@ define(['js/Constants',
                 //FIXME Find a better way to approximate this...
                 //I could add a "name container" invisible rect... 
                 var approxWidth = parseFloat(this.$svgContent
-                        .find("#name-bounding-box")[0].getAttribute("width"));
+                        .find("#name-bounding-box")[0].getAttribute("width")),
+                    newX = approxWidth * (this.$name.text().length/oldName.length);
 
                 dx = Math.floor(approxWidth * (this.$name.text().length/oldName.length));
+                //this.stretchTo(SNAP_CONSTANTS.NAME, newX, 0);
             }else{
                 dx = this.$name.width() - oldNameLength;
+                //this.stretchTo(SNAP_CONSTANTS.NAME, this.$name.width(), 0);
             }
 
-            if(dx !== 0){
+            if (dx !== 0){
                 this.stretch(SNAP_CONSTANTS.NAME, AXIS.X, dx);
             }
         }
@@ -180,30 +187,40 @@ define(['js/Constants',
         //classTransforms keeps track of the current size of the stuff 
         //associated with the given pointer
         if (!this._classTransforms[id]){
-            this._classTransforms[id] = { x: 0, y: 0 };
+            if (this.svgInitialStretch[id]){
+                this._classTransforms[id] = { x: this.svgInitialStretch[id].x,
+                    y: this.svgInitialStretch[id].y };
+            } else {
+                this._classTransforms[id] = { x: 0, y: 0 };
+            }
         }
 
-        dx = x - this._classTransforms[id].x;
-        dy = y - this._classTransforms[id].y;
+        if (!this.svgInitialStretch[id] || (x > this.svgInitialStretch[id].x 
+               && y > this.svgInitialStretch[id].y)){//Don't shrink past initial
 
-        //update size attached to ptr
-        if (y !== null) {
-            this._classTransforms[id].y = y;
-        }
 
-        if (x !== null) {
-            this._classTransforms[id].x = x;
-        }
+           dx = x - this._classTransforms[id].x;
+           dy = y - this._classTransforms[id].y;
 
-        if (dx){
-            this.stretch(id, AXIS.X, dx);
-            changed = true;
-        }
+           //update size attached to ptr
+           if (y !== null) {
+               this._classTransforms[id].y = y;
+           }
 
-        if (dy){
-            this.stretch(id, AXIS.Y, dy);
-            changed = true;
-        }
+           if (x !== null) {
+               this._classTransforms[id].x = x;
+           }
+
+           if (dx){
+               this.stretch(id, AXIS.X, dx);
+               changed = true;
+           }
+
+           if (dy){
+               this.stretch(id, AXIS.Y, dy);
+               changed = true;
+           }
+       }
 
         return changed;
     };
@@ -238,6 +255,7 @@ define(['js/Constants',
         var displacement = {},
             x,
             y;
+
         i = stretchElements.length;
         while(i--){
             svgId = stretchElements[i].getAttribute("id");
@@ -367,11 +385,13 @@ define(['js/Constants',
         //Check to see if it has a filter
         //If so, 
         var areSameColor = false,
-            hasFilter = this.$svgElement.find("#secondary").length === 1,
+            secondary = this.$svgElement.find("#" + SVG_SECONDARY_COLOR_ID),
             color = SNAP_CONSTANTS.COLOR_PRIMARY,
-            filterName = "secondary",
-            colorGroup = this.$svgElement.find("#colors"),
-            otherColorGroup = otherDecorator.$svgElement.find("#colors");
+            filterName = SVG_SECONDARY_COLOR_ID,
+            colorGroup = this.$svgElement.find("#" + SVG_COLOR_ID),
+            colors = colorGroup.data(),
+            otherColorGroup = otherDecorator.$svgElement.find("#" + SVG_COLOR_ID),
+            i = secondary.length;
 
         //Figure out if the decorators are the same color
         if (colorGroup.length && otherColorGroup.length){
@@ -381,16 +401,45 @@ define(['js/Constants',
             areSameColor = colorGroup.getAttribute("style") === otherColorGroup.getAttribute("style");
         }
 
-        if (areSameColor && hasFilter){//has filter and color group
+        var filter = null;
+        while (i-- && !filter){//find the filter
+            if (secondary[i].tagName === "filter"){
+                filter = secondary[i];
+            }
+        }
+
+        var hasFilter = filter !== null,
+            hasColors = Object.keys(colors).length > 0;
+
+        if (areSameColor && (hasFilter || hasColors)){//has filter and color group
+
             switch(otherColor){
                 case SNAP_CONSTANTS.COLOR_PRIMARY:
-                    colorGroup.setAttribute("filter", "url(#secondary)");
+                    if (hasFilter){
+                        colorGroup.setAttribute("filter", "url(#" + SVG_SECONDARY_COLOR_ID + ")");
+                    } else if (hasColors){//Change the color
+                        if (!colorGroup.hasAttribute("data-" + SNAP_CONSTANTS.COLOR_PRIMARY)){
+                            colorGroup.setAttribute("data-" + SNAP_CONSTANTS.COLOR_PRIMARY,
+                                    colorGroup.getAttribute("style"));
+                        }
+                        colorGroup.setAttribute("style", colorGroup.getAttribute("data-" 
+                                                                     + SNAP_CONSTANTS.COLOR_SECONDARY));
+
+                    }
+
                     color = SNAP_CONSTANTS.COLOR_SECONDARY;
                     break;
 
                 case SNAP_CONSTANTS.COLOR_SECONDARY:
-                    if (colorGroup.hasAttribute("filter")){
-                        colorGroup.removeAttribute("filter");
+                    if (hasFilter){
+                        if (colorGroup.hasAttribute("filter")){
+                            colorGroup.removeAttribute("filter");
+                        }
+                    } else if (hasColors){//Set the color
+                        if (colorGroup.hasAttribute("data-" + SNAP_CONSTANTS.COLOR_PRIMARY)){
+                            colorGroup.setAttribute("style", colorGroup.getAttribute("data-" 
+                                                                     + SNAP_CONSTANTS.COLOR_PRIMARY));
+                        }
                     }
                     break;
 
