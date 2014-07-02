@@ -62,14 +62,14 @@
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:window-width="1918"
-     inkscape:window-height="1173"
+     inkscape:window-height="1080"
      id="namedview27"
      showgrid="false"
      inkscape:zoom="10.190974"
      inkscape:cx="28.629372"
      inkscape:cy="32.23215"
-     inkscape:window-x="1920"
-     inkscape:window-y="25"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
      inkscape:window-maximized="1"
      inkscape:current-layer="bracket"
      fit-margin-top="0"
@@ -84,6 +84,7 @@
      x="12.210462"
      y="7.9643755"
      inkscape:label="#rect3016" />
+  <!--
   <filter
      id="secondary"
      color-interpolation-filters="sRGB">
@@ -93,9 +94,11 @@
        values="10"
        id="feColorMatrix8" />
   </filter>
+-->
   <g
      id="colors"
-     style="fill:#fd3f49;stroke:#fd3f49">
+     style="fill:#fd3f49;stroke:#fd3f49"
+     data-secondary="fill:#fd5f49;stroke:#fd5f49">
     <rect
        class="y-shift-name x-shift-name"
        style="opacity:0.54863808;fill:#ffffff;fill-opacity:1;stroke:#0000cc;stroke-width:0.03871261;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
@@ -303,4 +306,20 @@
      x2="48.008518"
      y2="8.939868"
      id="cond-out" />
+  <rect
+     data-ptr="true_next"
+     class="initial-measure"
+     width="0"
+     height="28.5"
+     x="0"
+     y="0"
+     inkscape:label="#rect3008"
+     id="rect33" />
+  <rect
+     data-ptr="cond"
+     class="initial-measure"
+     width="40"
+     height="15"
+     x="0"
+     y="0"/>
 </svg>
