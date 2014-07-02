@@ -38,40 +38,29 @@ define(['./SnapEditorWidget.Constants'], function (SNAP_CONSTANTS){
             this._svg = Raphael(this._connHighlight[0], w + CONN_AREA_SIZE, h + CONN_AREA_SIZE);
             this._svg.canvas.className.baseVal = CONN_AREA;
 
-            //Check to see if it has a highlight with the given id
-            /*
-            highlight = this._getConnectionHighlightById(id);
-            if (highlight){//Use custom defined highlight if one is defined
+            //Create the connection area
+            line.x1 += shiftVal;
+            line.x2 += shiftVal;
+            line.y1 += shiftVal;
+            line.y2 += shiftVal;
 
-                //Add the highlight to the svg
-                this._connHighlight.find('svg').append(highlight);
-            } else {
-           */
+            //if the area is too small, enlarge it
+            if (Math.abs(line.x2 - line.x1) < CONN_AREA_SIZE &&
+                Math.abs(line.y2 - line.y1) < CONN_AREA_SIZE) {
 
-                //Create the connection area
-                line.x1 += shiftVal;
-                line.x2 += shiftVal;
-                line.y1 += shiftVal;
-                line.y2 += shiftVal;
-
-                //if the area is too small, enlarge it
-                if (Math.abs(line.x2 - line.x1) < CONN_AREA_SIZE &&
-                    Math.abs(line.y2 - line.y1) < CONN_AREA_SIZE) {
-
-                    if (line.x2 > line.x1) {
-                        line.x1 -= CONN_AREA_SIZE / 2;
-                        line.x2 += CONN_AREA_SIZE / 2;
-                    } else {
-                        line.x2 -= CONN_AREA_SIZE / 2;
-                        line.x1 += CONN_AREA_SIZE / 2;
-                    }
+                if (line.x2 > line.x1) {
+                    line.x1 -= CONN_AREA_SIZE / 2;
+                    line.x2 += CONN_AREA_SIZE / 2;
+                } else {
+                    line.x2 -= CONN_AREA_SIZE / 2;
+                    line.x1 += CONN_AREA_SIZE / 2;
                 }
+            }
 
-                var path = this._svg.path('M ' + line.x1 + ',' + line.y1 + 'L' + line.x2 + ',' + line.y2);
-                $(path.node).data(DATA_CONN_AREA_ID, line.id);
-                path.attr({ "stroke-width": CONN_AREA_SIZE });
-                $(path.node).attr({ "class": CONN_AREA_EDIT_CLASS });        
-            //}
+            var path = this._svg.path('M ' + line.x1 + ',' + line.y1 + 'L' + line.x2 + ',' + line.y2);
+            $(path.node).data(DATA_CONN_AREA_ID, line.id);
+            path.attr({ "stroke-width": CONN_AREA_SIZE });
+            $(path.node).attr({ "class": CONN_AREA_EDIT_CLASS });        
 
             this.$el.append(this._connHighlight);
         }

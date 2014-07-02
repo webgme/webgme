@@ -44,6 +44,11 @@ define([], function () {
         DATA_ITEM_ID : 'data-oid',
         DATA_SUBCOMPONENT_ID : 'data-sid',
 
+        /*GME*/
+        GME_ID: 'GME_ID',
+
+        /* * * * * * * SVG TAGS * * * * * * */
+
         /*COLORING OF ITEMS*/
         COLOR_PRIMARY: 'primary',
         COLOR_SECONDARY: 'secondary',
@@ -51,7 +56,7 @@ define([], function () {
         /*CUSTOM HIGHLIGHTING*/
         CONNECTION_HIGHLIGHT: 'connection-highlight',
 
-        /*GME*/
-        GME_ID: 'GME_ID'
+        /*DEFAULT HEIGHT MEASUREMENT*/
+        INITIAL_MEASURE: 'initial-measure'
     };
 });
