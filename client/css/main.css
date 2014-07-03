@@ -158,3 +158,8 @@ div.spacer {
 *::-webkit-scrollbar-corner{background:rgba(255, 255, 255, 0.9);-webkit-box-shadow:inset 0 0 6px rgba(0, 0, 0, 0.1);}
 
 /******************/
+
+
+.empty-message {
+    font-style: italic;
+}

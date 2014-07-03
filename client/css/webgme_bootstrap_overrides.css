@@ -51,6 +51,10 @@
     -ms-user-select:element;
 }
 
+.modal-content .row {
+    margin-bottom: 1ex;
+}
+
 .modal-body {
     overflow: auto;
     max-height: 200px;

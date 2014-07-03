@@ -65,7 +65,7 @@ define(['clientUtil',
         //by default the template is for single pointer
         //in case of pointer list, update labels in the dialog
         if (isSet === true) {
-            this._dialog.find('.modal-header > h3').text('New set...');
+            this._dialog.find('.modal-header > h3').text('Cretae new set');
             this._dialog.find('.modal-body > .title').text('Pick one of the existing sets:');
             this._dialog.find('.modal-footer .create').text('Or create a new set:');
             this._dialog.find('.modal-footer .txt-pointer-name').attr('placeholder', 'New set name...');
@@ -78,8 +78,17 @@ define(['clientUtil',
 
 		//fill pointer names
         existingPointerNames.sort();
-        for (i = 0; i < len ; i += 1) {
-            this._btnGroup.append($('<button class="btn btn-default">' + util.toSafeString(existingPointerNames[i]) + '</button>'));
+
+        if (len) {
+
+            this._btnGroup.empty();
+
+            for (i = 0; i < len ; i += 1) {
+                this._btnGroup.append($('<button class="btn btn-default">' + util.toSafeString(existingPointerNames[i]) + '</button>'));
+            }
+
+        } else {
+            this._btnGroup.html('<span class="empty-message">No exisiting pointers defined yet.</i>');
         }
 
         //add most popular ones
