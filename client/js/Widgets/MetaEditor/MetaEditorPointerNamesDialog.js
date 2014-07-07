@@ -65,10 +65,10 @@ define(['clientUtil',
         //by default the template is for single pointer
         //in case of pointer list, update labels in the dialog
         if (isSet === true) {
-            this._dialog.find('.modal-header > h3').text('Cretae new set');
-            this._dialog.find('.modal-body > .title').text('Pick one of the existing sets:');
-            this._dialog.find('.modal-footer .create').text('Or create a new set:');
-            this._dialog.find('.modal-footer .txt-pointer-name').attr('placeholder', 'New set name...');
+            this._dialog.find('.modal-header > h3').text('Create new set');
+            this._dialog.find('.pick-existing-label').text('Pick one of the existing sets:');
+            this._dialog.find('.create-new-label').text('Or create a new set:');
+            this._dialog.find('.txt-pointer-name').attr('placeholder', 'New set name...');
         }
 
         //get controls
@@ -88,7 +88,12 @@ define(['clientUtil',
             }
 
         } else {
-            this._btnGroup.html('<span class="empty-message">No exisiting pointers defined yet.</i>');
+
+            if (isSet === true) {
+                this._btnGroup.html('<span class="empty-message">No exisiting sets defined yet...</i>');
+            } else {
+                this._btnGroup.html('<span class="empty-message">No exisiting pointers defined yet...</i>');
+            }
         }
 
         //add most popular ones
