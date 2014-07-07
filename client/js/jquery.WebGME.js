@@ -197,7 +197,7 @@ define(['jquery'], function () {
             li.find('a').text('ALL');
             ul.append(li);
 
-            for (var i = 0; i <opts.groups.length; i += 1) {
+            for (var i = 0; i < opts.groups.length; i += 1) {
                 var start = opts.groups[i].split('-')[0].trim();
                 var end = opts.groups[i].split('-')[1].trim();
                 li = liBase.clone();

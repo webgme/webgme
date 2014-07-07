@@ -118,10 +118,13 @@ define(['logManager',
         this._loader = new LoaderCircles({"containerElement": this._btnRefresh });
         this._loader.setSize(14);
 
-        this._dialog.find('.tabContainer').first().groupedAlphabetTabs({'onClick': function (filter) {
-            self._filter = filter;
-            self._updateProjectNameList();
-        }});
+        this._dialog.find('.tabContainer').first().groupedAlphabetTabs({
+            onClick: function (filter) {
+                self._filter = filter;
+                self._updateProjectNameList();
+            },
+            noMatchText: 'Nothing matched your filter, please click another letter.'
+        });
 
         //hook up event handlers - SELECT project in the list
         this._ul.on("click", "li:not(.disabled)", function (event) {
@@ -398,40 +401,50 @@ define(['logManager',
         var len = this._projectNames.length,
             i,
             li,
-            displayProject;
+            displayProject,
+            count = 0,
+            $emptyLi = $('<li class="center"><i>No projects in this group...</i></li>');
 
         this._ul.empty();
 
-        for (i = 0; i < len ; i += 1) {
-            displayProject = false;
-            if (this._filter !== undefined) {
-                displayProject = (this._projectNames[i].toUpperCase()[0] >= this._filter[0] &&
-                    this._projectNames[i].toUpperCase()[0] <= this._filter[1]);
-            } else {
-                displayProject = true;
-            }
-
-            if (displayProject) {
-                li = LI_BASE.clone();
-                li.find('a').text(this._projectNames[i]);
-                li.data(DATA_PROJECT_NAME, this._projectNames[i]);
-
-                if (this._projectNames[i] === this._activeProject) {
-                    li.addClass('active');
-                }
-
-                //check to see if the user has READ access to this project
-                if (this._projectList[this._projectNames[i]].read !== true) {
-                    li.disable(true);
+        if (len > 0)  {
+            for (i = 0; i < len ; i += 1) {
+                displayProject = false;
+                if (this._filter !== undefined) {
+                    displayProject = (this._projectNames[i].toUpperCase()[0] >= this._filter[0] &&
+                        this._projectNames[i].toUpperCase()[0] <= this._filter[1]);
                 } else {
-                    //check if user has only READ rights for this project
-                    if (this._projectList[this._projectNames[i]].write !== true) {
-                        li.find('a.btn-env').append(READ_ONLY_BASE.clone());
-                    }
+                    displayProject = true;
                 }
 
-                this._ul.append(li);
+                if (displayProject) {
+                    li = LI_BASE.clone();
+                    li.find('a').text(this._projectNames[i]);
+                    li.data(DATA_PROJECT_NAME, this._projectNames[i]);
+
+                    if (this._projectNames[i] === this._activeProject) {
+                        li.addClass('active');
+                    }
+
+                    //check to see if the user has READ access to this project
+                    if (this._projectList[this._projectNames[i]].read !== true) {
+                        li.disable(true);
+                    } else {
+                        //check if user has only READ rights for this project
+                        if (this._projectList[this._projectNames[i]].write !== true) {
+                            li.find('a.btn-env').append(READ_ONLY_BASE.clone());
+                        }
+                    }
+
+                    this._ul.append(li);
+
+                    count++;
+                }
             }
+        }
+
+        if ( count === 0 ) {
+            this._ul.append( $emptyLi.clone() );
         }
 
         this._showButtons(false, null);
