@@ -18,3 +18,8 @@
 
 .txt-project-name {
   width: 50%; }
+
+a.btn-env {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none; }

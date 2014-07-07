@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  * 
@@ -39,4 +40,10 @@
 
 .txt-project-name {
   width: 50%;
+}
+
+a.btn-env {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }

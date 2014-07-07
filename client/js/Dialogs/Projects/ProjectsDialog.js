@@ -344,8 +344,6 @@ define(['logManager',
 
     ProjectsDialog.prototype._showButtons = function (enabled, projectId) {
 
-
-
         if (enabled === true) {
             //btnOpen
             if (this._projectList[projectId].read === true) {
