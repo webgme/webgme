@@ -210,21 +210,30 @@ define(['logManager',
             event.preventDefault();
         });
 
+
+        function isValidProjectName(aProjectName) {
+            var re = /^[0-9a-z_]+$/gi;
+
+            return (
+                re.test(aProjectName) &&
+                self._projectNames.indexOf(aProjectName) === -1
+            );
+        }
+
         this._txtNewProjectName.on('keyup', function () {
-            var val = self._txtNewProjectName.val(),
-                re = /^[0-9a-z_]+$/gi;
+            var val = self._txtNewProjectName.val();
 
             if (val.length === 1) {
                 self._filter = [val.toUpperCase(), val.toUpperCase()];
                 self._updateProjectNameList();
             }
 
-            if (!re.test(val) || self._projectNames.indexOf(val) !== -1) {
-                self._panelCreateNew.addClass("error");
+            if (isValidProjectName(val) === false) {
+                self._panelCreateNew.addClass("has-error");
                 self._btnNewProjectCreate.disable(true);
                 self._btnNewProjectImport.disable(true);
             } else {
-                self._panelCreateNew.removeClass("error");
+                self._panelCreateNew.removeClass("has-error");
                 self._btnNewProjectCreate.disable(false);
                 self._btnNewProjectImport.disable(false);
             }
@@ -243,18 +252,20 @@ define(['logManager',
         });
 
         this._txtNewProjectName.on('keydown', function (event) {
-            // [enter]
-            if (event.which === 13) {
-                //create project
+
+            var enterPressed = event.which === 13,
+                newProjectName = self._txtNewProjectName.val();
+
+            if (enterPressed && isValidProjectName(newProjectName)) {
                 if (createType === CREATE_TYPE_EMPTY) {
                     doCreateProject();
                 } else if (createType === CREATE_TYPE_IMPORT) {
                     doCreateProjectFromFile();
                 }
-
-                event.preventDefault();
                 event.stopPropagation();
+                event.preventDefault();
             }
+
         });
 
 
