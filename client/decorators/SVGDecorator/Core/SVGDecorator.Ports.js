@@ -1,13 +1,8 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Brian Broll
- *
- *
- * This file contains the port relevant functions for the SVGDecorator.
- */
+/*globals define, _*/
 
-"use strict";
+/**
+ * @author brollb / https://github.com/brollb
+ */
 
 define(['js/Decorators/DecoratorWithPorts.Base',
         'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
@@ -15,6 +10,7 @@ define(['js/Decorators/DecoratorWithPorts.Base',
                                 DiagramDesignerWidgetConstants,
                                 SVGPort) {
 
+    "use strict";
 
     var SVGDecoratorPorts,
         ABSTRACT_CLASS = 'abstract',

@@ -1,9 +1,12 @@
-"use strict";
-/*
- * WebGME jquery extension
+/*globals define*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
 define(['jquery'], function () {
+
+    "use strict";
 
     $.fn.extend({
         editOnDblClick : function (params) {

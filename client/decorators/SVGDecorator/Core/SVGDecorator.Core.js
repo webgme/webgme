@@ -1,11 +1,10 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- *
- * This file contains the core functionality for getting 
- * and rendering the svg
+/*globals define, _*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi*
+ * @author brollb / https://github.com/brollb
  */
+
 
 "use strict";
 
