@@ -91,15 +91,15 @@ $.extend( $.fn.dataTableExt.oPagination, {
 
 				// Add / remove disabled classes from the static elements
 				if ( oPaging.iPage === 0 ) {
-					$('li:first', an[i]).addClass('disabled');
+					$('li:first', an[i]).disable(true);
 				} else {
-					$('li:first', an[i]).removeClass('disabled');
+					$('li:first', an[i]).disable(false);
 				}
 
 				if ( oPaging.iPage === oPaging.iTotalPages-1 || oPaging.iTotalPages === 0 ) {
-					$('li:last', an[i]).addClass('disabled');
+					$('li:last', an[i]).disable(true);
 				} else {
-					$('li:last', an[i]).removeClass('disabled');
+					$('li:last', an[i]).disable(false);
 				}
 			}
 		}

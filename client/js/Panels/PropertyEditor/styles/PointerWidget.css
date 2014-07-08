@@ -1,0 +1,12 @@
+/*
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ * 
+ * Author: Robert Kereskenyi
+ */
+.ptr-widget {
+  position: relative; }
+  .ptr-widget i {
+    margin-top: 6px;
+    position: absolute;
+    right: 2px;
+    cursor: pointer; }

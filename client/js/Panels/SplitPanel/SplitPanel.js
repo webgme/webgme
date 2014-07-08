@@ -1,13 +1,13 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
+/*globals define, Raphael, window, WebGMEGlobal, _*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-"use strict";
-
 define(['js/PanelBase/PanelBase',
-    'css!/css/Panels/SplitPanel/SplitPanel'], function (PanelBase) {
+    'css!./styles/SplitPanel'], function (PanelBase) {
+
+    "use strict";
 
     var SplitPanel,
         SPLIT_PANEL_CLASS = 'split-panel',

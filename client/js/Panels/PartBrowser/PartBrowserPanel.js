@@ -1,10 +1,16 @@
-"use strict";
+/*globals define, Raphael, window, WebGMEGlobal*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['js/PanelBase/PanelBaseWithHeader',
     'js/Widgets/PartBrowser/PartBrowserWidget',
     './PartBrowserPanelControl'], function (PanelBaseWithHeader,
                                             PartBrowserWidget,
                                             PartBrowserPanelControl) {
+
+    "use strict";
 
     var PartBrowserPanel,
         __parent__ = PanelBaseWithHeader;

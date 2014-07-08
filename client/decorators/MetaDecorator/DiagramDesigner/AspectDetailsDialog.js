@@ -1,17 +1,18 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
+/*globals define, _*/
 
-"use strict";
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['clientUtil',
     'js/Constants',
-    'text!./AspectDetailsDialog.html',
-    'css!./AspectDetailsDialog'], function ( util,
+    'text!./templates/AspectDetailsDialog.html',
+    'css!./styles/AspectDetailsDialog.css'], function ( util,
                                              CONSTANTS,
                                              aspectDetailsDialogTemplate) {
+
+    "use strict";
+
 
     var AspectDetailsDialog,
         ASPECT_DESC_BASE = {'name': undefined,
@@ -29,7 +30,7 @@ define(['clientUtil',
 
         this._dialog.modal('show');
 
-        this._dialog.on('hidden', function () {
+        this._dialog.on('hidden.bs.modal', function () {
             self._dialog.remove();
             self._dialog.empty();
             self._dialog = undefined;
@@ -89,9 +90,9 @@ define(['clientUtil',
             var checked = typesContainer.find('input[type=checkbox]:checked');
 
             if (checked.length === 0) {
-                self._btnSave.addClass("disabled");
+                self._btnSave.disable(true);
             } else {
-                self._btnSave.removeClass("disabled");
+                self._btnSave.disable(false);
             }
         };
 
@@ -117,10 +118,10 @@ define(['clientUtil',
 
             if (!isValidAspectName(val)) {
                 self._pName.addClass("error");
-                self._btnSave.addClass("disabled");
+                self._btnSave.disable(true);
             } else {
                 self._pName.removeClass("error");
-                self._btnSave.removeClass("disabled");
+                self._btnSave.disable(false);
             }
         });
 

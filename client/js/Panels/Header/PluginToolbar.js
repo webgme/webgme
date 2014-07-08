@@ -85,7 +85,7 @@ define(['js/Dialogs/PluginResults/PluginResultsDialog'], function (PluginResults
         /************** EXECUTE PLUG-IN BUTTON ****************/
         $btnExecutePlugin = toolbar.addDropDownButton(
             { "title": "Execute plug-in",
-                "icon": "icon-play",
+                "icon": "glyphicon glyphicon-play",
                 "menuClass": "no-min-width",
                 'clickFn': function () {
                     fillMenuItems();

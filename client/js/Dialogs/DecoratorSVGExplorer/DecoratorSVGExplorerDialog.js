@@ -1,17 +1,19 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
- * Author: Robert Kereskenyi
+/*globals define, _, WebGMEGlobal, DEBUG*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
  */
 
-"use strict";
 
 define(['js/Constants',
     'assets/decoratorSVG',
-    'text!html/Dialogs/DecoratorSVGExplorer/DecoratorSVGExplorerDialog.html',
-    'css!/css/Dialogs/DecoratorSVGExplorer/DecoratorSVGExplorerDialog'], function (CONSTANTS,
+    'text!./templates/DecoratorSVGExplorerDialog.html',
+    'css!./styles/DecoratorSVGExplorerDialog.css'], function (CONSTANTS,
                                                                decoratorSVG,
                                                                DecoratorSVGExplorerDialogTemplate) {
+
+    "use strict";
 
     var DecoratorSVGExplorerDialog,
         IMG_BASE = $('<div class="img"><img src=""/><div class="desc">description</div></div>'),
@@ -31,7 +33,7 @@ define(['js/Constants',
 
         this._initDialog();
 
-        this._dialog.on('hidden', function () {
+        this._dialog.on('hidden.bs.modal', function () {
             self._dialog.remove();
             self._dialog.empty();
             self._dialog = undefined;
@@ -107,10 +109,10 @@ define(['js/Constants',
         this._modalBody.find('div.img.selected').removeClass('selected');
         if (fileName || fileName === '') {
             this._selectedSVG = fileName;
-            this._btnSelect.removeClass('disabled');
+            this._btnSelect.disable(false);
         } else {
             this._selectedSVG = undefined;
-            this._btnSelect.addClass('disabled');
+            this._btnSelect.disable(true);
         }
     };
 

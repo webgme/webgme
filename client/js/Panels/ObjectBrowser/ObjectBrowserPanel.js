@@ -1,4 +1,9 @@
-"use strict";
+/*globals define, Raphael, window, WebGMEGlobal*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
+
 
 define(['js/PanelBase/PanelBaseWithHeader',
     'js/Constants',
@@ -6,12 +11,15 @@ define(['js/PanelBase/PanelBaseWithHeader',
     './InheritanceBrowserControl',
     './CrosscutBrowserControl',
     'js/Widgets/TreeBrowser/TreeBrowserWidget',
-    'css!/css/Panels/ObjectBrowser/ObjectBrowserPanel'], function (PanelBaseWithHeader,
+    'css!./styles/ObjectBrowserPanel'], function (PanelBaseWithHeader,
                                                           CONSTANTS,
                                                           TreeBrowserControl,
                                                           InheritanceBrowserControl,
                                                           CrosscutBrowserControl,
                                                           TreeBrowserWidget) {
+
+    "use strict";
+
 
     var ObjectBrowserPanel,
         __parent__ = PanelBaseWithHeader,

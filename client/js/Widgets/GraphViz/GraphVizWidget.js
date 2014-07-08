@@ -1,15 +1,15 @@
-/*
- * Copyright (C) 2012 Vanderbilt University, All rights reserved.
- *
- * Author: Robert Kereskenyi
+/*globals define, Raphael, window, WebGMEGlobal*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
  */
-"use strict";
 
 define(['logManager',
         'js/Widgets/GraphViz/GraphVizWidget.Zoom',
         'd3',
-        'css!/css/Widgets/GraphViz/GraphVizWidget'], function (logManager,
+        'css!./styles/GraphVizWidget'], function (logManager,
                                                                GraphVizWidgetZoom) {
+    "use strict";
 
     var GraphVizWidget,
         GRAPH_VIZ_CLASS = "graph-viz",

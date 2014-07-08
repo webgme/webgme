@@ -1,7 +1,14 @@
-"use strict";
+/*globals define, _, WebGMEGlobal, DEBUG*/
 
-var WebGMEGlobal = { 'version': 'x',    //will be set from Node's package.json
-    'SUPPORTS_TOUCH': 'ontouchstart' in window || navigator.msMaxTouchPoints }; //touch device detection}
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
+ */
+
+var WebGMEGlobal = {
+    'version': 'x',                                                             //will be set from Node's package.json
+    'SUPPORTS_TOUCH': 'ontouchstart' in window || navigator.msMaxTouchPoints    //touch device detection}
+};
 
 // let require load all the toplevel needed script and call us on domReady
 define(['logManager',
@@ -9,12 +16,12 @@ define(['logManager',
     'text!package.json',
     'js/client',
     'js/Constants',
-    'clientUtil',
     'js/Utils/GMEConcepts',
     'js/Utils/GMEVisualConcepts',
     'js/Utils/ExportManager',
     'js/Utils/ImportManager',
     'js/Utils/StateManager',
+    'js/Utils/WebGMEUrlManager',
     'js/LayoutManager/LayoutManager',
     'js/Decorators/DecoratorManager',
     'js/KeyboardManager/KeyboardManager',
@@ -23,17 +30,18 @@ define(['logManager',
     'js/Utils/METAAspectHelper',
     'js/Utils/PreferencesHelper',
     'js/ConstraintManager/ConstraintManager',
+    'js/Dialogs/Projects/ProjectsDialog',
     'js/Utils/InterpreterManager'], function (logManager,
                                             CONFIG,
                                             packagejson,
                                             Client,
                                             CONSTANTS,
-                                            util,
                                             GMEConcepts,
                                             GMEVisualConcepts,
                                             ExportManager,
                                             ImportManager,
                                             StateManager,
+                                            WebGMEUrlManager,
                                             LayoutManager,
                                             DecoratorManager,
                                             KeyboardManager,
@@ -42,29 +50,31 @@ define(['logManager',
                                             METAAspectHelper,
                                             PreferencesHelper,
                                             ConstraintManager,
+                                            ProjectsDialog,
                                             InterpreterManager) {
+
+    "use strict";
 
     var npmJSON = JSON.parse(packagejson);
     WebGMEGlobal.version = npmJSON.version;
 
     var _webGMEStart = function () {
-        var lm,
+        var layoutManager,
             client,
             loadPanels,
-            layoutToLoad = util.getURLParameterByName('layout') || 'DefaultLayout',
-            commitToLoad = util.getURLParameterByName('commit').toLowerCase(),
-            projectToLoad = util.getURLParameterByName('project'),
-            objectToLoad = util.getURLParameterByName('obj').toLowerCase(),
-            createNewProject = util.getURLParameterByName('create') === "true" ? true : false,
             logger = logManager.create('WebGME'),
             selectObject,
             loadBranch,
-            branchToLoad = util.getURLParameterByName('branch') || CONFIG.branch;
+            initialThingsToDo = WebGMEUrlManager.parseInitialThingsToDoFromUrl(),
+            projectOpenDialog,
+            openProjectLoadDialog;
 
-        lm = new LayoutManager();
-        lm.loadLayout(layoutToLoad, function () {
+        initialThingsToDo.branchToLoad = initialThingsToDo.branchToLoad || CONFIG.branch;
+
+        layoutManager = new LayoutManager();
+        layoutManager.loadLayout(initialThingsToDo.layoutToLoad, function () {
             var panels = [],
-                layoutPanels = lm._currentLayout.panels,
+                layoutPanels = layoutManager._currentLayout.panels,
                 len = layoutPanels ? layoutPanels.length : 0,
                 i;
 
@@ -74,10 +84,12 @@ define(['logManager',
 
             WebGMEGlobal.InterpreterManager = new InterpreterManager(client);
 
-            Object.defineProperty(WebGMEGlobal, 'State', {value : StateManager.initialize(),
+            Object.defineProperty(WebGMEGlobal, 'State', {
+                value : StateManager.initialize(),
                 writable : false,
                 enumerable : true,
-                configurable : false});
+                configurable : false}
+            );
 
             WebGMEHistory.initialize();
 
@@ -92,10 +104,12 @@ define(['logManager',
 
             //hook up branch changed to set read-only mode on panels
             client.addEventListener(client.events.BRANCH_CHANGED, function (__project, branchName) {
-                lm.setPanelReadOnly(client.isCommitReadOnly() || client.isProjectReadOnly());
+                layoutManager.setPanelReadOnly(client.isCommitReadOnly() || client.isProjectReadOnly());
+                WebGMEGlobal.State.registerActiveBranchName(branchName);
             });
             client.addEventListener(client.events.PROJECT_OPENED, function (__project, projectName) {
-                lm.setPanelReadOnly(client.isProjectReadOnly());
+                layoutManager.setPanelReadOnly(client.isProjectReadOnly());
+                WebGMEGlobal.State.registerActiveProjectName(projectName);
             });
 
             //on project close clear the current state
@@ -125,29 +139,32 @@ define(['logManager',
         loadPanels = function (panels) {
             var p = panels.splice(0, 1)[0];
 
-            lm.loadPanel(p, function () {
+            layoutManager.loadPanel(p, function () {
                 if (panels.length > 0) {
                     loadPanels(panels);
                 } else {
-                    if(createNewProject && projectToLoad !== ""){
+                    if(initialThingsToDo.createNewProject){
                         client.connectToDatabaseAsync({},function(err){
                             if(err){
                                 logger.error(err);
+                                openProjectLoadDialog();
                             } else {
                                 client.getAvailableProjectsAsync(function(err,projectArray){
                                     if(err){
                                         logger.error(err);
+                                        openProjectLoadDialog();
                                     } else {
-                                        if(projectArray.indexOf(projectToLoad) !== -1){
+                                        if(projectArray.indexOf(initialThingsToDo.projectToLoad) !== -1){
                                             //we fallback to loading
-                                            client.selectProjectAsync(projectToLoad,function(err){
+                                            client.selectProjectAsync(initialThingsToDo.projectToLoad,function(err){
                                                 if(err){
                                                     logger.error(err);
+                                                    openProjectLoadDialog();
                                                 } else {
-                                                    if (branchToLoad && branchToLoad !== '') {
-                                                        loadBranch(branchToLoad);
-                                                    } else  if (commitToLoad && commitToLoad !== "") {
-                                                        client.selectCommitAsync(commitToLoad, function (err) {
+                                                    if (initialThingsToDo.branchToLoad) {
+                                                        loadBranch(initialThingsToDo.branchToLoad);
+                                                    } else  if (initialThingsToDo.commitToLoad && initialThingsToDo.commitToLoad !== "") {
+                                                        client.selectCommitAsync(initialThingsToDo.commitToLoad, function (err) {
                                                             if (err) {
                                                                 logger.error(err);
                                                             } else {
@@ -161,13 +178,15 @@ define(['logManager',
                                             });
                                         } else {
                                             //we create the project
-                                            client.createProjectAsync(projectToLoad,function(err){
+                                            client.createProjectAsync(initialThingsToDo.projectToLoad,function(err){
                                                 if(err){
                                                     logger.error(err);
+                                                    openProjectLoadDialog();
                                                 } else {
-                                                    client.selectProjectAsync(projectToLoad,function(err) {
+                                                    client.selectProjectAsync(initialThingsToDo.projectToLoad,function(err) {
                                                         if (err) {
                                                             logger.error(err);
+                                                            openProjectLoadDialog();
                                                         } else {
                                                             GMEConcepts.createBasicProjectSeed();
                                                         }
@@ -181,39 +200,63 @@ define(['logManager',
                             }
                         });
                     } else {
-                        projectToLoad = projectToLoad === "" ? CONFIG.project : projectToLoad;
-                        client.connectToDatabaseAsync({'open': projectToLoad,
-                            'project': projectToLoad}, function (err) {
-                            if (err) {
-                                logger.error(err);
-                            } else {
-                                if (branchToLoad && branchToLoad !== '') {
-                                    loadBranch(branchToLoad);
-                                } else  if (commitToLoad && commitToLoad !== "") {
-                                    client.selectCommitAsync(commitToLoad, function (err) {
-                                        if (err) {
-                                            logger.error(err);
-                                        } else {
-                                            selectObject();
-                                        }
-                                    });
+
+                        initialThingsToDo.projectToLoad = initialThingsToDo.projectToLoad || CONFIG.project;
+
+                        if(!initialThingsToDo.projectToLoad){
+                            openProjectLoadDialog();
+                        } else {
+                            client.connectToDatabaseAsync({
+                                'open': initialThingsToDo.projectToLoad,
+                                'project': initialThingsToDo.projectToLoad
+                            }, function (err) {
+                                if (err) {
+                                    logger.error(err);
+                                    openProjectLoadDialog();
                                 } else {
-                                    selectObject();
+                                    if (initialThingsToDo.branchToLoad) {
+                                        loadBranch(initialThingsToDo.branchToLoad);
+                                    } else  if (initialThingsToDo.commitToLoad) {
+                                        client.selectCommitAsync(initialThingsToDo.commitToLoad, function (err) {
+                                            if (err) {
+                                                logger.error(err);
+                                                openProjectLoadDialog();
+                                            } else {
+                                                selectObject();
+                                            }
+                                        });
+                                    } else {
+                                        selectObject();
+                                    }
                                 }
-                            }
-                        });
+                            });
+                        }
                     }
                 }
             });
         };
 
+        openProjectLoadDialog = function(){
+            //if initial project openings failed we shhow the project opening dialog
+            client.connectToDatabaseAsync({},function(err){
+                if(err){
+                    logger.error(err);
+                } else {
+                    client.getAvailableProjectsAsync(function(err,projectArray){
+                        projectOpenDialog = new ProjectsDialog(client);
+                        projectOpenDialog.show();
+                    });
+                }
+            });
+        };
+
         selectObject = function () {
-            if (objectToLoad && objectToLoad !== "") {
-                if (objectToLoad.toLowerCase() === 'root') {
-                    objectToLoad = CONSTANTS.PROJECT_ROOT_ID;
+            if (initialThingsToDo.objectToLoad) {
+                if (initialThingsToDo.objectToLoad.toLowerCase() === 'root') {
+                    initialThingsToDo.objectToLoad = CONSTANTS.PROJECT_ROOT_ID;
                 }
                 setTimeout(function () {
-                    WebGMEGlobal.State.setActiveObject(objectToLoad);
+                    WebGMEGlobal.State.registerActiveObject(initialThingsToDo.objectToLoad);
                 }, 1000);
             }
         };
@@ -222,9 +265,11 @@ define(['logManager',
             client.selectBranchAsync(branchName, function (err) {
                 if (err) {
                     logger.error(err);
+                    openProjectLoadDialog();
                 }
             });
         };
+
     };
 
     return {
