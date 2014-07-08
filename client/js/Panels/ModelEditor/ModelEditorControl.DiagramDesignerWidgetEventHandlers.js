@@ -1,4 +1,8 @@
-"use strict";
+/*globals define, Raphael, window, WebGMEGlobal, _, alert, hasOwnProperty*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['logManager',
     'clientUtil',
@@ -17,6 +21,8 @@ define(['logManager',
                                                         ExportManager,
                                                         DiagramDesignerWidgetConstants,
                                                         DragHelper) {
+
+    "use strict";
 
     var ModelEditorControlDiagramDesignerWidgetEventHandlers,
         ATTRIBUTES_STRING = "attributes",
@@ -374,13 +380,32 @@ define(['logManager',
             possibleDropActions = [],
             parentID = this.currentNodeInfo.id,
             i,
-            validPointerTypes,
             j,
             validPointerTypes = [],
             baseTypeID,
             baseTypeNode,
             dragAction,
-            aspect = this._selectedAspect;
+            aspect = this._selectedAspect,
+            pointerSorter = function (a,b)
+                {
+                    var baseAName = a.name.toLowerCase(),
+                        baseBName = b.name.toLowerCase(),
+                        ptrAName = a.pointer.toLowerCase(),
+                        ptrBName = b.pointer.toLowerCase();
+
+                    if (ptrAName < ptrBName) {
+                        return -1;
+                    } else if (ptrAName > ptrBName) {
+                        return 1;
+                    } else {
+                        //ptrAName = ptrBName
+                        if (baseAName < baseBName) {
+                            return -1;
+                        } else {
+                            return 1;
+                        }
+                    }
+                };
 
         //check to see what DROP actions are possible
         if (items.length > 0) {
@@ -423,25 +448,7 @@ define(['logManager',
                                     }
                                 }
 
-                                validPointerTypes.sort(function (a,b) {
-                                    var baseAName = a.name.toLowerCase(),
-                                        baseBName = b.name.toLowerCase(),
-                                        ptrAName = a.pointer.toLowerCase(),
-                                        ptrBName = b.pointer.toLowerCase();
-
-                                    if (ptrAName < ptrBName) {
-                                        return -1;
-                                    } else if (ptrAName > ptrBName) {
-                                        return 1;
-                                    } else {
-                                        //ptrAName = ptrBName
-                                        if (baseAName < baseBName) {
-                                            return -1;
-                                        } else {
-                                            return 1;
-                                        }
-                                    }
-                                });
+                                validPointerTypes.sort(pointerSorter);
 
                                 for (j = 0; j < validPointerTypes.length; j += 1) {
                                     dragAction = { 'dragEffect': DragHelper.DRAG_EFFECTS.DRAG_CREATE_POINTER,
@@ -889,10 +896,6 @@ define(['logManager',
         var nodeObj = this._client.getNode(this._ComponentID2GmeID[itemID]),
             result = true;
 
-        if (nodeObj) {
-            result = this._client.canSetRegistry(nodeObj.getId(), REGISTRY_KEYS.POSITION);
-        }
-
         return result;
     };
 
@@ -901,7 +904,7 @@ define(['logManager',
             result = true;
 
         if (nodeObj) {
-            result = nodeObj.getAttribute('copy') != "false";
+            result = nodeObj.getAttribute('copy') !== "false";
         }
 
         return result;
@@ -1098,7 +1101,7 @@ define(['logManager',
                 if (key === MENU_EXPORT) {
                     self._exportItems(selectedIds);
                 } else if (key === MENU_EXINTCONF){
-                    self._exIntConf(selectedIds)
+                    self._exIntConf(selectedIds);
                 }
             },
             this.designerCanvas.posToPageXY(mousePos.mX,
