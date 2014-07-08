@@ -42,3 +42,20 @@ using requirejs (see the scripts in the bin directory).
     var server = webGME.standaloneServer(CONFIG); //you should gather all relevant configuration for the server like mongoip and port of the server
     server.start()
 ```
+
+# Developer guidelines
+
+## Coding style
+
+Use JSHint with the following settings:
+```
+/*jshint bitwise:true, curly:true, eqeqeq:true, noarg:true, noempty:true, nonew:true, undef:true, strict:true, browser:true, jquery:true, node:true */
+```
+Always declare your globals at the top of the source.
+
+Use [JDDoc](http://en.wikipedia.org/wiki/JSDoc) syntax to annotate source code with documentation, eg. specify authors as:
+```
+/**
+ * @author brollb / https://github.com/brollb
+ */
+```
