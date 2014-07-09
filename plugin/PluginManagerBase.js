@@ -221,7 +221,7 @@ define([
                         pluginContext.branchName = managerConfiguration.branchName;
                         loadCommitHashAndRun(pluginContext.commitHash);
                     } else {
-                        callback('cannot find branch', pluginContext);
+                        callback('cannot find branch \'' + managerConfiguration.branchName + '\'', pluginContext);
                     }
                 });
             } else {
