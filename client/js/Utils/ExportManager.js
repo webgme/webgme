@@ -22,7 +22,7 @@ define(['jquery',
     };
 
     var _export = function (objID) {
-        var fileName =  _client.getActiveProject() + "_" + _client.getActualBranch(),
+        var fileName =  _client.getActiveProjectName() + "_" + _client.getActualBranch(),
             objName;
 
         if (objID !== CONSTANTS.PROJECT_ROOT_ID) {
@@ -43,7 +43,7 @@ define(['jquery',
     };
 
     var _exportMultiple = function (objIDs) {
-        var fileName =  _client.getActiveProject() + "_" + _client.getActualBranch() + "_multiple";
+        var fileName =  _client.getActiveProjectName() + "_" + _client.getActualBranch() + "_multiple";
 
         if (_.isArray(objIDs) &&
             objIDs.length > 0) {
@@ -56,7 +56,7 @@ define(['jquery',
     };
 
     var _exIntConf = function(objIDs) {
-        var fileName = _client.getActiveProject() + "_" + _client.getActualBranch() + "_conf";
+        var fileName = _client.getActiveProjectName() + "_" + _client.getActualBranch() + "_conf";
 
         if(_.isArray(objIDs) &&
            objIDs.length > 0) {
@@ -70,7 +70,7 @@ define(['jquery',
     var _expLib = function(objID) {
         if(objID){
             var object = _client.getNode(objID),
-                fileName = _client.getActiveProject() + "_" + _client.getActualBranch() + "_" + object.getAttribute('name') + "_lib";
+                fileName = _client.getActiveProjectName() + "_" + _client.getActualBranch() + "_" + object.getAttribute('name') + "_lib";
 
             _client.getExportLibraryUrlAsync(objID,fileName,function(err,url){
                 if(!err){

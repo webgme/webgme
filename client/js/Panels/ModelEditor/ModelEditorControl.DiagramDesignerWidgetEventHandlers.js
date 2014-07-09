@@ -1,4 +1,8 @@
-"use strict";
+/*globals define, Raphael, window, WebGMEGlobal, _, alert, hasOwnProperty*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['logManager',
     'clientUtil',
@@ -19,6 +23,8 @@ define(['logManager',
                                                         ImportManager,
                                                         DiagramDesignerWidgetConstants,
                                                         DragHelper) {
+
+    "use strict";
 
     var ModelEditorControlDiagramDesignerWidgetEventHandlers,
         ATTRIBUTES_STRING = "attributes",
@@ -310,7 +316,7 @@ define(['logManager',
 
         if (gmeID) {
             this.logger.debug("Opening model with id '" + gmeID + "'");
-            WebGMEGlobal.State.setActiveObject(gmeID);
+            WebGMEGlobal.State.registerActiveObject(gmeID);
         }
     };
 
@@ -376,13 +382,32 @@ define(['logManager',
             possibleDropActions = [],
             parentID = this.currentNodeInfo.id,
             i,
-            validPointerTypes,
             j,
             validPointerTypes = [],
             baseTypeID,
             baseTypeNode,
             dragAction,
-            aspect = this._selectedAspect;
+            aspect = this._selectedAspect,
+            pointerSorter = function (a,b)
+                {
+                    var baseAName = a.name.toLowerCase(),
+                        baseBName = b.name.toLowerCase(),
+                        ptrAName = a.pointer.toLowerCase(),
+                        ptrBName = b.pointer.toLowerCase();
+
+                    if (ptrAName < ptrBName) {
+                        return -1;
+                    } else if (ptrAName > ptrBName) {
+                        return 1;
+                    } else {
+                        //ptrAName = ptrBName
+                        if (baseAName < baseBName) {
+                            return -1;
+                        } else {
+                            return 1;
+                        }
+                    }
+                };
 
         //check to see what DROP actions are possible
         if (items.length > 0) {
@@ -425,25 +450,7 @@ define(['logManager',
                                     }
                                 }
 
-                                validPointerTypes.sort(function (a,b) {
-                                    var baseAName = a.name.toLowerCase(),
-                                        baseBName = b.name.toLowerCase(),
-                                        ptrAName = a.pointer.toLowerCase(),
-                                        ptrBName = b.pointer.toLowerCase();
-
-                                    if (ptrAName < ptrBName) {
-                                        return -1;
-                                    } else if (ptrAName > ptrBName) {
-                                        return 1;
-                                    } else {
-                                        //ptrAName = ptrBName
-                                        if (baseAName < baseBName) {
-                                            return -1;
-                                        } else {
-                                            return 1;
-                                        }
-                                    }
-                                });
+                                validPointerTypes.sort(pointerSorter);
 
                                 for (j = 0; j < validPointerTypes.length; j += 1) {
                                     dragAction = { 'dragEffect': DragHelper.DRAG_EFFECTS.DRAG_CREATE_POINTER,
@@ -490,25 +497,25 @@ define(['logManager',
                     case DragHelper.DRAG_EFFECTS.DRAG_COPY:
                         menuItems[i] = {
                             "name": "Copy here",
-                            "icon": 'icon-plus'
+                            "icon": 'glyphicon glyphicon-plus'
                         };
                         break;
                     case DragHelper.DRAG_EFFECTS.DRAG_MOVE:
                         menuItems[i] = {
                             "name": "Move here",
-                            "icon": 'icon-move'
+                            "icon": 'glyphicon glyphicon-move'
                         };
                         break;
                     case DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE:
                         menuItems[i] = {
                             "name": "Create instance here",
-                            "icon": 'icon-share-alt'
+                            "icon": 'glyphicon glyphicon-share-alt'
                         };
                         break;
                     case DragHelper.DRAG_EFFECTS.DRAG_CREATE_POINTER:
                         menuItems[i] = {
                             "name": "Create pointer '" + possibleDropActions[i].pointer + "' of type '" + possibleDropActions[i].name + "'",
-                            "icon": 'icon-share'
+                            "icon": 'glyphicon glyphicon-share'
                         };
                         break;
                     default:
@@ -727,7 +734,7 @@ define(['logManager',
         }
 
         this._settingActiveSelection = true;
-        WebGMEGlobal.State.setActiveSelection(gmeIDs);
+        WebGMEGlobal.State.registerActiveSelection(gmeIDs);
         this._settingActiveSelection = false;
     };
 
@@ -891,10 +898,6 @@ define(['logManager',
         var nodeObj = this._client.getNode(this._ComponentID2GmeID[itemID]),
             result = true;
 
-        if (nodeObj) {
-            result = this._client.canSetRegistry(nodeObj.getId(), REGISTRY_KEYS.POSITION);
-        }
-
         return result;
     };
 
@@ -903,7 +906,7 @@ define(['logManager',
             result = true;
 
         if (nodeObj) {
-            result = nodeObj.getAttribute('copy') != "false";
+            result = nodeObj.getAttribute('copy') !== "false";
         }
 
         return result;
@@ -983,7 +986,7 @@ define(['logManager',
             gmeID,
             obj,
             nodeObj,
-            cpData = {'project': this._client.getActiveProject(),
+            cpData = {'project': this._client.getActiveProjectName(),
                       'items' : []};
 
         while(i--) {
@@ -1011,7 +1014,7 @@ define(['logManager',
             objDesc,
             parentID = this.currentNodeInfo.id,
             params = { "parentId": parentID },
-            projectName = this._client.getActiveProject(),
+            projectName = this._client.getActiveProjectName(),
             childrenIDs = [],
             aspect = this._selectedAspect;
 
@@ -1090,16 +1093,16 @@ define(['logManager',
 
         /*menuItems[MENU_EXINTCONF] = {
             "name": 'Export model context...',
-            "icon": 'icon-cog'
+            "icon": 'glyphicon glyphicon-cog'
         };*/
         if(selectedIds.length === 1){
             menuItems[MENU_EXPLIB] = {
                 "name": 'Export library...',
-                "icon": 'icon-book'
+                "icon": 'glyphicon glyphicon-book'
             };
             menuItems[MENU_UPDLIB] = {
                 "name": 'Update library...',
-                "icon": 'icon-refresh'
+                "icon": 'glyphicon glyphicon-refresh'
             };
         }
 

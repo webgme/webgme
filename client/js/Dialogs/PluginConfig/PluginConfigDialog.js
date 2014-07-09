@@ -1,15 +1,20 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
- * Author: Robert Kereskenyi
+/*globals define, WebGMEGlobal, alert, _*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
  */
 
-"use strict";
 
-define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
-    'text!html/Dialogs/PluginConfig/PluginConfigDialog.html',
-    'css!/css/Dialogs/PluginConfig/PluginConfigDialog'], function (PropertyGridWidgetManager,
-                                                                   pluginConfigDialogTemplate) {
+define([
+    'js/Controls/PropertyGrid/PropertyGridWidgetManager',
+    'text!./templates/PluginConfigDialog.html',
+    'css!./styles/PluginConfigDialog.css'],
+    function (
+        PropertyGridWidgetManager,
+        pluginConfigDialogTemplate) {
+
+    "use strict";
 
     var PluginConfigDialog,
         PLUGIN_DATA_KEY = 'plugin',
@@ -27,7 +32,7 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
 
         this._initDialog(pluginConfigs);
 
-        this._dialog.on('hidden', function () {
+        this._dialog.on('hidden.bs.modal', function () {
             self._dialog.remove();
             self._dialog.empty();
             self._dialog = undefined;
@@ -54,7 +59,7 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
         }
     };
 
-    var PLUGIN_CONFIG_SECTION_BASE = $('<div><fieldset><legend></legend><div class="form-horizontal"></div><fieldset></div>');
+    var PLUGIN_CONFIG_SECTION_BASE = $('<div><fieldset><legend></legend><form class="form-horizontal" role="form"></form><fieldset></div>');
     PluginConfigDialog.prototype._initDialog = function (pluginConfigs) {
         var self = this;
         var pluginSectionEl;
@@ -93,7 +98,7 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
         });
     };
 
-    var ENTRY_BASE = $('<div class="control-group"><label class="control-label">NAME</label><div class="controls"></div></div>');
+    var ENTRY_BASE = $('<div class="form-group"><label class="col-sm-4 control-label">NAME</label><div class="col-sm-8 controls"></div></div>');
     var DESCRIPTION_BASE = $('<div class="desc muted"></div>');
     PluginConfigDialog.prototype._generatePluginSection = function (pluginName, pluginConfig, containerEl) {
         var len = pluginConfig.length,

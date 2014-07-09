@@ -1,4 +1,9 @@
-"use strict";
+/*globals define, _, WebGMEGlobal, DEBUG*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
+ */
 
 define(['logManager',
     'loaderProgressBar',
@@ -6,12 +11,14 @@ define(['logManager',
     'js/PanelBase/PanelBaseWithHeader',
     'js/Panels/SplitPanel/SplitPanel',
     '/listAllVisualizerDescriptors',
-    'css!/css/Panels/Visualizer/VisualizerPanel'], function (logManager,
+    'css!./styles/VisualizerPanel'], function (logManager,
                                     LoaderProgressBar,
                                     CONSTANTS,
                                     PanelBaseWithHeader,
                                     SplitPanel,
                                     VisualizersJSON) {
+
+    "use strict";
 
     var VisualizerPanel,
         DEFAULT_VISUALIZER = 'ModelEditor';
@@ -47,7 +54,7 @@ define(['logManager',
     VisualizerPanel.prototype._initialize = function () {
         var self = this,
             toolbar = WebGMEGlobal.Toolbar,
-            btnIconBase = $('<i style="display: inline-block;width: 14px;height: 14px;line-height: 14px;vertical-align: text-top;background-repeat: no-repeat;"></i>');;
+            btnIconBase = $('<i/>');
 
         //set Widget title
         this.setTitle("Visualizer");
@@ -57,8 +64,9 @@ define(['logManager',
         //add toolbar controls
         toolbar.addSeparator();
 
-        toolbar.addToggleButton({ "title": "Split view ON/OFF",
-            "icon": btnIconBase.clone().css('background-image', 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAIAAACQKrqGAAAALHRFWHRDcmVhdGlvbiBUaW1lAFR1ZSAxOSBOb3YgMjAxMyAxNjozNjo0NCAtMDYwMKaJVWgAAAAHdElNRQfdCxMWKDLaKUzZAAAACXBIWXMAAAsSAAALEgHS3X78AAAABGdBTUEAALGPC/xhBQAAAAZ0Uk5TAP8A/wD/N1gbfQAAAD5JREFUeNpj/P//PwMqMDExAZJnzpxBE2eBSMABsgo0KSYGogELskloxqBJsWBVgdUNo6bSyFTMZIFpJAQAAMcoMq0xIJLxAAAAAElFTkSuQmCC)'),
+        toolbar.addToggleButton({
+            "title": "Split view ON/OFF",
+            "icon": btnIconBase.clone().addClass('gme icon-gme_split-panels'),
             "clickFn": function (data, toggled) {
                 self._p2Editor(toggled);
             }});
@@ -97,7 +105,7 @@ define(['logManager',
 
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_VISUALIZER, function (model, activeVisualizer) {
             if (self._settingVisualizer !== true) {
-                self.setActiveVisualizer(activeVisualizer);
+                WebGMEGlobal.State.registerActiveVisualizer(activeVisualizer);
             }
         });
 
@@ -147,14 +155,15 @@ define(['logManager',
                 }
             }
 
-            WebGMEGlobal.State.setActiveVisualizer(visualizer);
+            WebGMEGlobal.State.registerActiveVisualizer(visualizer);
         }
 
         this._settingVisualizer = false;
     };
 
+
     VisualizerPanel.prototype.setActiveVisualizer = function (visualizer) {
-        var panel = WebGMEGlobal.PanelManager.getActivePanel() === this._activePanel['p1'] ? 'p1' : 'p2',
+        var panel = WebGMEGlobal.PanelManager.getActivePanel() === this._activePanel.p1 ? 'p1' : 'p2',
             ul = panel === 'p1' ? this._ul1 : this._ul2;
 
         this._setActiveVisualizer(visualizer, ul);
@@ -221,12 +230,12 @@ define(['logManager',
                         var msg = "Failed to download '" + err.requireModules[0] + "'";
                         //for any error store undefined in the list and the default decorator will be used on the canvas
                         self.logger.error(msg);
-                        a.append(' <i class="icon-warning-sign" title="' + msg + '"></i>');
+                        a.append(' <i class="glyphicon glyphicon-warning-sign" title="' + msg + '"></i>');
                         self._removeLoader(li, loaderDiv);
                         doCallBack();
                     });
             } else {
-                a.append(' <i class="icon-warning-sign"></i>');
+                a.append(' <i class="glyphicon glyphicon-warning-sign"></i>');
 
                 this.logger.warning("The visualizer with the ID '" + menuDesc.id + "' is missing 'panel' or 'control'");
 
@@ -247,7 +256,7 @@ define(['logManager',
                 if (queueLen === 0) {
                     callback();
                 }
-            }
+            };
         }
 
         for (i = 0; i < len; i += 1) {

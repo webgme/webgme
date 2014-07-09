@@ -1,10 +1,9 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
- * Author: Robert Kereskenyi
- */
+/*globals define, WebGMEGlobal, alert, _*/
 
-"use strict";
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
+ */
 
 define(['js/DragDrop/DragSource',
     'js/DragDrop/DragHelper',
@@ -12,11 +11,13 @@ define(['js/DragDrop/DragSource',
                                                     dragHelper,
                                                     DiagramDesignerWidgetConstants) {
 
+    "use strict";
+
     var DiagramDesignerWidgetDraggable,
         DRAG_HELPER_CLASS = 'diagram-designer-drag-outline',
         DRAG_HELPER_EL_BASE = $('<div/>', {'class': DRAG_HELPER_CLASS}),
-        DRAG_HELPER_ICON_MOVE = $('<i class="icon-move"></i>'),
-        DRAG_HELPER_ICON_COPY = $('<i class="icon-plus"></i>');
+        DRAG_HELPER_ICON_MOVE = $('<i class="glyphicon glyphicon-move"></i>'),
+        DRAG_HELPER_ICON_COPY = $('<i class="glyphicon glyphicon-plus"></i>');
 
     DiagramDesignerWidgetDraggable = function () {
     };

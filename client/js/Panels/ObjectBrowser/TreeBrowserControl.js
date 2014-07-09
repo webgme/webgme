@@ -1,9 +1,8 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
- * Author: Robert Kereskenyi
+/*globals define, Raphael, window, WebGMEGlobal*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
  */
-"use strict";
 
 define(['logManager',
         'js/Utils/GMEConcepts',
@@ -12,13 +11,16 @@ define(['logManager',
         'js/Utils/ImportManager',
         'js/Constants',
         'js/RegistryKeys',
-        'css!/css/Panels/ObjectBrowser/TreeBrowserControl'], function (logManager,
+        'css!./styles/TreeBrowserControl'], function (logManager,
                                                                        GMEConcepts,
                                                                        nodePropertyNames,
                                                                        ExportManager,
                                                                        ImportManager,
                                                                        CONSTANTS,
                                                                        REGISTRY_KEYS) {
+
+    "use strict";
+
 
     var NODE_PROGRESS_CLASS = 'node-progress',
         GME_MODEL_CLASS = "gme-model",
@@ -157,7 +159,7 @@ define(['logManager',
                         nodes[currentChildId] = {    "treeNode": childTreeNode,
                             "children" : [],
                             "state" : stateLoading };
-                    };
+                    }
                 }
 
                 treeBrowser.enableUpdate(true);
@@ -258,7 +260,7 @@ define(['logManager',
                 menuItems.separatorCreate = "-";
                 menuItems.create = { // The "create" menu item
                     "name": "Create...",
-                    "icon": "add",
+                    "icon": "glyphicon glyphicon-plus",
                     "items": {}
                 };
 

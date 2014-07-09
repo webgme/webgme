@@ -1,0 +1,67 @@
+@font-face {
+	font-family: 'gme';
+	src:url('fonts/gme.eot?-qqk8l2');
+	src:url('fonts/gme.eot?#iefix-qqk8l2') format('embedded-opentype'),
+		url('fonts/gme.woff?-qqk8l2') format('woff'),
+		url('fonts/gme.ttf?-qqk8l2') format('truetype'),
+		url('fonts/gme.svg?-qqk8l2#gme') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+
+.gme {
+	font-family: 'gme';
+	speak: none;
+	font-style: normal;
+	font-weight: normal;
+	font-variant: normal;
+	text-transform: none;
+	line-height: 1;
+
+	/* Better Font Rendering =========== */
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+.icon-gme_pen:before {
+	content: "\e60c";
+}
+.icon-gme_keyboard:before {
+	content: "\e60d";
+}
+.icon-gme_diagonal-arrow:before {
+	content: "\e606";
+}
+.icon-gme_straight-line:before {
+	content: "\e600";
+}
+.icon-gme_split-panels:before {
+	content: "\e601";
+}
+.icon-gme_lines:before {
+	content: "\e602";
+}
+.icon-gme_grid:before {
+	content: "\e603";
+}
+.icon-gme_dot-tailed-line:before {
+	content: "\e604";
+}
+.icon-gme_diamond-headed-line:before {
+	content: "\e605";
+}
+.icon-gme_curvy-line:before {
+	content: "\e607";
+}
+.icon-gme_crossing-lines:before {
+	content: "\e608";
+}
+.icon-gme_broken-arrow-with-box:before {
+	content: "\e609";
+}
+.icon-gme_broken-arow:before {
+	content: "\e60a";
+}
+.icon-gme_arrow-headed-line:before {
+	content: "\e60b";
+}

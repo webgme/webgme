@@ -1,7 +1,14 @@
-"use strict";
+/*globals define, Raphael, window*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
+
 
 define(['jquery',
-        'css!/css/Controls/PopoverBox'], function () {
+        'css!./styles/PopoverBox.css'], function () {
+
+    "use strict";
 
     var PopoverBox,
         AUTO_HIDE_MILLISEC = 2000;
@@ -19,7 +26,8 @@ define(['jquery',
         el.popover('destroy');
 
         //show new
-        el.popover({'placement': 'top',
+        el.popover({
+            'placement': 'top',
             'content': message,
             'container': this._el});
 

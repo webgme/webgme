@@ -2,12 +2,12 @@
 
 define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
         'blob/BlobClient',
-        'css!/css/Controls/PropertyGrid/Widgets/AssetWidget'],
+        'css!./styles/AssetWidget'],
     function (WidgetBase,
               BlobClient) {
 
         var AssetWidget,
-            BTN_ATTACH = $('<a class="btn btn-mini btn-dialog-open"><i class="icon-file"/></a>'),
+            BTN_ATTACH = $('<a class="btn btn-mini btn-dialog-open"><i class="glyphicon glyphicon-file"/></a>'),
             INPUT_FILE_UPLOAD = $('<input type="file" />'),
             MAX_FILE_SIZE = 100000000,
             ASSET_WIDGET_BASE = $('<div class="asset-widget" />'),
@@ -128,9 +128,9 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
 
             if (this.__btnAttach) {
                 if (isReadOnly === true) {
-                    this.__btnAttach.addClass('disabled');
+                    this.__btnAttach.disable(true);
                 } else {
-                    this.__btnAttach.removeClass('disabled');
+                    this.__btnAttach.disable(false);
                 }
             }
 

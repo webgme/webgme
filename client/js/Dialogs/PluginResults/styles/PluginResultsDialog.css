@@ -1,0 +1,39 @@
+/*
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ * 
+ * Author: Robert Kereskenyi
+ */
+.plugin-results-dialog .modal-body div.plugin-result {
+  padding: 3px;
+  margin-bottom: 10px;
+  background-color: #f5f5f5;
+  border: 1px solid #ddd; }
+  .plugin-results-dialog .modal-body div.plugin-result.unread {
+    color: #3a87ad;
+    background-color: #d9edf7;
+    border-color: #bce8f1; }
+  .plugin-results-dialog .modal-body div.plugin-result .alert {
+    margin-bottom: 0px; }
+  .plugin-results-dialog .modal-body div.plugin-result .title {
+    margin-left: 5px; }
+  .plugin-results-dialog .modal-body div.plugin-result .time {
+    margin-left: 5px;
+    color: #999999;
+    font-size: 9px; }
+  .plugin-results-dialog .modal-body div.plugin-result .messages .msg {
+    margin-bottom: 5px;
+    padding-bottom: 15px; }
+    .plugin-results-dialog .modal-body div.plugin-result .messages .msg .msg-title {
+      margin-top: 5px;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: #999999;
+      border-bottom: 1px solid #999999; }
+  .plugin-results-dialog .modal-body div.plugin-result .artifacts {
+    margin-bottom: 5px; }
+    .plugin-results-dialog .modal-body div.plugin-result .artifacts .artifacts-title {
+      margin-top: 5px;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: #999999;
+      border-bottom: 1px solid #999999; }

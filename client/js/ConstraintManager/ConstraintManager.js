@@ -75,11 +75,11 @@ define(['logManager',
                 return res;
             });
 
-        dialog.on('shown', function () {
+        dialog.on('shown.bs.modal', function () {
             doValidate();
         });
 
-        dialog.on('hidden', function () {
+        dialog.on('hidden.bs.modal', function () {
             dialog.remove();
             dialog = undefined;
         });

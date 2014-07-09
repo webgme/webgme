@@ -39,7 +39,7 @@ define(['./BlobBackendBase',
 
             var writeStream = fs.createWriteStream(tempName);
 
-            writeStream.on('finish', function () {
+            writeStream.on('close', function () {
                 // at this point the temporary file have been written out
                 // now the file have been written out
                 // finalizing hash and moving temporary file..
@@ -54,30 +54,27 @@ define(['./BlobBackendBase',
                         });
                         return;
                     }
-
-                    if (fs.existsSync(objectFilename)) {
-                        // if already exists we do not need to move the content
-                        fs.unlink(tempName, function (e) {
-                            if (err) {
-                                callback(err);
-                                return;
-                            }
-
-                            callback(null, hash, size);
-                        });
-                    } else {
-                        fs.rename(tempName, objectFilename, function (err) {
-                            // FIXME: this code has to be reviewed.
-                            if (err) {
+                    fs.rename(tempName, objectFilename, function (err) {
+                    // FIXME: this code has to be reviewed.
+                        if (err) {
+                            fs.exists(objectFilename, function (exists) {
                                 fs.unlink(tempName, function (e) {
-                                    callback(err);
+                                    if (e) {
+                                        // The tempName could not be deleted, something is very wrong.
+                                        callback(e);
+                                    } else {
+                                        if (exists) {
+                                            callback(null, hash, size);
+                                        } else {
+                                            callback(err);
+                                        }
+                                    }
                                 });
-                                return;
-                            }
-
-                            callback(null, hash, size);
-                        });
-                    }
+                            });
+                            return;
+                        }
+                        callback(null, hash, size);
+                    });
                 });
             });
 

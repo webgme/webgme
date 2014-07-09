@@ -1,16 +1,22 @@
 "use strict";
 
-define(['js/PanelBase/PanelBase',
-    'js/Widgets/LogLevelManager/LogLevelManagerWidget',
-    'js/Widgets/NetworkStatus/NetworkStatusWidget',
-    'js/Widgets/BranchStatus/BranchStatusWidget',
-    'js/Widgets/BranchSelector/BranchSelectorWidget',
-    'js/Widgets/KeyboardManager/KeyboardManagerWidget'], function (PanelBase,
-                                                  LogLevelManagerWidget,
-                                                  NetworkStatusWidget,
-                                                  BranchStatusWidget,
-                                                  BranchSelectorWidget,
-                                                  KeyboardManagerWidget) {
+define([
+        'js/PanelBase/PanelBase',
+        'js/Widgets/LogLevelManager/LogLevelManagerWidget',
+        'js/Widgets/NetworkStatus/NetworkStatusWidget',
+        'js/Widgets/BranchStatus/BranchStatusWidget',
+        'js/Widgets/BranchSelector/BranchSelectorWidget',
+        'js/Widgets/KeyboardManager/KeyboardManagerWidget'
+        //,'text!./template.html'
+    ],
+    function (
+        PanelBase,
+        LogLevelManagerWidget,
+        NetworkStatusWidget,
+        BranchStatusWidget,
+        BranchSelectorWidget,
+        KeyboardManagerWidget,
+        template) {
 
     var FooterControlsPanel,
         __parent__ = PanelBase;

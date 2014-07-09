@@ -1,6 +1,11 @@
-"use strict";
+/*globals define, Raphael, window, WebGMEGlobal*/
 
-define(['css!/css/Loader/LoaderCircles'], function () {
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
+
+define(['css!/js/Loader/styles/LoaderCircles'], function () {
+    "use strict";
 
     var LoaderCircles,
         CIRCLE_O_SHADOW_SIZE = 36,

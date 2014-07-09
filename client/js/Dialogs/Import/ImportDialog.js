@@ -1,15 +1,16 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
- * Author: Robert Kereskenyi
+/*globals define*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
  */
 
-"use strict";
 
 define(['loaderCircles',
-    'text!html/Dialogs/Import/ImportDialog.html',
-    'css!/css/Dialogs/Import/ImportDialog'], function (LoaderCircles,
+    'text!./templates/ImportDialog.html',
+    'css!./styles/ImportDialog.css'], function (LoaderCircles,
                                          importDialogTemplate) {
+    "use strict";
 
     var ImportDialog,
         MAX_FILE_SIZE = 100000000;
@@ -24,7 +25,7 @@ define(['loaderCircles',
 
         this._initDialog();
 
-        this._dialog.on('hidden', function () {
+        this._dialog.on('hide.bs.modal', function () {
             self._dialog.remove();
             self._dialog.empty();
             self._dialog = undefined;
@@ -43,7 +44,7 @@ define(['loaderCircles',
         this._dialog = $(importDialogTemplate);
 
         this._btnImport = this._dialog.find('.btn-import');
-        this._btnImport.addClass("disabled");
+        this._btnImport.disable(true);
 
         this._importErrorLabel = this._dialog.find('.alert-error');
         this._importErrorLabel.hide();
@@ -87,7 +88,7 @@ define(['loaderCircles',
 
     ImportDialog.prototype._fileSelectHandler = function (event) {
         var loader = this._loader,
-            btnImport = this._btnImport.addClass("disabled"),
+            btnImport = this._btnImport/*.addClass("disabled")*/,
             self = this;
 
         // cancel event and hover styling
@@ -95,13 +96,13 @@ define(['loaderCircles',
         event.preventDefault();
         this._fileDropTarget.removeClass('hover');
 
-        btnImport.addClass("disabled");
+        btnImport.disable(true);
         btnImport.off('click');
 
         // fetch FileList object
         var file = event.target.files || event.dataTransfer.files;
 
-        var parsedJSONFileContent = undefined;
+        var parsedJSONFileContent;
 
         // process all File objects
         if (file && file.length > 0) {
@@ -132,7 +133,7 @@ define(['loaderCircles',
                         self._displayMessage(file.name + ':<br><br>INVALID FILE FORMAT...', true);
                     } else {
                         self._displayMessage(file.name + ':<br><br>File has been parsed successfully, click \'Import...\' to start importing.', false);
-                        btnImport.removeClass("disabled");
+                        btnImport.disable(false);
                         btnImport.on('click', function (event) {
                             event.preventDefault();
                             event.stopPropagation();

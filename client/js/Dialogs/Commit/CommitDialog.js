@@ -1,8 +1,19 @@
-"use strict";
+/*globals define*/
 
-define(['logManager',
-    'text!html/Dialogs/Commit/CommitDialog.html'], function (logManager,
-                                                           commitDialogTemplate) {
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
+ */
+
+define([
+    'logManager',
+    'text!./templates/CommitDialog.html',
+    'css!./styles/CommitDialog.css'
+], function (logManager,
+        commitDialogTemplate) {
+
+    "use strict";
+
 
     var CommitDialog;
 
@@ -21,11 +32,11 @@ define(['logManager',
 
         this._dialog.modal('show');
 
-        this._dialog.on('shown', function () {
+        this._dialog.on('shown.bs.modal', function () {
             self._txtMessage.focus();
         });
 
-        this._dialog.on('hidden', function () {
+        this._dialog.on('hidden.bs.modal', function () {
             self._dialog.remove();
             self._dialog.empty();
             self._dialog = undefined;
@@ -59,10 +70,10 @@ define(['logManager',
             var val = self._txtMessage.val();
             if (val === "") {
                 self._controlGroupMessage.addClass("error");
-                self._btnCommit.addClass('disabled');
+                self._btnCommit.disable(true);
             } else {
                 self._controlGroupMessage.removeClass("error");
-                self._btnCommit.removeClass('disabled');
+                self._btnCommit.disable(false);
             }
         });
 

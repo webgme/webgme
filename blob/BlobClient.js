@@ -6,11 +6,21 @@
 
 define(['./Artifact', 'blob/BlobMetadata'], function (Artifact, BlobMetadata) {
 
-    var BlobClient = function () {
+    var BlobClient = function (parameters) {
         this.artifacts = [];
 
+        if (parameters) {
+            this.server = parameters.server || this.server;
+            this.serverPort = parameters.serverPort || this.serverPort;
+            this.httpsecure = (parameters.httpsecure !== undefined) ? parameters.httpsecure : this.httpsecure;
+        }
+        this.blobUrl = '';
+        if (this.httpsecure !== undefined && this.server && this.serverPort) {
+            this.blobUrl = (this.httpsecure ? 'https://' : 'http://') + this.server + ':' + this.serverPort;
+        }
+
         // TODO: TOKEN???
-        this.blobUrl = '/rest/blob/'; // TODO: any ways to ask for this or get it from the configuration?
+        this.blobUrl = this.blobUrl + '/rest/blob/'; // TODO: any ways to ask for this or get it from the configuration?
     };
 
     BlobClient.prototype.getMetadataURL = function (hash) {

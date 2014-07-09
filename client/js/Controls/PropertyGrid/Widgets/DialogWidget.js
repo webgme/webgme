@@ -54,9 +54,9 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'],
 
             if (this.__btnDialogOpen) {
                 if (isReadOnly === true) {
-                    this.__btnDialogOpen.addClass('disabled');
+                    this.__btnDialogOpen.disable(true);
                 } else {
-                    this.__btnDialogOpen.removeClass('disabled');
+                    this.__btnDialogOpen.disable(false);
                 }
             }
         };
