@@ -38,7 +38,13 @@ define(['util/assert'],function(ASSERT){
             _guidKeys = _guidKeys.sort();
             gatherAncestors(); //collecting the 'external' base classes - probably we should avoid these
 
-            _export.bases = _extraBasePaths; //we save this info alongside with the library export, to be on the safe side
+            var keys = Object.keys(_extraBasePaths),
+                i;
+            _export.bases = {};
+            for(i=0;i<keys.length;i++){
+                _export.bases[_extraBasePaths[keys[i]]] = keys[i];
+            }
+            //_export.bases = _extraBasePaths; //we save this info alongside with the library export, to be on the safe side
 
             _export.root = getLibraryRootInfo(libraryRoot);
             _export.relids = getRelIdInfo();
@@ -92,9 +98,11 @@ define(['util/assert'],function(ASSERT){
             base = _nodes[_guidKeys[i]];
             while(base!== null){
                 guid = _core.getGuid(base);
-                if(!_nodes[guid]){
+                if(!_nodes[guid]) {
                     _nodes[guid] = base;
-                    _extraBasePaths[guid] = _core.getPath(base);
+                    _extraBasePaths[_core.getPath(base)] = guid;
+                } else if(_guidKeys.indexOf(guid) === -1){
+                    _extraBasePaths[_core.getPath(base)] = guid;
                 }
                 base = _core.getBase(base);
             }
@@ -163,14 +171,15 @@ define(['util/assert'],function(ASSERT){
         };
     }
     function baseGuid(path){
-        var keys = Object.keys(_extraBasePaths),
+       /*var keys = Object.keys(_extraBasePaths),
             i;
         for(i=0;i<keys.length;i++){
             if(_extraBasePaths[keys[i]] === path){
                 return keys[i];
             }
         }
-        return null;
+        return null;*/
+        return _extraBasePaths[path];
     }
     function pathsToGuids(jsonObject){
         if(typeof jsonObject === 'object'){
@@ -260,8 +269,8 @@ define(['util/assert'],function(ASSERT){
             target;
         for(i=0;i<names.length;i++){
             target = _core.getPointerPath(node,names[i]);
-            if(_pathToGuidMap[target] || _extraBasePaths[target] || target === null){
-                result[names[i]] = _pathToGuidMap[target] || _extraBasePaths[target] || null;
+            if(_pathToGuidMap[target] || baseGuid(target) || target === null){
+                result[names[i]] = _pathToGuidMap[target] || baseGuid(target) || null;
             }
         }
         return result;
