@@ -1,4 +1,4 @@
-"use strict";
+/*globals require, $, console, angular*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -114,6 +114,9 @@ require(
     ],
     function (domReady, jQuery, jQueryUi, jQueryUiiPad, jqueryWebGME, jqueryDataTables, bootstrap, underscore,
               backbone, webGME, util, CONFIG) {
+
+        "use strict";
+
         domReady(function () {
 
 
