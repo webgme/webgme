@@ -88,7 +88,7 @@ define(['loaderCircles',
 
     ImportDialog.prototype._fileSelectHandler = function (event) {
         var loader = this._loader,
-            btnImport = this._btnImport.addClass("disabled"),
+            btnImport = this._btnImport/*.addClass("disabled")*/,
             self = this;
 
         // cancel event and hover styling

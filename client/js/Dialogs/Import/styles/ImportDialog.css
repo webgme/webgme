@@ -3,17 +3,3 @@
  * 
  * Author: Robert Kereskenyi
  */
-.import-dialog legend {
-  margin-bottom: 10px; }
-.import-dialog .file-drop-target {
-  border: 2px dashed #bbbbbb;
-  -moz-border-radius: 5px;
-  -webkit-border-radius: 5px;
-  border-radius: 5px;
-  padding: 25px;
-  text-align: center;
-  font-size: 15px;
-  color: #bbbbbb;
-  margin-top: 20px; }
-  .import-dialog .file-drop-target.hover {
-    background-color: rgba(0, 255, 0, 0.2); }

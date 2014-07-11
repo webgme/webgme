@@ -19,8 +19,9 @@ requirejs(['worker/constants',
         'blob/BlobServerClient',
         'plugin/PluginManagerBase',
         'plugin/PluginResult',
-        'storage/clientstorage'],
-function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,PluginManagerBase,PluginResult,ConnectedStorage){
+        'storage/clientstorage',
+        'coreclient/serialization'],
+function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,PluginManagerBase,PluginResult,ConnectedStorage,Serialization){
     var storage = null,
         core = null,
         result = null,
@@ -78,6 +79,35 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
             });
         }
     };
+    var exportLibrary = function(name,hash,libraryRootPath,callback){
+        if(!storage){
+            return callback('no active data connection');
+        }
+        if(!initialized){
+            return callback('worker has not been initialized yet');
+        }
+
+        storage.openProject(name,function(err,project){
+            if(err){
+                return callback(err);
+            }
+            var core = new Core(project);
+            core.loadRoot(hash,function(err,root){
+                if(err){
+                    return callback(err);
+                }
+
+                core.loadByPath(root,libraryRootPath,function(err,libraryRoot){
+                    if(err){
+                        return callback(err);
+                    }
+
+                    Serialization.export(core,libraryRoot,callback);
+                });
+            });
+        });
+
+    };
     var dumpMoreNodes = function(name,hash,nodePaths,callback){
         if(storage){
             if(initialized){
@@ -120,7 +150,7 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
                 callback('worker has not been initialized yet');
             }
         } else {
-            callback('no active data connecction');
+            callback('no active data connection');
         }
     };
 
@@ -289,6 +319,25 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
                 } else {
                     initResult();
                     process.send({pid:process.pid,type:CONSTANT.msgTypes.result,error:'invalid parameters',result:{}});
+                }
+                break;
+            case CONSTANT.workerCommands.exportLibrary:
+                if( typeof parameters.name === 'string' && typeof parameters.hash === 'string' && typeof parameters.path === 'string'){
+                    resultId = GUID();
+                    process.send({pid:process.pid,type:CONSTANT.msgTypes.request,error:null,resid:resultId});
+                    exportLibrary(parameters.name,parameters.hash,parameters.path,function(err,r){
+                        if(resultRequested === true){
+                            initResult();
+                            process.send({pid:process.pid,type:CONSTANT.msgTypes.result,error:err,result:r});
+                        } else {
+                            resultReady = true;
+                            error = err;
+                            result = r;
+                        }
+                    });
+                } else {
+                    initResult();
+                    process.send({pid:process.pid,type:CONSTANT.msgTypes.request,error:'invalid parameters'});
                 }
                 break;
             default:

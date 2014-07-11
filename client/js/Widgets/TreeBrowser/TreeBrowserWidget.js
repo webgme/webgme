@@ -257,24 +257,30 @@ define(['logManager',
      */
     TreeBrowserWidget.prototype.updateNode = function (node, objDescriptor) {
 
+        //by default we say there is nothing to update
+        var nodeDataChanged = false,
+            nodeNameChanged = false,
+            nodeName;
+
+
         //check if valid node
         if (!node) {
             return;
         }
 
-        //by default we say there is nothing to update
-        var nodeDataChanged = false;
-
-        var nodeNameChanged = false;
-
         //set new text value (if any)
-        if (objDescriptor.name && node.data.title !== objDescriptor.name) {
-            node.data.title = objDescriptor.name;
-            node.data.tooltip = objDescriptor.name;
+        if (node.data.title !== objDescriptor.name) {
+
+
+            nodeName = objDescriptor.name;
+
+            node.data.title = nodeName;
+            node.data.tooltip = nodeName;
 
             //mark that change happened
             nodeDataChanged = true;
             nodeNameChanged = true;
+
         }
 
         //set new children value (if any)
