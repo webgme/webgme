@@ -29,7 +29,8 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'],
                     dialog.show(function (newValue) {
                         self.setValue(newValue);
                         self.fireFinishChange();
-                    });
+                    },
+                    self.getValue());
                 });
             }
 

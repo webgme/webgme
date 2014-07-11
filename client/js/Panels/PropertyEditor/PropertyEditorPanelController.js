@@ -1,4 +1,9 @@
-"use strict";
+/*globals define, WebGMEGlobal, _*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
+ */
 
 define(['logManager',
     'clientUtil',
@@ -17,6 +22,8 @@ define(['logManager',
                                         DecoratorSVGExplorerDialog,
                                         PropertyGridWidgets,
                                         PointerWidget) {
+
+    "use strict";
 
     var PropertyEditorController,
         META_REGISTRY_KEYS = [REGISTRY_KEYS.IS_PORT,
@@ -265,9 +272,7 @@ define(['logManager',
                                 //not both are enum
                                 //if only one is enum --> not common anymore
                                 //if both are not enum --> still common
-                                if (!isEnumCommon && !isEnumAttrMeta) {
-
-                                } else {
+                                if (!(!isEnumCommon && !isEnumAttrMeta)) {
                                     isCommon = false;
                                 }
                             }
@@ -448,11 +453,9 @@ define(['logManager',
 
                 for (i in srcList) {
                     if (srcList.hasOwnProperty(i)) {
-                        doDisplay = true;
 
-                        if (isAttribute && !commonAttrMeta.hasOwnProperty(i)) {
-                            doDisplay = false;
-                        }
+
+                        doDisplay = !(isAttribute && !commonAttrMeta.hasOwnProperty(i));
 
                         if (doDisplay) {
                             extKey = prefix + i;
