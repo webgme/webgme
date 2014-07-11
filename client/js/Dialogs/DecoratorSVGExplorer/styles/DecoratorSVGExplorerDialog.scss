@@ -7,9 +7,9 @@
 $item-width: 112px;
 $item-height: 100px;
 $item-margin: 3px;
-$img-margin: 5px;
+$img-margin: 3px;
 $desc-line-height: 20px;
-$desc-margin: 5px;
+$desc-margin: 3px;
 
 
 .decorator-svg-dialog {
@@ -26,8 +26,9 @@ $desc-margin: 5px;
 
     img {
       display: inline;
-      margin: $img-margin;
-      max-width: $item-width - 2 * $img-margin;
+      margin: 0;
+      padding: $img-margin;
+      max-width: 100%;
       max-height:  $item-height - 2 * $img-margin - 2 * $desc-margin - $desc-line-height;
     }
 
@@ -35,10 +36,12 @@ $desc-margin: 5px;
       text-align: center;
       font-weight: normal;
       line-height: $desc-line-height;
-      width: $item-width - 2 * $desc-margin;
-      margin: $desc-margin;
+      width: 100%;
+      padding: 0 .5ex;
+      margin: 0;
       position: absolute;
-      bottom: -$desc-margin;
+      left: 0;
+      bottom: 0;
       overflow: hidden;
       text-overflow: ellipsis;
     }
@@ -56,4 +59,10 @@ $desc-margin: 5px;
       box-shadow: 0px 0px 15px 0px #1276d4 !important;
     }
   }
+}
+
+.selected > div.desc {
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
 }

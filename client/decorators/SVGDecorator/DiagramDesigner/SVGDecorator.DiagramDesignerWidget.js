@@ -1,4 +1,10 @@
-"use strict";
+/*globals define, $, _*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
+ */
+
 
 define(['js/Constants',
     'js/NodePropertyNames',
@@ -12,6 +18,8 @@ define(['js/Constants',
                                                           DiagramDesignerWidgetConstants,
                                                           SVGDecoratorTemplate,
                                                           SVGDecoratorCore) {
+
+    "use strict";
 
     var SVGDecoratorDiagramDesignerWidget,
         DECORATOR_ID = "SVGDecoratorDiagramDesignerWidget";
