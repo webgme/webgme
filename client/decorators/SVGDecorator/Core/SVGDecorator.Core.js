@@ -341,7 +341,7 @@ define(['js/Constants',
     };
 
     SVGDecoratorCore.prototype._getCustomConnectionAreas = function (svgFile) {
-        var connAreas = svgCache[svgFile].customConnectionAreas,
+        var connAreas = svgCache[svgFile] ? svgCache[svgFile].customConnectionAreas || [] : [],
             len = connAreas ? connAreas.length : 0,
             connA;
 

@@ -596,9 +596,23 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
             ASSERT(!base || core.getPath(core.getParent(node)) !== core.getPath(base));
             ASSERT(!base || core.getPath(node) !== core.getPath(base));
             if(!!base){
-                oldcore.setPointer(node, "base", base);
                 //TODO maybe this is not the best way, needs to be double checked
                 node.base = base;
+                var parent = core.getParent(node),
+                    parentBase,baseParent;
+                if(parent){
+                    parentBase = core.getBase(parent);
+                    baseParent = core.getParent(base);
+                    if(core.getPath(parentBase) !== core.getPath(baseParent)){
+                        //we have to set an exact pointer only if it is not inherited child
+                        oldcore.setPointer(node, "base", base);
+                    } else {
+                        oldcore.deletePointer(node,"base"); //we remove the pointer just in case
+                    }
+                } else {
+                    //if for some reason the node doesn't have a parent it is surely not an inherited child
+                    oldcore.setPointer(node,"base",base);
+                }
             } else {
                 oldcore.setPointer(node,'base',null);
                 node.base = null;

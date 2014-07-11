@@ -11,6 +11,7 @@ define(['logManager',
     'js/RegistryKeys',
     'js/Utils/GMEConcepts',
     'js/Utils/ExportManager',
+    'js/Utils/ImportManager',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     'js/DragDrop/DragHelper'], function (logManager,
                                                         util,
@@ -19,6 +20,7 @@ define(['logManager',
                                                         REGISTRY_KEYS,
                                                         GMEConcepts,
                                                         ExportManager,
+                                                        ImportManager,
                                                         DiagramDesignerWidgetConstants,
                                                         DragHelper) {
 
@@ -1084,24 +1086,34 @@ define(['logManager',
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionContextMenu = function (selectedIds, mousePos) {
         var menuItems = {},
-            MENU_EXPORT = 'export',
-            MENU_EXINTCONF = 'exintconf', //kecso
+            MENU_EXINTCONF = 'exintconf',
+            MENU_EXPLIB = 'exportlib',
+            MENU_UPDLIB = 'updatelib',
             self = this;
 
-        menuItems[MENU_EXPORT] = {
-            "name": 'Export selected...',
-            "icon": 'glyphicon glyphicon-share'
-        };
-        menuItems[MENU_EXINTCONF] = {
+        /*menuItems[MENU_EXINTCONF] = {
             "name": 'Export model context...',
             "icon": 'glyphicon glyphicon-cog'
-        };
+        };*/
+        if(selectedIds.length === 1){
+            menuItems[MENU_EXPLIB] = {
+                "name": 'Export library...',
+                "icon": 'glyphicon glyphicon-book'
+            };
+            menuItems[MENU_UPDLIB] = {
+                "name": 'Update library...',
+                "icon": 'glyphicon glyphicon-refresh'
+            };
+        }
+
 
         this.designerCanvas.createMenu(menuItems, function (key) {
-                if (key === MENU_EXPORT) {
-                    self._exportItems(selectedIds);
-                } else if (key === MENU_EXINTCONF){
+                if (key === MENU_EXINTCONF){
                     self._exIntConf(selectedIds);
+                } else if(key === MENU_EXPLIB){
+                    self._expLib(selectedIds);
+                } else if(key == MENU_UPDLIB){
+                    self._updLib(selectedIds);
                 }
             },
             this.designerCanvas.posToPageXY(mousePos.mX,
@@ -1109,18 +1121,6 @@ define(['logManager',
         );
     };
 
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._exportItems = function (selectedIds) {
-        var i = selectedIds.length,
-            gmeIDs = [];
-
-        while(i--) {
-            gmeIDs.push(this._ComponentID2GmeID[selectedIds[i]]);
-        }
-
-        ExportManager.exportMultiple(gmeIDs);
-    };
-
-    //kecso
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._exIntConf = function (selectedIds) {
         var i = selectedIds.length,
             gmeIDs = [];
@@ -1130,6 +1130,32 @@ define(['logManager',
         }
 
         ExportManager.exIntConf(gmeIDs);
+    };
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._expLib = function (selectedIds) {
+        var i = selectedIds.length,
+            gmeIDs = [],
+            id;
+
+        while(i--) {
+            gmeIDs.push(this._ComponentID2GmeID[selectedIds[i]]);
+        }
+
+        id = gmeIDs[0] || null;
+
+        ExportManager.expLib(id);
+    };
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._updLib = function (selectedIds) {
+        var i = selectedIds.length,
+            gmeIDs = [],
+            id;
+
+        while(i--) {
+            gmeIDs.push(this._ComponentID2GmeID[selectedIds[i]]);
+        }
+
+        id = gmeIDs[0] || null;
+
+        ImportManager.importLibrary(id);
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionFillColorChanged = function (selectedElements, color) {
