@@ -39,11 +39,12 @@ define(['js/Constants',
             self._dialog = undefined;
         });
 
-        this._dialog.on('hide', function () {
+        //FIXME TODO this override not working with bootstrap3
+        /*this._dialog.on('hide', function () {
             if (self._fnCallback && (self._selectedSVG || self._selectedSVG === '')) {
                 self._fnCallback(self._selectedSVG);
             }
-        });
+        });*/
 
         this._dialog.modal('show');
     };
@@ -89,10 +90,18 @@ define(['js/Constants',
 
         this._modalBody.on('dblclick', 'div.img', function () {
             self._dialog.modal('hide');
+            //TODO until the function override has been fixed
+            if (self._fnCallback && (self._selectedSVG || self._selectedSVG === '')) {
+                self._fnCallback(self._selectedSVG);
+            }
         });
 
         this._btnSelect.on('click', function () {
             self._dialog.modal('hide');
+            //TODO until the function override has been fixed
+            if (self._fnCallback && (self._selectedSVG || self._selectedSVG === '')) {
+                self._fnCallback(self._selectedSVG);
+            }
         });
 
         this._txtFind.on('keyup', function () {
