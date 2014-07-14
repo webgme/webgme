@@ -1,15 +1,16 @@
+/*globals define*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
  */
-
-"use strict";
 
 define(['logManager',
         'clientUtil',
         './SnapEditorWidget.Constants'], function (logManager,
                                                    clientUtil,
                                                    SnapEditorWidgetConstants) {
+
+    "use strict";
 
     var SelectionManager,
         SELECTION_OVERLAP_RATIO = 0.5,

@@ -1,10 +1,9 @@
+/*globals define,_,Raphael,DEBUG*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
  * Author: Brian Broll
  */
-
-"use strict";
 
 define(['logManager',
         'raphaeljs',
@@ -35,6 +34,8 @@ define(['logManager',
                                     SelectionManager,
                                     HighlightManager,
                                     LoaderCircles) {
+
+    "use strict";
 
     var SnapEditorWidget,
         CANVAS_EDGE = 100,
@@ -547,7 +548,7 @@ define(['logManager',
 
             params = params || {};
             params['font-size'] = params['font-size'] || BACKGROUND_TEXT_SIZE;
-            params['color'] = params['color'] || BACKGROUND_TEXT_COLOR;
+            params.color = params.color || BACKGROUND_TEXT_COLOR;
 
             if (params) {
                 setSvgAttrFromParams([['color', 'fill'],
@@ -656,8 +657,7 @@ define(['logManager',
         var resizeQueue,
             moveQueue = [], 
             dependents,
-            visited = {},
-            i;
+            visited = {};
 
         items = Object.keys(this._clickableItems2Update);
         while(items.length){

@@ -1,3 +1,4 @@
+/*globals define,Raphael,_*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved
  *
@@ -8,6 +9,8 @@
 
 define(['./SnapEditorWidget.Constants'], function (SNAP_CONSTANTS){
     
+    "use strict";
+
     //Stuff for displaying connection area
     var CONN_AREA_EDIT_CLASS = "conn-area-edit",
         CONN_AREA_SIZE = 8,

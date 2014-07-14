@@ -1,3 +1,4 @@
+/*globals define,_*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved
  *
@@ -9,6 +10,8 @@
 define(['logManager',
     './ErrorDecorator'], function (logManager,
                                    ErrorDecorator) {
+
+   "use strict";
 
     var ItemBase,
         HOVER_CLASS = "hover",
@@ -59,14 +62,14 @@ define(['logManager',
     //Need to override the following in the main item file
     //ItemBase.prototype.$_DOMBase = $('<div/>').attr({ "class": CONSTANTS.DESIGNER_ITEM_CLASS });
 
-    ItemBase.prototype.__setDecorator = function (decoratorName, decoratorClass, control, metaInfo, preferencesHelper, aspect, decoratorParams) {
-        if (decoratorClass === undefined) {
+    ItemBase.prototype.__setDecorator = function (decoratorName, DecoratorClass, control, metaInfo, preferencesHelper, aspect, decoratorParams) {
+        if (DecoratorClass === undefined) {
             //the required decorator is not available
             metaInfo = metaInfo || {};
-            metaInfo["__missingdecorator__"] = decoratorName;
-            decoratorClass = ErrorDecorator;
+            metaInfo.__missingdecorator__ = decoratorName;
+            DecoratorClass = ErrorDecorator;
         }
-        if (this._decoratorID !== decoratorClass.prototype.DECORATORID) {
+        if (this._decoratorID !== DecoratorClass.prototype.DECORATORID) {
 
             if (this._decoratorInstance) {
                 //destroy old decorator
@@ -74,11 +77,11 @@ define(['logManager',
                 this.$el.empty();
             }
 
-            this._decoratorID = decoratorClass.prototype.DECORATORID;
+            this._decoratorID = DecoratorClass.prototype.DECORATORID;
 
-            this._decoratorClass = decoratorClass;
+            this._DecoratorClass = DecoratorClass;
 
-            this._decoratorInstance = new decoratorClass({'host': this,
+            this._decoratorInstance = new DecoratorClass({'host': this,
                 'preferencesHelper': preferencesHelper,
                 'aspect': aspect,
                 'decoratorParams': decoratorParams});
@@ -106,8 +109,9 @@ define(['logManager',
     };
 
     ItemBase.prototype._attachUserInteractions = function () {
-        var i,
-            self = this;
+        var handleEvent,
+            self = this,
+            i;
 
         this._events = {"mouseenter": { "fn": "onMouseEnter",
             "stopPropagation": true,
@@ -122,45 +126,47 @@ define(['logManager',
                 "preventDefault": true,
                 "enabledInReadOnlyMode": true}};
 
-        for (i in this._events) {
-            if (this._events.hasOwnProperty(i)) {
-                this.$el.on( i + '.' + EVENT_POSTFIX, null, null, function (event) {
-                    var eventHandlerOpts = self._events[event.type],
-                    handled = false,
-                    enabled = true;
+        handleEvent = function (event){
+            var eventHandlerOpts = self._events[event.type],
+            handled = false,
+            enabled = true;
 
-                if (self.canvas.mode !== self.canvas.OPERATING_MODES.READ_ONLY &&
-                    self.canvas.mode !== self.canvas.OPERATING_MODES.DESIGN) {
-                        return;
+            if (self.canvas.mode !== self.canvas.OPERATING_MODES.READ_ONLY &&
+                self.canvas.mode !== self.canvas.OPERATING_MODES.DESIGN) {
+                return;
+            }
+
+            if (eventHandlerOpts) {
+                if (self.canvas.mode === self.canvas.OPERATING_MODES.READ_ONLY) {
+                    enabled = eventHandlerOpts.enabledInReadOnlyMode;
+                }
+
+                if (enabled) {
+                    //call decorators event handler first
+                    handled = self._callDecoratorMethod(eventHandlerOpts.fn, event);
+
+                    if (handled !== true) {
+                        handled = self[eventHandlerOpts.fn].call(self, event);
                     }
 
-                if (eventHandlerOpts) {
-                    if (self.canvas.mode === self.canvas.OPERATING_MODES.READ_ONLY) {
-                        enabled = eventHandlerOpts.enabledInReadOnlyMode;
-                    }
-
-                    if (enabled) {
-                        //call decorators event handler first
-                        handled = self._callDecoratorMethod(eventHandlerOpts.fn, event);
-
-                        if (handled !== true) {
-                            handled = self[eventHandlerOpts.fn].call(self, event);
+                    //if still not marked as handled
+                    if (handled !== true) {
+                        //finally marked handled if needed
+                        if (eventHandlerOpts.stopPropagation === true) {
+                            event.stopPropagation();
                         }
 
-                        //if still not marked as handled
-                        if (handled !== true) {
-                            //finally marked handled if needed
-                            if (eventHandlerOpts.stopPropagation === true) {
-                                event.stopPropagation();
-                            }
-
-                            if (eventHandlerOpts.preventDefault === true) {
-                                event.preventDefault();
-                            }
+                        if (eventHandlerOpts.preventDefault === true) {
+                            event.preventDefault();
                         }
                     }
                 }
-                });
+            }
+        };
+
+        for (i in this._events) {
+            if (this._events.hasOwnProperty(i)) {
+                this.$el.on( i + '.' + EVENT_POSTFIX, null, null, handleEvent);
             }
         }
     };
@@ -362,9 +368,9 @@ define(['logManager',
         this.$el.addClass("selected");
 
         //when selected, no clickable areas are available
-        if (multiSelection === true) {
+        //if (multiSelection === true) {
             //this.hideSourceConnectors();
-        }
+        //}
 
         //let the decorator know that this item became selected
         this._callDecoratorMethod("onSelect");
@@ -411,7 +417,7 @@ define(['logManager',
                     "w": this._width,
                     "h": this._height});
             }
-        };
+        }
     };
 
     /* * * * * * * FUNCTIONS TO OVERRIDE * * * * * * */

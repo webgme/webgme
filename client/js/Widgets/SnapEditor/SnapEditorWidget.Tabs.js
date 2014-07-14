@@ -1,14 +1,15 @@
+/*globals define*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  * 
  * Author: Robert Kereskenyi
  */
 
-"use strict";
-
 define(['js/Toolbar/ToolbarButton',
     'js/Toolbar/ToolbarDropDownButton'], function (ToolbarButton,
                                                    ToolbarDropDownButton) {
+
+    "use strict";
 
     var SnapEditorWidgetTabs,
         TABS_CONTAINER = "diagram-designer-tabs-container",
