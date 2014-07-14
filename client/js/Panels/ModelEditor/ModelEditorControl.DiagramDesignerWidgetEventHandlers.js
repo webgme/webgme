@@ -1,4 +1,4 @@
-"use strict";
+/*globals define,_,WebGMEGlobal,alert*/
 
 define(['logManager',
     'clientUtil',
@@ -19,6 +19,8 @@ define(['logManager',
                                                         ImportManager,
                                                         DiagramDesignerWidgetConstants,
                                                         DragHelper) {
+
+    "use strict";
 
     var ModelEditorControlDiagramDesignerWidgetEventHandlers,
         ATTRIBUTES_STRING = "attributes",
@@ -376,7 +378,6 @@ define(['logManager',
             possibleDropActions = [],
             parentID = this.currentNodeInfo.id,
             i,
-            validPointerTypes,
             j,
             validPointerTypes = [],
             baseTypeID,
@@ -425,25 +426,7 @@ define(['logManager',
                                     }
                                 }
 
-                                validPointerTypes.sort(function (a,b) {
-                                    var baseAName = a.name.toLowerCase(),
-                                        baseBName = b.name.toLowerCase(),
-                                        ptrAName = a.pointer.toLowerCase(),
-                                        ptrBName = b.pointer.toLowerCase();
-
-                                    if (ptrAName < ptrBName) {
-                                        return -1;
-                                    } else if (ptrAName > ptrBName) {
-                                        return 1;
-                                    } else {
-                                        //ptrAName = ptrBName
-                                        if (baseAName < baseBName) {
-                                            return -1;
-                                        } else {
-                                            return 1;
-                                        }
-                                    }
-                                });
+                                validPointerTypes.sort(this.__pointerSortCriteria);
 
                                 for (j = 0; j < validPointerTypes.length; j += 1) {
                                     dragAction = { 'dragEffect': DragHelper.DRAG_EFFECTS.DRAG_CREATE_POINTER,
@@ -462,6 +445,26 @@ define(['logManager',
         this.logger.debug('possibleDropActions: ' + JSON.stringify(possibleDropActions));
 
         return possibleDropActions;
+    };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype.__pointerSortCriteria = function (a,b) {
+        var baseAName = a.name.toLowerCase(),
+            baseBName = b.name.toLowerCase(),
+            ptrAName = a.pointer.toLowerCase(),
+            ptrBName = b.pointer.toLowerCase();
+
+        if (ptrAName < ptrBName) {
+            return -1;
+        } else if (ptrAName > ptrBName) {
+            return 1;
+        } else {
+            //ptrAName = ptrBName
+            if (baseAName < baseBName) {
+                return -1;
+            } else {
+                return 1;
+            }
+        }
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDroppableAccept = function (event, dragInfo) {
@@ -903,7 +906,7 @@ define(['logManager',
             result = true;
 
         if (nodeObj) {
-            result = nodeObj.getAttribute('copy') != "false";
+            result = nodeObj.getAttribute('copy') !== "false";
         }
 
         return result;
@@ -1108,7 +1111,7 @@ define(['logManager',
                     self._exIntConf(selectedIds);
                 } else if(key === MENU_EXPLIB){
                     self._expLib(selectedIds);
-                } else if(key == MENU_UPDLIB){
+                } else if(key === MENU_UPDLIB){
                     self._updLib(selectedIds);
                 }
             },
