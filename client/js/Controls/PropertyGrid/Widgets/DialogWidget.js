@@ -1,7 +1,7 @@
-"use strict";
-
 define(['js/Controls/PropertyGrid/Widgets/WidgetBase'],
     function (WidgetBase) {
+
+        "use strict";
 
         var DialogWidget,
             LABEL_BASE = $('<span/>', {}),
