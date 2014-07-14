@@ -1,10 +1,10 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
+/*globals define, WebGMEGlobal, alert, _*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
  */
 
-"use strict";
 
 define(['js/PanelBase/PanelBase',
         'js/Widgets/ProjectTitle/ProjectTitleWidget',
@@ -15,6 +15,8 @@ define(['js/PanelBase/PanelBase',
                                                                  UserProfileWidget,
                                                                  toolbar,
                                                                  DefaultToolbar) {
+
+    "use strict";
 
     var HeaderPanel,
         __parent__ = PanelBase;
