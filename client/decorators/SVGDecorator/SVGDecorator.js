@@ -26,9 +26,12 @@ define(['js/Decorators/DecoratorBase',
     /*********************** OVERRIDE DecoratorBase MEMBERS **************************/
 
     SVGDecorator.prototype.initializeSupportedWidgetMap = function () {
-        this.supportedWidgetMap = {'DiagramDesigner': SVGDecoratorDiagramDesignerWidget,
+
+        this.supportedWidgetMap = {
+            'DiagramDesigner': SVGDecoratorDiagramDesignerWidget,
             'PartBrowser': SVGDecoratorPartBrowserWidget,
-            'SnapEditor': SVGDecoratorSnapEditorWidget };
+            'SnapEditor': SVGDecoratorSnapEditorWidget};
+
     };
 
     return SVGDecorator;
