@@ -5,7 +5,7 @@
  */
 
 define(['logManager',
-        'css!./styles/ProjectTitleWidget'], function (logManager) {
+        'css!./styles/ProjectTitleWidget.css'], function (logManager) {
 
     "use strict";
 

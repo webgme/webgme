@@ -137,7 +137,6 @@ require(
 
         domReady(function () {
 
-
             if (CONFIG.hasOwnProperty('debug')) {
                 DEBUG = CONFIG.debug;
             }

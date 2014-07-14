@@ -7,14 +7,12 @@
 
 
 define(['js/PanelBase/PanelBase',
-        'js/Widgets/ProjectTitle/ProjectTitleWidget',
-        'js/Widgets/UserProfile/UserProfileWidget',
-        'js/Toolbar/Toolbar',
-        './DefaultToolbar'], function (PanelBase,
-                                                                 ProjectTitleWidget,
-                                                                 UserProfileWidget,
-                                                                 toolbar,
-                                                                 DefaultToolbar) {
+    'js/Widgets/ProjectTitle/ProjectTitleWidget',
+    'js/Widgets/UserProfile/UserProfileWidget',
+    'js/Toolbar/Toolbar',
+    './DefaultToolbar',
+    'ui-components/projectbreadcrumb/ProjectBreadcrumb'
+], function (PanelBase, ProjectTitleWidget, UserProfileWidget, toolbar, DefaultToolbar) {
 
     "use strict";
 
@@ -48,9 +46,10 @@ define(['js/PanelBase/PanelBase',
         navBar.append(navBarInner);
         this.$el.append(navBar);
 
+
         //project title
-        var projectTitleEl = $('<div/>', {'class': "inline"});
-        new ProjectTitleWidget(projectTitleEl, this._client);
+        var projectTitleEl = $('<project-breadcrumb/>', {'class': "inline"});
+        //new ProjectTitleWidget(projectTitleEl, this._client);
         navBarInner.append(projectTitleEl);
 
         //user info
