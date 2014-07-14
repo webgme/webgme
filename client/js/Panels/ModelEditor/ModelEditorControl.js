@@ -1,5 +1,4 @@
-"use strict";
-
+/*globals define,_,WebGMEGlobal*/
 define(['logManager',
     'js/Constants',
     'js/NodePropertyNames',
@@ -17,6 +16,8 @@ define(['logManager',
                                                         GMEConcepts,
                                                         GMEVisualConcepts,
                                                         PreferencesHelper) {
+
+    "use strict";
 
     var ModelEditorControl,
         GME_ID = "GME_ID",
@@ -312,16 +313,17 @@ define(['logManager',
             } else if (e.desc.kind === "MODEL") {
                 orderedItemEvents.push(e);
             } else if (e.desc.kind === "CONNECTION") {
-                if (e.desc.parentId == this.currentNodeInfo.id) {
+                if (e.desc.parentId === this.currentNodeInfo.id) {
                     //check to see if SRC and DST is another connection
                     //if so, put this guy AFTER them
                     var srcGMEID = e.desc.source;
                     var dstGMEID = e.desc.target;
                     var srcConnIdx = -1;
                     var dstConnIdx = -1;
-                    var j = orderedConnectionEvents.length;
+                    var j = orderedConnectionEvents.length,
+                        ce;
                     while (j--) {
-                        var ce = orderedConnectionEvents[j];
+                        ce = orderedConnectionEvents[j];
                         if (ce.id === srcGMEID) {
                             srcConnIdx = j;
                         } else if (ce.id === dstGMEID) {
@@ -340,9 +342,9 @@ define(['logManager',
                     var MAX_VAL = 999999999;
                     var depSrcConnIdx = MAX_VAL;
                     var depDstConnIdx = MAX_VAL;
-                    var j = orderedConnectionEvents.length;
+                    j = orderedConnectionEvents.length;
                     while (j--) {
-                        var ce = orderedConnectionEvents[j];
+                        ce = orderedConnectionEvents[j];
                         if (e.desc.id === ce.desc.source) {
                             depSrcConnIdx = j;
                         } else if (e.desc.id === ce.desc.target) {
@@ -536,7 +538,7 @@ define(['logManager',
         //we are interested in the load of sub_components of the opened component
         if (this.currentNodeInfo.id !== gmeID) {
             if (objD) {
-                if (objD.parentId == this.currentNodeInfo.id) {
+                if (objD.parentId === this.currentNodeInfo.id) {
                     objDesc = _.extend({}, objD);
                     this._GmeID2ComponentID[gmeID] = [];
 
@@ -1117,11 +1119,10 @@ define(['logManager',
                     aspectRulesChanged = (_.difference(newAspectRules.items, this._selfPatterns[nodeId].items)).length > 0;
                 }
             } else {
-                if (!this._selfPatterns[nodeId].items && !newAspectRules.items) {
-                    //none of them has items, no change
-                } else {
+                if (this._selfPatterns[nodeId].items || newAspectRules.items) {
+                    //at least one has an item
                     aspectRulesChanged = true;
-                }
+                } 
             }
 
             if (aspectRulesChanged) {
