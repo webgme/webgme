@@ -145,7 +145,7 @@
        inkscape:label="#RTRect-4" />
     <!-- Input Fields -->
     <rect
-       class="y-shift-name x-shift-name x-shift-first"
+       class="x-stretch-second y-shift-name x-shift-name x-shift-first"
        style="fill:#ffffff;fill-opacity:1;stroke:none;overflow:hidden"
        id="RinputField"
        width="16.673277"
@@ -153,7 +153,7 @@
        x="57.725422"
        y="4.7485795" />
     <rect
-       class="y-stretch-name"
+       class="x-stretch-first y-stretch-name"
        style="fill:#ffffff;fill-opacity:1;stroke:none;overflow:hidden"
        id="LinputField"
        width="16.673277"
@@ -164,18 +164,45 @@
   <!-- NAME AND CONNECTION INFO -->
   <text
      class="x-shift-first"
+     id="first"
+     x="14.375652"
+     y="14.179907"
+     style="font-size:9.43999958px">10</text>
+  <text
      id="name"
      x="36.375652"
      y="14.179907"
      style="font-size:9.43999958px">OP</text>
+  <text
+     class="x-shift-name x-shift-first"
+     id="second"
+     x="58.375652"
+     y="14.179907"
+     style="font-size:9.43999958px">20</text>
+<!-- Text Bounding Boxes -->
   <rect
      style="opacity:0"
      id="name-bounding-box"
      width="7.2517357"
      height="8.1356192"
      x="35.972111"
-     y="6.5785375"
-     inkscape:label="#name-bounding-box" />
+     y="6.5785375"/>
+    <rect
+     style="opacity:0"
+       id="first-bounding-box"
+       width="16.673277"
+       height="12.51503"
+       x="57.725422"
+       y="4.7485795" />
+    <rect
+     style="opacity:0"
+       id="second-bounding-box"
+       width="16.673277"
+       height="12.51503"
+       x="13.434318"
+       y="4.8144441" />
+
+<!-- connection areas -->
   <line
      class="connection-area"
      data-ptr="cond first second"
@@ -204,22 +231,25 @@
      x2="8"
      y2="8"
      id="first-out" />
-
+<!-- initial measures -->
   <rect
+     style="opacity:0"
      data-ptr="second"
      class="initial-measure"
      width="25"
      height="15"
      x="0"
      y="0"
-     inkscape:label="#rect3000" />
+     inkscape:label="#rect3000"
+     id="rect27" />
   <rect
+     style="opacity:0"
      data-ptr="first"
      class="initial-measure"
      width="25"
      height="15"
      x="0"
      y="0"
-     inkscape:label="#rect3000" />
-
+     inkscape:label="#rect3000"
+     id="rect29" />
 </svg>

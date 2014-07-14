@@ -306,7 +306,9 @@
      x2="48.008518"
      y2="8.939868"
      id="cond-out" />
+  <!-- initial measures -->
   <rect
+     style="opacity:0"
      data-ptr="true_next"
      class="initial-measure"
      width="0"
@@ -316,6 +318,7 @@
      inkscape:label="#rect3008"
      id="rect33" />
   <rect
+     style="opacity:0"
      data-ptr="cond"
      class="initial-measure"
      width="40"
