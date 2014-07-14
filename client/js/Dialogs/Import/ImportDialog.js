@@ -8,8 +8,10 @@
 
 define(['loaderCircles',
     'text!./templates/ImportDialog.html',
-    'css!./styles/ImportDialog.css'], function (LoaderCircles,
-                                         importDialogTemplate) {
+    'css!./styles/ImportDialog.css'], function (
+        LoaderCircles,
+        importDialogTemplate) {
+
     "use strict";
 
     var ImportDialog,
@@ -43,6 +45,8 @@ define(['loaderCircles',
 
         this._dialog = $(importDialogTemplate);
 
+        this._btnAttach = this._dialog.find('.btn-dialog-open');
+
         this._btnImport = this._dialog.find('.btn-import');
         this._btnImport.disable(true);
 
@@ -50,9 +54,19 @@ define(['loaderCircles',
         this._importErrorLabel.hide();
 
         this._fileDropTarget = this._dialog.find('.file-drop-target');
-        this._fileInput = this._dialog.find('#fileInput');
+        this._fileInput = this._dialog.find('#fileInput').hide();
 
         this._loader = new LoaderCircles({"containerElement": this._dialog});
+
+        // attach handlers
+
+        this._btnAttach.on('click', function (e) {
+                e.stopPropagation();
+                e.preventDefault();
+
+                self._fileInput.click();
+        });
+
 
         // file select
         this._fileInput.on("change", function (event) {
@@ -154,10 +168,10 @@ define(['loaderCircles',
     };
 
     ImportDialog.prototype._displayMessage = function (msg, isError) {
-        this._importErrorLabel.removeClass('alert-success').removeClass('alert-error');
+        this._importErrorLabel.removeClass('alert-success').removeClass('alert-danger');
 
         if (isError === true) {
-            this._importErrorLabel.addClass('alert-error');
+            this._importErrorLabel.addClass('alert-danger');
         } else {
             this._importErrorLabel.addClass('alert-success');
         }
