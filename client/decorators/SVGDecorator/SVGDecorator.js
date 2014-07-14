@@ -35,7 +35,8 @@ define(['js/Decorators/DecoratorBase',
 
         this.supportedWidgetMap = {
             'DiagramDesigner': SVGDecoratorDiagramDesignerWidget,
-            'PartBrowser': SVGDecoratorPartBrowserWidget};
+            'PartBrowser': SVGDecoratorPartBrowserWidget,
+            'SnapEditor': SVGDecoratorSnapEditorWidget};
 
     };
 
