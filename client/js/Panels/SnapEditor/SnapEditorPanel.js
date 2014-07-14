@@ -1,10 +1,9 @@
+/*globals define,_,WebGMEGlobal*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
  * Author: Brian Broll
  */
-
-"use strict";
 
 define(['js/PanelBase/PanelBaseWithHeader',
         'js/PanelManager/IActivePanel',
@@ -14,6 +13,8 @@ define(['js/PanelBase/PanelBaseWithHeader',
                                     IActivePanel,
                                     SnapEditorWidget,
                                     SnapEditorControl) {
+
+    "use strict";
 
     var SnapEditorPanel;
 

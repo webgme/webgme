@@ -1,10 +1,9 @@
+/*globals define,_,WebGMEGlobal*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
  * Author: Brian Broll
  */
-
-"use strict";
 
 define(['logManager',
     'js/Constants',
@@ -21,6 +20,8 @@ define(['logManager',
                                         PreferencesHelper,
                                         SnapEditorEventHandlers,
                                         GMEConcepts){
+
+    "use strict";
 
     var BACKGROUND_TEXT_COLOR = '#DEDEDE',
         BACKGROUND_TEXT_SIZE = 30,
@@ -458,8 +459,6 @@ console.log("Object changed to " + nodeId);
 
             if(!this._GmeID2ComponentID[prevItem]){//Load the item if needed
                 territoryChanged = this._onSingleLoad(prevItem, objDesc[prevItem]) || territoryChanged;
-            }else{
-                //this._onUpdate(prevItem, objDesc[prevItem]);
             }
 
             //Load all the dependent items 
@@ -467,8 +466,7 @@ console.log("Object changed to " + nodeId);
                 
                 //Load the item if isn't available
                 if(!this._GmeID2ComponentID[nextItem]){
-                    territoryChanged = this._onSingleLoad(nextItem, objDesc[nextItem]) 
-                        || territoryChanged;
+                    territoryChanged = this._onSingleLoad(nextItem, objDesc[nextItem]) || territoryChanged;
 
                     //connect the objects
                     if(this._GmeID2ComponentID[prevItem] && this._GmeID2ComponentID[nextItem]){
@@ -482,8 +480,7 @@ console.log("Object changed to " + nodeId);
                         ptrs = node.getPointerNames();
                         i = ptrs.length;
                         while(i--){
-                            if(this.snapCanvas.itemHasPtr(this._GmeID2ComponentID[base], ptrs[i])
-                                    && node.getPointer(ptrs[i]).to === nextItem){
+                            if(this.snapCanvas.itemHasPtr(this._GmeID2ComponentID[base], ptrs[i]) && node.getPointer(ptrs[i]).to === nextItem){
                                         //Connect them!
                                         this.snapCanvas.setToConnect(this._GmeID2ComponentID[base], 
                                                 this._GmeID2ComponentID[nextItem], ptrs[i]);
@@ -526,8 +523,7 @@ console.log("Object changed to " + nodeId);
                 ptrs = node.getPointerNames();
                 i = ptrs.length;
                 while(i--){
-                    if(this.snapCanvas.itemHasPtr(this._GmeID2ComponentID[base], ptrs[i])
-                            && node.getPointer(ptrs[i]).to === item){
+                    if(this.snapCanvas.itemHasPtr(this._GmeID2ComponentID[base], ptrs[i]) && node.getPointer(ptrs[i]).to === item){
                         //Connect them!
                         this.snapCanvas.setToConnect(this._GmeID2ComponentID[base], 
                             this._GmeID2ComponentID[item], ptrs[i]);
@@ -568,6 +564,7 @@ console.log("Object changed to " + nodeId);
 
         var node,
             ptrs,
+            attrs,
             id,
             i;
 
@@ -605,6 +602,14 @@ console.log("Object changed to " + nodeId);
                         }
 
                         objDesc.ptrs[ptrs[i]] = id;
+                    }
+
+                    //Getting the ptr info
+                    objDesc.attrInfo = {};
+                    attrs = node.getAttributeNames();
+                    i = attrs.length;
+                    while (i--){
+                        objDesc.attrInfo[attrs[i]] = node.getAttribute(attrs[i]);
                     }
 
                     uiComponent = this.snapCanvas.createClickableItem(objDesc);
@@ -677,11 +682,6 @@ console.log("Object changed to " + nodeId);
                 delete this._ComponentID2GmeID[componentID];
                 delete this._GmeID2ComponentID[gmeID];
 
-            } else {
-                //the item is probably still being used as a different gme component
-                
-                //probably a subcomponent has been deleted - will be handled in the decorator
-                //this._checkComponentDependency(gmeID, CONSTANTS.TERRITORY_EVENT_UNLOAD);
             }
         }
 
@@ -694,6 +694,7 @@ console.log("Object changed to " + nodeId);
             objId,
             sCompId,
             ptrs,
+            attrs,
             node = this._client.getNode(gmeID),
             id,
             i;
@@ -718,6 +719,7 @@ console.log("Object changed to " + nodeId);
                         objDesc.decoratorClass = decClass;
                         objDesc.preferencesHelper = PreferencesHelper.getPreferences();
                         objDesc.aspect = this._selectedAspect;
+
                         //Get the pointer info
                         objDesc.ptrInfo = {};
                         ptrs = node.getPointerNames(gmeID);
@@ -727,6 +729,14 @@ console.log("Object changed to " + nodeId);
                             if (id && this._GmeID2ComponentID[id]){
                                 objDesc.ptrInfo[ptrs[i]] = this._GmeID2ComponentID[id];
                             }
+                        }
+
+                        //Get the attribute info
+                        objDesc.attrInfo = {};
+                        attrs = node.getAttributeNames(gmeID);
+                        i = attrs.length;
+                        while (i--){
+                            objDesc.attrInfo[attrs[i]] = node.getAttribute(attrs[i]);
                         }
 
                         this.snapCanvas.updateClickableItem(componentID, objDesc);
@@ -819,11 +829,10 @@ console.log("Object changed to " + nodeId);
                     aspectRulesChanged = (_.difference(newAspectRules.items, this._selfPatterns[nodeId].items)).length > 0;
                 }
             } else {
-                if (!this._selfPatterns[nodeId].items && !newAspectRules.items) {
-                    //none of them has items, no change
-                } else {
+                if (this._selfPatterns[nodeId].items || newAspectRules.items) {
+                    //at least one of them has items
                     aspectRulesChanged = true;
-                }
+                } 
             }
 
             if (aspectRulesChanged) {
