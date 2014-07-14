@@ -1,10 +1,9 @@
+/*globals define*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
  * Author: Brian Broll
  */
-
-"use strict";
 
 define(['js/DragDrop/DragSource',
         'js/DragDrop/DragHelper',
@@ -13,6 +12,8 @@ define(['js/DragDrop/DragSource',
                                                    dragHelper,
                                                    assert,
                                                    SnapEditorWidgetConstants) {
+
+    "use strict";
 
     var SnapEditorWidgetDraggable,
         DRAG_HELPER_CLASS = 'diagram-designer-drag-outline',

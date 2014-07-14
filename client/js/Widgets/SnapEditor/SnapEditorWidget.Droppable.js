@@ -1,14 +1,15 @@
+/*globals define*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
- * Author: Robert Kereskenyi
+ * Author: Brian Broll
  */
-
-"use strict";
 
 define(['js/DragDrop/DropTarget',
         './SnapEditorWidget.Constants'], function (dropTarget,
                                                    SnapEditorWidgetConstants) {
+
+    "use strict";
 
     var SnapEditorWidgetDroppable,
         DROP_REGION_MARGIN = 0,
@@ -189,8 +190,7 @@ define(['js/DragDrop/DropTarget',
                             connectionDistance = connectionInfo.distance;
 
                         if (connectionInfo.area && 
-                                (!draggedUI.data(ITEM_TAG) || draggedUI.data(ITEM_TAG) === item.id
-                                || draggedUI.data(DISTANCE_TAG) > connectionDistance)){
+                                (!draggedUI.data(ITEM_TAG) || draggedUI.data(ITEM_TAG) === item.id || draggedUI.data(DISTANCE_TAG) > connectionDistance)){
 
                             //This connection area is the best choice
                             item.setActiveConnectionArea(connectionInfo.area);
@@ -221,8 +221,7 @@ define(['js/DragDrop/DropTarget',
                 }
             },
             drop: function(event, ui) {
-                if (self.dropFocus === SnapEditorWidgetConstants.ITEM
-                        && ui.helper.data(ITEM_TAG) === item.id){
+                if (self.dropFocus === SnapEditorWidgetConstants.ITEM && ui.helper.data(ITEM_TAG) === item.id){
                     self._onItemDrop(item, event, ui);
                 }
             }
@@ -243,11 +242,12 @@ define(['js/DragDrop/DropTarget',
             if(ptr instanceof Array){//Find the closest compatible area
                 var ptrs = ptr,
                     shortestDistance,
-                        connArea,
-                        draggedItem = this.items[draggedId],
-                        role = item.activeConnectionArea.role === SnapEditorWidgetConstants.CONN_ACCEPTING ?
-                            SnapEditorWidgetConstants.CONN_PASSING : SnapEditorWidgetConstants.CONN_ACCEPTING,
-                        i = ptrs.length;
+                    connArea,
+                    draggedItem = this.items[draggedId],
+                    role = item.activeConnectionArea.role === SnapEditorWidgetConstants.CONN_ACCEPTING ?
+                        SnapEditorWidgetConstants.CONN_PASSING : SnapEditorWidgetConstants.CONN_ACCEPTING;
+
+                i = ptrs.length;
 
                 while (i--){
                     connArea = draggedItem.getConnectionArea(ptrs[i], role);
@@ -255,7 +255,7 @@ define(['js/DragDrop/DropTarget',
                     if (connArea && (!shortestDistance || draggedItem.__getDistanceBetweenConnections(connArea, 
                                     item.activeConnectionArea) < shortestDistance)){
                                         shortestDistance = draggedItem.__getDistanceBetweenConnections(connArea, 
-                                                item.activeConnectionArea)
+                                                item.activeConnectionArea);
                                         ptr = ptrs[i];
                                     }
                 }
@@ -277,7 +277,7 @@ define(['js/DragDrop/DropTarget',
     };
 
     SnapEditorWidgetDroppable.prototype.onItemDrop = function (droppedItems, receiver) {
-        this.logger.warning("SnapEditorWidget.prototype.onItemDrop(event, dragInfo) not overridden in controller!!! dragInfo:" + JSON.stringify(dragInfo) + " , position: '" + JSON.stringify(position) + "'");
+        this.logger.warning("SnapEditorWidget.prototype.onItemDrop(event, droppedItems) not overridden in controller!!! droppedItems:" + JSON.stringify(droppedItems) + " , position: '" + JSON.stringify(receiver) + "'");
     };
 
     return SnapEditorWidgetDroppable;

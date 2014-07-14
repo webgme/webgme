@@ -1,12 +1,13 @@
+/*globals define,_*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  * 
  * Author: Brian Broll
  */
 
-"use strict";
-
 define(['js/KeyboardManager/IKeyTarget'], function (IKeyTarget) {
+
+    "use strict";
 
     var SnapEditorWidgetKeyboard;
 

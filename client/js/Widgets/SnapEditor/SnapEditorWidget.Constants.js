@@ -1,10 +1,11 @@
-"use strict";
+/*globals define*/
 /*
  * STRING CONSTANT DEFINITIONS USED IN SNAP EDITOR
  */
 
 define([], function () {
 
+    "use strict";
     //return string constants
     return {
         /*

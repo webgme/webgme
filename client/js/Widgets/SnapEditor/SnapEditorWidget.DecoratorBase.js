@@ -1,8 +1,9 @@
-"use strict";
-
+/*globals define,_*/
 define(['js/Decorators/WidgetDecoratorBase',
         './SnapEditorWidget.Constants'], function (WidgetDecoratorBase,
                                                    SnapEditorWidgetConstants) {
+
+    "use strict";
 
     var SnapEditorWidgetDecoratorBase,
         DECORATOR_ID = "SnapEditorWidgetDecoratorBase";

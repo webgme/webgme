@@ -1,6 +1,7 @@
-"use strict";
-
+/*globals define,_*/
 define(['js/Widgets/SnapEditor/SnapEditorWidget.DecoratorBase'], function (SnapEditorWidgetDecoratorBase) {
+
+    "use strict";
 
     var ErrorDecorator,
         __parent__ = SnapEditorWidgetDecoratorBase,
@@ -34,6 +35,15 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.DecoratorBase'], function (SnapE
     ErrorDecorator.prototype._renderContent = function () {
         this.$el.append(this._metaInfo.__missingdecorator__);
         this.$el.attr('title', "Could not initialize decorator '" + this._metaInfo.__missingdecorator__ + "'");
+    };
+
+    /* * * * * * * Connection functionality * * * * * * */
+    ErrorDecorator.prototype.cleanConnections = function () {
+        //Shouldn't be any connection areas 
+    };
+
+    ErrorDecorator.prototype.getConnectionAreas = function () {
+        return [];
     };
 
     return ErrorDecorator;

@@ -1,14 +1,15 @@
+/*globals define,_*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  * 
- * Author: Robert Kereskenyi
+ * Author: Brian Broll
  */
-
-"use strict";
 
 define(['logManager',
     'js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function (logManager,
                                                                    SnapEditorWidgetConstants) {
+
+    "use strict";
 
     var HighlightManager;
 

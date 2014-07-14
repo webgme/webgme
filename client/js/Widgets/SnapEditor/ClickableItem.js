@@ -1,20 +1,20 @@
+/*globals define,_*/
+
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
  * Author: Brian Broll
  */
 
-"use strict";
-
 define(['logManager',
-    './SnapEditorWidget.Constants',
-    'util/assert',
-    './ItemBase',
-    './ErrorDecorator'], function (logManager,
-                                   CONSTANTS,
-                                   assert,
-                                   ItemBase,
-                                   ErrorDecorator) {
+        './SnapEditorWidget.Constants',
+        'util/assert',
+        './ItemBase'], function (logManager,
+                                       CONSTANTS,
+                                       assert,
+                                       ItemBase) {
+
+    "use strict";
 
     var ClickableItem,
         NAME = "clickable-item";
@@ -33,12 +33,47 @@ define(['logManager',
         this.ptrNames = null;
         this.activeConnectionArea = null;
 
+        //Attributes (may be displayed in the svg)
+        this.attributes = {};
+
         this._color = CONSTANTS.COLOR_PRIMARY;
     };
 
     _.extend(ClickableItem.prototype, ItemBase.prototype);
 
     ClickableItem.prototype.$_DOMBase = $('<div/>').attr({ "class": CONSTANTS.DESIGNER_ITEM_CLASS });
+
+    /* * * * * * * * * * * * * ATTRIBUTES * * * * * * * * * * * * */ 
+    ClickableItem.prototype.updateAttributes = function (attrInfo) {
+        var newAttributeNames = Object.keys(attrInfo),
+            oldAttributeNames = Object.keys(this.attributes),
+            attr,
+            i,
+            changed = null;
+
+        while (newAttributeNames.length){
+            attr = newAttributeNames.pop();
+            if (this.attributes[attr] !== attrInfo[attr]){
+                this.attributes[attr] = attrInfo[attr];
+                changed = "set attribute";
+            }
+
+            i = oldAttributeNames.indexOf(attr);
+            if (i !== -1){
+                oldAttributeNames.splice(i,1);
+            }
+        }
+
+        while (oldAttributeNames.length){
+            attr = newAttributeNames.pop();
+            delete this.attributes[attr];
+            changed = "removed attr";
+        }
+
+        return changed;
+    };
+
+    /* * * * * * * * * * * * * END ATTRIBUTES * * * * * * * * * * * * */ 
 
     /* * * * * * * * * * * * * POINTERS * * * * * * * * * * * * */ 
     ClickableItem.prototype.isPositionDependent = function (ptrInfo) {
@@ -183,19 +218,16 @@ define(['logManager',
 
     /* * * * * * * * * * * * * COLORING * * * * * * * * * * * * */ 
     ClickableItem.prototype.setColor = function () {
-        var keys = Object.keys(this.ptrs[CONSTANTS.CONN_ACCEPTING]);
+        var keys = Object.keys(this.ptrs[CONSTANTS.CONN_ACCEPTING]),
+            changed = false;
 
         if (keys.length){
 
-            var basePtr,
-                base,
-                color,
-                oldColor,
-                changed = false;
+            var basePtr = keys[0],
+                base = this.ptrs[CONSTANTS.CONN_ACCEPTING][basePtr],
+                color = base._color,
+                oldColor;
 
-            basePtr = keys[0]; 
-            base = this.ptrs[CONSTANTS.CONN_ACCEPTING][basePtr];
-            color = base._color;
 
             //If the item has more than one object pointing in, then we won't know
             //for sure where to place it as the object pointing in determines
@@ -250,9 +282,9 @@ define(['logManager',
             ptr = ptrs.pop();
 
             if (CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1){
-                result['siblings'].push(this.ptrs[CONSTANTS.CONN_PASSING][ptr].id);
+                result.siblings.push(this.ptrs[CONSTANTS.CONN_PASSING][ptr].id);
             } else {
-                result['children'].push(this.ptrs[CONSTANTS.CONN_PASSING][ptr].id);
+                result.children.push(this.ptrs[CONSTANTS.CONN_PASSING][ptr].id);
             }
         }
 
@@ -446,7 +478,7 @@ define(['logManager',
                 if (connArea && (!shortestDistance || this.__getDistanceBetweenConnections(connArea, 
                             otherItem.activeConnectionArea) < shortestDistance)){
                                 shortestDistance = this.__getDistanceBetweenConnections(connArea, 
-                                    otherItem.activeConnectionArea)
+                                    otherItem.activeConnectionArea);
                                 ptr = ptrs[i];
                 }
             }
@@ -590,8 +622,9 @@ define(['logManager',
         //Make sure it is inside the box
         var box = this.getBoundingBox();
         if(box.height > 0 && box.width > 0){//If the box has been rendered
-            if(area.x1 >= box.x && area.x2 <= box.x2 && area.y1 >= box.y && area.y2 <= box.y2)
+            if(area.x1 >= box.x && area.x2 <= box.x2 && area.y1 >= box.y && area.y2 <= box.y2){
                this.logger.debug("Connection Area is outside the clickable item's bounding box");
+            }
         }
 
         return area;
@@ -653,8 +686,7 @@ define(['logManager',
                     otherArea.y1 += shift.y;
                     otherArea.y2 += shift.y;
 
-                    if (!closestIndex 
-                            || this.__getDistanceBetweenConnections(openAreas[i], otherArea) < closestArea){
+                    if (!closestIndex || this.__getDistanceBetweenConnections(openAreas[i], otherArea) < closestArea){
                         closestIndex = i;
                         closestArea = this.__getDistanceBetweenConnections(openAreas[i], otherArea);
                     }
@@ -749,7 +781,7 @@ define(['logManager',
 
         while (i--){
             this.ptrs[CONSTANTS.CONN_PASSING][dependents[i]].moveByWithDependents(dX, dY);
-        };
+        }
     };
 
     ClickableItem.prototype.moveBy = function (dX, dY) {
@@ -803,8 +835,7 @@ define(['logManager',
 
             this.ptrs[CONSTANTS.CONN_ACCEPTING][basePtr].updateDependents();
 
-        } else */if (!this.isPositionDependent() && objDescriptor.position 
-                && _.isNumber(objDescriptor.position.x) && _.isNumber(objDescriptor.position.y)) {
+        } else */if (!this.isPositionDependent() && objDescriptor.position && _.isNumber(objDescriptor.position.x) && _.isNumber(objDescriptor.position.y)) {
             var dx = objDescriptor.position.x - this.positionX,
                 dy = objDescriptor.position.y - this.positionY;
 
@@ -816,8 +847,7 @@ define(['logManager',
         var oldMetaInfo = this._decoratorInstance.getMetaInfo();
 
         //update gmeId if needed
-        if(objDescriptor.id && oldMetaInfo[CONSTANTS.GME_ID] 
-           && oldMetaInfo[CONSTANTS.GME_ID] !== objDescriptor.id){
+        if(objDescriptor.id && oldMetaInfo[CONSTANTS.GME_ID] && oldMetaInfo[CONSTANTS.GME_ID] !== objDescriptor.id){
             console.log("Changing " + oldMetaInfo[CONSTANTS.GME_ID] + " to " + objDescriptor.id);
             this._decoratorInstance.setGmeId(objDescriptor.id);
             this.$el.html(this._decoratorInstance.$el);
@@ -878,6 +908,7 @@ define(['logManager',
 
     /*********************** CONNECTION END CONNECTOR HIGHLIGHT ************************/
 
+    /*
     ClickableItem.prototype.showSourceConnectors = function (params) {
         if (this.canvas._enableConnectionDrawing === true) {
             //this._decoratorInstance.showSourceConnectors(params);
@@ -889,6 +920,7 @@ define(['logManager',
         //this._decoratorInstance.hideSourceConnectors();
         //TODO Change this to be the clickable areas (connection areas)
     };
+   */
 
     ClickableItem.prototype.showEndConnectors = function (params) {
         if (this.canvas._enableConnectionDrawing === true) {

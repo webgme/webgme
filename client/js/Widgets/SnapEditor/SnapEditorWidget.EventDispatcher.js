@@ -1,6 +1,7 @@
-"use strict";
-
+/*globals define*/
 define(['eventDispatcher'], function (EventDispatcher) {
+
+    "use strict";
 
     var SnapEditorWidgetEventDispatcher;
 

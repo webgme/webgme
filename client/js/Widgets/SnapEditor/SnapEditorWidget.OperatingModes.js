@@ -1,12 +1,13 @@
+/*globals define*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
  * Author: Brian Broll
  */
 
-"use strict";
-
 define([], function () {
+
+    "use strict";
 
     var SnapEditorWidgetOperatingModes;
 

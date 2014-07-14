@@ -1,8 +1,9 @@
-"use strict";
+/*globals define,_*/
 
 define(['./ClickableItem',
         './SnapEditorWidget.Constants'], function (ClickableItem,
                                                    CONSTANTS) {
+    "use strict";
 
     var SnapEditorWidgetClickableItems;
 
@@ -33,12 +34,15 @@ define(['./ClickableItem',
         newComponent = this.items[componentId] = new ClickableItem(componentId, this);
         newComponent.moveTo(objDescriptor.position.x, objDescriptor.position.y);
 
+        //Store Attributes
+        newComponent.updateAttributes(objDescriptor.attrInfo);
+
         newComponent.__setDecorator(objDescriptor.decorator, objDescriptor.decoratorClass, objDescriptor.control, objDescriptor.metaInfo, objDescriptor.preferencesHelper, objDescriptor.aspect, objDescriptor.decoratorParams);
         newComponent.addToDocFragment(this._documentFragment);
 
-        //Pointers/Connections
-        newComponent.cleanConnectionAreas(Object.keys(objD.ptrs));
-        newComponent.updatePtrs(objD.ptrs);
+        //Set Pointers/Connections
+        newComponent.cleanConnectionAreas(Object.keys(objDescriptor.ptrs));
+        newComponent.updatePtrs(objDescriptor.ptrs);
 
         //set the item to be able to be "clicked" to with drag'n'drop
         this.setClickable(newComponent);
@@ -86,6 +90,7 @@ define(['./ClickableItem',
             //Update pointers
             if (objDescriptor.hasOwnProperty("ptrInfo")){
                 addToUpdateList = item.updatePtrs(objDescriptor.ptrInfo) || addToUpdateList;
+                addToUpdateList = item.updateAttributes(objDescriptor.attrInfo) || addToUpdateList;
             }
 
             //adjust its position to this canvas
