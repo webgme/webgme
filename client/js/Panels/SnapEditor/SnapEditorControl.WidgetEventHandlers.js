@@ -1,4 +1,4 @@
-"use strict";
+/*globals define,_,WebGMEGlobal,alert*/
 
 define(['logManager',
     'clientUtil',
@@ -17,13 +17,14 @@ define(['logManager',
                                          ExportManager,
                                          SNAP_CONSTANTS,
                                          DragHelper) {
+    "use strict";
 
     var SnapEditorControlWidgetEventHandlers,
         ATTRIBUTES_STRING = "attributes",
         REGISTRY_STRING = "registry";
 
     SnapEditorControlWidgetEventHandlers = function(){
-    }
+    };
 
     SnapEditorControlWidgetEventHandlers.prototype.attachSnapEditorEventHandlers = function () {
         var self = this;
@@ -238,10 +239,9 @@ define(['logManager',
             dragParams = DragHelper.getDragParams(dragInfo),
             possibleDropActions = [],
             parentID = this.currentNodeInfo.id,
-            i,
-            validPointerTypes,
-            j,
             validPointerTypes = [],
+            i,
+            j,
             baseTypeID,
             baseTypeNode,
             dragAction,
@@ -288,25 +288,7 @@ define(['logManager',
                                     }
                                 }
 
-                                validPointerTypes.sort(function (a,b) {
-                                    var baseAName = a.name.toLowerCase(),
-                                        baseBName = b.name.toLowerCase(),
-                                        ptrAName = a.pointer.toLowerCase(),
-                                        ptrBName = b.pointer.toLowerCase();
-
-                                    if (ptrAName < ptrBName) {
-                                        return -1;
-                                    } else if (ptrAName > ptrBName) {
-                                        return 1;
-                                    } else {
-                                        //ptrAName = ptrBName
-                                        if (baseAName < baseBName) {
-                                            return -1;
-                                        } else {
-                                            return 1;
-                                        }
-                                    }
-                                });
+                                validPointerTypes.sort(this.__pointerSortCriteria);
 
                                 for (j = 0; j < validPointerTypes.length; j += 1) {
                                     dragAction = { 'dragEffect': DragHelper.DRAG_EFFECTS.DRAG_CREATE_POINTER,
@@ -325,6 +307,26 @@ define(['logManager',
         this.logger.debug('possibleDropActions: ' + JSON.stringify(possibleDropActions));
 
         return possibleDropActions;
+    };
+
+    SnapEditorControlWidgetEventHandlers.prototype.__pointerSortCriteria = function (a,b) {
+        var baseAName = a.name.toLowerCase(),
+            baseBName = b.name.toLowerCase(),
+            ptrAName = a.pointer.toLowerCase(),
+            ptrBName = b.pointer.toLowerCase();
+
+        if (ptrAName < ptrBName) {
+            return -1;
+        } else if (ptrAName > ptrBName) {
+            return 1;
+        } else {
+            //ptrAName = ptrBName
+            if (baseAName < baseBName) {
+                return -1;
+            } else {
+                return 1;
+            }
+        }
     };
 
     SnapEditorControlWidgetEventHandlers.prototype._onBackgroundDroppableAccept = function (event, dragInfo) {
@@ -563,6 +565,8 @@ define(['logManager',
             firstId = this._ComponentID2GmeID[droppedItem],
             lastId,
             newIds,
+            params,
+            moveItems,
             i;
 
         node = this._client.getNode(this._ComponentID2GmeID[droppedItem]);
@@ -574,12 +578,9 @@ define(['logManager',
         //in terms of hierarchy
         this._removeExtraPointers([this._ComponentID2GmeID[droppedItem]]);
 
-        if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1 
-                || receiverParentId !== droppedParentId){
+        if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1 || receiverParentId !== droppedParentId){
 
-            var params,
-                items2Move,
-                i,
+            var items2Move,
                 ptrs2Create = {},
                 gmeId,
                 newId,
@@ -627,20 +628,6 @@ define(['logManager',
             }
 
             newIds = this._client.moveMoreNodes(params);
-            /*
-
-            //Update the id's of the node
-            i = droppedItems.length;
-            while (i--){
-                newId = newIds[this._ComponentID2GmeID[droppedItems[i]]];
-                oldId = this._ComponentID2GmeID[droppedItems[i]];
-
-                //Update the dictionaries
-                delete this._GmeID2ComponentID[oldId];
-                this._GmeID2ComponentID[newId] = droppedItems[i];
-                this._ComponentID2GmeID[droppedItems[i]] = newId;
-            }
-            */
 
             //For each of the droppedItems, I will need to update the ptrs
             var keys = Object.keys(ptrs2Create);
@@ -673,9 +660,9 @@ define(['logManager',
             //I will get the next item and try to create a pointer btwn
             //the dropping item and the nextItem
                 var nextItem = this.snapCanvas.items[droppedItem],
-                canSplice = false,
-                conn = receiverItem.activeConnectionArea,
-                prevItem;
+                    canSplice = false,
+                    conn = receiverItem.activeConnectionArea,
+                    prevItem;
 
             //Can we make a connection between them?
             //Follow the connection from the dropping item
@@ -705,9 +692,9 @@ define(['logManager',
                     //If it isn't a sibling ptr, move the correct item...
                     if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1){
                         //move the recipient of the ptr to the child of the other
-                        var params = { parentId: spliceToItem },
-                            moveItems = this._addSiblingDependents([prevGmeId]),
-                            i = moveItems.length;
+                        moveItems = this._addSiblingDependents([prevGmeId]);
+                        params = { parentId: spliceToItem };
+                        i = moveItems.length;
 
                         while (i--){
                             params[moveItems[i]] = {};
@@ -724,9 +711,9 @@ define(['logManager',
                     //If it isn't a sibling ptr, move the correct item...
                     if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1){
                         //move the recipient of the ptr to the child of the other
-                        var params = { parentId: prevGmeId },
-                            moveItems = this._addSiblingDependents([spliceToItem]),
-                            i = moveItems.length;
+                        moveItems = this._addSiblingDependents([spliceToItem]);
+                        params = { parentId: prevGmeId };
+                        i = moveItems.length;
 
                         while (i--){
                             params[moveItems[i]] = {};
@@ -893,7 +880,7 @@ define(['logManager',
         }
 
         this._settingActiveSelection = true;
-        WebGMEGlobal.State.setActiveSelection([gmeID]);
+        WebGMEGlobal.State.registerActiveSelection([gmeID]);
         this._settingActiveSelection = false;
     };
 
@@ -937,7 +924,7 @@ define(['logManager',
             result = true;
 
         if (nodeObj) {
-            result = nodeObj.getAttribute('copy') != "false";
+            result = nodeObj.getAttribute('copy') !== "false";
         }
 
         return result;
@@ -1069,7 +1056,7 @@ define(['logManager',
                 if (key === MENU_EXPORT) {
                     self._exportItems(selectedIds);
                 } else if (key === MENU_EXINTCONF){
-                    self._exIntConf(selectedIds)
+                    self._exIntConf(selectedIds);
                 }
             },
             this.snapCanvas.posToPageXY(mousePos.mX,
