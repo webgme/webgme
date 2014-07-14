@@ -1,6 +1,11 @@
 [
-    {"id": "SnapEditor",
-        "title": "Snap Editor",
+    {"id": "ModelEditor",
+        "title": "Composition",
+        "panel": "js/Panels/ModelEditor/ModelEditorPanel",
+        "DEBUG_ONLY": false},
+
+    {"id": "Snap Editor",
+        "title": "Constraint Editor",
         "panel": "js/Panels/SnapEditor/SnapEditorPanel",
         "DEBUG_ONLY": false},
 
