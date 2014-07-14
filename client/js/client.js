@@ -2255,13 +2255,17 @@ define([
                 command.name = _projectName;
                 command.hash = _rootHash || _core.getHash(_nodes[ROOT_PATH].node);
                 command.path = libraryRootPath;
-                _database.simpleRequest(command,function(err,resId){
-                    if(err){
-                        callback(err);
-                    } else {
-                        callback(null,window.location.protocol + '//' + window.location.host +'/worker/simpleResult/'+resId+'/'+filename);
-                    }
-                });
+                if(command.name && command.hash){
+                    _database.simpleRequest(command,function(err,resId){
+                        if(err){
+                            callback(err);
+                        } else {
+                            callback(null,window.location.protocol + '//' + window.location.host +'/worker/simpleResult/'+resId+'/'+filename);
+                        }
+                    });
+                } else {
+                    callback(new Error('there is no open project!'));
+                }
             }
             function updateLibraryAsync(libraryRootPath,newLibrary,callback){
                 Serialization.import(_core,_nodes[libraryRootPath].node,newLibrary,function(err,log){
@@ -2353,10 +2357,12 @@ define([
                 }
             }
             function getDumpURL(path,filepath){
-                filepath = filepath || _projectName+'_'+_branch+'_'+URL.addSpecialChars(path);
-                if(window && window.location && window.location && _nodes && _nodes[ROOT_PATH]){
-                    var address = plainUrl('etf',path)+'&output='+URL.addSpecialChars(filepath);
-                    return address;
+                if(_projectName && _branch){
+                    filepath = filepath || _projectName+'_'+_branch+'_'+URL.addSpecialChars(path);
+                    if(window && window.location && window.location && _nodes && _nodes[ROOT_PATH]){
+                        var address = plainUrl('etf',path)+'&output='+URL.addSpecialChars(filepath);
+                        return address;
+                    }
                 }
                 return null;
             }
