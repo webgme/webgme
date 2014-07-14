@@ -1,4 +1,8 @@
-"use strict";
+/*globals define, _*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['js/Decorators/DecoratorBase',
     './SnapEditor/SVGDecorator.SnapEditorWidget',
@@ -8,6 +12,8 @@ define(['js/Decorators/DecoratorBase',
                                                            SVGDecoratorSnapEditorWidget,
                                                            SVGDecoratorDiagramDesignerWidget,
                                                            SVGDecoratorPartBrowserWidget) {
+
+    "use strict";
 
     var SVGDecorator,
         DECORATOR_ID = "SVGDecorator";
@@ -26,9 +32,11 @@ define(['js/Decorators/DecoratorBase',
     /*********************** OVERRIDE DecoratorBase MEMBERS **************************/
 
     SVGDecorator.prototype.initializeSupportedWidgetMap = function () {
-        this.supportedWidgetMap = {'DiagramDesigner': SVGDecoratorDiagramDesignerWidget,
-            'PartBrowser': SVGDecoratorPartBrowserWidget,
-            'SnapEditor': SVGDecoratorSnapEditorWidget };
+
+        this.supportedWidgetMap = {
+            'DiagramDesigner': SVGDecoratorDiagramDesignerWidget,
+            'PartBrowser': SVGDecoratorPartBrowserWidget};
+
     };
 
     return SVGDecorator;

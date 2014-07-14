@@ -115,7 +115,7 @@ define(['logManager',
                 if (aspectNames.indexOf(this._selectedAspect) === -1) {
                     this.logger.warning('The currently selected aspect "' + this._selectedAspect + '" does not exist in the object "' + desc.name + ' (' + nodeId + ')", falling back to "All"');
                     this._selectedAspect = CONSTANTS.ASPECT_ALL;
-                    WebGMEGlobal.State.setActiveAspect(CONSTANTS.ASPECT_ALL);
+                    WebGMEGlobal.State.registerActiveAspect(CONSTANTS.ASPECT_ALL);
                 }
             }
 
@@ -131,7 +131,7 @@ define(['logManager',
 
             this._firstLoad = true;
 
-            nodeName = (desc && desc.name || " ").toUpperCase();
+            nodeName = (desc && desc.name || " ");
 
             this.designerCanvas.setTitle(nodeName);
             this.designerCanvas.setBackgroundText(nodeName, {'font-size': BACKGROUND_TEXT_SIZE,
@@ -718,8 +718,8 @@ define(['logManager',
     };
 
     ModelEditorControl.prototype._updateSheetName = function (name) {
-        this.designerCanvas.setTitle(name.toUpperCase());
-        this.designerCanvas.setBackgroundText(name.toUpperCase(), {'font-size': BACKGROUND_TEXT_SIZE,
+        this.designerCanvas.setTitle(name);
+        this.designerCanvas.setBackgroundText(name, {'font-size': BACKGROUND_TEXT_SIZE,
             'color': BACKGROUND_TEXT_COLOR });
     };
 
@@ -789,8 +789,8 @@ define(['logManager',
         var myId = this.currentNodeInfo.id;
         if (this.currentNodeInfo.parentId ||
             this.currentNodeInfo.parentId === CONSTANTS.PROJECT_ROOT_ID) {
-            WebGMEGlobal.State.setActiveObject(this.currentNodeInfo.parentId);
-            WebGMEGlobal.State.setActiveSelection([myId]);
+            WebGMEGlobal.State.registerActiveObject(this.currentNodeInfo.parentId);
+            WebGMEGlobal.State.registerActiveSelection([myId]);
         }
     };
 
@@ -998,7 +998,7 @@ define(['logManager',
 
         /************** GOTO PARENT IN HIERARCHY BUTTON ****************/
         this.$btnModelHierarchyUp = toolBar.addButton({ "title": "Go to parent",
-            "icon": "icon-circle-arrow-up",
+            "icon": "glyphicon glyphicon-circle-arrow-up",
             "clickFn": function (/*data*/) {
                 self._onModelHierarchyUp();
             }
@@ -1010,7 +1010,7 @@ define(['logManager',
 
         /************************ CONTSTRAINT VALIDATION ******************/
         this.$btnConstraintValidate = toolBar.addButton({ "title": "Constraint check...",
-            "icon": "icon-fire",
+            "icon": "glyphicon glyphicon-fire",
             "clickFn": function (/*data*/) {
                 self._constraintCheck();
             }
@@ -1020,7 +1020,7 @@ define(['logManager',
         /************** REMOVE CONNECTION SEGMENTPOINTS BUTTON ****************/
         this.$btnConnectionRemoveSegmentPoints = toolBar.addButton(
             { "title": "Remove segment points",
-                "icon": "icon-remove-circle",
+                "icon": "glyphicon glyphicon-remove-circle",
                 "clickFn": function (/*data*/) {
                     self._removeConnectionSegmentPoints();
                 }
@@ -1131,7 +1131,7 @@ define(['logManager',
     };
 
     ModelEditorControl.prototype._initializeSelectedAspect = function () {
-        WebGMEGlobal.State.setActiveAspect(this._selectedAspect);
+        WebGMEGlobal.State.registerActiveAspect(this._selectedAspect);
 
         this.selectedObjectChanged(this.currentNodeInfo.id);
     };

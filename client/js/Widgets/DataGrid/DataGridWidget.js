@@ -1,15 +1,21 @@
-"use strict";
+/*globals define, Raphael, window, WebGMEGlobal, _*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
+
 
 define(['logManager',
     'clientUtil',
     'js/Constants',
     'js/Widgets/DataGrid/DataGridWidget.Droppable',
-    'text!html/Widgets/DataGrid/DataTableTemplate.html',
-    'css!/css/Widgets/DataGrid/DataGridWidget'], function (logManager,
+    'text!./templates/DataTableTemplate.html',
+    'css!./styles/DataGridWidget'], function (logManager,
                                                            util,
                                                           CONSTANTS,
                                                           DataGridWidgetDroppable,
                                                           dataTableTemplate) {
+    "use strict";
 
     var DataGridWidget,
         DEFAULT_DATAMEMBER_ID = "ID",
@@ -18,7 +24,7 @@ define(['logManager',
         ROW_COMMAND_DELETE = "delete",
         ROW_COMMAND_EDIT = "edit",
         ROW_COMMAND_DELETE_TITLE = "Delete row",
-        ROW_COMMAND_EDIT_TITLE = "Edit row";
+        ROW_COMMAND_EDIT_TITLE = "edit row";
 
     DataGridWidget = function (container, params) {
         this.logger = logManager.create("DataGridWidget");
@@ -106,7 +112,7 @@ define(['logManager',
 
         //check if any action is enabled for the rows
         if (this._rowEdit === true) {
-            actionBtnColContent = '<i class="icon-edit pointer rowCommandBtn" data-action="' + ROW_COMMAND_EDIT + '" title="' + ROW_COMMAND_EDIT_TITLE + '"></i>';
+            actionBtnColContent = '<i class="glyphicon glyphicon-edit pointer rowCommandBtn" data-action="' + ROW_COMMAND_EDIT + '" title="' + ROW_COMMAND_EDIT_TITLE + '"></i>';
             this._actionButtonsInFirstColumn = true;
         }
 
@@ -114,7 +120,7 @@ define(['logManager',
             if (actionBtnColContent !== "") {
                 actionBtnColContent += " ";
             }
-            actionBtnColContent += '<i class="icon-trash pointer rowCommandBtn" data-action="' + ROW_COMMAND_DELETE  + '" title="' + ROW_COMMAND_DELETE_TITLE + '">';
+            actionBtnColContent += '<i class="glyphicon glyphicon-trash pointer rowCommandBtn" data-action="' + ROW_COMMAND_DELETE  + '" title="' + ROW_COMMAND_DELETE_TITLE + '">';
             this._actionButtonsInFirstColumn = true;
         }
 
@@ -616,7 +622,7 @@ i,
         this.onRowDelete(id, aData);
     };
 
-    DataGridWidget.prototype.$_editSaveCancel = $('<i class="icon-ok editSave"></i> <i class="icon-remove editCancel"></i>');
+    DataGridWidget.prototype.$_editSaveCancel = $('<i class="glyphicon glyphicon-ok glyphicon glyphicon-ok editSave"></i> <i class="glyphicon glyphicon-remove editCancel"></i>');
 
     DataGridWidget.prototype._onRowEdit = function (rowIndex, id, aData) {
         var nRow = this._oTable.fnGetNodes(rowIndex),
@@ -629,7 +635,7 @@ i,
             col,
             row,
             editCtrl,
-            editCtrlClass = "edit",
+            editCtrlClass = "glyphicon glyphicon-edit",
             endEdit,
             self = this;
 
@@ -844,7 +850,7 @@ i,
     /****************** PUBLIC API / COMMON COLUMNS ONLY *************************/
 
     DataGridWidget.prototype.displayCommonColumnsOnly = function (commonColumnOnly) {
-        this._displayCommonColumnsOnly = commonColumnOnly === true ? true : false;
+        this._displayCommonColumnsOnly = commonColumnOnly === true;
         this.logger.debug("setting displayCommonColumnsOnly to: " + this._displayCommonColumnsOnly);
         this._applyCommonColumnFilter();
     };

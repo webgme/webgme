@@ -1,15 +1,16 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
+/*globals define, _*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-"use strict";
+
 
 define(['clientUtil',
-    'text!./AttributeDetailsDialog.html',
-    'css!./AttributeDetailsDialog'], function ( util,
+    'text!./templates/AttributeDetailsDialog.html',
+    'css!./styles/AttributeDetailsDialog.css'], function ( util,
                                                 attributeDetailsDialogTemplate) {
+    "use strict";
 
     var AttributeDetailsDialog,
         ASSET_TYPE = 'asset';
@@ -25,11 +26,11 @@ define(['clientUtil',
 
         this._dialog.modal('show');
 
-        this._dialog.on('shown', function () {
+        this._dialog.on('shown.bs.modal', function () {
             self._inputName.focus().trigger('keyup');
         });
 
-        this._dialog.on('hidden', function () {
+        this._dialog.on('hidden.bs.modal', function () {
             self._dialog.remove();
             self._dialog.empty();
             self._dialog = undefined;
@@ -162,7 +163,10 @@ define(['clientUtil',
         this._el = this._dialog.find('.modal-body').first();
         this._cbEnum = this._el.find('#cbEnum').first();
         this._pEnum = this._el.find('#pEnum').first();
+
         this._pEnumValues = this._el.find('#pEnumValues').first();
+        this._pEnumValues.hide();
+
         this._pName = this._el.find('#pName').first();
 
         this._btnSave = this._dialog.find('.btn-save').first();
@@ -172,7 +176,10 @@ define(['clientUtil',
         this._inputType = this._el.find('#inputType').first();
         this._inputDefaultValue = this._el.find('#inputDefaultValue').first();
         this._pDefaultValue = this._el.find('#pDefaultValue').first();
+
         this._pDefaultValueBoolean = this._el.find('#pDefaultValueBoolean').first();
+        this._pDefaultValueBoolean.hide();
+
         this._inputEnumValues = this._el.find('#inputEnumValues').first();
 
         //hook up event handlers
@@ -182,10 +189,10 @@ define(['clientUtil',
 
             if (!isValidAttributeName(val)) {
                 self._pName.addClass("error");
-                self._btnSave.addClass("disabled");
+                self._btnSave.disable(true);
             } else {
                 self._pName.removeClass("error");
-                self._btnSave.removeClass("disabled");
+                self._btnSave.disable(false);
             }
         });
 

@@ -85,7 +85,7 @@ define(['core/core',
 
                             // TODO: if global config says try to merge branch then we should pass the name of the branch
                             var config = {
-                                "project": self._client.getActiveProject(),
+                                "project": self._client.getActiveProjectName(),
                                 "token": "",
                                 "activeNode": WebGMEGlobal.State.getActiveObject(), // active object in the editor
                                 "activeSelection": WebGMEGlobal.State.getActiveSelection() || [], // selected objects

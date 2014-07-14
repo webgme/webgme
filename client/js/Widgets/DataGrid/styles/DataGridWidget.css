@@ -1,0 +1,19 @@
+.dataTable {
+  /* BOOTSTRAP TABLE STYLES OVVERIDE */
+  /*BOOTSTRAP OVERRIDE*/
+  /*BOOTSTRAP OVERRIDE*/ }
+  .dataTable td.undefined-value {
+    background-color: #f5e1e1; }
+  .dataTable.table-striped tbody > tr:nth-child(odd) > td.undefined-value, .dataTable.table-hover tbody tr:hover > td.undefined-value {
+    background-color: #f5e1e1; }
+  .dataTable.table.table thead .sorting.accept-drop, .dataTable.table.table thead .sorting_asc.accept-drop, .dataTable.table.table thead .sorting_desc.accept-drop, .dataTable.table.table thead .sorting_asc_disabled.accept-drop, .dataTable.table.table thead .sorting_desc_disabled.accept-drop, .dataTable.table-striped tbody > tr:nth-child(odd) > td.undefined-value.accept-drop, .dataTable.table-hover tbody tr:hover > td.undefined-value.accept-drop, .dataTable.table-striped tbody > tr:nth-child(odd) > td.accept-drop,
+  .dataTable td.accept-drop,
+  .dataTable th.accept-drop {
+    background-color: #5bb75b; }
+  .dataTable.table.table thead .sorting.noaccept-drop, .dataTable.table.table thead .sorting_asc.noaccept-drop, .dataTable.table.table thead .sorting_desc.noaccept-drop, .dataTable.table.table thead .sorting_asc_disabled.noaccept-drop, .dataTable.table.table thead .sorting_desc_disabled.noaccept-drop, .dataTable.table-striped tbody > tr:nth-child(odd) > td.undefined-value.noaccept-drop, .dataTable.table-hover tbody tr:hover > td.undefined-value.noaccept-drop, .dataTable.table-striped tbody > tr:nth-child(odd) > td.noaccept-drop,
+  .dataTable td.noaccept-drop,
+  .dataTable th.noaccept-drop {
+    background-color: #da4f49; }
+
+.read-only .dataTable .rowCommandBtn {
+  opacity: 0.5; }

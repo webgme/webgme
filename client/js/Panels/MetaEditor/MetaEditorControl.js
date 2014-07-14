@@ -1548,7 +1548,7 @@ define(['logManager',
 
         /************** PRINT NODE DATA *****************/
         this._btnPrintNodeMetaData = toolBar.addButton({ "title": "Print node META data",
-            "icon": "icon-share",
+            "icon": "glyphicon glyphicon-share",
             "clickFn": function (/*data*/){
                 self._printNodeData();
             }});

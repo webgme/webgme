@@ -350,7 +350,7 @@ define(['js/Constants',
     };
 
 
-    ModelDecoratorCore.prototype._ptrUIDOMBase = $('<div class="' + ModelDecoratorConstants.POINTER_CLASS + '"><i class="icon-share"></i></div>');
+    ModelDecoratorCore.prototype._ptrUIDOMBase = $('<div class="' + ModelDecoratorConstants.POINTER_CLASS + '"><i class="glyphicon glyphicon-share"></i></div>');
 
 
     ModelDecoratorCore.prototype._updatePointers = function () {

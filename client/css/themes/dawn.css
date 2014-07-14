@@ -1,0 +1,56 @@
+a {
+  color: #3160ab; }
+
+a:hover {
+  color: #ff7700; }
+
+.toolbar-container a {
+  color: #00235b;
+  transition: background-color .2s; }
+.toolbar-container a:hover,
+.toolbar-container a:active {
+  color: #fff;
+  background-color: #00235b; }
+.toolbar-container .btn:active, .toolbar-container .btn.active {
+  background-color: #a5afbe;
+  color: #fff; }
+.toolbar-container .btn:active, .toolbar-container .btn.active:hover {
+  background-color: #a5afbe;
+  color: #fff; }
+.toolbar-container .btn[title="Pointer"]:hover,
+.toolbar-container .btn[title="Pointer"]:active,
+.toolbar-container .btn[title="Set"]:hover,
+.toolbar-container .btn[title="Set"]:active {
+  background-color: #d3d8df; }
+
+.nav-pills > li.active > a,
+.nav-pills > li.active > a:hover,
+.nav-pills > li.active > a:focus {
+  background: #a5afbe;
+  border-radius: 0; }
+
+.separator {
+  border-color: #a5afbe; }
+
+.navbar-inverse {
+  background-image: linear-gradient(to bottom, #040524 0, #03071d 100%); }
+
+/* Selected styling */
+.selected > div {
+  box-shadow: 0 0 6px #ff7700; }
+
+.s-btn {
+  background-color: #00235b !important;
+  color: #fff !important; }
+  .s-btn:hover {
+    background-color: #ff7700 !important; }
+
+/*.selected {
+    .svg-decorator {
+      .svg-content {
+        svg {
+          box-shadow: 0 0 5px $dark;
+        }
+      }
+    }
+}*/

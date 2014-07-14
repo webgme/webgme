@@ -1,20 +1,21 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
+/*globals define, DEBUG, WebGMEGlobal*/
 
-"use strict";
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
+ */
 
 define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
     'logManager',
     './DefaultLayout',
-    'text!html/Layouts/Default/DefaultLayout.html',
+    'text!./templates/DefaultLayout.html',
     'text!./VehicleForgeLayoutConfig.json'], function (_jQueryLayout,
                                                                logManager,
                                                                DefaultLayout,
                                                                vehicleForgeLayoutTemplate,
                                                                VehicleForgeLayoutConfigJSON) {
+
+    "use strict";
 
     var VehicleForgeLayout,
         CONFIG = JSON.parse(VehicleForgeLayoutConfigJSON);

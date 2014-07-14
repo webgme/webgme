@@ -9,7 +9,7 @@
 define(['js/Constants',
     'js/RegistryKeys',
     'raphaeljs',
-    'css!/css/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase.ConnectionArea'], function (CONSTANTS,
+    'css!./styles/DiagramDesignerWidget.DecoratorBase.ConnectionArea'], function (CONSTANTS,
                                                                                                       REGISTRY_KEYS) {
 
     var DiagramDesignerWidgetDecoratorBaseConnectionArea,

@@ -52,9 +52,9 @@ define([], function () {
 
         $btn.enabled = function (enabled) {
             if (enabled === true) {
-                $btn.removeClass("disabled");
+                $btn.disable(false);
             } else {
-                $btn.addClass("disabled");
+                $btn.disable(true);
             }
         };
 

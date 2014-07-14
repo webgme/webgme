@@ -1,8 +1,16 @@
-"use strict";
+/*globals define, _*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
+ */
+
 
 define(['jquery',
         './DropDownMenu'], function (_jquery,
                                      DropDownMenu) {
+
+    "use strict";
 
     var DropDownList,
         __parent__ = DropDownMenu,
@@ -101,7 +109,7 @@ define(['jquery',
 
         if (li) {
             a = li.find('> a');
-            selectedIcon = $('<i class="icon-ok"></i>');
+            selectedIcon = $('<i class="glyphicon glyphicon-ok glyphicon glyphicon-ok"></i>');
 
             selectedIcon.css({"margin-left": "-16px",
                 "margin-right": "2px"});

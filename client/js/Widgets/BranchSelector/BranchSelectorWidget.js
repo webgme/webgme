@@ -27,7 +27,7 @@ define(['logManager',
             "pullRight": true,
             "size": "micro",
             "sort": true,
-            "icon": "icon-random"});
+            "icon": "glyphicon glyphicon-random"});
         this._ddBranches.setTitle(NO_BRANCH_TEXT);
 
         this._el.append(this._ddBranches.getEl());

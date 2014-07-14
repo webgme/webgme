@@ -1,10 +1,9 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
+/*globals define*/
 
-"use strict";
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
+ */
 
 define(['logManager',
     './ToolbarButton',
@@ -16,7 +15,7 @@ define(['logManager',
     './ToolbarCheckBox',
     './ToolbarDropDownButton',
     './ToolbarColorPicker',
-    'css!/css/Toolbar/Toolbar'], function (logManager,
+    'css!./styles/Toolbar.css'], function (logManager,
                                            ToolbarButton,
                                            ToolbarSeparator,
                                            ToolbarRadioButtonGroup,
@@ -26,6 +25,8 @@ define(['logManager',
                                            ToolbarCheckBox,
                                            ToolbarDropDownButton,
                                            ToolbarColorPicker) {
+
+    "use strict";
 
     var _toolBar,
         TOOLBAR_CLASS = 'webgme-toolbar',
@@ -54,7 +55,7 @@ define(['logManager',
 
         this._toolbarExt = $('<div/>', {'class': TOOLBAR_EXT_CLASS});
 
-        this._toolbarExtToggleBtn = $('<div class="' + TOOLBAR_EXT_TOGGLE_CLASS + '"><i class="icon-chevron-down"/><i class="icon-chevron-down"/></div>');
+        this._toolbarExtToggleBtn = $('<div class="' + TOOLBAR_EXT_TOGGLE_CLASS + '"><i class="glyphicon glyphicon-chevron-down"/><i class="glyphicon glyphicon-chevron-down"/></div>');
 
         this._toolbarExtToggleBtn.on('click', function (event) {
             self._toolbarExt.toggleClass(TOOLBAR_EXT_CLASS_SHOWN_CLASS);

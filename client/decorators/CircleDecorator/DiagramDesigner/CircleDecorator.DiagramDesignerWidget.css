@@ -1,58 +1,61 @@
 /*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
- * Author: Robert Kereskenyi
- */
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
-div.designer-item .circle-decorator {
-  position: relative;
-  width: 11px;
-  height: 11px; }
-  div.designer-item .circle-decorator svg {
-    top: -3px;
-    position: relative; }
-  div.designer-item .circle-decorator .name {
-    white-space: nowrap;
-    font-size: 9px;
-    font-weight: bold;
-    text-transform: uppercase;
-    position: relative; }
-  div.designer-item .circle-decorator .circle-shadow {
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    display: none;
-    width: 11px;
-    height: 11px;
-    border-radius: 11px;
-    z-index: -1;
-    -webkit-box-shadow: 0px 0px 15px 0px #1276d4 !important;
-    -moz-box-shadow: 0px 0px 15px 0px #1276d4 !important;
-    box-shadow: 0px 0px 15px 0px #1276d4 !important; }
-div.designer-item .circle-decorator .name {
-  top: -10px; }
-div.designer-item .circle-decorator .connector {
-  background-color: #fefefe;
-  height: 9px;
-  width: 9px;
-  position: absolute;
-  cursor: pointer;
-  border: 1px solid blue;
-  z-index: 10;
-  position: absolute;
-  top: 0px;
-  left: 0px; }
-  div.designer-item .circle-decorator .connector:hover {
-    border-color: rgba(82, 168, 236, 0.8);
-    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
-    -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
-    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6); }
-div.designer-item.selected .circle-decorator svg circle {
-  fill: #dbeafc;
-  stroke: #52a8ec; }
-div.designer-item.selected .circle-decorator .circle-shadow {
-  display: block; }
+Syntax error: File to import not found or unreadable: ../../../scss/Widgets/DiagramDesigner/Connector.
+              Load path: /Volumes/Projects/webgme/webgme/client/decorators/CircleDecorator/DiagramDesigner (DEPRECATED)
+        on line 9 of CircleDecorator.DiagramDesignerWidget.scss
+
+4:  * Author: Robert Kereskenyi
+5:  *\/
+6: 
+7: //imports
+8: @import "../Core/_CircleDecorator";
+9: @import "../../../scss/Widgets/DiagramDesigner/Connector";
+10: 
+11: $connector-size: $CIRCLE_SIZE;
+12: 
+13: //include CircleDecoratorCore style
+14: div.designer-item {
+
+Backtrace:
+CircleDecorator.DiagramDesignerWidget.scss:9
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/import_node.rb:66:in `rescue in import'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/import_node.rb:45:in `import'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/import_node.rb:28:in `imported_file'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/import_node.rb:37:in `css_import?'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:283:in `visit_import'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/base.rb:36:in `visit'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:152:in `block in visit'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/stack.rb:79:in `block in with_base'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/stack.rb:121:in `with_frame'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/stack.rb:79:in `with_base'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:152:in `visit'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/base.rb:52:in `block in visit_children'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/base.rb:52:in `map'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/base.rb:52:in `visit_children'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:161:in `block in visit_children'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:173:in `with_environment'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:160:in `visit_children'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/base.rb:36:in `block in visit'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:180:in `visit_root'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/base.rb:36:in `visit'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:151:in `visit'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:8:in `visit'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/root_node.rb:36:in `css_tree'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/root_node.rb:20:in `render'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/engine.rb:274:in `render'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/plugin/compiler.rb:414:in `update_stylesheet'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/plugin/compiler.rb:189:in `block in update_stylesheets'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/plugin/compiler.rb:186:in `each'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/plugin/compiler.rb:186:in `update_stylesheets'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/plugin.rb:82:in `update_stylesheets'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/exec.rb:489:in `watch_or_update'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/exec.rb:346:in `process_result'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/exec.rb:43:in `parse'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/exec.rb:22:in `parse!'
+/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/bin/scss:13:in `<top (required)>'
+/usr/bin/scss:23:in `load'
+/usr/bin/scss:23:in `<main>'
+*/
+body:before {
+  white-space: pre;
+  font-family: monospace;
+  content: "Syntax error: File to import not found or unreadable: ../../../scss/Widgets/DiagramDesigner/Connector.\A               Load path: /Volumes/Projects/webgme/webgme/client/decorators/CircleDecorator/DiagramDesigner (DEPRECATED)\A         on line 9 of CircleDecorator.DiagramDesignerWidget.scss\A \A 4:  * Author: Robert Kereskenyi\A 5:  */\A 6: \A 7: //imports\A 8: @import \"../Core/_CircleDecorator\";\A 9: @import \"../../../scss/Widgets/DiagramDesigner/Connector\";\A 10: \A 11: $connector-size: $CIRCLE_SIZE;\A 12: \A 13: //include CircleDecoratorCore style\A 14: div.designer-item {"; }
