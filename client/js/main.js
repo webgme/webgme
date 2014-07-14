@@ -72,14 +72,14 @@ require.config({
         'angular': 'lib/angular/angular-1.2.19/angular' + ( DEBUG ? '.min' : '' ),
         'angular-route': 'lib/angular/angular-1.2.19/angular-route' + ( DEBUG ? '.min' : '' ),
         'angular-route-styles': 'lib/angular/angular-route-styles/route-styles',
-        'ui-bootstrap': 'lib/angular/ui-bootstrap/ui-bootstrap-tpls-0.11.0.min'
+        'angular-ui-bootstrap': 'lib/angular/ui-bootstrap/ui-bootstrap-tpls-0.11.0.min'
     },
 
     shim: {
         
         'angular-route': ['angular'],
         'angular-route-styles': ['angular'],
-        'ui-bootstrap': ['angular'],
+        'angular-ui-bootstrap': ['angular'],
         
         'jquery-ui': ['jquery'],
         'jquery-ui-iPad': ['jquery','jquery-ui'],
@@ -122,7 +122,13 @@ require(
         'backbone',
         'js/WebGME',
         'clientUtil',
-        'bin/getconfig'
+        'bin/getconfig',
+
+        'angular',
+        'angular-route',
+        'angular-route-styles',
+        'angular-ui-bootstrap'
+
     ],
     function (domReady, jQuery, jQueryUi, jQueryUiiPad, jqueryWebGME, jqueryDataTables, bootstrap, underscore,
               backbone, webGME, util, CONFIG) {
