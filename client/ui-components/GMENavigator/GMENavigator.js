@@ -51,6 +51,7 @@ define([
             exportProject,
             dummyProjectsGenerator,
             dummyBranchGenerator,
+            allItems,
 
             selectedProject,
             selectedBranch;
@@ -135,7 +136,7 @@ define([
             };
 
 
-        self.$scope.items = {
+        allItems =  {
 
             root: {
                 id: 'root',
@@ -159,8 +160,8 @@ define([
 
         };
 
-        self.$scope.selectedItems = [
-            self.$scope.items.root,
+        self.$scope.items = [
+            allItems.root,
             selectedProject,
             selectedBranch
         ];
@@ -321,8 +322,6 @@ define([
     ).directive(
         'gmeNavigator',
          function($compile) {
-
-             console.log('ehhhhhh');
 
              return {
 
