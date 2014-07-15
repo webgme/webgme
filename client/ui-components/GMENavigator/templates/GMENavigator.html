@@ -3,7 +3,7 @@
     <script type="text/ng-template"  id="navigator_item_renderer">
         <span class="item-name">{{item.name}}</span>
         <ul class="gme-navigator" ng-if="item.items">
-            <li ng-include=" item.templateId || 'navigator_item_renderer' " data-ng-repeat="item in item.items" data-ng-class="{ 'selected': item.isSelected }">
+            <li ng-include=" item.itemTemplate || 'navigator_item_renderer' " data-ng-repeat="item in item.items" data-ng-class="{ 'selected': item.isSelected }">
 
             </li>
         </ul>
