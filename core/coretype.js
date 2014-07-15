@@ -733,7 +733,7 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 
         core.deleteNode = function(node){
             //currently we only check if the node is inherited from its parents children
-            if(node){
+            if(node && node.base !== null){
                 var parent = core.getParent(node),
                     parentsBase = parent ? core.getBase(node) : null,
                     base = core.getBase(node),
@@ -746,6 +746,17 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
                 } else {
                     oldcore.deleteNode(node);
                 }
+            }
+        };
+
+        core.getTypeRoot = function(node){
+            if(node.base){
+                while(node.base !== null){
+                    node = core.getBase(node);
+                }
+                return node;
+            } else {
+                return null;
             }
         };
 

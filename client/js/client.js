@@ -1415,7 +1415,7 @@ define([
                         returnArray = {};
 
                     //creating the 'from' object
-                    var tempFrom = _core.createNode({parent:parent});
+                    var tempFrom = _core.createNode({parent:parent,base:_core.getTypeRoot(_nodes[nodePaths[0]].node)});
                     //and moving every node under it
                     for(var i=0;i<nodePaths.length;i++){
                         helpArray[nodePaths[i]] = {};
