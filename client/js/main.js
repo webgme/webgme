@@ -182,6 +182,8 @@ require(
 
             webGME.start( function() {
 
+                // Initialize Angular. For this time no better place.
+
                 var gmeApp = angular.module(
                     'gmeApp', [
                         'ngRoute',

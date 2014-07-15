@@ -1,4 +1,4 @@
-/*globals define, angular*/
+/*globals define, angular, alert*/
 
 /**
  * @author lattmann / https://github.com/lattmann
@@ -24,7 +24,53 @@ define([
     ).controller(
         'ProjectBreadcrumbController',
         function($scope) {
-            $scope.name = 'My Name!';
+            $scope.navigatorItems = {
+
+                items: {
+                    id: 'root',
+                    name: 'GME',
+                    iconClass: 'gme-navi-icon',
+                    actions: {
+                        createProject: {
+                            label: 'Create new project',
+                            iconClass: 'fa fa-add',
+                            action: function() { alert('Create new project'); }
+                        },
+                        importProject: {
+                            label: 'Import project',
+                            action: function() { alert('Import project'); }
+                        }
+                    },
+
+                    items: {
+                        'test': {
+                            id: 'test_project',
+                            name: 'Test project Name',
+                            items: {
+                                'master': {
+                                    id: 'master',
+                                    properties: {
+                                        hashTag: '34535435',
+                                        lastCommiter: 'petike',
+                                        lastCommitTime: new Date()
+                                    },
+                                    directive: 'branch-selector'
+                                }
+
+                            },
+                            actions: {
+                                exportProject: {
+                                    label: 'Export',
+                                    iconClass: 'glyphicon glyphicon-export',
+                                    action: function() { alert('Export project'); }
+                                }
+                            }
+                        }
+                    }
+
+                }
+
+            };
         }
     ).directive(
         'projectBreadcrumb',
