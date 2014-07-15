@@ -15,18 +15,48 @@ define([
 
     "use strict";
 
-    var GMENavigator = function() {
+    var GMENavigatorController = function ($scope, gmeClient) {
+
+        var self = this;
+
+        self.$scope = $scope;
+        self.gmeClient = gmeClient;
+
+        self.initialize();
 
     };
 
-    angular.module(
-        'gme.ui.gmeNavigator', []
-    ).controller(
-        'GMENavigator',
-        function($scope) {
+    GMENavigatorController.prototype.update = function () {
+        if (!this.$scope.$$phase) {
+            this.$scope.$apply();
+        }
+    };
 
-            var dummyProjectsGenerator,
-                dummyBranchGenerator;
+    GMENavigatorController.prototype.initialize = function () {
+        var self = this;
+
+        // initialize model structure
+        self.$scope.items = {};
+
+        if (self.gmeClient) {
+            self.initWithClient();
+        } else {
+            self.initTestData();
+        }
+    };
+
+    GMENavigatorController.prototype.initTestData = function () {
+        var self = this,
+            createNewProject,
+            exportProject,
+            dummyProjectsGenerator,
+            dummyBranchGenerator;
+
+            // Function handlers
+            exportProject = function (id, branch) {
+                console.log(JSON.stringify(self.$scope.items.root.items[id].items[branch || 'master']));
+            };
+
 
             dummyBranchGenerator = function(name, maxCount) {
                 var i,
@@ -65,14 +95,6 @@ define([
 
                 count = Math.round( Math.random() * maxCount );
 
-                exportProject = function( name ) {
-                    return (
-                        function() {
-                            console.log( 'Export' + name );
-                        }
-                    );
-                };
-
                 for (i=0; i < count; i++) {
 
                     id = name + '_' + i;
@@ -86,7 +108,7 @@ define([
                             exportProject: {
                                 label: 'Export',
                                 iconClass: 'glyphicon glyphicon-export',
-                                action: exportProject( id )
+                                action: exportProject
                             }
                         }
                     };
@@ -96,30 +118,103 @@ define([
 
             };
 
-            $scope.items = {
 
-                root: {
-                    id: 'root',
-                    name: 'GME',
-                    iconClass: 'gme-navi-icon',
-                    actions: {
-                        createProject: {
-                            label: 'Create new project',
-                            iconClass: 'fa fa-add',
-                            action: function() { alert('Create new project'); }
-                        },
-                        importProject: {
-                            label: 'Import project',
-                            action: function() { alert('Import project'); }
-                        }
+        self.$scope.items = {
+
+            root: {
+                id: 'root',
+                name: 'GME',
+                iconClass: 'gme-navi-icon',
+                actions: {
+                    createProject: {
+                        label: 'Create new project',
+                        iconClass: 'fa fa-add',
+                        action: function() { alert('Create new project'); }
                     },
+                    importProject: {
+                        label: 'Import project',
+                        action: function() { alert('Import project'); }
+                    }
+                },
 
-                    items: dummyProjectsGenerator( 'Project', 20),
-                    selectedItem: 'Project_0'
+                items: dummyProjectsGenerator( 'Project', 20),
+                selectedItem: 'Project_0'
+            }
+
+        };
+
+        self.update();
+
+    };
+
+    GMENavigatorController.prototype.initWithClient = function () {
+        var self = this,
+            len;
+
+        self.gmeClient.getFullProjectListAsync(function (err, fullList) {
+            var i,
+                id,
+                name;
+
+            if (err) {
+                console.error(err);
+                return;
+            }
+
+            for (i = 0; i < fullList.length; i += 1) {
+                id = fullList[i];
+                name = fullList[i];
+                // TODO: factor this function out to addProject
+                self.$scope.items.root.items[id] = {
+                    id: id,
+                    name: name,
+                    items: {},
+                    actions: {
+                        exportProject: {
+                            label: 'Export',
+                            iconClass: 'glyphicon glyphicon-export',
+                            action: function () { alert('TODO: implement export project using client...'); }
+                        }
+                    }
+                };
+            }
+        });
+
+        // TODO: replace this to ids
+        if (self.gmeClient.getActiveProjectName() || self.gmeClient.getActiveProjectName() === '') {
+            self.$scope.items.root.items[self.gmeClient.getActiveProjectName()].items = {};
+
+            self.gmeClient.getBranchesAsync(function (err, branchList) {
+                if (err) {
+                    console.error(err);
+                    return;
                 }
 
-            };
+                var branches =  self.$scope.items.root.items[self.gmeClient.getActiveProjectName()].items;
+                len = branchList.length;
+
+                while (len--) {
+                    branches[branchList[len].name] = {
+                        id: branchList[len].name,
+                        name: branchList[len].name,
+                        properties: {
+                            hash: branchList[len].hash
+                            //lastCommiter: 'petike',
+                            //lastCommitTime: new Date()
+                        }
+                    };
+                }
+            });
         }
+
+        // TODO: register function handlers
+    };
+
+
+    angular.module(
+        'gme.ui.gmeNavigator', []
+    ).controller(
+        'GMENavigator', GMENavigatorController
     ).directive(
         'gmeNavigator',
          function($compile) {

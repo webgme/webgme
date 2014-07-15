@@ -180,7 +180,7 @@ require(
                 }
             });
 
-            webGME.start( function() {
+            webGME.start( function(client) {
 
                 // Initialize Angular. For this time no better place.
 
@@ -191,6 +191,9 @@ require(
                         'ui.bootstrap',
                         'headerPanel'
                     ]);
+
+                //gmeApp.value('gmeClient', client);
+                gmeApp.value('gmeClient', null);
 
                 angular.bootstrap(document, [ 'gmeApp']);
 

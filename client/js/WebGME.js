@@ -145,7 +145,7 @@ define(['logManager',
                 } else {
 
                     if (_.isFunction(afterPanelsLoaded)) {
-                        afterPanelsLoaded();
+                        afterPanelsLoaded(client);
                     }
 
                     if(initialThingsToDo.createNewProject){
