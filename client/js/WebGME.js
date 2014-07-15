@@ -58,7 +58,7 @@ define(['logManager',
     var npmJSON = JSON.parse(packagejson);
     WebGMEGlobal.version = npmJSON.version;
 
-    var _webGMEStart = function () {
+    var _webGMEStart = function ( afterPanelsLoaded ) {
         var layoutManager,
             client,
             loadPanels,
@@ -143,6 +143,11 @@ define(['logManager',
                 if (panels.length > 0) {
                     loadPanels(panels);
                 } else {
+
+                    if (_.isFunction(afterPanelsLoaded)) {
+                        afterPanelsLoaded();
+                    }
+
                     if(initialThingsToDo.createNewProject){
                         client.connectToDatabaseAsync({},function(err){
                             if(err){

@@ -41,18 +41,4 @@ define([
     });
 
 
-
-    console.log('ejjj');
-
-//        var gmeApp = angular.module(
-//            'gmeApp', [
-//                'ngRoute',
-//                'routeStyles',
-//                'ui.bootstrap',
-//                'gme.ui.projectBreadcrumb'
-//            ]);
-//
-//        angular.bootstrap(document, [ 'gmeApp']);
-
-
 });

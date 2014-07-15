@@ -180,7 +180,20 @@ require(
                 }
             });
 
-            webGME.start();
+            webGME.start( function() {
+
+                var gmeApp = angular.module(
+                    'gmeApp', [
+                        'ngRoute',
+                        'routeStyles',
+                        'ui.bootstrap',
+                        'headerPanel'
+                    ]);
+
+                angular.bootstrap(document, [ 'gmeApp']);
+
+            });
+
         });
     }
 );

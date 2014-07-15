@@ -19,6 +19,10 @@ define(['js/PanelBase/PanelBase',
     var HeaderPanel,
         __parent__ = PanelBase;
 
+    angular.module('headerPanel', ['gme.ui.projectBreadcrumb']).run(function() {
+
+    });
+
     HeaderPanel = function (layoutManager, params) {
         var options = {};
         //set properties from options
