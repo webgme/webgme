@@ -172,9 +172,9 @@ define(['clientUtil',
             typeInfo = aDesc.validChildrenTypes[i];
 
             displayName = typeInfo.name;
-            if (DEBUG === true) {
+            /*if (DEBUG === true) {
                 displayName += ' (' + typeInfo.id + ')';
-            }
+            }*/
 
             typeEl = TYPE_EL_BASE.clone();
             typeEl.append(displayName);

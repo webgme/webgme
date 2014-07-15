@@ -6,12 +6,35 @@
                 <h3>Import file</h3>
             </div>
             <div class="modal-body">
-                <input type="file" id="fileInput" accept=".json">
-                <div class="file-drop-target">
-                    Select a file or drop one here...
-                </div>
-                <div class="alert alert-error" style="margin-top:5px; text-align: center;font-weight: bold; overflow: hidden; text-overflow: ellipsis">
-                </div>
+                <form class="form-horizontal" role="form">
+
+                    <div class="row">
+                        <input type="file" id="fileInput" accept=".json">
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-9 controls">
+                            Drag-and-drop a file or click on the file icon to upload one below:
+                        </div>
+                    </div>
+                    <div class="row">
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Exported JSON file:</label>
+                        <div class="col-sm-9 controls">
+                            <div class="widget">
+                                <div class="asset-widget file-drop-target">
+                                    <span class="uploaded-file-name empty">No file selected</span>
+                                    <a class="btn btn-mini btn-dialog-open">
+                                        <i class="glyphicon glyphicon-file"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-error" style="margin-top:5px; text-align: center;font-weight: bold; overflow: hidden; text-overflow: ellipsis">
+                    </div>
+                </form>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-primary btn-import" disabled>Import...</button>
