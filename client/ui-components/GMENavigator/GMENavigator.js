@@ -24,6 +24,78 @@ define([
     ).controller(
         'GMENavigator',
         function($scope) {
+
+            var dummyProjectsGenerator,
+                dummyBranchGenerator;
+
+            dummyBranchGenerator = function(name, maxCount) {
+                var i,
+                    id,
+                    branches = {},
+                    count;
+
+                count = Math.round( Math.random() * maxCount );
+
+                for (i=0; i < count; i++) {
+
+                    id = name + '_' + i;
+
+                    branches[ id ] =  {
+                        id: id,
+                        name: id,
+                        properties: {
+                            hashTag: '34535435',
+                            lastCommiter: 'petike',
+                            lastCommitTime: new Date()
+                        },
+                        directive: 'branch-selector'
+                    };
+                }
+
+                return branches;
+
+            };
+
+            dummyProjectsGenerator = function(name, maxCount) {
+                var i,
+                    id,
+                    projects = {},
+                    count,
+                    exportProject;
+
+                count = Math.round( Math.random() * maxCount );
+
+                exportProject = function( name ) {
+                    return (
+                        function() {
+                            console.log( 'Export' + name );
+                        }
+                    );
+                };
+
+                for (i=0; i < count; i++) {
+
+                    id = name + '_' + i;
+
+                    projects[ id ] = {
+                        id: id,
+                        name: id,
+                        items: dummyBranchGenerator( 'Branch', 10 ),
+                        selectedItem: 'Branch_0',
+                        actions: {
+                            exportProject: {
+                                label: 'Export',
+                                iconClass: 'glyphicon glyphicon-export',
+                                action: exportProject( id )
+                            }
+                        }
+                    };
+                }
+
+                return projects;
+
+            };
+
             $scope.items = {
 
                 root: {
@@ -42,32 +114,8 @@ define([
                         }
                     },
 
-                    items: {
-                        'test': {
-                            id: 'test_project',
-                            name: 'Test project Name',
-                            items: {
-                                'master': {
-                                    id: 'master',
-                                    properties: {
-                                        hashTag: '34535435',
-                                        lastCommiter: 'petike',
-                                        lastCommitTime: new Date()
-                                    },
-                                    directive: 'branch-selector'
-                                }
-
-                            },
-                            actions: {
-                                exportProject: {
-                                    label: 'Export',
-                                    iconClass: 'glyphicon glyphicon-export',
-                                    action: function() { alert('Export project'); }
-                                }
-                            }
-                        }
-                    }
-
+                    items: dummyProjectsGenerator( 'Project', 20),
+                    selectedItem: 'Project_0'
                 }
 
             };

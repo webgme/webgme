@@ -1,8 +1,20 @@
  <div class="gme-navigator">
      <ul data-ng-repeat="item in items">
-         <li tooltip="{{item.name}}">{{item.name}}
-            <div class="sub-items">
-
+         <li tooltip="{{item.name}}">
+            <span class="label">{{item.name}}</span>
+            <div ng-if="item.items" class="sub-items">
+                <div class="gme-navigator">
+                    <ul data-ng-repeat="item in item.items">
+                        <span class="label">{{item.name}}</span>
+                        <div ng-if="item.items" class="sub-items">
+                            <div class="gme-navigator">
+                                <ul data-ng-repeat="item in item.items">
+                                    <span class="label">{{item.name}}</span>
+                                </ul>
+                            </div>
+                        </div>
+                    </ul>
+                </div>
             </div>
          </li>
      </ul>
