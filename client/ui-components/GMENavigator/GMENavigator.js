@@ -50,7 +50,10 @@ define([
             createNewProject,
             exportProject,
             dummyProjectsGenerator,
-            dummyBranchGenerator;
+            dummyBranchGenerator,
+
+            selectedProject,
+            selectedBranch;
 
             // Function handlers
             exportProject = function (id, branch) {
@@ -68,8 +71,6 @@ define([
                 count = Math.max( Math.round( Math.random() * maxCount ), 3 );
                 selectedItem = Math.floor( Math.random() * count );
 
-                console.log('selectedBranch' + selectedItem);
-
                 for (i=0; i < count; i++) {
 
                     id = name + '_' + i;
@@ -85,6 +86,10 @@ define([
                         },
                         itemTemplate: 'branch-selector-template'
                     };
+
+                    if (i === selectedItem) {
+                        selectedBranch = branches[ id ];
+                    }
                 }
 
                 return branches;
@@ -101,8 +106,6 @@ define([
 
                 count = Math.max( Math.round( Math.random() * maxCount ), 3 );
                 selectedItem = Math.floor( Math.random() * count );
-
-                console.log('selectedProject' + selectedItem);
 
                 for (i=0; i < count; i++) {
 
@@ -121,6 +124,10 @@ define([
                             }
                         }
                     };
+
+                    if (i === selectedItem) {
+                        selectedProject = projects[ id ];
+                    }
                 }
 
                 return projects;
@@ -151,6 +158,12 @@ define([
             }
 
         };
+
+        self.$scope.selectedItems = [
+            self.$scope.items.root,
+            selectedProject,
+            selectedBranch
+        ];
 
         self.update();
 

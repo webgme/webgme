@@ -1,18 +1,15 @@
 <ul class="gme-navigator">
 
-    <script type="text/ng-template"  id="navigator_item_renderer">
+    <script type="text/ng-template"  id="navigator-item-template">
         <span class="item-name">{{item.name}}</span>
-        <ul class="gme-navigator" ng-if="item.items">
-            <li ng-include=" item.itemTemplate || 'navigator_item_renderer' " data-ng-repeat="item in item.items" data-ng-class="{ 'selected': item.isSelected }">
-
-            </li>
-        </ul>
     </script>
 
     <script type="text/ng-template"  id="branch-selector-template">
         <span class="item-name">Branch {{item.name}}</span>
     </script>
 
-     <li ng-include="'navigator_item_renderer'" data-ng-repeat="item in items" data-ng-class="{ 'selected': item.isSelected }">
+     <li data-ng-repeat="item in selectedItems"
+         data-ng-class=" item.itemClass || '' "
+         ng-include=" item.itemTemplate || 'navigator-item-template' ">
      </li>
 </ul>

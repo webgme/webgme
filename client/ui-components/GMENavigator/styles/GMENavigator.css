@@ -1,8 +1,14 @@
 ul.gme-navigator {
-  color: #fff;
-  background-color: #000; }
-  ul.gme-navigator li {
-    display: none; }
+  font-size: 130%;
+  padding: 0;
+  list-style-type: none;
+  color: #fff; }
+  ul.gme-navigator > li {
+    display: inline-block;
+    padding: .75ex 1em; }
+  ul.gme-navigator > li:hover {
+    background-color: #00235B;
+    cursor: pointer; }
   ul.gme-navigator li.selected {
     display: block; }
   ul.gme-navigator ul.gme-navigator {
