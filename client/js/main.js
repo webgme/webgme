@@ -192,7 +192,7 @@ require(
                         'headerPanel'
                     ]);
 
-                //gmeApp.value('gmeClient', client);
+//                gmeApp.value('gmeClient', client);
                 gmeApp.value('gmeClient', null);
 
                 angular.bootstrap(document, [ 'gmeApp']);
