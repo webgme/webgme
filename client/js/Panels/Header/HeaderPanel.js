@@ -11,7 +11,7 @@ define(['js/PanelBase/PanelBase',
     'js/Widgets/UserProfile/UserProfileWidget',
     'js/Toolbar/Toolbar',
     './DefaultToolbar',
-    'ui-components/projectbreadcrumb/ProjectBreadcrumb'
+    'ui-components/GMENavigator/GMENavigator'
 ], function (PanelBase, ProjectTitleWidget, UserProfileWidget, toolbar, DefaultToolbar) {
 
     "use strict";
@@ -19,7 +19,7 @@ define(['js/PanelBase/PanelBase',
     var HeaderPanel,
         __parent__ = PanelBase;
 
-    angular.module('headerPanel', ['gme.ui.projectBreadcrumb']).run(function() {
+    angular.module('headerPanel', ['gme.ui.gmeNavigator']).run(function() {
 
     });
 
@@ -52,7 +52,7 @@ define(['js/PanelBase/PanelBase',
 
 
         //project title
-        var projectTitleEl = $('<project-breadcrumb/>', {'class': "inline"});
+        var projectTitleEl = $('<gme-navigator/>', {'class': "inline"});
         //new ProjectTitleWidget(projectTitleEl, this._client);
         navBarInner.append(projectTitleEl);
 

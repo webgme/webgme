@@ -7,26 +7,26 @@
 
 define([
     'angular',
-    'text!./templates/ProjectBreadcrumb.html',
-    'css!./styles/ProjectBreadcrumb.css'
+    'text!./templates/GMENavigator.html',
+    'css!./styles/GMENavigator.css'
 ], function(
     ng,
     template ){
 
     "use strict";
 
-    var ProjectBreadcrumb = function() {
+    var GMENavigator = function() {
 
     };
 
     angular.module(
-        'gme.ui.projectBreadcrumb', []
+        'gme.ui.gmeNavigator', []
     ).controller(
-        'ProjectBreadcrumbController',
+        'GMENavigator',
         function($scope) {
-            $scope.navigatorItems = {
+            $scope.items = {
 
-                items: {
+                root: {
                     id: 'root',
                     name: 'GME',
                     iconClass: 'gme-navi-icon',
@@ -73,16 +73,20 @@ define([
             };
         }
     ).directive(
-        'projectBreadcrumb',
-         function() {
+        'gmeNavigator',
+         function($compile) {
 
              console.log('ehhhhhh');
 
              return {
-                 restrict: 'EA',
-                 controller: 'ProjectBreadcrumbController',
+
+                 //scope: { items: '=' },
+
+                 restrict: 'E',
+                 controller: 'GMENavigator',
                  replace: true,
                  template: template
+
              };
     });
 
