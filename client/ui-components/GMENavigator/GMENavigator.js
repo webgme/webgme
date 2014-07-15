@@ -110,8 +110,66 @@ define([
     };
 
     GMENavigatorController.prototype.initWithClient = function () {
-        var self = this;
-        console.error('Not implemented yet.');
+        var self = this,
+            len;
+
+        self.gmeClient.getFullProjectListAsync(function (err, fullList) {
+            var i,
+                id,
+                name;
+
+            if (err) {
+                console.error(err);
+                return;
+            }
+
+            for (i = 0; i < fullList.length; i += 1) {
+                id = fullList[i];
+                name = fullList[i];
+                // TODO: factor this function out to addProject
+                self.$scope.items.root.items[id] = {
+                    id: id,
+                    name: name,
+                    items: {},
+                    actions: {
+                        exportProject: {
+                            label: 'Export',
+                            iconClass: 'glyphicon glyphicon-export',
+                            action: function () { alert('TODO: implement export project using client...'); }
+                        }
+                    }
+                };
+            }
+        });
+
+        // TODO: replace this to ids
+        if (self.gmeClient.getActiveProjectName() || self.gmeClient.getActiveProjectName() === '') {
+            self.$scope.items.root.items[self.gmeClient.getActiveProjectName()].items = {};
+
+            self.gmeClient.getBranchesAsync(function (err, branchList) {
+                if (err) {
+                    console.error(err);
+                    return;
+                }
+
+                var branches =  self.$scope.items.root.items[self.gmeClient.getActiveProjectName()].items;
+                len = branchList.length;
+
+                while (len--) {
+                    branches[branchList[len].name] = {
+                        id: branchList[len].name,
+                        name: branchList[len].name,
+                        properties: {
+                            hash: branchList[len].hash
+                            //lastCommiter: 'petike',
+                            //lastCommitTime: new Date()
+                        }
+                    };
+                }
+            });
+        }
+
+        // TODO: register function handlers
     };
 
 
