@@ -1,18 +1,18 @@
- <ul class="gme-navigator">
-     <li tooltip="{{item.name}}" data-ng-repeat="item in items" data-ng-class="{ 'selected': item.isSelected }">
-        <span class="label">{{item.name}}</span>
+<ul class="gme-navigator">
+
+    <script type="text/ng-template"  id="navigator_item_renderer">
+        <span class="item-name">{{item.name}}</span>
         <ul class="gme-navigator" ng-if="item.items">
+            <li ng-include=" item.templateId || 'navigator_item_renderer' " data-ng-repeat="item in item.items" data-ng-class="{ 'selected': item.isSelected }">
 
-            <li tooltip="{{item.name}}" data-ng-repeat="item in item.items"  data-ng-class="{ 'selected': item.isSelected }">
-                <span class="label">{{item.name}}</span>
-                <ul class="gme-navigator"  ng-if="item.items">
-                    <li tooltip="{{subItem.name}}" data-ng-repeat="subItem in item.items" data-ng-class="{ 'selected': subItem.isSelected }">
-                        <span class="label">{{subItem.name}}</span>
-                    </li>
-                </ul>
             </li>
-
         </ul>
+    </script>
 
+    <script type="text/ng-template"  id="branch-selector-template">
+        <span class="item-name">Branch {{item.name}}</span>
+    </script>
+
+     <li ng-include="'navigator_item_renderer'" data-ng-repeat="item in items" data-ng-class="{ 'selected': item.isSelected }">
      </li>
- </ul>
+</ul>
