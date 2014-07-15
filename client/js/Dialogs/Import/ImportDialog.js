@@ -149,9 +149,9 @@ define(['loaderCircles',
                     self._uploadedFileName.removeClass('empty');
 
                     if (parsedJSONFileContent === undefined) {
-                        self._displayMessage(file.name + ':<br><br>INVALID FILE FORMAT...', true);
+                        self._displayMessage('INVALID FILE FORMAT...', true);
                     } else {
-                        self._displayMessage(file.name + ':<br><br>File has been parsed successfully, click \'Import...\' to start importing.', false);
+                        self._displayMessage('File has been parsed successfully, click \'Import...\' to start importing.', false);
                         btnImport.disable(false);
                         btnImport.on('click', function (event) {
                             event.preventDefault();
