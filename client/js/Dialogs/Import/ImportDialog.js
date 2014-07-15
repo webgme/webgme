@@ -56,6 +56,8 @@ define(['loaderCircles',
         this._fileDropTarget = this._dialog.find('.file-drop-target');
         this._fileInput = this._dialog.find('#fileInput').hide();
 
+        this._uploadedFileName = this._dialog.find('.uploaded-file-name');
+
         this._loader = new LoaderCircles({"containerElement": this._dialog});
 
         // attach handlers
@@ -142,6 +144,9 @@ define(['loaderCircles',
                             parsedJSONFileContent = undefined;
                         }
                     }
+
+                    self._uploadedFileName.text(file.name);
+                    self._uploadedFileName.removeClass('empty');
 
                     if (parsedJSONFileContent === undefined) {
                         self._displayMessage(file.name + ':<br><br>INVALID FILE FORMAT...', true);
