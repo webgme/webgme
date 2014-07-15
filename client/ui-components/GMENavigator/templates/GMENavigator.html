@@ -1,21 +1,18 @@
- <div class="gme-navigator">
-     <ul data-ng-repeat="item in items">
-         <li tooltip="{{item.name}}">
-            <span class="label">{{item.name}}</span>
-            <div ng-if="item.items" class="sub-items">
-                <div class="gme-navigator">
-                    <ul data-ng-repeat="item in item.items">
-                        <span class="label">{{item.name}}</span>
-                        <div ng-if="item.items" class="sub-items">
-                            <div class="gme-navigator">
-                                <ul data-ng-repeat="item in item.items">
-                                    <span class="label">{{item.name}}</span>
-                                </ul>
-                            </div>
-                        </div>
-                    </ul>
-                </div>
-            </div>
-         </li>
-     </ul>
- </div>
+ <ul class="gme-navigator">
+     <li tooltip="{{item.name}}" data-ng-repeat="item in items" data-ng-class="{ 'selected': item.isSelected }">
+        <span class="label">{{item.name}}</span>
+        <ul class="gme-navigator" ng-if="item.items">
+
+            <li tooltip="{{item.name}}" data-ng-repeat="item in item.items"  data-ng-class="{ 'selected': item.isSelected }">
+                <span class="label">{{item.name}}</span>
+                <ul class="gme-navigator"  ng-if="item.items">
+                    <li tooltip="{{subItem.name}}" data-ng-repeat="subItem in item.items" data-ng-class="{ 'selected': subItem.isSelected }">
+                        <span class="label">{{subItem.name}}</span>
+                    </li>
+                </ul>
+            </li>
+
+        </ul>
+
+     </li>
+ </ul>

@@ -1,2 +1,9 @@
-.gme-navigator {
-  color: #fff; }
+ul.gme-navigator {
+  color: #fff;
+  background-color: #000; }
+  ul.gme-navigator li {
+    display: none; }
+  ul.gme-navigator li.selected {
+    display: block; }
+  ul.gme-navigator ul.gme-navigator {
+    display: inline-block; }

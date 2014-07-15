@@ -1,3 +1,19 @@
-.gme-navigator {
+ul.gme-navigator {
+
   color: #fff;
+  background-color: #000;
+
+  li {
+    display: none;
+  }
+
+  li.selected {
+    display: block;
+  }
+
+  ul.gme-navigator {
+    display: inline-block;
+  }
+
 }
+

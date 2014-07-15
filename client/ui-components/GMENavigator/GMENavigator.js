@@ -62,9 +62,13 @@ define([
                 var i,
                     id,
                     branches = {},
-                    count;
+                    count,
+                    selectedItem;
 
-                count = Math.round( Math.random() * maxCount );
+                count = Math.max( Math.round( Math.random() * maxCount ), 3 );
+                selectedItem = Math.floor( Math.random() * count );
+
+                console.log('selectedBranch' + selectedItem);
 
                 for (i=0; i < count; i++) {
 
@@ -73,6 +77,7 @@ define([
                     branches[ id ] =  {
                         id: id,
                         name: id,
+                        isSelected: i === selectedItem,
                         properties: {
                             hashTag: '34535435',
                             lastCommiter: 'petike',
@@ -91,9 +96,13 @@ define([
                     id,
                     projects = {},
                     count,
-                    exportProject;
+                    exportProject,
+                    selectedItem;
 
-                count = Math.round( Math.random() * maxCount );
+                count = Math.max( Math.round( Math.random() * maxCount ), 3 );
+                selectedItem = Math.floor( Math.random() * count );
+
+                console.log('selectedProject' + selectedItem);
 
                 for (i=0; i < count; i++) {
 
@@ -102,8 +111,8 @@ define([
                     projects[ id ] = {
                         id: id,
                         name: id,
+                        isSelected: i === selectedItem,
                         items: dummyBranchGenerator( 'Branch', 10 ),
-                        selectedItem: 'Branch_0',
                         actions: {
                             exportProject: {
                                 label: 'Export',
@@ -124,6 +133,7 @@ define([
             root: {
                 id: 'root',
                 name: 'GME',
+                isSelected: true,
                 iconClass: 'gme-navi-icon',
                 actions: {
                     createProject: {
@@ -137,8 +147,7 @@ define([
                     }
                 },
 
-                items: dummyProjectsGenerator( 'Project', 20),
-                selectedItem: 'Project_0'
+                items: dummyProjectsGenerator( 'Project', 10)
             }
 
         };
