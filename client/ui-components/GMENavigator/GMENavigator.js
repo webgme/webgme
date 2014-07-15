@@ -83,7 +83,7 @@ define([
                             lastCommiter: 'petike',
                             lastCommitTime: new Date()
                         },
-                        directive: 'branch-selector'
+                        itemTemplate: 'branch-selector-template'
                     };
                 }
 
