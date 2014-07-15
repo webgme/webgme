@@ -160,6 +160,107 @@ define([
         var self = this,
             len;
 
+        self.$scope.items = {
+
+            root: {
+                id: 'root',
+                name: 'GME',
+                isSelected: true,
+                iconClass: 'gme-navi-icon',
+                actions: {
+                    createProject: {
+                        label: 'Create new project',
+                        iconClass: 'fa fa-add',
+                        action: function () {
+                            alert('Create new project');
+                        }
+                    },
+                    importProject: {
+                        label: 'Import project',
+                        action: function () {
+                            alert('Import project');
+                        }
+                    }
+                },
+                items: {}
+            }
+        };
+
+        self.gmeClient.addEventListener("PROJECT_OPENED", function (c, projectId) {
+            var id;
+
+            // TODO: update project list first
+            for (id in self.$scope.items.root.items) {
+                if (id === projectId) {
+                    self.$scope.items.root.items[id].isSelected = true;
+                } else {
+                    self.$scope.items.root.items[id].isSelected = false;
+                }
+            }
+
+            self.update();
+        });
+
+        self.gmeClient.addEventListener("PROJECT_CLOESED", function (c, projectId) {
+
+            // TODO: update project list first
+            self.$scope.items.root.items[projectId].isSelected = false;
+
+            self.update();
+        });
+
+        self.gmeClient.addEventListener("BRANCH_CHANGED", function (c, branchId) {
+            var id,
+                project;
+
+            // TODO: replace this to ids
+            if (self.gmeClient.getActiveProjectName() || self.gmeClient.getActiveProjectName() === '') {
+                self.$scope.items.root.items[self.gmeClient.getActiveProjectName()].items = {};
+                self.$scope.items.root.items[self.gmeClient.getActiveProjectName()].isSelected = true;
+
+                self.gmeClient.getBranchesAsync(function (err, branchList) {
+                    if (err) {
+                        console.error(err);
+                        return;
+                    }
+
+                    var branches =  self.$scope.items.root.items[self.gmeClient.getActiveProjectName()].items;
+                    len = branchList.length;
+
+                    while (len--) {
+                        branches[branchList[len].name] = {
+                            id: branchList[len].name,
+                            name: branchList[len].name,
+                            isSelected: self.gmeClient.getActualBranch() === branchList[len].name,
+                            properties: {
+                                hash: branchList[len].hash
+                                //lastCommiter: 'petike',
+                                //lastCommitTime: new Date()
+                            }
+                        };
+                    }
+
+
+                    project = self.$scope.items.root.items[self.gmeClient.getActiveProjectName()];
+
+                    // TODO: update project list first and branch list
+                    for (id in project.items) {
+                        if (id === branchId) {
+                            project.items[id].isSelected = true;
+                        } else {
+                            project.items[id].isSelected = false;
+                        }
+                    }
+
+                    self.update();
+
+                });
+            }
+        });
+
+
+
+
         self.gmeClient.getFullProjectListAsync(function (err, fullList) {
             var i,
                 id,
@@ -170,9 +271,11 @@ define([
                 return;
             }
 
-            for (i = 0; i < fullList.length; i += 1) {
-                id = fullList[i];
-                name = fullList[i];
+            self.$scope.items.root.items = {};
+
+            for (id in fullList) {
+//                id = id;
+                name = id;
                 // TODO: factor this function out to addProject
                 self.$scope.items.root.items[id] = {
                     id: id,
@@ -187,34 +290,12 @@ define([
                     }
                 };
             }
+
+
+            self.update();
         });
 
-        // TODO: replace this to ids
-        if (self.gmeClient.getActiveProjectName() || self.gmeClient.getActiveProjectName() === '') {
-            self.$scope.items.root.items[self.gmeClient.getActiveProjectName()].items = {};
 
-            self.gmeClient.getBranchesAsync(function (err, branchList) {
-                if (err) {
-                    console.error(err);
-                    return;
-                }
-
-                var branches =  self.$scope.items.root.items[self.gmeClient.getActiveProjectName()].items;
-                len = branchList.length;
-
-                while (len--) {
-                    branches[branchList[len].name] = {
-                        id: branchList[len].name,
-                        name: branchList[len].name,
-                        properties: {
-                            hash: branchList[len].hash
-                            //lastCommiter: 'petike',
-                            //lastCommitTime: new Date()
-                        }
-                    };
-                }
-            });
-        }
 
         // TODO: register function handlers
     };
