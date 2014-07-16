@@ -17,7 +17,7 @@ ul.gme-navigator {
       position: absolute;
       margin-bottom: 5px;
       *width: 180px;
-      margin-top: -2px;
+      margin-top: -1px;
     }
 
   }
@@ -62,5 +62,25 @@ ul.gme-navigator {
 
   .show-all-items {
   }
+
+  li.gme-root {
+    background-image: url(images/gme-icon.png);
+    background-position: 8px 3px;
+    background-repeat: no-repeat;
+    padding-left: 46px;
+  }
+
+  li.separator {
+    padding: 0;
+    cursor: default;
+    font-size: 60%;
+    top: -2px;
+    position: relative;
+  }
+
+  &:hover {
+    background-color: transparent;
+  }
+
 
 }

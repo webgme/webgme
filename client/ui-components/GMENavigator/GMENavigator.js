@@ -218,7 +218,7 @@ define([
                 id: 'root',
                 label: 'GME',
                 isSelected: true,
-                iconClass: 'gme-navi-icon',
+                itemClass: 'gme-root',
                 menu: [
                     {
                         items: dummyProjectsGenerator( 'Project', 10),
@@ -271,11 +271,14 @@ define([
 
         };
 
-        self.$scope.items = [
-            allItems.root,
-            selectedProject,
-            selectedBranch
-        ];
+        self.$scope.navigator = {
+            items: [
+                allItems.root,
+                selectedProject,
+                selectedBranch
+            ],
+            separator: true
+        };
 
         console.log(self.$scope.items);
 

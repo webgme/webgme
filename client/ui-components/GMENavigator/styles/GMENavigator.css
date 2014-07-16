@@ -12,7 +12,7 @@ ul.gme-navigator {
       position: absolute;
       margin-bottom: 5px;
       *width: 180px;
-      margin-top: -2px; }
+      margin-top: -1px; }
   ul.gme-navigator > li:hover {
     background-color: #00235B;
     cursor: pointer; }
@@ -65,3 +65,16 @@ ul.gme-navigator {
     -webkit-border-radius: 6px 0 6px 6px;
     -moz-border-radius: 6px 0 6px 6px;
     border-radius: 6px 0 6px 6px; }
+  ul.gme-navigator li.gme-root {
+    background-image: url(images/gme-icon.png);
+    background-position: 8px 3px;
+    background-repeat: no-repeat;
+    padding-left: 46px; }
+  ul.gme-navigator li.separator {
+    padding: 0;
+    cursor: default;
+    font-size: 60%;
+    top: -2px;
+    position: relative; }
+  ul.gme-navigator:hover {
+    background-color: transparent; }
