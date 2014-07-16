@@ -47,8 +47,12 @@ define([
 
     GMENavigatorController.prototype.initTestData = function () {
         var self = this,
-            createNewProject,
-            exportProject,
+
+            exportBranch,
+            showHistory,
+            createTag,
+            generateMetaJSAPI,
+
             dummyProjectsGenerator,
             dummyBranchGenerator,
             allItems,
@@ -57,15 +61,26 @@ define([
             selectedBranch;
 
             // Function handlers
-            exportProject = function (id, branch) {
-                console.log(JSON.stringify(self.$scope.items.root.items[id].items[branch || 'master']));
+            exportBranch = function (data) {
+                console.log('Export branch' + JSON.stringify(data));
             };
 
+            showHistory = function(data) {
+                console.log('Show history' + JSON.stringify(data));
+            };
 
-            dummyBranchGenerator = function(name, maxCount) {
+            createTag = function(data) {
+                console.log('Create tag' + JSON.stringify(data));
+            };
+
+            generateMetaJSAPI = function(data) {
+                console.log('Generate META JS API ' + JSON.stringify(data));
+            };
+
+            dummyBranchGenerator = function(name, maxCount, projectId, isSelectedProject) {
                 var i,
                     id,
-                    branches = {},
+                    branches = [],
                     count,
                     selectedItem;
 
@@ -76,7 +91,7 @@ define([
 
                     id = name + '_' + i;
 
-                    branches[ id ] =  {
+                    branches.push({
                         id: id,
                         label: id,
                         isSelected: i === selectedItem,
@@ -85,11 +100,39 @@ define([
                             lastCommiter: 'petike',
                             lastCommitTime: new Date()
                         },
-                        itemTemplate: 'branch-selector-template'
-                    };
+                        //itemTemplate: 'branch-selector-template',
+                        menu: [
+                            {
+                                items: [
+                                    {
+                                        id: 'exportBranch',
+                                        label: 'Export branch',
+                                        iconClass: 'glyphicon glyphicon-export',
+                                        action: exportBranch,
+                                        actionData: {
+                                            project: projectId,
+                                            branchId: id
+                                        }
+                                    },
+                                    {
+                                        id: 'createTag',
+                                        label: 'Create tag',
+                                        iconClass: 'glyphicon glyphicon-tag',
+                                        action: createTag,
+                                        actionData: {
+                                            project: projectId,
+                                            branchId: id
+                                        }
+                                    }
+                                ]
 
-                    if (i === selectedItem) {
-                        selectedBranch = branches[ id ];
+                            }
+                        ]
+
+                    });
+
+                    if (i === selectedItem && isSelectedProject === true) {
+                        selectedBranch = branches[ i ];
                     }
                 }
 
@@ -100,7 +143,7 @@ define([
             dummyProjectsGenerator = function(name, maxCount) {
                 var i,
                     id,
-                    projects = {},
+                    projects = [],
                     count,
                     exportProject,
                     selectedItem;
@@ -112,28 +155,55 @@ define([
 
                     id = name + '_' + i;
 
-                    projects[ id ] = {
+                    projects.push({
                         id: id,
                         label: id,
                         isSelected: i === selectedItem,
-                        items: dummyBranchGenerator( 'Branch', 10 ),
-                        topActions: {
-                            exportProject: {
-                                label: 'Export',
-                                iconClass: 'glyphicon glyphicon-export',
-                                action: exportProject
+                        menu: [
+                            {
+                                items: [
+                                    {
+                                        id: 'showHistory',
+                                        label: 'Show history',
+                                        iconClass: 'glyphicon glyphicon-time',
+                                        action: showHistory,
+                                        actionData: {
+                                            project: id
+                                        }
+                                    }
+
+                                ]
+                            },
+                            {
+                                items: [
+                                    {
+                                        id: 'displayMetaEntries',
+                                        label: 'Display META Entries',
+                                        action: showHistory,
+                                        actionData: {
+                                            project: id
+                                        }
+                                    },
+                                    {
+                                        id: 'generateMetaJSAPI',
+                                        label: 'Generate META JS API',
+                                        action: generateMetaJSAPI,
+                                        actionData: {
+                                            project: id
+                                        }
+                                    }
+
+                                ]
+                            },
+                            {
+                                items: dummyBranchGenerator( 'Branch', 10, id, i === selectedItem),
+                                showAllItems: function() { console.log('Show all items...'); }
                             }
-                        },
-                        bottomActions: {
-                            manageProject: {
-                                label: 'Show all',
-                                action: exportProject
-                            }
-                        }
-                    };
+                        ]
+                    });
 
                     if (i === selectedItem) {
-                        selectedProject = projects[ id ];
+                        selectedProject = projects[ i ];
                     }
                 }
 
@@ -149,20 +219,54 @@ define([
                 label: 'GME',
                 isSelected: true,
                 iconClass: 'gme-navi-icon',
-                topActions: {
-                    createProject: {
-                        label: 'Create new project',
-                        iconClass: 'glyphicon glyphicon-plus',
-                        action: function() { alert('Create new project'); }
+                menu: [
+                    {
+                        items: dummyProjectsGenerator( 'Project', 10),
+                        showAllItems: function() { console.log('Show all items...'); }
                     },
-                    importProject: {
-                        label: 'Import project',
-                        iconClass: 'glyphicon glyphicon-arrow-left',
-                        action: function() { alert('Import project'); }
-                    }
-                },
+                    {
+                        items: [
+                            {
+                            id: 'showPreferences',
+                            label: 'Show preferences',
+                            action: function() { console.log('Show preferences'); },
+                            menu: [
+                                {
+                                    items: [
+                                        {
+                                            id: 'preferences 1',
+                                            label: 'Preferences 1'
+                                        },
+                                        {
+                                            id: 'preferences 2',
+                                            label: 'Preferences 2'
+                                        },
+                                        {
+                                            id: 'preferences 3',
+                                            label: 'Preferences 3',
+                                            menu: [
+                                                {
+                                                    items: [
+                                                        {
+                                                            id: 'sub_preferences 1',
+                                                            label: 'Sub preferences 1'
+                                                        },
+                                                        {
+                                                            id: 'sub_preferences 2',
+                                                            label: 'Sub preferences 2'
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }]
 
-                items: dummyProjectsGenerator( 'Project', 10)
+                    }
+                ]
+
             }
 
         };
@@ -172,6 +276,8 @@ define([
             selectedProject,
             selectedBranch
         ];
+
+        console.log(self.$scope.items);
 
         self.update();
 
@@ -188,21 +294,23 @@ define([
                 name: 'GME',
                 isSelected: true,
                 iconClass: 'gme-navi-icon',
-                actions: {
-                    createProject: {
+                topActions: [
+                    {
+                        id: 'createProject',
                         label: 'Create new project',
                         iconClass: 'fa fa-add',
                         action: function () {
                             alert('Create new project');
                         }
                     },
-                    importProject: {
+                    {
+
+                        id: 'importProject',
                         label: 'Import project',
                         action: function () {
                             alert('Import project');
                         }
-                    }
-                },
+                }],
                 items: {}
             }
         };

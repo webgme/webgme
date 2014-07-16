@@ -1,61 +1,53 @@
 <ul class="gme-navigator">
 
+    <script type="text/ng-template" id="gme-navigator-menu">
+
+        <div data-ng-repeat-start="menuItemGroup in item.menu" data-ng-if="false"></div>
+
+            <li data-ng-repeat="item in menuItemGroup.items"
+                data-ng-class="{'dropdown-submenu':item.menu}">
+                <a href="#"
+                   data-ng-class="'action-' + item.id"
+                   data-ng-click="item.action(item.actionData)">
+                    <i data-ng-if="item.iconClass" data-ng-class="item.iconClass"></i>
+                    {{item.label}}
+                </a>
+                <ul class="dropdown-menu"
+                    role="menu"
+                    aria-labelledby="dropdownMenu"
+                    data-ng-if="item.menu"
+                    ng-include="'gme-navigator-menu'">
+                </ul>
+            </li>
+
+            <!--<li class="dot-dot-dot" data-ng-if="menuItemGroup.showAllItems">...</li>-->
+            <li class="show-all-items" data-ng-if="menuItemGroup.showAllItems">
+                <a href="#" data-ng-click="menuItemGroup.showAllItems()">
+                   Show all...
+                </a>
+            </li>
+
+            <li data-ng-if="!$last" class="divider"></li>
+        <div data-ng-repeat-end data-ng-if="false"></div>
+
+
+    </script>
+
     <script type="text/ng-template" id="navigator-item-template">
         <span class="item-label">{{item.label}}</span>
         <ul class="dropdown-menu"
             role="menu"
             aria-labelledby="dropdownMenu"
-            data-ng-show="item.topActions || item.items || item.bottomActions">
-
-
-            <li data-ng-repeat="topAction in item.topActions">
-                <a href="#">
-                    <i data-ng-show="topAction.iconClass" data-ng-class="topAction.iconClass"></i>
-                    {{topAction.label}}
-                </a>
-            </li>
-            <li ng-if="item.topActions" class="divider"></li>
-
-            <li data-ng-repeat="subItem in item.items">
-                <a href="#">
-                    {{subItem.label}}
-                </a>
-            </li>
-
-            <li>...</li>
-
-            <li ng-if="item.bottomActions" class="divider"></li>
-            <li data-ng-repeat="bottomAction in item.bottomActions">
-                <a href="#">
-                    <i data-ng-show="bottomAction.iconClass" data-ng-class="bottomAction.iconClass"></i>
-                    {{bottomAction.label}}
-                </a>
-            </li>            
-            
-            <li class="dropdown-submenu">
-                <a tabindex="-1" href="#">More options</a>
-                <ul class="dropdown-menu">
-                    <li><a tabindex="-1" href="#">Second level</a></li>
-                    <li class="dropdown-submenu">
-                        <a href="#">More..</a>
-                        <ul class="dropdown-menu">
-                            <li><a href="#">3rd level</a></li>
-                            <li><a href="#">3rd level</a></li>
-                        </ul>
-                    </li>
-                    <li><a href="#">Second level</a></li>
-                    <li><a href="#">Second level</a></li>
-                </ul>
-            </li>
+            data-ng-if="item.menu"
+            ng-include="'gme-navigator-menu'">
         </ul>
-
     </script>
 
     <script type="text/ng-template" id="branch-selector-template">
         <span class="item-label">Branch {{item.label}}</span>
     </script>
 
-    <li data-ng-repeat="item in items"
+    <li data-ng-repeat="item in items track by $index"
         data-ng-class=" item.itemClass || '' "
         ng-include=" item.itemTemplate || 'navigator-item-template' ">
 
