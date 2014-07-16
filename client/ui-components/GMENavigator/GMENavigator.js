@@ -78,7 +78,7 @@ define([
 
                     branches[ id ] =  {
                         id: id,
-                        name: id,
+                        label: id,
                         isSelected: i === selectedItem,
                         properties: {
                             hashTag: '34535435',
@@ -114,13 +114,19 @@ define([
 
                     projects[ id ] = {
                         id: id,
-                        name: id,
+                        label: id,
                         isSelected: i === selectedItem,
                         items: dummyBranchGenerator( 'Branch', 10 ),
-                        actions: {
+                        topActions: {
                             exportProject: {
                                 label: 'Export',
                                 iconClass: 'glyphicon glyphicon-export',
+                                action: exportProject
+                            }
+                        },
+                        bottomActions: {
+                            manageProject: {
+                                label: 'Show all',
                                 action: exportProject
                             }
                         }
@@ -140,17 +146,18 @@ define([
 
             root: {
                 id: 'root',
-                name: 'GME',
+                label: 'GME',
                 isSelected: true,
                 iconClass: 'gme-navi-icon',
-                actions: {
+                topActions: {
                     createProject: {
                         label: 'Create new project',
-                        iconClass: 'fa fa-add',
+                        iconClass: 'glyphicon glyphicon-plus',
                         action: function() { alert('Create new project'); }
                     },
                     importProject: {
                         label: 'Import project',
+                        iconClass: 'glyphicon glyphicon-arrow-left',
                         action: function() { alert('Import project'); }
                     }
                 },
