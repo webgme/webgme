@@ -1,13 +1,13 @@
+/*globals define,_*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  * 
- * Author: Brian Broll
+ * @author rkereskenyi / https://github/rkereskenyi
  *
+ * @author brollb / https://github/brollb
  *
  * This file contains the port relevant functions for the SVGDecorator.
  */
-
-"use strict";
 
 define(['js/Decorators/DecoratorWithPorts.Base',
         'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
@@ -15,6 +15,7 @@ define(['js/Decorators/DecoratorWithPorts.Base',
                                 DiagramDesignerWidgetConstants,
                                 SVGPort) {
 
+    "use strict";
 
     var SVGDecoratorPorts,
         ABSTRACT_CLASS = 'abstract',
@@ -134,10 +135,12 @@ define(['js/Decorators/DecoratorWithPorts.Base',
 
         //fix default SVG's dimensions to sorround the ports
         //defaultSVG only, nothing else
+        var height;
+
         if (this._defaultSVGUsed === true) {
             var svg = this.$svgElement;
             var svgRect = svg.find('rect');
-            var height = Math.max(leftPorts.length * PORT_HEIGHT, rightPorts.length * PORT_HEIGHT, DEFAULT_SVG_DEFAULT_HEIGHT);
+            height = Math.max(leftPorts.length * PORT_HEIGHT, rightPorts.length * PORT_HEIGHT, DEFAULT_SVG_DEFAULT_HEIGHT);
             svg.attr('height', height);
             svgRect.attr('height', height - 1);
 
