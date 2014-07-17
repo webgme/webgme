@@ -1,4 +1,4 @@
-/*globals define*/
+/*globals define, console*/
 /**
  * @author nabana / https://github.com/nabana
  * @author lattmann / https://github.com/lattmann
@@ -24,7 +24,7 @@ define([], function () {
             menu: []
         };
 
-        // navigation items in the nagivator list
+        // navigation items in the navigator list
         self.navIdRoot = 0;
         self.navIdProject = 1;
         self.navIdBranch = 2;
@@ -54,12 +54,7 @@ define([], function () {
         } else {
             self.initTestData();
         }
-    };
 
-    ProjectNavigatorController.prototype.initTestData = function () {
-        var self = this;
-
-        // TODO: factor out to a createRoot function
         self.root.menu = [
             {
                 section: 'projects',
@@ -115,8 +110,6 @@ define([], function () {
             }
         ];
 
-        self.dummyProjectsGenerator('Project', 10);
-
         // only root is selected
         self.$scope.navigator = {
             items: [
@@ -124,11 +117,16 @@ define([], function () {
             ],
             separator: true
         };
+    };
+
+    ProjectNavigatorController.prototype.initTestData = function () {
+        var self = this;
+
+        self.dummyProjectsGenerator('Project', 10);
 
         console.log(self.$scope.items);
 
         self.update();
-
     };
 
     ProjectNavigatorController.prototype.initWithClient = function () {
@@ -136,77 +134,23 @@ define([], function () {
             len;
 
         self.gmeClient.addEventListener("PROJECT_OPENED", function (c, projectId) {
-            var id;
-
-            // TODO: update project list first
-            for (id in self.$scope.items.root.items) {
-                if (id === projectId) {
-                    self.$scope.items.root.items[id].isSelected = true;
-                } else {
-                    self.$scope.items.root.items[id].isSelected = false;
-                }
-            }
-
-            self.update();
+            self.selectProject({projectId: projectId});
+            self.updateBranchList(projectId);
         });
 
         self.gmeClient.addEventListener("PROJECT_CLOESED", function (c, projectId) {
-
-            // TODO: update project list first
-            self.$scope.items.root.items[projectId].isSelected = false;
-
-            self.update();
+            self.selectProject({});
         });
 
         self.gmeClient.addEventListener("BRANCH_CHANGED", function (c, branchId) {
-            var id,
-                project;
-
-            // TODO: replace this to ids
-            if (self.gmeClient.getActiveProjectName() || self.gmeClient.getActiveProjectName() === '') {
-                self.$scope.items.root.items[self.gmeClient.getActiveProjectName()].items = {};
-                self.$scope.items.root.items[self.gmeClient.getActiveProjectName()].isSelected = true;
-
-                self.gmeClient.getBranchesAsync(function (err, branchList) {
-                    if (err) {
-                        console.error(err);
-                        return;
-                    }
-
-                    var branches = self.$scope.items.root.items[self.gmeClient.getActiveProjectName()].items;
-                    len = branchList.length;
-
-                    while (len--) {
-                        branches[branchList[len].name] = {
-                            id: branchList[len].name,
-                            name: branchList[len].name,
-                            isSelected: self.gmeClient.getActualBranch() === branchList[len].name,
-                            properties: {
-                                hash: branchList[len].hash
-                                //lastCommiter: 'petike',
-                                //lastCommitTime: new Date()
-                            }
-                        };
-                    }
-
-
-                    project = self.$scope.items.root.items[self.gmeClient.getActiveProjectName()];
-
-                    // TODO: update project list first and branch list
-                    for (id in project.items) {
-                        if (id === branchId) {
-                            project.items[id].isSelected = true;
-                        } else {
-                            project.items[id].isSelected = false;
-                        }
-                    }
-
-                    self.update();
-
-                });
-            }
+            self.selectBranch({projectId: self.gmeClient.getActiveProjectName(), branchId: branchId});
         });
 
+        self.updateProjectList();
+    };
+
+    ProjectNavigatorController.prototype.updateProjectList = function () {
+        var self = this;
 
         self.gmeClient.getFullProjectListAsync(function (err, fullList) {
             var i,
@@ -218,34 +162,36 @@ define([], function () {
                 return;
             }
 
-            self.$scope.items.root.items = {};
+            // FIXME:
+            self.projects = {};
 
             for (id in fullList) {
 //                id = id;
                 name = id;
-                // TODO: factor this function out to addProject
-                self.$scope.items.root.items[id] = {
-                    id: id,
-                    name: name,
-                    items: {},
-                    actions: {
-                        exportProject: {
-                            label: 'Export',
-                            iconClass: 'glyphicon glyphicon-export',
-                            action: function () {
-                                alert('TODO: implement export project using client...');
-                            }
-                        }
-                    }
-                };
+                self.addProject(id);
             }
-
-
-            self.update();
         });
+    };
 
+    ProjectNavigatorController.prototype.updateBranchList = function (projectId) {
+        var self = this,
+            i;
 
-        // TODO: register function handlers
+        if (projectId === self.gmeClient.getActiveProjectName()) {
+            // FIXME: can we get branches for the a given project???
+            self.gmeClient.getBranchesAsync(function (err, branchList) {
+                if (err) {
+                    console.error(err);
+                    return;
+                }
+
+                self.projects[projectId].branches = [];
+
+                for (i = 0; i < branchList.length; i += 1) {
+                    self.addBranch(projectId, branchList[i].name);
+                }
+            });
+        }
     };
 
     ProjectNavigatorController.prototype.addProject = function (projectId) {
@@ -353,9 +299,9 @@ define([], function () {
         };
 
         if (self.gmeClient) {
-            console.error('TODO: get all branches for: ' + projectId);
+            self.updateBranchList(projectId);
         } else {
-            self.dummyBranchGenerator('Branch', 10, projectId)
+            self.dummyBranchGenerator('Branch', 10, projectId);
         }
 
         for (i = 0; i < self.root.menu.length; i += 1) {
@@ -466,8 +412,34 @@ define([], function () {
         if (projectId || projectId === '') {
             // FIXME: what if projects do not contain projectId anymore?
             self.$scope.navigator.items[self.navIdProject] = self.projects[projectId];
+
+            if (self.gmeClient) {
+                if (projectId !== self.gmeClient.getActiveProjectName()) {
+                    self.gmeClient.selectProjectAsync(projectId, function (err) {
+                        if (err) {
+                            console.log(err);
+                            return;
+                        }
+                    });
+                    // we cannot select branch if the project is not open
+                    return;
+                }
+            }
+
             if (branchId || branchId === '') {
                 self.$scope.navigator.items[self.navIdBranch] = self.projects[projectId].branches[branchId];
+                if (self.gmeClient) {
+                    if (branchId !== self.gmeClient.getActualBranch()) {
+                        self.gmeClient.selectBranchAsync(branchId, function (err) {
+                            if (err) {
+                                console.log(err);
+                                return;
+                            }
+                        });
+
+                        return;
+                    }
+                }
             } else {
                 // remove branch element
                 self.$scope.navigator.items.splice(self.navIdBranch, 1);
