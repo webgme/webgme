@@ -4,7 +4,7 @@
  * @author lattmann / https://github.com/lattmann
  */
 
-define([], function () {
+define(['js/Dialogs/ProjectRepository/ProjectRepositoryDialog'], function (ProjectRepositoryDialog) {
     "use strict";
 
     var ProjectNavigatorController = function ($scope, gmeClient) {
@@ -207,7 +207,16 @@ define([], function () {
 
         if (self.gmeClient) {
             showHistory = function (data) {
-                console.error('showHistory: gmeClient version is not implemented yet.', data);
+                var prd;
+                if (self.gmeClient.getActiveProjectName() === data.projectId) {
+                    prd = new ProjectRepositoryDialog(self.gmeClient);
+                    prd.show();
+                } else {
+                    self.selectProject({projectId: projectId}, function () {
+                        var dialog = new ProjectRepositoryDialog(self.gmeClient);
+                        dialog.show();
+                    });
+                }
             };
 
             showMETAEntries = function (data) {
@@ -408,14 +417,16 @@ define([], function () {
         self.update();
     };
 
-    ProjectNavigatorController.prototype.selectProject = function (data) {
-        this.selectBranch(data);
+    ProjectNavigatorController.prototype.selectProject = function (data, callback) {
+        this.selectBranch(data, callback);
     };
 
-    ProjectNavigatorController.prototype.selectBranch = function (data) {
+    ProjectNavigatorController.prototype.selectBranch = function (data, callback) {
         var self = this,
             projectId = data.projectId,
             branchId = data.branchId;
+
+        callback = callback || function () {};
 
         if (projectId || projectId === '') {
             // FIXME: what if projects do not contain projectId anymore?
@@ -426,8 +437,11 @@ define([], function () {
                     self.gmeClient.selectProjectAsync(projectId, function (err) {
                         if (err) {
                             console.log(err);
+                            callback(err);
                             return;
                         }
+
+                        callback(null);
                     });
 
                     // we cannot select branch if the project is not open
@@ -445,8 +459,11 @@ define([], function () {
                         self.gmeClient.selectBranchAsync(branchId, function (err) {
                             if (err) {
                                 console.log(err);
+                                callback(err);
                                 return;
                             }
+
+                            callback(null);
                         });
 
                         // we will get a branch status changed event
@@ -462,6 +479,7 @@ define([], function () {
             self.$scope.navigator.items.splice(self.navIdProject, 2);
         }
 
+        callback(null);
         self.update();
     };
 
