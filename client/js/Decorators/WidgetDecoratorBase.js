@@ -1,12 +1,13 @@
+/*globals define,_*/
 /*
  * Copyright (C) 2014 Vanderbilt University, All rights reserved.
  * 
- * Author: Robert Kereskenyi
+ * @author rkereskenyi / https://github/rkereskenyi
  */
 
-"use strict";
-
 define(['logManager'], function (logManager) {
+
+    "use strict";
 
     var WidgetDecoratorBase,
         DECORATOR_ID = "WidgetDecoratorBase";

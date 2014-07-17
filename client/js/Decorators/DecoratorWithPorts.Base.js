@@ -1,15 +1,16 @@
+/*globals define,_*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  * 
- * Author: Robert Kereskenyi
+ * @author rkereskenyi / https://github/rkereskenyi
  */
 
-"use strict";
 
 define(['js/Constants',
     'js/Utils/GMEConcepts'], function (CONSTANTS,
                                  GMEConcepts) {
 
+    "use strict";
     var DecoratorWithPortsBase;
 
     DecoratorWithPortsBase = function () {
