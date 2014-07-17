@@ -5,11 +5,8 @@
  * @author brollb / https://github/brollb
  */
 
-define(['logManager'
-        //'./AutoRouter.Point',
-        /*'./AutoRouter.Rect'*/], function (logManager
-                                            //ArPoint,
-                                            /*ArRect*/) {
+define(['logManager'], function (logManager) {
+                                            
     "use strict"; 
 
     var ArSize = function (x, y){
@@ -50,50 +47,6 @@ define(['logManager'
         this.cy -= otherSize.cy;
     };
 
-/*
-    ArSize.prototype.plus = function(otherObject){ //equivalent to +
-        var objectCopy = undefined;
-
-        if(otherObject instanceof ArSize){
-            objectCopy = new ArSize(otherObject);
-            objectCopy.add(this);
-
-        }else if(otherObject instanceof ArPoint){
-            objectCopy = new ArPoint(otherObject);
-            objectCopy.x += this.cx;
-            objectCopy.y += this.cy;
-
-        }else if(otherObject instanceof ArRect){
-            objectCopy = new ArRect(otherObject);
-            objectCopy.add(this);
-
-        }
-
-        return objectCopy;
-    };
-
-    ArSize.prototype.minus = function(otherObject){ //equivalent to -
-        var objectCopy = undefined;
-
-        if(otherObject instanceof ArSize){
-            objectCopy = new ArSize(otherObject);
-            objectCopy.subtract(this);
-
-        }else if(otherObject instanceof ArPoint){
-            objectCopy = new ArPoint(otherObject);
-            objectCopy.x -= this.cx;
-            objectCopy.y -= this.cy;
-
-        }else if(otherObject instanceof ArRect){
-            objectCopy = new ArRect(otherObject);
-            objectCopy.subtract(this);
-
-        }
-
-        return objectCopy;
-    };
-
-*/
     ArSize.prototype.assign = function(otherSize){
         this.cx = otherSize.cx;
         this.cy = otherSize.cy;
