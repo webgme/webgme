@@ -2,6 +2,7 @@
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
+ * @author brollb / https://github/brollb
  */
 
 define(['logManager',

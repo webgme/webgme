@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved
  *
- * Author: Brian Broll
+ * @author brollb / https://github/brollb
  * 
  * Adding decorator support for showing connection areas
  */

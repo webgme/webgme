@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  * 
- * Author: Robert Kereskenyi
+ * @author brollb / https://github/brollb
  */
 
 define(['js/Toolbar/ToolbarButton',

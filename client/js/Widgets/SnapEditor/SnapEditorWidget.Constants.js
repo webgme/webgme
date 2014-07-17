@@ -1,5 +1,7 @@
 /*globals define*/
 /*
+ * @author brollb / https://github/brollb
+ *
  * STRING CONSTANT DEFINITIONS USED IN SNAP EDITOR
  */
 

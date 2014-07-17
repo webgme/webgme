@@ -1,4 +1,7 @@
 /*globals define,_*/
+/*
+ * @author brollb / https://github/brollb
+ */
 
 define(['./ClickableItem',
         './SnapEditorWidget.Constants'], function (ClickableItem,
