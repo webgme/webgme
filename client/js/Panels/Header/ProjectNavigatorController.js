@@ -4,7 +4,14 @@
  * @author lattmann / https://github.com/lattmann
  */
 
-define(['js/Dialogs/ProjectRepository/ProjectRepositoryDialog'], function (ProjectRepositoryDialog) {
+define([
+    'js/Constants',
+    'js/Utils/ExportManager',
+    'js/Dialogs/ProjectRepository/ProjectRepositoryDialog'], function (
+    CONSTANTS,
+    ExportManager,
+    ProjectRepositoryDialog
+) {
     "use strict";
 
     var ProjectNavigatorController = function ($scope, gmeClient) {
@@ -212,7 +219,12 @@ define(['js/Dialogs/ProjectRepository/ProjectRepositoryDialog'], function (Proje
                     prd = new ProjectRepositoryDialog(self.gmeClient);
                     prd.show();
                 } else {
-                    self.selectProject({projectId: projectId}, function () {
+                    self.selectProject({projectId: projectId}, function (err) {
+                        if (err) {
+                            // TODO: handle errors
+                            return;
+                        };
+
                         var dialog = new ProjectRepositoryDialog(self.gmeClient);
                         dialog.show();
                     });
@@ -338,7 +350,19 @@ define(['js/Dialogs/ProjectRepository/ProjectRepositoryDialog'], function (Proje
 
         if (self.gmeClient) {
             exportBranch = function (data) {
-                console.error('exportBranch: gmeClient version is not implemented yet.', data);
+                if (self.gmeClient.getActiveProjectName() === data.projectId &&
+                    self.gmeClient.getActualBranch() === data.branchId) {
+
+                    ExportManager.export(CONSTANTS.PROJECT_ROOT_ID);
+                } else {
+                    self.selectBranch(data, function (err) {
+                        if (err) {
+                            // TODO: handle errors
+                            return;
+                        };
+                        ExportManager.export(CONSTANTS.PROJECT_ROOT_ID);
+                    });
+                }
             };
 
             createTag = function (data) {
@@ -441,7 +465,19 @@ define(['js/Dialogs/ProjectRepository/ProjectRepositoryDialog'], function (Proje
                             return;
                         }
 
-                        callback(null);
+                        if (branchId !== self.gmeClient.getActualBranch()) {
+                            self.gmeClient.selectBranchAsync(branchId, function (err) {
+                                if (err) {
+                                    console.log(err);
+                                    callback(err);
+                                    return;
+                                }
+
+                                callback(null);
+                            });
+                        } else {
+                            callback(null);
+                        }
                     });
 
                     // we cannot select branch if the project is not open
