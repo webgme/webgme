@@ -45,6 +45,7 @@ require.config({
         'backbone': 'lib/backbone/backbone.min',
         'd3': 'lib/d3/d3.v3.min',
         'jscolor': 'lib/jscolor/jscolor',
+        'superagent': 'lib/superagent/superagent',
 
         //RaphaelJS family
         'eve': 'lib/raphael/eve',   //needed because of raphael.core.js uses require with 'eve'
