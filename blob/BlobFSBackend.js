@@ -55,7 +55,7 @@ define(['./BlobBackendBase',
                         return;
                     }
                     fs.rename(tempName, objectFilename, function (err) {
-                    // FIXME: this code has to be reviewed.
+                        // FIXME: this code has to be reviewed.
                         if (err) {
                             fs.exists(objectFilename, function (exists) {
                                 fs.unlink(tempName, function (e) {
@@ -76,6 +76,9 @@ define(['./BlobBackendBase',
                         callback(null, hash, size);
                     });
                 });
+            });
+            writeStream.on('error', function (err) {
+                callback(err);
             });
 
             readStream.pipe(writeStream);
