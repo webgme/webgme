@@ -1,4 +1,7 @@
 /*globals define*/
+/*
+ * @author brollb / https://github/brollb
+ */
 define(['eventDispatcher'], function (EventDispatcher) {
 
     "use strict";

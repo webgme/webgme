@@ -1,4 +1,7 @@
 /*globals define,_*/
+/*
+ * @author brollb / https://github/brollb
+ */
 define(['js/Decorators/WidgetDecoratorBase',
         './SnapEditorWidget.Constants'], function (WidgetDecoratorBase,
                                                    SnapEditorWidgetConstants) {

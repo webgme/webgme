@@ -1,4 +1,7 @@
 /*globals define,_*/
+/*
+ * @author brollb / https://github/brollb
+ */
 define(['js/Widgets/SnapEditor/SnapEditorWidget.DecoratorBase'], function (SnapEditorWidgetDecoratorBase) {
 
     "use strict";
