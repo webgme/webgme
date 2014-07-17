@@ -1,7 +1,8 @@
+/*globals define,_*/
 /*
  * Copyright (C) 2012 Vanderbilt University, All rights reserved.
  *
- * Author: Robert Kereskenyi
+ * @author rkereskenyi / https://github/rkereskenyi
  */
 "use strict";
 
