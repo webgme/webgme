@@ -428,7 +428,7 @@ define([
                     getNCommitsFrom: getNCommitsFrom,
                     clearCache: clearCache,
                     newCommit: newCommit
-                }
+                };
             }
 
             function viewLatestCommit(callback){
@@ -2236,9 +2236,9 @@ define([
                 config.host = window.location.protocol+"//"+window.location.host;
                 config.project = _projectName;
                 config.token = _TOKEN.getToken();
-                config.selected = plainUrl('node',selectedItemsPaths[0] || "");
+                config.selected = plainUrl({command:'node',path:selectedItemsPaths[0] || ""});
                 config.commit = URL.addSpecialChars(_recentCommits[0] || "");
-                config.root = plainUrl('node',"");
+                config.root = plainUrl({command:'node'});
                 config.branch = _branch
                 _database.simpleRequest({command:'generateJsonURL',object:config},function(err,resId){
                     if(err){
@@ -2350,21 +2350,51 @@ define([
                     });
                 });
             }
-            function plainUrl(command,path){
-                if(window && window.location && window.location && _nodes && _nodes[ROOT_PATH]){
-                    var address = window.location.protocol + '//' + window.location.host +'/rest/'+command+'?'+'project='+_projectName+'&root='+URL.addSpecialChars(_rootHash || _core.getHash(_nodes[ROOT_PATH].node))+'&path='+URL.addSpecialChars(path);
-                    return address;
-                }
-            }
-            function getDumpURL(path,filepath){
-                if(_projectName && _branch){
-                    filepath = filepath || _projectName+'_'+_branch+'_'+URL.addSpecialChars(path);
-                    if(window && window.location && window.location && _nodes && _nodes[ROOT_PATH]){
-                        var address = plainUrl('etf',path)+'&output='+URL.addSpecialChars(filepath);
-                        return address;
+            function plainUrl(parameters){
+                //setting the default values
+                parameters.command = parameters.command || 'etf';
+                parameters.path = parameters.path || "";
+                parameters.project = parameters.project || _projectName;
+
+                if(!parameters.root && !parameters.branch && !parameters.commit){
+                    if(_rootHash){
+                        parameters.root = _rootHash;
+                    } else if(_nodes && _nodes[ROOT_PATH]){
+                        parameters.root = _core.getHash(_nodes[ROOT_PATH].node);
+                    } else {
+                        parameters.branch = _branch || 'master';
                     }
                 }
+
+                //now we compose the URL
+                if(window && window.location){
+                    var address = window.location.protocol + '//' + window.location.host + '/rest/' + parameters.command+ '?';
+                    address+= "&project="+URL.addSpecialChars(parameters.project);
+                    if(parameters.root){
+                        address+="&root="+URL.addSpecialChars(parameters.root);
+                    } else {
+                        if(parameters.commit){
+                            address+="&commit="+URL.addSpecialChars(parameters.commit);
+                        } else {
+                            address+="&branch="+URL.addSpecialChars(parameters.branch);
+                        }
+                    }
+
+                    address+="&path="+URL.addSpecialChars(parameters.path);
+
+                    if(parameters.output){
+                        address+="&output="+URL.addSpecialChars(parameters.output);
+                    }
+
+                    return address;
+                }
+
                 return null;
+
+            }
+            function getDumpURL(parameters){
+                parameters.output = parameters.output || "dump_url.out";
+                return plainUrl(parameters);
             }
 
             function getProjectObject(){

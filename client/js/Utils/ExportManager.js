@@ -39,7 +39,7 @@ define(['jquery',
             fileName += '_' + objName;
         }
 
-        url = _client.getDumpURL(objID, fileName)
+        url = _client.getDumpURL({path:objID, output:fileName});
         if(url){
             window.location = url;
         }
