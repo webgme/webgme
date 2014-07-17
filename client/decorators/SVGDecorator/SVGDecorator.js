@@ -1,5 +1,8 @@
-"use strict";
-
+/*globals define,_*/
+/*
+ * @author rkereskenyi / https://github/rkereskenyi
+ * @author brollb / https://github/brollb
+ */
 define(['js/Decorators/DecoratorBase',
     './SnapEditor/SVGDecorator.SnapEditorWidget',
     './DiagramDesigner/SVGDecorator.DiagramDesignerWidget',
@@ -8,6 +11,8 @@ define(['js/Decorators/DecoratorBase',
                                                            SVGDecoratorSnapEditorWidget,
                                                            SVGDecoratorDiagramDesignerWidget,
                                                            SVGDecoratorPartBrowserWidget) {
+
+    "use strict";
 
     var SVGDecorator,
         DECORATOR_ID = "SVGDecorator";
