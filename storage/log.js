@@ -159,6 +159,10 @@ define([ "util/assert" ], function (ASSERT) {
             logger.debug('getToken()');
             _database.getToken(callback);
         }
+        function getNextServerEvent(latestGuid,callback){
+            logger.debug('getNextServerEvent('+latestGuid+")");
+            _database.getNextServerEvent(latestGuid,callback);
+        }
 		return {
 			openDatabase: openDatabase,
 			closeDatabase: closeDatabase,
@@ -171,6 +175,7 @@ define([ "util/assert" ], function (ASSERT) {
 			deleteProject: deleteProject,
             simpleRequest: simpleRequest,
             simpleResult: simpleResult,
+            getNextServerEvent: getNextServerEvent,
             getToken: getToken
 		};
 	}

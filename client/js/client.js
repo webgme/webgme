@@ -2194,9 +2194,12 @@ define([
                  });
                  },0);
                  });*/
-                connectToDatabaseAsync({open:true},function(err){
-                    console.log('kecso connecting to database',err);
+                _database.getNextServerEvent("",function(err,guid,parameters){
+                    console.log(err,guid,parameters);
                 });
+                //connectToDatabaseAsync({open:true},function(err){
+                //    console.log('kecso connecting to database',err);
+                //});
             }
 
             //export and import functions

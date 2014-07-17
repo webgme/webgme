@@ -11,7 +11,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
         ASSERT(typeof options === "object");
 
         options.type = options.type || "browser";
-        options.timeout = options.timeout || 10000;
+        options.timeout = options.timeout || 100000;
 
         var _hostAddress = null;
         if(options.type === "browser") {
@@ -341,6 +341,22 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
             }
         }
 
+        function getNextServerEvent(latestGuid,callback){
+            if(socketConnected){
+                var guid = GUID();
+                callbacks[guid] = {
+                    cb: callback,
+                    to: setTimeout(callbackTimeout,options.timeout, guid)
+                };
+                socket.emit('getNextServerEvent',latestGuid,function(err,newGuid,eventParams){
+                    if(callbacks[guid]){
+                        clearTimeout(callbacks[guid].to);
+                        delete callbacks[guid];
+                        callback(err,newGuid,eventParams);
+                    }
+                });
+            }
+        }
         function openProject (project, callback) {
             ASSERT(typeof callback === 'function');
             var ownId = GUID();
@@ -740,6 +756,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
             openProject: openProject,
             simpleRequest: simpleRequest,
             simpleResult: simpleResult,
+            getNextServerEvent: getNextServerEvent,
             getToken: getToken
         };
     }
