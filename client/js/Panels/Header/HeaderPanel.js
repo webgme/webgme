@@ -1,4 +1,4 @@
-/*globals define, WebGMEGlobal, alert, _*/
+/*globals define, WebGMEGlobal, alert, angular, _*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -57,7 +57,9 @@ define(['js/PanelBase/PanelBase',
         app.controller('ProjectNavigatorController', ProjectNavigatorController);
 
         //project title
-        var projectTitleEl = $('<div data-ng-controller="ProjectNavigatorController"><gme-navigator navigator="navigator"></div>', {'class': "inline"});
+        var projectTitleEl = $(
+            '<div data-ng-controller="ProjectNavigatorController"><gme-navigator navigator="navigator"></div>', {'class': "inline"}
+        );
         //new ProjectTitleWidget(projectTitleEl, this._client);
         navBarInner.append(projectTitleEl);
 
