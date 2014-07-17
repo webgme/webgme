@@ -2,8 +2,9 @@
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
- * Author: Brian Broll
- */
+  * @author brollb / https://github/brollb
+  */
+
 
 define(['js/PanelBase/PanelBaseWithHeader',
         'js/PanelManager/IActivePanel',

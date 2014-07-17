@@ -1,4 +1,7 @@
 /*globals define,_,WebGMEGlobal,alert*/
+/*
+ * @author brollb / https://github/brollb
+ */
 
 define(['logManager',
     'clientUtil',
