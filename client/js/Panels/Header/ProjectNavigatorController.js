@@ -29,9 +29,7 @@ define([], function () {
         self.navIdProject = 1;
         self.navIdBranch = 2;
 
-
         self.initialize();
-
     };
 
     ProjectNavigatorController.prototype.update = function () {
@@ -43,7 +41,7 @@ define([], function () {
     ProjectNavigatorController.prototype.initialize = function () {
         var self = this;
 
-        // initialize model structure
+        // initialize model structure for view
         self.$scope.navigator = {
             items: [],
             separator: true
@@ -55,6 +53,8 @@ define([], function () {
             self.initTestData();
         }
 
+        // initialize root menu
+        // projects section is mandatory
         self.root.menu = [
             {
                 section: 'projects',
@@ -110,7 +110,7 @@ define([], function () {
             }
         ];
 
-        // only root is selected
+        // only root is selected by default
         self.$scope.navigator = {
             items: [
                 self.root
@@ -124,51 +124,52 @@ define([], function () {
 
         self.dummyProjectsGenerator('Project', 10);
 
+        // debug
         console.log(self.$scope.items);
 
         self.update();
     };
 
     ProjectNavigatorController.prototype.initWithClient = function () {
-        var self = this,
-            len;
+        var self = this;
 
-        self.gmeClient.addEventListener("PROJECT_OPENED", function (c, projectId) {
+        // register all event listeners on gmeClient
+        self.gmeClient.addEventListener("PROJECT_OPENED", function (client, projectId) {
             self.selectProject({projectId: projectId});
             self.updateBranchList(projectId);
         });
 
-        self.gmeClient.addEventListener("PROJECT_CLOESED", function (c, projectId) {
+        self.gmeClient.addEventListener("PROJECT_CLOESED", function (client, projectId) {
             self.selectProject({});
         });
 
-        self.gmeClient.addEventListener("BRANCH_CHANGED", function (c, branchId) {
+        self.gmeClient.addEventListener("BRANCH_CHANGED", function (client, branchId) {
             self.selectBranch({projectId: self.gmeClient.getActiveProjectName(), branchId: branchId});
         });
 
+        // get project list
         self.updateProjectList();
     };
 
     ProjectNavigatorController.prototype.updateProjectList = function () {
         var self = this;
 
-        self.gmeClient.getFullProjectListAsync(function (err, fullList) {
-            var i,
-                id,
-                name;
+        // FIXME: get read=only/viewable/available project?!
+        self.gmeClient.getFullProjectListAsync(function (err, projectList) {
+            var projectId;
 
             if (err) {
                 console.error(err);
                 return;
             }
 
-            // FIXME:
+            // clear project list
             self.projects = {};
 
-            for (id in fullList) {
-//                id = id;
-                name = id;
-                self.addProject(id);
+            for (projectId in projectList) {
+                if (projectList.hasOwnProperty(projectId)) {
+                    self.addProject(projectId);
+                }
             }
         });
     };
@@ -185,6 +186,7 @@ define([], function () {
                     return;
                 }
 
+                // clear branches list
                 self.projects[projectId].branches = [];
 
                 for (i = 0; i < branchList.length; i += 1) {
@@ -238,11 +240,11 @@ define([], function () {
             };
         }
 
-
         selectProject = function (data) {
             self.selectProject(data);
         };
 
+        // create a new project object
         self.projects[projectId] = {
             id: projectId,
             label: projectId,
@@ -305,7 +307,10 @@ define([], function () {
         }
 
         for (i = 0; i < self.root.menu.length; i += 1) {
+
+            // find the projects section in the menu items
             if (self.root.menu[i].section === 'projects') {
+
                 // convert indexed projects to an array
                 self.root.menu[i].items = self.mapToArray(self.projects);
                 break;
@@ -336,7 +341,7 @@ define([], function () {
                 console.log('exportBranch: ', data);
             };
 
-            exportBranch = function (data) {
+            createTag = function (data) {
                 console.log('createTag: ', data);
             };
         }
@@ -345,10 +350,10 @@ define([], function () {
             self.selectBranch(data);
         };
 
+        // create the new branch structure
         self.projects[projectId].branches[branchId] = {
             id: branchId,
             label: branchId,
-            //isSelected: i === selectedItem,
             properties: {
                 hashTag: '34535435',
                 lastCommiter: 'petike',
@@ -390,7 +395,10 @@ define([], function () {
         };
 
         for (i = 0; i < self.projects[projectId].menu.length; i += 1) {
+
+            // find the branches section in the menu items
             if (self.projects[projectId].menu[i].section === 'branches') {
+
                 // convert indexed branches to an array
                 self.projects[projectId].menu[i].items = self.mapToArray(self.projects[projectId].branches);
                 break;
@@ -421,13 +429,17 @@ define([], function () {
                             return;
                         }
                     });
+
                     // we cannot select branch if the project is not open
+                    // we will get a project open event
                     return;
                 }
             }
 
             if (branchId || branchId === '') {
+                // set selected branch
                 self.$scope.navigator.items[self.navIdBranch] = self.projects[projectId].branches[branchId];
+
                 if (self.gmeClient) {
                     if (branchId !== self.gmeClient.getActualBranch()) {
                         self.gmeClient.selectBranchAsync(branchId, function (err) {
@@ -437,6 +449,7 @@ define([], function () {
                             }
                         });
 
+                        // we will get a branch status changed event
                         return;
                     }
                 }
@@ -456,15 +469,12 @@ define([], function () {
         var self = this,
             i,
             id,
-            count,
-            selectedItem;
+            count;
 
         count = Math.max(Math.round(Math.random() * maxCount), 3);
 
-        for (i = 0; i < count; i++) {
-
+        for (i = 0; i < count; i += 1) {
             id = name + '_' + i;
-
             self.addProject(id);
         }
     };
@@ -480,7 +490,6 @@ define([], function () {
 
         for (i = 0; i < count; i += 1) {
             id = name + '_' + i;
-
             self.addBranch(projectId, id);
         }
     };
