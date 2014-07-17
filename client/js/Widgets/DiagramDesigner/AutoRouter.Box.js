@@ -1,10 +1,9 @@
+/*globals define*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
- * Author: Brian Broll
+ * @author brollb / https://github/brollb/
  */
-
-"use strict"; 
 
 define(['logManager',
 	    'util/assert',
@@ -20,6 +19,8 @@ define(['logManager',
 										   ArRect,
 										   AutoRouterPort) {
 
+    "use strict"; 
+
     var AutoRouterBox = function (){
         this.owner = null;
         this.rect = new ArRect();
@@ -28,7 +29,7 @@ define(['logManager',
         this.ports = [];
         this.childBoxes = [];//dependent boxes
         this.mother = null;
-        this.id;
+        this.id = null;
 
         this.calculateSelfPoints(); //Part of initialization
     };
@@ -95,20 +96,23 @@ define(['logManager',
     AutoRouterBox.prototype.addPort = function (port){
         assert(port !== null, "ARBox.addPort: port !== null FAILED");
 
-        if(port === null)
+        if(port === null){
             return;
+        }
 
         port.setOwner(this);
         this.ports.push(port);
 
-        if(this.owner)//Not pointing to the ARGraph
+        if(this.owner){//Not pointing to the ARGraph
             this.owner._addEdges(port);
+        }
     };
 
     AutoRouterBox.prototype.deletePort = function (port){
         assert(port !== null, "ARBox.deletePort: port !== null FAILED");
-        if(port === null)
+        if(port === null){
             return;
+        }
 
         var index = this.ports.indexOf(port),
             delPort,
@@ -242,8 +246,9 @@ define(['logManager',
 
         //notify this.mother of destruction
         //if there is a this.mother, of course
-        if(this.mother)
+        if(this.mother){
             this.mother.removeChild(this);
+        }
 
         this.setOwner(null);
         this.deleteAllPorts();

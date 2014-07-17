@@ -1,10 +1,9 @@
+/*globals define*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
- * Author: Brian Broll
+ * @author brollb / https://github/brollb
  */
-
-"use strict"; 
 
 define(['logManager',
 	    'util/assert',
@@ -21,6 +20,9 @@ define(['logManager',
                                            ArRect) {
                                                
 
+    "use strict"; 
+
+    var _logger = logManager.create("AutoRouterPort");
 
     var AutoRouterPort = function (){
         this.owner = null;
@@ -103,7 +105,7 @@ define(['logManager',
     };
 
     AutoRouterPort.prototype.isConnectToCenter = function (){
-        return (this.attributes & CONSTANTS.ARPORT_ConnectToCenter) != 0;
+        return (this.attributes & CONSTANTS.ARPORT_ConnectToCenter) !== 0;
     };
 
     AutoRouterPort.prototype.hasLimitedDirs = function (){
@@ -133,18 +135,19 @@ define(['logManager',
     AutoRouterPort.prototype.canHaveStartEndPointOn = function (dir, isStart){
         assert( 0 <= dir && dir <= 3, "ARPort.canHaveStartEndPointOn: 0 <= dir && dir <= 3 FAILED!");
 
-        if( isStart)
+        if( isStart){
             dir += 4;
+        }
 
-        return ((this.attributes & (1 << dir)) != 0);
+        return ((this.attributes & (1 << dir)) !== 0);
     };
 
     AutoRouterPort.prototype.canHaveStartEndPoint = function (isStart){
-        return ((this.attributes & (isStart ? CONSTANTS.ARPORT_StartOnAll : CONSTANTS.ARPORT_EndOnAll)) != 0);
+        return ((this.attributes & (isStart ? CONSTANTS.ARPORT_StartOnAll : CONSTANTS.ARPORT_EndOnAll)) !== 0);
     };
 
     AutoRouterPort.prototype.canHaveStartEndPointHorizontal = function (isHorizontal){
-        return ((this.attributes & (isHorizontal ? CONSTANTS.ARPORT_StartEndHorizontal : CONSTANTS.ARPORT_StartEndVertical)) != 0);
+        return ((this.attributes & (isHorizontal ? CONSTANTS.ARPORT_StartEndHorizontal : CONSTANTS.ARPORT_StartEndVertical)) !== 0);
     };
 
     AutoRouterPort.prototype.getStartEndDirTo = function (point, isStart, notthis){
@@ -156,35 +159,43 @@ define(['logManager',
             canHave = false,
             dir1 = UTILS.getMajorDir(offset);
 
-        if(dir1 !== notthis && this.canHaveStartEndPointOn(dir1, isStart))
+        if(dir1 !== notthis && this.canHaveStartEndPointOn(dir1, isStart)){
             return dir1;
+        }
 
         var dir2 = UTILS.getMinorDir(offset);
 
-        if(dir2 !== notthis && this.canHaveStartEndPointOn(dir2, isStart))
+        if(dir2 !== notthis && this.canHaveStartEndPointOn(dir2, isStart)){
             return dir2;
+        }
 
         var dir3 = UTILS.reverseDir (dir2);
 
-        if(dir3 !== notthis && this.canHaveStartEndPointOn(dir3, isStart))
+        if(dir3 !== notthis && this.canHaveStartEndPointOn(dir3, isStart)){
             return dir3;
+        }
 
         var dir4 = UTILS.reverseDir (dir1);
 
-        if(dir4 !== notthis && this.canHaveStartEndPointOn(dir4, isStart))
+        if(dir4 !== notthis && this.canHaveStartEndPointOn(dir4, isStart)){
             return dir4;
+        }
 
-        if(this.canHaveStartEndPointOn(dir1, isStart))
+        if(this.canHaveStartEndPointOn(dir1, isStart)){
             return dir1;
+        }
 
-        if(this.canHaveStartEndPointOn(dir2, isStart))
+        if(this.canHaveStartEndPointOn(dir2, isStart)){
             return dir2;
+        }
 
-        if(this.canHaveStartEndPointOn(dir3, isStart))
+        if(this.canHaveStartEndPointOn(dir3, isStart)){
             return dir3;
+        }
 
-        if(this.canHaveStartEndPointOn(dir4, isStart))
+        if(this.canHaveStartEndPointOn(dir4, isStart)){
             return dir4;
+        }
 
         return CONSTANTS.Dir_Top;
     };
@@ -196,37 +207,44 @@ define(['logManager',
     AutoRouterPort.prototype.createStartEndPointAt = function (pt, isStart){
         assert( !this.rect.isRectEmpty(), "ARPort.createStartEndPointAt: !this.rect.isRectEmpty() FAILED!");
 
-        var point = new ArPoint(p),
+        var point = new ArPoint(pt),
             dir = CONSTANTS.Dir_None,
             nearest = new UTILS.ArFindNearestLine(point),
             canHave = false;
 
-        if(this.canHaveStartEndPointOn(CONSTANTS.Dir_Top, isStart) && nearest.HLine(this.rect.left, this.rect.right, this.rect.ceil))
+        if(this.canHaveStartEndPointOn(CONSTANTS.Dir_Top, isStart) && nearest.HLine(this.rect.left, this.rect.right, this.rect.ceil)){
             dir = CONSTANTS.Dir_Top;
+        }
 
-        if(this.canHaveStartEndPointOn(CONSTANTS.Dir_Right, isStart) && nearest.VLine(this.rect.ceil, this.rect.floor, this.rect.right))
+        if(this.canHaveStartEndPointOn(CONSTANTS.Dir_Right, isStart) && nearest.VLine(this.rect.ceil, this.rect.floor, this.rect.right)){
             dir = CONSTANTS.Dir_Right;
+        }
 
-        if(this.canHaveStartEndPointOn(CONSTANTS.Dir_Bottom, isStart) && nearest.HLine(this.rect.left, this.rect.right, this.rect.floor))
+        if(this.canHaveStartEndPointOn(CONSTANTS.Dir_Bottom, isStart) && nearest.HLine(this.rect.left, this.rect.right, this.rect.floor)){
             dir = CONSTANTS.Dir_Bottom;
+        }
 
-        if(this.canHaveStartEndPointOn(CONSTANTS.Dir_Left, isStart) && nearest.VLine(this.rect.ceil, this.rect.floor, this.rect.left ))
+        if(this.canHaveStartEndPointOn(CONSTANTS.Dir_Left, isStart) && nearest.VLine(this.rect.ceil, this.rect.floor, this.rect.left )){
             dir = CONSTANTS.Dir_Left;
+        }
 
         assert(UTILS.isRightAngle (dir), "ArPort.createStartEndPointAt: UTILS.isRightAngle (dir) FAILED!");
 
-        if(this.isConnectToCenter())
+        if(this.isConnectToCenter()){
             return this.createStartEndPointOn(dir);
+        }
 
-        if( point.x < this.rect.left )
+        if( point.x < this.rect.left ){
             point.x = this.rect.left;
-        else if(this.rect.right <= point.x)
+        } else if(this.rect.right <= point.x){
             point.x = this.rect.right;
+        }
 
-        if( point.y < this.rect.ceil )
+        if( point.y < this.rect.ceil ){
             point.y = this.rect.ceil;
-        else if( this.rect.floor <= point.y)
+        } else if( this.rect.floor <= point.y){
             point.y = this.rect.bottom - 1;
+        }
 
         switch(dir){
 
@@ -400,8 +418,9 @@ end;
             i++;
         }
 
-        if( !removed )
+        if( !removed ){
             _logger.warning("point (" + pt.x + ", " + pt.y + ") was not removed from port");
+        }
     };
 
     AutoRouterPort.prototype.hasPoint = function(pt){
@@ -438,25 +457,30 @@ end;
     AutoRouterPort.prototype.resetAvailableArea = function (){
         this.availableArea = [];
 
-        if(this.canHaveStartEndPointOn(CONSTANTS.Dir_Top))
+        if(this.canHaveStartEndPointOn(CONSTANTS.Dir_Top)){
             this.availableArea.push([this.rect.getTopLeft(),  new ArPoint(this.rect.right, this.rect.ceil)]);
+        }
 
-        if(this.canHaveStartEndPointOn(CONSTANTS.Dir_Right))
+        if(this.canHaveStartEndPointOn(CONSTANTS.Dir_Right)){
             this.availableArea.push([new ArPoint(this.rect.right, this.rect.ceil),  this.rect.getBottomRight()]);
+        }
 
-        if(this.canHaveStartEndPointOn(CONSTANTS.Dir_Bottom))
+        if(this.canHaveStartEndPointOn(CONSTANTS.Dir_Bottom)){
             this.availableArea.push([new ArPoint(this.rect.left, this.rect.floor),  this.rect.getBottomRight()]);
+        }
 
-        if(this.canHaveStartEndPointOn(CONSTANTS.Dir_Left))
+        if(this.canHaveStartEndPointOn(CONSTANTS.Dir_Left)){
             this.availableArea.push([this.rect.getTopLeft(), new ArPoint(this.rect.left, this.rect.floor)]);
+        }
 
     };
 
     AutoRouterPort.prototype.adjustAvailableArea = function (r){
         //For all lines specified in availableAreas, check if the line UTILS.intersect s the rectangle
         //If it does, remove the part of the line that UTILS.intersect s the rectangle
-        if(!this.rect.touching(r))
+        if(!this.rect.touching(r)){
             return;
+        }
 
         var i = this.availableArea.length,
             intersection,
@@ -468,11 +492,13 @@ end;
                 line = this.availableArea.splice(i, 1)[0];
                 intersection = UTILS.getLineClipRectIntersect(line[0], line[1], r);
 
-                if(!intersection[0].equals(line[0]))
+                if(!intersection[0].equals(line[0])){
                     this.availableArea.push([ line[0], intersection[0] ]);
+                }
 
-                if(!intersection[1].equals(line[1]))
+                if(!intersection[1].equals(line[1])){
                     this.availableArea.push([ intersection[1], line[1] ]);
+                }
             }
         }
     };

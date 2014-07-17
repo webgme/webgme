@@ -1,16 +1,16 @@
+/*globals define*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
- * Author: Brian Broll
+ * @author brollb / https://github/brollb
  */
-
-"use strict"; 
 
 define(['logManager'
         //'./AutoRouter.Point',
         /*'./AutoRouter.Rect'*/], function (logManager
                                             //ArPoint,
                                             /*ArRect*/) {
+    "use strict"; 
 
     var ArSize = function (x, y){
         //Multiple Constructors
@@ -27,8 +27,9 @@ define(['logManager'
     };
 
     ArSize.prototype.equals = function(otherSize){
-        if( this.cx === otherSize.cx && this.cy === otherSize.cy)
+        if( this.cx === otherSize.cx && this.cy === otherSize.cy){
             return true;
+        }
 
         return false;
     };

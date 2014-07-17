@@ -1,10 +1,9 @@
+/*globals define*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
- * Author: Brian Broll
+ * @author brollb / https://github/brollb
  */
-
-"use strict"; 
 
 define(['logManager',
 	    'util/assert',
@@ -30,11 +29,11 @@ define(['logManager',
                                            ArPathMap,
                                            CustomPathData) {
 
-    var AutoRouter;
+    "use strict"; 
 
     var _logger = logManager.create("AutoRouter");
 
-    AutoRouter = function(graphDetails){
+    var AutoRouter = function(graphDetails){
        this.paths = {};
        this.pCount = 0;//A not decrementing count of paths for unique path id's
        this.boxId2Path = {};
@@ -69,8 +68,9 @@ define(['logManager',
     AutoRouter.prototype.addBox = function(size){
         //Need to make sure it has all the required size details...
         if(!((size.x1 !== undefined && size.x2 !== undefined ) || (size.width !== undefined && (size.x1 !== undefined || size.x2 !== undefined))) ||
-                !((size.y1 !== undefined && size.y2 !== undefined) || (size.height !== undefined && (size.y1 !== undefined || size.y2 !== undefined))))
+                !((size.y1 !== undefined && size.y2 !== undefined) || (size.height !== undefined && (size.y1 !== undefined || size.y2 !== undefined)))){
             throw "AutoRouter:addBox missing required size details to determine x1,x2,y1,y2 ("  + x1 + "," + x2 + "," + y1 + "," + y2 + ")";
+        }
 
         var x1 = size.x1 !== undefined ? size.x1 : (size.x2 - size.width),
             x2 = size.x2 !== undefined ? size.x2 : (size.x1 + size.width),
@@ -143,8 +143,9 @@ define(['logManager',
              *
              */
 
-            if(!(connAreas instanceof Array))
+            if(!(connAreas instanceof Array)){
                 connAreas = [connAreas];
+            }
 
             var i = connAreas.length;
             while (i--) {
@@ -217,8 +218,9 @@ define(['logManager',
                         (ary1 - 1 === y1 ? CONSTANTS.ARPORT_EndOnTop * isStart : 0) +
                         (ary2 + 1 === y2 ? CONSTANTS.ARPORT_EndOnBottom * isStart : 0);
 
-                }else if(connArea[j].length === 2 && connArea[j][0][0] != connArea[j][1][0] //connection RECTANGLE
-                        && connArea[j][0][1] != connArea[j][1][1]) {//[ [x1, y1], [x2, y2] ]
+                }else if(connArea[j].length === 2 && connArea[j][0][0] !== connArea[j][1][0] && connArea[j][0][1] !== connArea[j][1][1]) {
+                    //connection RECTANGLE
+                    //[ [x1, y1], [x2, y2] ]
                     arx1 = Math.min( connArea[j][0][0], connArea[j][1][0]) + 1;
                     arx2 = Math.max( connArea[j][0][0], connArea[j][1][0]) - 1;
                     ary1 = Math.min( connArea[j][0][1], connArea[j][1][1]) + 1;
@@ -235,14 +237,18 @@ define(['logManager',
                     dright = Math.abs(arx1 - x2);
                     min = Math.min( dceil, dfloor, dleft, dright );
 
-                    if( min === dceil )
+                    if( min === dceil ){
                         attr = CONSTANTS.ARPORT_StartOnTop + CONSTANTS.ARPORT_EndOnTop;
-                    if( min === dfloor )
+                    }
+                    if( min === dfloor ){
                         attr = CONSTANTS.ARPORT_StartOnBottom + CONSTANTS.ARPORT_EndOnBottom;
-                    if( min === dleft )
+                    }
+                    if( min === dleft ){
                         attr = CONSTANTS.ARPORT_StartOnLeft + CONSTANTS.ARPORT_EndOnLeft;
-                    if( min === dright )
+                    }
+                    if( min === dright ){
                         attr = CONSTANTS.ARPORT_StartOnRight + CONSTANTS.ARPORT_EndOnRight;
+                    }
 
 
                     //attr = (arx1  - 1 === x1 ? CONSTANTS.ARPORT_EndOnLeft * isStart : 0) +
@@ -330,36 +336,40 @@ define(['logManager',
 
                     attr = 0; //Throw away our guess of attr
 
-                    if( rightAngle >= a1 && rightAngle <= a2 )
+                    if( rightAngle >= a1 && rightAngle <= a2 ){
                         attr += CONSTANTS.ARPORT_StartOnRight + CONSTANTS.ARPORT_EndOnRight;
+                    }
 
-                    if( topAngle >= a1 && topAngle <= a2 )
+                    if( topAngle >= a1 && topAngle <= a2 ){
                         attr += CONSTANTS.ARPORT_StartOnTop + CONSTANTS.ARPORT_EndOnTop;
+                    }
 
-                    if( leftAngle >= a1 && leftAngle <= a2 )
+                    if( leftAngle >= a1 && leftAngle <= a2 ){
                         attr += CONSTANTS.ARPORT_StartOnLeft + CONSTANTS.ARPORT_EndOnLeft;
+                    }
 
-                    if( bottomAngle >= a1 && bottomAngle <= a2 )
+                    if( bottomAngle >= a1 && bottomAngle <= a2 ){
                         attr += CONSTANTS.ARPORT_StartOnBottom + CONSTANTS.ARPORT_EndOnBottom;
+                    }
                 }
 
             }else if(typeof connArea[j] === "string") //Using words to designate connection area
             {
                 r = new ArRect(x1 + 1, y1 + 1, x2 - 1, y2 - 1);
                 //connArea[j] = connArea[j].toLowerCase();
-                attr = (connArea[j].indexOf("top") != -1 ?
+                attr = (connArea[j].indexOf("top") !== -1 ?
                         //Connection area is on top
                         (( j % 2 === 0 ? CONSTANTS.ARPORT_StartOnTop : 0) + (j < 2 ? CONSTANTS.ARPORT_EndOnTop : 0)) : 0) +
                     //Connection area is on bottom
-                    (connArea[j].indexOf("bottom") != -1 ?
+                    (connArea[j].indexOf("bottom") !== -1 ?
                      (( j % 2 === 0 ? CONSTANTS.ARPORT_StartOnBottom : 0) + (j < 2 ? CONSTANTS.ARPORT_EndOnBottom : 0)) : 0) +
                     //Connection area is on left
-                    (connArea[j].indexOf("left") != -1 ?
+                    (connArea[j].indexOf("left") !== -1 ?
                      (( j % 2 === 0 ? CONSTANTS.ARPORT_StartOnLeft : 0) + (j < 2 ? CONSTANTS.ARPORT_EndOnLeft : 0)) : 0) +
                     //Connection area is on right
-                    (connArea[j].indexOf("right") != -1 ?
+                    (connArea[j].indexOf("right") !== -1 ?
                      (( j % 2 === 0 ? CONSTANTS.ARPORT_StartOnRight : 0) + (j < 2 ? CONSTANTS.ARPORT_EndOnRight : 0)) : 0) ||
-                    (connArea[j].indexOf("all") != -1 ? CONSTANTS.ARPORT_ConnectOnAll : 0) ;
+                    (connArea[j].indexOf("all") !== -1 ? CONSTANTS.ARPORT_ConnectOnAll : 0) ;
 
                 //Unfortunately, all will not specify in or outgoing connections
             }
@@ -398,8 +408,9 @@ define(['logManager',
     };
 
     AutoRouter.prototype._createPath = function(a){
-        if( !a.src || !a.dst)
+        if( !a.src || !a.dst){
             throw "AutoRouter:_createPath missing source or destination";
+        }
 
         var id = a.id,
             autoroute = a.autoroute || true,
@@ -407,36 +418,35 @@ define(['logManager',
             endDir = a.endDirection || a.end,
             src = [], 
             dst = [],
-            path;
+            path,
+            i;
 
-        for(var i in a.src){
+        for(i in a.src){
             if(a.src.hasOwnProperty(i)){
                 src.push(a.src[i]);
             }
         }
-        for(var i in a.dst){
+        for(i in a.dst){
             if(a.dst.hasOwnProperty(i)){
                 dst.push(a.dst[i]);
             }
         }
 
-        assert(src instanceof AutoRouterPort
-                || src instanceof Array || src.ports[0] instanceof AutoRouterPort, "AutoRouter:_createPath: src is not recognized as an AutoRouterPort");
-        assert(dst instanceof AutoRouterPort
-                || dst instanceof Array || dst.ports[0] instanceof AutoRouterPort, "AutoRouter:_createPath: dst is not recognized as an AutoRouterPort");
+        assert(src instanceof AutoRouterPort || src instanceof Array || src.ports[0] instanceof AutoRouterPort, "AutoRouter:_createPath: src is not recognized as an AutoRouterPort");
+        assert(dst instanceof AutoRouterPort || dst instanceof Array || dst.ports[0] instanceof AutoRouterPort, "AutoRouter:_createPath: dst is not recognized as an AutoRouterPort");
         path = this.router.addPath(autoroute, src, dst);
 
         if(startDir || endDir){ 
-            var start = startDir != undefined ? (startDir.indexOf("top") != -1 ? CONSTANTS.ARPATH_StartOnTop : 0) +
-                (startDir.indexOf("bottom") != -1 ? CONSTANTS.ARPATH_StartOnBottom : 0) +
-                (startDir.indexOf("left") != -1 ? CONSTANTS.ARPATH_StartOnLeft : 0) +
-                (startDir.indexOf("right") != -1 ? CONSTANTS.ARPATH_StartOnRight : 0) ||
-                (startDir.indexOf("all") != -1 ? CONSTANTS.ARPATH_Default : 0) : CONSTANTS.ARPATH_Default ;
-            var end = endDir != undefined ? (endDir.indexOf("top") != -1 ? CONSTANTS.ARPATH_EndOnTop : 0) +
-                (endDir.indexOf("bottom") != -1 ? CONSTANTS.ARPATH_EndOnBottom : 0) +
-                (endDir.indexOf("left") != -1 ? CONSTANTS.ARPATH_EndOnLeft : 0) +
-                (endDir.indexOf("right") != -1 ? CONSTANTS.ARPATH_EndOnRight : 0) ||
-                (endDir.indexOf("all") != -1 ? CONSTANTS.ARPATH_Default : 0) : CONSTANTS.ARPATH_Default;
+            var start = startDir !== undefined ? (startDir.indexOf("top") !== -1 ? CONSTANTS.ARPATH_StartOnTop : 0) +
+                (startDir.indexOf("bottom") !== -1 ? CONSTANTS.ARPATH_StartOnBottom : 0) +
+                (startDir.indexOf("left") !== -1 ? CONSTANTS.ARPATH_StartOnLeft : 0) +
+                (startDir.indexOf("right") !== -1 ? CONSTANTS.ARPATH_StartOnRight : 0) ||
+                (startDir.indexOf("all") !== -1 ? CONSTANTS.ARPATH_Default : 0) : CONSTANTS.ARPATH_Default ;
+            var end = endDir !== undefined ? (endDir.indexOf("top") !== -1 ? CONSTANTS.ARPATH_EndOnTop : 0) +
+                (endDir.indexOf("bottom") !== -1 ? CONSTANTS.ARPATH_EndOnBottom : 0) +
+                (endDir.indexOf("left") !== -1 ? CONSTANTS.ARPATH_EndOnLeft : 0) +
+                (endDir.indexOf("right") !== -1 ? CONSTANTS.ARPATH_EndOnRight : 0) ||
+                (endDir.indexOf("all") !== -1 ? CONSTANTS.ARPATH_Default : 0) : CONSTANTS.ARPATH_Default;
 
             path.setStartDir(start); 
             path.setEndDir(end);
@@ -610,8 +620,9 @@ define(['logManager',
             }
             delete this.paths[item]; //Remove dictionary entry
 
-        }else
+        }else{
             throw "AutoRouter:remove Unrecognized item type. Must be an AutoRouterBox or an AutoRouterPath ID";
+        }
     };
 
     AutoRouter.prototype.move = function( box, details ){
@@ -640,13 +651,15 @@ define(['logManager',
         var path = this.paths[args.path].path,
             points = [],
             i = 0;
-        if( path === undefined )
+        if( path === undefined ){
             throw "AutoRouter: Need to have an AutoRouterPath type to set custom path points";
+        }
 
-        if( args.points.length > 0 )
+        if( args.points.length > 0 ){
             path.setAutoRouting( false );
-        else
+        } else {
             path.setAutoRouting( true );
+        }
 
         //Convert args.points to array of [ArPoint] 's
         while ( i < args.points.length ){

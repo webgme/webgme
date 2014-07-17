@@ -1,14 +1,15 @@
+/*globals define*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
- * Author: Brian Broll
+ * @author brollb / https://github/brollb
  */
-
-"use strict";
 
 define(['logManager',
         './AutoRouter.Size'], function (logManager,
                                             ArSize) {
+
+    "use strict";
 
     var ArPoint = function (x, y){
         //Multiple Constructors
@@ -25,8 +26,9 @@ define(['logManager',
     };
 
     ArPoint.prototype.equals = function (otherPoint){
-        if( this.x === otherPoint.x && this.y === otherPoint.y)
+        if( this.x === otherPoint.x && this.y === otherPoint.y){
             return true;
+        }
 
         return false;
     };
@@ -48,8 +50,8 @@ define(['logManager',
             this.y += otherObject.y;
         }
 
-        this.x = Math.round(x);
-        this.y = Math.round(y);
+        this.x = Math.round(this.x);
+        this.y = Math.round(this.y);
     };
 
     ArPoint.prototype.subtract = function (otherObject){ //equivalent to +=
@@ -63,7 +65,7 @@ define(['logManager',
     };
 
     ArPoint.prototype.plus = function (otherObject){ //equivalent to +
-        var objectCopy = undefined;
+        var objectCopy = null;
 
         if(otherObject instanceof ArSize){
             objectCopy = new ArPoint(this);
@@ -79,7 +81,7 @@ define(['logManager',
             //objectCopy.add(this);
         //}
 
-        return objectCopy;
+        return objectCopy || undefined;
     };
 
     ArPoint.prototype.minus = function (otherObject){
