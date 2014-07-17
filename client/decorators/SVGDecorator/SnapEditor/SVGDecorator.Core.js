@@ -1,14 +1,13 @@
+/*globals define,_*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  * 
- * Author: Brian Broll
+ * @author brollb / https://github/brollb
  *
  * This file simply extends the features of the SVG that the panel 
  * will support. 
  * 
  */
-
-"use strict";
 
 define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants',
         '../Core/SVGDecorator.Core',
@@ -16,6 +15,8 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants',
                                                        SVGDecoratorCore,
                                                        SVGDecoratorConnections) {
 
+
+    "use strict";
 
     var SVGDecorator = function (options) {
         var opts = _.extend( {}, options);
