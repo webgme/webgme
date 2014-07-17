@@ -14,6 +14,22 @@ define([], function () {
         self.$scope = $scope;
         self.gmeClient = gmeClient;
 
+        // internal data representation for fast access to objects
+        self.projects = {};
+        self.root = {
+            id: 'root',
+            label: 'GME',
+            isSelected: true,
+            itemClass: 'gme-root',
+            menu: []
+        };
+
+        // navigation items in the nagivator list
+        self.navIdRoot = 0;
+        self.navIdProject = 1;
+        self.navIdBranch = 2;
+
+
         self.initialize();
 
     };
@@ -28,7 +44,10 @@ define([], function () {
         var self = this;
 
         // initialize model structure
-        self.$scope.items = {};
+        self.$scope.navigator = {
+            items: [],
+            separator: true
+        };
 
         if (self.gmeClient) {
             self.initWithClient();
@@ -38,222 +57,50 @@ define([], function () {
     };
 
     ProjectNavigatorController.prototype.initTestData = function () {
-        var self = this,
+        var self = this;
 
-            exportBranch,
-            showHistory,
-            createTag,
-            generateMetaJSAPI,
-
-            dummyProjectsGenerator,
-            dummyBranchGenerator,
-            allItems,
-
-            selectedProject,
-            selectedBranch;
-
-        // Function handlers
-        exportBranch = function (data) {
-            console.log('Export branch' + JSON.stringify(data));
-        };
-
-        showHistory = function (data) {
-            console.log('Show history' + JSON.stringify(data));
-        };
-
-        createTag = function (data) {
-            console.log('Create tag' + JSON.stringify(data));
-        };
-
-        generateMetaJSAPI = function (data) {
-            console.log('Generate META JS API ' + JSON.stringify(data));
-        };
-
-        dummyBranchGenerator = function (name, maxCount, projectId, isSelectedProject) {
-            var i,
-                id,
-                branches = [],
-                count,
-                selectedItem;
-
-            count = Math.max(Math.round(Math.random() * maxCount), 3);
-            selectedItem = Math.floor(Math.random() * count);
-
-            for (i = 0; i < count; i++) {
-
-                id = name + '_' + i;
-
-                branches.push({
-                    id: id,
-                    label: id,
-                    isSelected: i === selectedItem,
-                    properties: {
-                        hashTag: '34535435',
-                        lastCommiter: 'petike',
-                        lastCommitTime: new Date()
-                    },
-                    //itemTemplate: 'branch-selector-template',
-                    menu: [
-                        {
-                            items: [
-                                {
-                                    id: 'exportBranch',
-                                    label: 'Export branch',
-                                    iconClass: 'glyphicon glyphicon-export',
-                                    action: exportBranch,
-                                    actionData: {
-                                        project: projectId,
-                                        branchId: id
-                                    }
-                                },
-                                {
-                                    id: 'createTag',
-                                    label: 'Create tag',
-                                    iconClass: 'glyphicon glyphicon-tag',
-                                    action: createTag,
-                                    actionData: {
-                                        project: projectId,
-                                        branchId: id
-                                    }
-                                }
-                            ]
-
-                        }
-                    ]
-
-                });
-
-                if (i === selectedItem && isSelectedProject === true) {
-                    selectedBranch = branches[ i ];
+        // TODO: factor out to a createRoot function
+        self.root.menu = [
+            {
+                section: 'projects',
+                items: [],
+                showAllItems: function () {
+                    console.log('Show all items...');
                 }
-            }
-
-            return branches;
-
-        };
-
-        dummyProjectsGenerator = function (name, maxCount) {
-            var i,
-                id,
-                projects = [],
-                count,
-                exportProject,
-                selectedItem;
-
-            count = Math.max(Math.round(Math.random() * maxCount), 3);
-            selectedItem = Math.floor(Math.random() * count);
-
-            for (i = 0; i < count; i++) {
-
-                id = name + '_' + i;
-
-                projects.push({
-                    id: id,
-                    label: id,
-                    isSelected: i === selectedItem,
-                    menu: [
-                        {
-                            items: [
-                                {
-                                    id: 'showHistory',
-                                    label: 'Show history',
-                                    iconClass: 'glyphicon glyphicon-time',
-                                    action: showHistory,
-                                    actionData: {
-                                        project: id
-                                    }
-                                }
-
-                            ]
-                        },
-                        {
-                            items: [
-                                {
-                                    id: 'displayMetaEntries',
-                                    label: 'Display META Entries',
-                                    action: showHistory,
-                                    actionData: {
-                                        project: id
-                                    }
-                                },
-                                {
-                                    id: 'generateMetaJSAPI',
-                                    label: 'Generate META JS API',
-                                    action: generateMetaJSAPI,
-                                    actionData: {
-                                        project: id
-                                    }
-                                }
-
-                            ]
-                        },
-                        {
-                            items: dummyBranchGenerator('Branch', 10, id, i === selectedItem),
-                            showAllItems: function () {
-                                console.log('Show all items...');
-                            }
-                        }
-                    ]
-                });
-
-                if (i === selectedItem) {
-                    selectedProject = projects[ i ];
-                }
-            }
-
-            return projects;
-
-        };
-
-
-        allItems = {
-
-            root: {
-                id: 'root',
-                label: 'GME',
-                isSelected: true,
-                itemClass: 'gme-root',
-                menu: [
+            },
+            {
+                section: 'preferences',
+                items: [
                     {
-                        items: dummyProjectsGenerator('Project', 10),
-                        showAllItems: function () {
-                            console.log('Show all items...');
-                        }
-                    },
-                    {
-                        items: [
+                        id: 'showPreferences',
+                        label: 'Show preferences',
+                        action: function () {
+                            console.log('Show preferences');
+                        },
+                        menu: [
                             {
-                                id: 'showPreferences',
-                                label: 'Show preferences',
-                                action: function () {
-                                    console.log('Show preferences');
-                                },
-                                menu: [
+                                items: [
                                     {
-                                        items: [
+                                        id: 'preferences 1',
+                                        label: 'Preferences 1'
+                                    },
+                                    {
+                                        id: 'preferences 2',
+                                        label: 'Preferences 2'
+                                    },
+                                    {
+                                        id: 'preferences 3',
+                                        label: 'Preferences 3',
+                                        menu: [
                                             {
-                                                id: 'preferences 1',
-                                                label: 'Preferences 1'
-                                            },
-                                            {
-                                                id: 'preferences 2',
-                                                label: 'Preferences 2'
-                                            },
-                                            {
-                                                id: 'preferences 3',
-                                                label: 'Preferences 3',
-                                                menu: [
+                                                items: [
                                                     {
-                                                        items: [
-                                                            {
-                                                                id: 'sub_preferences 1',
-                                                                label: 'Sub preferences 1'
-                                                            },
-                                                            {
-                                                                id: 'sub_preferences 2',
-                                                                label: 'Sub preferences 2'
-                                                            }
-                                                        ]
+                                                        id: 'sub_preferences 1',
+                                                        label: 'Sub preferences 1'
+                                                    },
+                                                    {
+                                                        id: 'sub_preferences 2',
+                                                        label: 'Sub preferences 2'
                                                     }
                                                 ]
                                             }
@@ -262,19 +109,18 @@ define([], function () {
                                 ]
                             }
                         ]
-
                     }
                 ]
 
             }
+        ];
 
-        };
+        self.dummyProjectsGenerator('Project', 10);
 
+        // only root is selected
         self.$scope.navigator = {
             items: [
-                allItems.root,
-                selectedProject,
-                selectedBranch
+                self.root
             ],
             separator: true
         };
@@ -288,35 +134,6 @@ define([], function () {
     ProjectNavigatorController.prototype.initWithClient = function () {
         var self = this,
             len;
-
-        self.$scope.items = {
-
-            root: {
-                id: 'root',
-                name: 'GME',
-                isSelected: true,
-                iconClass: 'gme-navi-icon',
-                topActions: [
-                    {
-                        id: 'createProject',
-                        label: 'Create new project',
-                        iconClass: 'fa fa-add',
-                        action: function () {
-                            alert('Create new project');
-                        }
-                    },
-                    {
-
-                        id: 'importProject',
-                        label: 'Import project',
-                        action: function () {
-                            alert('Import project');
-                        }
-                    }
-                ],
-                items: {}
-            }
-        };
 
         self.gmeClient.addEventListener("PROJECT_OPENED", function (c, projectId) {
             var id;
@@ -429,6 +246,278 @@ define([], function () {
 
 
         // TODO: register function handlers
+    };
+
+    ProjectNavigatorController.prototype.addProject = function (projectId) {
+        var self = this,
+            i,
+            showHistory,
+            showMETAEntries,
+            generateMetaJSAPI,
+            showAllBranches,
+            selectProject;
+
+        if (self.gmeClient) {
+            showHistory = function (data) {
+                console.error('showHistory: gmeClient version is not implemented yet.', data);
+            };
+
+            showMETAEntries = function (data) {
+                console.error('showMETAEntries: gmeClient version is not implemented yet.', data);
+            };
+
+            generateMetaJSAPI = function (data) {
+                console.error('generateMetaJSAPI: gmeClient version is not implemented yet.', data);
+            };
+
+            showAllBranches = function (data) {
+                console.error('showAllBranches: gmeClient version is not implemented yet.', data);
+            };
+        } else {
+            // test version
+            showHistory = function (data) {
+                console.log('showHistory: ', data);
+            };
+
+            showMETAEntries = function (data) {
+                console.log('showMETAEntries: ', data);
+            };
+
+            generateMetaJSAPI = function (data) {
+                console.log('generateMetaJSAPI: ', data);
+            };
+
+            showAllBranches = function (data) {
+                console.log('showAllBranches: ', data);
+            };
+        }
+
+
+        selectProject = function (data) {
+            self.selectProject(data);
+        };
+
+        self.projects[projectId] = {
+            id: projectId,
+            label: projectId,
+            //isSelected: i === selectedItem,
+            branches: {},
+            action: selectProject,
+            actionData: {
+                projectId: projectId
+            },
+            menu: [
+                {
+                    section: 'top',
+                    items: [
+                        {
+                            id: 'showHistory',
+                            label: 'Show history',
+                            iconClass: 'glyphicon glyphicon-time',
+                            action: showHistory,
+                            actionData: {
+                                projectId: projectId
+                            }
+                        }
+
+                    ]
+                },
+                {
+                    section: 'middle',
+                    items: [
+                        {
+                            id: 'displayMetaEntries',
+                            label: 'Display META Entries',
+                            action: showMETAEntries,
+                            actionData: {
+                                projectId: projectId
+                            }
+                        },
+                        {
+                            id: 'generateMetaJSAPI',
+                            label: 'Generate META JS API',
+                            action: generateMetaJSAPI,
+                            actionData: {
+                                projectId: projectId
+                            }
+                        }
+
+                    ]
+                },
+                {
+                    section: 'branches',
+                    items: [],
+                    showAllItems: showAllBranches
+                }
+            ]
+        };
+
+        if (self.gmeClient) {
+            console.error('TODO: get all branches for: ' + projectId);
+        } else {
+            self.dummyBranchGenerator('Branch', 10, projectId)
+        }
+
+        for (i = 0; i < self.root.menu.length; i += 1) {
+            if (self.root.menu[i].section === 'projects') {
+                // convert indexed projects to an array
+                self.root.menu[i].items = self.mapToArray(self.projects);
+                break;
+            }
+        }
+
+        self.update();
+    };
+
+    ProjectNavigatorController.prototype.addBranch = function (projectId, branchId) {
+        var self = this,
+            i,
+            selectBranch,
+            exportBranch,
+            createTag;
+
+        if (self.gmeClient) {
+            exportBranch = function (data) {
+                console.error('exportBranch: gmeClient version is not implemented yet.', data);
+            };
+
+            createTag = function (data) {
+                console.error('createTag: gmeClient version is not implemented yet.', data);
+            };
+        } else {
+            // test version
+            exportBranch = function (data) {
+                console.log('exportBranch: ', data);
+            };
+
+            exportBranch = function (data) {
+                console.log('createTag: ', data);
+            };
+        }
+
+        selectBranch = function (data) {
+            self.selectBranch(data);
+        };
+
+        self.projects[projectId].branches[branchId] = {
+            id: branchId,
+            label: branchId,
+            //isSelected: i === selectedItem,
+            properties: {
+                hashTag: '34535435',
+                lastCommiter: 'petike',
+                lastCommitTime: new Date()
+            },
+            action: selectBranch,
+            actionData: {
+                projectId: projectId,
+                branchId: branchId
+            },
+            //itemTemplate: 'branch-selector-template',
+            menu: [
+                {
+                    items: [
+                        {
+                            id: 'exportBranch',
+                            label: 'Export branch',
+                            iconClass: 'glyphicon glyphicon-export',
+                            action: exportBranch,
+                            actionData: {
+                                projectId: projectId,
+                                branchId: branchId
+                            }
+                        },
+                        {
+                            id: 'createTag',
+                            label: 'Create tag',
+                            iconClass: 'glyphicon glyphicon-tag',
+                            action: createTag,
+                            actionData: {
+                                projectId: projectId,
+                                branchId: branchId
+                            }
+                        }
+                    ]
+
+                }
+            ]
+        };
+
+        for (i = 0; i < self.projects[projectId].menu.length; i += 1) {
+            if (self.projects[projectId].menu[i].section === 'branches') {
+                // convert indexed branches to an array
+                self.projects[projectId].menu[i].items = self.mapToArray(self.projects[projectId].branches);
+                break;
+            }
+        }
+
+        self.update();
+    };
+
+    ProjectNavigatorController.prototype.selectProject = function (data) {
+        this.selectBranch(data);
+    };
+
+    ProjectNavigatorController.prototype.selectBranch = function (data) {
+        var self = this,
+            projectId = data.projectId,
+            branchId = data.branchId;
+
+        if (projectId || projectId === '') {
+            // FIXME: what if projects do not contain projectId anymore?
+            self.$scope.navigator.items[self.navIdProject] = self.projects[projectId];
+            if (branchId || branchId === '') {
+                self.$scope.navigator.items[self.navIdBranch] = self.projects[projectId].branches[branchId];
+            } else {
+                // remove branch element
+                self.$scope.navigator.items.splice(self.navIdBranch, 1);
+            }
+        } else {
+            // remove project and branch elements
+            self.$scope.navigator.items.splice(self.navIdProject, 2);
+        }
+
+        self.update();
+    };
+
+    ProjectNavigatorController.prototype.dummyProjectsGenerator = function (name, maxCount) {
+        var self = this,
+            i,
+            id,
+            count,
+            selectedItem;
+
+        count = Math.max(Math.round(Math.random() * maxCount), 3);
+
+        for (i = 0; i < count; i++) {
+
+            id = name + '_' + i;
+
+            self.addProject(id);
+        }
+    };
+
+
+    ProjectNavigatorController.prototype.dummyBranchGenerator = function (name, maxCount, projectId) {
+        var self = this,
+            i,
+            id,
+            count;
+
+        count = Math.max(Math.round(Math.random() * maxCount), 3);
+
+        for (i = 0; i < count; i += 1) {
+            id = name + '_' + i;
+
+            self.addBranch(projectId, id);
+        }
+    };
+
+    ProjectNavigatorController.prototype.mapToArray = function (hashMap) {
+        var keys = Object.keys(hashMap),
+            values = keys.map(function (v) { return hashMap[v]; });
+
+        return values;
     };
 
     return ProjectNavigatorController;
