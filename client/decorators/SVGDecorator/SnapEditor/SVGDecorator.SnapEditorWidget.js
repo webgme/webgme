@@ -1,4 +1,8 @@
-"use strict";
+/*globals define,_*/
+
+/*
+ * @author brollb / https://github/brollb
+ */
 
 define(['js/Constants',
     'js/NodePropertyNames',
@@ -15,6 +19,7 @@ define(['js/Constants',
                                                       SVGDecoratorTemplate,
                                                       SVGDecoratorCore) {
 
+    "use strict";
     /*
      * This SVG was created with Snap! (byob) in mind.
      *
@@ -91,6 +96,8 @@ define(['js/Constants',
         this._renderContent();
 
         // set title editable on double-click
+        // Make all 'attribute' text clickable
+        // TODO
         this.$name.on("dblclick.editOnDblClick", null, function (event) {
             if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
                 $(this).editInPlace({"class": "",
@@ -113,7 +120,7 @@ define(['js/Constants',
 
         this._update();
 
-        //Resize the svg as needed, if needed
+        //Resize the svg as needed
         if(this.$name[0].tagName === "text"){
             if(this.$name.width() === 0 && oldNameLength === 0){
                 //Assume that it hasn't been drawn yet.
@@ -153,13 +160,58 @@ define(['js/Constants',
         this._updateSVGFile();
 
         //If it has a "name" text id in the svg, use that instead of $name
+        //This allows for the svg to fall back to a separate name div if
+        //no spot for it in the svg
         var name = this.$svgContent.find("#" + SNAP_CONSTANTS.NAME);
         if(name[0] !== undefined && name[0].tagName === "text"){
             this.$name.remove();
             this.$name = name;
         }
 
+        //set any attribute text fields in the svg to the value of
+        //the attribute from the clickable item
+        //TODO
+        var attributes = this.hostDesignerItem.attributes,
+            textFields = this.$el.find("text"),
+            attr,
+            i = textFields.length;
+
+        while (i--){
+            attr = textFields[i].id;
+            if (attributes[attr] !== undefined && attr !== 'name'){
+                this._setTextAndStretch(textFields.filter("#" + attr), attributes[attr], attr);
+            }
+        }
+
         this.update();
+    };
+
+    SVGDecoratorSnapEditorWidget.prototype._setTextAndStretch = function (element, newText, stretchId) {
+        var oldText = element.text(),
+            oldWidth = element.width(),
+            newWidth;
+
+        element.text(newText);
+
+        if(element.width() === 0 && oldWidth === 0){
+            //Assume that it hasn't been drawn yet.
+            //Approx the pixel length by relative name change
+            //FIXME Find a better way to approximate this...
+            //I could add a "name container" invisible rect... 
+            var bBox = this.$svgContent.find("#" + stretchId +"-bounding-box"),
+                approxWidth;
+
+            if (bBox.length){
+                bBox = bBox[0];
+                approxWidth = parseFloat(bBox.getAttribute("width"));
+                newWidth = approxWidth * (element.text().length/oldText.length);
+                this.stretchTo(stretchId, newWidth, 0);
+            }
+
+        }else{
+            this.stretchTo(stretchId, element.width(), 0);
+        }
+
     };
 
     SVGDecoratorSnapEditorWidget.prototype.setGmeId = function (newId) {
@@ -195,8 +247,7 @@ define(['js/Constants',
             }
         }
 
-        if (!this.svgInitialStretch[id] || (x > this.svgInitialStretch[id].x 
-               && y > this.svgInitialStretch[id].y)){//Don't shrink past initial
+        if (!this.svgInitialStretch[id] || (x > this.svgInitialStretch[id].x && y > this.svgInitialStretch[id].y)){//Don't shrink past initial
 
 
            dx = x - this._classTransforms[id].x;
@@ -260,8 +311,9 @@ define(['js/Constants',
         while(i--){
             svgId = stretchElements[i].getAttribute("id");
 
-            if(!svgId)
+            if(!svgId){
                 this.logger.error("SVG should have an ID");
+            }
 
             //Update the stretch of the given svg element
             this._transforms[svgId][dim] += delta;
@@ -307,10 +359,8 @@ define(['js/Constants',
             if(!this._transforms[svgId]){//Initialize transform if needed
 
                 if(elements[i].tagName === "line"){
-                    width = parseFloat(elements[i].getAttribute("x2")) 
-                        - parseFloat(elements[i].getAttribute("x1"));
-                    height = parseFloat(elements[i].getAttribute("y2")) 
-                        - parseFloat(elements[i].getAttribute("y1"));
+                    width = parseFloat(elements[i].getAttribute("x2")) - parseFloat(elements[i].getAttribute("x1"));
+                    height = parseFloat(elements[i].getAttribute("y2")) - parseFloat(elements[i].getAttribute("y1"));
                 }else if(elements[i].tagName === "rect"){
                     width = parseFloat(elements[i].getAttribute("width"));
                     height = parseFloat(elements[i].getAttribute("height"));
@@ -330,8 +380,7 @@ define(['js/Constants',
             var i = this._customConnectionAreas.length;
 
             while(i--){
-                if(this._customConnectionAreas[i].shift 
-                   && this._customConnectionAreas[i].shift.indexOf(shiftClass) !== -1){
+                if(this._customConnectionAreas[i].shift && this._customConnectionAreas[i].shift.indexOf(shiftClass) !== -1){
                        //shift the connection area
                        this._customConnectionAreas[i].x1 += shift.x || 0;
                        this._customConnectionAreas[i].x2 += shift.x || 0;
@@ -351,8 +400,7 @@ define(['js/Constants',
             var i = this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT].length;
 
             while(i--){
-                if(this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].class 
-                   && this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].class.indexOf(shiftClass) !== -1){
+                if(this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].class && this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].class.indexOf(shiftClass) !== -1){
                        //shift the connection area highlight
                        this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].x1 += shift.x || 0;
                        this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].x2 += shift.x || 0;
@@ -370,8 +418,7 @@ define(['js/Constants',
             var i = this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT].length;
 
             while(i--){
-                if(this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].class 
-                   && this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].class.indexOf(stretchClass) !== -1){
+                if(this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].class && this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].class.indexOf(stretchClass) !== -1){
                        //stretch the connection area highlight
                        this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].x2 += stretch.x || 0;
                        this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].y2 += stretch.y || 0;
@@ -409,7 +456,7 @@ define(['js/Constants',
         }
 
         var hasFilter = filter !== null,
-            hasColors = Object.keys(colors).length > 0;
+            hasColors = colors instanceof Object ? Object.keys(colors).length > 0 : false;
 
         if (areSameColor && (hasFilter || hasColors)){//has filter and color group
 
@@ -422,8 +469,7 @@ define(['js/Constants',
                             colorGroup.setAttribute("data-" + SNAP_CONSTANTS.COLOR_PRIMARY,
                                     colorGroup.getAttribute("style"));
                         }
-                        colorGroup.setAttribute("style", colorGroup.getAttribute("data-" 
-                                                                     + SNAP_CONSTANTS.COLOR_SECONDARY));
+                        colorGroup.setAttribute("style", colorGroup.getAttribute("data-" + SNAP_CONSTANTS.COLOR_SECONDARY));
 
                     }
 
@@ -437,8 +483,7 @@ define(['js/Constants',
                         }
                     } else if (hasColors){//Set the color
                         if (colorGroup.hasAttribute("data-" + SNAP_CONSTANTS.COLOR_PRIMARY)){
-                            colorGroup.setAttribute("style", colorGroup.getAttribute("data-" 
-                                                                     + SNAP_CONSTANTS.COLOR_PRIMARY));
+                            colorGroup.setAttribute("style", colorGroup.getAttribute("data-" + SNAP_CONSTANTS.COLOR_PRIMARY));
                         }
                     }
                     break;
@@ -576,14 +621,11 @@ define(['js/Constants',
         if (this._customConnectionAreas){
             var i = this._customConnectionAreas.length;
             while (i--){
-                if (this._customConnectionAreas[i].role === SNAP_CONSTANTS.CONN_PASSING
-                    && ptrs.indexOf(this._customConnectionAreas[i].ptr) === -1){
+                if (this._customConnectionAreas[i].role === SNAP_CONSTANTS.CONN_PASSING && ptrs.indexOf(this._customConnectionAreas[i].ptr) === -1){
                         this._customConnectionAreas.splice(i, 1);
                     }
             }
-        } else {
-            //No connection areas found - item will not be able to connect to things
-        }
+        } 
     };
 
     //Get a specific connection area
@@ -595,8 +637,7 @@ define(['js/Constants',
         while(areas.length){
             area = areas.pop();
             //If the area has the role or is unspecified
-            if((!role || area.role === role) && (!ptr || area.ptr === ptr 
-                        || (area.ptr instanceof Array && area.ptr.indexOf(ptr) !== -1))){
+            if((!role || area.role === role) && (!ptr || area.ptr === ptr || (area.ptr instanceof Array && area.ptr.indexOf(ptr) !== -1))){
                 return area;
             }
         }
