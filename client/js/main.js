@@ -192,8 +192,8 @@ require(
 
             webGME.start( function(client) {
 
-//                gmeApp.value('gmeClient', client);
-                gmeApp.value('gmeClient', null);
+                gmeApp.value('gmeClient', client);
+//                gmeApp.value('gmeClient', null);
 
                 angular.bootstrap(document, [ 'gmeApp']);
 
