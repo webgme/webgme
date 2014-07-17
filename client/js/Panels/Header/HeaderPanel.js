@@ -11,8 +11,9 @@ define(['js/PanelBase/PanelBase',
     'js/Widgets/UserProfile/UserProfileWidget',
     'js/Toolbar/Toolbar',
     './DefaultToolbar',
-    'ui-components/GMENavigator/GMENavigator'
-], function (PanelBase, ProjectTitleWidget, UserProfileWidget, toolbar, DefaultToolbar) {
+    'ui-components/GMENavigator/GMENavigator',
+    './ProjectNavigatorController'
+], function (PanelBase, ProjectTitleWidget, UserProfileWidget, toolbar, DefaultToolbar, GMENavigator, ProjectNavigatorController) {
 
     "use strict";
 
@@ -50,9 +51,13 @@ define(['js/PanelBase/PanelBase',
         navBar.append(navBarInner);
         this.$el.append(navBar);
 
+        // TODO: would be nice to get the app as a parameter
+        var app = angular.module('gmeApp');
+
+        app.controller('ProjectNavigatorController', ProjectNavigatorController);
 
         //project title
-        var projectTitleEl = $('<gme-navigator/>', {'class': "inline"});
+        var projectTitleEl = $('<div data-ng-controller="ProjectNavigatorController"><gme-navigator navigator="navigator"></div>', {'class': "inline"});
         //new ProjectTitleWidget(projectTitleEl, this._client);
         navBarInner.append(projectTitleEl);
 

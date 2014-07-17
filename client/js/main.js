@@ -180,17 +180,17 @@ require(
                 }
             });
 
+            // Initialize Angular. For this time no better place.
+            // has to be initialized as early as possible
+            var gmeApp = angular.module(
+                'gmeApp', [
+                    'ngRoute',
+                    'routeStyles',
+                    'ui.bootstrap',
+                    'headerPanel'
+                ]);
+
             webGME.start( function(client) {
-
-                // Initialize Angular. For this time no better place.
-
-                var gmeApp = angular.module(
-                    'gmeApp', [
-                        'ngRoute',
-                        'routeStyles',
-                        'ui.bootstrap',
-                        'headerPanel'
-                    ]);
 
 //                gmeApp.value('gmeClient', client);
                 gmeApp.value('gmeClient', null);
