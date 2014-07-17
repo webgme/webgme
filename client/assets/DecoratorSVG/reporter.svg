@@ -53,6 +53,11 @@
       type="hueRotate"
       values="25" />
   </filter>
+  <g
+     id="colors"
+     style="fill:#74e868;stroke:#74e868;"
+     data-secondary="fill:#54b868;stroke:#54b868;">
+
 -->
   <g
      id="colors"
