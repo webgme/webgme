@@ -237,8 +237,6 @@ define([
         var self = this,
             i,
             showHistory,
-            showMETAEntries,
-            generateMetaJSAPI,
             showAllBranches,
             selectProject;
 
@@ -261,14 +259,6 @@ define([
                 }
             };
 
-            showMETAEntries = function (data) {
-                console.error('showMETAEntries: gmeClient version is not implemented yet.', data);
-            };
-
-            generateMetaJSAPI = function (data) {
-                console.error('generateMetaJSAPI: gmeClient version is not implemented yet.', data);
-            };
-
             showAllBranches = function (data) {
                 console.error('showAllBranches: gmeClient version is not implemented yet.', data);
             };
@@ -276,14 +266,6 @@ define([
             // test version
             showHistory = function (data) {
                 console.log('showHistory: ', data);
-            };
-
-            showMETAEntries = function (data) {
-                console.log('showMETAEntries: ', data);
-            };
-
-            generateMetaJSAPI = function (data) {
-                console.log('generateMetaJSAPI: ', data);
             };
 
             showAllBranches = function (data) {
@@ -314,28 +296,6 @@ define([
                             label: 'Show history',
                             iconClass: 'glyphicon glyphicon-time',
                             action: showHistory,
-                            actionData: {
-                                projectId: projectId
-                            }
-                        }
-
-                    ]
-                },
-                {
-                    section: 'middle',
-                    items: [
-                        {
-                            id: 'displayMetaEntries',
-                            label: 'Display META Entries',
-                            action: showMETAEntries,
-                            actionData: {
-                                projectId: projectId
-                            }
-                        },
-                        {
-                            id: 'generateMetaJSAPI',
-                            label: 'Generate META JS API',
-                            action: generateMetaJSAPI,
                             actionData: {
                                 projectId: projectId
                             }
