@@ -1,10 +1,9 @@
+/*globals define*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
- * Author: Brian Broll
+ * @author brollb / https://github/brollb
  */
-
-"use strict"; 
 
 define(['logManager',
 	    'util/assert',
@@ -13,6 +12,8 @@ define(['logManager',
 										        assert,
                                                 UTILS,
                                                 CONSTANTS) {
+
+    "use strict"; 
 
     var AutoRouterCustomPathData = function (_x, _y){
         this.version = CONSTANTS.CONNECTIONCUSTOMIZATIONDATAVERSION;
@@ -23,8 +24,8 @@ define(['logManager',
         this.horizontalOrVerticalEdge = false;
         this.x = _x;
         this.y = _y;
-        this.l;
-        this.d;
+        this.l = null;
+        this.d = null;
     };
 
     //Functions
@@ -54,7 +55,7 @@ define(['logManager',
 
         outChannel += "," + this.getDoubleDataCount();
 
-        for(var i = 0; i < this.getDoubleDataCount(); i++) {
+        for(i = 0; i < this.getDoubleDataCount(); i++) {
             outChannel += "," + this.d[i];
         }
 
@@ -70,7 +71,7 @@ define(['logManager',
         this.setVersion(Number(versionStr));
         assert(this.getVersion() === CONSTANTS.CONNECTIONCUSTOMIZATIONDATAVERSION, "AutoRouterCustomPathData.deserialize: getVersion() === CONSTANTS.CONNECTIONCUSTOMIZATIONDATAVERSION FAILED");
 
-        if (this.getVersion() != CONSTANTS.CONNECTIONCUSTOMIZATIONDATAVERSION) {
+        if (this.getVersion() !== CONSTANTS.CONNECTIONCUSTOMIZATIONDATAVERSION) {
             // TODO: Convert from older version to newer
             return false;
         }
@@ -91,7 +92,7 @@ define(['logManager',
         var edgeCustomTypeStr = inChannel.substr(0, curSubPos);
         this.setType(Number(edgeCustomTypeStr));
 
-        console.log("\tAsp " + getAspect() + ", Ind " + getEdgeIndex() + ", Cnt " + getEdgeCount() + ", Typ " + getType());
+        console.log("\tAsp " + this.getAspect() + ", Ind " + this.getEdgeIndex() + ", Cnt " + this.getEdgeCount() + ", Typ " + this.getType());
 
         curSubPos = inChannel.indexOf(",", ++curSubPos);
         var directionStr = inChannel.substr(0, curSubPos);
@@ -110,22 +111,22 @@ define(['logManager',
         var numOfExtraLongData = Number(positionStr);
         assert(numOfExtraLongData >= 0 && numOfExtraLongData <= 4, "AutoRouterCustomPathData.deserialize: numOfExtraLongData >= 0 && numOfExtraLongData <= 4 FAILED");
 
-        console.log(", Dir " + UTILS.isHorizontalOrVertical() + ", x " + getX() + ", y " + getY() + ", num " + numOfExtraLongData);
+        console.log(", Dir " + UTILS.isHorizontalOrVertical() + ", x " + this.getX() + ", y " + this.getY() + ", num " + numOfExtraLongData);
 
         for(var i = 0; i < numOfExtraLongData; i++) {
             positionStr = inChannel.substr(0, inChannel.indexOf(",", ++curSubPos));
             this.addLongData(Number(positionStr));
-            console.log(", l" + i + " " +  l[i]);
+            console.log(", l" + i + " " +  this.l[i]);
         }
 
         positionStr = inChannel.substr(0, inChannel.indexOf(","));
         var numOfExtraDoubleData = Number(positionStr);
         assert(numOfExtraDoubleData >= 0 && numOfExtraDoubleData <= 8, "AutoRouterCustomPathData.deserialize: numOfExtraDoubleData >= 0 && numOfExtraDoubleData <= 8 FAILED");
         console.log(", num " + numOfExtraDoubleData);
-        for(var i = 0; i < numOfExtraDoubleData; i++) {
+        for(i = 0; i < numOfExtraDoubleData; i++) {
             positionStr = inChannel.substr(0, inChannel.indexOf(",", ++curSubPos));
             this.addDoubleData(Number(positionStr));
-            console.log(", l" + i + " " + d[i]);
+            console.log(", l" + i + " " + this.d[i]);
         }
         return true;
     };
