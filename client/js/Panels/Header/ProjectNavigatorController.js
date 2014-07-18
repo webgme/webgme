@@ -503,7 +503,7 @@ define([
                             return;
                         }
 
-                        if (branchId !== self.gmeClient.getActualBranch()) {
+                        if (branchId && branchId !== self.gmeClient.getActualBranch()) {
                             self.gmeClient.selectBranchAsync(branchId, function (err) {
                                 if (err) {
                                     console.log(err);

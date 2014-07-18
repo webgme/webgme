@@ -107,7 +107,13 @@ define([
                 "BRANCHSTATUS_CHANGED"  : "BRANCHSTATUS_CHANGED",
                 "BRANCH_CHANGED"        : "BRANCH_CHANGED",
                 "PROJECT_CLOSED"        : "PROJECT_CLOSED",
-                "PROJECT_OPENED"        : "PROJECT_OPENED"
+                "PROJECT_OPENED"        : "PROJECT_OPENED",
+
+                "SERVER_PROJECT_CREATED" : "SERVER_PROJECT_CREATED",
+                "SERVER_PROJECT_DELETED" : "SERVER_PROJECT_DELETED",
+                "SERVER_BRANCH_CREATED"  : "SERVER_BRANCH_CREATED",
+                "SERVER_BRANCH_UPDATED"  : "SERVER_BRANCH_UPDATED",
+                "SERVER_BRANCH_DELETED"  : "SERVER_BRANCH_DELETED"
             };
             _self.networkStates = {
                 'CONNECTED' :"connected",
@@ -166,6 +172,38 @@ define([
                 if(_recentCommits.length > 10){
                     _recentCommits.pop();
                 }
+            }
+
+            function serverEventer(){
+                var lastGuid = '',
+                    nextServerEvent = function(err,guid,parameters){
+                        lastGuid = guid || lastGuid;
+                        if(!err && parameters){
+                            switch (parameters.type){
+                                case "PROJECT_CREATED":
+                                    _self.dispatchEvent(_self.events.SERVER_PROJECT_CREATED,parameters.project);
+                                    break;
+                                case "PROJECT_DELETED":
+                                    _self.dispatchEvent(_self.events.SERVER_PROJECT_DELETED,parameters.project);
+                                    break;
+                                case "BRANCH_CREATED":
+                                    _self.dispatchEvent(_self.events.SERVER_BRANCH_CREATED,{project:parameters.project,branch:parameters.branch});
+                                    break;
+                                case "BRANCH_DELETED":
+                                    _self.dispatchEvent(_self.events.SERVER_BRANCH_DELETED,{project:parameters.project,branch:parameters.branch});
+                                    break;
+                                case "BRANCH_UPDATED":
+                                    _self.dispatchEvent(_self.events.SERVER_BRANCH_UPDATED,{project:parameters.project,branch:parameters.branch,commit:parameters.commit});
+                                    break;
+                            }
+                            return _database.getNextServerEvent(lastGuid,nextServerEvent);
+                        } else {
+                            setTimeout(function(){
+                                return _database.getNextServerEvent(lastGuid,nextServerEvent);
+                            },1000);
+                        }
+                    };
+                _database.getNextServerEvent(lastGuid,nextServerEvent);
             }
 
             function tokenWatcher(){
@@ -1324,6 +1362,7 @@ define([
                             _networkWatcher.stop();
                         }
                         _networkWatcher = networkWatcher();
+                        serverEventer();
 
                         if(options.open){
                             if(options.project){
@@ -2194,12 +2233,15 @@ define([
                  });
                  },0);
                  });*/
-                _database.getNextServerEvent("",function(err,guid,parameters){
-                    console.log(err,guid,parameters);
-                });
+                //_database.getNextServerEvent("",function(err,guid,parameters){
+                //    console.log(err,guid,parameters);
+                //});
                 //connectToDatabaseAsync({open:true},function(err){
                 //    console.log('kecso connecting to database',err);
                 //});
+                _self.addEventListener(_self.events.SERVER_BRANCH_UPDATED,function(client,data){
+                    console.log(data);
+                });
             }
 
             //export and import functions
@@ -2430,6 +2472,7 @@ define([
                 _database.openDatabase(function(err){
                     if(!err){
                         _networkWatcher = networkWatcher();
+                        serverEventer();
                         _database.getProjectNames(function(err,names){
                             if(!err && names && names.length>0){
                                 var projectName = null;
