@@ -19,7 +19,7 @@ ul.gme-navigator {
     ul.gme-navigator > li:hover > .dropdown-menu {
       display: block; }
   ul.gme-navigator li.selected {
-    display: block; }
+    background-color: #EFF5FD; }
   ul.gme-navigator ul.gme-navigator {
     display: inline-block; }
   ul.gme-navigator .dropdown-menu {
@@ -57,6 +57,8 @@ ul.gme-navigator {
     margin-right: -10px; }
   ul.gme-navigator .dropdown-submenu:hover > a:after {
     border-left-color: #ffffff; }
+  ul.gme-navigator .disabled.dropdown-submenu:hover > a:after {
+    border-left-color: #999; }
   ul.gme-navigator .dropdown-submenu.pull-left {
     float: none; }
   ul.gme-navigator .dropdown-submenu.pull-left > .dropdown-menu {
@@ -76,5 +78,8 @@ ul.gme-navigator {
     font-size: 60%;
     top: -2px;
     position: relative; }
+  ul.gme-navigator li.label {
+    color: #bbb;
+    text-transform: uppercase; }
   ul.gme-navigator:hover {
     background-color: transparent; }

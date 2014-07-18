@@ -72,10 +72,10 @@ define([
         }
 
         // initialize root menu
-        // projects section is mandatory
+        // projects id is mandatory
         self.root.menu = [
             {
-                section: 'top',
+                id: 'top',
                 items: [
                     {
                         id: 'newProkect',
@@ -94,14 +94,16 @@ define([
                 ]
             },
             {
-                section: 'projects',
+                id: 'projects',
+                label: 'Recent projects',
+                totalItems: 20,
                 items: [],
                 showAllItems: function () {
                     console.log('Show all items...');
                 }
             },
             {
-                section: 'preferences',
+                id: 'preferences',
                 items: [
                     {
                         id: 'showPreferences',
@@ -320,7 +322,8 @@ define([
         self.projects[projectId] = {
             id: projectId,
             label: projectId,
-            //isSelected: i === selectedItem,
+            //disabled: true,
+            //isSelected: true,
             branches: {},
             action: selectProject,
             actionData: {
@@ -328,7 +331,7 @@ define([
             },
             menu: [
                 {
-                    section: 'top',
+                    id: 'top',
                     items: [
                         {
                             id: 'deleteProject',
@@ -352,9 +355,11 @@ define([
                     ]
                 },
                 {
-                    section: 'branches',
-                    items: [],
-                    showAllItems: showAllBranches
+                    id: 'branches',
+                    label: 'Recent branches',
+                    totalItems: 20,
+                    items: []
+//                    showAllItems: showAllBranches
                 }
             ]
         };
@@ -367,8 +372,8 @@ define([
 
         for (i = 0; i < self.root.menu.length; i += 1) {
 
-            // find the projects section in the menu items
-            if (self.root.menu[i].section === 'projects') {
+            // find the projects id in the menu items
+            if (self.root.menu[i].id === 'projects') {
 
                 // convert indexed projects to an array
                 self.root.menu[i].items = self.mapToArray(self.projects);
@@ -516,8 +521,8 @@ define([
 
         for (i = 0; i < self.projects[projectId].menu.length; i += 1) {
 
-            // find the branches section in the menu items
-            if (self.projects[projectId].menu[i].section === 'branches') {
+            // find the branches id in the menu items
+            if (self.projects[projectId].menu[i].id === 'branches') {
 
                 // convert indexed branches to an array
                 self.projects[projectId].menu[i].items = self.mapToArray(self.projects[projectId].branches);
@@ -537,8 +542,8 @@ define([
 
             for (i = 0; i < self.root.menu.length; i += 1) {
 
-                // find the projects section in the menu items
-                if (self.root.menu[i].section === 'projects') {
+                // find the projects id in the menu items
+                if (self.root.menu[i].id === 'projects') {
 
                     // convert indexed projects to an array
                     self.root.menu[i].items = self.mapToArray(self.projects);
@@ -561,8 +566,8 @@ define([
 
             for (i = 0; i < self.projects[projectId].menu.length; i += 1) {
 
-                // find the branches section in the menu items
-                if (self.projects[projectId].menu[i].section === 'branches') {
+                // find the branches id in the menu items
+                if (self.projects[projectId].menu[i].id === 'branches') {
 
                     // convert indexed branches to an array
                     self.projects[projectId].menu[i].items = self.mapToArray(self.projects[projectId].branches);
