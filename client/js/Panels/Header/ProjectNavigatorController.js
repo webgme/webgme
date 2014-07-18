@@ -6,10 +6,8 @@
 
 define([
     'js/Constants',
-    'js/Utils/ExportManager',
     'js/Dialogs/ProjectRepository/ProjectRepositoryDialog'], function (
     CONSTANTS,
-    ExportManager,
     ProjectRepositoryDialog
 ) {
     "use strict";
@@ -350,18 +348,16 @@ define([
 
         if (self.gmeClient) {
             exportBranch = function (data) {
-                if (self.gmeClient.getActiveProjectName() === data.projectId &&
-                    self.gmeClient.getActualBranch() === data.branchId) {
+                var url = self.gmeClient.getDumpURL({
+                    project: data.projectId,
+                    branch: data.branchId,
+                    output: data.projectId + '_' + data.branchId
+                });
 
-                    ExportManager.export(CONSTANTS.PROJECT_ROOT_ID);
+                if (url) {
+                    window.location = url;
                 } else {
-                    self.selectBranch(data, function (err) {
-                        if (err) {
-                            // TODO: handle errors
-                            return;
-                        };
-                        ExportManager.export(CONSTANTS.PROJECT_ROOT_ID);
-                    });
+                    console.error('Failed to get project dump url for ', data);
                 }
             };
 
