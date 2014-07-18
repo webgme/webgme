@@ -180,8 +180,31 @@ define([
             self.selectProject({});
         });
 
+        self.gmeClient.addEventListener("SERVER_PROJECT_CREATED", function (client, projectId) {
+            console.log('SERVER_PROJECT_CREATED', projectId);
+        });
+
+        self.gmeClient.addEventListener("SERVER_PROJECT_DELETED", function (client, projectId) {
+            console.log('SERVER_PROJECT_DELETED', projectId);
+        });
+
         self.gmeClient.addEventListener("BRANCH_CHANGED", function (client, branchId) {
             self.selectBranch({projectId: self.gmeClient.getActiveProjectName(), branchId: branchId});
+        });
+
+        self.gmeClient.addEventListener("SERVER_BRANCH_CREATED", function (client, parameters) {
+            console.log('SERVER_BRANCH_CREATED', parameters);
+
+        });
+
+        self.gmeClient.addEventListener("SERVER_BRANCH_UPDATED", function (client, parameters) {
+            console.log('SERVER_BRANCH_UPDATED', parameters);
+
+        });
+
+        self.gmeClient.addEventListener("SERVER_BRANCH_DELETED", function (client, parameters) {
+            console.log('SERVER_BRANCH_DELETED', parameters);
+
         });
 
         // get project list
