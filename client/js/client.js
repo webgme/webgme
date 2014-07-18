@@ -2239,8 +2239,11 @@ define([
                 //connectToDatabaseAsync({open:true},function(err){
                 //    console.log('kecso connecting to database',err);
                 //});
-                _self.addEventListener(_self.events.SERVER_BRANCH_UPDATED,function(client,data){
-                    console.log(data);
+                //_self.addEventListener(_self.events.SERVER_BRANCH_UPDATED,function(client,data){
+                //    console.log(data);
+                //});
+                getFullProjectListAsync(function(err,info){
+                    console.log(err,info);
                 });
             }
 
@@ -2260,7 +2263,6 @@ define([
                 _database.simpleRequest({command:'dumpMoreNodes',name:_projectName,hash:_rootHash || _core.getHash(_nodes[ROOT_PATH].node),nodes:paths},function(err,resId){
                     if(err){
                         callback(err);
-                        _database.simpleResult(resId,callback);
                     } else {
                         _database.simpleResult(resId,callback);
                     }
@@ -2466,6 +2468,15 @@ define([
                 return AllDecorators;
             }
 
+            function getFullProjectsInfoAsync(callback){
+                _database.simpleRequest({command:'getAllProjectsInfo'},function(err,id){
+                    if(err){
+                        return callback(err);
+                    }
+                    _database.simpleResult(id,callback);
+                });
+            }
+
             //initialization
             function initialize(){
                 _database = newDatabase();
@@ -2632,6 +2643,7 @@ define([
                 getExportLibraryUrlAsync: getExportLibraryUrlAsync,
                 updateLibraryAsync: updateLibraryAsync,
                 addLibraryAsync: addLibraryAsync,
+                getFullProjectsInfoAsync: getFullProjectsInfoAsync,
 
                 //constraint
                 setConstraint: setConstraint,

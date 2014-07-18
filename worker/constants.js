@@ -21,7 +21,8 @@ function(){
             'dumpMoreNodes': 'dumpMoreNodes',
             'generateJsonURL': 'generateJsonURL',
             'executePlugin': 'executePlugin',
-            'exportLibrary': 'exportLibrary'
+            'exportLibrary': 'exportLibrary',
+            'getAllProjectsInfo': 'getAllProjectsInfo'
         }
     }
 });
