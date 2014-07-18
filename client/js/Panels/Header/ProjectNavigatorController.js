@@ -5,9 +5,9 @@
  */
 
 define([
-    'js/Constants',
+    'js/Dialogs/Commit/CommitDialog',
     'js/Dialogs/ProjectRepository/ProjectRepositoryDialog'], function (
-    CONSTANTS,
+    CommitDialog,
     ProjectRepositoryDialog
 ) {
     "use strict";
@@ -344,7 +344,7 @@ define([
             i,
             selectBranch,
             exportBranch,
-            createTag;
+            createCommitMessage;
 
         if (self.gmeClient) {
             exportBranch = function (data) {
@@ -361,8 +361,18 @@ define([
                 }
             };
 
-            createTag = function (data) {
-                console.error('createTag: gmeClient version is not implemented yet.', data);
+            createCommitMessage = function (data) {
+                self.selectBranch(data, function (err) {
+                    var cd;
+
+                    if (err) {
+                       // TODO: log error
+                       return;
+                    }
+
+                    cd = new CommitDialog(self.gmeClient);
+                    cd.show();
+                });
             };
         } else {
             // test version
@@ -370,8 +380,8 @@ define([
                 console.log('exportBranch: ', data);
             };
 
-            createTag = function (data) {
-                console.log('createTag: ', data);
+            createCommitMessage = function (data) {
+                console.log('createCommitMessage: ', data);
             };
         }
 
@@ -408,10 +418,10 @@ define([
                             }
                         },
                         {
-                            id: 'createTag',
-                            label: 'Create tag',
+                            id: 'createCommitMessage',
+                            label: 'Create commit message',
                             iconClass: 'glyphicon glyphicon-tag',
-                            action: createTag,
+                            action: createCommitMessage,
                             actionData: {
                                 projectId: projectId,
                                 branchId: branchId
