@@ -263,6 +263,7 @@ define([
             i,
             showHistory,
             showAllBranches,
+            deleteProject,
             selectProject;
 
         if (self.gmeClient) {
@@ -284,6 +285,15 @@ define([
                 }
             };
 
+            deleteProject =  function (data) {
+                self.gmeClient.deleteProjectAsync(data.projectId, function (err) {
+                    if (err) {
+                        console.error(err);
+                        return;
+                    }
+                });
+            };
+
             showAllBranches = function (data) {
                 console.error('showAllBranches: gmeClient version is not implemented yet.', data);
             };
@@ -291,6 +301,10 @@ define([
             // test version
             showHistory = function (data) {
                 console.log('showHistory: ', data);
+            };
+
+            deleteProject =  function (data) {
+                self.removeProject(data.projectId);
             };
 
             showAllBranches = function (data) {
@@ -316,6 +330,15 @@ define([
                 {
                     section: 'top',
                     items: [
+                        {
+                            id: 'deleteProject',
+                            label: 'Delete project',
+                            iconClass: 'glyphicon glyphicon-remove',
+                            action: deleteProject,
+                            actionData: {
+                                projectId: projectId
+                            }
+                        },
                         {
                             id: 'showHistory',
                             label: 'Show history',
@@ -361,6 +384,8 @@ define([
             i,
             selectBranch,
             exportBranch,
+            createBranch,
+            deleteBranch,
             createCommitMessage;
 
         if (self.gmeClient) {
@@ -376,6 +401,14 @@ define([
                 } else {
                     console.error('Failed to get project dump url for ', data);
                 }
+            };
+
+            createBranch = function (data) {
+                console.error('createBranch: not implemented yet', data);
+            };
+
+            deleteBranch = function (data) {
+                console.error('deleteBranch: not implemented yet', data);
             };
 
             createCommitMessage = function (data) {
@@ -395,6 +428,17 @@ define([
             // test version
             exportBranch = function (data) {
                 console.log('exportBranch: ', data);
+            };
+
+            createBranch = function (data) {
+                console.log('createBranch: ', data);
+                self.addBranch(data.projectId, data.branchId + ' _copy');
+                self.selectProject({projectId: data.projectId, branchId: data.branchId + '_copy'});
+            };
+
+            deleteBranch = function (data) {
+                self.removeBranch(data.projectId, data.branchId);
+                self.selectProject(data);
             };
 
             createCommitMessage = function (data) {
@@ -424,6 +468,26 @@ define([
             menu: [
                 {
                     items: [
+                        {
+                            id: 'createBranch',
+                            label: 'Create branch',
+                            iconClass: 'glyphicon glyphicon-plus',
+                            action: createBranch,
+                            actionData: {
+                                projectId: projectId,
+                                branchId: branchId
+                            }
+                        },
+                        {
+                            id: 'deleteBranch',
+                            label: 'Delete branch',
+                            iconClass: 'glyphicon glyphicon-remove',
+                            action: deleteBranch,
+                            actionData: {
+                                projectId: projectId,
+                                branchId: branchId
+                            }
+                        },
                         {
                             id: 'exportBranch',
                             label: 'Export branch',
@@ -482,6 +546,8 @@ define([
                 }
             }
 
+            self.selectProject({});
+
             self.update();
         }
     };
@@ -503,6 +569,8 @@ define([
                     break;
                 }
             }
+
+            self.selectProject({projectId: projectId});
 
             self.update();
         }
