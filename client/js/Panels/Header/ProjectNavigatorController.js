@@ -5,8 +5,10 @@
  */
 
 define([
+    'js/Dialogs/Projects/ProjectsDialog',
     'js/Dialogs/Commit/CommitDialog',
     'js/Dialogs/ProjectRepository/ProjectRepositoryDialog'], function (
+    ProjectsDialog,
     CommitDialog,
     ProjectRepositoryDialog
 ) {
@@ -24,7 +26,7 @@ define([
         self.root = {
             id: 'root',
             label: 'GME',
-            isSelected: true,
+//            isSelected: true,
             itemClass: 'gme-root',
             menu: []
         };
@@ -44,7 +46,8 @@ define([
     };
 
     ProjectNavigatorController.prototype.initialize = function () {
-        var self = this;
+        var self = this,
+            newProject;
 
         // initialize model structure for view
         self.$scope.navigator = {
@@ -54,13 +57,42 @@ define([
 
         if (self.gmeClient) {
             self.initWithClient();
+
+            newProject = function (data) {
+                var pd = new ProjectsDialog(self.gmeClient);
+                pd.show();
+            };
+
         } else {
             self.initTestData();
+
+            newProject = function (data) {
+                self.addProject('New project ' + Math.floor(Math.random() * 10000));
+            };
         }
 
         // initialize root menu
         // projects section is mandatory
         self.root.menu = [
+            {
+                section: 'top',
+                items: [
+                    {
+                        id: 'newProkect',
+                        label: 'New project ...',
+                        iconClass: 'glyphicon glyphicon-plus',
+                        action: newProject,
+                        actionData: {}
+                    },
+                    {
+                        id: 'importProject',
+                        label: 'Import project ...',
+                        iconClass: 'glyphicon glyphicon-import',
+                        action: newProject,
+                        actionData: {}
+                    }
+                ]
+            },
             {
                 section: 'projects',
                 items: [],
