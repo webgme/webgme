@@ -182,10 +182,12 @@ define([
 
         self.gmeClient.addEventListener("SERVER_PROJECT_CREATED", function (client, projectId) {
             console.log('SERVER_PROJECT_CREATED', projectId);
+            self.addProject(projectId);
         });
 
         self.gmeClient.addEventListener("SERVER_PROJECT_DELETED", function (client, projectId) {
             console.log('SERVER_PROJECT_DELETED', projectId);
+            self.removeProject(projectId);
         });
 
         self.gmeClient.addEventListener("BRANCH_CHANGED", function (client, branchId) {
@@ -194,17 +196,17 @@ define([
 
         self.gmeClient.addEventListener("SERVER_BRANCH_CREATED", function (client, parameters) {
             console.log('SERVER_BRANCH_CREATED', parameters);
-
+            self.addBranch(parameters.project, parameters.branch);
         });
 
         self.gmeClient.addEventListener("SERVER_BRANCH_UPDATED", function (client, parameters) {
             console.log('SERVER_BRANCH_UPDATED', parameters);
-
+            // TODO: update branch information
         });
 
         self.gmeClient.addEventListener("SERVER_BRANCH_DELETED", function (client, parameters) {
             console.log('SERVER_BRANCH_DELETED', parameters);
-
+            self.removeBranch(parameters.project, parameters.branch);
         });
 
         // get project list
@@ -460,6 +462,50 @@ define([
         }
 
         self.update();
+    };
+
+    ProjectNavigatorController.prototype.removeProject = function (projectId, callback) {
+        var self = this,
+            i;
+
+        if (self.projects.hasOwnProperty(projectId)) {
+            delete self.projects[projectId];
+
+            for (i = 0; i < self.root.menu.length; i += 1) {
+
+                // find the projects section in the menu items
+                if (self.root.menu[i].section === 'projects') {
+
+                    // convert indexed projects to an array
+                    self.root.menu[i].items = self.mapToArray(self.projects);
+                    break;
+                }
+            }
+
+            self.update();
+        }
+    };
+
+    ProjectNavigatorController.prototype.removeBranch = function (projectId, branchId) {
+        var self = this,
+            i;
+
+        if (self.projects.hasOwnProperty(projectId) && self.projects[projectId].branches.hasOwnProperty(branchId)) {
+            delete self.projects[projectId].branches[branchId];
+
+            for (i = 0; i < self.projects[projectId].menu.length; i += 1) {
+
+                // find the branches section in the menu items
+                if (self.projects[projectId].menu[i].section === 'branches') {
+
+                    // convert indexed branches to an array
+                    self.projects[projectId].menu[i].items = self.mapToArray(self.projects[projectId].branches);
+                    break;
+                }
+            }
+
+            self.update();
+        }
     };
 
     ProjectNavigatorController.prototype.selectProject = function (data, callback) {
