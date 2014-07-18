@@ -521,7 +521,8 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 intoutdir:options.intoutdir,
                 pluginBasePaths:options.pluginBasePaths,
                 serverPort:options.webServerPort,
-                sessionToUser:options.sessionToUser
+                sessionToUser:options.sessionToUser,
+                auth:options.auth
             });
         }
 
