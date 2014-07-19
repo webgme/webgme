@@ -55,22 +55,6 @@ define([
             separator: true
         };
 
-        if (self.gmeClient) {
-            self.initWithClient();
-
-            newProject = function (data) {
-                var pd = new ProjectsDialog(self.gmeClient);
-                pd.show();
-            };
-
-        } else {
-            self.initTestData();
-
-            newProject = function (data) {
-                self.addProject('New project ' + Math.floor(Math.random() * 10000));
-            };
-        }
-
         // initialize root menu
         // projects id is mandatory
         self.root.menu = [
@@ -149,6 +133,22 @@ define([
             }
         ];
 
+        if (self.gmeClient) {
+            self.initWithClient();
+
+            newProject = function (data) {
+                var pd = new ProjectsDialog(self.gmeClient);
+                pd.show();
+            };
+
+        } else {
+            self.initTestData();
+
+            newProject = function (data) {
+                self.addProject('New project ' + Math.floor(Math.random() * 10000));
+            };
+        }
+
         // only root is selected by default
         self.$scope.navigator = {
             items: [
@@ -162,11 +162,6 @@ define([
         var self = this;
 
         self.dummyProjectsGenerator('Project', 10);
-
-        // debug
-        console.log(self.$scope.items);
-
-        self.update();
     };
 
     ProjectNavigatorController.prototype.initWithClient = function () {
@@ -229,8 +224,9 @@ define([
         var self = this;
 
         // FIXME: get read=only/viewable/available project?!
-        self.gmeClient.getFullProjectListAsync(function (err, projectList) {
-            var projectId;
+        self.gmeClient.getFullProjectsInfoAsync(function(err, projectList) {
+            var projectId,
+                branchId;
 
             if (err) {
                 console.error(err);
@@ -242,7 +238,12 @@ define([
 
             for (projectId in projectList) {
                 if (projectList.hasOwnProperty(projectId)) {
-                    self.addProject(projectId);
+                    self.addProject(projectId, projectList[projectId].rights);
+                    for (branchId in projectList[projectId].branches) {
+                        if (projectList[projectId].branches.hasOwnProperty(branchId)) {
+                            self.addBranch(projectId, branchId, projectList[projectId].branches[branchId]);
+                        }
+                    }
                 }
             }
         });
@@ -270,13 +271,19 @@ define([
         }
     };
 
-    ProjectNavigatorController.prototype.addProject = function (projectId) {
+    ProjectNavigatorController.prototype.addProject = function (projectId, rights) {
         var self = this,
             i,
             showHistory,
             showAllBranches,
             deleteProject,
             selectProject;
+
+        rights = rights || {
+            'delete': true,
+            'read': true,
+            'write': true
+        };
 
         if (self.gmeClient) {
             showHistory = function (data) {
@@ -332,8 +339,9 @@ define([
         self.projects[projectId] = {
             id: projectId,
             label: projectId,
-            //disabled: true,
-            //isSelected: true,
+            iconClass: rights.write ? '' : 'glyphicon glyphicon-lock',
+            disabled: !rights.read,
+            isSelected: false,
             branches: {},
             action: selectProject,
             actionData: {
@@ -347,6 +355,7 @@ define([
                             id: 'deleteProject',
                             label: 'Delete project',
                             iconClass: 'glyphicon glyphicon-remove',
+                            disabled: !rights.delete,
                             action: deleteProject,
                             actionData: {
                                 projectId: projectId
@@ -394,7 +403,7 @@ define([
         self.update();
     };
 
-    ProjectNavigatorController.prototype.addBranch = function (projectId, branchId) {
+    ProjectNavigatorController.prototype.addBranch = function (projectId, branchId, branchInfo) {
         var self = this,
             i,
             selectBranch,
@@ -470,10 +479,11 @@ define([
             id: branchId,
             label: branchId,
             properties: {
-                hashTag: '34535435',
+                hashTag: branchInfo || '#1234567890',
                 lastCommiter: 'petike',
                 lastCommitTime: new Date()
             },
+            isSelected: false,
             action: selectBranch,
             actionData: {
                 projectId: projectId,
@@ -487,6 +497,7 @@ define([
                             id: 'createBranch',
                             label: 'Create branch',
                             iconClass: 'glyphicon glyphicon-plus',
+                            disabled: true,
                             action: createBranch,
                             actionData: {
                                 projectId: projectId,
@@ -497,6 +508,7 @@ define([
                             id: 'deleteBranch',
                             label: 'Delete branch',
                             iconClass: 'glyphicon glyphicon-remove',
+                            disabled: true,
                             action: deleteBranch,
                             actionData: {
                                 projectId: projectId,
@@ -598,13 +610,27 @@ define([
     ProjectNavigatorController.prototype.selectBranch = function (data, callback) {
         var self = this,
             projectId = data.projectId,
-            branchId = data.branchId;
+            branchId = data.branchId,
+            currentProject = self.$scope.navigator.items[self.navIdProject],
+            currentBranch = self.$scope.navigator.items[self.navIdBranch];
 
         callback = callback || function () {};
+
+        // clear current selection
+        if (currentProject) {
+            currentProject.isSelected = false;
+        }
+
+        if (currentBranch) {
+            currentBranch.isSelected = false;
+        }
 
         if (projectId || projectId === '') {
             // FIXME: what if projects do not contain projectId anymore?
             self.$scope.navigator.items[self.navIdProject] = self.projects[projectId];
+
+            // mark project as selected
+            self.projects[projectId].isSelected = true;
 
             if (self.gmeClient) {
                 if (projectId !== self.gmeClient.getActiveProjectName()) {
@@ -640,6 +666,9 @@ define([
                 // set selected branch
                 self.$scope.navigator.items[self.navIdBranch] = self.projects[projectId].branches[branchId];
 
+                // mark branch as selected
+                self.projects[projectId].branches[branchId].isSelected = true;
+
                 if (self.gmeClient) {
                     if (branchId !== self.gmeClient.getActualBranch()) {
                         self.gmeClient.selectBranchAsync(branchId, function (err) {
@@ -673,13 +702,19 @@ define([
         var self = this,
             i,
             id,
-            count;
+            count,
+            rights;
 
         count = Math.max(Math.round(Math.random() * maxCount), 3);
 
         for (i = 0; i < count; i += 1) {
             id = name + '_' + i;
-            self.addProject(id);
+            rights = {
+                'delete': Math.random() > 0.5,
+                'read': Math.random() > 0.5,
+                'write': Math.random() > 0.5
+            };
+            self.addProject(id, rights);
         }
     };
 
