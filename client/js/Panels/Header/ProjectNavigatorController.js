@@ -55,6 +55,18 @@ define([
             separator: true
         };
 
+        if (self.gmeClient) {
+            newProject = function (data) {
+                var pd = new ProjectsDialog(self.gmeClient);
+                pd.show();
+            };
+
+        } else {
+            newProject = function (data) {
+                self.dummyProjectsGenerator('New Project ' + Math.floor(Math.random() * 10000), 4);
+            };
+        }
+
         // initialize root menu
         // projects id is mandatory
         self.root.menu = [
@@ -135,18 +147,8 @@ define([
 
         if (self.gmeClient) {
             self.initWithClient();
-
-            newProject = function (data) {
-                var pd = new ProjectsDialog(self.gmeClient);
-                pd.show();
-            };
-
         } else {
             self.initTestData();
-
-            newProject = function (data) {
-                self.addProject('New project ' + Math.floor(Math.random() * 10000));
-            };
         }
 
         // only root is selected by default
@@ -161,7 +163,7 @@ define([
     ProjectNavigatorController.prototype.initTestData = function () {
         var self = this;
 
-        self.dummyProjectsGenerator('Project', 10);
+        self.dummyProjectsGenerator('Project', 20);
     };
 
     ProjectNavigatorController.prototype.initWithClient = function () {
@@ -182,7 +184,6 @@ define([
 
         self.gmeClient.addEventListener("PROJECT_OPENED", function (client, projectId) {
             self.selectProject({projectId: projectId});
-            self.updateBranchList(projectId);
         });
 
         self.gmeClient.addEventListener("PROJECT_CLOESED", function (client, projectId) {
@@ -247,28 +248,6 @@ define([
                 }
             }
         });
-    };
-
-    ProjectNavigatorController.prototype.updateBranchList = function (projectId) {
-        var self = this,
-            i;
-
-        if (projectId === self.gmeClient.getActiveProjectName()) {
-            // FIXME: can we get branches for the a given project???
-            self.gmeClient.getBranchesAsync(function (err, branchList) {
-                if (err) {
-                    console.error(err);
-                    return;
-                }
-
-                // clear branches list
-                self.projects[projectId].branches = [];
-
-                for (i = 0; i < branchList.length; i += 1) {
-                    self.addBranch(projectId, branchList[i].name);
-                }
-            });
-        }
     };
 
     ProjectNavigatorController.prototype.addProject = function (projectId, rights) {
@@ -365,6 +344,7 @@ define([
                             id: 'showHistory',
                             label: 'Show history',
                             iconClass: 'glyphicon glyphicon-time',
+                            disabled: !rights.read,
                             action: showHistory,
                             actionData: {
                                 projectId: projectId
@@ -384,7 +364,7 @@ define([
         };
 
         if (self.gmeClient) {
-            self.updateBranchList(projectId);
+            // branches are updated based on events
         } else {
             self.dummyBranchGenerator('Branch', 10, projectId);
         }
@@ -395,7 +375,7 @@ define([
             if (self.root.menu[i].id === 'projects') {
 
                 // convert indexed projects to an array
-                self.root.menu[i].items = self.mapToArray(self.projects);
+                self.root.menu[i].items = self.mapToArray(self.projects, ['name', 'id']);
                 break;
             }
         }
@@ -411,6 +391,11 @@ define([
             createBranch,
             deleteBranch,
             createCommitMessage;
+
+        if (self.projects[projectId].disabled) {
+            // do not show any branches if the project is disabled
+            return;
+        }
 
         if (self.gmeClient) {
             exportBranch = function (data) {
@@ -547,7 +532,7 @@ define([
             if (self.projects[projectId].menu[i].id === 'branches') {
 
                 // convert indexed branches to an array
-                self.projects[projectId].menu[i].items = self.mapToArray(self.projects[projectId].branches);
+                self.projects[projectId].menu[i].items = self.mapToArray(self.projects[projectId].branches, ['name', 'id']);
                 break;
             }
         }
@@ -626,6 +611,25 @@ define([
         }
 
         if (projectId || projectId === '') {
+            if (self.projects.hasOwnProperty(projectId) === false) {
+                console.error(projectId + ' does not exist in the navigation bar');
+                return;
+            }
+
+            if (self.projects[projectId].disabled) {
+                // prevent to select disabled projects
+
+                if (currentProject) {
+                    currentProject.isSelected = true;
+                }
+
+                if (currentBranch) {
+                    currentBranch.isSelected = true;
+                }
+
+                return;
+            }
+
             // FIXME: what if projects do not contain projectId anymore?
             self.$scope.navigator.items[self.navIdProject] = self.projects[projectId];
 
@@ -663,6 +667,12 @@ define([
             }
 
             if (branchId || branchId === '') {
+
+                if (self.projects[projectId].branches.hasOwnProperty(branchId) === false) {
+                    console.error(projectId + ' - ' + branchId + ' branch does not exist in the navigation bar');
+                    return;
+                }
+
                 // set selected branch
                 self.$scope.navigator.items[self.navIdBranch] = self.projects[projectId].branches[branchId];
 
@@ -710,10 +720,18 @@ define([
         for (i = 0; i < count; i += 1) {
             id = name + '_' + i;
             rights = {
-                'delete': Math.random() > 0.5,
-                'read': Math.random() > 0.5,
-                'write': Math.random() > 0.5
+                'read': Math.random() > 0.2,
+                'write': false,
+                'delete': false,
             };
+
+            if (rights.read) {
+                rights.write = Math.random() > 0.3;
+                if (rights.write) {
+                    rights.delete = Math.random() > 0.3;
+                }
+            }
+
             self.addProject(id, rights);
         }
     };
@@ -733,9 +751,32 @@ define([
         }
     };
 
-    ProjectNavigatorController.prototype.mapToArray = function (hashMap) {
+    ProjectNavigatorController.prototype.mapToArray = function (hashMap, orderBy) {
         var keys = Object.keys(hashMap),
             values = keys.map(function (v) { return hashMap[v]; });
+
+        // keys precedence to order
+        orderBy = orderBy || [];
+
+        values.sort(function (a, b) {
+            var i,
+                key;
+
+            for (i = 0; i < orderBy.length; i += 1) {
+                key = orderBy[i];
+                if (a.hasOwnProperty(key) && b.hasOwnProperty(key)) {
+                    if (a[key] > b[key]) {
+                        return 1;
+                    }
+                    if (a[key] < b[key]) {
+                        return -1;
+                    }
+                }
+            }
+
+            // a must be equal to b
+            return 0;
+        });
 
         return values;
     };
