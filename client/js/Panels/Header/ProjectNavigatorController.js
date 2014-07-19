@@ -173,6 +173,18 @@ define([
         var self = this;
 
         // register all event listeners on gmeClient
+
+        self.gmeClient.addEventListener("NETWORKSTATUS_CHANGED", function (client) {
+            if (self.gmeClient.getActualNetworkStatus() === self.gmeClient.networkStates.CONNECTED) {
+                // get project list
+                self.updateProjectList();
+            } else {
+                // get project list
+                console.warn(self.gmeClient.getActualNetworkStatus() + " netwrok status is not handled yet.");
+            }
+
+        });
+
         self.gmeClient.addEventListener("PROJECT_OPENED", function (client, projectId) {
             self.selectProject({projectId: projectId});
             self.updateBranchList(projectId);
@@ -211,8 +223,6 @@ define([
             self.removeBranch(parameters.project, parameters.branch);
         });
 
-        // get project list
-        self.updateProjectList();
     };
 
     ProjectNavigatorController.prototype.updateProjectList = function () {

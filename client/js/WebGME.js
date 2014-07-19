@@ -143,6 +143,10 @@ define(['logManager',
                 if (panels.length > 0) {
                     loadPanels(panels);
                 } else {
+                    if (_.isFunction(afterPanelsLoaded)) {
+                        afterPanelsLoaded(client);
+                    }
+
                     if(initialThingsToDo.createNewProject){
                         client.connectToDatabaseAsync({},function(err){
                             if(err){
@@ -243,11 +247,6 @@ define(['logManager',
                 if(err){
                     logger.error(err);
                 } else {
-
-                    if (_.isFunction(afterPanelsLoaded)) {
-                        afterPanelsLoaded(client);
-                    }
-
                     client.getAvailableProjectsAsync(function(err,projectArray){
                         projectOpenDialog = new ProjectsDialog(client);
                         projectOpenDialog.show();
@@ -257,10 +256,6 @@ define(['logManager',
         };
 
         selectObject = function () {
-            if (_.isFunction(afterPanelsLoaded)) {
-                afterPanelsLoaded(client);
-            }
-
             if (initialThingsToDo.objectToLoad) {
                 if (initialThingsToDo.objectToLoad.toLowerCase() === 'root') {
                     initialThingsToDo.objectToLoad = CONSTANTS.PROJECT_ROOT_ID;
