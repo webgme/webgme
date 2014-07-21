@@ -138,7 +138,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 _waitingEventCallbacks.push(callback);
             } else {
                 //missed some events so we send the next right away
-                callback(null,_eventHistory[index],_events[_eventHistory[index]]);
+                callback(null,_eventHistory[index-1],_events[_eventHistory[index-1]]);
             }
         }
 

@@ -183,10 +183,12 @@ define([
         });
 
         self.gmeClient.addEventListener("PROJECT_OPENED", function (client, projectId) {
+            console.log('PROJECT_OPENED', projectId);
             self.selectProject({projectId: projectId});
         });
 
-        self.gmeClient.addEventListener("PROJECT_CLOESED", function (client, projectId) {
+        self.gmeClient.addEventListener("PROJECT_CLOSED", function (client, projectId) {
+            console.log('PROJECT_CLOSED', projectId);
             self.selectProject({});
         });
 
@@ -201,6 +203,7 @@ define([
         });
 
         self.gmeClient.addEventListener("BRANCH_CHANGED", function (client, branchId) {
+            console.log('BRANCH_CHANGED', branchId);
             self.selectBranch({projectId: self.gmeClient.getActiveProjectName(), branchId: branchId});
         });
 
