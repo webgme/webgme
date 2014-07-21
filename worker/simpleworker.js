@@ -329,6 +329,33 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
         }
 
     };
+
+    var setBranch = function(sessionId,projectName,branchName,oldHash,newHash,callback){
+        if(storage){
+            if(initialized){
+                storage.getProjectNames(function(err,projectlist){
+                    if(err){
+                        return callback(err);
+                    }
+
+                    if(projectlist.indexOf(projectName) === -1){
+                        return callback(new Error('no such project'));
+                    }
+                    getProject(projectName,sessionId,function(err,project){
+                            if(err){
+                                return callback(err);
+                            }
+
+                            project.setBranchHash(branchName,oldHash,newHash,callback);
+                        });
+                    });
+            } else {
+                callback(new Error('worker not yet initialized'));
+            }
+        } else {
+            callback(new Error('no active data connection'));
+        }
+    };
     //main message processing loop
     process.on('message',function(parameters){
         parameters = parameters || {};
@@ -413,6 +440,20 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
                 resultId = GUID();
                 process.send({pid:process.pid,type:CONSTANT.msgTypes.request,error:null,resid:resultId});
                 getAllProjectsInfo(parameters.user,function(err,r){
+                    if(resultRequested === true){
+                        initResult();
+                        process.send({pid:process.pid,type:CONSTANT.msgTypes.result,error:err,result:r});
+                    } else {
+                        resultReady = true;
+                        error = err;
+                        result = r;
+                    }
+                });
+                break;
+            case CONSTANT.workerCommands.setBranch:
+                resultId = GUID();
+                process.send({pid:process.pid,type:CONSTANT.msgTypes.request,error:null,resid:resultId});
+                setBranch(parameters.webGMESessionId,parameters.project,parameters.branch,parameters.old,parameters.new,function(err,r){
                     if(resultRequested === true){
                         initResult();
                         process.send({pid:process.pid,type:CONSTANT.msgTypes.result,error:err,result:r});

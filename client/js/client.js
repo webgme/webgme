@@ -586,7 +586,7 @@ define([
                     callback(e);
                 };
                 if(_branch){
-                    //otherwise the branch will not change
+                    //otherwise the branch will not 'change'
                     _self.dispatchEvent(_self.events.BRANCH_CHANGED,null);
                 }
                 _branch = null;
@@ -2250,9 +2250,7 @@ define([
                 //_self.addEventListener(_self.events.SERVER_BRANCH_UPDATED,function(client,data){
                 //    console.log(data);
                 //});
-                getFullProjectListAsync(function(err,info){
-                    console.log(err,info);
-                });
+                
             }
 
             //export and import functions
@@ -2485,6 +2483,24 @@ define([
                 });
             }
 
+            function createGenericBranchAsync(project,branch,commit,callback){
+                _database.simpleRequest({command:'setBranch',project:project,branch:branch,old:'',new:commit},function(err,id){
+                    if(err){
+                        return callback(err);
+                    }
+                    _database.simpleResult(id,callback);
+                });
+            }
+
+            function deleteGenericBranchAsync(project,branch,commit,callback){
+                _database.simpleRequest({command:'setBranch',project:project,branch:branch,old:commit,new:''},function(err,id){
+                    if(err){
+                        return callback(err);
+                    }
+                    _database.simpleResult(id,callback);
+                });
+            }
+
             //initialization
             function initialize(){
                 _database = newDatabase();
@@ -2652,6 +2668,8 @@ define([
                 updateLibraryAsync: updateLibraryAsync,
                 addLibraryAsync: addLibraryAsync,
                 getFullProjectsInfoAsync: getFullProjectsInfoAsync,
+                createGenericBranchAsync: createGenericBranchAsync,
+                deleteGenericBranchAsync: deleteGenericBranchAsync,
 
                 //constraint
                 setConstraint: setConstraint,

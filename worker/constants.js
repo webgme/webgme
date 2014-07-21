@@ -22,7 +22,8 @@ function(){
             'generateJsonURL': 'generateJsonURL',
             'executePlugin': 'executePlugin',
             'exportLibrary': 'exportLibrary',
-            'getAllProjectsInfo': 'getAllProjectsInfo'
+            'getAllProjectsInfo': 'getAllProjectsInfo',
+            'setBranch': 'setBranch'
         }
-    }
+    };
 });
