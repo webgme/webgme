@@ -120,11 +120,11 @@ define(['jquery'], function () {
                             if (onChangeFn) {
                                 onChangeFn.call(el, originalValue, newValue);
                             }
+                        }
 
                             if (onFinishFn) {
-                                onChangeFn.call(el);
+                                onFinishFn.call(el);
                             }
-                        }
                     });
             };
 
