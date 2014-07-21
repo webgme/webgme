@@ -578,10 +578,17 @@ define([
                     _loadError = 0;
                     _offline = false;
                     cleanUsersTerritories();
-                    _self.dispatchEvent(_self.events.PROJECT_CLOSED,oldProjName);
+                    if(oldProjName){
+                        //otherwise there were no open project at all
+                        _self.dispatchEvent(_self.events.PROJECT_CLOSED,oldProjName);
+                    }
 
                     callback(e);
                 };
+                if(_branch){
+                    //otherwise the branch will not change
+                    _self.dispatchEvent(_self.events.BRANCH_CHANGED,null);
+                }
                 _branch = null;
                 if(_project){
                     var project = _project;
@@ -1900,53 +1907,55 @@ define([
                 }
             }
             function updateTerritory(guid, patterns) {
-                if(_project){
-                    if(_nodes[ROOT_PATH]){
-                        //TODO: this has to be optimized
-                        var missing = 0;
-                        var error = null;
+                if(_users[guid]){
+                    if(_project){
+                        if(_nodes[ROOT_PATH]){
+                            //TODO: this has to be optimized
+                            var missing = 0;
+                            var error = null;
 
-                        var patternLoaded = function (err) {
-                            error = error || err;
-                            if(--missing === 0){
+                            var patternLoaded = function (err) {
+                                error = error || err;
+                                if(--missing === 0){
+                                    //allDone();
+                                    _updateTerritoryAllDone(guid, patterns, error);
+                                }
+                            };
+
+                            //EXTRADTED OUT TO: _updateTerritoryAllDone
+                            /*var allDone = function(){
+                             if(_users[guid]){
+                             _users[guid].PATTERNS = JSON.parse(JSON.stringify(patterns));
+                             if(!error){
+                             userEvents(guid,[]);
+                             }
+                             }
+                             };*/
+                            for(var i in patterns){
+                                missing++;
+                            }
+                            if(missing>0){
+                                for(i in patterns){
+                                    loadPattern(_core,i,patterns[i],_nodes,patternLoaded);
+                                }
+                            } else {
                                 //allDone();
                                 _updateTerritoryAllDone(guid, patterns, error);
                             }
-                        };
-
-                        //EXTRADTED OUT TO: _updateTerritoryAllDone
-                        /*var allDone = function(){
-                            if(_users[guid]){
-                                _users[guid].PATTERNS = JSON.parse(JSON.stringify(patterns));
-                                if(!error){
-                                    userEvents(guid,[]);
-                                }
-                            }
-                        };*/
-                        for(var i in patterns){
-                            missing++;
-                        }
-                        if(missing>0){
-                            for(i in patterns){
-                                loadPattern(_core,i,patterns[i],_nodes,patternLoaded);
-                            }
                         } else {
-                            //allDone();
-                            _updateTerritoryAllDone(guid, patterns, error);
+                            //something funny is going on
+                            if(_loadNodes[ROOT_PATH]){
+                                //probably we are in the loading process, so we should redo this update when the loading finishes
+                                //setTimeout(updateTerritory,100,guid,patterns);
+                            } else {
+                                //root is not in nodes and has not even started to load it yet...
+                                _users[guid].PATTERNS = JSON.parse(JSON.stringify(patterns));
+                            }
                         }
                     } else {
-                        //something funny is going on
-                        if(_loadNodes[ROOT_PATH]){
-                            //probably we are in the loading process, so we should redo this update when the loading finishes
-                            //setTimeout(updateTerritory,100,guid,patterns);
-                        } else {
-                            //root is not in nodes and has not even started to load it yet...
-                            _users[guid].PATTERNS = JSON.parse(JSON.stringify(patterns));
-                        }
+                        //we should update the patterns, but that is all
+                        _users[guid].PATTERNS = JSON.parse(JSON.stringify(patterns));
                     }
-                } else {
-                    //we should update the patterns, but that is all
-                    _users[guid].PATTERNS = JSON.parse(JSON.stringify(patterns));
                 }
             }
 
