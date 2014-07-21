@@ -74,7 +74,7 @@ define([
                 id: 'top',
                 items: [
                     {
-                        id: 'newProkect',
+                        id: 'newProject',
                         label: 'New project ...',
                         iconClass: 'glyphicon glyphicon-plus',
                         action: newProject,
@@ -171,54 +171,54 @@ define([
 
         // register all event listeners on gmeClient
 
-        self.gmeClient.addEventListener("NETWORKSTATUS_CHANGED", function (client) {
+        self.gmeClient.addEventListener(self.gmeClient.events.NETWORKSTATUS_CHANGED, function (client) {
             if (self.gmeClient.getActualNetworkStatus() === self.gmeClient.networkStates.CONNECTED) {
                 // get project list
                 self.updateProjectList();
             } else {
                 // get project list
-                console.warn(self.gmeClient.getActualNetworkStatus() + " netwrok status is not handled yet.");
+                console.warn(self.gmeClient.getActualNetworkStatus() + " network status is not handled yet.");
             }
 
         });
 
-        self.gmeClient.addEventListener("PROJECT_OPENED", function (client, projectId) {
-            console.log('PROJECT_OPENED', projectId);
+        self.gmeClient.addEventListener(self.gmeClient.events.PROJECT_OPENED, function (client, projectId) {
+            console.log(self.gmeClient.events.PROJECT_OPENED, projectId);
             self.selectProject({projectId: projectId});
         });
 
-        self.gmeClient.addEventListener("PROJECT_CLOSED", function (client, projectId) {
-            console.log('PROJECT_CLOSED', projectId);
+        self.gmeClient.addEventListener(self.gmeClient.events.PROJECT_CLOSED, function (client, projectId) {
+            console.log(self.gmeClient.events.PROJECT_CLOSED, projectId);
             self.selectProject({});
         });
 
-        self.gmeClient.addEventListener("SERVER_PROJECT_CREATED", function (client, projectId) {
-            console.log('SERVER_PROJECT_CREATED', projectId);
+        self.gmeClient.addEventListener(self.gmeClient.events.SERVER_PROJECT_CREATED, function (client, projectId) {
+            console.log(self.gmeClient.events.SERVER_PROJECT_CREATED, projectId);
             self.addProject(projectId);
         });
 
-        self.gmeClient.addEventListener("SERVER_PROJECT_DELETED", function (client, projectId) {
-            console.log('SERVER_PROJECT_DELETED', projectId);
+        self.gmeClient.addEventListener(self.gmeClient.events.SERVER_PROJECT_DELETED, function (client, projectId) {
+            console.log(self.gmeClient.events.SERVER_PROJECT_DELETED, projectId);
             self.removeProject(projectId);
         });
 
-        self.gmeClient.addEventListener("BRANCH_CHANGED", function (client, branchId) {
-            console.log('BRANCH_CHANGED', branchId);
+        self.gmeClient.addEventListener(self.gmeClient.events.BRANCH_CHANGED, function (client, branchId) {
+            console.log(self.gmeClient.events.BRANCH_CHANGED, branchId);
             self.selectBranch({projectId: self.gmeClient.getActiveProjectName(), branchId: branchId});
         });
 
-        self.gmeClient.addEventListener("SERVER_BRANCH_CREATED", function (client, parameters) {
-            console.log('SERVER_BRANCH_CREATED', parameters);
+        self.gmeClient.addEventListener(self.gmeClient.events.SERVER_BRANCH_CREATED, function (client, parameters) {
+            console.log(self.gmeClient.events.SERVER_BRANCH_CREATED, parameters);
             self.addBranch(parameters.project, parameters.branch);
         });
 
-        self.gmeClient.addEventListener("SERVER_BRANCH_UPDATED", function (client, parameters) {
-            console.log('SERVER_BRANCH_UPDATED', parameters);
+        self.gmeClient.addEventListener(self.gmeClient.events.SERVER_BRANCH_UPDATED, function (client, parameters) {
+            console.log(self.gmeClient.events.SERVER_BRANCH_UPDATED, parameters);
             // TODO: update branch information
         });
 
-        self.gmeClient.addEventListener("SERVER_BRANCH_DELETED", function (client, parameters) {
-            console.log('SERVER_BRANCH_DELETED', parameters);
+        self.gmeClient.addEventListener(self.gmeClient.events.SERVER_BRANCH_DELETED, function (client, parameters) {
+            console.log(self.gmeClient.events.SERVER_BRANCH_DELETED, parameters);
             self.removeBranch(parameters.project, parameters.branch);
         });
 
@@ -417,11 +417,27 @@ define([
             };
 
             createBranch = function (data) {
-                console.error('createBranch: not implemented yet', data);
+                // TODO: get available branch name for project
+                var newBranchName = data.branchId + '_copy';
+
+                self.gmeClient.createGenericBranchAsync(data.projectId, newBranchName, data.branchInfo, function (err) {
+                    if (err) {
+                        console.error(err);
+                        return;
+                    }
+
+                    //self.selectProject({projectId: data.projectId, branchId: data.branchId + '_copy'});
+                });
+
             };
 
             deleteBranch = function (data) {
-                console.error('deleteBranch: not implemented yet', data);
+                self.gmeClient.deleteGenericBranchAsync(data.projectId, data.branchId, data.branchInfo, function (err) {
+                    if (err) {
+                        console.error(err);
+                        return;
+                    }
+                });
             };
 
             createCommitMessage = function (data) {
@@ -486,22 +502,24 @@ define([
                             id: 'createBranch',
                             label: 'Create branch',
                             iconClass: 'glyphicon glyphicon-plus',
-                            disabled: true,
+//                            disabled: true,
                             action: createBranch,
                             actionData: {
                                 projectId: projectId,
-                                branchId: branchId
+                                branchId: branchId,
+                                branchInfo: branchInfo
                             }
                         },
                         {
                             id: 'deleteBranch',
                             label: 'Delete branch',
                             iconClass: 'glyphicon glyphicon-remove',
-                            disabled: true,
+//                            disabled: true,
                             action: deleteBranch,
                             actionData: {
                                 projectId: projectId,
-                                branchId: branchId
+                                branchId: branchId,
+                                branchInfo: branchInfo
                             }
                         },
                         {
