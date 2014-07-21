@@ -11,7 +11,7 @@
             var app = angular.module('app', []);
 
 
-            app.directive('gmeNavigator', function () {
+            app.directive('dropDownNavigator', function () {
                 return {
                     restrict: 'E',
                     scope: {
@@ -55,19 +55,19 @@
 
 <div data-ng-controller="ProjectNavController">
     Project navigator
-    <gme-navigator items="projectNavItems"/>
+    <drop-down-navigator items="projectNavItems"/>
 </div>
 
 
 <div data-ng-controller="PanelNavController">
     Panel navigator
-    <gme-navigator  items="panelNavItems"/>
+    <drop-down-navigator  items="panelNavItems"/>
 </div>
 
 
 <div data-ng-controller="ZipNavController">
     Zip file content navigator
-    <gme-navigator items="zipNavItems"/>
+    <drop-down-navigator items="zipNavItems"/>
 </div>
 
 </body>

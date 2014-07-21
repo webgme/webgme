@@ -1,6 +1,6 @@
-<ul class="gme-navigator">
+<ul class="drop-down-navigator">
 
-    <script type="text/ng-template" id="gme-navigator-menu">
+    <script type="text/ng-template" id="drop-down-navigator-menu">
 
         <div data-ng-repeat-start="menuItemGroup in item.menu" data-ng-if="false"></div>
 
@@ -23,7 +23,7 @@
                     role="menu"
                     aria-labelledby="dropdownMenu"
                     data-ng-if="item.menu"
-                    ng-include="'gme-navigator-menu'">
+                    ng-include="'drop-down-navigator-menu'">
                 </ul>
             </li>
 
@@ -49,7 +49,7 @@
             role="menu"
             aria-labelledby="dropdownMenu"
             data-ng-if="item.menu"
-            ng-include="'gme-navigator-menu'">
+            ng-include="'drop-down-navigator-menu'">
         </ul>
     </script>
 
