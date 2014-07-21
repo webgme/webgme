@@ -7,8 +7,8 @@
 
 define([
     'angular',
-    'text!./templates/GMENavigator.html',
-    'css!./styles/GMENavigator.css'
+    'text!./templates/DropDownNavigator.html',
+    'css!./styles/dropDownNavigator.css'
 ], function(
     ng,
     template ){
@@ -16,9 +16,9 @@ define([
     "use strict";
 
     angular.module(
-        'gme.ui.gmeNavigator', []
+        'isis.ui.dropDownNavigator', []
     ).directive(
-        'gmeNavigator',
+        'dropDownNavigator',
          function () {
 
              return {

@@ -322,6 +322,7 @@ define([
             id: projectId,
             label: projectId,
             iconClass: rights.write ? '' : 'glyphicon glyphicon-lock',
+            iconPullRight: !rights.write,
             disabled: !rights.read,
             isSelected: false,
             branches: {},
