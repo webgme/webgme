@@ -209,12 +209,14 @@ define([
 
         self.gmeClient.addEventListener(self.gmeClient.events.SERVER_BRANCH_CREATED, function (client, parameters) {
             console.log(self.gmeClient.events.SERVER_BRANCH_CREATED, parameters);
-            self.addBranch(parameters.project, parameters.branch);
+            self.addBranch(parameters.project, parameters.branch, parameters.commit);
         });
 
         self.gmeClient.addEventListener(self.gmeClient.events.SERVER_BRANCH_UPDATED, function (client, parameters) {
             console.log(self.gmeClient.events.SERVER_BRANCH_UPDATED, parameters);
             // TODO: update branch information
+            self.removeBranch(parameters.project, parameters.branch);
+            self.addBranch(parameters.project, parameters.branch, parameters.commit);
         });
 
         self.gmeClient.addEventListener(self.gmeClient.events.SERVER_BRANCH_DELETED, function (client, parameters) {

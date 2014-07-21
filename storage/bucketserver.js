@@ -459,7 +459,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                                         if(!err){
                                             //here comes the branch eventing
                                             if(oldhash === '' && newhash !== ''){
-                                                fireEvent({type:SERVER_EVENT.BRANCH_CREATED,project:projectName,branch:branch});
+                                                fireEvent({type:SERVER_EVENT.BRANCH_CREATED,project:projectName,branch:branch,commit:newhash});
                                             } else if(oldhash !== '' && newhash === ''){
                                                 fireEvent({type:SERVER_EVENT.BRANCH_DELETED,project:projectName,branch:branch});
                                             } else {

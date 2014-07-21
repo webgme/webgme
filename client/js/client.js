@@ -187,7 +187,7 @@ define([
                                     _self.dispatchEvent(_self.events.SERVER_PROJECT_DELETED,parameters.project);
                                     break;
                                 case "BRANCH_CREATED":
-                                    _self.dispatchEvent(_self.events.SERVER_BRANCH_CREATED,{project:parameters.project,branch:parameters.branch});
+                                    _self.dispatchEvent(_self.events.SERVER_BRANCH_CREATED,{project:parameters.project,branch:parameters.branch,commit:parameters.commit});
                                     break;
                                 case "BRANCH_DELETED":
                                     _self.dispatchEvent(_self.events.SERVER_BRANCH_DELETED,{project:parameters.project,branch:parameters.branch});
