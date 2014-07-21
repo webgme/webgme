@@ -25,13 +25,16 @@ define(['plugin/PluginNodeDescription'], function (PluginNodeDescription) {
             }
 
             this.message = config.message;
-
-            // TODO: message type ERROR, WARNING, INFO, DEBUG
+            if (config.severity) {
+                this.severity = config.severity;
+            } else {
+                this.severity = 'info';
+            }
         } else {
             this.commitHash = '';
             this.activeNode = new PluginNodeDescription();
             this.message = '';
-            // TODO: message type ERROR, WARNING, INFO, DEBUG
+            this.severity = 'info';
         }
     };
 
@@ -44,7 +47,8 @@ define(['plugin/PluginNodeDescription'], function (PluginNodeDescription) {
         var result = {
             commitHash: this.commitHash,
             activeNode: this.activeNode.serialize(),
-            message: this.message
+            message: this.message,
+            severity: this.severity
         };
 
         return result;
