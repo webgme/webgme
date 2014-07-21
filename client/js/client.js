@@ -226,7 +226,7 @@ define([
                 WebGMEGlobal.getToken = getToken;
                 return {
                     getToken: getToken
-                }
+                };
             }
 
             function branchWatcher(branch,callback) {
@@ -513,7 +513,6 @@ define([
                                     if(firstName){
                                         branchWatcher(firstName,function(err){
                                             if(!err){
-                                                _self.dispatchEvent(_self.events.BRANCH_CHANGED, _branch);
                                                 callback(null);
                                             } else {
                                                 logger.error('The branch '+firstName+' of project '+name+' cannot be selected! ['+JSON.stringify(err)+']');
@@ -563,7 +562,7 @@ define([
             function closeOpenedProject(callback){
                 callback = callback || function(){};
                 var returning = function(e){
-
+                    var oldProjName = _projectName;
                     _projectName = null;
                     _inTransaction = false;
                     _core = null;
@@ -579,7 +578,7 @@ define([
                     _loadError = 0;
                     _offline = false;
                     cleanUsersTerritories();
-                    _self.dispatchEvent(_self.events.PROJECT_CLOSED);
+                    _self.dispatchEvent(_self.events.PROJECT_CLOSED,oldProjName);
 
                     callback(e);
                 };
