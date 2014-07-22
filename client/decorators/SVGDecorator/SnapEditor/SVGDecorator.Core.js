@@ -18,6 +18,12 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants',
 
     "use strict";
 
+    /**
+     * SVGDecorator constructor
+     *
+     * @constructor
+     * @param {Object} options
+     */
     var SVGDecorator = function (options) {
         var opts = _.extend( {}, options);
 
@@ -31,7 +37,14 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants',
     _.extend(SVGDecorator.prototype, SVGDecoratorCore.prototype);
     _.extend(SVGDecorator.prototype, SVGDecoratorConnections.prototype);
 
+    /**
+     * Process the custom data retrieved from the svg.
+     *
+     * @return {undefined}
+     */
     SVGDecorator.prototype.processCustomSvgData = function () {
+        var customDataElement;
+
         //Clean the line highlight data...
         var i = this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT].length,
             line;
@@ -75,6 +88,64 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants',
             }
 
             this.svgInitialStretch[this[SNAP_CONSTANTS.INITIAL_MEASURE][i].getAttribute('data-ptr')] = { x: w, y: h };
+
+        }
+
+        //Find the input areas and store them
+        var type,
+            attribute,
+            content,
+            target,
+            input,
+            x,
+            y;
+
+        //DOM section for input fields
+        this.inputFieldUpdates = {};//input field updates to receive
+        this.inputFields = {};
+        this._inputFields2Update = {};
+
+        for (i = this[SNAP_CONSTANTS.INPUT_FIELDS].length-1; i >=0; i--){
+            customDataElement = this[SNAP_CONSTANTS.INPUT_FIELDS][i];
+            //Populate input fields
+            type = customDataElement.getAttribute('data-type');
+            attribute = customDataElement.getAttribute('data-attribute');
+
+            //Get location and size of the inputField
+            x = parseFloat(customDataElement.getAttribute('x'));
+            y = parseFloat(customDataElement.getAttribute('y'));
+            w = parseFloat(customDataElement.getAttribute('width'));
+            h = parseFloat(customDataElement.getAttribute('height'));
+ 
+            //Get the content
+            switch (type) {
+                case SNAP_CONSTANTS.TEXT_FIELD.NAME:
+                    input = $('<input type="text"/>');
+                    content = SNAP_CONSTANTS.TEXT_FIELD.CONTENT.TEXT;
+                    break;
+
+                case SNAP_CONSTANTS.DROPDOWN.NAME:
+                    input = $('<select/>');
+                    content = customDataElement.getAttribute('data-content');
+                    target = customDataElement.getAttribute('data-target');
+                    break;
+                
+                default:
+                this.logger.warn("Will not be able to populate dropdown menu for " + attribute);
+            }
+
+            //Create the record the update
+            this.inputFieldUpdates[attribute] = { content: content, type: type };
+
+            if (target){
+                this.inputFieldUpdates[attribute].target = target;
+            }
+
+            //Create the data record
+            this.inputFields[attribute] = { x: x, y: y, width: w, height: h, type: type, visible: true};
+
+            //Add item to list of items to update
+            this._inputFields2Update[attribute] = true;
         }
     };
 
