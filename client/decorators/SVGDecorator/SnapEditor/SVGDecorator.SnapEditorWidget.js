@@ -5,19 +5,21 @@
  */
 
 define(['js/Constants',
-    'js/NodePropertyNames',
-    'js/Widgets/SnapEditor/SnapEditorWidget.DecoratorBase',
-    'js/Widgets/SnapEditor/SnapEditorWidget.DecoratorBase.ConnectionAreas',
-    'js/Widgets/SnapEditor/SnapEditorWidget.Constants',
-    'text!../Core/SVGDecorator.html',
-    './SVGDecorator.Core',
-    'css!./SVGDecorator.SnapEditorWidget'], function (CONSTANTS,
-                                                      nodePropertyNames,
-                                                      SnapEditorWidgetDecoratorBase,
-                                                      SnapEditorWidgetDecoratorBaseConnectionAreas,
-                                                      SNAP_CONSTANTS,
-                                                      SVGDecoratorTemplate,
-                                                      SVGDecoratorCore) {
+        'util/assert',
+        'js/NodePropertyNames',
+        'js/Widgets/SnapEditor/SnapEditorWidget.DecoratorBase',
+        'js/Widgets/SnapEditor/SnapEditorWidget.DecoratorBase.ConnectionAreas',
+        'js/Widgets/SnapEditor/SnapEditorWidget.Constants',
+        'text!../Core/SVGDecorator.html',
+        './SVGDecorator.Core',
+        'css!./SVGDecorator.SnapEditorWidget'], function (CONSTANTS,
+                                                          assert,
+                                                          nodePropertyNames,
+                                                          SnapEditorWidgetDecoratorBase,
+                                                          SnapEditorWidgetDecoratorBaseConnectionAreas,
+                                                          SNAP_CONSTANTS,
+                                                          SVGDecoratorTemplate,
+                                                          SVGDecoratorCore) {
 
     "use strict";
     /*
@@ -46,6 +48,13 @@ define(['js/Constants',
         SVG_SECONDARY_COLOR_ID = "secondary",
         AXIS = { X:'x', Y:'y' };//constants for stretching
 
+    /**
+     * SVGDecoratorSnapEditorWidget
+     *
+     * @constructor
+     * @param {Object} options
+     * @return {undefined}
+     */
     SVGDecoratorSnapEditorWidget = function (options) {
         var opts = _.extend( {}, options);
 
@@ -53,7 +62,7 @@ define(['js/Constants',
         SVGDecoratorCore.apply(this, [opts]);
 
         this._initializeVariables({ data: [SNAP_CONSTANTS.CONNECTION_HIGHLIGHT, 
-                                  SNAP_CONSTANTS.INITIAL_MEASURE], "connectors": false});
+                                  SNAP_CONSTANTS.INITIAL_MEASURE, SNAP_CONSTANTS.INPUT_FIELDS], "connectors": false});
 
         this._selfPatterns = {};
         
@@ -100,23 +109,59 @@ define(['js/Constants',
         // TODO
         this.$name.on("dblclick.editOnDblClick", null, function (event) {
             if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
-                $(this).editInPlace({"class": "",
+                var id = $(this).attr('id'),
+                    tempName = $('<div/>', { id: id + '-edit', 
+                     text: $(this).text()});
+
+                self.$el.append(tempName);
+                tempName.css('left', $(this).attr('x'));
+                tempName.css('top', $(this).attr('y'));
+                    
+                $(tempName).editInPlace({"class": id + "-edit",
                     "value": self.name,
                     "onChange": function (oldValue, newValue) {
-                        self.__onNodeTitleChanged(oldValue, newValue);
-                    }});
+                        self._saveAttributeChange(id, newValue);
+                    },
+                    "onFinish": function () {
+                        $(this).remove();
+                    }
+
+                });
             }
             event.stopPropagation();
             event.preventDefault();
         });
     };
 
+    /**
+     * Save changes to any node attributes made through clicking on the node.
+     *
+     * @this {SVGDecoratorSnapEditorWidget}
+     * @param {String} attributeName
+     * @param {String} value
+     * @return {undefined} 
+     */
+    SVGDecoratorSnapEditorWidget.prototype._saveAttributeChange = function(attributeName, value){
+        var client = this._control._client;
+
+        client.setAttributes(this._metaInfo[CONSTANTS.GME_ID], attributeName, value);
+    };
+
 
     /**** Override from SnapEditorWidgetDecoratorBase ****/
+    /**
+     * Update the svg image and attributes.
+     *
+     * @return {Boolean} return true if the decorator changed size
+     */
     SVGDecoratorSnapEditorWidget.prototype.update = function () {
         var oldNameLength = this.$name.width(),
             oldName = this.$name.text(),
-            dx;
+            dx,
+            changed = false;
+
+        //Update the displayed input areas based on newest data
+        this._updateInputFields();
 
         this._update();
 
@@ -140,8 +185,76 @@ define(['js/Constants',
 
             if (dx !== 0){
                 this.stretch(SNAP_CONSTANTS.NAME, AXIS.X, dx);
+                changed = "decorator resized";
             }
         }
+
+    };
+
+    /**
+     * Update item's input fields' DOMs as needed.
+     *
+     * @private
+     * @return {undefined}
+     */
+    SVGDecoratorSnapEditorWidget.prototype._updateInputFields = function () {
+        var fields = Object.keys(this._inputFields2Update),
+            container,
+            input,
+            field;
+
+        for (var i = fields.length-1; i >= 0; i--) {
+            //Get the div containing this input field or create one
+            field = fields[i];
+            input = null;
+            //container = this.$inputFields.find("#"+field+ "-container");
+            container = this.$el.find("#"+field+ "-container");
+            if (!container.length){
+                container = $('<div id="' + field + '-container" />');
+                //this.$inputFields.append(container);
+                this.$el.append(container);
+            } else {//Remove any old info
+                container.empty();
+            }
+
+            //Update field
+            if (this.inputFields[field].type === SNAP_CONSTANTS.TEXT_FIELD.NAME){
+                //Create a text field
+                input = $('<input>', { id: field, type: "text", text: this.inputFields[field].content });
+            } else if (this.inputFields[field].type === SNAP_CONSTANTS.DROPDOWN.NAME){
+                input = $('<select>', { id: field });
+                if (this.inputFields[field].options){//If it has options
+
+                    for (var j = 0; j < this.inputFields[field].options.length; j++){
+                        input.append($('<option>', { text: this.inputFields[field].options[j] }));
+                    }
+                }
+            }
+
+            if (input){
+                container.css("left", this.inputFields[field].x);
+                container.css("top", this.inputFields[field].y);
+                container.css("position", "absolute");
+                
+                input.css("width", this.inputFields[field].width);
+                input.css("height", this.inputFields[field].height);
+
+                input.css("z-index", this.zIndex+1);
+                //Register event listener
+                //TODO
+                /*
+                 *input.click(function(e){
+                 *    console.log("CLICKED ON " + field + " Field");
+                 *});
+                 */
+                container.append(input);
+            }
+
+            delete this._inputFields2Update[field];
+        }
+
+        this.$el.css("position", "relative");
+        this.$el.append(this.$inputFields);
     };
 
     /**** Override from SnapEditorWidgetCore ****/
@@ -168,24 +281,109 @@ define(['js/Constants',
             this.$name = name;
         }
 
-        //set any attribute text fields in the svg to the value of
-        //the attribute from the clickable item
-        //TODO
         var attributes = this.hostDesignerItem.attributes,
+            attrList = Object.keys(attributes),
             textFields = this.$el.find("text"),
             attr,
-            i = textFields.length;
+            fields,
+            self = this,
+            editText = function (event) {
+                if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
+                    var id = $(this).attr('id'),
+                    tempName = $('<div/>', { id: id + '-edit', 
+                         text: $(this).text()}),
+                    element = $(this);
+                         console.log("trying to edit " + id);
 
-        while (i--){
-            attr = textFields[i].id;
-            if (attributes[attr] !== undefined && attr !== 'name'){
-                this._setTextAndStretch(textFields.filter("#" + attr), attributes[attr], attr);
+                    self.$el.append(tempName);
+                    tempName.css('left', $(this).attr('x'));
+                    tempName.css('top', $(this).attr('y'));
+
+                    $(tempName).editInPlace({"class": id + "-edit",
+                        "value": $(this).text(),
+                        "onChange": function (oldValue, newValue) {
+                            self._saveAttributeChange(id, newValue);
+                            self._setTextAndStretch(element, newValue, id);
+                        },
+                        "onFinish": function () {
+                            $(this).remove();
+                        }
+                    });
+                }
+                event.stopPropagation();
+                event.preventDefault();
+            };
+
+        for (var i = 0; i < attrList.length; i++){
+            attr = attrList[i];
+            if (attr !== 'name'){
+                fields = textFields.filter("#" + attr);
+                this._setTextAndStretch(fields, attributes[attr].value, attr);
+                //Make the fields editable
+                fields.on("click", null, editText);
             }
         }
 
         this.update();
     };
 
+    /**
+     *Get the information that this decorator will need to update its input fields
+     *
+     *@this {SVGDecoratorSnapEditorWidget}
+     *@return {Object|null}  Dictionary of input content indexed by target pointer name
+     */
+    SVGDecoratorSnapEditorWidget.prototype.getInputFieldUpdates = function(){
+        if (this.inputFieldUpdates){
+            return _.extend({}, this.inputFieldUpdates);
+        }
+        return null;
+    };
+
+    /**
+     * Update the input field information
+     *
+     * @this {SVGDecoratorSnapEditorWidget}
+     * @param {String} id
+     * @param {String} content
+     * @param {Array} [options] Only required for dropdown menus
+     * @return {undefined}
+     */
+    SVGDecoratorSnapEditorWidget.prototype.updateInputField = function(id, content, options){
+        if (this.inputFields[id].content !== content){
+            this.inputFields[id].content = content;
+            this._inputFields2Update[id] = true;
+        }
+
+            if (options && this.inputFields[id].type === SNAP_CONSTANTS.DROPDOWN.NAME){
+                assert(options.indexOf(content) !== -1, "Selected option must be one of the available dropdown options");
+                if (this.inputFields[id].options !== options){
+                    this.inputFields[id].options = options;
+                    this._inputFields2Update[id] = true;
+                }
+            }
+    };
+
+    /**
+     * Show or hide the given input field visibility
+     *
+     * @this {SVGDecoratorSnapEditorWidget}
+     * @param {String} id
+     * @param {Boolean} visible
+     * @return {undefined}
+     */
+    SVGDecoratorSnapEditorWidget.prototype.setInputFieldVisibility = function(id, visible){
+        this.inputFields[id].visible = visible;
+    };
+
+    /**
+     * Set the text of a DOM element and stretch by the change in size
+     *
+     * @param {DOM Element} element
+     * @param {String} newText
+     * @param {String} stretchId
+     * @return {undefined}
+     */
     SVGDecoratorSnapEditorWidget.prototype._setTextAndStretch = function (element, newText, stretchId) {
         var oldText = element.text(),
             oldWidth = element.width(),
@@ -214,6 +412,12 @@ define(['js/Constants',
 
     };
 
+    /**
+     * Set the GME id of the decorator and update the z-index
+     *
+     * @param {String} newId
+     * @return {undefined}
+     */
     SVGDecoratorSnapEditorWidget.prototype.setGmeId = function (newId) {
         this._metaInfo[CONSTANTS.GME_ID] = newId;
         this.$el.attr("data-id", newId);
@@ -225,6 +429,14 @@ define(['js/Constants',
 
     /* * * * Manipulating the SVG * * * */
     //Stretching
+    /**
+     * Stretch the svg to a given x,y with respect to a stretching id
+     *
+     * @param {String} id
+     * @param {Number} x
+     * @param {Number} y
+     * @return {Boolean} true if the svg has changed in size
+     */
     SVGDecoratorSnapEditorWidget.prototype.stretchTo = function (id, x, y) {
         //Stretch according to the x,y values where x,y are
         //dimensions of the items pointed to by "id"
@@ -276,6 +488,14 @@ define(['js/Constants',
         return changed;
     };
 
+    /**
+     * Stretch the svg by delta along the coordinate plane, axis, with respect to the id
+     *
+     * @param {String} id
+     * @param {String} axis
+     * @param {Number} delta
+     * @return {Number} Current size of the svg along the given axis
+     */
     SVGDecoratorSnapEditorWidget.prototype.stretch = function (id, axis, delta) {
         var stretchClass = axis + "-stretch-" + id,
             shiftClass = axis + "-shift-" + id,
@@ -342,6 +562,11 @@ define(['js/Constants',
         return currentSVGSize;
     };
 
+    /**
+     * Initialize variables
+     *
+     * @param {Array} elements
+     */
     SVGDecoratorSnapEditorWidget.prototype._initializeSvgElements = function (elements) {
         var svgId,
             width,
@@ -352,7 +577,7 @@ define(['js/Constants',
             svgId = elements[i].getAttribute("id");
 
             if(!svgId){
-                svgId = this.genSVGId();
+                svgId = this._genSVGId();
                 elements[i].setAttribute("id", svgId);
             }
 
@@ -374,6 +599,12 @@ define(['js/Constants',
         }
     };
 
+    /**
+     * Shift the connection areas by "shift" with respect to shiftClass
+     *
+     * @param {String} shiftClass
+     * @param {Number} shift
+     */
     SVGDecoratorSnapEditorWidget.prototype._shiftConnectionAreas = function (shiftClass, shift) {
         if (this._customConnectionAreas){
 
@@ -394,6 +625,12 @@ define(['js/Constants',
         this._shiftCustomConnectionHighlightAreas(shiftClass, shift);
     };
 
+    /**
+     * Shift the connection highlight areas by "shift" with respect to shiftClass
+     *
+     * @param {String} shiftClass
+     * @param {Number} shift
+     */
     SVGDecoratorSnapEditorWidget.prototype._shiftCustomConnectionHighlightAreas = function (shiftClass, shift) {
         if (this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT]){
 
@@ -412,6 +649,14 @@ define(['js/Constants',
         }
     };
 
+    /**
+     * Stretch custom connection highlight areas of the item.
+     *
+     * @private
+     * @param {String} stretchClass
+     * @param {Number} stretch
+     * @return {undefined}
+     */
     SVGDecoratorSnapEditorWidget.prototype._stretchCustomConnectionHighlightAreas = function (stretchClass, stretch) {
         if (this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT]){
 
@@ -427,7 +672,13 @@ define(['js/Constants',
         }
     };
 
-    //Zebra Coloring
+    /**
+     * Set the color of the item to it's primary or secondary coloring depending upon the item it is attached to.
+     *
+     * @param {SVGDecoratorSnapEditorWidget} otherDecorator
+     * @param {SVGDecoratorSnapEditorWidget} otherColor
+     * @return {String} returns the item's color (primary/secondary)
+     */
     SVGDecoratorSnapEditorWidget.prototype.setColor = function (otherDecorator, otherColor) {
         //Check to see if it has a filter
         //If so, 
@@ -499,8 +750,14 @@ define(['js/Constants',
 
     /* * * * * END of Manipulating the SVG * * * * * */
 
-    SVGDecoratorSnapEditorWidget.prototype.genSVGId = function () {
-        //Randomly generate ID between 0,10000
+    /**
+     * Randomly generate ID between 0,10000 for identifying svg elements.
+     *
+     * @private
+     * @return {String} id
+     */
+    SVGDecoratorSnapEditorWidget.prototype._genSVGId = function () {
+        //
         var id = "SVG_" + Math.random()*10000;
 
         while(this._transforms[id]){
@@ -616,7 +873,11 @@ define(['js/Constants',
         return result;
     };
 
-    //Remove any connection areas that have ptrs not allowed by META
+    /**
+     * Remove any connection areas that have ptrs not allowed by META
+     *
+     * @param {Array} ptrs
+     */
     SVGDecoratorSnapEditorWidget.prototype.cleanConnections = function (ptrs) {
         if (this._customConnectionAreas){
             var i = this._customConnectionAreas.length;
@@ -628,7 +889,13 @@ define(['js/Constants',
         } 
     };
 
-    //Get a specific connection area
+    /**
+     * Get a specific connection area
+     *
+     * @param {String} ptr
+     * @param {String} role
+     * @return {Object|null} Connection Area
+     */
     SVGDecoratorSnapEditorWidget.prototype.getConnectionArea = function (ptr, role) {
         //Returns the first (and should be only) connection area of the given type
         var areas = this.getConnectionAreas(),
@@ -674,50 +941,6 @@ define(['js/Constants',
         this.hideSourceConnectors();
     };
 
-
-    SVGDecoratorSnapEditorWidget.prototype.__onNodeTitleChanged = function (oldValue, newValue) {
-        var client = this._control._client;
-
-        client.setAttributes(this._metaInfo[CONSTANTS.GME_ID], nodePropertyNames.Attributes.name, newValue);
-    };
-
-    /**** Override from SnapEditorWidgetDecoratorBase ****/
-    //called when the designer item's subcomponent should be updated
-    SVGDecoratorSnapEditorWidget.prototype.updateSubcomponent = function (portId) {
-        this._updatePort(portId);//FIXME
-    };
-
-
-    /**** Override from ModelDecoratorCore ****/
-    SVGDecoratorSnapEditorWidget.prototype.renderChild = function (portId) {
-        //Render the children inside of the given svg
-        //TODO
-        this.__registerAsSubcomponent(portId);
-
-    };
-
-    /**** Override from ModelDecoratorCore ****/
-    SVGDecoratorSnapEditorWidget.prototype.removePort = function (portId) {
-        var idx = this.portIDs.indexOf(portId);
-
-        if (idx !== -1) {
-            this.__unregisterAsSubcomponent(portId);
-        }
-
-        SVGDecoratorCore.prototype.removePort.call(this, portId);
-    };
-
-    SVGDecoratorSnapEditorWidget.prototype.__registerAsSubcomponent = function(portId) {
-        if (this.hostDesignerItem) {
-            this.hostDesignerItem.registerSubcomponent(portId, {"GME_ID": portId});
-        }
-    };
-
-    SVGDecoratorSnapEditorWidget.prototype.__unregisterAsSubcomponent = function(portId) {
-        if (this.hostDesignerItem) {
-            this.hostDesignerItem.unregisterSubcomponent(portId);
-        }
-    };
 
     /**** Override from SnapEditorWidgetDecoratorBase ****/
     SVGDecoratorSnapEditorWidget.prototype.notifyComponentEvent = function (componentList) {
