@@ -27,7 +27,7 @@ define(['./SnapEditorWidget.Constants'], function (SnapEditorWidgetConstants) {
         //handle click on clickable-items
         this.$el.on('mousedown.' + EVENT_POSTFIX, 'div.' + SnapEditorWidgetConstants.DESIGNER_ITEM_CLASS,  function (event) {
             var itemId = $(this).attr("id"),
-                eventDetails = self._processMouseEvent(event, true, true, true, true);
+                eventDetails = self._processMouseEvent(event, true, false, true, true);
 
             logger.debug('mousedown.item, ItemID: ' + itemId + ' eventDetails: ' + JSON.stringify(eventDetails));
 
@@ -40,7 +40,7 @@ define(['./SnapEditorWidget.Constants'], function (SnapEditorWidgetConstants) {
 
         //handle mouse down on background
         this.$el.on('mousedown.' + EVENT_POSTFIX, function (event) {
-            var eventDetails = self._processMouseEvent(event, true, true, true, true);
+            var eventDetails = self._processMouseEvent(event, true, false, true, true);
 
             logger.debug('mousedown.background, eventDetails: ' + JSON.stringify(eventDetails));
 
