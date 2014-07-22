@@ -1,12 +1,14 @@
-"use strict";
-
+/*globals define,_,WebGMEGlobal*/
 define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
         'js/Utils/DisplayFormat',
         'js/Constants',
         'css!/css/Panels/PropertyEditor/PointerWidget'],
+
     function (WidgetBase,
               displayFormat,
               CONSTANTS) {
+
+    "use strict";
 
         var PointerWidget;
 

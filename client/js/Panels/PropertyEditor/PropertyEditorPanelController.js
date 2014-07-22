@@ -1,4 +1,7 @@
-"use strict";
+/*globals define,WebGMEGlobal,_*/
+/*
+ * @author rkereskenyi / https://github/rkereskenyi
+ */
 
 define(['logManager',
     'clientUtil',
@@ -17,6 +20,8 @@ define(['logManager',
                                         DecoratorSVGExplorerDialog,
                                         PropertyGridWidgets,
                                         PointerWidget) {
+
+    "use strict";
 
     var PropertyEditorController,
         META_REGISTRY_KEYS = [REGISTRY_KEYS.IS_PORT,

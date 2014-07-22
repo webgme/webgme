@@ -1,10 +1,11 @@
-"use strict";
-
+/*globals define,_*/
 define(['js/PanelBase/PanelBaseWithHeader',
     'js/Controls/PropertyGrid/PropertyGrid',
     './PropertyEditorPanelController'], function (PanelBaseWithHeader,
                                                                      PropertyGrid,
                                                                      PropertyEditorPanelController) {
+
+    "use strict";
 
     var PropertyEditorPanel,
         __parent__ = PanelBaseWithHeader;
