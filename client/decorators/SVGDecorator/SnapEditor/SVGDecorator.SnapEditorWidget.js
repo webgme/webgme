@@ -293,7 +293,6 @@ define(['js/Constants',
                     tempName = $('<div/>', { id: id + '-edit', 
                          text: $(this).text()}),
                     element = $(this);
-                         console.log("trying to edit " + id);
 
                     self.$el.append(tempName);
                     tempName.css('left', $(this).attr('x'));
@@ -403,11 +402,11 @@ define(['js/Constants',
                 bBox = bBox[0];
                 approxWidth = parseFloat(bBox.getAttribute("width"));
                 newWidth = approxWidth * (element.text().length/oldText.length);
-                this.stretchTo(stretchId, newWidth, 0);
+                this.stretchTo(stretchId, { x: newWidth });
             }
 
         }else{
-            this.stretchTo(stretchId, element.width(), 0);
+            this.stretchTo(stretchId, { x: element.width() });
         }
 
     };
@@ -433,14 +432,15 @@ define(['js/Constants',
      * Stretch the svg to a given x,y with respect to a stretching id
      *
      * @param {String} id
-     * @param {Number} x
-     * @param {Number} y
+     * @param {Object} size {x: x, y: y}
      * @return {Boolean} true if the svg has changed in size
      */
-    SVGDecoratorSnapEditorWidget.prototype.stretchTo = function (id, x, y) {
+    SVGDecoratorSnapEditorWidget.prototype.stretchTo = function (id, size) {
         //Stretch according to the x,y values where x,y are
         //dimensions of the items pointed to by "id"
         var changed = false,
+            x = size.x,
+            y = size.y,
             dx,
             dy;
 
@@ -459,31 +459,43 @@ define(['js/Constants',
             }
         }
 
-        if (!this.svgInitialStretch[id] || (x > this.svgInitialStretch[id].x && y > this.svgInitialStretch[id].y)){//Don't shrink past initial
+        //Set initial stretch values if undefined
+        if (!this.svgInitialStretch[id]){
+            this.svgInitialStretch[id] = { x: 0, y: 0 };
+        } 
+
+        //stretch x
+        if (x !== undefined){//Don't shrink past initial
+            x = Math.max(x, this.svgInitialStretch[id].x);
+            dx = x - this._classTransforms[id].x;
+
+            if (x !== null) {
+                this._classTransforms[id].x = x;
+            }
+
+            if (dx){
+                this.stretch(id, AXIS.X, dx);
+                changed = true;
+            }
+        }
 
 
-           dx = x - this._classTransforms[id].x;
-           dy = y - this._classTransforms[id].y;
+        //stretch y
+        if (y !== undefined){
 
-           //update size attached to ptr
-           if (y !== null) {
-               this._classTransforms[id].y = y;
-           }
+            y = Math.max(y, this.svgInitialStretch[id].y);//Don't shrink past initial
+            dy = y - this._classTransforms[id].y;
 
-           if (x !== null) {
-               this._classTransforms[id].x = x;
-           }
+            //update size attached to ptr
+            if (y !== null) {
+                this._classTransforms[id].y = y;
+            }
 
-           if (dx){
-               this.stretch(id, AXIS.X, dx);
-               changed = true;
-           }
-
-           if (dy){
-               this.stretch(id, AXIS.Y, dy);
-               changed = true;
-           }
-       }
+            if (dy){
+                this.stretch(id, AXIS.Y, dy);
+                changed = true;
+            }
+        }
 
         return changed;
     };
