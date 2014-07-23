@@ -8,7 +8,7 @@
 
 define([],
     function(){
-        var AddonBase = function(Core,Storage){
+        var AddOnBase = function(Core,Storage){
             this._Core = Core;
             this._Storage = Storage;
             this.core = null;
@@ -19,16 +19,53 @@ define([],
             this.commit = null;
 
         };
-        AddonBase.prototype.getName = function () {
+        AddOnBase.prototype.getName = function () {
             throw new Error('implement this function in the derived class - getting type automatically is a bad idea,' +
                 'when the js scripts are minified names are useless.');
         };
 
-        AddonBase.prototype._eventer = function(){
+        AddOnBase.prototype._eventer = function(){
+            var lastGuid = '',
+                self = this,
+                nextServerEvent = function(err,guid,parameters){
+                    lastGuid = guid || lastGuid;
+                    if(!err && parameters){
+                        switch (parameters.type){
+                            case "PROJECT_CREATED":
+                            case "PROJECT_DELETED":
+                            case "BRANCH_CREATED":
+                            case "BRANCH_DELETED":
+                                //TODO can be handled later
+                                return self._Storage.getNextServerEvent(lastGuid,nextServerEvent);
+                            case "BRANCH_UPDATED":
+                                if(this.projectName === parameters.project && this.branchName === parameters.branch){
+                                    self.project.loadObject(parameters.commit,function(err,commit){
+                                        if(err){
+                                            return self._Storage.getNextServerEvent(lastGuid,nextServerEvent);
+                                        }
 
+                                        self.core.loadRoot(commit.root,function(err,root){
+                                            if(err){
+                                                return self._Storage.getNextServerEvent(lastGuid,nextServerEvent);
+                                            }
+                                            self.update(root);
+                                            return self._Storage.getNextServerEvent(lastGuid,nextServerEvent);
+                                        });
+                                    });
+                                } else {
+                                    return self._Storage.getNextServerEvent(lastGuid,nextServerEvent);
+                                }
+                        }
+                    } else {
+                        setTimeout(function(){
+                            return self._Storage.getNextServerEvent(lastGuid,nextServerEvent);
+                        },1000);
+                    }
+                };
+            self._Storage.getNextServerEvent(lastGuid,nextServerEvent);
         };
 
-        AddonBase.prototype.init = function(parameters){
+        AddOnBase.prototype.init = function(parameters){
             //this is the part of the start process which should be always done, so this function should be always called from the start
             if(!(parameters.projectName && parameters.branchName && parameters.project)){
                 return false;
@@ -38,8 +75,11 @@ define([],
             this.projectName = parameters.projectName;
             this.branchName = parameters.branchName;
 
+            //start the eventing
+            this._eventer();
+
         };
-        AddonBase.prototype.start = function(parameters,callback){
+        AddOnBase.prototype.start = function(parameters,callback){
             //this is the initialization function it could be overwritten or use as it is
             if(this.init(parameters)){
                 callback(null);
@@ -48,5 +88,14 @@ define([],
             }
         };
 
-        return AddonBase;
+        AddOnBase.prototype.update = function(root){
+            throw new Error('the update function is a main point of an AddOn\'s functionality so it must be overwritten');
+        };
+
+        AddOnBase.prototype.query = function(parameters,callback){
+            callback(new Error('the function is the main function of the AddOn so it must be overwritten'));
+        };
+
+
+        return AddOnBase;
     });
