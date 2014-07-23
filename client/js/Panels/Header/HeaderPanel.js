@@ -11,7 +11,7 @@ define(['js/PanelBase/PanelBase',
     'js/Widgets/UserProfile/UserProfileWidget',
     'js/Toolbar/Toolbar',
     './DefaultToolbar',
-    'ui-components/DropDownNavigator/DropDownNavigator',
+    'ui-components/DropdownNavigator/DropdownNavigator',
     './ProjectNavigatorController'
 ], function (PanelBase, ProjectTitleWidget, UserProfileWidget, toolbar, DefaultToolbar, DropDownNavigator, ProjectNavigatorController) {
 
@@ -20,7 +20,7 @@ define(['js/PanelBase/PanelBase',
     var HeaderPanel,
         __parent__ = PanelBase;
 
-    angular.module('headerPanel', ['isis.ui.dropDownNavigator']).run(function() {
+    angular.module('headerPanel', ['isis.ui.dropdownNavigator']).run(function() {
 
     });
 
@@ -58,7 +58,7 @@ define(['js/PanelBase/PanelBase',
 
         //project title
         var projectTitleEl = $(
-            '<div data-ng-controller="ProjectNavigatorController"><drop-down-navigator navigator="navigator"></drop-down-navigator></div>', {'class': "inline"}
+            '<div data-ng-controller="ProjectNavigatorController"><dropdown-navigator navigator="navigator"></dropdown-navigator></div>', {'class': "inline"}
         );
         //new ProjectTitleWidget(projectTitleEl, this._client);
         navBarInner.append(projectTitleEl);

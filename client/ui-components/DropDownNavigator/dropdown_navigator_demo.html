@@ -48,11 +48,11 @@
 
         requirejs([
             'angular-ui-bootstrap',
-            'ui-components/DropDownNavigator/DropDownNavigator'], function (ngBootstrap, DropDownNavigator){
+            'ui-components/DropdownNavigator/DropdownNavigator'], function (ngBootstrap, DropdownNavigator){
 
-            var demoApp = angular.module('demoApp', ['ui.bootstrap', 'isis.ui.dropDownNavigator']);
+            var demoApp = angular.module('demoApp', ['ui.bootstrap', 'isis.ui.dropdownNavigator']);
 
-            demoApp.controller('DropDownDemoController', function ($scope) {
+            demoApp.controller('DropdownDemoController', function ($scope) {
                 var firstMenu;
 
                 firstMenu = {
@@ -161,8 +161,8 @@
 </head>
 <body>
 
-<div style="background-color: #222;" data-ng-controller="DropDownDemoController">
-    <drop-down-navigator data-navigator="navigator"></drop-down-navigator>
+<div style="background-color: #222;" data-ng-controller="DropdownDemoController">
+    <dropdown-navigator data-navigator="navigator"></dropdown-navigator>
 </div>
 
 </body>

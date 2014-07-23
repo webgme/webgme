@@ -7,8 +7,8 @@
 
 define([
     'angular',
-    'text!./templates/DropDownNavigator.html',
-    'css!./styles/dropDownNavigator.css',
+    'text!./templates/DropdownNavigator.html',
+    'css!./styles/dropdownNavigator.css',
 
     './../HierarchicalDropDown/HierarchicalDropdown'
 
@@ -19,10 +19,10 @@ define([
     "use strict";
 
     angular.module(
-        'isis.ui.dropDownNavigator',
+        'isis.ui.dropdownNavigator',
         [ 'isis.ui.hierarchicalDropdown' ]
     ).directive(
-        'dropDownNavigator',
+        'dropdownNavigator',
          function () {
 
              return {
