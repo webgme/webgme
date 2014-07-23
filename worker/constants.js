@@ -25,7 +25,9 @@ function(){
             'exportLibrary': 'exportLibrary',
             'getAllProjectsInfo': 'getAllProjectsInfo',
             'setBranch': 'setBranch',
-            'connectedWorker': 'connectedWorker'
+            'connectedWorkerStart': 'connectedWorkerStart',
+            'connectedWorkerQuery': 'connectedWorkerQuery',
+            'connectedWorkerStop': 'connectedworkerStop'
         }
     };
 });
