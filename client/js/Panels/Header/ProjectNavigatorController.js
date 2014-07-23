@@ -215,8 +215,20 @@ define([
         self.gmeClient.addEventListener(self.gmeClient.events.SERVER_BRANCH_UPDATED, function (client, parameters) {
             console.log(self.gmeClient.events.SERVER_BRANCH_UPDATED, parameters);
             // TODO: update branch information
+            var currentProject = self.$scope.navigator.items[self.navIdProject],
+                currentBranch = self.$scope.navigator.items[self.navIdBranch];
+            if(currentProject){
+                currentProject = currentProject.id;
+            }
+            if(currentBranch) {
+                currentBranch = currentBranch.id;
+            }
             self.removeBranch(parameters.project, parameters.branch);
             self.addBranch(parameters.project, parameters.branch, parameters.commit);
+            if(currentProject === parameters.project && currentBranch === parameters.branch){
+                //we also have te re-select the branch
+                self.selectBranch({projectId:currentProject,branchId:currentBranch});
+            }
         });
 
         self.gmeClient.addEventListener(self.gmeClient.events.SERVER_BRANCH_DELETED, function (client, parameters) {
