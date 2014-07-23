@@ -36,6 +36,8 @@ define([
         self.navIdProject = 1;
         self.navIdBranch = 2;
 
+        self.requestedSelection = null;
+
         self.initialize();
     };
 
@@ -183,56 +185,63 @@ define([
         });
 
         self.gmeClient.addEventListener(self.gmeClient.events.PROJECT_OPENED, function (client, projectId) {
-            console.log(self.gmeClient.events.PROJECT_OPENED, projectId);
+            //console.log(self.gmeClient.events.PROJECT_OPENED, projectId);
             self.selectProject({projectId: projectId});
         });
 
         self.gmeClient.addEventListener(self.gmeClient.events.PROJECT_CLOSED, function (client, projectId) {
-            console.log(self.gmeClient.events.PROJECT_CLOSED, projectId);
+//            console.log(self.gmeClient.events.PROJECT_CLOSED, projectId);
             self.selectProject({});
         });
 
         self.gmeClient.addEventListener(self.gmeClient.events.SERVER_PROJECT_CREATED, function (client, projectId) {
-            console.log(self.gmeClient.events.SERVER_PROJECT_CREATED, projectId);
+//            console.log(self.gmeClient.events.SERVER_PROJECT_CREATED, projectId);
             self.addProject(projectId);
         });
 
         self.gmeClient.addEventListener(self.gmeClient.events.SERVER_PROJECT_DELETED, function (client, projectId) {
-            console.log(self.gmeClient.events.SERVER_PROJECT_DELETED, projectId);
+//            console.log(self.gmeClient.events.SERVER_PROJECT_DELETED, projectId);
             self.removeProject(projectId);
         });
 
         self.gmeClient.addEventListener(self.gmeClient.events.BRANCH_CHANGED, function (client, branchId) {
-            console.log(self.gmeClient.events.BRANCH_CHANGED, branchId);
+//            console.log(self.gmeClient.events.BRANCH_CHANGED, branchId);
             self.selectBranch({projectId: self.gmeClient.getActiveProjectName(), branchId: branchId});
         });
 
         self.gmeClient.addEventListener(self.gmeClient.events.SERVER_BRANCH_CREATED, function (client, parameters) {
-            console.log(self.gmeClient.events.SERVER_BRANCH_CREATED, parameters);
+//            console.log(self.gmeClient.events.SERVER_BRANCH_CREATED, parameters);
             self.addBranch(parameters.project, parameters.branch, parameters.commit);
         });
 
         self.gmeClient.addEventListener(self.gmeClient.events.SERVER_BRANCH_UPDATED, function (client, parameters) {
-            console.log(self.gmeClient.events.SERVER_BRANCH_UPDATED, parameters);
+//            console.log(self.gmeClient.events.SERVER_BRANCH_UPDATED, parameters);
             // TODO: update branch information
             var currentProject = self.$scope.navigator.items[self.navIdProject],
                 currentBranch = self.$scope.navigator.items[self.navIdBranch];
-            if(currentProject){
+
+            if (currentProject) {
                 currentProject = currentProject.id;
             }
-            if(currentBranch) {
+
+            if (currentBranch) {
                 currentBranch = currentBranch.id;
             }
+
             self.removeBranch(parameters.project, parameters.branch);
             self.addBranch(parameters.project, parameters.branch, parameters.commit);
-            if(currentProject === parameters.project && currentBranch === parameters.branch){
+
+            if (currentProject === parameters.project && currentBranch === parameters.branch) {
                 //we also have te re-select the branch
-                self.selectBranch({projectId:currentProject,branchId:currentBranch});
+                self.selectBranch({
+                    projectId: currentProject,
+                    branchId: currentBranch
+                });
             }
         });
 
         self.gmeClient.addEventListener(self.gmeClient.events.SERVER_BRANCH_DELETED, function (client, parameters) {
-            console.log(self.gmeClient.events.SERVER_BRANCH_DELETED, parameters);
+            //console.log(self.gmeClient.events.SERVER_BRANCH_DELETED, parameters);
             self.removeBranch(parameters.project, parameters.branch);
         });
 
@@ -264,6 +273,11 @@ define([
                     }
                 }
             }
+
+            if (self.requestedSelection) {
+                self.selectBranch(self.requestedSelection);
+                self.requestedSelection = null;
+            }
         });
     };
 
@@ -292,7 +306,7 @@ define([
                         if (err) {
                             // TODO: handle errors
                             return;
-                        };
+                        }
 
                         var dialog = new ProjectRepositoryDialog(self.gmeClient);
                         dialog.show();
@@ -649,6 +663,7 @@ define([
         if (projectId || projectId === '') {
             if (self.projects.hasOwnProperty(projectId) === false) {
                 console.error(projectId + ' does not exist in the navigation bar');
+                self.requestedSelection = data;
                 return;
             }
 
@@ -676,7 +691,7 @@ define([
                 if (projectId !== self.gmeClient.getActiveProjectName()) {
                     self.gmeClient.selectProjectAsync(projectId, function (err) {
                         if (err) {
-                            console.log(err);
+                            console.error(err);
                             callback(err);
                             return;
                         }
@@ -684,7 +699,7 @@ define([
                         if (branchId && branchId !== self.gmeClient.getActualBranch()) {
                             self.gmeClient.selectBranchAsync(branchId, function (err) {
                                 if (err) {
-                                    console.log(err);
+                                    console.error(err);
                                     callback(err);
                                     return;
                                 }
@@ -706,6 +721,7 @@ define([
 
                 if (self.projects[projectId].branches.hasOwnProperty(branchId) === false) {
                     console.error(projectId + ' - ' + branchId + ' branch does not exist in the navigation bar');
+                    self.requestedSelection = data;
                     return;
                 }
 
@@ -719,7 +735,7 @@ define([
                     if (branchId !== self.gmeClient.getActualBranch()) {
                         self.gmeClient.selectBranchAsync(branchId, function (err) {
                             if (err) {
-                                console.log(err);
+                                console.error(err);
                                 callback(err);
                                 return;
                             }
