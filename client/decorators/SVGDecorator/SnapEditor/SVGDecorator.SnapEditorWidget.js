@@ -105,32 +105,32 @@ define(['js/Constants',
         this._renderContent();
 
         // set title editable on double-click
-        // Make all 'attribute' text clickable
-        // TODO
-        this.$name.on("dblclick.editOnDblClick", null, function (event) {
-            if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
-                var id = $(this).attr('id'),
+        if (this.$name.attr('data-editable')){
+            this.$name.on("dblclick.editOnDblClick", null, function (event) {
+                if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
+                    var id = $(this).attr('id'),
                     tempName = $('<div/>', { id: id + '-edit', 
-                     text: $(this).text()});
+                                 text: $(this).text()});
 
-                self.$el.append(tempName);
-                tempName.css('left', $(this).attr('x'));
-                tempName.css('top', $(this).attr('y'));
-                    
-                $(tempName).editInPlace({"class": id + "-edit",
-                    "value": self.name,
-                    "onChange": function (oldValue, newValue) {
-                        self._saveAttributeChange(id, newValue);
-                    },
-                    "onFinish": function () {
-                        $(this).remove();
-                    }
+                                 self.$el.append(tempName);
+                                 tempName.css('left', $(this).attr('x'));
+                                 tempName.css('top', $(this).attr('y'));
 
-                });
-            }
-            event.stopPropagation();
-            event.preventDefault();
-        });
+                                 $(tempName).editInPlace({"class": id + "-edit",
+                                                         "value": self.name,
+                                                         "onChange": function (oldValue, newValue) {
+                                                             self._saveAttributeChange(id, newValue);
+                                                         },
+                                                         "onFinish": function () {
+                                                             $(this).remove();
+                                                         }
+
+                                 });
+                }
+                event.stopPropagation();
+                event.preventDefault();
+            });
+        }
     };
 
     /**
@@ -161,7 +161,7 @@ define(['js/Constants',
             changed = false;
 
         //Update the displayed input areas based on newest data
-        this._updateInputFields();
+        this.updateInputFields();
 
         this._update();
 
@@ -184,7 +184,7 @@ define(['js/Constants',
             }
 
             if (dx !== 0){
-                this.stretch(SNAP_CONSTANTS.NAME, AXIS.X, dx);
+                this.stretchTo(SNAP_CONSTANTS.NAME, { x: dx });
                 changed = "decorator resized";
             }
         }
@@ -197,7 +197,7 @@ define(['js/Constants',
      * @private
      * @return {undefined}
      */
-    SVGDecoratorSnapEditorWidget.prototype._updateInputFields = function () {
+    SVGDecoratorSnapEditorWidget.prototype.updateInputFields = function () {
         var fields = Object.keys(this._inputFields2Update),
             container,
             input,
@@ -222,7 +222,7 @@ define(['js/Constants',
                 //Create a text field
                 input = $('<input>', { id: field, type: "text", text: this.inputFields[field].content });
             } else if (this.inputFields[field].type === SNAP_CONSTANTS.DROPDOWN.NAME){
-                input = $('<select>', { id: field });
+                input = $('<select>', { id: field, class: "input-small" });
                 if (this.inputFields[field].options){//If it has options
 
                     for (var j = 0; j < this.inputFields[field].options.length; j++){
@@ -302,7 +302,6 @@ define(['js/Constants',
                         "value": $(this).text(),
                         "onChange": function (oldValue, newValue) {
                             self._saveAttributeChange(id, newValue);
-                            self._setTextAndStretch(element, newValue, id);
                         },
                         "onFinish": function () {
                             $(this).remove();
@@ -346,21 +345,25 @@ define(['js/Constants',
      * @param {String} id
      * @param {String} content
      * @param {Array} [options] Only required for dropdown menus
-     * @return {undefined}
+     * @return {Boolean} return true if changed
      */
     SVGDecoratorSnapEditorWidget.prototype.updateInputField = function(id, content, options){
+        var changed = false;
+
         if (this.inputFields[id].content !== content){
             this.inputFields[id].content = content;
-            this._inputFields2Update[id] = true;
+            changed = this._inputFields2Update[id] = true;
         }
 
             if (options && this.inputFields[id].type === SNAP_CONSTANTS.DROPDOWN.NAME){
                 assert(options.indexOf(content) !== -1, "Selected option must be one of the available dropdown options");
                 if (this.inputFields[id].options !== options){
                     this.inputFields[id].options = options;
-                    this._inputFields2Update[id] = true;
+                    changed = this._inputFields2Update[id] = true;
                 }
             }
+
+        return changed;
     };
 
     /**
@@ -376,17 +379,42 @@ define(['js/Constants',
     };
 
     /**
+     * Update the text of the svg if needed (and present).
+     *
+     * @param {String} attribute Attribute name to update
+     * @param {String} newText new text of the attribute
+     * @return {Boolean} return true if svg changed in size
+     */
+    SVGDecoratorSnapEditorWidget.prototype.updateText = function (attribute, newText) {
+        var element = this.$el.find('#' + attribute),
+            currentText;
+
+        if (element.length){
+            currentText = element.text();
+            if (currentText !== newText){
+                return this._setTextAndStretch(element, newText, attribute);
+            }
+        }
+
+        return false;
+    };
+
+    /**
      * Set the text of a DOM element and stretch by the change in size
      *
      * @param {DOM Element} element
      * @param {String} newText
      * @param {String} stretchId
-     * @return {undefined}
+     * @return {Boolean} return true if size has changed
      */
     SVGDecoratorSnapEditorWidget.prototype._setTextAndStretch = function (element, newText, stretchId) {
         var oldText = element.text(),
             oldWidth = element.width(),
             newWidth;
+
+        if (oldText === newText){
+            return false;
+        }
 
         element.text(newText);
 
@@ -402,13 +430,14 @@ define(['js/Constants',
                 bBox = bBox[0];
                 approxWidth = parseFloat(bBox.getAttribute("width"));
                 newWidth = approxWidth * (element.text().length/oldText.length);
-                this.stretchTo(stretchId, { x: newWidth });
+                return this.stretchTo(stretchId, { x: newWidth });
             }
 
         }else{
-            this.stretchTo(stretchId, { x: element.width() });
+            return this.stretchTo(stretchId, { x: element.width() });
         }
 
+        return false;
     };
 
     /**
@@ -469,12 +498,9 @@ define(['js/Constants',
             x = Math.max(x, this.svgInitialStretch[id].x);
             dx = x - this._classTransforms[id].x;
 
-            if (x !== null) {
-                this._classTransforms[id].x = x;
-            }
-
             if (dx){
                 this.stretch(id, AXIS.X, dx);
+                this._classTransforms[id].x = x;
                 changed = true;
             }
         }
@@ -487,12 +513,9 @@ define(['js/Constants',
             dy = y - this._classTransforms[id].y;
 
             //update size attached to ptr
-            if (y !== null) {
-                this._classTransforms[id].y = y;
-            }
-
             if (dy){
                 this.stretch(id, AXIS.Y, dy);
+                this._classTransforms[id].y = y;
                 changed = true;
             }
         }
