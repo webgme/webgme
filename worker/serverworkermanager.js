@@ -5,7 +5,7 @@ function(ASSERT,Child,CONSTANTS){
            _waitingRequests = [];
 
         _parameters = _parameters || {};
-        _parameters.maxworkers = _parameters.maxworkers || 1;
+        _parameters.maxworkers = _parameters.maxworkers || 10;
 
         //helping functions
         //TODO always check if this works properly
