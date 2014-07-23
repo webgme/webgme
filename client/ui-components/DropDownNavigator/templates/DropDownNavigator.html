@@ -1,0 +1,20 @@
+<ul class="drop-down-navigator">
+
+
+    <script type="text/ng-template" id="navigator-item-template">
+        <span class="item-label">{{item.label}}</span>
+        <hierarchical-dropdown menu="item.menu"></hierarchical-dropdown>
+    </script>
+
+    <!--<script type="text/ng-template" id="branch-selector-template">-->
+        <!--<span class="item-label">Branch {{item.label}}</span>-->
+    <!--</script>-->
+
+    <li data-ng-repeat-start="item in navigator.items track by $index"
+        data-ng-class=" item.itemClass || '' "
+        ng-include=" item.itemTemplate || 'navigator-item-template' ">
+    </li>
+    <li data-ng-repeat-end data-ng-if="navigator.separator && !$last" class="separator">
+        <i class="glyphicon glyphicon-chevron-right"></i>
+    </li>
+</ul>

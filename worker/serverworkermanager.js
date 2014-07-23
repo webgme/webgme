@@ -105,7 +105,8 @@ function(ASSERT,Child,CONSTANTS){
                             pluginBasePaths:_parameters.pluginBasePaths,
                             interpreteroutputdirectory:_parameters.intoutdir,
                             serverPort:_parameters.serverPort,
-                            paths: webGMEGlobal.getConfig().paths
+                            paths: webGMEGlobal.getConfig().paths,
+                            auth: _parameters.auth
                         });
                         break;
                     case CONSTANTS.msgTypes.initialized:

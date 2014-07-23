@@ -265,7 +265,7 @@ input.input-mini {
 }
 
 ul.dropdown-menu {
-    max-height: 600px;
+    /*max-height: 600px;*/
     overflow: auto;
 }
 

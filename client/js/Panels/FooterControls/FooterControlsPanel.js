@@ -82,9 +82,9 @@ define([
         new BranchStatusWidget(branchStatusEl, this._client);
         navBarInner.append(branchStatusEl).append(separator.clone());
 
-        var branchSelectorEl = widgetPlaceHolder.clone();
+        /*var branchSelectorEl = widgetPlaceHolder.clone();
         new BranchSelectorWidget(branchSelectorEl, this._client);
-        navBarInner.append(branchSelectorEl).append(separator.clone());
+        navBarInner.append(branchSelectorEl).append(separator.clone());*/
     };
 
     return FooterControlsPanel;

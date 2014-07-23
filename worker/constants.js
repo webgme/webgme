@@ -17,13 +17,15 @@ function(){
             'waiting'      : 'waiting'
         },
         'workerCommands':{
-            'initialize'      : 'initialize',
-            'getResult'       : 'getResult',
-            'dumpMoreNodes'   : 'dumpMoreNodes',
-            'generateJsonURL' : 'generateJsonURL',
-            'executePlugin'   : 'executePlugin',
-            'exportLibrary'   : 'exportLibrary',
-            'connectedWorker' : 'connectedWorker' //this command starts the addOn
+            'initialize': 'initialize',
+            'getResult': 'getResult',
+            'dumpMoreNodes': 'dumpMoreNodes',
+            'generateJsonURL': 'generateJsonURL',
+            'executePlugin': 'executePlugin',
+            'exportLibrary': 'exportLibrary',
+            'getAllProjectsInfo': 'getAllProjectsInfo',
+            'setBranch': 'setBranch',
+            'connectedWorker': 'connectedWorker'
         }
     };
 });

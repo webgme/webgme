@@ -264,26 +264,6 @@ define([
                     needRootHash(commitHash);
                 }
             });
-
-
-            _storage.openProject(name,function(err,project){
-                if(err){
-                    return callback(err);
-                }
-                var core = new Core(project);
-                core.loadRoot(rootHash,function(err,root){
-                    if(err){
-                        return callback(err);
-                    }
-                    Serialization.export(core,root,function(err,dump){
-                        if(err){
-                            callback(_HTTPError.internalServerError,err);
-                        } else {
-                            callback(_HTTPError.ok,dump);
-                        }
-                    });
-                });
-            });
         }
 
         function doGET(command,token,parameters,callback){
