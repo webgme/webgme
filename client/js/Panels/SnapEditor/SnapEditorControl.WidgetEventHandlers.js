@@ -567,7 +567,7 @@ define(['logManager',
             droppedParentId,
             firstId = this._ComponentID2GmeID[droppedItem],
             lastId,
-            newIds,
+            newIds = {},
             params,
             moveItems,
             i;
@@ -782,7 +782,7 @@ define(['logManager',
             id,
             ptr;
 
-        this._client.startTransaction();
+        //this._client.startTransaction();
         while (i--){
             id = this._GmeID2ComponentID[items[i]];
             ptrs2Remove = this.snapCanvas.getItemsPointingTo(id);
@@ -799,7 +799,7 @@ define(['logManager',
             }
         }
 
-        this._client.completeTransaction();
+        //this._client.completeTransaction();
     };
 
     SnapEditorControlWidgetEventHandlers.prototype._repositionItems = function (items, dragPositions, dropPosition) {
@@ -883,7 +883,8 @@ define(['logManager',
         }
 
         this._settingActiveSelection = true;
-        WebGMEGlobal.State.registerActiveSelection([gmeID]);
+        //WebGMEGlobal.State.registerActiveSelection([gmeID]);
+        WebGMEGlobal.State.setActiveSelection([gmeID]);
         this._settingActiveSelection = false;
     };
 
