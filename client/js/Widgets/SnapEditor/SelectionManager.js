@@ -321,7 +321,7 @@ define(['logManager',
 
         if(this._selectedElement){
             item = items[this._selectedElement];
-            if ($.isFunction(item.onDeselect)) {
+            if (item && $.isFunction(item.onDeselect)) {
                 item.onDeselect();
             }
         }
@@ -330,7 +330,7 @@ define(['logManager',
             this._selectedElement = id;
             item = items[this._selectedElement];
 
-            if ($.isFunction(item.onSelect)) {
+            if (item && $.isFunction(item.onSelect)) {
                 item.onSelect(true);
             }
         }
@@ -570,60 +570,9 @@ define(['logManager',
     /************* END OF --- GET SELECTION OUTLINE COORDINATES AND DIMENSIONS ************************/
 
     /************* RENDER COMMAND BUTTONS ON SELECTION OUTLINE ************************/
-    var DELETE_BUTTON_BASE = $('<div/>', {
-        "class" : "s-btn delete",
-        "command" : "delete"
-    });
-    DELETE_BUTTON_BASE.html('<i class="icon-remove"></i>');
-
-    var CONTEXT_MENU_BUTTON_BASE = $('<div/>', {
-        "class" : "s-btn contextmenu",
-        "command" : "contextmenu"
-    });
-    CONTEXT_MENU_BUTTON_BASE.html('<i class="icon-list-alt"></i>');
-
-    var MOVE_BUTTON_BASE = $('<div/>', {
-        "class" : "s-btn move",
-        "command" : "move"
-    });
-    MOVE_BUTTON_BASE.html('<i class="icon-move"></i>');
 
     SelectionManager.prototype._renderSelectionActions = function () {
-        var self = this,
-            deleteBtn,
-            contextMenuBtn,
-            moveBtn;
-
-        if (this._snapEditor.getIsReadOnlyMode() === true) {
-            return;
-        }
-
-        if (this._snapEditor.getIsReadOnlyMode() !== true) {
-            deleteBtn = DELETE_BUTTON_BASE.clone();
-            this._snapEditor.skinParts.$selectionOutline.append(deleteBtn);
-
-            moveBtn = MOVE_BUTTON_BASE.clone();
-            this._snapEditor.skinParts.$selectionOutline.append(moveBtn);
-            this._snapEditor._makeDraggable({ 'items': this._selectedElement, '$el': moveBtn });
-        }
-
-        //context menu
-        contextMenuBtn = CONTEXT_MENU_BUTTON_BASE.clone();
-        this._snapEditor.skinParts.$selectionOutline.append(contextMenuBtn);
-
-        //detach mousedown handler on selection outline
-        this._snapEditor.skinParts.$selectionOutline.off("mousedown").off("click", ".s-btn");
-        this._snapEditor.skinParts.$selectionOutline.on("mousedown", function (event) {
-            event.stopPropagation();
-        }).on("click", ".s-btn", function (event) {
-            var command = $(this).attr("command");
-            self.logger.debug("Selection button clicked with command: '" + command + "'");
-
-            self.onSelectionCommandClicked(command, self._selectedElement, event);
-
-            event.stopPropagation();
-            event.preventDefault();
-        });
+        //Add selection actions here if you want specific functionality on clicking
 
     };
     /************* END OF --- RENDER COMMAND BUTTONS ON SELECTION OUTLINE ************************/
