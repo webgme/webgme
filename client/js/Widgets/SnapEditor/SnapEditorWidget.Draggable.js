@@ -20,7 +20,7 @@ define(['js/DragDrop/DragSource',
         DRAG_HELPER_EL_BASE = $('<div/>', {'class': DRAG_HELPER_CLASS}),
         DRAG_HELPER_ICON_MOVE = $('<i class="icon-move"></i>'),
         DRAG_HELPER_ICON_COPY = $('<i class="icon-plus"></i>'),
-        DRAG_HELPER_BUFFER = 0;
+        DRAG_HELPER_BUFFER = 15;
 
     SnapEditorWidgetDraggable = function () {
     };
@@ -156,7 +156,7 @@ define(['js/DragDrop/DragSource',
         dragElement.height(maxY);
 
         //DEBUGGING
-        dragElement.css("background-color", "grey");
+        //dragElement.css("background-color", "grey");
         
         return dragElement;
     };
