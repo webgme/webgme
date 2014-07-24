@@ -99,12 +99,18 @@ define(['js/Constants',
     SVGDecoratorSnapEditorWidget.prototype.$DOMBase = $(SVGDecoratorTemplate);
 
     /**** Override from SnapEditorWidgetDecoratorBase ****/
+    /**
+     * This is called before the item is added to the canvas DOM. The item must create it's
+     * DOM representation.
+     *
+     * @return {undefined}
+     */
     SVGDecoratorSnapEditorWidget.prototype.on_addTo = function () {
         var self = this;
 
         this._renderContent();
 
-        // set title editable on double-click
+        // set title editable on double-click if editable
         if (this.$name.attr('data-editable')){
             this.$name.on("dblclick.editOnDblClick", null, function (event) {
                 if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
@@ -319,10 +325,21 @@ define(['js/Constants',
                 this._setTextAndStretch(fields, attributes[attr].value, attr);
                 //Make the fields editable
                 fields.on("click", null, editText);
+                //Add support for clicking on a box around the text to edit the text
+                //TODO
             }
         }
 
         this.update();
+    };
+
+    //May remove this TODO
+    SVGDecoratorSnapEditorWidget.prototype.updateAttributeText = function(attribute){
+        var textFields = this.$el.find("text"),
+            fields = textFields.filter("#" + attribute),
+            item;
+
+        this._setTextAndStretch(fields, item.getAttribute(attribute), attribute);
     };
 
     /**
