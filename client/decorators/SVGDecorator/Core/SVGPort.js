@@ -1,7 +1,5 @@
 /*globals define*/
 /*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
  * @author rkereskenyi / https://github/rkereskenyi
  */
 

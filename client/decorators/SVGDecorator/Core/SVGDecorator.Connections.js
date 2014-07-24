@@ -1,16 +1,14 @@
+/*globals define,_*/
 /*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Brian Broll
+ * @author rkereskenyi / https://github/rkereskenyi
+ * @author brollb / https://github/brollb
  *
- *
- * This file contains functions for getting connection areas.
  */
-
-"use strict";
 
 define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'], 
         function (DiagramDesignerWidgetConstants) {
+
+    "use strict";
 
     var SVGDecoratorConnections,
         CONNECTION_AREA_CLASS = 'connection-area',

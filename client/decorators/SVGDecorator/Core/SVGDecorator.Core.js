@@ -1,14 +1,8 @@
 /*globals define,_*/
 /*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
  * @author rkereskenyi / https://github/rkereskenyi
  *
- * This file contains the core functionality for getting 
- * and rendering the svg
  */
-
-"use strict";
 
 define(['js/Constants',
         'js/NodePropertyNames',
@@ -23,6 +17,8 @@ define(['js/Constants',
                                          DecoratorBase,
                                          DiagramDesignerWidgetConstants,
                                          DefaultSvgTemplate) {
+
+    "use strict";
 
     var SVGDecoratorCore,
         ABSTRACT_CLASS = 'abstract',

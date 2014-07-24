@@ -1,16 +1,14 @@
+/*globals define,_*/
 /*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Brian Broll
+ * @author rkereskenyi / https://github/rkereskenyi
+ * @author brollb / https://github/brollb
  *
- *
- * This file contains the connector relevant functions for the SVGDecorator.
  */
-
-"use strict";
 
 define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'], 
         function (DiagramDesignerWidgetConstants) {
+
+    "use strict";
 
     var SVGDecoratorConnectors,
         CONNECTOR_BASE = $('<div class="' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS + '"/>');

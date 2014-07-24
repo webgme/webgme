@@ -1,12 +1,7 @@
 /*globals define,_*/
 /*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
  * @author rkereskenyi / https://github/rkereskenyi
- *
  * @author brollb / https://github/brollb
- *
- * This file contains the port relevant functions for the SVGDecorator.
  */
 
 define(['js/Decorators/DecoratorWithPorts.Base',
@@ -84,7 +79,15 @@ define(['js/Decorators/DecoratorWithPorts.Base',
             PORT_TOP_PADDING = 1,
             ports = this.ports,
             portSorter,
-            portInstance;
+            portInstance,
+
+            svg,
+            svgRect,
+            height,
+
+            connectorSouth,
+            connectorWest,
+            connectorEast;
 
         for (i = 0; i < this.portIDs.length; i += 1) {
             if (this.ports[this.portIDs[i]].positionX > RIGHT_POS_X) {
@@ -132,32 +135,31 @@ define(['js/Decorators/DecoratorWithPorts.Base',
         //store if we have ports on the left/right
         this._leftPorts = leftPorts.length > 0;
         this._rightPorts = rightPorts.length > 0;
+        height = Math.max(leftPorts.length * PORT_HEIGHT, rightPorts.length * PORT_HEIGHT, DEFAULT_SVG_DEFAULT_HEIGHT);
 
         //fix default SVG's dimensions to sorround the ports
         //defaultSVG only, nothing else
-        var height;
 
         if (this._defaultSVGUsed === true) {
-            var svg = this.$svgElement;
-            var svgRect = svg.find('rect');
-            height = Math.max(leftPorts.length * PORT_HEIGHT, rightPorts.length * PORT_HEIGHT, DEFAULT_SVG_DEFAULT_HEIGHT);
+            svg = this.$svgElement;
+            svgRect = svg.find('rect');
             svg.attr('height', height);
             svgRect.attr('height', height - 1);
 
-            var connectorSouth = this.$el.find('.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS + '.cs');
+            connectorSouth = this.$el.find('.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS + '.cs');
             connectorSouth.css('top', height);
         }
 
         //remove left side connector if there is port there
         if (this._leftPorts) {
-            var connectorWest = this.$el.find('.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS + '.cw');
+            connectorWest = this.$el.find('.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS + '.cw');
             connectorWest.css('top', height / 2);
             connectorWest.remove();
         }
 
         //remove right side connector if there is port there
         if (this._rightPorts) {
-            var connectorEast = this.$el.find('.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS + '.ce');
+            connectorEast = this.$el.find('.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS + '.ce');
             connectorEast.css('top', height / 2);
             connectorEast.remove();
         }
