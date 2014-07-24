@@ -40,7 +40,7 @@ requirejs(['core/core','storage/serveruserstorage','coreclient/import', 'fs'],
                     storage.openProject(projectname,function(err,p){
                         if(!err){
                             project = p;
-                            var core = new Core(project,{corerel:2});
+                            var core = new Core(project);
                             Import(core,null,jProject,function(err,root){
                                 if(err){
                                     console.log("some error happened during import:",err);

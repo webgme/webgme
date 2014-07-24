@@ -20,7 +20,10 @@ function(){
             'getResult': 'getResult',
             'dumpMoreNodes': 'dumpMoreNodes',
             'generateJsonURL': 'generateJsonURL',
-            'executePlugin': 'executePlugin'
+            'executePlugin': 'executePlugin',
+            'exportLibrary': 'exportLibrary',
+            'getAllProjectsInfo': 'getAllProjectsInfo',
+            'setBranch': 'setBranch'
         }
-    }
+    };
 });

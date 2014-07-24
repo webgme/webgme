@@ -1,10 +1,9 @@
+/*globals define*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
- * Author: Brian Broll
+ * @author brollb / https://github/brollb
  */
-
-"use strict"; 
 
 define(['logManager',
 	    'util/assert',
@@ -22,6 +21,8 @@ define(['logManager',
                                            AutoRouterBox,
                                            AutoRouterEdge) {
 
+    "use strict"; 
+
     //----------------------AutoRouterEdgeList
 
     var AutoRouterEdgeList = function (b){
@@ -35,8 +36,8 @@ define(['logManager',
         this.order_last = null;
 
         //--Section
-        this.section_first;
-        this.section_blocker;
+        this.section_first = null;
+        this.section_blocker = null;
         this.section_ptr2blocked = []; //This is an array to emulate the pointer to a pointer functionality in CPP. 
         // this.section_ptr2blocked[0] = this.section_ptr2blocked*
 
@@ -46,8 +47,8 @@ define(['logManager',
 
     //Public Functions
     AutoRouterEdgeList.prototype.destroy = function(){
-        checkOrder();
-        checkSection();
+        this.checkOrder();
+        this.checkSection();
     };
 
     AutoRouterEdgeList.prototype.setOwner = function(newOwner){
@@ -55,6 +56,15 @@ define(['logManager',
     };
 
     AutoRouterEdgeList.prototype.addEdges = function(path){
+        var selfPoints,
+            startpoint,
+            startpoint_prev,
+            endpoint_next,
+            endpoint,
+            edge,
+            dir,
+            i;
+
         if(path instanceof AutoRouterPath){
             assert(path.getOwner() === this.owner, "AREdgeList.addEdges: path.getOwner() === owner FAILED!");
 
@@ -66,7 +76,7 @@ define(['logManager',
             //path.getCustomizedEdgeIndexes(indexes);
 
             if(isPathAutoRouted){
-                var i = -1;
+                i = -1;
                 while(++i < indexes.length){
                     hasCustomEdge = true;
                     customizedIndexes[indexes[i]] = 0;
@@ -77,22 +87,21 @@ define(['logManager',
 
             var pointList = path.getPointList(),
                 ptrsObject = pointList.getTailEdgePtrs(startpoint, endpoint),
-                startpoint = ptrsObject.start,
-                endpoint = ptrsObject.end,
                 indItr,
                 currEdgeIndex = pointList.length - 2,
                 goodAngle,
                 pos = ptrsObject.pos,
                 skipEdge,
                 isMoveable,
-                edge,
                 isEdgeCustomFixed,
                 startPort,
                 endPort,
                 isStartPortConnectToCenter,
                 isEndPortConnectToCenter,
-                isPathFixed,
-                dir;
+                isPathFixed;
+
+            startpoint = ptrsObject.start;
+            endpoint = ptrsObject.end;
 
             while( pointList.getLength() && pos >= 0){
 
@@ -105,8 +114,9 @@ define(['logManager',
                     goodAngle = UTILS.isRightAngle (dir);
                     assert( goodAngle, "AREdgeList.addEdges: UTILS.isRightAngle (dir) FAILED!");
 
-                    if( !goodAngle)
+                    if( !goodAngle){
                         skipEdge = true;
+                    }
 
                 }
 
@@ -123,7 +133,7 @@ define(['logManager',
                         isEdgeCustomFixed = false;
                         if (isPathAutoRouted){
                             indItr = customizedIndexes.indexOf(currEdgeIndex);
-                            isEdgeCustomFixed = (indIter != customizedIndexes.length - 1);
+                            isEdgeCustomFixed = (indItr !== customizedIndexes.length - 1);
                         } else {
                             isEdgeCustomFixed = true;
                         }
@@ -174,22 +184,18 @@ define(['logManager',
 
             return true;
         }else if(path instanceof AutoRouterPort){
-            var port = path;
-            assert(port.getOwner().getOwner() === this.owner, "AREdgeList.addEdges: port.getOwner() === (owner) FAILED!");
-
-            if (port.isConnectToCenter() || port.getOwner().isAtomic())
-                return;
-
-            var selfPoints = port.getSelfPoints(),
-                startpoint_prev,
-                startpoint,
-                endpoint,
-                endpoint_next,
-                edge,
-                dir,
+            var port = path,
                 canHaveStartEndPointHorizontal;
 
-            for(var i = 0; i < 4; i++){
+            assert(port.getOwner().getOwner() === this.owner, "AREdgeList.addEdges: port.getOwner() === (owner) FAILED!");
+
+            if (port.isConnectToCenter() || port.getOwner().isAtomic()){
+                return;
+            }
+
+            selfPoints = port.getSelfPoints();
+
+            for(i = 0; i < 4; i++){
 
                 startpoint_prev = selfPoints[(i + 3) % 4];
                 startpoint = selfPoints[i];
@@ -213,8 +219,9 @@ define(['logManager',
                     this._position_LoadY(edge);
                     this._position_LoadB(edge);
 
-                    if( edge.getBracketClosing() )
+                    if( edge.getBracketClosing() ){
                         edge.addToPosition(0.999); 
+                    }
 
                     this.insert(edge);
                 }
@@ -224,15 +231,10 @@ define(['logManager',
 
             assert(box.getOwner() === this.owner, "AREdgeList.addEdges: box.getOwner() === (owner) FAILED!");
 
-            var selfPoints = box.getSelfPoints(),
-                startpoint_prev,
-                startpoint,
-                endpoint,
-                endpoint_next,
-                edge,
-                dir;
 
-            for(var i = 0; i < 4; i++){
+            selfPoints = box.getSelfPoints();
+
+            for(i = 0; i < 4; i++){
                 startpoint_prev = selfPoints[(i + 3) % 4];
                 startpoint = selfPoints[i];
                 endpoint = selfPoints[(i + 1) % 4];
@@ -254,8 +256,9 @@ define(['logManager',
                     this._position_LoadY(edge);
                     this._position_LoadB(edge);
 
-                    if( edge.getBracketClosing() )
+                    if( edge.getBracketClosing() ){
                         edge.addToPosition(0.999); 
+                    }
 
                     this.insert(edge);
                 }
@@ -264,15 +267,9 @@ define(['logManager',
             var graph = path;
             assert(graph === this.owner, "AREdgeList.addEdges: graph === this.owner FAILED!");
 
-            var selfPoints = graph.getSelfPoints();
-                startpoint_prev,
-                startpoint,
-                endpoint,
-                endpoint_next,
-                edge,
-                dir;
+            selfPoints = graph.getSelfPoints();
 
-            for(var i = 0; i < 4; i++){
+            for(i = 0; i < 4; i++){
 
                 startpoint_prev = selfPoints[(i + 3) % 4];
                 startpoint = selfPoints[i];
@@ -309,16 +306,17 @@ define(['logManager',
                 next = edge.getOrderNext();
                 this.Delete(edge);
                 edge = next;
-            }
-            else
+            } else {
                 edge = edge.getOrderNext();
+            }
         }
 
     };
 
     AutoRouterEdgeList.prototype.deleteAllEdges = function(){
-        while(this.order_first)
+        while(this.order_first){
             this.Delete(this.order_first);
+        }
     };
 
     AutoRouterEdgeList.prototype.isEmpty = function(){
@@ -329,8 +327,9 @@ define(['logManager',
         var edge = this.order_first;
         while( edge !== null ){
 
-            if( edge.isSameStartPoint(startpoint))
+            if( edge.isSameStartPoint(startpoint)){
                 break;
+            }
 
             edge = edge.getOrderNext();
         }
@@ -342,8 +341,9 @@ define(['logManager',
     AutoRouterEdgeList.prototype.getEdgeByPointer = function(startpoint){
         var edge = this.order_first;
         while( edge !== null ){
-            if(edge.isSameStartPoint(startpoint))
+            if(edge.isSameStartPoint(startpoint)){
                 break;
+            }
 
             edge = edge.getOrderNext();
         }
@@ -356,8 +356,9 @@ define(['logManager',
         assert(newEdge instanceof AutoRouterEdge, "AREdgeList.setEdgeByPointer: newEdge instanceof AutoRouterEdge FAILED!");
         var edge = this.section_first;
         while( edge !== null ){
-            if(pEdge === edge)
+            if(pEdge === edge){
                 break;
+            }
 
             edge = edge.getSectionDown();
         }
@@ -370,8 +371,9 @@ define(['logManager',
         var edge = this.order_first;
         while(edge){
 
-            if(UTILS.isPointNearLine(point, edge.getStartPoint(), edge.getEndPoint(), nearness))
+            if(UTILS.isPointNearLine(point, edge.getStartPoint(), edge.getEndPoint(), nearness)){
                 return edge;
+            }
 
             edge = edge.getOrderNext();
         }
@@ -385,9 +387,7 @@ define(['logManager',
         console.log(msg);
 
         while( edge !== null ){
-            console.log('\t' + edge.getStartPoint().x + ', ' + edge.getStartPoint().y + '\t\t' + edge.getEndPoint().x + ', ' + edge.getEndPoint().y 
-                    + '\t\t\t(' + (edge.getEdgeFixed() ? "FIXED" : "MOVEABLE" ) + ')\t\t' 
-                    + (edge.getBracketClosing() ? "Bracket Closing" : (edge.getBracketOpening() ? "Bracket Opening" : "")));
+            console.log('\t' + edge.getStartPoint().x + ', ' + edge.getStartPoint().y + '\t\t' + edge.getEndPoint().x + ', ' + edge.getEndPoint().y + '\t\t\t(' + (edge.getEdgeFixed() ? "FIXED" : "MOVEABLE" ) + ')\t\t' + (edge.getBracketClosing() ? "Bracket Closing" : (edge.getBracketOpening() ? "Bracket Opening" : "")));
             edge = edge.getOrderNext();
             total++;
         }
@@ -433,10 +433,11 @@ define(['logManager',
     };
 
     AutoRouterEdgeList.prototype._position_SetRealY = function (edge, y){
-        if(edge instanceof Array) //TEST
+        if(edge instanceof Array){ 
             edge = edge[0];
+        }
 
-        assert( edge != null && !edge.isStartPointNull() && !edge.isEndPointNull(), "AREdgeList.position_SetRealY: edge != null && !edge.isStartPointNull() && !edge.isEndPointNull() FAILED");
+        assert( edge !== null && !edge.isStartPointNull() && !edge.isEndPointNull(), "AREdgeList.position_SetRealY: edge != null && !edge.isStartPointNull() && !edge.isEndPointNull() FAILED");
 
         if( this.ishorizontal )
         {
@@ -616,7 +617,7 @@ define(['logManager',
         if( this.order_last )
         {
             assert( this.order_last.getOrderNext() === null, "AREdgeList.insertLast: this.order_last.getOrderNext() === null FAILED");
-            assert( this.order_first != null, "AREdgeList.insertLast: this.order_first != null FAILED" );
+            assert( this.order_first !== null, "AREdgeList.insertLast: this.order_first != null FAILED" );
 
             this.order_last.setOrderNext(edge);
             this.order_last = edge;
@@ -640,29 +641,35 @@ define(['logManager',
 
         var insert = this.order_first;
 
-        while( insert && insert.getPositionY() < y )
+        while( insert && insert.getPositionY() < y ){
             insert = insert.getOrderNext();
+        }
 
-        if( insert )
+        if( insert ){
             this.insertBefore(edge, insert);
-        else
+        } else {
             this.insertLast(edge);
+        }
     };
 
     AutoRouterEdgeList.prototype.remove = function(edge){
         assert( edge !== null, "AREdgeList.remove:  edge !== null FAILED");
 
-        if( this.order_first === edge )
+        if( this.order_first === edge ){
             this.order_first = edge.getOrderNext();
+        }
 
-        if( edge.getOrderNext() )
+        if( edge.getOrderNext() ){
             edge.getOrderNext().setOrderPrev(edge.getOrderPrev());
+        }
 
-        if( this.order_last === edge )
+        if( this.order_last === edge ){
             this.order_last = edge.getOrderPrev();
+        }
 
-        if( edge.getOrderPrev() )
+        if( edge.getOrderPrev() ){
             edge.getOrderPrev().setOrderNext(edge.getOrderNext());
+        }
 
         edge.setOrderNext(null);
         edge.setOrderPrev(null);
@@ -678,14 +685,15 @@ define(['logManager',
     //-- Private
 
     AutoRouterEdgeList.prototype._slideButNotPassEdges = function (edge, y){
-        assert( edge != null, "AREdgeList.slideButNotPassEdges: edge != null FAILED" );
+        assert( edge !== null, "AREdgeList.slideButNotPassEdges: edge != null FAILED" );
         assert( CONSTANTS.ED_MINCOORD < y && y < CONSTANTS.ED_MAXCOORD,  "AREdgeList.slideButNotPassEdges: CONSTANTS.ED_MINCOORD < y && y < CONSTANTS.ED_MAXCOORD FAILED");
 
         var oldy = edge.getPositionY();
         assert( CONSTANTS.ED_MINCOORD < oldy && oldy < CONSTANTS.ED_MAXCOORD, "AREdgeList.slideButNotPassEdges: CONSTANTS.ED_MINCOORD < oldy && oldy < CONSTANTS.ED_MAXCOORD FAILED");
 
-        if( oldy === y )
+        if( oldy === y ){
             return null;
+        }
 
         var x1 = edge.getPositionX1(),
             x2 = edge.getPositionX2(),
@@ -767,9 +775,9 @@ define(['logManager',
     AutoRouterEdgeList.prototype.checkSection = function (){
         if( !(this.section_blocker === null && this.section_ptr2blocked === null)){
             //This used to be contained in an assert. Generally this fails when the router does not have a clean exit then is asked to reroute.
-            _logger.warning("section_blocker and this.section_ptr2blocked are not null. Assuming last run did not exit cleanly. Fixing...");
-            this.section_blocker === null;
-            this.section_ptr2blocked === null;
+            this._logger.warning("section_blocker and this.section_ptr2blocked are not null. Assuming last run did not exit cleanly. Fixing...");
+            this.section_blocker = null;
+            this.section_ptr2blocked = null;
         }
     };
 
@@ -792,7 +800,7 @@ define(['logManager',
     };
 
     AutoRouterEdgeList.prototype.section_IsImmediate  = function (){
-        assert( this.section_blocker != null && this.section_ptr2blocked != null && this.section_ptr2blocked != null, "AREdgeList.section_IsImmediate: this.section_blocker != null && this.section_ptr2blocked != null && *section_ptr2blocked != null FAILED");
+        assert( this.section_blocker !== null && this.section_ptr2blocked !== null && this.section_ptr2blocked !== null, "AREdgeList.section_IsImmediate: this.section_blocker != null && this.section_ptr2blocked != null && *section_ptr2blocked != null FAILED");
 
         var section_blocked = this.section_ptr2blocked[0],
             e = section_blocked.getSectionDown(),
@@ -803,8 +811,9 @@ define(['logManager',
             b1 = this.section_blocker.getSectionX1(),
             b2 = this.section_blocker.getSectionX2();
 
-        if(e != null)
+        if(e !== null){
             e = (e.getStartPoint().equals(CONSTANTS.EMPTY_POINT) || e.getSectionX1() === undefined ? null : e);
+        }
 
         assert( b1 <= a2 && a1 <= b2, "AREdgeList.section_IsImmediate: b1 <= a2 && a1 <= b2 FAILED");// not case 1 or 6
 
@@ -813,26 +822,32 @@ define(['logManager',
 
         if( a1 <= b1 )
         {
-            while( !(e === null || e.getStartPoint().equals(CONSTANTS.EMPTY_POINT)) && e.getSectionX2() < b1 )
+            while( !(e === null || e.getStartPoint().equals(CONSTANTS.EMPTY_POINT)) && e.getSectionX2() < b1 ){
                 e = e.getSectionNext();
+            }
 
-            if( b2 <= a2 )
+            if( b2 <= a2 ){
                 return (e === null || e.getStartPoint().equals(CONSTANTS.EMPTY_POINT))|| b2 < e.getSectionX1();				// case 3
+            }
 
             return (e === null || e.getStartPoint().equals(CONSTANTS.EMPTY_POINT)) && a2 === p2;								// case 2
         }
 
-        if( b2 <= a2 )
+        if( b2 <= a2 ){
             return a1 === p1 && ((e === null || e.getStartPoint().equals(CONSTANTS.EMPTY_POINT)) || b2 < e.getSectionX1());	// case 5
+        }
 
         return (e === null || e.getStartPoint().equals(CONSTANTS.EMPTY_POINT)) && a1 === p1 && a2 === p2;						// case 4
     };
 
 
     AutoRouterEdgeList.prototype.section_HasBlockedEdge = function (){
-        assert( this.section_blocker != null, "AREdgeList.section_HasBlockedEdge: this.section_blocker != null FAILED");
+        assert( this.section_blocker !== null, "AREdgeList.section_HasBlockedEdge: this.section_blocker != null FAILED");
 
-        var b1 = this.section_blocker.getSectionX1(),
+        var a1,
+            a2,
+            e,
+            b1 = this.section_blocker.getSectionX1(),
             b2 = this.section_blocker.getSectionX2();
 
         assert( b1 <= b2, "AREdgeList.section_HasBlockedEdge: b1 <= b2 FAILED");
@@ -849,11 +864,11 @@ define(['logManager',
 
             assert( !current_edge.getStartPoint().equals(CONSTANTS.EMPTY_POINT) , "AREdgeList.section_HasBlockedEdge: !current_edge.getStartPoint().equals(CONSTANTS.EMPTY_POINT) FAILED" );
 
-            var e = current_edge.getSectionDownPtr()[0], 
-                o = null,
+            var o = null;
 
-                a1 = current_edge.getSectionX1(),
-                a2 = current_edge.getSectionX2();
+            e = current_edge.getSectionDownPtr()[0];
+            a1 = current_edge.getSectionX1();
+            a2 = current_edge.getSectionX2();
 
             assert( a1 <= a2, "AREdgeList.section_HasBlockedEdge: a1 <= a2 FAILED (" + a1 + " <= " + a2 + ")");
 
@@ -867,8 +882,9 @@ define(['logManager',
             {
                 if( e && !e.getStartPoint().equals(CONSTANTS.EMPTY_POINT))
                 {
-                    while( e.getSectionNext() && !e.getSectionNext().getStartPoint().equals(CONSTANTS.EMPTY_POINT))
+                    while( e.getSectionNext() && !e.getSectionNext().getStartPoint().equals(CONSTANTS.EMPTY_POINT)){
                         e = e.getSectionNext();
+                    }
 
                     e.setSectionNext(current_edge.getSectionNext());
                     this.section_ptr2blocked[0] = current_edge.getSectionDown();
@@ -926,7 +942,7 @@ define(['logManager',
 
                 if( !this.section_ptr2blocked[0].getStartPoint().equals(CONSTANTS.EMPTY_POINT) )
                 {
-                    assert( o != null, "AREdgeList.section_HasBlockedEdge: o != null FAILED");
+                    assert( o !== null, "AREdgeList.section_HasBlockedEdge: o != null FAILED");
                     o.setSectionNext(current_edge.getSectionNext());
 
                     current_edge.setSectionX2(
@@ -936,37 +952,38 @@ define(['logManager',
                     this.section_ptr2blocked[0] = new AutoRouterEdge(); //This seems odd
                     this.section_ptr2blocked = null;
 
-                }
-                else
+                } else {
                     current_edge.setSectionX2(b1 - 1);
+                }
 
                 this.section_ptr2blocked = current_edge.getSectionNextPtr();
             }
         }
 
         assert( this.section_ptr2blocked !== null, "AREdgeList.section_HasBlockedEdge: this.section_ptr2blocked != null FAILED");
-        while( this.section_ptr2blocked[0] != null && !this.section_ptr2blocked[0].getStartPoint().equals(CONSTANTS.EMPTY_POINT))
+        while( this.section_ptr2blocked[0] !== null && !this.section_ptr2blocked[0].getStartPoint().equals(CONSTANTS.EMPTY_POINT))
         {
-            var a1 = this.section_ptr2blocked[0].getSectionX1(),
-                a2 = this.section_ptr2blocked[0].getSectionX2();
+            a1 = this.section_ptr2blocked[0].getSectionX1();
+            a2 = this.section_ptr2blocked[0].getSectionX2();
 
             //If this.section_ptr2blocked is completely to the left (or above) this.section_blocker
             if( a2 < b1 )												// case 1
             {
                 this.section_ptr2blocked = this.section_ptr2blocked[0].getSectionNextPtr();
 
-                assert( this.section_ptr2blocked != null, "AREdgeList.section_HasBlockedEdge: this.section_ptr2blocked != null FAILED");
+                assert( this.section_ptr2blocked !== null, "AREdgeList.section_HasBlockedEdge: this.section_ptr2blocked != null FAILED");
                 continue;
             }
             //If this.section_blocker is completely to the right (or below) this.section_ptr2blocked 
-            else if( b2 < a1 )											// case 6
+            else if( b2 < a1 ) {											// case 6
                 break;
+            }
 
             if( a1 < b1 && b2 < a2 )									// case 3
                 //If this.section_ptr2blocked starts before and ends after this.section_blocker
             {
-                var x = b1,
-                    e = this.section_ptr2blocked[0].getSectionDown();
+                var x = b1;
+                e = this.section_ptr2blocked[0].getSectionDown();
 
                 for(;;)
                 {
@@ -977,8 +994,9 @@ define(['logManager',
                     else if( x <= e.getSectionX2() )
                     {
                         x = e.getSectionX2() + 1;
-                        if( b2 < x )
+                        if( b2 < x ){
                             break;
+                        }
                     }
 
                     e = e.getSectionNext();
@@ -1004,7 +1022,7 @@ define(['logManager',
     };
 
     AutoRouterEdgeList.prototype.section_GetBlockedEdge = function (){
-        assert( this.section_blocker != null && this.section_ptr2blocked != null, "AREdgeList.sectionGetBlockedEdge: this.section_blocker != null && this.section_ptr2blocked != null FAILED" );
+        assert( this.section_blocker !== null && this.section_ptr2blocked !== null, "AREdgeList.sectionGetBlockedEdge: this.section_blocker !== null && this.section_ptr2blocked !== null FAILED" );
 
         return this.section_ptr2blocked[0];
     };
@@ -1012,7 +1030,7 @@ define(['logManager',
     //----Bracket
 
     AutoRouterEdgeList.prototype.bracket_IsClosing = function (edge){
-        assert( edge != null, "AREdgeList.bracket_IsClosing: edge != null FAILED" );
+        assert( edge !== null, "AREdgeList.bracket_IsClosing: edge !== null FAILED" );
         assert( !edge.isStartPointNull() && !edge.isEndPointNull(), "AREdgeList.bracket_IsClosing: !edge.isStartPointNull() && !edge.isEndPointNull() FAILED");
 
         var start = edge.getStartPoint(),
@@ -1029,14 +1047,15 @@ define(['logManager',
     };
 
     AutoRouterEdgeList.prototype.bracket_IsOpening = function (edge){
-        assert( edge != null, "AREdgeList.bracket_IsOpening: edge != null FAILED" );
+        assert( edge !== null, "AREdgeList.bracket_IsOpening: edge !== null FAILED" );
         assert( !edge.isStartPointNull() && !edge.isEndPointNull(), "AREdgeList.bracket_IsOpening: !edge.isStartPointNull() && !edge.isEndPointNull() FAILED");
 
         var start = edge.getStartPoint(),
             end = edge.getEndPoint();
 
-        if( edge.isStartPointPrevNull() || edge.isEndPointNextNull() )
+        if( edge.isStartPointPrevNull() || edge.isEndPointNextNull() ){
             return false;
+        }
 
         return this.ishorizontal ?
             (edge.getStartPointPrev().y > start.y && edge.getEndPointNext().y > end.y ) :
@@ -1048,7 +1067,7 @@ define(['logManager',
     };
 
     AutoRouterEdgeList.prototype.bracket_ShouldBeSwitched = function (edge, next){
-        assert( edge != null && next != null, "AREdgeList.bracket_ShouldBeSwitched: edge != null && next != null FAILED");
+        assert( edge !== null && next !== null, "AREdgeList.bracket_ShouldBeSwitched: edge !== null && next !== null FAILED");
 
         var ex = this._position_GetRealX(edge),
             ex1 = ex[0], 
@@ -1065,19 +1084,21 @@ define(['logManager',
 
         var c1, c2;
 
-        if( (nx1 < ex1 && ex1 < nx2 && eo1 > 0 ) || (ex1 < nx1 && nx1 < ex2 && no1 < 0) )
+        if( (nx1 < ex1 && ex1 < nx2 && eo1 > 0 ) || (ex1 < nx1 && nx1 < ex2 && no1 < 0) ){
             c1 = +1;
-        else if( ex1 === nx1 && eo1 === 0 && no1 === 0 )
+        } else if( ex1 === nx1 && eo1 === 0 && no1 === 0 ){
             c1 = 0;
-        else
+        } else {
             c1 = -9;
+        }
 
-        if( (nx1 < ex2 && ex2 < nx2 && eo2 > 0 ) || (ex1 < nx2 && nx2 < ex2 && no2 < 0) )
+        if( (nx1 < ex2 && ex2 < nx2 && eo2 > 0 ) || (ex1 < nx2 && nx2 < ex2 && no2 < 0) ){
             c2 = +1;
-        else if( ex2 === nx2 && eo2 === 0 && no2 === 0 )
+        } else if( ex2 === nx2 && eo2 === 0 && no2 === 0 ){
             c2 = 0;
-        else
+        } else {
             c2 = -9;
+        }
 
         return (c1 + c2) > 0;
     };
@@ -1091,10 +1112,11 @@ define(['logManager',
             D = CONSTANTS.EDLS_D; //This is the total distance of the graph
 
         //If f is greater than the SMALLGAP, then make some checks/edits
-        if( b === 0 && R <= f ) //If every comparison resulted in an overlap AND SMALLGAP + 1 is less than the distance between each edge (in the given range)
+        if( b === 0 && R <= f ){ //If every comparison resulted in an overlap AND SMALLGAP + 1 is less than the distance between each edge (in the given range)
             f += (D-R);
-        else if( S < f && s > 0 )
+        } else if( S < f && s > 0 ){
             f = ((D-S)*d - S*(D-R)*s) / ((D-S)*b + (R-S)*s);
+        }
 
         return f;
     };
@@ -1105,23 +1127,24 @@ define(['logManager',
             R = CONSTANTS.EDLS_R,
             D = CONSTANTS.EDLS_D;
 
-        if( S < g && b > 0 )
+        if( S < g && b > 0 ){
             g = ((R-S)*d + S*(D-R)*b) / ((D-S)*b + (R-S)*s);
+        }
 
         return g;
     };
 
     //Float equals
     AutoRouterEdgeList.prototype.flt_equ  = function (a, b){
-        return ((a - .1) < b) && (b < (a + .1));
+        return ((a - 0.1) < b) && (b < (a + 0.1));
     };
 
     AutoRouterEdgeList.prototype.block_PushBackward = function(blocked, blocker){
         var modified = false;
 
-        assert( blocked != null && blocker != null, "AREdgeList.block_PushBackward: blocked != null && blocker != null FAILED");
+        assert( blocked !== null && blocker !== null, "AREdgeList.block_PushBackward: blocked !== null && blocker !== null FAILED");
         assert( blocked.getPositionY() <= blocker.getPositionY(), "AREdgeList.block_PushBackward: blocked.getPositionY() <= blocker.getPositionY() FAILED");
-        assert( blocked.getBlockPrev() != null, "AREdgeList.block_PushBackward: blocked.getBlockPrev() != null FAILED"); 
+        assert( blocked.getBlockPrev() !== null, "AREdgeList.block_PushBackward: blocked.getBlockPrev() !== null FAILED"); 
 
         var f = 0,
             g = 0,
@@ -1141,8 +1164,9 @@ define(['logManager',
             trace = edge;
             edge = edge.getBlockPrev();
 
-            if( edge === null )
+            if( edge === null ){
                 break;
+            }
 
             d2 = trace.getPositionY() - edge.getPositionY();
             assert( d2 >= 0, "AREdgeList.block_PushBackward:  d2 >= 0 FAILED");
@@ -1182,13 +1206,13 @@ define(['logManager',
             assert( this.flt_equ(d, f*b + g*s), "AREdgeList.block_PushBackward: flt_equ(d, f*b + g*s) FAILED");
 
             edge = trace;
-            assert( edge != null && edge != blocked, "AREdgeList.block_PushBackward: edge != null && edge != blocked FAILED");
+            assert( edge !== null && edge !== blocked, "AREdgeList.block_PushBackward: edge !== null && edge !== blocked FAILED");
 
             var y = edge.getPositionY();
 
             do
             {
-                assert( edge != null && edge.getBlockTrace() != null,"AREdgeList.block_PushBackward: edge != null && edge.getBlockTrace() != null FAILED");
+                assert( edge !== null && edge.getBlockTrace() !== null,"AREdgeList.block_PushBackward: edge !== null && edge.getBlockTrace() !== null FAILED");
                 trace = edge.getBlockTrace();
 
                 y += (edge.getBracketOpening() || trace.getBracketClosing()) ? g : f;
@@ -1196,8 +1220,9 @@ define(['logManager',
                 if( y + 0.001 < trace.getPositionY() )
                 {
                     modified = true;
-                    if( this._slideButNotPassEdges(trace, y) )
+                    if( this._slideButNotPassEdges(trace, y) ){
                         trace.setBlockPrev(null);
+                    }
                 }
 
                 edge = trace;
@@ -1205,7 +1230,7 @@ define(['logManager',
 
             if (CONSTANTS.DEBUG){
                 //y += (edge.getBracketOpening() || blocker.getBracketClosing()) ? g : f;
-                assert( flt_equ(y, blocker.getPositionY()), "AREdgeList.block_PushBackward: flt_equ(y, blocker.getPositionY()) FAILED");
+                assert( this.flt_equ(y, blocker.getPositionY()), "AREdgeList.block_PushBackward: flt_equ(y, blocker.getPositionY()) FAILED");
             }
         }
 
@@ -1215,9 +1240,9 @@ define(['logManager',
     AutoRouterEdgeList.prototype.block_PushForward = function(blocked, blocker){
         var modified = false;
 
-        assert( blocked != null && blocker != null, "AREdgeList.block_PushForward: blocked != null && blocker != null FAILED");
+        assert( blocked !== null && blocker !== null, "AREdgeList.block_PushForward: blocked !== null && blocker !== null FAILED");
         assert( blocked.getPositionY() >= blocker.getPositionY(), "AREdgeList.block_PushForward: blocked.getPositionY() >= blocker.getPositionY() FAILED");
-        assert( blocked.getBlockNext() != null, "AREdgeList.block_PushForward: blocked.getBlockNext() != null FAILED");
+        assert( blocked.getBlockNext() !== null, "AREdgeList.block_PushForward: blocked.getBlockNext() !== null FAILED");
 
         var f = 0,
             g = 0,
@@ -1285,7 +1310,7 @@ define(['logManager',
 
             do
             {
-                assert( edge != null && edge.getBlockTrace() != null, "AREdgeList.block_PushForward: edge != null && edge.getBlockTrace() != null FAILED");
+                assert( edge !== null && edge.getBlockTrace() !== null, "AREdgeList.block_PushForward: edge !== null && edge.getBlockTrace() !== null FAILED");
                 trace = edge.getBlockTrace();
 
                 y -= (trace.getBracketOpening() || edge.getBracketClosing()) ? g : f;
@@ -1294,8 +1319,9 @@ define(['logManager',
                 {
                     modified = true;
 
-                    if( this._slideButNotPassEdges(trace, y) ) 
+                    if( this._slideButNotPassEdges(trace, y) ) {
                         trace.setBlockNext(null);
+                    }
                 }
 
                 edge = trace;
@@ -1333,10 +1359,11 @@ blocked,
                 if( this.section_IsImmediate() )
                 {
                     blocked = this.section_GetBlockedEdge();
-                    assert( blocked != null, "AREdgeList.block_PushForward: blocked != null FAILED");
+                    assert( blocked !== null, "AREdgeList.block_PushForward: blocked !== null FAILED");
 
-                    if( blocked.getBlockPrev() != null )
+                    if( blocked.getBlockPrev() !== null ){
                         modified = this.block_PushBackward(blocked, blocker) || modified;
+                    }
 
                     if( !blocker.getEdgeFixed() )
                     {
@@ -1421,9 +1448,9 @@ blocked,
                 {
                     blocked = this.section_GetBlockedEdge();
 
-                    assert( blocked != null, "AREdgeList.block_ScanBackward: blocked != null FAILED");
+                    assert( blocked !== null, "AREdgeList.block_ScanBackward: blocked !== null FAILED");
 
-                    if( blocked.getBlockNext() != null )
+                    if( blocked.getBlockNext() !== null )
                     {
                         modified = this.block_PushForward(blocked, blocker) || modified;
                     }
@@ -1492,7 +1519,7 @@ blocked,
             ny,
             a;
 
-        while( second != null )
+        while( second !== null )
         {
             if( second.getClosestPrev() !== null && second.getClosestPrev().getClosestNext() !== (second) && //Check if it references itself
                     second.getClosestNext() !== null && second.getClosestNext().getClosestPrev() === (second) )
@@ -1536,11 +1563,13 @@ blocked,
                             break;
                         }
 
-                        if( edge.getClosestPrev() !== null && edge.getClosestPrev().getClosestNext() === edge )
+                        if( edge.getClosestPrev() !== null && edge.getClosestPrev().getClosestNext() === edge ){
                             edge.getClosestPrev().setClosestNext(next);
+                        }
 
-                        if( next.getClosestNext() !== null && next.getClosestNext().getClosestPrev() === next)
+                        if( next.getClosestNext() !== null && next.getClosestNext().getClosestPrev() === next){
                             next.getClosestNext().setClosestPrev(edge);
+                        }
 
                         edge.setClosestNext(next.getClosestNext());
                         next.setClosestNext(edge);
@@ -1552,10 +1581,11 @@ blocked,
 
                         assert( !this.bracket_ShouldBeSwitched(next, edge), "AREdgeList.block_SwitchWrongs: !Bracket_ShouldBeSwitched(next, edge) FAILED");
 
-                        if( next.getClosestPrev() !== null && next.getClosestPrev().getClosestNext() === next )
+                        if( next.getClosestPrev() !== null && next.getClosestPrev().getClosestNext() === next ){
                             edge = next.getClosestPrev();
-                        else
+                        } else {
                             next = edge.getClosestNext();
+                        }
                     }
                     else
                     {
@@ -1568,8 +1598,9 @@ blocked,
             second = second.getOrderNext();
         }
 
-        if( was )
+        if( was ){
             this._positionAll_StoreY();
+        }
 
         return was;
     };

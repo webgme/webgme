@@ -1,6 +1,6 @@
 $dot-color: #666666;
 $port-height: 15px;
-$dot-radius : 4px;
+$dot-radius : 5px;
 $dot-width: 3px;
 $dot-height: 7px;
 $dot-border-width: 1px;
@@ -41,7 +41,7 @@ $svg-icon-width: 5px;
       border: $dot-border-width solid $dot-color;
       width: $dot-width;
       height: $dot-height;
-      top: ($port-height - $dot-height - 2 * $dot-border-width)/2;
+      top: ($port-height - $dot-height)/2;
     }
 
     &.w-icon {
@@ -62,7 +62,7 @@ $svg-icon-width: 5px;
       }
 
       span.dot {
-        left: - $padding - $dot-width - 2; // -2 because of the 2px border-width of the decorator)
+        left: - $padding - $dot-width;
         border-top-left-radius: $dot-radius;
         border-bottom-left-radius: $dot-radius;
       }
@@ -85,7 +85,7 @@ $svg-icon-width: 5px;
       }
 
       span.dot {
-        left: $ports-width + $padding;
+        left: $ports-width + $padding + 1;
         border-top-right-radius: $dot-radius;
         border-bottom-right-radius: $dot-radius;
       }

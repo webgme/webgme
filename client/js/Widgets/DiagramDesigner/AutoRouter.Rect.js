@@ -1,16 +1,17 @@
+/*globals define*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
- * Author: Brian Broll
+ * @author brollb / https://github/brollb
  */
-
-"use strict"; 
 
 define(['logManager',
         './AutoRouter.Point',
         './AutoRouter.Size'], function (logManager,
                                             ArPoint,
                                             ArSize) {
+
+    "use strict"; 
 
     var ArRect = function(Left, Ceil, Right, Floor){
         if(Left === undefined){ //No arguments
@@ -39,8 +40,9 @@ define(['logManager',
                 Floor = Math.round(Ceil.y);
                 Ceil = Math.round(Left.y);
                 Left = Math.round(Left.x);
-            }else
+            }else{
                 console.log("Invalid ArRect Constructor");
+            }
 
         }else if(Floor === undefined){ //Invalid
             console.log("Invalid ArRect Constructor");
@@ -81,8 +83,9 @@ define(['logManager',
     };
 
     ArRect.prototype.isRectEmpty = function (){
-        if((this.left >= this.right) && (this.ceil >= this.floor))
+        if((this.left >= this.right) && (this.ceil >= this.floor)){
             return true;
+        }
 
         return false;
     };
@@ -92,28 +95,32 @@ define(['logManager',
         if( this.left === 0 &&
                 this.right === 0 &&
                 this.ceil === 0 &&
-                this.floor === 0)
+                this.floor === 0){
             return true;
+        }
 
         return false;
     };
 
     ArRect.prototype.ptInRect = function (pt){
-        if(pt instanceof Array)
+        if(pt instanceof Array){
             pt = pt[0];
+        }
 
         if( pt.x >= this.left &&
                 pt.x <= this.right &&
                 pt.y >= this.ceil &&
-                pt.y <= this.floor)
+                pt.y <= this.floor){
             return true;
+        }
 
         return false;
     };
 
     ArRect.prototype.rectInRect = function (rect){
-        if(rect === undefined)
+        if(rect === undefined){
             return false;
+        }
 
         return (rect.left >= this.left && rect.ceil >= this.ceil &&
                 rect.right <= this.right && rect.floor <= this.floor);
@@ -197,8 +204,9 @@ define(['logManager',
         if( this.left === rect.left &&
                 this.right === rect.right &&
                 this.ceil === rect.ceil &&
-                this.floor === rect.floor)
+                this.floor === rect.floor){
             return true;
+        }
 
         return false;
 
@@ -215,8 +223,9 @@ define(['logManager',
             dx = ArObject.cx;
             dy = ArObject.cy;
 
-        }else
+        }else{
             console.log("Invalid arg for [ArRect].add method");
+        }
 
         this.left += dx;
         this.right += dx;
@@ -237,8 +246,9 @@ define(['logManager',
             this.ceil += ArObject.ceil;
             this.floor -= ArObject.floor;
 
-        }else
+        }else{
             console.log("Invalid arg for [ArRect].subtract method");
+        }
     };
 
     ArRect.prototype.plus = function (ArObject){
@@ -256,8 +266,9 @@ define(['logManager',
     };
 
     ArRect.prototype.unionAssign = function (rect){
-        if( rect.isRectEmpty())
+        if( rect.isRectEmpty()){
             return;
+        }
         if( this.isRectEmpty()){
             this.assign(rect);
             return;
@@ -304,8 +315,7 @@ define(['logManager',
     ArRect.prototype.touching = function (rect){
         //One pixel is added to the minimums so, if they are not deemed to be touching
         //there is guaranteed to be at lease a one pixel path between them
-        return Math.max(rect.left, this.left) <= Math.min(rect.right, this.right) + 1
-            && Math.max(rect.ceil, this.ceil) <= Math.min(rect.floor, this.floor) + 1;
+        return Math.max(rect.left, this.left) <= Math.min(rect.right, this.right) + 1 && Math.max(rect.ceil, this.ceil) <= Math.min(rect.floor, this.floor) + 1;
     };
 
     return ArRect;

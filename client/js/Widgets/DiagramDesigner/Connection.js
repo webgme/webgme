@@ -1,10 +1,8 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
- * Author: Robert Kereskenyi
- */
+/*globals define, Raphael, window, WebGMEGlobal*/
 
-"use strict";
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['logManager',
     'clientUtil',
@@ -17,6 +15,8 @@ define(['logManager',
                             DiagramDesignerWidgetOperatingModes,
                             ConnectionEditSegment,
                             ConnectionSegmentPoint) {
+
+    "use strict";
 
     var Connection,
         TEXT_ID_PREFIX = "t_",

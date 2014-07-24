@@ -10315,7 +10315,7 @@
 		 *        "aoColumnDefs": [ 
 		 *          {
 		 *            "mData": null,
-		 *            "sDefaultContent": "Edit",
+		 *            "sDefaultContent": "glyphicon glyphicon-edit",
 		 *            "aTargets": [ -1 ]
 		 *          }
 		 *        ]
@@ -10332,7 +10332,7 @@
 		 *          null,
 		 *          {
 		 *            "mData": null,
-		 *            "sDefaultContent": "Edit"
+		 *            "sDefaultContent": "glyphicon glyphicon-edit"
 		 *          }
 		 *        ]
 		 *      } );

@@ -1,9 +1,9 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
- * Author: Robert Kereskenyi
+/*globals define, Raphael, window, WebGMEGlobal*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
  */
-"use strict";
+
 /*
  * WIDGET TreeBrowserWidget based on DynaTree
  */
@@ -13,7 +13,9 @@ define(['logManager',
     'js/DragDrop/DragSource',
     'lib/jquery/jquery.dynatree-1.2.5.min',
     'lib/jquery/jquery.contextMenu',
-    'css!/css/Widgets/TreeBrowser/TreeBrowserWidget'], function (logManager, CONSTANTS, TreeBrowserWidgetKeyboard, dragSource) {
+    'css!./styles/TreeBrowserWidget'], function (logManager, CONSTANTS, TreeBrowserWidgetKeyboard, dragSource) {
+
+    "use strict";
 
     var NODE_PROGRESS_CLASS = 'node-progress',
         TREE_BROWSER_CLASS = "tree-browser";
@@ -255,24 +257,30 @@ define(['logManager',
      */
     TreeBrowserWidget.prototype.updateNode = function (node, objDescriptor) {
 
+        //by default we say there is nothing to update
+        var nodeDataChanged = false,
+            nodeNameChanged = false,
+            nodeName;
+
+
         //check if valid node
         if (!node) {
             return;
         }
 
-        //by default we say there is nothing to update
-        var nodeDataChanged = false;
-
-        var nodeNameChanged = false;
-
         //set new text value (if any)
-        if (objDescriptor.name && node.data.title !== objDescriptor.name) {
-            node.data.title = objDescriptor.name;
-            node.data.tooltip = objDescriptor.name;
+        if (node.data.title !== objDescriptor.name) {
+
+
+            nodeName = objDescriptor.name;
+
+            node.data.title = nodeName;
+            node.data.tooltip = nodeName;
 
             //mark that change happened
             nodeDataChanged = true;
             nodeNameChanged = true;
+
         }
 
         //set new children value (if any)
@@ -509,7 +517,7 @@ define(['logManager',
             return;
         }
 
-        this._logger.debug("Edit node: " + nodeToEdit.data.key);
+        this._logger.debug("glyphicon glyphicon-edit node: " + nodeToEdit.data.key);
 
         $(nodeToEdit.span).find('a').editInPlace({"class": "",
             "onChange": function (oldValue, newValue) {
@@ -627,7 +635,7 @@ define(['logManager',
                         callback: function(/*key, options*/) {
                         self._nodeEdit(node);
                     },
-                    "icon": "edit"
+                    "icon": "glyphicon glyphicon-edit"
                 };
             }
 

@@ -1,7 +1,8 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
+/*globals define*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
  */
 
 define(['./ButtonBase',

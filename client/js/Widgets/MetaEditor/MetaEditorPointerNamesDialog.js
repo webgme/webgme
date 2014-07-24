@@ -1,11 +1,17 @@
-"use strict";
+/*globals define, Raphael, window, WebGMEGlobal*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['clientUtil',
         'js/Constants',
-        'text!html/Widgets/MetaEditor/MetaEditorPointerNamesDialog.html',
-        'css!/css/Widgets/MetaEditor/MetaEditorPointerNamesDialog'], function ( util,
+        'text!./templates/MetaEditorPointerNamesDialog.html',
+        'css!./styles/MetaEditorPointerNamesDialog'], function ( util,
                                                                                 CONSTANTS,
                                                                metaEditorPointerNamesDialogTemplate) {
+
+    "use strict";
 
     var MetaEditorPointerNamesDialog,
         POPULAR_POINTER_NAMES = [CONSTANTS.POINTER_SOURCE, CONSTANTS.POINTER_TARGET];
@@ -21,13 +27,13 @@ define(['clientUtil',
 
         this._dialog.modal('show');
 
-        this._dialog.on('shown', function () {
+        this._dialog.on('shown.bs.modal', function () {
             if (existingPointerNames.length === 0) {
-	        	self._txtNewPointerName.focus();
-	        }
+                self._txtNewPointerName.focus();
+            }
         });
 
-        this._dialog.on('hidden', function () {
+        this._dialog.on('hidden.bs.modal', function () {
             self._dialog.remove();
             self._dialog.empty();
             self._dialog = undefined;
@@ -43,11 +49,11 @@ define(['clientUtil',
             isValidPointerName;
 
         closeAndCallback = function (selectedName) {
-        	self._dialog.modal('hide');
+            self._dialog.modal('hide');
 
-        	if (callBack) {
-        		callBack.call(self, selectedName);
-        	}
+            if (callBack) {
+                callBack.call(self, selectedName);
+            }
         };
 
         isValidPointerName = function (name) {
@@ -59,10 +65,10 @@ define(['clientUtil',
         //by default the template is for single pointer
         //in case of pointer list, update labels in the dialog
         if (isSet === true) {
-            this._dialog.find('.modal-header > h3').text('New set...');
-            this._dialog.find('.modal-body > .title').text('Pick one of the existing sets:');
-            this._dialog.find('.modal-footer .create').text('Or create a new set:');
-            this._dialog.find('.modal-footer .txt-pointer-name').attr('placeholder', 'New set name...');
+            this._dialog.find('.modal-header > h3').text('Create new set');
+            this._dialog.find('.pick-existing-label').text('Pick one of the existing sets:');
+            this._dialog.find('.create-new-label').text('Or create a new set:');
+            this._dialog.find('.txt-pointer-name').attr('placeholder', 'New set name...');
         }
 
         //get controls
@@ -72,8 +78,22 @@ define(['clientUtil',
 
 		//fill pointer names
         existingPointerNames.sort();
-        for (i = 0; i < len ; i += 1) {
-            this._btnGroup.append($('<button class="btn">' + util.toSafeString(existingPointerNames[i]) + '</button>'));
+
+        if (len) {
+
+            this._btnGroup.empty();
+
+            for (i = 0; i < len ; i += 1) {
+                this._btnGroup.append($('<button class="btn btn-default">' + util.toSafeString(existingPointerNames[i]) + '</button>'));
+            }
+
+        } else {
+
+            if (isSet === true) {
+                this._btnGroup.html('<span class="empty-message">No exisiting sets defined yet...</i>');
+            } else {
+                this._btnGroup.html('<span class="empty-message">No exisiting pointers defined yet...</i>');
+            }
         }
 
         //add most popular ones
@@ -83,7 +103,7 @@ define(['clientUtil',
 
             for (i = 0; i < len ; i += 1) {
                 if (existingPointerNames.indexOf(POPULAR_POINTER_NAMES[i]) === -1) {
-                    this._btnGroupPopular.append($('<button class="btn">' + POPULAR_POINTER_NAMES[i] + '</button>'));
+                    this._btnGroupPopular.append($('<button class="btn btn-default">' + POPULAR_POINTER_NAMES[i] + '</button>'));
                     popularsAdded = true;
                 }
             }
@@ -95,13 +115,13 @@ define(['clientUtil',
         }
 
         //create UI for new pointer name
-        this._txtNewPointerName =  this._dialog.find('.txt-pointer-name').first();
-        this._btnCreateNew = this._dialog.find('.btn-create').first();
-        this._panelCreateNew = this._dialog.find('.panel-create-new').first();
+        this._txtNewPointerName =  this._dialog.find('.txt-pointer-name');
+        this._btnCreateNew = this._dialog.find('.btn-create').disable(true);
+        this._panelCreateNew = this._dialog.find('.panel-create-new');
 
         //hook up event handlers
         this._btnGroup.on('click', '.btn', function (event) {
-        	var selectedPointerName = $(this).text();
+        var selectedPointerName = $(this).text();
             
             event.stopPropagation();
             event.preventDefault();
@@ -122,14 +142,12 @@ define(['clientUtil',
         this._txtNewPointerName.on('keyup', function () {
             var val = self._txtNewPointerName.val();
 
-            self._btnCreateNew.text('Create \'' + val +'\'');
-
             if (!isValidPointerName(val)) {
-                self._panelCreateNew.addClass("error");
-                self._btnCreateNew.addClass("disabled");
+                self._panelCreateNew.addClass("has-error");
+                self._btnCreateNew.disable(true);
             } else {
-                self._panelCreateNew.removeClass("error");
-                self._btnCreateNew.removeClass("disabled");
+                self._panelCreateNew.removeClass("has-error");
+                self._btnCreateNew.disable(false);
             }
         });
 
@@ -146,13 +164,13 @@ define(['clientUtil',
         });
 
         this._btnCreateNew.on('click', function (event) {
-        	var selectedPointerName = self._txtNewPointerName.val();
+            var selectedPointerName = self._txtNewPointerName.val();
             
             event.stopPropagation();
             event.preventDefault();
 
             if (!($(this).hasClass('disabled'))) {
-            	closeAndCallback(selectedPointerName);
+                closeAndCallback(selectedPointerName);
             }
         });
     };

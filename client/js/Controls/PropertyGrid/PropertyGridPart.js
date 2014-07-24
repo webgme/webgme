@@ -1,14 +1,21 @@
-"use strict";
+/*globals define, Raphael, window, WebGMEGlobal*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
+ */
 
 define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
-        'css!/css/Controls/PropertyGrid/PropertyGridPart'], function (PropertyGridWidgetManager) {
+        'css!./styles/PropertyGridPart'], function (PropertyGridWidgetManager) {
+
+    "use strict";
 
     /** Outer-most className for GUI's */
     var PropertyGridPart,
         CSS_NAMESPACE = 'pgp',
         CLASS_CLOSED = 'closed',
         CLASS_CONTROLLER_ROW = 'cr',
-        RESET_BUTTON_BASE = $('<i class="icon-remove-circle btn-reset" title="Reset value"/>');
+        RESET_BUTTON_BASE = $('<i class="glyphicon glyphicon-remove-circle btn-reset" title="Reset value"/>');
 
     PropertyGridPart = function (params) {
         if (params.el) {

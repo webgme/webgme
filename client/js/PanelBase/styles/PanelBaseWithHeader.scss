@@ -1,0 +1,246 @@
+$panel-header-background-color: #EFEFEF;
+$panel-header-active-background-color: #fff;
+$panel-header-active-border-color: #00235b;
+
+$palePale: #d3d8df;
+
+$floating-title-color: #555;
+$floating-title-active-color: #00235b;
+
+
+$panel-header-active-title-color: #FFF;
+
+$panel-body-background-color: #FFFFFF;
+$panel-body-background-color-read-only: #FBFBFB;
+
+$sidepane-panel-background-color: #F5F5F5;
+$sidepane-panel-header-background-color: #F5F5F5;
+$sidepane-panel-body-background-color: #F5F5F5;
+$sidepane-panel-body-background-color-read-only: #FBFBFB;
+
+$sidepane-panel-border-color: #E9E9E9;
+$sidepane-panel-border-radius: 0;
+
+$panel-header-height: 3px;
+$side-panel-header-height: 18px;
+$panel-border-bottom-width: 3px;
+
+
+$title-font-size: 21px;
+
+@mixin panel_header_title {
+  font-size: $title-font-size;
+  line-height: $title-font-size;
+  font-weight: 400;
+  display: inline-block;
+  margin-right: 10px;
+  margin-left: 5px;
+  white-space: nowrap;
+  margin-top: 8px;
+}
+
+.panel-base-wh {
+  box-sizing: border-box;
+
+  .ro-icon {
+    display: none;
+    margin-right: 2px;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+  }
+
+  .panel-header {
+
+    background-color: $panel-header-background-color;
+    border-bottom: $panel-border-bottom-width solid rgba(0, 0, 0, 0);
+    white-space: nowrap;
+
+    .panel-header-title {
+      @include panel_header_title;
+    }
+
+    .panel-header-toolbar {
+      .toolbar-group {
+        margin-left: 10px;
+
+        &.toolbar-group-small-margin {
+          margin-left: 2px;
+        }
+      }
+
+      select,
+      textarea,
+      input,
+      .uneditable-input {
+        margin-bottom: 0px;
+      }
+
+      .input-append,
+      .input-prepend {
+        margin-bottom: 0px;
+      }
+
+      input.no-focus-collapse:not(:focus) {
+        width: 30px;
+      }
+
+      li {
+        div.iCheckBox {
+          margin-left: 10px;
+        }
+      }
+
+      .iCheckBox {
+        top: 5px;
+        margin-left: 10px;
+      }
+
+      ul.dropdown-menu {
+        .iCheckBox {
+          top: 1px;
+        }
+      }
+    }
+
+    &.absolute-header {
+      border-bottom-width: 0px;
+      position: absolute;
+      top: 0px;
+      left: 0px;
+    }
+  }
+
+  .panel-body {
+    position: relative;
+    overflow: auto;
+    background-color: $panel-body-background-color;
+  }
+
+  .floating-title {
+    position: absolute;
+    left: 0;
+    box-shadow: 0;
+    text-shadow: 1.5px 1.5px 0 rgba(0,0,0,.15);
+    opacity: .65;
+
+    color: $floating-title-color;
+
+    .ro-icon {
+      position: relative;
+      top: -1px;
+      left: 2px;
+      margin-right: 1.2ex
+    }
+
+    .panel-header-title {
+      @include panel_header_title;
+
+      &:empty {
+        display: none;
+      }
+
+    }
+
+  }
+
+  &.read-only {
+    .ro-icon {
+      display: inline-block;
+    }
+
+    .panel-body {
+      background-color: $panel-body-background-color-read-only;
+    }
+
+    .floating-title {
+
+    }
+  }
+
+  .absolute-header {
+    border: 1px solid $palePale;
+  }
+
+
+  &.active-panel {
+    .panel-header {
+      border-bottom-color: $panel-header-active-border-color;
+      background: $panel-header-active-background-color;
+    }
+
+    .floating-title {
+      opacity: 0.85;
+      color: $floating-title-active-color;
+    }
+
+    .absolute-header {
+      border: 1px solid $panel-header-active-border-color;
+    }
+  }
+
+  &.w-tabs {
+    .floating-title {
+      top: 30px;
+    }
+  }
+}
+
+
+
+
+.side-panel {
+
+  .panel-base-wh {
+    position: relative;
+    padding: 0px;
+    margin-bottom: 2px;
+    border: 0;
+    -webkit-border-radius: $sidepane-panel-border-radius;
+    -moz-border-radius: $sidepane-panel-border-radius;
+    border-radius: $sidepane-panel-border-radius;
+    background-color: $sidepane-panel-background-color;
+
+    .panel-header {
+      padding: 3px;
+      background-color: $sidepane-panel-header-background-color;
+      border-bottom: $panel-border-bottom-width solid rgba(0, 0, 0, 0);
+
+      .ro-icon {
+        position: relative;
+        top: 0px;
+        left: 0px;
+      }
+
+      .panel-header-title {
+        font-size: 11px;
+        line-height: 18px;
+        color: #999;
+        text-transform: uppercase;
+        margin-right: 0;
+        margin-left: 0;
+      }
+
+      .panel-header-toolbar {
+        display: block;
+     }
+    }
+
+    .panel-body {
+      background-color: $sidepane-panel-body-background-color;
+      padding: 0;
+    }
+
+    &.read-only {
+      .panel-body {
+        background-color: $sidepane-panel-body-background-color-read-only;
+      }
+    }
+
+    &.active-panel {
+      .panel-header {
+        border-bottom-color: $panel-header-active-border-color;
+      }
+    }
+  }
+}

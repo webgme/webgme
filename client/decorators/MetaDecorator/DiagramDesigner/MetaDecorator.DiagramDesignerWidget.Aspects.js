@@ -1,4 +1,8 @@
-"use strict";
+/*globals define, _*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['js/Constants',
     'js/Utils/GMEConcepts',
@@ -9,6 +13,9 @@ define(['js/Constants',
                            nodePropertyNames,
                             AspectDetailsDialog,
                             Aspect) {
+
+
+    "use strict";
 
     var MetaDecoratorDiagramDesignerWidgetAspects;
 

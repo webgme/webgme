@@ -13,7 +13,8 @@ define([
     'coreclient/import',
     'coreclient/copyimport',
     '/listAllDecorators',
-    '/listAllPlugins'
+    '/listAllPlugins',
+    'coreclient/serialization'
 ],
     function (
         ASSERT,
@@ -30,7 +31,8 @@ define([
         MergeImport,
         Import,
         AllDecorators,
-        AllPlugins
+        AllPlugins,
+        Serialization
         ) {
 
         var ROOT_PATH = '';
@@ -44,7 +46,7 @@ define([
 
         function getNewCore(project){
             //return new NullPointerCore(new DescriptorCore(new SetCore(new GuidCore(new Core(project)))));
-            return Core(project,{autopersist: true,usertype:'nodejs',corerel:2});
+            return Core(project,{autopersist: true,usertype:'nodejs'});
         }
         function Client(_configuration){
             var _self = this,
@@ -70,8 +72,10 @@ define([
                 _commitCache = null,
                 _offline = false,
                 _networkWatcher = null,
-                _TOKEN = null;
+                _TOKEN = null,
                 META = new BaseMeta();
+                _rootHash = null,
+                _gHash = 0;
 
             function print_nodes(pretext){
                 if(pretext){
@@ -103,7 +107,13 @@ define([
                 "BRANCHSTATUS_CHANGED"  : "BRANCHSTATUS_CHANGED",
                 "BRANCH_CHANGED"        : "BRANCH_CHANGED",
                 "PROJECT_CLOSED"        : "PROJECT_CLOSED",
-                "PROJECT_OPENED"        : "PROJECT_OPENED"
+                "PROJECT_OPENED"        : "PROJECT_OPENED",
+
+                "SERVER_PROJECT_CREATED" : "SERVER_PROJECT_CREATED",
+                "SERVER_PROJECT_DELETED" : "SERVER_PROJECT_DELETED",
+                "SERVER_BRANCH_CREATED"  : "SERVER_BRANCH_CREATED",
+                "SERVER_BRANCH_UPDATED"  : "SERVER_BRANCH_UPDATED",
+                "SERVER_BRANCH_DELETED"  : "SERVER_BRANCH_DELETED"
             };
             _self.networkStates = {
                 'CONNECTED' :"connected",
@@ -164,6 +174,38 @@ define([
                 }
             }
 
+            function serverEventer(){
+                var lastGuid = '',
+                    nextServerEvent = function(err,guid,parameters){
+                        lastGuid = guid || lastGuid;
+                        if(!err && parameters){
+                            switch (parameters.type){
+                                case "PROJECT_CREATED":
+                                    _self.dispatchEvent(_self.events.SERVER_PROJECT_CREATED,parameters.project);
+                                    break;
+                                case "PROJECT_DELETED":
+                                    _self.dispatchEvent(_self.events.SERVER_PROJECT_DELETED,parameters.project);
+                                    break;
+                                case "BRANCH_CREATED":
+                                    _self.dispatchEvent(_self.events.SERVER_BRANCH_CREATED,{project:parameters.project,branch:parameters.branch,commit:parameters.commit});
+                                    break;
+                                case "BRANCH_DELETED":
+                                    _self.dispatchEvent(_self.events.SERVER_BRANCH_DELETED,{project:parameters.project,branch:parameters.branch});
+                                    break;
+                                case "BRANCH_UPDATED":
+                                    _self.dispatchEvent(_self.events.SERVER_BRANCH_UPDATED,{project:parameters.project,branch:parameters.branch,commit:parameters.commit});
+                                    break;
+                            }
+                            return _database.getNextServerEvent(lastGuid,nextServerEvent);
+                        } else {
+                            setTimeout(function(){
+                                return _database.getNextServerEvent(lastGuid,nextServerEvent);
+                            },1000);
+                        }
+                    };
+                _database.getNextServerEvent(lastGuid,nextServerEvent);
+            }
+
             function tokenWatcher(){
                 var token = null,
                     refreshToken = function(){
@@ -184,7 +226,7 @@ define([
                 WebGMEGlobal.getToken = getToken;
                 return {
                     getToken: getToken
-                }
+                };
             }
 
             function branchWatcher(branch,callback) {
@@ -314,8 +356,7 @@ define([
 
             function commitCache(){
                 var _cache = {},
-                    _timeOrder = [],
-                    _timeHash = {}
+                    _timeOrder = [];
                 function clearCache(){
                     _cache = {};
                     _timeOrder = [];
@@ -425,7 +466,7 @@ define([
                     getNCommitsFrom: getNCommitsFrom,
                     clearCache: clearCache,
                     newCommit: newCommit
-                }
+                };
             }
 
             function viewLatestCommit(callback){
@@ -463,20 +504,15 @@ define([
                                 if(!err && names){
                                     var firstName = null;
 
-                                    for(var i in names){
-                                        if(!firstName){
-                                            firstName = i;
-                                        }
-                                        if(i === 'master'){
-                                            firstName = i;
-                                            break;
-                                        }
+                                    if(names['master']){
+                                        firstName = 'master';
+                                    } else {
+                                        firstName = Object.keys(names)[0] || null;
                                     }
 
                                     if(firstName){
                                         branchWatcher(firstName,function(err){
                                             if(!err){
-                                                _self.dispatchEvent(_self.events.BRANCH_CHANGED, _branch);
                                                 callback(null);
                                             } else {
                                                 logger.error('The branch '+firstName+' of project '+name+' cannot be selected! ['+JSON.stringify(err)+']');
@@ -501,7 +537,7 @@ define([
             }
 
             //internal functions
-            function cleanUsers(){
+            function cleanUsersTerritories(){
                 for(var i in _users){
                     var events = [];
                     for(var j in _users[i].PATHS){
@@ -514,7 +550,10 @@ define([
                     _users[i].PATTERNS = {};
                     _users[i].PATHS = {};
                     _users[i].SENDEVENTS = true;
-
+                }
+            }
+            function reLaunchUsers(){
+                for(var i in _users){
                     if(_users[i].UI.reLaunch){
                         _users[i].UI.reLaunch();
                     }
@@ -523,7 +562,7 @@ define([
             function closeOpenedProject(callback){
                 callback = callback || function(){};
                 var returning = function(e){
-
+                    var oldProjName = _projectName;
                     _projectName = null;
                     _inTransaction = false;
                     _core = null;
@@ -538,11 +577,18 @@ define([
                     _loadNodes = {};
                     _loadError = 0;
                     _offline = false;
-                    cleanUsers();
-                    _self.dispatchEvent(_self.events.PROJECT_CLOSED);
+                    cleanUsersTerritories();
+                    if(oldProjName){
+                        //otherwise there were no open project at all
+                        _self.dispatchEvent(_self.events.PROJECT_CLOSED,oldProjName);
+                    }
 
                     callback(e);
                 };
+                if(_branch){
+                    //otherwise the branch will not 'change'
+                    _self.dispatchEvent(_self.events.BRANCH_CHANGED,null);
+                }
                 _branch = null;
                 if(_project){
                     var project = _project;
@@ -566,6 +612,19 @@ define([
             }
 
             //loading functions
+            function getStringHash(node){
+                //TODO there is a memory issue with the huge strings so we have to replace it with something
+                return _gHash++;
+                /*
+                var datas = _core.getDataForSingleHash(node),
+                    i,hash="";
+                for(i=0;i<datas.length;i++){
+                    hash+=datas[i];
+                }
+                return hash;
+                */
+
+            }
             function getModifiedNodes(newerNodes){
                 var modifiedNodes = [];
                 for(var i in _nodes){
@@ -613,9 +672,14 @@ define([
                 var newPaths = {};
                 var startErrorLevel = _loadError;
                 for(var i in _users[userId].PATTERNS){
-                    patternToPaths(i,_users[userId].PATTERNS[i],newPaths);
+                    if(_nodes[i]){ //TODO we only check pattern if its root is there...
+                        patternToPaths(i,_users[userId].PATTERNS[i],newPaths);
+                    }
                 }
 
+                if(startErrorLevel !== _loadError){
+                    return; //we send events only when everything is there correctly
+                }
                 var events = [];
 
                 //deleted items
@@ -644,9 +708,9 @@ define([
 
                 if(events.length>0){
                     if(_loadError > startErrorLevel){
-                        // TODO events.push({etype:'incomplete',eid:null});
+                        // TODO events.unshift({etype:'incomplete',eid:null});
                     } else {
-                        // TODO events.push({etype:'complete',eid:null});
+                        // TODO events.unshift({etype:'complete',eid:null});
                     }
 
                     _users[userId].FN(events);
@@ -664,11 +728,11 @@ define([
                 return path;
             }
 
-            function loadChildrenPattern(core,nodesSoFar,node,level,callback){
+            function _loadChildrenPattern(core,nodesSoFar,node,level,callback){
                 var path = core.getPath(node);
                 _metaNodes[path] = node;
                 if(!nodesSoFar[path]){
-                    nodesSoFar[path] = {node:node,hash:core.getSingleNodeHash(node),incomplete:true,basic:true};
+                    nodesSoFar[path] = {node:node,incomplete:true,basic:true,hash:getStringHash(node)};
                 }
                 if(level>0){
                     if(core.getChildrenRelids(nodesSoFar[path].node).length>0){
@@ -693,6 +757,53 @@ define([
                     }
                 } else {
                     callback(null);
+                }
+            }
+            //partially optimized
+            function loadChildrenPattern(core,nodesSoFar,node,level,callback){
+                var path = core.getPath(node),
+                    childrenPaths = core.getChildrenPaths(node),
+                    childrenRelids = core.getChildrenRelids(node),
+                    missing = childrenPaths.length,
+                    error = null,
+                    i;
+                _metaNodes[path] = node;
+                if(!nodesSoFar[path]){
+                    nodesSoFar[path] = {node:node,incomplete:true,basic:true,hash:getStringHash(node)};
+                }
+                if(level>0){
+                    if(missing>0){
+                        for(i=0;i<childrenPaths.length;i++){
+                            if(nodesSoFar[childrenPaths[i]]){
+                                loadChildrenPattern(core,nodesSoFar,nodesSoFar[childrenPaths[i]].node,level-1,function(err){
+                                    error = error || err;
+                                    if(--missing === 0){
+                                        callback(error);
+                                    }
+                                });
+                            } else {
+                                core.loadChild(node,childrenRelids[i],function(err,child){
+                                    if(err || child === null){
+                                        error = error || err;
+                                        if( --missing === 0){
+                                            callback(error);
+                                        }
+                                    } else {
+                                        loadChildrenPattern(core,nodesSoFar,child,level-1,function(err){
+                                            error = error || err;
+                                            if(--missing === 0){
+                                                callback(error);
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        }
+                    } else {
+                        callback(error);
+                    }
+                } else {
+                    callback(error);
                 }
             }
             function loadPattern(core,id,pattern,nodesSoFar,callback){
@@ -721,7 +832,7 @@ define([
                             var path = core.getPath(node);
                             _metaNodes[path] = node;
                             if(!nodesSoFar[path]){
-                                nodesSoFar[path] = {node:node,hash:core.getSingleNodeHash(node),incomplete:false,basic:true};
+                                nodesSoFar[path] = {node:node,incomplete:false,basic:true,hash:getStringHash(node)};
                             }
                             base = node;
                             baseLoaded();
@@ -731,14 +842,14 @@ define([
                     });
                 }
             }
-            function loadRoot(newRootHash,callback){
+            /*function loadRoot(newRootHash,callback){
                 _loadNodes = {};
                 _loadError = 0;
                 _core.loadRoot(newRootHash,function(err,root){
                     if(!err){
                         var missing = 0,
                             error = null;
-                        _loadNodes[_core.getPath(root)] = {node:root,hash:_core.getSingleNodeHash(root),incomplete:true,basic:true};
+                        _loadNodes[_core.getPath(root)] = {node:root,incomplete:true,basic:true,hash:getStringHash(root)};
                         _metaNodes[_core.getPath(root)] = root;
 
                         for(var i in _users){
@@ -759,6 +870,86 @@ define([
                             }
                         } else {
                             callback(error);
+                        }
+                    } else {
+                        callback(err);
+                    }
+                });
+            }*/
+            function orderStringArrayByElementLength(strArray){
+                var ordered = [],
+                    i, j,index;
+
+                for(i=0;i<strArray.length;i++){
+                    index = -1;
+                    j = 0;
+                    while(index === -1 && j < ordered.length){
+                        if(ordered[j].length>strArray[i].length){
+                            index = j;
+                        }
+                        j++;
+                    }
+
+                    if(index === -1){
+                        ordered.push(strArray[i]);
+                    } else {
+                        ordered.splice(index,0,strArray[i]);
+                    }
+                }
+                return ordered;
+            }
+
+            function loadRoot(newRootHash,callback){
+                //with the newer approach we try to optimize a bit the mechanizm of the loading and try to get rid of the paralellism behind it
+                var patterns = {},
+                    orderedPatternIds = [],
+                    error = null,
+                    i, j,keysi,keysj,
+                    loadNextPattern = function(index){
+                        if(index<orderedPatternIds.length){
+                            loadPattern(_core,orderedPatternIds[index],patterns[orderedPatternIds[index]],_loadNodes,function(err){
+                                error = error || err;
+                                loadNextPattern(index+1);
+                            });
+                        } else {
+                            callback(error);
+                        }
+                    };
+                _loadNodes = {};
+                _loadError = 0;
+
+                //gathering the patterns
+                keysi = Object.keys(_users);
+                for(i=0;i<keysi.length;i++){
+                    keysj = Object.keys(_users[keysi[i]].PATTERNS);
+                    for(j=0;j<keysj.length;j++){
+                        if(patterns[keysj[j]]){
+                            //we check if the range is bigger for the new definition
+                            if(patterns[keysj[j]].children < _users[keysi[i]].PATTERNS[keysj[j]].children){
+                                patterns[keysj[j]].children = _users[keysi[i]].PATTERNS[keysj[j]].children;
+                            }
+                        } else {
+                            patterns[keysj[j]] = _users[keysi[i]].PATTERNS[keysj[j]];
+                        }
+                    }
+                }
+                //getting an orderd keylist
+                orderedPatternIds = Object.keys(patterns);
+                orderedPatternIds = orderStringArrayByElementLength(orderedPatternIds);
+
+
+                //and now the one-by-one loading
+                _core.loadRoot(newRootHash,function(err,root){
+                    error = error || err;
+                    if(!err){
+                        _loadNodes[_core.getPath(root)] = {node:root,incomplete:true,basic:true,hash:getStringHash(root)};
+                        _metaNodes[_core.getPath(root)] = root;
+                        if(orderedPatternIds.length === 0 && Object.keys(_users) > 0){
+                            //we have user, but they do not interested in any object -> let's relaunch them :D
+                            callback(null);
+                            reLaunchUsers();
+                        } else {
+                            loadNextPattern(0);
                         }
                     } else {
                         callback(err);
@@ -789,8 +980,10 @@ define([
                     callback(null);
                 };
 
+                _rootHash = newRootHash
                 loadRoot(newRootHash,function(err){
                     if(err){
+                        _rootHash = null;
                         callback(err);
                     } else {
                         if(--missing === 0){
@@ -813,7 +1006,7 @@ define([
                     counter++;
                 }
                 hasEnoughNodes = limit <= counter;
-                if(hasEnoughNodes){
+                if(/*hasEnoughNodes*/false){
                     modifiedPaths = getModifiedNodes(_loadNodes);
                     _nodes = {};
                     for(i in _loadNodes){
@@ -839,7 +1032,11 @@ define([
             function saveRoot(msg,callback){
                 callback = callback || function(){};
                 if(!_viewer && !_readOnlyProject){
-                    _msg +="\n"+msg;
+                    if(_msg){
+                        _msg +="\n"+msg;
+                    } else {
+                        _msg += msg;
+                    }
                     if(!_inTransaction){
                         ASSERT(_project && _core && _branch);
                         _core.persist(_nodes[ROOT_PATH].node,function(err){});
@@ -923,7 +1120,11 @@ define([
                     } else {
                         closeOpenedProject(function(err){
                             //TODO what can we do with the error??
-                            openProject(projectname,callback);
+                            openProject(projectname,function(err){
+                                //TODO is there a meaningful error which we should propagate towards user???
+                                reLaunchUsers();
+                                callback();
+                            });
                         });
                     }
                 } else {
@@ -1145,6 +1346,7 @@ define([
                 var oldcallback = callback;
                 callback = function(err){
                     _TOKEN = tokenWatcher();
+                    reLaunchUsers();
                     oldcallback(err);
                 }; //we add tokenWatcher start at this point
                 options = options || {};
@@ -1166,6 +1368,7 @@ define([
                             _networkWatcher.stop();
                         }
                         _networkWatcher = networkWatcher();
+                        serverEventer();
 
                         if(options.open){
                             if(options.project){
@@ -1192,6 +1395,55 @@ define([
             }
 
             //MGA
+            function copyMoreNodes(parameters,msg){
+                var pathestocopy = [];
+                if(typeof parameters.parentId === 'string' && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
+                    for(var i in parameters){
+                        if(i !== "parentId"){
+                            pathestocopy.push(i);
+                        }
+                    }
+
+                    msg = msg || 'copyMoreNodes('+pathestocopy+','+parameters.parentId+')';
+                    if(pathestocopy.length < 1){
+                    } else if(pathestocopy.length === 1){
+                        var newNode = _core.copyNode(_nodes[pathestocopy[0]].node,_nodes[parameters.parentId].node);
+                        storeNode(newNode);
+                        if(parameters[pathestocopy[0]]){
+                            for(var j in parameters[pathestocopy[0]].attributes){
+                                _core.setAttribute(newNode,j,parameters[pathestocopy[0]].attributes[j]);
+                            }
+                            for(j in parameters[pathestocopy[0]].registry){
+                                _core.setRegistry(newNode,j,parameters[pathestocopy[0]].registry[j]);
+                            }
+                        }
+                        saveRoot(msg);
+                    } else {
+                        copyMoreNodesAsync(pathestocopy,parameters.parentId,function(err,copyarr){
+                            if(err){
+                                //rollBackModification();
+                            }
+                            else{
+                                for(var i in copyarr){
+                                    if(parameters[i]){
+                                        for(var j in parameters[i].attributes){
+                                            _core.setAttribute(copyarr[i],j,parameters[i].attributes[j]);
+                                        }
+                                        for(j in parameters[i].registry){
+                                            _core.setRegistry(copyarr[i],j,parameters[i].registry[j]);
+                                        }
+                                    }
+                                }
+                                saveRoot(msg);
+                            }
+                        });
+                    }
+                } else {
+                    console.log('wrong parameters for copy operation - denied -');
+                }
+            }
+
+
             function copyMoreNodesAsync(nodePaths,parentPath,callback){
                 var checkPaths = function(){
                     var result = true;
@@ -1208,7 +1460,7 @@ define([
                         returnArray = {};
 
                     //creating the 'from' object
-                    var tempFrom = _core.createNode({parent:parent});
+                    var tempFrom = _core.createNode({parent:parent,base:_core.getTypeRoot(_nodes[nodePaths[0]].node)});
                     //and moving every node under it
                     for(var i=0;i<nodePaths.length;i++){
                         helpArray[nodePaths[i]] = {};
@@ -1252,55 +1504,44 @@ define([
                 }
             }
 
-            function copyMoreNodes(parameters){
-                var returnParameters = {},
-                    pathsToCopy = [];
-                for(var i in parameters){
-                    if(i !== 'parentId'){
-                        pathsToCopy.push(i);
+            function _copyMoreNodes(parameters){
+                //now we will use the multiple copy function of the core
+                var nodes = [],
+                    copiedNodes,
+                    i, j,paths,keys,
+                    parent = _nodes[parameters.parentId].node,
+                    resultMap = {};
+                keys = Object.keys(parameters);
+                keys.splice(keys.indexOf('parentId'),1);
+                paths = keys;
+                for(i=0;i<paths.length;i++){
+                    nodes.push(_nodes[paths[i]].node);
+                }
+
+                copiedNodes = _core.copyNodes(nodes,parent);
+
+                for(i=0;i<paths.length;i++){
+                    keys = Object.keys(parameters[paths[i]].attributes || {});
+                    for(j=0;j<keys.length;j++){
+                        _core.setAttribute(copiedNodes[i],keys[j],parameters[paths[i]].attributes[keys[j]]);
+                    }
+
+                    keys = Object.keys(parameters[paths[i]].registry || {});
+                    for(j=0;j<keys.length;j++){
+                        _core.setRegistry(copiedNodes[i],keys[j],parameters[paths[i]].registry[keys[j]]);
                     }
                 }
 
-                if(pathsToCopy.length > 0 && typeof parameters.parentId === 'string' && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
-                    //collecting nodes under tempFrom
-                    var tempFrom = _core.createNode({parent:_nodes[parameters.parentId].node});
-                    for(var i=0;i<pathsToCopy.length;i++){
-                        if(_nodes[pathsToCopy[i]] && typeof _nodes[pathsToCopy[i]].node === 'object'){
-                            returnParameters[pathsToCopy[i]] = {'1stparent':_core.getParent(_nodes[pathsToCopy[i]].node),'1st':_core.moveNode(_nodes[pathsToCopy[i]].node,tempFrom)};
-                            returnParameters[pathsToCopy[i]]['1strelid'] = _core.getRelid(returnParameters[pathsToCopy[i]]['1st']);
-                        }
-                    }
-                    var tempTo = _core.copyNode(tempFrom,_nodes[parameters.parentId].node);
 
-                    //clean up part of temporary mess
-                    for(var i in returnParameters){
-                        _core.moveNode(returnParameters[i]['1st'],returnParameters[i]['1stparent']);
-                        delete returnParameters[i]['1st'];
-                        delete returnParameters[i]['1stparent'];
-                    }
-                    _core.deleteNode(tempFrom);
-                    delete tempFrom;
 
-                    for(var i in returnParameters){
-                        var child = _core.getChild(tempTo,returnParameters[i]['1strelid']);
-                        var finalNode = _core.moveNode(child,_nodes[parameters.parentId].node);
-                        returnParameters[i] = storeNode(finalNode);
-                        if(parameters[i]){
-                            for(var j in parameters[i].attributes){
-                                _core.setAttribute(finalNode,j,parameters[i].attributes[j]);
-                            }
-                            for(j in parameters[i].registry){
-                                _core.setRegistry(finalNode,j,parameters[i].registry[j]);
-                            }
-                        }
-                    }
-                    _core.deleteNode(tempTo);
-                    delete tempTo;
-
-                    saveRoot('copyMoreNodes('+JSON.stringify(returnParameters)+')');
-                    return returnParameters;
+                //creating the result map and storing the nodes to our cache, so the user will know which path became which
+                for(i=0;i<paths.length;i++){
+                    resultMap[paths[i]] = storeNode(copiedNodes[i]);
                 }
+
+                return resultMap;
             }
+
             function moveMoreNodes(parameters){
                 var pathsToMove = [],
                     returnParams = {};
@@ -1334,146 +1575,138 @@ define([
 
                 return returnParams;
             }
-            function createChildren(parameters){
-                var returnParameters = {},
-                    pathsToCopy = [];
-                for(var i in parameters){
-                    if(i !== 'parentId'){
-                        pathsToCopy.push(i);
+            
+            function createChildren(parameters,msg){
+                //TODO we also have to check out what is happening with the sets!!!
+                var result = {},
+                    paths = [],
+                    nodes = [],node,
+                    parent = _nodes[parameters.parentId].node,
+                    names, i, j,index, keys,pointer,
+                    newChildren = [],relations=[];
+
+                //to allow 'meaningfull' instantiation of multiple objects we have to recreate the internal relations - except the base
+                paths = Object.keys(parameters);
+                paths.splice(paths.indexOf('parentId'),1);
+                for(i=0;i<paths.length;i++){
+                    node = _nodes[paths[i]].node;
+                    nodes.push(node);
+                    pointer = {};
+                    names = _core.getPointerNames(node);
+                    index = names.indexOf('base');
+                    if(index !== -1){
+                        names.splice(index,1);
                     }
-                }
-                if(pathsToCopy.length > 0 && typeof parameters.parentId === 'string' && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
-                    for(var i=0;i<pathsToCopy.length;i++){
-                        if(_nodes[pathsToCopy[i]] && typeof _nodes[pathsToCopy[i]].node === 'object'){
-                            var node = _core.createNode({parent:_nodes[parameters.parentId].node,base:_nodes[pathsToCopy[i]].node});
-                            var newPath = storeNode(node);
-                            returnParameters[pathsToCopy[i]] = newPath;
 
-                            if(parameters[pathsToCopy[i]]){
-                                for(var j in parameters[pathsToCopy[i]].attributes){
-                                    _core.setAttribute(node,j,parameters[pathsToCopy[i]].attributes[j]);
-                                }
-                                for(j in parameters[pathsToCopy[i]].registry){
-                                    _core.setRegistry(node,j,parameters[pathsToCopy[i]].registry[j]);
-                                }
-                            }
-
+                    for(j=0;j<names.length;j++){
+                        index = paths.indexOf(_core.getPointerPath(node,names[j]));
+                        if(index !== -1){
+                            pointer[names[j]] = index;
                         }
                     }
+                    relations.push(pointer);
                 }
 
-                saveRoot('createChildren('+JSON.stringify(returnParameters)+')');
-                return returnParameters;
-            }
-            function _createChildren(parameters){
-                var returnParameters = {},
-                    pathsToCopy = [];
-                for(var i in parameters){
-                    if(i !== 'parentId'){
-                        pathsToCopy.push(i);
-                    }
+                //now the instantiation
+                for(i=0;i<nodes.length;i++){
+                    newChildren.push(_core.createNode({parent:parent,base:nodes[i]}));
                 }
-                
-                if(pathsToCopy.length > 0 && typeof parameters.parentId === 'string' && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
-                    //collecting nodes under tempFrom
-                    var tempFrom = _core.createNode({parent:_nodes[parameters.parentId].node,base:null});
-                    for(var i=0;i<pathsToCopy.length;i++){
-                        if(_nodes[pathsToCopy[i]] && typeof _nodes[pathsToCopy[i]].node === 'object'){
-                            returnParameters[pathsToCopy[i]] = {'1stparent':_core.getParent(_nodes[pathsToCopy[i]].node),'1st':_core.moveNode(_nodes[pathsToCopy[i]].node,tempFrom)};
-                            returnParameters[pathsToCopy[i]]['1strelid'] = _core.getRelid(returnParameters[pathsToCopy[i]]['1st']);
-                        }
-                    }
-                    var tempTo = _core.createNode({parent:_nodes[parameters.parentId].node, base:tempFrom});
 
-                    //clean up part of temporary mess
-                    for(var i in returnParameters){
-                        _core.moveNode(returnParameters[i]['1st'],returnParameters[i]['1stparent']);
-                        delete returnParameters[i]['1st'];
-                        delete returnParameters[i]['1stparent'];
+                //now for the storage and relation setting
+                for(i=0;i<paths.length;i++){
+                    //attributes
+                    names = Object.keys(parameters[paths[i]].attributes || {});
+                    for(j=0;j<names.length;j++){
+                        _core.setAttribute(newChildren[i],names[j],parameters[paths[i]].attributes[names[j]]);
+                    }
+                    //registry
+                    names = Object.keys(parameters[paths[i]].registry || {});
+                    for(j=0;j<names.length;j++){
+                        _core.setRegistry(newChildren[i],names[j],parameters[paths[i]].registry[names[j]]);
                     }
 
-                    _core.deleteNode(tempFrom);
-                    delete tempFrom;
-
-                    for(var i in returnParameters){
-                        var child = _core.getChild(tempTo,returnParameters[i]['1strelid']);
-                        var finalNode = _core.moveNode(child,_nodes[parameters.parentId].node);
-                        returnParameters[i] = storeNode(finalNode);
-                        if(parameters[i]){
-                            for(var j in parameters[i].attributes){
-                                _core.setAttribute(finalNode,j,parameters[i].attributes[j]);
-                            }
-                            for(j in parameters[i].registry){
-                                _core.setRegistry(finalNode,j,parameters[i].registry[j]);
-                            }
-                        }
+                    //relations
+                    names = Object.keys(relations[i]);
+                    for(j=0;j<names.length;j++){
+                        _core.setPointer(newChildren[i],names[j],newChildren[relations[i][names[j]]]);
                     }
-                    _core.deleteNode(tempTo);
-                    delete tempTo;
 
+                    //store
+                    result[paths[i]] = storeNode(newChildren[i]);
 
-                    saveRoot('createChildren('+JSON.stringify(returnParameters)+')');
-                    return returnParameters;
                 }
+
+                msg = msg || 'createChildren('+JSON.stringify(result)+')';
+                saveRoot(msg);
+                return result;
             }
 
-            function startTransaction() {
+
+            function startTransaction(msg) {
                 if (_core) {
                     _inTransaction = true;
-                    saveRoot('startTransaction()');
+                    msg = msg || 'startTransaction()';
+                    saveRoot(msg);
                 }
             }
-            function completeTransaction() {
+            function completeTransaction(msg,callback) {
                 _inTransaction = false;
                 if (_core) {
-                    saveRoot('completeTransaction()');
+                    msg = msg || 'completeTransaction()';
+                    saveRoot(msg,callback);
                 }
             }
-            function setAttributes(path, name, value) {
+            function setAttributes(path, name, value, msg) {
                 if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
                     _core.setAttribute(_nodes[path].node, name, value);
-                    saveRoot('setAttribute('+path+','+'name'+','+value+')');
+                    msg = msg || 'setAttribute('+path+','+name+','+value+')';
+                    saveRoot(msg);
                 }
             }
-            function delAttributes(path, name) {
+            function delAttributes(path, name, msg) {
                 if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
                     _core.delAttribute(_nodes[path].node, name);
-                    saveRoot('delAttribute('+path+','+'name'+')');
+                    msg = msg || 'delAttribute('+path+','+name+')';
+                    saveRoot(msg);
                 }
             }
-            function setRegistry(path, name, value) {
+            function setRegistry(path, name, value, msg) {
                 if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
                     _core.setRegistry(_nodes[path].node, name, value);
-                    saveRoot('setRegistry('+path+','+','+name+','+value+')');
+                    msg = msg || 'setRegistry('+path+','+','+name+','+value+')';
+                    saveRoot(msg);
                 }
             }
-            function delRegistry(path, name) {
+            function delRegistry(path, name, msg) {
                 if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
                     _core.delRegistry(_nodes[path].node, name);
-                    saveRoot('delRegistry('+path+','+','+name+')');
+                    msg = msg || 'delRegistry('+path+','+','+name+')';
+                    saveRoot(msg);
                 }
             }
 
-            function deleteNode(path) {
+            function deleteNode(path, msg) {
                 if(_core && _nodes[path] && typeof _nodes[path].node === 'object'){
                     _core.deleteNode(_nodes[path].node);
-                    delete _nodes[path];
-                    saveRoot('deleteNode('+path+')');
+                    //delete _nodes[path];
+                    msg = msg || 'deleteNode('+path+')';
+                    saveRoot(msg);
                 }
             }
-            function delMoreNodes(paths) {
+            function delMoreNodes(paths, msg) {
                 if(_core){
                     for(var i=0;i<paths.length;i++){
                         if(_nodes[paths[i]] && typeof _nodes[paths[i]].node === 'object'){
                             _core.deleteNode(_nodes[paths[i]].node);
-                            delete _nodes[paths[i]];
+                            //delete _nodes[paths[i]];
                         }
                     }
-                    saveRoot('delMoreNodes('+paths+')');
+                    msg = msg || 'delMoreNodes('+paths+')';
+                    saveRoot(msg);
                 }
             }
 
-            function createChild(parameters){
+            function createChild(parameters, msg){
                 var newID;
 
                 if(_core){
@@ -1490,14 +1723,15 @@ define([
                         }
                         storeNode(child);
                         newID = _core.getPath(child);
-                        saveRoot('createChild('+parameters.parentId+','+parameters.baseId+','+_core.getPath(child)+')');
+                        msg = msg || 'createChild('+parameters.parentId+','+parameters.baseId+','+newID+')';
+                        saveRoot(msg);
                     }
                 }
 
                 return newID;
             }
 
-            function makePointer(id, name, to) {
+            function makePointer(id, name, to, msg) {
                 if(to === null){
                     _core.setPointer(_nodes[id].node,name,to);
                 } else {
@@ -1505,114 +1739,78 @@ define([
 
                     _core.setPointer(_nodes[id].node,name,_nodes[to].node);
                 }
-                saveRoot('makePointer('+id+','+name+','+to+')');
+
+                msg = msg || 'makePointer('+id+','+name+','+to+')';
+                saveRoot(msg);
             }
-            function delPointer(path, name) {
+            function delPointer(path, name, msg) {
                 if(_core && _nodes[path] && typeof _nodes[path].node === 'object'){
                     _core.setPointer(_nodes[path].node,name,undefined);
-                    saveRoot('delPointer('+path+','+name+')');
+                    msg = msg || 'delPointer('+path+','+name+')';
+                    saveRoot(msg);
                 }
             }
 
-
-            function _copyMoreNodes(parameters){
-                var pathestocopy = [];
-                if(typeof parameters.parentId === 'string' && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
-                    for(var i in parameters){
-                        if(i !== "parentId"){
-                            pathestocopy.push(i);
-                        }
-                    }
-
-                    if(pathestocopy.length < 1){
-                    } else if(pathestocopy.length === 1){
-                        var newNode = _core.copyNode(_nodes[pathestocopy[0]].node,_nodes[parameters.parentId].node);
-                        storeNode(newNode);
-                        if(parameters[pathestocopy[0]]){
-                            for(var j in parameters[pathestocopy[0]].attributes){
-                                _core.setAttribute(newNode,j,parameters[pathestocopy[0]].attributes[j]);
-                            }
-                            for(j in parameters[pathestocopy[0]].registry){
-                                _core.setRegistry(newNode,j,parameters[pathestocopy[0]].registry[j]);
-                            }
-                        }
-                        saveRoot('intellyPaste('+pathestocopy+','+parameters.parentId+')');
-                    } else {
-                        copyMoreNodesAsync(pathestocopy,parameters.parentId,function(err,copyarr){
-                            if(err){
-                                //rollBackModification();
-                            }
-                            else{
-                                for(var i in copyarr){
-                                    if(parameters[i]){
-                                        for(var j in parameters[i].attributes){
-                                            _core.setAttribute(copyarr[i],j,parameters[i].attributes[j]);
-                                        }
-                                        for(j in parameters[i].registry){
-                                            _core.setRegistry(copyarr[i],j,parameters[i].registry[j]);
-                                        }
-                                    }
-                                }
-                                saveRoot('intellyPaste('+pathestocopy+','+parameters.parentId+')');
-                            }
-                        });
-                    }
-                } else {
-                    console.log('wrong parameters for copy operation - denied -');
-                }
-            }
 
             //MGAlike - set functions
-            function addMember(path,memberpath,setid){
+            function addMember(path,memberpath,setid,msg){
                 if(_nodes[path] &&
                     _nodes[memberpath] &&
                     typeof _nodes[path].node === 'object' &&
                     typeof _nodes[memberpath].node === 'object'){
                     _core.addMember(_nodes[path].node,setid,_nodes[memberpath].node);
-                    saveRoot('addMember('+path+','+memberpath+','+setid+')');
+                    msg = msg || 'addMember('+path+','+memberpath+','+setid+')';
+                    saveRoot(msg);
                 }
             }
-            function removeMember(path,memberpath,setid){
+            function removeMember(path,memberpath,setid,msg){
                 if(_nodes[path] &&
                     typeof _nodes[path].node === 'object'){
                     _core.delMember(_nodes[path].node,setid,memberpath);
-                    saveRoot('removeMember('+path+','+memberpath+','+setid+')');
+                    msg = msg || 'removeMember('+path+','+memberpath+','+setid+')';
+                    saveRoot(msg);
                 }
             }
-            function setMemberAttribute(path,memberpath,setid,name,value){
+            function setMemberAttribute(path,memberpath,setid,name,value,msg){
                 if(_nodes[path] && typeof _nodes[path].node === 'object'){
                     _core.setMemberAttribute(_nodes[path].node,setid,memberpath,name,value);
-                    saveRoot('setMemberAttribute('+path+","+memberpath+","+setid+","+name+","+value+")");
+                    msg = msg || 'setMemberAttribute('+path+","+memberpath+","+setid+","+name+","+value+")";
+                    saveRoot(msg);
                 }
             }
-            function delMemberAttribute(path,memberpath,setid,name){
+            function delMemberAttribute(path,memberpath,setid,name,msg){
                 if(_nodes[path] && typeof _nodes[path].node === 'object'){
                     _core.delMemberAttribute(_nodes[path].node,setid,memberpath,name);
-                    saveRoot('delMemberAttribute('+path+","+memberpath+","+setid+","+name+")");
+                    msg = msg || 'delMemberAttribute('+path+","+memberpath+","+setid+","+name+")";
+                    saveRoot(msg);
                 }
             }
-            function setMemberRegistry(path,memberpath,setid,name,value){
+            function setMemberRegistry(path,memberpath,setid,name,value,msg){
                 if(_nodes[path] && typeof _nodes[path].node === 'object'){
                     _core.setMemberRegistry(_nodes[path].node,setid,memberpath,name,value);
-                    saveRoot('setMemberRegistry('+path+","+memberpath+","+setid+","+name+","+value+")");
+                    msg = msg || 'setMemberRegistry('+path+","+memberpath+","+setid+","+name+","+value+")";
+                    saveRoot(msg);
                 }
             }
-            function delMemberRegistry(path,memberpath,setid,name){
+            function delMemberRegistry(path,memberpath,setid,name,msg){
                 if(_nodes[path] && typeof _nodes[path].node === 'object'){
                     _core.delMemberRegistry(_nodes[path].node,setid,memberpath,name);
-                    saveRoot('delMemberRegistry('+path+","+memberpath+","+setid+","+name+")");
+                    msg = msg || 'delMemberRegistry('+path+","+memberpath+","+setid+","+name+")";
+                    saveRoot(msg);
                 }
             }
-            function createSet(path, setid) {
+            function createSet(path, setid, msg) {
                 if(_nodes[path] && typeof _nodes[path].node === 'object'){
                     _core.createSet(_nodes[path].node,setid);
-                    saveRoot('createSet('+path+","+setid+")");
+                    msg = msg || 'createSet('+path+","+setid+")";
+                    saveRoot(msg);
                 }
             }
-            function deleteSet(path, setid) {
+            function deleteSet(path, setid, msg) {
                 if(_nodes[path] && typeof _nodes[path].node === 'object'){
                     _core.deleteSet(_nodes[path].node,setid);
-                    saveRoot('deleteSet('+path+","+setid+")");
+                    msg = msg || 'deleteSet('+path+","+setid+")";
+                    saveRoot(msg);
                 }
             }
 
@@ -1709,53 +1907,55 @@ define([
                 }
             }
             function updateTerritory(guid, patterns) {
-                if(_project){
-                    if(_nodes[ROOT_PATH]){
-                        //TODO: this has to be optimized
-                        var missing = 0;
-                        var error = null;
+                if(_users[guid]){
+                    if(_project){
+                        if(_nodes[ROOT_PATH]){
+                            //TODO: this has to be optimized
+                            var missing = 0;
+                            var error = null;
 
-                        var patternLoaded = function (err) {
-                            error = error || err;
-                            if(--missing === 0){
+                            var patternLoaded = function (err) {
+                                error = error || err;
+                                if(--missing === 0){
+                                    //allDone();
+                                    _updateTerritoryAllDone(guid, patterns, error);
+                                }
+                            };
+
+                            //EXTRADTED OUT TO: _updateTerritoryAllDone
+                            /*var allDone = function(){
+                             if(_users[guid]){
+                             _users[guid].PATTERNS = JSON.parse(JSON.stringify(patterns));
+                             if(!error){
+                             userEvents(guid,[]);
+                             }
+                             }
+                             };*/
+                            for(var i in patterns){
+                                missing++;
+                            }
+                            if(missing>0){
+                                for(i in patterns){
+                                    loadPattern(_core,i,patterns[i],_nodes,patternLoaded);
+                                }
+                            } else {
                                 //allDone();
                                 _updateTerritoryAllDone(guid, patterns, error);
                             }
-                        };
-
-                        //EXTRADTED OUT TO: _updateTerritoryAllDone
-                        /*var allDone = function(){
-                            if(_users[guid]){
-                                _users[guid].PATTERNS = JSON.parse(JSON.stringify(patterns));
-                                if(!error){
-                                    userEvents(guid,[]);
-                                }
-                            }
-                        };*/
-                        for(var i in patterns){
-                            missing++;
-                        }
-                        if(missing>0){
-                            for(i in patterns){
-                                loadPattern(_core,i,patterns[i],_nodes,patternLoaded);
-                            }
                         } else {
-                            //allDone();
-                            _updateTerritoryAllDone(guid, patterns, error);
+                            //something funny is going on
+                            if(_loadNodes[ROOT_PATH]){
+                                //probably we are in the loading process, so we should redo this update when the loading finishes
+                                //setTimeout(updateTerritory,100,guid,patterns);
+                            } else {
+                                //root is not in nodes and has not even started to load it yet...
+                                _users[guid].PATTERNS = JSON.parse(JSON.stringify(patterns));
+                            }
                         }
                     } else {
-                        //something funny is going on
-                        if(_loadNodes[ROOT_PATH]){
-                            //probably we are in the loading process, so we should redo this update when the loading finishes
-                            setTimeout(updateTerritory,100,guid,patterns);
-                        } else {
-                            //root is not in nodes and has not even started to load it yet...
-                            _users[guid].PATTERNS = JSON.parse(JSON.stringify(patterns));
-                        }
+                        //we should update the patterns, but that is all
+                        _users[guid].PATTERNS = JSON.parse(JSON.stringify(patterns));
                     }
-                } else {
-                    //we should update the patterns, but that is all
-                    _users[guid].PATTERNS = JSON.parse(JSON.stringify(patterns));
                 }
             }
 
@@ -1841,6 +2041,10 @@ define([
 
                 var getPointer = function(name){
                     //return _core.getPointerPath(_nodes[_id].node,name);
+                    if(name === 'base'){
+                        //base is a special case as it complicates with inherited children
+                        return {to:_core.getPath(_core.getBase(_nodes[_id].node)),from:[]};
+                    }
                     return {to:_core.getPointerPath(_nodes[_id].node,name),from:[]};
                 };
                 var getOwnPointer = function(name){
@@ -2037,9 +2241,16 @@ define([
                  });
                  },0);
                  });*/
-                connectToDatabaseAsync({open:true},function(err){
-                    console.log('kecso connecting to database',err);
-                });
+                //_database.getNextServerEvent("",function(err,guid,parameters){
+                //    console.log(err,guid,parameters);
+                //});
+                //connectToDatabaseAsync({open:true},function(err){
+                //    console.log('kecso connecting to database',err);
+                //});
+                //_self.addEventListener(_self.events.SERVER_BRANCH_UPDATED,function(client,data){
+                //    console.log(data);
+                //});
+                
             }
 
             //export and import functions
@@ -2055,17 +2266,16 @@ define([
                 }
 
                 //DumpMore(_core,nodes,"",'guid',callback);
-                _database.simpleRequest({command:'dumpMoreNodes',name:_projectName,hash:_core.getHash(_nodes[ROOT_PATH].node),nodes:paths},function(err,resId){
+                _database.simpleRequest({command:'dumpMoreNodes',name:_projectName,hash:_rootHash || _core.getHash(_nodes[ROOT_PATH].node),nodes:paths},function(err,resId){
                     if(err){
                         callback(err);
-                        _database.simpleResult(resId,callback);
                     } else {
                         _database.simpleResult(resId,callback);
                     }
                 });
             }
             function getExportItemsUrlAsync(paths,filename,callback){
-                _database.simpleRequest({command:'dumpMoreNodes',name:_projectName,hash:_core.getHash(_nodes[ROOT_PATH].node),nodes:paths},function(err,resId){
+                _database.simpleRequest({command:'dumpMoreNodes',name:_projectName,hash:_rootHash || _core.getHash(_nodes[ROOT_PATH].node),nodes:paths},function(err,resId){
                     if(err){
                         callback(err);
                     } else {
@@ -2079,9 +2289,9 @@ define([
                 config.host = window.location.protocol+"//"+window.location.host;
                 config.project = _projectName;
                 config.token = _TOKEN.getToken();
-                config.selected = plainUrl('node',selectedItemsPaths[0] || "");
+                config.selected = plainUrl({command:'node',path:selectedItemsPaths[0] || ""});
                 config.commit = URL.addSpecialChars(_recentCommits[0] || "");
-                config.root = plainUrl('node',"");
+                config.root = plainUrl({command:'node'});
                 config.branch = _branch
                 _database.simpleRequest({command:'generateJsonURL',object:config},function(err,resId){
                     if(err){
@@ -2089,6 +2299,45 @@ define([
                     } else {
                         callback(null,window.location.protocol + '//' + window.location.host +'/worker/simpleResult/'+resId+'/'+filename);
                     }
+                });
+            }
+
+            function getExportLibraryUrlAsync(libraryRootPath,filename,callback){
+                var command = {};
+                command.command = 'exportLibrary';
+                command.name = _projectName;
+                command.hash = _rootHash || _core.getHash(_nodes[ROOT_PATH].node);
+                command.path = libraryRootPath;
+                if(command.name && command.hash){
+                    _database.simpleRequest(command,function(err,resId){
+                        if(err){
+                            callback(err);
+                        } else {
+                            callback(null,window.location.protocol + '//' + window.location.host +'/worker/simpleResult/'+resId+'/'+filename);
+                        }
+                    });
+                } else {
+                    callback(new Error('there is no open project!'));
+                }
+            }
+            function updateLibraryAsync(libraryRootPath,newLibrary,callback){
+                Serialization.import(_core,_nodes[libraryRootPath].node,newLibrary,function(err,log){
+                    if(err){
+                        return callback(err);
+                    }
+
+                    saveRoot("library update done\nlogs:\n"+log,callback);
+                });
+            }
+            function addLibraryAsync(libraryParentPath,newLibrary,callback){
+                startTransaction("creating library as a child of "+libraryParentPath);
+                var libraryRoot = createChild({parentId:libraryParentPath,baseId:null},"library placeholder");
+                Serialization.import(_core,_nodes[libraryRoot].node,newLibrary,function(err,log){
+                    if(err){
+                        return callback(err);
+                    }
+
+                    completeTransaction("library update done\nlogs:\n"+log,callback);
                 });
             }
             function dumpNodeAsync(path,callback){
@@ -2124,7 +2373,21 @@ define([
                     }
                 });
             }
-            function createProjectFromFileAsync(projectname,jNode,callback){
+            function createProjectFromFileAsync(projectname,jProject,callback){
+                //if called on an existing project, it will ruin it!!! - although the old commits will be untouched
+                createProjectAsync(projectname,function(err){
+                    selectProjectAsync(projectname,function(err){
+                        Serialization.import(_core,_nodes[ROOT_PATH].node,jProject,function(err){
+                            if(err){
+                                return callback(err);
+                            }
+
+                            saveRoot("library have been updated...",callback);
+                        });
+                    });
+                });
+            }
+            function _createProjectFromFileAsync(projectname,jNode,callback){
                 //if called on an existing project, it will ruin it!!! - although the old commits will be untouched
                 createProjectAsync(projectname,function(err){
                     selectProjectAsync(projectname,function(err){
@@ -2140,19 +2403,51 @@ define([
                     });
                 });
             }
-            function plainUrl(command,path){
-                if(window && window.location && window.location && _nodes && _nodes[ROOT_PATH]){
-                    var address = window.location.protocol + '//' + window.location.host +'/rest/'+command+'?'+'project='+_projectName+'&root='+URL.addSpecialChars(_core.getHash(_nodes[ROOT_PATH].node))+'&path='+URL.addSpecialChars(path);
+            function plainUrl(parameters){
+                //setting the default values
+                parameters.command = parameters.command || 'etf';
+                parameters.path = parameters.path || "";
+                parameters.project = parameters.project || _projectName;
+
+                if(!parameters.root && !parameters.branch && !parameters.commit){
+                    if(_rootHash){
+                        parameters.root = _rootHash;
+                    } else if(_nodes && _nodes[ROOT_PATH]){
+                        parameters.root = _core.getHash(_nodes[ROOT_PATH].node);
+                    } else {
+                        parameters.branch = _branch || 'master';
+                    }
+                }
+
+                //now we compose the URL
+                if(window && window.location){
+                    var address = window.location.protocol + '//' + window.location.host + '/rest/' + parameters.command+ '?';
+                    address+= "&project="+URL.addSpecialChars(parameters.project);
+                    if(parameters.root){
+                        address+="&root="+URL.addSpecialChars(parameters.root);
+                    } else {
+                        if(parameters.commit){
+                            address+="&commit="+URL.addSpecialChars(parameters.commit);
+                        } else {
+                            address+="&branch="+URL.addSpecialChars(parameters.branch);
+                        }
+                    }
+
+                    address+="&path="+URL.addSpecialChars(parameters.path);
+
+                    if(parameters.output){
+                        address+="&output="+URL.addSpecialChars(parameters.output);
+                    }
+
                     return address;
                 }
-            }
-            function getDumpURL(path,filepath){
-                filepath = filepath || _projectName+'_'+_branch+'_'+URL.addSpecialChars(path);
-                if(window && window.location && window.location && _nodes && _nodes[ROOT_PATH]){
-                    var address = plainUrl('etf',path)+'&output='+URL.addSpecialChars(filepath);
-                    return address;
-                }
+
                 return null;
+
+            }
+            function getDumpURL(parameters){
+                parameters.output = parameters.output || "dump_url.out";
+                return plainUrl(parameters);
             }
 
             function getProjectObject(){
@@ -2179,12 +2474,40 @@ define([
                 return AllDecorators;
             }
 
+            function getFullProjectsInfoAsync(callback){
+                _database.simpleRequest({command:'getAllProjectsInfo'},function(err,id){
+                    if(err){
+                        return callback(err);
+                    }
+                    _database.simpleResult(id,callback);
+                });
+            }
+
+            function createGenericBranchAsync(project,branch,commit,callback){
+                _database.simpleRequest({command:'setBranch',project:project,branch:branch,old:'',new:commit},function(err,id){
+                    if(err){
+                        return callback(err);
+                    }
+                    _database.simpleResult(id,callback);
+                });
+            }
+
+            function deleteGenericBranchAsync(project,branch,commit,callback){
+                _database.simpleRequest({command:'setBranch',project:project,branch:branch,old:commit,new:''},function(err,id){
+                    if(err){
+                        return callback(err);
+                    }
+                    _database.simpleResult(id,callback);
+                });
+            }
+
             //initialization
             function initialize(){
                 _database = newDatabase();
                 _database.openDatabase(function(err){
                     if(!err){
                         _networkWatcher = networkWatcher();
+                        serverEventer();
                         _database.getProjectNames(function(err,names){
                             if(!err && names && names.length>0){
                                 var projectName = null;
@@ -2227,7 +2550,7 @@ define([
                 getUserId : getUserId,
 
                 //projects, branch, etc.
-                getActiveProject: getActiveProject,
+                getActiveProjectName: getActiveProject,
                 getAvailableProjectsAsync: getAvailableProjectsAsync,
                 getViewableProjectsAsync: getViewableProjectsAsync,
                 getFullProjectListAsync: getFullProjectListAsync,
@@ -2341,6 +2664,12 @@ define([
                 mergeNodeAsync: mergeNodeAsync,
                 createProjectFromFileAsync: createProjectFromFileAsync,
                 getDumpURL: getDumpURL,
+                getExportLibraryUrlAsync: getExportLibraryUrlAsync,
+                updateLibraryAsync: updateLibraryAsync,
+                addLibraryAsync: addLibraryAsync,
+                getFullProjectsInfoAsync: getFullProjectsInfoAsync,
+                createGenericBranchAsync: createGenericBranchAsync,
+                deleteGenericBranchAsync: deleteGenericBranchAsync,
 
                 //constraint
                 setConstraint: setConstraint,

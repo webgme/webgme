@@ -1,14 +1,16 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
+/*globals define, _, WebGMEGlobal, DEBUG*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
  */
 
-"use strict";
 
 define(['./DiagramDesignerWidget.OperatingModes',
         './DiagramDesignerWidget.Constants'], function (DiagramDesignerWidgetOperatingModes,
                                                         DiagramDesignerWidgetConstants) {
+
+    "use strict";
 
     var DiagramDesignerWidgetToolbar;
 
@@ -18,7 +20,7 @@ define(['./DiagramDesignerWidget.OperatingModes',
     DiagramDesignerWidgetToolbar.prototype._initializeToolbar = function () {
         var toolbar = WebGMEGlobal.Toolbar,
             self = this,
-            btnIconBase = $('<i style="display: inline-block;width: 14px;height: 14px;line-height: 14px;vertical-align: text-top;background-repeat: no-repeat;"></i>');
+            btnIconBase = $('<i/>');
 
         this.toolbarItems = {};
 
@@ -28,7 +30,7 @@ define(['./DiagramDesignerWidget.OperatingModes',
 
             if (DEBUG === true) {
                 this.toolbarItems.btnGridLayout = toolbar.addButton({ "title": "Grid layout",
-                     "icon": "icon-th",
+                     "icon": "glyphicon glyphicon-th",
                      "data": { "mode": "grid" },
                      "clickFn": function (data) {
                          self.itemAutoLayout(data.mode);
@@ -36,7 +38,7 @@ define(['./DiagramDesignerWidget.OperatingModes',
                 });
 
                 this.toolbarItems.btnCozyGridLayout = toolbar.addButton({ "title": "Cozy Grid layout",
-                    "icon": "icon-th-large",
+                    "icon": "glyphicon glyphicon-th-large",
                     "data": { "mode": "cozygrid" },
                     "clickFn": function (data) {
                         self.itemAutoLayout(data.mode);
@@ -45,6 +47,8 @@ define(['./DiagramDesignerWidget.OperatingModes',
 
                 //progress text in toolbar for debug only
                 this.toolbarItems.progressText = toolbar.addLabel();
+
+                this.toolbarItems.gridSeparator = toolbar.addSeparator();
             }
 
             /************** ROUTING MANAGER SELECTION **************************/
@@ -52,36 +56,39 @@ define(['./DiagramDesignerWidget.OperatingModes',
                 self._onConnectionRouteManagerChanged(data.type);
             });
 
+
             this.toolbarItems.radioButtonGroupRouteManager.addButton({ "title": "Basic route manager",
-                "icon": btnIconBase.clone().css('background-image', 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAIAAACQKrqGAAAALHRFWHRDcmVhdGlvbiBUaW1lAFdlZCAyMCBOb3YgMjAxMyAwODo0Mjo0MSAtMDYwMAuDmbEAAAAHdElNRQfdCxQPAB9Mix5AAAAACXBIWXMAAAsSAAALEgHS3X78AAAABGdBTUEAALGPC/xhBQAAAAZ0Uk5TAOUANwAB2LGMvQAAAL9JREFUeNpjfGrOyEAcYIJQtzr2EaX0euvugoICIElYqWa1a3d3d3Fx8dXmnYQdoF3r3tnZWVJScrlxOwGlQKBb79nR0VFWVnaxfisBpUCg3+jd1tZWXl5+vnYzAaVAYNjs29raWllZebZ6I5C70L8VLsWINVxPV66vqamJiIi4cuVK7/2V2E2FANP2wPDw8BUrVgCV7s6cj0/pHK+Gy5cv/weDw4cP43MABOxIm3Ps2LETJ07s4rlGQCmBEMADAKRqUMky2DsIAAAAAElFTkSuQmCC)'),
+                "icon": btnIconBase.clone().addClass('gme icon-gme_diagonal-arrow'),
                 "data": { "type": "basic"}
             });
 
             this.toolbarItems.radioButtonGroupRouteManager.addButton({ "title": "Basic+ route manager",
-                "icon": btnIconBase.clone().css('background-image', 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAIAAACQKrqGAAAALHRFWHRDcmVhdGlvbiBUaW1lAFdlZCAyMCBOb3YgMjAxMyAwODozMDoyNyAtMDYwMIPyYLIAAAAHdElNRQfdCxQOHybfFvLhAAAACXBIWXMAAAsSAAALEgHS3X78AAAABGdBTUEAALGPC/xhBQAAAAZ0Uk5TAP8A/wD/N1gbfQAAAHpJREFUeNpj/P//PwNxgIlIdUDAAsQGBgbIQhcuXMCu9j8q0NfX/48DMGHqpIJb6W9qa2vrxo0bcYaAjo4OMhsIcnNzIVxGNMcB5eBsTk5OIPn9+/ewsLC6ujqG/7iBNhhkZWVBuCx4/BEcHKylpRUeHg7hMv4nOrkAAEbVjF45QyssAAAAAElFTkSuQmCC)'),
+                "icon": btnIconBase.clone().addClass('gme icon-gme_broken-arow'),
                 "data": { "type": "basic2"}
             });
 
             this.toolbarItems.radioButtonGroupRouteManager.addButton({ "title": "AutoRouter",
-                "icon": btnIconBase.clone().css('background-image', 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAIAAACQKrqGAAAALHRFWHRDcmVhdGlvbiBUaW1lAFdlZCAyMCBOb3YgMjAxMyAwODozMDoyNyAtMDYwMIPyYLIAAAAHdElNRQfdCxQOKAp9yT42AAAACXBIWXMAAAsSAAALEgHS3X78AAAABGdBTUEAALGPC/xhBQAAAAZ0Uk5TAOUANwAB2LGMvQAAAIxJREFUeNpjfGrOyEAcYEHje/3Qw6puG8clFmRpIB9OYupngshhSmMCJiIdSppSFkwhXD5DV4rH0fgcMN+3+XTlenwOgIMVK1YASUfHnIpTU4AMRnhsQZz4588fuFJOTk4g+f3797CwsJRtDYx4ItbtixaQtLe3rz47nYADgoODtbS0bPsjIVxG4pMLAGzALHONeXRYAAAAAElFTkSuQmCC)'),
+                "icon": btnIconBase.clone().addClass('gme icon-gme_broken-arrow-with-box'),
                 "selected": true,
                 "data": { "type": "basic3"}
             });
             /************** END OF - ROUTING MANAGER SELECTION **************************/
+
+            this.toolbarItems.routingManagerSeparator = toolbar.addSeparator();
 
             this.toolbarItems.radioButtonGroupOperatingMode = toolbar.addRadioButtonGroup(function (data) {
                 self.setOperatingMode(data.mode);
             });
 
             this.toolbarItems.radioButtonGroupOperatingMode.addButton(
-                {"icon": "icon-lock",
+                {"icon": "glyphicon glyphicon-lock",
                     "title": "Read-only mode",
                     "data": {"mode": DiagramDesignerWidgetOperatingModes.prototype.OPERATING_MODES.READ_ONLY}
                 }
             );
 
             this.toolbarItems.radioButtonGroupOperatingMode.addButton(
-                {"icon": "icon-move",
+                {"icon": "glyphicon glyphicon-move",
                     "title": "Design mode",
                     "selected": true,
                     "data": {"mode": DiagramDesignerWidgetOperatingModes.prototype.OPERATING_MODES.DESIGN}
@@ -89,35 +96,38 @@ define(['./DiagramDesignerWidget.OperatingModes',
             );
 
             this.toolbarItems.radioButtonGroupOperatingMode.addButton(
-                {"icon": "icon-eye-open",
+                {"icon": "glyphicon glyphicon-eye-open",
                     "title": "Highlight mode",
                     "data": {"mode": DiagramDesignerWidgetOperatingModes.prototype.OPERATING_MODES.HIGHLIGHT}
                 }
             );
 
+            this.toolbarItems.modeSeparator = toolbar.addSeparator();
 
             this.toolbarItems.btnXing = toolbar.addToggleButton({
-                    "icon": btnIconBase.clone().css('background-image', 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAIAAACQKrqGAAAALHRFWHRDcmVhdGlvbiBUaW1lAFdlZCAyMCBOb3YgMjAxMyAwOToxMDozMyAtMDYwMD7tJHsAAAAHdElNRQfdCxQPCi+QvcZmAAAACXBIWXMAAAsSAAALEgHS3X78AAAABGdBTUEAALGPC/xhBQAAAAZ0Uk5TAP8A/wD/N1gbfQAAAJlJREFUeNpj+I8KjI2N/+MATAyo4N+/fww4ACNQOTI/OztbQEBAW1s7KiqKgFIgePz48apVq8TExGJjY1EkcLls6tSpixYtwudWOPD29r5x4waKA4BeZiAS4HLA/fv3a2pqiHLApk2b1NXVkUVYMBU9ePBg7dq1kpKSaOGFrjQ3N5efn19HRyciIoKAW0mIWDwAXamRkREupQApjcB/krw8sAAAAABJRU5ErkJggg==)'),
+                    "icon": btnIconBase.clone().addClass('gme icon-gme_crossing-lines'),
                     "title": "Connection crossing bumps ON/OFF",
                     "clickFn": function (data, isPressed) {
                         self._setConnectionXingJumpMode(isPressed);
                     }}
             );
 
+            this.toolbarItems.crossingLinesSeparator = toolbar.addSeparator();
+
             if (this._lineStyleControls === true) {
                 /************** END OF - VISUAL STYLE ARROWS *****************/
-                this.toolbarItems.ddbtnConnectionArrowStart = toolbar.addDropDownButton({ "title": "Line start marker", "icon": "icon-arrow-left", "menuClass": "no-min-width" });
-                this.toolbarItems.ddbtnConnectionPattern = toolbar.addDropDownButton({ "title": "Line pattern", "icon": "icon-minus", "menuClass": "no-min-width" });
-                this.toolbarItems.ddbtnConnectionArrowEnd = toolbar.addDropDownButton({ "title": "Line end marker","icon": "icon-arrow-right", "menuClass": "no-min-width" });
+                this.toolbarItems.ddbtnConnectionArrowStart = toolbar.addDropDownButton({ "title": "Line start marker", "icon": "glyphicon glyphicon-arrow-left", "menuClass": "no-min-width" });
+                this.toolbarItems.ddbtnConnectionPattern = toolbar.addDropDownButton({ "title": "Line pattern", "icon": "glyphicon glyphicon-minus", "menuClass": "no-min-width" });
+                this.toolbarItems.ddbtnConnectionArrowEnd = toolbar.addDropDownButton({ "title": "Line end marker","icon": "glyphicon glyphicon-arrow-right", "menuClass": "no-min-width" });
 
                 this.toolbarItems.ddbtnConnectionLineWidth = toolbar.addDropDownButton({
                     "title": "Line width",
-                    "icon": btnIconBase.clone().css('background-image', 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAAK3RFWHRDcmVhdGlvbiBUaW1lAFdlZCA1IEZlYiAyMDE0IDE1OjE0OjQ2IC0wNjAw56MnmwAAAAd0SU1FB94CBRURAg7EVwoAAAAJcEhZcwAACxIAAAsSAdLdfvwAAAAEZ0FNQQAAsY8L/GEFAAAAKUlEQVR42mP8z0AeYCJTHwMLiGBkYCDJYqBiRsah41SybRwJfhxCgQMAmmIKGzUyxp0AAAAASUVORK5CYII=)'),
+                    "icon": btnIconBase.clone().addClass('gme icon-gme_lines'),
                     "menuClass": "no-min-width" });
 
                 this.toolbarItems.ddbtnConnectionLineType = toolbar.addDropDownButton({
                     "title": "Line type",
-                    "icon": btnIconBase.clone().css('background-image', 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAIAAACQKrqGAAAAK3RFWHRDcmVhdGlvbiBUaW1lAEZyaSA2IERlYyAyMDEzIDE1OjE1OjUyIC0wNjAwvQqmVQAAAAd0SU1FB90MBhURF0gI0MAAAAAJcEhZcwAACxIAAAsSAdLdfvwAAAAEZ0FNQQAAsY8L/GEFAAAABnRSTlMA/wD/AP83WBt9AAAAuUlEQVR42mP8//8/A3GAiUh1KEp//fqFXykLhCorK3v+/LmkpGRXVxdOtUC35ufnb9myBcjYuHEjkP0fB2AGYhsbGx8fH6A2dXX1P3/+LFu2zMHBAYtbP3365OvrC+cD9Xz+/Pno0aPYHYAGTpw4gekMoAiWwDI3NxcQENiwYQNcZNOmTYKCggy4PFFYWAhUAfFrQUEBkMGIJ7bKy8ufPn0qLS3d2dkJ5OJTCgTAAGFhgYY9AaVkpgEAIAumySCHw2MAAAAASUVORK5CYII=)'),
+                    "icon": btnIconBase.clone().addClass('gme  icon-gme_curvy-line'),
                     "menuClass": "no-min-width" });
 
                 var createArrowMenuItem = function (arrowType, isEnd) {
@@ -213,7 +223,7 @@ define(['./DiagramDesignerWidget.OperatingModes',
             }
 
             //add fill color, text color, border color controls
-            this.toolbarItems.cpFillColor = toolbar.addColorPicker({'icon': 'icon-tint',
+            this.toolbarItems.cpFillColor = toolbar.addColorPicker({'icon': 'glyphicon glyphicon-tint',
                 'title': 'Fill color',
                 'colorChangedFn': function (color) {
                     self.onSelectionFillColorChanged(self.selectionManager.getSelectedElements(), color);
@@ -221,14 +231,14 @@ define(['./DiagramDesignerWidget.OperatingModes',
             );
 
             this.toolbarItems.cpBorderColor = toolbar.addColorPicker({
-                'icon':  btnIconBase.clone().css('background-image', 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAALHRFWHRDcmVhdGlvbiBUaW1lAFdlZCAxOSBGZWIgMjAxNCAxMzo1MjowNiAtMDYwMLm/hBUAAAAHdElNRQfeAhMTNg6sSN21AAAACXBIWXMAAAsSAAALEgHS3X78AAAABGdBTUEAALGPC/xhBQAAADNJREFUeNpjNDY2/s9AIjhz5gwjA0gjEDCgY0LiTKTaBgNDSCPjaKjSQCPZocoICiFyAADhMVpX3ZZoCgAAAABJRU5ErkJggg==)'),
+                'icon':  btnIconBase.clone().addClass('gme icon-gme_pen'),
                 'title': 'Border color',
                 'colorChangedFn': function (color) {
                     self.onSelectionBorderColorChanged(self.selectionManager.getSelectedElements(), color);
                 }}
             );
 
-            this.toolbarItems.cpTextColor = toolbar.addColorPicker({'icon': 'icon-font',
+            this.toolbarItems.cpTextColor = toolbar.addColorPicker({'icon': 'glyphicon glyphicon-font',
                 'title': 'Text color',
                 'colorChangedFn': function (color) {
                     self.onSelectionTextColorChanged(self.selectionManager.getSelectedElements(), color);
@@ -241,11 +251,12 @@ define(['./DiagramDesignerWidget.OperatingModes',
 
             if (this._defaultSearchUI === true) {
                 this.toolbarItems.filterBox = toolbar.addTextBox(
-                    {"prependContent": '<i class="icon-search"></i>',
+                {
+                    "prependContent": '<i class="glyphicon glyphicon-search"></i>&nbsp;',
                     "placeholder": "Find...",
                     "textChangedFn": function (oldVal, newVal) {
                         self.searchManager.filterItems(newVal);
-                    }});
+                }});
             }
         }
 

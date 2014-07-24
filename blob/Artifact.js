@@ -75,7 +75,18 @@ define(['blob/BlobMetadata'], function (BlobMetadata) {
             nbrOfFiles = fileNames.length,
             hashes = [],
             error = '',
-            i;
+            i,
+            counterCallback = function (err, hash) {
+                error = err ? error + err : error;
+                nbrOfFiles -= 1;
+                hashes.push(hash);
+                if (nbrOfFiles === 0) {
+                    if (error) {
+                        return callback('Failed adding files: ' + error, hashes);
+                    }
+                    callback(null, hashes);
+                }
+            };
 
         if (nbrOfFiles === 0) {
             callback(null, hashes);
@@ -83,18 +94,42 @@ define(['blob/BlobMetadata'], function (BlobMetadata) {
         }
 
         for (i = 0; i < fileNames.length; i += 1) {
-            self.addFile(fileNames[i], files[fileNames[i]], function (err, hash) {
+            self.addFile(fileNames[i], files[fileNames[i]], counterCallback);
+        }
+    };
+
+
+    /**
+     * Adds multiple files as soft-links.
+     * @param {Object.<string, Blob>} files files to add
+     * @param callback
+     */
+    Artifact.prototype.addFilesAsSoftLinks = function (files, callback) {
+        var self = this,
+            fileNames = Object.keys(files),
+            nbrOfFiles = fileNames.length,
+            hashes = [],
+            error = '',
+            i,
+            counterCallback = function (err, hash) {
                 error = err ? error + err : error;
                 nbrOfFiles -= 1;
                 hashes.push(hash);
                 if (nbrOfFiles === 0) {
                     if (error) {
-                        callback('Failed adding files: ' + error, hashes);
-                        return;
+                        return callback('Failed adding files as soft-links: ' + error, hashes);
                     }
                     callback(null, hashes);
                 }
-            });
+            };
+
+        if (nbrOfFiles === 0) {
+            callback(null, hashes);
+            return;
+        }
+
+        for (i = 0; i < fileNames.length; i += 1) {
+            self.addFileAsSoftLink(fileNames[i], files[fileNames[i]], counterCallback);
         }
     };
 
@@ -128,6 +163,40 @@ define(['blob/BlobMetadata'], function (BlobMetadata) {
         });
     };
 
+    /**
+     * Adds hashes to the artifact using the given file paths.
+     * @param {object.<string, string>} objectHashes - Keys are file paths and values object hashes.
+     * @param callback
+     */
+    Artifact.prototype.addObjectHashes = function (objectHashes, callback) {
+        var self = this,
+            fileNames = Object.keys(objectHashes),
+            nbrOfFiles = fileNames.length,
+            hashes = [],
+            error = '',
+            i,
+            counterCallback = function (err, hash) {
+                error = err ? error + err : error;
+                nbrOfFiles -= 1;
+                hashes.push(hash);
+                if (nbrOfFiles === 0) {
+                    if (error) {
+                        return callback('Failed adding objectHashes: ' + error, hashes);
+                    }
+                    callback(null, hashes);
+                }
+            };
+
+        if (nbrOfFiles === 0) {
+            callback(null, hashes);
+            return;
+        }
+
+        for (i = 0; i < fileNames.length; i += 1) {
+            self.addObjectHash(fileNames[i], objectHashes[fileNames[i]], counterCallback);
+        }
+    };
+
     Artifact.prototype.addMetadataHash = function (name, hash, callback) {
         var self = this;
 
@@ -150,6 +219,40 @@ define(['blob/BlobMetadata'], function (BlobMetadata) {
                 callback(null, hash);
             }
         });
+    };
+
+    /**
+     * Adds hashes to the artifact using the given file paths.
+     * @param {object.<string, string>} objectHashes - Keys are file paths and values object hashes.
+     * @param callback
+     */
+    Artifact.prototype.addMetadataHashes = function (objectHashes, callback) {
+        var self = this,
+            fileNames = Object.keys(objectHashes),
+            nbrOfFiles = fileNames.length,
+            hashes = [],
+            error = '',
+            i,
+            counterCallback = function (err, hash) {
+                error = err ? error + err : error;
+                nbrOfFiles -= 1;
+                hashes.push(hash);
+                if (nbrOfFiles === 0) {
+                    if (error) {
+                        return callback('Failed adding objectHashes: ' + error, hashes);
+                    }
+                    callback(null, hashes);
+                }
+            };
+
+        if (nbrOfFiles === 0) {
+            callback(null, hashes);
+            return;
+        }
+
+        for (i = 0; i < fileNames.length; i += 1) {
+            self.addMetadataHash(fileNames[i], objectHashes[fileNames[i]], counterCallback);
+        }
     };
 
     /**

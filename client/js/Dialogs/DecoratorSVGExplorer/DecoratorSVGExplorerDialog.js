@@ -1,49 +1,64 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
- * Author: Robert Kereskenyi
+/*globals define, _, WebGMEGlobal, DEBUG*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
  */
 
-"use strict";
 
 define(['js/Constants',
     'assets/decoratorSVG',
-    'text!html/Dialogs/DecoratorSVGExplorer/DecoratorSVGExplorerDialog.html',
-    'css!/css/Dialogs/DecoratorSVGExplorer/DecoratorSVGExplorerDialog'], function (CONSTANTS,
+    'text!./templates/DecoratorSVGExplorerDialog.html',
+    'css!./styles/DecoratorSVGExplorerDialog.css'], function (CONSTANTS,
                                                                decoratorSVG,
                                                                DecoratorSVGExplorerDialogTemplate) {
+
+    "use strict";
 
     var DecoratorSVGExplorerDialog,
         IMG_BASE = $('<div class="img"><img src=""/><div class="desc">description</div></div>'),
         SVG_DIR = CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER,
         DecoratorSVGIconList = [''].concat(decoratorSVG.DecoratorSVGIconList.slice(0)),
-        DATA_FILENAME = 'filename',
-        DATA_SVG = 'data-svg';
+        DATA_FILENAME = 'data-filename',
+        DATA_SVG = 'data-normalized-filename';
 
 
     DecoratorSVGExplorerDialog = function () {
     };
 
-    DecoratorSVGExplorerDialog.prototype.show = function (fnCallback) {
-        var self = this;
+    DecoratorSVGExplorerDialog.prototype.show = function (fnCallback, oldValue) {
+        var self = this,
+            $originalSelected;
 
         this._fnCallback = fnCallback;
 
         this._initDialog();
 
-        this._dialog.on('hidden', function () {
+        this._dialog.on('hidden.bs.modal', function () {
             self._dialog.remove();
             self._dialog.empty();
             self._dialog = undefined;
         });
 
-        this._dialog.on('hide', function () {
-            if (self._fnCallback && (self._selectedSVG || self._selectedSVG === '')) {
-                self._fnCallback(self._selectedSVG);
+        this._dialog.on('hide.bs.modal', function () {
+            if (self._fnCallback && (self.result || self.result === '')) {
+                self._fnCallback(self.result);
             }
         });
 
         this._dialog.modal('show');
+
+        if (oldValue) {
+
+            $originalSelected = self._modalBody.find("[" + DATA_FILENAME + "='" + oldValue + "']");
+            this._setSelected(oldValue, $originalSelected);
+        }
+
+
+    };
+
+    DecoratorSVGExplorerDialog.prototype.registerResult = function () {
+        this.result = this._selectedSVG;
     };
 
     DecoratorSVGExplorerDialog.prototype._initDialog = function () {
@@ -74,22 +89,29 @@ define(['js/Constants',
             }
 
             divImg.data(DATA_FILENAME, svg);
+            divImg.attr(DATA_FILENAME, svg);
+
             divImg.attr(DATA_SVG, svg.toLowerCase());
 
             this._modalBody.append(divImg);
+
+            self._setSelected();
         }
 
         this._modalBody.on('mousedown', 'div.img', function () {
+            var $el = $(this);
+
             self._modalBody.find('div.img.selected').removeClass('selected');
-            self._setSelected($(this).data(DATA_FILENAME));
-            $(this).addClass('selected');
+            self._setSelected($el.data(DATA_FILENAME), $el);
         });
 
         this._modalBody.on('dblclick', 'div.img', function () {
+            self.registerResult();
             self._dialog.modal('hide');
         });
 
         this._btnSelect.on('click', function () {
+            self.registerResult();
             self._dialog.modal('hide');
         });
 
@@ -98,19 +120,23 @@ define(['js/Constants',
         });
 
         this._txtFind.on('keypress', function(e) {
-            /* Prevent form submission */
             return  e.keyCode !== 13;
         });
     };
 
-    DecoratorSVGExplorerDialog.prototype._setSelected = function (fileName) {
+    DecoratorSVGExplorerDialog.prototype._setSelected = function (fileName, $selectedItem) {
         this._modalBody.find('div.img.selected').removeClass('selected');
+
+        if ($selectedItem) {
+            $selectedItem.addClass('selected');
+        }
+
         if (fileName || fileName === '') {
             this._selectedSVG = fileName;
-            this._btnSelect.removeClass('disabled');
+            this._btnSelect.disable(false);
         } else {
             this._selectedSVG = undefined;
-            this._btnSelect.addClass('disabled');
+            this._btnSelect.disable(true);
         }
     };
 

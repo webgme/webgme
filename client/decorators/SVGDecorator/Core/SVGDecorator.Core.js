@@ -246,8 +246,76 @@ define(['js/Constants',
         //Can be overridden for custom functionality
     };
 
-    /***** PORT FUNCTIONALITY *****/
-    //Overridden in SVGDecorator.Ports.js 
+    SVGDecoratorCore.prototype._getCustomConnectionAreas = function (svgFile) {
+        var connAreas = svgCache[svgFile] ? svgCache[svgFile].customConnectionAreas || [] : [],
+            len = connAreas ? connAreas.length : 0,
+            connA;
+
+        delete this._customConnectionAreas;
+
+        if (len > 0) {
+            this._customConnectionAreas = [];
+
+            while (len--) {
+                connA = {};
+
+                _.extend(connA, connAreas[len]);
+
+                this._customConnectionAreas.push(connA);
+            }
+        }
+    };
+
+    SVGDecoratorCore.prototype._generateConnectors = function () {
+        var svg = this.$svgElement,
+            connectors = svg.find('.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS),
+            c,
+            svgWidth = parseInt(svg.attr('width'), 10),
+            svgHeight = parseInt(svg.attr('height'), 10);
+
+        if (this._displayConnectors === true) {
+            //check if there are any connectors defined in the SVG itself
+            if (connectors.length === 0) {
+                //no dedicated connectors
+                //by default generate four: N, S, E, W
+
+                //NORTH
+                c = CONNECTOR_BASE.clone();
+                c.addClass('cn');
+                c.css({'top': 0,
+                       'left': svgWidth / 2});
+                this.$el.append(c);
+
+                //SOUTH
+                c = CONNECTOR_BASE.clone();
+                c.addClass('cs');
+                c.css({'top': svgHeight,
+                       'left': svgWidth / 2});
+                this.$el.append(c);
+
+                //EAST
+                c = CONNECTOR_BASE.clone();
+                c.addClass('ce');
+                c.css({'top': svgHeight / 2,
+                       'left': svgWidth});
+                this.$el.append(c);
+
+                //WEST
+                c = CONNECTOR_BASE.clone();
+                c.addClass('cw');
+                c.css({'top': svgHeight / 2,
+                    'left': 0});
+                this.$el.append(c);
+            }
+
+            this.initializeConnectors();
+        } else {
+            connectors.remove();
+        }
+    };
+
+
+    /***** UPDATE THE PORTS OF THE NODE *****/
     SVGDecoratorCore.prototype._updatePorts = function () {
         //If no ports in model, does nothing
     };

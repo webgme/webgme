@@ -4,9 +4,10 @@
  * Author: Tamas Kecskes
  */
 
-define([ "util/assert", "util/sha1", "util/canon" ], function (ASSERT, SHA1, CANON) {
+define([ "util/assert", "util/zssha1", "util/canon" ], function (ASSERT, SHA1, CANON) {
 	"use strict";
 	var HASH_REGEXP = new RegExp("^#[0-9a-zA-Z_]*$");
+    var zsSHA = new SHA1();
 
 	function Database (_database,_options) {
         _options = _options || {};
@@ -54,7 +55,7 @@ define([ "util/assert", "util/sha1", "util/canon" ], function (ASSERT, SHA1, CAN
 					type: "commit"
 				};
 
-				var id = '#' + SHA1(CANON.stringify(commitObj));
+				var id = '#' + zsSHA.getHash(CANON.stringify(commitObj));
 				commitObj[_project.ID_NAME] = id;
 
 				_project.insertObject(commitObj, function (err) {
@@ -87,6 +88,7 @@ define([ "util/assert", "util/sha1", "util/canon" ], function (ASSERT, SHA1, CAN
 			deleteProject: _database.deleteProject,
             simpleRequest: _database.simpleRequest,
             simpleResult: _database.simpleResult,
+            getNextServerEvent: _database.getNextServerEvent,
             getToken: _database.getToken
 		};
 	}

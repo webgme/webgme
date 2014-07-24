@@ -1,5 +1,4 @@
-@import url("bootstrap.css");
-@import url("bootstrap_webgme_ext.css");
+@import url("webgme_bootstrap_overrides.css");
 @import url("jquery/jquery-ui-1.10.4.css");
 @import url("jquery/jquery.layout.css");
 @import url("jquery/jquery.layout.webgme.css");
@@ -30,6 +29,12 @@ html,body {
     -o-user-select:none;
     user-select:none;
     -ms-user-select:none;
+}
+
+ul.unstyled,
+ol.unstyled {
+    margin-left: 0;
+    list-style: none;
 }
 
 .user-select-off {
@@ -111,13 +116,9 @@ div.spacer {
     z-index: 10 !important;
 }
 
-div.toolbar-container {
-    position: relative;
-    /*overflow: hidden;*/
-    overflow-x: visible;
-    top: 41px;
-    height: 27px;
-    background-color: #F5F5F5;
+
+.ui-layout-pane {
+    border: 0;
 }
 
 /*FIX jquery context menu's z-index to be over the jqueryUI's layouting...*/
@@ -157,3 +158,8 @@ div.toolbar-container {
 *::-webkit-scrollbar-corner{background:rgba(255, 255, 255, 0.9);-webkit-box-shadow:inset 0 0 6px rgba(0, 0, 0, 0.1);}
 
 /******************/
+
+
+.empty-message {
+    font-style: italic;
+}

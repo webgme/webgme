@@ -3,18 +3,33 @@
 	<head>
 		<title>WebGME</title>
 
-        <!-- CSS libraries -->
-        <link href="css/main.css" type="text/css" rel="stylesheet"/>
-
         <!-- Load main.js with RequireJS and launch the app from there -->
         <script data-main="js/main" src="lib/require/require.min.js"></script>
 
         <!-- favicon -->
         <link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico">
+
+        <style>
+            .default-container {
+                position: absolute;
+                width: 100%; height: 86px;
+                line-height: 100%;
+                text-align: center;
+                top: 50%;
+                margin: 0 0 0 0;
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 12px;
+            }
+
+            .default-container>span{
+                font-weight: bold;
+            }
+
+        </style>
 	</head>
     <body>
-        <div style="position: absolute; width: 100%; height: 86px;line-height: 86px;text-align: center;top: 50%;margin: -43px 0 0 0;">
-            <b>WebGME...</b>
+        <div class="default-container">
+            <span>WebGME...</span>
         </div>
     </body>
 </html>

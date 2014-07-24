@@ -9,7 +9,11 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 
 	// ----------------- CoreType -----------------
 
-	var CoreType = function(oldcore) {
+    //FIXME TODO these stuff have been simply copied from lower layer, probably it should be put to some constant place
+    var OVERLAYS = "ovr";
+    var COLLSUFFIX = "-inv";
+
+    var CoreType = function(oldcore) {
 		// copy all operations
 		var core = {};
 		for ( var key in oldcore) {
@@ -54,6 +58,15 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 			return node.base;
 		};
 
+        core.getBaseRoot = function(node) {
+            ASSERT(isValidNode(node));
+            while (node.base !== null){
+                node = node.base;
+            }
+
+            return node;
+        };
+
 		core.loadRoot = function(hash) {
 			return TASYNC.call(__loadRoot2, oldcore.loadRoot(hash));
 		};
@@ -66,22 +79,28 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 		}
 
         core.loadChild = function(node,relid){
-            var child = TASYNC.call(__loadBase,oldcore.loadChild(node,relid));
-            var base = core.getBase(node);
-            var basechild = null;
-            if(base && oldcore.getChildrenRelids(base).indexOf(relid) !== -1){
-                basechild = TASYNC.call(__loadBase,oldcore.loadChild(base,relid));
-            }
-            return TASYNC.call(function(ch,bch,n,r){
-                var done = null;
-                if(ch === null){
-                    if(bch !== null){
-                        ch = core.createNode({base:bch,parent:n,relid:r});
-                        done = core.persist(core.getRoot(n));
+            var child = null,
+                base = core.getBase(node),
+                basechild = null;
+            if(base){
+                //the parent is inherited
+                if(oldcore.getChildrenRelids(base).indexOf(relid) !== -1) {
+                    //inherited child
+                    if (oldcore.getChildrenRelids(node).indexOf(relid) !== -1) {
+                        //but it is overwritten so we should load it
+                        child = oldcore.loadChild(node, relid);
                     }
+                    basechild = core.loadChild( base, relid);
+                    return TASYNC.call(function(b,c,n,r){
+                        child = c || core.getChild(n,r);
+                        child.base = b;
+                        core.getCoreTree().setHashed(child,true);
+                        return child;
+                    },basechild,child,node,relid);
                 }
-                return TASYNC.call(function(child){return child;},ch,done);
-            },child,basechild,node,relid);
+            }
+            //normal child
+            return TASYNC.call(__loadBase,oldcore.loadChild(node,relid));
         };
 
         core.loadByPath = function(node,path){
@@ -109,27 +128,26 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 			ASSERT(node === null || typeof node.base === "undefined" || typeof node.base === "object");
 
 			if (typeof node.base === "undefined") {
-                if(core.isEmpty(node)){
+                if(core.isEmpty(node)) {
                     //empty nodes do not have a base
                     return null;
+                } else if(node.parent && node.parent.base && oldcore.getChildrenRelids(node.parent.base).indexOf(node.relid) !== -1) {
+                    //it is possible that the node is an inherited child
+                    return TASYNC.call(function(n,b){
+                        n.base = b;
+                        return n;
+                    },node,core.loadChild(node.parent.base,node.relid));
                 } else if(isFalseNode(node)){
                     var root = core.getRoot(node);
                     oldcore.deleteNode(node);
-                    return TASYNC.call(function(){return null;},core.persist(root));
+                    core.persist(root);
+                    return null;
                 } else {
                     return TASYNC.call(__loadBase2, node, oldcore.loadPointer(node, "base"));
                 }
-			} else if(node === null){
-                return node;
             } else {
-                var oldpath = core.getPath(node.base);
-                var newpath = core.getPointerPath(node,"base");
-                if(oldpath !== newpath){
-                    delete node.base;
-                    return __loadBase(node);
-                } else {
-                    return node;
-                }
+                //TODO can the base change at this point???
+                return node;
 			}
 		}
 
@@ -140,10 +158,10 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
             } else {
                 ASSERT(typeof node.base === "undefined" || node.base === null); //kecso
 
-                if(target === null){
+                if(target === null) {
                     node.base = null;
                     return node;
-                } else {
+                }  else {
                     return TASYNC.call(function(n,b){n.base = b; return n;},node,__loadBase(target));
                 }
             }
@@ -178,7 +196,179 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
             },TASYNC.lift(children));
         };
 
-        //TODO now the collection paths doesn't take any kind of inheritance into account...
+        //collection handling and needed functions
+        function _isInheritedChild(node){
+            var parent = core.getParent(node),
+                base = core.getBase(node),
+                parentBase = parent ? core.getBase(parent) : null,
+                baseParent = base ? core.getParent(base) : null;
+
+            if(baseParent && parentBase && core.getPath(baseParent) === core.getPath(parentBase)){
+                return true;
+            }
+            return false;
+        }
+
+        function _getInstanceRoot(node){
+
+            while(_isInheritedChild(node)){
+                node = core.getParent(node);
+            }
+
+            return node;
+        }
+        //TODO copied function from corerel
+        function isPointerName(name) {
+            ASSERT(typeof name === "string");
+
+            return name.slice(-COLLSUFFIX.length) !== COLLSUFFIX;
+        }
+
+        function _getInheritedCollectionNames(node){
+            var target = "",
+                names = [],
+                coretree = core.getCoreTree(),
+                startNode = node,
+                endNode = _getInstanceRoot(node),
+                exit;
+
+            if(core.getPath(startNode) === core.getPath(endNode)){
+                return names;
+            }
+
+            do{
+                startNode = core.getBase(startNode);
+                endNode = core.getBase(endNode);
+                node = startNode;
+                exit = false;
+                target = "";
+                do {
+                    if(core.getPath(node) === core.getPath(endNode)){
+                        exit = true;
+                    }
+                    var child = coretree.getProperty(coretree.getChild(node, OVERLAYS), target);
+                    if (child) {
+                        for ( var name in child) {
+                            if (!isPointerName(name)) {
+                                name = name.slice(0, -COLLSUFFIX.length);
+                                if (names.indexOf(name) < 0) {
+                                    names.push(name);
+                                }
+                            }
+                        }
+                    }
+
+                    target = "/" + coretree.getRelid(node) + target;
+                    node = coretree.getParent(node);
+                } while (!exit);
+            } while (_isInheritedChild(startNode));
+
+            return names;
+        }
+        function _getInheritedCollectionPaths(node,name){
+            var target = "",
+                result = [],
+                coretree = core.getCoreTree(),
+                startNode = node,
+                endNode = _getInstanceRoot(node),
+                prefixStart = startNode,
+                prefixNode = prefixStart,
+                exit,
+                collName = name + COLLSUFFIX,
+                notOverwritten = function(sNode,eNode,source){
+                    var result = true,
+                        tNode = sNode,
+                        child,target;
+
+                    while(core.getPath(tNode) !== core.getPath(eNode)){
+                        child = coretree.getChild(tNode,OVERLAYS);
+                        child = coretree.getChild(child,source);
+                        if(child){
+                            target = coretree.getProperty(child,name);
+                            if(target){
+                                return false;
+                            }
+                        }
+                        tNode = core.getBase(tNode);
+                    }
+
+                    return result;
+                };
+
+            if(core.getPath(startNode) === core.getPath(endNode)){
+                return result;
+            }
+
+            do{
+                startNode = core.getBase(startNode);
+                endNode = core.getBase(endNode);
+                node = startNode;
+                prefixNode = prefixStart;
+                exit = false;
+                target = "";
+                do {
+                    if(core.getPath(node) === core.getPath(endNode)){
+                        exit = true;
+                    }
+                    var child = coretree.getChild(node, OVERLAYS);
+                    child = coretree.getChild(child,target);
+                    if (child) {
+                        var sources = coretree.getProperty(child, collName);
+                        if (sources) {
+                            ASSERT(Array.isArray(sources) && sources.length >= 1);
+
+                            var prefix = coretree.getPath(prefixNode);
+
+                            for ( var i = 0; i < sources.length; ++i) {
+                                if(notOverwritten(prefixNode,node,sources[i])){
+                                    result.push(coretree.joinPaths(prefix, sources[i]));
+                                }
+                            }
+                        }
+                    }
+
+                    target = "/" + coretree.getRelid(node) + target;
+                    node = coretree.getParent(node);
+                    prefixNode = core.getParent(prefixNode);
+                } while (!exit);
+            } while (_isInheritedChild(startNode));
+
+            return result;
+        }
+        core.getCollectionNames = function(node){
+            ASSERT(isValidNode(node));
+            var checkCollNames = function(draft){
+                    var i,filtered = [],sources;
+                    for(i=0;i<draft.length;i++){
+                        sources = core.getCollectionPaths(node,draft[i]);
+                        if(sources.length > 0){
+                            filtered.push(draft[i])
+                        }
+                    }
+                    return filtered;
+                },
+                ownNames = oldcore.getCollectionNames(node),
+                inhNames = checkCollNames(_getInheritedCollectionNames(node)),
+                i;
+            for(i=0;i<ownNames.length;i++){
+                if(inhNames.indexOf(ownNames[i]) < 0){
+                    inhNames.push(ownNames[i])
+                }
+            }
+
+            return inhNames;
+        };
+
+        core.getCollectionPaths = function(node,name){
+            ASSERT(isValidNode(node) && name);
+            var ownPaths = oldcore.getCollectionPaths(node,name),
+                inhPaths = _getInheritedCollectionPaths(node,name);
+
+            inhPaths = inhPaths.concat(ownPaths);
+
+            return inhPaths;
+        };
+
         core.loadCollection = function(node, name) {
             var root =  core.getRoot(node);
             var paths = core.getCollectionPaths(node,name);
@@ -406,9 +596,23 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
             ASSERT(!base || core.getPath(core.getParent(node)) !== core.getPath(base));
             ASSERT(!base || core.getPath(node) !== core.getPath(base));
             if(!!base){
-                oldcore.setPointer(node, "base", base);
                 //TODO maybe this is not the best way, needs to be double checked
                 node.base = base;
+                var parent = core.getParent(node),
+                    parentBase,baseParent;
+                if(parent){
+                    parentBase = core.getBase(parent);
+                    baseParent = core.getParent(base);
+                    if(core.getPath(parentBase) !== core.getPath(baseParent)){
+                        //we have to set an exact pointer only if it is not inherited child
+                        oldcore.setPointer(node, "base", base);
+                    } else {
+                        oldcore.deletePointer(node,"base"); //we remove the pointer just in case
+                    }
+                } else {
+                    //if for some reason the node doesn't have a parent it is surely not an inherited child
+                    oldcore.setPointer(node,"base",base);
+                }
             } else {
                 oldcore.setPointer(node,'base',null);
                 node.base = null;
@@ -428,6 +632,7 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
             return child;
         };
         core.moveNode = function(node,parent){
+            //TODO we have to check if the move is really allowed!!!
             var base = node.base;
             ASSERT(!base || core.getPath(base) !== core.getPath(parent));
 
@@ -441,28 +646,78 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 
             var newnode = oldcore.copyNode(node,parent);
             newnode.base = base;
+            oldcore.setPointer(newnode,'base',base);
             return newnode;
         };
+        function _inheritedPointerNames(node){
+            var allNames = core.getPointerNames(node),
+                ownNames = core.getOwnPointerNames(node),
+                names = [],
+                i;
 
-        core.getSingleNodeHash = function(node){
-            //TODO this function only needed while the inheritance is not in its final form!!!
-            //bb377d14fd57cbe2b0a2ad297a7a303b7a5fccf3
-            ASSERT(isValidNode(node));
-            function xorHashes (a, b) {
-                var outHash = "";
-                if(a.length === b.length){
-                    for(var i=0;i< a.length;i++){
-                        outHash += (parseInt(a.charAt(i),16) ^ parseInt(b.charAt(i),16)).toString(16);
+            for(i=0;i<allNames.length;i++){
+                if(ownNames.indexOf(allNames[i]) === -1){
+                    names.push(allNames[i]);
+                }
+            }
+
+            return names;
+        }
+
+        core.copyNodes = function(nodes,parent){
+            var copiedNodes,
+                i, j,index,base,
+                relations = [],
+                names,pointer,
+                paths = [];
+
+            //here we also have to copy the inherited relations which points inside the copy area
+            for(i=0;i<nodes.length;i++){
+                paths.push(core.getPath(nodes[i]));
+            }
+
+            for(i=0;i<nodes.length;i++){
+                names = _inheritedPointerNames(nodes[i]);
+                pointer = {};
+                for(j=0;j<names.length;j++){
+                    index = paths.indexOf(core.getPointerPath(nodes[i],names[j]));
+                    if(index !== -1){
+                        pointer[names[j]] = index;
                     }
                 }
-                return outHash;
+                relations.push(pointer);
             }
-            var hash = "0000000000000000000000000000000000000000";
-            while( node ){
-                hash = xorHashes(hash,oldcore.getSingleNodeHash(node));
+
+            //making the actual copy
+            copiedNodes = oldcore.copyNodes(nodes,parent);
+            
+            //setting internal-inherited relations
+            for(i=0;i<nodes.length;i++){
+                names = Object.keys(relations[i]);
+                for(j=0;j<names.length;j++){
+                    core.setPointer(copiedNodes[i],names[j],copiedNodes[relations[i][names[j]]]);
+                }
+            }
+
+            //setting base relation
+            for(i=0;i<nodes.length;i++){
+                base = nodes[i].base;
+                copiedNodes[i].base = base;
+                oldcore.setPointer(copiedNodes[i],'base',base);
+            }
+
+
+            return copiedNodes;
+        };
+
+        core.getDataForSingleHash = function(node){
+            ASSERT(isValidNode(node));
+            var datas = [];
+            while(node){
+                datas.push(oldcore.getDataForSingleHash(node));
                 node = core.getBase(node);
             }
-            return hash;
+            return datas;
         };
 
         core.getChildrenPaths = function(node){
@@ -478,7 +733,7 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 
         core.deleteNode = function(node){
             //currently we only check if the node is inherited from its parents children
-            if(node){
+            if(node && node.base !== null){
                 var parent = core.getParent(node),
                     parentsBase = parent ? core.getBase(node) : null,
                     base = core.getBase(node),
@@ -491,6 +746,17 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
                 } else {
                     oldcore.deleteNode(node);
                 }
+            }
+        };
+
+        core.getTypeRoot = function(node){
+            if(node.base){
+                while(node.base !== null){
+                    node = core.getBase(node);
+                }
+                return node;
+            } else {
+                return null;
             }
         };
 

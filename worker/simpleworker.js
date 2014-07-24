@@ -1,5 +1,6 @@
 var requirejs = require("requirejs"),
-    BASEPATH = __dirname + "/..";
+    BASEPATH = __dirname + "/..",
+    WEBGME = require(BASEPATH+'/webgme');
 requirejs.config({
     nodeRequire: require,
     baseUrl: BASEPATH,
@@ -18,8 +19,10 @@ requirejs(['worker/constants',
         'blob/BlobServerClient',
         'plugin/PluginManagerBase',
         'plugin/PluginResult',
-        'storage/clientstorage'],
-function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,PluginManagerBase,PluginResult,ConnectedStorage){
+        'storage/clientstorage',
+        'coreclient/serialization',
+        'auth/gmeauth'],
+function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,PluginManagerBase,PluginResult,ConnectedStorage,Serialization,GMEAUTH){
     var storage = null,
         core = null,
         result = null,
@@ -30,7 +33,8 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
         initialized = false,
         pluginBasePaths = null,
         interpreteroutputdirectory = null,
-        serverPort = 80;
+        serverPort = 80,
+        AUTH =null;
 
     var initResult = function(){
         core = null;
@@ -41,20 +45,14 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
         error = null;
     };
     var initialize = function(parameters){
+        console.log(webGMEGlobal);
         if(initialized !== true){
             initialized = true;
-            if(parameters.paths){
-                var configPaths = {},
-                    keys = Object.keys(parameters.paths);
-                for (var i = 0; i < keys.length; i += 1) {
-                    configPaths[keys[i]] = PATH.relative(BASEPATH,PATH.resolve(parameters.paths[keys[i]]));
-                }
-
-                requirejs.config({
-                    paths: configPaths
-                });
+            if(parameters.auth){
+                AUTH = GMEAUTH(parameters.auth);
             }
             pluginBasePaths = parameters.pluginBasePaths;
+            webGMEGlobal.setConfig({paths:parameters.paths,pluginBasePaths:parameters.pluginBasePaths});
             serverPort = parameters.serverPort || 80;
             interpreteroutputdirectory = parameters.interpreteroutputdirectory || "";
             if(interpreteroutputdirectory){
@@ -75,6 +73,35 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
             });
         }
     };
+    var exportLibrary = function(name,hash,libraryRootPath,callback){
+        if(!storage){
+            return callback('no active data connection');
+        }
+        if(!initialized){
+            return callback('worker has not been initialized yet');
+        }
+
+        storage.openProject(name,function(err,project){
+            if(err){
+                return callback(err);
+            }
+            var core = new Core(project);
+            core.loadRoot(hash,function(err,root){
+                if(err){
+                    return callback(err);
+                }
+
+                core.loadByPath(root,libraryRootPath,function(err,libraryRoot){
+                    if(err){
+                        return callback(err);
+                    }
+
+                    Serialization.export(core,libraryRoot,callback);
+                });
+            });
+        });
+
+    };
     var dumpMoreNodes = function(name,hash,nodePaths,callback){
         if(storage){
             if(initialized){
@@ -82,7 +109,7 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
                     if(err){
                         callback(err);
                     } else {
-                        var core = new Core(project,{corerel:2});
+                        var core = new Core(project);
                         core.loadRoot(hash,function(err,root){
                             if(err){
                                 callback(err);
@@ -117,7 +144,7 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
                 callback('worker has not been initialized yet');
             }
         } else {
-            callback('no active data connecction');
+            callback('no active data connection');
         }
     };
 
@@ -172,22 +199,7 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
     };
 
     var getInterpreter = function(name){
-        var interpreterClass = null,
-            basePath = getPluginBasePathByName(name);
-
-        if(basePath){
-            var path = {};
-            path['plugin/'+name] = PATH.relative(BASEPATH,basePath);
-            requirejs.config({
-                paths:path
-            });
-            interpreterClass = requirejs('plugin/'+name+'/'+name+'/'+name);
-        } else {
-            return null;
-        }
-
-
-        return interpreterClass;
+        return requirejs('plugin/'+name+'/'+name+'/'+name);
     };
     var runInterpreter = function(userId,name,sessionId,context,callback){
         var interpreter = getInterpreter(name);
@@ -223,6 +235,125 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
         } else {
             var newErrorPluginResult = new PluginResult();
             callback(new Error('unable to load plugin'),newErrorPluginResult.serialize());
+        }
+    };
+
+    var getAllProjectsInfo = function(userId,callback){
+        var projectNames,
+            userAuthInfo = null,
+            completeInfo = {},
+            needed,
+            i,
+            filterProjectList = function(cb) {
+                if(AUTH === null){
+                    return cb(null);
+                }
+
+                if(typeof userId === 'string'){
+                    AUTH.getUserAuthInfo(userId,function(err,userData){
+                        if(err){
+                            projectNames = [];
+                            return cb(err);
+                        }
+
+                        userAuthInfo = userData;
+
+                        //the actual filtering
+                        var i,filtered = [];
+                        for(i=0;i<projectNames.length;i++){
+                            if(userAuthInfo[projectNames[i]]){
+                                filtered.push(projectNames[i]);
+                            }
+                        }
+                        projectNames = filtered;
+                        cb(null);
+                    });
+                } else {
+                    projectNames = []; //we have authentication yet doesn't get valid user name...
+                    return cb(new Error('invalid user'));
+
+                }
+            },
+            addUserAuthInfo = function(projectName){
+                if(userAuthInfo === null){
+                    completeInfo[projectName].rights = {read:true,write:true,delete:true};
+                } else {
+                    completeInfo[projectName].rights = userAuthInfo[projectName] || {read:false,write:false,delete:false};
+                }
+            },
+            getProjectInfo = function(name,cb){
+                storage.openProject(name,function(err,project){
+                    if(err){
+                        return cb(err);
+                    }
+
+                    project.getBranchNames(function(err,branches){
+                        return cb(err,name,branches);
+                    });
+                });
+            },
+            projectInfoReceived = function(err,name,branches){
+                if(!err){
+                    completeInfo[name] = {branches:branches};
+                    addUserAuthInfo(name);
+                }
+
+                if(--needed === 0){
+                    //TODO here we first should go and add the user right info
+                    callback(null,completeInfo);
+                }
+            };
+        if(storage){
+            if(initialized){
+                storage.getProjectNames(function(err,projectlist){
+                    if(err){
+                        return callback(new Error('cannot get project name list'));
+                    }
+                    projectNames = projectlist;
+                    filterProjectList(function(err){
+                        if(err){
+                            callback(err);
+                        }
+                        needed = projectNames.length;
+                        for(i=0;i<projectNames.length;i++){
+                            getProjectInfo(projectNames[i],projectInfoReceived);
+                        }
+                    });
+
+                });
+            } else {
+                callback(new Error('worker not yet initialized'));
+            }
+        } else {
+            callback(new Error('no active data connection'));
+        }
+
+    };
+
+    var setBranch = function(sessionId,projectName,branchName,oldHash,newHash,callback){
+        if(storage){
+            if(initialized){
+                storage.getProjectNames(function(err,projectlist){
+                    if(err){
+                        return callback(err);
+                    }
+
+                    if(projectlist.indexOf(projectName) === -1){
+                        return callback(new Error('no such project'));
+                    }
+                    getProject(projectName,sessionId,function(err,project){
+                            if(err){
+                                return callback(err);
+                            }
+
+                            project.setBranchHash(branchName,oldHash,newHash,callback);
+                        });
+                    });
+            } else {
+                callback(new Error('worker not yet initialized'));
+            }
+        } else {
+            callback(new Error('no active data connection'));
         }
     };
     //main message processing loop
@@ -285,6 +416,53 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
                     initResult();
                     process.send({pid:process.pid,type:CONSTANT.msgTypes.result,error:'invalid parameters',result:{}});
                 }
+                break;
+            case CONSTANT.workerCommands.exportLibrary:
+                if( typeof parameters.name === 'string' && typeof parameters.hash === 'string' && typeof parameters.path === 'string'){
+                    resultId = GUID();
+                    process.send({pid:process.pid,type:CONSTANT.msgTypes.request,error:null,resid:resultId});
+                    exportLibrary(parameters.name,parameters.hash,parameters.path,function(err,r){
+                        if(resultRequested === true){
+                            initResult();
+                            process.send({pid:process.pid,type:CONSTANT.msgTypes.result,error:err,result:r});
+                        } else {
+                            resultReady = true;
+                            error = err;
+                            result = r;
+                        }
+                    });
+                } else {
+                    initResult();
+                    process.send({pid:process.pid,type:CONSTANT.msgTypes.request,error:'invalid parameters'});
+                }
+                break;
+            case CONSTANT.workerCommands.getAllProjectsInfo:
+                resultId = GUID();
+                process.send({pid:process.pid,type:CONSTANT.msgTypes.request,error:null,resid:resultId});
+                getAllProjectsInfo(parameters.user,function(err,r){
+                    if(resultRequested === true){
+                        initResult();
+                        process.send({pid:process.pid,type:CONSTANT.msgTypes.result,error:err,result:r});
+                    } else {
+                        resultReady = true;
+                        error = err;
+                        result = r;
+                    }
+                });
+                break;
+            case CONSTANT.workerCommands.setBranch:
+                resultId = GUID();
+                process.send({pid:process.pid,type:CONSTANT.msgTypes.request,error:null,resid:resultId});
+                setBranch(parameters.webGMESessionId,parameters.project,parameters.branch,parameters.old,parameters.new,function(err,r){
+                    if(resultRequested === true){
+                        initResult();
+                        process.send({pid:process.pid,type:CONSTANT.msgTypes.result,error:err,result:r});
+                    } else {
+                        resultReady = true;
+                        error = err;
+                        result = r;
+                    }
+                });
                 break;
             default:
                 process.send({error:'unknown command'});

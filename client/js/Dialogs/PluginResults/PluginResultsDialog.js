@@ -1,31 +1,33 @@
-/*
- * Copyright (C) 2014 Vanderbilt University, All rights reserved.
- *
- * Author: Robert Kereskenyi
+/*globals define, Raphael, window, WebGMEGlobal*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
  */
 
-"use strict";
 
 define(['clientUtil',
     'blob/BlobClient',
-    'text!html/Dialogs/PluginResults/PluginResultsDialog.html',
-    'css!/css/Dialogs/PluginResults/PluginResultsDialog'], function (clientUtil,
+    'text!./templates/PluginResultsDialog.html',
+    'css!./styles/PluginResultsDialog.css'], function (clientUtil,
                                                                      BlobClient,
                                                                      pluginResultsDialogTemplate) {
+
+    "use strict";
 
     var PluginResultsDialog,
         PLUGIN_RESULT_ENTRY_BASE = $('<div/>', { 'class': 'plugin-result' }),
         PLUGIN_RESULT_HEADER_BASE = $('<div class="alert"></div>'),
         RESULT_SUCCESS_CLASS = 'alert-success',
-        RESULT_ERROR_CLASS  = 'alert-error',
-        ICON_SUCCESS = $('<i class="icon-ok"/>'),
-        ICON_ERROR = $('<i class="icon-warning-sign"/>'),
+        RESULT_ERROR_CLASS  = 'alert-danger',
+        ICON_SUCCESS = $('<i class="glyphicon glyphicon-ok glyphicon glyphicon-ok"/>'),
+        ICON_ERROR = $('<i class="glyphicon glyphicon-warning-sign glyphicon glyphicon-warning-sign"/>'),
         RESULT_NAME_BASE = $('<span/>', { 'class': 'title' }),
         RESULT_TIME_BASE = $('<span/>', { 'class': 'time' }),
-        RESULT_DETAILS_BTN_BASE = $('<span class="btn-details pull-right">Details</span>'),
+        RESULT_DETAILS_BTN_BASE = $('<span class="btn btn-micro btn-details pull-right">Details</span>'),
         RESULT_DETAILS_BASE = $('<div/>', {'class': 'messages collapse'}),
         MESSAGE_ENTRY_BASE = $('<div class="msg"><div class="msg-title"></div><div class="msg-body"></div></div>'),
-        MESSAGE_ENTRY_NODE_BTN_BASE = $('<span class="btn-node pull-right">Show node</span>'),
+        MESSAGE_ENTRY_NODE_BTN_BASE = $('<span class="btn btn-micro btn-node pull-right">Show node</span>'),
         RESULT_ARTIFACTS_BASE = $('<div class="artifacts collapse"><div class="artifacts-title">Generated artifacts</div><div class="artifacts-body"><ul></ul></div></div>'),
         ARTIFACT_ENTRY_BASE = $('<li><a href="#">Loading...</a></li>'),
         MESSAGE_PREFIX = 'Message #';
@@ -40,7 +42,7 @@ define(['clientUtil',
         this._client = client;
         this._initDialog(pluginResults);
 
-        this._dialog.on('hidden', function () {
+        this._dialog.on('hidden.bs.modal', function () {
             self._dialog.remove();
             self._dialog.empty();
             self._dialog = undefined;
@@ -184,10 +186,10 @@ define(['clientUtil',
 
             //TODO maybe this could be done in a more nicer way
             if(typeof parentId === 'string'){
-                WebGMEGlobal.State.setActiveObject(parentId);
-                WebGMEGlobal.State.setActiveSelection([resultEntry.activeNode.id]);
+                WebGMEGlobal.State.registerActiveObject(parentId);
+                WebGMEGlobal.State.registerActiveSelection([resultEntry.activeNode.id]);
             } else {
-                WebGMEGlobal.State.setActiveObject(resultEntry.activeNode.id);
+                WebGMEGlobal.State.registerActiveObject(resultEntry.activeNode.id);
             }
             dialog.modal('hide');
         });

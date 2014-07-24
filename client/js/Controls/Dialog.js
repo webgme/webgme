@@ -1,12 +1,13 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
+/*globals define, _*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-"use strict";
 
-define(['text!html/Controls/Dialog.html'], function (dialogTemplate) {
+define(['text!./templates/Dialog.html'], function (dialogTemplate) {
+
+    "use strict";
 
     var dialogBase = $(dialogTemplate);
 
@@ -27,11 +28,11 @@ define(['text!html/Controls/Dialog.html'], function (dialogTemplate) {
             dialog.find('.modal-header > .close').remove();
         }
 
-        dialog.on('shown', function () {
+        dialog.on('shown.bs.modal', function () {
             btnOK.focus();
         });
 
-        dialog.on('hidden', function () {
+        dialog.on('hidden.bs.modal', function () {
             dialog.remove();
             dialog.empty();
             dialog = undefined;

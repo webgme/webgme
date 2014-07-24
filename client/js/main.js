@@ -1,64 +1,107 @@
-"use strict";
+/*globals require, $, console, angular*/
 
-var DEBUG = false;
-var _webGME_jquery_ver = '2.1.0';
-var _webGME_jqueryui_ver = '1.10.4';
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
+ */
+
+
+var DEBUG = false,
+    _jqueryVersion = '2.1.0',
+    _jqueryUIVersion = '1.10.4',
+    _bootsrapVersion = '3.1.1';
+
 
 // configure require path and modules
 require.config({
-    baseUrl: "/",
+    baseUrl: '/',
+
+    map: {
+         '*': {
+            'css': 'lib/require/require-css/css',
+            'text': 'lib/require/require-text/text'
+        }
+    },
+
+
     paths: {
-        //RequireJS plugins
-        "text":	'lib/require/text',
-        "css": 'lib/require/rcss',
-        "domReady":	'lib/require/domReady',
+
+        'domReady':	'lib/require/require-domready/domReady',
 
         //jQuery and stuff
-        "jquery": 'lib/jquery/jquery-' + _webGME_jquery_ver + ( DEBUG ? '.min' : '' ),
-        "jquery-ui": 'lib/jquery/jquery-ui-' + _webGME_jqueryui_ver + ( DEBUG ? '.min' : '' ),
-        "jquery-ui-iPad": 'lib/jquery/jquery.ui.ipad',
-        "jquery-WebGME": 'js/jquery.WebGME',
-        "jquery-dataTables": 'lib/jquery/jquery.dataTables.min',
-        "jquery-dataTables-bootstrapped": 'lib/jquery/jquery.dataTables.bootstrapped',
-        "jquery-spectrum": 'lib/jquery/jquery.spectrum',
+        'jquery': 'lib/jquery/jquery-' + _jqueryVersion + ( DEBUG ? '.min' : '' ),
+        'jquery-ui': 'lib/jquery/jquery-ui-' + _jqueryUIVersion + ( DEBUG ? '.min' : '' ),
+        'jquery-ui-iPad': 'lib/jquery/jquery.ui.ipad',
+        'jquery-WebGME': 'js/jquery.WebGME',
+        'jquery-dataTables': 'lib/jquery/jquery.dataTables.min',
+        'jquery-dataTables-bootstrapped': 'lib/jquery/jquery.dataTables.bootstrapped',
+        'jquery-spectrum': 'lib/jquery/jquery.spectrum',
 
-        //necessary 3rd party modules
-        "bootstrap": 'lib/bootstrap/bootstrap.amd',
-        "underscore": 'lib/underscore/underscore-min',
-        "backbone": 'lib/backbone/backbone.min',
-        "d3": 'lib/d3/d3.v3.min',
-        "jscolor": 'lib/jscolor/jscolor',
+        //Bootsrap stuff
+        'bootstrap': 'lib/bootstrap/' + _bootsrapVersion + '/js/bootstrap' + ( DEBUG ? '.min' : '' ),
+
+        //Other modules
+        'underscore': 'lib/underscore/underscore-min',
+        'backbone': 'lib/backbone/backbone.min',
+        'd3': 'lib/d3/d3.v3.min',
+        'jscolor': 'lib/jscolor/jscolor',
 
         //RaphaelJS family
-        "eve": 'lib/raphael/eve',   //needed because of raphael.core.js uses require with 'eve'
-        "raphaeljs": 'lib/raphael/raphael.amd',
-        "raphael_core": 'lib/raphael/raphael.core',
-        "raphael_svg": 'lib/raphael/raphael.svg_fixed',
-        "raphael_vml": 'lib/raphael/raphael.vml',
+        'eve': 'lib/raphael/eve',   //needed because of raphael.core.js uses require with 'eve'
+        'raphaeljs': 'lib/raphael/raphael.amd',
+        'raphael_core': 'lib/raphael/raphael.core',
+        'raphael_svg': 'lib/raphael/raphael.svg_fixed',
+        'raphael_vml': 'lib/raphael/raphael.vml',
 
         //WebGME custom modules
-        "logManager": 'common/LogManager',
-        "eventDispatcher": 'common/EventDispatcher',
-        "notificationManager": 'js/NotificationManager',
-        "clientUtil": 'js/util',
-        "loaderCircles": "js/Loader/LoaderCircles",
-        "loaderProgressBar": "js/Loader/LoaderProgressBar",
+        'logManager': 'common/LogManager',
+        'eventDispatcher': 'common/EventDispatcher',
+        'notificationManager': 'js/NotificationManager',
+        'clientUtil': 'js/util',
+        'loaderCircles': 'js/Loader/LoaderCircles',
+        'loaderProgressBar': 'js/Loader/LoaderProgressBar',
 
-        "codemirror": 'lib/codemirror/codemirror.amd',
-        "jquery-csszoom": 'lib/jquery/jquery.csszoom',
+        'codemirror': 'lib/codemirror/codemirror.amd',
+        'jquery-csszoom': 'lib/jquery/jquery.csszoom',
 
-        "jszip": 'lib/jszip/jszip'
+        'jszip': 'lib/jszip/jszip',
+
+        'moment': 'lib/moment/moment.min',
+
+        // Angular and modules
+        'angular': 'lib/angular/angular-1.2.19/angular' + ( DEBUG ? '.min' : '' ),
+        'angular-route': 'lib/angular/angular-1.2.19/angular-route' + ( DEBUG ? '.min' : '' ),
+        'angular-route-styles': 'lib/angular/angular-route-styles/route-styles',
+        'angular-ui-bootstrap': 'lib/angular/ui-bootstrap/ui-bootstrap-tpls-0.11.0.min'
     },
+
     shim: {
+        
+        'angular-route': ['angular'],
+        'angular-route-styles': ['angular'],
+        'angular-ui-bootstrap': ['angular'],
+        
         'jquery-ui': ['jquery'],
         'jquery-ui-iPad': ['jquery','jquery-ui'],
-        'bootstrap': ['jquery'],
+
+        'bootstrap': [
+            'jquery',
+            'css!lib/bootstrap/' + _bootsrapVersion + '/css/bootstrap.min.css',
+            'css!lib/bootstrap/' + _bootsrapVersion + '/css/bootstrap-theme.min.css'
+        ],
+
         'backbone': ['underscore'],
         'clientUtil': ['jquery'],
         'jquery-WebGME': ['bootstrap'],
         'jquery-dataTables': ['jquery'],
         'jquery-dataTables-bootstrapped': ['jquery-dataTables'],
-        'WebGME': ['jquery-WebGME'],
+        'js/WebGME': [
+            'jquery-WebGME',
+            'css!/css/main.css',
+            'css!/css/themes/dawn.css',
+            //'css!/fonts/font-awesome/css/font-awesome.min.css',
+            'css!/fonts/webgme-icons/style.css'
+        ],
         'jquery-csszoom': ['jquery-ui'],
         'jquery-spectrum': ['jquery'],
         'raphael_svg': ['raphael_core'],
@@ -79,13 +122,23 @@ require(
         'backbone',
         'js/WebGME',
         'clientUtil',
-        'bin/getconfig'
+        'bin/getconfig',
+
+        'angular',
+        'angular-route',
+        'angular-route-styles',
+        'angular-ui-bootstrap'
+
     ],
-    function (domReady, jQuery, jQueryUi, jQueryUiiPad, jqueryWebGME, jqueryDataTables, bootstrap, underscore, backbone, webGME, util, CONFIG) {
+    function (domReady, jQuery, jQueryUi, jQueryUiiPad, jqueryWebGME, jqueryDataTables, bootstrap, underscore,
+              backbone, webGME, util, CONFIG) {
+
+        'use strict';
+
         domReady(function () {
-            //#1 set debug info from config file
+
             if (CONFIG.hasOwnProperty('debug')) {
-                DEBUG = CONFIG['debug'];
+                DEBUG = CONFIG.debug;
             }
 
             //#2 check URL
@@ -97,14 +150,18 @@ require(
             }
 
             if (CONFIG.paths) {
+
                 // attach external libraries to extlib/*
+
                 var keys = Object.keys(CONFIG.paths);
                 for (var i = 0; i < keys.length; i += 1) {
+
                     // assume this is a relative path from the current working directory
                     CONFIG.paths[keys[i]] = 'extlib/' + CONFIG.paths[keys[i]];
                 }
 
                 // update client config to route the external lib requests
+
                 require.config({
                     paths: CONFIG.paths
                 });
@@ -112,7 +169,39 @@ require(
             }
 
 
-            webGME.start();
+            // Extended disable function
+            jQuery.fn.extend({
+                disable: function(state) {
+                    return this.each(function() {
+                        var $this = $(this);
+                        if($this.is('input, button')) {
+                          this.disabled = state;
+                        } else {
+                          $this.toggleClass('disabled', state);
+                        }
+                    });
+                }
+            });
+
+            // Initialize Angular. For this time no better place.
+            // has to be initialized as early as possible
+            var gmeApp = angular.module(
+                'gmeApp', [
+                    'ngRoute',
+                    'routeStyles',
+                    'ui.bootstrap',
+                    'headerPanel'
+                ]);
+
+            webGME.start( function(client) {
+
+                gmeApp.value('gmeClient', client);
+//                gmeApp.value('gmeClient', null);
+
+                angular.bootstrap(document, [ 'gmeApp']);
+
+            });
+
         });
     }
 );

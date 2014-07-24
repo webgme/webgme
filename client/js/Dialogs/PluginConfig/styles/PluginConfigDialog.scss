@@ -1,0 +1,43 @@
+/*
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ * 
+ * Author: Robert Kereskenyi
+ */
+.plugin-config-dialog {
+  .control-group {
+    .controls {
+      .widget {
+        span {
+          margin-top: 5px;
+          font-size: 14px;
+          line-height: 20px;
+          display: block;
+        }
+
+        .iCheckBox {
+          margin-top: 6px;
+        }
+
+
+        div.color-picker {
+          height: 30px;
+          width: 220px;
+          margin-top: 0px;
+          cursor: pointer;
+          border-radius: 4px;
+        }
+
+        div.asset-widget {
+          height: 30px;
+          line-height: 30px;
+          width: 220px;
+          margin-top: 0px;
+        }
+      }
+    }
+
+    div.desc {
+      margin-left: 180px;
+    }
+  }
+}

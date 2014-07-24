@@ -4,14 +4,16 @@ define([
     'coreclient/tojson',
     'coreclient/dump',
     'util/url',
-    'logManager'
+    'logManager',
+    'coreclient/serialization'
 ],function(
     Core,
     Storage,
     ToJson,
     Dump,
     URL,
-    logManager
+    logManager,
+    Serialization
     ){
 
     function Rest(_parameters){
@@ -212,6 +214,58 @@ define([
                 }
             });
         }
+
+        function exportProject(name,rootHash,branch,commitHash,callback){
+
+            var core = null,
+                project = null,
+                needRootHash = function(cHash){
+                    project.loadObject(cHash,function(err,commit){
+                        if(err || !commit){
+                            return callback(err || new Error('no such commit'));
+                        }
+
+                        rootHash = commit.root;
+                        initialized();
+                    });
+                },
+                initialized = function(){
+                core.loadRoot(rootHash,function(err,root){
+                    if(err){
+                        return callback(err);
+                    }
+                    Serialization.export(core,root,function(err,dump){
+                        if(err){
+                            callback(_HTTPError.internalServerError,err);
+                        } else {
+                            callback(_HTTPError.ok,dump);
+                        }
+                    });
+                });
+            };
+            _storage.openProject(name,function(err,pr){
+                if(err){
+                    return callback(err);
+                }
+
+                project = pr;
+                core = new Core(project);
+
+                if(rootHash){
+                    initialized();
+                } else if(branch){
+                    project.getBranchHash(branch,"#hack",function(err,cHash){
+                        if(err){
+                            return callback(err);
+                        }
+                        needRootHash(cHash);
+                    });
+                } else {
+                    needRootHash(commitHash);
+                }
+            });
+        }
+
         function doGET(command,token,parameters,callback){
             switch(command){
                 case _commands.help:
@@ -273,13 +327,25 @@ define([
                     });
                     break;
                 case _commands.dump:
-                case _commands.etf:
                     _parameters.authorization(token,parameters.project,function(err,canGo){
                         if(err){
                             callback(_HTTPError.internalServerError,err);
                         } else {
                             if(canGo === true){
                                 dumpNode(parameters.project,parameters.root,parameters.path || "",callback);
+                            } else {
+                                callback(_HTTPError.forbidden);
+                            }
+                        }
+                    });
+                    break;
+                case _commands.etf:
+                    _parameters.authorization(token,parameters.project,function(err,canGo){
+                        if(err){
+                            callback(_HTTPError.internalServerError,err);
+                        } else {
+                            if(canGo === true){
+                                exportProject(parameters.project,parameters.root,parameters.branch,parameters.commit,callback);
                             } else {
                                 callback(_HTTPError.forbidden);
                             }

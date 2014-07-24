@@ -1,12 +1,20 @@
-"use strict";
+/*globals define, WebGMEGlobal, alert, _*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
+ */
 
 define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
         'js/Utils/DisplayFormat',
         'js/Constants',
-        'css!/css/Panels/PropertyEditor/PointerWidget'],
+        'css!./styles/PointerWidget.css'],
+
     function (WidgetBase,
               displayFormat,
               CONSTANTS) {
+
+        "use strict";
 
         var PointerWidget;
 
@@ -24,7 +32,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
             this._div.append(this.__label);
 
 
-            this.__iconFollowPointer = $('<i/>', {class: 'icon-share'});
+            this.__iconFollowPointer = $('<i/>', {class: 'glyphicon glyphicon-share'});
             this.__iconFollowPointer.attr('title', 'Follow pointer');
             this._div.append(this.__iconFollowPointer);
 
@@ -103,11 +111,11 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
                 targetNodeObj = _client.getNode(ptrTo);
                 if (targetNodeObj) {
                     if (targetNodeObj.getParentId() || targetNodeObj.getParentId() === CONSTANTS.PROJECT_ROOT_ID) {
-                        WebGMEGlobal.State.setActiveObject(targetNodeObj.getParentId());
-                        WebGMEGlobal.State.setActiveSelection([ptrTo]);
+                        WebGMEGlobal.State.registerActiveObject(targetNodeObj.getParentId());
+                        WebGMEGlobal.State.registerActiveSelection([ptrTo]);
                     } else {
-                        WebGMEGlobal.State.setActiveObject(CONSTANTS.PROJECT_ROOT_ID);
-                        WebGMEGlobal.State.setActiveSelection([ptrTo]);
+                        WebGMEGlobal.State.registerActiveObject(CONSTANTS.PROJECT_ROOT_ID);
+                        WebGMEGlobal.State.registerActiveSelection([ptrTo]);
                     }
                 }
             }

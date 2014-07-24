@@ -1,4 +1,8 @@
-"use strict";
+/*globals define, Raphael, window, WebGMEGlobal, _*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['logManager',
     'clientUtil',
@@ -6,12 +10,14 @@ define(['logManager',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget',
     'js/Controls/iCheckBox',
     './MetaEditorPointerNamesDialog',
-    'css!/css/Widgets/MetaEditor/MetaEditorWidget'], function (logManager,
+    'css!./styles/MetaEditorWidget'], function (logManager,
                                                              clientUtil,
                                                              DragHelper,
                                                              DiagramDesignerWidget,
                                                              iCheckBox,
                                                              MetaEditorPointerNamesDialog) {
+
+    "use strict";
 
     var MetaEditorWidget,
         __parent__ = DiagramDesignerWidget,

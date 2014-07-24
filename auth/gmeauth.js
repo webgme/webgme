@@ -540,6 +540,18 @@ define(["storage/mongo", "storage/commit", "core/core", "util/guid"],function(Mo
                 }
             });
         }
+
+        function getUserAuthInfo(userID,callback){
+            //TODO No session storage support here yet
+            getUserNode(userID,function(err,userNode){
+                if(err || !userNode){
+                    return callback(err || new Error('no such user'));
+                }
+
+                callback(null,_core.getRegistry(userNode,'projects') || {});
+            });
+        }
+
         return {
             authenticate: authenticate,
             authorize: authorize,
@@ -548,8 +560,9 @@ define(["storage/mongo", "storage/commit", "core/core", "util/guid"],function(Mo
             generateToken: generateToken,
             getToken: getToken,
             checkToken: checkToken,
-            tokenAuth: tokenAuth
-        }
+            tokenAuth: tokenAuth,
+            getUserAuthInfo: getUserAuthInfo
+        };
     }
 
     return GMEAuth;

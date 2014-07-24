@@ -1,15 +1,16 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
+/*globals define, _*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
  */
+
 
 "use strict";
 
 define(['clientUtil',
-    'text!./ConstraintDetailsDialog.html',
+    'text!./templates/ConstraintDetailsDialog.html',
     'codemirror',
-    'css!./ConstraintDetailsDialog'], function ( util,
+    'css!./styles/ConstraintDetailsDialog.css'], function ( util,
                                                  constraintDetailsDialogTemplate,
                                                  CodeMirror) {
 
@@ -26,12 +27,12 @@ define(['clientUtil',
 
         this._dialog.modal('show');
 
-        this._dialog.on('shown', function () {
+        this._dialog.on('shown.bs.modal', function () {
             self._codeMirror.refresh();
             self._inputName.focus().trigger('keyup');
         });
 
-        this._dialog.on('hidden', function () {
+        this._dialog.on('hidden.bs.modal', function () {
             self._dialog.remove();
             self._dialog.empty();
             self._dialog = undefined;
@@ -92,10 +93,10 @@ define(['clientUtil',
 
             if (!isValidConstraintName(val)) {
                 self._pName.addClass("error");
-                self._btnSave.addClass("disabled");
+                self._btnSave.disable(true);
             } else {
                 self._pName.removeClass("error");
-                self._btnSave.removeClass("disabled");
+                self._btnSave.disable(false);
             }
         });
 

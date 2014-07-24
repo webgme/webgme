@@ -45,7 +45,7 @@ define(['jquery',
         }
 
         //there is an open project
-        if (_client.getActiveProject()) {
+        if (_client.getActiveProjectName()) {
             _territoryId = _client.addUI(_territoryUI, function (/*events*/) {
                 _processMetaContainer();
                 _territoryUI.dispatchEvent(_events.META_ASPECT_CHANGED);
@@ -277,7 +277,7 @@ define(['jquery',
         var result = {};
 
         if (!_.isEmpty(_metaTypes)) {
-            var projName = _client.getActiveProject();
+            var projName = _client.getActiveProjectName();
             var content = METATemplateJS;
             var sortedMetaTypes = _getMETAAspectTypesSorted();
             var typeCheckMethodTemplate = 'var _is__METATYPE__ = function (objID) { return METAAspectHelper.isMETAType(objID, _metaTypes.__METATYPE__); };';

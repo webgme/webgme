@@ -1,11 +1,18 @@
-"use strict";
+/*globals define, WebGMEGlobal, alert, _*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
+ */
 
 define(['logManager',
     'js/Constants',
     'js/DragDrop/DragSource',
-    'css!/css/Widgets/PartBrowser/PartBrowserWidget'], function (logManager,
+    'css!./styles/PartBrowserWidget.css'], function (logManager,
                                                                  CONSTANTS,
                                                                  dragSource) {
+
+    "use strict";
 
     var PartBrowserWidget,
         PART_BROWSER_CLASS = "part-browser",

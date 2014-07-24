@@ -21,7 +21,7 @@ define(['js/Toolbar/ToolbarButton',
         SELECTED_ICON = 'icon-ok',
         DDL_SELECTED_TAB_ICON_BASE = $('<i class="' + SELECTED_ICON + '" />'),
         TAB_LI_BASE = $('<li class=""><a href="#" data-toggle="tab"><div class="tab-title"></div></a></li>'),
-        TAB_DELETE_ICON_BASE = $('<i class="icon-remove-circle"/>');
+        TAB_DELETE_ICON_BASE = $('<i class="glyphicon glyphicon-remove-circle"/>');
 
     DiagramDesignerWidgetTabs = function () {
     };
@@ -42,7 +42,7 @@ define(['js/Toolbar/ToolbarButton',
 
         if (this._addTabs === true) {
             this.$btnAddTab = new ToolbarButton({ "title": "Add new tab...",
-                "icon": "icon-plus",
+                "icon": "glyphicon glyphicon-plus",
                 "clickFn": function (/*data*/) {
                     if (self.getIsReadOnlyMode() !== true) {
                         self.onTabAddClicked();
@@ -52,18 +52,18 @@ define(['js/Toolbar/ToolbarButton',
         }
 
         this.$ddlTabsList = new ToolbarDropDownButton({ "title": "Tab list",
-            "icon": "icon-list"});
+            "icon": "glyphicon glyphicon-list"});
         this.$divAddTab.append(this.$ddlTabsList.el);
 
         this.$btnScrollLeft = new ToolbarButton({ "title": "Scroll left",
-            "icon": "icon-chevron-left",
+            "icon": "glyphicon glyphicon-chevron-left",
             "clickFn": function (/*data*/) {
                 self._tabsScrollLeft();
             } });
         this.$divAddTab.append(this.$btnScrollLeft.el);
 
         this.$btnScrollRight = new ToolbarButton({ "title": "Scroll right",
-            "icon": "icon-chevron-right",
+            "icon": "glyphicon glyphicon-chevron-right",
             "clickFn": function (/*data*/) {
                 self._tabsScrollRight();
             } });

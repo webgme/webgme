@@ -1,0 +1,124 @@
+.panel-base-wh {
+  box-sizing: border-box; }
+  .panel-base-wh .ro-icon {
+    display: none;
+    margin-right: 2px;
+    position: absolute;
+    top: 2px;
+    left: 2px; }
+  .panel-base-wh .panel-header {
+    background-color: #efefef;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap; }
+    .panel-base-wh .panel-header .panel-header-title {
+      font-size: 21px;
+      line-height: 21px;
+      font-weight: 400;
+      display: inline-block;
+      margin-right: 10px;
+      margin-left: 5px;
+      white-space: nowrap;
+      margin-top: 8px; }
+    .panel-base-wh .panel-header .panel-header-toolbar .toolbar-group {
+      margin-left: 10px; }
+      .panel-base-wh .panel-header .panel-header-toolbar .toolbar-group.toolbar-group-small-margin {
+        margin-left: 2px; }
+    .panel-base-wh .panel-header .panel-header-toolbar select,
+    .panel-base-wh .panel-header .panel-header-toolbar textarea,
+    .panel-base-wh .panel-header .panel-header-toolbar input,
+    .panel-base-wh .panel-header .panel-header-toolbar .uneditable-input {
+      margin-bottom: 0px; }
+    .panel-base-wh .panel-header .panel-header-toolbar .input-append,
+    .panel-base-wh .panel-header .panel-header-toolbar .input-prepend {
+      margin-bottom: 0px; }
+    .panel-base-wh .panel-header .panel-header-toolbar input.no-focus-collapse:not(:focus) {
+      width: 30px; }
+    .panel-base-wh .panel-header .panel-header-toolbar li div.iCheckBox {
+      margin-left: 10px; }
+    .panel-base-wh .panel-header .panel-header-toolbar .iCheckBox {
+      top: 5px;
+      margin-left: 10px; }
+    .panel-base-wh .panel-header .panel-header-toolbar ul.dropdown-menu .iCheckBox {
+      top: 1px; }
+    .panel-base-wh .panel-header.absolute-header {
+      border-bottom-width: 0px;
+      position: absolute;
+      top: 0px;
+      left: 0px; }
+  .panel-base-wh .panel-body {
+    position: relative;
+    overflow: auto;
+    background-color: white; }
+  .panel-base-wh .floating-title {
+    position: absolute;
+    left: 0;
+    box-shadow: 0;
+    text-shadow: 1.5px 1.5px 0 rgba(0, 0, 0, 0.15);
+    opacity: .65;
+    color: #555555; }
+    .panel-base-wh .floating-title .ro-icon {
+      position: relative;
+      top: -1px;
+      left: 2px;
+      margin-right: 1.2ex; }
+    .panel-base-wh .floating-title .panel-header-title {
+      font-size: 21px;
+      line-height: 21px;
+      font-weight: 400;
+      display: inline-block;
+      margin-right: 10px;
+      margin-left: 5px;
+      white-space: nowrap;
+      margin-top: 8px; }
+      .panel-base-wh .floating-title .panel-header-title:empty {
+        display: none; }
+  .panel-base-wh.read-only .ro-icon {
+    display: inline-block; }
+  .panel-base-wh.read-only .panel-body {
+    background-color: #fbfbfb; }
+  .panel-base-wh .absolute-header {
+    border: 1px solid #d3d8df; }
+  .panel-base-wh.active-panel .panel-header {
+    border-bottom-color: #00235b;
+    background: white; }
+  .panel-base-wh.active-panel .floating-title {
+    opacity: 0.85;
+    color: #00235b; }
+  .panel-base-wh.active-panel .absolute-header {
+    border: 1px solid #00235b; }
+  .panel-base-wh.w-tabs .floating-title {
+    top: 30px; }
+
+.side-panel .panel-base-wh {
+  position: relative;
+  padding: 0px;
+  margin-bottom: 2px;
+  border: 0;
+  -webkit-border-radius: 0;
+  -moz-border-radius: 0;
+  border-radius: 0;
+  background-color: whitesmoke; }
+  .side-panel .panel-base-wh .panel-header {
+    padding: 3px;
+    background-color: whitesmoke;
+    border-bottom: 3px solid transparent; }
+    .side-panel .panel-base-wh .panel-header .ro-icon {
+      position: relative;
+      top: 0px;
+      left: 0px; }
+    .side-panel .panel-base-wh .panel-header .panel-header-title {
+      font-size: 11px;
+      line-height: 18px;
+      color: #999;
+      text-transform: uppercase;
+      margin-right: 0;
+      margin-left: 0; }
+    .side-panel .panel-base-wh .panel-header .panel-header-toolbar {
+      display: block; }
+  .side-panel .panel-base-wh .panel-body {
+    background-color: whitesmoke;
+    padding: 0; }
+  .side-panel .panel-base-wh.read-only .panel-body {
+    background-color: #fbfbfb; }
+  .side-panel .panel-base-wh.active-panel .panel-header {
+    border-bottom-color: #00235b; }

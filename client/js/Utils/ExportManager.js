@@ -22,8 +22,8 @@ define(['jquery',
     };
 
     var _export = function (objID) {
-        var fileName =  _client.getActiveProject() + "_" + _client.getActualBranch(),
-            objName;
+        var fileName =  _client.getActiveProjectName() + "_" + _client.getActualBranch(),
+            objName,url;
 
         if (objID !== CONSTANTS.PROJECT_ROOT_ID) {
             var obj = _client.getNode(objID);
@@ -39,11 +39,14 @@ define(['jquery',
             fileName += '_' + objName;
         }
 
-        window.location = _client.getDumpURL(objID, fileName);
+        url = _client.getDumpURL({path:objID, output:fileName});
+        if(url){
+            window.location = url;
+        }
     };
 
     var _exportMultiple = function (objIDs) {
-        var fileName =  _client.getActiveProject() + "_" + _client.getActualBranch() + "_multiple";
+        var fileName =  _client.getActiveProjectName() + "_" + _client.getActualBranch() + "_multiple";
 
         if (_.isArray(objIDs) &&
             objIDs.length > 0) {
@@ -55,9 +58,8 @@ define(['jquery',
         }
     };
 
-    //kecso
     var _exIntConf = function(objIDs) {
-        var fileName = _client.getActiveProject() + "_" + _client.getActualBranch() + "_conf";
+        var fileName = _client.getActiveProjectName() + "_" + _client.getActualBranch() + "_conf";
 
         if(_.isArray(objIDs) &&
            objIDs.length > 0) {
@@ -68,11 +70,25 @@ define(['jquery',
             });
         }
     };
+    var _expLib = function(objID) {
+        if(objID){
+            var object = _client.getNode(objID),
+                fileName = _client.getActiveProjectName() + "_" + _client.getActualBranch() + "_" + object.getAttribute('name') + "_lib";
+
+            _client.getExportLibraryUrlAsync(objID,fileName,function(err,url){
+                if(!err){
+                    window.location = url;
+                }
+            });
+        }
+
+    };
 
     //return utility functions
     return { initialize: _initialize,
         export: _export,
         exportMultiple: _exportMultiple,
-        exIntConf : _exIntConf
+        exIntConf : _exIntConf,
+        expLib : _expLib
     };
 });
