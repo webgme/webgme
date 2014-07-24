@@ -1,0 +1,168 @@
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
+ */
+
+$toolbar-item-margin-left: 2px;
+$toolbar-separator-margin: 0;
+$separator-bg-color: #9fb2d1;
+
+
+$webgme-toolbar-ext-background-color: #F5F5F5;
+$webgme-toolbar-ext-border-color: rgb(187, 187, 187);
+$webgme-toolbar-ext-toggle-hover-background-color: #E6E6E6;
+
+.webgme-toolbar,
+.webgme-toolbar-ext {
+  white-space: nowrap;
+
+  .toolbar-button {
+    display: inline-block;
+    position: relative;
+
+  }
+
+  .separator {
+    margin-left: $toolbar-separator-margin;
+    margin-right: $toolbar-separator-margin;
+    border-right: 1px solid $separator-bg-color;
+    width: 0;
+    height: 26px;
+    display: inline-block;
+    vertical-align: middle;
+    position: relative;
+  }
+
+  .btn-group {
+    margin-left: $toolbar-separator-margin;
+    margin-right: $toolbar-separator-margin;
+  }
+
+  .toolbar-input {
+    display: inline-block;
+    margin-left: $toolbar-item-margin-left;
+    position: relative;
+
+    .input-append,
+    .input-prepend {
+      margin-bottom: 0;
+    }
+  }
+
+  .toolbar-label {
+    display: inline-block;
+    margin-left: $toolbar-item-margin-left;
+    position: relative;
+    font-size: 12px;
+    line-height: 22px;
+    height: 22px;
+    vertical-align: middle;
+  }
+
+  .toolbar-checkbox {
+    display: inline-block;
+    margin-left: $toolbar-item-margin-left;
+    position: relative;
+    vertical-align: middle;
+  }
+
+  .dropdown-menu {
+    li {
+      .iCheckBox {
+        top: 1px;
+      }
+    }
+  }
+
+  .toolbar-colorpicker {
+    display: inline-block;
+
+    input {
+      margin: 0;
+      width: 20px;
+      color: rgba(0,0,0,0) !important;
+    }
+
+    &.input-append,
+    &.input-prepend {
+      margin-bottom: 0px !important;
+      
+      .add-on {
+        i:hover {
+          cursor: pointer;
+        }
+      }
+    }
+  }
+}
+
+.webgme-toolbar-ext {
+  position: absolute;
+  right: 0px;
+  margin-top: 1px;
+  padding: 3px;
+  padding-left: 0;
+  padding-top: 0;
+  background: $webgme-toolbar-ext-background-color;
+  border: 1px solid $webgme-toolbar-ext-border-color;
+  display: none;
+  white-space: normal;
+
+  &.shown {
+    display: inline-block;
+  }
+
+  > div {
+    margin-top: 2px;
+  }
+}
+
+.webgme-toolbar-ext-toggle {
+  display: inline-block;
+  position: absolute;
+  right: 2px;
+  top: 2px;
+  background-color: $webgme-toolbar-ext-background-color;
+  height: 22px;
+  width: 7px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: $webgme-toolbar-ext-toggle-hover-background-color;
+  }
+
+  > i {
+    -webkit-transform: scale(0.5, 0.5);
+    -moz-transform: scale(0.5, 0.5);
+    -ms-transform: scale(0.5, 0.5);
+    -o-transform: scale(0.5, 0.5);
+    transform: scale(0.5, 0.5);
+
+    position: absolute;
+    top: 8px;
+    left: -3px;
+  }
+
+  >i:last-child {
+    top: 11px;
+  }
+}
+
+
+div.toolbar-container {
+    position: relative;
+    /*overflow: hidden;*/
+    overflow-x: visible;
+    top: 34px;
+    height: 30px;
+    padding: 0;
+}
+
+div.toolbar-container .btn {
+    border: 1px solid #fff;
+    border-radius: 0;
+    padding: 1px 5px;
+    margin: 3px 5px !important;
+
+    box-shadow: none;
+}

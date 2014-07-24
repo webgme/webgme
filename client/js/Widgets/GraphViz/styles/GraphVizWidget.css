@@ -1,0 +1,19 @@
+.graph-viz {
+  outline: none; }
+  .graph-viz .node {
+    cursor: pointer; }
+  .graph-viz .node circle {
+    fill: white;
+    stroke: steelblue;
+    stroke-width: 1.5px; }
+  .graph-viz .node text {
+    font: 10px sans-serif; }
+  .graph-viz .link {
+    fill: none;
+    stroke: #cccccc;
+    stroke-width: 1.5px; }
+
+div.css-zoom.graph-viz-zoom {
+  position: absolute;
+  top: 30px;
+  left: 10px; }

@@ -1,7 +1,15 @@
-"use strict";
+/*globals define, _, WebGMEGlobal, DEBUG*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
+ */
+
 
 define(['jquery',
-        'css!/css/Controls/iCheckBox'], function (_jquery) {
+        'css!./styles/iCheckBox.css'], function (_jquery) {
+
+    "use strict";
 
     var iCheckBox,
         DEFAULT_CHECKED_TEXT = 'ON',
@@ -19,6 +27,14 @@ define(['jquery',
         this._uncheckedText = this._uncheckedText.toUpperCase();
 
         this.el = EL_BASE.clone();
+
+        if ( options.icon ) {
+            this.el.find('.sw').append('<i class="' + options.icon + '"></i>');
+        }
+
+        if ( options.title ) {
+            this.el.attr( 'title', options.title);
+        }
 
         this._txt = this.el.find('.txt').first();
         this._txt.text(this._checkedText);

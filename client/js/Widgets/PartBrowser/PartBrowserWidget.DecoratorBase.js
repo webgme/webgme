@@ -1,8 +1,13 @@
-"use strict";
+/*globals define, WebGMEGlobal, alert, _*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['logManager',
         'js/Decorators/WidgetDecoratorBase'], function (logManager,
                                                         WidgetDecoratorBase) {
+    "use strict";
 
     var PartBrowserWidgetDecoratorBase,
         DECORATOR_ID = "PartBrowserWidgetDecoratorBase";

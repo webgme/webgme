@@ -312,7 +312,7 @@ define(['logManager',
 
         if (gmeID) {
             this.logger.debug("Opening model with id '" + gmeID + "'");
-            WebGMEGlobal.State.setActiveObject(gmeID);
+            WebGMEGlobal.State.registerActiveObject(gmeID);
         }
     };
 
@@ -493,25 +493,25 @@ define(['logManager',
                     case DragHelper.DRAG_EFFECTS.DRAG_COPY:
                         menuItems[i] = {
                             "name": "Copy here",
-                            "icon": 'icon-plus'
+                            "icon": 'glyphicon glyphicon-plus'
                         };
                         break;
                     case DragHelper.DRAG_EFFECTS.DRAG_MOVE:
                         menuItems[i] = {
                             "name": "Move here",
-                            "icon": 'icon-move'
+                            "icon": 'glyphicon glyphicon-move'
                         };
                         break;
                     case DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE:
                         menuItems[i] = {
                             "name": "Create instance here",
-                            "icon": 'icon-share-alt'
+                            "icon": 'glyphicon glyphicon-share-alt'
                         };
                         break;
                     case DragHelper.DRAG_EFFECTS.DRAG_CREATE_POINTER:
                         menuItems[i] = {
                             "name": "Create pointer '" + possibleDropActions[i].pointer + "' of type '" + possibleDropActions[i].name + "'",
-                            "icon": 'icon-share'
+                            "icon": 'glyphicon glyphicon-share'
                         };
                         break;
                     default:
@@ -730,7 +730,7 @@ define(['logManager',
         }
 
         this._settingActiveSelection = true;
-        WebGMEGlobal.State.setActiveSelection(gmeIDs);
+        WebGMEGlobal.State.registerActiveSelection(gmeIDs);
         this._settingActiveSelection = false;
     };
 
@@ -986,7 +986,7 @@ define(['logManager',
             gmeID,
             obj,
             nodeObj,
-            cpData = {'project': this._client.getActiveProject(),
+            cpData = {'project': this._client.getActiveProjectName(),
                       'items' : []};
 
         while(i--) {
@@ -1014,7 +1014,7 @@ define(['logManager',
             objDesc,
             parentID = this.currentNodeInfo.id,
             params = { "parentId": parentID },
-            projectName = this._client.getActiveProject(),
+            projectName = this._client.getActiveProjectName(),
             childrenIDs = [],
             aspect = this._selectedAspect;
 
@@ -1105,7 +1105,6 @@ define(['logManager',
                 "icon": 'icon-refresh'
             };
         }
-
 
         this.designerCanvas.createMenu(menuItems, function (key) {
                 if (key === MENU_EXINTCONF){

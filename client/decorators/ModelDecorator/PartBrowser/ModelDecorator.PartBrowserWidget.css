@@ -11,9 +11,9 @@
   padding: 3px;
   text-align: center;
   position: relative;
-  -webkit-box-shadow: 0px 0px 7px 0px #444444 inset;
-  -moz-box-shadow: 0px 0px 7px 0px #444444 inset;
-  box-shadow: 0px 0px 7px 0px #444444 inset; }
+  -webkit-box-shadow: inset 0px 0px 7px 0px rgba(0, 0, 0, 0.15);
+  -moz-box-shadow: inset 0px 0px 7px 0px rgba(0, 0, 0, 0.15);
+  box-shadow: inset 0px 0px 7px 0px rgba(0, 0, 0, 0.15); }
   .model-decorator .name {
     white-space: nowrap;
     font-size: 9px;
@@ -23,7 +23,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     width: 121px;
-    border-bottom: 1px solid #000000;
+    border-bottom: none;
     height: 16px;
     line-height: 16px; }
   .model-decorator div.conn-type {
@@ -76,7 +76,7 @@
         border: 1px solid #666666;
         width: 3px;
         height: 7px;
-        top: 3px; }
+        top: 4px; }
       .model-decorator .ports .port.w-icon span.dot {
         display: none; }
     .model-decorator .ports .left .port .title-wrapper {
@@ -84,9 +84,9 @@
     .model-decorator .ports .left .port img.svg-icon {
       left: -8px; }
     .model-decorator .ports .left .port span.dot {
-      left: -8px;
-      border-top-left-radius: 4px;
-      border-bottom-left-radius: 4px; }
+      left: -6px;
+      border-top-left-radius: 5px;
+      border-bottom-left-radius: 5px; }
     .model-decorator .ports .right .port .title-wrapper {
       text-align: right; }
     .model-decorator .ports .right .port img.svg-icon {
@@ -97,9 +97,9 @@
       -o-transform: scaleX(-1);
       transform: scaleX(-1); }
     .model-decorator .ports .right .port span.dot {
-      left: 53px;
-      border-top-right-radius: 4px;
-      border-bottom-right-radius: 4px; }
+      left: 54px;
+      border-top-right-radius: 5px;
+      border-bottom-right-radius: 5px; }
   .model-decorator .progress-bar .loader-progressbar {
     position: relative;
     left: 50%;

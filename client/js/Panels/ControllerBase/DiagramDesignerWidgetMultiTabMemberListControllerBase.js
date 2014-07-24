@@ -1561,7 +1561,7 @@ define(['logManager',
             gmeIDs.push(this._memberListContainerID);
         }
 
-        WebGMEGlobal.State.setActiveSelection(gmeIDs);
+        WebGMEGlobal.State.registerActiveSelection(gmeIDs);
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.displayNoTabMessage = function () {

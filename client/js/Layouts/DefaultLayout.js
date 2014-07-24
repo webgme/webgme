@@ -1,12 +1,19 @@
-"use strict";
+/*globals define, DEBUG, WebGMEGlobal*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
+ */
 
 define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
     'logManager',
-    'text!html/Layouts/Default/DefaultLayout.html',
+    'text!./templates/DefaultLayout.html',
     'text!./DefaultLayoutConfig.json'], function (_jQueryLayout,
                              logManager,
                              defaultLayoutTemplate,
                              DefaultLayoutConfigJSON) {
+
+    "use strict";
 
     var DefaultLayout,
         SPACING_OPEN_TOUCH = 10,
@@ -43,22 +50,23 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
 
         this._body.layout({
             defaults: {
-            }
-            ,  north: {
+            },
+
+            north: {
                 closable :false,
                 resizable: false,
                 slidable: false,
                 spacing_open: 0,
-                size: 69
-            }
-            ,  south: {
+                size: 64
+            },
+            south: {
                 closable :false,
                 resizable: false,
                 slidable: false,
                 spacing_open: 0,
                 size: 27        //has to match footer CSS settings (height + border)
-            }
-            ,  east: {
+            },
+            east: {
                 size: SIDE_PANEL_WIDTH,
                 minSize: SIDE_PANEL_WIDTH,
                 resizable: true,
@@ -68,8 +76,7 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
                 onresize : function (/*paneName, paneElement, paneState, paneOptions, layoutName*/) {
                     self._onEastResize();
                 }
-            }
-            ,  west: {
+            },  west: {
                 size: SIDE_PANEL_WIDTH,
                 minSize: SIDE_PANEL_WIDTH,
                 resizable: true,

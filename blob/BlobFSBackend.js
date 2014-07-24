@@ -39,7 +39,7 @@ define(['./BlobBackendBase',
 
             var writeStream = fs.createWriteStream(tempName);
 
-            writeStream.on('finish', function () {
+            writeStream.on('close', function () {
                 // at this point the temporary file have been written out
                 // now the file have been written out
                 // finalizing hash and moving temporary file..

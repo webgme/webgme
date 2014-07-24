@@ -1,17 +1,17 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
+/*globals define, _*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-"use strict";
-
 define(['clientUtil',
-    'text!./MetaTextEditorDialog.html',
+    'text!./templates/MetaTextEditorDialog.html',
     'codemirror',
-    'css!./MetaTextEditorDialog'], function ( util,
+    'css!./styles/MetaTextEditorDialog.css'], function ( util,
                                                  metaTextEditorDialogTemplate,
                                                  CodeMirror) {
+
+    "use strict";
 
     var MetaTextEditorDialog;
 
@@ -26,12 +26,12 @@ define(['clientUtil',
 
         this._dialog.modal('show');
 
-        this._dialog.on('shown', function () {
+        this._dialog.on('shown.bs.modal', function () {
             self._codeMirror.refresh();
             self._codeMirror.focus();
         });
 
-        this._dialog.on('hidden', function () {
+        this._dialog.on('hidden.bs.modal', function () {
             self._dialog.remove();
             self._dialog.empty();
             self._dialog = undefined;

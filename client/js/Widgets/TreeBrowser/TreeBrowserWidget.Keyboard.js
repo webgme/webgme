@@ -1,12 +1,12 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
+/*globals define, Raphael, window, WebGMEGlobal*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-"use strict";
-
 define(['js/KeyboardManager/IKeyTarget'], function (IKeyTarget) {
+
+    "use strict";
 
     var TreeBrowserWidgetKeyboard;
 

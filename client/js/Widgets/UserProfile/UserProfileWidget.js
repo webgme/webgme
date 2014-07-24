@@ -1,17 +1,17 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
+/*globals define, Raphael, window, WebGMEGlobal*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-"use strict";
-
 define(['logManager',
-    'css!/css/Widgets/UserProfile/UserProfileWidget'], function (logManager) {
+    'css!./styles/UserProfileWidget'], function (logManager) {
+
+    "use strict";
 
     var UserProfileWidget,
-        USER_PROFILE_WIDGET_TEMPLATE_LOGGEDIN = '<i class="icon-user icon-white" title="Logged in as"></i> <a href="#" class="navbar-link">__USERNAME__</a> <a href="/logout" class="navbar-link"><i class="icon-eject icon-white" title="Log out"></i></a>',
-        USER_PROFILE_WIDGET_TEMPLATE_NOTLOGGEDIN = '<i class="icon-user" title="Not logged in"></i>';
+        USER_PROFILE_WIDGET_TEMPLATE_LOGGEDIN = '<i class="glyphicon glyphicon-user icon-white" title="Logged in as"></i> <a href="#" class="navbar-link">__USERNAME__</a> <a href="/logout" class="navbar-link"><i class="icon-eject icon-white" title="Log out"></i></a>',
+        USER_PROFILE_WIDGET_TEMPLATE_NOTLOGGEDIN = '<i class="glyphicon glyphicon-user" title="Not logged in"></i>';
 
     UserProfileWidget = function (containerEl, client) {
         this._logger = logManager.create("UserProfileWidget");

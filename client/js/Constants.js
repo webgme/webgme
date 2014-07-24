@@ -62,6 +62,9 @@ define(['underscore', 'common/Constants'], function (underscore, COMMON_CONSTANT
         STATE_ACTIVE_SELECTION: 'activeSelection',
         STATE_ACTIVE_ASPECT: 'activeAspect',
         STATE_ACTIVE_VISUALIZER: 'activeVisualizer',
+        STATE_ACTIVE_PROJECT_NAME: 'activeProjectName',
+        STATE_ACTIVE_COMMIT: 'activeCommit',
+        STATE_ACTIVE_BRANCH_NAME: 'activeBranchName',
         STATE_ACTIVE_CROSSCUT: 'activeCrosscut',
 
         /* ASPECTs */

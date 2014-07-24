@@ -1,6 +1,7 @@
-/*globals define*/
-/*
- * WebGME jquery extension
+/*globals define, window*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
 define(['jquery'], function () {
@@ -136,7 +137,7 @@ define(['jquery'], function () {
 
     // Canvas drawing extension
     if (!!document.createElement('canvas').getContext) {
-        $.extend(CanvasRenderingContext2D.prototype, {
+        $.extend(window.CanvasRenderingContext2D.prototype, {
 
             ellipse: function (aX, aY, r1, r2, fillIt) {
                 aX = aX - r1;
@@ -206,7 +207,7 @@ define(['jquery'], function () {
             li.find('a').text('ALL');
             ul.append(li);
 
-            for (var i = 0; i <opts.groups.length; i += 1) {
+            for (var i = 0; i < opts.groups.length; i += 1) {
                 var start = opts.groups[i].split('-')[0].trim();
                 var end = opts.groups[i].split('-')[1].trim();
                 li = liBase.clone();

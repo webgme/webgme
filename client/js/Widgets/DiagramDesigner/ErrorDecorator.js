@@ -22,7 +22,7 @@ define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase'], funct
 
     /*********************** OVERRIDE DIAGRAMDESIGNERWIDGETDECORATORBASE MEMBERS **************************/
 
-    ErrorDecorator.prototype.$DOMBase = $('<div class="error-decorator"><i class="icon-warning-sign"></i></div>');
+    ErrorDecorator.prototype.$DOMBase = $('<div class="error-decorator"><i class="glyphicon glyphicon-warning-sign"></i></div>');
 
     ErrorDecorator.prototype.on_addTo = function () {
         this._renderContent();

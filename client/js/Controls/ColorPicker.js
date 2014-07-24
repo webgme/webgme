@@ -1,13 +1,14 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
+/*globals define, Raphael, window, WebGMEGlobal*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
  */
 
-"use strict";
-
 define(['jquery-spectrum',
-    'css!/css/Controls/ColorPicker'], function (/*_spectrum*/) {
+    'css!./styles/ColorPicker'], function (/*_spectrum*/) {
+
+    "use strict";
 
     var ColorPicker;
 

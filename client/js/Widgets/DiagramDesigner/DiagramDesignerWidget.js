@@ -1,10 +1,10 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
- * Author: Robert Kereskenyi
+/*globals define, Raphael, window*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
  */
 
-"use strict";
 
 define(['logManager',
     'js/Constants',
@@ -33,7 +33,7 @@ define(['logManager',
     './DiagramDesignerWidget.Toolbar',
     './DiagramDesignerWidget.Mouse',
     './DiagramDesignerWidget.Tabs',
-    'css!/css/Widgets/DiagramDesigner/DiagramDesignerWidget'], function (logManager,
+    'css!./styles/DiagramDesignerWidget.css'], function (logManager,
                                                       CONSTANTS,
                                                       raphaeljs,
                                                       LoaderCircles,
@@ -61,13 +61,18 @@ define(['logManager',
                                                       DiagramDesignerWidgetMouse,
                                                       DiagramDesignerWidgetTabs) {
 
+    "use strict";
+
     var DiagramDesignerWidget,
         CANVAS_EDGE = 100,
         WIDGET_CLASS = 'diagram-designer',  // must be same as scss/Widgets/DiagramDesignerWidget.scss
         DEFAULT_CONNECTION_ROUTE_MANAGER = ConnectionRouteManager3,
         GUID_DIGITS = 6,
         BACKGROUND_TEXT_COLOR = '#DEDEDE',
-        BACKGROUND_TEXT_SIZE = 30;
+        BACKGROUND_TEXT_SIZE = 30,
+
+        DEBUG = window.DEBUG,
+        _ = window._;
 
     var defaultParams = {'loggerName': 'DiagramDesignerWidget',
                          'gridSize': 10,
@@ -872,7 +877,7 @@ define(['logManager',
             if (this.connectionIds.indexOf(selectedIds[len]) !== -1) {
                 connectionSelected = true;
                 break;
-            };
+            }
         }
 
         if (this.toolbarItems) {
@@ -953,8 +958,8 @@ define(['logManager',
                     y += h + dy;
                 }
                 break;
-            case "cozygrid":
-            case "grid":
+            //case "cozygrid":
+            //case "grid":
             default:
                 dx = 20;
                 dy = 20;
@@ -974,7 +979,6 @@ define(['logManager',
                         h = 0;
                     }
                 }
-                break;
                 break;
         }
 
@@ -1105,7 +1109,7 @@ define(['logManager',
 
             params = params || {};
             params['font-size'] = params['font-size'] || BACKGROUND_TEXT_SIZE;
-            params['color'] = params['color'] || BACKGROUND_TEXT_COLOR;
+            params.color = params.color || BACKGROUND_TEXT_COLOR;
 
             if (params) {
                 setSvgAttrFromParams([['color', 'fill'],

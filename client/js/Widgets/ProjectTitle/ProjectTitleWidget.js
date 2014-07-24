@@ -1,13 +1,13 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
+/*globals define, Raphael, window, WebGMEGlobal*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-"use strict";
-
 define(['logManager',
-        'css!/css/Widgets/ProjectTitle/ProjectTitleWidget'], function (logManager) {
+        'css!./styles/ProjectTitleWidget'], function (logManager) {
+
+    "use strict";
 
     var ProjectTitleWidget,
         PROJECT_TITLE_WIDGET_TEMPLATE = '<div class="project-title navbar-text"><span class="title">WebGME</span><span class="readOnlyInfo">[READ ONLY]</span></div>';
@@ -43,7 +43,7 @@ define(['logManager',
 
     ProjectTitleWidget.prototype._refresh = function () {
         var client = this._client,
-            actualProject = client.getActiveProject(),
+            actualProject = client.getActiveProjectName(),
             actualBranch = client.getActualBranch(),
             readOnly = client.isProjectReadOnly() || client.isCommitReadOnly(),
             titleText = actualProject + " @ " + actualBranch,

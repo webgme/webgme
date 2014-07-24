@@ -42,11 +42,6 @@
     .svg-decorator {
       .svg-content {
         svg {
-          border: $selected-border;
-          background-color: $selected-background-color;
-          -webkit-box-shadow: $selected-box-shadow;
-          -moz-box-shadow: $selected-box-shadow;
-          box-shadow: $selected-box-shadow;
         }
       }
     }

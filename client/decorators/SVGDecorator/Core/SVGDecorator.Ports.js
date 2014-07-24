@@ -137,6 +137,8 @@ define(['js/Decorators/DecoratorWithPorts.Base',
         this._rightPorts = rightPorts.length > 0;
         height = Math.max(leftPorts.length * PORT_HEIGHT, rightPorts.length * PORT_HEIGHT, DEFAULT_SVG_DEFAULT_HEIGHT);
 
+        height = Math.max(leftPorts.length * PORT_HEIGHT, rightPorts.length * PORT_HEIGHT, DEFAULT_SVG_DEFAULT_HEIGHT);
+
         //fix default SVG's dimensions to sorround the ports
         //defaultSVG only, nothing else
 

@@ -1,9 +1,9 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
- * Author: Robert Kereskenyi
+/*globals define, Raphael, window, WebGMEGlobal*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
  */
-"use strict";
+
 /*
  * WIDGET TreeBrowserWidget based on DynaTree
  */
@@ -13,7 +13,9 @@ define(['logManager',
     'js/DragDrop/DragSource',
     'lib/jquery/jquery.dynatree-1.2.5.min',
     'lib/jquery/jquery.contextMenu',
-    'css!/css/Widgets/TreeBrowser/TreeBrowserWidget'], function (logManager, CONSTANTS, TreeBrowserWidgetKeyboard, dragSource) {
+    'css!./styles/TreeBrowserWidget'], function (logManager, CONSTANTS, TreeBrowserWidgetKeyboard, dragSource) {
+
+    "use strict";
 
     var NODE_PROGRESS_CLASS = 'node-progress',
         TREE_BROWSER_CLASS = "tree-browser";
@@ -509,7 +511,7 @@ define(['logManager',
             return;
         }
 
-        this._logger.debug("Edit node: " + nodeToEdit.data.key);
+        this._logger.debug("glyphicon glyphicon-edit node: " + nodeToEdit.data.key);
 
         $(nodeToEdit.span).find('a').editInPlace({"class": "",
             "onChange": function (oldValue, newValue) {
@@ -627,7 +629,7 @@ define(['logManager',
                         callback: function(/*key, options*/) {
                         self._nodeEdit(node);
                     },
-                    "icon": "edit"
+                    "icon": "glyphicon glyphicon-edit"
                 };
             }
 

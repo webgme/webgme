@@ -883,8 +883,7 @@ define(['logManager',
         }
 
         this._settingActiveSelection = true;
-        //WebGMEGlobal.State.registerActiveSelection([gmeID]);
-        WebGMEGlobal.State.setActiveSelection([gmeID]);
+        WebGMEGlobal.State.registerActiveSelection([gmeID]);
         this._settingActiveSelection = false;
     };
 

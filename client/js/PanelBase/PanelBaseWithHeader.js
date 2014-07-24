@@ -1,7 +1,15 @@
-"use strict";
+/*globals define, WebGMEGlobal, alert, _*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
+ */
 
 define(['js/PanelBase/PanelBase',
-        'css!/css/PanelBase/PanelBaseWithHeader'], function (PanelBase) {
+        'css!./styles/PanelBaseWithHeader.css'], function (PanelBase) {
+
+
+    "use strict";
 
     var PanelBaseWithHeader,
         BASE_CLASS = "panel-base-wh"; // /scss/PanelBase/PanelBaseWithHeader.scss
@@ -69,7 +77,7 @@ define(['js/PanelBase/PanelBase',
             "class" : "ro-icon",
             "title" : "READ-ONLY mode ON"
         });
-        this.$panelReadOnlyIndicator.append($('<i class="icon-lock"></i>'));
+        this.$panelReadOnlyIndicator.append($('<i class="glyphicon glyphicon-lock"></i>'));
 
         //TITLE IN HEADER BAR
         if (options[PanelBaseWithHeader.OPTIONS.HEADER_TITLE] === true) {

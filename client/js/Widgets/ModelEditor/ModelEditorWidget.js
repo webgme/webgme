@@ -46,9 +46,9 @@ define(['js/DragDrop/DragHelper',
 
         if (dragEffects.length === 1) {
             if (dragEffects[0] === DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE) {
-                helperEl.html($('<i class="icon-share-alt"></i>')).append(' Create instance...');
+                helperEl.html($('<i class="glyphicon glyphicon-share-alt"></i>')).append(' Create instance...');
             } else if (dragEffects[0] === DragHelper.DRAG_EFFECTS.DRAG_CREATE_POINTER) {
-                helperEl.html($('<i class="icon-share"></i>')).append(' Create pointer...');
+                helperEl.html($('<i class="glyphicon glyphicon-share"></i>')).append(' Create pointer...');
             }
         }
 

@@ -1,8 +1,15 @@
-"use strict";
+/*globals define, _*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
+
 
 define(['logManager',
         './AttributeDetailsDialog'], function (logManager,
                                                AttributeDetailsDialog) {
+
+    "use strict";
 
     var Attribute;
 

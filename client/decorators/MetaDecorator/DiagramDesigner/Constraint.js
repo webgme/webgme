@@ -1,6 +1,14 @@
-"use strict";
+/*globals define, _*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
+
 
 define(['logManager'], function (logManager) {
+
+
+    "use strict";
 
     var Constraint;
 

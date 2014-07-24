@@ -1,0 +1,95 @@
+$light: #3160ab;
+$light_transparent: rgba(49,96,161,.65);
+
+$dark: #00235b;
+$dark_transparent: rgba(0,35,91,.75);
+
+$pale: #A5AFBE;
+$palePale: #d3d8df;
+
+$toolbar-button-color: $dark;
+
+$accentColor: #f70;
+
+
+a{
+    color: $light;
+}
+
+a:hover {
+    color: $accentColor;
+}
+
+
+.toolbar-container {
+  a {
+      color: $toolbar-button-color;
+      transition: background-color .2s;
+  }
+
+  a:hover,
+  a:active{
+      color: #fff;
+      background-color: $dark;
+  }
+
+  .btn:active, .btn.active {
+      background-color: $pale;
+      color: #fff;
+   }
+
+  .btn:active, .btn.active:hover {
+      background-color: $pale;
+      color: #fff;
+  }
+
+  .btn[title="Pointer"]:hover,
+  .btn[title="Pointer"]:active,
+  .btn[title="Set"]:hover,
+  .btn[title="Set"]:active  {
+    background-color: $palePale;
+  }
+
+}
+
+.nav-pills>li.active>a,
+.nav-pills>li.active>a:hover,
+.nav-pills>li.active>a:focus {
+  background: $pale;
+  border-radius: 0;
+}
+
+
+.separator {
+  border-color: $pale;
+}
+
+.navbar-inverse {
+  background-image: linear-gradient(to bottom,#040524 0,#03071D 100%);
+}
+
+/* Selected styling */
+
+
+.selected > div {
+    box-shadow: 0 0 6px $accentColor;
+}
+
+.s-btn {
+  background-color: $dark !important;
+  color: #fff !important;
+
+  &:hover {
+    background-color: $accentColor !important;
+  }
+}
+
+/*.selected {
+    .svg-decorator {
+      .svg-content {
+        svg {
+          box-shadow: 0 0 5px $dark;
+        }
+      }
+    }
+}*/

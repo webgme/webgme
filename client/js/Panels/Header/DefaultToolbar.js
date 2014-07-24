@@ -1,10 +1,9 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
+/*globals define, WebGMEGlobal, alert, _*/
 
-"use strict";
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
+ */
 
 define(['clientUtil',
     'js/Constants',
@@ -21,6 +20,8 @@ define(['clientUtil',
                                CommitDialog,
                                ProjectRepositoryDialog,
                                PluginToolbar) {
+
+    "use strict";
 
     var DefaultToolbar;
 
@@ -39,7 +40,7 @@ define(['clientUtil',
         //#1: Projects
         if (projectsButtonDisabledForLayouts.indexOf(layoutToLoad) === -1) {
             toolbar.addButton({ "title": "Projects...",
-                "icon": "icon-folder-open",
+                "icon": "glyphicon glyphicon-folder-open",
                 "clickFn": function (/*data*/) {
                     var pd = new ProjectsDialog(_client);
                     pd.show();
@@ -48,14 +49,14 @@ define(['clientUtil',
 
         //#2: Project repository...
         toolbar.addButton({ "title": "Project repository...",
-            "icon": "icon-road",
+            "icon": "glyphicon glyphicon-time",
             "clickFn": function (/*data*/) {
                 var prd = new ProjectRepositoryDialog(_client);
                 prd.show();
             } });
 
         toolbar.addButton({ "title": "Commit...",
-            "icon": "icon-share-alt",
+            "icon": "glyphicon glyphicon-tag",
             "clickFn": function (/*data*/) {
                 var cd = new CommitDialog(_client);
                 cd.show();
@@ -66,7 +67,7 @@ define(['clientUtil',
         //EXPORT & IMPORT
 
         toolbar.addButton({ "title": "Export project...",
-            "icon": "icon-share",
+            "icon": "glyphicon glyphicon-export",
             "clickFn": function (/*data*/) {
                 ExportManager.export(CONSTANTS.PROJECT_ROOT_ID);
             } });
@@ -75,13 +76,13 @@ define(['clientUtil',
 
         //META ASPECT helper parts
         toolbar.addButton({ "title": "Display META entries...",
-            "icon": "icon-barcode",
+            "icon": "glyphicon glyphicon-barcode",
             "clickFn": function (/*data*/) {
                 alert('METAAspectTypes: \n' + JSON.stringify(METAAspectHelper.getMETAAspectTypesSorted(), undefined, 2));
             }});
 
         toolbar.addButton({ "title": "Download Domain's META javascript...",
-            "icon": "icon-download-alt",
+            "icon": "glyphicon glyphicon-download-alt",
             "clickFn": function (/*data*/) {
                 var meta = METAAspectHelper.generateMETAAspectJavaScript();
 
@@ -110,7 +111,7 @@ define(['clientUtil',
 
         //DEMO controls
         var btnCommit1 = toolbar.addButton({ "title": "Commit1...",
-            "icon": "icon-share",
+            "icon": "glyphicon glyphicon-share",
             "clickFn": function () {
                 console.log('Commit1...');
             }});
@@ -120,26 +121,26 @@ define(['clientUtil',
         });
 
         radioButtonGroup.addButton({ "title": "Radio button 1",
-            "icon": "icon-align-left",
+            "icon": "glyphicon glyphicon-align-left",
             "data": {'type': '1'}});
 
         radioButtonGroup.addButton({ "title": "Radio button 2",
-            "icon": "icon-align-center",
+            "icon": "glyphicon glyphicon-align-center",
             "data": {'type': '2'} });
 
         radioButtonGroup.addButton({ "title": "Radio button 3",
-            "icon": "icon-align-right",
+            "icon": "glyphicon glyphicon-align-right",
             "data": {'type': '3'} });
 
         var btnToggle1 = toolbar.addToggleButton({ "title": "Toggle button",
-            "icon": "icon-plane",
+            "icon": "glyphicon glyphicon-plane",
             "clickFn": function (data, toggled) {
                 console.log('toggled: ' + toggled);
             }});
 
 
         var txtFind = toolbar.addTextBox({
-            "prependContent": '<i class="icon-search"></i>',
+            "prependContent": '<i class="glyphicon glyphicon-search"></i>&nbsp;',
             "placeholder": "Find...",
             "textChangedFn": function (oldVal, newVal) {
                 console.log(newVal);
@@ -160,7 +161,7 @@ define(['clientUtil',
 
         var ddlCreate = toolbar.addDropDownButton({ "text": "Create..." });
         ddlCreate.addButton({ "title": "Create 1 item",
-            "icon": "icon-plus-sign",
+            "icon": "glyphicon glyphicon-plus-sign",
             "text": "1 item",
             "data": {'howmany': 1},
             "clickFn": function (data) {
@@ -170,7 +171,7 @@ define(['clientUtil',
         ddlCreate.addDivider();
 
         ddlCreate.addButton({ "title": "Create 10 items",
-            "icon": "icon-plus-sign",
+            "icon": "glyphicon glyphicon-plus-sign",
             "text": "10 items",
             "data": {'howmany': 10},
             "clickFn": function (data) {

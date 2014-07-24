@@ -2433,7 +2433,7 @@ define([
                 getUserId : getUserId,
 
                 //projects, branch, etc.
-                getActiveProject: getActiveProject,
+                getActiveProjectName: getActiveProject,
                 getAvailableProjectsAsync: getAvailableProjectsAsync,
                 getViewableProjectsAsync: getViewableProjectsAsync,
                 getFullProjectListAsync: getFullProjectListAsync,

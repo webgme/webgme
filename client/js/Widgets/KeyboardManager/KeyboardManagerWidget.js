@@ -24,15 +24,15 @@ define(['logManager',
     };
 
     KeyboardManagerWidget.prototype._initializeUI = function () {
-        this.__checkbox = new iCheckBox({"checkedText": 'ON',
+        this.__checkbox = new iCheckBox({
+            "checkedText": 'ON',
             "uncheckedText": 'OFF',
+            "icon": "gme icon-gme_keyboard",
             "checkChangedFn": function (data, isChecked) {
                 WebGMEGlobal.KeyboardManager.setEnabled(isChecked);
             }});
 
         //this.__checkbox.setChecked(false);
-
-        this.__checkbox.el.find('.sw').append('<i class="icon-keyboard"></i>');
 
         this._el.append(this.__checkbox.el);
 

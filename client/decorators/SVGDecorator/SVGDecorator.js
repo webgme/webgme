@@ -1,7 +1,6 @@
 /*globals define,_*/
 /*
  * @author rkereskenyi / https://github/rkereskenyi
- * @author brollb / https://github/brollb
  */
 define(['js/Decorators/DecoratorBase',
     './SnapEditor/SVGDecorator.SnapEditorWidget',

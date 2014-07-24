@@ -1,6 +1,7 @@
 /*globals define*/
-/*
- * @author rkereskenyi / https://github/rkereskenyi
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
 define(['js/Constants',

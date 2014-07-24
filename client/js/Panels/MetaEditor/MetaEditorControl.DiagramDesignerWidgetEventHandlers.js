@@ -454,7 +454,7 @@ define(['logManager',
             gmeIDs.push(this.metaAspectContainerNodeID);
         }
 
-        WebGMEGlobal.State.setActiveSelection(gmeIDs);
+        WebGMEGlobal.State.registerActiveSelection(gmeIDs);
     };
 
     //adding new meta aspect sheet

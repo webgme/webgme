@@ -1,6 +1,12 @@
-"use strict";
+/*globals define, Raphael, window, WebGMEGlobal*/
 
-define(['css!/css/Loader/LoaderProgressBar'], function () {
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
+
+define(['css!/js/Loader/styles/LoaderProgressBar'], function () {
+
+    "use strict";
 
     var LoaderProgressBar;
 
