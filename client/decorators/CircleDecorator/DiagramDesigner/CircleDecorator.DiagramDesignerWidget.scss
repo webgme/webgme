@@ -1,16 +1,8 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
- * Author: Robert Kereskenyi
- */
-
-//imports
 @import "../Core/_CircleDecorator";
-@import "../../../scss/Widgets/DiagramDesigner/Connector";
+@import "../../../js/Widgets/DiagramDesigner/styles/Connector";
 
 $connector-size: $CIRCLE_SIZE;
 
-//include CircleDecoratorCore style
 div.designer-item {
   @include circle_decorator_core;
 

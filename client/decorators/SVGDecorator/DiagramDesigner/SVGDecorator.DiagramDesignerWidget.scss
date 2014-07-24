@@ -1,12 +1,6 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
-
 //imports
 @import "../Core/_SVGDecorator";
-@import "../../../scss/Widgets/DiagramDesigner/Connector";
+@import "../../../js/Widgets/DiagramDesigner/styles/Connector";
 
 //include SVGDecoratorCore style
 @include svg_decorator_core;
