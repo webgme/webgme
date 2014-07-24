@@ -89,11 +89,12 @@
   <path
      style="stroke-width:1.17999995"
      d="m 78.694,6.0339815 0,3.53125 26.125,0 a 3.54,3.54 0 0 0 -3.5625,-3.53125 l -22.5625,0 z"
+     class="x-shift-Message x-shift-node x-shift-name"
      id="path3009"
-     class="x-shift-name"
      inkscape:connector-curvature="0" />
+
   <rect
-     class="x-stretch-name y-stretch-name"
+     class="x-stretch-Message y-stretch-Message x-stretch-node y-stretch-node x-stretch-name y-stretch-name"
      x="30.011944"
      y="6.8261447"
      width="48.291775"
@@ -101,7 +102,7 @@
      style="stroke-width:2.75422478"
      id="rect11" />
   <rect
-     class="x-stretch-name y-stretch-name"
+     class="x-stretch-Message y-stretch-Message x-stretch-node y-stretch-node x-stretch-name y-stretch-name"
      x="1.9400287"
      y="10.879236"
      width="102.0416"
@@ -111,18 +112,22 @@
      ry="0"
      style="stroke-width:2.77840447"
      id="rect10" />
+
+  <!-- bottom corners (L,R) -->
   <path
      d="m 1.1408265,78.794025 a 3.54,3.54 0 0 0 3.54,3.540008 l 7.0800005,0 3.54,3.54 9.44,0 3.54,-3.54 0,-3.658008"
      style="stroke-width:1.17999995"
      id="path12"
-     class="y-shift-name"
+     class="y-shift-Message y-shift-node y-shift-name"
      inkscape:connector-curvature="0" />
   <path
      style="stroke-width:1.18000448"
      d="m 77.600002,78.627713 0,3.531246 23.656478,0 a 3.5400319,3.5399954 0 0 0 3.56253,-3.531246 l -27.219008,0 z"
      id="path15"
-     class="x-shift-name"
+     class="x-shift-Message x-shift-node x-shift-name y-shift-Message y-shift-node y-shift-name"
      inkscape:connector-curvature="0" />
+
+  <!-- input boxes -->
   <rect
      style="fill:#ffffff;fill-rule:evenodd;stroke:#ffffff;stroke-width:4.10586119px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
      id="rect3011"
@@ -134,7 +139,8 @@
   <rect
      style="fill:#ffffff;fill-rule:evenodd;stroke:#ffffff;stroke-width:5.33687353px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;overflow:hidden"
      id="msgbox"
-     width="38.769127"
+     class="y-shift-node"
+     width="46.769127"
      height="8.3551264"
      x="57.454437"
      y="53.643917"
@@ -155,12 +161,14 @@
      style="font-size:10px;overflow:hidden">Conflict:</text>
   <text
      id="message-tag"
+     class="y-shift-node"
      x="5.874702"
      y="60.915504"
      style="font-size:10px;overflow:hidden">Message:</text>
   <text
      id="Message"
-     x="55.874702"
+     class="y-shift-node"
+     x="59.874702"
      y="60.915504"
      style="font-size:10px;overflow:hidden">Message</text>
   <!-- Connection Area Definitions -->
@@ -187,8 +195,8 @@
      class="connection-area"
      data-ptr="node"
      data-role="out"
-     x1="65.479141"
-     y1="36.352268"
+     x1="62.479141"
+     y1="33.352268"
      x2="68.479141"
      y2="39.352268"/>
 
