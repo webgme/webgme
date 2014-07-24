@@ -498,6 +498,10 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                     getWorkerResult(resultId,callback);
                 });
 
+                socket.on('simpleQuery',function(workerId,parameters,callback){
+                    _workerManager.query(workerId,parameters,callback);
+                });
+
                 //eventing
                 socket.on('getNextServerEvent',function(guid,callback){
                     eventRequest(guid,callback);
