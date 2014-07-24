@@ -7,8 +7,11 @@
 
 define([
     'angular',
-    'text!./templates/HierarchicalDropdown.html',
-    'css!./styles/hierarchicalDropdown.css'
+    'text!./templates/DropdownNavigator.html',
+    'css!./styles/DropdownNavigator.css',
+
+    './../HierarchicalDropdown/HierarchicalDropdown'
+
 ], function(
     ng,
     template ){
@@ -16,13 +19,14 @@ define([
     "use strict";
 
     angular.module(
-        'isis.ui.hierarchicalDropdown', []
+        'isis.ui.dropdownNavigator',
+        [ 'isis.ui.hierarchicalDropdown' ]
     ).directive(
-        'hierarchicalDropdown',
+        'dropdownNavigator',
          function () {
 
              return {
-                 scope: { menu: '=' },
+                 scope: { navigator: '=' },
                  restrict: 'E',
                  replace: true,
                  template: template

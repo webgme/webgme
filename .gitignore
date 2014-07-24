@@ -24,3 +24,4 @@ bin/*.xme
 # ignore file system blob storage files
 blob-local-storage
 
+*.swp
