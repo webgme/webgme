@@ -1,7 +1,7 @@
-"use strict";
-
 define(['js/Controls/PropertyGrid/Widgets/WidgetBase'],
     function (WidgetBase) {
+
+        "use strict";
 
         var DialogWidget,
             LABEL_BASE = $('<span/>', {}),
@@ -29,7 +29,8 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'],
                     dialog.show(function (newValue) {
                         self.setValue(newValue);
                         self.fireFinishChange();
-                    });
+                    },
+                    self.getValue());
                 });
             }
 

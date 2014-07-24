@@ -1,16 +1,17 @@
+/*globals define*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
- * Author: Brian Broll
+ * @author brollb / https://github/brollb
  */
-
-"use strict"; 
 
 define(['logManager',
 	    'util/assert',
         './AutoRouter.Port'], function (logManager,
                                         assert,
                                         AutoRouterPort) {
+
+    "use strict"; 
 
     var ArPathMap = function(i, p, s, d){
         //Stores a path with ports used
@@ -68,14 +69,16 @@ define(['logManager',
     };
 
     ArPathMap.prototype.getSrcBoxId = function(){
-        if(this.srcPorts && this.calcBoxId(this.srcPorts))
+        if(this.srcPorts && this.calcBoxId(this.srcPorts)){
             return this.srcBox;
+        }
         return null;
     };
 
     ArPathMap.prototype.getDstBoxId = function(){
-        if(this.dstPorts && this.calcBoxId(this.dstPorts))
+        if(this.dstPorts && this.calcBoxId(this.dstPorts)){
             return this.dstBox;
+        }
         return null;
     };
 
@@ -83,8 +86,9 @@ define(['logManager',
         var src = [];
 
         for(var i in this.srcPorts){
-            if(this.srcPorts.hasOwnProperty(i))
+            if(this.srcPorts.hasOwnProperty(i)){
                 assert( this.srcPorts[i] instanceof AutoRouterPort, "ArPathMap.updateSrcPorts: this.srcPorts[i] instanceof AutoRouterPort FAILED");
+            }
             src.push(this.srcPorts[i]);
         }
 
@@ -96,8 +100,9 @@ define(['logManager',
         var dst = [];
 
         for(var i in this.dstPorts){
-            if(this.dstPorts.hasOwnProperty(i))
+            if(this.dstPorts.hasOwnProperty(i)){
                 assert( this.dstPorts[i] instanceof AutoRouterPort, "ArPathMap.updateDstPorts: this.dstPorts[i] instanceof AutoRouterPort FAILED");
+            }
             dst.push(this.dstPorts[i]);
         }
 

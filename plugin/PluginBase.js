@@ -237,8 +237,10 @@ define(['plugin/PluginConfig',
          *
          * @param {object} node - webgme object which is related to the message
          * @param {string} message - feedback to the user
+         * @param {string} severity - severity level of the message: 'debug', 'info' (default), 'warning', 'error'.
          */
-        PluginBase.prototype.createMessage = function (node, message) {
+        PluginBase.prototype.createMessage = function (node, message, severity) {
+            var severityLevel = severity || 'info';
             //this occurence of the function will always handle a single node
 
             var descriptor = new PluginNodeDescription({
@@ -248,7 +250,8 @@ define(['plugin/PluginConfig',
             var pluginMessage = new PluginMessage({
                     commitHash: this.currentHash,
                     activeNode: descriptor,
-                    message: message
+                    message: message,
+                    severity: severityLevel
                 });
 
             this.result.addMessage(pluginMessage);

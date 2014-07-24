@@ -30,7 +30,18 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
         /*_references = {},*/
             _databaseOpened = false,
             ERROR_DEAD_GUID = 'the given object does not exists',
-            _workerManager = null;
+            _workerManager = null,
+            _eventHistory = [],
+            _events = {},
+            _waitingEventCallbacks = [],
+            SERVER_EVENT = {
+                PROJECT_CREATED : "PROJECT_CREATED",
+                PROJECT_DELETED : "PROJECT_DELETED",
+                PROJECT_UPDATED : "PROJECT_UPDATED",
+                BRANCH_CREATED : "BRANCH_CREATED",
+                BRANCH_DELETED : "BRANCH_DELETED",
+                BRANCH_UPDATED : "BRANCH_UPDATED"
+            };
 
         function getSessionID(socket){
             return socket.handshake.webGMESessionId;
@@ -101,6 +112,34 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                     callback(err);
                 }
             });
+        }
+
+        function fireEvent(parameters){
+            var guid = GUID(),
+                callbacks = _waitingEventCallbacks,
+                i;
+            _waitingEventCallbacks = [];
+            _events[guid] = parameters;
+            _eventHistory.unshift(guid);
+            if(_eventHistory.length > 1000){
+                _eventHistory.pop();
+            }
+
+            for(i=0;i<callbacks.length;i++){
+                callbacks[i](null,guid,parameters);
+            }
+        }
+        function eventRequest(latestGuid,callback){
+            var index;
+
+            index = _eventHistory.indexOf(latestGuid);
+            if(index === -1 || index === 0){
+                //new user or already received the last event
+                _waitingEventCallbacks.push(callback);
+            } else {
+                //missed some events so we send the next right away
+                callback(null,_eventHistory[index-1],_events[_eventHistory[index-1]]);
+            }
         }
 
         function open(){
@@ -263,6 +302,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                                     callback(err);
                                 } else {
                                     //TODO what to do with the object itself???
+                                    fireEvent({type:SERVER_EVENT.PROJECT_DELETED,project:projectName});
                                     callback(null);
                                 }
                             });
@@ -278,7 +318,13 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                             _database.getProjectNames(function(err,names){
                                 if(names.indexOf(projectName) === -1){
                                     //project creation
-                                    createProject(getSessionID(socket),projectName,callback);
+                                    createProject(getSessionID(socket),projectName,function(err,project){
+                                        if(!err){
+                                            fireEvent({type:SERVER_EVENT.PROJECT_CREATED,project:projectName});
+                                        }
+                                        callback(err,project);
+                                    });
+
                                 } else {
                                     checkProject(getSessionID(socket),projectName,callback);
                                 }
@@ -409,7 +455,19 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                         } else {
                             options.authorization(getSessionID(socket),projectName,'write',function(err,cando){
                                 if(!err && cando === true){
-                                    project.setBranchHash(branch,oldhash,newhash,callback);
+                                    project.setBranchHash(branch,oldhash,newhash,function(err){
+                                        if(!err){
+                                            //here comes the branch eventing
+                                            if(oldhash === '' && newhash !== ''){
+                                                fireEvent({type:SERVER_EVENT.BRANCH_CREATED,project:projectName,branch:branch,commit:newhash});
+                                            } else if(oldhash !== '' && newhash === ''){
+                                                fireEvent({type:SERVER_EVENT.BRANCH_DELETED,project:projectName,branch:branch});
+                                            } else {
+                                                fireEvent({type:SERVER_EVENT.BRANCH_UPDATED,project:projectName,branch:branch,commit:newhash});
+                                            }
+                                        }
+                                        callback(err);
+                                    });
                                 } else {
                                     callback(err);
                                 }
@@ -440,6 +498,11 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                     getWorkerResult(resultId,callback);
                 });
 
+                //eventing
+                socket.on('getNextServerEvent',function(guid,callback){
+                    eventRequest(guid,callback);
+                });
+
                 //token for REST
                 socket.on('getToken',function(callback){
                     options.getToken(getSessionID(socket),callback);
@@ -458,7 +521,8 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 intoutdir:options.intoutdir,
                 pluginBasePaths:options.pluginBasePaths,
                 serverPort:options.webServerPort,
-                sessionToUser:options.sessionToUser
+                sessionToUser:options.sessionToUser,
+                auth:options.auth
             });
         }
 

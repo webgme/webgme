@@ -159,7 +159,7 @@ define(['logManager',
                         nodes[currentChildId] = {    "treeNode": childTreeNode,
                             "children" : [],
                             "state" : stateLoading };
-                    };
+                    }
                 }
 
                 treeBrowser.enableUpdate(true);

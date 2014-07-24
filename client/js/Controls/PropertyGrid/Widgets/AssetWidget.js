@@ -1,10 +1,17 @@
-"use strict";
+/*globals define, _*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
         'blob/BlobClient',
         'css!./styles/AssetWidget'],
+
     function (WidgetBase,
               BlobClient) {
+
+        "use strict";
 
         var AssetWidget,
             BTN_ATTACH = $('<a class="btn btn-mini btn-dialog-open"><i class="glyphicon glyphicon-file"/></a>'),

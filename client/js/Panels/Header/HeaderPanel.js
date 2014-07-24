@@ -1,23 +1,28 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
+/*globals define, WebGMEGlobal, alert, angular, _*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
  */
 
-"use strict";
 
 define(['js/PanelBase/PanelBase',
-        'js/Widgets/ProjectTitle/ProjectTitleWidget',
-        'js/Widgets/UserProfile/UserProfileWidget',
-        'js/Toolbar/Toolbar',
-        './DefaultToolbar'], function (PanelBase,
-                                                                 ProjectTitleWidget,
-                                                                 UserProfileWidget,
-                                                                 toolbar,
-                                                                 DefaultToolbar) {
+    'js/Widgets/ProjectTitle/ProjectTitleWidget',
+    'js/Widgets/UserProfile/UserProfileWidget',
+    'js/Toolbar/Toolbar',
+    './DefaultToolbar',
+    'ui-components/DropdownNavigator/DropdownNavigator',
+    './ProjectNavigatorController'
+], function (PanelBase, ProjectTitleWidget, UserProfileWidget, toolbar, DefaultToolbar, DropDownNavigator, ProjectNavigatorController) {
+
+    "use strict";
 
     var HeaderPanel,
         __parent__ = PanelBase;
+
+    angular.module('headerPanel', ['isis.ui.dropdownNavigator']).run(function() {
+
+    });
 
     HeaderPanel = function (layoutManager, params) {
         var options = {};
@@ -46,9 +51,16 @@ define(['js/PanelBase/PanelBase',
         navBar.append(navBarInner);
         this.$el.append(navBar);
 
+        // TODO: would be nice to get the app as a parameter
+        var app = angular.module('gmeApp');
+
+        app.controller('ProjectNavigatorController', ProjectNavigatorController);
+
         //project title
-        var projectTitleEl = $('<div/>', {'class': "inline"});
-        new ProjectTitleWidget(projectTitleEl, this._client);
+        var projectTitleEl = $(
+            '<div data-ng-controller="ProjectNavigatorController"><dropdown-navigator navigator="navigator"></dropdown-navigator></div>', {'class': "inline"}
+        );
+        //new ProjectTitleWidget(projectTitleEl, this._client);
         navBarInner.append(projectTitleEl);
 
         //user info

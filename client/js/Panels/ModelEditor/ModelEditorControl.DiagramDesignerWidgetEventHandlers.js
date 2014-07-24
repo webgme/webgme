@@ -1,4 +1,8 @@
-/*globals define,_,WebGMEGlobal,alert*/
+/*globals define, Raphael, window, WebGMEGlobal, _, alert, hasOwnProperty*/
+
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['logManager',
     'clientUtil',
@@ -383,7 +387,27 @@ define(['logManager',
             baseTypeID,
             baseTypeNode,
             dragAction,
-            aspect = this._selectedAspect;
+            aspect = this._selectedAspect,
+            pointerSorter = function (a,b)
+                {
+                    var baseAName = a.name.toLowerCase(),
+                        baseBName = b.name.toLowerCase(),
+                        ptrAName = a.pointer.toLowerCase(),
+                        ptrBName = b.pointer.toLowerCase();
+
+                    if (ptrAName < ptrBName) {
+                        return -1;
+                    } else if (ptrAName > ptrBName) {
+                        return 1;
+                    } else {
+                        //ptrAName = ptrBName
+                        if (baseAName < baseBName) {
+                            return -1;
+                        } else {
+                            return 1;
+                        }
+                    }
+                };
 
         //check to see what DROP actions are possible
         if (items.length > 0) {
@@ -426,7 +450,7 @@ define(['logManager',
                                     }
                                 }
 
-                                validPointerTypes.sort(this.__pointerSortCriteria);
+                                validPointerTypes.sort(pointerSorter);
 
                                 for (j = 0; j < validPointerTypes.length; j += 1) {
                                     dragAction = { 'dragEffect': DragHelper.DRAG_EFFECTS.DRAG_CREATE_POINTER,
@@ -445,26 +469,6 @@ define(['logManager',
         this.logger.debug('possibleDropActions: ' + JSON.stringify(possibleDropActions));
 
         return possibleDropActions;
-    };
-
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype.__pointerSortCriteria = function (a,b) {
-        var baseAName = a.name.toLowerCase(),
-            baseBName = b.name.toLowerCase(),
-            ptrAName = a.pointer.toLowerCase(),
-            ptrBName = b.pointer.toLowerCase();
-
-        if (ptrAName < ptrBName) {
-            return -1;
-        } else if (ptrAName > ptrBName) {
-            return 1;
-        } else {
-            //ptrAName = ptrBName
-            if (baseAName < baseBName) {
-                return -1;
-            } else {
-                return 1;
-            }
-        }
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDroppableAccept = function (event, dragInfo) {
@@ -894,10 +898,6 @@ define(['logManager',
         var nodeObj = this._client.getNode(this._ComponentID2GmeID[itemID]),
             result = true;
 
-        if (nodeObj) {
-            result = this._client.canSetRegistry(nodeObj.getId(), REGISTRY_KEYS.POSITION);
-        }
-
         return result;
     };
 
@@ -1093,16 +1093,16 @@ define(['logManager',
 
         /*menuItems[MENU_EXINTCONF] = {
             "name": 'Export model context...',
-            "icon": 'icon-cog'
+            "icon": 'glyphicon glyphicon-cog'
         };*/
         if(selectedIds.length === 1){
             menuItems[MENU_EXPLIB] = {
                 "name": 'Export library...',
-                "icon": 'icon-book'
+                "icon": 'glyphicon glyphicon-book'
             };
             menuItems[MENU_UPDLIB] = {
                 "name": 'Update library...',
-                "icon": 'icon-refresh'
+                "icon": 'glyphicon glyphicon-refresh'
             };
         }
 

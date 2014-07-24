@@ -1,16 +1,13 @@
+/*globals define*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
- * Author: Brian Broll
+ * @author brollb / https://github/brollb
  */
 
-"use strict"; 
-
-define(['logManager'
-        //'./AutoRouter.Point',
-        /*'./AutoRouter.Rect'*/], function (logManager
-                                            //ArPoint,
-                                            /*ArRect*/) {
+define(['logManager'], function (logManager) {
+                                            
+    "use strict"; 
 
     var ArSize = function (x, y){
         //Multiple Constructors
@@ -27,8 +24,9 @@ define(['logManager'
     };
 
     ArSize.prototype.equals = function(otherSize){
-        if( this.cx === otherSize.cx && this.cy === otherSize.cy)
+        if( this.cx === otherSize.cx && this.cy === otherSize.cy){
             return true;
+        }
 
         return false;
     };
@@ -49,50 +47,6 @@ define(['logManager'
         this.cy -= otherSize.cy;
     };
 
-/*
-    ArSize.prototype.plus = function(otherObject){ //equivalent to +
-        var objectCopy = undefined;
-
-        if(otherObject instanceof ArSize){
-            objectCopy = new ArSize(otherObject);
-            objectCopy.add(this);
-
-        }else if(otherObject instanceof ArPoint){
-            objectCopy = new ArPoint(otherObject);
-            objectCopy.x += this.cx;
-            objectCopy.y += this.cy;
-
-        }else if(otherObject instanceof ArRect){
-            objectCopy = new ArRect(otherObject);
-            objectCopy.add(this);
-
-        }
-
-        return objectCopy;
-    };
-
-    ArSize.prototype.minus = function(otherObject){ //equivalent to -
-        var objectCopy = undefined;
-
-        if(otherObject instanceof ArSize){
-            objectCopy = new ArSize(otherObject);
-            objectCopy.subtract(this);
-
-        }else if(otherObject instanceof ArPoint){
-            objectCopy = new ArPoint(otherObject);
-            objectCopy.x -= this.cx;
-            objectCopy.y -= this.cy;
-
-        }else if(otherObject instanceof ArRect){
-            objectCopy = new ArRect(otherObject);
-            objectCopy.subtract(this);
-
-        }
-
-        return objectCopy;
-    };
-
-*/
     ArSize.prototype.assign = function(otherSize){
         this.cx = otherSize.cx;
         this.cy = otherSize.cy;

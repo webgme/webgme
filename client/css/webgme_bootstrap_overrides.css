@@ -265,7 +265,7 @@ input.input-mini {
 }
 
 ul.dropdown-menu {
-    max-height: 600px;
+    /*max-height: 600px;*/
     overflow: auto;
 }
 
@@ -298,4 +298,8 @@ input.no-focus-collapse:not(:focus) {
     -ms-transform:scaleX(-1);
     -o-transform:scaleX(-1);
     transform:scaleX(-1);
+}
+
+.panel-base .drawing-canvas {
+    padding: 0;
 }

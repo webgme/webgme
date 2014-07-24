@@ -54,6 +54,13 @@ define(['logManager',
             //creating the proper storage for the standalone server
             __storageOptions = {combined:__httpServer,logger:LogManager.create("StandAloneWebGMEServer-socket.io"),session:false,cookieID:CONFIG.sessioncookieid};
             if(true === CONFIG.authentication){
+                __storageOptions.auth = {
+                    session:{},
+                    host:CONFIG.mongoip,
+                    port:CONFIG.mongoport,
+                    database:CONFIG.mongodatabase,
+                    guest:CONFIG.guest
+                };
                 __storageOptions.session = true;
                 __storageOptions.sessioncheck = __sessionStore.check;
                 __storageOptions.secret = CONFIG.sessioncookiesecret;
@@ -713,7 +720,7 @@ define(['logManager',
             expressFileSending(res,Path.join(__clientBaseDir,req.path));
         });
 
-        __app.get(/^\/.*\.(js|html|gif|png|bmp|svg|json)$/,ensureAuthenticated,function(req,res){
+        __app.get(/^\/.*\.(js|html|gif|png|bmp|svg|json|map)$/,ensureAuthenticated,function(req,res){
             //package.json
             if(req.path === '/package.json') {
                 expressFileSending(res,Path.join(__baseDir,req.path));

@@ -107,7 +107,13 @@ define([
                 "BRANCHSTATUS_CHANGED"  : "BRANCHSTATUS_CHANGED",
                 "BRANCH_CHANGED"        : "BRANCH_CHANGED",
                 "PROJECT_CLOSED"        : "PROJECT_CLOSED",
-                "PROJECT_OPENED"        : "PROJECT_OPENED"
+                "PROJECT_OPENED"        : "PROJECT_OPENED",
+
+                "SERVER_PROJECT_CREATED" : "SERVER_PROJECT_CREATED",
+                "SERVER_PROJECT_DELETED" : "SERVER_PROJECT_DELETED",
+                "SERVER_BRANCH_CREATED"  : "SERVER_BRANCH_CREATED",
+                "SERVER_BRANCH_UPDATED"  : "SERVER_BRANCH_UPDATED",
+                "SERVER_BRANCH_DELETED"  : "SERVER_BRANCH_DELETED"
             };
             _self.networkStates = {
                 'CONNECTED' :"connected",
@@ -168,6 +174,38 @@ define([
                 }
             }
 
+            function serverEventer(){
+                var lastGuid = '',
+                    nextServerEvent = function(err,guid,parameters){
+                        lastGuid = guid || lastGuid;
+                        if(!err && parameters){
+                            switch (parameters.type){
+                                case "PROJECT_CREATED":
+                                    _self.dispatchEvent(_self.events.SERVER_PROJECT_CREATED,parameters.project);
+                                    break;
+                                case "PROJECT_DELETED":
+                                    _self.dispatchEvent(_self.events.SERVER_PROJECT_DELETED,parameters.project);
+                                    break;
+                                case "BRANCH_CREATED":
+                                    _self.dispatchEvent(_self.events.SERVER_BRANCH_CREATED,{project:parameters.project,branch:parameters.branch,commit:parameters.commit});
+                                    break;
+                                case "BRANCH_DELETED":
+                                    _self.dispatchEvent(_self.events.SERVER_BRANCH_DELETED,{project:parameters.project,branch:parameters.branch});
+                                    break;
+                                case "BRANCH_UPDATED":
+                                    _self.dispatchEvent(_self.events.SERVER_BRANCH_UPDATED,{project:parameters.project,branch:parameters.branch,commit:parameters.commit});
+                                    break;
+                            }
+                            return _database.getNextServerEvent(lastGuid,nextServerEvent);
+                        } else {
+                            setTimeout(function(){
+                                return _database.getNextServerEvent(lastGuid,nextServerEvent);
+                            },1000);
+                        }
+                    };
+                _database.getNextServerEvent(lastGuid,nextServerEvent);
+            }
+
             function tokenWatcher(){
                 var token = null,
                     refreshToken = function(){
@@ -188,7 +226,7 @@ define([
                 WebGMEGlobal.getToken = getToken;
                 return {
                     getToken: getToken
-                }
+                };
             }
 
             function branchWatcher(branch,callback) {
@@ -428,7 +466,7 @@ define([
                     getNCommitsFrom: getNCommitsFrom,
                     clearCache: clearCache,
                     newCommit: newCommit
-                }
+                };
             }
 
             function viewLatestCommit(callback){
@@ -475,7 +513,6 @@ define([
                                     if(firstName){
                                         branchWatcher(firstName,function(err){
                                             if(!err){
-                                                _self.dispatchEvent(_self.events.BRANCH_CHANGED, _branch);
                                                 callback(null);
                                             } else {
                                                 logger.error('The branch '+firstName+' of project '+name+' cannot be selected! ['+JSON.stringify(err)+']');
@@ -525,7 +562,7 @@ define([
             function closeOpenedProject(callback){
                 callback = callback || function(){};
                 var returning = function(e){
-
+                    var oldProjName = _projectName;
                     _projectName = null;
                     _inTransaction = false;
                     _core = null;
@@ -541,10 +578,17 @@ define([
                     _loadError = 0;
                     _offline = false;
                     cleanUsersTerritories();
-                    _self.dispatchEvent(_self.events.PROJECT_CLOSED);
+                    if(oldProjName){
+                        //otherwise there were no open project at all
+                        _self.dispatchEvent(_self.events.PROJECT_CLOSED,oldProjName);
+                    }
 
                     callback(e);
                 };
+                if(_branch){
+                    //otherwise the branch will not 'change'
+                    _self.dispatchEvent(_self.events.BRANCH_CHANGED,null);
+                }
                 _branch = null;
                 if(_project){
                     var project = _project;
@@ -1324,6 +1368,7 @@ define([
                             _networkWatcher.stop();
                         }
                         _networkWatcher = networkWatcher();
+                        serverEventer();
 
                         if(options.open){
                             if(options.project){
@@ -1415,7 +1460,7 @@ define([
                         returnArray = {};
 
                     //creating the 'from' object
-                    var tempFrom = _core.createNode({parent:parent});
+                    var tempFrom = _core.createNode({parent:parent,base:_core.getTypeRoot(_nodes[nodePaths[0]].node)});
                     //and moving every node under it
                     for(var i=0;i<nodePaths.length;i++){
                         helpArray[nodePaths[i]] = {};
@@ -1862,53 +1907,55 @@ define([
                 }
             }
             function updateTerritory(guid, patterns) {
-                if(_project){
-                    if(_nodes[ROOT_PATH]){
-                        //TODO: this has to be optimized
-                        var missing = 0;
-                        var error = null;
+                if(_users[guid]){
+                    if(_project){
+                        if(_nodes[ROOT_PATH]){
+                            //TODO: this has to be optimized
+                            var missing = 0;
+                            var error = null;
 
-                        var patternLoaded = function (err) {
-                            error = error || err;
-                            if(--missing === 0){
+                            var patternLoaded = function (err) {
+                                error = error || err;
+                                if(--missing === 0){
+                                    //allDone();
+                                    _updateTerritoryAllDone(guid, patterns, error);
+                                }
+                            };
+
+                            //EXTRADTED OUT TO: _updateTerritoryAllDone
+                            /*var allDone = function(){
+                             if(_users[guid]){
+                             _users[guid].PATTERNS = JSON.parse(JSON.stringify(patterns));
+                             if(!error){
+                             userEvents(guid,[]);
+                             }
+                             }
+                             };*/
+                            for(var i in patterns){
+                                missing++;
+                            }
+                            if(missing>0){
+                                for(i in patterns){
+                                    loadPattern(_core,i,patterns[i],_nodes,patternLoaded);
+                                }
+                            } else {
                                 //allDone();
                                 _updateTerritoryAllDone(guid, patterns, error);
                             }
-                        };
-
-                        //EXTRADTED OUT TO: _updateTerritoryAllDone
-                        /*var allDone = function(){
-                            if(_users[guid]){
-                                _users[guid].PATTERNS = JSON.parse(JSON.stringify(patterns));
-                                if(!error){
-                                    userEvents(guid,[]);
-                                }
-                            }
-                        };*/
-                        for(var i in patterns){
-                            missing++;
-                        }
-                        if(missing>0){
-                            for(i in patterns){
-                                loadPattern(_core,i,patterns[i],_nodes,patternLoaded);
-                            }
                         } else {
-                            //allDone();
-                            _updateTerritoryAllDone(guid, patterns, error);
+                            //something funny is going on
+                            if(_loadNodes[ROOT_PATH]){
+                                //probably we are in the loading process, so we should redo this update when the loading finishes
+                                //setTimeout(updateTerritory,100,guid,patterns);
+                            } else {
+                                //root is not in nodes and has not even started to load it yet...
+                                _users[guid].PATTERNS = JSON.parse(JSON.stringify(patterns));
+                            }
                         }
                     } else {
-                        //something funny is going on
-                        if(_loadNodes[ROOT_PATH]){
-                            //probably we are in the loading process, so we should redo this update when the loading finishes
-                            //setTimeout(updateTerritory,100,guid,patterns);
-                        } else {
-                            //root is not in nodes and has not even started to load it yet...
-                            _users[guid].PATTERNS = JSON.parse(JSON.stringify(patterns));
-                        }
+                        //we should update the patterns, but that is all
+                        _users[guid].PATTERNS = JSON.parse(JSON.stringify(patterns));
                     }
-                } else {
-                    //we should update the patterns, but that is all
-                    _users[guid].PATTERNS = JSON.parse(JSON.stringify(patterns));
                 }
             }
 
@@ -2194,9 +2241,16 @@ define([
                  });
                  },0);
                  });*/
-                connectToDatabaseAsync({open:true},function(err){
-                    console.log('kecso connecting to database',err);
-                });
+                //_database.getNextServerEvent("",function(err,guid,parameters){
+                //    console.log(err,guid,parameters);
+                //});
+                //connectToDatabaseAsync({open:true},function(err){
+                //    console.log('kecso connecting to database',err);
+                //});
+                //_self.addEventListener(_self.events.SERVER_BRANCH_UPDATED,function(client,data){
+                //    console.log(data);
+                //});
+                
             }
 
             //export and import functions
@@ -2215,7 +2269,6 @@ define([
                 _database.simpleRequest({command:'dumpMoreNodes',name:_projectName,hash:_rootHash || _core.getHash(_nodes[ROOT_PATH].node),nodes:paths},function(err,resId){
                     if(err){
                         callback(err);
-                        _database.simpleResult(resId,callback);
                     } else {
                         _database.simpleResult(resId,callback);
                     }
@@ -2236,9 +2289,9 @@ define([
                 config.host = window.location.protocol+"//"+window.location.host;
                 config.project = _projectName;
                 config.token = _TOKEN.getToken();
-                config.selected = plainUrl('node',selectedItemsPaths[0] || "");
+                config.selected = plainUrl({command:'node',path:selectedItemsPaths[0] || ""});
                 config.commit = URL.addSpecialChars(_recentCommits[0] || "");
-                config.root = plainUrl('node',"");
+                config.root = plainUrl({command:'node'});
                 config.branch = _branch
                 _database.simpleRequest({command:'generateJsonURL',object:config},function(err,resId){
                     if(err){
@@ -2255,13 +2308,17 @@ define([
                 command.name = _projectName;
                 command.hash = _rootHash || _core.getHash(_nodes[ROOT_PATH].node);
                 command.path = libraryRootPath;
-                _database.simpleRequest(command,function(err,resId){
-                    if(err){
-                        callback(err);
-                    } else {
-                        callback(null,window.location.protocol + '//' + window.location.host +'/worker/simpleResult/'+resId+'/'+filename);
-                    }
-                });
+                if(command.name && command.hash){
+                    _database.simpleRequest(command,function(err,resId){
+                        if(err){
+                            callback(err);
+                        } else {
+                            callback(null,window.location.protocol + '//' + window.location.host +'/worker/simpleResult/'+resId+'/'+filename);
+                        }
+                    });
+                } else {
+                    callback(new Error('there is no open project!'));
+                }
             }
             function updateLibraryAsync(libraryRootPath,newLibrary,callback){
                 Serialization.import(_core,_nodes[libraryRootPath].node,newLibrary,function(err,log){
@@ -2346,19 +2403,51 @@ define([
                     });
                 });
             }
-            function plainUrl(command,path){
-                if(window && window.location && window.location && _nodes && _nodes[ROOT_PATH]){
-                    var address = window.location.protocol + '//' + window.location.host +'/rest/'+command+'?'+'project='+_projectName+'&root='+URL.addSpecialChars(_rootHash || _core.getHash(_nodes[ROOT_PATH].node))+'&path='+URL.addSpecialChars(path);
+            function plainUrl(parameters){
+                //setting the default values
+                parameters.command = parameters.command || 'etf';
+                parameters.path = parameters.path || "";
+                parameters.project = parameters.project || _projectName;
+
+                if(!parameters.root && !parameters.branch && !parameters.commit){
+                    if(_rootHash){
+                        parameters.root = _rootHash;
+                    } else if(_nodes && _nodes[ROOT_PATH]){
+                        parameters.root = _core.getHash(_nodes[ROOT_PATH].node);
+                    } else {
+                        parameters.branch = _branch || 'master';
+                    }
+                }
+
+                //now we compose the URL
+                if(window && window.location){
+                    var address = window.location.protocol + '//' + window.location.host + '/rest/' + parameters.command+ '?';
+                    address+= "&project="+URL.addSpecialChars(parameters.project);
+                    if(parameters.root){
+                        address+="&root="+URL.addSpecialChars(parameters.root);
+                    } else {
+                        if(parameters.commit){
+                            address+="&commit="+URL.addSpecialChars(parameters.commit);
+                        } else {
+                            address+="&branch="+URL.addSpecialChars(parameters.branch);
+                        }
+                    }
+
+                    address+="&path="+URL.addSpecialChars(parameters.path);
+
+                    if(parameters.output){
+                        address+="&output="+URL.addSpecialChars(parameters.output);
+                    }
+
                     return address;
                 }
-            }
-            function getDumpURL(path,filepath){
-                filepath = filepath || _projectName+'_'+_branch+'_'+URL.addSpecialChars(path);
-                if(window && window.location && window.location && _nodes && _nodes[ROOT_PATH]){
-                    var address = plainUrl('etf',path)+'&output='+URL.addSpecialChars(filepath);
-                    return address;
-                }
+
                 return null;
+
+            }
+            function getDumpURL(parameters){
+                parameters.output = parameters.output || "dump_url.out";
+                return plainUrl(parameters);
             }
 
             function getProjectObject(){
@@ -2385,12 +2474,40 @@ define([
                 return AllDecorators;
             }
 
+            function getFullProjectsInfoAsync(callback){
+                _database.simpleRequest({command:'getAllProjectsInfo'},function(err,id){
+                    if(err){
+                        return callback(err);
+                    }
+                    _database.simpleResult(id,callback);
+                });
+            }
+
+            function createGenericBranchAsync(project,branch,commit,callback){
+                _database.simpleRequest({command:'setBranch',project:project,branch:branch,old:'',new:commit},function(err,id){
+                    if(err){
+                        return callback(err);
+                    }
+                    _database.simpleResult(id,callback);
+                });
+            }
+
+            function deleteGenericBranchAsync(project,branch,commit,callback){
+                _database.simpleRequest({command:'setBranch',project:project,branch:branch,old:commit,new:''},function(err,id){
+                    if(err){
+                        return callback(err);
+                    }
+                    _database.simpleResult(id,callback);
+                });
+            }
+
             //initialization
             function initialize(){
                 _database = newDatabase();
                 _database.openDatabase(function(err){
                     if(!err){
                         _networkWatcher = networkWatcher();
+                        serverEventer();
                         _database.getProjectNames(function(err,names){
                             if(!err && names && names.length>0){
                                 var projectName = null;
@@ -2550,6 +2667,9 @@ define([
                 getExportLibraryUrlAsync: getExportLibraryUrlAsync,
                 updateLibraryAsync: updateLibraryAsync,
                 addLibraryAsync: addLibraryAsync,
+                getFullProjectsInfoAsync: getFullProjectsInfoAsync,
+                createGenericBranchAsync: createGenericBranchAsync,
+                deleteGenericBranchAsync: deleteGenericBranchAsync,
 
                 //constraint
                 setConstraint: setConstraint,

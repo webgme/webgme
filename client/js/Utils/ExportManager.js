@@ -23,7 +23,7 @@ define(['jquery',
 
     var _export = function (objID) {
         var fileName =  _client.getActiveProjectName() + "_" + _client.getActualBranch(),
-            objName;
+            objName,url;
 
         if (objID !== CONSTANTS.PROJECT_ROOT_ID) {
             var obj = _client.getNode(objID);
@@ -39,7 +39,10 @@ define(['jquery',
             fileName += '_' + objName;
         }
 
-        window.location = _client.getDumpURL(objID, fileName);
+        url = _client.getDumpURL({path:objID, output:fileName});
+        if(url){
+            window.location = url;
+        }
     };
 
     var _exportMultiple = function (objIDs) {
@@ -70,7 +73,7 @@ define(['jquery',
     var _expLib = function(objID) {
         if(objID){
             var object = _client.getNode(objID),
-                fileName = _client.getActiveProject() + "_" + _client.getActualBranch() + "_" + object.getAttribute('name') + "_lib";
+                fileName = _client.getActiveProjectName() + "_" + _client.getActualBranch() + "_" + object.getAttribute('name') + "_lib";
 
             _client.getExportLibraryUrlAsync(objID,fileName,function(err,url){
                 if(!err){

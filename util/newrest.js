@@ -215,14 +215,22 @@ define([
             });
         }
 
-        function exportProject(name,hash,callback){
+        function exportProject(name,rootHash,branch,commitHash,callback){
 
-            _storage.openProject(name,function(err,project){
-                if(err){
-                    return callback(err);
-                }
-                var core = new Core(project);
-                core.loadRoot(hash,function(err,root){
+            var core = null,
+                project = null,
+                needRootHash = function(cHash){
+                    project.loadObject(cHash,function(err,commit){
+                        if(err || !commit){
+                            return callback(err || new Error('no such commit'));
+                        }
+
+                        rootHash = commit.root;
+                        initialized();
+                    });
+                },
+                initialized = function(){
+                core.loadRoot(rootHash,function(err,root){
                     if(err){
                         return callback(err);
                     }
@@ -234,6 +242,27 @@ define([
                         }
                     });
                 });
+            };
+            _storage.openProject(name,function(err,pr){
+                if(err){
+                    return callback(err);
+                }
+
+                project = pr;
+                core = new Core(project);
+
+                if(rootHash){
+                    initialized();
+                } else if(branch){
+                    project.getBranchHash(branch,"#hack",function(err,cHash){
+                        if(err){
+                            return callback(err);
+                        }
+                        needRootHash(cHash);
+                    });
+                } else {
+                    needRootHash(commitHash);
+                }
             });
         }
 
@@ -316,7 +345,7 @@ define([
                             callback(_HTTPError.internalServerError,err);
                         } else {
                             if(canGo === true){
-                                exportProject(parameters.project,parameters.root,callback);
+                                exportProject(parameters.project,parameters.root,parameters.branch,parameters.commit,callback);
                             } else {
                                 callback(_HTTPError.forbidden);
                             }
