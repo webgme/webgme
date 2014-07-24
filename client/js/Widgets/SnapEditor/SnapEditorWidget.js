@@ -207,7 +207,10 @@ define(['logManager',
 
     SnapEditorWidget.prototype._resizeItemContainer = function () {
         var zoomedWidth = this._containerSize.w / this._zoomRatio,
-            zoomedHeight = this._containerSize.h / this._zoomRatio;
+            zoomedHeight = this._containerSize.h / this._zoomRatio,
+            offset,
+            paddingTop,
+            paddingLeft;
 
         this.logger.debug('MinZoomedSize: ' + zoomedWidth + ', ' + zoomedHeight);
 
@@ -227,7 +230,15 @@ define(['logManager',
 
         this._centerBackgroundText();
 
-        this._offset = this.skinParts.$snapWidgetBody.offset();
+        offset = this.skinParts.$snapWidgetBody.offset();
+
+        paddingTop = parseInt( this.skinParts.$snapWidgetBody.css('padding-top').replace("px", "") );
+        paddingLeft = parseInt( this.skinParts.$snapWidgetBody.css('padding-left').replace("px", "") );
+
+        offset.left += paddingLeft;
+        offset.top += paddingTop;
+
+        this._offset = offset;
     };
 
     SnapEditorWidget.prototype._attachScrollHandler = function (el) {
