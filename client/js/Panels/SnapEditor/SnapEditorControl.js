@@ -1,7 +1,5 @@
 /*globals define,_,WebGMEGlobal*/
 /*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
  * @author brollb / https://github/brollb
  */
 
@@ -565,6 +563,7 @@ console.log("Object changed to " + nodeId);
         var node,
             ptrs,
             attrs,
+            attributeSchema,
             id,
             i;
 
@@ -604,12 +603,16 @@ console.log("Object changed to " + nodeId);
                         objDesc.ptrs[ptrs[i]] = id;
                     }
 
-                    //Getting the ptr info
+                    //Getting the attribute info
                     objDesc.attrInfo = {};
                     attrs = node.getAttributeNames();
                     i = attrs.length;
                     while (i--){
-                        objDesc.attrInfo[attrs[i]] = node.getAttribute(attrs[i]);
+                        objDesc.attrInfo[attrs[i]] = { value: node.getAttribute(attrs[i]) };
+                        attributeSchema = this._client.getAttributeSchema(gmeID, attrs[i]);
+                        if (attributeSchema.enum){
+                            objDesc.attrInfo[attrs[i]].options = attributeSchema.enum;
+                        }
                     }
 
                     uiComponent = this.snapCanvas.createClickableItem(objDesc);
@@ -695,6 +698,7 @@ console.log("Object changed to " + nodeId);
             sCompId,
             ptrs,
             attrs,
+            attributeSchema,
             node = this._client.getNode(gmeID),
             id,
             i;
@@ -728,15 +732,21 @@ console.log("Object changed to " + nodeId);
                             id = node.getPointer(ptrs[i]).to;
                             if (id && this._GmeID2ComponentID[id]){
                                 objDesc.ptrInfo[ptrs[i]] = this._GmeID2ComponentID[id];
+                            } else {
+                                objDesc.ptrInfo[ptrs[i]] = false;
                             }
                         }
 
                         //Get the attribute info
                         objDesc.attrInfo = {};
-                        attrs = node.getAttributeNames(gmeID);
+                        attrs = node.getAttributeNames();
                         i = attrs.length;
                         while (i--){
-                            objDesc.attrInfo[attrs[i]] = node.getAttribute(attrs[i]);
+                            objDesc.attrInfo[attrs[i]] = { value: node.getAttribute(attrs[i]) };
+                            attributeSchema = this._client.getAttributeSchema(gmeID, attrs[i]);
+                            if (attributeSchema.enum){
+                                objDesc.attrInfo[attrs[i]].options = attributeSchema.enum;
+                            }
                         }
 
                         this.snapCanvas.updateClickableItem(componentID, objDesc);
