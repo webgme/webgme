@@ -19,6 +19,7 @@ define(['logManager',
         './SearchManager',
         './SelectionManager',
         './HighlightManager',
+        'util/assert',
         'loaderCircles'], function (logManager,
                                     raphaeljs,
                                     SnapEditorWidgetZoom,
@@ -33,6 +34,7 @@ define(['logManager',
                                     SearchManager,
                                     SelectionManager,
                                     HighlightManager,
+                                    assert,
                                     LoaderCircles) {
 
     "use strict";
@@ -827,10 +829,16 @@ define(['logManager',
 
         this.selectionManager.clear(); 
 
-        var keys = Object.keys(this.items);
+        var keys = this.itemIds,
+            key;
+
         while(keys.length){
-            this.items[keys.pop()].destroy();
+            key = keys.pop();
+            this.items[key].destroy();
+            delete this.items[key];
         }
+
+        assert( Object.keys(this.items).length === 0, "Items have not been fully removed from previous screen");
 
         //initialize all the required collections with empty value
         this._initializeCollections();
