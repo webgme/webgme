@@ -1,10 +1,7 @@
 /*globals define,_*/
 /*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved
- *
  * @author brollb / https://github/brollb
- * 
- * Base file for items
+ *
  */
 
 define(['logManager',
@@ -359,7 +356,9 @@ define(['logManager',
     };
 
     ItemBase.prototype.onDoubleClick = function (event) {
-        this.canvas.onItemBaseDoubleClick(this.id, event);
+        if (this.canvas.onItemBaseDoubleClick && _.isFunction(this.canvas.onItemBaseDoubleClick)){
+            this.canvas.onItemBaseDoubleClick(this.id, event);
+        }
     };
 
     ItemBase.prototype.onSelect = function (multiSelection) {
