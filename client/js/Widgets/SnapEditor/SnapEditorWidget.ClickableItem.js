@@ -44,8 +44,8 @@ define(['./ClickableItem',
         newComponent.addToDocFragment(this._documentFragment);
 
         //Set Pointers/Connections
-        newComponent.cleanConnectionAreas(Object.keys(objDescriptor.ptrs));
         newComponent.updatePtrs(objDescriptor.ptrs);
+        newComponent.updateInputFields();
 
         //set the item to be able to be "clicked" to with drag'n'drop
         this.setClickable(newComponent);
