@@ -39,8 +39,11 @@ define(['plugin/PluginConfig',
                                                    'Variable': "%name",
 
                                                    //Constraint specific mappings
-                                                   'getParent': "this.core.getParentPath(%first)",
+                                                   'getAttribute': "this.core.getAttribute(%second, '%first')",
+                                                   'getPointer': "this.getNode(this.core.getPointerPath(%second, '%first'))",
+                                                   'getParent': "this.getNode(this.core.getParentPath(%first))",
                                                    'getChildren': "this.core.getChildrenPaths(%first)",
+                                                   //TODO Figure out how to have the children be children nodes...
                                                    'not': "!(%first)",
                                                    'getLength': "%first.length",
 
@@ -59,30 +62,6 @@ define(['plugin/PluginConfig',
         return "Constraint Creator";
     };
     
-    //config options
-    /*
-    ConstraintPlugin.prototype.getConfigStructure = function () {
-        return [
-            {
-                "name": "python",
-                "displayName": "Python",
-                "description": 'Generate Python Code',
-                "value": false, // this is the 'default config'
-                "valueType": "boolean",
-                "readOnly": false
-            },
-            {
-                "name": "javascript",
-                "displayName": "Javascript",
-                "description": 'Generate Javascript Code',
-                "value": true, // this is the 'default config'
-                "valueType": "boolean",
-                "readOnly": false
-            }
-        ]
-    };
-   */
-
     ConstraintPlugin.prototype._loadStartingNodes = function(callback){
         //we load the children of the active node
         var self = this;
