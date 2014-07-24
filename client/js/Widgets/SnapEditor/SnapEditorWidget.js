@@ -630,6 +630,11 @@ define(['logManager',
     // After resizing these items, we will iterate over the items in 
     // the opposite order and move the items to their correct location.
     
+    /**
+     * Update the size and position of the items affected by last update.
+     *
+     * @return {undefined}
+     */
     SnapEditorWidget.prototype._updateClickableItems = function () {
         //First, finding the highest node in the dependency tree that could
         //affected by the change
