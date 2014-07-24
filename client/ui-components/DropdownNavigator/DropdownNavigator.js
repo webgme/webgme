@@ -8,9 +8,9 @@
 define([
     'angular',
     'text!./templates/DropdownNavigator.html',
-    'css!./styles/dropdownNavigator.css',
+    'css!./styles/DropdownNavigator.css',
 
-    './../HierarchicalDropDown/HierarchicalDropdown'
+    './../HierarchicalDropdown/HierarchicalDropdown'
 
 ], function(
     ng,
