@@ -290,16 +290,18 @@
        class="y-shift-true_next y-shift-false_next" />
   </g>
   <!-- Name and Connection Info -->
+  <g
+    id="text"
+    style="font-size:12px;overflow:hidden">
   <text
      id="name"
      x="12.452287"
-     y="15.933867"
-     style="font-size:9.43999958px">If</text>
+     y="17">If</text>
   <text
      x="12.656292"
      y="56.709126"
-     style="font-size:9.43999958px;overflow:hidden"
      id="text33">Else</text>
+  </g>
   <line
      class="connection-area"
      data-ptr="next true_next false_next"

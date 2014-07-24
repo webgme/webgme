@@ -71,7 +71,7 @@
   </filter>-->
   <g
      id="colors"
-     style="fill:#856fd7;stroke:#856fd7"
+     style="fill:#556fd7;stroke:#556fd7"
      transform="translate(-0.01249999,-0.09525007)"
      data-secondary="fill:#858fd7;stroke:#858fd7">
     <path
@@ -120,8 +120,8 @@
   <text
      id="name"
      x="5.9000001"
-     y="15.929999"
-     style="font-size:9.43999958px">DEFAULT NAME</text>
+     y="17"
+     style="font-size:12px">DEFAULT NAME</text>
   <line
      class="connection-area"
      data-ptr="next true_next false_next"
@@ -143,14 +143,15 @@
   <!-- custom highlighting areas are now supported - must be a line, however -->
   <line
      class="connection-highlight x-stretch-name"
-     style="stroke:#444444;stroke-width:10.10658169"
+     style="opacity:0;stroke:#444444;stroke-width:10.10658169"
      data-ptr="next"
      data-role="out"
      x1="4.4899535"
      y1="26.904751"
      x2="79.28933"
      y2="26.904751"
-     id="line17" />
+     id="next-out" />
+  <!-- initial measurement of name -->
   <rect
      style="opacity:0"
      class="initial-measure"
