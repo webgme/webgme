@@ -4,7 +4,7 @@
         "panel": "js/Panels/ModelEditor/ModelEditorPanel",
         "DEBUG_ONLY": false},
 
-    {"id": "Snap Editor",
+    {"id": "Constraint Editor",
         "title": "Constraint Editor",
         "panel": "js/Panels/SnapEditor/SnapEditorPanel",
         "DEBUG_ONLY": false},
