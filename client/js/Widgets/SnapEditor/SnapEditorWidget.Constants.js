@@ -2,7 +2,7 @@
 /*
  * @author brollb / https://github/brollb
  *
- * STRING CONSTANT DEFINITIONS USED IN SNAP EDITOR
+ * STRING CONSTANT DEFINITIONS USED IN CONSTRAINT EDITOR
  */
 
 define([], function () {
@@ -60,6 +60,17 @@ define([], function () {
         CONNECTION_HIGHLIGHT: 'connection-highlight',
 
         /*DEFAULT HEIGHT MEASUREMENT*/
-        INITIAL_MEASURE: 'initial-measure'
+        INITIAL_MEASURE: 'initial-measure',
+
+        /*INPUT FIELDS*/
+        INPUT_FIELDS: 'input-field',
+        TEXT_FIELD: { NAME: 'text',
+                      CONTENT: { TEXT: 'text' } },
+
+        DROPDOWN: { NAME: 'dropdown', 
+                    CONTENT: { POINTERS: 'pointers',
+                               ATTRIBUTES: 'attributes',
+                               META_ENUM: 'enum'  } }
+
     };
 });
