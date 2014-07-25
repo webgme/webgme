@@ -4,7 +4,7 @@
  * Author: Tamas Kecskes
  */
 
-define(['../../.'],function(express){
+define(['express'],function(express){
     function sessionStore(){
         var MemoryStore = express.session.MemoryStore,
             store = new MemoryStore();
