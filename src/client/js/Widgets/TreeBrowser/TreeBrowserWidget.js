@@ -13,7 +13,7 @@ define(['logManager',
     'js/DragDrop/DragSource',
     'lib/jquery/jquery.dynatree-1.2.5.min',
     'lib/jquery/jquery.contextMenu',
-    'css!./styles/TreeBrowserWidget'], function (logManager, CONSTANTS, TreeBrowserWidgetKeyboard, dragSource) {
+    'css!./styles/TreeBrowserWidget.css'], function (logManager, CONSTANTS, TreeBrowserWidgetKeyboard, dragSource) {
 
     "use strict";
 

@@ -4,7 +4,7 @@ define(['js/Constants',
     'js/NodePropertyNames',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase',
     'text!./DefaultDecorator.DiagramDesignerWidget.html',
-    'css!./DefaultDecorator.DiagramDesignerWidget'], function (CONSTANTS,
+    'css!./DefaultDecorator.DiagramDesignerWidget.css'], function (CONSTANTS,
                                                        nodePropertyNames,
                                                        DiagramDesignerWidgetDecoratorBase,
                                                        defaultDecoratorTemplate) {

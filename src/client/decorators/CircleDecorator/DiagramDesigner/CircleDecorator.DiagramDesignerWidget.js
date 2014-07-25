@@ -4,7 +4,7 @@ define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase',
     '../Core/CircleDecorator.Core',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     'text!../Core/CircleDecorator.html',
-    'css!./CircleDecorator.DiagramDesignerWidget'], function (DiagramDesignerWidgetDecoratorBase,
+    'css!./CircleDecorator.DiagramDesignerWidget.css'], function (DiagramDesignerWidgetDecoratorBase,
                                                               CircleDecoratorCore,
                                                               DiagramDesignerWidgetConstants,
                                                               circleDecoratorTemplate) {

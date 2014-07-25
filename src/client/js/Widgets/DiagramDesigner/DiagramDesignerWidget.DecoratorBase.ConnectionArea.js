@@ -3,7 +3,7 @@
 define(['js/Constants',
     'js/RegistryKeys',
     'raphaeljs',
-    'css!./styles/DiagramDesignerWidget.DecoratorBase.ConnectionArea'], function (CONSTANTS,
+    'css!./styles/DiagramDesignerWidget.DecoratorBase.ConnectionArea.css'], function (CONSTANTS,
                                                                                                       REGISTRY_KEYS) {
     "use strict";
 

@@ -6,7 +6,7 @@
  */
 
 define(['jquery',
-    'css!./styles/ContextMenu'], function () {
+    'css!./styles/ContextMenu.css'], function () {
 
     "use strict";
 

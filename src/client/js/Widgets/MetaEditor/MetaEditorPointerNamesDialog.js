@@ -7,7 +7,7 @@
 define(['clientUtil',
         'js/Constants',
         'text!./templates/MetaEditorPointerNamesDialog.html',
-        'css!./styles/MetaEditorPointerNamesDialog'], function ( util,
+        'css!./styles/MetaEditorPointerNamesDialog.css'], function ( util,
                                                                                 CONSTANTS,
                                                                metaEditorPointerNamesDialogTemplate) {
 
