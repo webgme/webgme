@@ -77,7 +77,7 @@ define([
                 _offline = false,
                 _networkWatcher = null,
                 _TOKEN = null,
-                META = new BaseMeta();
+                META = new BaseMeta(),
                 _rootHash = null,
                 _gHash = 0;
 
