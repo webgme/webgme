@@ -1,0 +1,37 @@
+@import "../Core/CircleDecorator";
+@import "../../../js/Widgets/DiagramDesigner/styles/Connector";
+
+$connector-size: $CIRCLE_SIZE;
+
+div.designer-item {
+  @include circle_decorator_core;
+
+  .circle-decorator {
+    .name {
+      top: -10px;
+    }
+
+    .connector {
+      @include connector_basics;
+
+      position: absolute;
+      top: 0px;
+      left: 0px;
+    }
+  }
+
+  &.selected {
+    .circle-decorator {
+      svg {
+        circle {
+          fill: $selected-background-color;
+        }
+      }
+
+      .circle-shadow {
+        display: block;
+      }
+    }
+  }
+}
+
