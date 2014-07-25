@@ -818,5 +818,5 @@ define(['jquery',
         getCrosscuts: _getCrosscuts,
         getSets: _getSets,
         getFCOId: _getFCOId
-    }
+    };
 });

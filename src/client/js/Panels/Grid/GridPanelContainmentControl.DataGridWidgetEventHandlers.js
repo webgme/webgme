@@ -1,4 +1,4 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, _, requirejs, WebGMEGlobal, DEBUG*/
 
 define(['js/NodePropertyNames',
         'js/RegistryKeys',

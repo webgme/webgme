@@ -1,14 +1,9 @@
-/*
- * Copyright (C) 2012 Vanderbilt University, All rights reserved.
- *
- * Author: Robert Kereskenyi
- */
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
-/*
- * REGISTRY KEY NAMES USED BY THE UI
- */
 define([], function () {
+
+    "use strict";
+
     return {
         DIALOG_WIDGET: 'DIALOG_WIDGET'
     };

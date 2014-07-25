@@ -1,11 +1,9 @@
-/*
- * Copyright (C) 2012 Vanderbilt University, All rights reserved.
- *
- * Author: Robert Kereskenyi
- */
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+
 
 define(['logManager'], function (logManager) {
+
+    "use strict";
 
     var DecoratorManager,
         DECORATOR_PATH = "decorators/",

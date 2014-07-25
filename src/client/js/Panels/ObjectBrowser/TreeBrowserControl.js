@@ -1,4 +1,4 @@
-/*globals define, Raphael, window, WebGMEGlobal*/
+/*globals define, Raphael, window, WebGMEGlobal, _*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -272,7 +272,7 @@ define(['logManager',
                         callback: function(key, options) {
                             self._createChild(nodeId, key);
                         }
-                    }
+                    };
                 }
             }
 
@@ -323,7 +323,7 @@ define(['logManager',
             }
 
             if (GMEConcepts.getSets(nodeId).length > 0) {
-                menuItems["openInSetEditor"] = { //Open in crosscuts
+                menuItems.openInSetEditor = { //Open in crosscuts
                     "name": "Open in 'Set membership'",
                     "callback": function(/*key, options*/){
                         var settings = {};

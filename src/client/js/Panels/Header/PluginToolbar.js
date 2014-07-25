@@ -1,12 +1,8 @@
-/*
- * Copyright (C) 2014 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
-
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
 define(['js/Dialogs/PluginResults/PluginResultsDialog'], function (PluginResultsDialog) {
+
+    "use strict";
 
     var PluginToolbar,
         BADGE_BASE = $('<span class="label label-info"></span>');

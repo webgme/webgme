@@ -1566,13 +1566,15 @@ define(['logManager',
 
     MetaEditorControl.prototype._getAssociatedConnections =  function (objectID) {
         var result = {'src': [], 'dst': []},
-            otherID,
-            connType,
             len,
             cID,
             checkConnections;
 
         checkConnections = function (cList, res) {
+
+            var otherID,
+                connType;
+
             //check objectID as source
             if (cList.hasOwnProperty(objectID)) {
                 for (otherID in cList[objectID]) {

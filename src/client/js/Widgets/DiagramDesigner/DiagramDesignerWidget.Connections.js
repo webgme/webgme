@@ -270,7 +270,9 @@ define(['js/Widgets/DiagramDesigner/Connection',
                 }
             }
             decoratorPackages.push([objID, srcItemMetaInfo, srcSubCompMetaInfo, decoratorUpdatePackage]);
-            processedIndices.sort(function(a,b){return a-b});
+            processedIndices.sort(function(a,b){
+                return a-b;
+            });
             i = processedIndices.length;
             while(i--) {
                 filteredDroppableEnds.splice(processedIndices[i], 1);
@@ -394,7 +396,9 @@ define(['js/Widgets/DiagramDesigner/Connection',
                 }
             }
             decoratorPackages.push([objID, srcDragged ? srcItemMetaInfo : dstItemMetaInfo, srcDragged ? srcSubCompMetaInfo : dstSubCompMetaInfo, decoratorUpdatePackage]);
-            processedIndices.sort(function(a,b){return a-b});
+            processedIndices.sort(function(a,b){
+                return a-b;
+            });
             i = processedIndices.length;
             while(i--) {
                 filteredResult.splice(processedIndices[i], 1);

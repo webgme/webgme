@@ -144,7 +144,7 @@ define(['logManager',
 
     PartBrowserControl.prototype._onUpdate = function (gmeID) {
         if (this._containerNodeId === gmeID) {
-            this._processContainerNode(gmeID)
+            this._processContainerNode(gmeID);
         }
     };
 

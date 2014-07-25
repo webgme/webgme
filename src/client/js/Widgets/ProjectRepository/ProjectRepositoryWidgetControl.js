@@ -66,7 +66,7 @@ define(['logManager'], function (logManager) {
             var i,
                 cLen;
 
-            self._logger.debug("commitsLoaded, err: '" + err + "', data: " + data == true ? data.length : "null");
+            self._logger.debug("commitsLoaded, err: '" + err + "', data: " + data === true ? data.length : "null");
 
             if (err) {
                 if (_.isEmpty(err)) {

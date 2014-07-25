@@ -1,8 +1,10 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
 define(['jquery',
         'logManager'], function ( _jquery,
                                   logManager) {
+
+    "use strict";
 
     var PanelBase;
 

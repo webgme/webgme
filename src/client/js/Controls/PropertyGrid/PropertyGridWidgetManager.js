@@ -1,4 +1,4 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
 define([
     'js/Controls/PropertyGrid/Widgets/StringWidget',
@@ -23,6 +23,8 @@ define([
               DialogWidget,
               AssetWidget,
               PropertyGridWidgets) {
+
+        "use strict";
 
         var PropertyGridWidgetManager;
 

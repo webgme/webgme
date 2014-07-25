@@ -66,14 +66,14 @@ define(['js/PanelBase/PanelBase',
         //user info
         navBarInner.append($('<div class="spacer pull-right"></div>'));
         var userProfileEl = $('<div/>', {'class': "inline pull-right"});
-        new UserProfileWidget(userProfileEl, this._client);
+        var u = new UserProfileWidget(userProfileEl, this._client);
         navBarInner.append(userProfileEl);
 
         //toolbar
         var toolBarEl = $('<div/>', {'class': "toolbar-container"});
         this.$el.append(toolBarEl);
         WebGMEGlobal.Toolbar = toolbar.createToolbar(toolBarEl);
-        new DefaultToolbar(this._client);
+        var d= new DefaultToolbar(this._client);
     };
 
     return HeaderPanel;

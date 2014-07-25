@@ -1,6 +1,8 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
 define(['jquery'], function () {
+
+    "use strict";
 
     var DropDownMenu,
         DISABLED_CLASS = 'disabled';
@@ -101,7 +103,7 @@ define(['jquery'], function () {
             this._ul.append(li);
         } else {
             //find it's place based on text order
-            var insertBefore = undefined;
+            var insertBefore;
             var liList = this._ul.children();
             var len = liList.length;
             while (len--) {

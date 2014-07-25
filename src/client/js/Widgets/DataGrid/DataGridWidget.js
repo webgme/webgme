@@ -809,8 +809,8 @@ i,
         this._columnVisibilityCheckboxList = [];
         for (i = isActionButtonsInFirstColumn ? 1 : 0; i < len; i+= 1) {
 
-            if (this.dataMemberID !== columns[i]["mData"]) {
-                var chkBtn = this.toolbarItems.ddColumnVisibility.addCheckBox({"text": columns[i]["mData"],
+            if (this.dataMemberID !== columns[i].mData) {
+                var chkBtn = this.toolbarItems.ddColumnVisibility.addCheckBox({"text": columns[i].mData,
                     "data": { "idx": i },
                     "checkChangedFn": function (data, isChecked) {
                         self.setColumnVisibility(data.idx, isChecked);

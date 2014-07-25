@@ -358,7 +358,7 @@ define(['logManager'], function (logManager) {
                     if (connectionPathPoints[0].y === connectionPathPoints[lastIdx].y) {
                         //x coordinates are different
                         //y coordinates are the same
-                        var bbbox = canvas.items[srcObjId].getBoundingBox();
+                        bbbox = canvas.items[srcObjId].getBoundingBox();
                         connectionPathPoints.splice(2, 0, { "x": connectionPathPoints[1].x,
                             "y": connectionPathPoints[1].y + bbbox.height / 2 + 20}, { "x": connectionPathPoints[2].x,
                             "y": connectionPathPoints[2].y + bbbox.height / 2 + 20});

@@ -124,7 +124,7 @@ define(['logManager',
             //put new node's info into territory rules
             this._selfPatterns = {};
 
-			 if (this._selectedAspect === CONSTANTS.ASPECT_ALL) {
+            if (this._selectedAspect === CONSTANTS.ASPECT_ALL) {
 				this._selfPatterns[nodeId] = { "children": 2 };
 			} else {
 				this._selfPatterns[nodeId] = this._client.getAspectTerritoryPattern(nodeId, this._selectedAspect);
@@ -314,7 +314,7 @@ define(['logManager',
             } else if (e.desc.kind === "MODEL") {
                 orderedItemEvents.push(e);
             } else if (e.desc.kind === "CONNECTION") {
-                if (e.desc.parentId == this.currentNodeInfo.id) {
+                if (e.desc.parentId === this.currentNodeInfo.id) {
                     //check to see if SRC and DST is another connection
                     //if so, put this guy AFTER them
                     var srcGMEID = e.desc.source;
@@ -342,9 +342,9 @@ define(['logManager',
                     var MAX_VAL = 999999999;
                     var depSrcConnIdx = MAX_VAL;
                     var depDstConnIdx = MAX_VAL;
-                    var j = orderedConnectionEvents.length;
+                    j = orderedConnectionEvents.length;
                     while (j--) {
-                        var ce = orderedConnectionEvents[j];
+                        ce = orderedConnectionEvents[j];
                         if (e.desc.id === ce.desc.source) {
                             depSrcConnIdx = j;
                         } else if (e.desc.id === ce.desc.target) {

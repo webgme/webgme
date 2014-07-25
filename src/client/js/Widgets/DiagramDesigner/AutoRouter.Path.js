@@ -1,9 +1,5 @@
-/*globals define*/
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
- * @author brollb / https://github/brollb
- */
+/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+
 
 define( ['logManager',
             'util/assert',

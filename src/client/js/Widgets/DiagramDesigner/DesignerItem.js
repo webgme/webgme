@@ -47,7 +47,7 @@ define(['logManager',
         if (decoratorClass === undefined) {
             //the required decorator is not available
             metaInfo = metaInfo || {};
-            metaInfo["__missingdecorator__"] = decoratorName;
+            metaInfo.__missingdecorator__ = decoratorName;
             decoratorClass = ErrorDecorator;
         }
         if (this._decoratorID !== decoratorClass.prototype.DECORATORID) {

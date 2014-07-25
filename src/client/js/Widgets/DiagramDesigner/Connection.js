@@ -1733,7 +1733,9 @@ define(['logManager',
 
             //simplify bumps if they overlap
             //order based on t
-            resultIntersectionPathDefs[segNum].t.sort(function(a,b){return a-b});
+            resultIntersectionPathDefs[segNum].t.sort(function(a,b){
+                return a-b;
+            });
 
             segmentLength = resultIntersectionPathDefs[segNum].segmentLength;
             sweepFlag = resultIntersectionPathDefs[segNum].sweepFlag;

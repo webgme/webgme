@@ -1,6 +1,8 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
 define([], function () {
+
+    "use strict";
 
     var EL_BASE = $("<div/>", {'class': 'widget'});
 

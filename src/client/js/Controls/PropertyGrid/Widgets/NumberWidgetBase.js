@@ -1,8 +1,10 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
 define([
     'js/Controls/PropertyGrid/Widgets/WidgetBase'],
     function (WidgetBase) {
+
+        "use strict";
 
         var NumberWidgetBase;
 

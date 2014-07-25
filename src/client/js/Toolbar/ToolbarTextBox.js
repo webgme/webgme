@@ -57,7 +57,7 @@ define(['./ToolbarItemBase'], function (ToolbarItemBase) {
 
         $textBox.on('keypress', function(e) {
                 /* Prevent form submission */
-                if ( e.keyCode == 13 )
+                if ( e.keyCode === 13 )
                 {
                     if (params && params.onEnterFn) {
                         var val = $(this).val();
@@ -77,7 +77,7 @@ define(['./ToolbarItemBase'], function (ToolbarItemBase) {
         if (enabled === true) {
             this._textBox.removeAttr('disabled');
         } else {
-            this._textBox.attr('disabled', 'disabled')
+            this._textBox.attr('disabled', 'disabled');
         }
     };
 

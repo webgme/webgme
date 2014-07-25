@@ -1,4 +1,4 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
 define(['js/Constants',
         'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'], function (CONSTANTS,
@@ -107,5 +107,5 @@ define(['js/Constants',
         createButtonIcon : _createButtonIcon,
 
         CONNECTION_META_INFO: _connection_meta_info
-    }
+    };
 });

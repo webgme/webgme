@@ -1,6 +1,8 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
 define(['js/Controls/PropertyGrid/Widgets/NumberWidgetBase'], function (NumberWidgetBase) {
+
+    "use strict";
 
     var NumberBoxWidget,
         INPUT_BASE = $('<input/>', {"type": "text"});

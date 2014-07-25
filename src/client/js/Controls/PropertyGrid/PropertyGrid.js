@@ -1,8 +1,10 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
 define(['logManager',
     'js/Controls/PropertyGrid/PropertyGridPart'], function (logManager,
                                                    PropertyGridPart) {
+
+    "use strict";
 
     var PropertyGrid;
 

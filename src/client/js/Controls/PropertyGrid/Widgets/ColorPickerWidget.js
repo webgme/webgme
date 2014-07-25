@@ -1,15 +1,11 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
-
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
 define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
     'js/Controls/ColorPicker'],
     function (WidgetBase,
               ColorPicker) {
+
+        "use strict";
 
         var ColorPickerWidget,
             DIV_BASE = $('<div/>', {'id': 'cpw',

@@ -126,5 +126,5 @@ define(['jquery',
     return {
         initialize: _initialize,
         getConnectionVisualProperties: _getConnectionVisualProperties
-    }
+    };
 });

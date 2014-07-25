@@ -1,4 +1,4 @@
-/*globals define, Raphael, window, WebGMEGlobal, d3*/
+/*globals define, Raphael, window, WebGMEGlobal, d3, _*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -244,7 +244,9 @@ define(['logManager',
             var collideAtDepth = [];
             for (i = 1; i < l; i+= 1) {
                 //sort the coordinates for easy check of collision
-                nodesYByDepth[i].sort(function(a,b){return a-b});
+                nodesYByDepth[i].sort(function(a,b){
+                    return a-b;
+                });
 
                 //see if any of the nodes overlap
                 var j;

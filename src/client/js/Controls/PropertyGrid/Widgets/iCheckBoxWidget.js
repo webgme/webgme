@@ -1,9 +1,11 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
 define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
         'js/Controls/iCheckBox'],
     function (WidgetBase,
               iCheckBox) {
+
+        "use strict";
 
         var iCheckBoxWidget;
 

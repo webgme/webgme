@@ -68,20 +68,20 @@ define([
         //keyboard enable/disbale widget (NOTE: only on non touch device)
         if (WebGMEGlobal.SUPPORTS_TOUCH !== true) {
             var keyBoardManagerEl = widgetPlaceHolder.clone();
-            new KeyboardManagerWidget(keyBoardManagerEl);
+            var k = new KeyboardManagerWidget(keyBoardManagerEl);
             navBarInner.append(keyBoardManagerEl).append(separator.clone());
         }
 
         var logLevelManagerEl = widgetPlaceHolder.clone();
-        new LogLevelManagerWidget(logLevelManagerEl);
+        var l = new LogLevelManagerWidget(logLevelManagerEl);
         navBarInner.append(logLevelManagerEl).append(separator.clone());
 
         var networkStatusEl = widgetPlaceHolder.clone();
-        new NetworkStatusWidget(networkStatusEl, this._client);
+        var n = new NetworkStatusWidget(networkStatusEl, this._client);
         navBarInner.append(networkStatusEl).append(separator.clone());
 
         var branchStatusEl = widgetPlaceHolder.clone();
-        new BranchStatusWidget(branchStatusEl, this._client);
+        var b = new BranchStatusWidget(branchStatusEl, this._client);
         navBarInner.append(branchStatusEl).append(separator.clone());
 
         /*var branchSelectorEl = widgetPlaceHolder.clone();
