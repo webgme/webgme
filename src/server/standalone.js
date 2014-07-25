@@ -546,7 +546,7 @@ define(['logManager',
         __logger.info("creating basic static content related routing rules");
         //static contents
         //javascripts - core and transportation related files
-        __app.get(/^\/(common|util|storage|core|config|auth|bin|coreclient|blob)\/.*\.js$/,ensureAuthenticated,function(req,res){
+        __app.get(/^\/(common|config|bin|middleware)\/.*\.js$/,ensureAuthenticated,function(req,res){
             expressFileSending(res,Path.join(__baseDir,req.path));
         });
 
@@ -723,7 +723,7 @@ define(['logManager',
         __app.get(/^\/.*\.(js|html|gif|png|bmp|svg|json|map)$/,ensureAuthenticated,function(req,res){
             //package.json
             if(req.path === '/package.json') {
-                expressFileSending(res,Path.join(__baseDir,req.path));
+                expressFileSending(res,Path.join(__baseDir, '..', req.path));
             } else {
                 expressFileSending(res,Path.join(__clientBaseDir,req.path));
             }

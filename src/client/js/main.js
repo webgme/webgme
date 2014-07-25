@@ -57,6 +57,12 @@ require.config({
         //WebGME custom modules
         'logManager': 'common/LogManager',
         'eventDispatcher': 'common/EventDispatcher',
+
+        'util': 'common/util',
+        'core': 'common/core',
+        'storage': 'common/storage',
+        'blob': 'middleware/blob',
+
         'notificationManager': 'js/NotificationManager',
         'clientUtil': 'js/util',
         'loaderCircles': 'js/Loader/LoaderCircles',
