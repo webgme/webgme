@@ -4,7 +4,7 @@
  * Author: Zsolt Lattmann
  */
 
-define(['./Artifact', 'blob/BlobMetadata'], function (Artifact, BlobMetadata) {
+define(['./Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, BlobMetadata, superagent) {
 
     var BlobClient = function (parameters) {
         this.artifacts = [];
@@ -54,40 +54,46 @@ define(['./Artifact', 'blob/BlobMetadata'], function (Artifact, BlobMetadata) {
 
 
     BlobClient.prototype.putFile = function (name, data, callback) {
-        var oReq = new XMLHttpRequest();
-        oReq.open("POST", this.getCreateURL(name), true);
-        oReq.onload = function (oEvent) {
-            // Uploaded.
-            var response = JSON.parse(oEvent.target.response);
-            // TODO: handle error
-            // Get the first one
-            var hash = Object.keys(response)[0];
-            callback(null, hash);
-        };
-
-        // data is a file object or blob
-        oReq.send(data);
+        superagent.post(this.getCreateURL(name))
+            .set('Content-Type', 'application/octet-stream')
+            .set('Content-Length', data.length)
+            .send(data)
+            .end(function (err, res) {
+                var response = res.body;
+                // TODO: handle error
+                // Get the first one
+                var hash = Object.keys(response)[0];
+                callback(null, hash);
+            });
     };
 
     BlobClient.prototype.putMetadata = function (metadataDescriptor, callback) {
         var self = this;
         var metadata = new BlobMetadata(metadataDescriptor);
 
-        var oReq = new XMLHttpRequest();
-        oReq.open("POST", this.getCreateURL(name, true), true);
-        oReq.onload = function (oEvent) {
-            // Uploaded.
-            var response = JSON.parse(oEvent.target.response);
-            // TODO: handle error
-            // Get the first one
-            var hash = Object.keys(response)[0];
-            callback(null, hash);
-        };
-
         // FIXME: in production mode do not indent the json file.
-        var blob = new Blob([JSON.stringify(metadata.serialize(), null, 4)], {type: 'text/plain'});
+        var blob;
+        var contentLength;
+        if (typeof Blob !== 'undefined') {
+            blob = new Blob([JSON.stringify(metadata.serialize(), null, 4)], {type: 'text/plain'});
+            contentLength = blob.size;
+        } else {
+            blob = new Buffer(JSON.stringify(metadata.serialize(), null, 4), 'utf8');
+            contentLength = blob.length;
+        }
 
-        oReq.send(blob);
+        superagent.post(this.getCreateURL(metadataDescriptor.name, true))
+            .set('Content-Type', 'application/octet-stream')
+            .set('Content-Length', contentLength)
+            .send(blob)
+            .end(function (err, res) {
+                // Uploaded.
+                var response = JSON.parse(res.text);
+                // TODO: handle error
+                // Get the first one
+                var hash = Object.keys(response)[0];
+                callback(null, hash);
+            });
     };
 
     BlobClient.prototype.putFiles = function (o, callback) {
@@ -121,42 +127,65 @@ define(['./Artifact', 'blob/BlobMetadata'], function (Artifact, BlobMetadata) {
     };
 
     BlobClient.prototype.getObject = function (hash, callback) {
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", this.getViewURL(hash), true);
-        xhr.responseType = "arraybuffer";
-
-        xhr.onload = function (e) {
-            if (xhr.readyState === 4) {
-                if (xhr.status === 200) {
-                    // response is an arraybuffer
-                    callback(null, xhr.response);
-                } else {
-                    callback(xhr.status + ':' + xhr.statusText);
-                }
+        superagent.parse['application/zip'] = function (obj, parseCallback) {
+            if (parseCallback) {
+                // Running on node; this should be unreachable due to req.pipe() below
+            } else {
+                return obj;
             }
-        };
-        xhr.onerror = function (e) {
-            callback(e);
-        };
-        xhr.send(null);
+        }
+
+        var req = superagent.get(this.getViewURL(hash));
+        if (req.pipe) {
+            // running on node
+            var Writable = require('stream').Writable;
+            require('util').inherits(BuffersWritable, Writable);
+
+            function BuffersWritable(options) {
+                Writable.call(this, options);
+
+                var self = this;
+                self.buffers = [];
+            }
+            BuffersWritable.prototype._write = function(chunk, encoding, callback) {
+                this.buffers.push(chunk);
+                callback();
+            };
+
+            var buffers = new BuffersWritable();
+            buffers.on('finish', function () {
+                callback(null, Buffer.concat(buffers.buffers));
+            });
+            buffers.on('error', function (err) {
+                callback(err);
+            });
+            req.pipe(buffers);
+        } else {
+            req.on('request', function () {
+                if (typeof this.xhr !== 'undefined') {
+                    this.xhr.responseType = 'arraybuffer';
+                }
+            })
+            .end(function (err, res) {
+                if (err || res.status > 399) {
+                    callback(err || res.status);
+                } else {
+                    // response is an arraybuffer
+                    callback(null, res.xhr.response);
+                }
+            });
+        }
     };
 
     BlobClient.prototype.getMetadata = function (hash, callback) {
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", this.getMetadataURL(hash), true);
-        xhr.onload = function (e) {
-            if (xhr.readyState === 4) {
-                if (xhr.status === 200) {
-                    callback(null, JSON.parse(xhr.responseText));
+        superagent.get(this.getMetadataURL(hash))
+            .end(function (err, res) {
+                if (err || res.status > 399) {
+                    callback(err || res.status);
                 } else {
-                    callback(xhr.status + ':' + xhr.statusText);
+                    callback(null, JSON.parse(res.text));
                 }
-            }
-        };
-        xhr.onerror = function (e) {
-            callback(e);
-        };
-        xhr.send(null);
+            });
     };
 
     BlobClient.prototype.createArtifact = function (name) {

@@ -299,3 +299,7 @@ input.no-focus-collapse:not(:focus) {
     -o-transform:scaleX(-1);
     transform:scaleX(-1);
 }
+
+.panel-base .drawing-canvas {
+    padding: 0;
+}

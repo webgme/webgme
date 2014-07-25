@@ -1,13 +1,5 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
-
-//imports
 @import "../Core/_CircleDecorator";
 
-//include CircleDecoratorCore style
 div.part {
   @include circle_decorator_core;
 

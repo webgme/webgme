@@ -10,7 +10,7 @@ define(['blob/BlobClient', 'blob/BlobMetadata', 'http', 'https', 'util/StringStr
     function (BlobClient, BlobMetadata, http, https, StringStreamWriter) {
 
         /**
-         * Initializes a new instance of a server side file system object.
+         * Initializes a new instance of a server side blob client that makes http requests.
          *
          * Note: This code strictly runs in node.js (server side).
          *
@@ -19,6 +19,7 @@ define(['blob/BlobClient', 'blob/BlobMetadata', 'http', 'https', 'util/StringStr
          */
         function BlobServerClient(parameters) {
             BlobClient.call(this);
+            this.server = parameters.server || '127.0.0.1';
             this.serverPort = parameters.serverPort;
             this._clientSession = parameters.sessionId;
         }
@@ -31,7 +32,7 @@ define(['blob/BlobClient', 'blob/BlobMetadata', 'http', 'https', 'util/StringStr
 
         BlobServerClient.prototype.getMetadata = function (hash, callback) {
             var options = {
-                hostname: '127.0.0.1',
+                hostname: this.server,
                 port: this.serverPort,
                 path: this.getMetadataURL(hash),
                 method: 'GET'
@@ -48,7 +49,7 @@ define(['blob/BlobClient', 'blob/BlobMetadata', 'http', 'https', 'util/StringStr
 
         BlobServerClient.prototype.getObject = function (hash, callback) {
             var options = {
-                hostname: '127.0.0.1',
+                hostname: this.server,
                 port: this.serverPort,
                 path: this.getViewURL(hash),
                 method: 'GET'
@@ -71,7 +72,7 @@ define(['blob/BlobClient', 'blob/BlobMetadata', 'http', 'https', 'util/StringStr
             var metadata = new BlobMetadata(metadataDescriptor);
 
             var options = {
-                hostname: '127.0.0.1',
+                hostname: this.server,
                 port: this.serverPort,
                 path: this.getCreateURL(metadata.name, true),
                 method: 'POST'
@@ -94,7 +95,7 @@ define(['blob/BlobClient', 'blob/BlobMetadata', 'http', 'https', 'util/StringStr
 
         BlobServerClient.prototype.putFile = function (name, data, callback) {
             var options = {
-                hostname: '127.0.0.1',
+                hostname: this.server,
                 port: this.serverPort,
                 path: this.getCreateURL(name),
                 method: 'POST'

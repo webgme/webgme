@@ -68,7 +68,7 @@ define(['js/PanelBase/PanelBase',
         //Create Panel's BODY
         //set $el to panel-body for subclass use
         this.$el = this.$panelBody = $('<div/>', {
-            "class" : "panel-body"
+            "class" : "panel-body drawing-canvas"
         });
 
         //create additional visual pieces
