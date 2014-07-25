@@ -132,7 +132,7 @@ function(ASSERT,Child,CONSTANTS){
                 //Set an unused port number.
                 process.execArgv.push('--debug-brk=' + (32000+i));
             }
-            var worker = Child.fork(getBaseDir()+'/worker/simpleworker.js');
+            var worker = Child.fork(getBaseDir()+'/server/worker/simpleworker.js');
             _workers.push({pid:worker.pid,worker:worker,state:CONSTANTS.workerStates.initializing,resid:null}) - 1;
 
             worker.on('message', messageHandling);

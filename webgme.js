@@ -5,9 +5,7 @@
  * @author nabana / https://github.com/nabana
  */
 
-var webGMEGlobal;
-
-(function(){
+(function( global ){
 
 "use strict";
 
@@ -38,7 +36,8 @@ requirejs.config({
     paths:paths
 });
 
-var __CONFIG = requirejs('baseConfig');
+var __CONFIG = requirejs('baseConfig' ),
+    webGMEGlobal;
 
 var getConfig = function(){
     return JSON.parse(JSON.stringify(__CONFIG));
@@ -194,6 +193,8 @@ webGMEGlobal.setConfig({
     }*/
 });
 
+global.webGMEGlobal = webGMEGlobal;
+
 
 module.exports = {
     clientStorage: requirejs('storage/clientstorage'),
@@ -205,4 +206,4 @@ module.exports = {
     runPlugin: requirejs('server/runplugin')
 };
 
-})();
+})( global );

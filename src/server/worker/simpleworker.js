@@ -1,6 +1,6 @@
 var requirejs = require("requirejs"),
     BASEPATH = __dirname + "/../..",
-    WEBGME = require(BASEPATH+'/webgme');
+    WEBGME = require(BASEPATH + '/../webgme');
 requirejs.config({
     nodeRequire: require,
     baseUrl: BASEPATH,
