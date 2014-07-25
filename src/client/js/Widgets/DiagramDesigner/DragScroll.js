@@ -1,8 +1,10 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
 define(['jquery',
         'logManager'], function (__jquery,
                                  logManager) {
+
+    "use strict";
 
     var DragScroll;
 

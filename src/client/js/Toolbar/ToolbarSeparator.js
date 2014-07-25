@@ -1,4 +1,4 @@
-/*globals define*/
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -8,6 +8,8 @@
 define(['./ButtonBase',
         './ToolbarItemBase'], function (buttonBase,
                                         ToolbarItemBase) {
+
+    "use strict";
 
     var ToolbarSeparator,
         EL_BASE = $('<div class="separator"></div>');

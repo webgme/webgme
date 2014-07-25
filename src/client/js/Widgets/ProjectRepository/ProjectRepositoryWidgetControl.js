@@ -1,6 +1,8 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define(['logManager'], function (logManager) {
+
+    "use strict";
 
     var RepositoryLogControl;
 

@@ -1,15 +1,8 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
-
-"use strict";
-/*
- * Utility helper functions for the color conversion
- */
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define([], function () {
+
+    "use strict";
 
     var _getHexColor = function(color) {
         var result,
@@ -68,5 +61,6 @@ define([], function () {
         isColor : function(color) {
             return (_getHexColor(color) !== undefined);
         }
-    }
+    };
+
 });

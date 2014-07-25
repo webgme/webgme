@@ -1,12 +1,8 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
-
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define(['./ToolbarItemBase'], function (ToolbarItemBase) {
+
+    "use strict";
 
     var ToolbarLabel,
         EL_BASE = $('<div class="toolbar-label"></div>');

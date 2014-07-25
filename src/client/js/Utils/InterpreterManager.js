@@ -1,3 +1,5 @@
+/*globals define, _, requirejs, WebGMEGlobal*/
+
 define(['core/core',
         'plugin/PluginManagerBase',
         'plugin/PluginResult',

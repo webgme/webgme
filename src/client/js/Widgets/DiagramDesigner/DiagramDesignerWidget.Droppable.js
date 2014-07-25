@@ -1,14 +1,9 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
- * Author: Robert Kereskenyi
- */
-
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
 define(['js/DragDrop/DropTarget',
         './DiagramDesignerWidget.Constants'], function (dropTarget,
                                                         DiagramDesignerWidgetConstants) {
+    "use strict";
 
     var DiagramDesignerWidgetDroppable,
         DROP_REGION_MARGIN = 0;

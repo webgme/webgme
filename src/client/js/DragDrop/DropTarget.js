@@ -1,14 +1,9 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
-
-
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define(['./DragEffects',
     './DragConstants'], function (DragEffects, DragConstants) {
+
+    "use strict";
 
     var _makeDroppable = function (el, params) {
         var doCallBack;

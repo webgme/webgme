@@ -1,10 +1,4 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
- * Author: Robert Kereskenyi
- */
-
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
 define(['logManager',
         'js/Constants',
@@ -13,6 +7,7 @@ define(['logManager',
                                                         CONSTANTS,
                                                         DragScroll,
                                                         DiagramDesignerWidgetConstants) {
+    "use strict";
 
     var ConnectionDrawingManager,
         EVENTPOSTFIX = 'ConnectionDrawingManager',

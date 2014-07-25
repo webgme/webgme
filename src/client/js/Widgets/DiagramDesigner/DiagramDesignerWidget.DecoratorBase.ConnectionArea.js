@@ -1,16 +1,11 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
-
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
 define(['js/Constants',
     'js/RegistryKeys',
     'raphaeljs',
     'css!./styles/DiagramDesignerWidget.DecoratorBase.ConnectionArea'], function (CONSTANTS,
                                                                                                       REGISTRY_KEYS) {
+    "use strict";
 
     var DiagramDesignerWidgetDecoratorBaseConnectionArea,
         EVENT_POSTFIX = 'DiagramDesignerWidgetDecoratorBaseConnectionArea',

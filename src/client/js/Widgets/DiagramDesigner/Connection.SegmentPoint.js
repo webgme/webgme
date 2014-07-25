@@ -1,13 +1,9 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
-
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
 define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     'raphaeljs'], function (DiagramDesignerWidgetConstants) {
+
+    "use strict";
 
     var ConnectionSegmentPoint,
         MIN_WIDTH = 5,

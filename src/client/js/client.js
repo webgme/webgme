@@ -1,3 +1,5 @@
+/*globals define, _, requirejs, WebGMEGlobal*/
+
 define([
     'util/assert',
     'eventDispatcher',
@@ -34,6 +36,8 @@ define([
         AllPlugins,
         Serialization
         ) {
+
+        "use strict";
 
         var ROOT_PATH = '';
         function COPY(object){
@@ -821,7 +825,7 @@ define([
                     base = nodesSoFar[id].node;
                     baseLoaded();
                 } else {
-                    var base = null;
+                    base = null;
                     if(_loadNodes[ROOT_PATH]){
                         base = _loadNodes[ROOT_PATH].node;
                     } else if(_nodes[ROOT_PATH]){

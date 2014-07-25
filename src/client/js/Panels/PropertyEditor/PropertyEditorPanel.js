@@ -1,10 +1,11 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define(['js/PanelBase/PanelBaseWithHeader',
     'js/Controls/PropertyGrid/PropertyGrid',
     './PropertyEditorPanelController'], function (PanelBaseWithHeader,
                                                                      PropertyGrid,
                                                                      PropertyEditorPanelController) {
+    "use strict";
 
     var PropertyEditorPanel,
         __parent__ = PanelBaseWithHeader;
@@ -38,7 +39,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         this.$el.append(this.propertyGrid.$el);
 
         //attach control to the PropertyGrid
-        new PropertyEditorPanelController(this._client, this.propertyGrid);
+        var p = new PropertyEditorPanelController(this._client, this.propertyGrid);
     };
 
     /* OVERRIDE FROM WIDGET-WITH-HEADER */

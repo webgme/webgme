@@ -1,8 +1,10 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define(['logManager',
     'js/Controls/DropDownMenu'], function (logManager,
                                             DropDownMenu) {
+
+    "use strict";
 
     var BranchSelectorWidget,
         NO_BRANCH_TEXT = 'NO BRANCH SELECTED';

@@ -1,6 +1,5 @@
-/*
- * BezierHelper utility to compute the shortest Bezier curve control points between two rectangle
- */
+/*globals define, _, requirejs, WebGMEGlobal*/
+
 define([], function () {
     "use strict";
 

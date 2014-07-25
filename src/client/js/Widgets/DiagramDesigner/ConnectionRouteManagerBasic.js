@@ -1,6 +1,8 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
 define(['logManager'], function (logManager) {
+
+    "use strict";
 
     var ConnectionRouteManagerBasic,
         DESIGNERITEM_SUBCOMPONENT_SEPARATOR = "_x_";

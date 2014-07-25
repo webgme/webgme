@@ -5,19 +5,14 @@
  * @author brollb / https://github/brollb
  */
 
-define(['logManager',
-	    'util/assert',
-        './AutoRouter.Constants',
-        './AutoRouter.Utils',
-        './AutoRouter.Point',
-        './AutoRouter.Rect',
-        './AutoRouter.PointList'], function (logManager,
-										        assert,
-												CONSTANTS,
-												UTILS,
-												ArPoint,
-												ArRect,
-												ArPointListPath) {
+define( ['logManager',
+            'util/assert',
+            './AutoRouter.Constants',
+            './AutoRouter.Utils',
+            './AutoRouter.Point',
+            './AutoRouter.Rect',
+            './AutoRouter.PointList'],
+        function ( logManager, assert, CONSTANTS, UTILS, ArPoint, ArRect, ArPointListPath ) {
 
 
     "use strict"; 

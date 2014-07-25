@@ -1,6 +1,8 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
 define([], function () {
+
+    "use strict";
 
     var DiagramDesignerWidgetSubcomponents;
 

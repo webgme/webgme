@@ -11,7 +11,7 @@ define(['./AutoRouter.Point'], function (ArPoint){
     "use strict"; 
 
     return {
-	    "EMPTY_POINT": new ArPoint(-100000, -100000),
+        "EMPTY_POINT": new ArPoint(-100000, -100000),
         "ED_MAXCOORD": 100000,
         "ED_MINCOORD": -2,//This allows connections to be still be draw when box is pressed against the edge
         "ED_SMALLGAP": 15,

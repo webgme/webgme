@@ -1,10 +1,12 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define(['js/NodePropertyNames',
         'js/RegistryKeys',
         'js/DragDrop/DragHelper'], function (nodePropertyNames,
                                       REGISTRY_KEYS,
                                       DragHelper) {
+
+    "use strict";
 
     var GridPanelContainmentControlEventHandlers;
 

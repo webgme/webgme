@@ -1,6 +1,8 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
 define(['js/Controls/ContextMenu'], function (ContextMenu) {
+
+    "use strict";
 
     var DiagramDesignerWidgetContextMenu;
 

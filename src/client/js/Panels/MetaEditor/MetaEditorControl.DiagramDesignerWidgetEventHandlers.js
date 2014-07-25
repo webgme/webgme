@@ -1,4 +1,4 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define(['logManager',
     'clientUtil',
@@ -21,6 +21,8 @@ define(['logManager',
                                         MetaEditorConstants,
                                         DragHelper,
                                         dialog) {
+
+    "use strict";
 
     var MetaEditorControlDiagramDesignerWidgetEventHandlers,
         DRAG_PARAMS_META_CONTAINER_ID = 'metaContainerID',

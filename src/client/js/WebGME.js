@@ -1,4 +1,4 @@
-/*globals define, _, WebGMEGlobal, DEBUG*/
+/*globals define, _, DEBUG*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi

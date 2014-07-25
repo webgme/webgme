@@ -1,11 +1,5 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
-/*
- * Keyboard Manager for easy keyboard handling all over the application
- */
+/*globals define, _, requirejs, WebGMEGlobal, alert*/
+
 define(['logManager'], function (logManager) {
     "use strict";
 

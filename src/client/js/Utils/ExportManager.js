@@ -1,16 +1,11 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
- * Author: Robert Kereskenyi
- */
-
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define(['jquery',
         'js/Constants',
         'js/NodePropertyNames'], function (_jquery,
                                            CONSTANTS,
                                            nodePropertyNames) {
+    "use strict";
 
     var _client;
 

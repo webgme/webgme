@@ -1,8 +1,11 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+
 
 define(['js/Widgets/DiagramDesigner/Connection',
         'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'], function (Connection,
                                                    DiagramDesignerWidgetConstants) {
+
+    "use strict";
 
     var DiagramDesignerWidget,
         CONNECTION_IN_DRAW_CLASS = "connection-drawing";

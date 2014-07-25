@@ -1,4 +1,4 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define(['js/PanelBase/PanelBaseWithHeader',
     'js/PanelManager/IActivePanel',
@@ -7,6 +7,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
                                          IActivePanel,
                                             GraphVizWidget,
                                             GraphVizPanelControl) {
+    "use strict";
 
     var GraphVizPanel;
 

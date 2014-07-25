@@ -1,9 +1,12 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal, CanvasRenderingContext2D*/
+
 /*
  * WebGME jquery extension
  */
 
 define(['jquery'], function () {
+
+    "use strict";
 
     $.fn.extend({
         editOnDblClick : function (params) {
@@ -138,8 +141,8 @@ define(['jquery'], function () {
                 var aWidth = r1*2;
                 var aHeight = r2*2;
 
-                var hB = (aWidth / 2) * .5522848,
-                    vB = (aHeight / 2) * .5522848,
+                var hB = (aWidth / 2) * 0.5522848,
+                    vB = (aHeight / 2) * 0.5522848,
                     eX = aX + aWidth,
                     eY = aY + aHeight,
                     mX = aX + aWidth / 2,
@@ -151,12 +154,14 @@ define(['jquery'], function () {
                 this.bezierCurveTo(eX, mY + vB, mX + hB, eY, mX, eY);
                 this.bezierCurveTo(mX - hB, eY, aX, mY + vB, aX, mY);
                 this.closePath();
-                if (fillIt) this.fill();
+                if (fillIt) {
+                    this.fill();
+                }
                 this.stroke();
             },
 
             circle: function(aX, aY, aDiameter, fillIt) {
-                this.ellipse(aX, aY, aDiameter, aDiameter, fillIt)
+                this.ellipse(aX, aY, aDiameter, aDiameter, fillIt);
             }
         });
     }

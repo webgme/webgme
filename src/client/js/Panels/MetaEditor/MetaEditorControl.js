@@ -1,3 +1,5 @@
+/*globals define, _, $, console, angular, WebGMEGlobal*/
+
 define(['logManager',
     'clientUtil',
     'js/Constants',

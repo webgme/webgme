@@ -1,16 +1,12 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
- * Author: Robert Kereskenyi
- */
-
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
 define(['logManager',
     './DiagramDesignerWidget.Constants',
     './ErrorDecorator'], function (logManager,
                                  DiagramDesignerWidgetConstants,
                                  ErrorDecorator) {
+
+    "use strict";
 
     var DesignerItem,
         EVENT_POSTFIX = "DesignerItem",

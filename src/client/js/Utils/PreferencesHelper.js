@@ -1,14 +1,10 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
-
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define(['underscore',
         'util/assert'], function (_underscore,
                                  ASSERT) {
+
+    "use strict";
 
     var Preferences,
         _client;

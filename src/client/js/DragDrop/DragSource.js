@@ -1,14 +1,10 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
+/*globals define, _, requirejs, WebGMEGlobal*/
 
-
-"use strict";
 
 define(['./DragEffects',
         './DragConstants'], function (DragEffects, DragConstants) {
+
+    "use strict";
 
     var DEFAULT_Z_INDEX = 100000,
         DEFAULT_APPEND_TO = $('body'),

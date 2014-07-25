@@ -1,15 +1,11 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
+/*globals define, _, requirejs, WebGMEGlobal*/
 
-"use strict";
 /*
  * STRING CONSTANT DEFINITIONS USED IN METAEDITOR CONTROLLER
  */
 
 define(['js/Constants'], function (CONSTANTS) {
+    "use strict";
 
     //return string constants
     return {

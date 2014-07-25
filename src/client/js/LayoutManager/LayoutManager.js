@@ -1,9 +1,10 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal*/
 
-// let require load all the toplevel needed script and call us on domReady
 define(['logManager',
         'loaderCircles'], function (logManager,
                                     LoaderCircles) {
+
+    "use strict";
 
     var LayoutManager,
         LAYOUT_PATH = 'js/Layouts/',

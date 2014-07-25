@@ -6,11 +6,9 @@
  */
 
 define(['logManager',
-	    'util/assert',
-        './AutoRouter.Utils',
-        './AutoRouter.Constants'], function (logManager,
-										        assert,
-                                                UTILS,
+           'util/assert',
+           './AutoRouter.Utils',
+           './AutoRouter.Constants'], function ( logManager, assert, UTILS,
                                                 CONSTANTS) {
 
     "use strict"; 
@@ -31,7 +29,7 @@ define(['logManager',
     //Functions
     AutoRouterCustomPathData.prototype.assign = function(other){
         this.version					= other.version;
-        this.aspect					    = other.aspect;
+        this.aspect                     = other.aspect;
         this.edgeIndex					= other.edgeIndex;
         this.edgeCount					= other.edgeCount;
         this.type						= other.type;

@@ -1,19 +1,12 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
-
-"use strict";
-/*
- * STRING CONSTANT DEFINITIONS USED IN BOTH CLIENT AND SERVER JAVASCRIPT
- */
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define(['js/Constants',
     'js/NodePropertyNames',
     'js/RegistryKeys'], function (CONSTANTS,
                                        nodePropertyNames,
                                        REGISTRY_KEYS) {
+
+    "use strict";
 
     var ATTRIBUTE_MARKER = CONSTANTS.DISPLAY_FORMAT_ATTRIBUTE_MARKER;
 

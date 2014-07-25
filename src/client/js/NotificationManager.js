@@ -1,16 +1,13 @@
-/*
- * Copyright (C) 2012 Vanderbilt University, All rights reserved.
- *
- * Author: Robert Kereskenyi
- */
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 /*
- * -------- NOTIFICATIONMANAGER -------
+ * -------- NOTIFICATION MANAGER -------
  */
 
 define(['lib/jquery/jquery.gritter.min',
         'clientUtil'], function (myjgrowl, mygritter, util) {
+
+    "use strict";
 
     var activeNotifications = {};
 

@@ -1,14 +1,10 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * AUTO GENERATED CODE FOR PROJECT __PROJECT__
- */
-
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define(['underscore',
         'js/Utils/METAAspectHelper'], function (_underscore,
                                                 METAAspectHelper) {
+
+    "use strict";
 
     var _metaID = '__PROJECT__.META.js';
 

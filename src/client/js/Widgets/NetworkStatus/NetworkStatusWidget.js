@@ -1,10 +1,12 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define(['logManager',
     'js/Controls/DropDownMenu',
     'js/Controls/PopoverBox'], function (logManager,
                                         DropDownMenu,
                                         PopoverBox) {
+
+    "use strict";
 
     var NetworkStatusWidget,
         ITEM_VALUE_CONNECT = 'connect';

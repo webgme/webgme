@@ -1,4 +1,4 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define(['logManager',
     'js/Constants',
@@ -13,6 +13,7 @@ define(['logManager',
                              REGISTRY_KEYS,
                              METAAspectHelper,
                              PreferencesHelper) {
+    "use strict";
 
     var PartBrowserControl,
         WIDGET_NAME = 'PartBrowser',

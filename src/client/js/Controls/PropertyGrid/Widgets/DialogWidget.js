@@ -1,3 +1,5 @@
+/*globals define, _*/
+
 define(['js/Controls/PropertyGrid/Widgets/WidgetBase'],
     function (WidgetBase) {
 

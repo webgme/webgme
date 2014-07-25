@@ -1,16 +1,12 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
-
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define(['./ButtonBase',
         'js/Controls/iCheckBox',
         './ToolbarItemBase'], function (buttonBase,
                                             iCheckBox,
                                             ToolbarItemBase) {
+
+    "use strict";
 
     var ToolbarDropDownButton,
         EL_BASE = $('<div/>', {"class": "btn-group"}),
@@ -77,7 +73,7 @@ define(['./ButtonBase',
             params.clickFn = function (data) {
                 dropDownBtn.dropdown('toggle');
                 oclickFn(data);
-            }
+            };
         }
 
         btn = buttonBase.createButton(params);

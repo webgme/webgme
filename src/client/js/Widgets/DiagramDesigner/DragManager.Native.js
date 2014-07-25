@@ -1,16 +1,11 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
- * Author: Robert Kereskenyi
- */
-
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
 define(['logManager',
         'js/Widgets/DiagramDesigner/DragScroll',
         'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'], function (logManager,
                                                     DragScroll,
                                                     DiagramDesignerWidgetConstants) {
+    "use strict";
 
     var DragManager,
         MOVE_CURSOR = 'move',

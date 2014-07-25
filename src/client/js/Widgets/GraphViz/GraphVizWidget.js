@@ -1,4 +1,4 @@
-/*globals define, Raphael, window, WebGMEGlobal*/
+/*globals define, Raphael, window, WebGMEGlobal, d3*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi

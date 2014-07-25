@@ -1,9 +1,11 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define(['js/Constants',
         'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'], function (CONSTANTS,
                                                                                  DiagramDesignerWidgetConstants) {
  
+    "use strict";
+
     var CONTAINMENT_TYPE_LINE_END = "diamond2-xxwide-xxlong",
         POINTER_TYPE_LINE_END = "open-xwide-xlong",
         INHERITANCE_TYPE_LINE_END = "inheritance-xxwide-xxlong",

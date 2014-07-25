@@ -1,10 +1,4 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
-
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 /*
  * Utility helper functions for saving WebGME state and reload on browser back
@@ -13,6 +7,8 @@
 define(['jquery',
         'logManager'], function (_jquery,
                                  logManager) {
+
+    "use strict";
 
     var _stateLoading = false,
         _initialized = false,

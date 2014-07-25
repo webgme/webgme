@@ -1,10 +1,8 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define([], function () {
+
+    "use strict";
 
     //define client-only string constants
     var dragConstants = {'DRAG_ITEMS': 'DRAG_ITEMS',

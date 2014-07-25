@@ -1112,7 +1112,7 @@ define(['logManager',
                     self._exIntConf(selectedIds);
                 } else if(key === MENU_EXPLIB){
                     self._expLib(selectedIds);
-                } else if(key == MENU_UPDLIB){
+                } else if(key === MENU_UPDLIB){
                     self._updLib(selectedIds);
                 }
             },

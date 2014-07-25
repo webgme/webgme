@@ -1,6 +1,8 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
 define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase'], function (DiagramDesignerWidgetDecoratorBase) {
+
+    "use strict";
 
     var ErrorDecorator,
         __parent__ = DiagramDesignerWidgetDecoratorBase,

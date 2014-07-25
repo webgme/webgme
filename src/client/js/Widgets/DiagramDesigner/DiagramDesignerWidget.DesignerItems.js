@@ -1,6 +1,9 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+
 
 define(['js/Widgets/DiagramDesigner/DesignerItem'], function (DesignerItem) {
+
+    "use strict";
 
     var DiagramDesignerWidgetDesignerItems;
 

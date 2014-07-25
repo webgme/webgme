@@ -1,10 +1,4 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
-
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define(['jquery',
         'underscore',
@@ -21,6 +15,8 @@ define(['jquery',
                                     MetaEditorConstants,
                                     EventDispatcher,
                                     METATemplateJS) {
+
+    "use strict";
 
     var META_RULES_CONTAINER_NODE_ID = MetaEditorConstants.META_ASPECT_CONTAINER_ID,
         _client,

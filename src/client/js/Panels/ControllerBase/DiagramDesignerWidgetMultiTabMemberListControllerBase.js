@@ -1,4 +1,4 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define(['logManager',
         'util/guid',
@@ -17,6 +17,8 @@ define(['logManager',
                                    GMEVisualConcepts,
                                    DragHelper,
                                    PreferencesHelper) {
+
+    "use strict";
 
     var DiagramDesignerWidgetMultiTabMemberListControllerBase,
         DEFAULT_DECORATOR = "ModelDecorator",

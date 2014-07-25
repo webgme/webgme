@@ -6,14 +6,10 @@
  */
 
 define(['logManager',
-	    'util/assert',
-        './AutoRouter.Constants',
-        './AutoRouter.Utils',
-        './AutoRouter.Point'], function (logManager,
-										    assert,
-                                            CONSTANTS,
-                                            UTILS,
-                                            ArPoint) {
+           'util/assert',
+           './AutoRouter.Constants',
+           './AutoRouter.Utils',
+           './AutoRouter.Point'], function ( logManager, assert, CONSTANTS, UTILS, ArPoint ) {
 
     "use strict"; 
 

@@ -1,6 +1,8 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define(['jquery-csszoom'], function () {
+
+    "use strict";
 
     var GraphVizWidgetZoom;
 

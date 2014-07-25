@@ -1,9 +1,4 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
- * Author: Robert Kereskenyi
- */
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define(['logManager',
         'js/Utils/GMEConcepts',
@@ -12,6 +7,8 @@ define(['logManager',
                                                                        GMEConcepts,
                                                                        nodePropertyNames,
                                                                        CONSTANTS) {
+
+    "use strict";
 
     var NODE_PROGRESS_CLASS = 'node-progress',
         GME_MODEL_CLASS = "gme-model",

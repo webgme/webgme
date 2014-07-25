@@ -1,9 +1,8 @@
-"use strict";
-/*
- * STRING CONSTANT DEFINITIONS USED IN DESIGNER DIAGRAM
- */
+/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
 define(['js/Constants'], function (CONSTANTS) {
+
+    "use strict";
 
     //return string constants
     return {

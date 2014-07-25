@@ -1,14 +1,12 @@
-/*
- * Copyright (C) 2012 Vanderbilt University, All rights reserved.
- *
- * Author: Robert Kereskenyi
- */
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 /*
  * REGISTRY KEY NAMES USED BY THE UI
  */
 define([], function () {
+
+    "use strict";
+
     return {
         COLOR: 'color',   //fill color of the item
         TEXT_COLOR: 'textColor',   //color of the texts of the item

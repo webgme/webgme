@@ -1,4 +1,4 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define(['js/Utils/GMEConcepts',
     'js/DragDrop/DragHelper',
@@ -12,6 +12,9 @@ define(['js/Utils/GMEConcepts',
                                                REGISTRY_KEYS,
                                                ManualAspectConstants,
                                                DiagramDesignerWidgetMultiTabMemberListControllerBase) {
+
+
+    "use strict";
 
     var SetEditorController;
 

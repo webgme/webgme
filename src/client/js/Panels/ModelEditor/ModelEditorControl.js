@@ -1,4 +1,4 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define(['logManager',
     'js/Constants',
@@ -17,6 +17,8 @@ define(['logManager',
                                                         GMEConcepts,
                                                         GMEVisualConcepts,
                                                         PreferencesHelper) {
+
+    "use strict";
 
     var ModelEditorControl,
         GME_ID = "GME_ID",

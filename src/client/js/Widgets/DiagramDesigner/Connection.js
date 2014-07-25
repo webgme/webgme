@@ -84,7 +84,7 @@ define(['logManager',
         this.designerAttributes.arrowEnd = objDescriptor[DiagramDesignerWidgetConstants.LINE_END_ARROW] || CONNECTION_DEFAULT_END;
         this.designerAttributes.color = objDescriptor[DiagramDesignerWidgetConstants.LINE_COLOR] || CONNECTION_DEFAULT_COLOR;
         this.designerAttributes.width = parseInt(objDescriptor[DiagramDesignerWidgetConstants.LINE_WIDTH], 10) || CONNECTION_DEFAULT_WIDTH;
-        this.designerAttributes.pattern = objDescriptor[DiagramDesignerWidgetConstants.LINE_PATTERN] || CONNECTION_DEFAULT_PATTERN
+        this.designerAttributes.pattern = objDescriptor[DiagramDesignerWidgetConstants.LINE_PATTERN] || CONNECTION_DEFAULT_PATTERN;
         this.designerAttributes.shadowWidth = this.designerAttributes.width + CONNECTION_SHADOW_DEFAULT_WIDTH - CONNECTION_DEFAULT_WIDTH;
         this.designerAttributes.shadowOpacity = CONNECTION_SHADOW_DEFAULT_OPACITY;
         this.designerAttributes.shadowOpacityWhenSelected = CONNECTION_SHADOW_DEFAULT_OPACITY_WHEN_SELECTED;
@@ -1668,7 +1668,9 @@ define(['logManager',
         }
 
         //we got all the intersections of this path with everybody else
-        intersectionSegments.sort(function(a,b){return a-b});
+        intersectionSegments.sort(function(a,b){
+            return a-b;
+        });
         for (len = 0; len < intersectionSegments.length; len += 1) {
             segNum = intersectionSegments[len];
             segmentXings = intersections[segNum];
@@ -1710,7 +1712,7 @@ define(['logManager',
                     //vertical line
                     if (vDir > 0) {
                         //going from top to bottom
-                        sweepFlag = 1
+                        sweepFlag = 1;
                     } else {
                         sweepFlag = 0;
                     }
@@ -1789,7 +1791,9 @@ define(['logManager',
             //if resultIntersectionPathDefs[i] exist, use those
             //otherwise pick the corresponding value from the original array
             if (resultIntersectionPathDefs.hasOwnProperty(segNum)) {
-                resultIntersectionPathDefs[segNum].t.sort(function(a,b){return a-b});
+                resultIntersectionPathDefs[segNum].t.sort(function(a,b){
+                    return a-b;
+                });
 
                 for (j = 0; j < resultIntersectionPathDefs[segNum].t.length; j += 1) {
                     resultPathDefArray.push(resultIntersectionPathDefs[segNum].paths[resultIntersectionPathDefs[segNum].t[j]]);

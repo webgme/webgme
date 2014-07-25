@@ -1,4 +1,4 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define(['logManager',
     'clientUtil',
@@ -7,6 +7,8 @@ define(['logManager',
                                     util,
                                     CONSTANTS,
                                     GridPanelContainmentControlDataGridWidgetEventHandlers) {
+
+    "use strict";
 
     var GridPanelContainmentControPointers;
 

@@ -1,14 +1,9 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
-
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define(['./ButtonBase',
         './ToolbarItemBase'], function (buttonBase,
                                         ToolbarItemBase) {
+    "use strict";
 
     var ToolbarButton;
 

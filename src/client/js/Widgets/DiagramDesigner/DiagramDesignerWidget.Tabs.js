@@ -1,14 +1,9 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
-
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
 define(['js/Toolbar/ToolbarButton',
     'js/Toolbar/ToolbarDropDownButton'], function (ToolbarButton,
                                                    ToolbarDropDownButton) {
+    "use strict";
 
     var DiagramDesignerWidgetTabs,
         TABS_CONTAINER = "diagram-designer-tabs-container",

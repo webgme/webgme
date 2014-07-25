@@ -1,4 +1,4 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define([
         'js/PanelBase/PanelBase',
@@ -17,6 +17,8 @@ define([
         BranchSelectorWidget,
         KeyboardManagerWidget,
         template) {
+
+    "use strict";
 
     var FooterControlsPanel,
         __parent__ = PanelBase;
@@ -56,7 +58,7 @@ define([
         navBarInner.append(pullLeft);
 
         //add version UI piece
-        var pullLeft = $('<div class="pull-left inline"></div>');
+        pullLeft = $('<div class="pull-left inline"></div>');
         pullLeft.append($('<div class="navbar-text"><div class="webgme-version">version: ' + WebGMEGlobal.version + '</div></div>'));
         navBarInner.append(pullLeft);
 

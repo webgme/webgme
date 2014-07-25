@@ -1,6 +1,8 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
 define(['eventDispatcher'], function (EventDispatcher) {
+
+    "use strict";
 
     var DiagramDesignerWidgetEventDispatcher;
 

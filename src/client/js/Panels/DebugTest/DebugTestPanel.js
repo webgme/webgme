@@ -1,6 +1,8 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define(['js/PanelBase/PanelBaseWithHeader'], function (PanelBaseWithHeader) {
+
+    "use strict";
 
     var DebugTestPanel,
         __parent__ = PanelBaseWithHeader,

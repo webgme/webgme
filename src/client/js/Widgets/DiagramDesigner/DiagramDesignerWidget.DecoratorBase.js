@@ -1,10 +1,11 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
 define(['js/Decorators/WidgetDecoratorBase',
         './DiagramDesignerWidget.Constants',
         './DiagramDesignerWidget.DecoratorBase.ConnectionArea'], function (WidgetDecoratorBase,
                                                         DiagramDesignerWidgetConstants,
                                                         DiagramDesignerWidgetDecoratorBaseConnectionArea) {
+    "use strict";
 
     var DiagramDesignerWidgetDecoratorBase,
         DECORATOR_ID = "DiagramDesignerWidgetDecoratorBase";

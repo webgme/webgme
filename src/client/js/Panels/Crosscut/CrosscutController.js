@@ -1,4 +1,4 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define(['logManager',
     'js/RegistryKeys',
@@ -17,6 +17,8 @@ define(['logManager',
                                                DiagramDesignerWidgetMultiTabMemberListControllerBase,
                                                MetaRelations,
                                                nodePropertyNames) {
+
+    "use strict";
 
     var CrosscutController,
         DEFAULT_DECORATOR = "ModelDecorator",

@@ -1,11 +1,9 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define(['./DragConstants',
         './DragEffects'], function (DragConstants, DragEffects) {
+
+    "use strict";
 
     var _getParams = function (dragInfo, params, defaultValue) {
         var result = defaultValue;

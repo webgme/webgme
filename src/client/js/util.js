@@ -1,9 +1,13 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal*/
+
 /*
  * Utility helper functions for the client side
  */
 
 define([], function () {
+
+    "use strict";
+
     var _span = $('<span></span>');
 
     Array.prototype.pushUnique = function (val) {
@@ -101,7 +105,7 @@ define([], function () {
             name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
             var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
                 results = regex.exec(location.search);
-            return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+            return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
         },
 
         toSafeString: function (string) {
@@ -115,5 +119,5 @@ define([], function () {
                 return 1;
             }
         }
-    }
+    };
 });

@@ -1,8 +1,4 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
- * Author: Laszlo Juracz
- */
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define ([
         'clientUtil'
@@ -23,7 +19,7 @@ define ([
             objectToLoad: util.getURLParameterByName('activeObject').toLowerCase(),
             createNewProject: util.getURLParameterByName('create') === "true",
             branchToLoad: util.getURLParameterByName('branch')
-        }
+        };
     };
 
 

@@ -1,8 +1,10 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define(['js/DragDrop/DragHelper',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget'], function (DragHelper,
                                                              DiagramDesignerWidget) {
+
+    "use strict";
 
     var CrosscutWidget;
 

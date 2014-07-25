@@ -1,14 +1,4 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
-
-"use strict";
-
-/*
- * Utility helper functions implementing GME concepts...
- */
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define(['jquery',
         'js/Constants',
@@ -23,6 +13,8 @@ define(['jquery',
                                            METAAspectHelper,
                                            MetaEditorConstants,
                                            displayFormat) {
+
+    "use strict";
 
     var _client,
         DEFAULT_LINE_STYLE = {};

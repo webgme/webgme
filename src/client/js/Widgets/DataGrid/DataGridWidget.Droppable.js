@@ -1,6 +1,8 @@
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal*/
 
 define(['js/DragDrop/DropTarget'], function (dropTarget) {
+
+    "use strict";
 
     var DataGridWidgetDroppable,
         MOUSE_EVENT_POSTFIX = 'DataGridWidgetDroppable',

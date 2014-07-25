@@ -1,14 +1,10 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
- * Author: Robert Kereskenyi
- */
-
-"use strict";
+/*globals define, _, requirejs, WebGMEGlobal, alert*/
 
 define(['js/Dialogs/Import/ImportDialog',
         'loaderCircles'], function (ImportDialog,
                                     LoaderCircles) {
+
+    "use strict";
 
     var _client,
         _loader = new LoaderCircles({"containerElement": $('body')});
