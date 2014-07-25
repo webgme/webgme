@@ -13,7 +13,10 @@ requirejs.config({
         "util": "common/util",
         "baseConfig" : "bin/getconfig",
         "webgme": "webgme",
-        "plugin": "plugin"
+        "plugin": "plugin",
+        "worker": "server/worker",
+        "coreclient": "client/coreclient",
+        "blob": "middleware/blob"
     }
 });
 requirejs(['worker/constants',

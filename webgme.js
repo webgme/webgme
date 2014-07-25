@@ -25,7 +25,10 @@ var PATH = require('path'),
         "util": "common/util",
         "baseConfig" : "bin/getconfig",
         "webgme": "webgme",
-        "plugin": "plugin"
+        "plugin": "plugin",
+        "worker": "server/worker",
+        "coreclient": "client/coreclient",
+        "blob": "middleware/blob"
     };
 
 //All other modules should only configure new path in respect with this base URL

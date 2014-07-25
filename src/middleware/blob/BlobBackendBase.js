@@ -6,7 +6,7 @@
 
 define(['blob/BlobMetadata',
     'fs',
-    '../../',
+    'jszip',
     'mime',
     'util/guid',
     'util/StringStreamReader',
