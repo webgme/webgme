@@ -119,7 +119,7 @@ define(['plugin/PluginConfig',
         ITERATOR_PLACEHOLDER = this._createUniqueName(ITERATOR_PLACEHOLDER);
         ITERATOR_BASE = this._createUniqueName(ITERATOR_BASE);
 
-        this._constraintMapping = {   'bp': 'function(core, currentNode){\n' + 
+        this._constraintMapping = {   'bp': 'function(core, currentNode){\n\n' + 
                                                 'var ' + VIOLATION_VARIABLE_NAME + ' = { hasViolation: false };' +
                                                 '\n\n%code\n' +
                                                 'return ' + VIOLATION_VARIABLE_NAME + '\n}',
@@ -152,10 +152,11 @@ define(['plugin/PluginConfig',
                                                'contains': "%collection.indexOf(%first) !== -1",
 
                                                //Constraint specific mappings
-                                               'getAttribute': "core.getAttribute(%second, %first)",//FIXME
-                                               'getPointer': "this.getNode(core.getPointerPath(%node, %first))",
-                                               'getParent': "this.getNode(core.getParentPath(%node))",
-                                               'getChildren': "core.getChildrenPaths(%node)",
+                                               //node specific mappings
+                                               'getAttribute': "core.getAttribute(getNode(%second), %first)",//FIXME
+                                               'getPointer': "core.getPointerPath(getNode(%node), %first)",
+                                               'getParent': "core.getParentPath(getNode(%node))",
+                                               'getChildren': "core.getChildrenPaths(getNode(%node))",
 
                                                'markViolation': VIOLATION_VARIABLE_NAME + " = { hasViolation: true," +
                                                    " message: %Message, nodes: %node };\n",
