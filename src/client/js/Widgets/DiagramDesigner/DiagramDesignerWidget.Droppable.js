@@ -7,7 +7,7 @@
 "use strict";
 
 define(['js/DragDrop/DropTarget',
-        './DiagramDesignerWidget.Constants.js'], function (dropTarget,
+        './DiagramDesignerWidget.Constants'], function (dropTarget,
                                                         DiagramDesignerWidgetConstants) {
 
     var DiagramDesignerWidgetDroppable,

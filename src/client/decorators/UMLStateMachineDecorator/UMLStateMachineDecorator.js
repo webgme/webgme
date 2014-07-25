@@ -1,7 +1,7 @@
 "use strict";
 
 define(['js/Decorators/DecoratorBase',
-    './DiagramDesigner/UMLStateMachineDecorator.DiagramDesignerWidget.js',
+    './DiagramDesigner/UMLStateMachineDecorator.DiagramDesignerWidget',
     './PartBrowser/UMLStateMachineDecorator.PartBrowserWidget'], function (
                                                            DecoratorBase,
                                                            UMLStateMachineDecoratorDiagramDesignerWidget,

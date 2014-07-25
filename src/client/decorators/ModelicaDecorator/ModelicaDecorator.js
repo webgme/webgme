@@ -9,7 +9,7 @@
 "use strict";
 
 define(['js/Decorators/DecoratorBase',
-    './DiagramDesigner/ModelicaDecorator.DiagramDesignerWidget.js',
+    './DiagramDesigner/ModelicaDecorator.DiagramDesignerWidget',
     './PartBrowser/ModelicaDecorator.PartBrowserWidget'], function (
                                                            DecoratorBase,
                                                            ModelicaDecoratorDiagramDesignerWidget,

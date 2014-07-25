@@ -1,7 +1,7 @@
 "use strict";
 
 define(['js/Decorators/DecoratorBase',
-    './DiagramDesigner/MetaDecorator.DiagramDesignerWidget.js'], function (
+    './DiagramDesigner/MetaDecorator.DiagramDesignerWidget'], function (
                                                            DecoratorBase,
                                                            MetaDecoratorDiagramDesignerWidget) {
 

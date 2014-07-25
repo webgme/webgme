@@ -6,7 +6,7 @@
 
 "use strict";
 
-define(['./DiagramDesignerWidget.Constants.js'], function (DiagramDesignerWidgetConstants) {
+define(['./DiagramDesignerWidget.Constants'], function (DiagramDesignerWidgetConstants) {
 
     var DiagramDesignerWidgetMouse,
         EVENT_POSTFIX = 'DiagramDesignerWidget';

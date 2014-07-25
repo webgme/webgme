@@ -6,7 +6,7 @@
  */
 
 
-define(['./DiagramDesignerWidget.OperatingModes.js',
+define(['./DiagramDesignerWidget.OperatingModes',
         './DiagramDesignerWidget.Constants'], function (DiagramDesignerWidgetOperatingModes,
                                                         DiagramDesignerWidgetConstants) {
 

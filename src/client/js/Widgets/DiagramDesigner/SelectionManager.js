@@ -7,7 +7,7 @@
 
 define(['logManager',
     'clientUtil',
-    './DiagramDesignerWidget.Constants.js'], function (logManager,
+    './DiagramDesignerWidget.Constants'], function (logManager,
                             clientUtil,
                             DiagramDesignerWidgetConstants) {
 

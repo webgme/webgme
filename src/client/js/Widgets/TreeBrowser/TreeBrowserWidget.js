@@ -9,7 +9,7 @@
  */
 define(['logManager',
     'js/Constants',
-    './TreeBrowserWidget.Keyboard.js',
+    './TreeBrowserWidget.Keyboard',
     'js/DragDrop/DragSource',
     'lib/jquery/jquery.dynatree-1.2.5.min',
     'lib/jquery/jquery.contextMenu',

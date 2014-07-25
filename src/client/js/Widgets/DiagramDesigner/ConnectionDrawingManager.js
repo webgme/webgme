@@ -9,7 +9,7 @@
 define(['logManager',
         'js/Constants',
         'js/Widgets/DiagramDesigner/DragScroll',
-        './DiagramDesignerWidget.Constants.js'], function (logManager,
+        './DiagramDesignerWidget.Constants'], function (logManager,
                                                         CONSTANTS,
                                                         DragScroll,
                                                         DiagramDesignerWidgetConstants) {

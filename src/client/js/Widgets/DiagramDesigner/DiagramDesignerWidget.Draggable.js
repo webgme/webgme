@@ -7,7 +7,7 @@
 
 define(['js/DragDrop/DragSource',
     'js/DragDrop/DragHelper',
-    './DiagramDesignerWidget.Constants.js'], function (dragSource,
+    './DiagramDesignerWidget.Constants'], function (dragSource,
                                                     dragHelper,
                                                     DiagramDesignerWidgetConstants) {
 
