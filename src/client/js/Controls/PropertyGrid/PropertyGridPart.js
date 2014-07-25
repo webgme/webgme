@@ -6,7 +6,7 @@
  */
 
 define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
-        'css!./styles/PropertyGridPart'], function (PropertyGridWidgetManager) {
+        'css!./styles/PropertyGridPart.css'], function (PropertyGridWidgetManager) {
 
     "use strict";
 

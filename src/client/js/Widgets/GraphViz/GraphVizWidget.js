@@ -7,7 +7,7 @@
 define(['logManager',
         'js/Widgets/GraphViz/GraphVizWidget.Zoom',
         'd3',
-        'css!./styles/GraphVizWidget'], function (logManager,
+        'css!./styles/GraphVizWidget.css'], function (logManager,
                                                                GraphVizWidgetZoom) {
     "use strict";
 

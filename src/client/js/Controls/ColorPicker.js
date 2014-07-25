@@ -6,7 +6,7 @@
  */
 
 define(['jquery-spectrum',
-    'css!./styles/ColorPicker'], function (/*_spectrum*/) {
+    'css!./styles/ColorPicker.css'], function (/*_spectrum*/) {
 
     "use strict";
 

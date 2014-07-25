@@ -5,7 +5,7 @@
  */
 
 define(['js/PanelBase/PanelBase',
-    'css!./styles/SplitPanel'], function (PanelBase) {
+    'css!./styles/SplitPanel.css'], function (PanelBase) {
 
     "use strict";
 

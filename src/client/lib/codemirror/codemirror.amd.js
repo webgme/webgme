@@ -5,7 +5,7 @@
  */
 
 define(['lib/codemirror/codemirror_javascript.min',
-        'css!/css/codemirror/codemirror',
-        'css!/css/codemirror/codemirror.bootstrap'], function () {
+        'css!/css/codemirror/codemirror.css',
+        'css!/css/codemirror/codemirror.bootstrap.css'], function () {
     return CodeMirror;
 });
