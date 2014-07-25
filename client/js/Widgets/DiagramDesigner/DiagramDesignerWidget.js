@@ -446,7 +446,12 @@ define(['logManager',
 
     DiagramDesignerWidget.prototype._resizeItemContainer = function () {
         var zoomedWidth = this._containerSize.w / this._zoomRatio,
-            zoomedHeight = this._containerSize.h / this._zoomRatio;
+            zoomedHeight = this._containerSize.h / this._zoomRatio,
+
+            paddingLeft,
+            paddingTop,
+
+            offset;
 
         this.logger.debug('MinZoomedSize: ' + zoomedWidth + ', ' + zoomedHeight);
 
@@ -466,20 +471,34 @@ define(['logManager',
 
         this._centerBackgroundText();
 
-        this._offset = this.skinParts.$diagramDesignerWidgetBody.offset();
+        offset = this.skinParts.$diagramDesignerWidgetBody.offset();
+
+        paddingTop = parseInt( this.skinParts.$diagramDesignerWidgetBody.css('padding-top').replace("px", "") );
+        paddingLeft = parseInt( this.skinParts.$diagramDesignerWidgetBody.css('padding-left').replace("px", "") );
+
+        offset.left += paddingLeft;
+        offset.top += paddingTop;
+
+        this._offset = offset;
+
     };
 
     DiagramDesignerWidget.prototype.getAdjustedMousePos = function (e) {
         var childrenContainerOffset = this._offset,
             childrenContainerScroll = this._scrollPos,
             pX = e.pageX - childrenContainerOffset.left + childrenContainerScroll.left,
-            pY = e.pageY - childrenContainerOffset.top + childrenContainerScroll.top;
+            pY = e.pageY - childrenContainerOffset.top + childrenContainerScroll.top,
+            position;
 
         pX /= this._zoomRatio;
         pY /= this._zoomRatio;
 
-        return { "mX": pX > 0 ? pX : 0,
-            "mY": pY > 0 ? pY : 0 };
+        position = {
+            "mX": pX > 0 ? pX : 0,
+            "mY": pY > 0 ? pY : 0
+        };
+
+        return position;
     };
 
     DiagramDesignerWidget.prototype.getAdjustedOffset = function (offset) {
