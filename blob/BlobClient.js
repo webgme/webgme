@@ -171,7 +171,7 @@ define(['./Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, Bl
                     callback(err || res.status);
                 } else {
                     // response is an arraybuffer
-                    callback(null, res.body);
+                    callback(null, res.xhr.response);
                 }
             });
         }
