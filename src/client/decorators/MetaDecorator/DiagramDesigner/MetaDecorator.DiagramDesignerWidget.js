@@ -9,7 +9,7 @@
 define(['js/Constants',
     'js/NodePropertyNames',
     'js/RegistryKeys',
-    '../../DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesignerWidget.js',
+    '../../DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesignerWidget',
     'text!./templates/MetaDecorator.DiagramDesignerWidget.html',
     './Attribute',
     './AttributeDetailsDialog',

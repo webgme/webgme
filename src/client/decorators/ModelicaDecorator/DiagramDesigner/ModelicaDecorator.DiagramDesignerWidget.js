@@ -11,7 +11,7 @@
 define(['js/Constants',
     'js/NodePropertyNames',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase',
-    '../Core/ModelicaDecorator.Core.js',
+    '../Core/ModelicaDecorator.Core',
     'text!./ModelicaDecorator.DiagramDesignerWidget.html',
     'css!./ModelicaDecorator.DiagramDesignerWidget'], function (CONSTANTS,
                                                        nodePropertyNames,

@@ -7,7 +7,7 @@
 "use strict";
 
 define(['logManager',
-    './DiagramDesignerWidget.Constants.js',
+    './DiagramDesignerWidget.Constants',
     './ErrorDecorator'], function (logManager,
                                  DiagramDesignerWidgetConstants,
                                  ErrorDecorator) {

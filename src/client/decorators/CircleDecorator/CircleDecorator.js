@@ -1,7 +1,7 @@
 "use strict";
 
 define(['js/Decorators/DecoratorBase',
-    './DiagramDesigner/CircleDecorator.DiagramDesignerWidget.js',
+    './DiagramDesigner/CircleDecorator.DiagramDesignerWidget',
     './PartBrowser/CircleDecorator.PartBrowserWidget'], function (
                                                            DecoratorBase,
                                                            CircleDecoratorDiagramDesignerWidget,

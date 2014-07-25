@@ -6,7 +6,7 @@
  */
 
 define(['logManager',
-        './AutoRouter.Size.js'], function (logManager,
+        './AutoRouter.Size'], function (logManager,
                                             ArSize) {
 
     "use strict";

@@ -9,7 +9,7 @@
 "use strict";
 
 define(['js/Constants',
-    '../Core/ModelicaDecorator.Core.js',
+    '../Core/ModelicaDecorator.Core',
     'js/NodePropertyNames',
     'loaderProgressBar',
     'js/Widgets/PartBrowser/PartBrowserWidget.DecoratorBase',

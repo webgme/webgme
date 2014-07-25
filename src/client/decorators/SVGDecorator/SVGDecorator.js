@@ -5,7 +5,7 @@
  */
 
 define(['js/Decorators/DecoratorBase',
-    './DiagramDesigner/SVGDecorator.DiagramDesignerWidget.js',
+    './DiagramDesigner/SVGDecorator.DiagramDesignerWidget',
     './PartBrowser/SVGDecorator.PartBrowserWidget'], function (
                                                            DecoratorBase,
                                                            SVGDecoratorDiagramDesignerWidget,

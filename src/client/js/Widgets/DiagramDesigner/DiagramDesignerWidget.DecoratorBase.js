@@ -1,7 +1,7 @@
 "use strict";
 
 define(['js/Decorators/WidgetDecoratorBase',
-        './DiagramDesignerWidget.Constants.js',
+        './DiagramDesignerWidget.Constants',
         './DiagramDesignerWidget.DecoratorBase.ConnectionArea'], function (WidgetDecoratorBase,
                                                         DiagramDesignerWidgetConstants,
                                                         DiagramDesignerWidgetDecoratorBaseConnectionArea) {

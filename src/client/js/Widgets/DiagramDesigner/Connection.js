@@ -6,7 +6,7 @@
 
 define(['logManager',
     'clientUtil',
-    './DiagramDesignerWidget.Constants.js',
+    './DiagramDesignerWidget.Constants',
     './DiagramDesignerWidget.OperatingModes',
     './Connection.EditSegment',
     './Connection.SegmentPoint'], function (logManager,
