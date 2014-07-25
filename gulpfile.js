@@ -2,7 +2,7 @@
 
 var gulp = require('gulp'),
     jshint = require('gulp-jshint'),
-    sourcePattern = 'client/js/**/*.js';
+    sourcePattern = 'src/client/js/**/*.js';
 
 gulp.task('lint', function () {
     'use strict';
