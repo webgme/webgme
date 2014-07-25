@@ -1,4 +1,4 @@
-"use strict";
+/*globals define*/
 
 define(['logManager',
         'js/NodePropertyNames',
@@ -7,7 +7,10 @@ define(['logManager',
                                                     nodePropertyNames,
                                                     METAAspectHelper,
                                                     constraintManagerDialogTemplate) {
-  
+
+
+    "use strict";
+
     var dialog_base = $(constraintManagerDialogTemplate);
 
     var ConstraintManager = function(_client) {
@@ -37,7 +40,7 @@ define(['logManager',
         };
 
         doValidate = function () {
-            if (constraints.length == 0 ) {
+            if (constraints.length === 0 ) {
                 addValidationResult('SUCCESS: No constraints defined for <strong>' + node_name + '</strong>', 'alert-success');
             } else {
                 constraints.forEach(function(constraint) {
