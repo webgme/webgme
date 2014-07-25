@@ -1,26 +1,34 @@
-/*
- * Copyright (C) 2013-2014 Vanderbilt University, All rights reserved.
- *
- * Author: Tamas Kecskes
+/*globals require, $, console, angular*/
+
+/**
+ * @author kecso / https://github.com/kecso
+ * @author nabana / https://github.com/nabana
  */
-//This is the only module which doesn't checks for requirejs, and this is the only which defines the baseUrl!!!
+
+var webGMEGlobal;
+
+(function(){
+
+"use strict";
+
+//This is the only module which doesn't check for requirejs, and this is the only which defines the baseUrl
 var PATH = require('path'),
     FS = require('fs'),
     requirejs = require('requirejs'),
-    baseDir = __dirname,
+    baseDir = __dirname + '/src/',
     paths = {
         "logManager": "common/LogManager",
-        "storage": "storage",
-        "core": "core",
+        "storage": "common/storage",
+        "core": "common/core",
         "server": "server",
-        "auth": "auth",
-        "util": "util",
+        "auth": "server/auth",
+        "util": "common/util",
         "baseConfig" : "bin/getconfig",
         "webgme": "webgme",
         "plugin": "plugin"
     };
 
-//All other modules should only configure new path in respect with this base URL!!!
+//All other modules should only configure new path in respect with this base URL
 requirejs.config({
     nodeRequire: require,
     baseUrl: baseDir,
@@ -176,7 +184,7 @@ webGMEGlobal = {
 //TODO this should be done already in getconfig !!!
 webGMEGlobal.setConfig({
     decoratorpaths : [PATH.join(PATH.join(baseDir,'/client'),"/decorators")],
-    pluginBasePaths : [PATH.join(baseDir,"/coreplugins")],
+    pluginBasePaths : [PATH.join(baseDir,"/plugin/coreplugins")],
     visualizerDescriptors : [PATH.join(baseDir,"/client/js/Visualizers.json")]/*,
     rextrast : {
         'example' : PATH.join(baseDir,"/middlewares/exampleRExtraST")
@@ -193,3 +201,5 @@ module.exports = {
     logManager: requirejs('logManager'),
     runPlugin: requirejs('server/runplugin')
 };
+
+})();

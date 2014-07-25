@@ -1,11 +1,19 @@
 var requirejs = require("requirejs"),
-    BASEPATH = __dirname + "/..",
+    BASEPATH = __dirname + "/../..",
     WEBGME = require(BASEPATH+'/webgme');
 requirejs.config({
     nodeRequire: require,
     baseUrl: BASEPATH,
     paths: {
-        "logManager": "common/LogManager"
+        "logManager": "common/LogManager",
+        "storage": "common/storage",
+        "core": "common/core",
+        "server": "server",
+        "auth": "server/auth",
+        "util": "common/util",
+        "baseConfig" : "bin/getconfig",
+        "webgme": "webgme",
+        "plugin": "plugin"
     }
 });
 requirejs(['worker/constants',
