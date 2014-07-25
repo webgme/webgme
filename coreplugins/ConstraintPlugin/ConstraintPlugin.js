@@ -120,6 +120,8 @@ define(['plugin/PluginConfig',
         ITERATOR_BASE = this._createUniqueName(ITERATOR_BASE);
 
         this._constraintMapping = {   'bp': 'function(core, currentNode){\n\n' + 
+                                                '/* Adding utility functions like getNode and loadStartingNodes */\n' +
+                                                '//TODO\n\n' +
                                                 'var ' + VIOLATION_VARIABLE_NAME + ' = { hasViolation: false };' +
                                                 '\n\n%code\n' +
                                                 'return ' + VIOLATION_VARIABLE_NAME + '\n}',
