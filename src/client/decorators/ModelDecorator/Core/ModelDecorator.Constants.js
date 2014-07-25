@@ -1,9 +1,12 @@
-"use strict";
+/*globals define*/
+
 /*
  * STRING CONSTANT DEFINITIONS USED IN DECORATOR
  */
 
 define([], function () {
+
+    "use strict";
 
     //return string constants
     return {

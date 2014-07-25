@@ -7,7 +7,7 @@
 
 define(['logManager',
 	    'util/assert',
-        './AutoRouter.Constants.js',
+        './AutoRouter.Constants',
         './AutoRouter.Utils',
         './AutoRouter.Path',
         './AutoRouter.Port',

@@ -6,7 +6,7 @@
  */
 
 define(['logManager',
-        './AutoRouter.Point.js',
+        './AutoRouter.Point',
         './AutoRouter.Size'], function (logManager,
                                             ArPoint,
                                             ArSize) {

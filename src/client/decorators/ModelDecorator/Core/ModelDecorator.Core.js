@@ -1,10 +1,8 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
+/*globals define, _, WebGMEGlobal*/
 
-"use strict";
+/**
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ */
 
 define(['js/Constants',
     'js/NodePropertyNames',
@@ -25,6 +23,8 @@ define(['js/Constants',
                          displayFormat,
                          GMEConcepts,
                          ContextMenu) {
+
+    "use strict";
 
     var ModelDecoratorCore,
         ABSTRACT_CLASS = 'abstract',

@@ -1,10 +1,12 @@
-"use strict";
+/*globals define, _, WebGMEGlobal*/
 
 define(['logManager',
         'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
         'js/Constants'], function (logManager,
                                      DiagramDesignerWidgetConstants,
                                      CONSTANTS) {
+
+    "use strict";
 
     var Port,
         PORT_CONNECTOR_LEN = 20,

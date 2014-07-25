@@ -7,7 +7,7 @@
 
 define(['logManager',
 	    'util/assert',
-        './AutoRouter.Port.js'], function (logManager,
+        './AutoRouter.Port'], function (logManager,
                                         assert,
                                         AutoRouterPort) {
 

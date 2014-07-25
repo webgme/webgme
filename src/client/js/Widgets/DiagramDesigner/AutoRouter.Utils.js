@@ -5,7 +5,7 @@
  * @author brollb / https://github/brollb
  */
 
-define(['./AutoRouter.Constants.js',
+define(['./AutoRouter.Constants',
 	    'util/assert',
 	    './AutoRouter.Rect',
         './AutoRouter.Point'], function(CONSTANTS,

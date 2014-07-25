@@ -1,11 +1,11 @@
-"use strict";
+/*globals define, _, WebGMEGlobal*/
 
 define(['js/Constants',
     'js/NodePropertyNames',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     'text!../Core/ModelDecorator.html',
-    '../Core/ModelDecorator.Core.js',
+    '../Core/ModelDecorator.Core',
     '../Core/ModelDecorator.Constants',
     'js/DragDrop/DragConstants',
     'js/DragDrop/DragHelper',
@@ -20,6 +20,8 @@ define(['js/Constants',
                                                           DragConstants,
                                                           DragHelper,
                                                           ContextMenu) {
+
+    "use strict";
 
     var ModelDecoratorDiagramDesignerWidget,
         DECORATOR_ID = "ModelDecoratorDiagramDesignerWidget",

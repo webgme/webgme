@@ -1,11 +1,13 @@
-"use strict";
+/*globals define, _*/
 
 define(['js/Decorators/DecoratorBase',
-    './DiagramDesigner/ModelDecorator.DiagramDesignerWidget.js',
+    './DiagramDesigner/ModelDecorator.DiagramDesignerWidget',
     './PartBrowser/ModelDecorator.PartBrowserWidget'], function (
                                                            DecoratorBase,
                                                            ModelDecoratorDiagramDesignerWidget,
                                                            ModelDecoratorPartBrowserWidget) {
+    "use strict";
+
 
     var ModelDecorator,
         __parent__ = DecoratorBase,

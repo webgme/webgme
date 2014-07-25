@@ -5,7 +5,7 @@
  * @author brollb / https://github/brollb
  */
 
-define(['./AutoRouter.Point.js'], function (ArPoint){
+define(['./AutoRouter.Point'], function (ArPoint){
 //define([], function (){
 
     "use strict"; 
