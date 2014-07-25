@@ -8,7 +8,7 @@ gulp.task('lint', function () {
     'use strict';
 
     gulp.src(sourcePattern)
-        .pipe(jshint())
+        .pipe(jshint('.jshintrc'))
         .pipe(jshint.reporter('jshint-stylish'));
 });
 
