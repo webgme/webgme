@@ -1,7 +1,6 @@
+/*globals define*/
 /*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved
- *
- * Author: Brian Broll
+ * @author brollb / https://github/brollb
  * 
  * Code generating interpreter for SnapGME
  */
@@ -9,6 +8,7 @@
 define(['plugin/PluginConfig',
         'plugin/PluginBase'], function (PluginConfig,
                                        PluginBase){
+   "use strict";
 
     var SnapPlugin = function() {
         //Call base class's constructor
@@ -20,7 +20,7 @@ define(['plugin/PluginConfig',
         //% sign indicates it will be replaced with either 
         //attribute of the given name or ptr tgt of the given name
         this._languages = {};
-        this._languages['python'] = { 'bp': '#!/usr/bin/python2\n\n%code',
+        this._languages.python = { 'bp': '#!/usr/bin/python2\n\n%code',
                                       'map': { 'Add': "%first + %second", 
                                                'Subtract': "%first - %second", 
                                                'Multiply': "(%first) * (%second)", 
@@ -37,7 +37,7 @@ define(['plugin/PluginConfig',
                                       'ext': 'py' };
 
         //Change the languages to be within the map
-        this._languages['javascript'] = { 'bp': '#!/usr/bin/node\n\n%code',
+        this._languages.javascript = { 'bp': '#!/usr/bin/node\n\n%code',
                                           'map': { 'Add': "%first + %second", 
                                                    'Subtract': "%first - %second", 
                                                    'Multiply': "(%first) * (%second)", 
@@ -81,7 +81,7 @@ define(['plugin/PluginConfig',
                 "valueType": "boolean",
                 "readOnly": false
             }
-        ]
+        ];
     };
 
     SnapPlugin.prototype._loadStartingNodes = function(callback){
@@ -92,7 +92,7 @@ define(['plugin/PluginConfig',
         var load = function(node, fn){
             self.core.loadChildren(node,function(err,children){
                 if(err){
-                    fn(err)
+                    fn(err);
                 } else {
                     var j = children.length,
                         e = null; //error
@@ -100,15 +100,16 @@ define(['plugin/PluginConfig',
                     if(j === 0){
                         fn(null);
                     }
-
-                    for(var i=0;i<children.length;i++){
-                        self._nodeCache[self.core.getPath(children[i])] = children[i];
-                        load(children[i], function(err){
+                    var cb = function(err){
                             e = e || err;
                             if(--j === 0){//callback only on last child
                                 fn(e);
                             }
-                        });
+                        };
+
+                    for(var i=0;i<children.length;i++){
+                        self._nodeCache[self.core.getPath(children[i])] = children[i];
+                        load(children[i], cb(err));
                     }
                 }
             });
@@ -148,7 +149,7 @@ define(['plugin/PluginConfig',
         var self = this;
         self.config = self.getCurrentConfig();
 
-        if(!self._isTypeOf(self.activeNode, self.META['Project'])){
+        if(!self._isTypeOf(self.activeNode, self.META.Project)){
             self._errorMessages(self.activeNode, 
                 "Current project is an invalid type. Please run the plugin on a project.");
         }
@@ -162,7 +163,7 @@ define(['plugin/PluginConfig',
             } else {
                 //executing the plugin
                 self.logger.info("Finished loading children");
-                var err = self._runSync();
+                err = self._runSync();
                 if(err){
                     self.result.success = false;
                     callback(err,self.result);
@@ -186,7 +187,7 @@ define(['plugin/PluginConfig',
 
     SnapPlugin.prototype._runSync = function(){
         var err = null,
-            currentNode,
+            currentNode = null,
             languages = [];
 
         this.projectName = this.core.getAttribute(this.activeNode,'name');
@@ -201,28 +202,28 @@ define(['plugin/PluginConfig',
 
         this.variables = [];
 
-        var currentNode = null,
-            nodeIds = this.core.getChildrenPaths(this.activeNode),
-            i = nodeIds.length;
+        var nodeIds = this.core.getChildrenPaths(this.activeNode),
+            i = nodeIds.length,
+            l;
 
         //Find the hat and declare variables
         while(i-- && currentNode === null){
-            if(this._isTypeOf(nodeIds[i], this.META["Hat"]) 
-               && !this._isTypeOf(nodeIds[i], this.META["Command"]))
-           currentNode = this.getNode(nodeIds[i]);
+            if(this._isTypeOf(nodeIds[i], this.META.Hat) && !this._isTypeOf(nodeIds[i], this.META.Command)){
+                currentNode = this.getNode(nodeIds[i]);
+            }
         }
 
         //Follow the next pointers and map each object to it's given code
         while(this.core.getPointerPath(currentNode, 'next')){
             currentNode = this.getNode(this.core.getPointerPath(currentNode, 'next'));
-            for (var l in this.generatedCode){
+            for (l in this.generatedCode){
                 if(this.generatedCode.hasOwnProperty(l)){
                     this.generatedCode[l] += this._generateCode(l, currentNode) + "\n";
                 }
             }
         }
 
-        for (var l in this.generatedCode){
+        for (l in this.generatedCode){
             if(this.generatedCode.hasOwnProperty(l)){
                 this.generatedCode[l] = this._languages[l].bp.replace("%code", this.generatedCode[l]);
             }
@@ -247,7 +248,7 @@ define(['plugin/PluginConfig',
                 var nId = this.core.getPointerPath(node, ptrs[i]),
                     dec = "";
 
-                if(this._isTypeOf(nId, this.META["Variable"]) && this.variables.indexOf(nId)){
+                if(this._isTypeOf(nId, this.META.Variable) && this.variables.indexOf(nId)){
                     //Declare the variable
 
                     var n = this.getNode(nId);
@@ -273,18 +274,17 @@ define(['plugin/PluginConfig',
         //Return code that is part of another block
 
 
-        if(this._isTypeOf(nodeId, this.META["Predicate"])){
+        if(this._isTypeOf(nodeId, this.META.Predicate)){
             //Return the snippet inline
             return this._generateCode(language, this.getNode(nodeId));
 
         }
 
-        if(this._isTypeOf(nodeId, this.META["Command"])){//Return the snippet with an indent
+        if(this._isTypeOf(nodeId, this.META.Command)){//Return the snippet with an indent
             var node = this.getNode(nodeId),
                 snippet = "\t" + this._generateCode(language, node).replace(/\n/g, "\n\t");
 
-            while(this.core.getPointerPath(node, 'next') 
-                    && this._isTypeOf(this.core.getPointerPath(node, 'next'), this.META["Command"])){
+            while(this.core.getPointerPath(node, 'next') && this._isTypeOf(this.core.getPointerPath(node, 'next'), this.META.Command)){
                 node = this.getNode(this.core.getPointerPath(node, 'next'));
                 snippet += "\n\t" + this._generateCode(language, node);
             }
@@ -297,8 +297,9 @@ define(['plugin/PluginConfig',
         var primitives = this._languages[language].primitives,
             v = { 'name': this.core.getAttribute(node, 'name'), //variable
                   'val': this.core.getAttribute(node, 'value') };
-        if(primitives === null)//Not declaring variables
+        if(primitives === null){//Not declaring variables
             return "";
+    }
 
         for(var type in primitives){
             if(primitives.hasOwnProperty(type)){
@@ -318,12 +319,10 @@ define(['plugin/PluginConfig',
             artifact = self.blobClient.createArtifact(fileName+"_code"),
             keys = Object.keys(code),
             i = keys.length,
-            language;
+            language,
 
             //self._addFiles(fileName, keys, artifact);
-        while (i--){
-            language = keys[i];
-            artifact.addFile(fileName + "." + self._languages[language].ext,code[language],function(err){
+            cb = function(err){
                 if(err){
                     callback(err);
                 } else {
@@ -347,7 +346,11 @@ define(['plugin/PluginConfig',
                         });
                     }
                 }
-            });
+            };
+
+        while (i--){
+            language = keys[i];
+            artifact.addFile(fileName + "." + self._languages[language].ext,code[language], cb);
         }
     };
 
