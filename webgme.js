@@ -25,7 +25,7 @@ var PATH = require('path'),
         "webgme": "webgme",
         "plugin": "plugin",
         "worker": "server/worker",
-        "coreclient": "client/coreclient",
+        "coreclient": "common/core/users",
         "blob": "middleware/blob"
     };
 
