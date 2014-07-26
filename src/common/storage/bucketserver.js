@@ -4,7 +4,7 @@
  * Author: Tamas Kecskes
  */
 
-define([ "util/assert","util/guid","util/url","../../../node_modules/socket.io","worker/serverworkermanager" ], function(ASSERT,GUID,URL,IO,SWM){
+define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkermanager" ], function(ASSERT,GUID,URL,IO,SWM){
 
     var server = function(_database,options){
         ASSERT(typeof _database === 'object');
