@@ -895,7 +895,15 @@ console.log("Object changed to " + nodeId);
 
     SnapEditorControl.prototype.destroy = function(){
         //When you changing to meta view or something
+        this._detachClientEventListeners();
+        this._removeToolbarItems();
+        this._client.removeUI(this._territoryId);
     }; 
+
+    SnapEditorControl.prototype._removeToolbarItems = function(){
+        //Remove any toolbar items
+        //TODO
+    };
 
     _.extend(SnapEditorControl.prototype, SnapEditorEventHandlers.prototype);
 
