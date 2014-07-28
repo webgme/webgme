@@ -139,8 +139,8 @@
   <rect
      style="fill:#ffffff;fill-rule:evenodd;stroke:#ffffff;stroke-width:5.33687353px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;overflow:hidden"
      id="msgbox"
-     class="y-shift-node"
-     width="46.769127"
+     class="x-stretch-Message y-shift-node"
+     width="36.769127"
      height="8.3551264"
      x="57.454437"
      y="53.643917"
@@ -221,6 +221,14 @@
      x2="79.852654"
      y2="86.441727"
      id="line25" />
+  <!-- Bounding Boxes (For string length approx before initial render) -->
+  <rect
+     style="opacity:0"
+     id="Message-bounding-box"
+     width="30"
+     height="19"
+     x="0.56333113"
+     y="5.536983"/>
   <!-- Initial Measurements -->
   <rect
      style="opacity:0"
@@ -245,7 +253,7 @@
      class="initial-measure"
      data-ptr="Message"
      id="Message-initial-measure"
-     width="56.800045"
+     width="4.800045"
      height="14.032192"
      x="44.992043"
      y="75.828255" />
