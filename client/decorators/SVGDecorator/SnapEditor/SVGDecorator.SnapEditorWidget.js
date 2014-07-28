@@ -124,6 +124,7 @@ define(['js/Constants',
 
                                  $(tempName).editInPlace({"class": id + "-edit",
                                                          "value": self.name,
+                                                         "css": { 'z-index': 10000 },
                                                          "onChange": function (oldValue, newValue) {
                                                              self._saveAttributeChange(id, newValue);
                                                          },
@@ -306,6 +307,7 @@ define(['js/Constants',
 
                     $(tempName).editInPlace({"class": id + "-edit",
                         "value": $(this).text(),
+                        "css": { 'z-index': 10000 },
                         "onChange": function (oldValue, newValue) {
                             self._saveAttributeChange(id, newValue);
                         },
