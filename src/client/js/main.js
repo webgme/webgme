@@ -60,6 +60,7 @@ require.config({
 
         'util': 'common/util',
         'core': 'common/core',
+        'coreclient': 'common/core/users',
         'storage': 'common/storage',
         'blob': 'middleware/blob',
 
