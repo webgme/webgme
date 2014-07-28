@@ -1,5 +1,0 @@
-eclipse.preferences.version=1
-excluded=core/lib//*
-globals=console, setTimeout,setInterval,clearInterval,process,sessionStorage,localStorage
-included=//*.js
-options=laxbreak\:true

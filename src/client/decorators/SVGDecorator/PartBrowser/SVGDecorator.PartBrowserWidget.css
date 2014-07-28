@@ -1,0 +1,57 @@
+/*#DBEAFC;*/
+.part .svg-decorator {
+  text-align: center;
+  position: relative; }
+  .part .svg-decorator .svg-content svg {
+    vertical-align: top; }
+    .part .svg-decorator .svg-content svg .connection-area {
+      stroke: #FF0000;
+      stroke-width: 5.5; }
+  .part .svg-decorator .name {
+    white-space: nowrap;
+    font-size: 9px;
+    font-weight: bold;
+    text-transform: uppercase;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 16px;
+    line-height: 16px;
+    background-color: #fff; }
+  .part .svg-decorator.abstract .name {
+    font-style: italic;
+    color: #aaaaaa; }
+  .part .svg-decorator .ports {
+    position: absolute;
+    top: 0;
+    font-size: 10px; }
+    .part .svg-decorator .ports.ports-l {
+      left: 0px; }
+    .part .svg-decorator .ports.ports-r {
+      left: 100px; }
+    .part .svg-decorator .ports .port {
+      position: absolute;
+      height: 13px;
+      line-height: 13px; }
+      .part .svg-decorator .ports .port .title {
+        position: absolute;
+        overflow: hidden;
+        text-overflow: ellipsis; }
+      .part .svg-decorator .ports .port .icon {
+        position: absolute; }
+        .part .svg-decorator .ports .port .icon img {
+          width: 13px;
+          height: 13px; }
+      .part .svg-decorator .ports .port .connector {
+        margin-left: 0;
+        margin-top: 0; }
+    .part .svg-decorator .ports.ports-l .port .title {
+      text-align: left; }
+    .part .svg-decorator .ports.ports-r .port .title {
+      text-align: right; }
+    .part .svg-decorator .ports.ports-r .port .icon img {
+      -webkit-transform: scaleX(-1);
+      -moz-transform: scaleX(-1);
+      -ms-transform: scaleX(-1);
+      -o-transform: scaleX(-1);
+      transform: scaleX(-1); }

@@ -1,0 +1,12 @@
+@import "../Core/CircleDecorator";
+
+div.part {
+  @include circle_decorator_core;
+
+  .circle-decorator {
+    .name {
+      position: absolute;
+      top: 10px;
+    }
+  }
+}

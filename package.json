@@ -35,8 +35,13 @@
     "socket.io-client": "=0.9.10",
     "jszip": "=2.2.0",
     "commander": "=2.1.0",
-    "aws-sdk": "=1.18.0"
+    "aws-sdk": "=1.18.0",
+    "superagent": "=0.18.2"
   },
-  "devDependencies": {},
+  "devDependencies": {
+      "gulp": "=3.8.6",
+      "gulp-jshint": "=1.8.0",
+      "jshint-stylish": "=0.4.0"
+  },
   "main": "webgme"
 }
