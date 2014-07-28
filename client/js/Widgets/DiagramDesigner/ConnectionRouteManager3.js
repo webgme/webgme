@@ -1,6 +1,10 @@
-"use strict";
-
+/*globals define*/
+/*
+ * @author brollb / https://github/brollb
+ */
 define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoRouter, Profiler) {
+
+    "use strict";
 
     var ConnectionRouteManager3,
         DESIGNERITEM_SUBCOMPONENT_SEPARATOR = "_x_";
@@ -28,12 +32,13 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
 
         this._onComponentUpdate = function(_canvas, ID) {//Boxes and lines
             if( self.diagramDesigner.itemIds.indexOf( ID ) !== -1 ){
-                if( self.diagramDesigner.items[ID].rotation !== self._autorouterBoxRotation[ID] ) //Item has been rotated
+                if( self.diagramDesigner.items[ID].rotation !== self._autorouterBoxRotation[ID] ){ //Item has been rotated
                     try{
                         self._resizeItem( ID );
                     }catch(e){
                         self.logger.error('ConnectionRouteManager3.resizeItem failed with error: ' + e);
                     }
+                }
             }
        };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_UPDATE, this._onComponentUpdate);
@@ -58,18 +63,19 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_CREATE, this._onComponentCreate);
 
         this._onComponentResize = function(_canvas, ID) {
-            if( self._autorouterBoxes[ID.ID] )
+            if( self._autorouterBoxes[ID.ID] ){
                 try{
                     self._resizeItem( ID.ID );
                 }catch(e){
                     self.logger.error('ConnectionRouteManager3.resizeItem failed with error: ' + e);
                 }
-            else
+            } else {
                 try{
                     self.insertBox( ID.ID );
                 }catch(e){
                     self.logger.error('ConnectionRouteManager3.insertBox failed with error: ' + e);
                 }
+            }
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ITEM_SIZE_CHANGED, this._onComponentResize);
 
@@ -109,8 +115,9 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         this._onUnregisterSubcomponent = function(sender, ids){
             var longid = ids.objectID + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + ids.subComponentID;
             try{
-                if(self._autorouterBoxes[longid])
+                if(self._autorouterBoxes[longid]){
                     self.deleteItem(longid);
+                }
             }catch(e){
                 self.logger.error('ConnectionRouteManager3.deleteItem failed with error: ' + e);
             }
@@ -389,8 +396,9 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         //Set the port as a component of the objId
         this.autorouter.setComponent(this._autorouterBoxes[objId], this._autorouterBoxes[longid]);
 
-        if(this._autorouterPorts[objId].indexOf(subCompId) === -1)
+        if(this._autorouterPorts[objId].indexOf(subCompId) === -1){
             this._autorouterPorts[objId].push(subCompId);
+        }
 
     };
 
@@ -432,24 +440,30 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
                     leftAngle = 180,
                     topAngle = 270;
 
-                if( rightAngle < a1 || rightAngle > a2 )
+                if( rightAngle < a1 || rightAngle > a2 ){
                     x2 += 5;
+                }
 
-                if( leftAngle < a1 || leftAngle > a2 )
+                if( leftAngle < a1 || leftAngle > a2 ){
                     x1 -= 5;
+                }
 
-                if( topAngle < a1 || topAngle > a2 )
+                if( topAngle < a1 || topAngle > a2 ){
                     y1 -= 5;
+                }
 
-                if( bottomAngle < a1 || bottomAngle > a2 )
+                if( bottomAngle < a1 || bottomAngle > a2 ){
                     y2 += 5;
+                }
 
             }else{
-                if(x2 - x1 < 3)
+                if(x2 - x1 < 3){
                     x2 += 3;
+                }
 
-                if(y2 - y1 < 3)
+                if(y2 - y1 < 3){
                     y2 += 3;
+                }
             }
 
             //Derive the box object
