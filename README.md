@@ -47,10 +47,8 @@ using requirejs (see the scripts in the bin directory).
 
 ## Coding style
 
-Use JSHint with the following settings:
-```
-/*jshint bitwise:true, curly:true, eqeqeq:true, noarg:true, noempty:true, nonew:true, undef:true, strict:true, browser:true, jquery:true, node:true */
-```
+Please use JSHint. Consult .jshintrc for details.
+
 Always declare your globals at the top of the source.
 
 Use [JDDoc](http://en.wikipedia.org/wiki/JSDoc) syntax to annotate source code with documentation, eg. specify authors as:
