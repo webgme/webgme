@@ -23,6 +23,7 @@ define(['jquery'], function () {
     $.fn.extend({
         editInPlace : function (params) {
             var editClass = params && params.class || null,
+                extraCss = params && params.css || {},//Extra optional css styling
                 onChangeFn = params && params.onChange || null,
                 onFinishFn = params && params.onFinish || null,
                 enableEmpty = params && params.enableEmpty || false,
@@ -62,6 +63,13 @@ define(['jquery'], function () {
                 //add custom edit class
                 if (editClass && editClass !== "") {
                     inputCtrl.addClass(editClass);
+                }
+
+                //add any custom css specified 
+                var keys = Object.keys(extraCss);
+
+                for(var i = keys.length - 1; i >= 0; i--){
+                    inputCtrl.css(keys[i], extraCss[keys[i]]);
                 }
 
                 //set css properties to fix Bootstrap's modification
