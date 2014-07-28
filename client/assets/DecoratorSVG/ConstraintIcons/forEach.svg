@@ -109,12 +109,12 @@
      inkscape:label="#path8"
      inkscape:connector-curvature="0"
      id="topInIndent"
-     style="fill:#fd3f49;stroke:#fd3f49;stroke-width:1.18827236"
+     style="stroke-width:1.18827236"
      d="M 0.59567438,4.7587612 A 3.538921,3.5909029 0 0 1 4.1345964,1.1678584 l 7.0778416,0 3.538921,3.5909028 9.437123,0 3.538921,-3.4712061 0,3.4712061" />
   <rect
      inkscape:label="#rect11"
      id="topExpandBox"
-     style="fill:#fd3f49;stroke:#fd3f49;stroke-width:7.64337587"
+     style="stroke-width:7.64337587"
      height="15.661626"
      width="76.935623"
      y="3.825556"
@@ -123,7 +123,7 @@
   <rect
      inkscape:label="#rect10"
      id="topIndentRect"
-     style="fill:#fd3f49;stroke:#fd3f49;stroke-width:0.57006294"
+     style="stroke-width:0.57006294"
      ry="0"
      rx="0"
      r="0"
@@ -137,33 +137,33 @@
      inkscape:connector-curvature="0"
      class="y-shift-name y-shift-iter y-shift-collection"
      id="topOutIndent"
-     style="fill:#fd3f49;stroke:#fd3f49;stroke-width:1.17999995"
+     style="stroke-width:1.17999995"
      d="m 9.1422864,19.355868 a 3.54,3.54 0 0 0 3.5400006,3.54 l 7.08,0 3.54,3.54 9.44,0 3.54,-3.54 0,-3.658" />
   <path
      inkscape:label="#path12-9"
      inkscape:connector-curvature="0"
      id="bottomLeftCorner"
      d="m 4.2846034,57.22716 -3.65625002,0.03125 a 3.54,3.54 0 0 0 3.53125002,3.53125 l 0.125,0 0,-3.5625 z"
-     style="fill:#fd3f49;stroke:#fd3f49;stroke-width:1.22899997;stroke-miterlimit:4;stroke-dasharray:none;overflow:hidden"
+     style="stroke-width:1.22899997;stroke-miterlimit:4;stroke-dasharray:none;overflow:hidden"
      class="y-shift-collection y-shift-iter y-shift-name y-shift-true_next" />
   <path
      inkscape:label="#path9-8"
      inkscape:connector-curvature="0"
      id="topRightCorner"
      d="m 107.86125,0.59169395 0,3.52800605 16.60613,0 a 3.5627697,3.5367472 0 0 0 -3.58542,-3.52800605 l -13.02071,0 z"
-     style="fill:#fd3f49;stroke:#fd3f49;stroke-width:1.18324482;overflow:hidden"
+     style="stroke-width:1.18324482;overflow:hidden"
      class="x-shift-collection x-shift-iter x-shift-name " />
   <path
      inkscape:label="#path15-3"
      inkscape:connector-curvature="0"
      id="topBRcorner"
      d="m 107.83765,19.177477 0,3.54394 13.16389,0 a 3.4518636,3.5527214 0 0 0 3.47381,-3.54394 l -16.6377,0 z"
-     style="fill:#fd3f49;stroke:#fd3f49;stroke-width:1.16730976;overflow:hidden"
+     style="stroke-width:1.16730976;overflow:hidden"
      class="y-shift-collection y-shift-iter x-shift-iter x-shift-collection x-shift-name " />
   <rect
      inkscape:label="#rect10-9"
      id="topRightRect"
-     style="fill:#fd3f49;stroke:#fd3f49;stroke-width:0.43786135;overflow:hidden"
+     style="stroke-width:0.43786135;overflow:hidden"
      ry="0"
      rx="0"
      r="0"
@@ -175,7 +175,7 @@
   <rect
      inkscape:label="#rect11-1-0"
      id="spine"
-     style="fill:#fd3f49;stroke:#fd3f49;stroke-width:4.31094408;overflow:hidden"
+     style="stroke-width:4.31094408;overflow:hidden"
      height="48.328293"
      width="7.9311714"
      y="6.7386951"
@@ -186,19 +186,19 @@
      inkscape:connector-curvature="0"
      id="bottomTRcorner"
      d="m 107.44215,46.139983 0,3.528006 16.60613,0 a 3.5627697,3.5367472 0 0 0 -3.58542,-3.528006 l -13.02071,0 z"
-     style="fill:#fd3f49;stroke:#fd3f49;stroke-width:1.18324482;overflow:hidden"
+     style="stroke-width:1.18324482;overflow:hidden"
      class="x-shift-iter x-shift-collection y-shift-name y-shift-iter y-shift-collection y-shift-true_next x-shift-name " />
   <path
      inkscape:label="#path15-3-2"
      inkscape:connector-curvature="0"
      id="bottomRightCorner"
      d="m 107.39646,56.95864 0,3.54394 13.16389,0 a 3.4518636,3.5527214 0 0 0 3.47381,-3.54394 l -16.6377,0 z"
-     style="fill:#fd3f49;stroke:#fd3f49;stroke-width:1.16730976;overflow:hidden"
+     style="stroke-width:1.16730976;overflow:hidden"
      class="x-shift-iter x-shift-collection y-shift-name y-shift-iter y-shift-collection y-shift-true_next x-shift-name " />
   <rect
      inkscape:label="#rect10-9-1"
      id="bottomRightRect"
-     style="fill:#fd3f49;stroke:#fd3f49;stroke-width:0.32908961;overflow:hidden"
+     style="stroke-width:0.32908961;overflow:hidden"
      ry="0"
      rx="0"
      r="0"
@@ -211,7 +211,7 @@
      inkscape:label="#path8-5"
      id="bottomInIndent"
      d="m 18.851707,46.889978 0,3.84375 4.125,0 -3.53125,-3.84375 -0.59375,0 z m 17.09375,0.125 -3.53125,3.71875 3.53125,0 0,-3.71875 z"
-     style="fill:#fd3f49;stroke:#fd3f49;stroke-width:1.22866261;overflow:hidden"
+     style="stroke-width:1.22866261;overflow:hidden"
      inkscape:connector-curvature="0"
      class="y-shift-name y-shift-iter y-shift-collection y-shift-true_next" />
   <path
@@ -219,19 +219,19 @@
      inkscape:connector-curvature="0"
      id="bottomDentRect"
      d="m 18.446188,50.320396 0,8.426744 17.906703,0 0,-8.426744 -17.906703,0 z"
-     style="fill:#fd3f49;stroke:#fd3f49;stroke-width:0.42308816;overflow:hidden"
+     style="stroke-width:0.42308816;overflow:hidden"
      class="y-shift-name y-shift-iter y-shift-collection y-shift-true_next" />
   <path
      inkscape:label="#path12-53"
      id="bottomOutDent"
      d="m 10.851707,58.44575 0,2.34375 0.59375,0 3.53125,3.5625 9.4375,0 3.5625,-3.5625 0,-2.34375 -17.125,0 z"
-     style="fill:#fd3f49;stroke:#fd3f49;stroke-width:1.17999995;overflow:hidden"
+     style="stroke-width:1.17999995;overflow:hidden"
      inkscape:connector-curvature="0"
      class="y-shift-name y-shift-iter y-shift-collection y-shift-true_next" />
   <rect
      inkscape:label="#rect11-1-0"
      id="bottomLeftBase"
-     style="fill:#fd3f49;stroke:#fd3f49;stroke-width:2.71374059;overflow:hidden"
+     style="stroke-width:2.71374059;overflow:hidden"
      height="12.411633"
      width="12.237754"
      y="47.615982"
@@ -240,7 +240,7 @@
   <rect
      inkscape:label="#rect11-1-0"
      id="bottomExpandBox"
-     style="fill:#fd3f49;stroke:#fd3f49;stroke-width:5.79376316;overflow:hidden"
+     style="stroke-width:5.79376316;overflow:hidden"
      height="9.7293596"
      width="71.159233"
      y="48.446667"
@@ -249,7 +249,7 @@
   <rect
      inkscape:label="#rect11-1-0"
      id="bottomLeftBase-7"
-     style="fill:#fd3f49;stroke:#fd3f49;stroke-width:2.18415689;overflow:hidden"
+     style="stroke-width:2.18415689;overflow:hidden"
      height="7.5930915"
      width="12.958148"
      y="52.387577"
