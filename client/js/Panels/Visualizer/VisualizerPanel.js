@@ -21,7 +21,7 @@ define(['logManager',
     "use strict";
 
     var VisualizerPanel,
-        DEFAULT_VISUALIZER = 'SnapEditor';
+        DEFAULT_VISUALIZER = 'ModelEditor';
 
     VisualizerPanel = function (layoutManager, params) {
         var options = {};
