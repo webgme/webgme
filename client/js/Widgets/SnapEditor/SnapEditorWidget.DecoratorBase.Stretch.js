@@ -1,4 +1,4 @@
-/*globals define*/
+/*globals define,_*/
 /*
  * @author brollb / https://github/brollb
  *
@@ -42,17 +42,83 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      */
     SVGDecoratorSnapEditorWidgetStretch.prototype.initializeStretchability = function () {
         //Stretching stuff
-        this._calculatedTransforms = {};//The calculated abs stretch of any svg element in the SVG TODO
         this._transforms = {};//The current abs stretch of any svg element in the SVG
-
+        this._updatedSVGElements = {};//The elements that have been updated since last render
         this._classTransforms = {};//The calculated abs stretch of any class in the SVG
         this._minDims = {};
+        this._svgDims = {};
 
         this.svgContainerWidth = 0;
         this.svgWidth = 0;
         this.svgHeight = 0;
         this.svgBorderWidth = 0;
         this.svgInitialStretch = {};//Initial stretch values to allow for snug fit
+    };
+
+    /**
+     * Initialize ids of all svg elements.
+     *
+     * @return {undefined}
+     */
+    SVGDecoratorSnapEditorWidgetStretch.prototype._initializeSVGElements = function () {
+        var self = this,
+            svgId,
+            width,
+            height,
+            x,
+            y,
+            idCreator = function(key, value){
+                svgId = value.getAttribute("id");
+
+                if(!svgId){
+                    svgId = self._genSVGId();
+                    value.setAttribute("id", svgId);
+                }
+
+                if(!self._transforms[svgId]){//Initialize transform if needed
+
+                    if(value.tagName === "line"){
+                        x = parseFloat(value.getAttribute("x1"));
+                        y = parseFloat(value.getAttribute("y1"));
+                        width = parseFloat(value.getAttribute("x2")) - x;
+                        height = parseFloat(value.getAttribute("y2")) - y;
+                    }else if(value.tagName === "rect"){
+                        x = parseFloat(value.getAttribute("x"));
+                        y = parseFloat(value.getAttribute("y"));
+                        width = parseFloat(value.getAttribute("width"));
+                        height = parseFloat(value.getAttribute("height"));
+                    }else if(value.tagName === "path"){
+                        width = null;
+                        height = null;
+                    }
+                    self._transforms[svgId] = { original: { x: x, y: y }, shift: { x: 0, y: 0 }, width: width, height: height };
+                    self._minDims[svgId] = { width: width, height: height };
+                }
+
+                //Recurse if applicable
+                if (value.children){
+                    $.each(value.children, idCreator);
+                }
+            };
+
+        this.$svgElement.each(idCreator);
+    };
+
+    /**
+     * Randomly generate ID between 0,10000 for identifying svg elements.
+     *
+     * @private
+     * @return {String} id
+     */
+    SVGDecoratorSnapEditorWidgetStretch.prototype._genSVGId = function () {
+
+        var id = "SVG_" + Math.floor(Math.random()*10000);
+
+        while(this._transforms[id]){
+            id = "SVG_" + Math.floor(Math.random()*10000);
+        }
+
+        return id;
     };
 
 
@@ -62,9 +128,24 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      * @return {undefined}
      */
     SVGDecoratorSnapEditorWidgetStretch.prototype._applyTransforms = function () {
-        //Stored transformations: this._transforms
-        //Current transformations: this._currentTransforms
-        //TODO
+        var elements = Object.keys(this._updatedSVGElements),
+            element;
+
+        while (elements.length){
+            element = elements.pop();
+            this._updateSVGTransforms(this._updatedSVGElements[element]);
+            delete this._updatedSVGElements[element];
+        }
+
+        //Set the height/width as needed
+
+        for (var dim in this._svgDims){
+            if (this._svgDims.hasOwnProperty(dim)){
+                this.$svgElement[0].setAttribute(dim, this._svgDims[dim]);
+            }
+        }
+
+        this.hostDesignerItem.clearCalculatedSize();
     };
 
     /**
@@ -154,12 +235,11 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
             dx = x - this._classTransforms[id].x;
 
             if (dx){
-                this.stretch(id, AXIS.X, dx);
+                this.stretch(id, AXIS.X, dx);//FIXME
                 this._classTransforms[id].x = x;
                 changed = true;
             }
         }
-
 
         //stretch y
         if (y !== undefined){
@@ -169,7 +249,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
 
             //update size attached to ptr
             if (dy){
-                this.stretch(id, AXIS.Y, dy);
+                this.stretch(id, AXIS.Y, dy);//FIXME
                 this._classTransforms[id].y = y;
                 changed = true;
             }
@@ -187,7 +267,6 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      * @return {Number} Current size of the svg along the given axis
      */
     SVGDecoratorSnapEditorWidgetStretch.prototype.stretch = function (id, axis, delta) {
-        //WILL WRITE TO THE DOM
         var stretchClass = axis + "-stretch-" + id,
             shiftClass = axis + "-shift-" + id,
             stretchElements = this.$svgContent.find("." + stretchClass),
@@ -207,12 +286,6 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
         stretch[axis] = delta;
         this._stretchCustomConnectionHighlightAreas(stretchClass, stretch);
         
-        //Initialize elements as needed
-        this._initializeSvgElements(stretchElements);
-        this._initializeSvgElements(shiftElements);
-        //Done initializing
-
-
         //Stretch the SVG by delta
         var displacement = {},
             x,
@@ -230,7 +303,8 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
             this._transforms[svgId][dim] += delta;
             maxSize = Math.max(maxSize, this._transforms[svgId][dim]);
 
-            this._updateSVGTransforms( stretchElements[i], svgId);
+            //this._updateSVGTransforms( stretchElements[i] );//WRITE
+            this._updatedSVGElements[svgId] = stretchElements[i];
         }    
 
         i = shiftElements.length;
@@ -239,55 +313,23 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
 
             this._transforms[svgId].shift[axis] += delta;
 
-            this._updateSVGTransforms(shiftElements[i], svgId);
+            //this._updateSVGTransforms(shiftElements[i] );//WRITE
+            this._updatedSVGElements[svgId] = shiftElements[i];
         }    
 
         //Adjust the overall svg if necessary
-        var currentSVGSize = parseFloat(this.$svgElement[0].getAttribute(dim)) + delta;
+        if ( this._svgDims[dim] === undefined){
+            this._svgDims[dim] = parseFloat(this.$svgElement[0].getAttribute(dim));
+        }
 
         if(stretchElements.length || shiftElements.length){
-            this.$svgElement[0].setAttribute(dim, Math.max(currentSVGSize, maxSize));//Expand if needed
-            return Math.max(currentSVGSize, maxSize);
+            this._svgDims[dim] = Math.max(this._svgDims[dim] + delta, maxSize);
+            
+            //Update the host item  FIXME
+            //this.hostDesignerItem['_' + dim] = this._svgDims[dim];
         }
 
-        return currentSVGSize;
-    };
-
-    /**
-     * Initialize variables
-     *
-     * @param {Array} elements
-     */
-    SVGDecoratorSnapEditorWidgetStretch.prototype._initializeSvgElements = function (elements) {
-        var svgId,
-            width,
-            height,
-            i = elements.length;
-
-        while(i--){
-            svgId = elements[i].getAttribute("id");
-
-            if(!svgId){
-                svgId = this._genSVGId();
-                elements[i].setAttribute("id", svgId);
-            }
-
-            if(!this._transforms[svgId]){//Initialize transform if needed
-
-                if(elements[i].tagName === "line"){
-                    width = parseFloat(elements[i].getAttribute("x2")) - parseFloat(elements[i].getAttribute("x1"));
-                    height = parseFloat(elements[i].getAttribute("y2")) - parseFloat(elements[i].getAttribute("y1"));
-                }else if(elements[i].tagName === "rect"){
-                    width = parseFloat(elements[i].getAttribute("width"));
-                    height = parseFloat(elements[i].getAttribute("height"));
-                }else if(elements[i].tagName === "path"){
-                    width = null;
-                    height = null;
-                }
-                    this._transforms[svgId] = { shift: { x: 0, y: 0 }, width: width, height: height };
-                    this._minDims[svgId] = { width: width, height: height };
-            }
-        }
+        return this._svgDims[dim];
     };
 
     /**
@@ -363,18 +405,25 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
         }
     };
 
-    SVGDecoratorSnapEditorWidgetStretch.prototype._updateSVGTransforms = function (svg, id) {
-        var width = Math.max(this._minDims[id].width, this._transforms[id].width),
+    /**
+     * Apply the current svg transforms to the svg.
+     *
+     * @param svg
+     * @param id
+     * @return {undefined}
+     */
+    SVGDecoratorSnapEditorWidgetStretch.prototype._updateSVGTransforms = function (svg) {
+        //WRITE ONLY
+        var id = svg.id,
+            width = Math.max(this._minDims[id].width, this._transforms[id].width),
             height = Math.max(this._minDims[id].height, this._transforms[id].height);
 
         if(svg.tagName === "line"){
-            var x1 = parseFloat(svg.getAttribute("x1")),
-                x2 = parseFloat(svg.getAttribute("x2")),
-                y1 = parseFloat(svg.getAttribute("y1")),
-                y2 = parseFloat(svg.getAttribute("y2"));
+            var x = this._transforms.original.x,
+                y = this._transforms.original.y;
 
-            svg.setAttribute("x2", x1+width);
-            svg.setAttribute("y2", y1+height);
+            svg.setAttribute("x2", x + width);
+            svg.setAttribute("y2", y + height);
 
         }else if(svg.tagName === "rect"){
 
@@ -385,7 +434,6 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
         svg.setAttribute("transform", 
                 "translate(" + this._transforms[id].shift.x + "," + this._transforms[id].shift.y + ")");
     };
-
 
     return SVGDecoratorSnapEditorWidgetStretch;
 });
