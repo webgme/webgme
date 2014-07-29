@@ -308,6 +308,8 @@ define(['js/Constants',
             }
         }
 
+        this._initializeSVGElements();
+
         this.update();
     };
 
@@ -486,23 +488,6 @@ define(['js/Constants',
     };
 
     /* * * * * END of Manipulating the SVG * * * * * */
-
-    /**
-     * Randomly generate ID between 0,10000 for identifying svg elements.
-     *
-     * @private
-     * @return {String} id
-     */
-    SVGDecoratorSnapEditorWidget.prototype._genSVGId = function () {
-        //
-        var id = "SVG_" + Math.random()*10000;
-
-        while(this._transforms[id]){
-            id = "SVG_" + Math.random()*10000;
-        }
-
-        return id;
-    };
 
     //Drawing the internal objects
     //OVERRIDE FROM BASE
