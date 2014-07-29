@@ -1,0 +1,14 @@
+{
+    "bitwise": true,
+    "curly" : true,
+    "eqeqeq": true,
+    "noarg": true,
+    "noempty": true,
+    "nonew": true,
+    "undef": true,
+    "strict": true,
+    "browser": true,
+    "jquery": true,
+    "node": true,
+    "evil": true
+}

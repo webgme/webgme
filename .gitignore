@@ -1,4 +1,6 @@
-*/bin
+bin
+!src/bin
+
 */.settings
 */.idea
 *.class
@@ -14,12 +16,12 @@
 .project
 .settings
 
-bin/config.js
-bin/server.log
-bin/stderr.log
-bin/stdout.log
-bin/decorators.js
-bin/*.xme
+src/bin/config.js
+src/bin/server.log
+src/bin/stderr.log
+src/bin/stdout.log
+src/bin/decorators.js
+src/bin/*.xme
 
 # ignore file system blob storage files
 blob-local-storage

@@ -1,0 +1,60 @@
+/*
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ * 
+ * Author: Robert Kereskenyi
+ */
+
+//imports
+@import "../Core/ModelDecorator";
+@import "../../../js/Widgets/DiagramDesigner/styles/Connector";
+
+//include ModelDecoratorCore style
+@include model_decorator_core;
+
+//overwrite / extend with local modifications
+.model-decorator {
+
+  .connector {
+    @include connector_basics;
+
+    margin-left: $connector-size / -2;
+    left: 50%;
+
+    &.top {
+      top: $connector-size / -2;
+    }
+
+    &.bottom {
+      bottom: $connector-size / -2;
+    }
+  }
+
+  .ports {
+    .port {
+      div.connector {
+        top: ($port-height - $connector-size)/2;
+      }
+    }
+
+    .left {
+      .port {
+        .connector {
+          left: -($connector-size/2) - ($padding - 2);
+        }
+      }
+    }
+
+    .right {
+      .port {
+        .connector {
+          left: $ports-width + ($connector-size/2) + ($padding - 2);
+        }
+      }
+    }
+  }
+
+  &.accept-droppable {
+    background-color: $accept-droppable-background-color;
+    cursor: alias;
+  }
+}

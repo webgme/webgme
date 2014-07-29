@@ -1,0 +1,5 @@
+@import "../Core/SVGDecorator";
+
+.part {
+  @include svg_decorator_core;
+}
