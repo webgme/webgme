@@ -38,7 +38,7 @@ define([],
                                 //TODO can be handled later
                                 return self._Storage.getNextServerEvent(lastGuid,nextServerEvent);
                             case "BRANCH_UPDATED":
-                                if(this.projectName === parameters.project && this.branchName === parameters.branch){
+                                if(self.projectName === parameters.project && self.branchName === parameters.branch){
                                     self.project.loadObject(parameters.commit,function(err,commit){
                                         if(err){
                                             return self._Storage.getNextServerEvent(lastGuid,nextServerEvent);

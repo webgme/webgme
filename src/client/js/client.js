@@ -79,7 +79,8 @@ define([
                 _TOKEN = null,
                 META = new BaseMeta(),
                 _rootHash = null,
-                _gHash = 0;
+                _gHash = 0,
+                _addOns = {};
 
             function print_nodes(pretext){
                 if(pretext){
@@ -208,6 +209,35 @@ define([
                         }
                     };
                 _database.getNextServerEvent(lastGuid,nextServerEvent);
+            }
+
+            //addOn functions
+            function startAddOn(name){
+                if(_addOns[name] === undefined){
+                    _addOns[name] = "loading";
+                    _database.simpleRequest({command:'connectedWorkerStart',workerName:name,project:_projectName,branch:_branch},function(err,id){
+                        if(err){
+                            return logger.error(err);
+                        }
+
+                        _addOns[name] = id;
+                    });
+                }
+
+            }
+
+            function queryAddOn(name,query,callback){
+                if(!_addOns[name] || _addOns[name] === "loading"){
+                    return callback(new Error('no such addOn is ready for queries'));
+                }
+                _database.simpleQuery(_addOns[name],query,callback);
+            }
+
+            function stopAddOn(name,callback){
+                if(_addOns[name] && _addOns[name] !== "loading"){
+                    _database.simpleResult(_addOns[name],callback);
+                }
+                callback(null);
             }
 
             function tokenWatcher(){
@@ -2226,7 +2256,7 @@ define([
 
                         getCollectionPaths: getCollectionPaths
 
-                    }
+                    };
                 }
 
                 return null;
@@ -2254,7 +2284,8 @@ define([
                 //_self.addEventListener(_self.events.SERVER_BRANCH_UPDATED,function(client,data){
                 //    console.log(data);
                 //});
-                
+                startAddOn("TestAddOn");
+                console.log(_addOns);
             }
 
             //export and import functions

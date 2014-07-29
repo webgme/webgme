@@ -64,7 +64,8 @@ if (typeof define !== "function" && typeof require === "function" && typeof proc
             paths: {},
             pluginBasePaths: [],
             decoratorpaths:[],
-            visualizerDescriptors : []
+            visualizerDescriptors : [],
+            addonBasePaths:['./../addon/core']
 		};
 
 

@@ -182,7 +182,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                 } else {
                     /*IO = require("socket.io-client");
                      IOReady();*/
-                    require([ '../../../node_modules/socket.io/node_modules/socket.io-client' ], function (io) {
+                    require([ /*'../../../node_modules/socket.io/node_modules/socket.io-client'*/'socket.io-client' ], function (io) {
                         IO = io;
                         IOReady();
                     });
