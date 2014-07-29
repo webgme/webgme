@@ -11,7 +11,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
         ASSERT(typeof options === "object");
 
         options.type = options.type || "browser";
-        options.timeout = options.timeout || 10000;
+        options.timeout = options.timeout || 100000;
 
         var _hostAddress = null;
         if(options.type === "browser") {
@@ -341,6 +341,22 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
             }
         }
 
+        function getNextServerEvent(latestGuid,callback){
+            if(socketConnected){
+                var guid = GUID();
+                callbacks[guid] = {
+                    cb: callback,
+                    to: setTimeout(callbackTimeout,options.timeout, guid)
+                };
+                socket.emit('getNextServerEvent',latestGuid,function(err,newGuid,eventParams){
+                    if(callbacks[guid]){
+                        clearTimeout(callbacks[guid].to);
+                        delete callbacks[guid];
+                        callback(err,newGuid,eventParams);
+                    }
+                });
+            }
+        }
         function openProject (project, callback) {
             ASSERT(typeof callback === 'function');
             var ownId = GUID();
@@ -457,21 +473,48 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
             function loadObject (hash, callback) {
                 ASSERT(typeof callback === 'function');
                 if (socketConnected) {
-                    var guid = GUID();
-                    callbacks[guid] = {
-                        cb: callback,
-                        to: setTimeout(callbackTimeout, options.timeout, guid)
-                    };
-                    socket.emit('loadObject', project, hash, function (err, object) {
-                        if (callbacks[guid]) {
-                            clearTimeout(callbacks[guid].to);
-                            delete callbacks[guid];
-                            callback(err, object);
-                        }
-                    });
+                    if(loadBucketSize === 0){
+                        ++loadBucketSize;
+                        loadBucket.push({hash:hash,cb:callback});
+                        loadBucketTimer = setTimeout(function(){
+                            var myBucket = loadBucket;
+                            loadBucket = [];
+                            loadBucketTimer = null;
+                            loadBucketSize = 0;
+                            loadObjects(myBucket);
+                        },10);
+                    } else if (loadBucketSize === 99){
+                        loadBucket.push({hash:hash,cb:callback});
+                        var myBucket = loadBucket;
+                        loadBucket = [];
+                        clearTimeout(loadBucketTimer);
+                        loadBucketTimer = null;
+                        loadBucketSize = 0;
+                        loadObjects(myBucket);
+                    } else {
+                        loadBucket.push({hash:hash,cb:callback});
+                        ++loadBucketSize;
+                    }
                 } else {
                     callback(new Error(ERROR_DISCONNECTED));
                 }
+            }
+
+            var loadBucket = [],
+                loadBucketSize = 0,
+                loadBucketTimer;
+            function loadObjects (hashedObjects){
+                var hashes = {},i;
+                for(i=0;i<hashedObjects.length;i++){
+                    hashes[hashedObjects[i].hash] = true;
+                }
+                hashes = Object.keys(hashes);
+                socket.emit('loadObjects',project,hashes,function(err,results){
+                    for(i=0;i<hashedObjects.length;i++){
+                        hashedObjects[i].cb(err,results[hashedObjects[i].hash]);
+                    }
+                });
+
             }
 
             function insertObject (object, callback) {
@@ -682,6 +725,25 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                 callback(new Error(ERROR_DISCONNECTED));
             }
         }
+        function simpleQuery (workerId,parameters,callback){
+            ASSERT(typeof callback === 'function');
+            if(socketConnected){
+                var guid = GUID();
+                callbacks[guid] = {
+                    cb: callback,
+                    to: setTimeout(callbackTimeout,100*options.timeout, guid)
+                };
+                socket.emit('simpleQuery',workerId,parameters,function(err,result){
+                    if(callbacks[guid]){
+                        clearTimeout(callbacks[guid].to);
+                        delete callbacks[guid];
+                        callback(err,result);
+                    }
+                });
+            } else {
+                callback(new Error(ERROR_DISCONNECTED));
+            }
+        }
         function getToken(callback){
             ASSERT(typeof callback === 'function');
             if(socketConnected){
@@ -713,9 +775,14 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
             openProject: openProject,
             simpleRequest: simpleRequest,
             simpleResult: simpleResult,
+            simpleQuery: simpleQuery,
+            getNextServerEvent: getNextServerEvent,
             getToken: getToken
         };
     }
     return Database;
 });
 
+/**
+ * Created by tkecskes on 5/10/2014.
+ */

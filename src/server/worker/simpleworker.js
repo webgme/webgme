@@ -34,6 +34,7 @@ requirejs(['worker/constants',
         'coreclient/serialization',
         'auth/gmeauth'],
 function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,PluginManagerBase,PluginResult,ConnectedStorage,Serialization,GMEAUTH){
+    'use strict';
     var storage = null,
         core = null,
         result = null,
@@ -43,9 +44,10 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
         error = null,
         initialized = false,
         pluginBasePaths = null,
-        interpreteroutputdirectory = null,
+        pluginOutputDirectory = null,
         serverPort = 80,
-        AUTH =null;
+        AUTH =null,
+        _addOn = null;
 
     var initResult = function(){
         core = null;
@@ -64,10 +66,10 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
             pluginBasePaths = parameters.pluginBasePaths;
             webGMEGlobal.setConfig({paths:parameters.paths,pluginBasePaths:parameters.pluginBasePaths});
             serverPort = parameters.serverPort || 80;
-            interpreteroutputdirectory = parameters.interpreteroutputdirectory || "";
-            if(interpreteroutputdirectory){
+            pluginOutputDirectory = parameters.interpreteroutputdirectory || "";
+            if(pluginOutputDirectory){
                 try{
-                    FS.mkdirSync(PATH.resolve(interpreteroutputdirectory));
+                    FS.mkdirSync(PATH.resolve(pluginOutputDirectory));
                 } catch(e){
                     console.log('output directory cannot be created');
                 }
@@ -159,60 +161,37 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
     };
 
     //TODO the getContext should be refactored!!!
-    var getProject = function(projectName,sessionId,callback){
-        var pluginStorage = new ConnectedStorage({type:'node',host:'127.0.0.1',port:serverPort,log:logManager.create('SERVER-WORKER-PLUGIN-'+process.pid),webGMESessionId:sessionId});
-        pluginStorage.openDatabase(function(err){
-            if(!err){
-                if(projectName) {
-                    pluginStorage.openProject(projectName, function (err, project) {
-                        if (!err) {
-                            callback(null, project);
-                        } else {
-                            callback(err);
-                        }
-                    });
-                } else {
-                    callback(new Error('invalid project name'));
-                }
-            } else {
-                callback(new Error('cannot open database'));
-            }
+    var getConnectedStorage = function(sessionId,callback){
+        var connStorage = new ConnectedStorage({type:'node',host:'127.0.0.1',port:serverPort,log:logManager.create('SERVER-WORKER-PLUGIN-'+process.pid),webGMESessionId:sessionId});
+        connStorage.openDatabase(function(err){
+            callback(err,connStorage);
         });
     };
-    var isGoodExtraAsset = function(name,path){
-        try{
-            var file = FS.readFileSync(path+'/'+name+'.js','utf-8');
-            if(file === undefined || file === null){
-                return false;
-            } else {
-                return true;
+    var getConnectedProject = function(storage,projectName,callback){
+        storage.getProjectNames(function(err,names){
+            if(err){
+                return callback(err);
             }
-        } catch(e){
-            return false;
-        }
+            if(names.indexOf(projectName) === -1){
+                return callback(new Error('nonexsistent project'));
+            }
+            storage.openProject(projectName,callback);
+        });
     };
-    var getPluginBasePathByName = function(pluginName){
-        if(pluginBasePaths && pluginBasePaths.length){
-            for(var i=0;i<pluginBasePaths.length;i++){
-                var additional = FS.readdirSync(pluginBasePaths[i]);
-                for(var j=0;j<additional.length;j++){
-                    if(additional[j] === pluginName){
-                        if(isGoodExtraAsset(additional[j],PATH.join(pluginBasePaths[i],additional[j]))){
-                            return pluginBasePaths[i];
-                        }
-                    }
-                }
+    var getProject = function(projectName,sessionId,callback){
+        getConnectedStorage(sessionId,function(err,storage){
+            if(err){
+                return callback(err);
             }
-        } else {
-            return null;
-        }
+            getConnectedProject(storage,projectName,callback);
+        });
     };
 
-    var getInterpreter = function(name){
+    var getPlugin = function(name){
         return requirejs('plugin/'+name+'/'+name+'/'+name);
     };
-    var runInterpreter = function(userId,name,sessionId,context,callback){
-        var interpreter = getInterpreter(name);
+    var executePlugin = function(userId,name,sessionId,context,callback){
+        var interpreter = getPlugin(name);
         if(interpreter){
             getProject(context.managerConfig.project,sessionId,function(err,project){
                 if(!err){
@@ -368,11 +347,49 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
     };
 
     //addOn functions
-    var initConnectedWorker = function(name,callback){
-
+    var getAddOn = function(name){
+        return requirejs('addon/'+name+'/'+name+'/'+name);
+    };
+    var initConnectedWorker = function(name,sessionId,projectName,branchName,callback){
+        var addOnClass = getAddOn(name),
+            connStorage = null;
+        //for instance creation we need the Core class and the Storage object
+        getConnectedStorage(sessionId,function(err,cs){
+            if(!err && cs){
+                connStorage = cs;
+                _addOn = new addOnClass(Core,connStorage);
+                //for the initialization we need the project as well
+                getConnectedProject(connStorage,projectName,function(err,project){
+                    if(err){
+                        return callback(err);
+                    }
+                    _addOn.start({projectName:projectName,branchName:branchName,project:project},callback);
+                });
+            } else {
+                callback(new Error('unable to connect user\'s storage'));
+            }
+        });
     };
     var connectedWorkerQuery = function(parameters,callback){
+        if(_addOn){
+            _addOn.query(parameters,callback);
+        } else {
+            callback(new Error('the addon is not running'));
+        }
+    };
 
+    var connectedworkerStop = function(callback){
+        if(_addOn){
+            _addOn.stop(function(err){
+                if(err){
+                    return callback(err);
+                }
+                _addOn = null;
+                callback(null);
+            });
+        } else {
+            callback(null);
+        }
     };
 
     //main message processing loop
@@ -428,7 +445,7 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
                 break;
             case CONSTANT.workerCommands.executePlugin:
                 if( typeof parameters.name === 'string' && typeof parameters.context === 'object'){
-                    runInterpreter(parameters.user,parameters.name,parameters.webGMESessionId,parameters.context,function(err,result){
+                    executePlugin(parameters.user,parameters.name,parameters.webGMESessionId,parameters.context,function(err,result){
                         process.send({pid:process.pid,type:CONSTANT.msgTypes.result,error:err,result:result});
                     });
                 } else {
@@ -484,11 +501,11 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
                 });
                 break;
             case CONSTANT.workerCommands.connectedWorkerStart:
-                initConnectedWorker(parameters.workerName,function(err){
+                initConnectedWorker(parameters.workerName,parameters.sessionId,parameters.project,parameters.branch,function(err){
                     if(err){
                         process.send({pid:process.pid,type:CONSTANT.msgTypes.request,error:err,resid:null});
                     } else {
-                        process.send({pid:process.pid,type:CONSTANT.msgTypes.request,error:null,resid:process.pid});)
+                        process.send({pid:process.pid,type:CONSTANT.msgTypes.request,error:null,resid:process.pid});
                     }
                 });
                 break;
@@ -498,7 +515,9 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
                 });
                 break;
             case CONSTANT.workerCommands.connectedWorkerStop:
-                process.send({pid:process.pid,type:CONSTANT.msgTypes.result,error:err,result:null});
+                connectedworkerStop(function(err){
+                    process.send({pid:process.pid,type:CONSTANT.msgTypes.result,error:err,result:null});
+                });
                 break;
             default:
                 process.send({error:'unknown command'});

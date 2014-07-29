@@ -77,7 +77,7 @@ define([],
 
             //start the eventing
             this._eventer();
-
+            return true;
         };
         AddOnBase.prototype.start = function(parameters,callback){
             //this is the initialization function it could be overwritten or use as it is
@@ -94,6 +94,10 @@ define([],
 
         AddOnBase.prototype.query = function(parameters,callback){
             callback(new Error('the function is the main function of the AddOn so it must be overwritten'));
+        };
+
+        AddOnBase.prototype.stop = function(callback){
+            callback(new Error('this function must be overwritten to make sure that the addon stops properly'));
         };
 
 
