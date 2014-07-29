@@ -731,9 +731,9 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
             return relids;
         };
 
-        core.deleteNode = function(node){
+        core.deleteNode = function(node,technical){
             //currently we only check if the node is inherited from its parents children
-            if(node && node.base !== null){
+            if(node && (node.base !== null || technical === true)){
                 var parent = core.getParent(node),
                     parentsBase = parent ? core.getBase(node) : null,
                     base = core.getBase(node),
