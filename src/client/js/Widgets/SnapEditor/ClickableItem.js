@@ -612,9 +612,7 @@ define(['logManager',
         var box = {"x": this.positionX,
                 "y": this.positionY,
                 "width": this._width,
-                "height": this._height,
-                "x2": this.positionX + this._width,
-                "y2":  this.positionY + this._height},
+                "height": this._height},
             calculatedDims = Object.keys(this._calculatedSize),
             dim;
 
@@ -635,6 +633,10 @@ define(['logManager',
             box.height = height;
             box.y2 += height;
         }
+
+        //Calculate x2, y2
+        box.x2 = box.x + box.width;
+        box.y2 = box.y + box.height;
 
         return box;
     };
@@ -708,7 +710,7 @@ define(['logManager',
 
         if (this.isPositionDependent()){
             this.connectByPointerName(this.ptrs[SNAP_CONSTANTS.CONN_ACCEPTING][ptrs[0]], 
-                                      ptrs[0], SNAP_CONSTANTS.CONN_ACCEPTING);
+                                      ptrs[0], SNAP_CONSTANTS.CONN_ACCEPTING, false);
         }
     };
 
