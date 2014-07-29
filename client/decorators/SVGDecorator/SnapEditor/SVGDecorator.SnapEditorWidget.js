@@ -170,6 +170,7 @@ define(['js/Constants',
         }
         
         //Apply latest stretch transformation info
+        //May not be the right spot for this FIXME
         this._applyTransforms();
 
     };
@@ -489,27 +490,12 @@ define(['js/Constants',
 
     /* * * * * END of Manipulating the SVG * * * * * */
 
-    //Drawing the internal objects
-    //OVERRIDE FROM BASE
-    SVGDecoratorSnapEditorWidget.prototype._updateExtras = function () {
-        //Update the internal objects...
-        //May require redrawing of the current svg
-
-        //TODO
-    };
-
-    SVGDecoratorSnapEditorWidget.prototype._updateChildIDList = function () {
-        //Update children ID's
-        //TODO
-    };
-
-    SVGDecoratorSnapEditorWidget.prototype.renderChild = function () {
-        //Return the svg to be drawn...
-        //TODO
-        //return new SVGDecoratorSnapEditorWidget();
-    };
-
     /**** Override from SnapEditorWidgetDecoratorBase ****/
+    /**
+     * Get layout info. All DOM reading must be done here.
+     *
+     * @return {undefined}
+     */
     SVGDecoratorSnapEditorWidget.prototype.onRenderGetLayoutInfo = function () {
         this.svgContainerWidth = this.$svgContent.outerWidth(true);
         this.svgWidth = this.$svgContent.find('svg').outerWidth(true);
@@ -519,11 +505,19 @@ define(['js/Constants',
         SnapEditorWidgetDecoratorBase.prototype.onRenderGetLayoutInfo.call(this);
     };
 
+    /**
+     * Set layout info. All DOM editing must be done here.
+     *
+     * @return {undefined}
+     */
     SVGDecoratorSnapEditorWidget.prototype.onRenderSetLayoutInfo = function () {
         var xShift = Math.ceil((this.svgContainerWidth - this.svgWidth) / 2 + this.svgBorderWidth),
             connectors = this.$el.find('> .' + SNAP_CONSTANTS.CONNECTOR_CLASS);
 
         connectors.css('transform', 'translateX(' + xShift + 'px)');
+        
+        //Apply stretching
+        this._applyTransforms();
 
         SnapEditorWidgetDecoratorBase.prototype.onRenderSetLayoutInfo.call(this);
     };
