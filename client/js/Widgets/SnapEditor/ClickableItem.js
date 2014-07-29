@@ -50,6 +50,9 @@ define(['logManager',
         
         //Coloring
         this._color = SNAP_CONSTANTS.COLOR_PRIMARY;
+
+        //Size info
+        this._calculatedSize = {};
     };
 
     _.extend(ClickableItem.prototype, ItemBase.prototype);
@@ -576,6 +579,29 @@ define(['logManager',
         return result;
     };
 
+    /**
+     * Clear and stored size info.
+     *
+     * @return {undefined}
+     */
+    ClickableItem.prototype.clearCalculatedSize = function () {
+        this._calculatedSize = {};
+    };
+
+    /**
+     * Size calculated but not rendered yet.
+     *
+     * @param {Number} size
+     * @return {undefined}
+     */
+    ClickableItem.prototype.setCalculatedSize = function (size) {
+        for (var dim in size){
+            if (size.hasOwnProperty(dim)){
+                this._calculatedSize[dim] = size[dim];
+            }
+        }
+    };
+
     //Override
     /**
      * Get the bounding box of the item
@@ -588,7 +614,15 @@ define(['logManager',
                 "width": this._width,
                 "height": this._height,
                 "x2": this.positionX + this._width,
-                "y2":  this.positionY + this._height};
+                "y2":  this.positionY + this._height},
+            calculatedDims = Object.keys(this._calculatedSize),
+            dim;
+
+        //Use the calculated width if they have it...
+        while (calculatedDims.length){
+            dim = calculatedDims.pop();
+            box[dim] = this._calculatedSize[dim];
+        }
 
         if(box.width === 0 && box.height === 0){
             //Try to get width and height from the svg
