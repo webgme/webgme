@@ -502,6 +502,7 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
                 break;
             case CONSTANT.workerCommands.connectedWorkerStart:
                 initConnectedWorker(parameters.workerName,parameters.sessionId,parameters.project,parameters.branch,function(err){
+                    console.log('connected worker started',err);
                     if(err){
                         process.send({pid:process.pid,type:CONSTANT.msgTypes.request,error:err,resid:null});
                     } else {

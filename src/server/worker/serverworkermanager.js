@@ -3,6 +3,9 @@ function(ASSERT,Child,CONSTANTS){
     'use strict';
     function ServerWorkerManager(_parameters){
         var _workers = [],
+            _workerCount = 0,
+            _myWorkers = {},
+            _idToPid = {},
            _waitingRequests = [];
 
         _parameters = _parameters || {};
@@ -14,101 +17,93 @@ function(ASSERT,Child,CONSTANTS){
             return requirejs.s.contexts._.config.baseUrl;
         }
 
-        function checkRequests(){
-            //when this function called then probably some worker became free so we try to assign some job to it
+        function reserveWorker(){
+            if(_workerCount < _parameters.maxworkers){
+                var worker = Child.fork(getBaseDir()+'/server/worker/simpleworker.js');
+                _myWorkers[worker.pid] = {worker:worker,state:CONSTANTS.workerStates.initializing,type:null,cb:null};
+                worker.on('message', messageHandling);
+                _workerCount++;
+
+            }
+        }
+        function freeWorker(workerPid){
+            if(_myWorkers[workerPid]){
+                _myWorkers[workerPid].worker.kill();
+                delete _myWorkers[workerPid];
+                _workerCount--;
+                if(_waitingRequests.length > 0){
+                    //there are waiting requests, so we have to reserveWorker for them
+                    reserveWorker();
+                }
+            }
+        }
+        function assignRequest(workerPid){
             if(_waitingRequests.length > 0){
-                var index = -1;
-                for(var i=0;i<_workers.length;i++){
-                    if(_workers[i].state === CONSTANTS.workerStates.free){
-                        index = i;
-                        break;
-                    }
-                }
-
-                if(index !== -1){
+                if(_myWorkers[workerPid].state === CONSTANTS.workerStates.free){
                     var request = _waitingRequests.shift();
-                    _workers[index].state = CONSTANTS.workerStates.working;
-                    _workers[index].cb = request.cb;
-                    _workers[index].resid = null;
-                    _workers[index].worker.send(request.request);
+                    _myWorkers[workerPid].state = CONSTANTS.workerStates.working;
+                    _myWorkers[workerPid].cb = request.cb;
+                    _myWorkers[workerPid].resid = null;
+                    if(request.request.command === CONSTANTS.workerCommands.connectedWorkerStart){
+                        _myWorkers[workerPid].type = CONSTANTS.workerTypes.connected;
+                    } else {
+                        _myWorkers[workerPid].type = CONSTANTS.workerTypes.simple;
+                    }
+                    _myWorkers[workerPid].worker.send(request.request);
                 }
-            }
-        }
-
-        function request(parameters,callback){
-            ASSERT(typeof parameters === 'object' && parameters !== null);
-            ASSERT(typeof callback === 'function');
-
-            //put the userId into among the parameters based on the sessionId
-            _parameters.sessionToUser(parameters.webGMESessionId,function(err,userId){
-                if(err){
-                    userId = undefined;
-                }
-                parameters.user = userId;
-                _waitingRequests.push({cb:callback,request:parameters});
-                checkRequests(); //no-one became free, but it is possible that we do not use all of our resources at this point so its worth to try
-            });
-        }
-        function result(reqId,callback){
-            for(var i=0;i<_workers.length;i++){
-                if(_workers[i].resid === reqId){
-                    ASSERT(_workers[i].state === CONSTANTS.workerStates.waiting);
-                    _workers[i].state = CONSTANTS.workerStates.working;
-                    _workers[i].cb = callback;
-                    _workers[i].resid = null;
-                    _workers[i].worker.send(null);
-                    return;
-                }
-            }
-            callback('no result under the given id found');
-        }
-        function query(workerId,parameters,callback){
-            var index = indexByPid(workerId),
-                worker = null;
-            if(index !== -1){
-                worker = _workers[index];
-                worker.cb = callback;
-                parameters.command = CONSTANTS.workerCommands.connectedWorkerQuery;
-                worker.worker.send(parameters);
             } else {
-                callback(new Error('cannot found worker'));
+                //there is no need for the worker so we simply kill it
+                freeWorker(workerPid);
             }
         }
-        function indexByPid(pid){
-            for(var i=0;i<_workers.length;i++){
-                if(pid === _workers[i].pid){
-                    return i;
-                }
-            }
-            return -1;
-        }
-
         function messageHandling(msg){
-            var index = indexByPid(msg.pid);
-            if(index !== -1){
-                var worker = _workers[index];
-                switch(msg.type){
+            var worker = _myWorkers[msg.pid],
+                cFunction = null;
+            if(worker){
+                switch (msg.type){
                     case CONSTANTS.msgTypes.request:
-                        var cFunction = worker.cb;
+                        //this is the first response to the request
+                        //here we can store the id and
+                        cFunction = worker.cb;
                         worker.cb = null;
                         worker.state = CONSTANTS.workerStates.waiting;
                         worker.resid = msg.resid || null;
-                        if(worker.resid === null){
-                            //some error occured during request generation
-                            worker.state = CONSTANTS.workerStates.free;
-                            checkRequests(); //someone became free...
+                        if(msg.resid){
+                            _idToPid[msg.resid] = msg.pid;
+                        } else {
+                            //something happened during request handling so we can free the worker
+                            if(worker.type === CONSTANTS.workerTypes.simple){
+                                worker.state = CONSTANTS.workerStates.free;
+                                assignRequest(msg.pid);
+                            } else {
+                                freeWorker(msg.pid);
+                            }
                         }
-                        cFunction(msg.error,msg.resid);
+                        if(cFunction){
+                            cFunction(msg.error,msg.resid);
+                        }
                         break;
                     case CONSTANTS.msgTypes.result:
-                        var cFunction = worker.cb;
+                        //response to result request, so worker can be freed
+                        cFunction = worker.cb;
                         worker.cb = null;
-                        worker.state = CONSTANTS.workerStates.free;
-                        worker.resid = null;
-                        checkRequests();
-                        cFunction(msg.error,msg.result);
+                        if(worker.type === CONSTANTS.workerTypes.simple){
+                            worker.state = CONSTANTS.workerStates.free;
+                            if(worker.resid){
+                                delete _idToPid[worker.resid];
+                            }
+                            worker.resid = null;
+                            assignRequest(msg.pid);
+                        } else {
+                            freeWorker(msg.pid);
+                        }
+
+                        if(cFunction){
+                            cFunction(msg.error,msg.result);
+                        }
                         break;
                     case CONSTANTS.msgTypes.initialize:
+                        console.log('initialize',msg.pid);
                         //this arrives when the worker seems ready for initialization
                         worker.worker.send({
                             command:CONSTANTS.workerCommands.initialize,
@@ -123,39 +118,70 @@ function(ASSERT,Child,CONSTANTS){
                         });
                         break;
                     case CONSTANTS.msgTypes.initialized:
+                        //the worker have been initialized so we have to try to assign it right away
                         worker.state = CONSTANTS.workerStates.free;
-                        console.log('worker '+worker.pid+' is ready for tasks');
+                        assignRequest(msg.pid);
                         break;
                     case CONSTANTS.msgTypes.info:
                         console.log(msg.info);
                         break;
                     case CONSTANTS.msgTypes.query:
-                        var cFunction = worker.cb;
+                        cFunction = worker.cb;
                         worker.cb = null;
-                        cFunction(msg.error,msg.result);
+                        if(cFunction){
+                            cFunction(msg.error,msg.result);
+                        }
                         break;
                 }
             }
         }
 
-        //initialization part
-        for(var i=0;i<_parameters.maxworkers;i++){
-            var debug = false;
-            for(var j = 0;j<process.execArgv.length;j++){
-                if(process.execArgv[j].indexOf('--debug-brk') !== -1){
-                    debug = true;
-                    break;
-                }
+        function request(parameters,callback){
+            if(_workerCount<_parameters.maxworkers){
+                //there is resource for worker
+                reserveWorker();
             }
-            if(debug) {
-                //Set an unused port number.
-                process.execArgv.push('--debug-brk=' + (32000+i));
-            }
-            var worker = Child.fork(getBaseDir()+'/server/worker/simpleworker.js');
-            _workers.push({pid:worker.pid,worker:worker,state:CONSTANTS.workerStates.initializing,resid:null}) - 1;
-
-            worker.on('message', messageHandling);
+            _waitingRequests.push({request:parameters,cb:callback});
         }
+        function result(id,callback){
+            var worker,message = null;
+            if(_idToPid[id]){
+                worker = _myWorkers[_idToPid[id]];
+                if(worker){
+                    ASSERT(worker.state === CONSTANTS.workerStates.waiting);
+                    worker.state = CONSTANTS.workerStates.working;
+                    worker.cb = callback;
+                    worker.resid = null;
+                    if(worker.type === CONSTANTS.workerTypes.connected){
+                        message = {command:CONSTANTS.workerCommands.connectedWorkerStop};
+                    }
+                    worker.worker.send(message);
+                } else {
+                    delete _idToPid[id];
+                    callback(new Error('request handler cannot be found'));
+                }
+            } else {
+                callback(new Error('wrong request identification'));
+            }
+        }
+        function query(id,parameters,callback){
+            console.log('query',id,parameters);
+            var worker;
+            if(_idToPid[id]){
+                worker = _myWorkers[_idToPid[id]];
+                if(worker){
+                    worker.cb = callback;
+                    parameters.command = CONSTANTS.workerCommands.connectedWorkerQuery;
+                    worker.worker.send(parameters);
+                } else {
+                    delete _idToPid[id];
+                    callback(new Error('request handler cannot be found'));
+                }
+            } else {
+                callback(new Error('wrong request identification'));
+            }
+        }
+
         return {
             request : request,
             result  : result,

@@ -16,6 +16,10 @@ function(){
             'working'      : 'working',
             'waiting'      : 'waiting'
         },
+        'workerTypes':{
+            'connected' : 'connected',
+            'simple'    : 'simple'
+        },
         'workerCommands':{
             'initialize': 'initialize',
             'getResult': 'getResult',

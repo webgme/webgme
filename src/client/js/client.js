@@ -212,6 +212,20 @@ define([
             }
 
             //addOn functions
+            function startAddOnAsync(name,projectName,branchName,callback){
+                if(_addOns[name] === undefined){
+                    _addOns[name] = "loading";
+                    _database.simpleRequest({command:'connectedWorkerStart',workerName:name,project:projectName,branch:branchName},function(err,id){
+                        if(err){
+                            delete _addOns[name];
+                            return callback(err);
+                        }
+
+                        _addOns[name] = id;
+                        callback(null);
+                    });
+                }
+            }
             function startAddOn(name){
                 if(_addOns[name] === undefined){
                     _addOns[name] = "loading";
@@ -225,19 +239,40 @@ define([
                 }
 
             }
-
             function queryAddOn(name,query,callback){
                 if(!_addOns[name] || _addOns[name] === "loading"){
                     return callback(new Error('no such addOn is ready for queries'));
                 }
                 _database.simpleQuery(_addOns[name],query,callback);
             }
-
             function stopAddOn(name,callback){
                 if(_addOns[name] && _addOns[name] !== "loading"){
+                    delete _addOns[name];
                     _database.simpleResult(_addOns[name],callback);
                 }
                 callback(null);
+            }
+
+            //core addOns
+            //history
+            function startHistoryAsync(project,branch,callback){
+                if(_addOns['HistoryAddOn'] && _addOns['HistoryAddOn'] !== 'loading'){
+                    stopAddOn('HistoryAddOn',function(err){
+                        if(err){
+                            return callback(err);
+                        }
+                        startAddOnAsync('HistoryAddOn',project,branch,callback);
+                    });
+                } else {
+                    startAddOn('HistoryAddOn',project,branch,callback);
+                }
+            }
+            function getDetailedHistoryAsync(callback){
+                if(_addOns['HistoryAddOn'] && _addOns['HistoryAddOn'] !== 'loading'){
+                    queryAddOn('HistoryAddOn',{},callback);
+                } else {
+                    callback(new Error('history information is not available'));
+                }
             }
 
             function tokenWatcher(){
@@ -515,6 +550,18 @@ define([
             }
             function openProject(name,callback){
                 ASSERT(_database);
+                var waiting = 2,
+                    innerCallback = function(err){
+                        error = error || err;
+                        if(--waiting === 0){
+                            if(error){
+                                logger.error('The branch '+firstName+' of project '+name+' cannot be selected! ['+JSON.stringify(error)+']');
+                            }
+                            callback(error);
+                        }
+                    },
+                    firstName = null,
+                    error = null;
                 _database.openProject(name,function(err,p){
                     if(!err &&  p){
                         _database.getAuthorizationInfo(name,function(err,authInfo){
@@ -536,7 +583,6 @@ define([
                             //check for master or any other branch
                             _project.getBranchNames(function(err,names){
                                 if(!err && names){
-                                    var firstName = null;
 
                                     if(names['master']){
                                         firstName = 'master';
@@ -545,14 +591,8 @@ define([
                                     }
 
                                     if(firstName){
-                                        branchWatcher(firstName,function(err){
-                                            if(!err){
-                                                callback(null);
-                                            } else {
-                                                logger.error('The branch '+firstName+' of project '+name+' cannot be selected! ['+JSON.stringify(err)+']');
-                                                callback(err);
-                                            }
-                                        });
+                                        branchWatcher(firstName,innerCallback);
+                                        startHistoryAsync(_projectName,firstName,innerCallback);
                                     } else {
                                         //we should try the latest commit
                                         viewLatestCommit(callback);
@@ -1289,9 +1329,18 @@ define([
                 }
             }
             function selectBranchAsync(branch,callback){
+                var waiting = 2,
+                    error = null,
+                    innerCallback = function(err){
+                        error = error || err;
+                        if(--waiting === 0){
+                            callback(error);
+                        }
+                    }
                 if(_database){
                     if(_project){
-                        branchWatcher(branch,callback);
+                        branchWatcher(branch,innerCallback);
+                        startHistoryAsync(_projectName,branch,innerCallback);
                     } else {
                         callback(new Error('there is no open project!'));
                     }
@@ -2286,15 +2335,15 @@ define([
                 //});
                 switch (testnumber){
                     case 1:
-                        startAddOn("TestAddOn");
+                        startAddOn("HistoryAddOn");
                         break;
                     case 2:
-                        queryAddOn("TestAddOn",{egy:1,masik:"ketto"},function(err,result){
+                        queryAddOn("HistoryAddOn",{},function(err,result){
                             console.log("addon result",err,result);
                         });
                         break;
                     case 3:
-                        stopAddOn("TestAddOn",function(err){
+                        stopAddOn("HistoryAddOn",function(err){
                             console.log("addon stopped",err);
                         });
                 }

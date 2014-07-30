@@ -44,6 +44,7 @@ define([],
                                             return self._Storage.getNextServerEvent(lastGuid,nextServerEvent);
                                         }
 
+                                        self.commit = parameters.commit;
                                         self.core.loadRoot(commit.root,function(err,root){
                                             if(err){
                                                 return self._Storage.getNextServerEvent(lastGuid,nextServerEvent);
