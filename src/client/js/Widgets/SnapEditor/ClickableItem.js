@@ -496,9 +496,9 @@ define(['logManager',
             ptr = ptrs.pop();
 
             if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1){
-                result.siblings.push(this.ptrs[SNAP_CONSTANTS.CONN_PASSING][ptr].id);
-            } else {
                 result.children.push(this.ptrs[SNAP_CONSTANTS.CONN_PASSING][ptr].id);
+            } else {
+                result.siblings.push(this.ptrs[SNAP_CONSTANTS.CONN_PASSING][ptr].id);
             }
         }
 
@@ -547,14 +547,13 @@ define(['logManager',
      */
     ClickableItem.prototype.getTotalSize = function () {
         var result = this.getBoundingBox(),
-            deps = this.getDependents(),
-            siblingPtrs,
-            sibling,
+            deps = this.getDependentsByType().siblings,
+            siblings,
             box,
             dependent;
 
         while (deps.length){
-            dependent = deps.pop();
+            dependent = this.canvas.items[deps.pop()];
             box = dependent.getBoundingBox();
 
             //add the dependent to the total size
@@ -564,14 +563,10 @@ define(['logManager',
             result.y2 = Math.max(result.y2, box.y2);
 
             //Add all siblings of the dependent -- BFS
-            siblingPtrs = Object.keys(dependent.ptrs[SNAP_CONSTANTS.CONN_PASSING]);
-            for(var i = siblingPtrs.length - 1; i >= 0; i--){
-                if(SNAP_CONSTANTS.SIBLING_PTRS.indexOf(siblingPtrs[i]) !== -1){//if it is a sibling
-                    sibling = dependent.ptrs[SNAP_CONSTANTS.CONN_PASSING][siblingPtrs[i]];
-                    deps.push(sibling);
-                }
+            siblings = dependent.getDependentsByType().siblings;
+            if (siblings){
+                deps = deps.concat(siblings);
             }
-
         }
 
         //update width, height
