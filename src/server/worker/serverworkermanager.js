@@ -1,5 +1,6 @@
 define(['util/assert','child_process','worker/constants','util/guid'],
 function(ASSERT,Child,CONSTANTS){
+    'use strict';
     function ServerWorkerManager(_parameters){
         var _workers = [],
            _waitingRequests = [];
@@ -68,7 +69,7 @@ function(ASSERT,Child,CONSTANTS){
                 worker = _workers[index];
                 worker.cb = callback;
                 parameters.command = CONSTANTS.workerCommands.connectedWorkerQuery;
-                worker.send(parameters);
+                worker.worker.send(parameters);
             } else {
                 callback(new Error('cannot found worker'));
             }

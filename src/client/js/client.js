@@ -2284,8 +2284,20 @@ define([
                 //_self.addEventListener(_self.events.SERVER_BRANCH_UPDATED,function(client,data){
                 //    console.log(data);
                 //});
-                startAddOn("TestAddOn");
-                console.log(_addOns);
+                switch (testnumber){
+                    case 1:
+                        startAddOn("TestAddOn");
+                        break;
+                    case 2:
+                        queryAddOn("TestAddOn",{egy:1,masik:"ketto"},function(err,result){
+                            console.log("addon result",err,result);
+                        });
+                        break;
+                    case 3:
+                        stopAddOn("TestAddOn",function(err){
+                            console.log("addon stopped",err);
+                        });
+                }
             }
 
             //export and import functions
