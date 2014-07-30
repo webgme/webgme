@@ -757,7 +757,22 @@ define(['logManager',
         this.skinParts.$itemsContainer[0].appendChild(this._documentFragment);
         this._documentFragment = document.createDocumentFragment();
 
-        //STEP 1: call the inserted and updated items' getRenderLayout
+        //STEP 1: call the inserted and updated items' setRenderLayout
+        doRenderSetLayout = function (itemIDList) {
+            var i = itemIDList.length,
+                cItem;
+
+            while (i--) {
+                cItem = items[itemIDList[i]];
+                cItem.renderSetLayoutInfo();
+            }
+        };
+        
+        doRenderSetLayout(this._insertedClickableItemIDs);
+        doRenderSetLayout(this._updatedClickableItemIDs);
+
+
+        //STEP 2: call the inserted and updated items' getRenderLayout
         doRenderGetLayout = function (itemIDList) {
             var i = itemIDList.length,
                 itemBBox,
@@ -774,20 +789,6 @@ define(['logManager',
         };
         doRenderGetLayout(this._insertedClickableItemIDs);
         doRenderGetLayout(this._updatedClickableItemIDs);
-
-        //STEP 2: call the inserted and updated items' setRenderLayout
-        doRenderSetLayout = function (itemIDList) {
-            var i = itemIDList.length,
-                cItem;
-
-            while (i--) {
-                cItem = items[itemIDList[i]];
-                cItem.renderSetLayoutInfo();
-            }
-        };
-        
-        doRenderSetLayout(this._insertedClickableItemIDs);
-        doRenderSetLayout(this._updatedClickableItemIDs);
 
         /*********** SEND CREATE / UPDATE EVENTS about created/updated items **********/
         dispatchEvents = function (itemIDList, eventType) {

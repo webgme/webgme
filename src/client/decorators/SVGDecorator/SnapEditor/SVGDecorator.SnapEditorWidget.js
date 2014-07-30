@@ -49,6 +49,7 @@ define(['js/Constants',
         this._selfPatterns = {};
         
         this.initializeStretchability();
+
         //Stuff about contained info
         //this.childIds = [];
         //this.children = {};
@@ -140,9 +141,6 @@ define(['js/Constants',
             dx,
             changed = false;
 
-        //Update the displayed input areas based on newest data
-        this.updateInputFields();
-
         this._update();
 
         //Resize the svg as needed
@@ -171,7 +169,7 @@ define(['js/Constants',
         
         //Apply latest stretch transformation info
         //May not be the right spot for this FIXME
-        this._applyTransforms();
+        //this._applyTransforms();
 
     };
 
@@ -182,6 +180,7 @@ define(['js/Constants',
      * @return {undefined}
      */
     SVGDecoratorSnapEditorWidget.prototype.updateInputFields = function () {
+        //WRITE
         var fields = Object.keys(this._inputFields2Update),
             container,
             input,
@@ -224,13 +223,6 @@ define(['js/Constants',
                 input.css("height", this.inputFields[field].height);
 
                 input.css("z-index", this.zIndex+1);
-                //Register event listener
-                //TODO
-                /*
-                 *input.click(function(e){
-                 *    console.log("CLICKED ON " + field + " Field");
-                 *});
-                 */
                 container.append(input);
             }
 
@@ -255,6 +247,14 @@ define(['js/Constants',
         this.$svgContent = this.$el.find(".svg-content");
 
         this._updateSVGFile();
+
+        this._initializeSVGElements();//ID all svg elements
+
+        //Colors
+        this.initializeColors();
+
+        //Update the displayed input areas based on newest data
+        this.updateInputFields();
 
         //If it has a "name" text id in the svg, use that instead of $name
         //This allows for the svg to fall back to a separate name div if
@@ -309,19 +309,19 @@ define(['js/Constants',
             }
         }
 
-        this._initializeSVGElements();
-
         this.update();
     };
 
     //May remove this TODO
-    SVGDecoratorSnapEditorWidget.prototype.updateAttributeText = function(attribute){
-        var textFields = this.$el.find("text"),
-            fields = textFields.filter("#" + attribute),
-            item;
-
-        this._setTextAndStretch(fields, item.getAttribute(attribute), attribute);
-    };
+/*
+ *    SVGDecoratorSnapEditorWidget.prototype.updateAttributeText = function(attribute){
+ *        var textFields = this.$el.find("text"),
+ *            fields = textFields.filter("#" + attribute),
+ *            item;
+ *
+ *        this._setTextAndStretch(fields, item.getAttribute(attribute), attribute);
+ *    };
+ */
 
     /**
      *Get the information that this decorator will need to update its input fields
@@ -384,6 +384,7 @@ define(['js/Constants',
      * @return {Boolean} return true if svg changed in size
      */
     SVGDecoratorSnapEditorWidget.prototype.updateText = function (attribute, newText) {
+    //Change this to record the text and not WRITE to the DOM FIXME
         var element = this.$el.find('#' + attribute),
             currentText;
 
@@ -412,81 +413,91 @@ define(['js/Constants',
         this.$el[0].style.zIndex = this.zIndex;
     };
 
+    /* * * * * * * * * * * * * * * COLORS * * * * * * * * * * * * * * */
     /**
-     * Set the color of the item to it's primary or secondary coloring depending upon the item it is attached to.
+     * Store color info in the decorator.
+     *
+     * @private
+     * @return {undefined}
+     */
+    SVGDecoratorSnapEditorWidget.prototype.initializeColors = function () {
+        var colorGroup = this.$svgElement.find("#" + SVG_COLOR_ID);
+
+        this._colorInfo = {};
+        
+        //Primary or secondary
+        this._colorInfo.currentColor = SNAP_CONSTANTS.COLOR_PRIMARY;
+        this._colorInfo.supportsMultiColors = false;
+        this._colorInfo.needsUpdate = false;
+
+        //actual color
+        if (colorGroup.length){
+            if (colorGroup[0].hasAttribute("style")){
+
+                this._colorInfo.colors = {};
+                this._colorInfo.colors[SNAP_CONSTANTS.COLOR_PRIMARY] = colorGroup[0].getAttribute("style");
+
+                if (colorGroup[0].hasAttribute("data-" + SNAP_CONSTANTS.COLOR_SECONDARY)){
+                    this._colorInfo.supportsMultiColors = true;
+                    this._colorInfo.colors[SNAP_CONSTANTS.COLOR_SECONDARY] = colorGroup[0].getAttribute("data-" + SNAP_CONSTANTS.COLOR_SECONDARY);
+
+                    this._colorInfo.$el = colorGroup[0];
+                }
+            }
+        }
+    };
+
+    SVGDecoratorSnapEditorWidget.prototype._updateColor = function () {
+        var newColor = this._colorInfo.colors[this._colorInfo.currentColor];
+
+        if (this._colorInfo.supportsMultiColors){//Change the color
+            this._colorInfo.$el.setAttribute("style", newColor);
+        }
+
+        this._colorInfo.needsUpdate = false;
+    };
+
+    /**
+     * Set the color of the current item to it's primary or secondary coloring depending upon the item it is attached to.
      *
      * @param {SVGDecoratorSnapEditorWidget} otherDecorator
-     * @param {SVGDecoratorSnapEditorWidget} otherColor
      * @return {String} returns the item's color (primary/secondary)
      */
-    SVGDecoratorSnapEditorWidget.prototype.setColor = function (otherDecorator, otherColor) {
-        //Check to see if it has a filter
-        //If so, 
-        var areSameColor = false,
-            secondary = this.$svgElement.find("#" + SVG_SECONDARY_COLOR_ID),
-            color = SNAP_CONSTANTS.COLOR_PRIMARY,
-            filterName = SVG_SECONDARY_COLOR_ID,
-            colorGroup = this.$svgElement.find("#" + SVG_COLOR_ID),
-            colors = colorGroup.data(),
-            otherColorGroup = otherDecorator.$svgElement.find("#" + SVG_COLOR_ID),
-            i = secondary.length;
+    SVGDecoratorSnapEditorWidget.prototype.setColor = function (otherColor) {
+        var changed = false,
+            currentColor,
+            newColorType;
 
-        //Figure out if the decorators are the same color
-        if (colorGroup.length && otherColorGroup.length){
-            colorGroup = colorGroup[0];
-            otherColorGroup = otherColorGroup[0];
+        if (this._colorInfo.supportsMultiColors){
+            currentColor = this.getColor();
 
-            areSameColor = colorGroup.getAttribute("style") === otherColorGroup.getAttribute("style");
-        }
+            if (otherColor === currentColor){
+                newColorType = SNAP_CONSTANTS.COLOR_PRIMARY;
 
-        var filter = null;
-        while (i-- && !filter){//find the filter
-            if (secondary[i].tagName === "filter"){
-                filter = secondary[i];
+                if (this._colorInfo.currentColor === SNAP_CONSTANTS.COLOR_PRIMARY){
+                    newColorType = SNAP_CONSTANTS.COLOR_SECONDARY;
+                }
+
+                this._colorInfo.currentColor = newColorType;
+
+                //Needs to update color?
+                this._colorInfo.needsUpdate = true;
+                changed = true;
             }
         }
 
-        var hasFilter = filter !== null,
-            hasColors = colors instanceof Object ? Object.keys(colors).length > 0 : false;
-
-        if (areSameColor && (hasFilter || hasColors)){//has filter and color group
-
-            switch(otherColor){
-                case SNAP_CONSTANTS.COLOR_PRIMARY:
-                    if (hasFilter){
-                        colorGroup.setAttribute("filter", "url(#" + SVG_SECONDARY_COLOR_ID + ")");
-                    } else if (hasColors){//Change the color
-                        if (!colorGroup.hasAttribute("data-" + SNAP_CONSTANTS.COLOR_PRIMARY)){
-                            colorGroup.setAttribute("data-" + SNAP_CONSTANTS.COLOR_PRIMARY,
-                                    colorGroup.getAttribute("style"));
-                        }
-                        colorGroup.setAttribute("style", colorGroup.getAttribute("data-" + SNAP_CONSTANTS.COLOR_SECONDARY));
-
-                    }
-
-                    color = SNAP_CONSTANTS.COLOR_SECONDARY;
-                    break;
-
-                case SNAP_CONSTANTS.COLOR_SECONDARY:
-                    if (hasFilter){
-                        if (colorGroup.hasAttribute("filter")){
-                            colorGroup.removeAttribute("filter");
-                        }
-                    } else if (hasColors){//Set the color
-                        if (colorGroup.hasAttribute("data-" + SNAP_CONSTANTS.COLOR_PRIMARY)){
-                            colorGroup.setAttribute("style", colorGroup.getAttribute("data-" + SNAP_CONSTANTS.COLOR_PRIMARY));
-                        }
-                    }
-                    break;
-
-                default:
-                    //ERROR - COLOR NOT RECOGNIZED
-                    this.logger.debug("Decorator color not recognized: " + otherColor);
-            }
-        }
-
-        return color;
+        return changed;
     };
+    
+    SVGDecoratorSnapEditorWidget.prototype.getColor = function () {
+        if (this._colorInfo.colors){
+            return this._colorInfo.colors[this._colorInfo.currentColor];
+        }
+
+        return null;
+    };
+
+    /* * * * * * * * * * * * * * * END COLORS * * * * * * * * * * * * * * */
 
     /* * * * * END of Manipulating the SVG * * * * * */
 
@@ -516,8 +527,15 @@ define(['js/Constants',
 
         connectors.css('transform', 'translateX(' + xShift + 'px)');
         
+        //Update the displayed input areas based on newest data
+        this.updateInputFields();
+
         //Apply stretching
         this._applyTransforms();
+
+        if (this._colorInfo.needsUpdate){
+            this._updateColor();
+        }
 
         SnapEditorWidgetDecoratorBase.prototype.onRenderSetLayoutInfo.call(this);
     };

@@ -412,8 +412,7 @@ define(['logManager',
 
             var basePtr = keys[0],
                 base = this.ptrs[SNAP_CONSTANTS.CONN_ACCEPTING][basePtr],
-                color = base._color,
-                oldColor;
+                baseColor = base.getColor();
 
 
             //If the item has more than one object pointing in, then we won't know
@@ -421,15 +420,18 @@ define(['logManager',
             //the item's location
             assert(keys.length === 1, "Item should have only one object pointing into it");
 
-            //Need to check if they have the same svg or svg color. If so, check whether
-            //the item is set to it's PRIMARY or SECONDARY color and set this one accordingly
-            oldColor = this._color;
-            this._color = this._decoratorInstance.setColor(base._decoratorInstance, color);
-
-            changed = oldColor !== this._color;
+            if (baseColor){
+                //Need to check if they have the same svg or svg color. If so, check whether
+                //the item is set to it's PRIMARY or SECONDARY color and set this one accordingly
+                changed = this._decoratorInstance.setColor(base.getColor());
+            }
         }
 
         return changed;
+    };
+
+    ClickableItem.prototype.getColor = function () {
+        return this._decoratorInstance.getColor();
     };
 
     /**
@@ -585,6 +587,7 @@ define(['logManager',
      * @return {undefined}
      */
     ClickableItem.prototype.clearCalculatedSize = function () {
+        //this.setSize(this._calculatedSize.width, this._calculatedSize.height);
         this._calculatedSize = {};
     };
 

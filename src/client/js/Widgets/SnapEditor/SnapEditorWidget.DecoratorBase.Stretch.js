@@ -46,7 +46,9 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
         this._updatedSVGElements = {};//The elements that have been updated since last render
         this._classTransforms = {};//The calculated abs stretch of any class in the SVG
         this._minDims = {};
+
         this._svgDims = {};
+        this._initSvgDims = {};
 
         this.svgContainerWidth = 0;
         this.svgWidth = 0;
@@ -102,20 +104,29 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
             };
 
         this.$svgElement.each(idCreator);
+
+        //Initialize this._calculatedDims values
+        this._initSvgDims.width = parseFloat(this.$svgElement[0].getAttribute('width'));
+        this._initSvgDims.height = parseFloat(this.$svgElement[0].getAttribute('height'));
+
+        this._svgDims.width = this._initSvgDims.width;
+        this._svgDims.height = this._initSvgDims.height;
+
     };
 
     /**
-     * Randomly generate ID between 0,10000 for identifying svg elements.
+     * Randomly generate ID for identifying svg elements.
      *
      * @private
      * @return {String} id
      */
     SVGDecoratorSnapEditorWidgetStretch.prototype._genSVGId = function () {
 
-        var id = "SVG_" + Math.floor(Math.random()*10000);
+        var MAX_ID = 10000000,
+            id = "SVG_" + Math.floor(Math.random()*MAX_ID);
 
         while(this._transforms[id]){
-            id = "SVG_" + Math.floor(Math.random()*10000);
+            id = "SVG_" + Math.floor(Math.random()*MAX_ID);
         }
 
         return id;
@@ -128,6 +139,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      * @return {undefined}
      */
     SVGDecoratorSnapEditorWidgetStretch.prototype._applyTransforms = function () {
+        //WRITE ONLY
         var elements = Object.keys(this._updatedSVGElements),
             element;
 
@@ -157,7 +169,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      * @return {Boolean} return true if size has changed
      */
     SVGDecoratorSnapEditorWidgetStretch.prototype._setTextAndStretch = function (element, newText, stretchId) {
-        //TODO Change this to a READ-ONLY function wrt the DOM FIXME
+        //READ-ONLY wrt the DOM 
         var oldText = element.text(),
             oldWidth = element.width(),
             newWidth;
@@ -200,7 +212,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      * @return {Boolean} true if the svg has changed in size
      */
     SVGDecoratorSnapEditorWidgetStretch.prototype.stretchTo = function (id, size) {
-        //TODO Change this to a READ-ONLY function wrt the DOM FIXME
+        //READ-ONLY wrt DOM
         //Stretch according to the x,y values where x,y are
         //dimensions of the items pointed to by "id"
         var changed = false,
@@ -267,6 +279,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      * @return {Number} Current size of the svg along the given axis
      */
     SVGDecoratorSnapEditorWidgetStretch.prototype.stretch = function (id, axis, delta) {
+        //READ-ONLY
         var stretchClass = axis + "-stretch-" + id,
             shiftClass = axis + "-shift-" + id,
             stretchElements = this.$svgContent.find("." + stretchClass),
@@ -303,7 +316,6 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
             this._transforms[svgId][dim] += delta;
             maxSize = Math.max(maxSize, this._transforms[svgId][dim]);
 
-            //this._updateSVGTransforms( stretchElements[i] );//WRITE
             this._updatedSVGElements[svgId] = stretchElements[i];
         }    
 
@@ -313,20 +325,17 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
 
             this._transforms[svgId].shift[axis] += delta;
 
-            //this._updateSVGTransforms(shiftElements[i] );//WRITE
             this._updatedSVGElements[svgId] = shiftElements[i];
         }    
 
         //Adjust the overall svg if necessary
-        if ( this._svgDims[dim] === undefined){
-            this._svgDims[dim] = parseFloat(this.$svgElement[0].getAttribute(dim));
-        }
-
         if(stretchElements.length || shiftElements.length){
+            //May be a better way to do this
             this._svgDims[dim] = Math.max(this._svgDims[dim] + delta, maxSize);
             
-            //Update the host item  FIXME
-            //this.hostDesignerItem['_' + dim] = this._svgDims[dim];
+            //Update the host item  
+            var calculatedSize = _.extend({}, this._svgDims);
+            this.hostDesignerItem.setCalculatedSize(calculatedSize);
         }
 
         return this._svgDims[dim];
@@ -419,8 +428,8 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
             height = Math.max(this._minDims[id].height, this._transforms[id].height);
 
         if(svg.tagName === "line"){
-            var x = this._transforms.original.x,
-                y = this._transforms.original.y;
+            var x = this._transforms[id].original.x,
+                y = this._transforms[id].original.y;
 
             svg.setAttribute("x2", x + width);
             svg.setAttribute("y2", y + height);
