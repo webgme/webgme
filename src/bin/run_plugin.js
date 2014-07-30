@@ -1,4 +1,4 @@
-var webGme = require('../webgme'),
+var webGme = require('../../webgme'),
     program = require('commander'),
     PATH = require('path'),
     configFilename,

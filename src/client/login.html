@@ -4,7 +4,11 @@
         <title>-= Login =- WebGME</title>
 
         <!-- CSS libraries -->
+        <link type="text/css" rel="stylesheet" href="/lib/bootstrap/3.1.1/css/bootstrap.min.css">
+        <link type="text/css" rel="stylesheet" href="/lib/bootstrap/3.1.1/css/bootstrap-theme.min.css">
         <link href="css/main.css" type="text/css" rel="stylesheet"/>
+        <link type="text/css" rel="stylesheet" href="/css/themes/dawn.css">
+        <link type="text/css" rel="stylesheet" href="/fonts/webgme-icons/style.css">
 
         <!-- favicon -->
         <link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico">
@@ -18,7 +22,7 @@
             }
 
             .form-signin {
-                max-width: 400px;
+                max-width: 500px;
                 padding: 19px 29px 29px;
                 margin: 0 auto 20px;
                 background-color: #fff;
@@ -42,59 +46,56 @@
                 padding: 7px 9px;
             }
 
-            #customBtn {
-                display: inline-block;
-                background: #dd4b39;
-                color: white;
-                width: 115px;
-                border-radius: 5px;
-                white-space: nowrap;
-                padding: 5px 0px 4px 0px;
+            .gPlusButton {
+                position: relative;
+                padding-left: 32px;
             }
-            #customBtn:hover {
-                background: #e74b37;
-                cursor: pointer;
+
+            .gPlusIcon {
+                background: url('https://developers.google.com/+/images/branding/btn_red_32.png');
+                background-size: 25px 25px;
+                background-repeat: no-repeat;
+                background-position: center center;
+                position: absolute;
+                top: 4px;
+                left:4px;
+                width:25px;
+                height:25px;
+
             }
-            span.label {
-                font-weight: bold;
-            }
-            span.icon {
-                background: url('https://developers.google.com/+/images/branding/btn_red_32.png') transparent 5px 50% no-repeat;
-                display: inline-block;
-                vertical-align: middle;
-                width: 35px;
-                height: 35px;
-                border-right: #bb3f30 1px solid;
-            }
-            span.buttonText {
-                display: inline-block;
-                vertical-align: middle;
-                padding-left: 10px;
-                padding-right: 20px;
-                font-size: 14px;
-                font-weight: bold;
-                /* Use the Roboto font that is loaded in the <head> */
-                font-family: 'Roboto',arial,sans-serif;
-            }
+
         </style>
     </head>
 
     <body>
         <div class="container">
             <form class="form-signin" action="/login" method="post">
-                <h2 class="form-signin-heading">WebGME - Please sign in</h2>
-                <input name="username" type="text" autocomplete="off" class="input-block-level" placeholder="Username">
-                <input name="password" type="password" autocomplete="off" class="input-block-level" placeholder="Password">
-                <label class="checkbox">
-                    <input type="checkbox" value="remember-me"> Remember me
-                </label>
-                <button class="btn btn-large btn-primary" type="submit">Sign in</button>
-                <a class="pull-right" onclick="window.location.href='/login/google'">
-                    <div id="customBtn" class="customGPlusSignIn">
-                        <span class="icon"></span>
-                        <span class="buttonText">Sign in</span>
+                <h2 class="form-signin-heading">WebGME sign in</h2>
+                <div class="row">
+                    <div class="col-md-6">
+                        <input name="username" type="text" autocomplete="off" class="input-block-level" placeholder="Username">
                     </div>
-                </a>
+                    <div class="col-md-6">
+                        <input name="password" type="password" autocomplete="off" class="input-block-level" placeholder="Password">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-8">
+                        <label class="checkbox">
+                            <input type="checkbox" value="remember-me"> Remember me
+                        </label>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <button class="btn btn-large btn-primary" type="submit">Sign in</button>
+                    </div>
+                    <div class="col-md-6">
+                        <a class="btn btn-danger pull-right gPlusButton" type="button" onclick="window.location.href='/login/google'">
+                            <i class="gPlusIcon"></i> Use my Google account
+                        </a>
+                    </div>
+                </div>
             </form>
         </div>
     </body>
