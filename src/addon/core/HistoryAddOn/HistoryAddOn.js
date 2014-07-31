@@ -39,6 +39,11 @@ define(['addon/AddOnBase'],function(Base){
             self.buildInitial(callback);
         });
     };
+    HistoryAddOn.prototype.stop = function(callback){
+        //there is no need for special stop sequence
+        //TODO maybe we could close the project and the database, but right now it seems unnecessary
+        callback(null);
+    };
 
     //special HistoryAddOn elements
     HistoryAddOn.prototype.tree = {};
@@ -120,7 +125,6 @@ define(['addon/AddOnBase'],function(Base){
                         }
                     },
                     i;
-                console.log(treeObject.path,self.core.getHash(node),treeObject.hash);
                 if(self.core.getHash(node) !== treeObject.hash){
                     treeObject.hash = self.core.getHash(node);
                     treeObject.lastChanged = self.commit;
@@ -166,9 +170,7 @@ define(['addon/AddOnBase'],function(Base){
                     callback();
                 }
             };
-        checkNode(root,self.tree,function(){
-            console.log('HistoryAddOn updated ',self.commit);
-        });
+        checkNode(root,self.tree,function(){});
     };
     return HistoryAddOn;
 });

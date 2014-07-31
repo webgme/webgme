@@ -247,10 +247,11 @@ define([
             }
             function stopAddOn(name,callback){
                 if(_addOns[name] && _addOns[name] !== "loading"){
-                    delete _addOns[name];
                     _database.simpleResult(_addOns[name],callback);
+                    delete _addOns[name];
+                } else {
+                    callback(null);
                 }
-                callback(null);
             }
 
             //core addOns
@@ -259,12 +260,13 @@ define([
                 if(_addOns['HistoryAddOn'] && _addOns['HistoryAddOn'] !== 'loading'){
                     stopAddOn('HistoryAddOn',function(err){
                         if(err){
-                            return callback(err);
+                            callback(err);
+                        } else {
+                            startAddOnAsync('HistoryAddOn', project, branch, callback);
                         }
-                        startAddOnAsync('HistoryAddOn',project,branch,callback);
                     });
                 } else {
-                    startAddOn('HistoryAddOn',project,branch,callback);
+                    startAddOnAsync('HistoryAddOn',project,branch,callback);
                 }
             }
             function getDetailedHistoryAsync(callback){

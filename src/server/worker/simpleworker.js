@@ -366,7 +366,7 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
                     _addOn.start({projectName:projectName,branchName:branchName,project:project},callback);
                 });
             } else {
-                callback(new Error('unable to connect user\'s storage'));
+                callback('unable to connect user\'s storage');
             }
         });
     };
@@ -374,7 +374,7 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
         if(_addOn){
             _addOn.query(parameters,callback);
         } else {
-            callback(new Error('the addon is not running'));
+            callback('the addon is not running');
         }
     };
 

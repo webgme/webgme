@@ -388,8 +388,12 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                             callback(err);
                         } else {
                             project = p;
-                            for(i=0;i<hashes.length;i++){
-                                loadObject(hashes[i],innerCb);
+                            if(needed > 0){
+                                for(i=0;i<hashes.length;i++){
+                                    loadObject(hashes[i],innerCb);
+                                }
+                            } else {
+                                callback('no object was requested');
                             }
                         }
                     });
@@ -407,6 +411,44 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                                     callback(err);
                                 }
                             });
+                        }
+                    });
+                });
+                socket.on('insertObjects', function(projectName,objects,callback){
+                    var error = null,
+                        keys = Object.keys(objects),
+                        needed = keys.length,
+                        project, i,
+                        insertObject = function(object,next){
+                            project.insertObject(object,next);
+                        },
+                        innerCb = function(err){
+                            error = error || err;
+                            if(--needed === 0){
+                                callback(error);
+                            }
+                        };
+
+                    checkProject(getSessionID(socket),projectName,function(err,p){
+                        if(err){
+                            callback(err);
+                        } else {
+                            project = p;
+                            options.authorization(getSessionID(socket),projectName,'write',function(err,cando){
+                                if(!err && cando === true){
+                                    if(needed > 0){
+                                        for(i=0;i<keys.length;i++){
+                                            insertObject(objects[keys[i]],innerCb);
+                                        }
+                                    } else {
+                                        callback('no object to save');
+                                    }
+
+                                } else {
+                                    callback(err);
+                                }
+                            });
+
                         }
                     });
                 });

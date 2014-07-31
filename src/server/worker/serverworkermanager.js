@@ -158,10 +158,10 @@ function(ASSERT,Child,CONSTANTS){
                     worker.worker.send(message);
                 } else {
                     delete _idToPid[id];
-                    callback(new Error('request handler cannot be found'));
+                    callback('request handler cannot be found');
                 }
             } else {
-                callback(new Error('wrong request identification'));
+                callback('wrong request identification');
             }
         }
         function query(id,parameters,callback){
@@ -175,10 +175,10 @@ function(ASSERT,Child,CONSTANTS){
                     worker.worker.send(parameters);
                 } else {
                     delete _idToPid[id];
-                    callback(new Error('request handler cannot be found'));
+                    callback('request handler cannot be found');
                 }
             } else {
-                callback(new Error('wrong request identification'));
+                callback('wrong request identification');
             }
         }
 
