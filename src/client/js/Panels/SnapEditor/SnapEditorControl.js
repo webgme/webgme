@@ -46,7 +46,6 @@ define(['logManager',
     SnapEditorControl.prototype._attachClientEventListeners = function () {
         this._detachClientEventListeners();
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged, this);
-        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_SELECTION, this._stateActiveSelectionChanged, this);
     };
 
     SnapEditorControl.prototype._stateActiveObjectChanged = function (model, activeObjectId) {
@@ -55,7 +54,6 @@ define(['logManager',
 
     SnapEditorControl.prototype._detachClientEventListeners = function () {
         WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged);
-        WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_SELECTION, this._stateActiveSelectionChanged);
     };
 
     SnapEditorControl.prototype.selectedObjectChanged = function(nodeId){
@@ -888,9 +886,11 @@ console.log("Object changed to " + nodeId);
 
     SnapEditorControl.prototype.onActivate = function(){
         //When you have the split view and only one is active
+        this._attachClientEventListeners();
     }; 
 
     SnapEditorControl.prototype.onDeactivate = function(){
+        this._detachClientEventListeners();
     }; 
 
     SnapEditorControl.prototype.destroy = function(){
