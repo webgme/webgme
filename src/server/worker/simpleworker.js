@@ -326,8 +326,12 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
                             callback(err);
                         }
                         needed = projectNames.length;
-                        for(i=0;i<projectNames.length;i++){
-                            getProjectInfo(projectNames[i],projectInfoReceived);
+                        if(needed > 0){
+                            for(i=0;i<projectNames.length;i++){
+                                getProjectInfo(projectNames[i],projectInfoReceived);
+                            }
+                        } else {
+                            return callback(new Error('there is no project on server'));
                         }
                     });
 
