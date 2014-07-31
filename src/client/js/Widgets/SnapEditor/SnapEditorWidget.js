@@ -675,7 +675,53 @@ define(['logManager',
         var resizeQueue,
             moveQueue = [], 
             dependents,
-            visited = {};
+            visited = {},
+            self = this,
+            sortByDependency = function(children){
+                //Sort the children by dependency on one another
+                //Make sure that this works if we start on a child that is halfway through the list
+                var childMap = {},
+                    visited = {},
+                    sorted = [],
+                    depList = [],
+                    child,
+                    index,
+                    i;
+
+                //Create a map of children from array
+                for (i = children.length -1; i >= 0; i--){
+                    childMap[children[i]] = true;
+                }
+
+                i = 0;
+                while (i < children.length){
+
+                    depList = [];
+                    child = self.items[children[i]];
+                    
+                    //While we haven't visited child and it is in our set
+                    while(!visited[child.id] && childMap[child.id]){
+                        //add the child to the depList
+                        depList.unshift(child.id);
+                        visited[child.id] = true;
+                        child = child.getParent();
+                    }
+
+                    //Add depList to sorted as appropriate
+                    if (visited[child.id]){
+                        sorted = sorted.concat(depList);
+                    } else {
+                        sorted = depList.concat(sorted);
+                    }
+
+                    while (visited[children[i]]){
+                        i++;
+                    }
+
+                }
+
+                return sorted;
+            };
 
         items = Object.keys(this._clickableItems2Update);
         while(items.length){
@@ -687,13 +733,15 @@ define(['logManager',
                 //Try to follow children
                 while(dependents.children && !visited[resizeQueue[0]]){
                     visited[resizeQueue[0]] = true;
+                    //Sort children by dependency
+                    dependents.children = sortByDependency(dependents.children);
                     resizeQueue = dependents.children.concat(dependents.siblings, resizeQueue);
                     dependents = this.items[resizeQueue[0]].getDependentsByType();
                 }
                 //Else follow 'next' ptrs
                 moveQueue.push(resizeQueue.splice(0,1).pop());
                 this.items[moveQueue[moveQueue.length-1]].updateSize();
-                this.items[moveQueue[moveQueue.length-1]].updatePosition();
+                this.items[moveQueue[moveQueue.length-1]].updateDependents(false);
             }
         }
 

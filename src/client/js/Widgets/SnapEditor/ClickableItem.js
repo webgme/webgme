@@ -508,7 +508,7 @@ define(['logManager',
     /**
      * Get the ClickableItem that this item is attached to 
      *
-     * @return {ClickableItem}
+     * @return {ClickableItem|null}
      */
     ClickableItem.prototype.getParent = function () {
         //get parent in dependency tree
@@ -702,13 +702,14 @@ define(['logManager',
      * @return {undefined}
      */
     ClickableItem.prototype.updatePosition = function () {
-        var ptrs = Object.keys(this.ptrs[SNAP_CONSTANTS.CONN_ACCEPTING]);
+        var ptrs = Object.keys(this.ptrs[SNAP_CONSTANTS.CONN_ACCEPTING]),
+            params = { ignoreDependents: true, resize: false };//extra params
 
         assert(ptrs.length <= 1, "An item can only be connected to one other item");
 
         if (this.isPositionDependent()){
             this.connectByPointerName(this.ptrs[SNAP_CONSTANTS.CONN_ACCEPTING][ptrs[0]], 
-                                      ptrs[0], SNAP_CONSTANTS.CONN_ACCEPTING, false);
+                                      ptrs[0], SNAP_CONSTANTS.CONN_ACCEPTING, params);
         }
     };
 
@@ -717,14 +718,17 @@ define(['logManager',
      *
      * @return {undefined}
      */
-    ClickableItem.prototype.updateDependents = function () {
+    ClickableItem.prototype.updateDependents = function (propogate) {
         var ptrs = Object.keys(this.ptrs[SNAP_CONSTANTS.CONN_PASSING]),
             i = ptrs.length;
 
         while (i--){
             this.ptrs[SNAP_CONSTANTS.CONN_PASSING][ptrs[i]]
                 .connectByPointerName(this, ptrs[i], SNAP_CONSTANTS.CONN_ACCEPTING);
-            this.ptrs[SNAP_CONSTANTS.CONN_PASSING][ptrs[i]].updateDependents();
+
+            if (propogate === true){
+                this.ptrs[SNAP_CONSTANTS.CONN_PASSING][ptrs[i]].updateDependents(propogate);
+            }
         }
     };
 
@@ -736,19 +740,24 @@ define(['logManager',
      * @param {String} role
      * @param {Boolean} resize
      */
-    ClickableItem.prototype.connectByPointerName = function (otherItem, ptrName, role, resize) {
+    ClickableItem.prototype.connectByPointerName = function (otherItem, ptrName, role, extraParams) {
         
-        var otherRole = role === SNAP_CONSTANTS.CONN_ACCEPTING ? 
+        var otherRole = role === SNAP_CONSTANTS.CONN_ACCEPTING ? //Get the opposite role
                 SNAP_CONSTANTS.CONN_PASSING : SNAP_CONSTANTS.CONN_ACCEPTING,
             connArea1 = this.getConnectionArea(ptrName, role),
-            connArea2 = otherItem.getConnectionArea(ptrName, otherRole);
-
-        this._connect({ ptr: ptrName,
+            connArea2 = otherItem.getConnectionArea(ptrName, otherRole),
+            params = { ptr: ptrName,
                         role: SNAP_CONSTANTS.CONN_ACCEPTING,
                         area1: connArea1,
                         area2: connArea2,
-                        otherItem: otherItem,
-                        resize: resize });
+                        otherItem: otherItem };
+                        
+
+        if (_.isObject(extraParams)){
+            _.extend(params, extraParams);
+        }
+
+        this._connect(params);
 
     };
 
@@ -844,7 +853,11 @@ define(['logManager',
             }
         }
 
-        this.moveByWithDependents(distance.dx, distance.dy);
+        if (params.ignoreDependents === true){
+            this.moveBy(distance.dx, distance.dy);
+        } else {
+            this.moveByWithDependents(distance.dx, distance.dy);
+        }
 
         this.setPtr(ptr, role, otherItem);
 

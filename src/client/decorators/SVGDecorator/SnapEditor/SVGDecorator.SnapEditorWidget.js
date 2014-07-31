@@ -186,48 +186,50 @@ define(['js/Constants',
             input,
             field;
 
-        for (var i = fields.length-1; i >= 0; i--) {
-            //Get the div containing this input field or create one
-            field = fields[i];
-            input = null;
-            //container = this.$inputFields.find("#"+field+ "-container");
-            container = this.$el.find("#"+field+ "-container");
-            if (!container.length){
-                container = $('<div id="' + field + '-container" />');
-                //this.$inputFields.append(container);
-                this.$el.append(container);
-            } else {//Remove any old info
-                container.empty();
-            }
-
-            //Update field
-            if (this.inputFields[field].type === SNAP_CONSTANTS.TEXT_FIELD.NAME){
-                //Create a text field
-                input = $('<input>', { id: field, type: "text", text: this.inputFields[field].content });
-            } else if (this.inputFields[field].type === SNAP_CONSTANTS.DROPDOWN.NAME){
-                input = $('<select>', { id: field, class: "input-small" });
-                if (this.inputFields[field].options){//If it has options
-
-                    for (var j = 0; j < this.inputFields[field].options.length; j++){
-                        input.append($('<option>', { text: this.inputFields[field].options[j] }));
+            for (var i = fields.length-1; i >= 0; i--) {
+                //Get the div containing this input field or create one
+                field = fields[i];
+                input = null;
+                if (this.inputFields[field].visible === true){
+                    //container = this.$inputFields.find("#"+field+ "-container");
+                    container = this.$el.find("#"+field+ "-container");
+                    if (!container.length){
+                        container = $('<div id="' + field + '-container" />');
+                        //this.$inputFields.append(container);
+                        this.$el.append(container);
+                    } else {//Remove any old info
+                        container.empty();
                     }
+
+                    //Update field
+                    if (this.inputFields[field].type === SNAP_CONSTANTS.TEXT_FIELD.NAME){
+                        //Create a text field
+                        input = $('<input>', { id: field, type: "text", text: this.inputFields[field].content });
+                    } else if (this.inputFields[field].type === SNAP_CONSTANTS.DROPDOWN.NAME){
+                        input = $('<select>', { id: field, class: "input-small" });
+                        if (this.inputFields[field].options){//If it has options
+
+                            for (var j = 0; j < this.inputFields[field].options.length; j++){
+                                input.append($('<option>', { text: this.inputFields[field].options[j] }));
+                            }
+                        }
+                    }
+
+                    if (input){
+                        container.css("left", this.inputFields[field].x);
+                        container.css("top", this.inputFields[field].y);
+                        container.css("position", "absolute");
+
+                        input.css("width", this.inputFields[field].width);
+                        input.css("height", this.inputFields[field].height);
+
+                        input.css("z-index", this.zIndex+1);
+                        container.append(input);
+                    }
+
+                    delete this._inputFields2Update[field];
                 }
             }
-
-            if (input){
-                container.css("left", this.inputFields[field].x);
-                container.css("top", this.inputFields[field].y);
-                container.css("position", "absolute");
-                
-                input.css("width", this.inputFields[field].width);
-                input.css("height", this.inputFields[field].height);
-
-                input.css("z-index", this.zIndex+1);
-                container.append(input);
-            }
-
-            delete this._inputFields2Update[field];
-        }
 
         this.$el.css("position", "relative");
         this.$el.append(this.$inputFields);
