@@ -103,7 +103,6 @@ function(ASSERT,Child,CONSTANTS){
                         }
                         break;
                     case CONSTANTS.msgTypes.initialize:
-                        console.log('initialize',msg.pid);
                         //this arrives when the worker seems ready for initialization
                         worker.worker.send({
                             command:CONSTANTS.workerCommands.initialize,
@@ -165,7 +164,6 @@ function(ASSERT,Child,CONSTANTS){
             }
         }
         function query(id,parameters,callback){
-            console.log('query',id,parameters);
             var worker;
             if(_idToPid[id]){
                 worker = _myWorkers[_idToPid[id]];

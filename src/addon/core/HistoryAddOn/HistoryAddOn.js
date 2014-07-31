@@ -140,6 +140,7 @@ define(['addon/AddOnBase'],function(Base){
                                     'hash'        : null,
                                     'path'        : null,
                                     'lastChanged' : null,
+                                    'children'    : {},
                                     'latest'      : false
                                 };
                             }

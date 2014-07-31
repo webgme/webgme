@@ -40,7 +40,7 @@ define([],
                             case "BRANCH_UPDATED":
                                 if(self.projectName === parameters.project && self.branchName === parameters.branch){
                                     self.project.loadObject(parameters.commit,function(err,commit){
-                                        if(err){
+                                        if(err || !commit){
                                             return self._Storage.getNextServerEvent(lastGuid,nextServerEvent);
                                         }
 
