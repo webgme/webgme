@@ -96,10 +96,8 @@ define([
                 label: 'Recent projects',
                 totalItems: 20,
                 items: [],
-                showAllItems: function () {
-                    console.log('Show all items...');
-                }
-            },
+                showAllItems: newProject
+            }/*,
             {
                 id: 'preferences',
                 items: [
@@ -144,7 +142,7 @@ define([
                     }
                 ]
 
-            }
+            }*/
         ];
 
         if (self.gmeClient) {
