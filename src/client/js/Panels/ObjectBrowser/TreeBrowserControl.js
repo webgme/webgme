@@ -260,7 +260,7 @@ define(['logManager',
                 menuItems.separatorCreate = "-";
                 menuItems.create = { // The "create" menu item
                     "name": "Create...",
-                    "icon": "glyphicon glyphicon-plus",
+                    "icon": "add",
                     "items": {}
                 };
 
