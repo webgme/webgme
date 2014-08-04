@@ -50,9 +50,8 @@ define(['js/Constants',
         
         this.initializeStretchability();
 
-        //Stuff about contained info
-        //this.childIds = [];
-        //this.children = {};
+        //Attributes in text fields
+        this._attributes = {};//Only if they have a text field for it
 
         this.logger.debug("SVGDecoratorSnapEditorWidget ctor");
     };
@@ -171,6 +170,35 @@ define(['js/Constants',
         //May not be the right spot for this FIXME
         //this._applyTransforms();
 
+    };
+
+    SVGDecoratorSnapEditorWidget.prototype.removeAttributeText = function (attr) {
+        var fields;
+
+        if (this._attributes[attr]){
+            fields = this.$el.find('text').filter('#' + attr);
+            fields.remove();
+            delete this._attributes[attr];
+        }
+    };
+
+    SVGDecoratorSnapEditorWidget.prototype.updateAttributeContent = function (attr, value) {
+        if (this._attributes[attr]){
+            this._attributes[attr] = value;
+        }
+    };
+
+    SVGDecoratorSnapEditorWidget.prototype.updateAttributeText = function () {
+        var attributes = Object.keys(this._attributes),
+            textFields = this.$el.find('text'),
+            attr,
+            fields;
+
+        while (attributes.length){
+            attr = attributes.pop();
+            fields = textFields.filter("#" + attr);
+            this._setTextAndStretch(fields, this._attributes[attr], attr);
+        }
     };
 
     /**
@@ -302,6 +330,7 @@ define(['js/Constants',
         for (var i = 0; i < attrList.length; i++){
             attr = attrList[i];
             if (attr !== 'name'){
+                this._attributes[ attr ] = attributes[attr].value;
                 fields = textFields.filter("#" + attr);
                 this._setTextAndStretch(fields, attributes[attr].value, attr);
                 //Make the fields editable
@@ -531,6 +560,9 @@ define(['js/Constants',
         
         //Update the displayed input areas based on newest data
         this.updateInputFields();
+
+        //Update attribute text fields
+        this.updateAttributeText();
 
         //Apply stretching
         this._applyTransforms();
