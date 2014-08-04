@@ -747,14 +747,6 @@ console.log("Object changed to " + nodeId);
                             }
                         }
 
-                        //Get the attribute info
-                        objDesc.attrInfo = {};
-                        attrs = node.getAttributeNames(gmeID);
-                        i = attrs.length;
-                        while (i--){
-                            objDesc.attrInfo[attrs[i]] = node.getAttribute(attrs[i]);
-                        }
-
                         this.snapCanvas.updateClickableItem(componentID, objDesc);
                     }
                 }
