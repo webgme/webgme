@@ -34,7 +34,6 @@ define(['plugin/PluginConfig',
                        PARENT_SNIPPET_START: '%__parentSnippetStart__',
                        PARENT_SNIPPET_END: '%__parentSnippetEnd__' },
        OPTIONAL_PLACEHOLDERS = ['%next'],
-       ENDING_CODE = '',//The callback code
        UNIQUENESS_COEFFICIENT = 10000000;
 
    var ConstraintPlugin = function() {
@@ -204,7 +203,7 @@ define(['plugin/PluginConfig',
             //node methods (async)
             'isTypeOf': PRIVATE_VARIABLES.GET_NODE+"(%node, function(" + PLACEHOLDER.ARG + 
                 "){\n" + PLACEHOLDER.PARENT_SNIPPET_START + PRIVATE_VARIABLES.TYPE_OF + 
-                "(%node, %first)" + PLACEHOLDER.PARENT_SNIPPET_END + "\n});",
+                "(" + PLACEHOLDER.ARG + ", %first)" + PLACEHOLDER.PARENT_SNIPPET_END + "\n});",
 
             'getChildren': PRIVATE_VARIABLES.GET_NODE+"(%node, function(" + PLACEHOLDER.ARG + 
                 "){\n" + PLACEHOLDER.PARENT_SNIPPET_START + "core.getChildrenPaths(" + PLACEHOLDER.ARG + 
@@ -222,7 +221,7 @@ define(['plugin/PluginConfig',
                 ", %first)" + PLACEHOLDER.PARENT_SNIPPET_END + "\n});",
 
             'forEach': "var " + PLACEHOLDER.FUNCTION + " = function(" + 
-                PLACEHOLDER.ITERATOR + "){\nif ( ++" + PLACEHOLDER.ITERATOR + 
+                PLACEHOLDER.ITERATOR + "){\nif (" + PLACEHOLDER.ITERATOR + 
                 ' < %collection.length){\n%iter = %collection[' + 
                 PLACEHOLDER.ITERATOR + '];\n%true_next\n} else {\n %next\n} };\n'+
                 'var ' + PLACEHOLDER.ITERATOR + ' = 0;\n' + PLACEHOLDER.FUNCTION +
@@ -231,7 +230,7 @@ define(['plugin/PluginConfig',
 
             //additional end code by node type
             this._constraintEndCode = {
-                'forEach': PLACEHOLDER.FUNCTION + "(" + PLACEHOLDER.ITERATOR + ");\n",
+                'forEach': PLACEHOLDER.FUNCTION + "(++" + PLACEHOLDER.ITERATOR + ");\n",
                 'constraint': '\ncallback( ' + PRIVATE_VARIABLES.ERROR + 
                     ', ' + PRIVATE_VARIABLES.VIOLATION + ');\n'
             };
