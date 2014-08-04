@@ -47,6 +47,7 @@ define(['logManager',
 
         //Input field info
         this.inputFieldsToUpdate = {};
+        this.updatedAttributes = [];
         
         //Coloring
         this._color = SNAP_CONSTANTS.COLOR_PRIMARY;
@@ -78,6 +79,7 @@ define(['logManager',
             if (!_.isEqual(this.attributes[attr], attrInfo[attr])){
                 this.attributes[attr] = attrInfo[attr];
                 changed = "set attribute";
+                this.updatedAttributes.push(attr);
             }
 
             i = oldAttributeNames.indexOf(attr);
@@ -90,9 +92,31 @@ define(['logManager',
             attr = newAttributeNames.pop();
             delete this.attributes[attr];
             changed = "removed attr";
+            this.updatedAttributes.push(attr);
         }
 
         return changed;
+    };
+
+    /**
+     * Notify SVG of updated attributes 
+     *
+     * @return {undefined}
+     */
+    ClickableItem.prototype.updateDisplayedAttributeText = function () {
+        var attributes = this.updatedAttributes,
+            attributeName,
+            value;
+
+        while (this.updatedAttributes.length){
+            attributeName = this.updatedAttributes.pop();
+            value = this.getAttribute(attributeName);
+            if ( value !== null){
+                this._decoratorInstance.updateAttributeContent(attributeName, value);
+            } else {
+                this._decoratorInstance.removeAttributeText(attributeName);
+            }
+        }
     };
 
     /**
@@ -757,7 +781,9 @@ define(['logManager',
             _.extend(params, extraParams);
         }
 
-        this._connect(params);
+        if (connArea1 && connArea2){
+            this._connect(params);
+        }
 
     };
 
@@ -1182,6 +1208,7 @@ define(['logManager',
 
         //update the decorator's input area fields' values
         this.updateInputFields();
+        this.updateDisplayedAttributeText();
 
         var oldMetaInfo = this._decoratorInstance.getMetaInfo();
 
