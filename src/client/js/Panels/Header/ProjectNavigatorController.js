@@ -296,7 +296,8 @@ define([
             showHistory,
             showAllBranches,
             deleteProject,
-            selectProject;
+            selectProject,
+            refreshPage;
 
         rights = rights || {
             'delete': true,
@@ -323,6 +324,10 @@ define([
                 }
             };
 
+            refreshPage = function() {
+                document.location.href = window.location.href.split('?')[0];
+            };
+
             deleteProject =  function (data) {
 
                 var deleteProjectModal = self.$modal.open({
@@ -330,17 +335,13 @@ define([
                       controller: DeleteProjectController,
                       resolve: {
                         gmeClient:  function() { return self.gmeClient; },
-                        projectData: function() { return data; }
+                        projectData: function() { return data; },
+                        postDelete: function() {
+                            return refreshPage;
+                        }
                       }
                     });
 
-
-//                self.gmeClient.deleteProjectAsync(data.projectId, function (err) {
-//                    if (err) {
-//                        console.error(err);
-//                        return;
-//                    }
-//                });
             };
 
             showAllBranches = function (data) {

@@ -1,24 +1,27 @@
-/*globals define, console, window*/
+/*globals define, console, window, angular*/
 
 define( [], function () {
     "use strict";
 
 
-    var DeleteProjectController = function ( $scope, $modalInstance, gmeClient, projectData ) {
+    var DeleteProjectController = function ( $scope, $modalInstance, gmeClient, projectData, postDelete ) {
 
-        var postDelete = function() {
-            document.location.href = window.location.href.split('?')[0];
-        };
         $scope.projectName = projectData.projectId;
 
         $scope.ok = function () {
+
+                console.log(projectData);
 
                 gmeClient.deleteProjectAsync(projectData.projectId, function (err) {
                     if (err) {
                         console.error(err);
                         return;
                     } else {
-                        postDelete();
+
+                        if (angular.isFunction(postDelete)) {
+                            postDelete();
+                        }
+
                     }
                 });
 

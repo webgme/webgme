@@ -20,7 +20,7 @@ define(['js/PanelBase/PanelBase',
     var HeaderPanel,
         __parent__ = PanelBase;
 
-    angular.module('headerPanel', ['isis.ui.dropdownNavigator']).run(function() {
+    angular.module('gme.ui.headerPanel', ['isis.ui.dropdownNavigator']).run(function() {
 
     });
 
