@@ -1,4 +1,4 @@
-/*globals RegExp,define*/
+/*globals RegExp,_,define*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved
  *
@@ -35,7 +35,6 @@ define(['plugin/PluginConfig',
                        PARENT_SNIPPET_END: '%__parentSnippetEnd__' },
        OPTIONAL_PLACEHOLDERS = ['%next'],
        ENDING_CODE = '',//The callback code
-       LOADED_NODES = {},//loaded nodes mapped to callback variable name TODO
        UNIQUENESS_COEFFICIENT = 10000000;
 
    var ConstraintPlugin = function() {
@@ -479,7 +478,7 @@ define(['plugin/PluginConfig',
         for (i = keys.length-1; i >= 0; i--){
             snippetTag = keys[i];
 
-            if (snippetTagContent[snippetTag].indexOf(PLACEHOLDER.PARENT_SNIPPET_START) !== -1){
+            if (_.isString(snippetTagContent[snippetTag]) && snippetTagContent[snippetTag].indexOf(PLACEHOLDER.PARENT_SNIPPET_START) !== -1){
                 splitElements = '(' + PLACEHOLDER.PARENT_SNIPPET_START + 
                     '|' + PLACEHOLDER.PARENT_SNIPPET_END + ')';
                 subsnippets = snippetTagContent[snippetTag].split(new RegExp(splitElements, 'g'));
