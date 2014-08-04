@@ -10,8 +10,6 @@ define( [], function () {
 
         $scope.ok = function () {
 
-                console.log(projectData);
-
                 gmeClient.deleteProjectAsync(projectData.projectId, function (err) {
                     if (err) {
                         console.error(err);

@@ -93,6 +93,14 @@ define(['logManager',
 
         var deleteProject = function (projId) {
 
+            var refreshList = function() {
+                    self._refreshProjectList.call(self);
+                },
+                refreshPage = function() {
+                    document.location.href = window.location.href.split('?')[0];
+                };
+
+
             if (self._projectList[projId].delete === true) {
 
               var deleteProjectModal = $ngModal.open({
@@ -105,14 +113,29 @@ define(['logManager',
                     },
                     postDelete: function() {
 
-                        return self._refreshProjectList;
+                        var handler;
+
+                        if (self._activeProject === projId) {
+                            handler = refreshPage;
+                        } else {
+                            handler = refreshList;
+                        }
+
+                        return handler;
+
                     }
                   }
                 });
 
-//                self._client.deleteProjectAsync(selectedId,function(){
-//                    self._refreshProjectList();
-//                });
+                self._dialog.modal('hide');
+
+                deleteProjectModal.result.then(function () {
+                    self._dialog.modal('show');
+                },function () {
+                    self._dialog.modal('show');
+                });
+
+
             }
         };
 
@@ -308,7 +331,7 @@ define(['logManager',
 
 
         this._btnRefresh.on('click', function (event) {
-            self._refreshProjectList();
+            self._refreshProjectList.call(self);
 
             event.stopPropagation();
             event.preventDefault();
