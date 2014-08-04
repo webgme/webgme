@@ -24,11 +24,6 @@ define(['addon/AddOnBase'],function(Base){
         callback(null,this.tree);
     };
 
-    HistoryAddOn.prototype.stop = function(callback){
-        console.log('HistoryAddOn',new Date().getTime(), 'stop');
-        callback(null);
-    };
-
     HistoryAddOn.prototype.start = function(parameters,callback){
         var self = this;
         Base.prototype.start.call(this,parameters,function(err){
@@ -113,7 +108,7 @@ define(['addon/AddOnBase'],function(Base){
             });
         });
     };
-    HistoryAddOn.prototype.update = function(root,commit){
+    HistoryAddOn.prototype.update = function(root){
         var self = this,
             checkNode = function(node,treeObject,callback){
                 var newRelIds = self.core.getChildrenRelids(node),
