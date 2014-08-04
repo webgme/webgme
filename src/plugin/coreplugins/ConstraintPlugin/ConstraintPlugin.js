@@ -14,13 +14,28 @@ define(['plugin/PluginConfig',
     "use strict";
 
    var DEFAULT = '__default__',
-       INITIAL_VARIABLES = ['currentNode'],
-       ERROR_NAME = 'err',
-       VIOLATION_VARIABLE_NAME = 'violationInfo',
-       ITERATOR_PLACEHOLDER = '%__iterator__',
-       ITERATOR_BASE = 'i',
-       FUNCTION_PLACEHOLDER = '%__func__',
-       FUNCTION_BASE = 'fn',
+       ACCESSABLE_VARIABLES = ['currentNode'],
+       PRIVATE_VARIABLES = { CORE: 'core',//Variable names to be unique-ized
+                             CALLBACK: 'callback',
+                             ERROR: 'err',
+                             VIOLATION: 'violationInfo',
+                             CACHE : '_nodeCache',
+                             GET_NODE : 'getNode',
+                             TYPE_OF : 'isTypeOf',
+
+                             //Base values for iterators/functions
+                             ITERATOR: 'i',
+                             ARG: 'arg',
+                             FUNCTION: 'fn'},
+
+       PLACEHOLDER = { ITERATOR: '%__iterator__',//Placeholders to be unique-ized
+                       FUNCTION: '%__func__',
+                       ARG: '%__arg__',
+                       PARENT_SNIPPET_START: '%__parentSnippetStart__',
+                       PARENT_SNIPPET_END: '%__parentSnippetEnd__' },
+       OPTIONAL_PLACEHOLDERS = ['%next'],
+       ENDING_CODE = '',//The callback code
+       LOADED_NODES = {},//loaded nodes mapped to callback variable name TODO
        UNIQUENESS_COEFFICIENT = 10000000;
 
    var ConstraintPlugin = function() {
@@ -29,7 +44,7 @@ define(['plugin/PluginConfig',
 
         //Defined in Constriant Language META
         this._variableTypes = { 'dictionary': 'var %name = {};',
-                                'Collection': 'var %name = [];',
+                                'collection': 'var %name = [];',
                                 '__default__': 'var %name = null;' };
     };
 
@@ -45,6 +60,9 @@ define(['plugin/PluginConfig',
         //we load the children of the active node
         var self = this;
         self._nodeCache = {};
+
+        //Add activeNode
+        self._nodeCache[self.core.getPath(self.activeNode)] = self.activeNode;
 
         var load = function(node, fn){
             self.core.loadChildren(node,function(err,children){
@@ -92,17 +110,15 @@ define(['plugin/PluginConfig',
             return false;
         }
 
-        var self = this;
-
         if (typeof node === "string"){//if the node is the nodeId
-            node = self.getNode(node);
+            node = this.getNode(node);
         }
 
         while(node){
-            if(self.core.getPath(node) === self.core.getPath(type)){
+            if(this.core.getPath(node) === this.core.getPath(type)){
                 return true;
             }
-            node = self.core.getBase(node);
+            node = this.core.getBase(node);
         }
         return false;
     };
@@ -117,78 +133,112 @@ define(['plugin/PluginConfig',
         //These correspond to META items
         
         //Check for name collisions
-        //Violations_Variable
-        VIOLATION_VARIABLE_NAME = this._createUniqueName(VIOLATION_VARIABLE_NAME);
+        var keys = Object.keys(PRIVATE_VARIABLES),
+            key;
 
-        //iterator base
-        ITERATOR_PLACEHOLDER = this._createUniqueName(ITERATOR_PLACEHOLDER);
-        ITERATOR_BASE = this._createUniqueName(ITERATOR_BASE);
+        while (keys.length){
+            key = keys.pop();
+            PRIVATE_VARIABLES[key] = this._createUniqueName(PRIVATE_VARIABLES[key]);
+        }
 
-        FUNCTION_PLACEHOLDER = this._createUniqueName(FUNCTION_PLACEHOLDER);
-        FUNCTION_BASE = this._createUniqueName(ITERATOR_BASE);
+        //Placeholders
+        keys = Object.keys(PLACEHOLDER);
+        while (keys.length){
+            key = keys.pop();
+            PLACEHOLDER[key] = this._createUniqueName(PLACEHOLDER[key]);
+        }
 
-        this._constraintMapping = {   'bp': 'function(core, currentNode){\n\n' + 
-                                                '/* Adding utility functions like getNode and loadStartingNodes */\n' +
-                                                '//TODO\n\n' +
-                                                'var ' + VIOLATION_VARIABLE_NAME + ' = { hasViolation: false };' +
-                                                'var ' + ERROR_NAME + ' = null;' +
-                                                '\n\n%code\n' +
-                                                'cb( ' + ERROR_NAME + ', ' + VIOLATION_VARIABLE_NAME + ');\n}',
+        this._constraintExtension = 'js';
 
-                                      'map': { 'Add': "%first + %second", 
-                                               'Subtract': "%first - %second", 
-                                               'Multiply': "(%first) * (%second)", 
-                                               'Divide': "(%first)/(%second)", 
-                                               'Less Than': "(%first) < (%second)", 
-                                               'Greater Than': "(%first) > (%second)", 
-                                               'Equals': "(%first) === (%second)", 
+        this._constraintBoilerPlate = 'function(core, currentNode, callback){\n\n' + 
+            '\n"use strict";\n\nvar ' + PRIVATE_VARIABLES.VIOLATION +
+            ' = { hasViolation: false };\n' +
+            'var ' + PRIVATE_VARIABLES.ERROR + ' = null;\n' +
+            'var ' + PRIVATE_VARIABLES.CACHE + ' = {};\n' +
+            'var ' + PRIVATE_VARIABLES.GET_NODE + ' = function(nodeId){\n' +
+            'var node;\nif (nodeId === currentNode){\n'+
+            'return currentNode;\n}\n\nif (' + PRIVATE_VARIABLES.CACHE + '[nodeId]){\n' +
+            'return ' + PRIVATE_VARIABLES.CACHE + '[nodeId];\n' +
+            '}\nnode = core.loadByPath(currentNode, nodeId);\n'+
+            '' + PRIVATE_VARIABLES.CACHE + '[nodeId] = node;\n\nreturn node;\n};\n' + 
+            'var ' + PRIVATE_VARIABLES.TYPE_OF + ' = function(node,type){\n' + 
+            'if(node === undefined || node === null || type === undefined || ' + 
+            'type === null){\nreturn false;\n}\n\n' +
+            'while(node){\nif(core.getAttribute(node, "name") === type){\n'+
+            'return true;\n}\nnode = core.getBase(node);\n}\nreturn false;\n};\n'+
+            '\n\n%code\n\n}';
 
-                                               //Control flow
-                                               'If': "if (%cond){\n%true_next\n}",
-                                               /*
-                                               'ForEach': "var " + ITERATOR_PLACEHOLDER + ";\n" +
-                                                   "function " + FUNCTION_PLACEHOLDER + "( " + ITERATOR_PLACEHOLDER + 
-                                                  */
-                                                   //TODO
-                                               'ForEach': "for (var " + ITERATOR_PLACEHOLDER + 
-                                                   " = %collection.length-1; " + ITERATOR_PLACEHOLDER + 
-                                                   " >= 0; " + ITERATOR_PLACEHOLDER + "--){\n "+
-                                                   "\t%iter = %collection["+ ITERATOR_PLACEHOLDER + 
-                                                   "];\n%true_next\n}",
-                                               'While': "while (%cond){\n %true_next\n}",
+        this._constraintMapping = {
+            'add': "%first + %second", 
+            'subtract': "%first - %second", 
+            'multiply': "(%first) * (%second)", 
+            'divide': "(%first)/(%second)", 
+            'lessThan': "(%first) < (%second)", 
+            'greaterThan': "(%first) > (%second)", 
+            'equals': "(%first) === (%second)", 
 
-                                               //Variables
-                                               'Variable': "%name",
-                                               'Collection': "%name",
-                                               'Node': "%name",
-                                               'NodeSet': "%name",
-                                               'Item': "%name",
+            //Control flow
+            'if': "if (%cond){\n%true_next\n}\n%next",
+            'while': "while (%cond){\n %true_next\n}\n%next",
 
-                                               //Collection mappings
-                                               'addToCollection': "%collection.push(%first)",
-                                               'contains': "%collection.indexOf(%first) !== -1",
+            //Variables
+            'variable': "%name",
+            'collection': "%name",
+            'node': "%name",
+            'nodeSet': "%name",
+            'item': "%name",
 
-                                               //Constraint specific mappings
-                                               //node specific mappings
-                                               'getAttribute': "core.getAttribute(getNode(%second), %first)",//FIXME
-                                               'getPointer': "core.getPointerPath(getNode(%node), %first)",
-                                               'getParent': "core.getParentPath(getNode(%node))",
-                                               'getChildren': "core.getChildrenPaths(getNode(%node))",
+            //Collection mappings
+            'addToCollection': "%collection.push(%first);\n%next",
+            'contains': "%collection.indexOf(%first) !== -1",
 
-                                               'markViolation': VIOLATION_VARIABLE_NAME + " = { hasViolation: true," +
-                                                   " message: %Message, nodes: %node };\n",
+            'markViolation': PRIVATE_VARIABLES.VIOLATION + " = { hasViolation: true," +
+                " message: %Message, nodes: %node };\n\n%next",
 
-                                               //TODO Figure out how to have the children be children nodes...
-                                               'not': "!(%first)",
-                                               'getLength': "%first.length",
+            'not': "!(%first)",
+            'getLength': "%first.length",
 
-                                               //A few basic utilities
-                                               'Return': "return %first;",
-                                               'Set': '%first = %second;' },
+            //A few basic utilities
+            'return': "return %first;\n%next",
+            'set': '%first = %second;\n%next',
 
-                                        'ext': 'js' };
+            //node methods (async)
+            'isTypeOf': PRIVATE_VARIABLES.GET_NODE+"(%node, function(" + PLACEHOLDER.ARG + 
+                "){\n" + PLACEHOLDER.PARENT_SNIPPET_START + PRIVATE_VARIABLES.TYPE_OF + 
+                "(%node, %first)" + PLACEHOLDER.PARENT_SNIPPET_END + "\n});",
 
+            'getChildren': PRIVATE_VARIABLES.GET_NODE+"(%node, function(" + PLACEHOLDER.ARG + 
+                "){\n" + PLACEHOLDER.PARENT_SNIPPET_START + "core.getChildrenPaths(" + PLACEHOLDER.ARG + 
+                ")" + PLACEHOLDER.PARENT_SNIPPET_END + "\n});",
 
+            'getParent': PRIVATE_VARIABLES.GET_NODE+"(%node, function(" + PLACEHOLDER.ARG + 
+                "){\n" + PLACEHOLDER.PARENT_SNIPPET_START + "core.getParentPath(" + PLACEHOLDER.ARG + 
+                ")" + PLACEHOLDER.PARENT_SNIPPET_END + "\n});",
+
+            'getPointer': PRIVATE_VARIABLES.GET_NODE+"(%node, function(" + PLACEHOLDER.ARG + 
+                "){\n" + PLACEHOLDER.PARENT_SNIPPET_START + "core.getPointerPath(" + PLACEHOLDER.ARG + 
+                ")" + PLACEHOLDER.PARENT_SNIPPET_END + "\n});",
+
+            'getAttribute': PRIVATE_VARIABLES.GET_NODE+"(%second, function(" + PLACEHOLDER.ARG + "){\n" + PLACEHOLDER.PARENT_SNIPPET_START + "core.getAttribute(" + PLACEHOLDER.ARG + 
+                ", %first)" + PLACEHOLDER.PARENT_SNIPPET_END + "\n});",
+
+            'forEach': "var " + PLACEHOLDER.FUNCTION + " = function(" + 
+                PLACEHOLDER.ITERATOR + "){\nif ( ++" + PLACEHOLDER.ITERATOR + 
+                ' < %collection.length){\n%iter = %collection[' + 
+                PLACEHOLDER.ITERATOR + '];\n%true_next\n} else {\n %next\n} };\n'+
+                'var ' + PLACEHOLDER.ITERATOR + ' = 0;\n' + PLACEHOLDER.FUNCTION +
+                '(' + PLACEHOLDER.ITERATOR + ');\n'
+            };
+
+            //additional end code by node type
+            this._constraintEndCode = {
+                'forEach': PLACEHOLDER.FUNCTION + "(" + PLACEHOLDER.ITERATOR + ");\n",
+                'constraint': '\ncallback( ' + PRIVATE_VARIABLES.ERROR + 
+                    ', ' + PRIVATE_VARIABLES.VIOLATION + ');\n'
+            };
+
+            //additional end code by node id
+            this._nodeEndCode = {};
     };
 
     ConstraintPlugin.prototype._createUniqueName = function(variable){
@@ -201,19 +251,11 @@ define(['plugin/PluginConfig',
         return newName;
     };
 
-    ConstraintPlugin.prototype._getNewIterator = function(){
-        return this._createUniqueName(ITERATOR_BASE);
-    };
-
-    ConstraintPlugin.prototype._getNewFunctionName = function(){
-        return this._createUniqueName(FUNCTION_BASE);
-    };
-
     ConstraintPlugin.prototype.main = function (callback) {
         var self = this;
         self.config = self.getCurrentConfig();
 
-        if(!self._isTypeOf(self.activeNode, self.META.Constraint)){
+        if(!self._isTypeOf(self.activeNode, self.META.constraint)){
             self._errorMessages(self.activeNode, 
                 "Current project is an invalid type. Please run the plugin on a constraint definition.");
         }
@@ -259,7 +301,7 @@ define(['plugin/PluginConfig',
 
         this.variables = {};//List of declared variables
         this.projectName = this.core.getAttribute(this.activeNode,'name');
-        this.generatedCode = "";
+        this.generatedCode = { variables: "", functions: "", code: "" };
 
         currentNode = null;
         nodeIds = this.getAllNodeIds();
@@ -273,7 +315,7 @@ define(['plugin/PluginConfig',
                //What if they have more than one "start" node?
                //TODO
                
-            } else if(this._isTypeOf(nodeIds[i], this.META.Variable)){
+            } else if(this._isTypeOf(nodeIds[i], this.META.variable)){
                 variables.push(nodeIds[i]);
             }
         }
@@ -282,13 +324,11 @@ define(['plugin/PluginConfig',
         this._declareVariables(variables);
         this._createConstraintMapping();
 
-        //Follow the next pointers and map each object to it's given code
-        while(this.core.getPointerPath(currentNode, 'next')){
-            currentNode = this.getNode(this.core.getPointerPath(currentNode, 'next'));
-            this.generatedCode += this._generateCode(currentNode) + "\n";
-        }
+        //Find the last node (for inserting callback)
+        this._setNodeEndCode();
 
-        this.generatedCode = this._constraintMapping.bp.replace("%code", this.generatedCode);
+        currentNode = this.core.getPointerPath(currentNode, 'next');
+        this.generatedCode.code += this._generateCode(currentNode) + "\n";
 
         return err;
     };
@@ -303,10 +343,8 @@ define(['plugin/PluginConfig',
             j;
 
         //Remove the initial variable from declaration
-        for (i = INITIAL_VARIABLES.length -1; i >= 0; i--){
-            if ((index = variables.indexOf(INITIAL_VARIABLES[i])) !== -1){
-                variables.splice(index, 1);
-            }
+        for (i = ACCESSABLE_VARIABLES.length -1; i >= 0; i--){
+            this.variables[ACCESSABLE_VARIABLES[i]] = true;
         }
  
         //Declare remaining variables
@@ -328,40 +366,87 @@ define(['plugin/PluginConfig',
             this._declareVar(variable, variableType);
         }
 
-        this.generatedCode += "\n";
+        this.generatedCode.variables += "\n";
     };
 
     ConstraintPlugin.prototype._declareVar = function(variable, typeInfo){
         var varName = this.core.getAttribute(variable, 'name');
         if (!this.variables[varName]){
-            this.generatedCode += typeInfo.replace(new RegExp("%name", "g"), varName) + '\n';
+            this.generatedCode.variables += typeInfo.replace(new RegExp("%name", "g"), varName) + '\n';
             this.variables[varName] = true;
         }
     };
 
-    ConstraintPlugin.prototype._generateCode = function(node){
+    /**
+     * We will search all nodes and match the node to its ending code based
+     * on the node type (using the "this._constraintEndCode" dictionary). The
+     * data is recorded in this._nodeEndCode. 
+     *
+     * @private
+     * @return {undefined}
+     */
+    ConstraintPlugin.prototype._setNodeEndCode = function(){
+        var nodeIds = this.getAllNodeIds(),
+            nodeType,
+            node,
+            base;
+
+        for (var i = nodeIds.length-1; i >= 0; i--){
+            node = this.getNode( nodeIds[i] );
+            base = this.core.getBase(node);
+            nodeType = this.core.getAttribute(base, 'name');
+            if (this._constraintEndCode[nodeType]){
+                this._nodeEndCode[nodeIds[i]] = this._constraintEndCode[nodeType];
+            }
+        }
+    };
+
+    ConstraintPlugin.prototype._generateCode = function(nodeId){
         //Map stuff to code and return the code snippet
-        var base = this.core.getBase(node),
+        var node = this.getNode(nodeId),
+            base = this.core.getBase(node),
             typeName = this.core.getAttribute(base, 'name'),
-            snippet = this._constraintMapping.map[typeName],//Get the code for the given node...
+            snippet = this._constraintMapping[typeName],//Get the code for the given node...
             ptrs = this.core.getPointerNames(node),
             attributes = this.core.getAttributeNames(node),
             snippetTagContent = {},
             snippetTag,
             keys,
             i,
-            n;
+            targetNode,
+            splitElements,
+            subsnippets,
+            newSnippet,
+            parent = this.core.getParent(node),
+            parentId = this.core.getPath(parent);
+
+        //Handle any placeholders (ie, iterators, function names)
+        keys = Object.keys(PLACEHOLDER);
+        for (i = keys.length-1; i >= 0; i--){
+            snippetTag = PLACEHOLDER[keys[i]];
+            if (snippet.indexOf(snippetTag) !== -1 && PRIVATE_VARIABLES[keys[i]] !== undefined){
+                snippetTagContent[snippetTag] = this._createUniqueName(PRIVATE_VARIABLES[keys[i]]);
+            }
+        }
 
         //If the attribute name is in the snippet, substitute the attr name with the value
         i = attributes.length;
         while (i--){
             snippetTag = '%' + attributes[i];
             if (snippet.indexOf(snippetTag) !== -1){
-                snippetTagContent[snippetTag] = 'undefined';
+                if (OPTIONAL_PLACEHOLDERS.indexOf(snippetTag) !== -1){
+                    snippetTagContent[snippetTag] = '';
+                    if (this._nodeEndCode[parentId]){
+                        snippetTagContent[snippetTag] = this._nodeEndCode[parentId];
+                    }
+
+                } else {
+                    snippetTagContent[snippetTag] = 'undefined';
+                }
                 snippetTagContent[snippetTag] = this.core.getAttribute(node, attributes[i]);
 
                 if (attributes[i] !== 'name' && this.core.getAttributeMeta(node, attributes[i]).type === 'string'){
-                    snippetTagContent[snippetTag] = '"' + snippetTagContent[snippetTag] + '"';
+                    snippetTagContent[snippetTag] = '"' + snippetTagContent[snippetTag].replace(/[\\'"]/g, '\\$&') + '"';
                 }
             }
         }
@@ -374,55 +459,51 @@ define(['plugin/PluginConfig',
             if (snippet.indexOf(snippetTag) !== -1){ 
 
                 if(this.core.getPointerPath(node, ptrs[i])){
-                    snippetTagContent[snippetTag] = this._getBlockCode(this.core.getPointerPath(node, ptrs[i]));
+                    targetNode = this.core.getPointerPath(node, ptrs[i]);
+                    snippetTagContent[snippetTag] = this._generateCode(targetNode);
                 } 
                 if (!snippetTagContent[snippetTag]){
-                    snippetTagContent[snippetTag] = 'undefined';
+                    if (OPTIONAL_PLACEHOLDERS.indexOf(snippetTag) !== -1){
+                        snippetTagContent[snippetTag] = '';
+                        if (this._nodeEndCode[parentId]){
+                            snippetTagContent[snippetTag] = this._nodeEndCode[parentId];
+                        }
+                    } else {
+                        snippetTagContent[snippetTag] = 'undefined';
+                    }
                 }
             }
-        }
-
-        //Handle any iterators
-        if (snippet.indexOf(ITERATOR_PLACEHOLDER) !== -1){
-            snippetTagContent[ITERATOR_PLACEHOLDER] = this._getNewIterator();
         }
 
         keys = Object.keys(snippetTagContent);
         for (i = keys.length-1; i >= 0; i--){
             snippetTag = keys[i];
-            snippet = snippet.replace(new RegExp(snippetTag, "g"), snippetTagContent[snippetTag]);
+
+            if (snippetTagContent[snippetTag].indexOf(PLACEHOLDER.PARENT_SNIPPET_START) !== -1){
+                splitElements = '(' + PLACEHOLDER.PARENT_SNIPPET_START + 
+                    '|' + PLACEHOLDER.PARENT_SNIPPET_END + ')';
+                subsnippets = snippetTagContent[snippetTag].split(new RegExp(splitElements, 'g'));
+                newSnippet = "";
+                for (var k = 0; k < subsnippets.length; k +=5){
+                    newSnippet += subsnippets[k] + snippet.replace(new RegExp(snippetTag, "g"), subsnippets[k+2]) + subsnippets[k+4];
+                }
+                snippet = newSnippet;
+            } else {
+                snippet = snippet.replace(new RegExp(snippetTag, "g"), snippetTagContent[snippetTag]);
+                if (this._nodeEndCode[nodeId]){
+                    this._nodeEndCode[nodeId].replace(new RegExp(snippetTag, "g"), snippetTagContent[snippetTag]);
+                }
+            }
             delete snippetTagContent[snippetTag];
         }
 
         return snippet;
     };
 
-    ConstraintPlugin.prototype._getBlockCode = function(nodeId){
-        //Return code that is part of another block
-
-
-        if(this._isTypeOf(nodeId, this.META.Predicate)){
-            //Return the snippet inline
-            return this._generateCode(this.getNode(nodeId));
-
-        }
-
-        if(this._isTypeOf(nodeId, this.META.Command)){//Return the snippet with an indent
-            var node = this.getNode(nodeId),
-                snippet = "\t" + this._generateCode(node).replace(/\n/g, "\n\t");
-
-            while(this.core.getPointerPath(node, 'next') && this._isTypeOf(this.core.getPointerPath(node, 'next'), this.META.Command)){
-                node = this.getNode(this.core.getPointerPath(node, 'next'));
-                snippet += "\n\t" + this._generateCode(node).replace(/\n/g, "\n\t");
-            }
-
-            return snippet;
-        }
-    };
-
     //Thanks to Tamas for the next two functions
-    ConstraintPlugin.prototype._saveOutput = function(code, callback){
+    ConstraintPlugin.prototype._saveOutput = function(codeInfo, callback){
         var self = this,
+            code = codeInfo.variables + codeInfo.functions + codeInfo.code,
             fileName = self.projectName.replace(/ /g, "_"),
             artifact = self.blobClient.createArtifact(fileName+"_constraint"),
 
@@ -450,8 +531,10 @@ define(['plugin/PluginConfig',
                 }
             };
 
+        code = this._constraintBoilerPlate.replace("%code", code);
+
         //Save all files
-        artifact.addFile(fileName + "." + self._constraintMapping.ext,code,checkIfShouldSaveAll);
+        artifact.addFile(fileName + "." + self._constraintExtension,code,checkIfShouldSaveAll);
     };
 
     ConstraintPlugin.prototype._errorMessages = function(message){
