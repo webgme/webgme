@@ -921,10 +921,12 @@ define(['logManager',
     };
 
     ModelEditorControl.prototype._constraintCheck = function () {
-        //Cconstraint Checking goes here...
-        if (this.currentNodeInfo.id) {
-            WebGMEGlobal.ConstraintManager.validate(this.currentNodeInfo.id);
-        }
+        var self = this;
+
+        self._client.validateProjectAsync(function(err,result){
+            //TODO here we should pop up the result dialog...
+            console.log('project validation finished',err,result);
+        });
     };
 
     ModelEditorControl.prototype._stateActiveObjectChanged = function (model, activeObjectId) {

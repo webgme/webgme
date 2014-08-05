@@ -255,6 +255,19 @@ define([
             }
 
             //core addOns
+            function startCoreAddOnsAsync(project,branch,callback){
+                var needed = 2,
+                    error = null,
+                    icb = function(err){
+                        error = error || err;
+                        if(--needed === 0){
+                            callback(error);
+                        }
+                    };
+
+                startHistoryAsync(project,branch,icb);
+                startConstraintAsync(project,branch,icb);
+            }
             //history
             function startHistoryAsync(project,branch,callback){
                 if(_addOns['HistoryAddOn'] && _addOns['HistoryAddOn'] !== 'loading'){
@@ -276,6 +289,29 @@ define([
                     callback(new Error('history information is not available'));
                 }
             }
+
+            //constraint
+            function startConstraintAsync(project,branch,callback){
+                if(_addOns['ConstraintAddOn'] && _addOns['ConstraintAddOn'] !== 'loading'){
+                    stopAddOn('ConstraintAddOn',function(err){
+                        if(err){
+                            callback(err);
+                        } else {
+                            startAddOnAsync('ConstraintAddOn', project, branch, callback);
+                        }
+                    });
+                } else {
+                    startAddOnAsync('ConstraintAddOn',project,branch,callback);
+                }
+            }
+            function validateProjectAsync(callback){
+                if(_addOns['ConstraintAddOn'] && _addOns['ConstraintAddOn'] !== 'loading'){
+                    queryAddOn("ConstraintAddOn", {querytype:'execute'}, callback);
+                } else {
+                    callback(new Error('history information is not available'));
+                }
+            }
+            //core addOns end
 
             function tokenWatcher(){
                 var token = null,
@@ -594,7 +630,7 @@ define([
 
                                     if(firstName){
                                         branchWatcher(firstName,innerCallback);
-                                        startHistoryAsync(_projectName,firstName,innerCallback);
+                                        startCoreAddOnsAsync(_projectName,firstName,innerCallback);
                                     } else {
                                         //we should try the latest commit
                                         viewLatestCommit(callback);
@@ -918,40 +954,7 @@ define([
                     });
                 }
             }
-            /*function loadRoot(newRootHash,callback){
-                _loadNodes = {};
-                _loadError = 0;
-                _core.loadRoot(newRootHash,function(err,root){
-                    if(!err){
-                        var missing = 0,
-                            error = null;
-                        _loadNodes[_core.getPath(root)] = {node:root,incomplete:true,basic:true,hash:getStringHash(root)};
-                        _metaNodes[_core.getPath(root)] = root;
 
-                        for(var i in _users){
-                            for(var j in _users[i].PATTERNS){
-                                missing++;
-                            }
-                        }
-                        if(missing > 0){
-                            for(i in _users){
-                                for(j in _users[i].PATTERNS){
-                                    loadPattern(_core,j,_users[i].PATTERNS[j],_loadNodes,function(err){
-                                        error = error || err;
-                                        if(--missing === 0){
-                                            callback(error);
-                                        }
-                                    });
-                                }
-                            }
-                        } else {
-                            callback(error);
-                        }
-                    } else {
-                        callback(err);
-                    }
-                });
-            }*/
             function orderStringArrayByElementLength(strArray){
                 var ordered = [],
                     i, j,index;
@@ -1342,7 +1345,7 @@ define([
                 if(_database){
                     if(_project){
                         branchWatcher(branch,innerCallback);
-                        startHistoryAsync(_projectName,branch,innerCallback);
+                        startCoreAddOnsAsync(_projectName,branch,innerCallback);
                     } else {
                         callback(new Error('there is no open project!'));
                     }
@@ -2775,6 +2778,9 @@ define([
                 setConstraint: setConstraint,
                 delConstraint: delConstraint,
 
+                //coreAddOn functions
+                validateProjectAsync : validateProjectAsync,
+                getDetailedHistoryAsync : getDetailedHistoryAsync,
 
                 //territory functions for the UI
                 addUI: addUI,
