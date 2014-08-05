@@ -2335,20 +2335,22 @@ define([
                 //_self.addEventListener(_self.events.SERVER_BRANCH_UPDATED,function(client,data){
                 //    console.log(data);
                 //});
-                switch (testnumber){
+                switch (testnumber) {
                     case 1:
-                        startAddOn("HistoryAddOn");
+                        //startAddOn("HistoryAddOn");
+                        startAddOn("ConstraintAddOn");
                         break;
                     case 2:
-                        queryAddOn("HistoryAddOn",{},function(err,result){
-                            console.log("addon result",err,result);
+                        queryAddOn("ConstraintAddOn", {querytype:'execute'}, function (err, result) {
+                            console.log("addon result", err, result);
                         });
                         break;
                     case 3:
-                        stopAddOn("HistoryAddOn",function(err){
-                            console.log("addon stopped",err);
+                        stopAddOn("ConstraintAddOn", function (err) {
+                            console.log("addon stopped", err);
                         });
                 }
+
             }
 
             //export and import functions
