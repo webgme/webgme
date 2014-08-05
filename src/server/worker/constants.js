@@ -1,19 +1,20 @@
 define([],
 function(){
-
+    'use strict';
     return {
         'msgTypes':{
-            'request': 'request',
-            'result': 'result',
-            'info': 'info',
-            'initialize': 'initialize',
-            'initialized': 'initialized'
+            'request'     : 'request',
+            'result'      : 'result',
+            'info'        : 'info',
+            'initialize'  : 'initialize',
+            'initialized' : 'initialized',
+            'query'       : 'query'
         },
         'workerStates':{
-            'initializing': 'initializing',
-            'free': 'free',
-            'working': 'working',
-            'waiting': 'waiting'
+            'initializing' : 'initializing',
+            'free'         : 'free',
+            'working'      : 'working',
+            'waiting'      : 'waiting'
         },
         'workerCommands':{
             'initialize': 'initialize',
@@ -23,7 +24,10 @@ function(){
             'executePlugin': 'executePlugin',
             'exportLibrary': 'exportLibrary',
             'getAllProjectsInfo': 'getAllProjectsInfo',
-            'setBranch': 'setBranch'
+            'setBranch': 'setBranch',
+            'connectedWorkerStart': 'connectedWorkerStart',
+            'connectedWorkerQuery': 'connectedWorkerQuery',
+            'connectedWorkerStop': 'connectedworkerStop'
         }
     };
 });

@@ -5,7 +5,7 @@ function(ASSERT,Child,CONSTANTS){
            _waitingRequests = [];
 
         _parameters = _parameters || {};
-        _parameters.maxworkers = _parameters.maxworkers || 1;
+        _parameters.maxworkers = _parameters.maxworkers || 10;
 
         //helping functions
         //TODO always check if this works properly
@@ -61,6 +61,18 @@ function(ASSERT,Child,CONSTANTS){
             }
             callback('no result under the given id found');
         }
+        function query(workerId,parameters,callback){
+            var index = indexByPid(workerId),
+                worker = null;
+            if(index !== -1){
+                worker = _workers[index];
+                worker.cb = callback;
+                parameters.command = CONSTANTS.workerCommands.connectedWorkerQuery;
+                worker.send(parameters);
+            } else {
+                callback(new Error('cannot found worker'));
+            }
+        }
         function indexByPid(pid){
             for(var i=0;i<_workers.length;i++){
                 if(pid === _workers[i].pid){
@@ -115,6 +127,12 @@ function(ASSERT,Child,CONSTANTS){
                         break;
                     case CONSTANTS.msgTypes.info:
                         console.log(msg.info);
+                        break;
+                    case CONSTANTS.msgTypes.query:
+                        var cFunction = worker.cb;
+                        worker.cb = null;
+                        cFunction(msg.error,msg.result);
+                        break;
                 }
             }
         }
@@ -139,7 +157,8 @@ function(ASSERT,Child,CONSTANTS){
         }
         return {
             request : request,
-            result  : result
+            result  : result,
+            query   : query
         };
    }
    return ServerWorkerManager;

@@ -56,7 +56,6 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
         error = null;
     };
     var initialize = function(parameters){
-        console.log(webGMEGlobal);
         if(initialized !== true){
             initialized = true;
             if(parameters.auth){
@@ -371,6 +370,15 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
             callback(new Error('no active data connection'));
         }
     };
+
+    //addOn functions
+    var initConnectedWorker = function(name,callback){
+
+    };
+    var connectedWorkerQuery = function(parameters,callback){
+
+    };
+
     //main message processing loop
     process.on('message',function(parameters){
         parameters = parameters || {};
@@ -478,6 +486,23 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
                         result = r;
                     }
                 });
+                break;
+            case CONSTANT.workerCommands.connectedWorkerStart:
+                initConnectedWorker(parameters.workerName,function(err){
+                    if(err){
+                        process.send({pid:process.pid,type:CONSTANT.msgTypes.request,error:err,resid:null});
+                    } else {
+                        process.send({pid:process.pid,type:CONSTANT.msgTypes.request,error:null,resid:process.pid});)
+                    }
+                });
+                break;
+            case CONSTANT.workerCommands.connectedWorkerQuery:
+                connectedWorkerQuery(parameters,function(err,result){
+                    process.send({pid:process.pid,type:CONSTANT.msgTypes.query,error:err,result:result});
+                });
+                break;
+            case CONSTANT.workerCommands.connectedWorkerStop:
+                process.send({pid:process.pid,type:CONSTANT.msgTypes.result,error:err,result:null});
                 break;
             default:
                 process.send({error:'unknown command'});

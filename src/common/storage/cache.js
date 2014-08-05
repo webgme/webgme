@@ -328,6 +328,7 @@ define([ "util/assert" ], function (ASSERT) {
 			deleteProject: deleteProject,
             simpleRequest: database.simpleRequest,
             simpleResult: database.simpleResult,
+            simpleQuery: database.simpleQuery,
             getNextServerEvent: database.getNextServerEvent,
             getToken: database.getToken
 		};

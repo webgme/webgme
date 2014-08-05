@@ -727,6 +727,25 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                 callback(new Error(ERROR_DISCONNECTED));
             }
         }
+        function simpleQuery (workerId,parameters,callback){
+            ASSERT(typeof callback === 'function');
+            if(socketConnected){
+                var guid = GUID();
+                callbacks[guid] = {
+                    cb: callback,
+                    to: setTimeout(callbackTimeout,100*options.timeout, guid)
+                };
+                socket.emit('simpleQuery',workerId,parameters,function(err,result){
+                    if(callbacks[guid]){
+                        clearTimeout(callbacks[guid].to);
+                        delete callbacks[guid];
+                        callback(err,result);
+                    }
+                });
+            } else {
+                callback(new Error(ERROR_DISCONNECTED));
+            }
+        }
         function getToken(callback){
             ASSERT(typeof callback === 'function');
             if(socketConnected){
@@ -758,6 +777,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
             openProject: openProject,
             simpleRequest: simpleRequest,
             simpleResult: simpleResult,
+            simpleQuery: simpleQuery,
             getNextServerEvent: getNextServerEvent,
             getToken: getToken
         };

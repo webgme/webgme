@@ -88,6 +88,7 @@ define([ "util/assert", "util/zssha1", "util/canon" ], function (ASSERT, SHA1, C
 			deleteProject: _database.deleteProject,
             simpleRequest: _database.simpleRequest,
             simpleResult: _database.simpleResult,
+            simpleQuery: _database.simpleQuery,
             getNextServerEvent: _database.getNextServerEvent,
             getToken: _database.getToken
 		};
