@@ -175,7 +175,7 @@ define(['js/Constants',
     SVGDecoratorSnapEditorWidget.prototype.removeAttributeText = function (attr) {
         var fields;
 
-        if (this._attributes[attr]){
+        if (this._attributes.hasOwnProperty( attr )){
             fields = this.$el.find('text').filter('#' + attr);
             fields.remove();
             delete this._attributes[attr];
@@ -183,8 +183,14 @@ define(['js/Constants',
     };
 
     SVGDecoratorSnapEditorWidget.prototype.updateAttributeContent = function (attr, value) {
-        if (this._attributes[attr]){
-            this._attributes[attr] = value;
+        if (this._attributes.hasOwnProperty(attr)){
+            this._attributes[attr].value = value;
+        }
+    };
+
+    SVGDecoratorSnapEditorWidget.prototype.setAttributeEnabled = function (attr, enabled) {
+        if (this._attributes.hasOwnProperty(attr)){
+            this._attributes[attr].enabled = enabled;
         }
     };
 
@@ -192,12 +198,16 @@ define(['js/Constants',
         var attributes = Object.keys(this._attributes),
             textFields = this.$el.find('text'),
             attr,
+            enabled,
             fields;
 
         while (attributes.length){
             attr = attributes.pop();
-            fields = textFields.filter("#" + attr);
-            this._setTextAndStretch(fields, this._attributes[attr], attr);
+            enabled = this._attributes[attr].enabled;
+            if (enabled){
+                fields = textFields.filter("#" + attr);
+                this._setTextAndStretch(fields, this._attributes[attr].value, attr);
+            }
         }
     };
 
@@ -330,7 +340,7 @@ define(['js/Constants',
         for (var i = 0; i < attrList.length; i++){
             attr = attrList[i];
             if (attr !== 'name'){
-                this._attributes[ attr ] = attributes[attr].value;
+                this._attributes[ attr ] = { enabled: true, value: attributes[attr].value };
                 fields = textFields.filter("#" + attr);
                 this._setTextAndStretch(fields, attributes[attr].value, attr);
                 //Make the fields editable
