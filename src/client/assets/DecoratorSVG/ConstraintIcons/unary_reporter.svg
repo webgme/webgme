@@ -58,9 +58,13 @@
      data-secondary="fill:#54b868;stroke:#54b868;">
 
 -->
+  <g
+     id="colors"
+     style="fill:#74e868;stroke:#74e868;"
+     data-secondary="fill:#54b868;stroke:#54b868;">
   <rect
-     class="y-stretch-name x-stretch-name x-stretch-first y-stretch-first"
-     style="fill:#74e868;stroke:#74e868;stroke-width:5.30862522;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+     class="y-stretch-first y-stretch-name x-stretch-first x-stretch-name"
+     style="stroke-width:5.30862522;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
      width="51.595375"
      height="17.080511"
      ry="5.3455315"
@@ -70,7 +74,7 @@
      id="nameRect" />
   <rect
      y="4.7485795"
-     x="27.725422"
+     x="32.725422"
      rx="5"
      ry="5"
      height="12.51503"
@@ -78,6 +82,8 @@
      id="RinputField"
      style="fill:#ffffff;fill-opacity:1;stroke:none;overflow:hidden"
      class="y-shift-name x-shift-name" />
+
+  </g>
   <!-- NAME AND CONNECTION INFO -->
   <text
      id="name"
@@ -97,19 +103,12 @@
      id="first-bounding-box"
      width="16.673277"
      height="12.51503"
-     x="27.725422"
-     y="4.7485795" />
-  <rect
-     style="opacity:0"
-     id="second-bounding-box"
-     width="16.673277"
-     height="12.51503"
      x="13.434319"
      y="4.8144441" />
   <!-- connection areas -->
   <line
      class="connection-area"
-     data-ptr="cond first second"
+     data-ptr="cond first first"
      data-role="in"
      x1="4.5000005"
      y1="0"
@@ -118,27 +117,18 @@
      id="conn-area-in" />
   <line
      class="connection-area"
-     data-ptr="second"
-     data-role="out"
-     data-shift="x-shift-name x-shift-first"
-     x1="30"
-     y1="3.5"
-     x2="25.5"
-     y2="8"
-     id="second-out" />
-  <line
-     class="connection-area"
      data-ptr="first"
      data-role="out"
-     x1="12.374996"
-     y1="7.6875"
-     x2="9.8749962"
-     y2="12.1875"
+     data-shift="x-shift-name "
+     x1="35"
+     y1="3.5"
+     x2="30.5"
+     y2="8"
      id="first-out" />
   <!-- initial measures -->
   <rect
      style="opacity:0"
-     data-ptr="second"
+     data-ptr="first"
      class="initial-measure"
      width="25"
      height="15"
@@ -146,14 +136,4 @@
      y="4.1874995"
      inkscape:label="#rect3000"
      id="rect27" />
-  <rect
-     style="opacity:0"
-     data-ptr="first"
-     class="initial-measure"
-     width="25"
-     height="15"
-     x="1.8750005"
-     y="4.1874995"
-     inkscape:label="#rect3000"
-     id="rect29" />
 </svg>
