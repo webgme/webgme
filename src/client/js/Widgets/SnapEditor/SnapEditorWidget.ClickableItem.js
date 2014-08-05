@@ -46,6 +46,7 @@ define(['./ClickableItem',
         //Set Pointers/Connections
         newComponent.updatePtrs(objDescriptor.ptrs);
         newComponent.updateInputFields();
+        newComponent.updateDisplayedAttributeText();
 
         //set the item to be able to be "clicked" to with drag'n'drop
         this.setClickable(newComponent);

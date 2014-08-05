@@ -245,8 +245,10 @@ define(['logManager',
         //Update the colors of the attaching item
         if (role === SNAP_CONSTANTS.CONN_PASSING){
             item.updateColors();
+            this._decoratorInstance.setAttributeEnabled(ptr, false);
         } else {
             this.updateColors();
+            item._decoratorInstance.setAttributeEnabled(ptr, false);
         }
 
     };
@@ -311,7 +313,8 @@ define(['logManager',
         //remove pointers and resize
         var item = this.ptrs[role][ptr],
             otherRole = role === SNAP_CONSTANTS.CONN_ACCEPTING ? 
-                SNAP_CONSTANTS.CONN_PASSING : SNAP_CONSTANTS.CONN_ACCEPTING;
+                SNAP_CONSTANTS.CONN_PASSING : SNAP_CONSTANTS.CONN_ACCEPTING,
+            attribute;
 
         if(resize === true){
             if (role === SNAP_CONSTANTS.CONN_ACCEPTING){
@@ -319,6 +322,11 @@ define(['logManager',
             } else {
                 this._updateSize(ptr, null);
             }
+        }
+        
+        //Update decorator to show attributes with given name
+        if (role === SNAP_CONSTANTS.CONN_PASSING){
+            this._decoratorInstance.setAttributeEnabled(ptr, true);
         }
         
         //free the connections

@@ -745,12 +745,6 @@ define(['logManager',
             }
         }
 
-        i = moveQueue.length;
-        while(i--){
-            //move the item to it's correct location
-            this.items[moveQueue[i]].updatePosition();
-        }
-
         this._clickableItems2Update = {};
     };
 
