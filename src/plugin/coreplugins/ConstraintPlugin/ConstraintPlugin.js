@@ -51,18 +51,84 @@ define(['plugin/PluginConfig',
     ConstraintPlugin.prototype.constructor = ConstraintPlugin;
 
     ConstraintPlugin.prototype.getName = function () {
-        return "Constraint Creator";
+        return "Add Constraint";
     };
     
+    ConstraintPlugin.prototype._isTypeOf = function(node,type){
+        //now we make the check based upon path
+        if(node === undefined || node === null || type === undefined || type === null){
+            return false;
+        }
+
+        if (typeof node === "string"){//if the node is the nodeId
+            node = this.getNode(node);
+        }
+
+        while(node){
+            if(this.core.getPath(node) === this.core.getPath(type)){
+                return true;
+            }
+            node = this.core.getBase(node);
+        }
+        return false;
+    };
+
+    ConstraintPlugin.prototype._loadConstraintNodes = function(callback){
+        //we load the children of the constraintNodes
+        var self = this,
+            name,
+            root = self.core.getRoot(self.activeNode),
+            child,
+            len,
+            constraintsDirs = [];
+
+        //Load the constraints to be run
+        self.constraints = {};
+
+        var findConstraints = function(l, dirs){
+            var dir = dirs[--l];
+            self.core.loadChildren(dir, function(err, children){
+                if (!err && children){
+                    for (var i = 0; i < children.length; i++){
+                        name = self.core.getAttribute(children[i], 'name');
+                        if (self.config.hasOwnProperty(name) && self.config[name]){
+                            self.constraints[name] = children[i];//Store the node by constraint name
+                        }
+                    }
+                }
+
+                if (l > 0){
+                    findConstraints(l, dirs);
+                } else {
+                    self._loadStartingNodes(callback);
+                }
+            });
+        };
+
+        self.core.loadChildren( root, function(err, children){
+            if (!err && children){
+                //Find the constraints dir
+                for (var i = 0; i < children.length; i++){
+                    if (self._isTypeOf(children[i], self.META.Constraints)){
+                        //found constraints dir!
+                        constraintsDirs.push(children[i]);
+                    }
+                }
+                len = constraintsDirs.length;
+                findConstraints(len, constraintsDirs);
+            }
+        });
+
+    };
+
     ConstraintPlugin.prototype._loadStartingNodes = function(callback){
-        //we load the children of the active node
-        var self = this;
+        var self = this,
+            constraints = self.constraints,
+            root = self.core.getRoot(self.activeNode);
+
         self._nodeCache = {};
 
-        //Add activeNode
-        self._nodeCache[self.core.getPath(self.activeNode)] = self.activeNode;
-
-        var load = function(node, fn){
+        var load = function(name, node, fn){
             self.core.loadChildren(node,function(err,children){
                 if(err){
                     fn(err);
@@ -82,43 +148,189 @@ define(['plugin/PluginConfig',
                     };
 
                     for(var i=0;i<children.length;i++){
-                        self._nodeCache[self.core.getPath(children[i])] = children[i];
-                        load(children[i], callbackIfDone);
+                        self._nodeCache[name][self.core.getPath(children[i])] = children[i];
+                        load(name, children[i], callbackIfDone);
                     }
                 }
             });
         };
 
-        load(self.activeNode, callback);
+        //Load the nodes and store them in their own nodeCache entry
+        var loadConstraintNodes = function(constraints){
+            var names = Object.keys(constraints),
+                name,
+                node,
+                len = names.length,
+                err = null,
+                id,
+                cb = function(e){
+                    err = e || err;
+                    len--;
+                    if (len === 0){
+                        callback();
+                    }
+                };
+
+            while (names.length){
+                name = names.pop();
+                self._nodeCache[name] = {};
+
+                //Add the constraint node
+                node = self.constraints[name];
+                id = self.core.getPath(node);
+                self._nodeCache[name][id] = node;
+
+                load(name, constraints[name], cb);
+            }
+        };
+
+        loadConstraintNodes(constraints);
 
     };
 
     ConstraintPlugin.prototype.getNode = function(nodePath){
         //we check only our node cache
-        return this._nodeCache[nodePath];
+        return this._nodeCache[this.currentConstraint][nodePath];
     };
 
-    ConstraintPlugin.prototype.getAllNodeIds = function(){
-        return Object.keys(this._nodeCache);
+    ConstraintPlugin.prototype.getAllNodeIds = function(constraintName){
+        return Object.keys(this._nodeCache[this.currentConstraint]);
     };
 
-    ConstraintPlugin.prototype._isTypeOf = function(node,type){
-        //now we make the check based upon path
-        if(node === undefined || node === null || type === undefined || type === null){
-            return false;
+    ConstraintPlugin.prototype.getConfigStructure = function () {
+        var config = [],
+            constraints = [ 'Unique Name', 'OneStartBlock', 'Limited Connections Per Item' ];
+
+        //Get the constraint names to populate the config
+        //Currently this is not possible.
+        //TODO
+
+        for (var i = 0; i < constraints.length; i++){
+            config.push({ name: constraints[i],
+                          displayName: constraints[i],
+                          description: 'Generate the ' + constraints[i] + ' constraint',
+                          value: false, // this is the 'default config'
+                          valueType: "boolean",
+                          readOnly: false });
         }
 
-        if (typeof node === "string"){//if the node is the nodeId
-            node = this.getNode(node);
-        }
+        return config;
+    };
 
-        while(node){
-            if(this.core.getPath(node) === this.core.getPath(type)){
-                return true;
+    ConstraintPlugin.prototype.main = function (callback) {
+        var self = this,
+            constraintNodes;
+        self.config = self.getCurrentConfig();
+
+        self._loadConstraintNodes(function(err){
+            if(err){
+                //finishing
+                self.result.success = false;
+                callback(err,self.result);
+            } else {
+                //executing the plugin
+                self.logger.info("Finished loading children");
+                err = self._runSync();
+                if(err){
+                    self.result.success = false;
+                    callback(err,self.result);
+                } else {
+                    //Download language files
+                    self._saveOutput(function(err){
+                        if(err){ 
+                            self.result.success = false;
+                            callback(err,self.result);
+                        } else {
+                            if(callback){
+                                self.result.success = true;
+                                callback(null,self.result);
+                            }
+                        }
+                    });
+                }
             }
-            node = this.core.getBase(node);
+        });
+    };
+
+    //Get node names and store nodes in dictionary
+    ConstraintPlugin.prototype.getConstraintNodes = function(){
+        return this.constraints;
+    };
+
+    ConstraintPlugin.prototype._runSync = function(){
+        var constraints = Object.keys(this.constraints),
+            i = constraints.length,
+            constNames,
+            constraintScript,
+            base,
+            err = null;
+
+        constNames = this.core.getConstraintNames(this.activeNode);
+        console.log("Before constraints:", JSON.stringify(constNames)); 
+
+        while (i-- && !err){
+            this.currentConstraint = constraints[i];
+            err = this.createConstraintCode(constraints[i]);
+
+            if (!err){
+                //Apply the constraints to the activeNode
+                //Currently this is set to add the constraint to the given node - NOT the node TYPE (META object)
+                //This could be a problem...
+
+                this.core.setConstraint(this.activeNode, constraints[i], this.constraintObject[constraints[i]]);
+                base = this.core.getBase(this.activeNode);
+                this.core.setConstraint(base, constraints[i], this.constraintObject[constraints[i]]);
+
+                constraintScript = this.core.getConstraint(this.activeNode, constraints[i]).script;
+                console.log("Set the constraint of active node to ", constraintScript); 
+            }
         }
-        return false;
+
+        constNames = this.core.getConstraintNames(this.activeNode);
+        console.log("After adding constraints:", JSON.stringify(constNames)); 
+
+        return err;
+    };
+
+    ConstraintPlugin.prototype.createConstraintCode = function(){
+        var err = null,
+            currentNode,
+            variables = [],//List of variables to declare
+            nodeIds,
+            l,
+            i;
+
+        this.variables = {};//List of declared variables
+        this.generatedCode = "";
+
+        currentNode = null;
+        nodeIds = this.getAllNodeIds();
+        i = nodeIds.length;
+
+        //Find the hat and declare variables
+        while (i--){
+            if(this._isTypeOf(nodeIds[i], this.META.Hat) && !this._isTypeOf(nodeIds[i], this.META.Command)){
+               //Found the starting node
+               currentNode = this.getNode(nodeIds[i]);
+               
+            } else if(this._isTypeOf(nodeIds[i], this.META.variable)){
+                variables.push(nodeIds[i]);
+            }
+        }
+
+        //Declare all the variables
+        this._declareVariables(variables);
+        this._createConstraintMapping();
+
+        //Find the last node (for inserting callback)
+        this._setNodeEndCode();
+
+        currentNode = this.core.getPointerPath(currentNode, 'next');
+        this.generatedCode += this._generateCode(currentNode) + "\n";
+
+        this._createConstraintObject();
+
+        return err;
     };
 
     ConstraintPlugin.prototype._createConstraintMapping = function(){
@@ -149,16 +361,16 @@ define(['plugin/PluginConfig',
         this._constraintExtension = 'js';
 
         this._constraintBoilerPlate = 'function(core, currentNode, callback){\n\n' + 
-            '\n"use strict";\n\nvar ' + PRIVATE_VARIABLES.VIOLATION +
+            '"use strict";\n\nvar ' + PRIVATE_VARIABLES.VIOLATION +
             ' = { hasViolation: false };\n' +
             'var ' + PRIVATE_VARIABLES.ERROR + ' = null;\n' +
             'var ' + PRIVATE_VARIABLES.CACHE + ' = {};\n' +
-            'var ' + PRIVATE_VARIABLES.GET_NODE + ' = function(nodeId){\n' +
+            'var ' + PRIVATE_VARIABLES.GET_NODE + ' = function(nodeId, cb){\n' +
             'var node;\nif (nodeId === currentNode){\n'+
-            'return currentNode;\n}\n\nif (' + PRIVATE_VARIABLES.CACHE + '[nodeId]){\n' +
-            'return ' + PRIVATE_VARIABLES.CACHE + '[nodeId];\n' +
-            '}\nnode = core.loadByPath(currentNode, nodeId);\n'+
-            '' + PRIVATE_VARIABLES.CACHE + '[nodeId] = node;\n\nreturn node;\n};\n' + 
+            'cb(currentNode);\n}\n\nif (' + PRIVATE_VARIABLES.CACHE + '[nodeId]){\n' +
+            'cb(' + PRIVATE_VARIABLES.CACHE + '[nodeId]);\n' +
+            '}\nnode = core.loadByPath(currentNode, nodeId, function(n){\n' +
+            '' + PRIVATE_VARIABLES.CACHE + '[nodeId] = node;\n\ncb(node);\n});\n};\n' + 
             'var ' + PRIVATE_VARIABLES.TYPE_OF + ' = function(node,type){\n' + 
             'if(node === undefined || node === null || type === undefined || ' + 
             'type === null){\nreturn false;\n}\n\n' +
@@ -180,11 +392,16 @@ define(['plugin/PluginConfig',
             'while': "while (%cond){\n %true_next\n}\n%next",
 
             //Variables
+            'dictionary': "%name",
             'variable': "%name",
             'collection': "%name",
             'node': "%name",
             'nodeSet': "%name",
             'item': "%name",
+
+            //Map mappings
+            'addToMap': "%map[%first] = %second;\n%next",
+            'getItemFromMap': "%map[%first]",
 
             //Collection mappings
             'addToCollection': "%collection.push(%first);\n%next",
@@ -240,96 +457,27 @@ define(['plugin/PluginConfig',
     };
 
     ConstraintPlugin.prototype._createUniqueName = function(variable){
-        var newName = variable;
+        var self = this,
+            newName = variable,
+            variableExists = function(name){
+                var keys = Object.keys(self.variables);
 
-        while(this.variables[newName]){
+                while (keys.length){
+                    if(name === self.variables[keys.pop()]){
+                        return true;
+                    }
+                }
+
+                return false;
+            };
+
+        while(variableExists(newName)){
             newName = variable + '_' + Math.floor(Math.random()*UNIQUENESS_COEFFICIENT);
         }
-        this.variables[newName] = true;//Register the variable name
+        this.variables[newName] = newName;//Register the variable name
         return newName;
     };
 
-    ConstraintPlugin.prototype.main = function (callback) {
-        var self = this;
-        self.config = self.getCurrentConfig();
-
-        if(!self._isTypeOf(self.activeNode, self.META.constraint)){
-            self._errorMessages(self.activeNode, 
-                "Current project is an invalid type. Please run the plugin on a constraint definition.");
-        }
-
- 
-        self._loadStartingNodes(function(err){
-            if(err){
-                //finishing
-                self.result.success = false;
-                callback(err,self.result);
-            } else {
-                //executing the plugin
-                self.logger.info("Finished loading children");
-                err = self._runSync();
-                if(err){
-                    self.result.success = false;
-                    callback(err,self.result);
-                } else {
-                    //Download language files
-                    self._saveOutput(self.generatedCode, function(err){
-                        if(err){ 
-                            self.result.success = false;
-                            callback(err,self.result);
-                        } else {
-                            if(callback){
-                                self.result.success = true;
-                                callback(null,self.result);
-                            }
-                        }
-                    });
-                }
-            }
-        });
-    };
-
-    ConstraintPlugin.prototype._runSync = function(){
-        var err = null,
-            currentNode,
-            variables = [],//List of variables to declare
-            nodeIds,
-            l,
-            i;
-
-        this.variables = {};//List of declared variables
-        this.projectName = this.core.getAttribute(this.activeNode,'name');
-        this.generatedCode = { variables: "", functions: "", code: "" };
-
-        currentNode = null;
-        nodeIds = this.getAllNodeIds();
-        i = nodeIds.length;
-
-        //Find the hat and declare variables
-        while(i-- && currentNode === null){
-            if(this._isTypeOf(nodeIds[i], this.META.Hat) && !this._isTypeOf(nodeIds[i], this.META.Command)){
-               //Found the starting node
-               currentNode = this.getNode(nodeIds[i]);
-               //What if they have more than one "start" node?
-               //TODO
-               
-            } else if(this._isTypeOf(nodeIds[i], this.META.variable)){
-                variables.push(nodeIds[i]);
-            }
-        }
-
-        //Declare all the variables
-        this._declareVariables(variables);
-        this._createConstraintMapping();
-
-        //Find the last node (for inserting callback)
-        this._setNodeEndCode();
-
-        currentNode = this.core.getPointerPath(currentNode, 'next');
-        this.generatedCode.code += this._generateCode(currentNode) + "\n";
-
-        return err;
-    };
 
     ConstraintPlugin.prototype._declareVariables = function(variables){
         var types = Object.keys(this._variableTypes),
@@ -342,7 +490,7 @@ define(['plugin/PluginConfig',
 
         //Remove the initial variable from declaration
         for (i = ACCESSABLE_VARIABLES.length -1; i >= 0; i--){
-            this.variables[ACCESSABLE_VARIABLES[i]] = true;
+            this.variables[ACCESSABLE_VARIABLES[i]] = ACCESSABLE_VARIABLES[i];
         }
  
         //Declare remaining variables
@@ -364,15 +512,32 @@ define(['plugin/PluginConfig',
             this._declareVar(variable, variableType);
         }
 
-        this.generatedCode.variables += "\n";
+        this.generatedCode += "\n";
     };
 
     ConstraintPlugin.prototype._declareVar = function(variable, typeInfo){
-        var varName = this.core.getAttribute(variable, 'name');
-        if (!this.variables[varName]){
-            this.generatedCode.variables += typeInfo.replace(new RegExp("%name", "g"), varName) + '\n';
-            this.variables[varName] = true;
+        var name = this.core.getAttribute(variable, 'name'),
+            varName;
+
+        if (!this.variables[name]){
+            varName = this._getValidVariableName(name.slice());
+            this.generatedCode += typeInfo.replace(new RegExp("%name", "g"), varName) + '\n';
+            this.variables[name] = varName;
         }
+    };
+
+    ConstraintPlugin.prototype._getValidVariableName = function(variableName){
+        var basicRule = new RegExp(/[a-zA-Z_$][0-9a-zA-Z_$]*/),
+            regexRule = new RegExp(/^[a-zA-Z_$][0-9a-zA-Z_$]*$/),
+            matches;
+
+        if (!regexRule.test(variableName)){
+            variableName.replace(/ /g, "_");
+            matches = variableName.match(basicRule) || [ "no_matches" ];
+            variableName = this._createUniqueName(matches[0]);
+        }
+
+        return variableName;
     };
 
     /**
@@ -407,6 +572,7 @@ define(['plugin/PluginConfig',
             snippet = this._constraintMapping[typeName],//Get the code for the given node...
             ptrs = this.core.getPointerNames(node),
             attributes = this.core.getAttributeNames(node),
+            attribute,
             snippetTagContent = {},
             snippetTag,
             keys,
@@ -441,11 +607,14 @@ define(['plugin/PluginConfig',
                 } else {
                     snippetTagContent[snippetTag] = 'undefined';
                 }
-                snippetTagContent[snippetTag] = this.core.getAttribute(node, attributes[i]);
 
-                if (attributes[i] !== 'name' && this.core.getAttributeMeta(node, attributes[i]).type === 'string'){
-                    snippetTagContent[snippetTag] = '"' + snippetTagContent[snippetTag].replace(/[\\'"]/g, '\\$&') + '"';
+                attribute = this.core.getAttribute(node, attributes[i]);
+                if (attributes[i] === "name"){//Name may be mapped to a variable-safe string
+                    snippetTagContent[snippetTag] = this.variables[attribute] || attribute;
+                } else {
+                    snippetTagContent[snippetTag] = this._getFormattedAttribute(attribute);
                 }
+
             }
         }
 
@@ -498,18 +667,54 @@ define(['plugin/PluginConfig',
         return snippet;
     };
 
+    /**
+     * Format the value as number, special word or string.
+     *
+     * @param {String} value
+     * @return {String} formatted value
+     */
+    ConstraintPlugin.prototype._getFormattedAttribute = function(value){
+        var number = new RegExp(/^[\d]*.[\d]*$/),
+            specialValues = new RegExp(/^(null|undefined)$/);
+
+        if (!number.test(value) && !specialValues.test(value)){
+            value = '"' + value.replace(/[\\'"]/g, '\\$&') + '"';
+        }
+
+        return value;
+    };
+
+    //Create constraint and store it 
+    ConstraintPlugin.prototype._createConstraintObject = function(){
+        var code = this.generatedCode,
+            constraintName = this.currentConstraint;
+
+        code = this._constraintBoilerPlate.replace("%code", code);
+
+        if (!this.constraintObject){
+            this.constraintObject = {};
+        }
+
+        this.constraintObject[constraintName] = { script: code,
+            priority: 0,
+            name: constraintName };
+    };
+
     //Thanks to Tamas for the next two functions
-    ConstraintPlugin.prototype._saveOutput = function(codeInfo, callback){
+    ConstraintPlugin.prototype._saveOutput = function(callback){
         var self = this,
-            code = codeInfo.variables + codeInfo.functions + codeInfo.code,
-            fileName = self.projectName.replace(/ /g, "_"),
-            artifact = self.blobClient.createArtifact(fileName+"_constraint"),
+            code,
+            filename = self.core.getAttribute(self.activeNode, 'name').replace(/ /g, "_"),
+            artifact = self.blobClient.createArtifact(filename+"_constraints"),
+            constraints = Object.keys(this.constraintObject),
+            len = constraints.length,
 
             //Function to check if we have added all files
             checkIfShouldSaveAll = function(err){
+                len--;
                 if(err){
                     callback(err);
-                } else {
+                } else if (len === 0){
                     self.blobClient.saveAllArtifacts(function(err, hashes) {
                         if (err) {
                             callback(err);
@@ -529,10 +734,12 @@ define(['plugin/PluginConfig',
                 }
             };
 
-        code = this._constraintBoilerPlate.replace("%code", code);
-
         //Save all files
-        artifact.addFile(fileName + "." + self._constraintExtension,code,checkIfShouldSaveAll);
+        while (constraints.length){
+            filename = constraints.pop();
+            artifact.addFile(filename + "." + self._constraintExtension,
+                this.constraintObject[filename].script, checkIfShouldSaveAll);
+        }
     };
 
     ConstraintPlugin.prototype._errorMessages = function(message){
