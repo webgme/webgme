@@ -121,16 +121,16 @@
      data-role="out"
      data-shift="x-shift-name "
      x1="35"
-     y1="3.5"
+     y1="1.5"
      x2="30.5"
-     y2="8"
+     y2="4"
      id="first-out" />
   <!-- initial measures -->
   <rect
      style="opacity:0"
      data-ptr="first"
      class="initial-measure"
-     width="25"
+     width="20"
      height="15"
      x="1.8750005"
      y="4.1874995"

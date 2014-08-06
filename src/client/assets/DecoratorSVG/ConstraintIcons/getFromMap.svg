@@ -147,12 +147,12 @@
   <!-- Connection Areas -->
   <line
      class="connection-area"
-     data-ptr="next true_next false_next"
+     data-ptr="first second cond"
      data-role="in"
      x1="-0.0089999996"
      y1="0.022042144"
      x2="4.7510815"
-     y2="0.022042144"
+     y2="4.022042144"
      id="next-in" />
   <line
      class="connection-area"
@@ -200,7 +200,7 @@
      class="initial-measure"
      data-ptr="first"
      width="20"
-     height="17"
+     height="15"
      x="0.56333733"
      y="0"
      id="rect19" />
@@ -210,7 +210,7 @@
      class="initial-measure"
      data-ptr="map"
      width="20"
-     height="17"
+     height="15"
      x="0.56333733"
      y="0"
      id="rect19" />

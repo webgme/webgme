@@ -169,8 +169,8 @@
      height="12.51503"
      width="16.673277"
      id="LinputField"
-     style="fill:#ffffff;fill-opacity:1;stroke:none;overflow:hidden"
-     class="x-stretch-node y-stretch-name" />
+     style="fill:#ffffff;fill-opacity:1;stroke:none;overflow:hidden"/>
+     <!--class="x-stretch-node y-stretch-name" />-->
   </g>
   <!-- Text Bounding Boxes -->
   <rect

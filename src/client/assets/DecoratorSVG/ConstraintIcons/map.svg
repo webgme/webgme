@@ -139,7 +139,7 @@
   <!-- connection areas -->
   <line
      class="connection-area"
-     data-ptr="map iter cond first second node"
+     data-ptr="map first second"
      data-role="in"
      x1="4.5"
      y1="0"

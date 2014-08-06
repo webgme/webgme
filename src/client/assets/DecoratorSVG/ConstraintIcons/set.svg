@@ -147,6 +147,14 @@
      y="16.635614"
      style="font-size:12px;overflow:hidden">=</text>
 
+  <text
+     class="x-shift-name x-shift-first"
+     id="second"
+     x="79.598267"
+     y="16.635614"
+     style="font-size:12px;overflow:hidden"></text>
+
+
   <!-- connection areas -->
   <line
      class="connection-area"

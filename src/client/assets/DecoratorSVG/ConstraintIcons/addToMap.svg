@@ -108,7 +108,7 @@
        d="m 1.1533373,19.352 a 3.54,3.54 0 0 0 3.54,3.54 l 7.0799997,0 3.54,3.54 9.44,0 3.54,-3.54 0,-3.658" />
     <path
        inkscape:connector-curvature="0"
-       class="x-shift-name x-shift-first x-shift-second x-shift-map"
+       class="y-shift-name y-shift-first y-shift-second y-shift-map x-shift-name x-shift-first x-shift-second x-shift-map"
        id="path15"
        d="m 137.61334,19.186 0,3.53125 23.65625,0 a 3.54,3.54 0 0 0 3.5625,-3.53125 l -27.21875,0 z"
        style="stroke-width:1.17999995" />
@@ -144,10 +144,12 @@
   <!-- Text -->
   <text
      id="name-6"
+     class="x-shift-name x-shift-second"
      x="72.201973"
      y="17.000078"
      style="font-size:12px;overflow:hidden">at</text>
   <text
+     class="x-shift-name x-shift-first x-shift-second"
      id="name-6-6"
      x="119.11265"
      y="17.000078"
@@ -157,6 +159,12 @@
      x="6.4633374"
      y="17"
      style="font-size:12px">store</text>
+  <text
+     id="second"
+     x="46.463337"
+     y="17"
+     style="font-size:12px">llll</text>
+  <!-- Connection Areas -->
   <line
      class="connection-area"
      data-ptr="next true_next false_next"
@@ -177,8 +185,9 @@
      id="next-out" />
   <line
      class="connection-area"
-     data-ptr="first"
+     data-ptr="second"
      data-role="out"
+     data-shift="x-shift-name"
      x1="40.278103"
      y1="3.8570256"
      x2="45.278103"
@@ -186,8 +195,9 @@
      id="first-out" />
   <line
      class="connection-area"
-     data-ptr="second"
+     data-ptr="first"
      data-role="out"
+     data-shift="x-shift-name x-shift-second"
      x1="86.406471"
      y1="4.3118548"
      x2="91.406471"
@@ -197,12 +207,12 @@
      class="connection-area"
      data-ptr="map"
      data-role="out"
+     data-shift="x-shift-name x-shift-first x-shift-second"
      x1="132.54578"
      y1="3.1243854"
      x2="137.54578"
      y2="8.1243854"
      id="map-out" />
-
   <!-- custom highlighting areas are now supported - must be a line, however -->
   <line
      class="connection-highlight x-stretch-name x-stretch-first x-stretch-second x-stretch-map"
@@ -214,7 +224,7 @@
      x2="79.852669"
      y2="26.904751"
      id="line17" />
-  <!-- initial measurement of name -->
+  <!-- initial measurements -->
   <rect
      style="opacity:0"
      class="initial-measure"
@@ -224,4 +234,31 @@
      x="0.56333733"
      y="0"
      id="rect19" />
+  <rect
+     style="opacity:0"
+     class="initial-measure"
+     data-ptr="first"
+     width="24"
+     height="17"
+     x="0.56333733"
+     y="0"
+     id="rect28" />
+  <rect
+     style="opacity:0"
+     class="initial-measure"
+     data-ptr="second"
+     width="24"
+     height="17"
+     x="0.56333733"
+     y="0"
+     id="rect30" />
+  <rect
+     style="opacity:0"
+     class="initial-measure"
+     data-ptr="map"
+     width="24"
+     height="17"
+     x="0.56333733"
+     y="0"
+     id="rect32" />
 </svg>
