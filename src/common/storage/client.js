@@ -252,12 +252,12 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                             callback(err,newstatus);
                             //TODO why this common error check is missing and what was redo meant???
                             /*commonErrorCheck(err, function (err2, needRedo) {
-                             if (needRedo) {
-                             getDatabaseStatus(oldstatus, callback);
-                             } else {
-                             callback(err2, newstatus);
-                             }
-                             });*/
+                                if (needRedo) {
+                                    getDatabaseStatus(oldstatus, callback);
+                                } else {
+                                    callback(err2, newstatus);
+                                }
+                            });*/
                         }
                     });
                 }

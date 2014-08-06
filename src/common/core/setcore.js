@@ -116,7 +116,7 @@ define([ "util/assert"], function (ASSERT) {
             var setMemberRelId = getMemberRelId(node,setName,memberPath);
             if(setMemberRelId){
                 var setMemberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),setMemberRelId);
-                innerCore.deleteNode(setMemberNode);
+                innerCore.deleteNode(setMemberNode,true);
                 setModified(node);
             }
         };
@@ -221,7 +221,7 @@ define([ "util/assert"], function (ASSERT) {
             var setsNode = innerCore.getChild(node,SETS_ID),
                 setNode = innerCore.getChild(setsNode,setName);
             innerCore.deletePointer(setsNode,setName);
-            innerCore.deleteNode(setNode);
+            innerCore.deleteNode(setNode,true);
             setModified(node);
         };
 

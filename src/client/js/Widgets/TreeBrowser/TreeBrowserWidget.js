@@ -517,7 +517,7 @@ define(['logManager',
             return;
         }
 
-        this._logger.debug("glyphicon glyphicon-edit node: " + nodeToEdit.data.key);
+        this._logger.debug("Edit node: " + nodeToEdit.data.key);
 
         $(nodeToEdit.span).find('a').editInPlace({"class": "",
             "onChange": function (oldValue, newValue) {
@@ -635,7 +635,7 @@ define(['logManager',
                         callback: function(/*key, options*/) {
                         self._nodeEdit(node);
                     },
-                    "icon": "glyphicon glyphicon-edit"
+                    "icon": "edit"
                 };
             }
 
