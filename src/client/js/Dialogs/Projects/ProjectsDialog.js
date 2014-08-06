@@ -1,4 +1,4 @@
-/*globals define*/
+/*globals define, angular*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -11,17 +11,35 @@ define(['logManager',
         'js/Utils/GMEConcepts',
         'js/Dialogs/Import/ImportDialog',
         'text!./templates/ProjectsDialog.html',
-        'css!./styles/ProjectsDialog.css'], function (logManager,
-                                                               LoaderCircles,
-                                                               GMEConcepts,
-                                                               ImportDialog,
-                                                               projectsDialogTemplate) {
+
+        'js/Dialogs/Projects/DeleteProjectController',
+        'text!js/Dialogs/Projects/templates/DeleteProjectDialog.html',
+
+        'css!./styles/ProjectsDialog.css'
+
+       ], function (
+           logManager,
+           LoaderCircles,
+           GMEConcepts,
+           ImportDialog,
+           projectsDialogTemplate,
+
+           DeleteProjectController,
+           DeleteProjectDialogTemplate
+    ) {
+
     "use strict";
 
     var ProjectsDialog,
         DATA_PROJECT_NAME = "PROJECT_NAME",
         CREATE_TYPE_EMPTY = 'create_empty',
-        CREATE_TYPE_IMPORT = 'create_import';
+        CREATE_TYPE_IMPORT = 'create_import',
+        $ngModal;
+
+
+    angular.module('gme.ui.projectsDialog', ['isis.ui.dropdownNavigator']).run(function( $modal ) {
+        $ngModal = $modal;
+    });
 
     ProjectsDialog = function (client) {
         this._logger = logManager.create("ProjectsDialog");
@@ -74,10 +92,50 @@ define(['logManager',
         };
 
         var deleteProject = function (projId) {
+
+            var refreshList = function() {
+                    self._refreshProjectList.call(self);
+                },
+                refreshPage = function() {
+                    document.location.href = window.location.href.split('?')[0];
+                };
+
+
             if (self._projectList[projId].delete === true) {
-                self._client.deleteProjectAsync(selectedId,function(){
-                    self._refreshProjectList();
+
+              var deleteProjectModal = $ngModal.open({
+                  template: DeleteProjectDialogTemplate,
+                  controller: DeleteProjectController,
+                  resolve: {
+                    gmeClient:  function() { return self._client; },
+                    projectData: function() {
+                        return self._projectList[ projId ];
+                    },
+                    postDelete: function() {
+
+                        var handler;
+
+                        if (self._activeProject === projId) {
+                            handler = refreshPage;
+                        } else {
+                            handler = refreshList;
+                        }
+
+                        return handler;
+
+                    }
+                  }
                 });
+
+                self._dialog.modal('hide');
+
+                deleteProjectModal.result.then(function () {
+                    self._dialog.modal('show');
+                },function () {
+                    self._dialog.modal('show');
+                });
+
+
             }
         };
 
@@ -273,7 +331,7 @@ define(['logManager',
 
 
         this._btnRefresh.on('click', function (event) {
-            self._refreshProjectList();
+            self._refreshProjectList.call(self);
 
             event.stopPropagation();
             event.preventDefault();
@@ -297,6 +355,7 @@ define(['logManager',
                 if (projectList.hasOwnProperty(p)) {
                     self._projectNames.push(p);
                     self._projectList[p] = projectList[p];
+                    self._projectList[p].projectId = p;
                 }
             }
 
