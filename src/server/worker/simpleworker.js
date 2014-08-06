@@ -492,7 +492,7 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
                     if(err){
                         process.send({pid:process.pid,type:CONSTANT.msgTypes.request,error:err,resid:null});
                     } else {
-                        process.send({pid:process.pid,type:CONSTANT.msgTypes.request,error:null,resid:process.pid});)
+                        process.send({pid:process.pid,type:CONSTANT.msgTypes.request,error:null,resid:process.pid});
                     }
                 });
                 break;
