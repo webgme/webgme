@@ -178,6 +178,7 @@
      class="connection-area"
      data-ptr="next"
      data-role="out"
+     data-shift="y-shift-first y-shift-map y-shift-name"
      x1="15.550838"
      y1="26.904751"
      x2="24.550837"
