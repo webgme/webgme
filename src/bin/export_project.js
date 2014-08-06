@@ -87,7 +87,7 @@ requirejs(['core/core','storage/serveruserstorage','coreclient/serialization', '
                 }
             });
         } else {
-            console.log("proper usage: node create_project_from_file.js <ip of your database server> <port of your database server> <name of your database> <name of the project> <name of the branch> <file to create>");
+            console.log("proper usage: node export_project.js <ip of your database server> <port of your database server> <name of your database> <name of the project> <name of the branch> <file to create>");
             finish();
         }
 
