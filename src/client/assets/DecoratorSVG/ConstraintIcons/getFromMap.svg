@@ -99,7 +99,7 @@
      style="stroke-width:1.17999995"
      d="m 104.613,19.186 0,3.53125 23.65625,0 a 3.54,3.54 0 0 0 3.5625,-3.53125 l -27.21875,0 z"
      id="path15"
-     class="x-shift-name x-shift-first x-shift-second x-shift-map"
+     class="y-shift-name y-shift-first y-shift-second y-shift-map x-shift-name x-shift-first x-shift-second x-shift-map"
      inkscape:connector-curvature="0" />
   <path
      inkscape:label="#rect3006"
@@ -119,6 +119,7 @@
      style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0.58804238px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;overflow:hidden"
      class="x-shift-second x-shift-first x-shift-name" />
   <path
+     class="y-shift-name y-shift-first y-shift-second y-shift-map"
      style="stroke-width:1.17999995;overflow:hidden"
      d="m 28.37175,19.242895 0,3.53125 -23.65625,0 A 3.54,3.54 0 0 1 1.153,19.242895 l 27.21875,0 z"
      id="path15-1"
@@ -127,13 +128,13 @@
      style="stroke-width:1.17999995;overflow:hidden"
      d="m 28.37175,4.1740422 0,-3.53125027 -23.65625,0 A 3.54,3.54 0 0 0 1.153,4.1740422 l 27.21875,0 z"
      id="path15-1-9"
-     class="y-shift-name y-shift-first y-shift-second y-shift-map"
      inkscape:connector-curvature="0" />
 </g>
 
   <!-- Extra SVG info for WebGME -->
   <!-- Text -->
   <text
+     class="x-shift-name x-shift-first"
      id="name-6-6"
      x="85.112648"
      y="17.000078"
@@ -143,6 +144,7 @@
      x="6.4633374"
      y="17"
      style="font-size:12px">item at</text>
+  <!-- Connection Areas -->
   <line
      class="connection-area"
      data-ptr="next true_next false_next"
@@ -165,9 +167,12 @@
      class="connection-area"
      data-ptr="map"
      data-role="out"
+     data-shift="x-shift-name x-shift-first"
      id="map-out"
-     x="106.28339"
-     y="8.9332128" />
+     x1="100"
+     y1="4"
+     x2="102"
+     y2="8" />
   <!-- custom highlighting areas are now supported - must be a line, however -->
   <line
      class="connection-highlight x-stretch-name x-stretch-first x-stretch-second x-stretch-map"
@@ -179,13 +184,33 @@
      x2="79.852669"
      y2="26.904751"
      id="line17" />
-  <!-- initial measurement of name -->
+  <!-- initial measurements -->
   <rect
      style="opacity:0"
      class="initial-measure"
      data-ptr="name"
-     width="69"
+     width="40"
      height="19"
+     x="0.56333733"
+     y="0"
+     id="rect19" />
+
+  <rect
+     style="opacity:0"
+     class="initial-measure"
+     data-ptr="first"
+     width="20"
+     height="17"
+     x="0.56333733"
+     y="0"
+     id="rect19" />
+
+  <rect
+     style="opacity:0"
+     class="initial-measure"
+     data-ptr="map"
+     width="20"
+     height="17"
      x="0.56333733"
      y="0"
      id="rect19" />
