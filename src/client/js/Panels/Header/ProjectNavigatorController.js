@@ -7,19 +7,30 @@
 define([
     'js/Dialogs/Projects/ProjectsDialog',
     'js/Dialogs/Commit/CommitDialog',
-    'js/Dialogs/ProjectRepository/ProjectRepositoryDialog'], function (
+    'js/Dialogs/ProjectRepository/ProjectRepositoryDialog',
+
+    'js/Dialogs/Projects/DeleteProjectController',
+    'text!js/Dialogs/Projects/templates/DeleteProjectDialog.html',
+
+       ], function (
     ProjectsDialog,
     CommitDialog,
-    ProjectRepositoryDialog
+    ProjectRepositoryDialog,
+
+    DeleteProjectController,
+
+    DeleteProjectDialogTemplate
+
 ) {
     "use strict";
 
-    var ProjectNavigatorController = function ($scope, gmeClient) {
+    var ProjectNavigatorController = function ($scope, gmeClient, $modal) {
 
         var self = this;
 
         self.$scope = $scope;
         self.gmeClient = gmeClient;
+        self.$modal = $modal;
 
         // internal data representation for fast access to objects
         self.projects = {};
@@ -96,10 +107,8 @@ define([
                 label: 'Recent projects',
                 totalItems: 20,
                 items: [],
-                showAllItems: function () {
-                    console.log('Show all items...');
-                }
-            },
+                showAllItems: newProject
+            }/*,
             {
                 id: 'preferences',
                 items: [
@@ -144,7 +153,7 @@ define([
                     }
                 ]
 
-            }
+            }*/
         ];
 
         if (self.gmeClient) {
@@ -287,7 +296,8 @@ define([
             showHistory,
             showAllBranches,
             deleteProject,
-            selectProject;
+            selectProject,
+            refreshPage;
 
         rights = rights || {
             'delete': true,
@@ -314,13 +324,24 @@ define([
                 }
             };
 
+            refreshPage = function() {
+                document.location.href = window.location.href.split('?')[0];
+            };
+
             deleteProject =  function (data) {
-                self.gmeClient.deleteProjectAsync(data.projectId, function (err) {
-                    if (err) {
-                        console.error(err);
-                        return;
-                    }
-                });
+
+                var deleteProjectModal = self.$modal.open({
+                      template: DeleteProjectDialogTemplate,
+                      controller: DeleteProjectController,
+                      resolve: {
+                        gmeClient:  function() { return self.gmeClient; },
+                        projectData: function() { return data; },
+                        postDelete: function() {
+                            return refreshPage;
+                        }
+                      }
+                    });
+
             };
 
             showAllBranches = function (data) {
@@ -774,7 +795,7 @@ define([
             rights = {
                 'read': Math.random() > 0.2,
                 'write': false,
-                'delete': false,
+                'delete': false
             };
 
             if (rights.read) {
