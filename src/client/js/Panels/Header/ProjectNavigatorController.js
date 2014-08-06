@@ -12,6 +12,9 @@ define([
     'js/Dialogs/Projects/DeleteProjectController',
     'text!js/Dialogs/Projects/templates/DeleteProjectDialog.html',
 
+    'text!js/Dialogs/Projects/templates/DeleteBranchDialog.html'
+
+
        ], function (
     ProjectsDialog,
     CommitDialog,
@@ -19,7 +22,8 @@ define([
 
     DeleteProjectController,
 
-    DeleteProjectDialogTemplate
+    DeleteProjectDialogTemplate,
+    DeleteBranchDialogTemplate
 
 ) {
     "use strict";
@@ -297,7 +301,8 @@ define([
             showAllBranches,
             deleteProject,
             selectProject,
-            refreshPage;
+            refreshPage,
+            updateProjectList;
 
         rights = rights || {
             'delete': true,
@@ -328,6 +333,10 @@ define([
                 document.location.href = window.location.href.split('?')[0];
             };
 
+            updateProjectList = function() {
+                 self.updateProjectList.call(self);
+            };
+
             deleteProject =  function (data) {
 
                 var deleteProjectModal = self.$modal.open({
@@ -337,7 +346,14 @@ define([
                         gmeClient:  function() { return self.gmeClient; },
                         projectData: function() { return data; },
                         postDelete: function() {
-                            return refreshPage;
+
+                            var handler;
+
+                            if (data.projectId === self.gmeClient.getActiveProjectName()) {
+                                handler = refreshPage;
+                            }
+
+                            return handler;
                         }
                       }
                     });
@@ -629,7 +645,9 @@ define([
                 }
             }
 
-            self.selectProject({});
+            if (projectId === self.gmeClient.getActiveProjectName()) {
+                self.selectProject({}); // redundant, we reload the entire page in postDelete
+            }
 
             self.update();
         }
