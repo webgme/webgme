@@ -531,7 +531,7 @@ define(['util/assert'],function(ASSERT){
     function addNode(guid){
         //at this point we assume that an empty vessel has been already created and part of the _nodes
         updateAttributes(guid);
-        updateRegistry(guid);_
+        updateRegistry(guid);
     }
 
     function updateRelations(guid,containmentTreeObject){
