@@ -4,7 +4,7 @@
 var requirejs = require("requirejs");
 requirejs.config({
     nodeRequire: require,
-    baseUrl: __dirname + '/../',
+    baseUrl: __dirname + "/..",
     paths: {
         "storage": "common/storage",
         "core": "common/core",
@@ -14,12 +14,12 @@ requirejs.config({
 });
 requirejs(['core/core','storage/serveruserstorage','coreclient/serialization', 'fs'],
     function(Core,Storage,Serialization,FS){
-        'use strict';
         var mongoip = process.argv[2] || null,
             mongoport = process.argv[3] || null,
             mongodb = process.argv[4] || null,
             projectname = process.argv[5] || null,
-            projectfilepath = process.argv[6] || null,
+            branchname = process.argv[6] || null,
+            projectfilepath = process.argv[7] || null,
             storage = null,
             project = null;
 
@@ -36,7 +36,7 @@ requirejs(['core/core','storage/serveruserstorage','coreclient/serialization', '
 
         if (mongoip && mongoport && mongodb && projectname && projectfilepath){
 
-            var jProject = JSON.parse(FS.readFileSync(projectfilepath,'utf-8'));
+            var jProject = {};
 
             storage = new Storage({'host':mongoip, 'port':mongoport, 'database':mongodb});
             storage.openDatabase(function(err){
@@ -45,30 +45,35 @@ requirejs(['core/core','storage/serveruserstorage','coreclient/serialization', '
                         if(!err){
                             project = p;
                             var core = new Core(project,{corerel:2});
-                            var root = core.createNode({parent:null,base:null});
-                            Serialization.import(core,root,jProject,function(err){
-                                if(err){
-                                    console.log("some error happened during import:",err);
-                                } else {
-                                    core.persist(root,function(err){});
-                                    var rhash = core.getHash(root);
-                                    var chash = project.makeCommit([],rhash,"project imported by \'create_project_from_file\'",function(err){});
-                                    project.getBranchHash("master","#hack",function(err,oldhash){
-                                        if(!err){
-                                            project.setBranchHash("master",oldhash,chash,function(err){
-                                                if(!err){
-                                                    console.log("the file have been imported to master branch");
-                                                    finish();
+                            project.getBranchHash(branchname,"#hack",function(err,commitHash){
+                                if(!err){
+                                    project.loadObject(commitHash,function(err,commit){
+                                        if(!err && commit){
+                                            core.loadRoot(commit.root,function(err,root){
+                                                if(!err && root){
+                                                    Serialization.export(core,root,function(err,jProject){
+                                                        if(!err){
+                                                            FS.writeFileSync(projectfilepath,JSON.stringify(jProject,undefined,2),'utf-8');
+                                                            console.log("export finished successfully");
+                                                            finish();
+                                                        } else {
+                                                            console.log("export failed:",err);
+                                                            finish();
+                                                        }
+                                                    });
                                                 } else {
-                                                    console.log("problem setting the branch...");
+                                                    console.log("unable to load root");
                                                     finish();
                                                 }
                                             });
                                         } else {
-                                            console.log("problem getting the branch set...");
+                                            console.log('cannot get latest commit');
                                             finish();
                                         }
                                     });
+                                } else {
+                                    console.log("unable to find master branch");
+                                    finish();
                                 }
                             });
                         } else {
@@ -82,8 +87,9 @@ requirejs(['core/core','storage/serveruserstorage','coreclient/serialization', '
                 }
             });
         } else {
-            console.log("proper usage: node import_project.js <ip of your database server> <port of your database server> <name of your database> <name of the project> <file to import>");
+            console.log("proper usage: node create_project_from_file.js <ip of your database server> <port of your database server> <name of your database> <name of the project> <name of the branch> <file to create>");
             finish();
         }
 
     });
+

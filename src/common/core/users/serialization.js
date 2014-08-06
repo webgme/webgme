@@ -182,9 +182,10 @@ define(['util/assert'],function(ASSERT){
         return _extraBasePaths[path];
     }
     function pathsToGuids(jsonObject){
-        if(typeof jsonObject === 'object'){
+        if(jsonObject && typeof jsonObject === 'object'){
             var keys = Object.keys(jsonObject),
                 i, j, k,toDelete,tArray;
+
 
             for(i=0;i<keys.length;i++){
                 if(keys[i] === 'items') {
