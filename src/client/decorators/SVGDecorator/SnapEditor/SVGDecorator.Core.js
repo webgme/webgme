@@ -66,11 +66,17 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants',
         }
         
         //Record the default measurements for various stretch areas by ptrName
-        var w = 0,
+        var ptr,
+            type,
+            w = 0,
             h = 0;
 
         i = this[SNAP_CONSTANTS.INITIAL_MEASURE].length;
         while (i--){
+            ptr = this[SNAP_CONSTANTS.INITIAL_MEASURE][i].getAttribute('data-ptr');
+            type = this[SNAP_CONSTANTS.INITIAL_MEASURE][i].getAttribute('data-type') || 
+                SNAP_CONSTANTS.STRETCH_TYPE.SVG;
+
             if (this[SNAP_CONSTANTS.INITIAL_MEASURE][i].tagName === 'line'){
                 //get line values
                 line = {};
@@ -87,13 +93,16 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants',
                 h = this[SNAP_CONSTANTS.INITIAL_MEASURE][i].height.baseVal.value;
             }
 
-            this.svgInitialStretch[this[SNAP_CONSTANTS.INITIAL_MEASURE][i].getAttribute('data-ptr')] = { x: w, y: h };
+            if (!this.svgInitialStretch[ptr]){
+                this.svgInitialStretch[ptr] = {};
+            }
+
+            this.svgInitialStretch[ptr][type] = { x: w, y: h };//Store by svg/text types
 
         }
 
         //Find the input areas and store them
-        var type,
-            attribute,
+        var attribute,
             content,
             target,
             input,
