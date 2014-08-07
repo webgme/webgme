@@ -32,6 +32,12 @@ define(['addon/AddOnBase'],function(Base) {
             case 'execute':
                 this.executeConstraints(callback);
                 break;
+            case 'checkProject':
+                break;
+            case 'checkModel':
+                break;
+            case 'checkNode':
+                break;
             default:
                 callback('unknown command');
         }
@@ -70,6 +76,53 @@ define(['addon/AddOnBase'],function(Base) {
         callback(null);
     };
 
+    ConstraintAddOn.prototype.checkProject = function(callback){
+
+    };
+    ConstraintAddOn.prototype.checkModel = function(root,callback){
+
+    };
+    ConstraintAddOn.prototype.checkNode = function(node,callback){
+        var self = this,
+            message = {},
+            error = null,
+            names = self.core.getConstraintNames(node),
+            needed = names.length,
+            i,
+            check = function(name){
+                self.executeContraint(node,name,function(err,msg){
+                    error = error || err;
+                    message[name] = msg;
+
+                    if(--needed === 0){
+                        callback(error,message);
+                    }
+                });
+            };
+
+        if(needed > 0){
+            for(i=0;i<names.length;i++){
+                check(names[i]);
+            }
+        } else {
+            callback(error,message);
+        }
+    };
+    ConstraintAddOn.prototype.loadNode = function(path,callback){
+        this.core.loadByPath(this.root,path,callback);
+    };
+    ConstraintAddOn.prototype.executeContraint = function(node,name,callback){
+        var self = this,
+            script = self.core.getConstraint(node,name).script;
+
+        if(!self.contraints[script]){
+            var a="";
+            eval("a = "+script);
+            self.contraints[script] = a;
+            self.contraintsStorage[script] = {};
+        }
+        self.contraints[script].call(self.contraintsStorage[script],self.core,node,callback);
+    };
     ConstraintAddOn.prototype.executeConstraints = function(callback){
         var self = this,
             executeConstraint = function(node,name,cb){
