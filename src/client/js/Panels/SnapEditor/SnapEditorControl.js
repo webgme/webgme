@@ -40,6 +40,9 @@ define(['logManager',
 
         //attach all the event handlers for event's coming from SnapCanvas
         this.attachSnapEditorEventHandlers();
+
+        //Set up toolbar 
+        this._addToolbarItems();
     };
 
     //Attach listeners
@@ -892,10 +895,43 @@ console.log("Object changed to " + nodeId);
         this._client.removeUI(this._territoryId);
     }; 
 
+        /* * * * * * * * * * TOOLBAR * * * * * * * * * * */
+    SnapEditorControl.prototype._addToolbarItems = function(){
+        var self = this,
+            toolBar = WebGMEGlobal.Toolbar;
+
+        this._toolbarItems = [];
+
+        this.$btnConstraintValidate = toolBar.addButton({ "title": "Constraint check...",
+            "icon": "glyphicon glyphicon-fire",
+            "clickFn": function (/*data*/) {
+                self._constraintCheck();
+            }
+        });
+        this._toolbarItems.push(this.$btnConstraintValidate);
+
+    };
+
     SnapEditorControl.prototype._removeToolbarItems = function(){
         //Remove any toolbar items
-        //TODO
+        if (this._toolbarItems){
+            while (this._toolbarItems.length){
+                this._toolbarItems.pop().destroy();
+            }
+        }
     };
+
+
+    SnapEditorControl.prototype._constraintCheck = function(){
+        var self = this;
+
+        self._client.validateProjectAsync(function(err,result){
+            //TODO here we should pop up the result dialog...
+            console.log('project validation finished',err,result);
+        });
+    };
+
+        /* * * * * * * * * * END TOOLBAR * * * * * * * * * * */
 
     _.extend(SnapEditorControl.prototype, SnapEditorEventHandlers.prototype);
 
