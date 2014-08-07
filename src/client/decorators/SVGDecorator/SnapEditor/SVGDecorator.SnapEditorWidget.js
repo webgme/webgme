@@ -99,7 +99,7 @@ define(['js/Constants',
 
                      tempName.css('position', 'absolute');
                      box = self.$name[0].getBBox();
-                     tempName.css('left', box.x);
+                     tempName.css('left', box.x + self._transforms[id].shift.x);
                      tempName.css('top', box.y);
                      width = Math.max(box.width + EDIT_TEXT.PADDING, EDIT_TEXT.MIN_WIDTH);
                      tempName.css('width', width);
@@ -325,6 +325,7 @@ define(['js/Constants',
                     var id = $(this).attr('id'),
                         box,
                         width,
+                        fontSize = $(this).css('font-size'),
                         tempName = $('<div/>', { id: id + '-edit', 
                                                  text: $(this).text()}),
                         element = $(this);
@@ -333,14 +334,14 @@ define(['js/Constants',
                     tempName.css('position', 'absolute');
 
                     box = $(this)[0].getBBox();
-                    tempName.css('left', box.x);
+                    tempName.css('left', box.x + self._transforms[id].shift.x);
                     tempName.css('top', box.y);
                     width = Math.max(box.width + EDIT_TEXT.PADDING, EDIT_TEXT.MIN_WIDTH);
                     tempName.css('width', width);
 
                     $(tempName).editInPlace({"class": id + "-edit",
                         "value": $(this).text(),
-                        "css": { 'z-index': 10000 },
+                        "css": { 'z-index': 10000, 'font-size': fontSize },
                         "onChange": function (oldValue, newValue) {
                             self._saveAttributeChange(id, newValue);
                         },
