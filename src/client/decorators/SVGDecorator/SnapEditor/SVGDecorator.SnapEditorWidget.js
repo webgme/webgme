@@ -299,9 +299,9 @@ define(['js/Constants',
         //If it has a "name" text id in the svg, use that instead of $name
         //This allows for the svg to fall back to a separate name div if
         //no spot for it in the svg
+        this.$name.remove();
         var name = this.$svgContent.find("#" + SNAP_CONSTANTS.NAME);
         if(name[0] !== undefined && name[0].tagName === "text"){
-            this.$name.remove();
             this.$name = name;
         }
 
