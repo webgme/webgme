@@ -2476,6 +2476,14 @@ define([
                     }
                 });
             }
+            function _createProjectFromFileAsync(projectname,jProject,callback){
+                _database.simpleRequest({command:'createProjectFromFile',name:projectname,json:jProject},function(err,id){
+                    if(err){
+                        return callback(err);
+                    }
+                    _database.simpleResult(id,callback);
+                });
+            }
             function createProjectFromFileAsync(projectname,jProject,callback){
                 //if called on an existing project, it will ruin it!!! - although the old commits will be untouched
                 createProjectAsync(projectname,function(err){

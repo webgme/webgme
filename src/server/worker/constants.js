@@ -27,6 +27,7 @@ function(){
             'generateJsonURL': 'generateJsonURL',
             'executePlugin': 'executePlugin',
             'exportLibrary': 'exportLibrary',
+            'createProjectFromFile': 'createProjectFromFile',
             'getAllProjectsInfo': 'getAllProjectsInfo',
             'setBranch': 'setBranch',
             'connectedWorkerStart': 'connectedWorkerStart',
