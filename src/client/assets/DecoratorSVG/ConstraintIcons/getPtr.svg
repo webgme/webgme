@@ -65,7 +65,7 @@
 
 -->
   <rect
-     class="x-shift-first y-stretch-first y-stretch-second x-stretch-name y-stretch-name"
+     class="x-shift-first y-stretch-first y-stretch-node x-stretch-name y-stretch-name"
      style="fill:#4cc3d9;stroke:#4cc3d9;stroke-width:3.71589041;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
      id="nameRect"
      width="16.188242"
@@ -74,7 +74,7 @@
      y="1.8759441"
      inkscape:label="#rect3009" />
   <rect
-     class="x-shift-name x-shift-first y-shift-name x-stretch-second y-stretch-second y-stretch-first"
+     class="x-shift-name x-shift-first y-shift-name x-stretch-node y-stretch-node y-stretch-first"
      x="122.86996"
      y="3.9556303"
      width="33.893703"
@@ -84,19 +84,19 @@
      style="fill:#4cc3d9;stroke:#4cc3d9;stroke-width:0.7440812;overflow:hidden"
      id="RRect" />
   <path
-     class="x-shift-name x-shift-first x-shift-first x-shift-second x-shift-second"
+     class="x-shift-name x-shift-first x-shift-first x-shift-node x-shift-node"
      inkscape:connector-curvature="0"
      id="TRCorner"
      d="m 152.79049,0.62274991 0,3.53124999 3.59375,0 a 3.54,3.54 0 0 0 -3.5625,-3.53124999 l -0.0312,0 z"
      style="fill:#4cc3d9;stroke:#4cc3d9;stroke-width:1.17999995;overflow:hidden" />
   <path
-     class="x-shift-name y-shift-name x-shift-first y-shift-first x-shift-second y-shift-second x-shift-second y-shift-second"
+     class="x-shift-name y-shift-name x-shift-first y-shift-first x-shift-node y-shift-node x-shift-node y-shift-node"
      inkscape:connector-curvature="0"
      id="BRCorner"
      d="m 152.77959,29.786092 0,-3.53125 3.59375,0 a 3.54,3.54 0 0 1 -3.5625,3.53125 l -0.0312,0 z"
      style="fill:#4cc3d9;stroke:#4cc3d9;stroke-width:1.17999995;overflow:hidden" />
   <rect
-     class="x-stretch-name y-stretch-second y-stretch-name x-stretch-first y-stretch-first"
+     class="x-stretch-name y-stretch-node y-stretch-name x-stretch-first y-stretch-first"
      x="0.63464516"
      y="4.8356438"
      width="102.72572"
@@ -112,7 +112,7 @@
      style="fill:#4cc3d9;stroke:#4cc3d9;stroke-width:1.17999995;overflow:hidden" />
   <path
      inkscape:connector-curvature="0"
-     class="y-shift-name y-shift-second y-shift-first"
+     class="y-shift-name y-shift-node y-shift-first"
      id="path9-6-5"
      d="m 4.18375,29.781789 0,-3.53125 -3.59375,0 a 3.54,3.54 0 0 0 3.5625,3.53125 l 0.0312,0 z"
      style="fill:#4cc3d9;stroke:#4cc3d9;stroke-width:1.17999995;overflow:hidden" />
@@ -125,7 +125,7 @@
      id="LTRect"
      style="fill:#4cc3d9;stroke:#4cc3d9;stroke-width:1.43172371" />
   <rect
-     class="y-shift-name y-shift-second y-shift-first x-stretch-first"
+     class="y-shift-name y-shift-node y-shift-first x-stretch-first"
      y="26.293882"
      x="4.626503"
      height="3.3866155"
@@ -133,7 +133,7 @@
      id="LBRect"
      style="fill:#4cc3d9;stroke:#4cc3d9;stroke-width:1.44300425" />
   <rect
-     class="x-shift-first x-shift-name x-stretch-second"
+     class="x-shift-first x-shift-name x-stretch-node"
      y="0.47734737"
      x="123.19141"
      height="3.9139254"
@@ -142,7 +142,7 @@
      style="fill:#4cc3d9;stroke:#4cc3d9;stroke-width:0.84345406;overflow:hidden" />
   <rect
      inkscape:label="#RTRect-4"
-     class="x-shift-name y-shift-name x-stretch-second y-shift-second x-shift-first y-shift-first"
+     class="x-shift-name y-shift-name x-stretch-node y-shift-node x-shift-first y-shift-first"
      y="26.038549"
      x="122.74908"
      height="3.9139254"
@@ -200,7 +200,7 @@
      y="0" />
   <rect
      style="opacity:0"
-     id="second-bounding-box"
+     id="node-bounding-box"
      width="16.673277"
      height="12.51503"
      x="83.434319"
@@ -208,7 +208,7 @@
   <!-- connection areas -->
   <line
      class="connection-area"
-     data-ptr="cond first second"
+     data-ptr="cond first second node"
      data-role="in"
      x1="4.5"
      y1="0"
@@ -217,18 +217,18 @@
      id="conn-area-in" />
   <line
      class="connection-area"
-     data-ptr="second"
+     data-ptr="node"
      data-role="out"
      data-shift="x-shift-name x-shift-first"
      x1="136.25"
      y1="6.8750019"
      x2="131.75"
      y2="11.375002"
-     id="second-out" />
+     id="node-out" />
   <!-- initial measures -->
   <rect
      style="opacity:0"
-     data-ptr="second"
+     data-ptr="node"
      class="initial-measure"
      width="19"
      height="18"
