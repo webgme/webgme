@@ -61,6 +61,7 @@ define([], function () {
 
         /*DEFAULT HEIGHT MEASUREMENT*/
         INITIAL_MEASURE: 'initial-measure',
+        STRETCH_TYPE: { SVG: 'svg', TEXT: 'text' },
 
         /*INPUT FIELDS*/
         INPUT_FIELDS: 'input-field',
