@@ -12,6 +12,8 @@ define(['addon/AddOnBase'],function(Base) {
     ConstraintAddOn.prototype.constructor = ConstraintAddOn;
 
     ConstraintAddOn.prototype.root = null;
+    ConstraintAddOn.prototype.contraints = {};
+    ConstraintAddOn.prototype.contraintsStorage = {};
 
     ConstraintAddOn.prototype.getName = function () {
         return 'ConstraintAddOn';
@@ -76,9 +78,19 @@ define(['addon/AddOnBase'],function(Base) {
                         error = error || err;
                         message[guid][name] = msg;
                         cb();
-                };
+                    },
+                    script = self.core.getConstraint(node,name).script;
                 message[guid] = message[guid] || {};
-                eval("("+self.core.getConstraint(node,name).script+")(self.core,node,icb)");
+
+                if(!self.contraints[script]){
+                    var a="";
+                    eval("a = "+script);
+                    self.contraints[script] = a;
+                    self.contraintsStorage[script] = {};
+                    a.call(self.contraintsStorage[script],self.core,node,icb);
+                }
+                self.contraints[script].call(self.contraintsStorage[script],self.core,node,icb);
+                //eval("("+self.core.getConstraint(node,name).script+")(self.core,node,icb)");
             },
             checkNode = function(node,cb){
                 var names = self.core.getConstraintNames(node),
