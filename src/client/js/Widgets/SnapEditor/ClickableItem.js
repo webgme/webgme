@@ -896,6 +896,8 @@ define(['logManager',
         this.setPtr(ptr, role, otherItem);
 
         //record the connection
+        //Do we know area1 corresponds to otherItem?
+        //FIXME 
         otherItem.conn2Item[params.area2.id] = this;
         this.conn2Item[params.area1.id] = otherItem;
 
@@ -1041,22 +1043,48 @@ define(['logManager',
         var shift = { x: position.left - draggedItem.positionX,
                       y: position.top - draggedItem.positionY },
             openAreas = this.getConnectionAreas(),
+            otherAreas = draggedItem.getConnectionAreas(),
+            otherAreasSorted = {},//dictionary by role, ptr
+            otherArea,
             closestArea = null,
             closestIndex = null,
             i,
-            otherArea,
             ptrs,
             role;
 
         /*
          * Used before "splicing" capabilities were supported
          *
+         * Should probably only allow "backwards" clicking when it is a sibling pointer
+         *
          */
         i = openAreas.length;
         while (i--){
             //Remove any occupied areas
-            if (this.conn2Item[openAreas[i].id]){
+            if (this.isOccupied( openAreas[i].id )){
                 openAreas.splice(i,1);
+            }
+        }
+
+        otherAreasSorted[SNAP_CONSTANTS.CONN_ACCEPTING] = {};
+        otherAreasSorted[SNAP_CONSTANTS.CONN_PASSING] = {};
+
+        i = otherAreas.length;
+        while (i--){
+            //Remove any occupied areas
+            if (draggedItem.isOccupied( otherAreas[i].id )){
+                otherAreas.splice(i,1);
+            } else {
+                ptrs = otherAreas[i].ptr instanceof Array ?
+                    otherAreas[i].ptr.slice() : [otherAreas[i].ptr];
+                role = otherAreas[i].role;
+
+                if (role !== SNAP_CONSTANTS.CONN_PASSING || //Remove any nonsibling passing pointers
+                    SNAP_CONSTANTS.SIBLING_PTRS.indexOf(ptrs[0]) !== -1){
+                    while (ptrs.length){
+                        otherAreasSorted[role][ptrs.pop()] = otherAreas[i];
+                    }
+                }
             }
         }
 
@@ -1069,7 +1097,8 @@ define(['logManager',
                 SNAP_CONSTANTS.CONN_PASSING : SNAP_CONSTANTS.CONN_ACCEPTING;
 
             while(ptrs.length){
-                otherArea = draggedItem.getConnectionArea(ptrs.pop(), role);
+                otherArea = otherAreasSorted[role][ptrs.pop()];
+                //otherArea = draggedItem.getConnectionArea(ptrs.pop(), role);
 
                 if(otherArea){
 
