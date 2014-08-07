@@ -29,7 +29,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
 
     "use strict";
 
-    var AXIS = { X:'x', Y:'y' };//constants for stretching
+    var AXIS = { X:'x', Y:'y' };
 
     var SVGDecoratorSnapEditorWidgetStretch = function(){
     };
@@ -192,11 +192,11 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
                 bBox = bBox[0];
                 approxWidth = parseFloat(bBox.getAttribute("width"));
                 newWidth = approxWidth * (element.text().length/oldText.length);
-                return this.stretchTo(stretchId, { x: newWidth }, true);
+                return this.stretchTo(stretchId, { x: newWidth }, SNAP_CONSTANTS.STRETCH_TYPE.TEXT);
             }
 
         }else{
-            return this.stretchTo(stretchId, { x: element.width() }, true);
+            return this.stretchTo(stretchId, { x: element.width() }, SNAP_CONSTANTS.STRETCH_TYPE.TEXT);
         }
 
         return false;
@@ -209,9 +209,10 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      *
      * @param {String} id
      * @param {Object} size {x: x, y: y}
+     * @param {enum} type optional
      * @return {Boolean} true if the svg has changed in size
      */
-    SVGDecoratorSnapEditorWidgetStretch.prototype.stretchTo = function (id, size, isText) {
+    SVGDecoratorSnapEditorWidgetStretch.prototype.stretchTo = function (id, size, type) {
         //READ-ONLY wrt DOM
         //Stretch according to the x,y values where x,y are
         //dimensions of the items pointed to by "id"
@@ -221,34 +222,44 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
             dx,
             dy;
 
+        type = type || SNAP_CONSTANTS.STRETCH_TYPE.SVG;//svg by default
+
         if (x < 0 || y < 0){
             this.logger.warn("Cannot resize svg to negative size!");
         }
 
+        //Set initial stretch values if undefined
+        if (!this.svgInitialStretch[id]){
+            this.svgInitialStretch[id] = {};
+        }
+
+        if (!this.svgInitialStretch[id][type]){
+            this.svgInitialStretch[id][type] = { x: 0, y: 0 };
+        } 
+
         //classTransforms keeps track of the current size of the stuff 
         //associated with the given pointer
         if (!this._classTransforms[id]){
-            if (this.svgInitialStretch[id]){
-                this._classTransforms[id] = { x: this.svgInitialStretch[id].x,
-                    y: this.svgInitialStretch[id].y };
-            } else {
-                this._classTransforms[id] = { x: 0, y: 0 };
-            }
+            this._classTransforms[id] = {};
+
+            _.extend(this._classTransforms[id], this.svgInitialStretch[id]);//Clone object
         }
 
-        //Set initial stretch values if undefined
-        if (!this.svgInitialStretch[id]){
-            this.svgInitialStretch[id] = { x: 0, y: 0 };
-        } 
+        if (!this._classTransforms[id][type]){
+            this._classTransforms[id][type] = {};
+
+            _.extend(this._classTransforms[id][type], this.svgInitialStretch[id][type]);//Clone object
+        }
+
 
         //stretch x
         if (x !== undefined){//Don't shrink past initial
-            x = Math.max(x, this.svgInitialStretch[id].x);
-            dx = x - this._classTransforms[id].x;
+            x = Math.max(x, this.svgInitialStretch[id][type].x);
+            dx = x - this._classTransforms[id][type].x;
 
             if (dx){
-                this.stretch(id, AXIS.X, dx, isText);
-                this._classTransforms[id].x = x;
+                this.stretch(id, AXIS.X, dx, type);
+                this._classTransforms[id][type].x = x;
                 changed = true;
             }
         }
@@ -256,13 +267,13 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
         //stretch y
         if (y !== undefined){
 
-            y = Math.max(y, this.svgInitialStretch[id].y);//Don't shrink past initial
-            dy = y - this._classTransforms[id].y;
+            y = Math.max(y, this.svgInitialStretch[id][type].y);//Don't shrink past initial
+            dy = y - this._classTransforms[id][type].y;
 
             //update size attached to ptr
             if (dy){
-                this.stretch(id, AXIS.Y, dy, isText);
-                this._classTransforms[id].y = y;
+                this.stretch(id, AXIS.Y, dy, type);
+                this._classTransforms[id][type].y = y;
                 changed = true;
             }
         }
@@ -276,9 +287,10 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      * @param {String} id
      * @param {String} axis
      * @param {Number} delta
+     * @param {enum} type ("svg"|"text")
      * @return {Number} Current size of the svg along the given axis
      */
-    SVGDecoratorSnapEditorWidgetStretch.prototype.stretch = function (id, axis, delta, isText) {
+    SVGDecoratorSnapEditorWidgetStretch.prototype.stretch = function (id, axis, delta, type) {
         //READ-ONLY
         var stretchClass = axis + "-stretch-" + id,
             shiftClass = axis + "-shift-" + id,
@@ -293,7 +305,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
             stretch = {},
             i;
 
-        if (isText !== true){//Remove any element with the "text-stretch-only" flag
+        if (type !== SNAP_CONSTANTS.STRETCH_TYPE.TEXT){//Remove any element with the "text-stretch-only" flag
             stretchElements = $.grep(stretchElements, function(element){
                 if (element.hasAttribute("text-stretch-only") && 
                     element.getAttribute("text-stretch-only") === "true"){

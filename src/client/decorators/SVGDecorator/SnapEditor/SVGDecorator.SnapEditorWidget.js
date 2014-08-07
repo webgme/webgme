@@ -334,10 +334,13 @@ define(['js/Constants',
                     tempName.css('position', 'absolute');
 
                     box = $(this)[0].getBBox();
+                    width = Math.max(box.width + EDIT_TEXT.PADDING, EDIT_TEXT.MIN_WIDTH);
+
+                    //Set tempName
                     tempName.css('left', box.x + self._transforms[id].shift.x);
                     tempName.css('top', box.y);
-                    width = Math.max(box.width + EDIT_TEXT.PADDING, EDIT_TEXT.MIN_WIDTH);
                     tempName.css('width', width);
+                    tempName.css('font-size', fontSize);
 
                     $(tempName).editInPlace({"class": id + "-edit",
                         "value": $(this).text(),

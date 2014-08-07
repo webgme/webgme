@@ -260,6 +260,16 @@
   <rect
      style="opacity:0"
      class="initial-measure"
+     data-ptr="second"
+     data-type="text"
+     width="10"
+     height="17"
+     x="0.56333733"
+     y="0"
+     id="initSECONDtext" />
+  <rect
+     style="opacity:0"
+     class="initial-measure"
      data-ptr="map"
      width="24"
      height="17"

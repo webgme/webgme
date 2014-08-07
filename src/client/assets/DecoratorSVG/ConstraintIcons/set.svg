@@ -116,7 +116,8 @@
      style="stroke-width:1.17999995" />
   <!-- input boxes -->
   <rect
-     class="x-shift-first x-shift-name"
+     class="x-stretch-second x-shift-first x-shift-name"
+     text-stretch-only="true"
      style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:1.61639428px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;overflow:hidden"
      id="rect3014-3"
      width="21.236712"
