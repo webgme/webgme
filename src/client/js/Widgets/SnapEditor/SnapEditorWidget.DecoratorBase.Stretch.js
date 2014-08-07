@@ -192,11 +192,11 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
                 bBox = bBox[0];
                 approxWidth = parseFloat(bBox.getAttribute("width"));
                 newWidth = approxWidth * (element.text().length/oldText.length);
-                return this.stretchTo(stretchId, { x: newWidth });
+                return this.stretchTo(stretchId, { x: newWidth }, true);
             }
 
         }else{
-            return this.stretchTo(stretchId, { x: element.width() });
+            return this.stretchTo(stretchId, { x: element.width() }, true);
         }
 
         return false;
@@ -211,7 +211,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      * @param {Object} size {x: x, y: y}
      * @return {Boolean} true if the svg has changed in size
      */
-    SVGDecoratorSnapEditorWidgetStretch.prototype.stretchTo = function (id, size) {
+    SVGDecoratorSnapEditorWidgetStretch.prototype.stretchTo = function (id, size, isText) {
         //READ-ONLY wrt DOM
         //Stretch according to the x,y values where x,y are
         //dimensions of the items pointed to by "id"
@@ -247,7 +247,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
             dx = x - this._classTransforms[id].x;
 
             if (dx){
-                this.stretch(id, AXIS.X, dx);//FIXME
+                this.stretch(id, AXIS.X, dx, isText);
                 this._classTransforms[id].x = x;
                 changed = true;
             }
@@ -261,7 +261,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
 
             //update size attached to ptr
             if (dy){
-                this.stretch(id, AXIS.Y, dy);//FIXME
+                this.stretch(id, AXIS.Y, dy, isText);
                 this._classTransforms[id].y = y;
                 changed = true;
             }
@@ -278,7 +278,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      * @param {Number} delta
      * @return {Number} Current size of the svg along the given axis
      */
-    SVGDecoratorSnapEditorWidgetStretch.prototype.stretch = function (id, axis, delta) {
+    SVGDecoratorSnapEditorWidgetStretch.prototype.stretch = function (id, axis, delta, isText) {
         //READ-ONLY
         var stretchClass = axis + "-stretch-" + id,
             shiftClass = axis + "-shift-" + id,
@@ -292,6 +292,17 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
             shift = {},
             stretch = {},
             i;
+
+        if (isText !== true){//Remove any element with the "text-stretch-only" flag
+            stretchElements = $.grep(stretchElements, function(element){
+                if (element.hasAttribute("text-stretch-only") && 
+                    element.getAttribute("text-stretch-only") === "true"){
+                    return false;
+                }
+
+                return true;
+            });
+        }
 
         shift[axis] = delta;
         this._shiftConnectionAreas(shiftClass, shift);
