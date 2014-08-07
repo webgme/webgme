@@ -112,6 +112,8 @@
        id="path15"
        d="m 137.61334,19.186 0,3.53125 23.65625,0 a 3.54,3.54 0 0 0 3.5625,-3.53125 l -27.21875,0 z"
        style="stroke-width:1.17999995" />
+
+  <!-- input boxes -->
     <path
        class="x-shift-name x-shift-second"
        style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0.47324049px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
@@ -120,7 +122,8 @@
        inkscape:connector-curvature="0"
        inkscape:label="#rect3006" />
     <rect
-       class="x-shift-name"
+       class="x-stretch-second x-shift-name"
+       text-stretch-only="true"
        style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0.58804238px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        id="second_box"
        width="23.394461"
@@ -131,6 +134,7 @@
        inkscape:label="#rect3797" />
     <rect
        class="x-shift-second x-shift-first x-shift-name"
+       text-stretch-only="true"
        style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0.58804238px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;overflow:hidden"
        id="map_box"
        width="23.394461"
@@ -163,7 +167,7 @@
      id="second"
      x="46.463337"
      y="17"
-     style="font-size:12px">llll</text>
+     style="font-size:12px"></text>
   <!-- Connection Areas -->
   <line
      class="connection-area"

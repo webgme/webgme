@@ -150,6 +150,7 @@
        inkscape:label="#RTRect-4" />
     <!-- Input Fields -->
     <rect
+       text-stretch-only="true"
        class="x-shift-collection x-shift-name x-stretch-first"
        style="fill:#ffffff;fill-opacity:1;stroke:none;overflow:hidden"
        id="RinputField"

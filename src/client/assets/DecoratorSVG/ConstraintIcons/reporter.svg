@@ -151,6 +151,7 @@
     <!-- Input Fields -->
     <rect
        class="x-stretch-second y-shift-name x-shift-name x-shift-first"
+       text-stretch-only="true"
        style="fill:#ffffff;fill-opacity:1;stroke:none;overflow:hidden"
        id="RinputField"
        width="16.673277"
@@ -160,6 +161,8 @@
        y="4.7485795" />
     <rect
        style="fill:#ffffff;fill-opacity:1;stroke:none;overflow:hidden"
+       class="x-stretch-first"
+       text-stretch-only="true"
        id="LinputField"
        width="16.673277"
        height="12.51503"

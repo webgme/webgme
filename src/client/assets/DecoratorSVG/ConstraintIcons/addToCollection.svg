@@ -108,13 +108,14 @@
      id="path15"
      class="y-shift-collection y-shift-name y-shift-first x-shift-collection x-shift-name x-shift-first"
      inkscape:connector-curvature="0" />
+  <!-- Input boxes -->
   <rect
      rx="1.8"
      y="5.3968081"
      x="77.818619"
      height="12.584407"
      width="21.236712"
-     id="rect3014-3"
+     id="RInputField"
      style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:1.61639428px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;overflow:hidden"
      class="x-shift-first x-shift-name" />
   <rect
@@ -123,7 +124,8 @@
      x="41.315617"
      height="12.584407"
      width="21.236712"
-     id="rect3014-3-0"
+     id="LInputField"
+     text-stretch-only="true"
      style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:1.61639428px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;overflow:hidden" />
   <!-- Text -->
   <text
