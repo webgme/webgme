@@ -51,7 +51,7 @@ define(['plugin/PluginConfig',
     ConstraintPlugin.prototype.constructor = ConstraintPlugin;
 
     ConstraintPlugin.prototype.getName = function () {
-        return "Add Constraint";
+        return "ConstraintPlugin";
     };
     
     ConstraintPlugin.prototype._isTypeOf = function(node,type){
@@ -166,21 +166,25 @@ define(['plugin/PluginConfig',
                 cb = function(e){
                     err = e || err;
                     len--;
-                    if (len === 0){
+                    if (len <= 0){
                         callback();
                     }
                 };
 
-            while (names.length){
-                name = names.pop();
-                self._nodeCache[name] = {};
+            if (names.length){
+                while (names.length){
+                    name = names.pop();
+                    self._nodeCache[name] = {};
 
-                //Add the constraint node
-                node = self.constraints[name];
-                id = self.core.getPath(node);
-                self._nodeCache[name][id] = node;
+                    //Add the constraint node
+                    node = self.constraints[name];
+                    id = self.core.getPath(node);
+                    self._nodeCache[name][id] = node;
 
-                load(name, constraints[name], cb);
+                    load(name, constraints[name], cb);
+                }
+            } else {
+                cb();
             }
         };
 
@@ -201,6 +205,14 @@ define(['plugin/PluginConfig',
         var config = [],
             constraints = [ 'Unique Name', 'OneStartBlock', 'Limited Connections Per Item' ];
 
+        //Apply To All Option
+        config.push({ name: 'applyAll',
+                      displayName: "Add constraints to node base",
+                      description: 'Apply constraints to all nodes of this type',
+                      value: false, // this is the 'default config'
+                      valueType: "boolean",
+                      readOnly: false });
+
         //Get the constraint names to populate the config
         //Currently this is not possible.
         //TODO
@@ -219,7 +231,10 @@ define(['plugin/PluginConfig',
 
     ConstraintPlugin.prototype.main = function (callback) {
         var self = this,
-            constraintNodes;
+            constraintNodes,
+            changedNode = this.activeNode,
+            saveMessage = "Added constraints (";
+
         self.config = self.getCurrentConfig();
 
         self._loadConstraintNodes(function(err){
@@ -231,25 +246,41 @@ define(['plugin/PluginConfig',
                 //executing the plugin
                 self.logger.info("Finished loading children");
                 err = self._runSync();
+
+                //Create save message
+                saveMessage += self.getConstraintNames().join(",") + ") to ";
+                if (self.config.applyAll){
+                    changedNode = self.core.getBase(changedNode);
+                } 
+
+                saveMessage += self.core.getAttribute(changedNode, 'name');
+
                 if(err){
                     self.result.success = false;
                     callback(err,self.result);
                 } else {
-                    //Download language files
-                    self._saveOutput(function(err){
-                        if(err){ 
-                            self.result.success = false;
-                            callback(err,self.result);
-                        } else {
-                            if(callback){
-                                self.result.success = true;
-                                callback(null,self.result);
+                    //Save the constraint changes
+                    self.save(saveMessage, function(err){
+                        //Download language files
+                        self._saveOutput(function(err){
+                            if(err){ 
+                                self.result.success = false;
+                                callback(err,self.result);
+                            } else {
+                                if(callback){
+                                    self.result.success = true;
+                                    callback(null,self.result);
+                                }
                             }
-                        }
+                        });
                     });
                 }
             }
         });
+    };
+
+    ConstraintPlugin.prototype.getConstraintNames = function(){
+        return Object.keys(this._nodeCache);
     };
 
     //Get node names and store nodes in dictionary
@@ -261,12 +292,18 @@ define(['plugin/PluginConfig',
         var constraints = Object.keys(this.constraints),
             i = constraints.length,
             constNames,
-            constraintScript,
-            base,
+            node = this.activeNode,
             err = null;
 
-        constNames = this.core.getConstraintNames(this.activeNode);
-        console.log("Before constraints:", JSON.stringify(constNames)); 
+        if (this.config.applyAll){
+            node = this.core.getBase(this.activeNode);
+        }
+
+        //delete old constraints
+        constNames = this.core.getConstraintNames(node);
+        for (var j = constNames.length-1; j >= 0; j--){
+            this.core.delConstraint(node, constNames[j]);
+        }
 
         while (i-- && !err){
             this.currentConstraint = constraints[i];
@@ -276,18 +313,10 @@ define(['plugin/PluginConfig',
                 //Apply the constraints to the activeNode
                 //Currently this is set to add the constraint to the given node - NOT the node TYPE (META object)
                 //This could be a problem...
-
-                this.core.setConstraint(this.activeNode, constraints[i], this.constraintObject[constraints[i]]);
-                base = this.core.getBase(this.activeNode);
-                this.core.setConstraint(base, constraints[i], this.constraintObject[constraints[i]]);
-
-                constraintScript = this.core.getConstraint(this.activeNode, constraints[i]).script;
-                console.log("Set the constraint of active node to ", constraintScript); 
+                
+                this.core.setConstraint(node, constraints[i], this.constraintObject[constraints[i]]);
             }
         }
-
-        constNames = this.core.getConstraintNames(this.activeNode);
-        console.log("After adding constraints:", JSON.stringify(constNames)); 
 
         return err;
     };
@@ -383,9 +412,14 @@ define(['plugin/PluginConfig',
             'subtract': "%first - %second", 
             'multiply': "(%first) * (%second)", 
             'divide': "(%first)/(%second)", 
+
+            //Binary Predicates
             'lessThan': "(%first) < (%second)", 
             'greaterThan': "(%first) > (%second)", 
-            'equals': "(%first) === (%second)", 
+            'equal': "(%first) === (%second)", 
+            'and': "(%first) && (%second)", 
+            'or': "(%first) || (%second)", 
+            'xor': "((%first) || (%second)) && !((%first) && (%second))", 
 
             //Control flow
             'if': "if (%cond){\n%true_next\n}\n%next",
@@ -402,6 +436,7 @@ define(['plugin/PluginConfig',
             //Map mappings
             'addToMap': "%map[%first] = %second;\n%next",
             'getItemFromMap': "%map[%first]",
+            'getKeysFromMap': "Object.keys(%map)",
 
             //Collection mappings
             'addToCollection': "%collection.push(%first);\n%next",
@@ -706,8 +741,8 @@ define(['plugin/PluginConfig',
             code,
             filename = self.core.getAttribute(self.activeNode, 'name').replace(/ /g, "_"),
             artifact = self.blobClient.createArtifact(filename+"_constraints"),
-            constraints = Object.keys(this.constraintObject),
-            len = constraints.length,
+            constraints = [],
+            len = 0,
 
             //Function to check if we have added all files
             checkIfShouldSaveAll = function(err){
@@ -733,6 +768,11 @@ define(['plugin/PluginConfig',
                     });
                 }
             };
+
+        if (this.constraintObject){
+            constraints = Object.keys(this.constraintObject);
+            len = constraints.length;
+        }
 
         //Save all files
         while (constraints.length){
