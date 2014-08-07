@@ -28,7 +28,8 @@ define(['js/Constants',
     var SVGDecoratorSnapEditorWidget,
         DECORATOR_ID = "SVGDecoratorSnapEditorWidget",
         SVG_COLOR_ID = "colors",
-        SVG_SECONDARY_COLOR_ID = "secondary";
+        SVG_SECONDARY_COLOR_ID = "secondary",
+        EDIT_TEXT = { PADDING: 5, MIN_WIDTH: 30};
 
     /**
      * SVGDecoratorSnapEditorWidget
@@ -83,29 +84,37 @@ define(['js/Constants',
 
         this._renderContent();
 
+        this.$svgContent.css('position', 'relative');
         // set title editable on double-click if editable
         if (this.$name.attr('data-editable')){
             this.$name.on("dblclick.editOnDblClick", null, function (event) {
                 if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
                     var id = $(this).attr('id'),
-                    tempName = $('<div/>', { id: id + '-edit', 
-                                 text: $(this).text()});
+                        box = {},
+                        width,
+                        tempName = $('<div/>', { id: id + '-edit', 
+                                             text: $(this).text()});
 
-                                 self.$el.append(tempName);
-                                 tempName.css('left', $(this).attr('x'));
-                                 tempName.css('top', $(this).attr('y'));
+                     self.$svgContent.append(tempName);
 
-                                 $(tempName).editInPlace({"class": id + "-edit",
-                                                         "value": self.name,
-                                                         "css": { 'z-index': 10000 },
-                                                         "onChange": function (oldValue, newValue) {
-                                                             self._saveAttributeChange(id, newValue);
-                                                         },
-                                                         "onFinish": function () {
-                                                             $(this).remove();
-                                                         }
+                     tempName.css('position', 'absolute');
+                     box = self.$name[0].getBBox();
+                     tempName.css('left', box.x);
+                     tempName.css('top', box.y);
+                     width = Math.max(box.width + EDIT_TEXT.PADDING, EDIT_TEXT.MIN_WIDTH);
+                     tempName.css('width', width);
 
-                                 });
+                     $(tempName).editInPlace({"class": id + "-edit",
+                                             "value": self.name,
+                                             "css": { 'z-index': 10000 },
+                                             "onChange": function (oldValue, newValue) {
+                                                 self._saveAttributeChange(id, newValue);
+                                             },
+                                             "onFinish": function () {
+                                                 $(this).remove();
+                                             }
+
+                     });
                 }
                 event.stopPropagation();
                 event.preventDefault();
@@ -314,13 +323,20 @@ define(['js/Constants',
             editText = function (event) {
                 if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
                     var id = $(this).attr('id'),
-                    tempName = $('<div/>', { id: id + '-edit', 
-                         text: $(this).text()}),
-                    element = $(this);
+                        box,
+                        width,
+                        tempName = $('<div/>', { id: id + '-edit', 
+                                                 text: $(this).text()}),
+                        element = $(this);
 
-                    self.$el.append(tempName);
-                    tempName.css('left', $(this).attr('x'));
-                    tempName.css('top', $(this).attr('y'));
+                    self.$svgContent.append(tempName);
+                    tempName.css('position', 'absolute');
+
+                    box = $(this)[0].getBBox();
+                    tempName.css('left', box.x);
+                    tempName.css('top', box.y);
+                    width = Math.max(box.width + EDIT_TEXT.PADDING, EDIT_TEXT.MIN_WIDTH);
+                    tempName.css('width', width);
 
                     $(tempName).editInPlace({"class": id + "-edit",
                         "value": $(this).text(),
