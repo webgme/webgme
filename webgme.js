@@ -103,6 +103,38 @@ var setConfig = function(configObject){
                 paths: pluginPaths
         });
         },
+        addAddOnPathsToRequirejs = function(basepaths){
+            var requirejsBase = webGMEGlobal.baseDir,
+                pluginNames = getPluginNames(basepaths),
+                i,j;
+
+            //we go through every plugin and we check where we are able to find the main part of it so we can set the plugin/pluginName path according that in requirejs
+            var pluginPaths = {};
+            for(i in pluginNames) {
+                var found = false;
+                for (j = 0; j < basepaths.length; j++) {
+                    if (!found) {
+                        try {
+                            var items = FS.readdirSync(basepaths[j]);
+                            if(items.indexOf(pluginNames[i]) !== -1){
+                                pluginPaths['addon/' + pluginNames[i]] = PATH.relative(requirejsBase,PATH.resolve(basepaths[j]));
+                                found = true;
+                            }
+                        } catch (e) {
+                            //do nothing as we will go on anyway
+                            //console.error(e);
+                        }
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+
+            requirejs.config({
+                paths: pluginPaths
+            });
+        },
         addToRequireJSPath = function (requireJSPaths) {
             if (!requireJSPaths) {
                 return;
@@ -147,6 +179,13 @@ var setConfig = function(configObject){
 
     if (__CONFIG.pluginBasePaths) {
         addPluginPathsToRequirejs(__CONFIG.pluginBasePaths);
+    }
+
+    if(configObject.addonBasePaths && configObject.addonBasePaths.length){
+        __CONFIG.addonBasePaths = configObject.addonBasePaths.concat(__CONFIG.addonBasePaths);
+    }
+    if(__CONFIG.addonBasePaths) {
+        addAddOnPathsToRequirejs(__CONFIG.addonBasePaths);
     }
 
     //merge decorator base paths

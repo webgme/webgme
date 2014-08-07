@@ -15,7 +15,7 @@ define(['js/Constants',
     "use strict";
 
     var MetaDecoratorDiagramDesignerWidgetConstraints,
-        SCRIPT_TEMPLATE = "function(client, node) {\n//return TRUE if the constraint is valid, otherwise return FALSE\nreturn true;\n}";
+        SCRIPT_TEMPLATE = "function(core, node, callback) {\ncallback(null,{hasViolation:false,message:\"\"});\n}";
 
     MetaDecoratorDiagramDesignerWidgetConstraints = function () {
     };

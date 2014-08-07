@@ -79,7 +79,8 @@ define([
                 _TOKEN = null,
                 META = new BaseMeta(),
                 _rootHash = null,
-                _gHash = 0;
+                _gHash = 0,
+                _addOns = {};
 
             function print_nodes(pretext){
                 if(pretext){
@@ -209,6 +210,108 @@ define([
                     };
                 _database.getNextServerEvent(lastGuid,nextServerEvent);
             }
+
+            //addOn functions
+            function startAddOnAsync(name,projectName,branchName,callback){
+                if(_addOns[name] === undefined){
+                    _addOns[name] = "loading";
+                    _database.simpleRequest({command:'connectedWorkerStart',workerName:name,project:projectName,branch:branchName},function(err,id){
+                        if(err){
+                            delete _addOns[name];
+                            return callback(err);
+                        }
+
+                        _addOns[name] = id;
+                        callback(null);
+                    });
+                }
+            }
+            function startAddOn(name){
+                if(_addOns[name] === undefined){
+                    _addOns[name] = "loading";
+                    _database.simpleRequest({command:'connectedWorkerStart',workerName:name,project:_projectName,branch:_branch},function(err,id){
+                        if(err){
+                            return logger.error(err);
+                        }
+
+                        _addOns[name] = id;
+                    });
+                }
+
+            }
+            function queryAddOn(name,query,callback){
+                if(!_addOns[name] || _addOns[name] === "loading"){
+                    return callback(new Error('no such addOn is ready for queries'));
+                }
+                _database.simpleQuery(_addOns[name],query,callback);
+            }
+            function stopAddOn(name,callback){
+                if(_addOns[name] && _addOns[name] !== "loading"){
+                    _database.simpleResult(_addOns[name],callback);
+                    delete _addOns[name];
+                } else {
+                    callback(null);
+                }
+            }
+
+            //core addOns
+            function startCoreAddOnsAsync(project,branch,callback){
+                var needed = 2,
+                    error = null,
+                    icb = function(err){
+                        error = error || err;
+                        if(--needed === 0){
+                            callback(error);
+                        }
+                    };
+
+                startHistoryAsync(project,branch,icb);
+                startConstraintAsync(project,branch,icb);
+            }
+            //history
+            function startHistoryAsync(project,branch,callback){
+                if(_addOns['HistoryAddOn'] && _addOns['HistoryAddOn'] !== 'loading'){
+                    stopAddOn('HistoryAddOn',function(err){
+                        if(err){
+                            callback(err);
+                        } else {
+                            startAddOnAsync('HistoryAddOn', project, branch, callback);
+                        }
+                    });
+                } else {
+                    startAddOnAsync('HistoryAddOn',project,branch,callback);
+                }
+            }
+            function getDetailedHistoryAsync(callback){
+                if(_addOns['HistoryAddOn'] && _addOns['HistoryAddOn'] !== 'loading'){
+                    queryAddOn('HistoryAddOn',{},callback);
+                } else {
+                    callback(new Error('history information is not available'));
+                }
+            }
+
+            //constraint
+            function startConstraintAsync(project,branch,callback){
+                if(_addOns['ConstraintAddOn'] && _addOns['ConstraintAddOn'] !== 'loading'){
+                    stopAddOn('ConstraintAddOn',function(err){
+                        if(err){
+                            callback(err);
+                        } else {
+                            startAddOnAsync('ConstraintAddOn', project, branch, callback);
+                        }
+                    });
+                } else {
+                    startAddOnAsync('ConstraintAddOn',project,branch,callback);
+                }
+            }
+            function validateProjectAsync(callback){
+                if(_addOns['ConstraintAddOn'] && _addOns['ConstraintAddOn'] !== 'loading'){
+                    queryAddOn("ConstraintAddOn", {querytype:'execute'}, callback);
+                } else {
+                    callback(new Error('history information is not available'));
+                }
+            }
+            //core addOns end
 
             function tokenWatcher(){
                 var token = null,
@@ -485,6 +588,18 @@ define([
             }
             function openProject(name,callback){
                 ASSERT(_database);
+                var waiting = 2,
+                    innerCallback = function(err){
+                        error = error || err;
+                        if(--waiting === 0){
+                            if(error){
+                                logger.error('The branch '+firstName+' of project '+name+' cannot be selected! ['+JSON.stringify(error)+']');
+                            }
+                            callback(error);
+                        }
+                    },
+                    firstName = null,
+                    error = null;
                 _database.openProject(name,function(err,p){
                     if(!err &&  p){
                         _database.getAuthorizationInfo(name,function(err,authInfo){
@@ -506,7 +621,6 @@ define([
                             //check for master or any other branch
                             _project.getBranchNames(function(err,names){
                                 if(!err && names){
-                                    var firstName = null;
 
                                     if(names['master']){
                                         firstName = 'master';
@@ -515,14 +629,8 @@ define([
                                     }
 
                                     if(firstName){
-                                        branchWatcher(firstName,function(err){
-                                            if(!err){
-                                                callback(null);
-                                            } else {
-                                                logger.error('The branch '+firstName+' of project '+name+' cannot be selected! ['+JSON.stringify(err)+']');
-                                                callback(err);
-                                            }
-                                        });
+                                        branchWatcher(firstName,innerCallback);
+                                        startCoreAddOnsAsync(_projectName,firstName,innerCallback);
                                     } else {
                                         //we should try the latest commit
                                         viewLatestCommit(callback);
@@ -846,40 +954,7 @@ define([
                     });
                 }
             }
-            /*function loadRoot(newRootHash,callback){
-                _loadNodes = {};
-                _loadError = 0;
-                _core.loadRoot(newRootHash,function(err,root){
-                    if(!err){
-                        var missing = 0,
-                            error = null;
-                        _loadNodes[_core.getPath(root)] = {node:root,incomplete:true,basic:true,hash:getStringHash(root)};
-                        _metaNodes[_core.getPath(root)] = root;
 
-                        for(var i in _users){
-                            for(var j in _users[i].PATTERNS){
-                                missing++;
-                            }
-                        }
-                        if(missing > 0){
-                            for(i in _users){
-                                for(j in _users[i].PATTERNS){
-                                    loadPattern(_core,j,_users[i].PATTERNS[j],_loadNodes,function(err){
-                                        error = error || err;
-                                        if(--missing === 0){
-                                            callback(error);
-                                        }
-                                    });
-                                }
-                            }
-                        } else {
-                            callback(error);
-                        }
-                    } else {
-                        callback(err);
-                    }
-                });
-            }*/
             function orderStringArrayByElementLength(strArray){
                 var ordered = [],
                     i, j,index;
@@ -1259,9 +1334,18 @@ define([
                 }
             }
             function selectBranchAsync(branch,callback){
+                var waiting = 2,
+                    error = null,
+                    innerCallback = function(err){
+                        error = error || err;
+                        if(--waiting === 0){
+                            callback(error);
+                        }
+                    }
                 if(_database){
                     if(_project){
-                        branchWatcher(branch,callback);
+                        branchWatcher(branch,innerCallback);
+                        startCoreAddOnsAsync(_projectName,branch,innerCallback);
                     } else {
                         callback(new Error('there is no open project!'));
                     }
@@ -2226,7 +2310,7 @@ define([
 
                         getCollectionPaths: getCollectionPaths
 
-                    }
+                    };
                 }
 
                 return null;
@@ -2254,7 +2338,22 @@ define([
                 //_self.addEventListener(_self.events.SERVER_BRANCH_UPDATED,function(client,data){
                 //    console.log(data);
                 //});
-                
+                switch (testnumber) {
+                    case 1:
+                        //startAddOn("HistoryAddOn");
+                        startAddOn("ConstraintAddOn");
+                        break;
+                    case 2:
+                        queryAddOn("ConstraintAddOn", {querytype:'execute'}, function (err, result) {
+                            console.log("addon result", err, result);
+                        });
+                        break;
+                    case 3:
+                        stopAddOn("ConstraintAddOn", function (err) {
+                            console.log("addon stopped", err);
+                        });
+                }
+
             }
 
             //export and import functions
@@ -2679,6 +2778,9 @@ define([
                 setConstraint: setConstraint,
                 delConstraint: delConstraint,
 
+                //coreAddOn functions
+                validateProjectAsync : validateProjectAsync,
+                getDetailedHistoryAsync : getDetailedHistoryAsync,
 
                 //territory functions for the UI
                 addUI: addUI,

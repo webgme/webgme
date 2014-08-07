@@ -38,12 +38,13 @@ define([],
                                 //TODO can be handled later
                                 return self._Storage.getNextServerEvent(lastGuid,nextServerEvent);
                             case "BRANCH_UPDATED":
-                                if(this.projectName === parameters.project && this.branchName === parameters.branch){
+                                if(self.projectName === parameters.project && self.branchName === parameters.branch){
                                     self.project.loadObject(parameters.commit,function(err,commit){
-                                        if(err){
+                                        if(err || !commit){
                                             return self._Storage.getNextServerEvent(lastGuid,nextServerEvent);
                                         }
 
+                                        self.commit = parameters.commit;
                                         self.core.loadRoot(commit.root,function(err,root){
                                             if(err){
                                                 return self._Storage.getNextServerEvent(lastGuid,nextServerEvent);
@@ -77,7 +78,7 @@ define([],
 
             //start the eventing
             this._eventer();
-
+            return true;
         };
         AddOnBase.prototype.start = function(parameters,callback){
             //this is the initialization function it could be overwritten or use as it is
@@ -94,6 +95,10 @@ define([],
 
         AddOnBase.prototype.query = function(parameters,callback){
             callback(new Error('the function is the main function of the AddOn so it must be overwritten'));
+        };
+
+        AddOnBase.prototype.stop = function(callback){
+            callback(new Error('this function must be overwritten to make sure that the addon stops properly'));
         };
 
 
