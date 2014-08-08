@@ -306,7 +306,21 @@ define([
             }
             function validateProjectAsync(callback){
                 if(_addOns['ConstraintAddOn'] && _addOns['ConstraintAddOn'] !== 'loading'){
-                    queryAddOn("ConstraintAddOn", {querytype:'execute'}, callback);
+                    queryAddOn("ConstraintAddOn", {querytype:'checkProject'}, callback);
+                } else {
+                    callback(new Error('history information is not available'));
+                }
+            }
+            function validateModelAsync(path,callback){
+                if(_addOns['ConstraintAddOn'] && _addOns['ConstraintAddOn'] !== 'loading'){
+                    queryAddOn("ConstraintAddOn", {querytype:'checkModel',path:path}, callback);
+                } else {
+                    callback(new Error('history information is not available'));
+                }
+            }
+            function validateNodeAsync(path,callback){
+                if(_addOns['ConstraintAddOn'] && _addOns['ConstraintAddOn'] !== 'loading'){
+                    queryAddOn("ConstraintAddOn", {querytype:'checkNode',path:path}, callback);
                 } else {
                     callback(new Error('history information is not available'));
                 }
@@ -2788,6 +2802,8 @@ define([
 
                 //coreAddOn functions
                 validateProjectAsync : validateProjectAsync,
+                validateModelAsync: validateModelAsync,
+                validateNodeAsync: validateNodeAsync,
                 getDetailedHistoryAsync : getDetailedHistoryAsync,
 
                 //territory functions for the UI

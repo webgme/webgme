@@ -21,22 +21,31 @@ define(['addon/AddOnBase'],function(Base) {
 
     ConstraintAddOn.prototype.update = function (root) {
         //TODO if we would like a continuous constraint checking we should use this function as well
-        console.log('CAD update',this.core.getHash(root));
         this.root = root;
     };
 
     ConstraintAddOn.prototype.query = function (parameters, callback) {
-        console.log('query CAD',parameters);
+        var self = this;
         //several query will be available but the first is the simple run constraint
         switch (parameters.querytype){
-            case 'execute':
-                this.executeConstraints(callback);
-                break;
             case 'checkProject':
+                this.checkProject(callback);
                 break;
             case 'checkModel':
+                self.loadNode(parameters.path,function(err,node){
+                    if(err){
+                        return callback(err);
+                    }
+                    self.checkModel(node,callback);
+                });
                 break;
             case 'checkNode':
+                self.loadNode(parameters.path,function(err,node){
+                    if(err){
+                        return callback(err);
+                    }
+                    self.checkNode(node,callback);
+                });
                 break;
             default:
                 callback('unknown command');
@@ -77,10 +86,48 @@ define(['addon/AddOnBase'],function(Base) {
     };
 
     ConstraintAddOn.prototype.checkProject = function(callback){
-
+        this.checkModel(this.root,callback);
     };
     ConstraintAddOn.prototype.checkModel = function(root,callback){
+        var self = this,
+            error = null,
+            message = {},
+            checkChild = function(node,cb){
+                var needed = 2,
+                    children = [],
+                    nextChild = function(index){
+                        if(index>=children.length){
+                            return cb(error,message);
+                        }
 
+                        checkChild(children[index],function(){
+                            nextChild(index+1);
+                        });
+                    },
+                    childrenLoaded = function(){
+                        needed = children.length;
+                        if(!needed || needed === 0){
+                            return cb(error,message);
+                        }
+                        nextChild(0);
+                    };
+                self.checkNode(node,function(err,msg){
+                    error = error || err;
+                    message[self.core.getGuid(node)] = msg;
+                    if(--needed === 0){
+                        childrenLoaded();
+                    }
+                });
+                self.core.loadChildren(node,function(err,c){
+                    children = c || [];
+                    error = error || err;
+                    if(--needed === 0){
+                        childrenLoaded();
+                    }
+                });
+            };
+
+        checkChild(root,callback);
     };
     ConstraintAddOn.prototype.checkNode = function(node,callback){
         var self = this,
@@ -122,73 +169,6 @@ define(['addon/AddOnBase'],function(Base) {
             self.contraintsStorage[script] = {};
         }
         self.contraints[script].call(self.contraintsStorage[script],self.core,node,callback);
-    };
-    ConstraintAddOn.prototype.executeConstraints = function(callback){
-        var self = this,
-            executeConstraint = function(node,name,cb){
-                var guid = self.core.getGuid(node),
-                    icb = function(err,msg){
-                        error = error || err;
-                        message[guid][name] = msg;
-                        cb();
-                    },
-                    script = self.core.getConstraint(node,name).script;
-                message[guid] = message[guid] || {};
-
-                if(!self.contraints[script]){
-                    var a="";
-                    eval("a = "+script);
-                    self.contraints[script] = a;
-                    self.contraintsStorage[script] = {};
-                    a.call(self.contraintsStorage[script],self.core,node,icb);
-                }
-                self.contraints[script].call(self.contraintsStorage[script],self.core,node,icb);
-                //eval("("+self.core.getConstraint(node,name).script+")(self.core,node,icb)");
-            },
-            checkNode = function(node,cb){
-                var names = self.core.getConstraintNames(node),
-                    needed = names.length,
-                    children = [],
-                    countDown = function(){
-                        if(--needed === 0){
-                            checkChildren();
-                        }
-                    },
-                    checkChildren = function(){
-                        self.core.loadChildren(node,function(err,c){
-                            if(!err && c){
-                                children = c;
-                                checkChild(0);
-                            } else {
-                                cb(err);
-                            }
-                        });
-                    },
-                    checkChild = function(index){
-                        if(index<children.length){
-                            checkNode(children[index],function(){
-                                checkChild(index+1);
-                            });
-                        } else {
-                            cb();
-                        }
-                    },
-                    i;
-
-                if(needed > 0){
-                    for(i=0;i<names.length;i++){
-                        executeConstraint(node,names[i],countDown);
-                    }
-                } else {
-                    checkChildren();
-                }
-            },
-            error = null,
-            message = {};
-
-            checkNode(self.root,function(){
-                callback(error,message);
-            });
     };
 
     return ConstraintAddOn;
