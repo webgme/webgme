@@ -182,9 +182,10 @@ define(['util/assert'],function(ASSERT){
         return _extraBasePaths[path];
     }
     function pathsToGuids(jsonObject){
-        if(typeof jsonObject === 'object'){
+        if(jsonObject && typeof jsonObject === 'object'){
             var keys = Object.keys(jsonObject),
                 i, j, k,toDelete,tArray;
+
 
             for(i=0;i<keys.length;i++){
                 if(keys[i] === 'items') {
@@ -531,7 +532,7 @@ define(['util/assert'],function(ASSERT){
     function addNode(guid){
         //at this point we assume that an empty vessel has been already created and part of the _nodes
         updateAttributes(guid);
-        updateRegistry(guid);_
+        updateRegistry(guid);
     }
 
     function updateRelations(guid,containmentTreeObject){

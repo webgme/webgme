@@ -4,7 +4,7 @@
  * Author: Tamas Kecskes
  */
 
-define([ "util/assert","util/guid","util/url","../../../node_modules/socket.io","worker/serverworkermanager" ], function(ASSERT,GUID,URL,IO,SWM){
+define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkermanager" ], function(ASSERT,GUID,URL,IO,SWM){
 
     var server = function(_database,options){
         ASSERT(typeof _database === 'object');
@@ -27,10 +27,21 @@ define([ "util/assert","util/guid","util/url","../../../node_modules/socket.io",
         var _socket = null,
             _objects = {},
             _projects = {},
-            /*_references = {},*/
+        /*_references = {},*/
             _databaseOpened = false,
             ERROR_DEAD_GUID = 'the given object does not exists',
-            _workerManager = null;
+            _workerManager = null,
+            _eventHistory = [],
+            _events = {},
+            _waitingEventCallbacks = [],
+            SERVER_EVENT = {
+                PROJECT_CREATED : "PROJECT_CREATED",
+                PROJECT_DELETED : "PROJECT_DELETED",
+                PROJECT_UPDATED : "PROJECT_UPDATED",
+                BRANCH_CREATED : "BRANCH_CREATED",
+                BRANCH_DELETED : "BRANCH_DELETED",
+                BRANCH_UPDATED : "BRANCH_UPDATED"
+            };
 
         function getSessionID(socket){
             return socket.handshake.webGMESessionId;
@@ -103,6 +114,34 @@ define([ "util/assert","util/guid","util/url","../../../node_modules/socket.io",
             });
         }
 
+        function fireEvent(parameters){
+            var guid = GUID(),
+                callbacks = _waitingEventCallbacks,
+                i;
+            _waitingEventCallbacks = [];
+            _events[guid] = parameters;
+            _eventHistory.unshift(guid);
+            if(_eventHistory.length > 1000){
+                _eventHistory.pop();
+            }
+
+            for(i=0;i<callbacks.length;i++){
+                callbacks[i](null,guid,parameters);
+            }
+        }
+        function eventRequest(latestGuid,callback){
+            var index;
+
+            index = _eventHistory.indexOf(latestGuid);
+            if(index === -1 || index === 0){
+                //new user or already received the last event
+                _waitingEventCallbacks.push(callback);
+            } else {
+                //missed some events so we send the next right away
+                callback(null,_eventHistory[index-1],_events[_eventHistory[index-1]]);
+            }
+        }
+
         function open(){
             _socket = IO.listen(options.combined ? options.combined : options.port,{
                 'transports': [
@@ -167,9 +206,9 @@ define([ "util/assert","util/guid","util/url","../../../node_modules/socket.io",
                     //we ignore the close request from any client
                     //TODO check how we should function
                     /*
-                    _databaseOpened = false;
-                    _database.closeDatabase(callback);
-                    */
+                     _databaseOpened = false;
+                     _database.closeDatabase(callback);
+                     */
                     if(typeof callback === 'function'){
                         callback(null);
                     }
@@ -263,6 +302,7 @@ define([ "util/assert","util/guid","util/url","../../../node_modules/socket.io",
                                     callback(err);
                                 } else {
                                     //TODO what to do with the object itself???
+                                    fireEvent({type:SERVER_EVENT.PROJECT_DELETED,project:projectName});
                                     callback(null);
                                 }
                             });
@@ -278,7 +318,13 @@ define([ "util/assert","util/guid","util/url","../../../node_modules/socket.io",
                             _database.getProjectNames(function(err,names){
                                 if(names.indexOf(projectName) === -1){
                                     //project creation
-                                    createProject(getSessionID(socket),projectName,callback);
+                                    createProject(getSessionID(socket),projectName,function(err,project){
+                                        if(!err){
+                                            fireEvent({type:SERVER_EVENT.PROJECT_CREATED,project:projectName});
+                                        }
+                                        callback(err,project);
+                                    });
+
                                 } else {
                                     checkProject(getSessionID(socket),projectName,callback);
                                 }
@@ -297,12 +343,12 @@ define([ "util/assert","util/guid","util/url","../../../node_modules/socket.io",
                             //var index = _references[projectName].indexOf(getSessionID(socket));
                             //_references[projectName].splice(index,1);
                             //if(_references[projectName].length === 0){
-                                //delete _references[projectName];
-                                //delete _projects[projectName];
-                                //project.closeProject(callback);
+                            //delete _references[projectName];
+                            //delete _projects[projectName];
+                            //project.closeProject(callback);
                             //} else {
-                                callback(null);
-                           // }
+                            callback(null);
+                            // }
                         }
                     });
                 });
@@ -316,6 +362,38 @@ define([ "util/assert","util/guid","util/url","../../../node_modules/socket.io",
                         }
                     });
                 });
+                socket.on('loadObjects', function(projectName,hashes,callback){
+                    var error = null,
+                        needed = hashes.length,
+                        objects = {},
+                        project, i,
+                        loadObject = function(hash,next){
+                            project.loadObject(hash,function(err,obj){
+                                var object = {};
+                                object.hash = hash;
+                                object.result = obj;
+                                next(err,object);
+                            });
+                        },
+                        innerCb = function(err,object){
+                            error = error || err;
+                            objects[object.hash]=object.result;
+                            if(--needed === 0){
+                                callback(error,objects);
+                            }
+                        };
+
+                    checkProject(getSessionID(socket),projectName,function(err,p){
+                        if(err){
+                            callback(err);
+                        } else {
+                            project = p;
+                            for(i=0;i<hashes.length;i++){
+                                loadObject(hashes[i],innerCb);
+                            }
+                        }
+                    });
+                });
 
                 socket.on('insertObject', function(projectName,object,callback){
                     checkProject(getSessionID(socket),projectName,function(err,project){
@@ -323,11 +401,11 @@ define([ "util/assert","util/guid","util/url","../../../node_modules/socket.io",
                             callback(err);
                         } else {
                             options.authorization(getSessionID(socket),projectName,'write',function(err,cando){
-                               if(!err && cando === true){
-                                   project.insertObject(object,callback);
-                               } else {
-                                   callback(err);
-                               }
+                                if(!err && cando === true){
+                                    project.insertObject(object,callback);
+                                } else {
+                                    callback(err);
+                                }
                             });
                         }
                     });
@@ -377,7 +455,19 @@ define([ "util/assert","util/guid","util/url","../../../node_modules/socket.io",
                         } else {
                             options.authorization(getSessionID(socket),projectName,'write',function(err,cando){
                                 if(!err && cando === true){
-                                    project.setBranchHash(branch,oldhash,newhash,callback);
+                                    project.setBranchHash(branch,oldhash,newhash,function(err){
+                                        if(!err){
+                                            //here comes the branch eventing
+                                            if(oldhash === '' && newhash !== ''){
+                                                fireEvent({type:SERVER_EVENT.BRANCH_CREATED,project:projectName,branch:branch,commit:newhash});
+                                            } else if(oldhash !== '' && newhash === ''){
+                                                fireEvent({type:SERVER_EVENT.BRANCH_DELETED,project:projectName,branch:branch});
+                                            } else {
+                                                fireEvent({type:SERVER_EVENT.BRANCH_UPDATED,project:projectName,branch:branch,commit:newhash});
+                                            }
+                                        }
+                                        callback(err);
+                                    });
                                 } else {
                                     callback(err);
                                 }
@@ -408,6 +498,11 @@ define([ "util/assert","util/guid","util/url","../../../node_modules/socket.io",
                     getWorkerResult(resultId,callback);
                 });
 
+                //eventing
+                socket.on('getNextServerEvent',function(guid,callback){
+                    eventRequest(guid,callback);
+                });
+
                 //token for REST
                 socket.on('getToken',function(callback){
                     options.getToken(getSessionID(socket),callback);
@@ -426,7 +521,8 @@ define([ "util/assert","util/guid","util/url","../../../node_modules/socket.io",
                 intoutdir:options.intoutdir,
                 pluginBasePaths:options.pluginBasePaths,
                 serverPort:options.webServerPort,
-                sessionToUser:options.sessionToUser
+                sessionToUser:options.sessionToUser,
+                auth:options.auth
             });
         }
 
@@ -471,3 +567,6 @@ define([ "util/assert","util/guid","util/url","../../../node_modules/socket.io",
 
     return server;
 });
+/**
+ * Created by tkecskes on 5/10/2014.
+ */
