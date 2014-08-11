@@ -107,6 +107,9 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
 
                 if(!self._transforms[svgId]){//Initialize transform if needed
 
+                    width = null;
+                    height = null;
+
                     if(value.tagName === "line"){
                         x = parseFloat(value.getAttribute("x1"));
                         y = parseFloat(value.getAttribute("y1"));
@@ -117,13 +120,12 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
                         y = parseFloat(value.getAttribute("y"));
                         width = parseFloat(value.getAttribute("width"));
                         height = parseFloat(value.getAttribute("height"));
-                    }else if(value.tagName === "path"){
-                        //FIXME
-                        width = null;
-                        height = null;
                     }
+
+                    //If the width/height is still null, we will set it after first render
+                    //using getBBox
                     self._transforms[svgId] = { 
-                        original: Object.freeze({ x: x, y: y, width: width, height: height }), 
+                        original: { x: x, y: y, width: width, height: height }, 
                         shift: { x: 0, y: 0 }, stretch: { width: null, height: null }};
                 }
                 //initialize shiftTree
@@ -155,11 +157,13 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
                 if (value.hasAttribute("data-shift")){
                     data = value.getAttribute("data-shift").split(" ");
                     for (i = data.length-1; i >= 0; i--){
-                        axis = data[i].substring(0,1);
-                        base = data[i].substring((AXIS.X + SPLITTER).length);
+                        if (data[i].length){
+                            axis = data[i].substring(0,1);
+                            base = data[i].substring((AXIS.X + SPLITTER).length);
 
-                        //Add svgId to base's shiftTree
-                        self.shiftTree[base][axis].push(svgId);
+                            //Add svgId to base's shiftTree
+                            self.shiftTree[base][axis].push(svgId);
+                        }
                     }
                 }
 
@@ -457,7 +461,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
         if(stretchElements.length){
             var size = {};
             size[dim] = maxSize;
-            this._increaseSVGSize(size);
+            this._increaseSVGSize(size);//May need to change this to update to allow shrinking...
         }
 
         return this._svgDims[dim];
@@ -468,6 +472,8 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
             id,
             edge,
             axis,
+            element,
+            box,
             size = {};
 
         size.width = -1;
@@ -479,6 +485,16 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
 
             for (var i = ids.length - 1; i >= 0; i--){
                 //Take into account the right/bottom most point of the svg element
+                if (this._transforms[ids[i]].original[dim] === null){
+                    //Set the original width/height if null
+                    element = this.$svgContent.find("#" + ids[i])[0];
+                    if (_.isFunction(element.getBBox)){
+                        box = element.getBBox();
+                        this._transforms[ids[i]].original.width = box.width;
+                        this._transforms[ids[i]].original.height = box.height;
+                    }
+                }
+
                 edge = this._transforms[ids[i]].original[axis] + this._transforms[ids[i]].shift[axis] + 
                     this._transforms[ids[i]].original[dim] + this._transforms[ids[i]].stretch[dim];
 
@@ -496,7 +512,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
     };
 
     /**
-     * Update svg size if necessary
+     * Increase svg size if necessary
      *
      * @param {Object} size
      * @return {Boolean} updated
