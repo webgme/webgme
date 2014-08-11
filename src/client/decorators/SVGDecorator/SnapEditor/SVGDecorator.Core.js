@@ -93,11 +93,16 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants',
                 h = this[SNAP_CONSTANTS.INITIAL_MEASURE][i].height.baseVal.value;
             }
 
-            if (!this.svgInitialStretch[ptr]){
-                this.svgInitialStretch[ptr] = {};
+            if (!this.pointerInitialStretch[ptr]){
+                this.pointerInitialStretch[ptr] = {};
             }
 
-            this.svgInitialStretch[ptr][type] = { x: w, y: h };//Store by svg/text types
+            if (!this._classTransforms[ptr]){
+                this._classTransforms[ptr] = {};
+            }
+
+            this.pointerInitialStretch[ptr][type] = { x: w, y: h };//Store by svg/text types
+            this._classTransforms[ptr][type] = { x: w, y: h };//Store by svg/text types
 
         }
 

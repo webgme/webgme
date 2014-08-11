@@ -40,6 +40,13 @@ define(['./ClickableItem',
         //Store Attributes
         newComponent.updateAttributes(objDescriptor.attrInfo);
 
+        //Pass ptrs to decorator
+        var attrs = Object.keys(objDescriptor.attrInfo),
+            ptrs = Object.keys(objDescriptor.ptrs), 
+            stretchers = attrs.concat(ptrs);
+
+        objDescriptor.decoratorParams = { stretchers: stretchers };
+
         newComponent.__setDecorator(objDescriptor.decorator, objDescriptor.decoratorClass, objDescriptor.control, objDescriptor.metaInfo, objDescriptor.preferencesHelper, objDescriptor.aspect, objDescriptor.decoratorParams);
         newComponent.addToDocFragment(this._documentFragment);
 

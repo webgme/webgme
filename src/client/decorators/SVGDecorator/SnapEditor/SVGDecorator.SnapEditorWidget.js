@@ -49,7 +49,7 @@ define(['js/Constants',
 
         this._selfPatterns = {};
         
-        this.initializeStretchability();
+        this.initializeStretchability(options.decoratorParams.stretchers);//stretchers are things that cause an svg stretch (attribute name or ptr name)
 
         //Attributes in text fields
         this._attributes = {};//Only if they have a text field for it
@@ -573,6 +573,8 @@ define(['js/Constants',
         this.svgWidth = this.$svgContent.find('svg').outerWidth(true);
         this.svgHeight = this.$svgContent.find('svg').outerHeight(true);
         this.svgBorderWidth = parseInt(this.$svgContent.find('svg').css('border-width'), 10);
+
+        this.onRenderGetStretchInfo();
 
         SnapEditorWidgetDecoratorBase.prototype.onRenderGetLayoutInfo.call(this);
     };
