@@ -51,6 +51,7 @@ define( [
 
               var confirmDialogInstance = $modal.open( {
                 template: ConfirmDialogTemplate,
+                size: options.size,
                 controller: ConfirmDialogController,
                 resolve: {
                   dialogTitle: function() { return options.dialogTitle; },

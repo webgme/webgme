@@ -74,7 +74,7 @@
 
                 $scope.openDialog = function () {
 
-                    var confirmDialogInstance = $confirmDialog.open( {
+                    $confirmDialog.open( {
                         dialogTitle: 'Are you sure?',
                         dialogContentTemplate: 'confirm-content-template',
                         onOk: function () {
@@ -82,8 +82,8 @@
                         },
                         onCancel: function () {
                             console.log( 'This was canceled' );
-                        }
-
+                        },
+                        size: 'lg' // can be sm or lg
                     } );
 
                 }
