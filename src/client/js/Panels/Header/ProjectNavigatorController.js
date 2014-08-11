@@ -9,10 +9,10 @@ define([
     'js/Dialogs/Commit/CommitDialog',
     'js/Dialogs/ProjectRepository/ProjectRepositoryDialog',
 
-    'js/Dialogs/Projects/DeleteProjectController',
-    'text!js/Dialogs/Projects/templates/DeleteProjectDialog.html',
+    'ui-components/ConfirmDialog/ConfirmDialogController',
+    'text!ui-components/ConfirmDialog/templates/ConfirmDialog.html',
 
-    'text!js/Dialogs/Projects/templates/DeleteBranchDialog.html'
+    'text!js/Dialogs/Projects/templates/DialogTemplages.html'
 
 
        ], function (
@@ -20,9 +20,9 @@ define([
     CommitDialog,
     ProjectRepositoryDialog,
 
-    DeleteProjectController,
+    ConfirmDialogController,
 
-    DeleteProjectDialogTemplate,
+    ConfirmDialogTemplate,
     DeleteBranchDialogTemplate
 
 ) {
@@ -340,8 +340,8 @@ define([
             deleteProject =  function (data) {
 
                 var deleteProjectModal = self.$modal.open({
-                      template: DeleteProjectDialogTemplate,
-                      controller: DeleteProjectController,
+                      template: ConfirmDialogTemplate,
+                      controller: ConfirmDialogController,
                       resolve: {
                         gmeClient:  function() { return self.gmeClient; },
                         projectData: function() { return data; },
