@@ -53,6 +53,7 @@ define( [
                 template: ConfirmDialogTemplate,
                 size: options.size,
                 controller: ConfirmDialogController,
+                scope: options.scope,
                 resolve: {
                   dialogTitle: function() { return options.dialogTitle; },
                   dialogContentTemplate: function() {  return options.dialogContentTemplate; },
@@ -60,7 +61,10 @@ define( [
                   onCancel: function() { return options.onCancel; },
                   validator: function() { return options.validator; }
                 }
+
               });
+
+              console.log(options.scope);
 
               return confirmDialogInstance;
 

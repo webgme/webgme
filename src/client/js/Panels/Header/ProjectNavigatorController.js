@@ -9,10 +9,9 @@ define([
     'js/Dialogs/Commit/CommitDialog',
     'js/Dialogs/ProjectRepository/ProjectRepositoryDialog',
 
-    'ui-components/ConfirmDialog/ConfirmDialogController',
-    'text!ui-components/ConfirmDialog/templates/ConfirmDialog.html',
+    'ui-components/ConfirmDialog/ConfirmDialog',
 
-    'text!js/Dialogs/Projects/templates/DialogTemplages.html'
+    'text!js/Dialogs/Projects/templates/DialogTemplates.html'
 
 
        ], function (
@@ -20,10 +19,9 @@ define([
     CommitDialog,
     ProjectRepositoryDialog,
 
-    ConfirmDialogController,
+    ConfirmDialog,
 
-    ConfirmDialogTemplate,
-    DeleteBranchDialogTemplate
+    ConfirmDialogTemplates
 
 ) {
     "use strict";

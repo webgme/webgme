@@ -51,26 +51,35 @@
             'ui-components/ConfirmDialog/ConfirmDialog'], function ( ngBootstrap, ConfirmDialog ) {
 
             var isValid,
-                demoApp = angular.module( 'demoApp', ['isis.ui.confirmDialog'] ),
-                parameter = {
-                    value: 10,
-                    invalid: true
+                    demoApp = angular.module( 'demoApp', ['isis.ui.confirmDialog'] ),
+                    parameter = {
+                        value: 10,
+                        invalid: true
+                    };
+
+            demoApp.controller( 'ConfirmDialogDemoController', function ( $scope, $confirmDialog ) {
+
+                isValid = function ( $scope ) {
+
+                    var result = (parameter.value == 4);
+
+                    console.log( 'Validator was called' );
+                    console.log( 'Sum is: ' + parameter.value, result );
+                    parameter.invalid = !result;
+
+                    return result;
+
                 };
 
 
-            isValid = function ($scope) {
+                $scope.parameter = parameter;
 
-                var result = (parameter.value == 4);
-
-                console.log( 'Validator was called' );
-                console.log( 'Sum is: ' + parameter.value, result );
-                parameter.invalid = !result;
-
-                return result;
-
-            };
-
-            demoApp.controller( 'ConfirmDialogDemoController', function ( $scope, $confirmDialog ) {
+                $scope.isValid = function () {
+                    isValid();
+                    if ( !$scope.$$phase ) {
+                        $scope.$apply();
+                    }
+                }
 
                 $scope.openDialog = function () {
 
@@ -83,22 +92,17 @@
                         onCancel: function () {
                             console.log( 'This was canceled' );
                         },
-                        size: 'lg' // can be sm or lg
+                        validator: isValid,
+                        size: 'lg', // can be sm or lg
+                        scope: $scope
                     } );
 
                 }
 
+
             } );
 
             demoApp.controller( 'ConfirmDialogDemoDataController', function ( $scope ) {
-
-                $scope.parameter = parameter;
-                $scope.isValid = function() {
-                    isValid();
-                    if (!$scope.$$phase) {
-                        $scope.$apply();
-                    }
-                }
 
             } );
 
@@ -113,10 +117,8 @@
 
 <script type="text/ng-template" id="confirm-content-template">
     <p>That you now the result of this equation?</p>
-    <div data-ng-controller="ConfirmDialogDemoDataController">
-        <label>2 + 2 = </label><input ng-model="parameter.value" min="0" max="99" required ng-change="isValid()"/>
-        <span ng-if="parameter.invalid" class="label label-danger">This can not be true!</span>
-    </div>
+    <label>2 + 2 = </label><input ng-model="parameter.value" min="0" max="99" required ng-change="isValid()"/>
+    <span ng-if="parameter.invalid" class="label label-danger">This can not be true!</span>
 </script>
 
 
