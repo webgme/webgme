@@ -1975,7 +1975,7 @@ define([
                 };
 
                 var getParentId = function(){
-                    return _core.getPath(_core.getParent(_nodes[_id].node));
+                    return storeNode(_core.getParent(_nodes[_id].node)); //just for sure, as it may missing from the cache
                 };
 
                 var getId = function(){
@@ -1991,8 +1991,7 @@ define([
                 };
 
                 var getBaseId = function(){
-                    //return _core.getRegistry(_nodes[_id].node,"isConnection") === true ? 'connection' : 'object';
-                    return _core.getPath(_core.getBase(_nodes[_id].node));
+                    return storeNode(_core.getBase(_nodes[_id].node)); //just for sure, maybe the base is missing from the cache
                 };
 
                 var getInheritorIds = function(){
