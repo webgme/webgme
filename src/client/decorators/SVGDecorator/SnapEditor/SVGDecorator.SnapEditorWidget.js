@@ -193,7 +193,7 @@ define(['js/Constants',
 
     SVGDecoratorSnapEditorWidget.prototype.updateAttributeContent = function (attr, value) {
         if (this._attributes.hasOwnProperty(attr)){
-            this._attributes[attr].value = value;
+            this._attributes[attr].value = value + "";
         }
     };
 
@@ -360,11 +360,14 @@ define(['js/Constants',
         for (var i = 0; i < attrList.length; i++){
             attr = attrList[i];
             if (attr !== 'name'){
-                this._attributes[ attr ] = { enabled: true, value: attributes[attr].value };
+                this._attributes[ attr ] = { enabled: true, value: attributes[attr].value+"" };
                 fields = textFields.filter("#" + attr);
+
                 this._setTextAndStretch(fields, attributes[attr].value, attr);
+
                 //Make the fields editable
                 fields.on("click", null, editText);
+
                 //Add support for clicking on a box around the text to edit the text
                 //TODO
             }
