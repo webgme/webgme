@@ -60,7 +60,8 @@ define( [
 
   ProjectNavigatorController.prototype.initialize = function () {
     var self = this,
-      newProject;
+      newProject,
+      manageProjects;
 
     // initialize model structure for view
     self.$scope.navigator = {
@@ -69,7 +70,7 @@ define( [
     };
 
     if ( self.gmeClient ) {
-      newProject = function ( data ) {
+      manageProjects = newProject = function ( data ) {
         var pd = new ProjectsDialog( self.gmeClient );
         pd.show();
       };
@@ -77,6 +78,10 @@ define( [
     } else {
       newProject = function ( data ) {
         self.dummyProjectsGenerator( 'New Project ' + Math.floor( Math.random() * 10000 ), 4 );
+      };
+
+      manageProjects = function ( data ) {
+        self.dummyProjectsGenerator( 'Manage projects ' + Math.floor( Math.random() * 10000 ), 4 );
       };
     }
 
@@ -86,6 +91,13 @@ define( [
       {
         id: 'top',
         items: [
+          {
+            id: 'manageProject',
+            label: 'Manage projects ...',
+            iconClass: 'glyphicon glyphicon-folder-open',
+            action: manageProjects,
+            actionData: {}
+          },
           {
             id: 'newProject',
             label: 'New project ...',
@@ -436,9 +448,7 @@ define( [
       ]
     };
 
-    if ( self.gmeClient ) {
-      // branches are updated based on events
-    } else {
+    if ( !self.gmeClient ) {
       self.dummyBranchGenerator( 'Branch', 10, projectId );
     }
 
