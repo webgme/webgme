@@ -64,8 +64,6 @@ define( [
 
               });
 
-              console.log(options.scope);
-
               return confirmDialogInstance;
 
             };

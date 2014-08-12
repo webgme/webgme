@@ -6,7 +6,9 @@
  */
 
 
-define( ['logManager',
+define( [
+  'angular',
+  'logManager',
   'loaderCircles',
   'js/Utils/GMEConcepts',
   'js/Dialogs/Import/ImportDialog',
@@ -17,7 +19,7 @@ define( ['logManager',
 
   'css!./styles/ProjectsDialog.css'
 
-], function ( logManager, LoaderCircles, GMEConcepts, ImportDialog, projectsDialogTemplate, DeleteProjectController,
+], function ( ng, logManager, LoaderCircles, GMEConcepts, ImportDialog, projectsDialogTemplate, ConfirmDialog,
               DeleteDialogTemplate ) {
 
   "use strict";
@@ -26,11 +28,17 @@ define( ['logManager',
     DATA_PROJECT_NAME = "PROJECT_NAME",
     CREATE_TYPE_EMPTY = 'create_empty',
     CREATE_TYPE_IMPORT = 'create_import',
-    $ngModal;
+    ngConfirmDialog,
+    rootScope;
 
 
-  angular.module( 'gme.ui.projectsDialog', ['isis.ui.confirmDialog'] ).run( function ( $modal ) {
-    $ngModal = $modal;
+  angular.module( 'gme.ui.projectsDialog', ['isis.ui.confirmDialog'] ).run( function ( $confirmDialog, $templateCache, $rootScope ) {
+    ngConfirmDialog = $confirmDialog;
+
+    $templateCache.put('DeleteDialogTemplate.html', DeleteDialogTemplate);
+
+    rootScope = $rootScope;
+
   } );
 
   ProjectsDialog = function ( client ) {
@@ -95,13 +103,14 @@ define( ['logManager',
 
       if ( self._projectList[projId].delete === true ) {
 
-        var deleteProjectModal;
+        var deleteProjectModal,
+            myScope = rootScope.$new(true);
 
-        self.$scope.projectName = projId;
+        myScope.thingName = 'project "'+ projId + '"';
 
-        deleteProjectModal = self.$confirmDialog.open( {
+        deleteProjectModal = ngConfirmDialog.open( {
           dialogTitle: 'Confirm delete',
-          dialogContentTemplate: 'deleteProjectDialogTemplate',
+          dialogContentTemplate: 'DeleteDialogTemplate.html',
           onOk: function () {
             self._client.deleteProjectAsync( projId, function ( err ) {
               if ( err ) {
@@ -118,7 +127,7 @@ define( ['logManager',
               }
             } );
           },
-          scope: self.$scope
+          scope: myScope
         } );
 
         self._dialog.modal( 'hide' );

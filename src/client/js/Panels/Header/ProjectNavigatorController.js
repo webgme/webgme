@@ -1,10 +1,11 @@
-/*globals define, console*/
+/*globals define, console, angular*/
 /**
  * @author nabana / https://github.com/nabana
  * @author lattmann / https://github.com/lattmann
  */
 
 define( [
+  'angular',
   'js/Dialogs/Projects/ProjectsDialog',
   'js/Dialogs/Commit/CommitDialog',
   'js/Dialogs/ProjectRepository/ProjectRepositoryDialog',
@@ -14,8 +15,14 @@ define( [
   'text!js/Dialogs/Projects/templates/DeleteDialogTemplate.html'
 
 
-], function ( ProjectsDialog, CommitDialog, ProjectRepositoryDialog, ConfirmDialog, DeleteDialogTemplate ) {
+], function ( ng, ProjectsDialog, CommitDialog, ProjectRepositoryDialog, ConfirmDialog, DeleteDialogTemplate ) {
   "use strict";
+
+
+  angular.module( 'gme.ui.ProjectNavigator', [] ).run( function ( $templateCache ) {
+    $templateCache.put( 'DeleteDialogTemplate.html', DeleteDialogTemplate );
+  } );
+
 
   var ProjectNavigatorController = function ( $scope, gmeClient, $confirmDialog ) {
 
@@ -330,19 +337,22 @@ define( [
 
         var deleteProjectModal;
 
-        self.$scope.thingName = data.projectId;
+        self.$scope.thingName = 'project "'+ data.projectId + '"';
 
         deleteProjectModal = self.$confirmDialog.open( {
           dialogTitle: 'Confirm delete',
-          dialogContentTemplate: DeleteDialogTemplate,
+          dialogContentTemplate: 'DeleteDialogTemplate.html',
           onOk: function () {
+
+            var activeProjectId = self.gmeClient.getActiveProjectName();
+
             self.gmeClient.deleteProjectAsync( data.projectId, function ( err ) {
               if ( err ) {
                 console.error( err );
                 return;
               } else {
 
-                if ( data.projectId === self.gmeClient.getActiveProjectName() ) {
+                if ( data.projectId === activeProjectId ) {
                   refreshPage();
                 }
 
@@ -453,7 +463,9 @@ define( [
       exportBranch,
       createBranch,
       deleteBranch,
-      createCommitMessage;
+      createCommitMessage,
+
+      deleteBranchItem;
 
     if ( self.projects[projectId].disabled ) {
       // do not show any branches if the project is disabled
@@ -491,12 +503,26 @@ define( [
       };
 
       deleteBranch = function ( data ) {
-        self.gmeClient.deleteGenericBranchAsync( data.projectId, data.branchId, data.branchInfo, function ( err ) {
-          if ( err ) {
-            console.error( err );
-            return;
-          }
+
+
+        var deleteBranchModal;
+
+        self.$scope.thingName = 'branch "'+ data.branchId + '"';
+
+        deleteBranchModal = self.$confirmDialog.open( {
+          dialogTitle: 'Confirm delete',
+          dialogContentTemplate: 'DeleteDialogTemplate.html',
+          onOk: function () {
+            self.gmeClient.deleteGenericBranchAsync( data.projectId, data.branchId, data.branchInfo, function ( err ) {
+              if ( err ) {
+                console.error( err );
+                return;
+              }
+            } );
+          },
+          scope: self.$scope
         } );
+
       };
 
       createCommitMessage = function ( data ) {
@@ -525,8 +551,21 @@ define( [
       };
 
       deleteBranch = function ( data ) {
-        self.removeBranch( data.projectId, data.branchId );
-        self.selectProject( data );
+
+        var deleteBranchModal;
+
+        self.$scope.thingName = data.branchId;
+
+        deleteBranchModal = self.$confirmDialog.open( {
+          dialogTitle: 'Confirm delete',
+          dialogContentTemplate: 'DeleteDialogTemplate.html',
+          onOk: function () {
+            self.removeBranch( data.projectId, data.branchId );
+            self.selectProject( data );
+          },
+          scope: self.$scope
+        } );
+
       };
 
       createCommitMessage = function ( data ) {
@@ -536,6 +575,20 @@ define( [
 
     selectBranch = function ( data ) {
       self.selectBranch( data );
+    };
+
+
+    deleteBranchItem = {
+      id: 'deleteBranch',
+      label: 'Delete branch',
+      iconClass: 'glyphicon glyphicon-remove',
+      disabled: false,
+      action: deleteBranch,
+      actionData: {
+        projectId: projectId,
+        branchId: branchId,
+        branchInfo: branchInfo
+      }
     };
 
     // create the new branch structure
@@ -569,18 +622,7 @@ define( [
                 branchInfo: branchInfo
               }
             },
-            {
-              id: 'deleteBranch',
-              label: 'Delete branch',
-              iconClass: 'glyphicon glyphicon-remove',
-//                            disabled: true,
-              action: deleteBranch,
-              actionData: {
-                projectId: projectId,
-                branchId: branchId,
-                branchInfo: branchInfo
-              }
-            },
+            deleteBranchItem,
             {
               id: 'exportBranch',
               label: 'Export branch',
@@ -606,6 +648,8 @@ define( [
         }
       ]
     };
+
+    self.projects[projectId].branches[branchId].deleteBranchItem = deleteBranchItem;
 
     for ( i = 0; i < self.projects[projectId].menu.length; i += 1 ) {
 
@@ -691,6 +735,7 @@ define( [
 
     if ( currentBranch ) {
       currentBranch.isSelected = false;
+      currentBranch.deleteBranchItem.disabled = false;
     }
 
     if ( projectId || projectId === '' ) {
@@ -709,6 +754,7 @@ define( [
 
         if ( currentBranch ) {
           currentBranch.isSelected = true;
+          currentBranch.deleteBranchItem.disabled = true;
         }
 
         return;
@@ -763,6 +809,8 @@ define( [
 
         // mark branch as selected
         self.projects[projectId].branches[branchId].isSelected = true;
+
+        self.projects[projectId].branches[branchId].deleteBranchItem.disabled = true;
 
         if ( self.gmeClient ) {
           if ( branchId !== self.gmeClient.getActualBranch() ) {
