@@ -2354,18 +2354,17 @@ define([
                 //});
                 switch (testnumber) {
                     case 1:
-                        //startAddOn("HistoryAddOn");
-                        startAddOn("ConstraintAddOn");
+                        queryAddOn("HistoryAddOn", {}, function (err, result) {
+                            console.log("addon result", err, result);
+                        });
                         break;
                     case 2:
-                        queryAddOn("ConstraintAddOn", {querytype:'execute'}, function (err, result) {
+                        queryAddOn("ConstraintAddOn", {querytype:'checkProject'}, function (err, result) {
                             console.log("addon result", err, result);
                         });
                         break;
                     case 3:
-                        stopAddOn("ConstraintAddOn", function (err) {
-                            console.log("addon stopped", err);
-                        });
+                        break;
                 }
 
             }

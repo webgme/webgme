@@ -115,7 +115,7 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv" ], function(ASSER
 
             for(i=0;i<validNames.length;i++){
                 metaPointerNode = MetaPointerNode(node,validNames[i]);
-                if(metaPointerNode.max === undefined || metaPointerNode.max === -1 || metaPointerNode > 1){ //TODO specify what makes something a pointer and what a set??? - can you extend a pointer to a set????
+                if(metaPointerNode.max === undefined || metaPointerNode.max === -1 || metaPointerNode.max > 1){ //TODO specify what makes something a pointer and what a set??? - can you extend a pointer to a set????
                     validSetNames.push(validNames[i]);
                 }
             }

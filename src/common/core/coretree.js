@@ -777,6 +777,9 @@ define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon
 				__reloadChildrenData(node);
 			} else {
 				// TODO: if this bites you, use the Cache
+                if(node.data !== newdata){
+                    console.log("kecso",node);
+                }
 				ASSERT(node.data === newdata);
 			}
 

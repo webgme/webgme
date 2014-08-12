@@ -21,8 +21,19 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
         }
 
 
-        var socketConnected = false, socket = null, status = null, reconnect = false, getDbStatusCallbacks = {}, callbacks = {}, getBranchHashCallbacks = {}, IO = null, projects = {}, references = {}, ERROR_DISCONNECTED =
-            'The socket.io is disconnected', ERROR_TIMEOUT = "no valid response arrived in time", STATUS_NETWORK_DISCONNECTED = "socket.io is disconnected";
+        var socketConnected = false,
+            socket = null,
+            status = null,
+            reconnect = false,
+            getDbStatusCallbacks = {},
+            callbacks = {},
+            getBranchHashCallbacks = {},
+            IO = null,
+            projects = {},
+            references = {},
+            ERROR_DISCONNECTED = 'The socket.io is disconnected',
+            ERROR_TIMEOUT = "no valid response arrived in time",
+            STATUS_NETWORK_DISCONNECTED = "socket.io is disconnected";
 
         function clearDbCallbacks () {
             var myCallbacks = [];
@@ -472,6 +483,9 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                 }
             }
 
+            function _loadObject(hash,callback){
+                socket.emit('loadObject',project,hash,callback);
+            }
             function loadObject (hash, callback) {
                 ASSERT(typeof callback === 'function');
                 if (socketConnected) {

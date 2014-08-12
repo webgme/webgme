@@ -21,6 +21,7 @@ define(['addon/AddOnBase'],function(Base) {
 
     ConstraintAddOn.prototype.update = function (root) {
         //TODO if we would like a continuous constraint checking we should use this function as well
+        console.log('we got updated',this.core.getHash(root));
         this.root = root;
     };
 
