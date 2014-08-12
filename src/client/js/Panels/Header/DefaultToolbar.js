@@ -22,6 +22,7 @@ define( ['clientUtil',
 
     DefaultToolbar = function ( client ) {
       this._client = client;
+      this._pluginToolBar = null;
 
       this._initialize();
     };
@@ -32,41 +33,7 @@ define( ['clientUtil',
         _client = this._client,
         projectsButtonDisabledForLayouts = ['VehicleForgeLayout'];
 
-      //#1: Projects
-      if ( projectsButtonDisabledForLayouts.indexOf( layoutToLoad ) === -1 ) {
-        toolbar.addButton( { "title": "Projects...",
-          "icon": "glyphicon glyphicon-folder-open",
-          "clickFn": function ( /*data*/ ) {
-            var pd = new ProjectsDialog( _client );
-            pd.show();
-          }} );
-      }
-
-      //META ASPECT helper parts
-      toolbar.addButton( { "title": "Display META entries...",
-        "icon": "glyphicon glyphicon-barcode",
-        "clickFn": function ( /*data*/ ) {
-          alert( 'METAAspectTypes: \n' + JSON.stringify( METAAspectHelper.getMETAAspectTypesSorted(), undefined, 2 ) );
-        }} );
-
-      toolbar.addButton( { "title": "Download Domain's META javascript...",
-        "icon": "glyphicon glyphicon-download-alt",
-        "clickFn": function ( /*data*/ ) {
-          var meta = METAAspectHelper.generateMETAAspectJavaScript();
-
-          if ( meta && !_.isEmpty( meta ) ) {
-            var pom = document.createElement( 'a' );
-            pom.setAttribute( 'href', 'data:text/plain;charset=utf-8,' + encodeURIComponent( meta.content ) );
-            pom.setAttribute( 'download', meta.fileName );
-            $( 'body' ).append( $( pom ) );
-            pom.click();
-            $( pom ).remove();
-          } else {
-            alert( 'Something went wrong, METAAspectTypes are not available...' );
-          }
-        }} );
-
-      new PluginToolbar( this._client );
+      this._pluginToolBar = new PluginToolbar( this._client );
 
       //TODO: remove
       //this._createDummyControls();
