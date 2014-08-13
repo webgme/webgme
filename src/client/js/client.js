@@ -722,14 +722,17 @@ define([
             }
             function storeNode(node,basic){
                 //basic = basic || true;
-                var path = _core.getPath(node);
-                _metaNodes[path] = node;
-                if(_nodes[path]){
-                    //TODO we try to avoid this
-                } else {
-                    _nodes[path] = {node:node,hash:""/*,incomplete:true,basic:basic*/};
+                if(node){
+                    var path = _core.getPath(node);
+                    _metaNodes[path] = node;
+                    if(_nodes[path]){
+                        //TODO we try to avoid this
+                    } else {
+                        _nodes[path] = {node:node,hash:""/*,incomplete:true,basic:basic*/};
+                    }
+                    return path;
                 }
-                return path;
+                return null;
             }
 
             function _loadChildrenPattern(core,nodesSoFar,node,level,callback){
