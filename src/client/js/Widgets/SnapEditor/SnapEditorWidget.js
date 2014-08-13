@@ -801,7 +801,9 @@ define(['logManager',
         this.skinParts.$itemsContainer[0].appendChild(this._documentFragment);
         this._documentFragment = document.createDocumentFragment();
 
-        //STEP 2: call the inserted and updated items' getRenderLayout
+        //STEP 1: call the inserted and updated items' getRenderLayout
+        //I need to get the widths, heights, etc, so I can calculate the new sizes
+        //after the transforms...
         doRenderGetLayout = function (itemIDList) {
             var i = itemIDList.length,
                 itemBBox,
@@ -819,7 +821,7 @@ define(['logManager',
         doRenderGetLayout(this._insertedClickableItemIDs);
         doRenderGetLayout(this._updatedClickableItemIDs);
 
-        //STEP 1: call the inserted and updated items' setRenderLayout
+        //STEP 2: call the inserted and updated items' setRenderLayout
         doRenderSetLayout = function (itemIDList) {
             var i = itemIDList.length,
                 cItem;

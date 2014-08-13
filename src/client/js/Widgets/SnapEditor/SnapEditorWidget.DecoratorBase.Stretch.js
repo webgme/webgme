@@ -47,8 +47,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
         this._updatedSVGElements = {};//The elements that have been updated since last render
         this._classTransforms = {};//The calculated abs stretch of any class in the SVG
 
-        this._svgDims = {};
-        this._initSvgDims = {};
+        this._svgSize = {};
 
         this.svgContainerWidth = 0;
         this.svgWidth = 0;
@@ -144,8 +143,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
                 }
             },
             treeCreator = function(key, value){
-                var shifts,
-                    axis,
+                var axis,
                     data,
                     base,
                     type,
@@ -180,7 +178,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
                             type = SNAP_CONSTANTS.STRETCH_TYPE.TEXT;
                         }
 
-                        self.stretchTree[svgId][axis][pointer] = self.pointerInitialStretch[pointer][SNAP_CONSTANTS.STRETCH_TYPE.SVG][axis] || 0;
+                        self.stretchTree[svgId][axis][pointer] = 0;//self.pointerInitialStretch[pointer][SNAP_CONSTANTS.STRETCH_TYPE.SVG][axis] || 0;
 
                         //Add element to stretchElementsByPointer
                         self.stretchElementsByPointer[pointer][type][axis].push(svgId);//'text' stores the 'text-only' elements
@@ -198,13 +196,13 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
 
         this.shiftTree = Object.freeze(this.shiftTree);
         //this.stretchTree = Object.freeze(this.stretchTree);
+        
+        //Create connection area shift tree
+        this._buildConnectionAreaShiftTree();
 
         //Initialize this._calculatedDims values
-        this._initSvgDims.width = parseFloat(this.$svgElement[0].getAttribute('width'));
-        this._initSvgDims.height = parseFloat(this.$svgElement[0].getAttribute('height'));
-
-        this._svgDims.width = this._initSvgDims.width;
-        this._svgDims.height = this._initSvgDims.height;
+        this._svgSize.width = parseFloat(this.$svgElement[0].getAttribute('width'));
+        this._svgSize.height = parseFloat(this.$svgElement[0].getAttribute('height'));
 
     };
 
@@ -226,8 +224,54 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
         return id;
     };
 
+    /**
+     * Build a shift tree for the connection areas.
+     *
+     * @return {undefined}
+     */
+    SVGDecoratorSnapEditorWidgetStretch.prototype._buildConnectionAreaShiftTree = function () {
+        var data,
+            axis,
+            base;
+
+        this._connAreaShiftTree = {};
+
+        for (var i = 0; i < this._customConnectionAreas.length; i++){
+            if (this._customConnectionAreas[i].shift){
+                data = this._customConnectionAreas[i].shift.split(" ");
+                for (var j = 0; j < data.length; j++){
+                    axis = data[j].substring(0,1);
+                    base = data[j].substring((AXIS.X + SPLITTER).length);
+
+                    if (this._connAreaShiftTree[base] === undefined){
+                        this._connAreaShiftTree[base] = {};
+                        this._connAreaShiftTree[base][AXIS.X] = [];
+                        this._connAreaShiftTree[base][AXIS.Y] = [];
+                    }
+
+                    this._connAreaShiftTree[base][axis].push(this._customConnectionAreas[i].id);
+                }
+            }
+        }
+    };
+
     SVGDecoratorSnapEditorWidgetStretch.prototype.onRenderGetStretchInfo = function(){
+        //fixNullDimensions
+        this._fixNullDimensions();
+
         //shift respective elements
+        this.updateShifts();
+
+        //Calculate SVG Size
+        this._updateSVGSize();
+    };
+
+    /**
+     * Update shifts of the elements.
+     *
+     * @return {undefined}
+     */
+    SVGDecoratorSnapEditorWidgetStretch.prototype.updateShifts = function(){
         var ids = Object.keys(this._newShiftAmounts),
             svgId;
 
@@ -239,9 +283,6 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
         }
 
         this._newShiftAmounts = {};
-
-        //Calculate SVG Size
-        this._updateSVGSize();
     };
 
     /**
@@ -262,13 +303,12 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
 
         //Set the height/width as needed
 
-        for (var dim in this._svgDims){
-            if (this._svgDims.hasOwnProperty(dim)){
-                this.$svgElement[0].setAttribute(dim, this._svgDims[dim]);
+        for (var dim in this._svgSize){
+            if (this._svgSize.hasOwnProperty(dim)){
+                this.$svgElement[0].setAttribute(dim, this._svgSize[dim]);
             }
         }
 
-        this.hostDesignerItem.clearCalculatedSize();
     };
 
     /**
@@ -280,7 +320,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      * @return {Boolean} return true if size has changed
      */
     SVGDecoratorSnapEditorWidgetStretch.prototype._setTextAndStretch = function (element, newText, stretchId) {
-        //READ-ONLY wrt the DOM 
+        //READ-ONLY wrt the DOM FIXME
         var oldText = element.text(),
             oldWidth = element.width(),
             newWidth;
@@ -382,8 +422,6 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
         var stretchElements = [],
             maxSize = 0,
             dim = axis === AXIS.X ? "width" : "height",
-            width,
-            height,
             svgId,
             stretch = {},
             stretches;
@@ -400,13 +438,10 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
         this._stretchCustomConnectionHighlightAreas(id, stretch);
         
         //Stretch the SVG to Max(delta, currentStretch)
-        var displacement = {},
-            ptrs = [],
+        var ptrs = [],
             oldValue,
             newValue,
-            edge,//value of the largest edge of the svg element. Used to see if we need to resize the parent
-            x,
-            y;
+            edge;//value of the largest edge of the svg element. Used to see if we need to resize the parent
 
         
         for (var i = stretchElements.length - 1; i >= 0; i--){
@@ -459,21 +494,48 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
 
         //Adjust the overall svg if necessary
         if(stretchElements.length){
-            var size = {};
-            size[dim] = maxSize;
-            this._increaseSVGSize(size);//May need to change this to update to allow shrinking...
+            this._updateSVGSize();//May need to change this to update to allow shrinking...
         }
 
-        return this._svgDims[dim];
+        return this._svgSize[dim];
+    };
+
+    //Some svg elements have unknown dimensions until the svg is actually rendered 
+    //on the screen. I have stored "null" for those elements and we will calculate 
+    //them on render (using the following function)
+    SVGDecoratorSnapEditorWidgetStretch.prototype._fixNullDimensions = function(){//fixes null dimensions
+        var ids = Object.keys(this._transforms),
+            dims = [ 'width', 'height' ],
+            dim,
+            element,
+            box;
+
+        for (var j = dims.length-1; j >= 0; j--){
+
+            dim = dims[j];
+
+            for (var i = ids.length - 1; i >= 0; i--){
+                //Take into account the right/bottom most point of the svg element
+                
+                //Get the width/height if undefined
+                if (this._transforms[ids[i]].original[dim] === null){
+                    //Set the original width/height if null
+                    element = this.$svgContent.find("#" + ids[i])[0];
+                    if (_.isFunction(element.getBBox)){
+                        box = element.getBBox();
+                        this._transforms[ids[i]].original.width = box.width;
+                        this._transforms[ids[i]].original.height = box.height;
+                    }
+                } 
+            }
+        }
+
     };
 
     SVGDecoratorSnapEditorWidgetStretch.prototype._updateSVGSize = function(){
         var ids = Object.keys(this._transforms),
-            id,
             edge,
             axis,
-            element,
-            box,
             size = {};
 
         size.width = -1;
@@ -485,16 +547,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
 
             for (var i = ids.length - 1; i >= 0; i--){
                 //Take into account the right/bottom most point of the svg element
-                if (this._transforms[ids[i]].original[dim] === null){
-                    //Set the original width/height if null
-                    element = this.$svgContent.find("#" + ids[i])[0];
-                    if (_.isFunction(element.getBBox)){
-                        box = element.getBBox();
-                        this._transforms[ids[i]].original.width = box.width;
-                        this._transforms[ids[i]].original.height = box.height;
-                    }
-                }
-
+                
                 edge = this._transforms[ids[i]].original[axis] + this._transforms[ids[i]].shift[axis] + 
                     this._transforms[ids[i]].original[dim] + this._transforms[ids[i]].stretch[dim];
 
@@ -503,11 +556,9 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
                 }
             }
 
-            this._svgDims[dim] = size[dim];
+            this._svgSize[dim] = size[dim];
 
-            //Update the host item  
-            var calculatedSize = _.extend({}, this._svgDims);
-            this.hostDesignerItem.setCalculatedSize(calculatedSize);
+            this.hostDesignerItem.setSize(this._svgSize.width, this._svgSize.height);
         }
     };
 
@@ -521,14 +572,13 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
         var updated = false;
 
         for (var dim in size){
-            if (size.hasOwnProperty(dim) && this._svgDims.hasOwnProperty(dim)){
+            if (size.hasOwnProperty(dim) && this._svgSize.hasOwnProperty(dim)){
                 //May be a better way to do this
-                if (size[dim] > this._svgDims[dim]){
-                    this._svgDims[dim] = size[dim];
+                if (size[dim] > this._svgSize[dim]){
+                    this._svgSize[dim] = size[dim];
 
-                    //Update the host item  
-                    var calculatedSize = _.extend({}, this._svgDims);
-                    this.hostDesignerItem.setCalculatedSize(calculatedSize);
+                    //Update the host item size info
+                    this.hostDesignerItem.setSize(this._svgSize.width, this._svgSize.height);
                 }
             }
         }
@@ -569,6 +619,8 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
                 while(shiftElements[axis].length){
                     svgId = shiftElements[axis].pop();
 
+                    this._shiftConnectionAreas(svgId, shift);
+
                     this._transforms[svgId].shift[axis] += shift[axis];
                     
                     //Update svg window if necessary
@@ -585,7 +637,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
             }
         }    
 
-        this._increaseSVGSize(edges);
+        this._updateSVGSize(edges);
     };
 
     /**
@@ -595,23 +647,36 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      * @param {Object} shift
      */
     SVGDecoratorSnapEditorWidgetStretch.prototype._shiftConnectionAreas = function (id, shift) {
-        if (this._customConnectionAreas){
+        var area,
+            areas,
+            i;
 
-            var i = this._customConnectionAreas.length;
+        if (this._customConnectionAreas && this._connAreaShiftTree[id]){
 
-            while(i--){
-                if(this._customConnectionAreas[i].shift && this._customConnectionAreas[i].shift.indexOf(id) !== -1){
-                       //shift the connection area
-                       this._customConnectionAreas[i].x1 += shift.x || 0;
-                       this._customConnectionAreas[i].x2 += shift.x || 0;
+            for (var axis in shift){
+                if (shift.hasOwnProperty(axis)){
+                    areas = this._connAreaShiftTree[id][axis];
+                    i = areas.length;
 
-                       this._customConnectionAreas[i].y1 += shift.y || 0;
-                       this._customConnectionAreas[i].y2 += shift.y || 0;
-                   }
+                    while (i--){
+                        area = this._getConnectionArea({ id: areas[i] });//get area by reference
+                        if (area){
+                            //shift the connection area
+                            area[axis + "1"] += shift[axis] || 0;
+                            area[axis + "2"] += shift[axis] || 0;
+
+                            /*
+                             *area.y1 += shift.y || 0;
+                             *area.y2 += shift.y || 0;
+                             */
+                        }
+                    }
+
+                }
             }
         }
         
-        //this._shiftCustomConnectionHighlightAreas(id, shift);
+        this._shiftCustomConnectionHighlightAreas(id, shift);//TODO
     };
 
     /**
