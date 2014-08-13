@@ -653,6 +653,7 @@ define(['logManager',
         //affected by the change
         var items = Object.keys(this._clickableItems2Update),
             item,
+            params,
             i = -1;
 
         while (++i < items.length){
@@ -724,6 +725,7 @@ define(['logManager',
             };
 
         items = Object.keys(this._clickableItems2Update);
+        params = { propogate: false, resize: false };
         while(items.length){
             item = items.pop();
 
@@ -741,7 +743,7 @@ define(['logManager',
                 //Else follow 'next' ptrs
                 moveQueue.push(resizeQueue.splice(0,1).pop());
                 this.items[moveQueue[moveQueue.length-1]].updateSize();
-                this.items[moveQueue[moveQueue.length-1]].updateDependents(false);
+                this.items[moveQueue[moveQueue.length-1]].updateDependents(params);//positions all dependents
             }
         }
 

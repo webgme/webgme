@@ -8,10 +8,8 @@
 
 define(['logManager',
         './SnapEditorWidget.Constants',
-        'util/assert',
         './ItemBase'], function (logManager,
                                        SNAP_CONSTANTS,
-                                       assert,
                                        ItemBase) {
 
     "use strict";
@@ -29,6 +27,9 @@ define(['logManager',
      */
     ClickableItem = function(objId, canvas){
         this._super(NAME, objId, canvas);
+
+        //Logger
+        this.logger = logManager.create("ClickableItem_" + this.id);
 
         //Clickable items that depend on this one for location
         //That is, the child nodes and the 'next' ptr
@@ -104,8 +105,7 @@ define(['logManager',
      * @return {undefined}
      */
     ClickableItem.prototype.updateDisplayedAttributeText = function () {
-        var attributes = this.updatedAttributes,
-            attributeName,
+        var attributeName,
             value;
 
         while (this.updatedAttributes.length){
@@ -233,7 +233,9 @@ define(['logManager',
         var otherRole = role === SNAP_CONSTANTS.CONN_ACCEPTING ? 
                 SNAP_CONSTANTS.CONN_PASSING : SNAP_CONSTANTS.CONN_ACCEPTING;
 
-        assert(item !== this, "Should never set a pointer to itself");
+        if (item === this){
+            this.logger.error("Should never set a pointer to itself");
+        }
 
         if (this.ptrs[role][ptr]){
             this.removePtr(ptr, role);
@@ -313,8 +315,7 @@ define(['logManager',
         //remove pointers and resize
         var item = this.ptrs[role][ptr],
             otherRole = role === SNAP_CONSTANTS.CONN_ACCEPTING ? 
-                SNAP_CONSTANTS.CONN_PASSING : SNAP_CONSTANTS.CONN_ACCEPTING,
-            attribute;
+                SNAP_CONSTANTS.CONN_PASSING : SNAP_CONSTANTS.CONN_ACCEPTING;
 
         if(resize === true){
             if (role === SNAP_CONSTANTS.CONN_ACCEPTING){
@@ -450,8 +451,9 @@ define(['logManager',
             //If the item has more than one object pointing in, then we won't know
             //for sure where to place it as the object pointing in determines
             //the item's location
-            assert(keys.length === 1, "Item should have only one object pointing into it");
-
+            if (keys.length > 1){
+                this.logger.error("Item should have only one object pointing into it");
+            }
             if (baseColor){
                 //Need to check if they have the same svg or svg color. If so, check whether
                 //the item is set to it's PRIMARY or SECONDARY color and set this one accordingly
@@ -547,7 +549,9 @@ define(['logManager',
         var ptrs = Object.keys(this.ptrs[SNAP_CONSTANTS.CONN_ACCEPTING]),
             result = null;
 
-            assert(ptrs.length <= 1, "Item should have only one object pointing into it");
+            if (ptrs.length > 1){
+                this.logger.error("Item should have only one object pointing into it");
+            }
 
             if (ptrs.length === 1){
                 result = this.ptrs[SNAP_CONSTANTS.CONN_ACCEPTING][ptrs.pop()];
@@ -698,6 +702,8 @@ define(['logManager',
             }
         }
 
+        this._decoratorInstance.updateShifts();
+
         return changed;
     };
 
@@ -737,7 +743,9 @@ define(['logManager',
         var ptrs = Object.keys(this.ptrs[SNAP_CONSTANTS.CONN_ACCEPTING]),
             params = { ignoreDependents: true, resize: false };//extra params
 
-        assert(ptrs.length <= 1, "An item can only be connected to one other item");
+        if (ptrs.length > 1){
+            this.logger.error("Item should have only one object pointing into it");
+        }
 
         if (this.isPositionDependent()){
             this.connectByPointerName(this.ptrs[SNAP_CONSTANTS.CONN_ACCEPTING][ptrs[0]], 
@@ -750,17 +758,21 @@ define(['logManager',
      *
      * @return {undefined}
      */
-    ClickableItem.prototype.updateDependents = function (propogate) {
+    ClickableItem.prototype.updateDependents = function (params) {
         var ptrs = Object.keys(this.ptrs[SNAP_CONSTANTS.CONN_PASSING]),
             i = ptrs.length;
 
         while (i--){
-            this.ptrs[SNAP_CONSTANTS.CONN_PASSING][ptrs[i]]
-                .connectByPointerName(this, ptrs[i], SNAP_CONSTANTS.CONN_ACCEPTING);
+            if (params.hasOwnProperty("propogate")){
+                if (params.propogate === true){
+                    this.ptrs[SNAP_CONSTANTS.CONN_PASSING][ptrs[i]].updateDependents(params);
+                }
 
-            if (propogate === true){
-                this.ptrs[SNAP_CONSTANTS.CONN_PASSING][ptrs[i]].updateDependents(propogate);
+                delete params.propogate;
             }
+
+            this.ptrs[SNAP_CONSTANTS.CONN_PASSING][ptrs[i]]
+                .connectByPointerName(this, ptrs[i], SNAP_CONSTANTS.CONN_ACCEPTING, params);
         }
     };
 
@@ -803,9 +815,7 @@ define(['logManager',
     ClickableItem.prototype.connectToActive = function (otherItem) {
         var ptr = otherItem.activeConnectionArea.ptr,
             role = SNAP_CONSTANTS.CONN_ACCEPTING,
-            connArea,
-            fromItem,
-            nextItem = null;
+            connArea;
 
         if(otherItem.activeConnectionArea.role === SNAP_CONSTANTS.CONN_ACCEPTING) {
             role = SNAP_CONSTANTS.CONN_PASSING;
@@ -871,7 +881,9 @@ define(['logManager',
      */
     ClickableItem.prototype._connect = function (params) {
         //
-        assert(params.area1 && params.area2, "Connection Areas must both be defined");
+        if (!(params.area1 && params.area2)){
+            this.logger.error("Connection Areas must both be defined");
+        }
 
         var distance = this._getDistance(params.area1, params.area2),
             otherItem = params.otherItem,
@@ -919,7 +931,7 @@ define(['logManager',
             connArea = this.getConnectionArea(ptr, SNAP_CONSTANTS.CONN_ACCEPTING),
             otherItem = this.canvas.items[this.ptrs[SNAP_CONSTANTS.CONN_ACCEPTING][ptr]];
 
-        if(ptrs.length){
+        if(ptrs.length > 1){
             this.logger.error("Item " + this.id + " has " + (ptrs.length + 1) + " incoming connections...");
         }
 
@@ -986,8 +998,16 @@ define(['logManager',
      * @return {Object}
      */
     ClickableItem.prototype.getConnectionArea = function (ptr, role) {
-        var area = this._decoratorInstance.getConnectionArea(ptr, role);
+        var params = { role: role, ptr: ptr },
+            area;
 
+        if (role === SNAP_CONSTANTS.CONN_ACCEPTING){
+            params.ptr = function (otherPtrs){
+                return otherPtrs.indexOf(ptr) !== -1;
+            };
+        } 
+
+        area = this._decoratorInstance.getConnectionArea(params);
         if(area === null){//no connection area of specified type
             return null;
         }
@@ -1018,14 +1038,6 @@ define(['logManager',
         }
 
         return area;
-    };
-
-    ClickableItem.prototype.onHover = function (event) {
-            //this._decoratorInstance.displayConnectionArea('next', 'out');
-    };
-
-    ClickableItem.prototype.onUnHover = function (event) {
-            //this._decoratorInstance.hideConnectionAreas();
     };
 
     /**
@@ -1229,15 +1241,19 @@ define(['logManager',
             //Click the item to it's parent
             var basePtr = Object.keys(this.ptrs[SNAP_CONSTANTS.CONN_ACCEPTING]);
 
-            assert(basePtr.length === 1);
+            if (basePtr.length > 1){
+                this.logger.error("Item can have only one item pointing into it.");
+            }
             basePtr = basePtr.pop();
 
             this.ptrs[SNAP_CONSTANTS.CONN_ACCEPTING][basePtr].updateDependents();
 
         } else */if (!this.isPositionDependent() && objDescriptor.position && _.isNumber(objDescriptor.position.x) && _.isNumber(objDescriptor.position.y)) {
-            var dx = objDescriptor.position.x - this.positionX,
-                dy = objDescriptor.position.y - this.positionY;
-
+/*
+ *            var dx = objDescriptor.position.x - this.positionX,
+ *                dy = objDescriptor.position.y - this.positionY;
+ *
+ */
             //this.moveByWithDependents(dx, dy);
             this.moveTo(objDescriptor.position.x, objDescriptor.position.y);
             needToUpdateDependents = "move";
