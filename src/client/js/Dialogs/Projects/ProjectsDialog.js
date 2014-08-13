@@ -14,7 +14,7 @@ define( [
   'js/Dialogs/Import/ImportDialog',
   'text!./templates/ProjectsDialog.html',
 
-  'ui-components/ConfirmDialog/ConfirmDialog',
+  'ui-components/confirmDialog/confirmDialog',
   'text!js/Dialogs/Projects/templates/DeleteDialogTemplate.html',
 
   'css!./styles/ProjectsDialog.css'

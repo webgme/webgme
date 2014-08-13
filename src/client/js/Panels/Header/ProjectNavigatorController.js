@@ -10,7 +10,7 @@ define( [
   'js/Dialogs/Commit/CommitDialog',
   'js/Dialogs/ProjectRepository/ProjectRepositoryDialog',
 
-  'ui-components/ConfirmDialog/ConfirmDialog',
+  'ui-components/confirmDialog/confirmDialog',
 
   'text!js/Dialogs/Projects/templates/DeleteDialogTemplate.html'
 

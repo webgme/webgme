@@ -3,7 +3,7 @@
 define( [
   'angular',
 
-  'text!./templates/ConfirmDialog.html'
+  'text!./templates/confirmDialog.html'
 
 ], function ( ng, ConfirmDialogTemplate ) {
   "use strict";
@@ -49,20 +49,24 @@ define( [
 
             $confirmDialog.open = function ( options ) {
 
-              var confirmDialogInstance = $modal.open( {
+              var modalOptions = {
                 template: ConfirmDialogTemplate,
-                size: options.size,
-                controller: ConfirmDialogController,
-                scope: options.scope,
-                resolve: {
+                controller: ConfirmDialogController
+              };
+
+              modalOptions = angular.extend(modalOptions, options);
+
+              modalOptions.resolve = angular.extend(modalOptions.resolve || {
                   dialogTitle: function() { return options.dialogTitle; },
                   dialogContentTemplate: function() {  return options.dialogContentTemplate; },
                   onOk: function() { return options.onOk; },
                   onCancel: function() { return options.onCancel; },
                   validator: function() { return options.validator; }
-                }
-
               });
+
+
+              var confirmDialogInstance = $modal.open( modalOptions );
+
 
               return confirmDialogInstance;
 
