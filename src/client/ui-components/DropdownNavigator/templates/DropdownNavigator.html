@@ -6,10 +6,6 @@
         <hierarchical-dropdown menu="item.menu"></hierarchical-dropdown>
     </script>
 
-    <!--<script type="text/ng-template" id="branch-selector-template">-->
-        <!--<span class="item-label">Branch {{item.label}}</span>-->
-    <!--</script>-->
-
     <li data-ng-repeat-start="item in navigator.items track by $index"
         data-ng-class=" item.itemClass || '' "
         ng-include=" item.itemTemplate || 'navigator-item-template' ">

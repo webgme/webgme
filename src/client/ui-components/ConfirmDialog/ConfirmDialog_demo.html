@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.14/require.min.js"></script>
+
+    <!--<script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.20/angular.min.js"></script>-->
+
+    <script type="text/javascript">
+        var DEBUG = true,
+                _jqueryVersion = '2.1.0',
+                _jqueryUIVersion = '1.10.4',
+                _bootsrapVersion = '3.1.1';
+
+
+        require.config( {
+            baseUrl: "../../",
+
+            map: {
+                '*': {
+                    'css': 'lib/require/require-css/css',
+                    'text': 'lib/require/require-text/text'
+                }
+            },
+
+            paths: {
+                'jquery': 'lib/jquery/jquery-' + _jqueryVersion + ( DEBUG ? '.min' : '' ),
+                'bootstrap': 'lib/bootstrap/' + _bootsrapVersion + '/js/bootstrap' + ( DEBUG ? '.min' : '' ),
+
+                'angular': 'lib/angular/angular-1.2.19/angular' + ( DEBUG ? '.min' : '' ),
+                'angular-ui-bootstrap': 'lib/angular/ui-bootstrap/ui-bootstrap-tpls-0.11.0.min'
+            },
+
+            shim: {
+                'angular-ui-bootstrap': ['angular', 'bootstrap'],
+
+                'bootstrap': [
+                    'jquery',
+                    'css!lib/bootstrap/' + _bootsrapVersion + '/css/bootstrap.min.css',
+                    'css!lib/bootstrap/' + _bootsrapVersion + '/css/bootstrap-theme.min.css'
+                ]
+            },
+
+            waitSeconds: 15
+        } );
+
+        requirejs( [
+            'angular-ui-bootstrap',
+            'ui-components/ConfirmDialog/ConfirmDialog'], function ( ngBootstrap, ConfirmDialog ) {
+
+            var isValid,
+                    demoApp = angular.module( 'demoApp', ['isis.ui.confirmDialog'] ),
+                    parameter = {
+                        value: 10,
+                        invalid: true
+                    };
+
+            demoApp.controller( 'ConfirmDialogDemoController', function ( $scope, $confirmDialog ) {
+
+                isValid = function ( $scope ) {
+
+                    var result = (parameter.value == 4);
+
+                    console.log( 'Validator was called' );
+                    console.log( 'Sum is: ' + parameter.value, result );
+                    parameter.invalid = !result;
+
+                    return result;
+
+                };
+
+
+                $scope.parameter = parameter;
+
+                $scope.isValid = function () {
+                    isValid();
+                    if ( !$scope.$$phase ) {
+                        $scope.$apply();
+                    }
+                }
+
+                $scope.openDialog = function () {
+
+                    $confirmDialog.open( {
+                        dialogTitle: 'Are you sure?',
+                        dialogContentTemplate: 'confirm-content-template',
+                        onOk: function () {
+                            console.log( 'OK was picked' );
+                        },
+                        onCancel: function () {
+                            console.log( 'This was canceled' );
+                        },
+                        validator: isValid,
+                        size: 'lg', // can be sm or lg
+                        scope: $scope
+                    } );
+
+                }
+
+
+            } );
+
+            demoApp.controller( 'ConfirmDialogDemoDataController', function ( $scope ) {
+
+            } );
+
+            angular.bootstrap( document, ['demoApp'] );
+
+        } );
+
+    </script>
+
+</head>
+<body>
+
+<script type="text/ng-template" id="confirm-content-template">
+    <p>That you now the result of this equation?</p>
+    <label>2 + 2 = </label><input ng-model="parameter.value" min="0" max="99" required ng-change="isValid()"/>
+    <span ng-if="parameter.invalid" class="label label-danger">This can not be true!</span>
+</script>
+
+
+<div data-ng-controller="ConfirmDialogDemoController">
+    <button class="btn btn-default" ng-click="openDialog()">Open dialog</button>
+</div>
+
+</body>
+</html>

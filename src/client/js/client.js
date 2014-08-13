@@ -844,14 +844,17 @@ define([
             }
             function storeNode(node,basic){
                 //basic = basic || true;
-                var path = _core.getPath(node);
-                _metaNodes[path] = node;
-                if(_nodes[path]){
-                    //TODO we try to avoid this
-                } else {
-                    _nodes[path] = {node:node,hash:""/*,incomplete:true,basic:basic*/};
+                if(node){
+                    var path = _core.getPath(node);
+                    _metaNodes[path] = node;
+                    if(_nodes[path]){
+                        //TODO we try to avoid this
+                    } else {
+                        _nodes[path] = {node:node,hash:""/*,incomplete:true,basic:basic*/};
+                    }
+                    return path;
                 }
-                return path;
+                return null;
             }
 
             function _loadChildrenPattern(core,nodesSoFar,node,level,callback){
@@ -2073,7 +2076,7 @@ define([
                 };
 
                 var getParentId = function(){
-                    return _core.getPath(_core.getParent(_nodes[_id].node));
+                    return storeNode(_core.getParent(_nodes[_id].node)); //just for sure, as it may missing from the cache
                 };
 
                 var getId = function(){
@@ -2089,8 +2092,7 @@ define([
                 };
 
                 var getBaseId = function(){
-                    //return _core.getRegistry(_nodes[_id].node,"isConnection") === true ? 'connection' : 'object';
-                    return _core.getPath(_core.getBase(_nodes[_id].node));
+                    return storeNode(_core.getBase(_nodes[_id].node)); //just for sure, maybe the base is missing from the cache
                 };
 
                 var getInheritorIds = function(){
