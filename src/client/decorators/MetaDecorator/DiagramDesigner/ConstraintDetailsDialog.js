@@ -49,7 +49,7 @@ define(['clientUtil',
             var constDesc = {'name': self._inputName.val(),
                             'script': self._codeMirror.getValue(),
                             'priority': self._inputPriority.val(),
-                            'message': self._inputMessage.val()};
+                            'info': self._inputMessage.val()};
 
             self._dialog.modal('hide');
 
