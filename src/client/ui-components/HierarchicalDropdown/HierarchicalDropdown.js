@@ -7,7 +7,7 @@
 
 define([
     'angular',
-    'text!./templates/HierarchicalDropdown.html',
+    'text!./templates/hierarchicalDropdown.html',
     'css!./styles/hierarchicalDropdown.css'
 ], function(
     ng,

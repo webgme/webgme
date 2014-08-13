@@ -1,0 +1,1 @@
+`$dropDownNavigator` is a directive to visualize a vertical, multi-hierarchical navigator.
