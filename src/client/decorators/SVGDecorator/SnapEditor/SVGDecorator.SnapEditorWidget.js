@@ -199,12 +199,25 @@ define(['js/Constants',
         }
     };
 
-    SVGDecoratorSnapEditorWidget.prototype.updateAttributeText = function () {
-        var attributes = Object.keys(this._attributes),
+    /**
+     * Update the text in the svg for the attribute specified (or all attributes is none 
+     * provided)
+     *
+     * @param {String} attribute (optional)
+     * @return {undefined}
+     */
+    SVGDecoratorSnapEditorWidget.prototype.updateAttributeText = function (attribute) {
+        var attributes,
             textFields = this.$el.find('text'),
             attr,
             enabled,
             fields;
+
+        if (this._attributes[attribute] !== undefined){
+            attributes = [attribute];
+        } else {
+            attributes = Object.keys(this._attributes);
+        }
 
         while (attributes.length){
             attr = attributes.pop();

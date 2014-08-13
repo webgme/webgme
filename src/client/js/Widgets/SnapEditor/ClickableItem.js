@@ -671,7 +671,6 @@ define(['logManager',
         }
 
         this._decoratorInstance.updateShifts();
-        this._decoratorInstance.updateAttributeText();
 
         return changed;
     };
@@ -685,7 +684,8 @@ define(['logManager',
      * @return {Boolean} return true if size has changed
      */
     ClickableItem.prototype._updateSize = function (ptrName, item) {
-        var box = item ? item.getTotalSize() : null;
+        var box = item ? item.getTotalSize() : null,
+            changed = false;
 
         if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(ptrName) === -1){
             //stretch the decorator 
@@ -693,14 +693,18 @@ define(['logManager',
                 //if there is an attribute of the same name
                 var attribute = this.getAttribute(ptrName);
                 if (attribute){
-                    return this._decoratorInstance.updateAttributeContent(ptrName, attribute);
+                    changed = this._decoratorInstance.updateAttributeContent(ptrName, attribute);
+                    this._decoratorInstance.updateAttributeText(ptrName);
                 } else {//set the box to 0,0 so the decorator has a valid object to resize
                     box = { width: 0, height: 0 };
                 }
             } 
-            return this._decoratorInstance.stretchTo(ptrName, { x: box.width, y: box.height });
+
+            if (box){
+                changed = this._decoratorInstance.stretchTo(ptrName, { x: box.width, y: box.height });
+            }
         }
-        return false;//return if it changed
+        return changed;
     };
 
     /**
