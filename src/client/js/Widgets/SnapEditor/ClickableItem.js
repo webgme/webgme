@@ -671,6 +671,7 @@ define(['logManager',
         }
 
         this._decoratorInstance.updateShifts();
+        this._decoratorInstance.updateAttributeText();
 
         return changed;
     };
@@ -692,7 +693,7 @@ define(['logManager',
                 //if there is an attribute of the same name
                 var attribute = this.getAttribute(ptrName);
                 if (attribute){
-                    return this._decoratorInstance.updateText(ptrName, attribute);
+                    return this._decoratorInstance.updateAttributeContent(ptrName, attribute);
                 } else {//set the box to 0,0 so the decorator has a valid object to resize
                     box = { width: 0, height: 0 };
                 }

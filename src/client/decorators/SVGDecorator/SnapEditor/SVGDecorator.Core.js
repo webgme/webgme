@@ -29,8 +29,10 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants',
 
         SVGDecoratorCore.apply(this, [opts]);
 
-        this.setConnectionAreaDefaults({'role': SNAP_CONSTANTS.CONN_RECEIVING,
-                                        'ptr': '' });
+        this.setConnectionAreaDefaults({
+            role: SNAP_CONSTANTS.CONN_RECEIVING,
+            shift: undefined,
+            ptr: '' });
         
     };
 

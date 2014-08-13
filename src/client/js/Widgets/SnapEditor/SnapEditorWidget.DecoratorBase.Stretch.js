@@ -325,6 +325,9 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
             oldWidth = element.width(),
             newWidth;
 
+        //make sure newText is a string
+        newText += "";
+
         if (oldText === newText){
             return false;
         }

@@ -6,7 +6,6 @@
 
 define(['js/Constants',
         'util/assert',
-        'js/NodePropertyNames',
         'js/Widgets/SnapEditor/SnapEditorWidget.DecoratorBase',
         'js/Widgets/SnapEditor/SnapEditorWidget.DecoratorBase.ConnectionAreas',
         'js/Widgets/SnapEditor/SnapEditorWidget.DecoratorBase.Stretch',
@@ -15,7 +14,6 @@ define(['js/Constants',
         './SVGDecorator.Core',
         'css!./SVGDecorator.SnapEditorWidget'], function (CONSTANTS,
                                                           assert,
-                                                          nodePropertyNames,
                                                           SnapEditorWidgetDecoratorBase,
                                                           SnapEditorWidgetDecoratorBaseConnectionAreas,
                                                           SnapEditorWidgetDecoratorBaseStretch,
@@ -28,7 +26,6 @@ define(['js/Constants',
     var SVGDecoratorSnapEditorWidget,
         DECORATOR_ID = "SVGDecoratorSnapEditorWidget",
         SVG_COLOR_ID = "colors",
-        SVG_SECONDARY_COLOR_ID = "secondary",
         EDIT_TEXT = { PADDING: 5, MIN_WIDTH: 30};
 
     /**
@@ -159,8 +156,7 @@ define(['js/Constants',
                 //FIXME Find a better way to approximate this...
                 //I could add a "name container" invisible rect... 
                 var approxWidth = parseFloat(this.$svgContent
-                        .find("#name-bounding-box")[0].getAttribute("width")),
-                    newX = approxWidth * (this.$name.text().length/oldName.length);
+                        .find("#name-bounding-box")[0].getAttribute("width"));
 
                 dx = Math.floor(approxWidth * (this.$name.text().length/oldName.length));
                 //this.stretchTo(SNAP_CONSTANTS.NAME, newX, 0);
@@ -193,7 +189,7 @@ define(['js/Constants',
 
     SVGDecoratorSnapEditorWidget.prototype.updateAttributeContent = function (attr, value) {
         if (this._attributes.hasOwnProperty(attr)){
-            this._attributes[attr].value = value + "";
+            this._attributes[attr].value = value;
         }
     };
 
@@ -327,8 +323,7 @@ define(['js/Constants',
                         width,
                         fontSize = $(this).css('font-size'),
                         tempName = $('<div/>', { id: id + '-edit', 
-                                                 text: $(this).text()}),
-                        element = $(this);
+                                                 text: $(this).text()});
 
                     self.$svgContent.append(tempName);
                     tempName.css('position', 'absolute');
@@ -438,28 +433,6 @@ define(['js/Constants',
      */
     SVGDecoratorSnapEditorWidget.prototype.setInputFieldVisibility = function(id, visible){
         this.inputFields[id].visible = visible;
-    };
-
-    /**
-     * Update the text of the svg if needed (and present).
-     *
-     * @param {String} attribute Attribute name to update
-     * @param {String} newText new text of the attribute
-     * @return {Boolean} return true if svg changed in size
-     */
-    SVGDecoratorSnapEditorWidget.prototype.updateText = function (attribute, newText) {
-    //Change this to record the text and not WRITE to the DOM FIXME
-        var element = this.$el.find('#' + attribute),
-            currentText;
-
-        if (element.length){
-            currentText = element.text();
-            if (currentText !== newText){
-                return this._setTextAndStretch(element, newText, attribute);
-            }
-        }
-
-        return false;
     };
 
     /**
@@ -670,21 +643,51 @@ define(['js/Constants',
     };
 
     /**
-     * Get a specific connection area
+     * Get a specific connection area.
      *
-     * @param {String} ptr
-     * @param {String} role
+     * @param {Object} params
      * @return {Object|null} Connection Area
      */
-    SVGDecoratorSnapEditorWidget.prototype.getConnectionArea = function (ptr, role) {
-        //Returns the first (and should be only) connection area of the given type
-        var areas = this.getConnectionAreas(),
-            area;
+    SVGDecoratorSnapEditorWidget.prototype._getConnectionArea = function (params) {
+        return this._filterConnectionAreas(this._customConnectionAreas, params);
+    };
 
-        while(areas.length){
-            area = areas.pop();
-            //If the area has the role or is unspecified
-            if((!role || area.role === role) && (!ptr || area.ptr === ptr || (area.ptr instanceof Array && area.ptr.indexOf(ptr) !== -1))){
+    /**
+     * Get a specific connection area (cloned).
+     *
+     * @param {Object} params
+     * @return {Object|null} Connection Area
+     */
+    SVGDecoratorSnapEditorWidget.prototype.getConnectionArea = function (params) {
+        return this._filterConnectionAreas(this.getConnectionAreas(), params);
+    };
+
+    SVGDecoratorSnapEditorWidget.prototype._filterConnectionAreas = function (areas, params) {
+        //Returns the first (and should be only) connection area matching params
+        var attributes = Object.keys(params),
+            criteria,
+            matchCount,
+            area,
+            j = areas.length;
+
+        while(j--){
+            area = areas[j];
+            matchCount = 0;
+            for (var i = 0; i < attributes.length; i++){
+
+                criteria = params[attributes[i]];
+                if (_.isFunction(criteria)){
+                    if (criteria(area[attributes[i]])){
+                        matchCount++;
+                    }
+                } else {
+                    if (area[attributes[i]] === criteria){
+                        matchCount++;
+                    }
+                }
+            }
+
+            if (matchCount === attributes.length){
                 return area;
             }
         }
@@ -695,7 +698,7 @@ define(['js/Constants',
 
     /**** Override from SnapEditorWidgetDecoratorBase ****/
     //Shows the 'connectors' - appends them to the DOM
-    SVGDecoratorSnapEditorWidget.prototype.showSourceConnectors = function (params) {
+    SVGDecoratorSnapEditorWidget.prototype.showSourceConnectors = function (/*params*/) {
         //Show "clickable" areas?
         //TODO
     };
@@ -727,6 +730,25 @@ define(['js/Constants',
         var len = componentList.length;
         while (len--) {
             this._updatePort(componentList[len].id);
+        }
+    };
+
+    /**** Override from SnapEditorWidgetDecoratorBase ****/
+    SVGDecoratorSnapEditorWidget.prototype.calculateDimension = function () {
+        var width,
+            height;
+
+        if (this.hostDesignerItem){
+            if (this._svgSize){
+                width = this._svgSize.width;
+                height = this._svgSize.height;
+            } else {
+                width = this.$el.outerWidth(true);
+                height = this.$el.outerHeight(true);
+            }
+
+            //Update the host item  
+            this.hostDesignerItem.setSize(width, height);
         }
     };
 
