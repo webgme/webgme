@@ -853,18 +853,21 @@ define(['logManager',
      * @param {Object} params
      */
     ClickableItem.prototype._connect = function (params) {
-        //
+        var distance = this._getDistance(params.area1, params.area2),
+            otherItem = params.otherItem,
+            ptr = params.ptr,
+            role = params.role,
+            defaultParams = { resize: true,
+                              ignoreDependents: false };
+
+        params = _.extend(defaultParams, params);
+
         if (!(params.area1 && params.area2)){
             this.logger.error("Connection Areas must both be defined");
         }
 
-        var distance = this._getDistance(params.area1, params.area2),
-            otherItem = params.otherItem,
-            ptr = params.ptr,
-            role = params.role;
-
         //resize as necessary. May need to resize after connecting
-        if (params.resize !== false){
+        if (params.resize){
             if (role === SNAP_CONSTANTS.CONN_ACCEPTING){
                 otherItem._updateSize(ptr, this);
             } else {
@@ -872,7 +875,7 @@ define(['logManager',
             }
         }
 
-        if (params.ignoreDependents === true){
+        if (params.ignoreDependents){
             this.moveBy(distance.dx, distance.dy);
         } else {
             this.moveByWithDependents(distance.dx, distance.dy);
@@ -882,7 +885,7 @@ define(['logManager',
 
         //record the connection
         //Do we know area1 corresponds to otherItem?
-        //FIXME 
+        //Consider renaming parameters
         otherItem.conn2Item[params.area2.id] = this;
         this.conn2Item[params.area1.id] = otherItem;
 
@@ -1093,7 +1096,8 @@ define(['logManager',
                     otherArea.y1 += shift.y;
                     otherArea.y2 += shift.y;
 
-                    if (!closestIndex || this.__getDistanceBetweenConnections(openAreas[i], otherArea) < closestArea){
+                    if (closestArea === null || 
+                        this.__getDistanceBetweenConnections(openAreas[i], otherArea) < closestArea){
                         closestIndex = i;
                         closestArea = this.__getDistanceBetweenConnections(openAreas[i], otherArea);
                     }
@@ -1206,28 +1210,26 @@ define(['logManager',
      * @return {Boolean} return true if the dependents need to be updated
      */
     ClickableItem.prototype.update = function (objDescriptor) {
-        var needToUpdateDependents = null;
+        var needToUpdateDependents = null,
+            self = this,
+            positionShouldChange = function (newPos){
+                if (!self.isPositionDependent() && //If the item cares about it's stored position
+                    newPos &&
+                    _.isNumber(newPos.x) && 
+                    _.isNumber(newPos.y)) {
+
+                    //Check if the position is different from current
+                    if (newPos.x !== self.positionX || newPos.y !== self.positionY){
+                        return true;
+                    }
+                }
+
+                return false;
+            };
 
         //check what might have changed
         //update position
-        /*if (this.isPositionDependent()){
-            //Click the item to it's parent
-            var basePtr = Object.keys(this.ptrs[SNAP_CONSTANTS.CONN_ACCEPTING]);
-
-            if (basePtr.length > 1){
-                this.logger.error("Item can have only one item pointing into it.");
-            }
-            basePtr = basePtr.pop();
-
-            this.ptrs[SNAP_CONSTANTS.CONN_ACCEPTING][basePtr].updateDependents();
-
-        } else */if (!this.isPositionDependent() && objDescriptor.position && _.isNumber(objDescriptor.position.x) && _.isNumber(objDescriptor.position.y)) {
-/*
- *            var dx = objDescriptor.position.x - this.positionX,
- *                dy = objDescriptor.position.y - this.positionY;
- *
- */
-            //this.moveByWithDependents(dx, dy);
+        if (positionShouldChange(objDescriptor.position)){
             this.moveTo(objDescriptor.position.x, objDescriptor.position.y);
             needToUpdateDependents = "move";
         }
