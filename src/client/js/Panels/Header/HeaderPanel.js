@@ -11,7 +11,7 @@ define(['js/PanelBase/PanelBase',
     'js/Widgets/UserProfile/UserProfileWidget',
     'js/Toolbar/Toolbar',
     './DefaultToolbar',
-    'ui-components/dropdownNavigator/dropdownNavigator',
+    'isis-ui-components/dropdownNavigator/dropdownNavigator',
     './ProjectNavigatorController'
 ], function (PanelBase, ProjectTitleWidget, UserProfileWidget, toolbar, DefaultToolbar, DropDownNavigator, ProjectNavigatorController) {
 

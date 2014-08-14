@@ -10,7 +10,7 @@ define( [
   'js/Dialogs/Commit/CommitDialog',
   'js/Dialogs/ProjectRepository/ProjectRepositoryDialog',
 
-  'ui-components/simpleDialog/simpleDialog',
+  'isis-ui-components/simpleDialog/simpleDialog',
 
   'text!js/Dialogs/Projects/templates/DeleteDialogTemplate.html'
 

@@ -33,7 +33,7 @@
                 'angular': 'lib/angular/angular-1.2.19/angular' + ( DEBUG ? '.min' : '' ),
                 'angular-ui-bootstrap': 'lib/angular/ui-bootstrap/ui-bootstrap-tpls-0.11.0.min',
 
-                'ui_components_demo': 'ui-components/docs/ui_components_demo',
+                'isis_ui_components_demo': 'isis-ui-components/docs/isis_ui_components_demo',
 
                 // for showing docs
 
@@ -60,9 +60,9 @@
         requirejs( [
             'angular-ui-bootstrap',
             'angular-markdown',
-            'css!ui-components/docs/styles/ui_components_demo'
+            'css!isis-ui-components/docs/styles/isis_ui_components_demo'
         ].concat(
-            components.map( function ( e ) { return 'ui-components/' + e + '/docs/demo'; } )
+            components.map( function ( e ) { return 'isis-ui-components/' + e + '/docs/demo'; } )
         ), function ( ngBootstrap ) {
 
             angular.module(

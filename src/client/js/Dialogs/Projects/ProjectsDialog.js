@@ -14,7 +14,7 @@ define( [
   'js/Dialogs/Import/ImportDialog',
   'text!./templates/ProjectsDialog.html',
 
-  'ui-components/simpleDialog/simpleDialog',
+  'isis-ui-components/simpleDialog/simpleDialog',
   'text!js/Dialogs/Projects/templates/DeleteDialogTemplate.html',
 
   'css!./styles/ProjectsDialog.css'
