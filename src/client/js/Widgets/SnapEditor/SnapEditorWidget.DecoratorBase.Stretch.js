@@ -303,11 +303,8 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
         //fixNullDimensions
         this._fixNullDimensions();
 
-        //shift respective elements
-        this.updateShifts();
-
         //Calculate SVG Size
-        this._updateSVGSize();
+        this.updateSize();
     };
 
     /**
@@ -323,7 +320,6 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
         while (ids.length){
             this._shiftDependentElements(ids.pop());
         }
-        //this._updateSVGSize();
     };
 
     SVGDecoratorSnapEditorWidgetStretch.prototype._clearShifts = function(){
@@ -668,7 +664,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      * @param {String} axis
      * @param {Number} delta
      * @param {enum} type ("svg"|"text")
-     * @return {Number} Current size of the svg along the given axis
+     * @return {undefined}
      */
     SVGDecoratorSnapEditorWidgetStretch.prototype.stretch = function (id, axis, delta, type) {
         //READ-ONLY
@@ -732,21 +728,10 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
                     delete this.stretchedElements[svgId];
                 }
 
-                //Take into account the right/bottom most point of the svg element
-                edge = this._transforms[svgId].original[axis] + this._transforms[svgId].shift[axis] + 
-                    this._transforms[svgId].original[dim] + this._transforms[svgId].stretch[dim];
-
-                maxSize = Math.max(maxSize, edge);//Update entire svg size if necessary
-
             }
         }    
 
-        //Adjust the overall svg if necessary
-        if(stretchElements.length){
-            this._updateSVGSize();//May need to change this to update to allow shrinking...
-        }
-
-        return this._svgSize[dim];
+        //return this._svgSize[dim];
     };
 
     //Some svg elements have unknown dimensions until the svg is actually rendered 
@@ -780,7 +765,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
 
     };
 
-    SVGDecoratorSnapEditorWidgetStretch.prototype._updateSVGSize = function(){
+    SVGDecoratorSnapEditorWidgetStretch.prototype.updateSize = function(){
         var ids = Object.keys(this._transforms),
             edge,
             axis,
@@ -788,6 +773,8 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
 
         size.width = -1;
         size.height = -1;
+
+        this.updateShifts();
 
         for (var dim in size){
 

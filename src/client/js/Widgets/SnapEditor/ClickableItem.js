@@ -619,10 +619,17 @@ define(['logManager',
      * @return {Object}
      */
     ClickableItem.prototype.getBoundingBox = function () {
-        var box = {"x": this.positionX,
-                "y": this.positionY,
-                "width": this._width,
-                "height": this._height};
+        var box;
+
+        //Update the decorator if needed
+        if (this._decoratorInstance.updateSize){
+            this._decoratorInstance.updateSize();
+        }
+
+        box = {"x": this.positionX,
+               "y": this.positionY,
+               "width": this._width,
+               "height": this._height};
 
         if(box.width === 0 && box.height === 0){
             //Try to get width and height from the svg
@@ -692,7 +699,7 @@ define(['logManager',
             if (box === null){
                 box = { width: 0, height: 0 };//set the box to 0,0 so the decorator has a valid object to resize
 
-                //if there is an attribute of the same name
+                //if there is an attribute of the same name, update it
                 var attribute = this.getAttribute(ptrName);
                 if (attribute){
                     changed = this._decoratorInstance.updateAttributeContent(ptrName, attribute);
