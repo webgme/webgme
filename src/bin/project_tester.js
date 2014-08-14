@@ -12,15 +12,17 @@ requirejs.config({
         "coreclient": "common/core/users"
     }
 });
-requirejs(['core/core','storage/serveruserstorage'],
-    function(Core,Storage){
+requirejs(['core/core','storage/serveruserstorage','storage/clientstorage','fs'],
+    function(Core,Storage,ConnectedStorage,FS){
         'use strict';
-        var mongoip = process.argv[2] || null,
-            mongoport = process.argv[3] || null,
-            mongodb = process.argv[4] || null,
-            projectname = process.argv[5] || null,
-            branch = process.argv[6] || null,
-            storage = null,
+        var configFile;
+        try{
+            configFile = FS.readFileSync(process.argv[2],'utf8');
+            configFile = JSON.parse(configFile);
+        } catch (e) {
+            throw e;
+        }
+        var storage = null,
             project = null,
             core = null;
 
@@ -88,20 +90,34 @@ requirejs(['core/core','storage/serveruserstorage'],
                     }
                 });
             },
+            checkPath = function(root,path,callback){
+                core.loadByPath(root,path,function(err,node){
+                    if(err || !node){
+                        console.log('unable to load node',err);
+                        return callback(err);
+                    }
+                    checkNode(node);
+                    callback(null);
+                });
+            },
             checkNode = function(node){
                 console.log(core.getPath(node),core.getGuid(node));
             };
 
+        if(configFile.serverip && configFile.serverport ){
+            storage = new ConnectedStorage({type:'node',host:configFile.serverip,port:configFile.serverport,log:console});
+        } else if(configFile.mongoip && configFile.mongoport && configFile.mongodb) {
+            storage = new Storage({'host':configFile.mongoip, 'port':configFile.mongoport, 'database':configFile.mongodb});
+        }
 
-        if (mongoip && mongoport && mongodb && projectname && branch){
 
-            storage = new Storage({'host':mongoip, 'port':mongoport, 'database':mongodb});
+        if (storage){
             storage.openDatabase(function(err){
                 if(err){
                     console.log('unable to open database',err);
                     return finish();
                 }
-                storage.openProject(projectname,function(err,p){
+                storage.openProject(configFile.projectname,function(err,p){
                     if(err || !p){
                         console.log('cannot open project',err);
                         return finish();
@@ -114,12 +130,12 @@ requirejs(['core/core','storage/serveruserstorage'],
                             return finish();
                         }
 
-                        if(!names[branch]){
+                        if(!names[configFile.branch]){
                             console.log('unknown branch');
                             return finish();
                         }
 
-                        project.loadObject(names[branch],function(err,commit){
+                        project.loadObject(names[configFile.branch],function(err,commit){
                             if(err || !commit){
                                 console.log('unable to load commit',err);
                                 return finish();
@@ -130,14 +146,29 @@ requirejs(['core/core','storage/serveruserstorage'],
                                     console.log('cannot load root object',err);
                                     return finish();
                                 }
-                                checkDFS(root,function(err){
-                                    console.log('DFS checking finished',err);
-
-                                    checkBFS(root,function(err){
-                                        console.log("BFS cheking finished",err);
+                                switch (configFile.testtype){
+                                    case "DFS":
+                                        checkDFS(root,function(err) {
+                                            console.log('DFS checking finished', err);
+                                            return finish();
+                                        });
+                                        break;
+                                    case "BFS":
+                                        checkBFS(root,function(err){
+                                            console.log("BFS cheking finished",err);
+                                            return finish();
+                                        });
+                                        break;
+                                    case "path":
+                                        checkPath(root,configFile.path,function(err){
+                                            console.log("Path checking finished",err);
+                                            return finish();
+                                        });
+                                        break;
+                                    default:
+                                        console.log('wrong test type');
                                         return finish();
-                                    });
-                                });
+                                }
                             });
                         });
                     });
@@ -145,7 +176,7 @@ requirejs(['core/core','storage/serveruserstorage'],
 
             });
         } else {
-            console.log("proper usage: node project_tester.js <ip of your database server> <port of your database server> <name of your database> <name of the project> <branch of the project>");
+            console.log("proper usage: node project_tester.js <path of test configuration file>");
             finish();
         }
 
