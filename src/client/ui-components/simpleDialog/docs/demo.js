@@ -2,7 +2,7 @@
 
 define( [
   'angular',
-  '../confirmDialog',
+  '../simpleDialog',
 
   'text!./demo.html'
 
@@ -11,14 +11,14 @@ define( [
 
 
   var isValid,
-    demoApp = angular.module( 'isis.ui.confirmDialog.demo', ['isis.ui.confirmDialog'] ),
+    demoApp = angular.module( 'isis.ui.simpleDialog.demo', ['isis.ui.simpleDialog'] ),
 
     parameter = {
       value: 10,
       invalid: true
     };
 
-  demoApp.controller( 'ConfirmDialogDemoController', function ( $scope, $confirmDialog ) {
+  demoApp.controller( 'ConfirmDialogDemoController', function ( $scope, $simpleDialog ) {
 
     isValid = function ( $scope ) {
 
@@ -44,7 +44,7 @@ define( [
 
     $scope.openDialog = function () {
 
-      $confirmDialog.open( {
+      $simpleDialog.open( {
         dialogTitle: 'Are you sure?',
         dialogContentTemplate: 'confirm-content-template',
         onOk: function () {

@@ -10,7 +10,7 @@ define( [
   'js/Dialogs/Commit/CommitDialog',
   'js/Dialogs/ProjectRepository/ProjectRepositoryDialog',
 
-  'ui-components/confirmDialog/confirmDialog',
+  'ui-components/simpleDialog/simpleDialog',
 
   'text!js/Dialogs/Projects/templates/DeleteDialogTemplate.html'
 
@@ -24,13 +24,13 @@ define( [
   } );
 
 
-  var ProjectNavigatorController = function ( $scope, gmeClient, $confirmDialog ) {
+  var ProjectNavigatorController = function ( $scope, gmeClient, $simpleDialog ) {
 
     var self = this;
 
     self.$scope = $scope;
     self.gmeClient = gmeClient;
-    self.$confirmDialog = $confirmDialog;
+    self.$simpleDialog = $simpleDialog;
 
     // internal data representation for fast access to objects
     self.projects = {};
@@ -351,7 +351,7 @@ define( [
 
         self.$scope.thingName = 'project "'+ data.projectId + '"';
 
-        deleteProjectModal = self.$confirmDialog.open( {
+        deleteProjectModal = self.$simpleDialog.open( {
           dialogTitle: 'Confirm delete',
           dialogContentTemplate: 'DeleteDialogTemplate.html',
           onOk: function () {
@@ -519,7 +519,7 @@ define( [
 
         self.$scope.thingName = 'branch "'+ data.branchId + '"';
 
-        deleteBranchModal = self.$confirmDialog.open( {
+        deleteBranchModal = self.$simpleDialog.open( {
           dialogTitle: 'Confirm delete',
           dialogContentTemplate: 'DeleteDialogTemplate.html',
           onOk: function () {
@@ -566,7 +566,7 @@ define( [
 
         self.$scope.thingName = data.branchId;
 
-        deleteBranchModal = self.$confirmDialog.open( {
+        deleteBranchModal = self.$simpleDialog.open( {
           dialogTitle: 'Confirm delete',
           dialogContentTemplate: 'DeleteDialogTemplate.html',
           onOk: function () {

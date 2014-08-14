@@ -3,24 +3,24 @@
 define( [
   'angular',
 
-  'text!./templates/confirmDialog.html'
+  'text!./templates/simpleDialog.html'
 
 ], function ( ng, ConfirmDialogTemplate ) {
   "use strict";
 
   angular.module(
-      'isis.ui.confirmDialog',
+      'isis.ui.simpleDialog',
       [ 'ui.bootstrap' ]
-    ).provider( '$confirmDialog', function () {
+    ).provider( '$simpleDialog', function () {
 
-      var $confirmDialogProvider = {
+      var $simpleDialogProvider = {
 
         options: {
         },
         $get: ['$modal',
           function ( $modal ) {
 
-            var $confirmDialog = {},
+            var $simpleDialog = {},
               ConfirmDialogController;
 
             ConfirmDialogController = function ( $scope, $modalInstance,
@@ -47,7 +47,7 @@ define( [
               };
             };
 
-            $confirmDialog.open = function ( options ) {
+            $simpleDialog.open = function ( options ) {
 
               var modalOptions = {
                 template: ConfirmDialogTemplate,
@@ -65,19 +65,19 @@ define( [
               });
 
 
-              var confirmDialogInstance = $modal.open( modalOptions );
+              var simpleDialogInstance = $modal.open( modalOptions );
 
 
-              return confirmDialogInstance;
+              return simpleDialogInstance;
 
             };
 
-            return $confirmDialog;
+            return $simpleDialog;
 
           }]
       };
 
-      return $confirmDialogProvider;
+      return $simpleDialogProvider;
 
     } );
 } );
