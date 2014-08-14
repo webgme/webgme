@@ -2,34 +2,19 @@
 
 define([
   'angular',
-  '../dropDownNavigator',
+  '../HierarchicalDropdown',
 
   'text!./demo.html'
 
-], function (ng, DropdownNavigator) {
+], function (ng, HierarchicalDropdown) {
   "use strict";
 
-  var demoApp = angular.module('isis.ui.dropDownNavigator.demo', ['ui.bootstrap', 'isis.ui.dropdownNavigator']);
+  var demoApp = angular.module('isis.ui.hierarchicalDropdown.demo', ['ui.bootstrap', 'isis.ui.hierarchicalDropdown']);
 
-  demoApp.controller('DropdownDemoController', function ($scope) {
-    var firstMenu,
-      secondMenu;
+  demoApp.controller('HierarchicalDropdownDemoController', function ($scope) {
+    var dropdownMenu;
 
-    firstMenu = {
-      id: 'root',
-      label: 'GME',
-//            isSelected: true,
-      itemClass: 'gme-root',
-      menu: []
-    };
-
-    secondMenu = {
-      id: 'secondItem',
-      label: 'Projects',
-      menu: []
-    };
-
-    firstMenu.menu = [
+    dropdownMenu = [
       {
         id: 'top',
         items: [
@@ -109,68 +94,7 @@ define([
       }
     ];
 
-
-    secondMenu = {
-      id: 'secondItem',
-      label: 'Projects',
-      menu: []
-    };
-
-    secondMenu.menu = [
-      {
-        id: 'secondMenuMenu',
-        items: [
-
-          {
-            id: 'showPreferences',
-            label: 'Show preferences',
-            action: function () {
-              console.log('Show preferences');
-            },
-            menu: [
-              {
-                items: [
-                  {
-                    id: 'preferences 1',
-                    label: 'Preferences 1'
-                  },
-                  {
-                    id: 'preferences 2',
-                    label: 'Preferences 2'
-                  },
-                  {
-                    id: 'preferences 3',
-                    label: 'Preferences 3',
-                    menu: [
-                      {
-                        items: [
-                          {
-                            id: 'sub_preferences 1',
-                            label: 'Sub preferences 1'
-                          },
-                          {
-                            id: 'sub_preferences 2',
-                            label: 'Sub preferences 2'
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        ]}
-    ];
-
-    $scope.navigator = {
-      items: [
-        firstMenu,
-        secondMenu
-      ],
-      separator: true
-    };
-
+    $scope.dropdownMenu = dropdownMenu;
 
   });
 

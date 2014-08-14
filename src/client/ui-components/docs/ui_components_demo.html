@@ -12,7 +12,8 @@
                 // The list of components being demoed here.
                 components = [
                     'simpleDialog',
-                    'dropDownNavigator'
+                    'dropDownNavigator',
+                    'hierarchicalDropdown'
                 ];
 
         require.config( {
@@ -58,7 +59,8 @@
 
         requirejs( [
             'angular-ui-bootstrap',
-            'angular-markdown'
+            'angular-markdown',
+            'css!ui-components/docs/styles/ui_components_demo'
         ].concat(
             components.map( function ( e ) { return 'ui-components/' + e + '/docs/demo'; } )
         ), function ( ngBootstrap ) {
