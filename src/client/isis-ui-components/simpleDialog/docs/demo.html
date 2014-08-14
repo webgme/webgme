@@ -1,0 +1,10 @@
+<script type="text/ng-template" id="confirm-content-template">
+    <p>That you now the result of this equation?</p>
+    <label>2 + 2 = </label><input ng-model="parameter.value" min="0" max="99" required ng-change="isValid()"/>
+    <span ng-if="parameter.invalid" class="label label-danger">This can not be true!</span>
+</script>
+
+
+<div data-ng-controller="ConfirmDialogDemoController">
+    Test a dialog here: <button class="btn btn-default" ng-click="openDialog()">Open dialog</button>
+</div>

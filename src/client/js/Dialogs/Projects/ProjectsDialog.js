@@ -14,7 +14,7 @@ define( [
   'js/Dialogs/Import/ImportDialog',
   'text!./templates/ProjectsDialog.html',
 
-  'ui-components/ConfirmDialog/ConfirmDialog',
+  'isis-ui-components/simpleDialog/simpleDialog',
   'text!js/Dialogs/Projects/templates/DeleteDialogTemplate.html',
 
   'css!./styles/ProjectsDialog.css'
@@ -32,8 +32,8 @@ define( [
     rootScope;
 
 
-  angular.module( 'gme.ui.projectsDialog', ['isis.ui.confirmDialog'] ).run( function ( $confirmDialog, $templateCache, $rootScope ) {
-    ngConfirmDialog = $confirmDialog;
+  angular.module( 'gme.ui.projectsDialog', ['isis.ui.simpleDialog'] ).run( function ( $simpleDialog, $templateCache, $rootScope ) {
+    ngConfirmDialog = $simpleDialog;
 
     $templateCache.put('DeleteDialogTemplate.html', DeleteDialogTemplate);
 

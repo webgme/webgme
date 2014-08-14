@@ -3,24 +3,24 @@
 define( [
   'angular',
 
-  'text!./templates/ConfirmDialog.html'
+  'text!./templates/simpleDialog.html'
 
 ], function ( ng, ConfirmDialogTemplate ) {
   "use strict";
 
   angular.module(
-      'isis.ui.confirmDialog',
+      'isis.ui.simpleDialog',
       [ 'ui.bootstrap' ]
-    ).provider( '$confirmDialog', function () {
+    ).provider( '$simpleDialog', function () {
 
-      var $confirmDialogProvider = {
+      var $simpleDialogProvider = {
 
         options: {
         },
         $get: ['$modal',
           function ( $modal ) {
 
-            var $confirmDialog = {},
+            var $simpleDialog = {},
               ConfirmDialogController;
 
             ConfirmDialogController = function ( $scope, $modalInstance,
@@ -47,33 +47,37 @@ define( [
               };
             };
 
-            $confirmDialog.open = function ( options ) {
+            $simpleDialog.open = function ( options ) {
 
-              var confirmDialogInstance = $modal.open( {
+              var modalOptions = {
                 template: ConfirmDialogTemplate,
-                size: options.size,
-                controller: ConfirmDialogController,
-                scope: options.scope,
-                resolve: {
+                controller: ConfirmDialogController
+              };
+
+              modalOptions = angular.extend(modalOptions, options);
+
+              modalOptions.resolve = angular.extend(modalOptions.resolve || {
                   dialogTitle: function() { return options.dialogTitle; },
                   dialogContentTemplate: function() {  return options.dialogContentTemplate; },
                   onOk: function() { return options.onOk; },
                   onCancel: function() { return options.onCancel; },
                   validator: function() { return options.validator; }
-                }
-
               });
 
-              return confirmDialogInstance;
+
+              var simpleDialogInstance = $modal.open( modalOptions );
+
+
+              return simpleDialogInstance;
 
             };
 
-            return $confirmDialog;
+            return $simpleDialog;
 
           }]
       };
 
-      return $confirmDialogProvider;
+      return $simpleDialogProvider;
 
     } );
 } );
