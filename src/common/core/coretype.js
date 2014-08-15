@@ -124,32 +124,34 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
             return TASYNC.call(core.loadByPath,core.getRoot(node),pointerPath);
         };
 
-		function __loadBase(node) {
-			ASSERT(node === null || typeof node.base === "undefined" || typeof node.base === "object");
+        function __loadBase(node) {
+            ASSERT(node === null || typeof node.base === "undefined" || typeof node.base === "object");
 
-			if (typeof node.base === "undefined") {
+            if (typeof node.base === "undefined") {
                 if(core.isEmpty(node)) {
                     //empty nodes do not have a base
-                    return null;
-                } else if(node.parent && node.parent.base && oldcore.getChildrenRelids(node.parent.base).indexOf(node.relid) !== -1) {
-                    //it is possible that the node is an inherited child
-                    return TASYNC.call(function(n,b){
-                        n.base = b;
-                        return n;
-                    },node,core.loadChild(node.parent.base,node.relid));
+                    node.base = null;
+                    return node;
                 } else if(isFalseNode(node)){
                     var root = core.getRoot(node);
                     oldcore.deleteNode(node);
                     core.persist(root);
                     return null;
                 } else {
-                    return TASYNC.call(__loadBase2, node, oldcore.loadPointer(node, "base"));
+                    var basepath = oldcore.getPointerPath(node,'base');
+                    ASSERT(basepath !== undefined);
+                    if(basepath === null){
+                        node.base = null;
+                        return node;
+                    } else {
+                        return TASYNC.call(__loadBase2, node, core.loadByPath(core.getRoot(node),basepath));
+                    }
                 }
             } else {
                 //TODO can the base change at this point???
                 return node;
-			}
-		}
+            }
+        }
 
 		function __loadBase2(node, target) {
             if(typeof node.base !== null && typeof node.base === 'object' && (oldcore.getPath(node.base) === oldcore.getPath(target))){
