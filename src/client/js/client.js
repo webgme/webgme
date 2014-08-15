@@ -80,7 +80,8 @@ define([
                 META = new BaseMeta(),
                 _rootHash = null,
                 _gHash = 0,
-                _addOns = {};
+                _addOns = {},
+                _conrtaintCallback = null;
 
             function print_nodes(pretext){
                 if(pretext){
@@ -305,24 +306,32 @@ define([
                 }
             }
             function validateProjectAsync(callback){
+                callback = callback || _conrtaintCallback || function(err,result){};
                 if(_addOns['ConstraintAddOn'] && _addOns['ConstraintAddOn'] !== 'loading'){
                     queryAddOn("ConstraintAddOn", {querytype:'checkProject'}, callback);
                 } else {
-                    callback(new Error('history information is not available'));
+                    callback(new Error('constraint checking is not available'));
                 }
             }
             function validateModelAsync(path,callback){
+                callback = callback || _conrtaintCallback || function(err,result){};
                 if(_addOns['ConstraintAddOn'] && _addOns['ConstraintAddOn'] !== 'loading'){
                     queryAddOn("ConstraintAddOn", {querytype:'checkModel',path:path}, callback);
                 } else {
-                    callback(new Error('history information is not available'));
+                    callback(new Error('constraint checking is not available'));
                 }
             }
             function validateNodeAsync(path,callback){
+                callback = callback || _conrtaintCallback || function(err,result){};
                 if(_addOns['ConstraintAddOn'] && _addOns['ConstraintAddOn'] !== 'loading'){
                     queryAddOn("ConstraintAddOn", {querytype:'checkNode',path:path}, callback);
                 } else {
-                    callback(new Error('history information is not available'));
+                    callback(new Error('constraint checking is not available'));
+                }
+            }
+            function setValidationCallback(cFunction){
+                if(typeof cFunction === 'function' || cFunction === null){
+                    _conrtaintCallback = cFunction;
                 }
             }
             //core addOns end
@@ -2805,6 +2814,7 @@ define([
                 validateProjectAsync : validateProjectAsync,
                 validateModelAsync: validateModelAsync,
                 validateNodeAsync: validateNodeAsync,
+                setValidationCallback: setValidationCallback,
                 getDetailedHistoryAsync : getDetailedHistoryAsync,
 
                 //territory functions for the UI

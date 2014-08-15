@@ -77,6 +77,7 @@ define(['logManager',
                 i;
 
             client = new Client(CONFIG);
+            WebGMEGlobal.Client = client;
 
             WebGMEGlobal.InterpreterManager = new InterpreterManager(client);
 

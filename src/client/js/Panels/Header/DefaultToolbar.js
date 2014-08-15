@@ -12,9 +12,10 @@ define( ['clientUtil',
   'js/Dialogs/Projects/ProjectsDialog',
   'js/Dialogs/Commit/CommitDialog',
   'js/Dialogs/ProjectRepository/ProjectRepositoryDialog',
-  './PluginToolbar'],
+  './PluginToolbar',
+  './ConstraintToolbar'],
   function ( util, CONSTANTS, METAAspectHelper, ExportManager, ProjectsDialog, CommitDialog, ProjectRepositoryDialog,
-             PluginToolbar ) {
+             PluginToolbar, ConstraintToolBar ) {
 
     "use strict";
 
@@ -23,6 +24,7 @@ define( ['clientUtil',
     DefaultToolbar = function ( client ) {
       this._client = client;
       this._pluginToolBar = null;
+      this._constraintToolBar = null;
 
       this._initialize();
     };
@@ -34,6 +36,7 @@ define( ['clientUtil',
         projectsButtonDisabledForLayouts = ['VehicleForgeLayout'];
 
       this._pluginToolBar = new PluginToolbar( this._client );
+        this._constraintToolBar = new ConstraintToolBar( this._client );
 
       //TODO: remove
       //this._createDummyControls();

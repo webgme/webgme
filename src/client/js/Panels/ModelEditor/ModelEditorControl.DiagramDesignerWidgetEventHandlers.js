@@ -1184,9 +1184,7 @@ define(['logManager',
         id = gmeIDs[0] || null;
 
         if(id){
-            this._client.validateModelAsync(id,function(err,msg){
-                console.log('model validation',err,msg);
-            });
+            this._client.validateModelAsync(id);
         }
     };
 
@@ -1202,9 +1200,7 @@ define(['logManager',
         id = gmeIDs[0] || null;
 
         if(id){
-            this._client.validateNodeAsync(id,function(err,msg){
-                console.log('node validation',err,msg);
-            });
+            this._client.validateNodeAsync(id);
         }
     };
 
