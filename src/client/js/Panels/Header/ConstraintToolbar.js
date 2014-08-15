@@ -19,7 +19,6 @@ define(['js/Dialogs/ConstraintCheckResults/ConstraintCheckResultsDialog'], funct
             $btnExecutePlugin,
             validateProject,
             checkCallback,
-            executePlugin,
             client = this._client,
             unreadResults = 0,
             BADGE_CLASS = 'label',
@@ -61,27 +60,21 @@ define(['js/Dialogs/ConstraintCheckResults/ConstraintCheckResultsDialog'], funct
         };
 
         checkCallback = function(err,result){
+            console.log(err,result);
             result = result || {};
             result.__error = err;
+            result.__time = new Date().getTime();
             result.__unread = true;
             results.splice(0,0,result);
             unreadResults+=1;
             setBadgeText(unreadResults);
         };
         WebGMEGlobal.Client.setValidationCallback(checkCallback);
+
         validateProject = function(){
             WebGMEGlobal.Client.validateProjectAsync();
         };
-        executePlugin = function( name ){
-            WebGMEGlobal.InterpreterManager.run(name,function(result){
-                result.__unread = true;
-                results.splice(0, 0, result);
-                unreadResults += 1;
-                if (unreadResults > 0) {
-                    setBadgeText(unreadResults);
-                }
-            });
-        };
+
 
         showResults = function () {
             var dialog = new ConstraintCheckResultsDialog();

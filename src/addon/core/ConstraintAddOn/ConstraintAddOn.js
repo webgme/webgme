@@ -114,6 +114,9 @@ define(['addon/AddOnBase'],function(Base) {
                     };
                 self.checkNode(node,function(err,msg){
                     error = error || err;
+                    if(msg.hasViolation === true){
+                        message.hasViolation = true;
+                    }
                     message[self.core.getGuid(node)] = msg;
                     if(--needed === 0){
                         childrenLoaded();
@@ -128,6 +131,12 @@ define(['addon/AddOnBase'],function(Base) {
                 });
             };
 
+        if(self.core.getPath(root) === self.core.getPath(self.core.getRoot(root))){
+            message.info = "project validation";
+        } else {
+            message.info = "model ["+ self.core.getPath(root)+"] validation";
+        }
+        message.commit = self.commit;
         checkChild(root,callback);
     };
     ConstraintAddOn.prototype.checkNode = function(node,callback){
@@ -142,12 +151,18 @@ define(['addon/AddOnBase'],function(Base) {
                     error = error || err;
                     message[name] = msg;
 
+                    if(msg.hasViolation === true){
+                        message.hasViolation = true;
+                    }
+
                     if(--needed === 0){
                         callback(error,message);
                     }
                 });
             };
 
+        message.info = "node ["+self.core.getPath(node)+"] validation";
+        message.commit = self.commit;
         if(needed > 0){
             for(i=0;i<names.length;i++){
                 check(names[i]);

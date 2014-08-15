@@ -80,27 +80,28 @@ define(['clientUtil',
             }
 
             resultHeader = PLUGIN_RESULT_HEADER_BASE.clone();
-            if (result.getSuccess() === true) {
-                resultHeader.append(ICON_SUCCESS.clone());
-                resultHeader.addClass(RESULT_SUCCESS_CLASS);
-            } else {
+            if (result.hasViolation === true) {
                 resultHeader.addClass(RESULT_ERROR_CLASS);
                 resultHeader.append(ICON_ERROR.clone());
+            } else {
+                resultHeader.append(ICON_SUCCESS.clone());
+                resultHeader.addClass(RESULT_SUCCESS_CLASS);
             }
 
-            var pluginName = result.getPluginName ? result.getPluginName() : 'PluginName N/A';
+            var checkName = result.info || 'unspecified checking';
             spanResultTitle = RESULT_NAME_BASE.clone();
-            spanResultTitle.text(pluginName);
+            spanResultTitle.text(checkName);
             resultHeader.append(spanResultTitle);
 
-            var pluginTime = result.getFinishTime ? clientUtil.formattedDate(new Date(result.getFinishTime()), 'elapsed') : 'Time: N/A';
+            var checkTime = result.__time ? clientUtil.formattedDate(new Date(result.__time), 'elapsed') : 'Time: N/A';
             spanResultTime = RESULT_TIME_BASE.clone();
-            spanResultTime.text(pluginTime);
+            spanResultTime.text(checkTime);
             resultHeader.append(spanResultTime);
 
             resultDetailsBtn = RESULT_DETAILS_BTN_BASE.clone();
             resultHeader.append(resultDetailsBtn);
 
+            /*
             messageContainer = RESULT_DETAILS_BASE.clone();
             messages = result.getMessages();
 
@@ -143,15 +144,11 @@ define(['clientUtil',
                         });
                     })(artifacts[j], artifactsUL);
                 }
-            }
+            }*/
 
             resultEntry.append(resultHeader);
 
-            if (artifactsContainer) {
-                resultEntry.append(artifactsContainer);
-            }
-
-            resultEntry.append(messageContainer);
+            //resultEntry.append(messageContainer);
 
             body.append(resultEntry);
         }
