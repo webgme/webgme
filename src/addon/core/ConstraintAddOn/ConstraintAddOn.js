@@ -163,6 +163,8 @@ define(['addon/AddOnBase'],function(Base) {
 
         message.info = "node ["+self.core.getPath(node)+"] validation";
         message.commit = self.commit;
+        message._path = self.core.getPath(node);
+        message._name = self.core.getAttribute(node,'name') || "N/A";
         if(needed > 0){
             for(i=0;i<names.length;i++){
                 check(names[i]);

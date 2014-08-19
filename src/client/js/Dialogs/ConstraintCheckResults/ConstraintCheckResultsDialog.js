@@ -14,7 +14,7 @@ define(['clientUtil',
     "use strict";
 
     var ContraintCheckResultsDialog = function(){},
-        PLUGIN_RESULT_ENTRY_BASE = $('<div/>', { 'class': 'plugin-result' }),
+        PLUGIN_RESULT_ENTRY_BASE = $('<div/>', { 'class': 'constraint-check-result' }),
         PLUGIN_RESULT_HEADER_BASE = $('<div class="alert"></div>'),
         RESULT_SUCCESS_CLASS = 'alert-success',
         RESULT_ERROR_CLASS  = 'alert-danger',
@@ -22,13 +22,12 @@ define(['clientUtil',
         ICON_ERROR = $('<i class="glyphicon glyphicon-warning-sign glyphicon glyphicon-warning-sign"/>'),
         RESULT_NAME_BASE = $('<span/>', { 'class': 'title' }),
         RESULT_TIME_BASE = $('<span/>', { 'class': 'time' }),
-        RESULT_DETAILS_BTN_BASE = $('<span class="btn btn-micro btn-details pull-right">Details</span>'),
+        RESULT_DETAILS_BTN_BASE = $('<span class="btn btn-micro btn-details pull-right"><i class="glyphicon glyphicon-plus glyphicon glyphicon-plus"/></span>'),
         RESULT_DETAILS_BASE = $('<div/>', {'class': 'messages collapse'}),
+        NODE_ENTRY_BASE = $('<div/>', { 'class': 'constraint-check-result' }),
+        NODE_BTN_BASE = $('<span class="btn btn-micro btn-node pull-left"><i class="glyphicon glyphicon-eye-open glyphicon glyphicon-eye-open"/></span>'),
         MESSAGE_ENTRY_BASE = $('<div class="msg"><div class="msg-title"></div><div class="msg-body"></div></div>'),
-        MESSAGE_ENTRY_NODE_BTN_BASE = $('<span class="btn btn-micro btn-node pull-right">Show node</span>'),
-        RESULT_ARTIFACTS_BASE = $('<div class="artifacts collapse"><div class="artifacts-title">Generated artifacts</div><div class="artifacts-body"><ul></ul></div></div>'),
-        ARTIFACT_ENTRY_BASE = $('<li><a href="#">Loading...</a></li>'),
-        MESSAGE_PREFIX = 'Message #';
+        GUID_REGEXP = new RegExp("[a-z0-9]{8}(-[a-z0-9]{4}){3}-[a-z0-9]{12}", 'i');
 
     ContraintCheckResultsDialog.prototype.show = function (client,pluginResults) {
         var self = this;
@@ -58,19 +57,26 @@ define(['clientUtil',
             spanResultTitle,
             spanResultTime,
             messageContainer,
+            nodeContainer,
+            nodeGuids,
             resultDetailsBtn,
+            nodeEntry,
+            contraintContainer,
+            contraintNames,
+            contraintEntry,
             messageEntry,
             messageEntryBtn,
             messages,
-            j,
+            i,j, k,
             artifactsContainer,
             artifacts,
             artifactsUL,
             artifactEntry,
             artifactEntryA;
 
-        for (var i = 0; i < pluginResults.length; i += 1) {
+        for (i = 0; i < pluginResults.length; i += 1) {
             result = pluginResults[i];
+
 
             resultEntry = PLUGIN_RESULT_ENTRY_BASE.clone();
 
@@ -101,54 +107,58 @@ define(['clientUtil',
             resultDetailsBtn = RESULT_DETAILS_BTN_BASE.clone();
             resultHeader.append(resultDetailsBtn);
 
-            /*
-            messageContainer = RESULT_DETAILS_BASE.clone();
-            messages = result.getMessages();
-
-            for (j = 0; j < messages.length; j += 1) {
-                messageEntry = MESSAGE_ENTRY_BASE.clone();
-                messageEntry.find('.msg-title').text(MESSAGE_PREFIX + (j+1));
-                if(messages[j].activeNode.id){
-                    messageEntryBtn = MESSAGE_ENTRY_NODE_BTN_BASE.clone();
-                    messageEntry.append(messageEntryBtn);
-                    messageEntry.find('.btn-node').attr('node-result-details', JSON.stringify(messages[j]));
+            //collecting the nodes which has violation
+            nodeGuids = Object.keys(result);
+            j=nodeGuids.length;
+            while(--j>=0){
+                if(!(GUID_REGEXP.test(nodeGuids[j]) && result[nodeGuids[j]].hasViolation === true )){
+                    nodeGuids.splice(j,1);
                 }
-                //messageEntry.find('.msg-body').html(JSON.stringify(messages[j], 0, 2).replace(/\n/g, '<br/>').replace(/  /g, '&nbsp;&nbsp;'));
-                messageEntry.find('.msg-body').html(messages[j].message);
-                messageContainer.append(messageEntry);
             }
 
-            artifactsContainer = undefined;
+            nodeContainer = RESULT_DETAILS_BASE.clone();
+            for(j=0;j<nodeGuids.length;j++){
+                nodeEntry = NODE_ENTRY_BASE.clone();
 
-            var blobClient = new BlobClient();
+                nodeEntry.attr("GMEpath",result[nodeGuids[j]]._path);
+                nodeEntry.append(NODE_BTN_BASE.clone());
 
-            artifacts = result.getArtifacts();
-            if (artifacts.length > 0) {
-                artifactsContainer = RESULT_ARTIFACTS_BASE.clone();
-                artifactsUL = artifactsContainer.find('ul');
-                for (j = 0; j < artifacts.length; j += 1) {
-                    (function(hash, ulE) {
-                        blobClient.getArtifact(hash, function (err, artifact) {
-                            if (err) {
-                                console.error(err);
-                                return;
-                            }
+                spanResultTitle = RESULT_NAME_BASE.clone();
+                spanResultTitle.text(result[nodeGuids[j]]._name +"["+nodeGuids[j]+"]");
 
-                            artifactEntry = ARTIFACT_ENTRY_BASE.clone();
-                            artifactEntryA = artifactEntry.find('a');
-                            //TODO: set the correct URL here
-                            artifactEntryA.attr('href', (new BlobClient()).getDownloadURL(hash));
-                            //TODO: set the correct link text here
-                            artifactEntryA.text(artifact.name);
-                            ulE.append(artifactEntry);
-                        });
-                    })(artifacts[j], artifactsUL);
+                nodeEntry.append(spanResultTitle);
+
+                resultDetailsBtn = RESULT_DETAILS_BTN_BASE.clone();
+                nodeEntry.append(resultDetailsBtn);
+
+                //now the contraint results
+                contraintNames = Object.keys(result[nodeGuids[j]]);
+                k=contraintNames.length;
+                while(--k>=0){
+                    if(!result[nodeGuids[j]][contraintNames[k]].hasViolation === true ){
+                        contraintNames.splice(k,1);
+                    }
                 }
-            }*/
+
+                contraintContainer = RESULT_DETAILS_BASE.clone();
+                for(k=0;k<contraintNames.length;k++){
+                    contraintEntry = MESSAGE_ENTRY_BASE.clone();
+                    contraintEntry.find('.msg-title').text(contraintNames[k]);
+                    contraintEntry.find('.msg-body').html(result[nodeGuids[j]][contraintNames[k]].message);
+
+                    contraintContainer.append(contraintEntry);
+                }
+                nodeEntry.append(contraintContainer);
+
+
+
+
+                nodeContainer.append(nodeEntry);
+
+            }
+            resultHeader.append(nodeContainer);
 
             resultEntry.append(resultHeader);
-
-            //resultEntry.append(messageContainer);
 
             body.append(resultEntry);
         }
@@ -159,31 +169,35 @@ define(['clientUtil',
         });
 
         dialog.on('click', '.btn-details', function (event) {
-            var detailsBtn = $(this),
-                messagesPanel = detailsBtn.parent().parent().find('.messages'),
-                artifactsPanel = detailsBtn.parent().parent().find('.artifacts');
+            $(this).siblings(".messages").toggleClass('in');
 
-            messagesPanel.toggleClass('in');
-            artifactsPanel.toggleClass('in');
-
+            if($(this).children('.glyphicon-plus').length > 0){
+                $(this).html('<i class="glyphicon glyphicon-minus glyphicon glyphicon-minus"/>');
+            } else {
+                $(this).html('<i class="glyphicon glyphicon-plus glyphicon glyphicon-plus"/>');
+            }
             event.stopPropagation();
             event.preventDefault();
         });
 
         dialog.on('click','.btn-node', function(event){
-            var nodeBtn = $(this),
-                resultEntry = JSON.parse(nodeBtn.attr('node-result-details')),
-                node = client.getNode(resultEntry.activeNode.id),
-                parentId = node ? node.getParentId() : null;
+            var node = client.getNode($(this).parent().attr("GMEpath")),
+                parentId;
 
-            //TODO maybe this could be done in a more nicer way
-            if(typeof parentId === 'string'){
-                WebGMEGlobal.State.registerActiveObject(parentId);
-                WebGMEGlobal.State.registerActiveSelection([resultEntry.activeNode.id]);
-            } else {
-                WebGMEGlobal.State.registerActiveObject(resultEntry.activeNode.id);
+            if(node){
+                parentId = node.getParentId();
+                //TODO maybe this could be done in a more nicer way
+                if(typeof parentId === 'string'){
+                    WebGMEGlobal.State.registerActiveObject(parentId);
+                    WebGMEGlobal.State.registerActiveSelection([node.getId()]);
+                } else {
+                    WebGMEGlobal.State.registerActiveObject(node.getId());
+                }
+                dialog.modal('hide');
             }
-            dialog.modal('hide');
+
+
+
         });
 
     };
