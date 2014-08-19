@@ -116,6 +116,7 @@
        style="stroke-width:1.17999995;overflow:hidden"
        d="m 4.2015296,21.781786 0,-3.53125 -3.59374989,0 a 3.54,3.54 0 0 0 3.56249989,3.53125 l 0.0312,0 z"
        id="path9-6-5"
+       data-shift="y-LRect"
        inkscape:connector-curvature="0" />
     <rect
        data-stretch="x-first"
@@ -180,7 +181,7 @@
   <rect
      style="opacity:0"
      id="name-bounding-box"
-     width="10.2517357"
+     width="7.2517357"
      height="8.1356192"
      x="35.972111"
      y="6.5785375"/>
@@ -231,7 +232,7 @@
      class="connection-area"
      data-ptr="second"
      data-role="out"
-     data-shift="x-shift-name x-shift-first"
+     data-shift="x-nameRect"
      x1="60"
      y1="3.5"
      x2="55.5"
@@ -252,8 +253,8 @@
      data-ptr="second"
      data-type="text"
      class="initial-measure"
-     width="15"
-     height="255"
+     width="14"
+     height="20"
      x="0"
      y="0"
      inkscape:label="#rect3000"
@@ -274,8 +275,19 @@
      data-ptr="first"
      data-type="svg"
      class="initial-measure"
-     width="14"
-     height="15"
+     width="25"
+     height="14"
+     x="0"
+     y="0"
+     inkscape:label="#rect3000"
+     id="rect29" />
+  <rect
+     style="opacity:0"
+     data-ptr="second"
+     data-type="svg"
+     class="initial-measure"
+     width="25"
+     height="14"
      x="0"
      y="0"
      inkscape:label="#rect3000"

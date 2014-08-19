@@ -86,7 +86,7 @@
        class="x-shift-name"
        inkscape:connector-curvature="0" />
     <rect
-       class="x-stretch-name y-stretch-name"
+       class="x-name y-name"
        x="28.686499"
        y="0.68525004"
        width="29.866077"
@@ -94,7 +94,7 @@
        style="stroke-width:1.17999995"
        id="rect11" />
     <rect
-       class="x-stretch-name y-stretch-name"
+       class="x-name y-name"
        x="0.60249996"
        y="4.7332501"
        width="83.639534"
@@ -142,7 +142,7 @@
      id="next-out" />
   <!-- custom highlighting areas are now supported - must be a line, however -->
   <line
-     class="connection-highlight x-stretch-name"
+     class="connection-highlight x-name"
      style="opacity:0;stroke:#444444;stroke-width:10.10658169"
      data-ptr="next"
      data-role="out"

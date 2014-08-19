@@ -59,7 +59,7 @@
      style="fill:#477f7a;stroke:#477f7a;"
      data-secondary="fill:#54b868;stroke:#54b868;">
   <rect
-     class="y-stretch-name x-stretch-name x-stretch-node y-stretch-node"
+     class="y-name x-name x-node y-node"
      id="nameRect"
      y="3.2143703"
      x="3.2063484"

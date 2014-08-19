@@ -7,13 +7,13 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   height="22.401995"
+   height="22.473457"
    version="1.1"
-   width="86.981117"
+   width="108.36743"
    style="overflow:hidden"
    id="svg2"
    inkscape:version="0.48.5 r10040"
-   sodipodi:docname="unary_reporter2.svg">
+   sodipodi:docname="unary_node_reporter.svg">
   <metadata
      id="metadata22">
     <rdf:RDF>
@@ -40,13 +40,17 @@
      inkscape:window-height="1173"
      id="namedview18"
      showgrid="false"
-     inkscape:zoom="16.000001"
-     inkscape:cx="46.97776"
-     inkscape:cy="17.345694"
+     inkscape:zoom="5.6568546"
+     inkscape:cx="32.219281"
+     inkscape:cy="26.920293"
      inkscape:window-x="3840"
      inkscape:window-y="25"
      inkscape:window-maximized="1"
-     inkscape:current-layer="svg2" />
+     inkscape:current-layer="svg2"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0" />
   <!--
   <g
      id="colors"
@@ -58,38 +62,53 @@
      id="colors"
      style="fill:#74e868;stroke:#74e868;"
      data-secondary="fill:#54b868;stroke:#54b868;">
+
   <rect
-     class="y-stretch-name x-stretch-name x-stretch-node y-stretch-node"
+     style="stroke-width:4.1156249;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+     width="53.921001"
+     height="18.27351"
+     ry="2.5"
+     rx="2.5"
+     x="52.388618"
+     y="2.1421349"
+     id="nodeRect"
+     data-shift="x-nameRect"
+     data-stretch="x-node y-node"
+     inkscape:label="#nameRect-0" />
+  <rect
+     style="stroke-width:5.68302441;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+     width="53.921001"
+     height="16.706114"
+     ry="2.5"
+     rx="2.5"
+     x="2.8415122"
+     y="2.849534"
      id="nameRect"
-     y="3.2143703"
-     x="3.2063484"
-     rx="5"
-     ry="5"
-     height="15.976439"
-     width="80.491302"
-     style="stroke-width:6.41269684;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"/>
+     data-stretch="y-node x-name y-name" />
+</g>
   <rect
-     class="y-shift-name x-shift-name"
-     style="fill:#ffffff;fill-opacity:1;stroke:none;overflow:hidden"
-     id="RinputField"
-     width="16.673277"
-     height="12.51503"
-     ry="5"
+     y="4.7485795"
+     x="82.725426"
      rx="5"
-     x="57.725422"
-     y="4.7485795" />
-  </g>
+     ry="5"
+     height="12.51503"
+     width="16.673277"
+     id="RinputField"
+     style="fill:#ffffff;fill-opacity:1;stroke:none;overflow:hidden"
+     text-stretch-only="true"
+     data-shift="x-nameRect"
+     data-stretch="x-node y-node" />
   <!-- NAME AND CONNECTION INFO -->
   <text
-     id="name"
-     x="10.3756523"
+     x="10.375652"
      y="15.179907"
-     style="font-size:12px">node Op</text>
+     style="font-size:12px"
+     id="text9">children of</text>
   <!-- Text Bounding Boxes -->
   <rect
      style="opacity:0"
      id="name-bounding-box"
-     width="20.2517357"
+     width="20.251736"
      height="8.1356192"
      x="35.972111"
      y="6.5785375" />
@@ -121,13 +140,12 @@
      class="connection-area"
      data-ptr="node"
      data-role="out"
-     data-shift="x-shift-name"
-     x1="60"
+     data-shift="x-nameRect"
+     x1="80"
      y1="3.5"
-     x2="55.5"
+     x2="75.5"
      y2="8"
      id="node-out" />
-
   <!-- initial measures -->
   <rect
      style="opacity:0"

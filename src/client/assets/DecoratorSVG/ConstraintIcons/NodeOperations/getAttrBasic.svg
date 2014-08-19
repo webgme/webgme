@@ -11,7 +11,7 @@
    version="1.1"
    width="157.1357"
    style="overflow:hidden"
-   id="svg2"
+   id="getAttribute"
    inkscape:version="0.48.5 r10040"
    sodipodi:docname="getAttrBasic.svg">
   <metadata
@@ -65,7 +65,8 @@
 
 -->
   <rect
-     class="x-shift-first y-stretch-first y-stretch-node x-stretch-name y-stretch-name"
+     data-stretch="y-first y-node"
+     data-shift="x-LRect"
      style="fill:#4cc3d9;stroke:#4cc3d9;stroke-width:3.71589041;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
      id="nameRect"
      width="16.188242"
@@ -74,7 +75,8 @@
      y="1.8759441"
      inkscape:label="#rect3009" />
   <rect
-     class="x-shift-name x-shift-first y-shift-name x-stretch-node y-stretch-node y-stretch-first"
+     data-stretch="x-node y-node y-first"
+     data-shift="x-nameRect"
      x="122.86996"
      y="3.9556303"
      width="33.893703"
@@ -84,19 +86,19 @@
      style="fill:#4cc3d9;stroke:#4cc3d9;stroke-width:0.7440812;overflow:hidden"
      id="RRect" />
   <path
-     class="x-shift-name x-shift-first x-shift-first x-shift-node x-shift-node"
+     data-shift="x-RRect"
      inkscape:connector-curvature="0"
      id="TRCorner"
      d="m 152.79049,0.62274991 0,3.53124999 3.59375,0 a 3.54,3.54 0 0 0 -3.5625,-3.53124999 l -0.0312,0 z"
      style="fill:#4cc3d9;stroke:#4cc3d9;stroke-width:1.17999995;overflow:hidden" />
   <path
-     class="x-shift-name y-shift-name x-shift-first y-shift-first x-shift-node y-shift-node x-shift-node y-shift-node"
+     data-shift="x-RRect y-RRect"
      inkscape:connector-curvature="0"
      id="BRCorner"
      d="m 152.77959,29.786092 0,-3.53125 3.59375,0 a 3.54,3.54 0 0 1 -3.5625,3.53125 l -0.0312,0 z"
      style="fill:#4cc3d9;stroke:#4cc3d9;stroke-width:1.17999995;overflow:hidden" />
   <rect
-     class="x-stretch-name y-stretch-node y-stretch-name x-stretch-first y-stretch-first"
+     data-stretch="y-node x-first y-first"
      x="0.63464516"
      y="4.8356438"
      width="102.72572"
@@ -112,12 +114,12 @@
      style="fill:#4cc3d9;stroke:#4cc3d9;stroke-width:1.17999995;overflow:hidden" />
   <path
      inkscape:connector-curvature="0"
-     class="y-shift-name y-shift-node y-shift-first"
+     data-shift="y-LRect"
      id="path9-6-5"
      d="m 4.18375,29.781789 0,-3.53125 -3.59375,0 a 3.54,3.54 0 0 0 3.5625,3.53125 l 0.0312,0 z"
      style="fill:#4cc3d9;stroke:#4cc3d9;stroke-width:1.17999995;overflow:hidden" />
   <rect
-     class="x-stretch-name x-stretch-first"
+     data-stretch="x-first"
      y="0.71612072"
      x="4.6208611"
      height="3.3310173"
@@ -125,7 +127,8 @@
      id="LTRect"
      style="fill:#4cc3d9;stroke:#4cc3d9;stroke-width:1.43172371" />
   <rect
-     class="y-shift-name y-shift-node y-shift-first x-stretch-first"
+     data-stretch="x-first"
+     data-shift="y-LRect"
      y="26.293882"
      x="4.626503"
      height="3.3866155"
@@ -133,7 +136,8 @@
      id="LBRect"
      style="fill:#4cc3d9;stroke:#4cc3d9;stroke-width:1.44300425" />
   <rect
-     class="x-shift-first x-shift-name x-stretch-node"
+     data-stretch="x-node"
+     data-shift="x-nameRect"
      y="0.47734737"
      x="123.19141"
      height="3.9139254"
@@ -142,7 +146,8 @@
      style="fill:#4cc3d9;stroke:#4cc3d9;stroke-width:0.84345406;overflow:hidden" />
   <rect
      inkscape:label="#RTRect-4"
-     class="x-shift-name y-shift-name x-stretch-node y-shift-node x-shift-first y-shift-first"
+     data-stretch="x-node"
+     data-shift="x-nameRect y-nameRect"
      y="26.038549"
      x="122.74908"
      height="3.9139254"
@@ -158,9 +163,11 @@
      width="16.673277"
      id="RInputField"
      style="fill:#ffffff;fill-opacity:1;stroke:none;overflow:hidden"
-     class="y-shift-name x-shift-name x-shift-first" />
+     data-shift="x-nameRect" />
   <rect
      id="firstInputField"
+     data-stretch="x-first"
+     text-stretch-only="true"
      width="74.297997"
      height="16.51503"
      ry="5"
@@ -178,8 +185,9 @@
      id="first"
      x="36.899418"
      y="20.875631"
-     style="font-size:12px;overflow:hidden">--pointer--</text>
+     style="font-size:12px;overflow:hidden">--attribute--</text>
   <text
+     data-shift="x-nameRect"
      x="114.37566"
      y="20.179911"
      style="font-size:14px">of</text>
@@ -194,7 +202,7 @@
   <rect
      style="opacity:0"
      id="first-bounding-box"
-     width="16.673277"
+     width="50.673277"
      height="12.51503"
      x="127.72543"
      y="0" />
@@ -208,7 +216,7 @@
   <!-- connection areas -->
   <line
      class="connection-area"
-     data-ptr="cond first second node"
+     data-ptr="cond first node second"
      data-role="in"
      x1="4.5"
      y1="0"
@@ -219,7 +227,7 @@
      class="connection-area"
      data-ptr="node"
      data-role="out"
-     data-shift="x-shift-name x-shift-first"
+     data-shift="x-nameRect"
      x1="136.25"
      y1="6.8750019"
      x2="131.75"
@@ -238,17 +246,19 @@
      id="rect27" />
   <rect
      style="opacity:0"
-     data-ptr="name"
+     data-ptr="first"
+     data-type="text"
      class="initial-measure"
-     width="10"
+     width="20"
      height="15"
      x="70"
      y="0"
      inkscape:label="#rect3000"
-     id="rect29" />
+     id="rect30" />
   <rect
      style="opacity:0"
      data-ptr="first"
+     data-type="svg"
      class="initial-measure"
      width="25"
      height="15"

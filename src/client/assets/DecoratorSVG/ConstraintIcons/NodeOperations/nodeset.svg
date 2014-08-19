@@ -12,8 +12,8 @@
    width="52.974239"
    style="overflow:hidden"
    id="svg2"
-   inkscape:version="0.48.4 r9939"
-   sodipodi:docname="node.svg">
+   inkscape:version="0.48.5 r10040"
+   sodipodi:docname="nodeset.svg">
   <metadata
      id="metadata22">
     <rdf:RDF>
@@ -37,13 +37,13 @@
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:window-width="1918"
-     inkscape:window-height="1053"
+     inkscape:window-height="1173"
      id="namedview18"
      showgrid="false"
      inkscape:zoom="16.000001"
-     inkscape:cx="46.97776"
+     inkscape:cx="27.242105"
      inkscape:cy="17.340852"
-     inkscape:window-x="0"
+     inkscape:window-x="3840"
      inkscape:window-y="25"
      inkscape:window-maximized="1"
      inkscape:current-layer="svg2"
@@ -65,59 +65,58 @@
 -->
   <g
      id="colors"
-     style="fill:#74e868;stroke:#74e868;"
+     style="fill:#54b848;stroke:#54b848;"
      data-secondary="fill:#54b868;stroke:#54b868;">
-
-  <rect
-     class="x-stretch-name"
-     style="stroke-width:4.7233882;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
-     id="nameRect"
-     width="39.493244"
-     height="17.665749"
-     x="6.7916842"
-     y="2.3697159"
-     inkscape:label="#rect3009" />
-  <rect
-     class="x-shift-name"
-     x="48.274986"
-     y="3.860949"
-     width="4.5836344"
-     height="13.994269"
-     r="0"
-     rx="0"
-     style="stroke-width:0.21916644;overflow:hidden"
-     id="RRect" />
-  <path
-     class="x-shift-name"
-     inkscape:connector-curvature="0"
-     id="TRCorner"
-     d="m 48.790488,0.62299493 0,3.53124987 3.59375,0 a 3.54,3.54 0 0 0 -3.5625,-3.53124987 l -0.0312,0 z"
-     style="stroke-width:1.17999995;overflow:hidden" />
-  <path
-     class="x-shift-name"
-     inkscape:connector-curvature="0"
-     id="BRCorner"
-     d="m 48.779588,21.786089 0,-3.53125 3.59375,0 a 3.54,3.54 0 0 1 -3.5625,3.53125 l -0.0312,0 z"
-     style="stroke-width:1.17999995;overflow:hidden" />
-  <rect
-     x="0.10520758"
-     y="4.2820969"
-     width="4.2222514"
-     height="14.003021"
-     r="0"
-     rx="0"
-     style="stroke-width:0.21041515"
-     id="LRect" />
-  <path
-     inkscape:connector-curvature="0"
-     id="path9-6"
-     d="m 4.1906288,0.61869211 0,3.53124999 -3.59374999,0 A 3.54,3.54 0 0 1 4.1593788,0.61869211 l 0.0312,0 z"
-     style="stroke-width:1.17999995;overflow:hidden" />
-  <path
-     inkscape:connector-curvature="0"
-     id="path9-6-5"
-     d="m 4.2015296,21.781786 0,-3.53125 -3.59374989,0 a 3.54,3.54 0 0 0 3.56249989,3.53125 l 0.0312,0 z"
-     style="stroke-width:1.17999995;overflow:hidden" />
+    <rect
+       data-stretch="x-name"
+       style="stroke-width:4.7233882;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="nameRect"
+       width="39.493244"
+       height="17.665749"
+       x="6.7916842"
+       y="2.3697159"
+       inkscape:label="#rect3009" />
+    <rect
+       data-shift="x-nameRect"
+       x="48.274986"
+       y="3.860949"
+       width="4.5836344"
+       height="13.994269"
+       r="0"
+       rx="0"
+       style="stroke-width:0.21916644;overflow:hidden"
+       id="RRect" />
+    <path
+       data-shift="x-nameRect"
+       inkscape:connector-curvature="0"
+       id="TRCorner"
+       d="m 48.790488,0.62299493 0,3.53124987 3.59375,0 a 3.54,3.54 0 0 0 -3.5625,-3.53124987 l -0.0312,0 z"
+       style="stroke-width:1.17999995;overflow:hidden" />
+    <path
+       data-shift="x-nameRect"
+       inkscape:connector-curvature="0"
+       id="BRCorner"
+       d="m 48.779588,21.786089 0,-3.53125 3.59375,0 a 3.54,3.54 0 0 1 -3.5625,3.53125 l -0.0312,0 z"
+       style="stroke-width:1.17999995;overflow:hidden" />
+    <rect
+       x="0.10520758"
+       y="4.2820969"
+       width="4.2222514"
+       height="14.003021"
+       r="0"
+       rx="0"
+       style="stroke-width:0.21041515"
+       id="LRect" />
+    <path
+       inkscape:connector-curvature="0"
+       id="path9-6"
+       d="m 4.1906288,0.61869211 0,3.53124999 -3.59374999,0 A 3.54,3.54 0 0 1 4.1593788,0.61869211 l 0.0312,0 z"
+       style="stroke-width:1.17999995;overflow:hidden" />
+    <path
+       inkscape:connector-curvature="0"
+       id="path9-6-5"
+       d="m 4.2015296,21.781786 0,-3.53125 -3.59374989,0 a 3.54,3.54 0 0 0 3.56249989,3.53125 l 0.0312,0 z"
+       style="stroke-width:1.17999995;overflow:hidden" />
   </g>
   <!-- Text Bounding Boxes -->
   <rect
@@ -129,17 +128,16 @@
      y="6.5785375" />
   <!-- NAME AND CONNECTION INFO -->
   <text
-     class="x-shift-first"
-     font-weight="bold"
      data-editable="true"
+     font-weight="bold"
      id="name"
-     x="12.3756523"
+     x="8.3756523"
      y="16.179907"
-     style="font-size:12px">node</text>
+     style="font-size:12px">nodes</text>
   <!-- connection areas -->
   <line
      class="connection-area"
-     data-ptr="iter cond first second node"
+     data-ptr="iter collection cond first second node"
      data-role="in"
      x1="4.5"
      y1="0"

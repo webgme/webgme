@@ -73,19 +73,28 @@
   <path
      style="stroke-width:1.17999995"
      d="m 105.707,0.59224993 0,3.53124997 26.125,0 a 3.54,3.54 0 0 0 -3.5625,-3.53124997 l -22.5625,0 z"
-     id="path3009"
-     class="x-shift-name x-shift-first x-shift-second x-shift-map"
+     id="TRCorner"
+     data-shift="x-mapRectHorizontal"
      inkscape:connector-curvature="0" />
   <rect
-     class="x-stretch-name x-stretch-first x-stretch-second x-stretch-map y-stretch-name y-stretch-first y-stretch-second y-stretch-map"
+     data-stretch="x-first y-first y-map"
      x="9.6982555"
      y="1.0512555"
      width="98.943489"
      height="21.202488"
      style="stroke-width:2.10251093"
-     id="rect11" />
+     id="firstRect" />
   <rect
-     class="x-stretch-name x-stretch-first x-stretch-second x-stretch-map y-stretch-name y-stretch-first y-stretch-second y-stretch-map"
+     data-stretch="x-map y-first y-map"
+     data-shift="x-firstRect"
+     x="9.6982555"
+     y="1.0512555"
+     width="98.943489"
+     height="21.202488"
+     style="stroke-width:2.10251093"
+     id="mapRect" />
+  <rect
+     data-stretch="x-first y-first y-map"
      x="1.2929344"
      y="4.777597"
      width="130.36081"
@@ -94,20 +103,31 @@
      rx="0"
      ry="0"
      style="stroke-width:1.45919418"
-     id="rect10" />
+     id="firstRectHorizontal" />
+  <rect
+     data-stretch="x-map y-first y-map"
+     data-shift="x-firstRectHorizontal"
+     x="1.2929344"
+     y="4.777597"
+     width="130.36081"
+     height="14.516808"
+     r="0"
+     rx="0"
+     ry="0"
+     style="stroke-width:1.45919418"
+     id="mapRectHorizontal" />
   <path
      style="stroke-width:1.17999995"
      d="m 104.613,19.186 0,3.53125 23.65625,0 a 3.54,3.54 0 0 0 3.5625,-3.53125 l -27.21875,0 z"
-     id="path15"
-     class="y-shift-name y-shift-first y-shift-second y-shift-map x-shift-name x-shift-first x-shift-second x-shift-map"
+     id="BRCorner"
+     data-shift="x-mapRectHorizontal y-mapRectHorizontal "
      inkscape:connector-curvature="0" />
   <path
      inkscape:label="#rect3006"
      inkscape:connector-curvature="0"
      id="first_box"
      d="m 62.699787,5.7697069 0,0.4034183 -0.23906,-0.2390625 -6.4248,6.4248053 6.4248,6.424805 0.23906,-0.239063 0,0.313769 10.115343,0 0,-0.373535 0.26894,0.268945 6.42481,-6.439746 -6.42481,-6.4248049 -0.26894,0.2689454 0,-0.3884766 -10.115343,0 z"
-     style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0.47324049px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-     class="x-shift-name x-shift-second" />
+     style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0.47324049px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"/>
   <rect
      inkscape:label="#rect3797-2"
      rx="5"
@@ -117,30 +137,29 @@
      width="23.394461"
      id="map_box"
      style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0.58804238px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;overflow:hidden"
-     class="x-shift-second x-shift-first x-shift-name" />
+     data-shift="x-firstRectHorizontal" />
   <path
-     class="y-shift-name y-shift-first y-shift-second y-shift-map"
+     data-shift="y-firstRectHorizontal"
      style="stroke-width:1.17999995;overflow:hidden"
      d="m 28.37175,19.242895 0,3.53125 -23.65625,0 A 3.54,3.54 0 0 1 1.153,19.242895 l 27.21875,0 z"
-     id="path15-1"
+     id="BLCorner"
      inkscape:connector-curvature="0" />
   <path
      style="stroke-width:1.17999995;overflow:hidden"
      d="m 28.37175,4.1740422 0,-3.53125027 -23.65625,0 A 3.54,3.54 0 0 0 1.153,4.1740422 l 27.21875,0 z"
-     id="path15-1-9"
+     id="TRCorner"
      inkscape:connector-curvature="0" />
 </g>
 
   <!-- Extra SVG info for WebGME -->
   <!-- Text -->
   <text
-     class="x-shift-name x-shift-first"
+     data-shift="x-firstRectHorizontal"
      id="name-6-6"
      x="85.112648"
      y="17.000078"
      style="font-size:12px;overflow:hidden">in</text>
   <text
-     id="name"
      x="6.4633374"
      y="17"
      style="font-size:12px">item at</text>
@@ -167,34 +186,14 @@
      class="connection-area"
      data-ptr="map"
      data-role="out"
-     data-shift="x-shift-name x-shift-first"
+     data-shift="x-firstRectHorizontal"
      id="map-out"
      x1="100"
      y1="4"
      x2="102"
      y2="8" />
   <!-- custom highlighting areas are now supported - must be a line, however -->
-  <line
-     class="connection-highlight x-stretch-name x-stretch-first x-stretch-second x-stretch-map"
-     style="opacity:0;stroke:#444444;stroke-width:10.10658169"
-     data-ptr="next"
-     data-role="out"
-     x1="5.0532908"
-     y1="26.904751"
-     x2="79.852669"
-     y2="26.904751"
-     id="line17" />
   <!-- initial measurements -->
-  <rect
-     style="opacity:0"
-     class="initial-measure"
-     data-ptr="name"
-     width="40"
-     height="19"
-     x="0.56333733"
-     y="0"
-     id="rect19" />
-
   <rect
      style="opacity:0"
      class="initial-measure"

@@ -41,9 +41,9 @@
      inkscape:window-height="1173"
      id="namedview11"
      showgrid="false"
-     inkscape:zoom="4.0684764"
-     inkscape:cx="23.128399"
-     inkscape:cy="91.786622"
+     inkscape:zoom="5.7536945"
+     inkscape:cx="96.737131"
+     inkscape:cy="4.9800671"
      inkscape:window-x="3840"
      inkscape:window-y="25"
      inkscape:window-maximized="1"
@@ -66,100 +66,152 @@
      style="fill:#4a79a5;stroke:#4a79a5;"
      data-secondary="fill:#54b868;stroke:#54b868;">
   -->
-  <g
-     id="colors"
-     style="fill:#4a79a5;stroke:#4a79a5;"
-     data-secondary="fill:#54b868;stroke:#54b868;">
-    <path
-       inkscape:connector-curvature="0"
-       id="path8"
-       style="stroke-width:1.22866261"
-       d="M 1.1776687,4.6956685 A 3.5336527,3.8448907 0 0 1 4.7113213,0.85077789 l 7.0673047,0 3.533653,3.84489061 9.423074,0 3.533653,-3.71672757 0,3.71672757" />
-    <path
-       inkscape:connector-curvature="0"
-       class="x-shift-name x-shift-first x-shift-second x-shift-map"
-       id="path3009"
-       d="m 138.70734,0.59224993 0,3.53124997 26.125,0 a 3.54,3.54 0 0 0 -3.5625,-3.53124997 l -22.5625,0 z"
-       style="stroke-width:1.17999995" />
-    <rect
-       id="rect11"
-       style="stroke-width:2.20013094"
-       height="21.104868"
-       width="108.84587"
-       y="1.1000655"
-       x="29.747402"
-       class="x-stretch-name x-stretch-first x-stretch-second x-stretch-map y-stretch-name y-stretch-first y-stretch-second y-stretch-map" />
-    <rect
-       id="rect10"
-       style="stroke-width:1.62339771"
-       ry="0"
-       rx="0"
-       r="0"
-       height="14.352603"
-       width="163.19661"
-       y="4.8596988"
-       x="1.3750362"
-       class="x-stretch-name x-stretch-first x-stretch-second x-stretch-map y-stretch-name y-stretch-first y-stretch-second y-stretch-map" />
-    <path
-       inkscape:connector-curvature="0"
-       class="y-shift-name y-shift-first y-shift-second y-shift-map"
-       id="path12"
-       style="stroke-width:1.17999995"
-       d="m 1.1533373,19.352 a 3.54,3.54 0 0 0 3.54,3.54 l 7.0799997,0 3.54,3.54 9.44,0 3.54,-3.54 0,-3.658" />
-    <path
-       inkscape:connector-curvature="0"
-       class="y-shift-name y-shift-first y-shift-second y-shift-map x-shift-name x-shift-first x-shift-second x-shift-map"
-       id="path15"
-       d="m 137.61334,19.186 0,3.53125 23.65625,0 a 3.54,3.54 0 0 0 3.5625,-3.53125 l -27.21875,0 z"
-       style="stroke-width:1.17999995" />
-
-  <!-- input boxes -->
-    <path
-       class="x-shift-name x-shift-second"
-       style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0.47324049px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 96.699787,5.7697069 0,0.4034183 -0.23906,-0.2390625 -6.4248,6.4248053 6.4248,6.424805 0.23906,-0.239063 0,0.313769 10.115343,0 0,-0.373535 0.26894,0.268945 6.42481,-6.439746 -6.42481,-6.4248049 -0.26894,0.2689454 0,-0.3884766 -10.115343,0 z"
-       id="first_box"
-       inkscape:connector-curvature="0"
-       inkscape:label="#rect3006" />
-    <rect
-       class="x-stretch-second x-shift-name"
-       text-stretch-only="true"
-       style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0.58804238px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       id="second_box"
-       width="23.394461"
-       height="14.300145"
-       x="41.868393"
-       y="4.500833"
-       rx="5"
-       inkscape:label="#rect3797" />
-    <rect
-       class="x-shift-second x-shift-first x-shift-name"
-       text-stretch-only="true"
-       style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0.58804238px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;overflow:hidden"
-       id="map_box"
-       width="23.394461"
-       height="14.300145"
-       x="135.95723"
-       y="4.500833"
-       rx="5"
-       inkscape:label="#rect3797-2" />
-  </g>
+  <rect
+     data-stretch="x-map y-name y-first y-second y-map"
+     data-shift="x-firstRect"
+     x="104.22752"
+     y="0.79714304"
+     width="55.551819"
+     height="21.710808"
+     style="fill:#4a79a5;stroke:#4a79a5;stroke-width:1.59418261;overflow:hidden"
+     id="mapRectVert"
+     inkscape:label="#rect11" />
+  <rect
+     data-stretch="x-map y-name y-first y-second y-map"
+     data-shift="x-firstRect"
+     x="120.3271"
+     y="4.4835935"
+     width="44.648899"
+     height="15.104897"
+     r="0"
+     rx="0"
+     ry="0"
+     style="fill:#4a79a5;stroke:#4a79a5;stroke-width:0.87110096;overflow:hidden"
+     id="mapRect"
+     inkscape:label="#rect10-4" />
+  <rect
+     data-stretch="x-first y-name y-first y-second y-map"
+     data-shift="x-secondRect"
+     x="76.265739"
+     y="4.5104094"
+     width="50.495266"
+     height="15.051264"
+     r="0"
+     rx="0"
+     ry="0"
+     style="fill:#4a79a5;stroke:#4a79a5;stroke-width:0.92473233;overflow:hidden"
+     id="firstRect"
+     inkscape:label="#rect10-4" />
+  <rect
+     data-stretch="x-first y-name y-first y-second y-map"
+     data-shift="x-secondRect"
+     x="70.208847"
+     y="0.79714555"
+     width="55.551819"
+     height="21.710808"
+     style="fill:#4a79a5;stroke:#4a79a5;stroke-width:1.59418261;overflow:hidden"
+     id="firstRectVert"
+     inkscape:label="#rect11" />
+  <rect
+     data-stretch="x-second y-name y-first y-second y-map"
+     x="32.853107"
+     y="4.5147882"
+     width="51.486507"
+     height="15.042508"
+     r="0"
+     rx="0"
+     ry="0"
+     style="fill:#4a79a5;stroke:#4a79a5;stroke-width:0.93349302;overflow:hidden"
+     id="secondRect"
+     inkscape:label="#rect10-4" />
+  <path
+     d="M 1.1776687,4.6956685 A 3.5336527,3.8448907 0 0 1 4.7113213,0.85077789 l 7.0673047,0 3.533653,3.84489061 9.423074,0 3.533653,-3.71672757 0,3.71672757"
+     style="fill:#4a79a5;stroke:#4a79a5;stroke-width:1.22866261"
+     id="dent-in"
+     inkscape:connector-curvature="0" />
+  <path
+     style="fill:#4a79a5;stroke:#4a79a5;stroke-width:1.17999995"
+     d="m 138.70734,0.59224993 0,3.53124997 26.125,0 a 3.54,3.54 0 0 0 -3.5625,-3.53124997 l -22.5625,0 z"
+     id="TRCorner"
+     data-shift="x-mapRectVert"
+     inkscape:connector-curvature="0" />
+  <rect
+     data-stretch="x-second y-name y-first y-second y-map"
+     x="29.331278"
+     y="0.68394423"
+     width="40.478104"
+     height="21.937099"
+     style="fill:#4a79a5;stroke:#4a79a5;stroke-width:1.36788845"
+     id="secondRectVert"
+     inkscape:label="#rect11" />
+  <rect
+     data-stretch="y-first y-second y-map"
+     x="0.9671194"
+     y="4.4517822"
+     width="38.212437"
+     height="15.168436"
+     r="0"
+     rx="0"
+     ry="0"
+     style="fill:#4a79a5;stroke:#4a79a5;stroke-width:0.80756402"
+     id="nameRect"
+     inkscape:label="#rect10" />
+  <path
+     d="m 1.1533373,19.352 a 3.54,3.54 0 0 0 3.54,3.54 l 7.0799997,0 3.54,3.54 9.44,0 3.54,-3.54 0,-3.658"
+     style="fill:#4a79a5;stroke:#4a79a5;stroke-width:1.17999995"
+     id="dent-out"
+     data-shift="y-nameRect"
+     inkscape:connector-curvature="0" />
+  <path
+     style="fill:#4a79a5;stroke:#4a79a5;stroke-width:1.17999995"
+     d="m 137.61334,19.186 0,3.53125 23.65625,0 a 3.54,3.54 0 0 0 3.5625,-3.53125 l -27.21875,0 z"
+     id="BRCorner"
+     data-shift="x-mapRectVert y-mapRect"
+     inkscape:connector-curvature="0" />
+  <path
+     inkscape:label="#rect3006"
+     inkscape:connector-curvature="0"
+     id="first_box"
+     d="m 96.699787,5.7697069 0,0.4034183 -0.23906,-0.2390625 -6.4248,6.4248053 6.4248,6.424805 0.23906,-0.239063 0,0.313769 10.115343,0 0,-0.373535 0.26894,0.268945 6.42481,-6.439746 -6.42481,-6.4248049 -0.26894,0.2689454 0,-0.3884766 -10.115343,0 z"
+     style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0.47324049px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     data-shift="x-secondRect" />
+  <rect
+     inkscape:label="#rect3797"
+     rx="5"
+     y="4.500833"
+     x="41.868393"
+     height="14.300145"
+     width="23.394461"
+     id="second_box"
+     style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0.58804238px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     text-stretch-only="true"
+     data-stretch="x-second" />
+  <rect
+     inkscape:label="#rect3797-2"
+     rx="5"
+     y="4.500833"
+     x="135.95723"
+     height="14.300145"
+     width="23.394461"
+     id="map_box"
+     style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0.58804238px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;overflow:hidden"
+     text-stretch-only="true"
+     data-shift="x-firstRect" />
   <!-- Extra SVG info for WebGME -->
   <!-- Text -->
   <text
      id="name-6"
-     class="x-shift-name x-shift-second"
+     data-shift="x-secondRect"
      x="72.201973"
      y="17.000078"
      style="font-size:12px;overflow:hidden">at</text>
   <text
-     class="x-shift-name x-shift-first x-shift-second"
+     data-shift="x-firstRect"
      id="name-6-6"
      x="119.11265"
      y="17.000078"
      style="font-size:12px;overflow:hidden">in</text>
   <text
-     id="name"
      x="6.4633374"
      y="17"
      style="font-size:12px">store</text>
@@ -167,7 +219,15 @@
      id="second"
      x="46.463337"
      y="17"
-     style="font-size:12px"></text>
+     style="font-size:12px" >text</text>
+  <!-- Bounding Boxes -->
+  <rect
+     style="opacity:0"
+     id="second-bounding-box"
+     width="15"
+     height="12"
+     x="0"
+     y="0" />
   <!-- Connection Areas -->
   <line
      class="connection-area"
@@ -182,7 +242,7 @@
      class="connection-area"
      data-ptr="next"
      data-role="out"
-     data-shift="y-shift-first y-shift-map y-shift-name"
+     data-shift="y-nameRect"
      x1="15.550838"
      y1="26.904751"
      x2="24.550837"
@@ -192,7 +252,6 @@
      class="connection-area"
      data-ptr="second"
      data-role="out"
-     data-shift="x-shift-name"
      x1="40.278103"
      y1="3.8570256"
      x2="45.278103"
@@ -202,7 +261,7 @@
      class="connection-area"
      data-ptr="first"
      data-role="out"
-     data-shift="x-shift-name x-shift-second"
+     data-shift="x-secondRect"
      x1="86.406471"
      y1="4.3118548"
      x2="91.406471"
@@ -212,7 +271,7 @@
      class="connection-area"
      data-ptr="map"
      data-role="out"
-     data-shift="x-shift-name x-shift-first x-shift-second"
+     data-shift="x-firstRect"
      x1="132.54578"
      y1="3.1243854"
      x2="137.54578"
@@ -220,7 +279,7 @@
      id="map-out" />
   <!-- custom highlighting areas are now supported - must be a line, however -->
   <line
-     class="connection-highlight x-stretch-name x-stretch-first x-stretch-second x-stretch-map"
+     class="connection-highlight x-name x-first x-second x-map"
      style="opacity:0;stroke:#444444;stroke-width:10.10658169"
      data-ptr="next"
      data-role="out"
@@ -233,18 +292,10 @@
   <rect
      style="opacity:0"
      class="initial-measure"
-     data-ptr="name"
-     width="69"
-     height="19"
-     x="0.56333733"
-     y="0"
-     id="rect19" />
-  <rect
-     style="opacity:0"
-     class="initial-measure"
      data-ptr="first"
+     data-type="svg"
      width="24"
-     height="17"
+     height="12"
      x="0.56333733"
      y="0"
      id="rect28" />
@@ -252,28 +303,31 @@
      style="opacity:0"
      class="initial-measure"
      data-ptr="second"
+     data-type="svg"
      width="24"
-     height="17"
+     height="12"
      x="0.56333733"
      y="0"
      id="rect30" />
   <rect
      style="opacity:0"
      class="initial-measure"
+     data-ptr="map"
+     data-type="svg"
+     width="24"
+     height="12"
+     x="0.56333733"
+     y="0"
+     id="rect32" />
+  <!-- Text -->
+  <rect
+     style="opacity:0"
+     class="initial-measure"
      data-ptr="second"
      data-type="text"
-     width="10"
+     width="4"
      height="17"
      x="0.56333733"
      y="0"
      id="initSECONDtext" />
-  <rect
-     style="opacity:0"
-     class="initial-measure"
-     data-ptr="map"
-     width="24"
-     height="17"
-     x="0.56333733"
-     y="0"
-     id="rect32" />
 </svg>

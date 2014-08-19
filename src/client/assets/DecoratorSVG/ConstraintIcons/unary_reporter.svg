@@ -9,7 +9,7 @@
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    height="22.397158"
    version="1.1"
-   width="56.903999"
+   width="67.918503"
    style="overflow:hidden"
    id="svg2"
    inkscape:version="0.48.5 r10040"
@@ -41,7 +41,7 @@
      id="namedview18"
      showgrid="false"
      inkscape:zoom="16.000001"
-     inkscape:cx="16.977761"
+     inkscape:cx="27.992261"
      inkscape:cy="17.340858"
      inkscape:window-x="3840"
      inkscape:window-y="25"
@@ -62,67 +62,82 @@
      id="colors"
      style="fill:#74e868;stroke:#74e868;"
      data-secondary="fill:#54b868;stroke:#54b868;">
-  <rect
-     class="y-stretch-first y-stretch-name x-stretch-first x-stretch-name"
-     style="stroke-width:5.30862522;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
-     width="51.595375"
-     height="17.080511"
-     ry="5.3455315"
-     rx="3.2050281"
-     x="2.6543126"
-     y="2.6623344"
-     id="nameRect" />
-  <rect
-     y="4.7485795"
-     x="32.725422"
-     rx="5"
-     ry="5"
-     height="12.51503"
-     width="16.673277"
-     id="RinputField"
-     style="fill:#ffffff;fill-opacity:1;stroke:none;overflow:hidden"
-     class="y-shift-name x-shift-name" />
 
-  </g>
+  <rect
+     id="nameRect"
+     y="2.662334"
+     x="2.6543126"
+     rx="3.2050281"
+     ry="5.3455315"
+     height="17.080511"
+     width="51.595375"
+     style="stroke-width:5.30862522;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;overflow:hidden"
+     data-stretch="y-first y-name x-name"
+     inkscape:label="#nameRect-7" />
+  <rect
+     id="firstRect"
+     y="2.6623344"
+     x="13.668813"
+     rx="3.2050281"
+     ry="5.3455315"
+     height="17.080511"
+     width="51.595375"
+     style="stroke-width:5.30862522;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+     data-stretch="y-first y-name x-first"
+     data-shift="x-nameRect"
+     inkscape:label="#nameRect" />
+  <rect
+     data-stretch="y-first"
+     data-shift="x-nameRect"
+     text-stretch-only="true"
+     style="fill:#ffffff;fill-opacity:1;stroke:none;overflow:hidden"
+     id="RinputField"
+     width="16.673277"
+     height="12.51503"
+     ry="5"
+     rx="5"
+     x="43.739922"
+     y="4.7485795" />
+</g>
   <!-- NAME AND CONNECTION INFO -->
   <text
      id="name"
-     x="10.4751949"
+     x="7.4896951"
      y="15.287725"
      style="font-size:14px">oper</text>
   <!-- Text Bounding Boxes -->
   <rect
      style="opacity:0"
      id="name-bounding-box"
-     width="20.251736"
+     width="35.251736"
      height="8.1356192"
-     x="5.9721112"
+     x="16.98661"
      y="6.5785375" />
   <rect
      style="opacity:0"
      id="first-bounding-box"
      width="16.673277"
      height="12.51503"
-     x="13.434319"
+     x="24.448818"
      y="4.8144441" />
   <!-- connection areas -->
   <line
      class="connection-area"
      data-ptr="cond first second"
      data-role="in"
-     x1="4.5000005"
+     x1="5.5145006"
      y1="0"
-     x2="4.7683716e-07"
+     x2="1.0145001"
      y2="4.5"
      id="conn-area-in" />
   <line
      class="connection-area"
      data-ptr="first"
      data-role="out"
-     data-shift="x-shift-name "
-     x1="35"
+     data-shift="x-nameRect"
+     x1="46.0145"
      y1="1.5"
-     x2="30.5"
+     x2="41.5145"
      y2="4"
      id="first-out" />
   <!-- initial measures -->
@@ -132,7 +147,17 @@
      class="initial-measure"
      width="20"
      height="15"
-     x="1.8750005"
+     x="12.889501"
+     y="4.1874995"
+     inkscape:label="#rect3000"
+     id="rect27" />
+  <rect
+     style="opacity:0"
+     data-ptr="name"
+     class="initial-measure"
+     width="5"
+     height="15"
+     x="12.889501"
      y="4.1874995"
      inkscape:label="#rect3000"
      id="rect27" />

@@ -51,14 +51,6 @@
      fit-margin-left="0"
      fit-margin-right="0"
      fit-margin-bottom="0" />
-  <rect
-     style="opacity:0.54863808;fill:#ffffff;fill-opacity:0;stroke:#000000;stroke-width:2.03220844;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none"
-     id="name-bounding-box"
-     width="20.448757"
-     height="8.3728704"
-     x="6.9949107"
-     y="13.571316"
-     inkscape:label="#rect2992" />
   <!--
   <filter
      id="secondary"
@@ -89,48 +81,59 @@
   <path
      style="stroke-width:1.17999995"
      d="m 78.694,6.0339815 0,3.53125 26.125,0 a 3.54,3.54 0 0 0 -3.5625,-3.53125 l -22.5625,0 z"
-     class="x-shift-Message x-shift-node x-shift-name"
+     data-shift="x-verticalRect"
      id="path3009"
      inkscape:connector-curvature="0" />
 
   <rect
-     class="x-stretch-Message y-stretch-Message x-stretch-node y-stretch-node x-stretch-name y-stretch-name"
+     data-stretch="x-Message x-node"
      x="30.011944"
      y="6.8261447"
      width="48.291775"
      height="74.545776"
      style="stroke-width:2.75422478"
-     id="rect11" />
+     id="verticalRect" />
   <rect
-     class="x-stretch-Message y-stretch-Message x-stretch-node y-stretch-node x-stretch-name y-stretch-name"
+     data-stretch="x-Message x-node y-node"
      x="1.9400287"
-     y="10.879236"
-     width="102.0416"
-     height="67.236595"
+     y="8.879236"
+     width="102"
+     height="34.236595"
+     r="0"
+     rx="0"
+     ry="0"
+     id="conflictRect" />
+  <rect
+     data-shift="y-conflictRect"
+     data-stretch="x-node x-Message y-Message"
+     x="1.9400287"
+     y="43.879236"
+     width="102"
+     height="36.236595"
      r="0"
      rx="0"
      ry="0"
      style="stroke-width:2.77840447"
-     id="rect10" />
+     id="messageRect" />
 
   <!-- bottom corners (L,R) -->
   <path
      d="m 1.1408265,78.794025 a 3.54,3.54 0 0 0 3.54,3.540008 l 7.0800005,0 3.54,3.54 9.44,0 3.54,-3.54 0,-3.658008"
      style="stroke-width:1.17999995"
      id="path12"
-     class="y-shift-Message y-shift-node y-shift-name"
+     data-shift="y-messageRect"
      inkscape:connector-curvature="0" />
   <path
      style="stroke-width:1.18000448"
      d="m 77.600002,78.627713 0,3.531246 23.656478,0 a 3.5400319,3.5399954 0 0 0 3.56253,-3.531246 l -27.219008,0 z"
      id="path15"
-     class="x-shift-Message x-shift-node x-shift-name y-shift-Message y-shift-node y-shift-name"
+     data-shift="y-messageRect x-verticalRect"
      inkscape:connector-curvature="0" />
 
   <!-- input boxes -->
   <rect
      style="fill:#ffffff;fill-rule:evenodd;stroke:#ffffff;stroke-width:4.10586119px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-     id="rect3011"
+     id="conflictBox"
      width="20"
      height="9.5861387"
      x="65.479141"
@@ -138,8 +141,11 @@
      rx="2.260397" />
   <rect
      style="fill:#ffffff;fill-rule:evenodd;stroke:#ffffff;stroke-width:5.33687353px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;overflow:hidden"
+     data-stretch="x-Message"
+     text-stretch-only="true"
+     data-shift="y-conflictRect"
      id="msgbox"
-     class="x-stretch-Message y-shift-node"
+     class="x-Message y-shift-node"
      width="36.769127"
      height="8.3551264"
      x="57.454437"
@@ -150,10 +156,9 @@
 
   <!-- EXTRA SVG INFO -->
   <text
-     id="name"
      x="6.463325"
      y="24"
-     style="font-size:12px">DEFAULT</text>
+     style="font-size:12px">Mark Violation</text>
   <text
      id="conflict-tag"
      x="6.4692149"
@@ -161,16 +166,16 @@
      style="font-size:10px;overflow:hidden">Conflict:</text>
   <text
      id="message-tag"
-     class="y-shift-node"
+     data-shift="y-conflictRect"
      x="5.874702"
      y="60.915504"
      style="font-size:10px;overflow:hidden">Message:</text>
   <text
      id="Message"
-     class="y-shift-node"
+     data-shift="y-conflictRect"
      x="59.874702"
      y="60.915504"
-     style="font-size:10px;overflow:hidden">Message</text>
+     style="font-size:10px;overflow:hidden">msg</text>
   <!-- Connection Area Definitions -->
   <line
      class="connection-area"
@@ -202,7 +207,7 @@
 
   <!-- custom highlighting areas are now supported - must be a line, however -->
   <line
-     class="connection-highlight x-stretch-name"
+     class="connection-highlight x-name"
      style="opacity:0;stroke:#444444;stroke-width:10.10658169"
      data-ptr="next"
      data-role="in"
@@ -212,9 +217,10 @@
      y2="5.0532908"
      id="line23" />
   <line
-     class="connection-highlight x-stretch-name"
+     class="connection-highlight x-name"
      style="opacity:0;stroke:#444444;stroke-width:10.10658169"
      data-ptr="next"
+     data-shift="y-path12"
      data-role="out"
      x1="5.0532908"
      y1="86.441727"
@@ -225,7 +231,7 @@
   <rect
      style="opacity:0"
      id="Message-bounding-box"
-     width="30"
+     width="5"
      height="19"
      x="0.56333113"
      y="5.536983"/>
@@ -253,8 +259,16 @@
      class="initial-measure"
      data-ptr="Message"
      id="Message-initial-measure"
-     width="4.800045"
+     width="10.800045"
      height="14.032192"
      x="44.992043"
      y="75.828255" />
+  <rect
+     style="opacity:0.54863808;fill:#ffffff;fill-opacity:0;stroke:#000000;stroke-width:2.03220844;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none"
+     id="name-bounding-box"
+     width="20.448757"
+     height="8.3728704"
+     x="6.9949107"
+     y="13.571316"
+     inkscape:label="#rect2992" />
 </svg>

@@ -15,7 +15,7 @@
    inkscape:version="0.48.4 r9939"
    sodipodi:docname="if.svg">
   <rect
-     class="x-stretch-name y-stretch-name"
+     class="x-name y-name"
      x="6.0570636"
      y="48.153595"
      width="11.792159"
@@ -24,7 +24,7 @@
      id="bottomLeftBase"
      inkscape:label="#rect11-1-0" />
   <rect
-     class="x-stretch-name y-stretch-name"
+     class="x-name y-name"
      x="38.560219"
      y="48.463371"
      width="42.246483"
@@ -101,7 +101,7 @@
      inkscape:connector-curvature="0"
      inkscape:label="#path8" />
   <rect
-     class="x-stretch-name y-stretch-name"
+     class="x-name y-name"
      x="39.551323"
      y="3.4875526"
      width="40.39093"
@@ -110,7 +110,7 @@
      id="topExpandBox"
      inkscape:label="#rect11" />
   <rect
-     class="x-stretch-name y-stretch-name"
+     class="x-name y-name"
      x="8.8288002"
      y="4.8970318"
      width="28.168869"
@@ -134,7 +134,7 @@
      y="16.493999"
      style="font-size:9.43999958px">IF</text>
   <rect
-     class="x-stretch-name y-stretch-name"
+     class="x-name y-name"
      x="5.0559735"
      y="2.2427516"
      width="7.9972148"
@@ -154,7 +154,7 @@
      inkscape:connector-curvature="0"
      inkscape:label="#path12-9" />
   <rect
-     class="x-stretch-name y-stretch-name"
+     class="x-name y-name"
      x="2.146955"
      y="7.2988272"
      width="7.9311714"
@@ -175,7 +175,7 @@
      inkscape:connector-curvature="0"
      inkscape:label="#path15-3" />
   <rect
-     class="x-stretch-name y-stretch-name"
+     class="x-name y-name"
      x="77.472977"
      y="4.8271337"
      width="17.349634"
@@ -199,7 +199,7 @@
      inkscape:connector-curvature="0"
      inkscape:label="#path15-3-2" />
   <rect
-     class="x-stretch-name y-stretch-name"
+     class="x-name y-name"
      x="76.38047"
      y="49.549591"
      width="18.100143"

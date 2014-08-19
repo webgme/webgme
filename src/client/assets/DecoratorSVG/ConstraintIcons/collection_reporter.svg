@@ -13,7 +13,7 @@
    style="overflow:hidden"
    id="svg2"
    inkscape:version="0.48.5 r10040"
-   sodipodi:docname="reporter.svg">
+   sodipodi:docname="collection_reporter.svg">
   <metadata
      id="metadata22">
     <rdf:RDF>
@@ -66,12 +66,14 @@
     <rect
        inkscape:label="#rect3009"
        y="1.6086967"
-       x="35.218163"
+       x="33.218163"
        height="19.187786"
-       width="16.702784"
+       width="19.702784"
        id="nameRect"
        style="stroke-width:3.2013495;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
-       class="x-shift-first y-stretch-first y-stretch-collection x-stretch-name y-stretch-name" />
+       data-stretch="x-name y-first y-collection y-name"
+       data-shift="x-LRect" />
+
     <rect
        id="RRect"
        style="stroke-width:0.586559;overflow:hidden"
@@ -81,19 +83,21 @@
        width="33.71624"
        y="4.0446453"
        x="52.958683"
-       class="x-shift-name x-shift-first y-shift-name x-stretch-collection y-stretch-collection y-stretch-first" />
+       data-shift="x-nameRect"
+       data-stretch="x-first y-collection y-first y-name" />
     <path
        style="stroke-width:1.17999995;overflow:hidden"
        d="m 82.790488,0.62299493 0,3.53124987 3.59375,0 a 3.54,3.54 0 0 0 -3.5625,-3.53124987 l -0.0312,0 z"
        id="TRCorner"
        inkscape:connector-curvature="0"
-       class="x-shift-name x-shift-first x-shift-first x-shift-collection x-shift-collection" />
+       data-shift="x-RRect" />
     <path
        style="stroke-width:1.17999995;overflow:hidden"
        d="m 82.779588,21.786089 0,-3.53125 3.59375,0 a 3.54,3.54 0 0 1 -3.5625,3.53125 l -0.0312,0 z"
        id="BRCorner"
        inkscape:connector-curvature="0"
-       class="x-shift-name y-shift-name x-shift-first y-shift-first x-shift-collection y-shift-collection x-shift-collection y-shift-collection" />
+       data-shift="x-RRect y-RRect" />
+
     <rect
        id="LRect"
        style="stroke-width:0.58395565"
@@ -103,7 +107,7 @@
        width="33.411209"
        y="4.4688673"
        x="0.29197782"
-       class="x-stretch-name y-stretch-collection y-stretch-name x-stretch-first y-stretch-first" />
+       data-stretch="y-collection y-name x-collection y-first" />
     <path
        style="stroke-width:1.17999995;overflow:hidden"
        d="m 4.1906288,0.61869211 0,3.53124999 -3.59374999,0 A 3.54,3.54 0 0 1 4.1593788,0.61869211 l 0.0312,0 z"
@@ -113,7 +117,7 @@
        style="stroke-width:1.17999995;overflow:hidden"
        d="m 4.2015296,21.781786 0,-3.53125 -3.59374989,0 a 3.54,3.54 0 0 0 3.56249989,3.53125 l 0.0312,0 z"
        id="path9-6-5"
-       class="y-shift-name y-shift-collection y-shift-first"
+       data-shift="y-nameRect"
        inkscape:connector-curvature="0" />
     <rect
        style="stroke-width:0.84396863"
@@ -122,7 +126,7 @@
        height="3.9187722"
        x="4.472322"
        y="0.42198431"
-       class="x-stretch-name x-stretch-first" />
+       data-stretch="x-name x-collection" />
     <rect
        style="stroke-width:0.85052216"
        id="LBRect"
@@ -130,7 +134,8 @@
        height="3.9790976"
        x="4.4198451"
        y="17.997637"
-       class="y-shift-name y-shift-collection y-shift-first x-stretch-first" />
+       data-stretch="x-collection"
+       data-shift="y-LRect"/>
     <rect
        style="stroke-width:0.84345406;overflow:hidden"
        id="RTRect"
@@ -138,7 +143,8 @@
        height="3.9139254"
        x="53.191414"
        y="0.47698987"
-       class="x-shift-first x-shift-name x-stretch-collection" />
+       data-stretch="x-first"
+       data-shift="x-nameRect" />
     <rect
        style="stroke-width:0.84345406;overflow:hidden"
        id="BRRect"
@@ -146,12 +152,14 @@
        height="3.9139254"
        x="52.749081"
        y="18.038546"
-       class="x-shift-name y-shift-name x-stretch-collection y-shift-collection x-shift-first y-shift-first"
+       data-stretch="x-first"
+       data-shift="x-nameRect y-RRect"
        inkscape:label="#RTRect-4" />
     <!-- Input Fields -->
     <rect
        text-stretch-only="true"
-       class="x-shift-collection x-shift-name x-stretch-first"
+       data-stretch="x-first"
+       data-shift="x-nameRect"
        style="fill:#ffffff;fill-opacity:1;stroke:none;overflow:hidden"
        id="RinputField"
        width="16.673277"
@@ -172,7 +180,7 @@
   <rect
      style="opacity:0"
      id="name-bounding-box"
-     width="10.2517357"
+     width="8.2517357"
      height="8.1356192"
      x="35.972111"
      y="6.5785375"/>
@@ -193,13 +201,13 @@
 
   <!-- NAME AND CONNECTION INFO -->
   <text
-     class="x-shift-name x-shift-collection"
+     data-shift="x-nameRect"
      id="first"
      x="58.375652"
      y="15.179907"
      style="font-size:12px">10</text>
   <text
-     class="x-shift-collection"
+     data-shift="x-LRect"
      id="name"
      x="36.375652"
      y="16.179907"
@@ -227,7 +235,7 @@
      class="connection-area"
      data-ptr="first"
      data-role="out"
-     data-shift="x-shift-name x-shift-collection"
+     data-shift="x-nameRect"
      x1="60"
      y1="3.5"
      x2="55.5"

@@ -7,9 +7,9 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   height="32.053291"
+   height="27.59375"
    version="1.1"
-   width="105.40959"
+   width="104.84375"
    style="overflow:hidden"
    id="svg2"
    inkscape:version="0.48.5 r10040"
@@ -41,8 +41,8 @@
      id="namedview11"
      showgrid="false"
      inkscape:zoom="8.1369528"
-     inkscape:cx="74.828249"
-     inkscape:cy="21.030093"
+     inkscape:cx="74.265749"
+     inkscape:cy="16.008051"
      inkscape:window-x="3840"
      inkscape:window-y="25"
      inkscape:window-maximized="1"
@@ -51,14 +51,6 @@
      fit-margin-left="0"
      fit-margin-right="0"
      fit-margin-bottom="0" />
-  <rect
-     style="opacity:0.54863808;fill:#ffffff;fill-opacity:0;stroke:#000000;stroke-width:2.03220844;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none"
-     id="name-bounding-box"
-     width="40.448757"
-     height="8.3728704"
-     x="6.9949174"
-     y="8.1295824"
-     inkscape:label="#rect2992" />
   <!--
   <g
      id="colors"
@@ -66,62 +58,109 @@
      data-secondary="fill:#73446d;stroke:#73446d"
      transform="translate(-0.01249999,-0.09525007)">
 -->
-  <path
-     d="M 1.1651687,4.6956685 A 3.5336527,3.8448907 0 0 1 4.6988213,0.85077789 l 7.0673047,0 3.533653,3.84489061 9.423074,0 3.533653,-3.71672757 0,3.71672757"
-     style="fill:#a16eb5;stroke:#a16eb5;stroke-width:1.22866261"
-     id="path8"
-     inkscape:connector-curvature="0" />
-  <path
-     style="fill:#a16eb5;stroke:#a16eb5;stroke-width:1.17999995"
-     d="m 78.694587,0.59224993 0,3.53124997 26.125003,0 a 3.54,3.54 0 0 0 -3.5625,-3.53124997 l -22.562503,0 z"
-     id="path3009"
-     class="x-shift-collection x-shift-name x-shift-first"
-     inkscape:connector-curvature="0" />
   <rect
-     x="29.389029"
-     y="0.75419438"
+     x="28.82653"
+     y="1.3166944"
      width="49.537613"
      height="21.796612"
      style="fill:#a16eb5;stroke:#a16eb5;stroke-width:1.50838876"
-     id="rect11"
-     class="x-stretch-collection x-stretch-first x-stretch-name y-stretch-collection y-stretch-first y-stretch-name" />
+     id="firstRectVertical"
+     data-stretch="x-first y-collection y-first " />
   <rect
-     x="1.2043748"
-     y="4.7015376"
-     width="103.51292"
-     height="14.668924"
+     x="71.664528"
+     width="25.365753"
+     y="1.1696231"
+     height="22.090754"
+     style="fill:#a16eb5;stroke:#a16eb5;stroke-width:1.21424639"
+     id="collectionRectVertical"
+     data-shift="x-firstRect"
+     data-stretch="x-collection y-collection y-first" />
+  <rect
+     x="71.811623"
+     y="4.9848862"
+     width="32.671814"
+     height="15.227817"
      r="0"
      rx="0"
      ry="0"
-     style="fill:#a16eb5;stroke:#a16eb5;stroke-width:1.3070749"
-     class="x-stretch-collection x-stretch-first x-stretch-name y-stretch-collection y-stretch-first y-stretch-name"
-     id="rect10" />
+     style="fill:#a16eb5;stroke:#a16eb5;stroke-width:0.74818552;overflow:hidden"
+     data-stretch="x-collection y-collection y-first"
+     data-shift="x-firstRect"
+     id="collectionRect"
+     inkscape:label="#rect10-2" />
+  <rect
+     x="35.836048"
+     y="5.0093417"
+     width="37.2029"
+     height="15.1789"
+     r="0"
+     rx="0"
+     ry="0"
+     style="fill:#a16eb5;stroke:#a16eb5;stroke-width:0.79709959;overflow:hidden"
+     data-stretch="x-first y-collection y-first"
+     id="firstRect"
+     inkscape:label="#rect10-2-1" />
+  <rect
+     style="opacity:0.54863808;fill:#ffffff;fill-opacity:0;stroke:#000000;stroke-width:2.03220844;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none"
+     id="name-bounding-box"
+     width="40.448757"
+     height="8.3728704"
+     x="6.4324183"
+     y="8.6920824"
+     inkscape:label="#rect2992" />
   <path
-     d="m 1.1408373,19.352 a 3.54,3.54 0 0 0 3.54,3.54 l 7.0799997,0 3.54,3.54 9.44,0 3.54,-3.54 0,-3.658"
-     style="fill:#a16eb5;stroke:#a16eb5;stroke-width:1.17999995"
-     id="path12"
-     class="y-shift-collection y-shift-name y-shift-first"
-     inkscape:connector-curvature="0" />
+     d="m 0.6026685,5.2581685 a 3.5336527,3.8448907 0 0 1 3.533652,-3.8448906 l 7.0673055,0 3.533653,3.8448906 9.423074,0 3.533653,-3.7167276 0,3.7167276"
+     style="fill:#a16eb5;stroke:#a16eb5;stroke-width:1.22866261"
+     id="dent-in"
+     inkscape:connector-curvature="0"
+     inkscape:label="#path8" />
   <path
      style="fill:#a16eb5;stroke:#a16eb5;stroke-width:1.17999995"
-     d="m 77.600837,19.186 0,3.53125 23.656253,0 a 3.54,3.54 0 0 0 3.5625,-3.53125 l -27.218753,0 z"
-     id="path15"
-     class="y-shift-collection y-shift-name y-shift-first x-shift-collection x-shift-name x-shift-first"
-     inkscape:connector-curvature="0" />
+     d="m 78.132087,1.1547499 0,3.53125 26.125003,0 a 3.54,3.54 0 0 0 -3.5625,-3.53125 l -22.562503,0 z"
+     id="TRCorner"
+     data-shift="x-collectionRect"
+     inkscape:connector-curvature="0"
+     inkscape:label="#path3009" />
+  <rect
+     x="0.38688612"
+     y="5.0090499"
+     width="37.2029"
+     height="15.1789"
+     r="0"
+     rx="0"
+     ry="0"
+     style="fill:#a16eb5;stroke:#a16eb5;stroke-width:0.79709959"
+     id="nameRect"
+     data-stretch="y-collection y-first"
+     inkscape:label="#rect10" />
+  <path
+     d="m 0.5783365,19.9145 a 3.54,3.54 0 0 0 3.54,3.54 l 7.0800005,0 3.54,3.54 9.44,0 3.54,-3.54 0,-3.658"
+     style="fill:#a16eb5;stroke:#a16eb5;stroke-width:1.17999995"
+     id="dent-out"
+     data-shift="y-nameRect"
+     inkscape:connector-curvature="0"
+     inkscape:label="#path12" />
+  <path
+     style="fill:#a16eb5;stroke:#a16eb5;stroke-width:1.17999995"
+     d="m 77.038337,19.7485 0,3.53125 23.656253,0 a 3.54,3.54 0 0 0 3.5625,-3.53125 l -27.218753,0 z"
+     id="BRCorner"
+     data-shift="x-collectionRect y-collectionRect"
+     inkscape:connector-curvature="0"
+     inkscape:label="#path15" />
   <!-- Input boxes -->
   <rect
      rx="1.8"
-     y="5.3968081"
-     x="77.818619"
+     y="5.9593081"
+     x="77.256119"
      height="12.584407"
      width="21.236712"
      id="RInputField"
      style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:1.61639428px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;overflow:hidden"
-     class="x-shift-first x-shift-name" />
+     data-shift="x-firstRect" />
   <rect
      rx="1.8"
-     y="5.5208917"
-     x="41.315617"
+     y="6.0833917"
+     x="40.753117"
      height="12.584407"
      width="21.236712"
      id="LInputField"
@@ -129,85 +168,75 @@
      style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:1.61639428px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;overflow:hidden" />
   <!-- Text -->
   <text
-     id="name"
-     x="10.463337"
-     y="17.095249"
-     style="font-size:12px">add</text>
+     x="9.9008369"
+     y="17.657749"
+     style="font-size:12px"
+     id="text15">add</text>
   <text
-     class="x-shift-name x-shift-first"
+     data-shift="x-firstRect"
      id="name-2"
-     x="62.598267"
-     y="16.730864"
+     x="64.035767"
+     y="17.293364"
      style="font-size:12px;overflow:hidden">to</text>
   <!-- connection areas -->
   <line
      class="connection-area"
      data-ptr="next true_next false_next"
      data-role="in"
-     x1="15.550838"
-     y1="4.3172493"
-     x2="24.550837"
-     y2="4.3172493"
+     x1="14.988338"
+     y1="4.8797493"
+     x2="23.988335"
+     y2="4.8797493"
      id="next-in" />
   <line
      class="connection-area"
      data-ptr="next"
      data-role="out"
-     data-shift="y-shift-collection y-shift-first y-shift-name"
-     x1="15.550838"
-     y1="27"
-     x2="24.550837"
-     y2="27"
+     data-shift="y-dent-out"
+     x1="14.988338"
+     y1="27.5625"
+     x2="23.988335"
+     y2="27.5625"
      id="next-out" />
   <line
      class="connection-area"
      data-ptr="first"
      data-role="out"
-     data-shift="x-shift-name"
      id="first-out"
-     x1="37"
-     y1="3.5952501"
-     x2="40"
-     y2="6.5952501" />
+     x1="36.4375"
+     y1="4.1577501"
+     x2="39.4375"
+     y2="7.1577501" />
   <line
      class="connection-area"
-     data-shift="x-shift-name x-shift-first"
+     data-shift="x-firstRect"
      data-ptr="collection"
      data-role="out"
      id="collection-out"
-     x1="76"
-     y1="3.5952501"
-     x2="79"
-     y2="6.5952501" />
+     x1="75.4375"
+     y1="4.1577501"
+     x2="78.4375"
+     y2="7.1577501" />
   <!-- custom highlighting areas are now supported - must be a line, however -->
   <line
      class="connection-highlight"
      style="opacity:0;stroke:#444444;stroke-width:10.10658169"
      data-ptr="next"
      data-role="out"
-     x1="5.0532908"
-     y1="27"
-     x2="79.852669"
-     y2="27"
+     x1="4.4907908"
+     y1="27.5625"
+     x2="79.290169"
+     y2="27.5625"
      id="line17" />
   <!-- initial measurement of name -->
-  <rect
-     style="opacity:0"
-     class="initial-measure"
-     data-ptr="name"
-     width="40"
-     height="19"
-     x="0.56333733"
-     y="0.09525007"
-     id="rect19" />
   <rect
      style="opacity:0"
      class="initial-measure"
      data-ptr="first"
      width="20"
      height="17"
-     x="0.56333733"
-     y="0.09525007"
+     x="0.00083875656"
+     y="0.65775007"
      id="rect24" />
   <rect
      style="opacity:0"
@@ -215,8 +244,8 @@
      data-ptr="collection"
      width="20"
      height="17"
-     x="0.56333733"
-     y="0.09525007"
+     x="0.00083875656"
+     y="0.65775007"
      id="rect26" />
   <!-- bounding box -->
   <rect
@@ -224,6 +253,6 @@
      id="rect28"
      width="20.251736"
      height="8.1356192"
-     x="35.972111"
-     y="6.6737876" />
+     x="35.409611"
+     y="7.2362876" />
 </svg>

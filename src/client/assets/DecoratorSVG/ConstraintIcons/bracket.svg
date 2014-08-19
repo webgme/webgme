@@ -100,7 +100,7 @@
      style="fill:#fd3f49;stroke:#fd3f49"
      data-secondary="fill:#fd5f49;stroke:#fd5f49">
     <rect
-       class="y-shift-name x-shift-name"
+       data-shift="y-topExpandBox x-topExpandBox"
        style="opacity:0.54863808;fill:#ffffff;fill-opacity:1;stroke:#0000cc;stroke-width:0.03871261;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
        id="inputField"
        width="27.074053"
@@ -116,7 +116,7 @@
        inkscape:connector-curvature="0"
        inkscape:label="#path8" />
     <rect
-       class="y-stretch-cond x-stretch-cond  x-stretch-name y-stretch-name"
+       data-stretch="y-cond x-cond x-name y-name"
        x="31.449223"
        y="3.157517"
        width="48.27145"
@@ -125,7 +125,7 @@
        id="topExpandBox"
        inkscape:label="#rect11" />
     <rect
-       class="y-stretch-name y-stretch-cond"
+       data-stretch="y-name y-cond"
        x="8.8373175"
        y="4.3368998"
        width="28.168869"
@@ -140,32 +140,33 @@
        d="m 9.1422862,19.355868 a 3.54,3.54 0 0 0 3.5400008,3.54 l 7.08,0 3.54,3.54 9.44,0 3.54,-3.54 0,-3.658"
        style="stroke-width:1.17999995"
        id="topOutIndent"
-       class="y-shift-name y-shift-cond"
+       data-shift="y-topExpandBox"
        inkscape:connector-curvature="0"
        inkscape:label="#path12" />
     <path
-       class="y-shift-cond y-shift-name y-shift-true_next"
+       data-shift="y-bottomExpandBox"
        style="stroke-width:1.22899997;stroke-miterlimit:4;stroke-dasharray:none;overflow:hidden"
        d="m 4.2846032,57.22716 -3.65625003,0.03125 a 3.54,3.54 0 0 0 3.53125003,3.53125 l 0.125,0 0,-3.5625 z"
        id="bottomLeftCorner"
        inkscape:connector-curvature="0"
        inkscape:label="#path12-9" />
     <path
-       class="x-shift-cond x-shift-name "
+       data-shift="x-topExpandBox "
        style="stroke-width:1.18324482;overflow:hidden"
        d="m 77.861058,0.59169395 0,3.52800605 16.606133,0 a 3.5627697,3.5367472 0 0 0 -3.58542,-3.52800605 l -13.020713,0 z"
        id="topRightCorner"
        inkscape:connector-curvature="0"
        inkscape:label="#path9-8" />
     <path
-       class="y-shift-cond x-shift-cond x-shift-name "
+       data-shift="y-topExpandBox x-topExpandBox "
        style="stroke-width:1.16730976;overflow:hidden"
        d="m 77.837466,19.177477 0,3.54394 13.163885,0 a 3.4518636,3.5527214 0 0 0 3.47381,-3.54394 l -16.637695,0 z"
        id="topBRcorner"
        inkscape:connector-curvature="0"
        inkscape:label="#path15-3" />
     <rect
-       class="y-stretch-cond x-shift-cond x-shift-name "
+       data-stretch="y-cond"
+       data-shift="x-topExpandBox "
        x="77.481491"
        y="4.2670016"
        width="17.349634"
@@ -177,7 +178,7 @@
        id="topRightRect"
        inkscape:label="#rect10-9" />
     <rect
-       class="y-stretch-cond y-stretch-name y-stretch-true_next"
+       data-stretch="y-cond y-name y-true_next"
        x="2.155472"
        y="6.7386951"
        width="7.9311714"
@@ -186,21 +187,21 @@
        id="spine"
        inkscape:label="#rect11-1-0" />
     <path
-       class="x-shift-cond y-shift-name y-shift-cond y-shift-true_next x-shift-name "
+       data-shift="y-bottomExpandBox x-bottomExpandBox"
        style="stroke-width:1.18324482;overflow:hidden"
        d="m 77.442589,46.139983 0,3.528006 16.606128,0 a 3.5627697,3.5367472 0 0 0 -3.58542,-3.528006 l -13.020708,0 z"
        id="bottomTRcorner"
        inkscape:connector-curvature="0"
        inkscape:label="#path9-8-9" />
     <path
-       class="x-shift-cond y-shift-name y-shift-cond y-shift-true_next x-shift-name "
+       data-shift="y-bottomExpandBox x-bottomExpandBox"
        style="stroke-width:1.16730976;overflow:hidden"
        d="m 77.396901,56.95864 0,3.54394 13.163886,0 a 3.4518636,3.5527214 0 0 0 3.47381,-3.54394 l -16.637696,0 z"
        id="bottomRightCorner"
        inkscape:connector-curvature="0"
        inkscape:label="#path15-3-2" />
     <rect
-       class="x-shift-cond x-shift-name y-shift-name y-shift-cond y-shift-true_next "
+       data-shift="y-bottomExpandBox x-bottomExpandBox"
        x="76.388985"
        y="48.98946"
        width="18.100143"
@@ -212,28 +213,28 @@
        id="bottomRightRect"
        inkscape:label="#rect10-9-1" />
     <path
-       class="y-shift-name y-shift-cond y-shift-true_next"
+       data-shift="y-bottomExpandBox"
        inkscape:connector-curvature="0"
        style="stroke-width:1.22866261;overflow:hidden"
        d="m 18.851707,46.889978 0,3.84375 4.125,0 -3.53125,-3.84375 -0.59375,0 z m 17.09375,0.125 -3.53125,3.71875 3.53125,0 0,-3.71875 z"
        id="bottomInIndent"
        inkscape:label="#path8-5" />
     <path
-       class="y-shift-name y-shift-cond y-shift-true_next"
+       data-shift="y-bottomExpandBox"
        style="stroke-width:0.42308816;overflow:hidden"
        d="m 18.446188,50.320396 0,8.426744 17.906703,0 0,-8.426744 -17.906703,0 z"
        id="bottomDentRect"
        inkscape:connector-curvature="0"
        inkscape:label="#rect10-4" />
     <path
-       class="y-shift-name y-shift-cond y-shift-true_next"
+       data-shift="y-bottomExpandBox"
        inkscape:connector-curvature="0"
        style="stroke-width:1.17999995;overflow:hidden"
        d="m 10.851707,58.44575 0,2.34375 0.59375,0 3.53125,3.5625 9.4375,0 3.5625,-3.5625 0,-2.34375 -17.125,0 z"
        id="bottomOutDent"
        inkscape:label="#path12-53" />
     <rect
-       class="y-shift-cond y-shift-name y-shift-true_next"
+       data-shift="y-bottomExpandBox"
        x="5.5974679"
        y="47.615982"
        width="12.237754"
@@ -242,7 +243,8 @@
        id="bottomLeftBase"
        inkscape:label="#rect11-1-0" />
     <rect
-       class="y-shift-cond x-stretch-cond  x-stretch-name y-shift-name y-shift-true_next"
+       data-shift="y-spine"
+       data-stretch="x-cond"
        x="38.568737"
        y="47.90324"
        width="42.246483"
@@ -251,7 +253,7 @@
        id="bottomExpandBox"
        inkscape:label="#rect11-1-0" />
     <rect
-       class="y-shift-cond y-shift-name y-shift-true_next"
+       data-shift="y-bottomExpandBox"
        x="25.507298"
        y="52.387577"
        width="12.958148"
@@ -280,7 +282,7 @@
      class="connection-area"
      data-ptr="next"
      data-role="out"
-     data-shift="y-shift-true_next y-shift-cond"
+     data-shift="y-bottomExpandBox"
      x1="15.109"
      y1="64.840004"
      x2="24.108999"
@@ -290,7 +292,7 @@
      class="connection-area"
      data-ptr="true_next"
      data-role="out"
-     data-shift="y-shift-name y-shift-cond"
+     data-shift="y-topExpandBox"
      x1="23.509001"
      y1="26.740002"
      x2="32.509003"
@@ -300,7 +302,6 @@
      class="connection-area"
      data-ptr="cond"
      data-role="out"
-     data-shift="x-shift-name "
      x1="52.508518"
      y1="4.439868"
      x2="48.008518"
@@ -322,7 +323,7 @@
      data-ptr="true_next"
      class="initial-measure"
      width="0"
-     height="38.5"
+     height="17"
      x="0"
      y="0"
      inkscape:label="#rect3008"

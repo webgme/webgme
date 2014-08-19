@@ -37,13 +37,13 @@
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:window-width="1918"
-     inkscape:window-height="1053"
+     inkscape:window-height="1173"
      id="namedview11"
      showgrid="false"
      inkscape:zoom="11.507389"
-     inkscape:cx="50.754572"
-     inkscape:cy="11.205345"
-     inkscape:window-x="0"
+     inkscape:cx="57.724025"
+     inkscape:cy="18.030607"
+     inkscape:window-x="3840"
      inkscape:window-y="25"
      inkscape:window-maximized="1"
      inkscape:current-layer="svg2"
@@ -60,6 +60,10 @@
      y="8.0343323"
      inkscape:label="#rect2992" />
   <!--
+       If you use inkscape and "ungroup" the items,
+       it will delete the following group tag. I store
+       a copy in this comment so I can replace it if/when
+       this happens.
   <g
      id="colors"
      style="fill:#a16eb5;stroke:#a16eb5"
@@ -71,91 +75,111 @@
      style="fill:#a16eb5;stroke:#a16eb5"
      data-secondary="fill:#73446d;stroke:#73446d"
      transform="translate(-0.01249999,-0.09525007)">
-
-  <path
-     inkscape:connector-curvature="0"
-     id="path8"
-     style="stroke-width:1.22866261"
-     d="M 1.1776687,4.6956685 A 3.5336527,3.8448907 0 0 1 4.7113213,0.85077789 l 7.0673047,0 3.533653,3.84489061 9.423074,0 3.533653,-3.71672757 0,3.71672757" />
-  <path
-     inkscape:connector-curvature="0"
-     class="x-shift-second x-shift-name x-shift-first"
-     id="path3009"
-     d="m 78.707087,0.59224993 0,3.53124997 26.125003,0 a 3.54,3.54 0 0 0 -3.5625,-3.53124997 l -22.562503,0 z"
-     style="stroke-width:1.17999995" />
   <rect
-     class="x-stretch-second x-stretch-first x-stretch-name y-stretch-second y-stretch-first y-stretch-name"
-     id="rect11"
-     style="stroke-width:1.50838876"
-     height="21.796612"
-     width="49.537613"
-     y="0.75419438"
-     x="29.401529"/>
+     x="66.24855"
+     y="0.43559337"
+     width="33.792896"
+     height="22.051897"
+     style="stroke-width:1.25310349;overflow:hidden"
+     id="vertical-body-2"
+     data-stretch="x-second y-first y-second"
+     data-shift="x-vertical-body"
+     inkscape:label="#rect11" />
   <rect
-     id="rect10"
-     class="x-stretch-second x-stretch-first x-stretch-name y-stretch-second y-stretch-first y-stretch-name"
-     style="stroke-width:1.3070749"
-     ry="0"
-     rx="0"
+     x="41.05624"
+     y="4.375536"
+     width="63.784515"
+     height="14.940513"
      r="0"
-     height="14.668924"
-     width="103.51292"
-     y="4.7015376"
-     x="1.2168748"/>
+     rx="0"
+     ry="0"
+     style="stroke-width:1.03548646;overflow:hidden"
+     id="horizontal-body-2"
+     data-stretch="x-second y-second y-first"
+     data-shift="x-vertical-body"
+     inkscape:label="#rect10" />
   <path
+     d="M 1.1526687,4.5051683 A 3.5336527,3.8448907 0 0 1 4.6863213,0.66027775 l 7.0673047,0 3.533653,3.84489055 9.423074,0 3.533653,-3.71672751 0,3.71672751"
+     style="stroke-width:1.22866261"
+     id="indent-in"
      inkscape:connector-curvature="0"
-     class="y-shift-second y-shift-name y-shift-first"
-     id="path12"
+     inkscape:label="#path8" />
+  <path
+     data-shift="x-horizontal-body-2"
      style="stroke-width:1.17999995"
-     d="m 1.1533373,19.352 a 3.54,3.54 0 0 0 3.54,3.54 l 7.0799997,0 3.54,3.54 9.44,0 3.54,-3.54 0,-3.658" />
-  <path
+     d="m 78.682087,0.40174979 0,3.53124991 26.125003,0 a 3.54,3.54 0 0 0 -3.5625,-3.53124991 l -22.562503,0 z"
+     id="TRCorner"
      inkscape:connector-curvature="0"
-     class="y-shift-second y-shift-name y-shift-first x-shift-second x-shift-name x-shift-first"
-     id="path15"
-     d="m 77.613337,19.186 0,3.53125 23.656253,0 a 3.54,3.54 0 0 0 3.5625,-3.53125 l -27.218753,0 z"
-     style="stroke-width:1.17999995" />
-  <!-- input boxes -->
+     inkscape:label="#path3009" />
   <rect
-     class="x-stretch-second x-shift-first x-shift-name"
+     x="29.291601"
+     y="0.47876585"
+     width="38.707466"
+     height="21.966471"
+     style="stroke-width:1.33853197"
+     id="vertical-body"
+     data-stretch="x-first x-name y-second y-first y-name"
+     inkscape:label="#rect11" />
+  <rect
+     x="1.0560806"
+     y="4.3752432"
+     width="63.784512"
+     height="14.940513"
+     r="0"
+     rx="0"
+     ry="0"
+     style="stroke-width:1.03548658"
+     data-stretch="x-second x-first x-name y-second y-first y-name"
+     id="horizontal-body"
+     inkscape:label="#rect10" />
+  <path
+     d="m 1.1283373,19.1615 a 3.54,3.54 0 0 0 3.54,3.54 l 7.0799997,0 3.54,3.54 9.44,0 3.54,-3.54 0,-3.658"
+     style="stroke-width:1.17999995"
+     id="indent-out"
+     data-shift="y-horizontal-body"
+     inkscape:connector-curvature="0"
+     inkscape:label="#path12" />
+  <path
+     style="stroke-width:1.17999995"
+     d="m 77.588337,18.9955 0,3.53125 23.656253,0 a 3.54,3.54 0 0 0 3.5625,-3.53125 l -27.218753,0 z"
+     id="BRCorner"
+     data-shift="x-horizontal-body-2 y-horizontal-body-2"
+     inkscape:connector-curvature="0"
+     inkscape:label="#path15" />
+  <rect
+     rx="1.8"
+     y="5.2063079"
+     x="77.806122"
+     height="12.584407"
+     width="21.236712"
+     id="RInputField"
+     style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:1.61639428px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;overflow:hidden"
      text-stretch-only="true"
-     style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:1.61639428px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;overflow:hidden"
-     id="rect3014-3"
-     width="21.236712"
-     height="12.584407"
-     x="77.831116"
-     y="5.3968081"
-     rx="1.8" />
+     data-stretch="x-second"
+     data-shift="x-vertical-body"
+     inkscape:label="#rect3014-3" />
   <rect
-     style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:1.61639428px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;overflow:hidden"
-     id="rect3014-3-0"
-     width="21.236712"
+     rx="1.8"
+     y="5.3303914"
+     x="34.303116"
      height="12.584407"
-     x="34.328117"
-     y="5.5208917"
-     rx="1.8" />
-
+     width="21.236712"
+     id="LInputField"
+     style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:1.61639428px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;overflow:hidden"
+     inkscape:label="#rect3014-3-0" />
   </g>
   <!-- Text -->
   <text
-     id="name"
      x="10.463337"
      y="17"
-     style="font-size:12px">let</text>
+     style="font-size:12px"
+     id="text16">let</text>
   <text
-     class="x-shift-name x-shift-first"
+     data-shift="x-vertical-body"
      id="name-2"
      x="62.598267"
      y="16.635614"
      style="font-size:12px;overflow:hidden">=</text>
-
-  <text
-     class="x-shift-name x-shift-first"
-     id="second"
-     x="79.598267"
-     y="16.635614"
-     style="font-size:12px;overflow:hidden"></text>
-
-
   <!-- connection areas -->
   <line
      class="connection-area"
@@ -170,7 +194,7 @@
      class="connection-area"
      data-ptr="next"
      data-role="out"
-     data-shift="y-shift-second y-shift-first y-shift-name"
+     data-shift="y-horizontal-body"
      x1="15.550838"
      y1="26.904751"
      x2="24.550837"
@@ -180,22 +204,21 @@
      class="connection-area"
      data-ptr="first"
      data-role="out"
-     data-shift="x-shift-name"
      id="first-out"
      x1="32"
      y1="3.5"
      x2="35"
-     y2="6.5"/>
+     y2="6.5" />
   <line
      class="connection-area"
-     data-shift="x-shift-name x-shift-first"
+     data-shift="x-vertical-body"
      data-ptr="second"
      data-role="out"
      id="second-out"
      x1="76"
      y1="3.5"
      x2="79"
-     y2="6.5"/>
+     y2="6.5" />
   <!-- custom highlighting areas are now supported - must be a line, however -->
   <line
      class="connection-highlight"
@@ -221,28 +244,38 @@
      style="opacity:0"
      class="initial-measure"
      data-ptr="first"
+     data-type="svg"
      width="20"
      height="17"
      x="0.56333733"
      y="0"
-     id="rect19" />
+     id="rect25" />
   <rect
      style="opacity:0"
      class="initial-measure"
      data-ptr="second"
+     data-type="text"
      width="20"
      height="17"
      x="0.56333733"
      y="0"
-     id="rect19" />
-
+     id="rect27" />
+  <rect
+     style="opacity:0"
+     class="initial-measure"
+     data-ptr="second"
+     data-type="svg"
+     width="20"
+     height="17"
+     x="0.56333733"
+     y="0"
+     id="rect28" />
   <!-- bounding box -->
   <rect
      style="opacity:0"
-     id="name-bounding-box"
+     id="rect29"
      width="20.2517357"
      height="8.1356192"
      x="35.972111"
      y="6.5785375" />
-
 </svg>
