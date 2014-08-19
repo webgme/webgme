@@ -1,4 +1,4 @@
-ul.drop-down-navigator {
+ul.dropdown-navigator {
 
   font-size: 130%;
 
@@ -17,7 +17,7 @@ ul.drop-down-navigator {
     }
   }
 
-  > li:hover {
+  > li:not(.separator):hover {
     background-color: #00235B;
     cursor: pointer;
 
