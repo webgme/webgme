@@ -76,13 +76,13 @@
   <path
      d="m 1.1651565,10.137401 a 3.5336527,3.8448907 0 0 1 3.53366,-3.8448915 l 7.0673005,0 3.53366,3.8448915 9.42307,0 3.53365,-3.7167285 0,3.7167285"
      style="stroke-width:1.22866261"
-     id="path8"
+     id="in-dent"
      inkscape:connector-curvature="0" />
   <path
      style="stroke-width:1.17999995"
      d="m 78.694,6.0339815 0,3.53125 26.125,0 a 3.54,3.54 0 0 0 -3.5625,-3.53125 l -22.5625,0 z"
      data-shift="x-verticalRect"
-     id="path3009"
+     id="TRCorner"
      inkscape:connector-curvature="0" />
 
   <rect
@@ -95,9 +95,9 @@
      id="verticalRect" />
   <rect
      data-stretch="x-Message x-node y-node"
-     x="1.9400287"
+     x="1"
      y="8.879236"
-     width="102"
+     width="102.9400287"
      height="34.236595"
      r="0"
      rx="0"
@@ -106,27 +106,26 @@
   <rect
      data-shift="y-conflictRect"
      data-stretch="x-node x-Message y-Message"
-     x="1.9400287"
+     x="1"
      y="43.879236"
-     width="102"
+     width="102.9400287"
      height="36.236595"
      r="0"
      rx="0"
      ry="0"
-     style="stroke-width:2.77840447"
      id="messageRect" />
 
   <!-- bottom corners (L,R) -->
   <path
      d="m 1.1408265,78.794025 a 3.54,3.54 0 0 0 3.54,3.540008 l 7.0800005,0 3.54,3.54 9.44,0 3.54,-3.54 0,-3.658008"
      style="stroke-width:1.17999995"
-     id="path12"
+     id="out-dent"
      data-shift="y-messageRect"
      inkscape:connector-curvature="0" />
   <path
      style="stroke-width:1.18000448"
      d="m 77.600002,78.627713 0,3.531246 23.656478,0 a 3.5400319,3.5399954 0 0 0 3.56253,-3.531246 l -27.219008,0 z"
-     id="path15"
+     id="BRCorner"
      data-shift="y-messageRect x-verticalRect"
      inkscape:connector-curvature="0" />
 
@@ -220,7 +219,7 @@
      class="connection-highlight x-name"
      style="opacity:0;stroke:#444444;stroke-width:10.10658169"
      data-ptr="next"
-     data-shift="y-path12"
+     data-shift="y-out-dent"
      data-role="out"
      x1="5.0532908"
      y1="86.441727"
