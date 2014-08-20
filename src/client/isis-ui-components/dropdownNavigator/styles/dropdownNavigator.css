@@ -5,7 +5,8 @@ ul.dropdown-navigator {
   color: #fff; }
   ul.dropdown-navigator > li {
     display: inline-block;
-    padding: .75ex 1em;
+    padding: 0 1em;
+    line-height: 2.22em;
     position: relative; }
     ul.dropdown-navigator > li > .hierarchical-dropdown {
       display: none; }
@@ -28,4 +29,5 @@ ul.dropdown-navigator {
     cursor: default;
     font-size: 60%;
     top: -2px;
-    position: relative; }
+    position: relative;
+    margin: 0 .75ex; }

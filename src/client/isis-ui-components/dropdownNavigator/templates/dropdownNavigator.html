@@ -8,9 +8,9 @@
 
     <li data-ng-repeat-start="item in navigator.items track by $index"
         data-ng-class=" item.itemClass || '' "
-        ng-include=" item.itemTemplate || 'navigator-item-template' ">
-    </li>
-    <li data-ng-repeat-end data-ng-if="navigator.separator && !$last" class="separator">
+        ng-include=" item.itemTemplate || 'navigator-item-template' "
+        data-ng-click="!item.disabled && item.action(item.actionData)" role="button">
+    </li><li data-ng-repeat-end data-ng-if="navigator.separator && !$last" class="separator">
         <i class="glyphicon glyphicon-chevron-right"></i>
     </li>
 </ul>

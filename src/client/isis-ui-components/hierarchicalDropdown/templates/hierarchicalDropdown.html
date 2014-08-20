@@ -12,8 +12,7 @@
 
             <li data-ng-repeat="item in menuItemGroup.items | limitTo:menuItemGroup.totalItems || 100"
                 data-ng-class="{ 'dropdown-submenu':item.menu, 'selected': item.isSelected, 'disabled': item.disabled }">
-                <a href="#"
-                   data-ng-class="'action-' + item.id"
+                <a data-ng-class="'action-' + item.id"
                    data-ng-click="!item.disabled && item.action(item.actionData)">
                     <i data-ng-if="item.iconClass && !item.iconPullRight" data-ng-class="item.iconClass" class="item-icon"></i>
                     {{item.label}}
@@ -34,7 +33,7 @@
                 menuItemGroup.items &&
                 menuItemGroup.items.length > 0 &&
                 menuItemGroup.items.length >  ( menuItemGroup.totalItems || 100 )">
-                <a href="#" data-ng-click="menuItemGroup.showAllItems()">
+                <a data-ng-click="menuItemGroup.showAllItems()">
                    Show all...
                 </a>
             </li>
