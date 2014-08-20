@@ -49,6 +49,9 @@ define(['js/DragDrop/DragSource',
             'start': function (event, ui) {
                 //Set the drop focus
                 self.dropFocus = SnapEditorWidgetConstants.BACKGROUND;
+
+                //Start the connection highlight updater
+                self.registerDraggingItem(ui.helper);
                 
                 var ret = false;
                 //enable drag mode only in

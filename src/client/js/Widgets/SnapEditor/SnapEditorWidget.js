@@ -16,6 +16,7 @@ define(['logManager',
         './SnapEditorWidget.Tabs',
         './SnapEditorWidget.Draggable',
         './SnapEditorWidget.Droppable',
+        './SnapEditorWidget.HighlightUpdater',
         './SearchManager',
         './SelectionManager',
         './HighlightManager',
@@ -31,6 +32,7 @@ define(['logManager',
                                     SnapEditorWidgetTabs,
                                     SnapEditorWidgetDraggable,
                                     SnapEditorWidgetDroppable,
+                                    SnapEditorWidgetHighlightUpdater,
                                     SearchManager,
                                     SelectionManager,
                                     HighlightManager,
@@ -998,6 +1000,7 @@ define(['logManager',
     //_.extend(SnapEditorWidget.prototype, SnapEditorWidgetTabs.prototype);
     _.extend(SnapEditorWidget.prototype, SnapEditorWidgetDraggable.prototype);
     _.extend(SnapEditorWidget.prototype, SnapEditorWidgetDroppable.prototype);
+    _.extend(SnapEditorWidget.prototype, SnapEditorWidgetHighlightUpdater.prototype);
 
     return SnapEditorWidget;
 });

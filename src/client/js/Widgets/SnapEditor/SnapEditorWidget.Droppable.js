@@ -158,10 +158,8 @@ define(['js/DragDrop/DropTarget',
         item.$el.droppable({
             tolerance: "touch",
             over: function(event, ui) {
-                var draggedUI = ui.helper,
-                    draggedId = ui.draggable[0].id,
-                    dragged = self.items[draggedId],
-                    pos;
+                var draggedId = ui.draggable[0].id,
+                    dragged = self.items[draggedId];
 
                 if (dragged === undefined){
                     //Need to find the appropriate connection areas for a non-existent item...
@@ -171,58 +169,17 @@ define(['js/DragDrop/DropTarget',
                 }else{
                     //item has been created
 
-                    var draggedIds = [],
-                        i = ui.helper.children().length;
-
-                    while (i--){
-                        draggedIds.push(ui.helper.children()[i].id);
-                    }
-
-                    pos = ui.helper.find("#" + dragged.id).position();
-                    pos.left += event.pageX - ui.draggable.parent().offset().left;
-                    pos.top += event.pageY - ui.draggable.parent().offset().top;
-
-                    if(draggedIds.indexOf(item.id) === -1){//If it isn't hovering over itself
-                        //if the ITEM_TAG is the item's id (or null) 
-                        //OR the connection distance is closer
-                        //THEN setActiveConnectionArea
-                        var connectionInfo = item.getClosestConnectionArea(dragged, pos),
-                            connectionDistance = connectionInfo.distance;
-
-                        if (connectionInfo.area && 
-                                (!draggedUI.data(ITEM_TAG) || draggedUI.data(ITEM_TAG) === item.id || draggedUI.data(DISTANCE_TAG) > connectionDistance)){
-
-                            //This connection area is the best choice
-                            item.setActiveConnectionArea(connectionInfo.area);
-                            self.dropFocus = SnapEditorWidgetConstants.ITEM;
-
-                            //Deactivate the previous connection area
-                            if (draggedUI.data(ITEM_TAG)){
-                                var otherItemId = draggedUI.data(ITEM_TAG);
-                                self.items[otherItemId].deactivateConnectionAreas();
-                            }
-
-                            //Store the data in the dragged object
-                            draggedUI.data(ITEM_TAG, item.id);
-                            draggedUI.data(DISTANCE_TAG, connectionDistance);
-                        }
-
-                    }
+                    self.registerUnderItem(item);
                 }
             },
-            out: function(event, ui) {
+            out: function() {
 
-                if (ui.helper.data(ITEM_TAG) === item.id){
-                    item.deactivateConnectionAreas();
-                    self.dropFocus = SnapEditorWidgetConstants.BACKGROUND;
-
-                    //Remove data from dragged ui
-                    ui.helper.removeData(ITEM_TAG);
-                }
+                self.unregisterUnderItem(item);
             },
             drop: function(event, ui) {
                 if (self.dropFocus === SnapEditorWidgetConstants.ITEM && ui.helper.data(ITEM_TAG) === item.id){
                     self._onItemDrop(item, event, ui);
+                    self.unregisterDraggingItem();
                 }
             }
         });

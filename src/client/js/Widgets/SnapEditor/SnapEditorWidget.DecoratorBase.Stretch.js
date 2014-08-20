@@ -44,7 +44,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
     SVGDecoratorSnapEditorWidgetStretch.prototype.initializeStretchability = function (stretchers) {
         //Stretching stuff
         this._transforms = {};//The current abs stretch of any svg element in the SVG
-        this._updatedSVGElements = {};//The elements that have been updated since last render
+        //this._updatedSVGElements = {};//The elements that have been updated since last render
         this._classTransforms = {};//The calculated abs stretch of any class in the SVG
 
         this._svgSize = {};
@@ -300,11 +300,8 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
     };
 
     SVGDecoratorSnapEditorWidgetStretch.prototype.onRenderGetStretchInfo = function(){
-        //fixNullDimensions
         this._fixNullDimensions();
-
-        //Calculate SVG Size
-        this.updateSize();
+        this.updateSize();//Updates the boundary box
     };
 
     /**
@@ -362,8 +359,6 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      * @return {Object} extreme edges of the elements
      */
     SVGDecoratorSnapEditorWidgetStretch.prototype._shiftDependentElements = function (id) {
-        //READ-ONLY
-
         var shiftElements = {},
             dim,
             stretch = this._transforms[id].stretch,
@@ -393,7 +388,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
 
                     this._transforms[svgId].shift[axis] += shift[axis];
                     
-                    this._updatedSVGElements[svgId] = this.$svgContent.find("#" + svgId);
+                    //this._updatedSVGElements[svgId] = this.$svgContent.find("#" + svgId);
 
                     if (this.shiftTree[svgId] && this.shiftTree[svgId][axis]){
                         shiftElements[axis] = shiftElements[axis].concat(this.shiftTree[svgId][axis]);
@@ -505,12 +500,10 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
 
         while (elements.length){
             element = elements.pop();
-            svg = this.$svgElement.find("#" + element)[0];
-            //this._updateSVGTransforms(this._updatedSVGElements[element][0]);
+            svg = this.$svgElement.find("#" + element)[0];//Store this somewhere TODO
             if (svg){
                 this._updateSVGTransforms(svg);
             }
-            //delete this._updatedSVGElements[element];
         }
 
         //Set the height/width as needed
@@ -669,7 +662,6 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
     SVGDecoratorSnapEditorWidgetStretch.prototype.stretch = function (id, axis, delta, type) {
         //READ-ONLY
         var stretchElements = [],
-            maxSize = 0,
             dim = axis === AXIS.X ? "width" : "height",
             svgId,
             stretch = {},
@@ -689,8 +681,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
         //Stretch the SVG to Max(delta, currentStretch)
         var ptrs = [],
             oldValue,
-            newValue,
-            edge;//value of the largest edge of the svg element. Used to see if we need to resize the parent
+            newValue;
 
         
         for (var i = stretchElements.length - 1; i >= 0; i--){
@@ -719,7 +710,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
                 this._transforms[svgId].stretch[dim] = newValue;
 
                 //Set the svg element to update
-                this._updatedSVGElements[svgId] = this.$svgContent.find("#" + svgId);
+                //this._updatedSVGElements[svgId] = this.$svgContent.find("#" + svgId);
 
                 //Record the stretch id if stretch is non-zero
                 if (newValue !== 0){

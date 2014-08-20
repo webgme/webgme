@@ -652,28 +652,35 @@ define(['logManager',
 
     /******************** ALTER SVG  *********************/
     /**
-     * Update size based on all pointers 
+     * Update size based on all 'out' pointers 
      *
      * @return {Boolean} return true if the item changed size
      */
     ClickableItem.prototype.updateSize = function () {
-        //
-        var ptrNames = this.getPtrNames(),
-            changed = false;
+        var ptrs = this.getPtrNames(),
+            ptr,
+            attrs = this.getAttributeNames(),
+            combinedNames = {},
+            names,
+            changed = false,
+            i;
 
-        if(ptrNames.length){
-            var ptrs = [],
-                i = ptrNames.length;
-
-            while(i--){
-                if(!(ptrNames[i] instanceof Array)){
-                    ptrs.push(ptrNames[i]);
-                }
+        while (ptrs.length){
+            ptr = ptrs.pop();
+            if (!(ptr instanceof Array)){//only look at outgoing ptrs
+                combinedNames[ptr] = true;
             }
+        }
 
-            i = ptrs.length;
+        while (attrs.length){
+            combinedNames[attrs.pop()] = true;
+        }
+
+        names = Object.keys(combinedNames);
+        if(names.length){
+            i = names.length;
             while(i--){
-                changed = this._updateSize(ptrs[i], this.ptrs[SNAP_CONSTANTS.CONN_PASSING][ptrs[i]]) || changed;
+                changed = this._updateSize(names[i], this.ptrs[SNAP_CONSTANTS.CONN_PASSING][names[i]]) || changed;
             }
         }
 
@@ -944,6 +951,21 @@ define(['logManager',
     };
 
     /**
+     * Returns connection areas with relative locations.
+     *
+     * @return {Array} Connection Areas
+     */
+    ClickableItem.prototype.getRelativeConnectionAreas = function () {
+        /*
+         * For the ClickableItem, the connection areas need to
+         * contain the id of their parent as some of the future
+         * methods will rely on simply the connection areas to link
+         * two objects together. 
+         */
+        return this._decoratorInstance.getConnectionAreas();
+
+    };
+    /**
      * Get all the item's connection areas
      *
      * @return {Object} Connection Areas
@@ -1029,14 +1051,12 @@ define(['logManager',
      * @return {Object} distance and connection area of closest
      */
     ClickableItem.prototype.getClosestConnectionArea = function (draggedItem, position) {
-        this.deactivateConnectionAreas();
+        //this.deactivateConnectionAreas();
 
         //Get all empty pointers and compare with draggedItem's available pointers.
         //Closest compatible pointers determines the active conn area
-        var shift = { x: position.left - draggedItem.positionX,
-                      y: position.top - draggedItem.positionY },
-            openAreas = this.getConnectionAreas(),
-            otherAreas = draggedItem.getConnectionAreas(),
+        var openAreas = this.getConnectionAreas(),
+            otherAreas = draggedItem.getRelativeConnectionAreas(),
             otherAreasSorted = {},//dictionary by role, ptr
             otherArea,
             closestArea = null,
@@ -1065,12 +1085,19 @@ define(['logManager',
         i = otherAreas.length;
         while (i--){
             //Remove any occupied areas
-            if (draggedItem.isOccupied( otherAreas[i].id )){
+            if (draggedItem.isOccupied( otherAreas[i].id ) && 
+               otherAreas[i].role === SNAP_CONSTANTS.CONN_PASSING){
                 otherAreas.splice(i,1);
             } else {
                 ptrs = otherAreas[i].ptr instanceof Array ?
                     otherAreas[i].ptr.slice() : [otherAreas[i].ptr];
                 role = otherAreas[i].role;
+
+                //Shift the area to the appropriate position
+                otherAreas[i].x1 += position.left;
+                otherAreas[i].x2 += position.left;
+                otherAreas[i].y1 += position.top;
+                otherAreas[i].y2 += position.top;
 
                 if (role !== SNAP_CONSTANTS.CONN_PASSING || //Remove any nonsibling passing pointers
                     SNAP_CONSTANTS.SIBLING_PTRS.indexOf(ptrs[0]) !== -1){
@@ -1094,12 +1121,6 @@ define(['logManager',
                 //otherArea = draggedItem.getConnectionArea(ptrs.pop(), role);
 
                 if(otherArea){
-
-                    //Shift the area
-                    otherArea.x1 += shift.x;
-                    otherArea.x2 += shift.x;
-                    otherArea.y1 += shift.y;
-                    otherArea.y2 += shift.y;
 
                     if (closestArea === null || 
                         this.__getDistanceBetweenConnections(openAreas[i], otherArea) < closestArea){
@@ -1247,7 +1268,7 @@ define(['logManager',
 
         //update gmeId if needed
         if(objDescriptor.id && oldMetaInfo[SNAP_CONSTANTS.GME_ID] && oldMetaInfo[SNAP_CONSTANTS.GME_ID] !== objDescriptor.id){
-            console.log("Changing " + oldMetaInfo[SNAP_CONSTANTS.GME_ID] + " to " + objDescriptor.id);
+            this.logger.debug("Changing " + oldMetaInfo[SNAP_CONSTANTS.GME_ID] + " to " + objDescriptor.id);
             this._decoratorInstance.setGmeId(objDescriptor.id);
             this.$el.html(this._decoratorInstance.$el);
             needToUpdateDependents = "changed id";

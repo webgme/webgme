@@ -321,6 +321,7 @@ define(['js/Constants',
         var name = this.$svgContent.find("#" + SNAP_CONSTANTS.NAME);
         if(name[0] !== undefined && name[0].tagName === "text"){
             this.$name = name;
+            //RETURN Add 'name' attribute
         }
 
         var attributes = this.hostDesignerItem.attributes,
@@ -367,12 +368,12 @@ define(['js/Constants',
 
         for (var i = 0; i < attrList.length; i++){
             attr = attrList[i];
-            if (attr !== 'name'){
-                this._attributes[ attr ] = { enabled: true, value: attributes[attr].value+"" };
-                fields = textFields.filter("#" + attr);
+            this._attributes[ attr ] = { enabled: true, value: attributes[attr].value+"" };
+            fields = textFields.filter("#" + attr);
 
-                this._setTextAndStretch(fields, attributes[attr].value, attr);
+            this._setTextAndStretch(fields, attributes[attr].value, attr);
 
+            if (attr !== "name"){//name requires double click to edit
                 //Make the fields editable
                 fields.on("click", null, editText);
 
