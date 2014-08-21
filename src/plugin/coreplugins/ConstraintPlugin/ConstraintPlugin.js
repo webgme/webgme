@@ -21,6 +21,7 @@ define(['plugin/PluginConfig',
                              VIOLATION: 'violationInfo',
                              CACHE : '_nodeCache',
                              GET_NODE : 'getNode',
+                             GET_DESCENDENTS: 'getDescendents',
                              TYPE_OF : 'isTypeOf',
 
                              //Base values for iterators/functions
@@ -30,7 +31,7 @@ define(['plugin/PluginConfig',
 
        PLACEHOLDER = { ITERATOR: '%__iterator__',//Placeholders to be unique-ized
                        FUNCTION: '%__func__',
-                       ARG: '%__arg__',
+                       ARG: function(i){ return '%__arg__'+ i + '__'; },//Create unique argument names
                        PARENT_SNIPPET_START: '%__parentSnippetStart__',
                        PARENT_SNIPPET_END: '%__parentSnippetEnd__' },
        OPTIONAL_PLACEHOLDERS = ['%next'],
@@ -78,7 +79,6 @@ define(['plugin/PluginConfig',
         var self = this,
             name,
             root = self.core.getRoot(self.activeNode),
-            child,
             len,
             constraintsDirs = [];
 
@@ -123,8 +123,7 @@ define(['plugin/PluginConfig',
 
     ConstraintPlugin.prototype._loadStartingNodes = function(callback){
         var self = this,
-            constraints = self.constraints,
-            root = self.core.getRoot(self.activeNode);
+            constraints = self.constraints;
 
         self._nodeCache = {};
 
@@ -197,13 +196,13 @@ define(['plugin/PluginConfig',
         return this._nodeCache[this.currentConstraint][nodePath];
     };
 
-    ConstraintPlugin.prototype.getAllNodeIds = function(constraintName){
+    ConstraintPlugin.prototype.getAllNodeIds = function(){
         return Object.keys(this._nodeCache[this.currentConstraint]);
     };
 
     ConstraintPlugin.prototype.getConfigStructure = function () {
         var config = [],
-            constraints = [ 'Unique Name', 'OneStartBlock', 'Limited Connections Per Item' ];
+            constraints = [ 'Unique Name', 'OneStartBlock', 'Limited Connections Per Item', 'test2' ];
 
         //Apply To All Option
         config.push({ name: 'applyAll',
@@ -231,7 +230,6 @@ define(['plugin/PluginConfig',
 
     ConstraintPlugin.prototype.main = function (callback) {
         var self = this,
-            constraintNodes,
             changedNode = this.activeNode,
             saveMessage = "Added constraints (";
 
@@ -326,7 +324,6 @@ define(['plugin/PluginConfig',
             currentNode,
             variables = [],//List of variables to declare
             nodeIds,
-            l,
             i;
 
         this.variables = {};//List of declared variables
@@ -384,7 +381,9 @@ define(['plugin/PluginConfig',
         keys = Object.keys(PLACEHOLDER);
         while (keys.length){
             key = keys.pop();
-            PLACEHOLDER[key] = this._createUniqueName(PLACEHOLDER[key]);
+            if (!_.isFunction(PLACEHOLDER[key])){
+                PLACEHOLDER[key] = this._createUniqueName(PLACEHOLDER[key]);
+            }
         }
 
         this._constraintExtension = 'js';
@@ -394,18 +393,33 @@ define(['plugin/PluginConfig',
             ' = { hasViolation: false };\n' +
             'var ' + PRIVATE_VARIABLES.ERROR + ' = null;\n' +
             'var ' + PRIVATE_VARIABLES.CACHE + ' = {};\n' +
+
+            //Get Node function
             'var ' + PRIVATE_VARIABLES.GET_NODE + ' = function(nodeId, cb){\n' +
             'var node;\nif (nodeId === currentNode){\n'+
             'cb(currentNode);\n}\n\nif (' + PRIVATE_VARIABLES.CACHE + '[nodeId]){\n' +
             'cb(' + PRIVATE_VARIABLES.CACHE + '[nodeId]);\n' +
             '}\nnode = core.loadByPath(currentNode, nodeId, function(n){\n' +
             '' + PRIVATE_VARIABLES.CACHE + '[nodeId] = node;\n\ncb(node);\n});\n};\n' + 
+
+            //Get Descendents function
+            'var ' + PRIVATE_VARIABLES.GET_DESCENDENTS + '= function' +
+            '(n, callback){\nvar result = [];\nvar count = 1;\nvar load'+
+            ' = function(node, cb){\ncore.loadChildren(node, function(e,'+
+            ' children){\nif (!e){\nresult.push(node);\ncount += children'+
+            '.length;\nfor (var i = children.length-1; i >= 0; i--){\nload'+
+            '(children[i], cb);\n}\nif (count === result.length){\ncb(result);'+
+            '\n}\n} else {\n' + PRIVATE_VARIABLES.ERROR + ' = e;\n}\n});\n};\n'+
+            'load(n, callback);\n\n};\n'+
+
+            //Type Of function
             'var ' + PRIVATE_VARIABLES.TYPE_OF + ' = function(node,type){\n' + 
             'if(node === undefined || node === null || type === undefined || ' + 
             'type === null){\nreturn false;\n}\n\n' +
             'while(node){\nif(core.getAttribute(node, "name") === type){\n'+
             'return true;\n}\nnode = core.getBase(node);\n}\nreturn false;\n};\n'+
             '\n\n%code\n\n}';
+
 
         this._constraintMapping = {
             'add': "%first + %second", 
@@ -423,7 +437,6 @@ define(['plugin/PluginConfig',
 
             //Control flow
             'if': "if (%cond){\n%true_next\n}\n%next",
-            'while': "while (%cond){\n %true_next\n}\n%next",
 
             //Variables
             'dictionary': "%name",
@@ -453,23 +466,30 @@ define(['plugin/PluginConfig',
             'set': '%first = %second;\n%next',
 
             //node methods (async)
-            'isTypeOf': PRIVATE_VARIABLES.GET_NODE+"(%node, function(" + PLACEHOLDER.ARG + 
+            'isTypeOf': PRIVATE_VARIABLES.GET_NODE+"(%node, function(" + PLACEHOLDER.ARG(0) + 
                 "){\n" + PLACEHOLDER.PARENT_SNIPPET_START + PRIVATE_VARIABLES.TYPE_OF + 
-                "(" + PLACEHOLDER.ARG + ", %first)" + PLACEHOLDER.PARENT_SNIPPET_END + "\n});",
+                "(" + PLACEHOLDER.ARG(0) + ", %first)" + PLACEHOLDER.PARENT_SNIPPET_END + "\n});",
 
-            'getChildren': PRIVATE_VARIABLES.GET_NODE+"(%node, function(" + PLACEHOLDER.ARG + 
-                "){\n" + PLACEHOLDER.PARENT_SNIPPET_START + "core.getChildrenPaths(" + PLACEHOLDER.ARG + 
+            'getChildren': PRIVATE_VARIABLES.GET_NODE+"(%node, function(" + PLACEHOLDER.ARG(0) + 
+                "){\n" + PLACEHOLDER.PARENT_SNIPPET_START + "core.getChildrenPaths(" + PLACEHOLDER.ARG(0) + 
                 ")" + PLACEHOLDER.PARENT_SNIPPET_END + "\n});",
 
-            'getParent': PRIVATE_VARIABLES.GET_NODE+"(%node, function(" + PLACEHOLDER.ARG + 
-                "){\n" + PLACEHOLDER.PARENT_SNIPPET_START + "core.getParentPath(" + PLACEHOLDER.ARG + 
+            'getDescendents': PRIVATE_VARIABLES.GET_NODE +"(%node, function(" + PLACEHOLDER.ARG(0) + 
+                "){\n" + PRIVATE_VARIABLES.GET_DESCENDENTS +
+                "(" + PLACEHOLDER.ARG(0) + ", function(" + PLACEHOLDER.ARG(1) + "){\n" + 
+                PLACEHOLDER.PARENT_SNIPPET_START + PLACEHOLDER.ARG(1) + 
+                PLACEHOLDER.PARENT_SNIPPET_END + "});\n\n});",
+
+            'getParent': PRIVATE_VARIABLES.GET_NODE+"(%node, function(" + PLACEHOLDER.ARG(0) + 
+                "){\n" + PLACEHOLDER.PARENT_SNIPPET_START + "core.getParentPath(" + PLACEHOLDER.ARG(0) + 
                 ")" + PLACEHOLDER.PARENT_SNIPPET_END + "\n});",
 
-            'getPointer': PRIVATE_VARIABLES.GET_NODE+"(%node, function(" + PLACEHOLDER.ARG + 
-                "){\n" + PLACEHOLDER.PARENT_SNIPPET_START + "core.getPointerPath(" + PLACEHOLDER.ARG + 
+            'getPointer': PRIVATE_VARIABLES.GET_NODE+"(%node, function(" + PLACEHOLDER.ARG(0) + 
+                "){\n" + PLACEHOLDER.PARENT_SNIPPET_START + "core.getPointerPath(" + PLACEHOLDER.ARG(0) + 
                 ")" + PLACEHOLDER.PARENT_SNIPPET_END + "\n});",
 
-            'getAttribute': PRIVATE_VARIABLES.GET_NODE+"(%second, function(" + PLACEHOLDER.ARG + "){\n" + PLACEHOLDER.PARENT_SNIPPET_START + "core.getAttribute(" + PLACEHOLDER.ARG + 
+            'getAttribute': PRIVATE_VARIABLES.GET_NODE+"(%second, function(" + PLACEHOLDER.ARG(0) + 
+                "){\n" + PLACEHOLDER.PARENT_SNIPPET_START + "core.getAttribute(" + PLACEHOLDER.ARG(0) + 
                 ", %first)" + PLACEHOLDER.PARENT_SNIPPET_END + "\n});",
 
             'forEach': "var " + PLACEHOLDER.FUNCTION + " = function(" + 
@@ -477,12 +497,25 @@ define(['plugin/PluginConfig',
                 ' < %collection.length){\n%iter = %collection[' + 
                 PLACEHOLDER.ITERATOR + '];\n%true_next\n} else {\n %next\n} };\n'+
                 'var ' + PLACEHOLDER.ITERATOR + ' = 0;\n' + PLACEHOLDER.FUNCTION +
-                '(' + PLACEHOLDER.ITERATOR + ');\n'
+                '(' + PLACEHOLDER.ITERATOR + ');\n',
+
+            'repeat': "var " + PLACEHOLDER.FUNCTION + " = function(" + 
+                PLACEHOLDER.ITERATOR + "){\nif (" + PLACEHOLDER.ITERATOR + 
+                ' < %count){\n%true_next\n} else {\n %next\n} };\n'+
+                'var ' + PLACEHOLDER.ITERATOR + ' = 0;\n' + PLACEHOLDER.FUNCTION +
+                '(' + PLACEHOLDER.ITERATOR + ');\n',
+
+            'while': 'var ' + PLACEHOLDER.FUNCTION + ' = function(){\n' +
+                'if (%cond){\n%true_next\n} else {\n %next\n} };\n'+
+                 PLACEHOLDER.FUNCTION + '();\n'
             };
 
             //additional end code by node type
             this._constraintEndCode = {
                 'forEach': PLACEHOLDER.FUNCTION + "(++" + PLACEHOLDER.ITERATOR + ");\n",
+                'repeat': PLACEHOLDER.FUNCTION + "(++" + PLACEHOLDER.ITERATOR + ");\n",
+                'while': PLACEHOLDER.FUNCTION + "();\n",
+
                 'constraint': '\ncallback( ' + PRIVATE_VARIABLES.ERROR + 
                     ', ' + PRIVATE_VARIABLES.VIOLATION + ');\n'
             };
@@ -516,11 +549,9 @@ define(['plugin/PluginConfig',
 
     ConstraintPlugin.prototype._declareVariables = function(variables){
         var types = Object.keys(this._variableTypes),
-            foundType,
             variableType,
             variable,
             i,
-            index,
             j;
 
         //Remove the initial variable from declaration
@@ -612,6 +643,7 @@ define(['plugin/PluginConfig',
             snippetTag,
             keys,
             i,
+            j,
             targetNode,
             splitElements,
             subsnippets,
@@ -621,8 +653,23 @@ define(['plugin/PluginConfig',
 
         //Handle any placeholders (ie, iterators, function names)
         keys = Object.keys(PLACEHOLDER);
-        for (i = keys.length-1; i >= 0; i--){
-            snippetTag = PLACEHOLDER[keys[i]];
+        for (i = 0; i < keys.length; i++){
+            if (_.isFunction(PLACEHOLDER[keys[i]])){
+
+                //resolve all argument names
+                j = 0;
+                while (snippet.indexOf(PLACEHOLDER[keys[i]](++j)) !== -1){
+                    snippetTag = PLACEHOLDER[keys[i]](j);
+                    if (snippet.indexOf(snippetTag) !== -1 && PRIVATE_VARIABLES[keys[i]] !== undefined){
+                        snippetTagContent[snippetTag] = this._createUniqueName(PRIVATE_VARIABLES[keys[i]]);
+                    }
+                }
+
+                snippetTag = PLACEHOLDER[keys[i]](0);
+            } else {
+                snippetTag = PLACEHOLDER[keys[i]];
+            }
+
             if (snippet.indexOf(snippetTag) !== -1 && PRIVATE_VARIABLES[keys[i]] !== undefined){
                 snippetTagContent[snippetTag] = this._createUniqueName(PRIVATE_VARIABLES[keys[i]]);
             }
@@ -738,7 +785,6 @@ define(['plugin/PluginConfig',
     //Thanks to Tamas for the next two functions
     ConstraintPlugin.prototype._saveOutput = function(callback){
         var self = this,
-            code,
             filename = self.core.getAttribute(self.activeNode, 'name').replace(/ /g, "_"),
             artifact = self.blobClient.createArtifact(filename+"_constraints"),
             constraints = [],
