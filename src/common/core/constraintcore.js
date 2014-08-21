@@ -111,6 +111,27 @@ define([ "util/assert" ], function (ASSERT) {
             return names;
         };
 
+        //TODO this means we always have to have this layer above type/inheritance layer
+        _core.getOwnConstraintNames = function(node){
+            ASSERT(_innerCore.isValidNode(node));
+            var names = _core.getConstraintNames(node),
+                base = _core.getBase(node),
+                baseNames = [], i,index;
+
+            if(base){
+                baseNames = _core.getConstraintNames(base);
+            }
+
+            for(i=0;i<baseNames.length;i++){
+                index = names.indexOf(baseNames[i]);
+                if(index !== -1){
+                    names.splice(index,1);
+                }
+            }
+
+            return names;
+        };
+
         return _core;
     }
 
