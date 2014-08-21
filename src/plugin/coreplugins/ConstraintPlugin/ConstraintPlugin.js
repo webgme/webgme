@@ -14,6 +14,13 @@ define(['plugin/PluginConfig',
     "use strict";
 
    var DEFAULT = '__default__',
+       JS_RESERVED_WORDS = [ 'break', 'case', 'class', 'catch', 'const', 
+           'continue', 'debugger', 'default', 'delete', 'do', 'else', 'export',
+           'extends', 'finally', 'for', 'function', 'if', 'import', 'in', 
+           'instanceof', 'let', 'new', 'return', 'super', 'switch', 'this',
+           'throw', 'try', 'typeof', 'var', 'void', 'while', 'with', 'yield',
+           'enum', 'await', 'implements', 'package', 'protected', 'static', 
+           'interface', 'private', 'public', 'null', 'undefined', 'true', 'false'],
        ACCESSABLE_VARIABLES = ['currentNode'],
        PRIVATE_VARIABLES = { CORE: 'core',//Variable names to be unique-ized
                              CALLBACK: 'callback',
@@ -326,7 +333,6 @@ define(['plugin/PluginConfig',
             nodeIds,
             i;
 
-        this.variables = {};//List of declared variables
         this.generatedCode = "";
 
         currentNode = null;
@@ -345,6 +351,7 @@ define(['plugin/PluginConfig',
         }
 
         //Declare all the variables
+        this._initializeVariableMap(variables);
         this._declareVariables(variables);
         this._createConstraintMapping();
 
@@ -546,11 +553,37 @@ define(['plugin/PluginConfig',
         return newName;
     };
 
+    ConstraintPlugin.prototype._initializeVariableMap = function(variables){
+        var names = {},
+            name,
+            node,
+            i;
+
+        this.variables = {};
+
+        //Get all the names from the variables
+        for (i = variables.length-1; i >= 0; i--){
+            node = this.getNode(variables[i]);
+            name = this.core.getAttribute(node, 'name');
+            names[name] = true;
+        }
+
+        //Add js reserved words to variables to prevent collisions
+        for (i = JS_RESERVED_WORDS.length-1; i >= 0; i--){
+            name = JS_RESERVED_WORDS[i];
+            while (names[name]){
+                name = JS_RESERVED_WORDS[i] + '_' + Math.floor(Math.random()*UNIQUENESS_COEFFICIENT);
+            }
+            this.variables[name] = JS_RESERVED_WORDS[i];
+        }
+    };
 
     ConstraintPlugin.prototype._declareVariables = function(variables){
         var types = Object.keys(this._variableTypes),
             variableType,
             variable,
+            declared = {},
+            name,
             i,
             j;
 
@@ -562,6 +595,11 @@ define(['plugin/PluginConfig',
         //Declare remaining variables
         for (i = variables.length -1; i >= 0; i--){
             variable = this.getNode(variables[i]);
+            name = this.core.getAttribute(variable, 'name');
+            if (declared[name]){
+                continue;
+            }
+
             variableType = null;
             j = types.length;
 
@@ -575,7 +613,9 @@ define(['plugin/PluginConfig',
                 variableType = this._variableTypes[DEFAULT];
             }
 
+            //Keep track of the declared variables
             this._declareVar(variable, variableType);
+            declared[name] = true;
         }
 
         this.generatedCode += "\n";
@@ -583,13 +623,11 @@ define(['plugin/PluginConfig',
 
     ConstraintPlugin.prototype._declareVar = function(variable, typeInfo){
         var name = this.core.getAttribute(variable, 'name'),
-            varName;
-
-        if (!this.variables[name]){
             varName = this._getValidVariableName(name.slice());
-            this.generatedCode += typeInfo.replace(new RegExp("%name", "g"), varName) + '\n';
-            this.variables[name] = varName;
-        }
+
+        varName = this._createUniqueName(varName);
+        this.generatedCode += typeInfo.replace(new RegExp("%name", "g"), varName) + '\n';
+        this.variables[name] = varName;
     };
 
     ConstraintPlugin.prototype._getValidVariableName = function(variableName){
