@@ -11,7 +11,7 @@ define(['js/PanelBase/PanelBase',
     'js/Widgets/UserProfile/UserProfileWidget',
     'js/Toolbar/Toolbar',
     './DefaultToolbar',
-    'ui-components/DropdownNavigator/DropdownNavigator',
+    'isis-ui-components/dropdownNavigator/dropdownNavigator',
     './ProjectNavigatorController'
 ], function (PanelBase, ProjectTitleWidget, UserProfileWidget, toolbar, DefaultToolbar, DropDownNavigator, ProjectNavigatorController) {
 
@@ -20,7 +20,11 @@ define(['js/PanelBase/PanelBase',
     var HeaderPanel,
         __parent__ = PanelBase;
 
-    angular.module('gme.ui.headerPanel', ['isis.ui.dropdownNavigator']).run(function() {
+    angular.module(
+        'gme.ui.headerPanel', [
+          'isis.ui.dropdownNavigator',
+          'gme.ui.ProjectNavigator'
+        ]).run(function() {
 
     });
 
