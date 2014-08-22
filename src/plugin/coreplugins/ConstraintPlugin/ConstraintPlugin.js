@@ -29,6 +29,8 @@ define(['plugin/PluginConfig',
                              CACHE : '_nodeCache',
                              GET_NODE : 'getNode',
                              GET_DESCENDENTS: 'getDescendents',
+                             GET_NODES: 'getNodes',
+                             FILTER_BY_NODE_TYPE: 'filterByNodeType',
                              TYPE_OF : 'isTypeOf',
 
                              //Base values for iterators/functions
@@ -409,15 +411,21 @@ define(['plugin/PluginConfig',
             '}\nnode = core.loadByPath(currentNode, nodeId, function(n){\n' +
             '' + PRIVATE_VARIABLES.CACHE + '[nodeId] = node;\n\ncb(node);\n});\n};\n' + 
 
+            //Get nodes
+            'var ' + PRIVATE_VARIABLES.GET_NODES +'= function(nodeIds, cb){\nvar '+
+            'result = [],\ndone = function (node){\nresult.push(node);if (result.length'+
+            ' === nodeIds.length){\ncb(result);\n}\n};\nfor (var i = nodeIds.length-1;'+
+            ' i>=0; i--){\n'+ PRIVATE_VARIABLES.GET_NODE +'(nodeIds[i], done);\n}\n};\n'+
+
             //Get Descendents function
             'var ' + PRIVATE_VARIABLES.GET_DESCENDENTS + '= function' +
-            '(n, callback){\nvar result = [];\nvar count = 1;\nvar load'+
+            '(n, _callback){\nvar result = [];\nvar count = 1;\nvar load'+
             ' = function(node, cb){\ncore.loadChildren(node, function(e,'+
             ' children){\nif (!e){\nresult.push(node);\ncount += children'+
             '.length;\nfor (var i = children.length-1; i >= 0; i--){\nload'+
             '(children[i], cb);\n}\nif (count === result.length){\ncb(result);'+
             '\n}\n} else {\n' + PRIVATE_VARIABLES.ERROR + ' = e;\n}\n});\n};\n'+
-            'load(n, callback);\n\n};\n'+
+            'load(n, _callback);\n\n};\n'+
 
             //Type Of function
             'var ' + PRIVATE_VARIABLES.TYPE_OF + ' = function(node,type){\n' + 
@@ -425,8 +433,13 @@ define(['plugin/PluginConfig',
             'type === null){\nreturn false;\n}\n\n' +
             'while(node){\nif(core.getAttribute(node, "name") === type){\n'+
             'return true;\n}\nnode = core.getBase(node);\n}\nreturn false;\n};\n'+
-            '\n\n%code\n\n}';
+            '\n\n%code\n\n}'+
 
+            'var ' + PRIVATE_VARIABLES.FILTER_BY_NODE_TYPE +'(nodeSet, type, cb){\n'+
+            'var result = [],\nid;\n'+PRIVATE_VARIABLES.GET_NODES+'(nodeSet, '+
+            'function(nodes){\nfor (var i = nodes.length-1; i>=0; i--){\nif ('+
+            PRIVATE_VARIABLES.TYPE_OF+'(nodes, type)){id = core.getPath(nodes[i]);\n'+
+            'result.push(id);\n}\n}\ncb(result);\n});\n};';
 
         this._constraintMapping = {
             'add': "%first + %second", 
@@ -498,6 +511,10 @@ define(['plugin/PluginConfig',
             'getAttribute': PRIVATE_VARIABLES.GET_NODE+"(%second, function(" + PLACEHOLDER.ARG(0) + 
                 "){\n" + PLACEHOLDER.PARENT_SNIPPET_START + "core.getAttribute(" + PLACEHOLDER.ARG(0) + 
                 ", %first)" + PLACEHOLDER.PARENT_SNIPPET_END + "\n});",
+
+            'filterByNodeType': PRIVATE_VARIABLES.FILTER_BY_NODE_TYPE +"(%second, function(" + 
+                PLACEHOLDER.ARG(0) + "){\n" + PLACEHOLDER.PARENT_SNIPPET_START + PLACEHOLDER.ARG(0) +
+                PLACEHOLDER.PARENT_SNIPPET_END + "\n});",
 
             'forEach': "var " + PLACEHOLDER.FUNCTION + " = function(" + 
                 PLACEHOLDER.ITERATOR + "){\nif (" + PLACEHOLDER.ITERATOR + 
