@@ -58,22 +58,33 @@ define(['./SnapEditorWidget.Constants.js'], function (SNAP_CONSTANTS) {
     };
 
     SnapEditorWidgetHighlightUpdater.prototype._updateHighlights = function (self) {
-        var items = self._underItems.slice(),
-            draggedUI = self._ui,
-            selector = '#' + draggedUI.attr('id') + '.' + draggedUI.attr('class'),
-            draggedId = draggedUI.attr('id'),
-            dragged = self.items[draggedId],
-            draggedIds = [],
-            pos,
-            connectionInfo,
+        var items,
+            closestArea,
+            closestItem,
             connectionDistance,
+            connectionInfo,
+            draggedUI,
+            draggedId,
+            dragged,
+            draggedIds,
+            pos,
             otherItemId,
-            minDistance = null,
-            closestItem = null,
-            closestArea = null,
+            minDistance,
+            selector,
             j;
 
-        if (items.length){
+        if (self._underItems && self._underItems.length){
+
+            items = self._underItems.slice();
+            draggedUI = self._ui;
+            selector = '#' + draggedUI.attr('id') + '.' + draggedUI.attr('class');
+            draggedId = draggedUI.attr('id');
+            dragged = self.items[draggedId];
+            draggedIds = [];
+            minDistance = null;
+            closestItem = null;
+            closestArea = null;
+
             pos = $(selector).position();
             pos.left -= items[0].$el.parent().offset().left;
             pos.top -= items[0].$el.parent().offset().top;
