@@ -12,6 +12,8 @@ define(['addon/AddOnBase'],function(Base) {
     ConstraintAddOn.prototype.constructor = ConstraintAddOn;
 
     ConstraintAddOn.prototype.root = null;
+    ConstraintAddOn.prototype.contraints = {};
+    ConstraintAddOn.prototype.contraintsStorage = {};
 
     ConstraintAddOn.prototype.getName = function () {
         return 'ConstraintAddOn';
@@ -19,16 +21,32 @@ define(['addon/AddOnBase'],function(Base) {
 
     ConstraintAddOn.prototype.update = function (root) {
         //TODO if we would like a continuous constraint checking we should use this function as well
-        console.log('CAD update',this.core.getHash(root));
+        console.log('we got updated',this.core.getHash(root));
         this.root = root;
     };
 
     ConstraintAddOn.prototype.query = function (parameters, callback) {
-        console.log('query CAD',parameters);
+        var self = this;
         //several query will be available but the first is the simple run constraint
         switch (parameters.querytype){
-            case 'execute':
-                this.executeConstraints(callback);
+            case 'checkProject':
+                this.checkProject(callback);
+                break;
+            case 'checkModel':
+                self.loadNode(parameters.path,function(err,node){
+                    if(err){
+                        return callback(err);
+                    }
+                    self.checkModel(node,callback);
+                });
+                break;
+            case 'checkNode':
+                self.loadNode(parameters.path,function(err,node){
+                    if(err){
+                        return callback(err);
+                    }
+                    self.checkNode(node,callback);
+                });
                 break;
             default:
                 callback('unknown command');
@@ -68,62 +86,107 @@ define(['addon/AddOnBase'],function(Base) {
         callback(null);
     };
 
-    ConstraintAddOn.prototype.executeConstraints = function(callback){
+    ConstraintAddOn.prototype.checkProject = function(callback){
+        this.checkModel(this.root,callback);
+    };
+    ConstraintAddOn.prototype.checkModel = function(root,callback){
         var self = this,
-            executeConstraint = function(node,name,cb){
-                var guid = self.core.getGuid(node),
-                    icb = function(err,msg){
-                        error = error || err;
-                        message[guid][name] = msg;
-                        cb();
-                };
-                message[guid] = message[guid] || {};
-                eval("("+self.core.getConstraint(node,name).script+")(self.core,node,icb)");
-            },
-            checkNode = function(node,cb){
-                var names = self.core.getConstraintNames(node),
-                    needed = names.length,
+            error = null,
+            message = {},
+            checkChild = function(node,cb){
+                var needed = 2,
                     children = [],
-                    countDown = function(){
-                        if(--needed === 0){
-                            checkChildren();
+                    nextChild = function(index){
+                        if(index>=children.length){
+                            return cb(error,message);
                         }
-                    },
-                    checkChildren = function(){
-                        self.core.loadChildren(node,function(err,c){
-                            if(!err && c){
-                                children = c;
-                                checkChild(0);
-                            } else {
-                                cb(err);
-                            }
+
+                        checkChild(children[index],function(){
+                            nextChild(index+1);
                         });
                     },
-                    checkChild = function(index){
-                        if(index<children.length){
-                            checkNode(children[index],function(){
-                                checkChild(index+1);
-                            });
-                        } else {
-                            cb();
+                    childrenLoaded = function(){
+                        needed = children.length;
+                        if(!needed || needed === 0){
+                            return cb(error,message);
                         }
-                    },
-                    i;
-
-                if(needed > 0){
-                    for(i=0;i<names.length;i++){
-                        executeConstraint(node,names[i],countDown);
+                        nextChild(0);
+                    };
+                self.checkNode(node,function(err,msg){
+                    error = error || err;
+                    if(msg.hasViolation === true){
+                        message.hasViolation = true;
                     }
-                } else {
-                    checkChildren();
-                }
-            },
-            error = null,
-            message = {};
+                    message[self.core.getGuid(node)] = msg;
+                    if(--needed === 0){
+                        childrenLoaded();
+                    }
+                });
+                self.core.loadChildren(node,function(err,c){
+                    children = c || [];
+                    error = error || err;
+                    if(--needed === 0){
+                        childrenLoaded();
+                    }
+                });
+            };
 
-            checkNode(self.root,function(){
-                callback(error,message);
-            });
+        if(self.core.getPath(root) === self.core.getPath(self.core.getRoot(root))){
+            message.info = "project validation";
+        } else {
+            message.info = "model ["+ self.core.getPath(root)+"] validation";
+        }
+        message.commit = self.commit;
+        checkChild(root,callback);
+    };
+    ConstraintAddOn.prototype.checkNode = function(node,callback){
+        var self = this,
+            message = {},
+            error = null,
+            names = self.core.getConstraintNames(node),
+            needed = names.length,
+            i,
+            check = function(name){
+                self.executeContraint(node,name,function(err,msg){
+                    error = error || err;
+                    message[name] = msg;
+
+                    if(msg.hasViolation === true){
+                        message.hasViolation = true;
+                    }
+
+                    if(--needed === 0){
+                        callback(error,message);
+                    }
+                });
+            };
+
+        message.info = "node ["+self.core.getPath(node)+"] validation";
+        message.commit = self.commit;
+        message._path = self.core.getPath(node);
+        message._name = self.core.getAttribute(node,'name') || "N/A";
+        if(needed > 0){
+            for(i=0;i<names.length;i++){
+                check(names[i]);
+            }
+        } else {
+            callback(error,message);
+        }
+    };
+    ConstraintAddOn.prototype.loadNode = function(path,callback){
+        this.core.loadByPath(this.root,path,callback);
+    };
+    ConstraintAddOn.prototype.executeContraint = function(node,name,callback){
+        var self = this,
+            script = self.core.getConstraint(node,name).script;
+
+        if(!self.contraints[script]){
+            var a="";
+            eval("a = "+script);
+            self.contraints[script] = a;
+            self.contraintsStorage[script] = {};
+        }
+        self.contraints[script].call(self.contraintsStorage[script],self.core,node,callback);
     };
 
     return ConstraintAddOn;

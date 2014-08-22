@@ -80,7 +80,8 @@ define([
                 META = new BaseMeta(),
                 _rootHash = null,
                 _gHash = 0,
-                _addOns = {};
+                _addOns = {},
+                _conrtaintCallback = null;
 
             function print_nodes(pretext){
                 if(pretext){
@@ -305,10 +306,32 @@ define([
                 }
             }
             function validateProjectAsync(callback){
+                callback = callback || _conrtaintCallback || function(err,result){};
                 if(_addOns['ConstraintAddOn'] && _addOns['ConstraintAddOn'] !== 'loading'){
-                    queryAddOn("ConstraintAddOn", {querytype:'execute'}, callback);
+                    queryAddOn("ConstraintAddOn", {querytype:'checkProject'}, callback);
                 } else {
-                    callback(new Error('history information is not available'));
+                    callback(new Error('constraint checking is not available'));
+                }
+            }
+            function validateModelAsync(path,callback){
+                callback = callback || _conrtaintCallback || function(err,result){};
+                if(_addOns['ConstraintAddOn'] && _addOns['ConstraintAddOn'] !== 'loading'){
+                    queryAddOn("ConstraintAddOn", {querytype:'checkModel',path:path}, callback);
+                } else {
+                    callback(new Error('constraint checking is not available'));
+                }
+            }
+            function validateNodeAsync(path,callback){
+                callback = callback || _conrtaintCallback || function(err,result){};
+                if(_addOns['ConstraintAddOn'] && _addOns['ConstraintAddOn'] !== 'loading'){
+                    queryAddOn("ConstraintAddOn", {querytype:'checkNode',path:path}, callback);
+                } else {
+                    callback(new Error('constraint checking is not available'));
+                }
+            }
+            function setValidationCallback(cFunction){
+                if(typeof cFunction === 'function' || cFunction === null){
+                    _conrtaintCallback = cFunction;
                 }
             }
             //core addOns end
@@ -2342,18 +2365,17 @@ define([
                 //});
                 switch (testnumber) {
                     case 1:
-                        //startAddOn("HistoryAddOn");
-                        startAddOn("ConstraintAddOn");
+                        queryAddOn("HistoryAddOn", {}, function (err, result) {
+                            console.log("addon result", err, result);
+                        });
                         break;
                     case 2:
-                        queryAddOn("ConstraintAddOn", {querytype:'execute'}, function (err, result) {
+                        queryAddOn("ConstraintAddOn", {querytype:'checkProject'}, function (err, result) {
                             console.log("addon result", err, result);
                         });
                         break;
                     case 3:
-                        stopAddOn("ConstraintAddOn", function (err) {
-                            console.log("addon stopped", err);
-                        });
+                        break;
                 }
 
             }
@@ -2476,6 +2498,14 @@ define([
                     } else {
                         saveRoot('importNode under '+parentPath, callback);
                     }
+                });
+            }
+            function _createProjectFromFileAsync(projectname,jProject,callback){
+                _database.simpleRequest({command:'createProjectFromFile',name:projectname,json:jProject},function(err,id){
+                    if(err){
+                        return callback(err);
+                    }
+                    _database.simpleResult(id,callback);
                 });
             }
             function createProjectFromFileAsync(projectname,jProject,callback){
@@ -2782,6 +2812,9 @@ define([
 
                 //coreAddOn functions
                 validateProjectAsync : validateProjectAsync,
+                validateModelAsync: validateModelAsync,
+                validateNodeAsync: validateNodeAsync,
+                setValidationCallback: setValidationCallback,
                 getDetailedHistoryAsync : getDetailedHistoryAsync,
 
                 //territory functions for the UI

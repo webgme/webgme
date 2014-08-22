@@ -29,7 +29,6 @@ define(['logManager',
     './WebGME.History',
     'js/Utils/METAAspectHelper',
     'js/Utils/PreferencesHelper',
-    'js/ConstraintManager/ConstraintManager',
     'js/Dialogs/Projects/ProjectsDialog',
     'js/Utils/InterpreterManager'], function (logManager,
                                             CONFIG,
@@ -49,7 +48,6 @@ define(['logManager',
                                             WebGMEHistory,
                                             METAAspectHelper,
                                             PreferencesHelper,
-                                            ConstraintManager,
                                             ProjectsDialog,
                                             InterpreterManager) {
 
@@ -79,8 +77,7 @@ define(['logManager',
                 i;
 
             client = new Client(CONFIG);
-
-            WebGMEGlobal.ConstraintManager = new ConstraintManager(client);
+            WebGMEGlobal.Client = client;
 
             WebGMEGlobal.InterpreterManager = new InterpreterManager(client);
 

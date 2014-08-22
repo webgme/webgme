@@ -21,8 +21,19 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
         }
 
 
-        var socketConnected = false, socket = null, status = null, reconnect = false, getDbStatusCallbacks = {}, callbacks = {}, getBranchHashCallbacks = {}, IO = null, projects = {}, references = {}, ERROR_DISCONNECTED =
-            'The socket.io is disconnected', ERROR_TIMEOUT = "no valid response arrived in time", STATUS_NETWORK_DISCONNECTED = "socket.io is disconnected";
+        var socketConnected = false,
+            socket = null,
+            status = null,
+            reconnect = false,
+            getDbStatusCallbacks = {},
+            callbacks = {},
+            getBranchHashCallbacks = {},
+            IO = null,
+            projects = {},
+            references = {},
+            ERROR_DISCONNECTED = 'The socket.io is disconnected',
+            ERROR_TIMEOUT = "no valid response arrived in time",
+            STATUS_NETWORK_DISCONNECTED = "socket.io is disconnected";
 
         function clearDbCallbacks () {
             var myCallbacks = [];
@@ -472,6 +483,9 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                 }
             }
 
+            function _loadObject(hash,callback){
+                socket.emit('loadObject',project,hash,callback);
+            }
             function loadObject (hash, callback) {
                 ASSERT(typeof callback === 'function');
                 if (socketConnected) {
@@ -520,6 +534,50 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
             }
 
             function insertObject (object, callback) {
+                ASSERT(typeof callback === 'function');
+                if (socketConnected) {
+                    if(saveBucketSize === 0){
+                        ++saveBucketSize;
+                        saveBucket.push({object:object,cb:callback});
+                        saveBucketTimer = setTimeout(function(){
+                            var myBucket = saveBucket;
+                            saveBucket = [];
+                            saveBucketTimer = null;
+                            saveBucketSize = 0;
+                            insertObjects(myBucket);
+                        },10);
+                    } else if (saveBucketSize === 99){
+                        saveBucket.push({object:object,cb:callback});
+                        var myBucket = saveBucket;
+                        saveBucket = [];
+                        clearTimeout(saveBucketTimer);
+                        saveBucketTimer = null;
+                        saveBucketSize = 0;
+                        insertObjects(myBucket);
+                    } else {
+                        ++saveBucketSize;
+                        saveBucket.push({object:object,cb:callback});
+                    }
+                } else {
+                    callback(new Error(ERROR_DISCONNECTED));
+                }
+            }
+
+            var saveBucket = [],
+                saveBucketSize = 0,
+                saveBucketTimer;
+            function insertObjects (objects) {
+                var storeObjects = [],i;
+                for(i=0;i<objects.length;i++){
+                    storeObjects.push(objects[i].object);
+                }
+                socket.emit('insertObjects',project,storeObjects,function(err){
+                    for(i=0;i<objects.length;i++){
+                        objects[i].cb(err);
+                    }
+                });
+            }
+            function _insertObject (object, callback) {
                 ASSERT(typeof callback === 'function');
                 if (socketConnected) {
                     var guid = GUID();

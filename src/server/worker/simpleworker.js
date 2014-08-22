@@ -227,6 +227,40 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
         }
     };
 
+    var createProject = function(sessionId,name,jsonProject,callback){
+        getConnectedStorage(sessionId,function(err,storage){
+            if(err){
+                return callback(""+err);
+            }
+
+            storage.openProject(name,function(err,project){
+                if(err){
+                    return callback(""+err);
+                }
+
+                var core = new Core(project),
+                    root = core.createNode({parent:null,base:null});
+                Serialization.import(core,root,jsonProject,function(err){
+                    if(err){
+                        return storage.deleteProject(name,function(){
+                            callback(""+err);
+                        });
+                    }
+
+                    core.persist(root,function(err){});
+                    var rhash = core.getHash(root),
+                        chash = project.makeCommit([],rhash,"project imported",function(err){});
+                    project.getBranchHash("master","#hack",function(err,oldhash){
+                        if(err){
+                            return callback(""+err);
+                        }
+                        project.setBranchHash("master",oldhash,chash,callback);
+                    });
+                });
+            });
+        });
+    };
+
     var getAllProjectsInfo = function(userId,callback){
         var projectNames,
             userAuthInfo = null,
@@ -469,6 +503,25 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
                             resultReady = true;
                             error = err;
                             result = r;
+                        }
+                    });
+                } else {
+                    initResult();
+                    process.send({pid:process.pid,type:CONSTANT.msgTypes.request,error:'invalid parameters'});
+                }
+                break;
+            case CONSTANT.workerCommands.createProjectFromFile:
+                if( typeof parameters.name === 'string' && typeof parameters.json === 'object'){
+                    resultId = GUID();
+                    process.send({pid:process.pid,type:CONSTANT.msgTypes.request,error:null,resid:resultId});
+                    createProject(parameters.webGMESessionId,parameters.name,parameters.json,function(err){
+                        if(resultRequested === true){
+                            initResult();
+                            process.send({pid:process.pid,type:CONSTANT.msgTypes.result,error:err,result:null});
+                        } else {
+                            resultReady = true;
+                            error = err;
+                            result = null;
                         }
                     });
                 } else {

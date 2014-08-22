@@ -8,15 +8,19 @@ define(['jquery',
         './GMEConcepts.FCO',
         './METAAspectHelper',
         'js/Panels/MetaEditor/MetaEditorConstants',
-        'clientUtil'], function (_jquery,
-                                                               generateGuid,
-                                           CONSTANTS,
-                                           nodePropertyNames,
-                                           REGISTRY_KEYS,
-                                           GMEConceptsFCO,
-                                           METAAspectHelper,
-                                           MetaEditorConstants,
-                                           clientUtil) {
+        'clientUtil',
+        'text!./metaConstraint.js'
+    ], function (
+    _jquery,
+    generateGuid,
+    CONSTANTS,
+    nodePropertyNames,
+    REGISTRY_KEYS,
+    GMEConceptsFCO,
+    METAAspectHelper,
+    MetaEditorConstants,
+    clientUtil,
+    metaConstraint) {
 
     "use strict";
 
@@ -190,6 +194,9 @@ define(['jquery',
         var fcoMeta = $.extend(true, {}, metaRuleBase);
         fcoMeta.attributes.name = {'type': 'string'};
         _client.setMeta(FCO_ID, fcoMeta);
+
+        //META constraint check
+        _client.setConstraint(FCO_ID,'meta',{script:metaConstraint,info:"this constraint will check all the meta rules defined to an object",priority:10});
 
         //set attributes for FCO
         for (it in GMEConceptsFCO.FCO_ATTRIBUTES) {
