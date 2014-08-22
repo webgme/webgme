@@ -36,6 +36,30 @@ requirejs(['core/core','storage/serveruserstorage','storage/clientstorage','fs']
                 storage.closeDatabase();
             }
             },
+            checkRDFS = function(root,callback){
+                var index = 0,
+                    children = core.getChildrenRelids(root),
+                    error = null,
+                    checkNextChild = function(){
+                        if(index >= children.length){
+                            return callback(error);
+                        }
+                        core.loadChild(root,children[index++],function(err,child){
+                            error = error || err;
+                            if(!child){
+                                return checkNextChild();
+                            }
+
+                            checkRDFS(child,function(err){
+                                error = error || err;
+                                return checkNextChild();
+                            });
+                        });
+                    };
+
+                checkNode(root);
+                checkNextChild();
+            },
             checkDFS = function(root,callback){
                 var index = 0,
                     children,
@@ -150,6 +174,12 @@ requirejs(['core/core','storage/serveruserstorage','storage/clientstorage','fs']
                                     case "DFS":
                                         checkDFS(root,function(err) {
                                             console.log('DFS checking finished', err);
+                                            return finish();
+                                        });
+                                        break;
+                                    case "RDFS":
+                                        checkRDFS(root,function(err) {
+                                            console.log('RDFS checking finished', err);
                                             return finish();
                                         });
                                         break;
