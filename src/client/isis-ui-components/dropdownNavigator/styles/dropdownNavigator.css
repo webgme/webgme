@@ -5,11 +5,14 @@ ul.dropdown-navigator {
   color: #fff; }
   ul.dropdown-navigator > li {
     display: inline-block;
-    padding: 0 1em;
+    padding: 0;
     line-height: 2.22em;
     position: relative; }
     ul.dropdown-navigator > li > .hierarchical-dropdown {
       display: none; }
+    ul.dropdown-navigator > li .label-container {
+      height: 100%;
+      padding: 0 1em; }
   ul.dropdown-navigator > li:not(.separator):hover {
     background-color: #00235B;
     cursor: pointer; }
@@ -21,9 +24,10 @@ ul.dropdown-navigator {
     display: inline-block; }
   ul.dropdown-navigator li.gme-root {
     background-image: url(images/gme-icon.png);
-    background-position: 8px 3px;
-    background-repeat: no-repeat;
-    padding-left: 46px; }
+    background-position: 8px center;
+    background-repeat: no-repeat; }
+    ul.dropdown-navigator li.gme-root .label-container {
+      padding-left: 46px; }
   ul.dropdown-navigator li.separator {
     padding: 0;
     cursor: default;

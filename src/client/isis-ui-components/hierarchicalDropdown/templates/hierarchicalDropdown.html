@@ -13,7 +13,7 @@
             <li data-ng-repeat="item in menuItemGroup.items | limitTo:menuItemGroup.totalItems || 100"
                 data-ng-class="{ 'dropdown-submenu':item.menu, 'selected': item.isSelected, 'disabled': item.disabled }">
                 <a data-ng-class="'action-' + item.id"
-                   data-ng-click="!item.disabled && item.action(item.actionData)">
+                   data-ng-click="!item.disabled && item.action(item.actionData, $event)">
                     <i data-ng-if="item.iconClass && !item.iconPullRight" data-ng-class="item.iconClass" class="item-icon"></i>
                     {{item.label}}
                     <i data-ng-if="item.iconClass && item.iconPullRight" data-ng-class="item.iconClass"></i>

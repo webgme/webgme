@@ -8,7 +8,7 @@ ul.dropdown-navigator {
 
   > li {
     display: inline-block;
-    padding: 0 1em;
+    padding: 0;
     line-height: 2.22em;
 
     position: relative;
@@ -16,6 +16,12 @@ ul.dropdown-navigator {
     > .hierarchical-dropdown {
       display: none;
     }
+
+    .label-container {
+      height: 100%;
+      padding: 0 1em;
+    }
+
   }
 
   > li:not(.separator):hover {
@@ -39,9 +45,13 @@ ul.dropdown-navigator {
 
   li.gme-root {
     background-image: url(images/gme-icon.png);
-    background-position: 8px 3px;
+    background-position: 8px center;
     background-repeat: no-repeat;
-    padding-left: 46px;
+
+    .label-container {
+      padding-left: 46px;
+    }
+
   }
 
   li.separator {
