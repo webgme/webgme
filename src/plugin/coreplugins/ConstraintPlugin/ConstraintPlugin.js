@@ -15,7 +15,7 @@ define(['plugin/PluginConfig',
 
     "use strict";
 
-   var TEST = false,
+   var TEST = true,
        DEFAULT = '__default__',
        JS_RESERVED_WORDS = [ 'break', 'case', 'class', 'catch', 'const', 
            'continue', 'debugger', 'default', 'delete', 'do', 'else', 'export',
@@ -44,6 +44,8 @@ define(['plugin/PluginConfig',
 
        PLACEHOLDER = { ITERATOR: '%__iterator__',//Placeholders to be unique-ized
                        FUNCTION: '%__func__',
+                       FUNCTION_DEFS: '%__func_defs__',
+                       CODE: '%__code__',
                        ARG: function(i){ return '%__arg__'+ i + '__'; },//Create unique argument names
                        PARENT_SNIPPET_START: '%__parentSnippetStart__',
                        PARENT_SNIPPET_END: '%__parentSnippetEnd__' },
@@ -408,27 +410,28 @@ define(['plugin/PluginConfig',
             ' = { hasViolation: false };\n' +
             'var ' + PRIVATE_VARIABLES.ERROR + ' = null;\n' +
             'var ' + PRIVATE_VARIABLES.CACHE + ' = {};\n' +
+            PLACEHOLDER.FUNCTION_DEFS + '\n\n' + PLACEHOLDER.CODE + '\n\n}';
 
-            //Get Dimension function
+        //Functions potentially used in constraint
+        this._constraintFunctions = {};
+
+        //Get Dimension function
+        this._constraintFunctions[PRIVATE_VARIABLES.GET_DIMENSION] =     
             'var ' + PRIVATE_VARIABLES.GET_DIMENSION + ' = function(a){\n' +
             'var dim = 0;\nwhile (a instanceof Array){\na=a[0];\ndim++;\n}\n'+
-            'return dim;\n};\n' +
+            'return dim;\n};\n';
 
-            //Get Node function
+        //Get Node function
+        this._constraintFunctions[PRIVATE_VARIABLES.GET_NODE] =     
             'var ' + PRIVATE_VARIABLES.GET_NODE + ' = function(nodeId, cb){\n' +
             'var node;\nif (nodeId === currentNode){\n'+
             'cb(currentNode);\n} else if (' + PRIVATE_VARIABLES.CACHE + '[nodeId]){\n' +
             'cb(' + PRIVATE_VARIABLES.CACHE + '[nodeId]);\n' +
             '} else {\ncore.loadByPath(currentNode, nodeId, function(err, node){\n' +
-            '' + PRIVATE_VARIABLES.CACHE + '[nodeId] = node;\n\ncb(node);\n});\n}\n};\n' + 
+            '' + PRIVATE_VARIABLES.CACHE + '[nodeId] = node;\n\ncb(node);\n});\n}\n};\n';
 
-            //Get nodes
-            'var ' + PRIVATE_VARIABLES.GET_NODES +'= function(nodeIds, cb){\nvar '+
-            'result = [],\ndone = function (node){\nresult.push(node);if (result.length'+
-            ' === nodeIds.length){\ncb(result);\n}\n};\nfor (var i = nodeIds.length-1;'+
-            ' i>=0; i--){\n'+ PRIVATE_VARIABLES.GET_NODE +'(nodeIds[i], done);\n}\n};\n'+
-
-            //Get Descendents function
+        //Get Descendents function
+        this._constraintFunctions[PRIVATE_VARIABLES.GET_DESCENDENTS] =     
             'var ' + PRIVATE_VARIABLES.GET_DESCENDENTS + '= function' +
             '(n, _callback){\nvar result = [];\nvar count = 1;\nvar id;\nvar load'+
             ' = function(node, cb){\ncore.loadChildren(node, function(e,'+
@@ -437,22 +440,33 @@ define(['plugin/PluginConfig',
             'for (var i = children.length-1; i >= 0; i--){\nload'+
             '(children[i], cb);\n}\nif (count === result.length){\ncb(result);'+
             '\n}\n} else {\n' + PRIVATE_VARIABLES.ERROR + ' = e;\n}\n});\n};\n'+
-            'load(n, _callback);\n\n};\n'+
+            'load(n, _callback);\n\n};\n';
 
-            //Type Of function
+        //Type Of function
+        this._constraintFunctions[PRIVATE_VARIABLES.TYPE_OF] =     
             'var ' + PRIVATE_VARIABLES.TYPE_OF + ' = function(node,type){\n' + 
             'if(node === undefined || node === null || type === undefined || ' + 
             'type === null){\nreturn false;\n}\n\n' +
             'while(node){\nif(core.getAttribute(node, "name") === type){\n'+
-            'return true;\n}\nnode = core.getBase(node);\n}\nreturn false;\n};\n'+
+            'return true;\n}\nnode = core.getBase(node);\n}\nreturn false;\n};\n';
 
-            //Filter by node type
+        //Get nodes
+        this._constraintFunctions[PRIVATE_VARIABLES.GET_NODES] =     
+            'var ' + PRIVATE_VARIABLES.GET_NODES +'= function(nodeIds, cb){\nvar '+
+            'result = [],\ndone = function (node){\nresult.push(node);if (result.length'+
+            ' === nodeIds.length){\ncb(result);\n}\n};\nfor (var i = nodeIds.length-1;'+
+            ' i>=0; i--){\n'+ PRIVATE_VARIABLES.GET_NODE +'(nodeIds[i], done);\n}\n};\n';
+
+        //Filter by node type
+        this._constraintFunctions[PRIVATE_VARIABLES.FILTER_BY_NODE_TYPE] =     
             'var ' + PRIVATE_VARIABLES.FILTER_BY_NODE_TYPE +' = function(nodeSet, type, cb){\n'+
             'var result = [],\nid;\n'+PRIVATE_VARIABLES.GET_NODES+'(nodeSet, '+
             'function(nodes){\nfor (var i = nodes.length-1; i>=0; i--){\nif ('+
             PRIVATE_VARIABLES.TYPE_OF+'(nodes, type)){id = core.getPath(nodes[i]);\n'+
-            'result.push(id);\n}\n}\ncb(result);\n});\n};'+
-            '\n\n%code\n\n}';
+            'result.push(id);\n}\n}\ncb(result);\n});\n};';
+
+
+
 
         this._constraintMapping = {
             'add': "%first + %second", 
@@ -842,9 +856,20 @@ define(['plugin/PluginConfig',
     //Create constraint and store it 
     ConstraintPlugin.prototype._createConstraintObject = function(){
         var code = this.generatedCode,
+            funcDefs = "",//function definitions
+            functions = Object.keys(this._constraintFunctions),
             constraintName = this.currentConstraint;
 
-        code = this._constraintBoilerPlate.replace("%code", code);
+        //Add function definitions as needed 
+        for (var i = functions.length-1; i >=0; i--){
+            if (code.match(new RegExp('\\b' + functions[i])) !== null ||
+               funcDefs.match(new RegExp('\\b' + functions[i] +'[ \n]*[(]')) !== null){
+                funcDefs += this._constraintFunctions[functions[i]];
+            }
+        }
+
+        code = this._constraintBoilerPlate.replace(PLACEHOLDER.CODE, code);
+        code = code.replace(PLACEHOLDER.FUNCTION_DEFS, funcDefs);
 
         if (!this.constraintObject){
             this.constraintObject = {};
