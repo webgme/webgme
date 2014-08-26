@@ -8,12 +8,15 @@
  */
 
 define(['plugin/PluginConfig',
-        'plugin/PluginBase'], function (PluginConfig,
-                                       PluginBase){
+        'plugin/PluginBase',
+        './test/ConstraintTestEnvironment'], function (PluginConfig,
+                                                PluginBase,
+                                                TestEnvironment){
 
     "use strict";
 
-   var DEFAULT = '__default__',
+   var TEST = false,
+       DEFAULT = '__default__',
        JS_RESERVED_WORDS = [ 'break', 'case', 'class', 'catch', 'const', 
            'continue', 'debugger', 'default', 'delete', 'do', 'else', 'export',
            'extends', 'finally', 'for', 'function', 'if', 'import', 'in', 
@@ -27,6 +30,7 @@ define(['plugin/PluginConfig',
                              ERROR: 'err',
                              VIOLATION: 'violationInfo',
                              CACHE : '_nodeCache',
+                             GET_DIMENSION: 'getDimension',
                              GET_NODE : 'getNode',
                              GET_DESCENDENTS: 'getDescendents',
                              GET_NODES: 'getNodes',
@@ -268,17 +272,19 @@ define(['plugin/PluginConfig',
                 } else {
                     //Save the constraint changes
                     self.save(saveMessage, function(err){
-                        //Download language files
-                        self._saveOutput(function(err){
-                            if(err){ 
-                                self.result.success = false;
-                                callback(err,self.result);
-                            } else {
-                                if(callback){
-                                    self.result.success = true;
-                                    callback(null,self.result);
+                        self.testConstraintCode(function(){
+                            //Download language files
+                            self._saveOutput(function(err){
+                                if(err){ 
+                                    self.result.success = false;
+                                    callback(err,self.result);
+                                } else {
+                                    if(callback){
+                                        self.result.success = true;
+                                        callback(null,self.result);
+                                    }
                                 }
-                            }
+                            });
                         });
                     });
                 }
@@ -403,13 +409,18 @@ define(['plugin/PluginConfig',
             'var ' + PRIVATE_VARIABLES.ERROR + ' = null;\n' +
             'var ' + PRIVATE_VARIABLES.CACHE + ' = {};\n' +
 
+            //Get Dimension function
+            'var ' + PRIVATE_VARIABLES.GET_DIMENSION + ' = function(a){\n' +
+            'var dim = 0;\nwhile (a instanceof Array){\na=a[0];\ndim++;\n}\n'+
+            'return dim;\n};\n' +
+
             //Get Node function
             'var ' + PRIVATE_VARIABLES.GET_NODE + ' = function(nodeId, cb){\n' +
             'var node;\nif (nodeId === currentNode){\n'+
-            'cb(currentNode);\n}\n\nif (' + PRIVATE_VARIABLES.CACHE + '[nodeId]){\n' +
+            'cb(currentNode);\n} else if (' + PRIVATE_VARIABLES.CACHE + '[nodeId]){\n' +
             'cb(' + PRIVATE_VARIABLES.CACHE + '[nodeId]);\n' +
-            '}\nnode = core.loadByPath(currentNode, nodeId, function(n){\n' +
-            '' + PRIVATE_VARIABLES.CACHE + '[nodeId] = node;\n\ncb(node);\n});\n};\n' + 
+            '} else {\ncore.loadByPath(currentNode, nodeId, function(err, node){\n' +
+            '' + PRIVATE_VARIABLES.CACHE + '[nodeId] = node;\n\ncb(node);\n});\n}\n};\n' + 
 
             //Get nodes
             'var ' + PRIVATE_VARIABLES.GET_NODES +'= function(nodeIds, cb){\nvar '+
@@ -433,13 +444,14 @@ define(['plugin/PluginConfig',
             'type === null){\nreturn false;\n}\n\n' +
             'while(node){\nif(core.getAttribute(node, "name") === type){\n'+
             'return true;\n}\nnode = core.getBase(node);\n}\nreturn false;\n};\n'+
-            '\n\n%code\n\n}'+
 
-            'var ' + PRIVATE_VARIABLES.FILTER_BY_NODE_TYPE +'(nodeSet, type, cb){\n'+
+            //Filter by node type
+            'var ' + PRIVATE_VARIABLES.FILTER_BY_NODE_TYPE +' = function(nodeSet, type, cb){\n'+
             'var result = [],\nid;\n'+PRIVATE_VARIABLES.GET_NODES+'(nodeSet, '+
             'function(nodes){\nfor (var i = nodes.length-1; i>=0; i--){\nif ('+
             PRIVATE_VARIABLES.TYPE_OF+'(nodes, type)){id = core.getPath(nodes[i]);\n'+
-            'result.push(id);\n}\n}\ncb(result);\n});\n};';
+            'result.push(id);\n}\n}\ncb(result);\n});\n};'+
+            '\n\n%code\n\n}';
 
         this._constraintMapping = {
             'add': "%first + %second", 
@@ -472,8 +484,12 @@ define(['plugin/PluginConfig',
             'getKeysFromMap': "Object.keys(%map)",
 
             //Collection mappings
-            'addToCollection': "%collection.push(%first);\n%next",
-            'contains': "%collection.indexOf(%first) !== -1",
+            'addToCollection': 'if(' + PRIVATE_VARIABLES.GET_DIMENSION + '(%collection)'+
+                ' === ' + PRIVATE_VARIABLES.GET_DIMENSION +'(%first)){\n%collection = '+
+                '%collection.concat(%first);\n}else{\n%collection.push(%first);'+
+                '\n}\n%next',
+
+            'contains': '%collection.indexOf(%first) !== -1',
 
             'markViolation': PRIVATE_VARIABLES.VIOLATION + " = { hasViolation: true," +
                 " message: %Message, nodes: %node };\n\n%next",
@@ -607,6 +623,7 @@ define(['plugin/PluginConfig',
         //Remove the initial variable from declaration
         for (i = ACCESSABLE_VARIABLES.length -1; i >= 0; i--){
             this.variables[ACCESSABLE_VARIABLES[i]] = ACCESSABLE_VARIABLES[i];
+            declared[ACCESSABLE_VARIABLES[i]] = true;//don't need to declare these
         }
  
         //Declare remaining variables
@@ -835,6 +852,31 @@ define(['plugin/PluginConfig',
         this.constraintObject[constraintName] = { script: code,
             priority: 0,
             name: constraintName };
+    };
+
+    ConstraintPlugin.prototype.testConstraintCode = function(callback){
+        var testEnvironment,
+            constraints = Object.keys(this.constraintObject),
+            name,
+            len = constraints.length,
+            cb = function(){
+                if (--len <= 0){
+                    console.log('\t\t*END TESTING*\n');
+                    callback();
+                }
+            };
+
+        if (TEST){
+            testEnvironment = new TestEnvironment(),
+            //Test constraint code
+            console.log('\t\t*TESTING*\n');
+            while (constraints.length){
+                name = constraints.pop();
+                testEnvironment.runTest(name, this.constraintObject[name].script, cb);
+            }
+        } else {
+            callback();
+        }
     };
 
     //Thanks to Tamas for the next two functions
