@@ -417,8 +417,8 @@ define(['logManager',
                     case DragHelper.DRAG_EFFECTS.DRAG_MOVE:
                         //check to see if dragParams.parentID and this.parentID are the same
                         //if so, it's not a real move, it is a reposition
-                        if ((dragParams && dragParams.parentID === parentID) ||
-                            GMEConcepts.canCreateChildrenInAspect(parentID, items, aspect)) {
+                        if (((dragParams && dragParams.parentID === parentID) ||
+                            GMEConcepts.canCreateChildrenInAspect(parentID, items, aspect)) && GMEConcepts.canMoveNodeHere(parentID,items)) {
                             dragAction = {'dragEffect': dragEffects[i]};
                             possibleDropActions.push(dragAction);
                         }

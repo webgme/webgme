@@ -1,1 +1,1 @@
-`$hierarchicalDropdown` is a directive for hierarchical dropdowns.
+`hierarchicalDropdown` is a directive for hierarchical dropdowns.
