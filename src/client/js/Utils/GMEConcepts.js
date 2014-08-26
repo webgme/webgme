@@ -790,6 +790,19 @@ define(['jquery',
         return FCO_ID;
     };
 
+    var _canMoveNodeHere = function(parentId,nodes){
+        var parent = _client.getNode(parentId),
+            parentBase = parent.getBaseId();
+
+        if(parentBase){
+            if(nodes.indexOf(parentBase) !== -1){
+                return false;
+            }
+        }
+
+        return true;
+    };
+
     //return utility functions
     return {
         initialize: _initialize,
@@ -817,6 +830,7 @@ define(['jquery',
         getValidSetTypesFromContainerToMember: _getValidSetTypesFromContainerToMember,
         getCrosscuts: _getCrosscuts,
         getSets: _getSets,
-        getFCOId: _getFCOId
+        getFCOId: _getFCOId,
+        canMoveNodeHere: _canMoveNodeHere
     };
 });

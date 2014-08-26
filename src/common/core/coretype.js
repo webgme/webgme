@@ -635,8 +635,11 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
         };
         core.moveNode = function(node,parent){
             //TODO we have to check if the move is really allowed!!!
-            var base = node.base;
+            ASSERT(isValidNode(node) && isValidNode(parent));
+            var base = node.base,
+                parentBase = parent.base;
             ASSERT(!base || core.getPath(base) !== core.getPath(parent));
+            ASSERT(!parentBase || core.getPath(parentBase) !== core.getPath(node));
 
             var moved = oldcore.moveNode(node,parent);
             moved.base = base;
