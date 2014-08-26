@@ -109,6 +109,45 @@ define(['util/canon'], function (CANON) {
 
             return diff;
         }
+        function set_diff(source,target){
+            var sNames = _core.getSetNames(source),
+                tNames = _core.getSetNames(target),
+                sMembers, tMembers,i, j,memberDiff,
+                diff = {added:[],updated:{},removed:[]};
+
+            for(i=0;i<sNames.length;i++){
+                if(tNames.indexOf(sNames[i]) === -1){
+                    diff.removed.push(sNames[i]);
+                }
+            }
+
+            for(i=0;i<tNames.length;i++){
+                if(sNames.indexOf(tNames[i]) === -1){
+                    diff.added.push(tNames[i]);
+                    diff.updated[tNames[i]] = _core.getMemberPaths(target,tNames[i]);
+                } else {
+                    sMembers = _core.getMemberPaths(source,tNames[i]);
+                    tMembers = _core.getMemberPaths(target,tNames[i]);
+                    memberDiff = {added:[],removed:[]}; //TODO are we interested in member change (when some data of the member changes
+                    for(j=0;j<sMembers.length;j++){
+                        if(tMembers.indexOf(sMembers[j]) === -1){
+                            memberDiff.removed.push(sMembers[j]);
+                        }
+                    }
+                    for(j=0;j<tMembers.length;j++){
+                        if(sMembers.indexOf(tMembers[j]) === -1){
+                            memberDiff.added.push(tMembers[j]);
+                        }
+                    }
+
+                    if(!isEmptyDiff(memberDiff)){
+                        diff.updated[tNames[i]] = memberDiff;
+                    }
+                }
+            }
+
+            return diff;
+        }
         function ovr_diff(source,target){
 
         }
@@ -129,7 +168,9 @@ define(['util/canon'], function (CANON) {
                 if(isEmptyDiff(diff.attr || {})){
                     if(isEmptyDiff(diff.reg || {})){
                         if(isEmptyDiff(diff.pointer || {})){
-                            return true;
+                            if(isEmptyDiff(diff.set || {})){
+                                return true;
+                            }
                         }
                     }
                 }
@@ -141,12 +182,13 @@ define(['util/canon'], function (CANON) {
                 children : children_diff(source,target),
                 attr     : attr_diff(source,target),
                 reg      : reg_diff(source,target),
-                pointer  : pointer_diff(source,target)
+                pointer  : pointer_diff(source,target),
+                set      : set_diff(source,target)
             };
             return isEmptyNodeDiff(diff) ? null : diff;
         };
 
-        _core.generateTreeDiff = funciton(sourceRoot,targetRoot,callback){
+        _core.generateTreeDiff = function(sourceRoot,targetRoot,callback){
             callback(new Error("not implemented"),null);
         };
         return _core;
