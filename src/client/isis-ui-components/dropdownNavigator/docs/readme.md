@@ -1,1 +1,1 @@
-`$dropdownNavigator` is a directive to visualize a vertical, multi-hierarchical navigator.
+`dropdownNavigator` is a directive to visualize a vertical, multi-hierarchical navigator.

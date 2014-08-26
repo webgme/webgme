@@ -1,4 +1,4 @@
-ul.drop-down-navigator {
+ul.dropdown-navigator {
 
   font-size: 130%;
 
@@ -8,16 +8,23 @@ ul.drop-down-navigator {
 
   > li {
     display: inline-block;
-    padding: .75ex 1em;
+    padding: 0;
+    line-height: 2.22em;
 
     position: relative;
 
     > .hierarchical-dropdown {
       display: none;
     }
+
+    .label-container {
+      height: 100%;
+      padding: 0 1em;
+    }
+
   }
 
-  > li:hover {
+  > li:not(.separator):hover {
     background-color: #00235B;
     cursor: pointer;
 
@@ -38,9 +45,13 @@ ul.drop-down-navigator {
 
   li.gme-root {
     background-image: url(images/gme-icon.png);
-    background-position: 8px 3px;
+    background-position: 8px center;
     background-repeat: no-repeat;
-    padding-left: 46px;
+
+    .label-container {
+      padding-left: 46px;
+    }
+
   }
 
   li.separator {
@@ -49,6 +60,7 @@ ul.drop-down-navigator {
     font-size: 60%;
     top: -2px;
     position: relative;
+    margin: 0 .75ex;
   }
 
 
