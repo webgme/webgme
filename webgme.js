@@ -105,8 +105,15 @@ var setConfig = function(configObject){
         },
         addAddOnPathsToRequirejs = function(basepaths){
             var requirejsBase = webGMEGlobal.baseDir,
-                pluginNames = getPluginNames(basepaths),
+                pluginNames,
                 i,j;
+
+            for(i=0;i<basepaths.length;i++){
+                if(basepaths[i].indexOf(requirejsBase) === -1){
+                    basepaths[i] = PATH.join(requirejsBase,basepaths[i]);
+                }
+            }
+            pluginNames = getPluginNames(basepaths);
 
             //we go through every plugin and we check where we are able to find the main part of it so we can set the plugin/pluginName path according that in requirejs
             var pluginPaths = {};
