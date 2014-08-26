@@ -430,10 +430,11 @@ define(['plugin/PluginConfig',
 
             //Get Descendents function
             'var ' + PRIVATE_VARIABLES.GET_DESCENDENTS + '= function' +
-            '(n, _callback){\nvar result = [];\nvar count = 1;\nvar load'+
+            '(n, _callback){\nvar result = [];\nvar count = 1;\nvar id;\nvar load'+
             ' = function(node, cb){\ncore.loadChildren(node, function(e,'+
-            ' children){\nif (!e){\nresult.push(node);\ncount += children'+
-            '.length;\nfor (var i = children.length-1; i >= 0; i--){\nload'+
+            ' children){\nif (!e){\nid = core.getPath(node);\nresult.push(id);\n'+
+            'count += children.length;\n'+ PRIVATE_VARIABLES.CACHE + '[id] = node;\n'+
+            'for (var i = children.length-1; i >= 0; i--){\nload'+
             '(children[i], cb);\n}\nif (count === result.length){\ncb(result);'+
             '\n}\n} else {\n' + PRIVATE_VARIABLES.ERROR + ' = e;\n}\n});\n};\n'+
             'load(n, _callback);\n\n};\n'+
@@ -524,7 +525,7 @@ define(['plugin/PluginConfig',
                 "){\n" + PLACEHOLDER.PARENT_SNIPPET_START + "core.getPointerPath(" + PLACEHOLDER.ARG(0) + 
                 ")" + PLACEHOLDER.PARENT_SNIPPET_END + "\n});",
 
-            'getAttribute': PRIVATE_VARIABLES.GET_NODE+"(%second, function(" + PLACEHOLDER.ARG(0) + 
+            'getAttribute': PRIVATE_VARIABLES.GET_NODE+"(%node, function(" + PLACEHOLDER.ARG(0) + 
                 "){\n" + PLACEHOLDER.PARENT_SNIPPET_START + "core.getAttribute(" + PLACEHOLDER.ARG(0) + 
                 ", %first)" + PLACEHOLDER.PARENT_SNIPPET_END + "\n});",
 
@@ -867,7 +868,7 @@ define(['plugin/PluginConfig',
             };
 
         if (TEST){
-            testEnvironment = new TestEnvironment(),
+            testEnvironment = new TestEnvironment();
             //Test constraint code
             console.log('\t\t*TESTING*\n');
             while (constraints.length){
