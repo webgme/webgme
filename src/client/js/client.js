@@ -79,6 +79,7 @@ define([
                 _TOKEN = null,
                 META = new BaseMeta(),
                 _rootHash = null,
+                _previousRootHash = null,
                 _gHash = 0;
 
             function print_nodes(pretext){
@@ -987,6 +988,7 @@ define([
                     callback(null);
                 };
 
+                _previousRootHash = _rootHash;
                 _rootHash = newRootHash
                 loadRoot(newRootHash,function(err){
                     if(err){
@@ -2256,7 +2258,53 @@ define([
                 //_self.addEventListener(_self.events.SERVER_BRANCH_UPDATED,function(client,data){
                 //    console.log(data);
                 //});
-                
+                var objectPath = WebGMEGlobal.State.getActiveObject(),
+                    source,target,needed = 2,error = null,
+                    objectsLoaded = function(){
+                        if(error){
+                            console.log('fuck',error);
+                        } else {
+                            console.log(_core.nodeDiff(source,target));
+                        }
+                    };
+                if(objectPath){
+                    _core.loadRoot(_previousRootHash,function(err,root){
+                        error = error || err;
+                        if(!err && root){
+                            _core.loadByPath(root,objectPath,function(err,obj){
+                                error = error || err;
+                                if(!err && obj){
+                                    source = obj;
+                                    if(--needed === 0){
+                                        objectsLoaded();
+                                    }
+                                }
+                            });
+                        } else {
+                            if(--needed === 0){
+                                objectsLoaded();
+                            }
+                        }
+                    });
+                    _core.loadRoot(_rootHash,function(err,root){
+                        error = error || err;
+                        if(!err && root){
+                            _core.loadByPath(root,objectPath,function(err,obj){
+                                error = error || err;
+                                if(!err && obj){
+                                    target = obj;
+                                    if(--needed === 0){
+                                        objectsLoaded();
+                                    }
+                                }
+                            });
+                        } else {
+                            if(--needed === 0){
+                                objectsLoaded();
+                            }
+                        }
+                    });
+                }
             }
 
             //export and import functions
