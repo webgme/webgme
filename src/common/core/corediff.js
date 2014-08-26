@@ -13,7 +13,7 @@ define(['util/canon'], function (CANON) {
             _core[i] = _innerCore[i];
         }
 
-        function atr_diff(source,target){
+        function attr_diff(source,target){
             var sNames = _core.getAttributeNames(source),
                 tNames = _core.getAttributeNames(target),
                 i,
@@ -64,14 +64,92 @@ define(['util/canon'], function (CANON) {
             return diff;
         }
         function children_diff(source,target){
+            var sRelids = _core.getChildrenRelids(source),
+                tRelids = _core.getChildrenRelids(target),
+                i,
+                diff = {added:[],removed:[]};
+
+            for(i=0;i<sRelids.length;i++){
+                if(tRelids.indexOf(sRelids[i]) === -1){
+                    diff.removed.push(sRelids[i]);
+                }
+            }
+
+            for(i=0;i<tRelids.length;i++){
+                if(sRelids.indexOf(tRelids[i]) === -1){
+                    diff.added.push(tRelids[i]);
+                }
+            }
+
+            return diff;
 
         }
         function pointer_diff(source,target){
+            var sNames = _core.getPointerNames(source),
+                tNames = _core.getPointerNames(target),
+                i,
+                diff = {added:[],updated:{},removed:[]};
 
+            for(i=0;i<sNames.length;i++){
+                if(tNames.indexOf(sNames[i]) === -1){
+                    diff.removed.push(sNames[i]);
+                }
+            }
+
+            for(i=0;i<tNames.length;i++){
+                if(sNames.indexOf(tNames[i]) === -1){
+                    diff.added.push(tNames[i]);
+                    diff.updated[tNames[i]] = _core.getPointerPath(target,tNames[i]);
+                } else {
+                    if(_core.getPointerPath(source,tNames[i]) !== _core.getPointerPath(target,tNames[i])){
+                        diff.updated[tNames[i]] = _core.getPointerPath(target,tNames[i]);
+                    }
+                }
+            }
+
+            return diff;
         }
         function ovr_diff(source,target){
 
         }
+        function isEmptyDiff(diff){
+            if(diff.removed && diff.removed.length > 0){
+                return false;
+            }
+            if(diff.added && diff.added.length > 0 ){
+                return false;
+            }
+            if(diff.updated && Object.keys(diff.updated).length > 0){
+                return false;
+            }
+            return true;
+        }
+        function isEmptyNodeDiff(diff){
+            if(isEmptyDiff(diff.children || {})){
+                if(isEmptyDiff(diff.attr || {})){
+                    if(isEmptyDiff(diff.reg || {})){
+                        if(isEmptyDiff(diff.pointer || {})){
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+        _core.nodeDiff = function(source,target){
+            var diff = {
+                children : children_diff(source,target),
+                attr     : attr_diff(source,target),
+                reg      : reg_diff(source,target),
+                pointer  : pointer_diff(source,target)
+            };
+            return isEmptyNodeDiff(diff) ? null : diff;
+        };
+
+        _core.generateTreeDiff = funciton(sourceRoot,targetRoot,callback){
+            callback(new Error("not implemented"),null);
+        };
+        return _core;
     }
 
     return nullPointerCore;
