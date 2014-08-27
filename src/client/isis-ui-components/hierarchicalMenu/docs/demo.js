@@ -6,12 +6,12 @@ define([
 
   'text!./demo.html'
 
-], function (ng, HierarchicalDropdown) {
+], function (ng, Hierarchicalmenu) {
   "use strict";
 
-  var demoApp = angular.module('isis.ui.hierarchicalDropdown.demo', ['ui.bootstrap', 'isis.ui.hierarchicalDropdown']);
+  var demoApp = angular.module('isis.ui.hierarchicalMenu.demo', ['ui.bootstrap', 'isis.ui.hierarchicalMenu']);
 
-  demoApp.controller('HierarchicalDropdownDemoController', function ($scope) {
+  demoApp.controller('HierarchicalMenuDemoController', function ($scope) {
     var dropdownMenu;
 
     dropdownMenu = [

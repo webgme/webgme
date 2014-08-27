@@ -1,4 +1,4 @@
-.hierarchical-menu{
+.hierarchical-menu {
 
   > .menu-contents {
 
@@ -44,6 +44,16 @@
       white-space: nowrap;
     }
 
+    > li > a:hover,
+    .dropdown-menu > li > a:focus {
+      background-image: -webkit-linear-gradient(top, #f5f5f5 0, #e8e8e8 100%);
+      background-image: linear-gradient(to bottom, #f5f5f5 0, #e8e8e8 100%);
+      background-repeat: repeat-x;
+      filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#fff5f5f5', endColorstr='#ffe8e8e8', GradientType=0);
+      background-color: #e8e8e8;
+      text-decoration: none;
+    }
+
     li.label {
       color: #bbb;
       text-transform: uppercase;
@@ -66,7 +76,7 @@
     .dropdown-submenu {
       position: relative;
     }
-    .dropdown-submenu > .menu-contents {
+    .dropdown-submenu > .dropdown-menu {
       top: 0;
       left: 100%;
       margin-top: -6px;
@@ -74,8 +84,9 @@
       -webkit-border-radius: 0 6px 6px 6px;
       -moz-border-radius: 0 6px 6px 6px;
       border-radius: 0 6px 6px 6px;
+      overflow: visible;
     }
-    .dropdown-submenu:hover > .menu-contents {
+    .dropdown-submenu:hover > .dropdown-menu {
       display: block;
     }
     .dropdown-submenu > a:after {
@@ -102,7 +113,7 @@
     .dropdown-submenu.pull-left {
       float: none;
     }
-    .dropdown-submenu.pull-left > .menu-contents {
+    .dropdown-submenu.pull-left > .dropdown-menu {
       left: -100%;
       margin-left: 10px;
       -webkit-border-radius: 6px 0 6px 6px;

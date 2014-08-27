@@ -1,1 +1,1 @@
-`hierarchicalDropdown` is a directive for hierarchical dropdowns.
+`hierarchicalMenu` is a directive for creating hierarchical menus.
