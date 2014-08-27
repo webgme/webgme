@@ -2,7 +2,7 @@
 
 define([
   'angular',
-  '../hierarchicalDropdown',
+  '../hierarchicalMenu',
 
   'text!./demo.html'
 

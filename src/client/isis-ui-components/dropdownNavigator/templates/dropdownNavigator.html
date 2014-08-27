@@ -3,7 +3,7 @@
         <div class="label-container" data-ng-click="!item.disabled && item.action(item.actionData, $event)">
             <span class="item-label">{{item.label}}</span>
         </div>
-        <hierarchical-dropdown menu="item.menu"></hierarchical-dropdown>
+        <hierarchical-menu menu="item.menu"></hierarchical-menu>
     </script>
 
     <li data-ng-repeat-start="item in navigator.items track by $index"
