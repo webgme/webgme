@@ -13,6 +13,24 @@ define(['util/canon'], function (CANON) {
             _core[i] = _innerCore[i];
         }
 
+        function normalize(obj){
+            console.log('norm',obj);
+            var keys = Object.keys(obj),
+                i;
+            for(i=0;i<keys.length;i++){
+                if(Array.isArray(obj[keys[i]])){
+                    if(obj[keys[i]].length === 0){
+                        delete obj[keys[i]];
+                    }
+                } else if(typeof obj[keys[i]] === 'object'){
+                    normalize(obj[keys[i]]);
+                    if(Object.keys(obj[keys[i]]).length === 0){
+                        delete obj[keys[i]];
+                    }
+                }
+            }
+            console.log('norme',obj);
+        }
         function attr_diff(source,target){
             var sNames = _core.getAttributeNames(source),
                 tNames = _core.getAttributeNames(target),
@@ -185,6 +203,7 @@ define(['util/canon'], function (CANON) {
                 pointer  : pointer_diff(source,target),
                 set      : set_diff(source,target)
             };
+            normalize(diff);
             return isEmptyNodeDiff(diff) ? null : diff;
         };
 
