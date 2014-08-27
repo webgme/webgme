@@ -1,4 +1,4 @@
-.hierarchical-dropdown .menu-contents {
+.hierarchical-menu .menu-contents {
   position: absolute;
   top: 100%;
   left: 0;
@@ -23,7 +23,7 @@
   *width: 180px;
   margin-top: -1px;
   overflow: visible; }
-  .hierarchical-dropdown .menu-contents > li > a {
+  .hierarchical-menu .menu-contents > li > a {
     display: block;
     padding: 3px 20px;
     clear: both;
@@ -31,22 +31,22 @@
     line-height: 1.42857143;
     color: #333;
     white-space: nowrap; }
-  .hierarchical-dropdown .menu-contents li.label {
+  .hierarchical-menu .menu-contents li.label {
     color: #bbb;
     text-transform: uppercase; }
-  .hierarchical-dropdown .menu-contents li.dot-dot-dot {
+  .hierarchical-menu .menu-contents li.dot-dot-dot {
     color: #777;
     font-weight: bold;
     text-align: center;
     line-height: 1ex;
     padding-bottom: 1ex;
     letter-spacing: .3ex; }
-  .hierarchical-dropdown .menu-contents li .item-icon {
+  .hierarchical-menu .menu-contents li .item-icon {
     margin-right: .3ex;
     font-size: 90%; }
-  .hierarchical-dropdown .menu-contents .dropdown-submenu {
+  .hierarchical-menu .menu-contents .dropdown-submenu {
     position: relative; }
-  .hierarchical-dropdown .menu-contents .dropdown-submenu > .menu-contents {
+  .hierarchical-menu .menu-contents .dropdown-submenu > .menu-contents {
     top: 0;
     left: 100%;
     margin-top: -6px;
@@ -54,9 +54,9 @@
     -webkit-border-radius: 0 6px 6px 6px;
     -moz-border-radius: 0 6px 6px 6px;
     border-radius: 0 6px 6px 6px; }
-  .hierarchical-dropdown .menu-contents .dropdown-submenu:hover > .menu-contents {
+  .hierarchical-menu .menu-contents .dropdown-submenu:hover > .menu-contents {
     display: block; }
-  .hierarchical-dropdown .menu-contents .dropdown-submenu > a:after {
+  .hierarchical-menu .menu-contents .dropdown-submenu > a:after {
     display: block;
     content: " ";
     float: right;
@@ -68,13 +68,13 @@
     border-left-color: #cccccc;
     margin-top: 5px;
     margin-right: -10px; }
-  .hierarchical-dropdown .menu-contents .dropdown-submenu:hover > a:after {
+  .hierarchical-menu .menu-contents .dropdown-submenu:hover > a:after {
     border-left-color: #ffffff; }
-  .hierarchical-dropdown .menu-contents .disabled.dropdown-submenu:hover > a:after {
+  .hierarchical-menu .menu-contents .disabled.dropdown-submenu:hover > a:after {
     border-left-color: #999; }
-  .hierarchical-dropdown .menu-contents .dropdown-submenu.pull-left {
+  .hierarchical-menu .menu-contents .dropdown-submenu.pull-left {
     float: none; }
-  .hierarchical-dropdown .menu-contents .dropdown-submenu.pull-left > .menu-contents {
+  .hierarchical-menu .menu-contents .dropdown-submenu.pull-left > .menu-contents {
     left: -100%;
     margin-left: 10px;
     -webkit-border-radius: 6px 0 6px 6px;
