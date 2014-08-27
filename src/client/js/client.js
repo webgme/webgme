@@ -356,7 +356,7 @@ define([
 
                 return {
                     stop: stop
-                }
+                };
             }
 
             function commitCache(){
@@ -2258,53 +2258,100 @@ define([
                 //_self.addEventListener(_self.events.SERVER_BRANCH_UPDATED,function(client,data){
                 //    console.log(data);
                 //});
-                var objectPath = WebGMEGlobal.State.getActiveObject(),
-                    source,target,needed = 2,error = null,
-                    objectsLoaded = function(){
-                        if(error){
-                            console.log('fuck',error);
-                        } else {
-                            console.log(_core.nodeDiff(source,target));
-                        }
-                    };
-                if(objectPath){
-                    _core.loadRoot(_previousRootHash,function(err,root){
-                        error = error || err;
-                        if(!err && root){
-                            _core.loadByPath(root,objectPath,function(err,obj){
+                switch(testnumber){
+                    case 1:
+                        var objectPath = WebGMEGlobal.State.getActiveObject(),
+                            source,target,needed = 2,error = null,
+                            objectsLoaded = function(){
+                                if(error){
+                                    console.log('fuck',error);
+                                } else {
+                                    console.log(_core.nodeDiff(source,target));
+                                }
+                            };
+                        if(objectPath){
+                            _core.loadRoot(_previousRootHash,function(err,root){
                                 error = error || err;
-                                if(!err && obj){
-                                    source = obj;
+                                if(!err && root){
+                                    _core.loadByPath(root,objectPath,function(err,obj){
+                                        error = error || err;
+                                        if(!err && obj){
+                                            source = obj;
+                                            if(--needed === 0){
+                                                objectsLoaded();
+                                            }
+                                        }
+                                    });
+                                } else {
                                     if(--needed === 0){
                                         objectsLoaded();
                                     }
                                 }
                             });
-                        } else {
-                            if(--needed === 0){
-                                objectsLoaded();
-                            }
-                        }
-                    });
-                    _core.loadRoot(_rootHash,function(err,root){
-                        error = error || err;
-                        if(!err && root){
-                            _core.loadByPath(root,objectPath,function(err,obj){
+                            _core.loadRoot(_rootHash,function(err,root){
                                 error = error || err;
-                                if(!err && obj){
-                                    target = obj;
+                                if(!err && root){
+                                    _core.loadByPath(root,objectPath,function(err,obj){
+                                        error = error || err;
+                                        if(!err && obj){
+                                            target = obj;
+                                            if(--needed === 0){
+                                                objectsLoaded();
+                                            }
+                                        }
+                                    });
+                                } else {
                                     if(--needed === 0){
                                         objectsLoaded();
                                     }
                                 }
                             });
-                        } else {
-                            if(--needed === 0){
-                                objectsLoaded();
-                            }
                         }
-                    });
+                        break;
+                    case 2:
+                        //here we try to check every element in _nodes...
+                        var start = new Date().getTime(),
+                            sized,
+                            end;
+                        console.log("allupdatestart");
+                        var keys = Object.keys(_nodes),
+                            oldroot,
+                            updates = {},
+                            index = 0,
+                            checkNextNode = function(path){
+                                if(index<keys.length){
+                                    _core.loadByPath(oldroot,path,function(err,node){
+                                        if(!err && node){
+                                            updates[path] = _core.nodeDiff(node,_nodes[path].node);
+                                            if(updates[path] === null){
+                                                delete updates[path];
+                                            }
+                                        } else {
+                                            updates[path] = "HIBAAAA";
+                                        }
+                                        checkNextNode(keys[++index]);
+                                    });
+                                } else {
+                                    finished();
+                                }
+                            },
+                            finished = function(){
+                                console.log(updates);
+                                end = new Date().getTime();
+                                sized = (end-start)/keys.length;
+                                console.log("allupdateend",end-start,sized);
+                            };
+                        _core.loadRoot(_previousRootHash,function(err,root){
+                            if(!err && root){
+                                oldroot = root;
+                                checkNextNode(keys[index]);
+                            } else {
+                                updates[""] = "NAGYHIBAAA";
+                                finished();
+                            }
+                        });
                 }
+
             }
 
             //export and import functions

@@ -14,7 +14,6 @@ define(['util/canon'], function (CANON) {
         }
 
         function normalize(obj){
-            console.log('norm',obj);
             var keys = Object.keys(obj),
                 i;
             for(i=0;i<keys.length;i++){
@@ -29,7 +28,6 @@ define(['util/canon'], function (CANON) {
                     }
                 }
             }
-            console.log('norme',obj);
         }
         function attr_diff(source,target){
             var sNames = _core.getAttributeNames(source),
