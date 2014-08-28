@@ -74,7 +74,7 @@ define(['js/Constants',
     MetaDecoratorDiagramDesignerWidgetConstraints.prototype._updateConstraints = function () {
         var client = this._control._client,
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
-            newConstraints = nodeObj ? nodeObj.getConstraintNames() : [],
+            newConstraints = nodeObj ? nodeObj.getOwnConstraintNames() : [],
             len,
             displayedConstraints = this._constraintNames.slice(0),
             diff,

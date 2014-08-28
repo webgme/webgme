@@ -95,7 +95,7 @@ define([ "util/assert" ], function (ASSERT) {
             var constRelId = getConstraintRelId(constraintsNode,name);
             if(constRelId){
                 var constraintNode = _innerCore.getChild(constraintsNode,constRelId);
-                _innerCore.deleteNode(constraintNode);
+                _innerCore.deleteNode(constraintNode,true);
             }
             _innerCore.delRegistry(node,getRegConstName(name));
         };
