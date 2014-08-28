@@ -377,6 +377,39 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv" ], function(ASSER
             core.deleteNode(_MetaAspectNode(node,name));
         };
 
+        //type related extra query functions
+        var isOnMetaSheet = function(node){
+            //MetaAspectSet
+            var sets = core.isMemberOf(node);
+
+            if(sets && sets[""] && sets[""].MetaAspectSet){ //TODO this is all should be global constant values
+                return true;
+            }
+            return false;
+        };
+        core.getBaseType = function(node){
+            //TODO this functions now uses the fact that we think of META as the MetaSetContainer of the ROOT
+            while(node){
+                if(isOnMetaSheet(node)){
+                    return node;
+                }
+                node = core.getBase(node);
+            }
+            return null;
+        };
+        core.isInstanceOf = function(node,name){
+            //TODO this is name based query - doesn't check the node's own name
+            node = core.getBase(node);
+            while(node){
+                if(core.getAttribute(node,'name') === name){
+                    return true;
+                }
+                node = core.getBase(node);
+            }
+
+            return false;
+        };
+
         return core;
     };
 
