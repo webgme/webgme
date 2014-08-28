@@ -15,15 +15,24 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      *      - gets wider as the name increases in length
      *      - gets taller as elements are added inside
      *  
-     * The SVG used must have the following id(s):
-     *      - "name" (text)
+     * Stretching and shifting of components in the svg
+     * are specified as follows.
      *
-     * The SVG used must have a couple elements with given 
-     * classes:
-     *      - "x-shift-PTR_NAME"
-     *      - "x-stretch-PTR_NAME"
-     *      - "y-shift-PTR_NAME"
-     *      - "y-stretch-PTR_NAME"
+     * Stretching: 
+     *      data-stretch="x-next"
+     *
+     * This means that the given element will stretch wrt
+     * the x coordinate when the 'next' pointer is stretched.
+     *      
+     * Shifting: 
+     *      data-shift="x-rect1"
+     *
+     * This means that the given element will shift wrt
+     * the x coordinate when the element with id "rect1"
+     * is shifted/stretched horizontally.
+     *
+     * That is, it will follow the right-most coord of 
+     * "rect1" as "rect1" shifts/stretches.
      *      
      */
 
@@ -218,7 +227,12 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
                             self.stretchTree[svgId][axis][pointer] = 0;//self.pointerInitialStretch[pointer][SNAP_CONSTANTS.STRETCH_TYPE.SVG][axis] || 0;
 
                             //Add element to stretchElementsByPointer
-                            self.stretchElementsByPointer[pointer][type][axis].push(svgId);//'text' stores the 'text-only' elements
+                            if (!self.stretchElementsByPointer[pointer]){
+                                self.logger.error("SVG does not have the pointer " + pointer);
+                            } else {
+                                //'text' stores the 'text-only' elements
+                                self.stretchElementsByPointer[pointer][type][axis].push(svgId);
+                            }
                         }
                     }
                 }
@@ -268,19 +282,20 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      * @return {undefined}
      */
     SVGDecoratorSnapEditorWidgetStretch.prototype._buildConnectionAreaShiftTree = function () {
-        var data,
-            axis,
+        var axis,
+            connectionAreas = this.getConnectionAreas(),
+            data,
             base;
 
         this._connAreaShiftTree = {};
 
-        for (var i = 0; i < this._customConnectionAreas.length; i++){
-            if (this._customConnectionAreas[i].shift){
-                this._connAreaShifts[this._customConnectionAreas[i].id] = {};
-                this._connAreaShifts[this._customConnectionAreas[i].id][AXIS.X] = 0;
-                this._connAreaShifts[this._customConnectionAreas[i].id][AXIS.Y] = 0;
+        for (var i = 0; i < connectionAreas.length; i++){
+            if (connectionAreas[i].shift){
+                this._connAreaShifts[connectionAreas[i].id] = {};
+                this._connAreaShifts[connectionAreas[i].id][AXIS.X] = 0;
+                this._connAreaShifts[connectionAreas[i].id][AXIS.Y] = 0;
 
-                data = this._customConnectionAreas[i].shift.split(" ");
+                data = connectionAreas[i].shift.split(" ");
                 for (var j = 0; j < data.length; j++){
                     if (data[j].length){
                         axis = data[j].substring(0,1);
@@ -292,7 +307,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
                             this._connAreaShiftTree[base][AXIS.Y] = [];
                         }
 
-                        this._connAreaShiftTree[base][axis].push(this._customConnectionAreas[i].id);
+                        this._connAreaShiftTree[base][axis].push(connectionAreas[i].id);
                     }
                 }
             }
