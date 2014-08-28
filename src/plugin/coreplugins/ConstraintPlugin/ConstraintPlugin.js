@@ -56,8 +56,10 @@ define(['plugin/PluginConfig',
         //Call base class's constructor
         PluginBase.call(this);
 
-        //Defined in Constriant Language META
-        this._variableTypes = { 'dictionary': 'var %name = {};',
+        //Defined in Constraint Language META
+        this.variableTypes = [ 'map', 'string', 'number', 'boolean', 
+            'node', 'collection', 'nodeSet'];
+        this.variableDefinition = { 'map': 'var %name = {};',
                                 'collection': 'var %name = [];',
                                 '__default__': 'var %name = null;' };
     };
@@ -87,6 +89,14 @@ define(['plugin/PluginConfig',
             node = this.core.getBase(node);
         }
         return false;
+    };
+
+    ConstraintPlugin.prototype._isVariable = function(nodeId){
+        var node = this.getNode(nodeId),
+            base = this.core.getBase(node),
+            typeName = this.core.getAttribute(base, 'name');
+
+        return this.variableTypes.indexOf(typeName) > -1;
     };
 
     ConstraintPlugin.prototype._loadConstraintNodes = function(callback){
@@ -349,13 +359,13 @@ define(['plugin/PluginConfig',
         nodeIds = this.getAllNodeIds();
         i = nodeIds.length;
 
-        //Find the hat and declare variables
+        //Find the starting block and declare variables
         while (i--){
-            if(this._isTypeOf(nodeIds[i], this.META.Hat) && !this._isTypeOf(nodeIds[i], this.META.Command)){
+            if(this._isTypeOf(nodeIds[i], this.META.start) && !this._isTypeOf(nodeIds[i], this.META.command)){
                //Found the starting node
                currentNode = this.getNode(nodeIds[i]);
                
-            } else if(this._isTypeOf(nodeIds[i], this.META.variable)){
+            } else if(this._isVariable(nodeIds[i])){
                 variables.push(nodeIds[i]);
             }
         }
@@ -462,11 +472,8 @@ define(['plugin/PluginConfig',
             'var ' + PRIVATE_VARIABLES.FILTER_BY_NODE_TYPE +' = function(nodeSet, type, cb){\n'+
             'var result = [],\nid;\n'+PRIVATE_VARIABLES.GET_NODES+'(nodeSet, '+
             'function(nodes){\nfor (var i = nodes.length-1; i>=0; i--){\nif ('+
-            PRIVATE_VARIABLES.TYPE_OF+'(nodes, type)){id = core.getPath(nodes[i]);\n'+
+            PRIVATE_VARIABLES.TYPE_OF+'(nodes[i], type)){id = core.getPath(nodes[i]);\n'+
             'result.push(id);\n}\n}\ncb(result);\n});\n};';
-
-
-
 
         this._constraintMapping = {
             'add': "%first + %second", 
@@ -484,17 +491,14 @@ define(['plugin/PluginConfig',
 
             //Control flow
             'if': "if (%cond){\n%true_next\n}\n%next",
+            'ifElse': "if (%cond){\n%true_next\n} else {\n%false_next\n}\n%next",
 
             //Variables
-            'dictionary': "%name",
-            'variable': "%name",
-            'collection': "%name",
-            'node': "%name",
-            'nodeSet': "%name",
-            'item': "%name",
+            'predicate': "%name",
 
             //Map mappings
             'addToMap': "%map[%first] = %second;\n%next",
+            'removeFromMap': "delete %map[%string];\n%next",
             'getItemFromMap': "%map[%first]",
             'getKeysFromMap': "Object.keys(%map)",
 
@@ -507,7 +511,7 @@ define(['plugin/PluginConfig',
             'contains': '%collection.indexOf(%first) !== -1',
 
             'markViolation': PRIVATE_VARIABLES.VIOLATION + " = { hasViolation: true," +
-                " message: %Message, nodes: %node };\n\n%next",
+                " message: %message, nodes: %node };\n\n%next",
 
             'not': "!(%first)",
             'getLength': "%first.length",
@@ -543,10 +547,12 @@ define(['plugin/PluginConfig',
                 "){\n" + PLACEHOLDER.PARENT_SNIPPET_START + "core.getAttribute(" + PLACEHOLDER.ARG(0) + 
                 ", %first)" + PLACEHOLDER.PARENT_SNIPPET_END + "\n});",
 
-            'filterByNodeType': PRIVATE_VARIABLES.FILTER_BY_NODE_TYPE +"(%second, function(" + 
+            'filterByNodeType': PRIVATE_VARIABLES.FILTER_BY_NODE_TYPE +"(%nodeSet, %first, function(" + 
                 PLACEHOLDER.ARG(0) + "){\n" + PLACEHOLDER.PARENT_SNIPPET_START + PLACEHOLDER.ARG(0) +
                 PLACEHOLDER.PARENT_SNIPPET_END + "\n});",
 
+            //FIXME Make this work for maps as well (use Object.keys)
+            //Will need to remove ordering assumption...
             'forEach': "var " + PLACEHOLDER.FUNCTION + " = function(" + 
                 PLACEHOLDER.ITERATOR + "){\nif (" + PLACEHOLDER.ITERATOR + 
                 ' < %collection.length){\n%iter = %collection[' + 
@@ -627,7 +633,7 @@ define(['plugin/PluginConfig',
     };
 
     ConstraintPlugin.prototype._declareVariables = function(variables){
-        var types = Object.keys(this._variableTypes),
+        var types = Object.keys(this.variableDefinition),
             variableType,
             variable,
             declared = {},
@@ -654,12 +660,12 @@ define(['plugin/PluginConfig',
 
             while (j-- && !variableType){
                 if (this._isTypeOf(variable, this.META[types[j]])){
-                    variableType = this._variableTypes[types[j]];
+                    variableType = this.variableDefinition[types[j]];
                 }
             }
 
             if (!variableType){
-                variableType = this._variableTypes[DEFAULT];
+                variableType = this.variableDefinition[DEFAULT];
             }
 
             //Keep track of the declared variables
@@ -729,14 +735,23 @@ define(['plugin/PluginConfig',
             snippetTagContent = {},
             snippetTag,
             keys,
-            i,
-            j,
             targetNode,
             splitElements,
             subsnippets,
             newSnippet,
             parent = this.core.getParent(node),
-            parentId = this.core.getPath(parent);
+            parentId = this.core.getPath(parent),
+            i,
+            k,
+            j,
+            dj = 1;
+
+        //Get the snippet
+        while (!snippet && base){
+            base = this.core.getBase(base);
+            typeName = this.core.getAttribute(base, 'name');
+            snippet = this._constraintMapping[typeName];
+        }
 
         //Handle any placeholders (ie, iterators, function names)
         keys = Object.keys(PLACEHOLDER);
@@ -811,17 +826,31 @@ define(['plugin/PluginConfig',
             }
         }
 
+        //Replace any PARENT_SNIPPETS in the next loop
+        //iff the node is a command type or if the snippet
+        //already contains PARENT_SNIPPET (should always
+        //only be 1 set of PARENT_SNIPPET's)
+        if (this._isTypeOf(node, this.META.command) ||
+              snippet.indexOf(PLACEHOLDER.PARENT_SNIPPET_START) !== -1){
+            dj = 2;
+        }
+
         keys = Object.keys(snippetTagContent);
         for (i = keys.length-1; i >= 0; i--){
             snippetTag = keys[i];
 
+            //Flip the parent, child code if PARENT_SNIPPET
             if (_.isString(snippetTagContent[snippetTag]) && snippetTagContent[snippetTag].indexOf(PLACEHOLDER.PARENT_SNIPPET_START) !== -1){
                 splitElements = '(' + PLACEHOLDER.PARENT_SNIPPET_START + 
                     '|' + PLACEHOLDER.PARENT_SNIPPET_END + ')';
                 subsnippets = snippetTagContent[snippetTag].split(new RegExp(splitElements, 'g'));
                 newSnippet = "";
-                for (var k = 0; k < subsnippets.length; k +=5){
-                    newSnippet += subsnippets[k] + snippet.replace(new RegExp(snippetTag, "g"), subsnippets[k+2]) + subsnippets[k+4];
+                for (k = 0; k < subsnippets.length; k +=5){
+                    subsnippets[k+2] = snippet.replace(new RegExp(snippetTag, "g"), subsnippets[k+2]);
+                    for (j = k; j < k+5; j+=dj){
+                        newSnippet += subsnippets[j];
+                    }
+                    //newSnippet += subsnippets[k] + snippet.replace(new RegExp(snippetTag, "g"), subsnippets[k+2]) + subsnippets[k+4];
                 }
                 snippet = newSnippet;
             } else {
