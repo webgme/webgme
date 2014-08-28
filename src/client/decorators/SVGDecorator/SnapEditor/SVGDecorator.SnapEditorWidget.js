@@ -134,49 +134,7 @@ define(['js/Constants',
     };
 
 
-    /**** Override from SnapEditorWidgetDecoratorBase ****/
-    /**
-     * Update the svg image and attributes.
-     *
-     * @return {Boolean} return true if the decorator changed size
-     */
-    SVGDecoratorSnapEditorWidget.prototype.update = function () {
-        var oldNameLength = this.$name.width(),
-            oldName = this.$name.text(),
-            dx,
-            changed = false;
-
-        this._update();
-
-        //Resize the svg as needed
-        if(this.$name[0].tagName === "text"){
-            if(this.$name.width() === 0 && oldNameLength === 0){
-                //Assume that it hasn't been drawn yet.
-                //Approx the pixel length by relative name change
-                //FIXME Find a better way to approximate this...
-                //I could add a "name container" invisible rect... 
-                var approxWidth = parseFloat(this.$svgContent
-                        .find("#name-bounding-box")[0].getAttribute("width"));
-
-                dx = Math.floor(approxWidth * (this.$name.text().length/oldName.length));
-                //this.stretchTo(SNAP_CONSTANTS.NAME, newX, 0);
-            }else{
-                dx = this.$name.width() - oldNameLength;
-                //this.stretchTo(SNAP_CONSTANTS.NAME, this.$name.width(), 0);
-            }
-
-            if (dx !== 0){
-                this.stretchTo(SNAP_CONSTANTS.NAME, { x: dx });
-                changed = "decorator resized";
-            }
-        }
-        
-        //Apply latest stretch transformation info
-        //May not be the right spot for this FIXME
-        //this._applyTransforms();
-
-    };
-
+    /**** Attributes ****/
     SVGDecoratorSnapEditorWidget.prototype.removeAttributeText = function (attr) {
         var fields;
 
