@@ -191,7 +191,7 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv" ], function(ASSER
 
         //additional meta functions for getting meta definitions
         core.getJsonMeta = function(node){
-            var meta = {children:{},attributes:{},pointers:{},aspects:{}},
+            var meta = {children:{},attributes:{},pointers:{},aspects:{},constraints:{}},
                 tempNode,
                 names,
                 pointer,
@@ -243,6 +243,12 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv" ], function(ASSER
             for(i=0;i<names.length;i++){
                 tempNode = MetaAspectNode(node,names[i]);
                 meta.aspects[names[i]] = core.getMemberPaths(tempNode,'items') || [];
+            }
+
+            //constraints
+            names = core.getConstraintNames(node);
+            for(i=0;i<names.length;i++){
+                meta.constraints[names[i]] = core.getConstraint(node,names[i]);
             }
 
             return meta;
@@ -382,7 +388,7 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv" ], function(ASSER
             //MetaAspectSet
             var sets = core.isMemberOf(node);
 
-            if(sets && sets[""] && sets[""].MetaAspectSet){ //TODO this is all should be global constant values
+            if(sets && sets[""] && sets[""].indexOf("MetaAspectSet") !== -1){ //TODO this is all should be global constant values
                 return true;
             }
             return false;

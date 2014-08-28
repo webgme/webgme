@@ -2375,7 +2375,7 @@ define([
                         });
                         break;
                     case 3:
-                        console.log(_core.getBaseType(_nodes["/1"].node));
+                        console.log(_core.getBaseType(_nodes[WebGMEGlobal.State.getActiveObject()].node));
                         break;
                 }
 
