@@ -68,7 +68,7 @@ define(['./FakeCore'], function (FakeCore){
 
     ConstraintTestEnvironment.prototype.buildMeta = function(){
         var meta = { fco: {},
-                Hat: {},
+                start: {},
                 box: {},
                 connection: { pointers: { src: null, dst: null} }},
             types = Object.keys(meta),
@@ -97,8 +97,8 @@ define(['./FakeCore'], function (FakeCore){
 
     ConstraintTestEnvironment.prototype.buildTrees = function(){
         //I will create a tree with a branching factor of 5
-        var branchingFactor = 3,
-            height = 4,
+        var branchingFactor = 4,
+            height = 5,
             nodesAtCurrentLevel = [],
             nodesAtNextLevel = [],
             parent,
@@ -108,7 +108,7 @@ define(['./FakeCore'], function (FakeCore){
                           "duplicate names": { attributes: function(id){ 
                               return { name: "box_" + (id%5) };
                           }},
-                          "multi start": { base: this.META.Hat } },
+                          "multi start": { base: this.META.start } },
             nodeInfo,
             trees = Object.keys(treeRules),
             h = -1,
@@ -178,7 +178,7 @@ define(['./FakeCore'], function (FakeCore){
                     i;
 
                 for (i = nodes.length-1; i>=0; i--){
-                    if (self._isTypeOf(self.nodes[tree][nodes[i]], 'Hat')){
+                    if (self._isTypeOf(self.nodes[tree][nodes[i]], 'start')){
                         violation.nodes.push(self.nodes[tree][nodes[i]]);
                     }
                 } 
@@ -228,8 +228,11 @@ define(['./FakeCore'], function (FakeCore){
         }
 
         console.log(testName, "on", tree, ": ( " + msg + " )");
-        console.log("test results:", !this._tests[testName](tree).hasViolation, 
-                    "gen result:", !results.hasViolation, "\n");
+
+        if (!passed){
+            console.log("test results:", !this._tests[testName](tree).hasViolation, 
+                        "gen result:", !results.hasViolation, "\n");
+        }
     };
 
     /* * * * * * * * * * * CONVENIENCE METHODS FOR TESTS * * * * * * * * * * */
