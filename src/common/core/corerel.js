@@ -804,6 +804,17 @@ define([ "util/assert", "core/coretree", "core/tasync", "util/canon" ], function
 			}
 		}
 
+        function getChildrenHashes(node){
+            var keys = getChildrenRelids(node),
+                i,hashes = {};
+
+            for(i=0;i<keys.length;i++){
+                hashes[keys[i]] = coretree.getChildHash(node,keys[i]);
+            }
+
+            return hashes;
+        }
+
 		// copy everything from coretree
 		var corerel = {};
 		for( var key in coretree) {
@@ -849,6 +860,8 @@ define([ "util/assert", "core/coretree", "core/tasync", "util/canon" ], function
 		corerel.getCoreTree = function() {
 			return coretree;
 		};
+
+        corerel.getChildrenHashes = getChildrenHashes;
 
 		return corerel;
 	}

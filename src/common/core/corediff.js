@@ -3,7 +3,7 @@
  *
  * Author: Tamas Kecskes
  */
-define(['util/canon'], function (CANON) {
+define(['util/canon','core/tasync'], function (CANON,TASYNC) {
     "use strict";
 
 
@@ -165,7 +165,7 @@ define(['util/canon'], function (CANON) {
             return diff;
         }
         function ovr_diff(source,target){
-
+            return {};
         }
         function isEmptyDiff(diff){
             if(diff.removed && diff.removed.length > 0){
@@ -193,6 +193,9 @@ define(['util/canon'], function (CANON) {
             }
             return false;
         }
+
+
+
         _core.nodeDiff = function(source,target){
             var diff = {
                 children : children_diff(source,target),
@@ -206,7 +209,115 @@ define(['util/canon'], function (CANON) {
         };
 
         _core.generateTreeDiff = function(sourceRoot,targetRoot,callback){
-            callback(new Error("not implemented"),null);
+            var sChildrenHashes = _core.getChildrenHashes(sourceRoot),
+                tChildrenHAshes = _core.getChildrenHashes(targetRoot),
+                sRelids = Object.keys(sChildrenHashes),
+                tRelids = Object.keys(tChildrenHAshes),
+                diff = _core.nodeDiff(sourceRoot,targetRoot) || {},
+                i,
+                keys = [],
+                index = 0,
+                error = null,
+                genChildTreeDiff = function(){
+                    var needed = 2,
+                        sChild,
+                        tChild,
+                        loadError = null,
+                        childrenLoaded = function(){
+                            if(loadError){
+                                error = error || loadError;
+                                index++;
+                                genChildTreeDiff();
+                            } else {
+                                _core.generateTreeDiff(sChild,tChild,function(err,cDiff){
+                                    error = error || err;
+                                    if(cDiff){
+                                        diff[keys[index]] = cDiff;
+                                    }
+                                    index++;
+                                    genChildTreeDiff();
+                                });
+                            }
+                        };
+                    if(index < keys.length){
+                        _core.loadChild(sourceRoot,keys[index],function(err,c){
+                            sChild = c;
+                            loadError = loadError || err;
+                            if(--needed === 0){
+                                childrenLoaded();
+                            }
+                        });
+                        _core.loadChild(targetRoot,keys[index],function(err,c){
+                            tChild = c;
+                            loadError = loadError || err;
+                            if(--needed === 0){
+                                childrenLoaded();
+                            }
+                        });
+                    } else {
+                        callback(error,diff);
+                    }
+                };
+
+            for(i=0;i<tRelids.length;i++){
+                if(sRelids.indexOf(tRelids[i]) !== -1){
+                    if(tChildrenHAshes[tRelids[i]] !== sChildrenHashes[tRelids[i]]){
+                        keys.push(tRelids[i]);
+                    }
+                }
+            }
+
+            genChildTreeDiff();
+        };
+
+        _core.generateTreeDiff = function(sourceRoot,targetRoot,callback){
+            var sChildrenHashes = _core.getChildrenHashes(sourceRoot),
+                tChildrenHAshes = _core.getChildrenHashes(targetRoot),
+                sRelids = Object.keys(sChildrenHashes),
+                tRelids = Object.keys(tChildrenHAshes),
+                diff = _core.nodeDiff(sourceRoot,targetRoot) || {},
+                i,
+                keys = [],
+                index = 0,
+                error = null,
+                genChildTreeDiff = function(){
+                    var needed = 2,
+                        loadError = null,
+                        childrenLoaded = function(sChild,tChild){
+                            if(loadError){
+                                error = error || loadError;
+                                index++;
+                                genChildTreeDiff();
+                            } else {
+                                _core.generateTreeDiff(sChild,tChild,function(err,cDiff){
+                                    error = error || err;
+                                    if(cDiff){
+                                        diff[keys[index]] = cDiff;
+                                    }
+                                    index++;
+                                    genChildTreeDiff();
+                                });
+                            }
+                        };
+                    if(index < keys.length){
+                        TASYNC.call(
+                            childrenLoaded,
+                            _core.loadChild(sourceRoot,keys[index]),
+                            _core.loadChild(targetRoot,keys[index]));
+                    } else {
+                        callback(error,diff);
+                    }
+                };
+
+            for(i=0;i<tRelids.length;i++){
+                if(sRelids.indexOf(tRelids[i]) !== -1){
+                    if(tChildrenHAshes[tRelids[i]] !== sChildrenHashes[tRelids[i]]){
+                        keys.push(tRelids[i]);
+                    }
+                }
+            }
+
+            genChildTreeDiff();
         };
         return _core;
     }

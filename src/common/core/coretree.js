@@ -766,6 +766,22 @@ define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon
 			}
 		};
 
+        var getChildHash = function(node,relid){
+            ASSERT(isValidNode(node));
+
+            node = getChild(node, relid);
+
+            if (isValidHash(node.data)) {
+                // TODO: this is a hack, we should avoid loading it multiple
+                // times
+                return node.data;
+            } else {
+                return typeof node.data === "object" && node.data !== null ? getHash(node) : null;
+            }
+        };
+
+
+
 		var __loadChild2 = function (node, newdata) {
 			node = normalize(node);
 
@@ -919,7 +935,9 @@ define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon
 			loadChild: loadChild,
 			loadByPath: loadByPath,
 
-			isValidNode: isValidNode
+			isValidNode: isValidNode,
+
+            getChildHash: getChildHash
 		};
 	};
 });

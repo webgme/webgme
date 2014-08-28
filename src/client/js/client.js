@@ -2350,6 +2350,19 @@ define([
                                 finished();
                             }
                         });
+                        break;
+                    case 3:
+                        var start = new Date().getTime(),
+                            end;
+                        _core.loadRoot(_previousRootHash,function(err,root){
+                            if(!err && root){
+                                _core.generateTreeDiff(root,_nodes[""].node,function(err,diff){
+                                    end = new Date().getTime();
+                                    console.log('treediff',end-start,err,diff);
+                                });
+                            }
+                        });
+
                 }
 
             }
