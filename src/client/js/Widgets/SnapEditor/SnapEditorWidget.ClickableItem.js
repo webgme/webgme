@@ -172,8 +172,19 @@ define(['./ClickableItem',
         item2.setPtr(ptrName, CONSTANTS.CONN_ACCEPTING, item1);
     };
 
-    SnapEditorWidgetClickableItems.prototype.updateItemDependents = function (id1, ptrName) {
+    SnapEditorWidgetClickableItems.prototype.updateItemDependents = function (id1) {
         this.items[id1].updateDependents();
+    };
+
+    //I will need to calculate the distance between objects
+    //for when I drop an object to point to the recipient.
+    SnapEditorWidgetClickableItems.prototype.getConnectionDistance = function (options) {
+        var src = this.items[options.src];//src has the CONN_PASSING role
+
+        delete options.src;
+        options.dst = this.items[options.dst];
+
+        return src.getConnectionDistance(options);
     };
 
     SnapEditorWidgetClickableItems.prototype.itemHasPtr = function (id1, ptrName) {
@@ -181,12 +192,9 @@ define(['./ClickableItem',
     };
 
     SnapEditorWidgetClickableItems.prototype.getItemsPointingTo = function (id) {
-        var item = this.items[id],
-            result = {};
+        var item = this.items[id];
 
-        _.extend(result, item.ptrs[CONSTANTS.CONN_ACCEPTING]);
-
-        return result;
+        return _.extend({}, item.ptrs[CONSTANTS.CONN_ACCEPTING]);
     };
 
     SnapEditorWidgetClickableItems.prototype.removePtr = function (itemId, ptr, role) {

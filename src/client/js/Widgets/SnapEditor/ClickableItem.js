@@ -9,8 +9,8 @@
 define(['logManager',
         './SnapEditorWidget.Constants',
         './ItemBase'], function (logManager,
-                                       SNAP_CONSTANTS,
-                                       ItemBase) {
+                                 SNAP_CONSTANTS,
+                                 ItemBase) {
 
     "use strict";
 
@@ -233,8 +233,14 @@ define(['logManager',
         var otherRole = role === SNAP_CONSTANTS.CONN_ACCEPTING ? 
                 SNAP_CONSTANTS.CONN_PASSING : SNAP_CONSTANTS.CONN_ACCEPTING;
 
+        //Make sure it is a valid 'move'
         if (item === this){
             this.logger.error("Should never set a pointer to itself");
+        }
+
+        if (role === SNAP_CONSTANTS.CONN_PASSING && 
+            this.getDependents().indexOf(item) !== -1){
+            this.logger.error("Adding an already existing dependent to item " + this.id);
         }
 
         if (this.ptrs[role][ptr]){
@@ -864,15 +870,15 @@ define(['logManager',
      * @private
      * @param {Object} params
      */
-    ClickableItem.prototype._connect = function (params) {
-        var distance = this._getDistance(params.area1, params.area2),
-            otherItem = params.otherItem,
-            ptr = params.ptr,
-            role = params.role,
-            defaultParams = { resize: true,
-                              ignoreDependents: false };
+    ClickableItem.prototype._connect = function (options) {
+        var distance = this._getDistance(options.area1, options.area2),
+            otherItem = options.otherItem,
+            ptr = options.ptr,
+            role = options.role,
+            params = { resize: true,
+                       ignoreDependents: false };
 
-        params = _.extend(defaultParams, params);
+        _.extend(params, options);
 
         if (!(params.area1 && params.area2)){
             this.logger.error("Connection Areas must both be defined");
@@ -1135,6 +1141,21 @@ define(['logManager',
     };
 
     /**
+     * Get the distance between this 'out' role (w/ given ptr) and the
+     * dst object.
+     *
+     * @param {Object} options (keys: dst, ptr)
+     * @return {Object} distance (dx, dy)
+     */
+    ClickableItem.prototype.getConnectionDistance = function (options) {
+        var connArea = this.getConnectionArea(options.ptr, SNAP_CONSTANTS.CONN_PASSING),
+            item = options.dst,
+            otherArea = item.getConnectionArea(options.ptr, SNAP_CONSTANTS.CONN_ACCEPTING);
+
+        return this._getDistance(connArea, otherArea);
+    };
+
+    /**
      * Get the distance between connection areas measuring from the centers
      *
      * @private
@@ -1330,20 +1351,6 @@ define(['logManager',
     };
 
     /*********************** CONNECTION END CONNECTOR HIGHLIGHT ************************/
-
-    /*
-    ClickableItem.prototype.showSourceConnectors = function (params) {
-        if (this.canvas._enableConnectionDrawing === true) {
-            //this._decoratorInstance.showSourceConnectors(params);
-            //TODO Change this to be the clickable areas (connection areas)
-        }
-    };
-
-    ClickableItem.prototype.hideSourceConnectors = function () {
-        //this._decoratorInstance.hideSourceConnectors();
-        //TODO Change this to be the clickable areas (connection areas)
-    };
-   */
 
     ClickableItem.prototype.showEndConnectors = function (params) {
         if (this.canvas._enableConnectionDrawing === true) {

@@ -456,9 +456,8 @@ define(['logManager',
                     }
 
                     this._client.startTransaction();
-                    var idMap = this._client.moveMoreNodes(params);
+                    this._client.moveMoreNodes(params);
                     //Update the Gme ids and component ids
-                    //this._updateGmeAndComponentIds(items, idMap);
                     this._client.completeTransaction();
                 }
                 break;
@@ -562,11 +561,9 @@ define(['logManager',
         var receiverId = this._ComponentID2GmeID[receiver],
             node = this._client.getNode(receiverId),
             receiverParentId = node.getParentId(),
-            nextId = node.getPointer(ptr).to,//item currently pointed to by receiver
             droppedItems = this._addSiblingDependents([this._ComponentID2GmeID[droppedItem]]),
             droppedParentId,
             firstId = this._ComponentID2GmeID[droppedItem],
-            lastId,
             newIds = {},
             params,
             moveItems,
@@ -738,11 +735,23 @@ define(['logManager',
         //Set the first pointer
         if (role === SNAP_CONSTANTS.CONN_ACCEPTING){
             this._client.makePointer(firstId, ptr, receiverId);
+
+            //Move firstId to the correct location
+            var options = { src: this._GmeID2ComponentID[firstId], 
+                    dst: this._GmeID2ComponentID[receiverId], ptr: ptr },
+                distance = this.snapCanvas.getConnectionDistance(options),
+                position;
+
+            node = this._client.getNode(firstId);
+            position = _.extend({}, node.getRegistry(REGISTRY_KEYS.POSITION));
+            position.x += distance.dx;
+            position.y += distance.dy;
+
+            this._client.setRegistry(firstId, REGISTRY_KEYS.POSITION, position);
+            
         } else {
             this._client.makePointer(receiverId, ptr, firstId);
         }
-
-        //this.snapCanvas.connect(droppedItem, receiver);
 
         this._client.completeTransaction();
     };
@@ -757,16 +766,6 @@ define(['logManager',
             if (items[i].split("/").length > currentDepth){
                 return true;
             }
-            /*
-            id = this._GmeID2ComponentID[items[i]];
-            ptrs = this.snapCanvas.getItemsPointingTo(id);
-            j = ptrs.length;
-            while (j--){
-                if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(ptrs[j]) === -1){
-                    return true;
-                }
-            }
-            */
         }
         return false;
     };
@@ -777,7 +776,6 @@ define(['logManager',
         var ptrs2Remove,
             i = items.length,
             ptrs,
-            keys,
             gmeId,
             id,
             ptr;
@@ -808,7 +806,6 @@ define(['logManager',
             componentID,
             gmeID,
             selectedIDs = [],
-            len,
             self = this;
 
         if (dragPositions && !_.isEmpty(dragPositions)) {
