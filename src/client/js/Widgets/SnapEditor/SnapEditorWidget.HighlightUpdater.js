@@ -42,17 +42,21 @@ define(['./SnapEditorWidget.Constants.js'], function (SNAP_CONSTANTS) {
     };
 
     SnapEditorWidgetHighlightUpdater.prototype.unregisterUnderItem = function (item) {
-        var i = this._underItems.indexOf(item),
+        var i,
+            ui;
+
+        if (this._underItems){
+            i = this._underItems.indexOf(item);
             ui = this._ui;
+            if (i !== -1){
+                this._underItems.splice(i,1);
+                if (ui.data(ITEM_TAG) === item.id){
+                    item.deactivateConnectionAreas();
+                    this.dropFocus = SNAP_CONSTANTS.BACKGROUND;
 
-        if (i !== -1){
-            this._underItems.splice(i,1);
-            if (ui.data(ITEM_TAG) === item.id){
-                item.deactivateConnectionAreas();
-                this.dropFocus = SNAP_CONSTANTS.BACKGROUND;
-
-                //Remove data from dragged ui
-                ui.removeData(ITEM_TAG);
+                    //Remove data from dragged ui
+                    ui.removeData(ITEM_TAG);
+                }
             }
         }
     };
