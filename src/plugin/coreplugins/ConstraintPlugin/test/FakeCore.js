@@ -83,7 +83,9 @@ define(['util/assert'], function (assert){
         var attribute = null;
 
         while (!attribute && node){
-            attribute = node.attributes[name] || null;
+            if (node.attributes){
+                attribute = node.attributes[name] || null;
+            }
             node = this.getBase(node);
         }
 
