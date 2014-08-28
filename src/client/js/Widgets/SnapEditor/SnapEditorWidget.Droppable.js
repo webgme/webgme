@@ -13,9 +13,7 @@ define(['js/DragDrop/DropTarget',
 
     var SnapEditorWidgetDroppable,
         DROP_REGION_MARGIN = 0,
-        CLICKABLE_CLASS = "clickable",
-        ITEM_TAG = "current_droppable_item",
-        DISTANCE_TAG = "connection_distance";
+        ITEM_TAG = "current_droppable_item";
 
     SnapEditorWidgetDroppable = function () {
     };
