@@ -7,7 +7,9 @@
  *
  */
 
-define(['./FakeCore'], function (FakeCore){
+define(['./FakeCore',
+        './ConstraintTests'], function (FakeCore,
+                                        ConstraintTests){
 
     "use strict";
 
@@ -19,7 +21,9 @@ define(['./FakeCore'], function (FakeCore){
         this.META = {};
         this.core = new FakeCore();
 
-        this._createTests();
+        //load the tests
+        this.tests = ConstraintTests;
+
         this.buildMeta();
         this.buildTrees();
     };
@@ -149,49 +153,6 @@ define(['./FakeCore'], function (FakeCore){
         }
     };
 
-    ConstraintTestEnvironment.prototype._createTests = function(){
-        var self = this,
-            uniqueName = function (tree){
-                var nodes = Object.keys(self.nodes[tree]),
-                    violation = { hasViolation: false, nodes: [] },
-                    names = {},
-                    name,
-                    i;
-
-                for (i = nodes.length-1; i>=0; i--){
-                    name = self.core.getAttribute(self.nodes[tree][nodes[i]], 'name');
-                    if (names[name]){
-                        violation.hasViolation = true;
-                        violation.message = name + ' is in conflict';
-
-                        names[name].push(nodes[i]);
-                        violation.nodes = names[name];
-                    } else {
-                        names[name] = [nodes[i]];
-                    }
-                } 
-                return violation;
-            },
-            oneStartBlock = function (tree){
-                var nodes = Object.keys(self.nodes[tree]),
-                    violation = { hasViolation: false, nodes: []},
-                    i;
-
-                for (i = nodes.length-1; i>=0; i--){
-                    if (self._isTypeOf(self.nodes[tree][nodes[i]], 'start')){
-                        violation.nodes.push(self.nodes[tree][nodes[i]]);
-                    }
-                } 
-
-                if (violation.nodes.length > 1){
-                    violation.hasViolation = true;
-                }
-                return violation;
-            };
-
-        this._tests = { "Unique Name": uniqueName, "OneStartBlock": oneStartBlock };
-    };
-
     ConstraintTestEnvironment.prototype.runTest = function(testName, code, callback){
         var self = this,
             trees,
@@ -220,8 +181,13 @@ define(['./FakeCore'], function (FakeCore){
     };
 
     ConstraintTestEnvironment.prototype.compareResults = function(results, testName, tree){
-        var passed = this._tests[testName](tree).hasViolation === results.hasViolation,
+        var passed = this.tests[testName](this, tree).hasViolation === results.hasViolation,
             msg = "FAILED";
+
+        if (!this.tests.hasOwnProperty(testName)){
+            console.log("Can't find test for", testName, "\nCannot test accuracy of", 
+                        testName, "until we have a test to compare it against");
+        }
 
         if (passed){
             msg = "PASSED";
@@ -230,7 +196,7 @@ define(['./FakeCore'], function (FakeCore){
         console.log(testName, "on", tree, ": ( " + msg + " )");
 
         if (!passed){
-            console.log("test results:", !this._tests[testName](tree).hasViolation, 
+            console.log("test results:", !this.tests[testName](this, tree).hasViolation, 
                         "gen result:", !results.hasViolation, "\n");
         }
     };
