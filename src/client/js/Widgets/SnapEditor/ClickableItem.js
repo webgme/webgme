@@ -1088,7 +1088,7 @@ define(['logManager',
                 }
             }
 
-            return self.isOccupied(area.id);
+            return !self.isOccupied(area.id);
         };
 
         i = openAreas.length;
