@@ -86,7 +86,7 @@
      inkscape:connector-curvature="0" />
 
   <rect
-     data-stretch="x-Message x-node"
+     data-stretch="x-message x-node"
      x="30.011944"
      y="6.8261447"
      width="48.291775"
@@ -94,7 +94,7 @@
      style="stroke-width:2.75422478"
      id="verticalRect" />
   <rect
-     data-stretch="x-Message x-node y-node"
+     data-stretch="x-message x-node y-node"
      x="1"
      y="8.879236"
      width="102.9400287"
@@ -105,7 +105,7 @@
      id="conflictRect" />
   <rect
      data-shift="y-conflictRect"
-     data-stretch="x-node x-Message y-Message"
+     data-stretch="x-node x-message y-message"
      x="1"
      y="43.879236"
      width="102.9400287"
@@ -140,11 +140,11 @@
      rx="2.260397" />
   <rect
      style="fill:#ffffff;fill-rule:evenodd;stroke:#ffffff;stroke-width:5.33687353px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;overflow:hidden"
-     data-stretch="x-Message"
+     data-stretch="x-message"
      text-stretch-only="true"
      data-shift="y-conflictRect"
      id="msgbox"
-     class="x-Message y-shift-node"
+     class="x-message y-shift-node"
      width="36.769127"
      height="8.3551264"
      x="57.454437"
@@ -168,9 +168,9 @@
      data-shift="y-conflictRect"
      x="5.874702"
      y="60.915504"
-     style="font-size:10px;overflow:hidden">Message:</text>
+     style="font-size:10px;overflow:hidden">message:</text>
   <text
-     id="Message"
+     id="message"
      data-shift="y-conflictRect"
      x="59.874702"
      y="60.915504"
@@ -230,7 +230,7 @@
   <!-- Bounding Boxes (For string length approx before initial render) -->
   <rect
      style="opacity:0"
-     id="Message-bounding-box"
+     id="message-bounding-box"
      width="5"
      height="19"
      x="0.56333113"
@@ -257,8 +257,8 @@
   <rect
      style="opacity:0"
      class="initial-measure"
-     data-ptr="Message"
-     id="Message-initial-measure"
+     data-ptr="message"
+     id="message-initial-measure"
      width="10.800045"
      height="14.032192"
      x="44.992043"

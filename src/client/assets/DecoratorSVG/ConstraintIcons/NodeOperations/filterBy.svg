@@ -9,11 +9,11 @@
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    height="22.473457"
    version="1.1"
-   width="138.36763"
+   width="116.03663"
    style="overflow:hidden"
    id="svg2"
    inkscape:version="0.48.5 r10040"
-   sodipodi:docname="getDescendents.svg">
+   sodipodi:docname="filterBy.svg">
   <metadata
      id="metadata22">
     <rdf:RDF>
@@ -62,22 +62,21 @@
      id="colors"
      style="fill:#74e868;stroke:#74e868;"
      data-secondary="fill:#54b868;stroke:#54b868;">
-
   <rect
-     inkscape:label="#nameRect-0"
-     data-stretch="x-node y-node"
-     data-shift="x-nameRect"
-     id="nodeRect"
+     inkscape:label="#nodeSetRect-0"
+     data-stretch="x-first y-nodeSet y-first"
+     data-shift="x-nodeSetRect"
+     id="firstRect"
      y="2.1421349"
-     x="82.388809"
+     x="60.057812"
      rx="2.5"
      ry="2.5"
      height="18.27351"
      width="53.921001"
      style="stroke-width:4.1156249;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
   <rect
-     data-stretch="y-node x-name y-name"
-     id="nameRect"
+     data-stretch="y-first x-nodeSet y-nodeSet"
+     id="nodeSetRect"
      y="3.4092071"
      x="3.4011853"
      rx="3.839025"
@@ -87,7 +86,7 @@
      style="stroke-width:6.80237055;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
   <rect
      y="4.7485795"
-     x="112.725"
+     x="90.724998"
      rx="5"
      ry="5"
      height="12.51503"
@@ -95,28 +94,41 @@
      id="RinputField"
      style="fill:#ffffff;fill-opacity:1;stroke:none;overflow:hidden"
      text-stretch-only="true"
-     data-shift="x-nameRect"
-     data-stretch="x-node y-node" />
+     data-shift="x-nodeSetRect"
+     data-stretch="x-first y-first" />
+  <rect
+     y="4.9022346"
+     x="9.1999998"
+     rx="5"
+     ry="5"
+     height="12.51503"
+     width="16.673277"
+     id="RinputField-7"
+     style="fill:#ffffff;fill-opacity:1;stroke:none;overflow:hidden"
+     text-stretch-only="true"
+     data-shift="x-nodeSetRect"
+     data-stretch="x-first y-first" />
   </g>
   <!-- NAME AND CONNECTION INFO -->
   <text
-     x="10.375652"
+     x="37.937889"
      y="15.179907"
+     data-shift="x-nodeSetRect"
      style="font-size:12px"
-     id="text10">descendents of</text>
+     id="text10">of type</text>
   <!-- Text Bounding Boxes -->
   <rect
      style="opacity:0"
-     id="name-bounding-box"
+     id="nodeSet-bounding-box"
      width="20.251736"
-     height="8.1356192"
+     height="5.1356192"
      x="35.972111"
      y="6.5785375" />
   <rect
      style="opacity:0"
-     id="node-bounding-box"
-     width="16.673277"
-     height="12.51503"
+     id="first-bounding-box"
+     width="10.673277"
+     height="5.51503"
      x="57.725422"
      y="4.7485795" />
   <rect
@@ -129,7 +141,7 @@
   <!-- connection areas -->
   <line
      class="connection-area"
-     data-ptr="collection nodeSet first second"
+     data-ptr="collection cond node first second"
      data-role="in"
      x1="4.5"
      y1="0"
@@ -138,18 +150,30 @@
      id="conn-area-in" />
   <line
      class="connection-area"
-     data-ptr="node"
+     data-ptr="first"
      data-role="out"
-     data-shift="x-nameRect"
-     x1="110"
+     data-shift="x-nodeSetRect"
+     x1="92.699997"
      y1="3.5"
-     x2="105.5"
+     x2="88.199997"
      y2="8"
-     id="node-out" />
+     id="first-out"
+     inkscape:label="#first-out" />
+  <line
+     style="overflow:hidden"
+     class="connection-area"
+     data-ptr="nodeSet"
+     data-role="out"
+     x1="11.778694"
+     y1="4.3828392"
+     x2="7.2786942"
+     y2="8.8828392"
+     id="collection-out"
+     inkscape:label="#first-out-1" />
   <!-- initial measures -->
   <rect
      style="opacity:0"
-     data-ptr="second"
+     data-ptr="nodeSet"
      class="initial-measure"
      width="25"
      height="15"
@@ -159,7 +183,7 @@
      id="rect27" />
   <rect
      style="opacity:0"
-     data-ptr="node"
+     data-ptr="first"
      class="initial-measure"
      width="25"
      height="15"
