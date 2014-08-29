@@ -36,33 +36,23 @@ define(['./FakeCore',
 
     ConstraintTestEnvironment.prototype._createNode = function(params){
         var tree = params.tree || DEFAULT_TREE,
-            node = {};
+            node = { base: this.META.fco, 
+                     path: '/' + (++this._id),
+                     parent: null,
+                     children: [], 
+                     attributes: { name: "node_" + this._id },
+                     pointers: {} };
 
-        if (!params){
-            params = {};
-        }
+        _.extend(node, params);
 
-        if (params.parent){
-            node.parent = params.parent;
-            node.path = params.parent.path + '/' + (++this._id);
-
+        if (node.parent){
+            node.path = node.parent.path + node.path;
             node.parent.children.push(node);
-        } else {
-            node.path = '/' + (++this._id);
-        }
-
-        node.children = params.children || [];
-        if (_.isFunction(params.attributes)){
-            node.attributes = params.attributes(this._id);
-        } else {
-            node.attributes = params.attributes || { name: "node_" + this._id };
-        }
-        node.pointers = params.pointers || {};
-
-        if (this.META.fco){
-            node.base = params.base || this.META.fco;
         } 
-        node.base = params.base || null;
+
+        if (_.isFunction(node.attributes)){
+            node.attributes = node.attributes(this._id);
+        } 
 
         //Add to nodes
         this.nodes[tree][node.path] = node;
