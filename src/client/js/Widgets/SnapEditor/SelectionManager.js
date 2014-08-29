@@ -6,10 +6,8 @@
  */
 
 define(['logManager',
-        'clientUtil',
-        './SnapEditorWidget.Constants'], function (logManager,
-                                                   clientUtil,
-                                                   SnapEditorWidgetConstants) {
+        'clientUtil'], function (logManager,
+                                 clientUtil) {
 
     "use strict";
 
@@ -75,7 +73,7 @@ define(['logManager',
 
         this.$el = el;
 
-        this._snapEditor.addEventListener(this._snapEditor.events.ON_COMPONENT_DELETE, function (__snapEditor, componentId) {
+        this._snapEditor.addEventListener(this._snapEditor.events.ON_COMPONENT_DELETE, function (snapEditor, componentId) {
             self._onComponentDelete(componentId);
         });
     };
@@ -111,7 +109,7 @@ define(['logManager',
 
     /*********************** RUBBERBAND SELECTION *************************************/
 
-    SelectionManager.prototype._onBackgroundMouseDown = function (event) {
+    SelectionManager.prototype._onBackgroundMouseDown = function (/*event*/) {
         //Clear the current selection
         this._clearSelection();
 
@@ -277,8 +275,7 @@ define(['logManager',
 
     /*********************** CLEAR SELECTION *********************************/
     SelectionManager.prototype._clearSelection = function () {
-        var itemId,
-            items = this._snapEditor.items,
+        var items = this._snapEditor.items,
             item,
             changed = false;
 
@@ -307,10 +304,8 @@ define(['logManager',
 
     /*********************** SET SELECTION *********************************/
     SelectionManager.prototype._setSelection = function (id) {
-        var i,
-            item,
+        var item,
             items = this._snapEditor.items,
-            itemId,
             changed = false;
 
         this.logger.debug("setSelection: " + id);
@@ -571,8 +566,36 @@ define(['logManager',
 
     /************* RENDER COMMAND BUTTONS ON SELECTION OUTLINE ************************/
 
+    var DELETE_BUTTON_BASE = $('<div/>', {
+        "class" : "s-btn delete",
+        "command" : "delete"
+    });
+    
+    DELETE_BUTTON_BASE.html('<i class="glyphicon glyphicon-remove"></i>');
+
+
     SelectionManager.prototype._renderSelectionActions = function () {
-        //Add selection actions here if you want specific functionality on clicking
+        var deleteBtn,
+            self = this;
+
+        if (this._snapEditor.getIsReadOnlyMode() !== true) {
+            deleteBtn = DELETE_BUTTON_BASE.clone();
+            this._snapEditor.skinParts.$selectionOutline.append(deleteBtn);
+        }
+
+        //detach mousedown handler on selection outline
+        this._snapEditor.skinParts.$selectionOutline.off("mousedown").off("click", ".s-btn");
+        this._snapEditor.skinParts.$selectionOutline.on("mousedown", function (event) {
+            event.stopPropagation();
+        }).on("click", ".s-btn", function (event) {
+            var command = $(this).attr("command");
+            self.logger.debug("Selection button clicked with command: '" + command + "'");
+
+            self.onSelectionCommandClicked(command, self._selectedElement, event);
+
+            event.stopPropagation();
+            event.preventDefault();
+        });
 
     };
     /************* END OF --- RENDER COMMAND BUTTONS ON SELECTION OUTLINE ************************/

@@ -13,7 +13,6 @@ define(['logManager',
         'js/Widgets/SnapEditor/SnapEditorWidget.EventDispatcher',
         './SnapEditorWidget.OperatingModes',
         './SnapEditorWidget.Keyboard',
-        './SnapEditorWidget.Tabs',
         './SnapEditorWidget.Draggable',
         './SnapEditorWidget.Droppable',
         './SnapEditorWidget.HighlightUpdater',
@@ -29,7 +28,6 @@ define(['logManager',
                                     SnapEditorWidgetEventDispatcher,
                                     SnapEditorWidgetOperatingModes,
                                     SnapEditorWidgetKeyboard,
-                                    SnapEditorWidgetTabs,
                                     SnapEditorWidgetDraggable,
                                     SnapEditorWidgetDroppable,
                                     SnapEditorWidgetHighlightUpdater,
@@ -403,14 +401,22 @@ define(['logManager',
 
     /************************** SELECTION DELETE CLICK HANDLER ****************************/
 
-    SnapEditorWidget.prototype._onSelectionCommandClicked = function (command, selectedIds, event) {
+    SnapEditorWidget.prototype._onSelectionCommandClicked = function (command, id, event) {
+        var idList;
+
+        //Get the list of siblings of the item
+        idList = this.items[id].getDependentsByType().siblings;
+        idList.push(id);
+
         switch(command) {
             case 'delete':
-                this.onSelectionDelete(selectedIds);
+                this.onSelectionDelete(idList);
                 break;
+                /*
             case 'contextmenu':
-                this.onSelectionContextMenu(selectedIds, this.getAdjustedMousePos(event));
+                this.onSelectionContextMenu(idList, this.getAdjustedMousePos(event));
                 break;
+               */
         }
     };
 
