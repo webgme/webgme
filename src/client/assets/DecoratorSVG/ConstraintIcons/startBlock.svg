@@ -138,10 +138,9 @@
        class="x-name" />
   </g>
   <text
-     id="name"
      x="5.9058795"
      y="16.186327"
-     style="font-size:12px">DEFAULT NAME</text>
+     style="font-size:12px">Start</text>
   <line
      class="connection-area"
      data-ptr="next"

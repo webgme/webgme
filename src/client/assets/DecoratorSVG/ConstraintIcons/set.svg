@@ -143,7 +143,7 @@
      style="stroke-width:1.17999995"
      d="m 77.588337,18.9955 0,3.53125 23.656253,0 a 3.54,3.54 0 0 0 3.5625,-3.53125 l -27.218753,0 z"
      id="BRCorner"
-     data-shift="x-horizontal-body-2 y-horizontal-body-2"
+     data-shift="x-horizontal-body-2 y-indent-out"
      inkscape:connector-curvature="0"
      inkscape:label="#path15" />
   <rect

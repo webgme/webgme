@@ -214,12 +214,13 @@
   <text
      x="6.4633374"
      y="17"
-     style="font-size:12px">store</text>
+     style="font-size:12px"
+     id="text23">store</text>
   <text
      id="second"
      x="46.463337"
      y="17"
-     style="font-size:12px" >text</text>
+     style="font-size:12px">__</text>
   <!-- Bounding Boxes -->
   <rect
      style="opacity:0"
