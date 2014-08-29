@@ -285,43 +285,47 @@ define(['js/Constants',
         var attributes = this.hostDesignerItem.attributes,
             attrList = Object.keys(attributes),
             textFields = this.$el.find("text"),
+            editFields,
             attr,
             fields,
             self = this,
-            editText = function (event) {
-                if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
-                    var id = $(this).attr('id'),
-                        box,
-                        width,
-                        fontSize = $(this).css('font-size'),
-                        tempName = $('<div/>', { id: id + '-edit', 
-                                                 text: $(this).text()});
+            editText,
+            getEditText = function(id){//get edit fn for given attribute
+                return function (event) {
+                    if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
+                        var element = self.$el.find('#' + id),
+                            box,
+                            width,
+                            fontSize = $(element).css('font-size'),
+                            tempName = $('<div/>', { id: id + '-edit', 
+                                                     text: $(element).text()});
 
-                    self.$svgContent.append(tempName);
-                    tempName.css('position', 'absolute');
+                        self.$svgContent.append(tempName);
+                        tempName.css('position', 'absolute');
 
-                    box = $(this)[0].getBBox();
-                    width = Math.max(box.width + EDIT_TEXT.PADDING, EDIT_TEXT.MIN_WIDTH);
+                        box = $(element)[0].getBBox();
+                        width = Math.max(box.width + EDIT_TEXT.PADDING, EDIT_TEXT.MIN_WIDTH);
 
-                    //Set tempName
-                    tempName.css('left', box.x + self._transforms[id].shift.x);
-                    tempName.css('top', box.y);
-                    tempName.css('width', width);
-                    tempName.css('font-size', fontSize);
+                        //Set tempName
+                        tempName.css('left', box.x + self._transforms[id].shift.x);
+                        tempName.css('top', box.y);
+                        tempName.css('width', width);
+                        tempName.css('font-size', fontSize);
 
-                    $(tempName).editInPlace({"class": id + "-edit",
-                        "value": $(this).text(),
-                        "css": { 'z-index': 10000, 'font-size': fontSize },
-                        "onChange": function (oldValue, newValue) {
-                            self._saveAttributeChange(id, newValue);
-                        },
-                        "onFinish": function () {
-                            $(this).remove();
-                        }
-                    });
-                }
-                event.stopPropagation();
-                event.preventDefault();
+                        $(tempName).editInPlace({"class": id + "-edit",
+                            "value": $(element).text(),
+                            "css": { 'z-index': 10000, 'font-size': fontSize },
+                            "onChange": function (oldValue, newValue) {
+                                self._saveAttributeChange(id, newValue);
+                            },
+                            "onFinish": function () {
+                                $(this).remove();
+                            }
+                        });
+                    }
+                    event.stopPropagation();
+                    event.preventDefault();
+                };
             };
 
         for (var i = 0; i < attrList.length; i++){
@@ -333,26 +337,17 @@ define(['js/Constants',
 
             if (attr !== "name"){//name requires double click to edit
                 //Make the fields editable
+                editText = getEditText(attr);
                 fields.on("click", null, editText);
 
                 //Add support for clicking on a box around the text to edit the text
-                //TODO
+                editFields = this.$el.find(".edit-" + attr);
+                editFields.on("click", null, editText);
             }
         }
 
         this.update();
     };
-
-    //May remove this TODO
-/*
- *    SVGDecoratorSnapEditorWidget.prototype.updateAttributeText = function(attribute){
- *        var textFields = this.$el.find("text"),
- *            fields = textFields.filter("#" + attribute),
- *            item;
- *
- *        this._setTextAndStretch(fields, item.getAttribute(attribute), attribute);
- *    };
- */
 
     /**
      *Get the information that this decorator will need to update its input fields
