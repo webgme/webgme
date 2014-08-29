@@ -167,46 +167,66 @@ define(['util/canon','core/tasync'], function (CANON,TASYNC) {
 
             return diff;
         }
-        function ovr_diff(basePath,source,target){
+        function ovr_diff(source,target){
             // structure: path:{pointername:"targetpath"}
             // diff structure: path:{pointername:{target:path,type:updated/removed/added}}
-            var i, j,paths,pNames,diff={};
+            var i, j,paths,pNames,
+                diff={},
+                basePath = _core.getPath(source),
+                sOvr = _core.getProperty(source,'ovr') || {},
+                tOvr = _core.getProperty(target,'ovr') || {};
 
             //removals
-            paths = Object.keys(source);
+            paths = Object.keys(sOvr);
             for(i=0;i<paths.length;i++){
-                pNames = Object.keys(source[paths[i]]);
-                for(j=0;j<pNames.length;j++){
-                    if(pNames[j].slice(-4) !== "-inv" && pNames[j].indexOf("_") === -1){
-                        //we do not care about technical relations - sets are handled elsewhere
-                        //we only care about direct pointer changes
-                        if(!(target[paths[i]] && target[paths[i]][pNames[j]])){
-                            diff[paths[i]] = diff[paths[i]] || {};
-                            diff[paths[i]][pNames[j]] = {target:null,type:"removed"};
+                if(paths[i].indexOf("_") === -1){
+                    //we do not care about technical relations - sets are handled elsewhere
+                    pNames = Object.keys(sOvr[paths[i]]);
+                    for(j=0;j<pNames.length;j++){
+                        if(pNames[j].slice(-4) !== "-inv"){
+                            //we only care about direct pointer changes and to real nodes
+                            if(sOvr[paths[i]][pNames[j]].indexOf("_") === -1){
+                                if(!(tOvr[paths[i]] && tOvr[paths[i]][pNames[j]])){
+                                    diff[paths[i]] = diff[paths[i]] || {};
+                                    diff[paths[i]][pNames[j]] = {target:null,type:"removed"};
+                                }
+                            }
+
                         }
                     }
                 }
+
             }
 
             //updates and additions
-            paths = Object.keys(target);
+            paths = Object.keys(tOvr);
             for(i=0;i<paths.length;i++){
-                pNames = Object.keys(target[paths[i]]);
-                for(j=0;j<pNames.length;j++){
-                    if(pNames[j].slice(-4) !== "-inv"){
-                        //we only care about direct pointer changes
-                        if(!(source[paths[i]] && source[paths[i]][pNames[j]])){
-                            diff[paths[i]] = diff[paths[i]] || {};
-                            diff[paths[i]][pNames[j]] = {target:_core.joinPaths(basePath,target[paths[i]][pNames[j]]),type:"added"};
-                        } else if(source[paths[i]][pNames[j]] !== target[paths[i]][pNames[j]]){
-                            diff[paths[i]] = diff[paths[i]] || {};
-                            diff[paths[i]][pNames[j]] = {target:_core.joinPaths(basePath,target[paths[i]][pNames[j]]),type:"updated"};
+                if(paths[i].indexOf("_") === -1) {
+                    //we do not care about technical relations - sets are handled elsewhere
+                    pNames = Object.keys(tOvr[paths[i]]);
+                    for(j=0;j<pNames.length;j++){
+                        if(pNames[j].slice(-4) !== "-inv"){
+                            //we only care about direct pointer changes and to real nodes
+                            if(tOvr[paths[i]][pNames[j]].indexOf("_") === -1){
+                                if(!(sOvr[paths[i]] && sOvr[paths[i]][pNames[j]])){
+                                    diff[paths[i]] = diff[paths[i]] || {};
+                                    diff[paths[i]][pNames[j]] = {target:_core.joinPaths(basePath,tOvr[paths[i]][pNames[j]]),type:"added"};
+                                } else if(sOvr[paths[i]][pNames[j]] !== tOvr[paths[i]][pNames[j]]){
+                                    diff[paths[i]] = diff[paths[i]] || {};
+                                    diff[paths[i]][pNames[j]] = {target:_core.joinPaths(basePath,tOvr[paths[i]][pNames[j]]),type:"updated"};
+                                }
+                            }
                         }
                     }
                 }
+
             }
 
-            return Object.keys(diff).length === 0 ? null : diff;
+            return diff;
+        }
+
+        function metaRulesChanged(source,target){
+            return CANON.stringify(_core.getJsonMeta(source)) !== CANON.stringify(_core.getJsonMeta(target));
         }
         function isEmptyDiff(diff){
             if(diff.removed && diff.removed.length > 0){
@@ -324,6 +344,9 @@ define(['util/canon','core/tasync'], function (CANON,TASYNC) {
                 pointer  : pointer_diff(source,target),
                 set      : set_diff(source,target)
             };
+            if(metaRulesChanged(source,target)){
+                diff.meta = true;
+            }
             normalize(diff);
             return isEmptyNodeDiff(diff) ? null : diff;
         };
@@ -334,7 +357,7 @@ define(['util/canon','core/tasync'], function (CANON,TASYNC) {
                 sRelids = Object.keys(sChildrenHashes),
                 tRelids = Object.keys(tChildrenHAshes),
                 diff = _core.nodeDiff(sourceRoot,targetRoot) || {},
-                oDiff = ovr_diff(_core.getPath(sourceRoot),_core.getProperty(sourceRoot,'ovr') || {},_core.getProperty(targetRoot,'ovr') || {}),
+                oDiff = ovr_diff(sourceRoot,targetRoot),
                 i,
                 keys = [],
                 index = 0,
