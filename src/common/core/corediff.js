@@ -14,6 +14,9 @@ define(['util/canon','core/tasync'], function (CANON,TASYNC) {
         }
 
         function normalize(obj){
+            if(!obj){
+                return obj;
+            }
             var keys = Object.keys(obj),
                 i;
             for(i=0;i<keys.length;i++){
@@ -23,7 +26,7 @@ define(['util/canon','core/tasync'], function (CANON,TASYNC) {
                     }
                 } else if(typeof obj[keys[i]] === 'object'){
                     normalize(obj[keys[i]]);
-                    if(Object.keys(obj[keys[i]]).length === 0){
+                    if(obj[keys[i]] && Object.keys(obj[keys[i]]).length === 0){
                         delete obj[keys[i]];
                     }
                 }
@@ -164,9 +167,9 @@ define(['util/canon','core/tasync'], function (CANON,TASYNC) {
 
             return diff;
         }
-        function ovr_diff(source,target){
+        function ovr_diff(basePath,source,target){
             // structure: path:{pointername:"targetpath"}
-            // diff structure: path:{pointername:{target:path,type:update/removal/addition}}
+            // diff structure: path:{pointername:{target:path,type:updated/removed/added}}
             var i, j,paths,pNames,diff={};
 
             //removals
@@ -174,11 +177,12 @@ define(['util/canon','core/tasync'], function (CANON,TASYNC) {
             for(i=0;i<paths.length;i++){
                 pNames = Object.keys(source[paths[i]]);
                 for(j=0;j<pNames.length;j++){
-                    if(pNames[j].slice(-4) !== "-inv"){
+                    if(pNames[j].slice(-4) !== "-inv" && pNames[j].indexOf("_") === -1){
+                        //we do not care about technical relations - sets are handled elsewhere
                         //we only care about direct pointer changes
                         if(!(target[paths[i]] && target[paths[i]][pNames[j]])){
                             diff[paths[i]] = diff[paths[i]] || {};
-                            diff[paths[i]][pNames[j]] = {target:null,type:"removal"};
+                            diff[paths[i]][pNames[j]] = {target:null,type:"removed"};
                         }
                     }
                 }
@@ -193,15 +197,16 @@ define(['util/canon','core/tasync'], function (CANON,TASYNC) {
                         //we only care about direct pointer changes
                         if(!(source[paths[i]] && source[paths[i]][pNames[j]])){
                             diff[paths[i]] = diff[paths[i]] || {};
-                            diff[paths[i]][pNames[j]] = {target:target[paths[i]][pNames[j]],type:"addition"};
+                            diff[paths[i]][pNames[j]] = {target:_core.joinPaths(basePath,target[paths[i]][pNames[j]]),type:"added"};
                         } else if(source[paths[i]][pNames[j]] !== target[paths[i]][pNames[j]]){
                             diff[paths[i]] = diff[paths[i]] || {};
-                            diff[paths[i]][pNames[j]] = {target:target[paths[i]][pNames[j]],type:"update"};
+                            diff[paths[i]][pNames[j]] = {target:_core.joinPaths(basePath,target[paths[i]][pNames[j]]),type:"updated"};
                         }
                     }
                 }
             }
-            return diff;
+
+            return Object.keys(diff).length === 0 ? null : diff;
         }
         function isEmptyDiff(diff){
             if(diff.removed && diff.removed.length > 0){
@@ -230,6 +235,85 @@ define(['util/canon','core/tasync'], function (CANON,TASYNC) {
             return false;
         }
 
+        function extendDiffWithOvr(diff,oDiff){
+            var patharray,
+                i, j,
+                keys = Object.keys(oDiff),
+                names,
+                wholeNodeDelete = false,
+                tDiff;
+
+            for(i=0;i<keys.length;i++){
+                tDiff = diff;
+                wholeNodeDelete = false;
+                names = Object.keys(oDiff[keys[i]]);
+                patharray = keys[i].split('/');
+                patharray.shift();
+                if(patharray.length > 0){
+                    for(j=0;j<patharray.length;j++){
+                        if(tDiff.children && tDiff.children.removed && tDiff.children.removed.indexOf(patharray[j]) !== -1){
+                            wholeNodeDelete = true;
+                        }
+                        if(!tDiff[patharray[j]]){
+                            tDiff[patharray[j]] = {};
+                        }
+                        tDiff = tDiff[patharray[j]];
+                    }
+                    //now we should iterate through all pointers in the oDiff
+                    if(!wholeNodeDelete){
+                        for(j=0;j<names.length;j++){
+                            switch(oDiff[keys[i]][names[j]].type){
+                                case "added":
+                                    if(!(tDiff.pointer && tDiff.pointer.added && tDiff.pointer.added.indexOf(names[j]) !== -1)){
+                                        if(tDiff.pointer && tDiff.pointer.removed && tDiff.pointer.removed.indexOf(names[j]) !== -1){
+                                            //the relation got updated but it switched level regarding the containment
+                                            tDiff.pointer.removed.splice(tDiff.pointer.removed.indexOf(names[j]),1);
+                                            if(tDiff.pointer.removed.length === 0){ delete tDiff.pointer.removed; }
+                                            if(Object.keys(tDiff.pointer).length === 0) { delete tDiff.pointer; }
+                                            tDiff.pointer = tDiff.pointer || {};
+                                            tDiff.pointer.updated = tDiff.pointer.updated || {};
+                                            tDiff.pointer.updated[names[j]] = oDiff[keys[i]][names[j]].target;
+                                        } else {
+                                            //this is the first encounter of the pointer
+                                            tDiff.pointer = tDiff.pointer || {};
+                                            tDiff.pointer.added = tDiff.pointer.added || {};
+                                            tDiff.pointer.added[names[j]] = oDiff[keys[i]][names[j]].target;
+                                        }
+                                    }
+                                    break;
+                                case "updated":
+                                    //if it is an update in the ovr than it must be an update anywhere
+                                    if(!(tDiff.pointer && tDiff.pointer.updated && tDiff.pointer.updated[names[j]])){
+                                        tDiff.pointer = tDiff.pointer || {};
+                                        tDiff.pointer.updated = tDiff.pointer.updated || {};
+                                        tDiff.pointer.updated[names[j]] = oDiff[keys[i]][names[j]].target;
+                                    }
+                                    break;
+                                case "removed":
+                                    if(!(tDiff.pointer && tDiff.pointer.removed && tDiff.pointer.removed.indexOf(names[j]) !== -1)){
+                                        if(tDiff.pointer && tDiff.pointer.added && tDiff.pointer.added.indexOf(names[j]) !== -1){
+                                            //the relation got updated but it switched level regarding the containment
+                                            tDiff.pointer.added.splice(tDiff.pointer.added.indexOf(names[j]),1);
+                                            if(tDiff.pointer.added.length === 0){ delete tDiff.pointer.added; }
+                                            if(Object.keys(tDiff.pointer).length === 0) { delete tDiff.pointer; }
+                                            tDiff.pointer = tDiff.pointer || {};
+                                            tDiff.pointer.updated = tDiff.pointer.updated || {};
+                                            tDiff.pointer.updated[names[j]] = oDiff[keys[i]][names[j]].target;
+                                        } else {
+                                            //this is the first encounter of the pointer
+                                            tDiff.pointer = tDiff.pointer || {};
+                                            tDiff.pointer.removed = tDiff.pointer.removed || [];
+                                            tDiff.pointer.removed.push(names[j]);
+                                        }
+                                    }
+                                    break;
+                            }
+                        }
+                    }
+
+                }
+            }
+        }
 
 
         _core.nodeDiff = function(source,target){
@@ -250,13 +334,13 @@ define(['util/canon','core/tasync'], function (CANON,TASYNC) {
                 sRelids = Object.keys(sChildrenHashes),
                 tRelids = Object.keys(tChildrenHAshes),
                 diff = _core.nodeDiff(sourceRoot,targetRoot) || {},
+                oDiff = ovr_diff(_core.getPath(sourceRoot),_core.getProperty(sourceRoot,'ovr') || {},_core.getProperty(targetRoot,'ovr') || {}),
                 i,
                 keys = [],
                 index = 0,
                 error = null,
                 genChildTreeDiff = function(){
-                    var needed = 2,
-                        loadError = null,
+                    var loadError = null,
                         childrenLoaded = function(sChild,tChild){
                             if(loadError){
                                 error = error || loadError;
@@ -279,6 +363,11 @@ define(['util/canon','core/tasync'], function (CANON,TASYNC) {
                             _core.loadChild(sourceRoot,keys[index]),
                             _core.loadChild(targetRoot,keys[index]));
                     } else {
+                        //now we should extend the diff with the information from the oDiff
+                        if(diff && oDiff){
+                            extendDiffWithOvr(diff,oDiff);
+                        }
+                        normalize(diff);
                         callback(error,diff);
                     }
                 };
@@ -290,7 +379,6 @@ define(['util/canon','core/tasync'], function (CANON,TASYNC) {
                     }
                 }
             }
-
             genChildTreeDiff();
         };
         return _core;
