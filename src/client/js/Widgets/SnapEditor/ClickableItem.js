@@ -1057,8 +1057,6 @@ define(['logManager',
      * @return {Object} distance and connection area of closest
      */
     ClickableItem.prototype.getClosestConnectionArea = function (draggedItem, position) {
-        //this.deactivateConnectionAreas();
-
         //Get all empty pointers and compare with draggedItem's available pointers.
         //Closest compatible pointers determines the active conn area
         var openAreas = this.getConnectionAreas(),
@@ -1067,7 +1065,10 @@ define(['logManager',
             otherArea,
             closestArea = null,
             closestIndex = null,
+            isEligible,
+            self = this,
             i,
+            j,
             ptrs,
             role;
 
@@ -1077,10 +1078,24 @@ define(['logManager',
          * Should probably only allow "backwards" clicking when it is a sibling pointer
          *
          */
+        isEligible = function(area){
+            ptrs = area.ptr instanceof Array ?
+                area.ptr.slice() : [area.ptr];
+
+            for (j = ptrs.length-1; j >= 0; j--){
+                if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(ptrs[j]) !== -1){
+                    return true;
+                }
+            }
+
+            return self.isOccupied(area.id);
+        };
+
         i = openAreas.length;
         while (i--){
-            //Remove any occupied areas
-            if (this.isOccupied( openAreas[i].id )){
+            //Remove any occupied areas that are not sibling pointers
+
+            if (!isEligible(openAreas[i])){
                 openAreas.splice(i,1);
             }
         }
