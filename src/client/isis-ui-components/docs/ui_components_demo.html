@@ -13,7 +13,7 @@
                 components = [
                     'simpleDialog',
                     'dropDownNavigator',
-                    'hierarchicalDropdown'
+                    'hierarchicalMenu'
                 ];
 
         require.config( {
@@ -60,7 +60,7 @@
         requirejs( [
             'angular-ui-bootstrap',
             'angular-markdown',
-            'css!isis-ui-components/docs/styles/isis_ui_components_demo'
+            'css!./isis_ui_components/docs/styles/ui_components_demo.css'
         ].concat(
             components.map( function ( e ) { return 'isis-ui-components/' + e + '/docs/demo'; } )
         ), function ( ngBootstrap ) {

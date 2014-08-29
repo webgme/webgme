@@ -1,14 +1,9 @@
 /*globals define, angular, alert*/
 
-/**
- * @author lattmann / https://github.com/lattmann
- * @author nabana / https://github.com/nabana
- */
-
 define([
     'angular',
-    'text!./templates/hierarchicalDropdown.html',
-    'css!./styles/hierarchicalDropdown.css'
+    'text!./templates/hierarchicalMenu.html',
+    'css!./styles/hierarchicalMenu.css'
 ], function(
     ng,
     template ){
@@ -16,9 +11,9 @@ define([
     "use strict";
 
     angular.module(
-        'isis.ui.hierarchicalDropdown', []
+        'isis.ui.hierarchicalMenu', []
     ).directive(
-        'hierarchicalDropdown',
+        'hierarchicalMenu',
          function () {
 
              return {

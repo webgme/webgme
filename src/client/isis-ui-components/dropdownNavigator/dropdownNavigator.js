@@ -1,16 +1,11 @@
 /*globals define, angular, alert*/
 
-/**
- * @author lattmann / https://github.com/lattmann
- * @author nabana / https://github.com/nabana
- */
-
 define([
     'angular',
     'text!./templates/dropdownNavigator.html',
     'css!./styles/dropdownNavigator.css',
 
-    './../hierarchicalDropdown/hierarchicalDropdown'
+    './../hierarchicalMenu/hierarchicalMenu'
 
 ], function(
     ng,
@@ -20,7 +15,7 @@ define([
 
     angular.module(
         'isis.ui.dropdownNavigator',
-        [ 'isis.ui.hierarchicalDropdown' ]
+        [ 'isis.ui.hierarchicalMenu' ]
     ).directive(
         'dropdownNavigator',
          function () {
