@@ -127,10 +127,10 @@ console.log("Object changed to " + nodeId);
 
             this._firstLoad = true;
 
-            nodeName = (desc && desc.name || " ").toUpperCase();
+            nodeName = (desc && desc.name || " ");
 
             this.snapCanvas.setTitle(nodeName);
-            this.snapCanvas.setBackgroundText(nodeName, {'font-size': BACKGROUND_TEXT_SIZE,
+            this.snapCanvas.setBackgroundText(nodeName.toUpperCase(), {'font-size': BACKGROUND_TEXT_SIZE,
                 'color': BACKGROUND_TEXT_COLOR });
 
             this.snapCanvas.showProgressbar();
@@ -757,11 +757,6 @@ console.log("Object changed to " + nodeId);
         }
     };
 
-    SnapEditorControl.prototype._checkComponentDependency = function (gmeID, eventType) {
-        //Use this for checking attached nodes?
-        //TODO
-    };
-
     SnapEditorControl.prototype._getItemDecorator = function (decorator) {
         var result;
 
@@ -775,7 +770,7 @@ console.log("Object changed to " + nodeId);
     };
 
     SnapEditorControl.prototype._updateSheetName = function (name) {
-        this.snapCanvas.setTitle(name.toUpperCase());
+        this.snapCanvas.setTitle(name);
         this.snapCanvas.setBackgroundText(name.toUpperCase(), {'font-size': BACKGROUND_TEXT_SIZE,
             'color': BACKGROUND_TEXT_COLOR });
     };
