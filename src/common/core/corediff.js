@@ -165,7 +165,43 @@ define(['util/canon','core/tasync'], function (CANON,TASYNC) {
             return diff;
         }
         function ovr_diff(source,target){
-            return {};
+            // structure: path:{pointername:"targetpath"}
+            // diff structure: path:{pointername:{target:path,type:update/removal/addition}}
+            var i, j,paths,pNames,diff={};
+
+            //removals
+            paths = Object.keys(source);
+            for(i=0;i<paths.length;i++){
+                pNames = Object.keys(source[paths[i]]);
+                for(j=0;j<pNames.length;j++){
+                    if(pNames[j].slice(-4) !== "-inv"){
+                        //we only care about direct pointer changes
+                        if(!(target[paths[i]] && target[paths[i]][pNames[j]])){
+                            diff[paths[i]] = diff[paths[i]] || {};
+                            diff[paths[i]][pNames[j]] = {target:null,type:"removal"};
+                        }
+                    }
+                }
+            }
+
+            //updates and additions
+            paths = Object.keys(target);
+            for(i=0;i<paths.length;i++){
+                pNames = Object.keys(target[paths[i]]);
+                for(j=0;j<pNames.length;j++){
+                    if(pNames[j].slice(-4) !== "-inv"){
+                        //we only care about direct pointer changes
+                        if(!(source[paths[i]] && source[paths[i]][pNames[j]])){
+                            diff[paths[i]] = diff[paths[i]] || {};
+                            diff[paths[i]][pNames[j]] = {target:target[paths[i]][pNames[j]],type:"addition"};
+                        } else if(source[paths[i]][pNames[j]] !== target[paths[i]][pNames[j]]){
+                            diff[paths[i]] = diff[paths[i]] || {};
+                            diff[paths[i]][pNames[j]] = {target:target[paths[i]][pNames[j]],type:"update"};
+                        }
+                    }
+                }
+            }
+            return diff;
         }
         function isEmptyDiff(diff){
             if(diff.removed && diff.removed.length > 0){
@@ -206,68 +242,6 @@ define(['util/canon','core/tasync'], function (CANON,TASYNC) {
             };
             normalize(diff);
             return isEmptyNodeDiff(diff) ? null : diff;
-        };
-
-        _core.generateTreeDiff = function(sourceRoot,targetRoot,callback){
-            var sChildrenHashes = _core.getChildrenHashes(sourceRoot),
-                tChildrenHAshes = _core.getChildrenHashes(targetRoot),
-                sRelids = Object.keys(sChildrenHashes),
-                tRelids = Object.keys(tChildrenHAshes),
-                diff = _core.nodeDiff(sourceRoot,targetRoot) || {},
-                i,
-                keys = [],
-                index = 0,
-                error = null,
-                genChildTreeDiff = function(){
-                    var needed = 2,
-                        sChild,
-                        tChild,
-                        loadError = null,
-                        childrenLoaded = function(){
-                            if(loadError){
-                                error = error || loadError;
-                                index++;
-                                genChildTreeDiff();
-                            } else {
-                                _core.generateTreeDiff(sChild,tChild,function(err,cDiff){
-                                    error = error || err;
-                                    if(cDiff){
-                                        diff[keys[index]] = cDiff;
-                                    }
-                                    index++;
-                                    genChildTreeDiff();
-                                });
-                            }
-                        };
-                    if(index < keys.length){
-                        _core.loadChild(sourceRoot,keys[index],function(err,c){
-                            sChild = c;
-                            loadError = loadError || err;
-                            if(--needed === 0){
-                                childrenLoaded();
-                            }
-                        });
-                        _core.loadChild(targetRoot,keys[index],function(err,c){
-                            tChild = c;
-                            loadError = loadError || err;
-                            if(--needed === 0){
-                                childrenLoaded();
-                            }
-                        });
-                    } else {
-                        callback(error,diff);
-                    }
-                };
-
-            for(i=0;i<tRelids.length;i++){
-                if(sRelids.indexOf(tRelids[i]) !== -1){
-                    if(tChildrenHAshes[tRelids[i]] !== sChildrenHashes[tRelids[i]]){
-                        keys.push(tRelids[i]);
-                    }
-                }
-            }
-
-            genChildTreeDiff();
         };
 
         _core.generateTreeDiff = function(sourceRoot,targetRoot,callback){
