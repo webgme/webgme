@@ -191,7 +191,7 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv" ], function(ASSER
 
         //additional meta functions for getting meta definitions
         core.getJsonMeta = function(node){
-            var meta = {children:{},attributes:{},pointers:{},aspects:{}},
+            var meta = {children:{},attributes:{},pointers:{},aspects:{},constraints:{}},
                 tempNode,
                 names,
                 pointer,
@@ -243,6 +243,12 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv" ], function(ASSER
             for(i=0;i<names.length;i++){
                 tempNode = MetaAspectNode(node,names[i]);
                 meta.aspects[names[i]] = core.getMemberPaths(tempNode,'items') || [];
+            }
+
+            //constraints
+            names = core.getConstraintNames(node);
+            for(i=0;i<names.length;i++){
+                meta.constraints[names[i]] = core.getConstraint(node,names[i]);
             }
 
             return meta;
@@ -375,6 +381,39 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv" ], function(ASSER
         core.delAspectMeta = function(node,name){
             core.deletePointer(MetaAspectsNode(node),name);
             core.deleteNode(_MetaAspectNode(node,name));
+        };
+
+        //type related extra query functions
+        var isOnMetaSheet = function(node){
+            //MetaAspectSet
+            var sets = core.isMemberOf(node);
+
+            if(sets && sets[""] && sets[""].indexOf("MetaAspectSet") !== -1){ //TODO this is all should be global constant values
+                return true;
+            }
+            return false;
+        };
+        core.getBaseType = function(node){
+            //TODO this functions now uses the fact that we think of META as the MetaSetContainer of the ROOT
+            while(node){
+                if(isOnMetaSheet(node)){
+                    return node;
+                }
+                node = core.getBase(node);
+            }
+            return null;
+        };
+        core.isInstanceOf = function(node,name){
+            //TODO this is name based query - doesn't check the node's own name
+            node = core.getBase(node);
+            while(node){
+                if(core.getAttribute(node,'name') === name){
+                    return true;
+                }
+                node = core.getBase(node);
+            }
+
+            return false;
         };
 
         return core;

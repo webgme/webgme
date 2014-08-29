@@ -622,6 +622,7 @@ define(['util/assert'],function(ASSERT){
         updateChildrenMeta(guid);
         updatePointerMeta(guid);
         updateAspectMeta(guid);
+        updateConstraintMeta(guid);
     }
 
     function updateAttributeMeta(guid){
@@ -634,7 +635,6 @@ define(['util/assert'],function(ASSERT){
             _core.setAttributeMeta(node,keys[i],jsonMeta[keys[i]]);
         }
     }
-
     function updateChildrenMeta(guid){
         var jsonMeta = _import.nodes[guid].meta.children || {items:[],minItems:[],maxItems:[]},
             i;
@@ -645,7 +645,6 @@ define(['util/assert'],function(ASSERT){
             _core.setChildMeta(_nodes[guid],_nodes[jsonMeta.items[i]],jsonMeta.minItems[i],jsonMeta.maxItems[i]);
         }
     }
-
     function updatePointerMeta(guid){
         var jsonMeta = _import.nodes[guid].meta.pointers || {},
             keys = Object.keys(jsonMeta),
@@ -668,6 +667,15 @@ define(['util/assert'],function(ASSERT){
             for(j=0;j<jsonMeta[keys[i]].length;j++){
                 _core.setAspectMetaTarget(_nodes[guid],keys[i],_nodes[jsonMeta[keys[i]][j]]);
             }
+        }
+    }
+    function updateConstraintMeta(guid){
+        var jsonMeta = _import.nodes[guid].meta.constraints || {},
+            keys = Object.keys(jsonMeta),
+            i;
+
+        for(i=0;i<keys.length;i++){
+            _core.setConstraint(_nodes[guid],keys[i],jsonMeta[keys[i]]);
         }
     }
 

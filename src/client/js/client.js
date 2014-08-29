@@ -2262,6 +2262,9 @@ define([
                 var getConstraintNames = function(){
                     return _core.getConstraintNames(_nodes[_id].node);
                 };
+                var getOwnConstraintNames = function(){
+                    return _core.getOwnConstraintNames(_nodes[_id].node);
+                };
                 var getConstraint = function(name){
                     return _core.getConstraint(_nodes[_id].node,name);
                 };
@@ -2327,8 +2330,9 @@ define([
                         getEditableChildrenMetaDescriptor : getEditableChildrenMetaDescriptor,
 
                         //constraint functions
-                        getConstraintNames : getConstraintNames,
-                        getConstraint      : getConstraint,
+                        getConstraintNames    : getConstraintNames,
+                        getOwnConstraintNames : getOwnConstraintNames,
+                        getConstraint         : getConstraint,
 
                         printData : printData,
                         toString: toString,
@@ -2375,6 +2379,7 @@ define([
                         });
                         break;
                     case 3:
+                        console.log(_core.getBaseType(_nodes[WebGMEGlobal.State.getActiveObject()].node));
                         break;
                 }
 
