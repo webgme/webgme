@@ -551,14 +551,16 @@ define(['plugin/PluginConfig',
                 PLACEHOLDER.ARG(0) + "){\n" + PLACEHOLDER.PARENT_SNIPPET_START + PLACEHOLDER.ARG(0) +
                 PLACEHOLDER.PARENT_SNIPPET_END + "\n});",
 
-            //FIXME Make this work for maps as well (use Object.keys)
-            //Will need to remove ordering assumption...
             'forEach': "var " + PLACEHOLDER.FUNCTION + " = function(" + 
-                PLACEHOLDER.ITERATOR + "){\nif (" + PLACEHOLDER.ITERATOR + 
-                ' < %collection.length){\n%iter = %collection[' + 
-                PLACEHOLDER.ITERATOR + '];\n%true_next\n} else {\n %next\n} };\n'+
-                'var ' + PLACEHOLDER.ITERATOR + ' = 0;\n' + PLACEHOLDER.FUNCTION +
-                '(' + PLACEHOLDER.ITERATOR + ');\n',
+                "){\nvar " + PLACEHOLDER.ARG(1) + " = Object.keys("+
+                "%collection);\nvar " + PLACEHOLDER.ARG(2) + " = " + PLACEHOLDER.ARG(1) + 
+                "[0];\nwhile("+PLACEHOLDER.ARG(0)+"["+PLACEHOLDER.ARG(2)+"] && "+
+                PLACEHOLDER.ARG(1) + ".length){\n" + PLACEHOLDER.ARG(2) + " = " + PLACEHOLDER.ARG(1)+
+                ".pop();\n}\nif (!" + PLACEHOLDER.ARG(0) + "[" + PLACEHOLDER.ARG(2) + 
+                ']){\n' + PLACEHOLDER.ARG(0) + '[' + PLACEHOLDER.ARG(2) + '] = true;\n%iter = %collection[' + 
+                PLACEHOLDER.ARG(2) + '];\n%true_next\n} else '+
+                '{\n %next\n} };\n'+'var ' + PLACEHOLDER.ARG(0) + ' = {};\n' + PLACEHOLDER.FUNCTION +
+                '();\n',
 
             'repeat': "var " + PLACEHOLDER.FUNCTION + " = function(" + 
                 PLACEHOLDER.ITERATOR + "){\nif (" + PLACEHOLDER.ITERATOR + 
@@ -573,7 +575,7 @@ define(['plugin/PluginConfig',
 
             //additional end code by node type
             this._constraintEndCode = {
-                'forEach': PLACEHOLDER.FUNCTION + "(++" + PLACEHOLDER.ITERATOR + ");\n",
+                'forEach': PLACEHOLDER.FUNCTION + "();\n",
                 'repeat': PLACEHOLDER.FUNCTION + "(++" + PLACEHOLDER.ITERATOR + ");\n",
                 'while': PLACEHOLDER.FUNCTION + "();\n",
 
