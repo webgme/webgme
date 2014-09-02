@@ -157,6 +157,7 @@
      text-stretch-only="true"
      data-stretch="x-second"
      data-shift="x-vertical-body"
+     class="edit-second"
      inkscape:label="#rect3014-3" />
   <rect
      rx="1.8"
@@ -180,6 +181,12 @@
      x="62.598267"
      y="16.635614"
      style="font-size:12px;overflow:hidden">=</text>
+  <text
+     data-shift="x-vertical-body"
+     id="second"
+     x="82.598267"
+     y="16.635614"
+     style="font-size:12px;overflow:hidden"></text>
   <!-- connection areas -->
   <line
      class="connection-area"
@@ -255,7 +262,7 @@
      class="initial-measure"
      data-ptr="second"
      data-type="text"
-     width="20"
+     width="0"
      height="17"
      x="0.56333733"
      y="0"

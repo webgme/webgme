@@ -154,28 +154,6 @@
        x="52.749081"
        y="18.038546"
        inkscape:label="#RTRect-4" />
-    <!-- Input Fields -->
-    <rect
-       data-stretch="x-second"
-       data-shift="x-nameRect"
-       text-stretch-only="true"
-       style="fill:#ffffff;fill-opacity:1;stroke:none;overflow:hidden"
-       id="RInputField"
-       width="16.673277"
-       height="12.51503"
-       rx="3"
-       x="57.725422"
-       y="4.7485795" />
-    <rect
-       data-stretch="x-first"
-       style="fill:#ffffff;fill-opacity:1;stroke:none;overflow:hidden"
-       text-stretch-only="true"
-       id="LInputField"
-       width="16.673277"
-       height="12.51503"
-       rx="3"
-       x="13.434318"
-       y="4.8144441" />
   </g>
 <!-- Text Bounding Boxes -->
   <rect
@@ -201,23 +179,6 @@
        y="4.8144441" />
 
   <!-- NAME AND CONNECTION INFO -->
-  <text
-     id="first"
-     x="14.375652"
-     y="15.179907"
-     style="font-size:12px">20</text>
-  <text
-     data-shift="x-LRect"
-     id="name"
-     x="36.375652"
-     y="16.179907"
-     style="font-size:12px">OP</text>
-  <text
-     data-shift="x-nameRect"
-     id="second"
-     x="58.375652"
-     y="15.179907"
-     style="font-size:12px">20</text>
 <!-- connection areas -->
   <line
      class="connection-area"
@@ -292,4 +253,45 @@
      y="0"
      inkscape:label="#rect3000"
      id="rect29" />
+    <!-- Input Fields -->
+    <rect
+       class="edit-second"
+       data-stretch="x-second"
+       data-shift="x-nameRect"
+       text-stretch-only="true"
+       style="fill:#ffffff;fill-opacity:1;stroke:none;overflow:hidden"
+       id="RInputField"
+       width="16.673277"
+       height="12.51503"
+       rx="3"
+       x="57.725422"
+       y="4.7485795" />
+    <rect
+       class="edit-first"
+       data-stretch="x-first"
+       style="fill:#ffffff;fill-opacity:1;stroke:none;overflow:hidden"
+       text-stretch-only="true"
+       id="LInputField"
+       width="16.673277"
+       height="12.51503"
+       rx="3"
+       x="13.434318"
+       y="4.8144441" />
+  <text
+     id="first"
+     x="14.375652"
+     y="15.179907"
+     style="font-size:12px">20</text>
+  <text
+     data-shift="x-LRect"
+     id="name"
+     x="36.375652"
+     y="16.179907"
+     style="font-size:12px">OP</text>
+  <text
+     data-shift="x-nameRect"
+     id="second"
+     x="58.375652"
+     y="15.179907"
+     style="font-size:12px">20</text>
 </svg>
