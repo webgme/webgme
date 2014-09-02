@@ -1,4 +1,4 @@
-<div class="hierarchical-dropdown">
+<div class="hierarchical-menu">
     <script type="text/ng-template" id="menu-items">
 
         <div data-ng-repeat-start="menuItemGroup in menu" data-ng-if="false"></div>
@@ -42,9 +42,8 @@
 
     </script>
 
-    <ul class="dropdown-menu"
+    <ul class="menu-contents"
         role="menu"
-        aria-labelledby="dropdownMenu"
         data-ng-if="menu"
         ng-include="'menu-items'">
     </ul>
