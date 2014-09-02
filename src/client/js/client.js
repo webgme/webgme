@@ -80,6 +80,7 @@ define([
                 META = new BaseMeta(),
                 _rootHash = null,
                 _previousRootHash = null,
+                _changeTree = null,
                 _gHash = 0;
 
             function print_nodes(pretext){
@@ -577,6 +578,8 @@ define([
                     _patterns = {};
                     _msg = "";
                     _recentCommits = [];
+                    _previousRootHash = null;
+                    _rootHash = null;
                     _viewer = false;
                     _readOnlyProject = false;
                     _loadNodes = {};
@@ -630,7 +633,7 @@ define([
                 */
 
             }
-            function getModifiedNodes(newerNodes){
+            function _getModifiedNodes(newerNodes){
                 var modifiedNodes = [];
                 for(var i in _nodes){
                     if(newerNodes[i]){
@@ -639,6 +642,52 @@ define([
                         }
                     }
                 }
+                return modifiedNodes;
+            }
+            function isInChangeTree(path){
+                var pathArray = path.split("/"),
+                    diffObj = _changeTree,
+                    index = 0,
+                    found = false;
+
+                pathArray.shift();
+                if(pathArray.length === 0){
+                    found = true;
+                }
+
+                if(!diffObj){
+                    return false;
+                }
+
+                while(index<pathArray.length && !found){
+                    if(diffObj[pathArray[index]]){
+                        diffObj = diffObj[pathArray[index]];
+                        if(++index === pathArray.length){
+                            found = true;
+                        }
+                    } else {
+                        index = pathArray.length;
+                    }
+                }
+
+                if(found && diffObj){
+                    if(diffObj.reg || diffObj.atr || diffObj.pointer || diffObj.set || diffObj.children || diffObj.meta){
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+            function getModifiedNodes(newerNodes){
+                var modifiedNodes = [],
+                    keys = Object.keys(newerNodes),
+                    i;
+                for(i=0;i<keys.length;i++){
+                    if(isInChangeTree(keys[i])){
+                        modifiedNodes.push(keys[i]);
+                    }
+                }
+
                 return modifiedNodes;
             }
             //this is just a first brute implementation it needs serious optimization!!!
@@ -711,15 +760,22 @@ define([
                 _users[userId].PATHS = newPaths;
 
 
-                if(events.length>0){
-                    if(_loadError > startErrorLevel){
-                        // TODO events.unshift({etype:'incomplete',eid:null});
-                    } else {
-                        // TODO events.unshift({etype:'complete',eid:null});
-                    }
-
+                if(events.length > 0){
                     _users[userId].FN(events);
                 }
+                /*
+                this is how the events should go
+                if(events.length>0){
+                    if(_loadError > startErrorLevel){
+                        events.unshift({etype:'incomplete',eid:null});
+                    } else {
+                        events.unshift({etype:'complete',eid:null});
+                    }
+                } else {
+                    events.unshift({etype:'complete',eid:null});
+                }
+                _users[userId].FN(events);
+                */
             }
             function storeNode(node,basic){
                 //basic = basic || true;
@@ -907,6 +963,33 @@ define([
                 return ordered;
             }
 
+            function getDiffTree(newRootHash,oldRootHash,callback){
+                var error = null,
+                    sRoot = null,
+                    tRoot = null,
+                    start = new Date().getTime(),
+                    loadRoot = function(hash,root){
+                        _core.loadRoot(hash,function(err,r){
+                            error = error || err;
+                            hash === newRootHash ? tRoot = r : sRoot = r;
+                            if(--needed === 0){
+                                rootsLoaded();
+                            }
+                        });
+                    },
+                    rootsLoaded = function(){
+                        if(error){
+                            return callback(error);
+                        }
+                        _core.generateTreeDiff(sRoot,tRoot,function(err,diff){
+                            console.log('genDiffTree',new Date().getTime()-start);
+                            callback(err,diff);
+                        });
+                    },
+                    needed = 2;
+                loadRoot(oldRootHash,sRoot);
+                loadRoot(newRootHash,tRoot);
+            }
             function loadRoot(newRootHash,callback){
                 //with the newer approach we try to optimize a bit the mechanizm of the loading and try to get rid of the paralellism behind it
                 var patterns = {},
@@ -989,17 +1072,39 @@ define([
                 };
 
                 _previousRootHash = _rootHash;
-                _rootHash = newRootHash
-                loadRoot(newRootHash,function(err){
-                    if(err){
-                        _rootHash = null;
-                        callback(err);
-                    } else {
-                        if(--missing === 0){
-                            finalEvents();
+                _rootHash = newRootHash;
+                if(_previousRootHash){
+                    getDiffTree(_previousRootHash,_rootHash,function(err,diffTree){
+                        if(err){
+                            _rootHash = null;
+                            callback(err);
+                        } else {
+                            _changeTree = diffTree;
+                            loadRoot(newRootHash,function(err){
+                                if(err){
+                                    _rootHash = null;
+                                    callback(err);
+                                } else {
+                                    if(--missing === 0){
+                                        finalEvents();
+                                    }
+                                }
+                            });
                         }
-                    }
-                });
+                    });
+                } else {
+                    loadRoot(newRootHash,function(err){
+                        if(err){
+                            _rootHash = null;
+                            callback(err);
+                        } else {
+                            if(--missing === 0){
+                                finalEvents();
+                            }
+                        }
+                    });
+                }
+
                 //here we try to make an immediate event building
                 //TODO we should deal with the full unloading!!!
                 //TODO we should check not to hide any issue related to immediate loading!!!
