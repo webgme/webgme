@@ -3,7 +3,7 @@ and inherits all of its options.
 
 The dialog creation is invoked through the `open(options)` method.
 
-`$simpleDialog`-specific options are:
+`simpleDialog`-specific options are:
 
  * `dialogTitle`
  * `dialogContentTemplate` - the body of the dialog. Url or id of Angular-template (eg. if preloaded)
