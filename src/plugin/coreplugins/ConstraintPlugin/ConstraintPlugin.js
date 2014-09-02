@@ -15,7 +15,7 @@ define(['plugin/PluginConfig',
 
     "use strict";
 
-   var TEST = true,
+   var DEBUG_MODE = true,
        DEFAULT = '__default__',
        JS_RESERVED_WORDS = [ 'break', 'case', 'class', 'catch', 'const', 
            'continue', 'debugger', 'default', 'delete', 'do', 'else', 'export',
@@ -227,7 +227,7 @@ define(['plugin/PluginConfig',
 
     ConstraintPlugin.prototype.getConfigStructure = function () {
         var config = [],
-            constraints = [ 'Unique Name', 'OneStartBlock', 'Limited Connections Per Item', 'test2' ];
+            constraints = [ 'Unique Name', 'OneStartBlock' ];
 
         //Apply To All Option
         config.push({ name: 'applyAll',
@@ -236,6 +236,17 @@ define(['plugin/PluginConfig',
                       value: false, // this is the 'default config'
                       valueType: "boolean",
                       readOnly: false });
+
+        //Test?
+        if (DEBUG_MODE){
+            config.push({ name: 'testConstraints',
+                          displayName: "Test Constraints",
+                          description: 'Test Generated Constraint Code',
+                          value: true, // this is the 'default config'
+                          valueType: "boolean",
+                          readOnly: false });
+        }
+
 
         //Get the constraint names to populate the config
         //Currently this is not possible.
@@ -476,18 +487,21 @@ define(['plugin/PluginConfig',
             'result.push(id);\n}\n}\ncb(result);\n});\n};';
 
         this._constraintMapping = {
+            //Binary Predicates
             'add': "%first + %second", 
             'subtract': "%first - %second", 
             'multiply': "(%first) * (%second)", 
             'divide': "(%first)/(%second)", 
 
-            //Binary Predicates
             'lessThan': "(%first) < (%second)", 
             'greaterThan': "(%first) > (%second)", 
             'equal': "(%first) === (%second)", 
+
             'and': "(%first) && (%second)", 
             'or': "(%first) || (%second)", 
             'xor': "((%first) || (%second)) && !((%first) && (%second))", 
+
+            'concat': '(\"\" + %first + %second)', 
 
             //Control flow
             'if': "if (%cond){\n%true_next\n}\n%next",
@@ -499,8 +513,9 @@ define(['plugin/PluginConfig',
             //Map mappings
             'addToMap': "%map[%first] = %second;\n%next",
             'removeFromMap': "delete %map[%string];\n%next",
-            'getItemFromMap': "%map[%first]",
             'getKeysFromMap': "Object.keys(%map)",
+
+            'getItemFromCollection': "%collection[%first]",
 
             //Collection mappings
             'addToCollection': 'if(' + PRIVATE_VARIABLES.GET_DIMENSION + '(%collection)'+
@@ -514,7 +529,7 @@ define(['plugin/PluginConfig',
                 " message: %message, nodes: %node };\n\n%next",
 
             'not': "!(%first)",
-            'getLength': "%first.length",
+            'getLength': "Object.keys(%first).length",
 
             //A few basic utilities
             'return': "return %first;\n%next",
@@ -923,7 +938,7 @@ define(['plugin/PluginConfig',
                 }
             };
 
-        if (TEST){
+        if (this.config.testConstraints){
             testEnvironment = new TestEnvironment();
             //Test constraint code
             console.log('\t\t*TESTING*\n');
