@@ -12,6 +12,7 @@ define(['js/Constants',
         'js/Widgets/SnapEditor/SnapEditorWidget.Constants',
         'text!../Core/SVGDecorator.html',
         './SVGDecorator.Core',
+        'js/Utils/DisplayFormat',
         'css!./SVGDecorator.SnapEditorWidget'], function (CONSTANTS,
                                                           assert,
                                                           SnapEditorWidgetDecoratorBase,
@@ -19,13 +20,16 @@ define(['js/Constants',
                                                           SnapEditorWidgetDecoratorBaseStretch,
                                                           SNAP_CONSTANTS,
                                                           SVGDecoratorTemplate,
-                                                          SVGDecoratorCore) {
+                                                          SVGDecoratorCore,
+                                                          DisplayFormat) {
 
     "use strict";
 
     var SVGDecoratorSnapEditorWidget,
         DECORATOR_ID = "SVGDecoratorSnapEditorWidget",
         SVG_COLOR_ID = "colors",
+        EMPTY_STRING = "_",//svg text elements need a value to getBBox
+        EMPTY_STYLE = "opacity:0;",//svg text elements need a value to getBBox
         EDIT_TEXT = { PADDING: 5, MIN_WIDTH: 30};
 
     /**
@@ -42,14 +46,16 @@ define(['js/Constants',
         SVGDecoratorCore.apply(this, [opts]);
 
         this._initializeVariables({ data: [SNAP_CONSTANTS.CONNECTION_HIGHLIGHT, 
-                                  SNAP_CONSTANTS.INITIAL_MEASURE, SNAP_CONSTANTS.INPUT_FIELDS], "connectors": false});
+            SNAP_CONSTANTS.INITIAL_MEASURE, SNAP_CONSTANTS.INPUT_FIELDS], connectors: false});
 
         this._selfPatterns = {};
-        
-        this.initializeStretchability(options.decoratorParams.stretchers);//stretchers are things that cause an svg stretch (attribute name or ptr name)
+
+        //stretchers are things that cause an svg stretch (attribute name or ptr name)
+        this.initializeStretchability(options.decoratorParams.stretchers);
 
         //Attributes in text fields
         this._attributes = {};//Only if they have a text field for it
+        this._textFieldStyles = {};//initial styles of editable text fields
 
         this.logger.debug("SVGDecoratorSnapEditorWidget ctor");
     };
@@ -169,6 +175,8 @@ define(['js/Constants',
             textFields = this.$el.find('text'),
             attr,
             enabled,
+            options,
+            value,
             fields;
 
         if (this._attributes[attribute] !== undefined){
@@ -180,9 +188,21 @@ define(['js/Constants',
         while (attributes.length){
             attr = attributes.pop();
             enabled = this._attributes[attr].enabled;
+            value = this._attributes[attr].value;
+
             if (enabled){
                 fields = textFields.filter("#" + attr);
-                this._setTextAndStretch(fields, this._attributes[attr].value, attr);
+
+                if (fields.length){
+                    options = { style: this._textFieldStyles[attr] || null };
+
+                    if (/^[ ]*$/.test(value)){//If more than whitespace
+                        options = { style: EMPTY_STYLE };
+                        value = EMPTY_STRING;
+                    }
+
+                    this._setTextAndStretch(fields, value, attr, options);
+                }
             }
         }
     };
@@ -251,6 +271,10 @@ define(['js/Constants',
 
     /**** Override from SnapEditorWidgetCore ****/
     SVGDecoratorSnapEditorWidget.prototype._renderContent = function () {
+        var client = this._control._client,
+            value,
+            options = {};
+
         this.$el.attr({"data-id": this._metaInfo[CONSTANTS.GME_ID]});
         this.zIndex = this._metaInfo[CONSTANTS.GME_ID].split("/").length;
 
@@ -279,7 +303,6 @@ define(['js/Constants',
         var name = this.$svgContent.find("#" + SNAP_CONSTANTS.NAME);
         if(name[0] !== undefined && name[0].tagName === "text"){
             this.$name = name;
-            //RETURN Add 'name' attribute
         }
 
         var attributes = this.hostDesignerItem.attributes,
@@ -297,8 +320,12 @@ define(['js/Constants',
                             box,
                             width,
                             fontSize = $(element).css('font-size'),
-                            tempName = $('<div/>', { id: id + '-edit', 
-                                                     text: $(element).text()});
+                            text = "",
+                            tempName = $('<div/>', { id: id + '-edit' });
+
+                        if (element[0].getAttribute('style') !== EMPTY_STYLE){
+                            text = element.text();
+                        }
 
                         self.$svgContent.append(tempName);
                         tempName.css('position', 'absolute');
@@ -313,7 +340,8 @@ define(['js/Constants',
                         tempName.css('font-size', fontSize);
 
                         $(tempName).editInPlace({"class": id + "-edit",
-                            "value": $(element).text(),
+                            "enableEmpty": true,
+                            "value": text,
                             "css": { 'z-index': 10000, 'font-size': fontSize },
                             "onChange": function (oldValue, newValue) {
                                 self._saveAttributeChange(id, newValue);
@@ -333,8 +361,6 @@ define(['js/Constants',
             this._attributes[ attr ] = { enabled: true, value: attributes[attr].value+"" };
             fields = textFields.filter("#" + attr);
 
-            this._setTextAndStretch(fields, attributes[attr].value, attr);
-
             if (attr !== "name"){//name requires double click to edit
                 //Make the fields editable
                 editText = getEditText(attr);
@@ -343,6 +369,24 @@ define(['js/Constants',
                 //Add support for clicking on a box around the text to edit the text
                 editFields = this.$el.find(".edit-" + attr);
                 editFields.on("click", null, editText);
+
+                //Record the initial styles of every field
+                this._textFieldStyles[attr] = [];
+                for (var j = 0; j <= fields.length-1; j++){
+                    this._textFieldStyles[attr].push(fields[j].getAttribute("style"));
+                }
+            }
+
+            if (fields.length){
+                if (/^[ ]*$/.test(attributes[attr].value)){
+                    options = { style: EMPTY_STYLE };
+                    value = EMPTY_STRING;
+                } else {
+                    options = null;
+                    value = attributes[attr].value;
+                }
+
+                this._setTextAndStretch(fields, value, attr, options);
             }
         }
 

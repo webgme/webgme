@@ -42,7 +42,7 @@ define(['./ClickableItem',
 
         //Pass ptrs to decorator
         var attrs = Object.keys(objDescriptor.attrInfo),
-            ptrs = Object.keys(objDescriptor.ptrs), 
+            ptrs = Object.keys(objDescriptor.ptrInfo), 
             stretchers = attrs.concat(ptrs);
 
         objDescriptor.decoratorParams = { stretchers: stretchers };
@@ -51,7 +51,7 @@ define(['./ClickableItem',
         newComponent.addToDocFragment(this._documentFragment);
 
         //Set Pointers/Connections
-        newComponent.updatePtrs(objDescriptor.ptrs);
+        newComponent.updatePtrs(objDescriptor.ptrInfo);
         newComponent.updateInputFields();
         newComponent.updateDisplayedAttributeText();
 

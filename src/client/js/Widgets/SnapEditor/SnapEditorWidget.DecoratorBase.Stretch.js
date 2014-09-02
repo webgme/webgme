@@ -403,8 +403,6 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
 
                     this._transforms[svgId].shift[axis] += shift[axis];
                     
-                    //this._updatedSVGElements[svgId] = this.$svgContent.find("#" + svgId);
-
                     if (this.shiftTree[svgId] && this.shiftTree[svgId][axis]){
                         shiftElements[axis] = shiftElements[axis].concat(this.shiftTree[svgId][axis]);
                     }
@@ -441,10 +439,6 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
 
                             this._connAreaShifts[area.id][axis] += shift[axis] || 0;
 
-                            /*
-                             *area.y1 += shift.y || 0;
-                             *area.y2 += shift.y || 0;
-                             */
                         }
                     }
 
@@ -513,6 +507,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
             element,
             svg;
 
+        this.updateSize();
         while (elements.length){
             element = elements.pop();
             svg = this.$svgElement.find("#" + element)[0];//Store this somewhere TODO
@@ -573,11 +568,13 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      * @param {String} stretchId
      * @return {Boolean} return true if size has changed
      */
-    SVGDecoratorSnapEditorWidgetStretch.prototype._setTextAndStretch = function (element, newText, stretchId) {
+    SVGDecoratorSnapEditorWidgetStretch.prototype._setTextAndStretch = function (element, newText, stretchId, extra) {
         //READ-ONLY wrt the DOM FIXME
         var oldText = element.text(),
             oldWidth = element.width(),
-            newWidth;
+            width = 0,
+            newWidth,
+            i;
 
         //make sure newText is a string
         newText += "";
@@ -587,6 +584,23 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
         }
 
         element.text(newText);
+
+        //Set the extra options
+        if (extra){
+            for (var tag in extra){
+                if (extra.hasOwnProperty(tag) && extra[tag]){
+                    if (extra[tag] instanceof Array){//needs refactor
+                        for (i = 0; i < element.length; i++){
+                            element[i].setAttribute(tag, extra[tag][i]);
+                        }
+                    } else {
+                        for (i = 0; i < element.length; i++){
+                            element[i].setAttribute(tag, extra[tag]);
+                        }
+                    }
+                }
+            }
+        }
 
         if(element.width() === 0 && oldWidth === 0){
             //Assume that it hasn't been drawn yet.
@@ -604,7 +618,10 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
             }
 
         }else{
-            return this.stretchTo(stretchId, { x: element.width() }, SNAP_CONSTANTS.STRETCH_TYPE.TEXT);
+            if (newText.length > 0){
+                width = element.width();
+            }
+            return this.stretchTo(stretchId, { x: width }, SNAP_CONSTANTS.STRETCH_TYPE.TEXT);
         }
 
         return false;
