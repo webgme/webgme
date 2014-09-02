@@ -9,6 +9,7 @@ define(['logManager',
     'js/NodePropertyNames',
     'js/RegistryKeys',
     'js/Utils/PreferencesHelper',
+    'js/Utils/DisplayFormat',
     './SnapEditorControl.WidgetEventHandlers',
     'js/Utils/GMEConcepts'], function (logManager,
                                         CONSTANTS,
@@ -16,6 +17,7 @@ define(['logManager',
                                         nodePropertyNames,
                                         REGISTRY_KEYS,
                                         PreferencesHelper,
+                                        DisplayFormat,
                                         SnapEditorEventHandlers,
                                         GMEConcepts){
 
@@ -98,7 +100,7 @@ console.log("Object changed to " + nodeId);
 
         //since PROJECT_ROOT_ID is an empty string, it is considered false..
         if (nodeId || nodeId === CONSTANTS.PROJECT_ROOT_ID) {
-            desc = this._getObjectDescriptor(nodeId);
+            desc = this._getObjectDescriptorBase(nodeId);
             if (desc) {
                 this.currentNodeInfo.parentId = desc.parentId;
             }
@@ -146,30 +148,30 @@ console.log("Object changed to " + nodeId);
         }
     }; 
 
-    SnapEditorControl.prototype._getObjectDescriptor = function (nodeId) {
-        var nodeObj = this._client.getNode(nodeId),
+    SnapEditorControl.prototype._getObjectDescriptorBase = function (nodeId) {
+        var node = this._client.getNode(nodeId),
             objDescriptor,
             pos,
             defaultPos = 0,
             customPoints,
             memberListContainerObj;
 
-        if (nodeObj) {
+        if (node) {
             objDescriptor = {};
 
-            objDescriptor.id = nodeObj.getId();
-            objDescriptor.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name);
-            objDescriptor.parentId = nodeObj.getParentId();
+            objDescriptor.id = node.getId();
+            objDescriptor.name = node.getAttribute(nodePropertyNames.Attributes.name);
+            objDescriptor.parentId = node.getParentId();
 
             if (nodeId !== this.currentNodeInfo.id){
                 //TODO Get all important info about the object..
                 
                 //aspect specific coordinate
                 if (this._selectedAspect === CONSTANTS.ASPECT_ALL) {
-                    pos = nodeObj.getRegistry(REGISTRY_KEYS.POSITION);
+                    pos = node.getRegistry(REGISTRY_KEYS.POSITION);
                 } else {
                     memberListContainerObj = this._client.getNode(this.currentNodeInfo.id);
-                    pos = memberListContainerObj.getMemberRegistry(this._selectedAspect, nodeId, REGISTRY_KEYS.POSITION) || nodeObj.getRegistry(REGISTRY_KEYS.POSITION);
+                    pos = memberListContainerObj.getMemberRegistry(this._selectedAspect, nodeId, REGISTRY_KEYS.POSITION) || node.getRegistry(REGISTRY_KEYS.POSITION);
                 }
 
                 if (pos) {
@@ -190,14 +192,14 @@ console.log("Object changed to " + nodeId);
                     objDescriptor.position.y = defaultPos;
                 }
 
-                objDescriptor.decorator = nodeObj.getRegistry(REGISTRY_KEYS.DECORATOR) || "";
+                objDescriptor.decorator = node.getRegistry(REGISTRY_KEYS.DECORATOR) || "";
 
-                if(nodeObj.getPointer(SNAP_CONSTANTS.PTR_NEXT)){
-                    objDescriptor.next = nodeObj.getPointer(SNAP_CONSTANTS.PTR_NEXT).to || "";
+                if(node.getPointer(SNAP_CONSTANTS.PTR_NEXT)){
+                    objDescriptor.next = node.getPointer(SNAP_CONSTANTS.PTR_NEXT).to || "";
                 }
             }
-        }
 
+        }
         return objDescriptor;
     };
 
@@ -243,7 +245,7 @@ console.log("Object changed to " + nodeId);
 
             while (len--) {
                 if ((nextBatchInQueue[len].etype === CONSTANTS.TERRITORY_EVENT_LOAD) || (nextBatchInQueue[len].etype === CONSTANTS.TERRITORY_EVENT_UPDATE)) {
-                    nextBatchInQueue[len].desc = nextBatchInQueue[len].debugEvent ? _.extend({}, this._getObjectDescriptorDEBUG(nextBatchInQueue[len].eid)) : this._getObjectDescriptor(nextBatchInQueue[len].eid);
+                    nextBatchInQueue[len].desc = nextBatchInQueue[len].debugEvent ? _.extend({}, this._getObjectDescriptorDEBUG(nextBatchInQueue[len].eid)) : this._getObjectDescriptorBase(nextBatchInQueue[len].eid);
 
                     itemDecorator = nextBatchInQueue[len].desc.decorator;
 
@@ -576,45 +578,12 @@ console.log("Object changed to " + nodeId);
                     objDesc = _.extend({}, objD);
 
                     this._items.push(gmeID);
+                    node = this._client.getNode(gmeID);
+                    this._extendObjectDescriptor(objDesc, node);//Add ptrs, attributes, decorator
 
-                    decClass = this._getItemDecorator(objDesc.decorator);
-
-                    objDesc.decoratorClass = decClass;
                     objDesc.control = this;
                     objDesc.metaInfo = {};
                     objDesc.metaInfo[CONSTANTS.GME_ID] = gmeID;
-                    objDesc.preferencesHelper = PreferencesHelper.getPreferences();
-                    objDesc.aspect = this._selectedAspect;
-
-                    //Getting the ptr info
-                    objDesc.ptrs = {};
-                    node = this._client.getNode(gmeID);
-                    ptrs = node.getPointerNames();
-                    i = ptrs.length;
-                    while (i--){
-                        id = node.getPointer(ptrs[i]).to;
-                        if (id){
-                            if (this._GmeID2ComponentID[id]){
-                                id = this._GmeID2ComponentID[id];
-                            } else {//If item hasn't been created, it won't have an id
-                                id = null;
-                            }
-                        }
-
-                        objDesc.ptrs[ptrs[i]] = id;
-                    }
-
-                    //Getting the attribute info
-                    objDesc.attrInfo = {};
-                    attrs = node.getAttributeNames();
-                    i = attrs.length;
-                    while (i--){
-                        objDesc.attrInfo[attrs[i]] = { value: node.getAttribute(attrs[i]) };
-                        attributeSchema = this._client.getAttributeSchema(gmeID, attrs[i]);
-                        if (attributeSchema.enum){
-                            objDesc.attrInfo[attrs[i]].options = attributeSchema.enum;
-                        }
-                    }
 
                     uiComponent = this.snapCanvas.createClickableItem(objDesc);
 
@@ -627,7 +596,7 @@ console.log("Object changed to " + nodeId);
                     //supposed to be the grandchild of the currently open node
                     //--> load of port
                     /*if(this._GMEModels.indexOf(objD.parentId) !== -1){
-                        this._onUpdate(objD.parentId,this._getObjectDescriptor(objD.parentId));
+                        this._onUpdate(objD.parentId,this._getObjectDescriptorBase(objD.parentId));
                     }*/
                     //this._checkComponentDependency(gmeID, CONSTANTS.TERRITORY_EVENT_LOAD);
                     //console.log("Found a child of a node... NEED TO IMPLEMENT UI SUPPORT!");
@@ -718,43 +687,63 @@ console.log("Object changed to " + nodeId);
                 if (objDesc.parentId.indexOf(this.currentNodeInfo.id) !== -1) {
                     if (this._GmeID2ComponentID[gmeID]){
                         componentID = this._GmeID2ComponentID[gmeID];
-
-                        decClass = this._getItemDecorator(objDesc.decorator);
-
-                        objDesc.decoratorClass = decClass;
-                        objDesc.preferencesHelper = PreferencesHelper.getPreferences();
-                        objDesc.aspect = this._selectedAspect;
-
-                        //Get the pointer info
-                        objDesc.ptrInfo = {};
-                        ptrs = node.getPointerNames(gmeID);
-                        i = ptrs.length;
-                        while (i--){
-                            id = node.getPointer(ptrs[i]).to;
-                            if (id && this._GmeID2ComponentID[id]){
-                                objDesc.ptrInfo[ptrs[i]] = this._GmeID2ComponentID[id];
-                            } else {
-                                objDesc.ptrInfo[ptrs[i]] = false;
-                            }
-                        }
-
-                        //Get the attribute info
-                        objDesc.attrInfo = {};
-                        attrs = node.getAttributeNames();
-                        i = attrs.length;
-                        while (i--){
-                            objDesc.attrInfo[attrs[i]] = { value: node.getAttribute(attrs[i]) };
-                            attributeSchema = this._client.getAttributeSchema(gmeID, attrs[i]);
-                            if (attributeSchema.enum){
-                                objDesc.attrInfo[attrs[i]].options = attributeSchema.enum;
-                            }
-                        }
+                        this._extendObjectDescriptor(objDesc, node);
 
                         this.snapCanvas.updateClickableItem(componentID, objDesc);
                     }
                 }
             }
         }
+    };
+
+    /**
+     * Add item details relevant for drawing the item on the currently displayed sheet.
+     *
+     * @param {Object} objDesc
+     * @param {Object} node
+     * @return {Object} objDesc
+     */
+    SnapEditorControl.prototype._extendObjectDescriptor = function (objDesc, node) {
+        var attrs,
+            attributeSchema,
+            decClass = this._getItemDecorator(objDesc.decorator),
+            ptrs,
+            id,
+            i;
+
+        objDesc.decoratorClass = decClass;
+        objDesc.preferencesHelper = PreferencesHelper.getPreferences();
+        objDesc.aspect = this._selectedAspect;
+
+        //Get the pointer info
+        objDesc.ptrInfo = {};
+        ptrs = node.getPointerNames();
+        i = ptrs.length;
+        while (i--){
+            id = node.getPointer(ptrs[i]).to;
+            if (id && this._GmeID2ComponentID[id]){
+                objDesc.ptrInfo[ptrs[i]] = this._GmeID2ComponentID[id];
+            } else {
+                objDesc.ptrInfo[ptrs[i]] = false;
+            }
+        }
+
+        //Get the attribute info
+        objDesc.attrInfo = {};
+        attrs = node.getAttributeNames();
+        i = attrs.length;
+        while (i--){
+            objDesc.attrInfo[attrs[i]] = { value: node.getAttribute(attrs[i]) };
+            attributeSchema = this._client.getAttributeSchema(node.getId(), attrs[i]);
+            if (attributeSchema.enum){
+                objDesc.attrInfo[attrs[i]].options = attributeSchema.enum;
+            }
+        }
+
+        //Change the 'name' to formatted name
+        objDesc.attrInfo.name = { value: DisplayFormat.resolve(node) };
+
+        return objDesc;
     };
 
     SnapEditorControl.prototype._getItemDecorator = function (decorator) {
