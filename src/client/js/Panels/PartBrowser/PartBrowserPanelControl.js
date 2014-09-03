@@ -110,8 +110,13 @@ define(['logManager',
     };
 
     PartBrowserControl.prototype._eventCallback = function (events) {
+        //TODO eventing should be refactored
+        this._logger.debug('_eventCallback ' + events[0].etype);
+        events.shift();
+
         var i = events ? events.length : 0,
             e;
+
 
         this._logger.debug("_eventCallback '" + i + "' items, events: " + JSON.stringify(events));
 
@@ -130,7 +135,10 @@ define(['logManager',
             }
         }
 
-        this._updateValidChildrenTypeDecorators();
+        if(events.length > 0){
+            this._updateValidChildrenTypeDecorators();
+        }
+
 
         this._logger.debug("_eventCallback '" + events.length + "' items - DONE");
     };

@@ -760,11 +760,11 @@ define([
                 _users[userId].PATHS = newPaths;
 
 
-                if(events.length > 0){
+                /*if(events.length > 0){
                     _users[userId].FN(events);
-                }
-                /*
-                this is how the events should go
+                }*/
+
+                //this is how the events should go
                 if(events.length>0){
                     if(_loadError > startErrorLevel){
                         events.unshift({etype:'incomplete',eid:null});
@@ -775,7 +775,7 @@ define([
                     events.unshift({etype:'complete',eid:null});
                 }
                 _users[userId].FN(events);
-                */
+
             }
             function storeNode(node,basic){
                 //basic = basic || true;

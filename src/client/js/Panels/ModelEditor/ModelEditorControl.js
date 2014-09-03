@@ -285,6 +285,9 @@ define(['logManager',
             territoryChanged = false,
             self = this;
 
+        this.logger.debug("_dispatchEvents "+ events[0].etype);
+        events.shift();
+
         this.logger.debug("_dispatchEvents '" + i + "' items");
 
         /********** ORDER EVENTS BASED ON DEPENDENCY ************/
