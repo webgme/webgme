@@ -205,16 +205,22 @@ require(
 
             // TODO: REMOVE - ONLY FOR TESTING
             WebGMEGlobal.gmeApp = gmeApp;
-            gmeApp.controller('TestController', function ($scope, DataStoreService) {
+            gmeApp.controller('TestController', function ($scope, DataStoreService, NodeService) {
 
-                DataStoreService.connectToDatabase()
-                    .then(function(db) {
-                        console.log('opened database');
-                        return db.openProject('myproject');
-                    })
-                    .then(function (data) {
-                        console.log('opened project', data);
+                DataStoreService.getProjects({db: 'localhost:8888'})
+                    .then(function (projectList) {
+                        console.log(projectList);
+
+
+                        for (var i = 0; i < 10; i += 1) {
+                            NodeService.getNode({db: 'localhost:8888', projectId: 'aaa', branch: 'master'}, '/123/234/' + i)
+                                .then(function (node) {
+                                    console.log(node);
+                                }
+                            );
+                        }
                     });
+
             });
 
 
