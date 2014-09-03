@@ -135,7 +135,9 @@ require(
         'angular',
         'angular-route',
         'angular-route-styles',
-        'angular-ui-bootstrap'
+        'angular-ui-bootstrap',
+
+        'js/services/DataStoreService'
 
     ],
     function (domReady, jQuery, jQueryUi, jQueryUiiPad, jqueryWebGME, jqueryDataTables, bootstrap, underscore,
@@ -196,8 +198,26 @@ require(
                     'routeStyles',
                     'ui.bootstrap',
                     'gme.ui.projectsDialog',
-                    'gme.ui.headerPanel'
+                    'gme.ui.headerPanel',
+
+                    'gme.services'
                 ]);
+
+            // TODO: REMOVE - ONLY FOR TESTING
+            WebGMEGlobal.gmeApp = gmeApp;
+            gmeApp.controller('TestController', function ($scope, DataStoreService) {
+
+                DataStoreService.connectToDatabase()
+                    .then(function(db) {
+                        console.log('opened database');
+
+                        db.openProject('myproject')
+                            .then(function (data) {
+                                 console.log('opened project', data);
+                            });
+                    });
+            });
+
 
             webGME.start( function(client) {
 
