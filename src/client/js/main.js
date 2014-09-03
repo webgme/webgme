@@ -210,11 +210,10 @@ require(
                 DataStoreService.connectToDatabase()
                     .then(function(db) {
                         console.log('opened database');
-
-                        db.openProject('myproject')
-                            .then(function (data) {
-                                 console.log('opened project', data);
-                            });
+                        return db.openProject('myproject');
+                    })
+                    .then(function (data) {
+                        console.log('opened project', data);
                     });
             });
 
