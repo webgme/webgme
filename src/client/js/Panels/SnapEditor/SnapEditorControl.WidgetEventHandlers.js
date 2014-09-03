@@ -556,17 +556,27 @@ define(['logManager',
     };
 
     SnapEditorControlWidgetEventHandlers.prototype._onItemDrop = function (droppedItem, receiver, ptr, role) {
-        //Dropping the droppedItems on the receiver
+        //ptr, role are relative to the receiver
         //receiver has an activeConnectionArea
         var receiverId = this._ComponentID2GmeID[receiver],
+            receiverItem = this.snapCanvas.items[receiver],
+            receiverConnId = receiverItem.activeConnectionArea.id,
+
             node = this._client.getNode(receiverId),
             receiverParentId = node.getParentId(),
+
             droppedItems = this._addSiblingDependents([this._ComponentID2GmeID[droppedItem]]),
             droppedParentId,
             firstId = this._ComponentID2GmeID[droppedItem],
             newIds = {},
             params,
             moveItems,
+
+            tryToSplice = receiverItem.isOccupied(receiverConnId),
+            splicing = false,//check to see if we should splice 
+            prevItem,
+            nextItem = this.snapCanvas.items[droppedItem],
+            conn = receiverItem.activeConnectionArea,
             i;
 
         node = this._client.getNode(this._ComponentID2GmeID[droppedItem]);
@@ -574,12 +584,40 @@ define(['logManager',
 
         this._client.startTransaction();
 
-        //If the ptr is not PTR_NEXT, we should move all dragged items into the receiver
-        //in terms of hierarchy
         this._removeExtraPointers([this._ComponentID2GmeID[droppedItem]]);
 
-        if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1 || receiverParentId !== droppedParentId){
+        //Determine if we will be splicing or not
+        if (tryToSplice){
+            //I will get the next item and try to create a pointer btwn
+            //the dropping item and the nextItem
 
+            //Can we make a connection between them?
+            //Follow the connection from the dropping item
+            //if the connection doesn't exist -> don't splice
+            //if there isn't a 'nextItem' to go to -> splice on the open connection
+
+            while (nextItem && conn){
+                conn = nextItem.getConnectionArea(ptr, role);
+                if (conn){
+                    prevItem = nextItem;
+                    nextItem = nextItem.getItemAtConnId(conn.id);
+                    if (nextItem){
+                        gmeId = this._ComponentID2GmeID[nextItem.id];
+
+                        //Make sure the item is one of the dragged items
+                        if (droppedItems.indexOf(gmeId) === -1){
+                            nextItem = null;
+                        }
+                    }
+                }
+            }
+
+            splicing = conn && !nextItem; //can splice if there is a connection without an item
+        }
+
+        //If the ptr is not PTR_NEXT, we should move all dragged items into the receiver
+        //in terms of hierarchy
+        if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1 || receiverParentId !== droppedParentId){
             var items2Move,
                 ptrs2Create = {},
                 gmeId,
@@ -591,16 +629,7 @@ define(['logManager',
                 p;
 
             //Set items2Move
-            if (role === SNAP_CONSTANTS.CONN_ACCEPTING){
-                items2Move = this._addSiblingDependents([receiverId]);//Get items of receiver and (sibling) dependents
-
-                if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1){
-                    params = { "parentId": firstId };
-                } else {
-                    params = { "parentId": droppedParentId };
-                }
-
-            } else {
+            if (splicing || role === SNAP_CONSTANTS.CONN_PASSING){//Move the draggedItems
                 items2Move = droppedItems;
 
                 if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1){
@@ -608,6 +637,16 @@ define(['logManager',
                 } else {
                     params = { "parentId": receiverParentId };
                 }
+
+            } else {//Move the receiving items
+                items2Move = this._addSiblingDependents([receiverId]);
+
+                if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1){
+                    params = { "parentId": firstId };
+                } else {
+                    params = { "parentId": droppedParentId };
+                }
+
             }
 
             i = items2Move.length;
@@ -651,103 +690,82 @@ define(['logManager',
             receiverId = newIds[receiverId] || receiverId;
         }
 
-        //check to see if we should splice 
-        var receiverItem = this.snapCanvas.items[receiver],
-            receiverConnId = receiverItem.activeConnectionArea.id,
-            tryToSplice = receiverItem.isOccupied(receiverConnId);
+        if (splicing){
+            //Make a connection between them
+            var prevGmeId = this._ComponentID2GmeID[prevItem.id],
+                spliceToItem = receiverItem.getItemAtConnId(receiverConnId),
+                spliceToId = this._ComponentID2GmeID[spliceToItem.id],
+                otherPtr = ptr;
 
-        if (tryToSplice){
-            //I will get the next item and try to create a pointer btwn
-            //the dropping item and the nextItem
-                var nextItem = this.snapCanvas.items[droppedItem],
-                    canSplice = false,
-                    conn = receiverItem.activeConnectionArea,
-                    prevItem;
-
-            //Can we make a connection between them?
-            //Follow the connection from the dropping item
-            //if the connection doesn't exist -> don't splice
-            //if there isn't a 'nextItem' to go to -> splice on the open connection
-
-            while (nextItem && conn){
-                conn = nextItem.getConnectionArea(ptr, role);
-                if (conn){
-                    prevItem = nextItem;
-                    nextItem = nextItem.getItemAtConnId(conn.id);
-                }
+            if (role === SNAP_CONSTANTS.CONN_ACCEPTING){
+                otherPtr = spliceToItem.getPtrFromItem(receiverItem.id);
             }
 
-            canSplice = conn && !nextItem; //can splice if there is a connection without an item
+            //Look up new ids if either have been moved
+            prevGmeId = newIds[prevGmeId] || prevGmeId;
+            spliceToId = newIds[spliceToId] || spliceToId;
 
-            if (canSplice){
-                //Make a connection between them
-                var prevGmeId = this._ComponentID2GmeID[prevItem.id],
-                    spliceToItem = this._ComponentID2GmeID[receiverItem.getItemAtConnId(receiverConnId).id];
+            if (role === SNAP_CONSTANTS.CONN_ACCEPTING){
+                //If it isn't a sibling otherPtr, move the correct item...
+                //if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(otherPtr) === -1){
+                    ////move the recipient of the otherPtr to the child of the other
+                    //moveItems = this._addSiblingDependents([prevGmeId]);
+                    //params = { parentId: spliceToId };
+                    //i = moveItems.length;
 
-                //Look up new ids if either have been moved
-                prevGmeId = newIds[prevGmeId] || prevGmeId;
-                spliceToItem = newIds[spliceToItem] || spliceToItem;
+                    //while (i--){
+                        //params[moveItems[i]] = {};
+                    //}
 
-                if (role === SNAP_CONSTANTS.CONN_ACCEPTING){
-                    //If it isn't a sibling ptr, move the correct item...
-                    if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1){
-                        //move the recipient of the ptr to the child of the other
-                        moveItems = this._addSiblingDependents([prevGmeId]);
-                        params = { parentId: spliceToItem };
-                        i = moveItems.length;
+                    //newIds = this._client.moveMoreNodes(params);
 
-                        while (i--){
-                            params[moveItems[i]] = {};
-                        }
+                    ////update the pointer names
+                    //prevGmeId = newIds[prevGmeId];
+                //}
 
-                        newIds = this._client.moveMoreNodes(params);
+                this._client.makePointer(spliceToId, otherPtr, prevGmeId);
+            } else {
+                //If it isn't a sibling otherPtr, move the correct item...
+                //if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(otherPtr) === -1){
+                    ////move the recipient of the otherPtr to the child of the other
+                    //moveItems = this._addSiblingDependents([spliceToId]);
+                    //params = { parentId: prevGmeId };
+                    //i = moveItems.length;
 
-                        //update the pointer names
-                        prevGmeId = newIds[prevGmeId];
-                    }
+                    //while (i--){
+                        //params[moveItems[i]] = {};
+                    //}
 
-                    this._client.makePointer(spliceToItem, ptr, prevGmeId);
-                } else {
-                    //If it isn't a sibling ptr, move the correct item...
-                    if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1){
-                        //move the recipient of the ptr to the child of the other
-                        moveItems = this._addSiblingDependents([spliceToItem]);
-                        params = { parentId: prevGmeId };
-                        i = moveItems.length;
+                    //newIds = this._client.moveMoreNodes(params);
 
-                        while (i--){
-                            params[moveItems[i]] = {};
-                        }
+                    ////update the pointer names
+                    //spliceToId = newIds[spliceToId];
+                //}
 
-                        newIds = this._client.moveMoreNodes(params);
-
-                        //update the pointer names
-                        spliceToItem = newIds[spliceToItem];
-                    }
-
-                    this._client.makePointer(prevGmeId, ptr, spliceToItem);
-                }
-                firstId = newIds[firstId] || firstId;
-                receiverId = newIds[receiverId] || receiverId;
+                this._client.makePointer(prevGmeId, otherPtr, spliceToId);
             }
+            firstId = newIds[firstId] || firstId;
+            receiverId = newIds[receiverId] || receiverId;
         }
 
         //Set the first pointer
         if (role === SNAP_CONSTANTS.CONN_ACCEPTING){
             this._client.makePointer(firstId, ptr, receiverId);
 
-            //Move firstId to the correct location
-            var options = { src: this._GmeID2ComponentID[firstId], 
+            if (!splicing){
+                //Move firstId to the correct location
+                var options = { src: this._GmeID2ComponentID[firstId], 
                     dst: this._GmeID2ComponentID[receiverId], ptr: ptr },
-                distance = this.snapCanvas.getConnectionDistance(options),
-                position;
+                    distance = this.snapCanvas.getConnectionDistance(options),
+                    position;
 
-            node = this._client.getNode(firstId);
-            position = _.extend({}, node.getRegistry(REGISTRY_KEYS.POSITION));
-            position.x += distance.dx;
-            position.y += distance.dy;
+                node = this._client.getNode(firstId);
+                position = _.extend({}, node.getRegistry(REGISTRY_KEYS.POSITION));
+                position.x += distance.dx;
+                position.y += distance.dy;
 
-            this._client.setRegistry(firstId, REGISTRY_KEYS.POSITION, position);
+                this._client.setRegistry(firstId, REGISTRY_KEYS.POSITION, position);
+            }
             
         } else {
             this._client.makePointer(receiverId, ptr, firstId);

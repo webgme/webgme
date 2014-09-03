@@ -29,10 +29,12 @@ define(['./SnapEditorWidget.Constants.js'], function (SNAP_CONSTANTS) {
     SnapEditorWidgetHighlightUpdater.prototype.unregisterDraggingItem = function () {
         this._ui = null;
         this._underItems = null;
+        this._draggedIds = null;
     };
 
     SnapEditorWidgetHighlightUpdater.prototype.registerUnderItem = function (underItem) {
-        if (this._underItems !== null){
+        //Only register if the item is not in the list of dragged items
+        if (this._underItems !== null && this._draggedIds.indexOf(underItem.id) === -1){
             this._underItems.push(underItem);
 
             if (this._underItems.length === 1){

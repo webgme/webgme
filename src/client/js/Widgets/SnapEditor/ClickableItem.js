@@ -230,35 +230,41 @@ define(['logManager',
      * @param {ClickableItem} item
      */
     ClickableItem.prototype.setPtr = function (ptr, role, item) {
-        var otherRole = role === SNAP_CONSTANTS.CONN_ACCEPTING ? 
-                SNAP_CONSTANTS.CONN_PASSING : SNAP_CONSTANTS.CONN_ACCEPTING;
+        var acceptingItem = this,
+            acceptingConnection,
+            passingItem = item,
+            passingConnection;
+
+        if (role === SNAP_CONSTANTS.CONN_ACCEPTING){
+            acceptingItem = this;
+            passingItem = item;
+        } 
+
+        acceptingConnection = acceptingItem.getConnectionArea(ptr, SNAP_CONSTANTS.CONN_ACCEPTING);
+        passingConnection = passingItem.getConnectionArea(ptr, SNAP_CONSTANTS.CONN_PASSING);
 
         //Make sure it is a valid 'move'
-        if (item === this){
+        if (acceptingItem === passingItem){
             this.logger.error("Should never set a pointer to itself");
         }
 
-        if (role === SNAP_CONSTANTS.CONN_PASSING && 
-            this.getDependents().indexOf(item) !== -1){
-            this.logger.error("Adding an already existing dependent to item " + this.id);
-        }
+        //Removing any existing value
+        acceptingItem.removePtr(ptr, SNAP_CONSTANTS.CONN_ACCEPTING);
+        passingItem.removePtr(ptr, SNAP_CONSTANTS.CONN_PASSING);
 
-        if (this.ptrs[role][ptr]){
-            this.removePtr(ptr, role);
-        }
-
-        this.ptrs[role][ptr] = item;
-        item.ptrs[otherRole][ptr] = this;
+        acceptingItem.ptrs[SNAP_CONSTANTS.CONN_ACCEPTING][ptr] = passingItem;
+        passingItem.ptrs[SNAP_CONSTANTS.CONN_PASSING][ptr] = acceptingItem;
 
         //Update the colors of the attaching item
-        if (role === SNAP_CONSTANTS.CONN_PASSING){
-            item.updateColors();
-            this._decoratorInstance.setAttributeEnabled(ptr, false);
-        } else {
-            this.updateColors();
-            item._decoratorInstance.setAttributeEnabled(ptr, false);
-        }
+        acceptingItem.updateColors();
+        passingItem._decoratorInstance.setAttributeEnabled(ptr, false);
 
+        //Record the connections used
+        acceptingItem.conn2Item[acceptingConnection.id] = passingItem;
+        passingItem.conn2Item[passingConnection.id] = acceptingItem;
+
+        acceptingItem.item2Conn[passingItem.id] = acceptingConnection.id;
+        passingItem.item2Conn[acceptingItem.id] = passingConnection.id;
     };
 
     /**
@@ -323,6 +329,10 @@ define(['logManager',
             otherRole = role === SNAP_CONSTANTS.CONN_ACCEPTING ? 
                 SNAP_CONSTANTS.CONN_PASSING : SNAP_CONSTANTS.CONN_ACCEPTING;
 
+        if (!item){//If the ptr is empty, ignore
+            return;
+        }
+
         if(resize === true){
             if (role === SNAP_CONSTANTS.CONN_ACCEPTING){
                 item._updateSize(ptr, null);
@@ -337,18 +347,30 @@ define(['logManager',
         }
         
         //free the connections
-        var connId = this.item2Conn[item.id],
-            otherConnId = item.item2Conn[this.id];
+        this._removePtr(ptr, role);
+        item._removePtr(ptr, otherRole);
+    };
+
+    ClickableItem.prototype._removePtr = function (ptr, role) {
+        var item = this.ptrs[role][ptr],
+            connId = this.item2Conn[item.id];
 
         delete this.item2Conn[item.id];
         delete this.conn2Item[connId];
 
-        delete item.item2Conn[this.id];
-        delete item.conn2Item[otherConnId];
-
-        //remove pointer
         delete this.ptrs[role][ptr];
-        delete item.ptrs[otherRole][ptr];
+    };
+
+    ClickableItem.prototype.getPtrFromItem = function (itemId) {
+        var connId = this.item2Conn[itemId],
+            conn = this._decoratorInstance.getConnectionArea({ id: connId }),
+            ptr = null;
+
+        if (conn){
+            ptr = conn.ptr;
+        }
+
+        return ptr;
     };
 
     /**
@@ -900,15 +922,6 @@ define(['logManager',
         }
 
         this.setPtr(ptr, role, otherItem);
-
-        //record the connection
-        //Do we know area1 corresponds to otherItem?
-        //Consider renaming parameters
-        otherItem.conn2Item[params.area2.id] = this;
-        this.conn2Item[params.area1.id] = otherItem;
-
-        otherItem.item2Conn[this.id] = params.area2.id;
-        this.item2Conn[otherItem.id] = params.area1.id;
 
         //Update input fields
         this.updateInputFields();

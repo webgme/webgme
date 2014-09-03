@@ -265,82 +265,55 @@ console.log("Object changed to " + nodeId);
 
     SnapEditorControl.prototype._dispatchEvents = function (events) {
         var i = events.length,
-            e,
             territoryChanged = false,
             loadEvents = [],
+            unloadEvents = [],
+            updateEvents = [],
             self = this;
 
         this.logger.debug("_dispatchEvents '" + i + "' items");
 
         /********** ORDER EVENTS BASED ON DEPENDENCY ************/
-        /** 1: items first, no dependency **/
-        /** 2: connections second, dependency if a connection is connected to an other connection **/
-        var orderedItemEvents = [];
+        /** 1: Unload **/
+        /** 2: Load **/
+        /** 3: Update **/
 
-        var unloadEvents = [];
-        i = events.length;
-        while (i--) {
-            e = events[i];
-
-            if (e.etype === CONSTANTS.TERRITORY_EVENT_UNLOAD) {
-                unloadEvents.push(e);
-            } else if (e.desc.kind === "MODEL") {
-                orderedItemEvents.push(e);
-            }  else if (this.currentNodeInfo.id === e.eid) {
-                orderedItemEvents.push(e);
-            }
-
-        }
-
-        /** LOG ORDERED CONNECTION LIST ********************/
-        /*this.logger.debug('ITEMS: ');
-        var itemIDList = [];
-        for (i = 0; i < orderedItemEvents.length; i += 1) {
-            var x = orderedItemEvents[i];
-            //console.log("ID: " + x.desc.id);
-            itemIDList.push(x.desc.id);
-        }
-
-        this.logger.debug('CONNECTIONS: ');
-        for (i = 0; i < orderedConnectionEvents.length; i += 1) {
-            var x = orderedConnectionEvents[i];
-            var connconn = itemIDList.indexOf(x.desc.source) === -1 && itemIDList.indexOf(x.desc.target) === -1;
-            this.logger.debug("ID: " + x.desc.id + ", SRC: " + x.desc.source + ", DST: " + x.desc.target + (connconn ? " *****" : ""));
-        }*/
-        /** END OF --- LOG ORDERED CONNECTION LIST ********************/
-
-        //events = unloadEvents.concat(orderedItemEvents, orderedConnectionEvents);
-        //events = unloadEvents.concat(orderedItemEvents);
         i = events.length;
 
         this._notifyPackage = {};
 
         this.snapCanvas.beginUpdate();
 
-        //items
-        for (i = events.length - 1; i >= 0; i -= 1) {
-            if (events[i].etype === CONSTANTS.TERRITORY_EVENT_LOAD) {
-                //We collect all loading events and process them at once
-                //to satisfy position dependencies caused by linking
-                loadEvents.push(events.splice(i, 1).pop());
-            }
-        }
+        for (i = events.length-1; i >= 0; i--) {
+            switch (events[i].etype) {
+                case CONSTANTS.TERRITORY_EVENT_LOAD:
+                    //We collect all loading events and process them at once
+                    //to satisfy position dependencies caused by linking
+                    loadEvents.push(events.splice(i, 1).pop());
+                    break;
 
-        //Now we handle all load events
-        this._onLoad(loadEvents);
-
-        for (i = 0; i < events.length; i += 1) {
-            e = events[i];
-            switch (e.etype) {
                 case CONSTANTS.TERRITORY_EVENT_UPDATE:
-                    this._onUpdate(e.eid, e.desc);
+                    updateEvents.push(events.splice(i, 1).pop());
                     break;
+
                 case CONSTANTS.TERRITORY_EVENT_UNLOAD:
-                    territoryChanged = this._onUnload(e.eid) || territoryChanged;
+                    unloadEvents.push(events.splice(i, 1).pop());
                     break;
             }
         }
 
+        //Unload
+        for (i = unloadEvents.length-1; i >= 0; i--){
+            territoryChanged = this._onUnload(unloadEvents[i].eid) || territoryChanged;
+        }
+
+        //Load
+        this._onLoad(loadEvents.concat(updateEvents));
+
+        //Update
+        for (i = updateEvents.length-1; i >= 0; i--){
+            this._onUpdate(updateEvents[i].eid, updateEvents[i].desc);
+        }
 
         //this._handleDecoratorNotification();
 

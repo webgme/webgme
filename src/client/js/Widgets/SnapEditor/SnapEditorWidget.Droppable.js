@@ -187,11 +187,10 @@ define(['js/DragDrop/DropTarget',
         //connect the items (with the controller)
         if (item.activeConnectionArea){
             var i = ui.helper.children().length,
-                draggedId = ui.helper[0].id;
-
-            //dragged.connectToActive(item);
-            var itemId = item.id,
-                ptr = item.activeConnectionArea.ptr;
+                draggedId = ui.helper[0].id,
+                itemId = item.id,
+                ptr = item.activeConnectionArea.ptr,
+                connId;
 
             //If multiple ptrs, select the closest compatible
             if(ptr instanceof Array){//Find the closest compatible area
@@ -217,15 +216,15 @@ define(['js/DragDrop/DropTarget',
 
             }
 
-
-            this.onItemDrop(draggedId, itemId, ptr, item.activeConnectionArea.role);
+            //Make sure they aren't already connected
+            if (draggedId !== item.getItemAtConnId(item.activeConnectionArea.id).id){
+                this.onItemDrop(draggedId, itemId, ptr, item.activeConnectionArea.role);
+            }
 
             //hide the conn areas
             item.deactivateConnectionAreas();
 
-        }//else{//drop to background
-        //  this._onBackgroundDrop(event, dragInfo);
-        //}
+        }
 
         this.selectionManager.clear();
         this.dropFocus = SnapEditorWidgetConstants.BACKGROUND;

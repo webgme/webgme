@@ -659,6 +659,9 @@ define(['logManager',
     SnapEditorWidget.prototype._updateClickableItems = function () {
         //First, finding the highest node in the dependency tree that could
         //affected by the change
+        
+        //Add removed items' parents
+        //TODO
         var items = Object.keys(this._clickableItems2Update),
             item,
             params,
