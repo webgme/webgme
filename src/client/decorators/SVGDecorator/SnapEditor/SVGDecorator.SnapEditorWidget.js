@@ -189,20 +189,18 @@ define(['js/Constants',
             attr = attributes.pop();
             enabled = this._attributes[attr].enabled;
             value = this._attributes[attr].value;
+            fields = textFields.filter("#" + attr);
 
-            if (enabled){
-                fields = textFields.filter("#" + attr);
+            if (!enabled || /^[ ]*$/.test(value)){
+                options = { style: EMPTY_STYLE };
+                value = EMPTY_STRING;
 
-                if (fields.length){
+            } else {
                     options = { style: this._textFieldStyles[attr] || null };
+            }
 
-                    if (/^[ ]*$/.test(value)){//If more than whitespace
-                        options = { style: EMPTY_STYLE };
-                        value = EMPTY_STRING;
-                    }
-
-                    this._setTextAndStretch(fields, value, attr, options);
-                }
+            if (fields.length){
+                this._setTextAndStretch(fields, value, attr, options);
             }
         }
     };
@@ -377,15 +375,12 @@ define(['js/Constants',
                 }
             }
 
+            //Initialize fields to EMPTY_STRING
+            //If they are "" or whitespace, the text will not have a BBox
+            //and the edit box will be messed up (hence the EMPTY_STRING, EMPTY_STYLE)
             if (fields.length){
-                if (/^[ ]*$/.test(attributes[attr].value)){
-                    options = { style: EMPTY_STYLE };
-                    value = EMPTY_STRING;
-                } else {
-                    options = null;
-                    value = attributes[attr].value;
-                }
-
+                options = { style: EMPTY_STYLE };
+                value = EMPTY_STRING;
                 this._setTextAndStretch(fields, value, attr, options);
             }
         }

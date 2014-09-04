@@ -579,11 +579,8 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
         //make sure newText is a string
         newText += "";
 
-        if (oldText === newText){
-            return false;
-        }
-
         element.text(newText);
+        width = element.width();//NOTE: if newText is empty or whitespace, width will be zero
 
         //Set the extra options
         if (extra){
@@ -602,29 +599,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
             }
         }
 
-        if(element.width() === 0 && oldWidth === 0){
-            //Assume that it hasn't been drawn yet.
-            //Approx the pixel length by relative name change
-            //FIXME Find a better way to approximate this...
-            //I could add a "name container" invisible rect... 
-            var bBox = this.$svgContent.find("#" + stretchId +"-bounding-box"),
-                approxWidth;
-
-            if (bBox.length){
-                bBox = bBox[0];
-                approxWidth = parseFloat(bBox.getAttribute("width"));
-                newWidth = approxWidth * (element.text().length/oldText.length);
-                return this.stretchTo(stretchId, { x: newWidth }, SNAP_CONSTANTS.STRETCH_TYPE.TEXT);
-            }
-
-        }else{
-            if (newText.length > 0){
-                width = element.width();
-            }
-            return this.stretchTo(stretchId, { x: width }, SNAP_CONSTANTS.STRETCH_TYPE.TEXT);
-        }
-
-        return false;
+        return this.stretchTo(stretchId, { x: width }, SNAP_CONSTANTS.STRETCH_TYPE.TEXT);
     };
 
     /* * * * Manipulating the SVG * * * */
