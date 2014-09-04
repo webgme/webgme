@@ -628,7 +628,7 @@ define([
                     if(err){
                         return callback(err);
                     }
-                    if(names.indexOf(names) !== -1){
+                    if(names.indexOf(name) !== -1){
                         _database.openProject(name,function(err,p){
                             if(!err &&  p){
                                 _database.getAuthorizationInfo(name,function(err,authInfo){
@@ -1381,8 +1381,19 @@ define([
                     }
                 if(_database){
                     if(_project){
-                        branchWatcher(branch,innerCallback);
-                        startCoreAddOnsAsync(_projectName,branch,innerCallback);
+                        _project.getBranchNames(function(err,names){
+                            if(err){
+                                return callback(err);
+                            }
+
+                            if(names[branch]){
+                                branchWatcher(branch,innerCallback);
+                                startCoreAddOnsAsync(_projectName,branch,innerCallback);
+                            } else {
+                                callback(new Error('there is no such branch!'));
+                            }
+
+                        });
                     } else {
                         callback(new Error('there is no open project!'));
                     }
