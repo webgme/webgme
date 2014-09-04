@@ -81,6 +81,7 @@ define([
                 _rootHash = null,
                 _previousRootHash = null,
                 _changeTree = null,
+                _inheritanceHash = {},
                 _gHash = 0;
 
             function print_nodes(pretext){
@@ -681,10 +682,17 @@ define([
             function getModifiedNodes(newerNodes){
                 var modifiedNodes = [],
                     keys = Object.keys(newerNodes),
-                    i;
+                    i,found,
+                    inheritanceArray;
                 for(i=0;i<keys.length;i++){
-                    if(isInChangeTree(keys[i])){
-                        modifiedNodes.push(keys[i]);
+                    found = false;
+                    inheritanceArray = getInheritanceChain(newerNodes[keys[i]].node);
+                    inheritanceArray.unshift(keys[i]);
+                    while(inheritanceArray.length > 0 && !found){
+                        if(isInChangeTree(inheritanceArray.shift())){
+                            found = true;
+                            modifiedNodes.push(keys[i]);
+                        }
                     }
                 }
 
@@ -777,6 +785,15 @@ define([
                 _users[userId].FN(events);
 
             }
+            function getInheritanceChain(node){
+                var ancestors = [];
+                node = _core.getBase(node);
+                while(node){
+                    ancestors.push(_core.getPath(node));
+                    node = _core.getBase(node);
+                }
+                return ancestors;
+            }
             function storeNode(node,basic){
                 //basic = basic || true;
                 if(node){
@@ -786,6 +803,7 @@ define([
                         //TODO we try to avoid this
                     } else {
                         _nodes[path] = {node:node,hash:""/*,incomplete:true,basic:basic*/};
+                        _inheritanceHash[path] = getInheritanceChain(node);
                     }
                     return path;
                 }
