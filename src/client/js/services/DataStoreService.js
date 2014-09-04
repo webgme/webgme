@@ -12,16 +12,31 @@ define(['js/client'], function (Client) {
             var datastores = {};
 
             this.connectToDatabase = function (context) {
-                var deferred = $q.defer();
+                var deferred = $q.defer(),
+                    client;
 
                 if (datastores.hasOwnProperty(context.db)) {
+                    // FIXME: this may or may not ready yet...
                     deferred.resolve();
                 } else {
-                    $timeout(function () {
-                        console.log('connecting to database ', context);
-                        datastores[context.db] = {a: 'some database object from the client', projectList: ['aa', 'test1']};
+                    // TODO: replace CONFIG with context
+                    client = new Client(/*CONFIG*/);
+
+                    // hold a reference to the client instance
+                    datastores[context.db] = {client: client};
+
+
+                    // TODO: add event listeners to client
+
+                    client.connectToDatabaseAsync({}, function (err) {
+                        if (err) {
+                            deferred.reject(err);
+                            return;
+                        }
+
                         deferred.resolve();
-                    }, 100);
+                    });
+
                 }
 
                 return deferred.promise;
@@ -32,46 +47,82 @@ define(['js/client'], function (Client) {
 
                 this.connectToDatabase(context)
                     .then(function () {
-                        deferred.resolve(datastores[context.db].projectList);
+                        datastores[context.db].client.getAvailableProjectsAsync(function (err, projectIds) {
+                            if (err) {
+                                deferred.reject(err);
+                                return;
+                            }
+
+                            deferred.resolve(projectIds);
+                        });
                     });
 
                 return deferred.promise;
             };
 
-        })
-
-        .service('ProjectService', function ($timeout, $q, DataStoreService) {
-
-            this.openProject = function (context) {
+            this.selectProject = function (context) {
                 var deferred = $q.defer();
 
-                DataStoreService.connectToDatabase(context)
-                    .then(function () {
-                        $timeout(function () {
-                            console.log('open project ', context);
-                            deferred.resolve();
-                        }, 100);
+                this.getProjects(context)
+                    .then(function (projectIds) {
+
+                        if (projectIds.indexOf(context.projectId) > -1) {
+                            datastores[context.db].client.selectProjectAsync(context.projectId, function (err) {
+                                if (err) {
+                                    deferred.reject(err);
+                                    return;
+                                }
+
+                                datastores[context.db].projectId = context.projectId;
+
+                                deferred.resolve();
+                            });
+                        } else {
+                            deferred.reject(new Error('Project does not exist. ' + context.projectId));
+                        }
                     });
 
                 return deferred.promise;
             };
-        })
-
-        .service('BranchService', function ($timeout, $q, ProjectService) {
 
 
             this.selectBranch = function (context) {
                 var deferred = $q.defer();
 
-                ProjectService.openProject(context)
+                this.selectProject(context)
                     .then(function () {
-                        $timeout(function () {
-                            console.log('select branch ', context);
+                        // FIXME: if branch does not exist the callback is not called, then after (probably a timeout) it is called with no error???
+                        datastores[context.db].client.selectBranchAsync(context.branchId, function (err) {
+                            if (err) {
+                                deferred.reject(err);
+                                return;
+                            }
+
+                            datastores[context.db].branchId = context.branchId;
+
                             deferred.resolve();
-                        }, 100);
+                        });
                     });
 
                 return deferred.promise;
+            };
+        })
+
+        .service('ProjectService', function ($timeout, $q, DataStoreService) {
+
+            this.openProject = function (context) {
+                return DataStoreService.selectProject(context);
+            };
+
+            this.selectBranch = function (context) {
+                return DataStoreService.selectBranch(context);
+            };
+        })
+
+        .service('BranchService', function ($timeout, $q, ProjectService) {
+
+            this.selectBranch = function (context) {
+                return ProjectService.selectBranch(context);
             };
         })
 
@@ -79,18 +130,18 @@ define(['js/client'], function (Client) {
 
 
             this.getNode = function (context, path) {
-                var deferred = $q.defer();
-
-                BranchService.selectBranch(context)
-                    .then(function () {
-
-                        $timeout(function () {
-                            console.log('getting node ', context, path);
-                            deferred.resolve({id: path, name: 'Node name 1'});
-                        }, Math.floor(Math.random() * 100));
-                    });
-
-                return deferred.promise;
+//                var deferred = $q.defer();
+//
+//                BranchService.selectBranch(context)
+//                    .then(function () {
+//
+//                        $timeout(function () {
+//                            console.log('getting node ', context, path);
+//                            deferred.resolve({id: path, name: 'Node name 1'});
+//                        }, Math.floor(Math.random() * 100));
+//                    });
+//
+//                return deferred.promise;
             };
         })
 

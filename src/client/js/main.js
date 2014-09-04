@@ -206,19 +206,22 @@ require(
             // TODO: REMOVE - ONLY FOR TESTING
             WebGMEGlobal.gmeApp = gmeApp;
             gmeApp.controller('TestController', function ($scope, DataStoreService, NodeService) {
+                var context = {
+                    db: 'my-db-connection-id',
+                    projectId: 'Test',
+                    branchId: 'b1'
+                };
 
-                DataStoreService.getProjects({db: 'localhost:8888'})
-                    .then(function (projectList) {
-                        console.log(projectList);
 
-
-                        for (var i = 0; i < 10; i += 1) {
-                            NodeService.getNode({db: 'localhost:8888', projectId: 'aaa', branch: 'master'}, '/123/234/' + i)
-                                .then(function (node) {
-                                    console.log(node);
-                                }
-                            );
-                        }
+                DataStoreService.selectProject({db: 'my-db-connection-id', projectId:'Test'})
+                    .then(function () {
+                        return DataStoreService.selectBranch({db: 'my-db-connection-id', projectId: 'Test', branchId: 'b11'});
+                    })
+                    .then(function () {
+                        console.log('ready to work with objects...', context);
+                    })
+                    .catch(function (reason) {
+                        console.error(reason);
                     });
 
             });
