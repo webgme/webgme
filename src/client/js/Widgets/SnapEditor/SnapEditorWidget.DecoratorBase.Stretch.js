@@ -109,12 +109,16 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
             shiftY,
             transforms,
             transform,
+            style,
+            stroke,
+            strokeWidth,
             x,
             y,
             idCreator = function(key, value){
                 var canFreeze;
                 //Set the id
                 svgId = value.getAttribute("id");
+                strokeWidth = 0;
 
                 if(!svgId){
                     svgId = self._genSVGId();
@@ -157,12 +161,22 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
                         }
                     }
 
+                    //Add stroke-width
+                    style = value.getAttribute('style');
+                    if (style){
+                        stroke = style.match(/stroke\-width:\d*/);
+                        if (stroke){
+                            strokeWidth = parseFloat(stroke[0].match(/\d+/)) + 1;
+                        }
+                    }
+                    
                     //If the width/height is still null, we will set it after first render
                     //using getBBox
                     self._transforms[svgId] = { 
                         original: { x: x, y: y, width: width, height: height, 
                             shift: { x: shiftX, y: shiftY } }, 
-                        shift: { x: 0, y: 0 }, stretch: { width: null, height: null }};
+                        shift: { x: 0, y: 0 }, stretch: { width: null, height: null },
+                        stroke: strokeWidth };
 
                     //Freeze the original measurements if possible
                     if (canFreeze){
@@ -797,7 +811,8 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
                 //Take into account the right/bottom most point of the svg element
                 
                 edge = this._transforms[ids[i]].original[axis] + this._transforms[ids[i]].shift[axis] + 
-                    this._transforms[ids[i]].original[dim] + this._transforms[ids[i]].stretch[dim];
+                    this._transforms[ids[i]].original[dim] + this._transforms[ids[i]].stretch[dim] + 
+                    this._transforms[ids[i]].stroke;
 
                 if (_.isNumber(edge) && !_.isNaN(edge)){
                     size[dim] = Math.max(edge, size[dim]);
