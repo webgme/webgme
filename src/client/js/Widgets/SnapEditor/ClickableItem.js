@@ -100,6 +100,19 @@ define(['logManager',
     };
 
     /**
+     * Update the attributes in the decorator and WRITE changes to the DOM.
+     *
+     * @return {undefined}
+     */
+    ClickableItem.prototype.renderSetTextInfo = function () {
+        //Update the attributes of the svg
+        this.updateDisplayedAttributeText();
+
+        //Trigger an attribute update in the decorator
+        this._decoratorInstance.updateAttributeText();
+    };
+
+    /**
      * Notify SVG of updated attributes 
      *
      * @return {undefined}
@@ -734,12 +747,6 @@ define(['logManager',
             if (box === null){
                 box = { width: 0, height: 0 };//set the box to 0,0 so the decorator has a valid object to resize
 
-                //if there is an attribute of the same name, update it
-                var attribute = this.getAttribute(ptrName);
-                if (attribute){
-                    changed = this._decoratorInstance.updateAttributeContent(ptrName, attribute);
-                    this._decoratorInstance.updateAttributeText(ptrName);
-                } 
             } 
 
             changed = this._decoratorInstance.stretchTo(ptrName, { x: box.width, y: box.height });

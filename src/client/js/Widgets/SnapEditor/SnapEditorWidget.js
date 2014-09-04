@@ -608,11 +608,140 @@ define(['logManager',
     SnapEditorWidget.prototype.endUpdate = function () {
         this.logger.debug("endUpdate");
 
-        //Update all clickable items that need updating
-        this._updateClickableItems();
-        
         this._updating = false;
         this._tryRefreshScreen();
+    };
+
+    //TODO REMOVE CONNECTION STUFF FROM NEXT TWO METHODS
+    SnapEditorWidget.prototype._tryRefreshScreen = function () {
+        var insertedLen = 0,
+            updatedLen = 0,
+            deletedLen = 0,
+            msg = "";
+
+        //check whether controller update finished or not
+        if (this._updating !== true) {
+
+            insertedLen += this._insertedClickableItemIDs.length;
+            updatedLen += this._updatedClickableItemIDs.length;
+            deletedLen += this._deletedClickableItemIDs.length;
+
+            msg += "I: " + insertedLen;
+            msg += " U: " + updatedLen;
+            msg += " D: " + deletedLen;
+
+            this.logger.debug(msg);
+            if (DEBUG === true && this.toolbarItems && this.toolbarItems.progressText) {
+                this.toolbarItems.progressText.text(msg, true);
+            }
+
+            this._refreshScreen();
+        }
+    };
+
+    SnapEditorWidget.prototype._refreshScreen = function () {
+        var i,
+            maxWidth = 0,
+            maxHeight = 0,
+            itemBBox,
+            doRenderGetLayout,
+            doRenderSetText,
+            doRenderSetLayout,
+            items = this.items,
+            affectedItems = [],
+            dispatchEvents,
+            self = this;
+
+        this.logger.debug("_refreshScreen START");
+
+        //TODO: updated items probably touched the DOM for modification
+        //hopefully none of them forced a reflow by reading values, only setting values
+        //browsers will optimize this
+        //http://www.phpied.com/rendering-repaint-reflowrelayout-restyle/ --- BROWSER ARE SMART
+
+        /***************** FIRST HANDLE THE DESIGNER ITEMS *****************/
+        //add all the inserted items, they are still on a document Fragment
+        this.skinParts.$itemsContainer[0].appendChild(this._documentFragment);
+        this._documentFragment = document.createDocumentFragment();
+
+        //STEP 1: call the inserted and updated items' getRenderLayout
+        //I need to get the widths, heights, etc, so I can calculate the new sizes
+        //after the transforms...
+        doRenderGetLayout = function (itemIDList) {
+            var i = itemIDList.length,
+                itemBBox,
+                cItem;
+
+            while (i--) {
+                cItem = items[itemIDList[i]];
+                cItem.renderGetLayoutInfo();
+
+                itemBBox = cItem.getBoundingBox();
+                maxWidth = Math.max(maxWidth, itemBBox.x2);
+                maxHeight = Math.max(maxHeight, itemBBox.y2);
+            }
+        };
+        doRenderGetLayout(this._insertedClickableItemIDs);
+        doRenderGetLayout(this._updatedClickableItemIDs);
+
+        //Update the text fields of all clickable items
+        doRenderSetText = function (itemIDList) {
+            for (var i = itemIDList.length-1; i >= 0; i--){
+                items[itemIDList[i]].renderSetTextInfo();
+            }
+        };
+        doRenderSetText(this._insertedClickableItemIDs);
+        doRenderSetText(this._updatedClickableItemIDs);
+        
+        //Update all clickable items that need updating
+        this._updateClickableItems();
+
+        //STEP 2: call the inserted and updated items' setRenderLayout
+        doRenderSetLayout = function (itemIDList) {
+            var i = itemIDList.length,
+                cItem;
+
+            for (var i = itemIDList.length-1; i >= 0; i--){
+                items[itemIDList[i]].renderSetLayoutInfo();
+            }
+        };
+        
+        doRenderSetLayout(this._insertedClickableItemIDs);
+        doRenderSetLayout(this._updatedClickableItemIDs);
+
+
+        /*********** SEND CREATE / UPDATE EVENTS about created/updated items **********/
+        dispatchEvents = function (itemIDList, eventType) {
+            var i = itemIDList.length;
+
+            while (i--) {
+                self.dispatchEvent(eventType, itemIDList[i]);
+            }
+        };
+        dispatchEvents(this._insertedClickableItemIDs, this.events.ON_COMPONENT_CREATE);
+        dispatchEvents(this._updatedClickableItemIDs, this.events.ON_COMPONENT_UPDATE);
+        /*********************/
+
+
+        affectedItems = this._insertedClickableItemIDs.concat(this._updatedClickableItemIDs, this._deletedClickableItemIDs);
+
+        //adjust the canvas size to the new 'grown' are that the inserted / updated require
+        //TODO: canvas size decrease not handled yet
+        this._actualSize.w = Math.max(this._actualSize.w, maxWidth + CANVAS_EDGE);
+        this._actualSize.h = Math.max(this._actualSize.h, maxHeight + CANVAS_EDGE);
+        this._resizeItemContainer();
+
+        /* clear collections */
+        this._insertedClickableItemIDs = [];
+        this._updatedClickableItemIDs = [];
+        this._deletedClickableItemIDs = [];
+
+        if (this.mode === this.OPERATING_MODES.DESIGN ||
+            this.mode === this.OPERATING_MODES.READ_ONLY) {
+            this.selectionManager.showSelectionOutline();    
+        }
+
+        this.logger.debug("_refreshScreen END");
     };
 
     // This next method will find the scope of items that could be affected by
@@ -760,127 +889,6 @@ define(['logManager',
 
         this._clickableItems2Update = {};
     };
-
-    //TODO REMOVE CONNECTION STUFF FROM NEXT TWO METHODS
-    SnapEditorWidget.prototype._tryRefreshScreen = function () {
-        var insertedLen = 0,
-            updatedLen = 0,
-            deletedLen = 0,
-            msg = "";
-
-        //check whether controller update finished or not
-        if (this._updating !== true) {
-
-            insertedLen += this._insertedClickableItemIDs.length;
-            updatedLen += this._updatedClickableItemIDs.length;
-            deletedLen += this._deletedClickableItemIDs.length;
-
-            msg += "I: " + insertedLen;
-            msg += " U: " + updatedLen;
-            msg += " D: " + deletedLen;
-
-            this.logger.debug(msg);
-            if (DEBUG === true && this.toolbarItems && this.toolbarItems.progressText) {
-                this.toolbarItems.progressText.text(msg, true);
-            }
-
-            this._refreshScreen();
-        }
-    };
-
-    SnapEditorWidget.prototype._refreshScreen = function () {
-        var i,
-            maxWidth = 0,
-            maxHeight = 0,
-            itemBBox,
-            doRenderGetLayout,
-            doRenderSetLayout,
-            items = this.items,
-            affectedItems = [],
-            dispatchEvents,
-            self = this;
-
-        this.logger.debug("_refreshScreen START");
-
-        //TODO: updated items probably touched the DOM for modification
-        //hopefully none of them forced a reflow by reading values, only setting values
-        //browsers will optimize this
-        //http://www.phpied.com/rendering-repaint-reflowrelayout-restyle/ --- BROWSER ARE SMART
-
-        /***************** FIRST HANDLE THE DESIGNER ITEMS *****************/
-        //add all the inserted items, they are still on a document Fragment
-        this.skinParts.$itemsContainer[0].appendChild(this._documentFragment);
-        this._documentFragment = document.createDocumentFragment();
-
-        //STEP 1: call the inserted and updated items' getRenderLayout
-        //I need to get the widths, heights, etc, so I can calculate the new sizes
-        //after the transforms...
-        doRenderGetLayout = function (itemIDList) {
-            var i = itemIDList.length,
-                itemBBox,
-                cItem;
-
-            while (i--) {
-                cItem = items[itemIDList[i]];
-                cItem.renderGetLayoutInfo();
-
-                itemBBox = cItem.getBoundingBox();
-                maxWidth = Math.max(maxWidth, itemBBox.x2);
-                maxHeight = Math.max(maxHeight, itemBBox.y2);
-            }
-        };
-        doRenderGetLayout(this._insertedClickableItemIDs);
-        doRenderGetLayout(this._updatedClickableItemIDs);
-
-        //STEP 2: call the inserted and updated items' setRenderLayout
-        doRenderSetLayout = function (itemIDList) {
-            var i = itemIDList.length,
-                cItem;
-
-            while (i--) {
-                cItem = items[itemIDList[i]];
-                cItem.renderSetLayoutInfo();
-            }
-        };
-        
-        doRenderSetLayout(this._insertedClickableItemIDs);
-        doRenderSetLayout(this._updatedClickableItemIDs);
-
-
-        /*********** SEND CREATE / UPDATE EVENTS about created/updated items **********/
-        dispatchEvents = function (itemIDList, eventType) {
-            var i = itemIDList.length;
-
-            while (i--) {
-                self.dispatchEvent(eventType, itemIDList[i]);
-            }
-        };
-        dispatchEvents(this._insertedClickableItemIDs, this.events.ON_COMPONENT_CREATE);
-        dispatchEvents(this._updatedClickableItemIDs, this.events.ON_COMPONENT_UPDATE);
-        /*********************/
-
-
-        affectedItems = this._insertedClickableItemIDs.concat(this._updatedClickableItemIDs, this._deletedClickableItemIDs);
-
-        //adjust the canvas size to the new 'grown' are that the inserted / updated require
-        //TODO: canvas size decrease not handled yet
-        this._actualSize.w = Math.max(this._actualSize.w, maxWidth + CANVAS_EDGE);
-        this._actualSize.h = Math.max(this._actualSize.h, maxHeight + CANVAS_EDGE);
-        this._resizeItemContainer();
-
-        /* clear collections */
-        this._insertedClickableItemIDs = [];
-        this._updatedClickableItemIDs = [];
-        this._deletedClickableItemIDs = [];
-
-        if (this.mode === this.OPERATING_MODES.DESIGN ||
-            this.mode === this.OPERATING_MODES.READ_ONLY) {
-            this.selectionManager.showSelectionOutline();    
-        }
-
-        this.logger.debug("_refreshScreen END");
-    };
-
     SnapEditorWidget.prototype.clear = function () {
 
         this.setTitle('');

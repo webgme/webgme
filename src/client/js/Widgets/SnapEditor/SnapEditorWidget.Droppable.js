@@ -217,7 +217,8 @@ define(['js/DragDrop/DropTarget',
             }
 
             //Make sure they aren't already connected
-            if (draggedId !== item.getItemAtConnId(item.activeConnectionArea.id).id){
+            if (!item.getItemAtConnId(item.activeConnectionArea.id) || 
+                draggedId !== item.getItemAtConnId(item.activeConnectionArea.id).id){
                 this.onItemDrop(draggedId, itemId, ptr, item.activeConnectionArea.role);
             }
 

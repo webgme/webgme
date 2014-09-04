@@ -155,29 +155,6 @@
        y="18.038546"
        inkscape:label="#RTRect-4" />
   </g>
-<!-- Text Bounding Boxes -->
-  <rect
-     style="opacity:0"
-     id="name-bounding-box"
-     width="7.2517357"
-     height="8.1356192"
-     x="35.972111"
-     y="6.5785375"/>
-    <rect
-     style="opacity:0"
-       id="first-bounding-box"
-       width="16.673277"
-       height="12.51503"
-       x="57.725422"
-       y="4.7485795" />
-    <rect
-     style="opacity:0"
-       id="second-bounding-box"
-       width="16.673277"
-       height="12.51503"
-       x="13.434318"
-       y="4.8144441" />
-
   <!-- NAME AND CONNECTION INFO -->
 <!-- connection areas -->
   <line
@@ -236,7 +213,7 @@
      data-ptr="first"
      data-type="svg"
      class="initial-measure"
-     width="25"
+     width="15"
      height="14"
      x="0"
      y="0"
@@ -247,7 +224,7 @@
      data-ptr="second"
      data-type="svg"
      class="initial-measure"
-     width="25"
+     width="15"
      height="14"
      x="0"
      y="0"

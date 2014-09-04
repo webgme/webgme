@@ -64,7 +64,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
         this.svgBorderWidth = 0;
 
         //stretching
-        this.stretchTree = {};
+        this.stretchTree = {};//Stores stretch requirements by pointer and type
         this.stretchElementsByPointer = {};
         this.stretchedElements = {};
 
@@ -179,8 +179,14 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
                 
                 //initialize stretchTree
                 self.stretchTree[svgId] = {};
-                self.stretchTree[svgId][AXIS.X] = {};
-                self.stretchTree[svgId][AXIS.Y] = {};
+                for (var axis in AXIS){
+                    if (AXIS.hasOwnProperty(axis)){
+                        axis = AXIS[axis];
+                        self.stretchTree[svgId][axis] = {};
+                        self.stretchTree[svgId][axis][SNAP_CONSTANTS.STRETCH_TYPE.SVG] = {};
+                        self.stretchTree[svgId][axis][SNAP_CONSTANTS.STRETCH_TYPE.TEXT] = {};
+                    }
+                }
 
                 //Recurse if applicable
                 if (value.children){
@@ -224,7 +230,8 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
                                 type = SNAP_CONSTANTS.STRETCH_TYPE.TEXT;
                             }
 
-                            self.stretchTree[svgId][axis][pointer] = 0;//self.pointerInitialStretch[pointer][SNAP_CONSTANTS.STRETCH_TYPE.SVG][axis] || 0;
+                            self.stretchTree[svgId][axis][SNAP_CONSTANTS.STRETCH_TYPE.SVG][pointer] = 0;
+                            self.stretchTree[svgId][axis][SNAP_CONSTANTS.STRETCH_TYPE.TEXT][pointer] = 0;
 
                             //Add element to stretchElementsByPointer
                             if (!self.stretchElementsByPointer[pointer]){
@@ -699,14 +706,17 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
             }
 
             //Update pointer width for svg element
-            this.stretchTree[svgId][axis][id] += delta;
+            this.stretchTree[svgId][axis][type][id] += delta;
 
             //Get new this._transforms
-            ptrs = Object.keys(this.stretchTree[svgId][axis]);
             stretches = [];
-
-            while (ptrs.length){
-                stretches.push(this.stretchTree[svgId][axis][ptrs.pop()]);
+            for (var t in this.stretchTree[svgId][axis]){
+                if (this.stretchTree[svgId][axis].hasOwnProperty(t)){
+                    ptrs = Object.keys(this.stretchTree[svgId][axis][t]);
+                    while (ptrs.length){
+                        stretches.push(this.stretchTree[svgId][axis][t][ptrs.pop()]);
+                    }
+                }
             }
 
             oldValue = this._transforms[svgId].stretch[dim] || 0;

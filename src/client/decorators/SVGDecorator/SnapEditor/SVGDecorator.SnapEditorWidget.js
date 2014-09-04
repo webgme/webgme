@@ -191,6 +191,8 @@ define(['js/Constants',
             value = this._attributes[attr].value;
             fields = textFields.filter("#" + attr);
 
+            //If they are "" or whitespace, the text will not have a BBox
+            //and the edit box will be messed up (hence the EMPTY_STRING, EMPTY_STYLE)
             if (!enabled || /^[ ]*$/.test(value)){
                 options = { style: EMPTY_STYLE };
                 value = EMPTY_STRING;
@@ -269,9 +271,7 @@ define(['js/Constants',
 
     /**** Override from SnapEditorWidgetCore ****/
     SVGDecoratorSnapEditorWidget.prototype._renderContent = function () {
-        var client = this._control._client,
-            value,
-            options = {};
+        var client = this._control._client;
 
         this.$el.attr({"data-id": this._metaInfo[CONSTANTS.GME_ID]});
         this.zIndex = this._metaInfo[CONSTANTS.GME_ID].split("/").length;
@@ -375,14 +375,6 @@ define(['js/Constants',
                 }
             }
 
-            //Initialize fields to EMPTY_STRING
-            //If they are "" or whitespace, the text will not have a BBox
-            //and the edit box will be messed up (hence the EMPTY_STRING, EMPTY_STYLE)
-            if (fields.length){
-                options = { style: EMPTY_STYLE };
-                value = EMPTY_STRING;
-                this._setTextAndStretch(fields, value, attr, options);
-            }
         }
 
         this.update();
@@ -574,9 +566,6 @@ define(['js/Constants',
         
         //Update the displayed input areas based on newest data
         this.updateInputFields();
-
-        //Update attribute text fields
-        this.updateAttributeText();
 
         //Apply stretching
         this._applyTransforms();
