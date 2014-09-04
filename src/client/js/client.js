@@ -81,7 +81,7 @@ define([
                 _rootHash = null,
                 _gHash = 0,
                 _addOns = {},
-                _conrtaintCallback = null;
+                _constraintCallback = null;
 
             function print_nodes(pretext){
                 if(pretext){
@@ -306,7 +306,7 @@ define([
                 }
             }
             function validateProjectAsync(callback){
-                callback = callback || _conrtaintCallback || function(err,result){};
+                callback = callback || _constraintCallback || function(err,result){};
                 if(_addOns['ConstraintAddOn'] && _addOns['ConstraintAddOn'] !== 'loading'){
                     queryAddOn("ConstraintAddOn", {querytype:'checkProject'}, callback);
                 } else {
@@ -314,7 +314,7 @@ define([
                 }
             }
             function validateModelAsync(path,callback){
-                callback = callback || _conrtaintCallback || function(err,result){};
+                callback = callback || _constraintCallback || function(err,result){};
                 if(_addOns['ConstraintAddOn'] && _addOns['ConstraintAddOn'] !== 'loading'){
                     queryAddOn("ConstraintAddOn", {querytype:'checkModel',path:path}, callback);
                 } else {
@@ -322,7 +322,7 @@ define([
                 }
             }
             function validateNodeAsync(path,callback){
-                callback = callback || _conrtaintCallback || function(err,result){};
+                callback = callback || _constraintCallback || function(err,result){};
                 if(_addOns['ConstraintAddOn'] && _addOns['ConstraintAddOn'] !== 'loading'){
                     queryAddOn("ConstraintAddOn", {querytype:'checkNode',path:path}, callback);
                 } else {
@@ -331,7 +331,7 @@ define([
             }
             function setValidationCallback(cFunction){
                 if(typeof cFunction === 'function' || cFunction === null){
-                    _conrtaintCallback = cFunction;
+                    _constraintCallback = cFunction;
                 }
             }
             //core addOns end
@@ -610,6 +610,7 @@ define([
                 });
             }
             function openProject(name,callback){
+                //this function cannot create new project
                 ASSERT(_database);
                 var waiting = 2,
                     innerCallback = function(err){
@@ -623,51 +624,61 @@ define([
                     },
                     firstName = null,
                     error = null;
-                _database.openProject(name,function(err,p){
-                    if(!err &&  p){
-                        _database.getAuthorizationInfo(name,function(err,authInfo){
-                            _readOnlyProject = authInfo ? (authInfo.write === true ? false : true) : true;
-                            _project = p;
-                            _projectName = name;
-                            _inTransaction = false;
-                            _nodes = {};
-                            _metaNodes = {};
-                            _core = getNewCore(_project);
-                            META.initialize(_core,_metaNodes,saveRoot);
-                            if(_commitCache){
-                                _commitCache.clearCache();
+                _database.getProjectNames(function(err,names){
+                    if(err){
+                        return callback(err);
+                    }
+                    if(names.indexOf(names) !== -1){
+                        _database.openProject(name,function(err,p){
+                            if(!err &&  p){
+                                _database.getAuthorizationInfo(name,function(err,authInfo){
+                                    _readOnlyProject = authInfo ? (authInfo.write === true ? false : true) : true;
+                                    _project = p;
+                                    _projectName = name;
+                                    _inTransaction = false;
+                                    _nodes = {};
+                                    _metaNodes = {};
+                                    _core = getNewCore(_project);
+                                    META.initialize(_core,_metaNodes,saveRoot);
+                                    if(_commitCache){
+                                        _commitCache.clearCache();
+                                    } else {
+                                        _commitCache = commitCache();
+                                    }
+                                    _self.dispatchEvent(_self.events.PROJECT_OPENED, _projectName);
+
+                                    //check for master or any other branch
+                                    _project.getBranchNames(function(err,names){
+                                        if(!err && names){
+
+                                            if(names['master']){
+                                                firstName = 'master';
+                                            } else {
+                                                firstName = Object.keys(names)[0] || null;
+                                            }
+
+                                            if(firstName){
+                                                branchWatcher(firstName,innerCallback);
+                                                startCoreAddOnsAsync(_projectName,firstName,innerCallback);
+                                            } else {
+                                                //we should try the latest commit
+                                                viewLatestCommit(callback);
+                                            }
+                                        } else {
+                                            //we should try the latest commit
+                                            viewLatestCommit(callback);
+                                        }
+                                    });
+                                });
                             } else {
-                                _commitCache = commitCache();
+                                logger.error('The project '+name+' cannot be opened! ['+JSON.stringify(err)+']');
+                                callback(err);
                             }
-                            _self.dispatchEvent(_self.events.PROJECT_OPENED, _projectName);
-
-                            //check for master or any other branch
-                            _project.getBranchNames(function(err,names){
-                                if(!err && names){
-
-                                    if(names['master']){
-                                        firstName = 'master';
-                                    } else {
-                                        firstName = Object.keys(names)[0] || null;
-                                    }
-
-                                    if(firstName){
-                                        branchWatcher(firstName,innerCallback);
-                                        startCoreAddOnsAsync(_projectName,firstName,innerCallback);
-                                    } else {
-                                        //we should try the latest commit
-                                        viewLatestCommit(callback);
-                                    }
-                                } else {
-                                    //we should try the latest commit
-                                    viewLatestCommit(callback);
-                                }
-                            });
                         });
                     } else {
-                        logger.error('The project '+name+' cannot be opened! ['+JSON.stringify(err)+']');
-                        callback(err);
+                        callback(new Error('there is no such project'));
                     }
+
                 });
             }
 
