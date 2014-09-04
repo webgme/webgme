@@ -620,7 +620,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      * @return {Boolean} true if the svg has changed in size
      */
     SVGDecoratorSnapEditorWidgetStretch.prototype.stretchTo = function (id, size, type) {
-        //READ-ONLY wrt DOM
+        //Doesn't READ or WRITE to DOM
         //Stretch according to the x,y values where x,y are
         //dimensions of the items pointed to by "id"
         var changed = false,
@@ -674,7 +674,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      * @return {undefined}
      */
     SVGDecoratorSnapEditorWidgetStretch.prototype.stretch = function (id, axis, delta, type) {
-        //READ-ONLY
+        //Doesn't READ or WRITE to DOM
         var stretchElements = [],
             dim = axis === AXIS.X ? "width" : "height",
             svgId,
@@ -726,26 +726,31 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
 
                 this._transforms[svgId].stretch[dim] = newValue;
 
-                //Set the svg element to update
-                //this._updatedSVGElements[svgId] = this.$svgContent.find("#" + svgId);
-
                 //Record the stretch id if stretch is non-zero
                 if (newValue !== 0){
-                    this.stretchedElements[svgId] = 1;
+                    if (!this.stretchedElements[svgId]){
+                        this.stretchedElements[svgId] = {};
+                    }
+
+                    this.stretchedElements[svgId][axis] = 1;
                 } else {
-                    delete this.stretchedElements[svgId];
+                    delete this.stretchedElements[svgId][axis];
+
+                    if (Object.keys(this.stretchedElements[svgId]) === 0){
+                        delete this.stretchedElements[svgId];
+                    }
                 }
 
             }
         }    
 
-        //return this._svgSize[dim];
     };
 
     //Some svg elements have unknown dimensions until the svg is actually rendered 
     //on the screen. I have stored "null" for those elements and we will calculate 
     //them on render (using the following function)
     SVGDecoratorSnapEditorWidgetStretch.prototype._fixNullDimensions = function(){//fixes null dimensions
+        //READ-ONLY wrt DOM
         var ids = Object.keys(this._transforms),
             element,
             box;
