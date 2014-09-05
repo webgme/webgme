@@ -203,6 +203,22 @@ require(
                     'gme.services'
                 ]);
 
+//            NS.getNode(context, path)
+//                .then(function (node) {
+//                    node.on('update', fcn1);
+//
+//                    return node.getChildren();
+//                })
+//                .then(function (children) {
+//                    for (var i = 0; i < children.length; i += 1) {
+//                        if (children[i].getType() === 'M12') {
+//                            children[i].on('update', updateM12);
+//                        }
+//                    }
+//                })
+//            ;
+
+
             // TODO: REMOVE - ONLY FOR TESTING
             WebGMEGlobal.gmeApp = gmeApp;
             gmeApp.controller('TestController', function ($scope, DataStoreService, NodeService) {

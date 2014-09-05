@@ -12,8 +12,7 @@ define(['js/client'], function (Client) {
             var datastores = {};
 
             this.connectToDatabase = function (context) {
-                var deferred = $q.defer(),
-                    client;
+                var deferred = $q.defer(), client;
 
                 if (datastores.hasOwnProperty(context.db)) {
                     // FIXME: this may or may not ready yet...
@@ -45,17 +44,16 @@ define(['js/client'], function (Client) {
             this.getProjects = function (context) {
                 var deferred = $q.defer();
 
-                this.connectToDatabase(context)
-                    .then(function () {
-                        datastores[context.db].client.getAvailableProjectsAsync(function (err, projectIds) {
-                            if (err) {
-                                deferred.reject(err);
-                                return;
-                            }
+                this.connectToDatabase(context).then(function () {
+                    datastores[context.db].client.getAvailableProjectsAsync(function (err, projectIds) {
+                        if (err) {
+                            deferred.reject(err);
+                            return;
+                        }
 
-                            deferred.resolve(projectIds);
-                        });
+                        deferred.resolve(projectIds);
                     });
+                });
 
                 return deferred.promise;
             };
@@ -63,24 +61,27 @@ define(['js/client'], function (Client) {
             this.selectProject = function (context) {
                 var deferred = $q.defer();
 
-                this.getProjects(context)
-                    .then(function (projectIds) {
+                this.getProjects(context).then(function (projectIds) {
 
-                        if (projectIds.indexOf(context.projectId) > -1) {
-                            datastores[context.db].client.selectProjectAsync(context.projectId, function (err) {
+                    if (projectIds.indexOf(context.projectId) > -1) {
+                        datastores[context.db].client.selectProjectAsync(context.projectId,
+                            function (err) {
                                 if (err) {
                                     deferred.reject(err);
                                     return;
                                 }
 
-                                datastores[context.db].projectId = context.projectId;
+                                datastores[context.db].projectId =
+                                    context.projectId;
 
                                 deferred.resolve();
                             });
-                        } else {
-                            deferred.reject(new Error('Project does not exist. ' + context.projectId));
-                        }
-                    });
+                    } else {
+                        deferred.reject(new Error('Project does not exist. ' +
+                                context.projectId
+                        ));
+                    }
+                });
 
                 return deferred.promise;
             };
@@ -89,20 +90,21 @@ define(['js/client'], function (Client) {
             this.selectBranch = function (context) {
                 var deferred = $q.defer();
 
-                this.selectProject(context)
-                    .then(function () {
-                        // FIXME: if branch does not exist the callback is not called, then after (probably a timeout) it is called with no error???
-                        datastores[context.db].client.selectBranchAsync(context.branchId, function (err) {
+                this.selectProject(context).then(function () {
+                    // FIXME: if branch does not exist the callback is not called, then after (probably a timeout) it is called with no error???
+                    datastores[context.db].client.selectBranchAsync(context.branchId,
+                        function (err) {
                             if (err) {
                                 deferred.reject(err);
                                 return;
                             }
 
-                            datastores[context.db].branchId = context.branchId;
+                            datastores[context.db].branchId =
+                                context.branchId;
 
                             deferred.resolve();
                         });
-                    });
+                });
 
                 return deferred.promise;
             };
@@ -127,23 +129,88 @@ define(['js/client'], function (Client) {
         })
 
         .service('NodeService', function ($timeout, $q, BranchService) {
+            var Node,
+                nodes;
 
+            Node = function (context) {
 
-            this.getNode = function (context, path) {
-//                var deferred = $q.defer();
-//
-//                BranchService.selectBranch(context)
-//                    .then(function () {
-//
-//                        $timeout(function () {
-//                            console.log('getting node ', context, path);
-//                            deferred.resolve({id: path, name: 'Node name 1'});
-//                        }, Math.floor(Math.random() * 100));
-//                    });
-//
-//                return deferred.promise;
+                this.context = context;
             };
-        })
+            
+            Node.prototype.getAttribute = function (name) {
 
-    ;
+            };
+
+            Node.prototype.setAttribute = function (name, value) {
+
+            };
+
+
+            Node.prototype.getRegistry = function (name) {
+
+            };
+
+            Node.prototype.setRegistry = function (name, value) {
+
+            };
+
+            Node.prototype.getPointer = function (name) {
+
+            };
+
+            Node.prototype.setPointer = function (name, nodeOrId) {
+
+            };
+
+            // TODO: add sets
+
+            Node.prototype.getParentNode = function () {
+
+            };
+
+            Node.prototype.getId = function () {
+
+            };
+
+            Node.prototype.getGuid = function () {
+
+            };
+
+
+            Node.prototype.getChildren = function () {
+
+            };
+
+            Node.prototype.createChild = function (baseNodeOrId, name) {
+
+            };
+
+            Node.prototype.destroy = function () {
+
+            };
+
+            Node.prototype.getMetaType = function () {
+
+            };
+
+            Node.prototype.isMetaTypeOf = function (nodeOrId) {
+
+            };
+
+
+            this.createChild = function (context, id) {
+                // NS.createChild({parent: parentNode/id, base: baseNode/id}) – current one on client takes {parentId and baseId}
+            };
+
+
+            this.destroyNode = function (context, nodeOrId) {
+                // NS.destroyNode(node/Id);
+            };
+
+
+            this.loadNode = function (context, path) {
+
+            };
+        }
+    );
 });
