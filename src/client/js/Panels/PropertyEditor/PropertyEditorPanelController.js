@@ -26,9 +26,12 @@ define(['logManager',
     "use strict";
 
     var PropertyEditorController,
-        META_REGISTRY_KEYS = [REGISTRY_KEYS.IS_PORT,
+        META_REGISTRY_KEYS = [
+            REGISTRY_KEYS.IS_PORT,
             REGISTRY_KEYS.IS_ABSTRACT,
-            REGISTRY_KEYS.VALID_PLUGINS],
+            REGISTRY_KEYS.VALID_PLUGINS,
+            REGISTRY_KEYS.USED_ADDONS,
+        ],
         PREFERENCES_REGISTRY_KEYS = [REGISTRY_KEYS.DECORATOR,
             REGISTRY_KEYS.DISPLAY_FORMAT,
             REGISTRY_KEYS.SVG_ICON,
