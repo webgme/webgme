@@ -155,73 +155,73 @@ define(['js/client'], function (Client) {
                 }
             };
 
-            Node = function (databaseConnection, id) {
+            NodeObj = function (databaseConnection, id) {
                 this.databaseConnection = databaseConnection;
                 this.id = id;
             };
 
-            Node.prototype.getAttribute = function (name) {
+            NodeObj.prototype.getAttribute = function (name) {
+                return this.databaseConnection.client.getNode(this.id).getAttribute(name);
+            };
+
+            NodeObj.prototype.setAttribute = function (name, value, msg) {
+                this.databaseConnection.client.setAttributes(this.id, name, value, msg);
+            };
+
+
+            NodeObj.prototype.getRegistry = function (name) {
 
             };
 
-            Node.prototype.setAttribute = function (name, value) {
+            NodeObj.prototype.setRegistry = function (name, value) {
 
             };
 
-
-            Node.prototype.getRegistry = function (name) {
-
-            };
-
-            Node.prototype.setRegistry = function (name, value) {
+            NodeObj.prototype.getPointer = function (name) {
 
             };
 
-            Node.prototype.getPointer = function (name) {
-
-            };
-
-            Node.prototype.setPointer = function (name, nodeOrId) {
+            NodeObj.prototype.setPointer = function (name, nodeOrId) {
 
             };
 
             // TODO: add sets
 
-            Node.prototype.getBaseNode = function () {
+            NodeObj.prototype.getBaseNode = function () {
 
             };
 
 
-            Node.prototype.getParentNode = function () {
+            NodeObj.prototype.getParentNode = function () {
 
             };
 
-            Node.prototype.getId = function () {
+            NodeObj.prototype.getId = function () {
 
             };
 
-            Node.prototype.getGuid = function () {
+            NodeObj.prototype.getGuid = function () {
 
             };
 
 
-            Node.prototype.getChildren = function () {
+            NodeObj.prototype.getChildren = function () {
 
             };
 
-            Node.prototype.createChild = function (baseNodeOrId, name) {
+            NodeObj.prototype.createChild = function (baseNodeOrId, name) {
 
             };
 
-            Node.prototype.destroy = function () {
+            NodeObj.prototype.destroy = function () {
 
             };
 
-            Node.prototype.getMetaType = function () {
+            NodeObj.prototype.getMetaType = function () {
 
             };
 
-            Node.prototype.isMetaTypeOf = function (nodeOrId) {
+            NodeObj.prototype.isMetaTypeOf = function (nodeOrId) {
 
             };
 
@@ -239,10 +239,12 @@ define(['js/client'], function (Client) {
             this.loadNode = function (context, id) {
                 var deferred = $q.defer(),
                     dbConn = getDatabaseConnection(context),
+                    territory,
                     nodes;
 
                 dbConn.nodeService = dbConn.nodeService || {};
                 dbConn.nodeService.nodes =  dbConn.nodeService.nodes || {};
+                dbConn.nodeService.territoies = dbConn.nodeService.territoies || {};
 
                 nodes = dbConn.nodeService.nodes;
 
@@ -250,12 +252,36 @@ define(['js/client'], function (Client) {
                     deferred.resolve(nodes[id]);
                 } else {
                     // TODO: create territory if does not exist
-                    // TODO: add territory rule
-                    // TODO: when node is loaded resolve promise
-                    nodes[id] =  new Node(dbConn, id);
-                    return nodes[id];
-                }
+                    if (dbConn.nodeService.territoies.hasOwnProperty(context.territoryId)) {
+                        territory = dbConn.nodeService.territoies[context.territoryId];
+                    } else {
+                        dbConn.client.addUI(null, function (events) {
+                            var i,
+                                event;
 
+                            // TODO: fill in this
+                            for (i = 0; i < events.length; i += 1) {
+                                event = events[i];
+                                if (event.eid === id && event.etype === 'load') {
+                                    // TODO: when node is loaded resolve promise
+                                    nodes[id] =  new NodeObj(dbConn, id);
+                                    deferred.resolve(nodes[id]);
+                                }
+                            }
+
+                        }, context.territoryId);
+
+                        // TODO: add territory rule
+                        territory = {};
+                        territory.id = context.territoryId;
+                        territory.patterns = territory.patterns || {};
+                        territory.patterns[id] = {children: 0}; // FIXME: how to update this correctly ???
+
+                        dbConn.nodeService.territoies[context.territoryId] = territory;
+
+                        dbConn.client.updateTerritory(context.territoryId, territory.patterns);
+                    }
+                }
 
                 return deferred.promise;
             };
