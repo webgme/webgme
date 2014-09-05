@@ -223,9 +223,10 @@ require(
             WebGMEGlobal.gmeApp = gmeApp;
             gmeApp.controller('TestController', function ($scope, DataStoreService, NodeService) {
                 var context = {
-                    db: 'my-db-connection-id',
+                    db: 'my-db-connection-id1',
                     projectId: 'Test',
-                    branchId: 'b1'
+                    branchId: 'b1',
+                    territoryId: 'my_terr11111'
                 };
 
 
@@ -235,6 +236,19 @@ require(
                     })
                     .then(function () {
                         console.log('ready to work with objects...', context);
+                    })
+                    .catch(function (reason) {
+                        console.error(reason);
+                    });
+
+                DataStoreService.selectBranch(context)
+                    .then(function () {
+                        console.log('ready to work with objects...', context);
+                        NodeService.loadNode(context, '')
+                            .then(function (node) {
+                                console.log(node.getAttribute('name'));
+                            });
+
                     })
                     .catch(function (reason) {
                         console.error(reason);

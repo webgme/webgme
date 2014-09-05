@@ -134,7 +134,7 @@ define(['js/client'], function (Client) {
             };
         })
 
-        .service('NodeService', function ($timeout, $q, BranchService) {
+        .service('NodeService', function ($timeout, $q, DataStoreService) {
             var Node,
                 nodes,
                 getIdFromNodeOrString;
@@ -238,7 +238,7 @@ define(['js/client'], function (Client) {
 
             this.loadNode = function (context, id) {
                 var deferred = $q.defer(),
-                    dbConn = getDatabaseConnection(context),
+                    dbConn = DataStoreService.getDatabaseConnection(context),
                     territory,
                     nodes;
 
