@@ -85,7 +85,7 @@ define(['js/Dialogs/ConstraintCheckResults/ConstraintCheckResultsDialog'], funct
 
         /************** EXECUTE PLUG-IN BUTTON ****************/
         $btnExecutePlugin = toolbar.addDropDownButton(
-            { "title": "Execute plug-in",
+            { "title": "Check constraints",
                 "icon": "glyphicon glyphicon-fire",
                 "menuClass": "no-min-width",
                 'clickFn': function () {

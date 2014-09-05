@@ -168,6 +168,7 @@ define([
                 //TODO we should try to update the branch with our latest commit
                 //and 'restart' listening to branch changes
                 if(_offline){
+                    stopRunningAddOns();
                     branchWatcher(_branch);
                 }
             }
@@ -231,7 +232,9 @@ define([
                 if(_addOns[name] === undefined){
                     _addOns[name] = "loading";
                     _database.simpleRequest({command:'connectedWorkerStart',workerName:name,project:_projectName,branch:_branch},function(err,id){
+                        console.log('started addon',err);
                         if(err){
+                            delete _addOns[name];
                             return logger.error(err);
                         }
 
@@ -251,8 +254,49 @@ define([
                     _database.simpleResult(_addOns[name],callback);
                     delete _addOns[name];
                 } else {
-                    callback(null);
+                    callback(_addOns[name] ? new Error("addon loading") : null);
                 }
+            }
+
+            //generic project related addOn handling
+            function updateRunningAddOns(root){
+                var neededAddOns = _core.getRegistry(root,"usedAddOns"),
+                    i,
+                    runningAddOns = getRunningAddOnNames();
+                neededAddOns = neededAddOns ? neededAddOns.split(" ") : [];
+                for(i=0;i<neededAddOns.length;i++){
+                    if(!_addOns[neededAddOns[i]]){
+                        startAddOn(neededAddOns[i]);
+                    }
+                }
+                for(i=0;i<runningAddOns.length;i++){
+                    if(neededAddOns.indexOf(runningAddOns[i])){
+                        stopAddOn(name,function(err){});
+                    }
+                }
+            }
+            function stopRunningAddOns(){
+                var i,
+                    keys = Object.keys(_addOns),
+                    callback = function(err){
+                        if(err){
+                            console.log("stopAddOn",err);
+                        }
+                    };
+                for(i=0;i<keys.length;i++){
+                    stopAddOn(keys[i],callback);
+                }
+            }
+            function getRunningAddOnNames(){
+                var i,
+                    names = [],
+                    keys = Object.keys(_addOns);
+                for(i=0;i<keys.length;i++){
+                    if(_addOns[keys[i]] !== 'loading'){
+                        names.push(keys[i]);
+                    }
+                }
+                return names;
             }
 
             //core addOns
@@ -612,7 +656,7 @@ define([
             function openProject(name,callback){
                 //this function cannot create new project
                 ASSERT(_database);
-                var waiting = 2,
+                var waiting = 1,
                     innerCallback = function(err){
                         error = error || err;
                         if(--waiting === 0){
@@ -658,8 +702,9 @@ define([
                                             }
 
                                             if(firstName){
+                                                stopRunningAddOns();
                                                 branchWatcher(firstName,innerCallback);
-                                                startCoreAddOnsAsync(_projectName,firstName,innerCallback);
+                                                //startCoreAddOnsAsync(_projectName,firstName,innerCallback);
                                             } else {
                                                 //we should try the latest commit
                                                 viewLatestCommit(callback);
@@ -1058,6 +1103,8 @@ define([
                 _core.loadRoot(newRootHash,function(err,root){
                     error = error || err;
                     if(!err){
+                        //TODO here is the point where we can start / stop our addOns - but we will not wait for them to start
+                        updateRunningAddOns(root);
                         _loadNodes[_core.getPath(root)] = {node:root,incomplete:true,basic:true,hash:getStringHash(root)};
                         _metaNodes[_core.getPath(root)] = root;
                         if(orderedPatternIds.length === 0 && Object.keys(_users) > 0){
@@ -1371,7 +1418,7 @@ define([
                 }
             }
             function selectBranchAsync(branch,callback){
-                var waiting = 2,
+                var waiting = 1,
                     error = null,
                     innerCallback = function(err){
                         error = error || err;
@@ -1387,8 +1434,9 @@ define([
                             }
 
                             if(names[branch]){
+                                stopRunningAddOns();
                                 branchWatcher(branch,innerCallback);
-                                startCoreAddOnsAsync(_projectName,branch,innerCallback);
+                                //startCoreAddOnsAsync(_projectName,branch,innerCallback);
                             } else {
                                 callback(new Error('there is no such branch!'));
                             }
@@ -2843,6 +2891,7 @@ define([
                 validateNodeAsync: validateNodeAsync,
                 setValidationCallback: setValidationCallback,
                 getDetailedHistoryAsync : getDetailedHistoryAsync,
+                getRunningAddOnNames : getRunningAddOnNames,
 
                 //territory functions for the UI
                 addUI: addUI,
