@@ -270,8 +270,8 @@ define([
                     }
                 }
                 for(i=0;i<runningAddOns.length;i++){
-                    if(neededAddOns.indexOf(runningAddOns[i])){
-                        stopAddOn(name,function(err){});
+                    if(neededAddOns.indexOf(runningAddOns[i]) === -1){
+                        stopAddOn(runningAddOns[i],function(err){});
                     }
                 }
             }
