@@ -135,7 +135,8 @@ define(['js/client'], function (Client) {
         })
 
         .service('NodeService', function ($timeout, $q, DataStoreService) {
-            var Node,
+            var self = this,
+                Node,
                 nodes,
                 getIdFromNodeOrString;
 
@@ -158,6 +159,15 @@ define(['js/client'], function (Client) {
             NodeObj = function (databaseConnection, id) {
                 this.databaseConnection = databaseConnection;
                 this.id = id;
+                this._onUpdate = function (id) { };
+                this._onUnload = function (id) { };
+                // This will always be called on unload.
+                this.__onUnload = function () {
+                    if (databaseConnection.nodeService.territories.hasOwnProperty(id)) {
+                        delete databaseConnection.nodeService.territories[id];
+                        databaseConnection.client.removeUI(id);
+                    }
+                };
             };
 
             NodeObj.prototype.getAttribute = function (name) {
@@ -178,7 +188,7 @@ define(['js/client'], function (Client) {
             };
 
             NodeObj.prototype.getPointer = function (name) {
-
+                return this.databaseConnection.client.getNode(this.id).getPointer(name);
             };
 
             NodeObj.prototype.setPointer = function (name, nodeOrId) {
@@ -191,22 +201,37 @@ define(['js/client'], function (Client) {
 
             };
 
+            NodeObj.prototype.getParentId = function () {
+
+            };
 
             NodeObj.prototype.getParentNode = function () {
 
             };
 
             NodeObj.prototype.getId = function () {
-
+                return this.databaseConnection.client.getNode(this.id).getId();
             };
 
             NodeObj.prototype.getGuid = function () {
-
+                return this.databaseConnection.client.getNode(this.id).getGuid();
             };
 
+            NodeObj.prototype.getChildrenIds = function () {
+                return this.databaseConnection.client.getNode(this.id).getChildrenIds();
+            };
 
-            NodeObj.prototype.getChildren = function () {
+            // FIXME : Can context be resolved from the node
+            NodeObj.prototype.loadChildren = function (context) {
+                var childrenIds = this.getChildrenIds(),
+                    queueList = [],
+                    all,
+                    i;
 
+                for (i = 0; i < childrenIds.length; i += 1) {
+                    queueList.push(self.loadNode2(context, childrenIds[i]));
+                }
+                return $q.all(queueList);
             };
 
             NodeObj.prototype.createChild = function (baseNodeOrId, name) {
@@ -235,6 +260,67 @@ define(['js/client'], function (Client) {
                 // NS.destroyNode(node/Id);
             };
 
+            NodeObj.prototype.onUpdate = function(fn) {
+                console.assert(typeof fn === 'function');
+                this._onUpdate = fn;
+            }
+
+            NodeObj.prototype.onUnload = function(fn) {
+                console.assert(typeof fn === 'function');
+                this._onUnload = fn;
+            }
+
+            this.loadNode2 = function (context, id) {
+                var deferred = $q.defer(),
+                    dbConn = DataStoreService.getDatabaseConnection(context),
+                    territory,
+                    nodes;
+
+                dbConn.nodeService = dbConn.nodeService || {};
+                dbConn.nodeService.nodes =  dbConn.nodeService.nodes || {};
+                dbConn.nodeService.territories = dbConn.nodeService.territories || {};
+
+                nodes = dbConn.nodeService.nodes;
+
+                if (nodes.hasOwnProperty(id)) {
+                    deferred.resolve(nodes[id]);
+                } else {
+                    if (dbConn.nodeService.territories.hasOwnProperty(id)) {
+//                        territory = dbConn.nodeService.territories[id];
+                        deferred.reject('Territory exists, but node does not!');
+                    } else {
+                        dbConn.client.addUI(null, function (events) {
+                            var i,
+                                event;
+
+                            for (i = 0; i < events.length; i += 1) {
+                                event = events[i];
+                                if (event.etype === 'load') {
+                                    nodes[id] =  new NodeObj(dbConn, id);
+                                    deferred.resolve(nodes[id]);
+                                } else if (event.etype === 'update') {
+                                    nodes[id]._onUpdate(event.eid);
+                                } else if (event.etype === 'unload') {
+                                    nodes[id]._onUnload(event.eid);
+                                    nodes[id].__onUnload();
+                                } else {
+                                    throw 'Unexpected event type' + events[j].etype;
+                                }
+                            }
+                        }, id);
+
+
+                        territory = {};
+                        dbConn.nodeService.territories[id] = territory;
+                        territory.id = id;
+                        territory.patterns = territory.patterns || {};
+                        territory.patterns[id] = {children: 0}; // FIXME: How to detect new children??
+                        dbConn.client.updateTerritory(id, territory.patterns);
+                    }
+                }
+
+                return deferred.promise;
+            };
 
             this.loadNode = function (context, id) {
                 var deferred = $q.defer(),
