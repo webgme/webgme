@@ -39,7 +39,7 @@ define(['addon/AddOnBase'],function(Base) {
                     self.checkModel(node,callback);
                 });
                 break;
-            case '_checkNode':
+            case 'checkNode':
                 self.loadNode(parameters.path,function(err,node){
                     if(err){
                         return callback(err);
