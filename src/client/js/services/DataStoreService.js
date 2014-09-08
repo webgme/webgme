@@ -221,7 +221,7 @@ define(['js/client'], function (Client) {
                 return this.databaseConnection.client.getNode(this.id).getChildrenIds();
             };
 
-            // FIXME : Can context be resolved from the node
+            // FIXME : Can context be resolved from the node?
             NodeObj.prototype.loadChildren = function (context) {
                 var childrenIds = this.getChildrenIds(),
                     queueList = [],
@@ -270,6 +270,47 @@ define(['js/client'], function (Client) {
                 this._onUnload = fn;
             }
 
+            // FIXME : Can context be resolved from the node?
+            NodeObj.prototype.onNewChildLoaded = function (context, fn) {
+                var dbConn = DataStoreService.getDatabaseConnection(context),
+                    territory,
+                    nodes,
+                    id = this.id,
+                    terrId = id + '_new_children_watch'; //FIXME: This probably needs some elaboration
+                console.log(dbConn);
+                if (dbConn.nodeService.territories.hasOwnProperty(terrId)) {
+                    console.warn('Children are already being watched for ', terrId);
+                } else {
+                    dbConn.client.addUI(null, function (events) {
+                        var i,
+                            event;
+                        for (i = 0; i < events.length; i += 1) {
+                            event = events[i];
+                            if (event.etype === 'load') {
+                                if (dbConn.nodeService.territories.hasOwnProperty(event.eid) === false) {
+                                    self.loadNode2(context, event.eid).then(function (newNode) {
+                                        fn(newNode);
+                                        console.log('Added new territory through onNewChildLoaded ', event.eid);
+                                    });
+                                } else {
+                                    console.info('Node ' + event.eid + ' was loaded in ' + terrId + ' but it already has ' +
+                                        'a territory.');
+                                }
+                            } else {
+                                // These node are just watched for loading..
+                            }
+                        }
+                    }, terrId);
+
+                    territory = {};
+                    dbConn.nodeService.territories[terrId] = territory;
+                    territory.id = terrId;
+                    territory.patterns = {};
+                    territory.patterns[id] = {children: 1};
+                    dbConn.client.updateTerritory(terrId, territory.patterns);
+                }
+            };
+
             this.loadNode2 = function (context, id) {
                 var deferred = $q.defer(),
                     dbConn = DataStoreService.getDatabaseConnection(context),
@@ -284,6 +325,7 @@ define(['js/client'], function (Client) {
 
                 if (nodes.hasOwnProperty(id)) {
                     deferred.resolve(nodes[id]);
+                    console.log('Node already loaded..');
                 } else {
                     if (dbConn.nodeService.territories.hasOwnProperty(id)) {
 //                        territory = dbConn.nodeService.territories[id];
@@ -314,7 +356,7 @@ define(['js/client'], function (Client) {
                         dbConn.nodeService.territories[id] = territory;
                         territory.id = id;
                         territory.patterns = territory.patterns || {};
-                        territory.patterns[id] = {children: 0}; // FIXME: How to detect new children??
+                        territory.patterns[id] = {children: 0};
                         dbConn.client.updateTerritory(id, territory.patterns);
                     }
                 }
@@ -330,7 +372,7 @@ define(['js/client'], function (Client) {
 
                 dbConn.nodeService = dbConn.nodeService || {};
                 dbConn.nodeService.nodes =  dbConn.nodeService.nodes || {};
-                dbConn.nodeService.territoies = dbConn.nodeService.territoies || {};
+                dbConn.nodeService.territories = dbConn.nodeService.territories || {};
 
                 nodes = dbConn.nodeService.nodes;
 
@@ -338,8 +380,8 @@ define(['js/client'], function (Client) {
                     deferred.resolve(nodes[id]);
                 } else {
                     // TODO: create territory if does not exist
-                    if (dbConn.nodeService.territoies.hasOwnProperty(context.territoryId)) {
-                        territory = dbConn.nodeService.territoies[context.territoryId];
+                    if (dbConn.nodeService.territories.hasOwnProperty(context.territoryId)) {
+                        territory = dbConn.nodeService.territories[context.territoryId];
                     } else {
                         dbConn.client.addUI(null, function (events) {
                             var i,
@@ -363,7 +405,7 @@ define(['js/client'], function (Client) {
                         territory.patterns = territory.patterns || {};
                         territory.patterns[id] = {children: 0}; // FIXME: how to update this correctly ???
 
-                        dbConn.nodeService.territoies[context.territoryId] = territory;
+                        dbConn.nodeService.territories[context.territoryId] = territory;
 
                         dbConn.client.updateTerritory(context.territoryId, territory.patterns);
                     }
@@ -371,6 +413,7 @@ define(['js/client'], function (Client) {
 
                 return deferred.promise;
             };
+
         }
     );
 });
