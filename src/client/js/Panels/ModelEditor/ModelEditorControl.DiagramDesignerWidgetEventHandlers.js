@@ -1089,7 +1089,6 @@ define(['logManager',
             MENU_EXINTCONF = 'exintconf',
             MENU_EXPLIB = 'exportlib',
             MENU_UPDLIB = 'updatelib',
-            MENU_CON_MODEL = 'conmodel',
             MENU_CON_NODE = 'connode',
             self = this;
 
@@ -1106,14 +1105,13 @@ define(['logManager',
                 "name": 'Update library...',
                 "icon": 'glyphicon glyphicon-refresh'
             };
-            menuItems[MENU_CON_MODEL] = {
-                "name": 'Check Model Constraints...',
-                "icon": 'glyphicon glyphicon-fire'
-            };
-            menuItems[MENU_CON_NODE] = {
-                "name": 'Check Node Constraints...',
-                "icon": 'glyphicon glyphicon-fire'
-            };
+            if(self._client.getRunningAddOnNames().indexOf("ConstraintAddOn") !== -1){
+                menuItems[MENU_CON_NODE] = {
+                    "name": 'Check Node Constraints...',
+                    "icon": 'glyphicon glyphicon-fire'
+                };
+            }
+
         }
 
         this.designerCanvas.createMenu(menuItems, function (key) {
@@ -1123,8 +1121,6 @@ define(['logManager',
                     self._expLib(selectedIds);
                 } else if(key === MENU_UPDLIB){
                     self._updLib(selectedIds);
-                } else if(key === MENU_CON_MODEL){
-                    self._modelConCheck(selectedIds);
                 } else if(key === MENU_CON_NODE){
                     self._nodeConCheck(selectedIds);
                 }
@@ -1169,22 +1165,6 @@ define(['logManager',
         id = gmeIDs[0] || null;
 
         ImportManager.importLibrary(id);
-    };
-
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._modelConCheck = function (selectedIds) {
-        var i = selectedIds.length,
-            gmeIDs = [],
-            id;
-
-        while(i--) {
-            gmeIDs.push(this._ComponentID2GmeID[selectedIds[i]]);
-        }
-
-        id = gmeIDs[0] || null;
-
-        if(id){
-            this._client.validateModelAsync(id);
-        }
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._nodeConCheck = function (selectedIds) {

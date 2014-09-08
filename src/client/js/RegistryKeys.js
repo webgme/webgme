@@ -24,6 +24,7 @@ define([], function () {
         LINE_CUSTOM_POINTS: 'lineCustomPoints',  //custom routing points of a line
 
         VALID_PLUGINS:'validPlugins', //space separated list of valid plugins for the project TODO maybe we should harmonize with project registry
+        USED_ADDONS:'usedAddOns', //space separated list of used addons in the given project
         /*
          *  MISC
          */

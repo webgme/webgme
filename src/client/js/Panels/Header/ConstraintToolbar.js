@@ -16,7 +16,7 @@ define(['js/Dialogs/ConstraintCheckResults/ConstraintCheckResultsDialog'], funct
     PluginToolbar.prototype._initialize = function () {
         var toolbar = WebGMEGlobal.Toolbar,
             fillMenuItems,
-            $btnExecutePlugin,
+            $btnExecuteAddOn,
             validateProject,
             checkCallback,
             client = this._client,
@@ -27,36 +27,36 @@ define(['js/Dialogs/ConstraintCheckResults/ConstraintCheckResultsDialog'], funct
             results = [];
 
         setBadgeText = function (text) {
-            $btnExecutePlugin.el.find('.' + BADGE_CLASS).text(text);
+            $btnExecuteAddOn.el.find('.' + BADGE_CLASS).text(text);
         };
 
         fillMenuItems = function () {
             var pluginNames = client.getAvailableInterpreterNames();
 
             //clear dropdown
-            $btnExecutePlugin.clear();
+            $btnExecuteAddOn.clear();
 
-            //add read menu if needed
-            if (results.length > 0) {
-                $btnExecutePlugin.addButton({
-                    "title" : 'Check results...',
-                    "text" : 'Check results...',
+            if(client.getRunningAddOnNames().indexOf('ConstraintAddOn') !== -1){
+                //add read menu if needed
+                if (results.length > 0) {
+                    $btnExecuteAddOn.addButton({
+                        "title" : 'Check results...',
+                        "text" : 'Check results...',
+                        "clickFn": function () {
+                            showResults();
+                        }
+                    });
+                    $btnExecuteAddOn.addDivider();
+                }
+
+                $btnExecuteAddOn.addButton({
+                    "title" : 'Validate project',
+                    "text" : 'Validate project',
                     "clickFn": function () {
-                        showResults();
+                        validateProject();
                     }
                 });
-                $btnExecutePlugin.addDivider();
             }
-
-            $btnExecutePlugin.addButton({
-                "title" : 'Validate project',
-                "text" : 'Validate project',
-                "clickFn": function () {
-                    validateProject();
-                }
-            });
-
-
         };
 
         checkCallback = function(err,result){
@@ -84,8 +84,8 @@ define(['js/Dialogs/ConstraintCheckResults/ConstraintCheckResultsDialog'], funct
         };
 
         /************** EXECUTE PLUG-IN BUTTON ****************/
-        $btnExecutePlugin = toolbar.addDropDownButton(
-            { "title": "Execute plug-in",
+        $btnExecuteAddOn = toolbar.addDropDownButton(
+            { "title": "Check constraints",
                 "icon": "glyphicon glyphicon-fire",
                 "menuClass": "no-min-width",
                 'clickFn': function () {
@@ -93,10 +93,10 @@ define(['js/Dialogs/ConstraintCheckResults/ConstraintCheckResultsDialog'], funct
                 }
             });
 
-        $btnExecutePlugin.el.find('a > i').css({'margin-top': '0px'});
+        $btnExecuteAddOn.el.find('a > i').css({'margin-top': '0px'});
 
         var badge = BADGE_BASE.clone();
-        badge.insertAfter($btnExecutePlugin.el.find('a > i'));
+        badge.insertAfter($btnExecuteAddOn.el.find('a > i'));
         badge.css('margin-left', '3px');
     };
 

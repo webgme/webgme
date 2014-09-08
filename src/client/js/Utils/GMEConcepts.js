@@ -174,6 +174,9 @@ define(['jquery',
         //create extra registry entries for root - currently allowed interpreters
         _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, REGISTRY_KEYS.VALID_PLUGINS, "");
 
+        //create extra registry entries for root - currently allowed interpreters
+        _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, REGISTRY_KEYS.USED_ADDONS, "ConstraintAddOn");
+
         //create FCO, META, PROJECT_BASE
         // now as we create FCO always on the same relid and with the same GUID project have a more interchangeable base...
         var FCO_ID = _client.createChild({'parentId': CONSTANTS.PROJECT_ROOT_ID,

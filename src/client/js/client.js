@@ -81,7 +81,7 @@ define([
                 _rootHash = null,
                 _gHash = 0,
                 _addOns = {},
-                _conrtaintCallback = null;
+                _constraintCallback = null;
 
             function print_nodes(pretext){
                 if(pretext){
@@ -168,6 +168,7 @@ define([
                 //TODO we should try to update the branch with our latest commit
                 //and 'restart' listening to branch changes
                 if(_offline){
+                    stopRunningAddOns();
                     branchWatcher(_branch);
                 }
             }
@@ -231,7 +232,9 @@ define([
                 if(_addOns[name] === undefined){
                     _addOns[name] = "loading";
                     _database.simpleRequest({command:'connectedWorkerStart',workerName:name,project:_projectName,branch:_branch},function(err,id){
+                        console.log('started addon',err);
                         if(err){
+                            delete _addOns[name];
                             return logger.error(err);
                         }
 
@@ -251,8 +254,49 @@ define([
                     _database.simpleResult(_addOns[name],callback);
                     delete _addOns[name];
                 } else {
-                    callback(null);
+                    callback(_addOns[name] ? new Error("addon loading") : null);
                 }
+            }
+
+            //generic project related addOn handling
+            function updateRunningAddOns(root){
+                var neededAddOns = _core.getRegistry(root,"usedAddOns"),
+                    i,
+                    runningAddOns = getRunningAddOnNames();
+                neededAddOns = neededAddOns ? neededAddOns.split(" ") : [];
+                for(i=0;i<neededAddOns.length;i++){
+                    if(!_addOns[neededAddOns[i]]){
+                        startAddOn(neededAddOns[i]);
+                    }
+                }
+                for(i=0;i<runningAddOns.length;i++){
+                    if(neededAddOns.indexOf(runningAddOns[i]) === -1){
+                        stopAddOn(runningAddOns[i],function(err){});
+                    }
+                }
+            }
+            function stopRunningAddOns(){
+                var i,
+                    keys = Object.keys(_addOns),
+                    callback = function(err){
+                        if(err){
+                            console.log("stopAddOn",err);
+                        }
+                    };
+                for(i=0;i<keys.length;i++){
+                    stopAddOn(keys[i],callback);
+                }
+            }
+            function getRunningAddOnNames(){
+                var i,
+                    names = [],
+                    keys = Object.keys(_addOns);
+                for(i=0;i<keys.length;i++){
+                    if(_addOns[keys[i]] !== 'loading'){
+                        names.push(keys[i]);
+                    }
+                }
+                return names;
             }
 
             //core addOns
@@ -306,7 +350,7 @@ define([
                 }
             }
             function validateProjectAsync(callback){
-                callback = callback || _conrtaintCallback || function(err,result){};
+                callback = callback || _constraintCallback || function(err,result){};
                 if(_addOns['ConstraintAddOn'] && _addOns['ConstraintAddOn'] !== 'loading'){
                     queryAddOn("ConstraintAddOn", {querytype:'checkProject'}, callback);
                 } else {
@@ -314,7 +358,7 @@ define([
                 }
             }
             function validateModelAsync(path,callback){
-                callback = callback || _conrtaintCallback || function(err,result){};
+                callback = callback || _constraintCallback || function(err,result){};
                 if(_addOns['ConstraintAddOn'] && _addOns['ConstraintAddOn'] !== 'loading'){
                     queryAddOn("ConstraintAddOn", {querytype:'checkModel',path:path}, callback);
                 } else {
@@ -322,7 +366,7 @@ define([
                 }
             }
             function validateNodeAsync(path,callback){
-                callback = callback || _conrtaintCallback || function(err,result){};
+                callback = callback || _constraintCallback || function(err,result){};
                 if(_addOns['ConstraintAddOn'] && _addOns['ConstraintAddOn'] !== 'loading'){
                     queryAddOn("ConstraintAddOn", {querytype:'checkNode',path:path}, callback);
                 } else {
@@ -331,7 +375,7 @@ define([
             }
             function setValidationCallback(cFunction){
                 if(typeof cFunction === 'function' || cFunction === null){
-                    _conrtaintCallback = cFunction;
+                    _constraintCallback = cFunction;
                 }
             }
             //core addOns end
@@ -610,8 +654,9 @@ define([
                 });
             }
             function openProject(name,callback){
+                //this function cannot create new project
                 ASSERT(_database);
-                var waiting = 2,
+                var waiting = 1,
                     innerCallback = function(err){
                         error = error || err;
                         if(--waiting === 0){
@@ -623,51 +668,62 @@ define([
                     },
                     firstName = null,
                     error = null;
-                _database.openProject(name,function(err,p){
-                    if(!err &&  p){
-                        _database.getAuthorizationInfo(name,function(err,authInfo){
-                            _readOnlyProject = authInfo ? (authInfo.write === true ? false : true) : true;
-                            _project = p;
-                            _projectName = name;
-                            _inTransaction = false;
-                            _nodes = {};
-                            _metaNodes = {};
-                            _core = getNewCore(_project);
-                            META.initialize(_core,_metaNodes,saveRoot);
-                            if(_commitCache){
-                                _commitCache.clearCache();
+                _database.getProjectNames(function(err,names){
+                    if(err){
+                        return callback(err);
+                    }
+                    if(names.indexOf(name) !== -1){
+                        _database.openProject(name,function(err,p){
+                            if(!err &&  p){
+                                _database.getAuthorizationInfo(name,function(err,authInfo){
+                                    _readOnlyProject = authInfo ? (authInfo.write === true ? false : true) : true;
+                                    _project = p;
+                                    _projectName = name;
+                                    _inTransaction = false;
+                                    _nodes = {};
+                                    _metaNodes = {};
+                                    _core = getNewCore(_project);
+                                    META.initialize(_core,_metaNodes,saveRoot);
+                                    if(_commitCache){
+                                        _commitCache.clearCache();
+                                    } else {
+                                        _commitCache = commitCache();
+                                    }
+                                    _self.dispatchEvent(_self.events.PROJECT_OPENED, _projectName);
+
+                                    //check for master or any other branch
+                                    _project.getBranchNames(function(err,names){
+                                        if(!err && names){
+
+                                            if(names['master']){
+                                                firstName = 'master';
+                                            } else {
+                                                firstName = Object.keys(names)[0] || null;
+                                            }
+
+                                            if(firstName){
+                                                stopRunningAddOns();
+                                                branchWatcher(firstName,innerCallback);
+                                                //startCoreAddOnsAsync(_projectName,firstName,innerCallback);
+                                            } else {
+                                                //we should try the latest commit
+                                                viewLatestCommit(callback);
+                                            }
+                                        } else {
+                                            //we should try the latest commit
+                                            viewLatestCommit(callback);
+                                        }
+                                    });
+                                });
                             } else {
-                                _commitCache = commitCache();
+                                logger.error('The project '+name+' cannot be opened! ['+JSON.stringify(err)+']');
+                                callback(err);
                             }
-                            _self.dispatchEvent(_self.events.PROJECT_OPENED, _projectName);
-
-                            //check for master or any other branch
-                            _project.getBranchNames(function(err,names){
-                                if(!err && names){
-
-                                    if(names['master']){
-                                        firstName = 'master';
-                                    } else {
-                                        firstName = Object.keys(names)[0] || null;
-                                    }
-
-                                    if(firstName){
-                                        branchWatcher(firstName,innerCallback);
-                                        startCoreAddOnsAsync(_projectName,firstName,innerCallback);
-                                    } else {
-                                        //we should try the latest commit
-                                        viewLatestCommit(callback);
-                                    }
-                                } else {
-                                    //we should try the latest commit
-                                    viewLatestCommit(callback);
-                                }
-                            });
                         });
                     } else {
-                        logger.error('The project '+name+' cannot be opened! ['+JSON.stringify(err)+']');
-                        callback(err);
+                        callback(new Error('there is no such project'));
                     }
+
                 });
             }
 
@@ -1047,6 +1103,8 @@ define([
                 _core.loadRoot(newRootHash,function(err,root){
                     error = error || err;
                     if(!err){
+                        //TODO here is the point where we can start / stop our addOns - but we will not wait for them to start
+                        updateRunningAddOns(root);
                         _loadNodes[_core.getPath(root)] = {node:root,incomplete:true,basic:true,hash:getStringHash(root)};
                         _metaNodes[_core.getPath(root)] = root;
                         if(orderedPatternIds.length === 0 && Object.keys(_users) > 0){
@@ -1360,7 +1418,7 @@ define([
                 }
             }
             function selectBranchAsync(branch,callback){
-                var waiting = 2,
+                var waiting = 1,
                     error = null,
                     innerCallback = function(err){
                         error = error || err;
@@ -1370,8 +1428,20 @@ define([
                     }
                 if(_database){
                     if(_project){
-                        branchWatcher(branch,innerCallback);
-                        startCoreAddOnsAsync(_projectName,branch,innerCallback);
+                        _project.getBranchNames(function(err,names){
+                            if(err){
+                                return callback(err);
+                            }
+
+                            if(names[branch]){
+                                stopRunningAddOns();
+                                branchWatcher(branch,innerCallback);
+                                //startCoreAddOnsAsync(_projectName,branch,innerCallback);
+                            } else {
+                                callback(new Error('there is no such branch!'));
+                            }
+
+                        });
                     } else {
                         callback(new Error('there is no open project!'));
                     }
@@ -2821,6 +2891,7 @@ define([
                 validateNodeAsync: validateNodeAsync,
                 setValidationCallback: setValidationCallback,
                 getDetailedHistoryAsync : getDetailedHistoryAsync,
+                getRunningAddOnNames : getRunningAddOnNames,
 
                 //territory functions for the UI
                 addUI: addUI,

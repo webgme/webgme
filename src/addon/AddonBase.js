@@ -39,7 +39,6 @@ define([],
                                 return self._Storage.getNextServerEvent(lastGuid,nextServerEvent);
                             case "BRANCH_UPDATED":
                                 if(self.projectName === parameters.project && self.branchName === parameters.branch){
-                                    console.log('our update');
                                     self.project.loadObject(parameters.commit,function(err,commit){
                                         if(err || !commit){
                                             return self._Storage.getNextServerEvent(lastGuid,nextServerEvent);
@@ -54,22 +53,6 @@ define([],
                                             return self._Storage.getNextServerEvent(lastGuid,nextServerEvent);
                                         });
                                     });
-                                    /*setTimeout(function(){
-                                        self.project.loadObject(parameters.commit,function(err,commit){
-                                            if(err || !commit){
-                                                return self._Storage.getNextServerEvent(lastGuid,nextServerEvent);
-                                            }
-
-                                            self.commit = parameters.commit;
-                                            self.core.loadRoot(commit.root,function(err,root){
-                                                if(err){
-                                                    return self._Storage.getNextServerEvent(lastGuid,nextServerEvent);
-                                                }
-                                                self.update(root);
-                                                return self._Storage.getNextServerEvent(lastGuid,nextServerEvent);
-                                            });
-                                        });
-                                    },10);*/
                                 } else {
                                     return self._Storage.getNextServerEvent(lastGuid,nextServerEvent);
                                 }

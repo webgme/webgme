@@ -36,7 +36,11 @@ define( ['clientUtil',
         projectsButtonDisabledForLayouts = ['VehicleForgeLayout'];
 
       this._pluginToolBar = new PluginToolbar( this._client );
-        this._constraintToolBar = new ConstraintToolBar( this._client );
+
+        //TODO the toolbar also has to be optional, but how???
+        //if(this._client.getRunningAddOnNames().indexOf('ConstraintAddOn') !== -1){
+            this._constraintToolBar = new ConstraintToolBar( this._client );
+        //}
 
       //TODO: remove
       //this._createDummyControls();
