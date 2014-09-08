@@ -8,7 +8,13 @@ var requirejs = require("requirejs");
 
 requirejs.config({
     nodeRequire: require,
-    baseUrl: __dirname + "/.."
+    baseUrl: __dirname + "/..",
+    paths: paths = {
+        "logManager": "common/LogManager",
+        "storage": "common/storage",
+        "core": "common/core",
+        "util": "common/util"
+    }
 });
 
 requirejs([ "util/common", "util/assert", "core/tasync", "util/guid" ], function (COMMON, ASSERT, TASYNC,GUID) {
@@ -182,10 +188,16 @@ requirejs([ "util/common", "util/assert", "core/tasync", "util/guid" ], function
     }
     function updateRoot (core,root){
         //SPECIAL UPDATE FOR THE ROOT NODE
-        var validPlugins = core.getRegistry(root,'validPlugins');
+        var validPlugins = core.getRegistry(root,'validPlugins'),
+            usedAddOns = core.getRegistry(root,'usedAddOns');
         if(validPlugins === undefined){
             console.log('adding valid plugins placeholder to registry');
             core.setRegistry(root,'validPlugins',"");
+        }
+
+        if(typeof usedAddOns !== 'string'){
+            console.log('adding used addOn placeholder to root registry');
+            core.setRegistry(root,'usedAddOns',"");
         }
     }
     function updateProject(core,roothash){
