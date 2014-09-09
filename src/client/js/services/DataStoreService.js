@@ -169,7 +169,7 @@ define(['js/client'], function (Client) {
                         dbConnEvent.client.addEventListener(dbConnEvent.client.events.BRANCH_CHANGED, function (projectId /* FIXME */, branchId) {
 
                             dbConnEvent.branchId = branchId;
-
+                            console.log('There was a BRANCH_CHANGED event');
                             if (branchId) {
                                 // initialize
                                 if (dbConnEvent.branchService &&
@@ -327,6 +327,10 @@ define(['js/client'], function (Client) {
 
             };
 
+            NodeObj.prototype.getMemberIds = function (name) {
+                return this.databaseConnection.client.getNode(this.id).getMemberIds(name);
+            };
+
             NodeObj.prototype.getMetaType = function () {
 
             };
@@ -335,11 +339,9 @@ define(['js/client'], function (Client) {
 
             };
 
-
             this.createChild = function (context, parameters) {
                 // NS.createChild({parent: parentNode/id, base: baseNode/id}) – current one on client takes {parentId and baseId}
             };
-
 
             this.destroyNode = function (context, nodeOrId) {
                 // NS.destroyNode(node/Id);
@@ -361,7 +363,7 @@ define(['js/client'], function (Client) {
                     territory,
                     nodes,
                     id = this.id,
-                    terrId = id + '_new_children_watch'; //FIXME: This probably needs some elaboration
+                    terrId = context.territoryId + '_' + id + '_new_children_watch'; //FIXME: This probably needs some elaboration
                 console.log(dbConn);
                 if (dbConn.nodeService.territories.hasOwnProperty(terrId)) {
                     console.warn('Children are already being watched for ', terrId);
@@ -372,7 +374,7 @@ define(['js/client'], function (Client) {
                         for (i = 0; i < events.length; i += 1) {
                             event = events[i];
                             if (event.etype === 'load') {
-                                if (dbConn.nodeService.territories.hasOwnProperty(event.eid) === false) {
+                                if (dbConn.nodeService.territories.hasOwnProperty(context.territoryId + '_' + event.eid) === false) {
                                     self.loadNode2(context, event.eid).then(function (newNode) {
                                         fn(newNode);
                                         console.log('Added new territory through onNewChildLoaded ', event.eid);
@@ -396,10 +398,39 @@ define(['js/client'], function (Client) {
                 }
             };
 
+            this.getMetaNodes = function (context) {
+                var deferred = $q.defer(),
+                    dbConn = DataStoreService.getDatabaseConnection(context),
+                    metaNodes;
+                self.loadNode2(context, '').then(function (rootNode) {
+                    var metaNodeIds = rootNode.getMemberIds('MetaAspectSet'),
+                        queueList = [],
+                        i;
+                    console.log(metaNodeIds);
+                    for (i = 0; i < metaNodeIds.length; i += 1) {
+                        queueList.push(self.loadNode2(context, metaNodeIds[i]));
+                    }
+                    $q.all(queueList).then(function (metaNodes) {
+                        var key,
+                            metaNode,
+                            meta = {};
+                        for (key in metaNodes) {
+                            if (metaNodes.hasOwnProperty(key)) {
+                                metaNode = metaNodes[key];
+                                meta[metaNode.getAttribute('name')] = metaNode;
+                            }
+                        }
+                        deferred.resolve(meta);
+                    });
+                });
+
+                return deferred.promise;
+            }
+
             this.loadNode2 = function (context, id) {
                 var deferred = $q.defer(),
                     dbConn = DataStoreService.getDatabaseConnection(context),
-                    territory,
+                    territoryId = context.territoryId + '_' + id,
                     nodes;
 
                 dbConn.nodeService = dbConn.nodeService || {};
@@ -407,12 +438,12 @@ define(['js/client'], function (Client) {
                 dbConn.nodeService.territories = dbConn.nodeService.territories || {};
 
                 nodes = dbConn.nodeService.nodes;
-
+                console.log('territoryId', territoryId);
                 if (nodes.hasOwnProperty(id)) {
                     deferred.resolve(nodes[id]);
                     console.log('Node already loaded..');
                 } else {
-                    if (dbConn.nodeService.territories.hasOwnProperty(id)) {
+                    if (dbConn.nodeService.territories.hasOwnProperty(territoryId)) {
 //                        territory = dbConn.nodeService.territories[id];
                         deferred.reject('Territory exists, but node does not!');
                     } else {
@@ -431,18 +462,18 @@ define(['js/client'], function (Client) {
                                     nodes[id]._onUnload(event.eid);
                                     nodes[id].__onUnload();
                                 } else {
-                                    throw 'Unexpected event type' + events[j].etype;
+                                    throw 'Unexpected event type' + events[i].etype;
                                 }
                             }
-                        }, id);
+                        }, territoryId);
 
 
                         territory = {};
-                        dbConn.nodeService.territories[id] = territory;
-                        territory.id = id;
+                        dbConn.nodeService.territories[territoryId] = territory;
+                        territory.id = territoryId;
                         territory.patterns = territory.patterns || {};
                         territory.patterns[id] = {children: 0};
-                        dbConn.client.updateTerritory(id, territory.patterns);
+                        dbConn.client.updateTerritory(territoryId, territory.patterns);
                     }
                 }
 
@@ -548,8 +579,10 @@ define(['js/client'], function (Client) {
                 dbConn.nodeService.events = dbConn.nodeService.events || {};
                 dbConn.nodeService.events[eventName] = dbConn.nodeService.events[eventName] || [];
                 dbConn.nodeService.events[eventName].push(fn);
-
-                if (dbConn.nodeService.isInitialized) {
+                // This might be hacky, but if an initialize event is registered before the database
+                // is opened the NodeService initialize event registered after the database has been 
+                // opened will also be called.
+                if (dbConn.nodeService.isInitialized || dbConn.branchService.isInitialized) {
                     if (eventName === 'initialize') {
                         fn(context);
                     }
