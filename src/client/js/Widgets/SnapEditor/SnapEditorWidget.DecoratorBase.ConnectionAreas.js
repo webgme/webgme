@@ -15,31 +15,56 @@ define(['./SnapEditorWidget.Constants'], function (SNAP_CONSTANTS){
     var CONN_AREA_EDIT_CLASS = "conn-area-edit",
         CONN_AREA_SIZE = 8,
         CONN_AREA = "conn-area-edit-bg",
-        DATA_CONN_AREA_ID = "CONN_AREA_ID";
+        DATA_CONN_AREA_ID = "CONN_AREA_ID",
+        DEFAULT_COLOR = "#666666";//FIXME Move to css
 
     var SnapEditorWidgetDecoratorBaseConnectionAreas = function(){
     };
 
+    //For debugging
+    SnapEditorWidgetDecoratorBaseConnectionAreas.prototype.displayAllConnectionAreas = function (options) {
+        //Display all connections areas with the given colors
+        var areas = this.getConnectionAreas(),
+            i = areas.length,
+            id;
+
+        this.hideConnectionAreas();
+        while (i--){
+            id = areas[i].id;
+            this._displayConnectionArea(id, options[id] || DEFAULT_COLOR);
+        }
+    };
+
     //Displaying Connection Area
-    SnapEditorWidgetDecoratorBaseConnectionAreas.prototype.displayConnectionArea = function (id) {
+    SnapEditorWidgetDecoratorBaseConnectionAreas.prototype.displayConnectionArea = function (id, color) {
+        this.hideConnectionAreas();
+        this._displayConnectionArea(id, color);
+    };
+
+    SnapEditorWidgetDecoratorBaseConnectionAreas.prototype._displayConnectionArea = function (id, color) {
         var w = this.$el.outerWidth(true),
             h = this.$el.outerHeight(true),
             shiftVal = CONN_AREA_SIZE/2,
             line = this._getConnectionHighlightById(id) || this._getConnectionAreaById(id),
             highlight;
 
-        this.hideConnectionAreas();
+        //Color
+        color = color || DEFAULT_COLOR;
 
         if(line){
             if(this._connHighlight === undefined){
-                this._connHighlight = $('<div/>', { 'class': CONN_AREA });
+                this._connHighlight = $('<div/>', { 'class': CONN_AREA,
+                    id: id });
                 this._connHighlight.css({ 'position': 'absolute', 
                                      'left': -shiftVal + 'px',
                                      'top': -shiftVal + 'px'});
+
             }
 
-            this._svg = Raphael(this._connHighlight[0], w + CONN_AREA_SIZE, h + CONN_AREA_SIZE);
-            this._svg.canvas.className.baseVal = CONN_AREA;
+            if (this._connHighlight.children().length === 0){
+                this._svg = Raphael(this._connHighlight[0], w + CONN_AREA_SIZE, h + CONN_AREA_SIZE);
+                this._svg.canvas.className.baseVal = CONN_AREA;
+            }
 
             //Create the connection area
             line.x1 += shiftVal;
@@ -62,7 +87,7 @@ define(['./SnapEditorWidget.Constants'], function (SNAP_CONSTANTS){
 
             var path = this._svg.path('M ' + line.x1 + ',' + line.y1 + 'L' + line.x2 + ',' + line.y2);
             $(path.node).data(DATA_CONN_AREA_ID, line.id);
-            path.attr({ "stroke-width": CONN_AREA_SIZE });
+            path.attr({ "stroke-width": CONN_AREA_SIZE, "fill": color });
             $(path.node).attr({ "class": CONN_AREA_EDIT_CLASS });        
 
             this.$el.append(this._connHighlight);
