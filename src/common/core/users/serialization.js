@@ -50,10 +50,64 @@ define(['util/assert'],function(ASSERT){
             _export.relids = getRelIdInfo();
             _export.containment = {}; fillContainmentTree(libraryRoot,_export.containment);
             _export.nodes = getNodesData();
+            _export.metaSheets = getMetaSheetInfo(_core.getRoot(libraryRoot));
 
             callback(null,_export);
 
         });
+    }
+    function getMetaSheetInfo(root){
+        var getMemberRegistry = function(setname,memberpath){
+                var names = _core.getMemberRegistryNames(root,setname,memberpath),
+                    i,
+                    registry = {};
+                for(i=0;i<names.length;i++){
+                    registry[names[i]] = _core.getMemberRegistry(root,setname,memberpath,names[i]);
+                }
+                return registry;
+            },
+            getMemberAttributes = function(setname,memberpath){
+                var names = _core.getMemberAttributeNames(root,setname,memberpath),
+                    i,
+                    attributes = {};
+                for(i=0;i<names.length;i++){
+                    attributes[names[i]] = _core.getMemberAttribute(root,setname,memberpath,names[i]);
+                }
+                return attributes;
+            },
+            getRegistryEntry = function(setname){
+                var index = registry.length;
+
+                while(--index >= 0){
+                    if(registry[index].SetID === setname){
+                        return registry[index];
+                    }
+                }
+                return {};
+            },
+            sheets = {},
+            registry = _core.getRegistry(root,"MetaSheets"),
+            keys = _core.getSetNames(root),
+            elements,
+            i,j;
+        for(i=0;i<keys.length;i++){
+            if(keys[i].indexOf("MetaAspectSet_") === 0){
+                elements = _core.getMemberPaths(root,keys[i]);
+                for(j=0;j<elements.length;j++){
+                    if(_pathToGuidMap[elements[j]]){
+                        sheets[keys[i]] = sheets[keys[i]] || {};
+                        sheets[keys[i]][_pathToGuidMap[elements[j]]] = {registry:getMemberRegistry(keys[i],elements[j]),attributes:getMemberAttributes(keys[i],elements[j])};
+                    }
+                }
+
+                if(sheets[keys[i]]){
+                    //we add the global registry values as well
+                    sheets[keys[i]].global = getRegistryEntry(keys[i]);
+                }
+            }
+        }
+        console.log('sheets',sheets);
+        return sheets;
     }
     function getLibraryRootInfo(node){
         return {
