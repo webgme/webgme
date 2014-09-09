@@ -70,7 +70,9 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
 
         //shifting
         this.shiftTree = {};
+        this._shiftCoefficients = {};
         this._connAreaShifts = {};
+        this._connAreaShiftCoefficients = {};
 
         //get all pointers from hostDesignerItem and intialize 
         this.pointerInitialStretch = {};//Initial stretch values to allow for snug fit
@@ -115,7 +117,8 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
             x,
             y,
             idCreator = function(key, value){
-                var canFreeze;
+                var canFreeze,
+                    shiftCoefficient = 1;
                 //Set the id
                 svgId = value.getAttribute("id");
                 strokeWidth = 0;
@@ -166,10 +169,11 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
                     if (style){
                         stroke = style.match(/stroke\-width:\d*/);
                         if (stroke){
-                            strokeWidth = parseFloat(stroke[0].match(/\d+/)) + 1;
+                            strokeWidth = parseFloat(stroke[0].match(/\d+\.?/)) + 1;
                         }
                     }
-                    
+
+                   
                     //If the width/height is still null, we will set it after first render
                     //using getBBox
                     self._transforms[svgId] = { 
@@ -216,6 +220,10 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
                     svgId = value.getAttribute("id"),
                     i;
 
+                self._shiftCoefficients[svgId] = {};
+                self._shiftCoefficients[svgId][AXIS.X] = {};
+                self._shiftCoefficients[svgId][AXIS.Y] = {};
+
                 //Create respective entries in shiftTree and stretchTree
                 if (value.hasAttribute("data-shift")){
                     data = value.getAttribute("data-shift").split(" ");
@@ -226,11 +234,32 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
 
                             //Add svgId to base's shiftTree
                             self.shiftTree[base][axis].push(svgId);
+
+                            //set default shift coefficient
+                            self._shiftCoefficients[svgId][axis] = 1;
                         }
                     }
                 }
 
-                //create stretchTree
+                //Record shift coefficients
+                if (value.getAttribute('data-align-center')){
+                    data = value.getAttribute("data-align-center").split(' ');
+
+                    for (i = data.length-1; i >= 0; i--){
+                        if (data[i].length){
+                            axis = data[i].substring(0,1);
+                            base = data[i].substring((AXIS.X + SPLITTER).length);
+
+                            //Add svgId to base's shiftTree
+                            self.shiftTree[base][axis].push(svgId);
+
+                            //set shift coefficient
+                            self._shiftCoefficients[svgId][axis] = 0.5;
+                        }
+                    }
+                }
+
+                 //create stretchTree
                 if (value.hasAttribute("data-stretch")){
                     data = value.getAttribute("data-stretch").split(' ');
 
@@ -304,34 +333,62 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      */
     SVGDecoratorSnapEditorWidgetStretch.prototype._buildConnectionAreaShiftTree = function () {
         var axis,
-            connectionAreas = this.getConnectionAreas(),
+            connectionAreas = this._customConnectionAreas,
             data,
-            base;
+            base,
+            self = this,
+            initializeShiftData = function (id){
+                if (!self._connAreaShifts[id]){
+                    self._connAreaShifts[connectionAreas[i].id] = {};
+                    self._connAreaShifts[connectionAreas[i].id][AXIS.X] = 0;
+                    self._connAreaShifts[connectionAreas[i].id][AXIS.Y] = 0;
+                }
+            },
+            j;
 
-        this._connAreaShiftTree = {};
+        this._connAreaShiftParents = {};
 
         for (var i = 0; i < connectionAreas.length; i++){
+
+            //Initialize shift coefficients
+            this._connAreaShiftCoefficients[connectionAreas[i].id] = {};
+            this._connAreaShiftCoefficients[connectionAreas[i].id][AXIS.X] = 1;
+            this._connAreaShiftCoefficients[connectionAreas[i].id][AXIS.Y] = 1;
+            this._connAreaShiftParents[connectionAreas[i].id] = {};
+
             if (connectionAreas[i].shift){
-                this._connAreaShifts[connectionAreas[i].id] = {};
-                this._connAreaShifts[connectionAreas[i].id][AXIS.X] = 0;
-                this._connAreaShifts[connectionAreas[i].id][AXIS.Y] = 0;
+                initializeShiftData(connectionAreas[i].id);
 
                 data = connectionAreas[i].shift.split(" ");
-                for (var j = 0; j < data.length; j++){
+                for (j = 0; j < data.length; j++){
                     if (data[j].length){
                         axis = data[j].substring(0,1);
                         base = data[j].substring((AXIS.X + SPLITTER).length);
 
-                        if (this._connAreaShiftTree[base] === undefined){
-                            this._connAreaShiftTree[base] = {};
-                            this._connAreaShiftTree[base][AXIS.X] = [];
-                            this._connAreaShiftTree[base][AXIS.Y] = [];
-                        }
-
-                        this._connAreaShiftTree[base][axis].push(connectionAreas[i].id);
+                        this._connAreaShiftParents[connectionAreas[i].id][axis] = base;
                     }
                 }
+                delete connectionAreas[i].shift;
             }
+
+            if (connectionAreas[i].alignCenter){
+                initializeShiftData(connectionAreas[i].id);
+
+                data = connectionAreas[i].alignCenter.split(" ");
+                for (j = 0; j < data.length; j++){
+                    if (data[j].length){
+                        axis = data[j].substring(0,1);
+
+                        base = data[j].substring((AXIS.X + SPLITTER).length);
+
+                        this._connAreaShiftParents[connectionAreas[i].id][axis] = base;
+
+                        this._connAreaShiftCoefficients[connectionAreas[i].id][axis] = 0.5;
+                    }
+                }
+                delete connectionAreas[i].alignCenter;
+            }
+
         }
     };
 
@@ -346,13 +403,21 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      * @return {undefined}
      */
     SVGDecoratorSnapEditorWidgetStretch.prototype.updateShifts = function(){
-        var ids = Object.keys(this.stretchedElements);
+        var ids = Object.keys(this.stretchedElements),
+            id,
+            stretch;
 
         this._clearShifts();
 
         while (ids.length){
-            this._shiftDependentElements(ids.pop());
+            id = ids.pop();
+            stretch = this._transforms[id].stretch;
+
+            this._shiftDependentElements(id, AXIS.X, stretch.width || 0);
+            this._shiftDependentElements(id, AXIS.Y, stretch.height || 0);
         }
+
+        this._shiftConnectionAreas();
     };
 
     SVGDecoratorSnapEditorWidgetStretch.prototype._clearShifts = function(){
@@ -388,86 +453,82 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
     };
 
     /**
-     * Shift the svg by delta along the coordinate plane, axis, with respect to the id
+     * Shift the svg's dependents by delta along the coordinate plane
      *
      * @param {String} id
-     * @param {Object} shift
+     * @param {enum} axis 'x' or 'y'
+     * @param {Number} shift
      * @return {Object} extreme edges of the elements
      */
-    SVGDecoratorSnapEditorWidgetStretch.prototype._shiftDependentElements = function (id) {
+    SVGDecoratorSnapEditorWidgetStretch.prototype._shiftDependentElements = function (id, axis, originalShift) {
         var shiftElements = {},
             dim,
-            stretch = this._transforms[id].stretch,
-            shift = {},
+            shift = originalShift,
             svgId;
 
-        shift[AXIS.X] = stretch.width;
-        shift[AXIS.Y] = stretch.height;
+        dim = axis === AXIS.X ? "width" : "height";
 
-        this._shiftConnectionAreas(id, shift);
+        shiftElements[axis] = [];
 
-        for (var axis in shift){
-            if (shift.hasOwnProperty(axis) && shift[axis] !== 0){
+        if (this.shiftTree[id] && this.shiftTree[id][axis]){
+            shiftElements[axis] = this.shiftTree[id][axis].slice();
+        }
 
-                dim = axis === AXIS.X ? "width" : "height";
+        while(shiftElements[axis].length){
+            svgId = shiftElements[axis].pop();
 
-                shiftElements[axis] = [];
+            shift = originalShift*this._shiftCoefficients[svgId][axis];
 
-                if (this.shiftTree[id] && this.shiftTree[id][axis]){
-                    shiftElements[axis] = this.shiftTree[id][axis].slice();
-                }
+            this._transforms[svgId].shift[axis] += shift;
 
-                while(shiftElements[axis].length){
-                    svgId = shiftElements[axis].pop();
-
-                    this._shiftConnectionAreas(svgId, shift);
-
-                    this._transforms[svgId].shift[axis] += shift[axis];
-                    
-                    if (this.shiftTree[svgId] && this.shiftTree[svgId][axis]){
-                        shiftElements[axis] = shiftElements[axis].concat(this.shiftTree[svgId][axis]);
-                    }
-                }    
-            }
+            this._shiftDependentElements(svgId, axis, shift);
         }    
-
     };
 
     /**
      * Shift the connection areas by "shift" with respect to id
      *
      * @param {String} id
-     * @param {Object} shift
+     * @param {String} axis
+     * @param {Number} shift
      */
-    SVGDecoratorSnapEditorWidgetStretch.prototype._shiftConnectionAreas = function (id, shift) {
-        var area,
-            areas,
+    SVGDecoratorSnapEditorWidgetStretch.prototype._shiftConnectionAreas = function () {
+        var areas,
+            svgId,
+            originalShift,
+            shift,
+            axis,
+            dim,
             i;
 
-        if (this._customConnectionAreas && this._connAreaShiftTree[id]){
+        if (this._customConnectionAreas){
 
-            for (var axis in shift){
-                if (shift.hasOwnProperty(axis)){
-                    areas = this._connAreaShiftTree[id][axis];
-                    i = areas.length;
+            areas = this._customConnectionAreas;
 
-                    while (i--){
-                        area = this._getConnectionArea({ id: areas[i] });//get area by reference
-                        if (area){
-                            //shift the connection area
-                            area[axis + "1"] += shift[axis] || 0;
-                            area[axis + "2"] += shift[axis] || 0;
+            for (var a in AXIS){
+                if (AXIS.hasOwnProperty(a)){
+                    axis = AXIS[a];
+                    dim = axis === AXIS.X ? 'width' : 'height';
 
-                            this._connAreaShifts[area.id][axis] += shift[axis] || 0;
+                    for (i = areas.length-1; i >= 0; i--){
+                        //shift the connection areas
+                        svgId = this._connAreaShiftParents[areas[i].id][axis];//Get the element determining shift
+                        if (svgId){
+                            originalShift = this._transforms[svgId].stretch[dim] + 
+                                this._transforms[svgId].shift[axis];
 
+                            shift = originalShift * this._connAreaShiftCoefficients[areas[i].id][axis];
+                            areas[i][axis + "1"] += shift;
+                            areas[i][axis + "2"] += shift;
+
+                            this._connAreaShifts[areas[i].id][axis] += shift || 0;
                         }
                     }
-
                 }
             }
+
+            //this._shiftCustomConnectionHighlightAreas(id, axis, shift);//TODO
         }
-        
-        this._shiftCustomConnectionHighlightAreas(id, shift);//TODO
     };
 
     /**

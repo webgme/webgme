@@ -747,5 +747,7 @@ define(['js/Constants',
         }
     };
 
+    /**** Override from SnapEditorWidgetDecoratorBase ****/
+
     return SVGDecoratorSnapEditorWidget;
 });

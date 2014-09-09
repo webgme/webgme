@@ -15,6 +15,7 @@ define(['logManager',
     "use strict";
 
     var ClickableItem,
+        DEBUG = false,
         NAME = "clickable-item";
     
     /**
@@ -110,6 +111,7 @@ define(['logManager',
 
         //Trigger an attribute update in the decorator
         this._decoratorInstance.updateAttributeText();
+
     };
 
     /**
@@ -130,6 +132,7 @@ define(['logManager',
                 this._decoratorInstance.removeAttributeText(attributeName);
             }
         }
+
     };
 
     /**
@@ -273,11 +276,13 @@ define(['logManager',
         passingItem._decoratorInstance.setAttributeEnabled(ptr, false);
 
         //Record the connections used
-        acceptingItem.conn2Item[acceptingConnection.id] = passingItem;
-        passingItem.conn2Item[passingConnection.id] = acceptingItem;
+        if (acceptingConnection && passingConnection){
+            acceptingItem.conn2Item[acceptingConnection.id] = passingItem;
+            passingItem.conn2Item[passingConnection.id] = acceptingItem;
 
-        acceptingItem.item2Conn[passingItem.id] = acceptingConnection.id;
-        passingItem.item2Conn[acceptingItem.id] = passingConnection.id;
+            acceptingItem.item2Conn[passingItem.id] = acceptingConnection.id;
+            passingItem.item2Conn[acceptingItem.id] = passingConnection.id;
+        }
     };
 
     /**
