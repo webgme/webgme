@@ -127,14 +127,83 @@ define(['js/client'], function (Client) {
             };
         })
 
-        .service('BranchService', function ($timeout, $q, ProjectService) {
+        .service('BranchService', function ($timeout, $q, ProjectService, DataStoreService) {
 
             this.selectBranch = function (context) {
                 return ProjectService.selectBranch(context);
             };
+
+            this.on = function (context, eventName, fn) {
+                var dbConn;
+
+                console.assert(typeof context === 'object');
+                console.assert(typeof eventName === 'string');
+                console.assert(typeof fn === 'function');
+
+                dbConn = DataStoreService.getDatabaseConnection(context);
+                dbConn.branchService = dbConn.branchService || {};
+
+                dbConn.branchService.isInitialized = dbConn.branchService.isInitialized || false;
+
+                if (typeof dbConn.branchService.events === 'undefined') {
+                    // TODO: register for project events
+
+                    // this should not be an inline function
+                    (function (dbConnEvent, c) {
+                        var i;
+
+                        dbConnEvent.client.addEventListener(dbConnEvent.client.events.BRANCH_CHANGED, function (projectId /* FIXME */, branchId) {
+
+                            if (branchId) {
+                                // initialize
+                                if (dbConnEvent.branchService &&
+                                    dbConnEvent.branchService.events &&
+                                    dbConnEvent.branchService.events.initialize) {
+
+                                    dbConnEvent.branchService.isInitialized = true;
+
+                                    for (i = 0; i < dbConnEvent.branchService.events.initialize.length; i += 1) {
+                                        dbConnEvent.branchService.events.initialize[i](c);
+                                    }
+                                }
+                            } else {
+                                // branchId is falsy, empty or null or undefined
+                                // destroy
+                                if (dbConnEvent.branchService &&
+                                    dbConnEvent.branchService.events &&
+                                    dbConnEvent.branchService.events.destroy) {
+
+                                    dbConnEvent.branchService.isInitialized = false;
+
+                                    for (i = 0; i < dbConnEvent.branchService.events.destroy.length; i += 1) {
+                                        dbConnEvent.branchService.events.destroy[i](c);
+                                    }
+                                }
+                            }
+                        });
+                    })(dbConn, context);
+
+                }
+
+                dbConn.branchService.events = dbConn.branchService.events || {};
+                dbConn.branchService.events[eventName] = dbConn.branchService.events[eventName] || [];
+                dbConn.branchService.events[eventName].push(fn);
+
+                if (dbConn.branchService.isInitialized) {
+                    if (eventName === 'initialize') {
+                        fn(context);
+                    }
+                } else {
+                    if (eventName === 'destroy') {
+                        fn(context);
+                    }
+                }
+
+                // TODO: register for branch change event OR BranchService onInitialize
+            };
         })
 
-        .service('NodeService', function ($timeout, $q, DataStoreService) {
+        .service('NodeService', function ($timeout, $q, DataStoreService, BranchService) {
             var self = this,
                 Node,
                 nodes,
@@ -281,7 +350,7 @@ define(['js/client'], function (Client) {
                 if (dbConn.nodeService.territories.hasOwnProperty(terrId)) {
                     console.warn('Children are already being watched for ', terrId);
                 } else {
-                    dbConn.client.addUI(null, function (events) {
+                    dbConn.client.addUI({}, function (events) {
                         var i,
                             event;
                         for (i = 0; i < events.length; i += 1) {
@@ -331,7 +400,7 @@ define(['js/client'], function (Client) {
 //                        territory = dbConn.nodeService.territories[id];
                         deferred.reject('Territory exists, but node does not!');
                     } else {
-                        dbConn.client.addUI(null, function (events) {
+                        dbConn.client.addUI({}, function (events) {
                             var i,
                                 event;
 
@@ -383,7 +452,7 @@ define(['js/client'], function (Client) {
                     if (dbConn.nodeService.territories.hasOwnProperty(context.territoryId)) {
                         territory = dbConn.nodeService.territories[context.territoryId];
                     } else {
-                        dbConn.client.addUI(null, function (events) {
+                        dbConn.client.addUI({}, function (events) {
                             var i,
                                 event;
 
@@ -411,28 +480,70 @@ define(['js/client'], function (Client) {
                     }
                 }
 
-                this.on = function (context, eventName, fn) {
-                    console.assert(typeof context === 'object');
-                    console.assert(typeof eventName === 'string');
-                    console.assert(typeof fn === 'function');
-
-                    dbConn = DataStoreService.getDatabaseConnection(context);
-                    dbConn.nodeService = dbConn.nodeService || {};
-
-                    dbConn.nodeService.isInitialized = dbConn.nodeService.isInitialized || false;
-
-                    dbConn.nodeService.events = dbConn.nodeService.events || {};
-                    dbConn.nodeService.events[eventName] = dbConn.nodeService.events[eventName] || [];
-                    dbConn.nodeService.events[eventName].push(fn);
-
-                    if (dbConn.nodeService.isInitialized && eventName === 'initialize') {
-                        fn();
-                    }
-
-                    // TODO: register for branch change event OR BranchService onInitialize
-                };
-
                 return deferred.promise;
+            };
+
+            this.on = function (context, eventName, fn) {
+                var dbConn;
+
+                console.assert(typeof context === 'object');
+                console.assert(typeof eventName === 'string');
+                console.assert(typeof fn === 'function');
+
+                dbConn = DataStoreService.getDatabaseConnection(context);
+                dbConn.nodeService = dbConn.nodeService || {};
+
+                dbConn.nodeService.isInitialized = dbConn.nodeService.isInitialized || false;
+
+                if (typeof dbConn.nodeService.events === 'undefined') {
+                    BranchService.on(context, 'initialize', function (c) {
+                        var dbConnEvent = DataStoreService.getDatabaseConnection(c),
+                            i;
+
+                        if (dbConnEvent.nodeService &&
+                            dbConnEvent.nodeService.events &&
+                            dbConnEvent.nodeService.events.initialize) {
+
+                            dbConnEvent.nodeService.isInitialized = true;
+
+                            for (i = 0; i < dbConnEvent.nodeService.events.initialize.length; i += 1) {
+                                dbConnEvent.nodeService.events.initialize[i](c);
+                            }
+                        }
+                    });
+
+                    BranchService.on(context, 'destroy', function (c) {
+                        var dbConnEvent = DataStoreService.getDatabaseConnection(c),
+                            i;
+
+                        if (dbConnEvent.nodeService &&
+                            dbConnEvent.nodeService.events &&
+                            dbConnEvent.nodeService.events.destroy) {
+
+                            dbConnEvent.nodeService.isInitialized = false;
+
+                            for (i = 0; i < dbConnEvent.nodeService.events.destroy.length; i += 1) {
+                                dbConnEvent.nodeService.events.destroy[i](c);
+                            }
+                        }
+                    });
+                }
+
+                dbConn.nodeService.events = dbConn.nodeService.events || {};
+                dbConn.nodeService.events[eventName] = dbConn.nodeService.events[eventName] || [];
+                dbConn.nodeService.events[eventName].push(fn);
+
+                if (dbConn.nodeService.isInitialized) {
+                    if (eventName === 'initialize') {
+                        fn(context);
+                    }
+                } else {
+                    if (eventName === 'destroy') {
+                        fn(context);
+                    }
+                }
+
+                // TODO: register for branch change event OR BranchService onInitialize
             };
 
         }

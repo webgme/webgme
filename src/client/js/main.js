@@ -254,6 +254,21 @@ require(
                         console.error(reason);
                     });
 
+                var rootNode;
+
+                NodeService.on(context, 'initialize', function(c) {
+                    NodeService.loadNode(context, '')
+                        .then(function (node) {
+                            rootNode = node;
+                            console.log(node);
+                            console.log(context);
+                            //console.log(c);
+                        });
+                });
+
+                NodeService.on(context, 'destroy', function(c) {
+                    rootNode = null;
+                });
             });
 
 
