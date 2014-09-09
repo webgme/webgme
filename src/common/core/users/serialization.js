@@ -21,7 +21,6 @@ define(['util/assert'],function(ASSERT){
         }
     }
     function exportLibrary(core,libraryRoot,callback){
-        console.log('kecso',core.getPath(libraryRoot),'exporting');
         //initialization
         _core = core;
         _nodes = {};
@@ -299,10 +298,6 @@ define(['util/assert'],function(ASSERT){
         if(jsonObject && typeof jsonObject === 'object'){
             var keys = Object.keys(jsonObject),
                 i, j, k,toDelete,tArray;
-
-            if(keys.indexOf('enum') !== -1){
-                console.log('kecso',jsonObject);
-            }
 
             for(i=0;i<keys.length;i++){
                 if(keys[i] === 'items') {
