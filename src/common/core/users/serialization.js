@@ -109,6 +109,61 @@ define(['util/assert'],function(ASSERT){
         console.log('sheets',sheets);
         return sheets;
     }
+    function importMetaSheetInfo(root){
+        var setMemberAttributesAndRegistry = function(setname,memberguid){
+                var attributes = oldSheets[setname][memberguid].registry || {},
+                    registry = oldSheets[setname][memberguid].attributes || {},
+                    keys,i;
+                keys = Object.keys(attributes);
+                for(i=0;i<keys.length;i++) {
+                    _core.setMemberAttribute(root,setname,_core.getPath(_nodes[memberguid]),keys[i],attributes[keys[i]]);
+                }
+                keys = Object.keys(registry);
+                for(i=0;i<keys.length;i++) {
+                    _core.setMemberRegistry(root,setname,_core.getPath(_nodes[memberguid]),keys[i],registry[keys[i]]);
+                }
+            },
+            updateSheet = function(name){
+                //the removed object should be already removed...
+                //if some element is extra in the place of import, then it stays untouched
+                var oldMemberGuids = Object.keys(oldSheets[name]).splice(oldSheets[name].indexOf('global'),1),
+                    i;
+                for(i=0;i<oldMemberGuids.length;i++) {
+                    _core.addMember(root,name,_nodes[oldMemberGuids[i]]);
+                    setMemberAttributesAndRegistry(name,oldMemberGuids[i]);
+                }
+            },
+            addSheet = function(name) {
+                var registry = JSON.parse(JSON.stringify(_core.getRegistry(root,"MetaSheets")) || {}),
+                    i,
+                    memberpath,
+                    memberguids = Object.keys(oldSheets[name]).splice(oldSheets[name].indexOf('global'),1);
+
+                registry.push(oldSheets[name].global);
+                _core.setRegistry(root,"MetaSheets",registry);
+
+                _core.createSet(root,name);
+                for(i=0;i<memberguids.length;i++) {
+                    memberpath = _core.getPath(_nodes[memberguids[i]]);
+                    _core.addMember(root,name,_nodes[memberguids[i]]);
+                    setMemberAttributesAndRegistry(name,memberguids[i]);
+                }
+            },
+            oldSheets = _export.metaSheets || {},
+            newSheets = _import.metaSheets || {},
+            oldSheetNames = Object.keys(oldsheets),
+            newSheetNames = Object.kesy(newsheets),
+            i;
+        }
+
+        for(i=0;i<oldSheetNames.length;i++) {
+            if(newSheetNames.indexOf(oldSheetNames[i]) !== -1){
+                updateSheet(oldSheetNames[i]);
+            } else {
+                addSheet(oldSheetNames[i]);
+            }
+        }
+    }
     function getLibraryRootInfo(node){
         return {
             path: _core.getPath(node),
@@ -506,6 +561,9 @@ define(['util/assert'],function(ASSERT){
 
                 //finally we need to update the meta rules of each node - again along the containment hierarchy
                 updateMetaRules(_import.root.guid,_import.containment);
+
+                //after everything is done we try to synchronize the metaSheet info
+                importMetaSheetInfo(_core.getRoot(originLibraryRoot));
 
                 callback(null,_log);
             });
