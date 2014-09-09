@@ -256,17 +256,17 @@ require(
 
                 var rootNode;
 
-                NodeService.on(context, 'initialize', function(c) {
-                    NodeService.loadNode(context, '')
+                NodeService.on(context, 'initialize', function(currentContext) {
+                    NodeService.loadNode(currentContext, '')
                         .then(function (node) {
                             rootNode = node;
                             console.log(node);
-                            console.log(context);
+                            console.log(currentContext);
                             //console.log(c);
                         });
                 });
 
-                NodeService.on(context, 'destroy', function(c) {
+                NodeService.on(context, 'destroy', function(currentContext) {
                     rootNode = null;
                 });
             });
