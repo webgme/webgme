@@ -210,5 +210,35 @@ define(['js/Decorators/WidgetDecoratorBase',
         this.logger.warning('notifyComponentEvent not overridden in decorator' + JSON.stringify(componentList));
     };
 
+    //                            Input Fields
+    
+    SnapEditorWidgetDecoratorBase.prototype.getInputFieldUpdates = function () {
+        this.logger.warning('getInputFieldUpdates not overridden in decorator');
+        return {};
+    };
+
+    SnapEditorWidgetDecoratorBase.prototype.updateInputFields = function () {
+        this.logger.warning('updateInputFields not overridden in decorator');
+    };
+
+    //                            Attribute Info
+    SnapEditorWidgetDecoratorBase.prototype.updateAttributeContent = function () {
+        this.logger.warning('updateAttributeContent not overridden in decorator');
+    };
+
+    SnapEditorWidgetDecoratorBase.prototype.updateAttributeText = function () {
+        this.logger.warning('updateAttributeText not overridden in decorator');
+    };
+
+    //                            Stretching/Shifting
+    SnapEditorWidgetDecoratorBase.prototype.stretchTo = function () {
+        this.logger.warning('stretchTo not overridden in decorator');
+    };
+
+    SnapEditorWidgetDecoratorBase.prototype.updateShifts = function () {
+        this.logger.warning('updateShifts not overridden in decorator');
+    };
+
+
     return SnapEditorWidgetDecoratorBase;
 });
