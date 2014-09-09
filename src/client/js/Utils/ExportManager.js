@@ -66,7 +66,7 @@ define(['jquery',
         }
     };
     var _expLib = function(objID) {
-        if(objID){
+        if(typeof objID === 'string'){
             var object = _client.getNode(objID),
                 fileName = _client.getActiveProjectName() + "_" + _client.getActualBranch() + "_" + object.getAttribute('name') + "_lib";
 

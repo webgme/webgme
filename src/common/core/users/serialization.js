@@ -21,6 +21,7 @@ define(['util/assert'],function(ASSERT){
         }
     }
     function exportLibrary(core,libraryRoot,callback){
+        console.log('kecso',core.getPath(libraryRoot),'exporting');
         //initialization
         _core = core;
         _nodes = {};
@@ -276,7 +277,7 @@ define(['util/assert'],function(ASSERT){
         return {
             attributes:getAttributesOfNode(node),
             base: _core.getBase(node) ? _core.getGuid(_core.getBase(node)) : null,
-            meta:pathsToGuids(_core.getOwnJsonMeta(node)),
+            meta:pathsToGuids(JSON.parse(JSON.stringify(_core.getOwnJsonMeta(node)) || {})),
             parent:_core.getParent(node) ? _core.getGuid(_core.getParent(node)) : null,
             pointers:getPointersOfNode(node),
             registry:getRegistryOfNode(node),
@@ -299,6 +300,9 @@ define(['util/assert'],function(ASSERT){
             var keys = Object.keys(jsonObject),
                 i, j, k,toDelete,tArray;
 
+            if(keys.indexOf('enum') !== -1){
+                console.log('kecso',jsonObject);
+            }
 
             for(i=0;i<keys.length;i++){
                 if(keys[i] === 'items') {
@@ -350,7 +354,7 @@ define(['util/assert'],function(ASSERT){
                     }
                 } else {
                     if(typeof jsonObject[keys[i]] === 'object'){
-                         jsonObject[keys[i]] = pathsToGuids(jsonObject[keys[i]]);
+                        jsonObject[keys[i]] = pathsToGuids(jsonObject[keys[i]]);
                     }
                 }
             }
