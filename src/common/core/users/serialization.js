@@ -1,5 +1,6 @@
 define(['util/assert'],function(ASSERT){
 
+    "use strict";
     var _nodes = {},
         _core = null,
         _pathToGuidMap = {},
@@ -88,15 +89,16 @@ define(['util/assert'],function(ASSERT){
             sheets = {},
             registry = _core.getRegistry(root,"MetaSheets"),
             keys = _core.getSetNames(root),
-            elements,
+            elements,guid,
             i,j;
         for(i=0;i<keys.length;i++){
             if(keys[i].indexOf("MetaAspectSet_") === 0){
                 elements = _core.getMemberPaths(root,keys[i]);
                 for(j=0;j<elements.length;j++){
-                    if(_pathToGuidMap[elements[j]]){
+                    guid = _pathToGuidMap[elements[j]] || _extraBasePaths[elements[j]];
+                    if(guid){
                         sheets[keys[i]] = sheets[keys[i]] || {};
-                        sheets[keys[i]][_pathToGuidMap[elements[j]]] = {registry:getMemberRegistry(keys[i],elements[j]),attributes:getMemberAttributes(keys[i],elements[j])};
+                        sheets[keys[i]][guid] = {registry:getMemberRegistry(keys[i],elements[j]),attributes:getMemberAttributes(keys[i],elements[j])};
                     }
                 }
 
@@ -111,8 +113,8 @@ define(['util/assert'],function(ASSERT){
     }
     function importMetaSheetInfo(root){
         var setMemberAttributesAndRegistry = function(setname,memberguid){
-                var attributes = oldSheets[setname][memberguid].registry || {},
-                    registry = oldSheets[setname][memberguid].attributes || {},
+                var attributes = oldSheets[setname][memberguid].attributes || {},
+                    registry = oldSheets[setname][memberguid].registry || {},
                     keys,i;
                 keys = Object.keys(attributes);
                 for(i=0;i<keys.length;i++) {
@@ -126,8 +128,9 @@ define(['util/assert'],function(ASSERT){
             updateSheet = function(name){
                 //the removed object should be already removed...
                 //if some element is extra in the place of import, then it stays untouched
-                var oldMemberGuids = Object.keys(oldSheets[name]).splice(oldSheets[name].indexOf('global'),1),
+                var oldMemberGuids = Object.keys(oldSheets[name]),
                     i;
+                oldMemberGuids.splice(oldMemberGuids.indexOf("global"),1);
                 for(i=0;i<oldMemberGuids.length;i++) {
                     _core.addMember(root,name,_nodes[oldMemberGuids[i]]);
                     setMemberAttributesAndRegistry(name,oldMemberGuids[i]);
@@ -137,7 +140,9 @@ define(['util/assert'],function(ASSERT){
                 var registry = JSON.parse(JSON.stringify(_core.getRegistry(root,"MetaSheets")) || {}),
                     i,
                     memberpath,
-                    memberguids = Object.keys(oldSheets[name]).splice(oldSheets[name].indexOf('global'),1);
+                    memberguids = Object.keys(oldSheets[name]);
+
+                memberguids.splice(memberguids.indexOf('global'),1);
 
                 registry.push(oldSheets[name].global);
                 _core.setRegistry(root,"MetaSheets",registry);
@@ -149,12 +154,11 @@ define(['util/assert'],function(ASSERT){
                     setMemberAttributesAndRegistry(name,memberguids[i]);
                 }
             },
-            oldSheets = _export.metaSheets || {},
-            newSheets = _import.metaSheets || {},
-            oldSheetNames = Object.keys(oldsheets),
-            newSheetNames = Object.kesy(newsheets),
+            oldSheets = _import.metaSheets || {},
+            newSheets = _export.metaSheets || {},
+            oldSheetNames = Object.keys(oldSheets),
+            newSheetNames = Object.keys(newSheets),
             i;
-        }
 
         for(i=0;i<oldSheetNames.length;i++) {
             if(newSheetNames.indexOf(oldSheetNames[i]) !== -1){
