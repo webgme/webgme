@@ -229,6 +229,8 @@ require(
                     territoryId: 'my_terr11111'
                 };
 
+                WebGMEGlobal.context = context;
+                WebGMEGlobal.DataStoreService = DataStoreService;
 
 //                DataStoreService.selectProject({db: 'my-db-connection-id', projectId:'Test'})
 //                    .then(function () {
