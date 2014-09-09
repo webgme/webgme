@@ -99,6 +99,9 @@ define(['logManager',
             ExportManager.initialize(client);
             ImportManager.initialize(client);
 
+            WebGMEGlobal.ExportManager = ExportManager;
+            WebGMEGlobal.ImportManager = ImportManager;
+
             //hook up branch changed to set read-only mode on panels
             client.addEventListener(client.events.BRANCH_CHANGED, function (__project, branchName) {
                 layoutManager.setPanelReadOnly(client.isCommitReadOnly() || client.isProjectReadOnly());
