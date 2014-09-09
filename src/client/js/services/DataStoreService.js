@@ -27,6 +27,7 @@ define(['js/client'], function (Client) {
 
                     // TODO: add event listeners to client
 
+                    // FIXME: deferred should not be used from closure
                     client.connectToDatabaseAsync({}, function (err) {
                         if (err) {
                             deferred.reject(err);
@@ -52,6 +53,7 @@ define(['js/client'], function (Client) {
             this.getProjects = function (context) {
                 var deferred = $q.defer();
 
+                // FIXME: deferred should not be used from closure
                 this.connectToDatabase(context).then(function () {
                     datastores[context.db].client.getAvailableProjectsAsync(function (err, projectIds) {
                         if (err) {
@@ -61,7 +63,10 @@ define(['js/client'], function (Client) {
 
                         deferred.resolve(projectIds);
                     });
-                });
+                })
+                    .catch(function (reason) {
+                        deferred.reject(reason);
+                    });
 
                 return deferred.promise;
             };
@@ -69,6 +74,7 @@ define(['js/client'], function (Client) {
             this.selectProject = function (context) {
                 var deferred = $q.defer();
 
+                // FIXME: deferred, context should not be used from closure
                 this.getProjects(context).then(function (projectIds) {
 
                     if (projectIds.indexOf(context.projectId) > -1) {
@@ -86,7 +92,10 @@ define(['js/client'], function (Client) {
                     } else {
                         deferred.reject(new Error('Project does not exist. ' + context.projectId));
                     }
-                });
+                })
+                    .catch(function (reason) {
+                        deferred.reject(reason);
+                    });
 
                 return deferred.promise;
             };
@@ -95,22 +104,27 @@ define(['js/client'], function (Client) {
             this.selectBranch = function (context) {
                 var deferred = $q.defer();
 
-                this.selectProject(context).then(function () {
-                    // FIXME: if branch does not exist the callback is not called,
-                    //        then after (probably a timeout) it is called with no error???
-                    datastores[context.db].client.selectBranchAsync(context.branchId,
-                        function (err) {
-                            if (err) {
-                                deferred.reject(err);
-                                return;
-                            }
+                // FIXME: deferred, context should not be used from closure
+                this.selectProject(context)
+                    .then(function () {
+                        // FIXME: if branch does not exist the callback is not called,
+                        //        then after (probably a timeout) it is called with no error???
+                        datastores[context.db].client.selectBranchAsync(context.branchId,
+                            function (err) {
+                                if (err) {
+                                    deferred.reject(err);
+                                    return;
+                                }
 
-                            datastores[context.db].branchId =
-                                context.branchId;
+                                datastores[context.db].branchId =
+                                    context.branchId;
 
-                            deferred.resolve();
-                        });
-                });
+                                deferred.resolve();
+                            });
+                    })
+                    .catch(function (reason) {
+                        deferred.reject(reason);
+                    });
 
                 return deferred.promise;
             };
@@ -153,6 +167,8 @@ define(['js/client'], function (Client) {
                         var i;
 
                         dbConnEvent.client.addEventListener(dbConnEvent.client.events.BRANCH_CHANGED, function (projectId /* FIXME */, branchId) {
+
+                            dbConnEvent.branchId = branchId;
 
                             if (branchId) {
                                 // initialize

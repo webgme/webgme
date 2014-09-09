@@ -230,45 +230,54 @@ require(
                 };
 
 
-                DataStoreService.selectProject({db: 'my-db-connection-id', projectId:'Test'})
-                    .then(function () {
-                        return DataStoreService.selectBranch({db: 'my-db-connection-id', projectId: 'Test', branchId: 'b11'});
-                    })
-                    .then(function () {
-                        console.log('ready to work with objects...', context);
-                    })
-                    .catch(function (reason) {
-                        console.error(reason);
-                    });
+//                DataStoreService.selectProject({db: 'my-db-connection-id', projectId:'Test'})
+//                    .then(function () {
+//                        return DataStoreService.selectBranch({db: 'my-db-connection-id', projectId: 'Test', branchId: 'b11'});
+//                    })
+//                    .then(function () {
+//                        console.log('ready to work with objects...', context);
+//                    })
+//                    .catch(function (reason) {
+//                        console.error(reason);
+//                    });
 
-                DataStoreService.selectBranch(context)
+
+                DataStoreService.connectToDatabase(context)
                     .then(function () {
-                        console.log('ready to work with objects...', context);
-                        NodeService.loadNode(context, '')
-                            .then(function (node) {
-                                console.log(node.getAttribute('name'));
+                        // Once we have connected to the database we can register event handlers.
+
+                        var rootNode;
+
+                        NodeService.on(context, 'initialize', function(currentContext) {
+                            NodeService.loadNode(currentContext, '')
+                                .then(function (node) {
+                                    rootNode = node;
+                                    console.log(node);
+                                    console.log(currentContext);
+                                    //console.log(c);
+                                });
+                        });
+
+                        NodeService.on(context, 'destroy', function(currentContext) {
+                            rootNode = null;
+                        });
+
+                        // we can select any branch
+                        DataStoreService.selectBranch(context)
+                            .then(function () {
+                                console.log('ready to work with objects...', context);
+                                NodeService.loadNode(context, '')
+                                    .then(function (node) {
+                                        console.log(node.getAttribute('name'));
+                                    });
+
+                            })
+                            .catch(function (reason) {
+                                console.error(reason);
                             });
 
-                    })
-                    .catch(function (reason) {
-                        console.error(reason);
                     });
 
-                var rootNode;
-
-                NodeService.on(context, 'initialize', function(currentContext) {
-                    NodeService.loadNode(currentContext, '')
-                        .then(function (node) {
-                            rootNode = node;
-                            console.log(node);
-                            console.log(currentContext);
-                            //console.log(c);
-                        });
-                });
-
-                NodeService.on(context, 'destroy', function(currentContext) {
-                    rootNode = null;
-                });
             });
 
 
