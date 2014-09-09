@@ -180,9 +180,9 @@
     <rect
        data-stretch="y-cond y-name y-true_next"
        x="2.155472"
-       y="6.7386951"
+       y="4.7386951"
        width="7.9311714"
-       height="48.328293"
+       height="50.328293"
        style="stroke-width:4.31094408;overflow:hidden"
        id="spine"
        inkscape:label="#rect11-1-0" />
@@ -266,7 +266,8 @@
   <text
      x="12.452287"
      y="17"
-     style="font-size:12px">if</text>
+     data-align-center="y-topExpandBox"
+     style="font-size:14px">if</text>
   <!-- connection areas -->
   <line
      class="connection-area"
@@ -301,10 +302,11 @@
      class="connection-area"
      data-ptr="cond"
      data-role="out"
-     x1="52.508518"
-     y1="4.439868"
-     x2="48.008518"
-     y2="8.939868"
+     data-align-center="y-topExpandBox"
+     x1="50"
+     y1="11"
+     x2="50"
+     y2="11"
      id="cond-out" />
   <!-- initial measures -->
   <rect

@@ -51,14 +51,6 @@
      fit-margin-left="0"
      fit-margin-right="0"
      fit-margin-bottom="0" />
-  <rect
-     style="opacity:0.54863808;fill:#ffffff;fill-opacity:0;stroke:#000000;stroke-width:2.03220844;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none"
-     id="name-bounding-box"
-     width="40.448757"
-     height="8.3728704"
-     x="6.9949174"
-     y="8.0343323"
-     inkscape:label="#rect2992" />
   <!--
        If you use inkscape and "ungroup" the items,
        it will delete the following group tag. I store
@@ -149,7 +141,7 @@
   <rect
      rx="1.8"
      y="5.2063079"
-     x="77.806122"
+     x="79.806122"
      height="12.584407"
      width="21.236712"
      id="RInputField"
@@ -157,6 +149,7 @@
      text-stretch-only="true"
      data-stretch="x-second"
      data-shift="x-vertical-body"
+     data-align-center="y-vertical-body"
      class="edit-second"
      inkscape:label="#rect3014-3" />
   <rect
@@ -167,22 +160,25 @@
      width="21.236712"
      id="LInputField"
      style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:1.61639428px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;overflow:hidden"
+     data-align-center="y-vertical-body"
      inkscape:label="#rect3014-3-0" />
   </g>
   <!-- Text -->
   <text
+     data-align-center="y-vertical-body"
      x="10.463337"
      y="17"
      style="font-size:12px"
-     id="text16">let</text>
+     id="midline">let</text>
   <text
      data-shift="x-vertical-body"
+     data-align-center="y-vertical-body"
      id="name-2"
      x="62.598267"
      y="16.635614"
      style="font-size:12px;overflow:hidden">=</text>
   <text
-     data-shift="x-vertical-body"
+     data-shift="y-RInputField x-vertical-body"
      id="second"
      x="82.598267"
      y="16.635614"
@@ -211,21 +207,23 @@
      class="connection-area"
      data-ptr="first"
      data-role="out"
+     data-align-center="y-vertical-body"
      id="first-out"
      x1="32"
-     y1="3.5"
+     y1="12"
      x2="35"
-     y2="6.5" />
+     y2="12" />
   <line
      class="connection-area"
      data-shift="x-vertical-body"
+     data-align-center="y-vertical-body"
      data-ptr="second"
      data-role="out"
      id="second-out"
      x1="76"
-     y1="3.5"
+     y1="12"
      x2="79"
-     y2="6.5" />
+     y2="12"/>
   <!-- custom highlighting areas are now supported - must be a line, however -->
   <line
      class="connection-highlight"
@@ -253,7 +251,7 @@
      data-ptr="first"
      data-type="svg"
      width="20"
-     height="17"
+     height="12"
      x="0.56333733"
      y="0"
      id="rect25" />
@@ -262,7 +260,7 @@
      class="initial-measure"
      data-ptr="second"
      data-type="text"
-     width="0"
+     width="5"
      height="17"
      x="0.56333733"
      y="0"
@@ -273,16 +271,8 @@
      data-ptr="second"
      data-type="svg"
      width="20"
-     height="17"
+     height="12"
      x="0.56333733"
      y="0"
      id="rect28" />
-  <!-- bounding box -->
-  <rect
-     style="opacity:0"
-     id="rect29"
-     width="20.2517357"
-     height="8.1356192"
-     x="35.972111"
-     y="6.5785375" />
 </svg>

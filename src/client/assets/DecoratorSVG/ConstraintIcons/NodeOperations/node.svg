@@ -78,7 +78,7 @@
      y="2.3697159"
      inkscape:label="#rect3009" />
   <rect
-     class="x-shift-name"
+     data-shift="x-nameRect"
      x="48.274986"
      y="3.860949"
      width="4.5836344"
@@ -88,13 +88,13 @@
      style="stroke-width:0.21916644;overflow:hidden"
      id="RRect" />
   <path
-     class="x-shift-name"
+     data-shift="x-RRect"
      inkscape:connector-curvature="0"
      id="TRCorner"
      d="m 48.790488,0.62299493 0,3.53124987 3.59375,0 a 3.54,3.54 0 0 0 -3.5625,-3.53124987 l -0.0312,0 z"
      style="stroke-width:1.17999995;overflow:hidden" />
   <path
-     class="x-shift-name"
+     data-shift="x-RRect"
      inkscape:connector-curvature="0"
      id="BRCorner"
      d="m 48.779588,21.786089 0,-3.53125 3.59375,0 a 3.54,3.54 0 0 1 -3.5625,3.53125 l -0.0312,0 z"
@@ -119,19 +119,12 @@
      d="m 4.2015296,21.781786 0,-3.53125 -3.59374989,0 a 3.54,3.54 0 0 0 3.56249989,3.53125 l 0.0312,0 z"
      style="stroke-width:1.17999995;overflow:hidden" />
   </g>
-  <!-- Text Bounding Boxes -->
-  <rect
-     style="opacity:0"
-     id="name-bounding-box"
-     width="15.251736"
-     height="8.1356192"
-     x="35.972111"
-     y="6.5785375" />
   <!-- NAME AND CONNECTION INFO -->
   <text
      class="x-shift-first"
      font-weight="bold"
      data-editable="true"
+     data-align-center="y-nameRect"
      id="name"
      x="12.3756523"
      y="16.179907"
@@ -141,10 +134,21 @@
      class="connection-area"
      data-ptr="iter cond first second node"
      data-role="in"
-     x1="4.5"
-     y1="0"
+     data-align-center="y-nameRect"
+     x1="0"
+     y1="11"
      x2="0"
-     y2="4.5"
+     y2="11"
      id="conn-area-in" />
   <!-- initial measures -->
+  <rect
+     style="opacity:0"
+     class="initial-measure"
+     data-ptr="name"
+     data-type="text"
+     width="20"
+     height="9"
+     x="0.56333733"
+     y="0"
+     id="rect19" />
 </svg>

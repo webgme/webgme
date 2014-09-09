@@ -147,4 +147,14 @@
      y2="4.5"
      id="conn-area-in" />
   <!-- initial measures -->
+  <rect
+     style="opacity:0"
+     class="initial-measure"
+     data-ptr="name"
+     data-type="text"
+     width="20"
+     height="9"
+     x="0.56333733"
+     y="0"
+     id="rect19" />
 </svg>

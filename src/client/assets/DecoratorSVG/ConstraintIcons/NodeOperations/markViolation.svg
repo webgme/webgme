@@ -144,7 +144,7 @@
      text-stretch-only="true"
      data-shift="y-conflictRect"
      id="msgbox"
-     class="x-message y-shift-node"
+     class="edit-message"
      width="36.769127"
      height="8.3551264"
      x="57.454437"

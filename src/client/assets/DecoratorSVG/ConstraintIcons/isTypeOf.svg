@@ -168,8 +168,10 @@
      style="fill:#ffffff;fill-opacity:1;stroke:none;overflow:hidden"
      data-stretch="x-first"
      text-stretch-only="true"
+     data-align-center="y-nameRect"
      data-shift="x-nameRect" />
   <rect
+     data-align-center="y-nameRect"
      y="4.8144441"
      x="13.434318"
      rx="3"
@@ -196,11 +198,12 @@
   <!-- NAME AND CONNECTION INFO -->
   <text
      data-shift="x-LRect"
+     data-align-center="y-nameRect"
      x="36.375652"
      y="16.179907"
      style="font-size:12px">is type of</text>
   <text
-     data-shift="x-nameRect"
+     data-shift="x-nameRect y-LinputField"
      id="first"
      x="98.376091"
      y="15.179907"
@@ -211,28 +214,30 @@
      data-ptr="cond node first"
      data-role="in"
      x1="4.5"
-     y1="0"
+     y1="11"
      x2="0"
-     y2="4.5"
+     y2="11"
      id="conn-area-in" />
   <line
      class="connection-area"
      data-ptr="first"
      data-role="out"
      data-shift="x-nameRect"
+     data-align-center="y-RRect"
      x1="100"
-     y1="3.5"
+     y1="11"
      x2="95.5"
-     y2="8"
+     y2="11"
      id="first-out" />
   <line
      class="connection-area"
      data-ptr="node"
      data-role="out"
+     data-align-center="y-nameRect"
      x1="10.5"
-     y1="3.5"
+     y1="11"
      x2="8"
-     y2="8"
+     y2="11"
      id="node-out" />
   <!-- initial measures -->
   <rect

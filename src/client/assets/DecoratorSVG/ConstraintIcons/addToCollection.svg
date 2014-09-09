@@ -151,10 +151,11 @@
   <rect
      rx="1.8"
      y="5.9593081"
-     x="77.256119"
+     x="83.256119"
      height="12.584407"
      width="21.236712"
      id="RInputField"
+     data-align-center="y-firstRect"
      style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:1.61639428px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;overflow:hidden"
      data-shift="x-firstRect" />
   <rect
@@ -165,16 +166,19 @@
      width="21.236712"
      id="LInputField"
      text-stretch-only="true"
+     data-align-center="y-firstRect"
      style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:1.61639428px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;overflow:hidden" />
   <!-- Text -->
   <text
      x="9.9008369"
      y="17.657749"
+     data-align-center="y-firstRect"
      style="font-size:12px"
      id="text15">add</text>
   <text
      data-shift="x-firstRect"
      id="name-2"
+     data-align-center="y-firstRect"
      x="64.035767"
      y="17.293364"
      style="font-size:12px;overflow:hidden">to</text>
@@ -202,21 +206,23 @@
      class="connection-area"
      data-ptr="first"
      data-role="out"
+     data-align-center="y-firstRect"
      id="first-out"
      x1="36.4375"
-     y1="4.1577501"
+     y1="11"
      x2="39.4375"
-     y2="7.1577501" />
+     y2="11" />
   <line
      class="connection-area"
      data-shift="x-firstRect"
+     data-align-center="y-firstRect"
      data-ptr="collection"
      data-role="out"
      id="collection-out"
-     x1="75.4375"
-     y1="4.1577501"
-     x2="78.4375"
-     y2="7.1577501" />
+     x1="80"
+     y1="11"
+     x2="80"
+     y2="11" />
   <!-- custom highlighting areas are now supported - must be a line, however -->
   <line
      class="connection-highlight"
@@ -247,12 +253,4 @@
      x="0.00083875656"
      y="0.65775007"
      id="rect26" />
-  <!-- bounding box -->
-  <rect
-     style="opacity:0"
-     id="rect28"
-     width="20.251736"
-     height="8.1356192"
-     x="35.409611"
-     y="7.2362876" />
 </svg>

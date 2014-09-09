@@ -254,16 +254,19 @@
      x="12.452287"
      y="17"
      style="font-size:12px"
+     data-align-center="y-topExpandBox"
      id="text28">repeat</text>
   <text
      id="count"
      x="66.63839"
      y="16.427568"
+     data-align-center="y-topExpandBox"
      style="font-size:12px;overflow:hidden">1</text>
   <text
      x="87.568542"
      y="17.32608"
      data-shift="x-topExpandBox"
+     data-align-center="y-topExpandBox"
      style="font-size:12px;overflow:hidden"
      id="text28-4">times</text>
   <!-- connection areas -->
@@ -300,10 +303,11 @@
      class="connection-area"
      data-ptr="count"
      data-role="out"
+     data-align-center="y-topExpandBox"
      x1="61.609001"
-     y1="4.439868"
+     y1="11"
      x2="57.109001"
-     y2="8.939868"
+     y2="11"
      id="count-out" />
   <!-- initial measures -->
   <rect
