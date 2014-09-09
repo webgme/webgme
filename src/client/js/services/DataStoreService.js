@@ -263,12 +263,12 @@ define(['js/client'], function (Client) {
             NodeObj.prototype.onUpdate = function(fn) {
                 console.assert(typeof fn === 'function');
                 this._onUpdate = fn;
-            }
+            };
 
             NodeObj.prototype.onUnload = function(fn) {
                 console.assert(typeof fn === 'function');
                 this._onUnload = fn;
-            }
+            };
 
             // FIXME : Can context be resolved from the node?
             NodeObj.prototype.onNewChildLoaded = function (context, fn) {
@@ -410,6 +410,27 @@ define(['js/client'], function (Client) {
                         dbConn.client.updateTerritory(context.territoryId, territory.patterns);
                     }
                 }
+
+                this.on = function (context, eventName, fn) {
+                    console.assert(typeof context === 'object');
+                    console.assert(typeof eventName === 'string');
+                    console.assert(typeof fn === 'function');
+
+                    dbConn = DataStoreService.getDatabaseConnection(context);
+                    dbConn.nodeService = dbConn.nodeService || {};
+
+                    dbConn.nodeService.isInitialized = dbConn.nodeService.isInitialized || false;
+
+                    dbConn.nodeService.events = dbConn.nodeService.events || {};
+                    dbConn.nodeService.events[eventName] = dbConn.nodeService.events[eventName] || [];
+                    dbConn.nodeService.events[eventName].push(fn);
+
+                    if (dbConn.nodeService.isInitialized && eventName === 'initialize') {
+                        fn();
+                    }
+
+                    // TODO: register for branch change event OR BranchService onInitialize
+                };
 
                 return deferred.promise;
             };
