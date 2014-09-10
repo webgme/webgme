@@ -12,6 +12,7 @@ define(['blob/BlobConfig'], function(BlobConfig){
      * @constructor
      */
     var BlobMetadata = function(metadata) {
+        var key;
         if (metadata) {
             this.name = metadata.name;
             this.size = metadata.size || 0;
@@ -21,7 +22,7 @@ define(['blob/BlobConfig'], function(BlobConfig){
             this.content = metadata.content;
             this.contentType = metadata.contentType || BlobMetadata.CONTENT_TYPES.OBJECT;
             if (this.contentType === BlobMetadata.CONTENT_TYPES.COMPLEX) {
-                for (var key in this.content) {
+                for (key in this.content) {
                     if (this.content.hasOwnProperty(key)) {
                         if (BlobConfig.hashRegex.test(this.content[key].content) === false) {
                             throw Error("BlobMetadata is malformed: hash is invalid");
