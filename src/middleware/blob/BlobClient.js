@@ -59,8 +59,11 @@ define(['./Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, Bl
             .set('Content-Length', data.length)
             .send(data)
             .end(function (err, res) {
+                if (err || res.status > 399) {
+                    callback(err || res.status);
+                    return;
+                }
                 var response = res.body;
-                // TODO: handle error
                 // Get the first one
                 var hash = Object.keys(response)[0];
                 callback(null, hash);
@@ -87,9 +90,12 @@ define(['./Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, Bl
             .set('Content-Length', contentLength)
             .send(blob)
             .end(function (err, res) {
+                if (err || res.status > 399) {
+                    callback(err || res.status);
+                    return;
+                }
                 // Uploaded.
                 var response = JSON.parse(res.text);
-                // TODO: handle error
                 // Get the first one
                 var hash = Object.keys(response)[0];
                 callback(null, hash);
