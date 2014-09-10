@@ -4,7 +4,7 @@
  * Author: Zsolt Lattmann
  */
 
-define(['blob/BlobMetadata'], function (BlobMetadata) {
+define(['blob/BlobMetadata', 'blob/BlobConfig'], function (BlobMetadata, BlobConfig) {
 
     /**
      * Creates a new instance of artifact, i.e. complex object, in memory. This object can be saved in the storage.
@@ -200,6 +200,10 @@ define(['blob/BlobMetadata'], function (BlobMetadata) {
     Artifact.prototype.addMetadataHash = function (name, hash, callback) {
         var self = this;
 
+        if (BlobConfig.hashRegex.test(hash) === false) {
+            callback("Blob hash is invalid");
+            return;
+        }
         self.blobClient.getMetadata(hash, function (err, metadata) {
             if (err) {
                 callback(err);

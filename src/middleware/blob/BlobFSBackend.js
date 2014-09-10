@@ -95,7 +95,7 @@ define(['./BlobBackendBase',
         var filename = path.join(this.blobDir, bucket, this._getObjectRelativeLocation(hash)),
             readStream;
 
-        if (fs.existsSync(filename)) {
+        if (fs.lstatSync(filename).isFile()) {
             readStream = fs.createReadStream(filename);
         } else {
             callback('Requested object does not exist: ' + hash);
