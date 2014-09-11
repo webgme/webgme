@@ -272,6 +272,10 @@ define(['js/client'], function (Client) {
 
             };
 
+            /** Gets nodeIds of nodes this node points 'to' and is pointed to 'from'.
+             * @param name - name of pointer.
+             * @returns {object} - with keys 'to' {string} and 'from' {[string]}
+             */
             NodeObj.prototype.getPointer = function (name) {
                 return this.databaseConnection.client.getNode(this.id).getPointer(name);
             };
@@ -295,7 +299,11 @@ define(['js/client'], function (Client) {
             };
 
             NodeObj.prototype.getId = function () {
-                return this.databaseConnection.client.getNode(this.id).getId();
+                return this.id;
+            };
+
+            NodeObj.prototype.getBaseId = function () {
+                return this.databaseConnection.client.getNode(this.id).getBaseId();
             };
 
             NodeObj.prototype.getGuid = function () {
@@ -335,8 +343,17 @@ define(['js/client'], function (Client) {
 
             };
 
-            NodeObj.prototype.isMetaTypeOf = function (nodeOrId) {
+            NodeObj.prototype.isMetaTypeOf = function (metaNode) {
+                var idWasGiven = false,
+                    node = this.databaseConnection.client.getNode(this.id);
 
+                while (node) {
+                    if (node.getId() === metaNode.getId()) {
+                        return true;
+                    }
+                    node = this.databaseConnection.client.getNode(node.getBaseId());
+                }
+                return false;
             };
 
             this.createChild = function (context, parameters) {
@@ -453,6 +470,9 @@ define(['js/client'], function (Client) {
 
                             for (i = 0; i < events.length; i += 1) {
                                 event = events[i];
+                                if (id !== event.eid) {
+                                    continue;
+                                }
                                 if (event.etype === 'load') {
                                     nodes[id] =  new NodeObj(dbConn, id);
                                     deferred.resolve(nodes[id]);
