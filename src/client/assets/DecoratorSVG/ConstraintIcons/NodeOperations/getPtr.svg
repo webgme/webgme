@@ -9,11 +9,11 @@
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    height="30.406998"
    version="1.1"
-   width="157.1357"
+   width="145.1357"
    style="overflow:hidden"
    id="svg2"
    inkscape:version="0.48.5 r10040"
-   sodipodi:docname="getAttrBasic.svg">
+   sodipodi:docname="getPtr.svg">
   <metadata
      id="metadata22">
     <rdf:RDF>
@@ -37,14 +37,14 @@
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:window-width="1918"
-     inkscape:window-height="1080"
+     inkscape:window-height="1173"
      id="namedview18"
      showgrid="false"
      inkscape:zoom="8.0000004"
      inkscape:cx="84.31655"
-     inkscape:cy="26.814026"
-     inkscape:window-x="0"
-     inkscape:window-y="0"
+     inkscape:cy="26.814027"
+     inkscape:window-x="3840"
+     inkscape:window-y="25"
      inkscape:window-maximized="1"
      inkscape:current-layer="svg2"
      fit-margin-top="0"
@@ -77,7 +77,7 @@
   <rect
      data-stretch="x-node y-first y-node"
      data-shift="x-nameRect"
-     x="122.86996"
+     x="110.86996"
      y="3.9556303"
      width="33.893703"
      height="21.813919"
@@ -89,13 +89,13 @@
      data-shift="x-RRect"
      inkscape:connector-curvature="0"
      id="TRCorner"
-     d="m 152.79049,0.62274991 0,3.53124999 3.59375,0 a 3.54,3.54 0 0 0 -3.5625,-3.53124999 l -0.0312,0 z"
+     d="m 140.79049,0.62274991 0,3.53124999 3.59375,0 a 3.54,3.54 0 0 0 -3.5625,-3.53124999 l -0.0312,0 z"
      style="fill:#4cc3d9;stroke:#4cc3d9;stroke-width:1.17999995;overflow:hidden" />
   <path
      data-shift="x-RRect y-RRect"
      inkscape:connector-curvature="0"
      id="BRCorner"
-     d="m 152.77959,29.786092 0,-3.53125 3.59375,0 a 3.54,3.54 0 0 1 -3.5625,3.53125 l -0.0312,0 z"
+     d="m 140.77959,29.786092 0,-3.53125 3.59375,0 a 3.54,3.54 0 0 1 -3.5625,3.53125 l -0.0312,0 z"
      style="fill:#4cc3d9;stroke:#4cc3d9;stroke-width:1.17999995;overflow:hidden" />
   <rect
      data-stretch="y-node y-name x-first y-first"
@@ -139,7 +139,7 @@
      data-stretch="x-node"
      data-shift="x-nameRect"
      y="0.47734737"
-     x="123.19141"
+     x="111.19141"
      height="3.9139254"
      width="29.096546"
      id="RTRect"
@@ -149,89 +149,82 @@
      data-stretch="x-node"
      data-shift="x-nameRect y-RRect"
      y="26.038549"
-     x="122.74908"
+     x="110.74908"
      height="3.9139254"
      width="29.096546"
      id="BRRect"
      style="fill:#4cc3d9;stroke:#4cc3d9;stroke-width:0.84345406;overflow:hidden" />
   <rect
-     y="8.6235809"
-     x="133.72543"
-     ry="5"
+     y="7.3289971"
+     x="121.72543"
+     ry="5.5327764"
      rx="5"
-     height="14.64003"
+     height="16.200001"
      width="16.673277"
      id="RInputField"
      style="fill:#ffffff;fill-opacity:1;stroke:none;overflow:hidden"
-     data-shift="x-nameRect" />
-  <rect
-     data-stretch="x-first"
+     data-shift="x-nameRect"
+     data-align-center="y-nameRect"
      text-stretch-only="true"
+     data-stretch="x-node y-node" />
+  <rect
+     data-stretch="x-first y-first"
+     text-stretch-only="true"
+     data-align-center="y-nameRect"
+     class="edit-first"
      id="firstInputField"
-     width="74.297997"
+     width="34.297997"
      height="16.51503"
      ry="5"
      rx="5"
-     x="34.934002"
-     y="8.3144493"
+     x="7.9340019"
+     y="7.3139677"
      style="fill:#ffffff;stroke:#4cc3d9" />
   <!-- NAME AND CONNECTION INFO -->
   <text
-     id="name-8"
-     x="6.8994179"
-     y="19.875631"
-     style="font-size:14px;overflow:hidden">get</text>
-  <text
      id="first"
-     x="36.899418"
+     data-align-center="y-nameRect"
+     x="14"
      y="20.875631"
-     style="font-size:12px;overflow:hidden">--pointer--</text>
+     style="font-size:12px;overflow:hidden"></text>
   <text
      data-shift="x-nameRect"
-     x="114.37566"
+     data-align-center="y-nameRect"
+     x="51"
      y="20.179911"
-     style="font-size:14px">of</text>
-  <!-- Text Bounding Boxes -->
-  <rect
-     style="opacity:0"
-     id="name-bounding-box"
-     width="20.251736"
-     height="8.1356192"
-     x="105.97211"
-     y="0" />
-  <rect
-     style="opacity:0"
-     id="first-bounding-box"
-     width="50.673277"
-     height="12.51503"
-     x="127.72543"
-     y="0" />
-  <rect
-     style="opacity:0"
-     id="node-bounding-box"
-     width="16.673277"
-     height="12.51503"
-     x="83.434319"
-     y="0" />
+     style="font-size:14px"
+     id="text21">pointer of</text>
   <!-- connection areas -->
   <line
      class="connection-area"
      data-ptr="cond first second node"
      data-role="in"
+     data-align-center="y-nameRect"
      x1="4.5"
-     y1="0"
+     y1="15"
      x2="0"
-     y2="4.5"
+     y2="15"
      id="conn-area-in" />
+  <line
+     class="connection-area"
+     data-ptr="first"
+     data-role="out"
+     data-align-center="y-LRect"
+     x1="5.5500007"
+     y1="15"
+     x2="1.05"
+     y2="15"
+     id="first-out" />
   <line
      class="connection-area"
      data-ptr="node"
      data-role="out"
      data-shift="x-nameRect"
-     x1="136.25"
-     y1="6.8750019"
-     x2="131.75"
-     y2="11.375002"
+     data-align-center="y-RRect"
+     x1="124.25"
+     y1="15"
+     x2="119.75"
+     y2="15"
      id="node-out" />
   <!-- initial measures -->
   <rect
@@ -265,5 +258,5 @@
      x="70"
      y="0"
      inkscape:label="#rect3000"
-     id="rect30" />
+     id="rect31" />
 </svg>

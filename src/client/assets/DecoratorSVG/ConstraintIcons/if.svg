@@ -98,7 +98,7 @@
   <g
      id="colors"
      style="fill:#0088cc;stroke:#0088cc;"
-     data-secondary="fill:#fd5f49;stroke:#fd5f49">
+     data-secondary="fill:#0099dd;stroke:#0099dd">
     <rect
        data-shift="y-topExpandBox x-topExpandBox"
        style="opacity:0.54863808;fill:#ffffff;fill-opacity:1;stroke:#0000cc;stroke-width:0.03871261;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
@@ -117,9 +117,9 @@
        inkscape:label="#path8" />
     <rect
        data-stretch="y-cond x-cond x-name y-name"
-       x="31.449223"
+       x="31"
        y="3.157517"
-       width="48.27145"
+       width="48.7"
        height="16.997704"
        style="stroke-width:6.30729771"
        id="topExpandBox"
@@ -324,7 +324,7 @@
      data-ptr="true_next"
      class="initial-measure"
      width="0"
-     height="17"
+     height="7"
      x="0"
      y="0"
      inkscape:label="#rect3008"

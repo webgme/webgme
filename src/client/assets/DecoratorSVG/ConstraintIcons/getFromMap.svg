@@ -68,8 +68,8 @@
   -->
   <g
      id="colors"
-     style="fill:#4a79a5;stroke:#4a79a5;"
-     data-secondary="fill:#54b868;stroke:#54b868;">
+     style="fill:#B641CA;stroke:#B641CA;"
+     data-secondary="fill:#CF5AE3;stroke:#CF5AE3;">
   <path
      style="stroke-width:1.17999995"
      d="m 105.707,0.59224993 0,3.53124997 26.125,0 a 3.54,3.54 0 0 0 -3.5625,-3.53124997 l -22.5625,0 z"
@@ -125,6 +125,7 @@
   <path
      inkscape:label="#rect3006"
      inkscape:connector-curvature="0"
+     data-align-center="y-firstRect"
      id="first_box"
      d="m 62.699787,5.7697069 0,0.4034183 -0.23906,-0.2390625 -6.4248,6.4248053 6.4248,6.424805 0.23906,-0.239063 0,0.313769 10.115343,0 0,-0.373535 0.26894,0.268945 6.42481,-6.439746 -6.42481,-6.4248049 -0.26894,0.2689454 0,-0.3884766 -10.115343,0 z"
      style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0.47324049px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"/>
@@ -135,6 +136,7 @@
      x="101.95723"
      height="14.300145"
      width="23.394461"
+     data-align-center="y-firstRect"
      id="map_box"
      style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0.58804238px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;overflow:hidden"
      data-shift="x-firstRectHorizontal" />
@@ -147,7 +149,7 @@
   <path
      style="stroke-width:1.17999995;overflow:hidden"
      d="m 28.37175,4.1740422 0,-3.53125027 -23.65625,0 A 3.54,3.54 0 0 0 1.153,4.1740422 l 27.21875,0 z"
-     id="TRCorner"
+     id="TLCorner"
      inkscape:connector-curvature="0" />
 </g>
 
@@ -158,20 +160,22 @@
      id="name-6-6"
      x="85.112648"
      y="17.000078"
+     data-align-center="y-firstRect"
      style="font-size:12px;overflow:hidden">in</text>
   <text
      x="6.4633374"
      y="17"
+     data-align-center="y-firstRect"
      style="font-size:12px">item at</text>
   <!-- Connection Areas -->
   <line
      class="connection-area"
      data-ptr="first second cond"
      data-role="in"
-     x1="-0.0089999996"
-     y1="0.022042144"
-     x2="4.7510815"
-     y2="4.022042144"
+     x1="0"
+     y1="16.5"
+     x2="0"
+     y2="16.5"
      id="next-in" />
   <line
      class="connection-area"
@@ -179,9 +183,9 @@
      data-role="out"
      id="first-out"
      x1="55.008133"
-     y1="4.062922"
-     x2="61.008133"
-     y2="10.062922" />
+     y1="15"
+     x2="55.008133"
+     y2="15" />
   <line
      class="connection-area"
      data-ptr="map"
@@ -189,9 +193,9 @@
      data-shift="x-firstRectHorizontal"
      id="map-out"
      x1="100"
-     y1="4"
-     x2="102"
-     y2="8" />
+     y1="15"
+     x2="100"
+     y2="15" />
   <!-- custom highlighting areas are now supported - must be a line, however -->
   <!-- initial measurements -->
   <rect

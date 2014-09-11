@@ -7,13 +7,13 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   height="22.473457"
+   height="22.389137"
    version="1.1"
-   width="116.03663"
+   width="99.918503"
    style="overflow:hidden"
    id="svg2"
    inkscape:version="0.48.5 r10040"
-   sodipodi:docname="filterBy.svg">
+   sodipodi:docname="getLength.svg">
   <metadata
      id="metadata22">
     <rdf:RDF>
@@ -41,8 +41,8 @@
      id="namedview18"
      showgrid="false"
      inkscape:zoom="5.6568546"
-     inkscape:cx="32.219281"
-     inkscape:cy="26.920293"
+     inkscape:cx="14.867419"
+     inkscape:cy="47.54583"
      inkscape:window-x="3840"
      inkscape:window-y="25"
      inkscape:window-maximized="1"
@@ -63,123 +63,89 @@
      style="fill:#74e868;stroke:#74e868;"
      data-secondary="fill:#54b868;stroke:#54b868;">
   <rect
-     inkscape:label="#nodeSetRect-0"
-     data-stretch="x-first y-nodeSet y-first"
-     data-shift="x-nodeSetRect"
-     id="firstRect"
-     y="2.1421349"
-     x="60.057812"
-     rx="2.5"
-     ry="2.5"
-     height="18.27351"
-     width="53.921001"
-     style="stroke-width:4.1156249;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+     inkscape:label="#nameRect-7"
+     data-stretch="y-first y-name x-name"
+     style="stroke-width:5.30862522;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;overflow:hidden"
+     width="51.595375"
+     height="17.080511"
+     ry="5.3455315"
+     rx="3.2050281"
+     x="2.6543126"
+     y="2.6543126"
+     id="nameRect" />
   <rect
-     data-stretch="y-first x-nodeSet y-nodeSet"
-     id="nodeSetRect"
-     y="3.4092071"
-     x="3.4011853"
-     rx="3.839025"
-     ry="2.3324945"
-     height="15.586767"
-     width="82.801628"
-     style="stroke-width:6.80237055;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+     inkscape:label="#nameRect"
+     data-shift="x-nameRect"
+     data-stretch="y-first y-name x-first"
+     style="stroke-width:5.30862522;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+     width="51.595375"
+     height="17.080511"
+     ry="5.3455315"
+     rx="3.2050281"
+     x="45.668812"
+     y="2.6543131"
+     id="firstRect" />
   <rect
-     y="2.7485795"
-     x="90.724998"
-     rx="5"
-     ry="5"
-     height="16.51503"
-     width="16.673277"
-     id="RinputField"
-     style="fill:#ffffff;fill-opacity:1;stroke:none;overflow:hidden"
-     class="edit-first"
-     text-stretch-only="true"
-     data-shift="x-nodeSetRect"
-     data-align-center="y-nodeSetRect"
-     data-stretch="x-first y-first" />
-  <rect
-     y="4.9022346"
-     x="9.1999998"
+     y="4.7405581"
+     x="75.739922"
      rx="5"
      ry="5"
      height="12.51503"
      width="16.673277"
-     id="RinputField-7"
+     id="RinputField"
      style="fill:#ffffff;fill-opacity:1;stroke:none;overflow:hidden"
      text-stretch-only="true"
-     data-shift="x-nodeSetRect"
-     data-align-center="y-nodeSetRect"
+     data-align-center="y-nameRect"
+     data-shift="x-nameRect"
      data-stretch="y-first" />
-  </g>
+</g>
   <!-- NAME AND CONNECTION INFO -->
   <text
-     x="97"
-     y="15"
-     data-shift="x-nodeSetRect y-RinputField-7"
-     style="font-size:13px"
-     id="first"></text>
-  <text
-     x="37.937889"
-     y="15.179907"
-     data-shift="x-nodeSetRect"
-     data-align-center="y-nodeSetRect"
-     style="font-size:13px"
-     id="text10">of type</text>
+     data-align-center="y-nameRect"
+     x="7.4896951"
+     y="15.279704"
+     style="font-size:14px">length of</text>
   <!-- connection areas -->
   <line
      class="connection-area"
-     data-ptr="collection cond node first second"
+     data-ptr="cond first second"
+     data-align-center="y-nameRect"
      data-role="in"
-     data-align-center="y-nodeSetRect"
-     x1="4.5"
-     y1="11"
-     x2="0"
-     y2="11"
+     x1="5.5145006"
+     y1="10.991979"
+     x2="1.0145001"
+     y2="10.991979"
      id="conn-area-in" />
   <line
      class="connection-area"
      data-ptr="first"
      data-role="out"
-     data-shift="x-nodeSetRect"
-     data-align-center="y-nodeSetRect"
-     x1="92.699997"
-     y1="11"
-     x2="88.199997"
-     y2="11"
-     id="first-out"
-     inkscape:label="#first-out" />
-  <line
-     style="overflow:hidden"
-     class="connection-area"
-     data-ptr="nodeSet"
-     data-role="out"
-     data-align-center="y-nodeSetRect"
-     x1="11.778694"
-     y1="11"
-     x2="7.2786942"
-     y2="11"
-     id="collection-out"
-     inkscape:label="#first-out-1" />
+     data-shift="x-nameRect"
+     data-align-center="y-nameRect"
+     x1="73"
+     y1="10"
+     x2="73"
+     y2="10"
+     id="first-out" />
   <!-- initial measures -->
-  <rect
-     style="opacity:0"
-     data-ptr="nodeSet"
-     class="initial-measure"
-     width="29"
-     height="15"
-     x="0"
-     y="0"
-     inkscape:label="#rect3000"
-     id="rect27" />
   <rect
      style="opacity:0"
      data-ptr="first"
      class="initial-measure"
-     width="25"
-     height="2"
-     x="0"
-     y="0"
+     width="20"
+     height="15"
+     x="12.889501"
+     y="4.1794782"
      inkscape:label="#rect3000"
-     id="rect29" />
+     id="rect27" />
+  <rect
+     style="opacity:0"
+     data-ptr="name"
+     class="initial-measure"
+     width="25"
+     height="15"
+     x="12.889501"
+     y="4.1794782"
+     inkscape:label="#rect3000"
+     id="rect14" />
 </svg>

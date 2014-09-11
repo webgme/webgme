@@ -151,7 +151,7 @@
      y2="8" />
   <!-- custom highlighting areas are now supported - must be a line, however -->
   <line
-     class="connection-highlight x-name x-first x-second x-map"
+     class="connection-highlight"
      style="opacity:0;stroke:#444444;stroke-width:10.10658169"
      data-ptr="next"
      data-role="out"

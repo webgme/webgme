@@ -13,7 +13,7 @@
    style="overflow:hidden"
    id="svg2"
    inkscape:version="0.48.5 r10040"
-   sodipodi:docname="reporter.svg">
+   sodipodi:docname="multiply.svg">
   <metadata
      id="metadata22">
     <rdf:RDF>
@@ -37,13 +37,13 @@
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:window-width="1918"
-     inkscape:window-height="1053"
+     inkscape:window-height="1173"
      id="namedview18"
      showgrid="false"
      inkscape:zoom="16.000001"
      inkscape:cx="46.97776"
      inkscape:cy="17.345694"
-     inkscape:window-x="0"
+     inkscape:window-x="3840"
      inkscape:window-y="25"
      inkscape:window-maximized="1"
      inkscape:current-layer="svg2" />
@@ -72,7 +72,7 @@
        height="19.187786"
        width="16.702784"
        id="nameRect"
-       style="stroke-width:3.2013495;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"/>
+       style="stroke-width:3.2013495;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
     <rect
        data-stretch="x-second y-first y-second y-name"
        data-shift="x-nameRect"
@@ -83,7 +83,7 @@
        height="13.626877"
        width="33.71624"
        y="4.0446453"
-       x="52.958683"/>
+       x="52.958683" />
     <path
        data-shift="x-RTRect"
        style="stroke-width:1.17999995;overflow:hidden"
@@ -96,7 +96,7 @@
        style="stroke-width:1.17999995;overflow:hidden"
        d="m 82.779588,21.786089 0,-3.53125 3.59375,0 a 3.54,3.54 0 0 1 -3.5625,3.53125 l -0.0312,0 z"
        id="BRCorner"
-       inkscape:connector-curvature="0"/>
+       inkscape:connector-curvature="0" />
     <rect
        data-stretch="x-first y-name y-first y-second"
        id="LRect"
@@ -106,7 +106,7 @@
        height="13.62948"
        width="33.411209"
        y="4.4688673"
-       x="0.29197782"/>
+       x="0.29197782" />
     <path
        style="stroke-width:1.17999995;overflow:hidden"
        d="m 4.1906288,0.61869211 0,3.53124999 -3.59374999,0 A 3.54,3.54 0 0 1 4.1593788,0.61869211 l 0.0312,0 z"
@@ -125,7 +125,7 @@
        width="29.096031"
        height="3.9187722"
        x="4.472322"
-       y="0.42198431"/>
+       y="0.42198431" />
     <rect
        data-stretch="x-first"
        data-shift="y-LRect"
@@ -134,7 +134,7 @@
        width="29.137478"
        height="3.9790976"
        x="4.4198451"
-       y="17.997637"/>
+       y="17.997637" />
     <rect
        data-stretch="x-second"
        data-shift="x-nameRect"
@@ -143,7 +143,7 @@
        width="29.096546"
        height="3.9139254"
        x="53.191414"
-       y="0.47698987"/>
+       y="0.47698987" />
     <rect
        data-stretch="x-second"
        data-shift="x-nameRect y-RRect"
@@ -156,7 +156,7 @@
        inkscape:label="#RTRect-4" />
   </g>
   <!-- NAME AND CONNECTION INFO -->
-<!-- connection areas -->
+  <!-- connection areas -->
   <line
      class="connection-area"
      data-ptr="cond first second"
@@ -188,7 +188,7 @@
      x2="8"
      y2="11"
      id="first-out" />
-<!-- initial measures -->
+  <!-- initial measures -->
   <rect
      style="opacity:0"
      data-ptr="second"
@@ -221,7 +221,7 @@
      x="0"
      y="0"
      inkscape:label="#rect3000"
-     id="rect29" />
+     id="rect23" />
   <rect
      style="opacity:0"
      data-ptr="second"
@@ -232,51 +232,51 @@
      x="0"
      y="0"
      inkscape:label="#rect3000"
-     id="rect29" />
-    <!-- Input Fields -->
-    <rect
-       class="edit-second"
-       data-stretch="x-second"
-       data-shift="x-nameRect"
-       data-align-center="y-nameRect"
-       text-stretch-only="true"
-       style="fill:#ffffff;fill-opacity:1;stroke:none;overflow:hidden"
-       id="RInputField"
-       width="16.673277"
-       height="12.51503"
-       rx="3"
-       x="57.725422"
-       y="4.7485795" />
-    <rect
-       class="edit-first"
-       data-stretch="x-first"
-       data-align-center="y-nameRect"
-       style="fill:#ffffff;fill-opacity:1;stroke:none;overflow:hidden"
-       text-stretch-only="true"
-       id="LInputField"
-       width="16.673277"
-       height="12.51503"
-       rx="3"
-       x="13.434318"
-       y="4.8144441" />
+     id="rect25" />
+  <!-- Input Fields -->
+  <rect
+     class="edit-second"
+     data-stretch="x-second"
+     data-shift="x-nameRect"
+     data-align-center="y-nameRect"
+     text-stretch-only="true"
+     style="fill:#ffffff;fill-opacity:1;stroke:none;overflow:hidden"
+     id="RInputField"
+     width="16.673277"
+     height="12.51503"
+     rx="3"
+     x="57.725422"
+     y="4.7485795" />
+  <rect
+     class="edit-first"
+     data-stretch="x-first"
+     data-align-center="y-nameRect"
+     style="fill:#ffffff;fill-opacity:1;stroke:none;overflow:hidden"
+     text-stretch-only="true"
+     id="LInputField"
+     width="16.673277"
+     height="12.51503"
+     rx="3"
+     x="13.434318"
+     y="4.8144441" />
   <text
      id="first"
      data-shift="y-LInputField"
      x="17.375652"
      y="15.179907"
-     style="font-size:12px"></text>
+     style="font-size:12px" />
   <text
      data-shift="x-LRect"
      data-align-center="y-nameRect"
-     id="name"
-     x="36.375652"
-     y="16.179907"
-     style="font-size:12px">OP</text>
+     x="33.364449"
+     y="16.618122"
+     style="font-size:16.39953423px"
+     transform="scale(1.1408848,0.87651268)">x</text>
   <text
      data-shift="x-nameRect"
      data-align-center="y-nameRect"
      id="second"
      x="61.375652"
      y="15.179907"
-     style="font-size:12px"></text>
+     style="font-size:12px" />
 </svg>

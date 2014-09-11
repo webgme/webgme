@@ -7,13 +7,13 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   height="22.39716"
+   height="22.397158"
    version="1.1"
-   width="52.974239"
+   width="76.974236"
    style="overflow:hidden"
    id="svg2"
-   inkscape:version="0.48.4 r9939"
-   sodipodi:docname="node.svg">
+   inkscape:version="0.48.5 r10040"
+   sodipodi:docname="number.svg">
   <metadata
      id="metadata22">
     <rdf:RDF>
@@ -37,13 +37,13 @@
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:window-width="1918"
-     inkscape:window-height="1053"
+     inkscape:window-height="1173"
      id="namedview18"
      showgrid="false"
      inkscape:zoom="16.000001"
      inkscape:cx="46.97776"
-     inkscape:cy="17.340852"
-     inkscape:window-x="0"
+     inkscape:cy="17.34085"
+     inkscape:window-x="3840"
      inkscape:window-y="25"
      inkscape:window-maximized="1"
      inkscape:current-layer="svg2"
@@ -59,83 +59,81 @@
   </filter>
   <g
      id="colors"
-     style="fill:#74e868;stroke:#74e868;"
-     data-secondary="fill:#54b868;stroke:#54b868;">
+     style="fill:#A8FFFF;stroke:#A8FFFF;"
+     data-secondary="fill:#C1FFFF;stroke:#C1FFFF;">
+
 
 -->
   <g
      id="colors"
-     style="fill:#FFC768;stroke:#FFC768;"
-     data-secondary="fill:#FFE081;stroke:#FFE081;">
+     style="fill:#A8FFFF;stroke:#A8FFFF;"
+     data-secondary="fill:#C1FFFF;stroke:#C1FFFF;">
 
   <rect
-     data-stretch="x-name"
-     style="stroke-width:4.7233882;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+     inkscape:label="#rect3009"
+     y="2.9062192"
+     x="7.328186"
+     height="16.592741"
+     width="63.320606"
      id="nameRect"
-     width="39.493244"
-     height="17.665749"
-     x="6.7916842"
-     y="2.3697159"
-     inkscape:label="#rect3009" />
+     style="stroke-width:5.79639482;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+     data-stretch="x-name" />
   <rect
-     data-shift="x-nameRect"
-     x="48.274986"
-     y="3.860949"
-     width="4.5836344"
-     height="13.994269"
-     r="0"
-     rx="0"
+     id="RRect"
      style="stroke-width:0.21916644;overflow:hidden"
-     id="RRect" />
-  <path
-     data-shift="x-RRect"
-     inkscape:connector-curvature="0"
-     id="TRCorner"
-     d="m 48.790488,0.62299493 0,3.53124987 3.59375,0 a 3.54,3.54 0 0 0 -3.5625,-3.53124987 l -0.0312,0 z"
-     style="stroke-width:1.17999995;overflow:hidden" />
-  <path
-     data-shift="x-RRect"
-     inkscape:connector-curvature="0"
-     id="BRCorner"
-     d="m 48.779588,21.786089 0,-3.53125 3.59375,0 a 3.54,3.54 0 0 1 -3.5625,3.53125 l -0.0312,0 z"
-     style="stroke-width:1.17999995;overflow:hidden" />
-  <rect
-     x="0.10520758"
-     y="4.2820969"
-     width="4.2222514"
-     height="14.003021"
-     r="0"
      rx="0"
+     r="0"
+     height="13.994269"
+     width="4.5836344"
+     y="3.860949"
+     x="72.274986"
+     data-shift="x-nameRect" />
+  <path
+     style="stroke-width:1.17999995;overflow:hidden"
+     d="m 72.790488,0.62299493 0,3.53124987 3.59375,0 a 3.54,3.54 0 0 0 -3.5625,-3.53124987 l -0.0312,0 z"
+     id="TRCorner"
+     inkscape:connector-curvature="0"
+     data-shift="x-nameRect" />
+  <path
+     style="stroke-width:1.17999995;overflow:hidden"
+     d="m 72.779588,21.786089 0,-3.53125 3.59375,0 a 3.54,3.54 0 0 1 -3.5625,3.53125 l -0.0312,0 z"
+     id="BRCorner"
+     inkscape:connector-curvature="0"
+     data-shift="x-nameRect" />
+  <rect
+     id="LRect"
      style="stroke-width:0.21041515"
-     id="LRect" />
+     rx="0"
+     r="0"
+     height="14.003021"
+     width="4.2222514"
+     y="4.2820969"
+     x="0.10520758" />
   <path
-     inkscape:connector-curvature="0"
-     id="path9-6"
+     style="stroke-width:1.17999995;overflow:hidden"
      d="m 4.1906288,0.61869211 0,3.53124999 -3.59374999,0 A 3.54,3.54 0 0 1 4.1593788,0.61869211 l 0.0312,0 z"
-     style="stroke-width:1.17999995;overflow:hidden" />
+     id="path9-6"
+     inkscape:connector-curvature="0" />
   <path
-     inkscape:connector-curvature="0"
-     id="path9-6-5"
+     style="stroke-width:1.17999995;overflow:hidden"
      d="m 4.2015296,21.781786 0,-3.53125 -3.59374989,0 a 3.54,3.54 0 0 0 3.56249989,3.53125 l 0.0312,0 z"
-     style="stroke-width:1.17999995;overflow:hidden" />
+     id="path9-6-5"
+     inkscape:connector-curvature="0" />
   </g>
   <!-- NAME AND CONNECTION INFO -->
   <text
-     class="x-shift-first"
-     font-weight="bold"
      data-editable="true"
-     data-align-center="y-nameRect"
+     font-weight="bold"
      id="name"
-     x="12.3756523"
+     x="12.375652"
      y="16.179907"
-     style="font-size:12px">node</text>
+     style="font-size:12px;font-weight:bold">number</text>
   <!-- connection areas -->
   <line
      class="connection-area"
-     data-ptr="iter cond first second node"
+     data-ptr="iter cond first second"
      data-role="in"
-     data-align-center="y-nameRect"
-     x1="0"
+     x1="4.5"
      y1="11"
      x2="0"
      y2="11"
@@ -146,8 +144,8 @@
      class="initial-measure"
      data-ptr="name"
      data-type="text"
-     width="20"
-     height="9"
+     width="45"
+     height="19"
      x="0.56333733"
      y="0"
      id="rect19" />

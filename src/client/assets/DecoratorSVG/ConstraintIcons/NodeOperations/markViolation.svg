@@ -69,7 +69,7 @@
 -->
   <g
      id="colors"
-     style="fill:#8cc1e3;stroke:#8cc1e3"
+     style="fill:#F36D69;stroke:#F36D69"
      transform="translate(-0.01249999,-0.09525007)"
      data-secondary="fill:#F36a48;stroke:#F36a48">
 
@@ -107,9 +107,9 @@
      data-shift="y-conflictRect"
      data-stretch="x-node x-message y-message"
      x="1"
-     y="43.879236"
+     y="41.879236"
      width="102.9400287"
-     height="38.236595"
+     height="40.236595"
      r="0"
      rx="0"
      ry="0"
@@ -133,6 +133,7 @@
   <rect
      style="fill:#ffffff;fill-rule:evenodd;stroke:#ffffff;stroke-width:4.10586119px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
      id="conflictBox"
+     data-align-center="y-conflictRect"
      width="20"
      height="9.5861387"
      x="65.479141"
@@ -143,6 +144,7 @@
      data-stretch="x-message"
      text-stretch-only="true"
      data-shift="y-conflictRect"
+     data-align-center="y-messageRect"
      id="msgbox"
      class="edit-message"
      width="36.769127"
@@ -162,6 +164,7 @@
      id="conflict-tag"
      x="6.4692149"
      y="43.665493"
+     data-align-center="y-conflictRect"
      style="font-size:10px;overflow:hidden">Conflict:</text>
   <text
      id="message-tag"
@@ -200,10 +203,11 @@
      class="connection-area"
      data-ptr="node"
      data-role="out"
+     data-align-center="y-conflictRect"
      x1="62.479141"
-     y1="33.352268"
+     y1="40"
      x2="68.479141"
-     y2="39.352268"/>
+     y2="40"/>
 
   <!-- custom highlighting areas are now supported - must be a line, however -->
   <line
@@ -227,14 +231,6 @@
      x2="79.852654"
      y2="86.441727"
      id="line25" />
-  <!-- Bounding Boxes (For string length approx before initial render) -->
-  <rect
-     style="opacity:0"
-     id="message-bounding-box"
-     width="5"
-     height="19"
-     x="0.56333113"
-     y="5.536983"/>
   <!-- Initial Measurements -->
   <rect
      style="opacity:0"
@@ -251,24 +247,17 @@
      class="initial-measure"
      data-ptr="conflict"
      width="59.481728"
-     height="14.010159"
+     height="34.010159"
      x="42.723625"
      y="34.086655" />
   <rect
      style="opacity:0"
      class="initial-measure"
      data-ptr="message"
+     data-type="text"
      id="message-initial-measure"
-     width="10.800045"
+     width="15.800045"
      height="14.032192"
      x="44.992043"
      y="75.828255" />
-  <rect
-     style="opacity:0.54863808;fill:#ffffff;fill-opacity:0;stroke:#000000;stroke-width:2.03220844;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none"
-     id="name-bounding-box"
-     width="20.448757"
-     height="8.3728704"
-     x="6.9949107"
-     y="13.571316"
-     inkscape:label="#rect2992" />
 </svg>

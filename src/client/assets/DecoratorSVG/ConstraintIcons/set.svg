@@ -64,8 +64,8 @@
 -->
   <g
      id="colors"
-     style="fill:#a16eb5;stroke:#a16eb5"
-     data-secondary="fill:#73446d;stroke:#73446d"
+     style="fill:#428BCA;stroke:#428BCA"
+     data-secondary="fill:#5CA5E4;stroke:#5CA5E4"
      transform="translate(-0.01249999,-0.09525007)">
   <rect
      x="66.24855"
@@ -104,9 +104,9 @@
      inkscape:connector-curvature="0"
      inkscape:label="#path3009" />
   <rect
-     x="29.291601"
+     x="28.75"
      y="0.47876585"
-     width="38.707466"
+     width="39"
      height="21.966471"
      style="stroke-width:1.33853197"
      id="vertical-body"
@@ -143,7 +143,7 @@
      y="5.2063079"
      x="79.806122"
      height="12.584407"
-     width="21.236712"
+     width="19"
      id="RInputField"
      style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:1.61639428px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;overflow:hidden"
      text-stretch-only="true"
@@ -211,7 +211,7 @@
      id="first-out"
      x1="32"
      y1="12"
-     x2="35"
+     x2="32"
      y2="12" />
   <line
      class="connection-area"
@@ -250,7 +250,7 @@
      class="initial-measure"
      data-ptr="first"
      data-type="svg"
-     width="20"
+     width="25"
      height="12"
      x="0.56333733"
      y="0"
@@ -260,7 +260,7 @@
      class="initial-measure"
      data-ptr="second"
      data-type="text"
-     width="5"
+     width="10"
      height="17"
      x="0.56333733"
      y="0"

@@ -264,10 +264,9 @@
   </g>
   <!-- NAME AND CONNECTIONS -->
   <text
-     id="name"
      x="12.452287"
      y="17"
-     style="font-size:12px">Bracket</text>
+     style="font-size:12px">while</text>
   <!-- connection areas -->
   <line
      class="connection-area"
