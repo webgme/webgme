@@ -635,7 +635,12 @@ define(['logManager',
             });
 
             req.addListener('end', function() {
-                var metadata = new BlobMetadata(JSON.parse(data));
+                try {
+                    var metadata = new BlobMetadata(JSON.parse(data));
+                } catch (e) {
+                    res.status(500);
+                    res.send(e);
+                }
                 blobBackend.putMetadata(metadata, function (err, hash) {
                     if (err) {
                         // FIXME: make sure we set the status code correctly like 404 etc.

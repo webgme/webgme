@@ -5,18 +5,19 @@
  */
 
 define(['blob/BlobMetadata',
+    'blob/BlobConfig',
     'fs',
     'jszip',
     'mime',
     'util/guid',
     'util/StringStreamReader',
-    'util/StringStreamWriter'], function (BlobMetadata, fs, jszip, mime, GUID, StringStreamReader, StringStreamWriter) {
+    'util/StringStreamWriter'], function (BlobMetadata, BlobConfig, fs, jszip, mime, GUID, StringStreamReader, StringStreamWriter) {
 
     var BlobBackendBase = function () {
         this.contentBucket = 'wg-content';
         this.metadataBucket = 'wg-metadata';
         this.tempBucket = 'wg-temp';
-        this.shaMethod = 'sha1'; // TODO: in the future we may switch to sha512
+        this.shaMethod = BlobConfig.hashMethod;
     };
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -85,6 +86,10 @@ define(['blob/BlobMetadata',
     };
 
     BlobBackendBase.prototype.getFile = function (metadataHash, subpath, writeStream, callback) {
+        if (BlobConfig.hashRegex.test(metadataHash) === false) {
+            callback("Blob hash is invalid");
+            return;
+        }
         // TODO: get metadata
         // TODO: get all content based on metadata
         // TODO: write the stream after callback (error, metadata)
