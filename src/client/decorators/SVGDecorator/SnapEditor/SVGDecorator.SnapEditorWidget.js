@@ -30,7 +30,7 @@ define(['js/Constants',
         SVG_COLOR_ID = "colors",
         EMPTY_STRING = "_",//svg text elements need a value to getBBox
         EMPTY_STYLE = "opacity:0;",//svg text elements need a value to getBBox
-        EDIT_TEXT = { PADDING: 5, MIN_WIDTH: 30};
+        EDIT_TEXT = { VERTICAL_PADDING: 2, HORIZONTAL_PADDING: 5, MIN_WIDTH: 30};
 
     /**
      * SVGDecoratorSnapEditorWidget
@@ -104,8 +104,9 @@ define(['js/Constants',
                      box = self.$name[0].getBBox();
                      tempName.css('left', box.x + self._transforms[id].shift.x);
                      tempName.css('top', box.y);
-                     width = Math.max(box.width + EDIT_TEXT.PADDING, EDIT_TEXT.MIN_WIDTH);
+                     width = Math.max(box.width + EDIT_TEXT.HORIZONTAL_PADDING, EDIT_TEXT.MIN_WIDTH);
                      tempName.css('width', width);
+                     tempName.css('height', box.height + EDIT_TEXT.VERTICAL_PADDING);
 
                      $(tempName).editInPlace({"class": id + "-edit",
                                              "value": self.name,
@@ -329,7 +330,7 @@ define(['js/Constants',
                         tempName.css('position', 'absolute');
 
                         box = $(element)[0].getBBox();
-                        width = Math.max(box.width + EDIT_TEXT.PADDING, EDIT_TEXT.MIN_WIDTH);
+                        width = Math.max(box.width + EDIT_TEXT.HORIZONTAL_PADDING, EDIT_TEXT.MIN_WIDTH);
 
                         //Set tempName
                         tempName.css('left', box.x + self._transforms[id].shift.x);
