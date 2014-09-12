@@ -90,7 +90,7 @@ define(['logManager',
         this._init(container, params);
 
         //init zoom related UI and handlers
-        //this._initZoom(params);
+        this._initZoom(params);
 
         //Scroll and view info
         this._offset = { "left": 0, "top": 0 };
@@ -157,8 +157,7 @@ define(['logManager',
 
     SnapEditorWidget.prototype._init = function (container, params){//Container is the div element
                                                                     //Params is the extra stuff (ie, the toolbar)
-        this.$el = $('<div class="snap-widget"></div>'); //Everything goes inside this.$el
-        container.append(this.$el);
+        this.$el = container; //Everything goes inside this.$el
 
         this._initializeUI();
     };
@@ -1008,7 +1007,7 @@ define(['logManager',
 
 
     /* * * * * * * * * * * * * * Additional Functionality * * * * * * * * * * * * * */
-    //_.extend(SnapEditorWidget.prototype, SnapEditorWidgetZoom.prototype);
+    _.extend(SnapEditorWidget.prototype, SnapEditorWidgetZoom.prototype);
     _.extend(SnapEditorWidget.prototype, SnapEditorWidgetMouse.prototype);
     _.extend(SnapEditorWidget.prototype, SnapEditorWidgetKeyboard.prototype);
     _.extend(SnapEditorWidget.prototype, SnapEditorWidgetOperatingModes.prototype);
