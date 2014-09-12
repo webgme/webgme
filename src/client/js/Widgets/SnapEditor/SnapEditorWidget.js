@@ -98,30 +98,6 @@ define(['logManager',
 
         this.gridSize = params.gridSize;
 
-        //by default tabs are not enabled
-        this._tabsEnabled = false;
-        this._addTabs = false;
-        this._deleteTabs = false;
-        this._reorderTabs = false;
-
-        if (params && params.hasOwnProperty('tabsEnabled')) {
-            this._tabsEnabled = params.tabsEnabled && true;
-        }
-
-        if (params && params.hasOwnProperty('addTabs')) {
-            this._addTabs = params.addTabs && true;
-        }
-
-        if (params && params.hasOwnProperty('deleteTabs')) {
-            this._deleteTabs = params.deleteTabs && true;
-        }
-
-        if (params && params.hasOwnProperty('reorderTabs')) {
-            this._reorderTabs = params.reorderTabs && true;
-        }
-
-        //this._initializeTabs();
-
        //initiate Highlight Manager
         var self = this;
         this.highlightManager = new HighlightManager({"widget": this});
@@ -1013,7 +989,6 @@ define(['logManager',
     _.extend(SnapEditorWidget.prototype, SnapEditorWidgetOperatingModes.prototype);
     _.extend(SnapEditorWidget.prototype, SnapEditorWidgetClickableItem.prototype);
     _.extend(SnapEditorWidget.prototype, SnapEditorWidgetEventDispatcher.prototype);
-    //_.extend(SnapEditorWidget.prototype, SnapEditorWidgetTabs.prototype);
     _.extend(SnapEditorWidget.prototype, SnapEditorWidgetDraggable.prototype);
     _.extend(SnapEditorWidget.prototype, SnapEditorWidgetDroppable.prototype);
     _.extend(SnapEditorWidget.prototype, SnapEditorWidgetHighlightUpdater.prototype);
