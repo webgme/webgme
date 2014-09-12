@@ -771,6 +771,8 @@ define(['logManager',
                     res.send(500);
                 } else {
                     __REST.doRESTCommand(__REST.request.GET,req.params.command,req.headers.webGMEToken,req.query,function(httpStatus,object){
+                        res.header("Access-Control-Allow-Origin", "*");
+                        res.header("Access-Control-Allow-Headers", "X-Requested-With");
                         if(req.params.command === __REST.command.etf){
                             var filename = 'exportedNode.json';
                             if(req.query.output){
