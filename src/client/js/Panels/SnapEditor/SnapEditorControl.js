@@ -859,14 +859,7 @@ console.log("Object changed to " + nodeId);
 
         this._toolbarItems = [];
 
-        this.$btnConstraintValidate = toolBar.addButton({ "title": "Constraint check...",
-            "icon": "glyphicon glyphicon-fire",
-            "clickFn": function (/*data*/) {
-                self._constraintCheck();
-            }
-        });
-        this._toolbarItems.push(this.$btnConstraintValidate);
-
+        //Add items here using toolBar.addButton 
     };
 
     SnapEditorControl.prototype._removeToolbarItems = function(){
