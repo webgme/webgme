@@ -981,7 +981,7 @@ define([
                 return ordered;
             }
 
-            function getDiffTree(newRootHash,oldRootHash,callback){
+            function getDiffTree(oldRootHash,newRootHash,callback){
                 var error = null,
                     sRoot = null,
                     tRoot = null,
@@ -1001,6 +1001,7 @@ define([
                         }
                         _core.generateTreeDiff(sRoot,tRoot,function(err,diff){
                             console.log('genDiffTree',new Date().getTime()-start);
+                            console.log('diffTree',diff);
                             callback(err,diff);
                         });
                     },

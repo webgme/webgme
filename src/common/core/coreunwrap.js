@@ -59,6 +59,11 @@ define([ "util/assert", "core/tasync" ], function(ASSERT, TASYNC) {
 		core.loadPointer = TASYNC.unwrap(oldcore.loadPointer);
 		core.loadCollection = TASYNC.unwrap(oldcore.loadCollection);
 
+        //core diff async functions
+        if(typeof oldcore.generateTreeDiff === 'function'){
+            core.generateTreeDiff = TASYNC.unwrap(oldcore.generateTreeDiff);
+        }
+
 		return core;
 	};
 

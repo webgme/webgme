@@ -85,18 +85,20 @@ define(['util/canon','core/tasync'], function (CANON,TASYNC) {
         function children_diff(source,target){
             var sRelids = _core.getChildrenRelids(source),
                 tRelids = _core.getChildrenRelids(target),
+                tHashes = _core.getChildrenHashes(target),
+                sHashes = _core.getChildrenHashes(source),
                 i,
                 diff = {added:[],removed:[]};
 
             for(i=0;i<sRelids.length;i++){
                 if(tRelids.indexOf(sRelids[i]) === -1){
-                    diff.removed.push(sRelids[i]);
+                    diff.removed.push({relid:sRelids[i],hash:sHashes[sRelids[i]]});
                 }
             }
 
             for(i=0;i<tRelids.length;i++){
                 if(sRelids.indexOf(tRelids[i]) === -1){
-                    diff.added.push(tRelids[i]);
+                    diff.added.push({relid:tRelids[i],hash:tHashes[tRelids[i]]});
                 }
             }
 
@@ -232,7 +234,7 @@ define(['util/canon','core/tasync'], function (CANON,TASYNC) {
             if(diff.removed && diff.removed.length > 0){
                 return false;
             }
-            if(diff.added && diff.added.length > 0 ){
+            if(diff.added && (diff.added.length > 0 || Object.keys(diff.added).length > 0)){
                 return false;
             }
             if(diff.updated && Object.keys(diff.updated).length > 0){
@@ -335,6 +337,15 @@ define(['util/canon','core/tasync'], function (CANON,TASYNC) {
             }
         }
 
+        /*function extendDiffWithGuidInfo(source,target,diff){
+            //it is an async function
+            var childLoaded = function(child,relid,isAdded){
+
+                },
+                i,
+                addedKeys = diff.children ? Object.keys(diff.children.added) : [],
+                removedKeys = diff.children ? Object.keys(diff.childre.re);
+        }*/
 
         _core.nodeDiff = function(source,target){
             var diff = {
@@ -351,58 +362,53 @@ define(['util/canon','core/tasync'], function (CANON,TASYNC) {
             return isEmptyNodeDiff(diff) ? null : diff;
         };
 
-        _core.generateTreeDiff = function(sourceRoot,targetRoot,callback){
+        _core.generateTreeDiff = function(sourceRoot,targetRoot){
             var sChildrenHashes = _core.getChildrenHashes(sourceRoot),
                 tChildrenHAshes = _core.getChildrenHashes(targetRoot),
                 sRelids = Object.keys(sChildrenHashes),
                 tRelids = Object.keys(tChildrenHAshes),
                 diff = _core.nodeDiff(sourceRoot,targetRoot) || {},
                 oDiff = ovr_diff(sourceRoot,targetRoot),
-                i,
-                keys = [],
-                index = 0,
-                error = null,
-                genChildTreeDiff = function(){
-                    var loadError = null,
-                        childrenLoaded = function(sChild,tChild){
-                            if(loadError){
-                                error = error || loadError;
-                                index++;
-                                genChildTreeDiff();
-                            } else {
-                                _core.generateTreeDiff(sChild,tChild,function(err,cDiff){
-                                    error = error || err;
-                                    if(cDiff){
-                                        diff[keys[index]] = cDiff;
-                                    }
-                                    index++;
-                                    genChildTreeDiff();
-                                });
-                            }
-                        };
-                    if(index < keys.length){
-                        TASYNC.call(
-                            childrenLoaded,
-                            _core.loadChild(sourceRoot,keys[index]),
-                            _core.loadChild(targetRoot,keys[index]));
-                    } else {
-                        //now we should extend the diff with the information from the oDiff
-                        if(diff && oDiff){
-                            extendDiffWithOvr(diff,oDiff);
+                sChildren = _core.loadChildren(sourceRoot),
+                tChildren = _core.loadChildren(targetRoot),
+                getChild = function(childArray,relid){
+                    for(var i=0;i<childArray.length;i++){
+                        if(_core.getRelid(childArray[i]) === relid){
+                            return childArray[i];
                         }
-                        normalize(diff);
-                        callback(error,diff);
                     }
+                    return null;
                 };
+            return TASYNC.call(function(){
+                var i,sChild, done,tDiff;
+                //fill the guid of removed children
+                tDiff = diff.children ? diff.children.removed || [] : [];
+                for(i=0;i<tDiff.length;i++){
+                    tDiff[i].guid = _core.getGuid(getChild(sChildren,tDiff[i].relid));
+                }
+                //fill the guid of added children
+                tDiff = diff.children ? diff.children.added || [] : [];
+                for(i=0;i<tDiff.length;i++){
+                    tDiff[i].guid = _core.getGuid(getChild(tChildren,tDiff[i].relid));
+                }
 
-            for(i=0;i<tRelids.length;i++){
-                if(sRelids.indexOf(tRelids[i]) !== -1){
-                    if(tChildrenHAshes[tRelids[i]] !== sChildrenHashes[tRelids[i]]){
-                        keys.push(tRelids[i]);
+                for(i=0;i<tChildren.length;i++){
+                    sChild = getChild(sChildren,_core.getRelid(tChildren[i]));
+                    if(sChild && _core.getHash(tChildren[i]) !== _core.getHash(sChild)){
+                        done = TASYNC.call(function(cDiff,relid){
+                            diff[relid] = cDiff;
+                        },_core.generateTreeDiff(sChild,tChildren[i]),_core.getRelid(sChild),done);
                     }
                 }
-            }
-            genChildTreeDiff();
+                return TASYNC.call(function(){
+                    normalize(diff);
+                    if(Object.keys(diff).length > 0){
+                        diff.guid = _core.getGuid(targetRoot);
+                    }
+                    return diff;
+                },done);
+            },sChildren,tChildren);
+
         };
         return _core;
     }

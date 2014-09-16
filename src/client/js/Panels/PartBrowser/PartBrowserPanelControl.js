@@ -115,7 +115,8 @@ define(['logManager',
         events.shift();
 
         var i = events ? events.length : 0,
-            e;
+            e,
+            needsDecoratorUpdate = false;
 
 
         this._logger.debug("_eventCallback '" + i + "' items, events: " + JSON.stringify(events));
@@ -124,9 +125,11 @@ define(['logManager',
             e = events[i];
             switch (e.etype) {
                 case CONSTANTS.TERRITORY_EVENT_LOAD:
+                    needsDecoratorUpdate = true;
                     this._onLoad(e.eid);
                     break;
                 case CONSTANTS.TERRITORY_EVENT_UPDATE:
+                    needsDecoratorUpdate = true;
                     this._onUpdate(e.eid);
                     break;
                 case CONSTANTS.TERRITORY_EVENT_UNLOAD:
@@ -135,7 +138,7 @@ define(['logManager',
             }
         }
 
-        if(events.length > 0){
+        if(needsDecoratorUpdate){
             this._updateValidChildrenTypeDecorators();
         }
 
