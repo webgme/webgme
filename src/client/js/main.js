@@ -135,9 +135,7 @@ require(
         'angular',
         'angular-route',
         'angular-route-styles',
-        'angular-ui-bootstrap',
-
-        'js/services/DataStoreService'
+        'angular-ui-bootstrap'
 
     ],
     function (domReady, jQuery, jQueryUi, jQueryUiiPad, jqueryWebGME, jqueryDataTables, bootstrap, underscore,
@@ -198,90 +196,8 @@ require(
                     'routeStyles',
                     'ui.bootstrap',
                     'gme.ui.projectsDialog',
-                    'gme.ui.headerPanel',
-
-                    'gme.services'
+                    'gme.ui.headerPanel'
                 ]);
-
-//            NS.getNode(context, path)
-//                .then(function (node) {
-//                    node.on('update', fcn1);
-//
-//                    return node.getChildren();
-//                })
-//                .then(function (children) {
-//                    for (var i = 0; i < children.length; i += 1) {
-//                        if (children[i].getType() === 'M12') {
-//                            children[i].on('update', updateM12);
-//                        }
-//                    }
-//                })
-//            ;
-
-
-            // TODO: REMOVE - ONLY FOR TESTING
-            WebGMEGlobal.gmeApp = gmeApp;
-            gmeApp.controller('TestController', function ($scope, DataStoreService, NodeService) {
-                var context = {
-                    db: 'my-db-connection-id1',
-                    projectId: 'Test',
-                    branchId: 'b1',
-                    territoryId: 'my_terr11111'
-                };
-
-                WebGMEGlobal.context = context;
-                WebGMEGlobal.DataStoreService = DataStoreService;
-
-//                DataStoreService.selectProject({db: 'my-db-connection-id', projectId:'Test'})
-//                    .then(function () {
-//                        return DataStoreService.selectBranch({db: 'my-db-connection-id', projectId: 'Test', branchId: 'b11'});
-//                    })
-//                    .then(function () {
-//                        console.log('ready to work with objects...', context);
-//                    })
-//                    .catch(function (reason) {
-//                        console.error(reason);
-//                    });
-
-
-                DataStoreService.connectToDatabase(context)
-                    .then(function () {
-                        // Once we have connected to the database we can register event handlers.
-
-                        var rootNode;
-
-                        NodeService.on(context, 'initialize', function(currentContext) {
-                            NodeService.loadNode(currentContext, '')
-                                .then(function (node) {
-                                    rootNode = node;
-                                    console.log(node);
-                                    console.log(currentContext);
-                                    //console.log(c);
-                                });
-                        });
-
-                        NodeService.on(context, 'destroy', function(currentContext) {
-                            rootNode = null;
-                        });
-
-                        // we can select any branch
-                        DataStoreService.selectBranch(context)
-                            .then(function () {
-                                console.log('ready to work with objects...', context);
-                                NodeService.loadNode(context, '')
-                                    .then(function (node) {
-                                        console.log(node.getAttribute('name'));
-                                    });
-
-                            })
-                            .catch(function (reason) {
-                                console.error(reason);
-                            });
-
-                    });
-
-            });
-
 
             webGME.start( function(client) {
 
