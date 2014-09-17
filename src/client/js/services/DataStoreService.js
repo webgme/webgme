@@ -54,16 +54,17 @@ define(['js/client'], function (Client) {
                 var deferred = $q.defer();
 
                 // FIXME: deferred should not be used from closure
-                this.connectToDatabase(context).then(function () {
-                    datastores[context.db].client.getAvailableProjectsAsync(function (err, projectIds) {
-                        if (err) {
-                            deferred.reject(err);
-                            return;
-                        }
+                this.connectToDatabase(context)
+                    .then(function () {
+                        datastores[context.db].client.getAvailableProjectsAsync(function (err, projectIds) {
+                            if (err) {
+                                deferred.reject(err);
+                                return;
+                            }
 
-                        deferred.resolve(projectIds);
-                    });
-                })
+                            deferred.resolve(projectIds);
+                        });
+                    })
                     .catch(function (reason) {
                         deferred.reject(reason);
                     });
@@ -245,6 +246,7 @@ define(['js/client'], function (Client) {
                 this.territories = [ ];
                 this.context = context;
                 this.databaseConnection = DataStoreService.getDatabaseConnection(context);
+                // TODO: Should these be arrays of functions? The controller may want to add more methods.
                 this._onUpdate = function (id) { };
                 this._onUnload = function (id) { };
                 // This will always be called on unload.
@@ -293,15 +295,17 @@ define(['js/client'], function (Client) {
             // TODO: add sets
 
             NodeObj.prototype.getBaseNode = function () {
-
+                // TODO: add proper error handling
+                return self.loadNode(this.context, this.getBaseId());
             };
 
             NodeObj.prototype.getParentId = function () {
-
+                return this.databaseConnection.client.getNode(this.id).getParentId();
             };
 
             NodeObj.prototype.getParentNode = function () {
-
+                // TODO: add proper error handling
+                return self.loadNode(this.context, this.getParentId());
             };
 
             NodeObj.prototype.getId = function () {
