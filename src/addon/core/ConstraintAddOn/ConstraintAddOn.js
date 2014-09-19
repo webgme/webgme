@@ -111,7 +111,7 @@ define(['addon/AddOnBase'],function(Base) {
                         }
                         nextChild(0);
                     };
-                self.checkNode(node,function(err,msg){
+                self._checkNode(node,function(err,msg){
                     error = error || err;
                     if(msg.hasViolation === true){
                         message.hasViolation = true;
@@ -141,12 +141,28 @@ define(['addon/AddOnBase'],function(Base) {
     ConstraintAddOn.prototype.checkNode = function(node,callback){
         var self = this,
             message = {},
+            error = null;
+
+        self._checkNode(node,function(err,msg){
+            error = error || err;
+            message[self.core.getGuid(node)] = msg;
+            if(msg){
+                message.info = "node ["+self.core.getPath(node)+"] validation";
+                message.commit = self.commit;
+                message.hasViolation = msg.hasViolation === true;
+            }
+            callback(error,message);
+        });
+    };
+    ConstraintAddOn.prototype._checkNode = function(node,callback){
+        var self = this,
+            message = {},
             error = null,
             names = self.core.getConstraintNames(node),
             needed = names.length,
             i,
             check = function(name){
-                self.executeContraint(node,name,function(err,msg){
+                self.executeConstraint(node,name,function(err,msg){
                     error = error || err;
                     message[name] = msg;
 
@@ -175,7 +191,7 @@ define(['addon/AddOnBase'],function(Base) {
     ConstraintAddOn.prototype.loadNode = function(path,callback){
         this.core.loadByPath(this.root,path,callback);
     };
-    ConstraintAddOn.prototype.executeContraint = function(node,name,callback){
+    ConstraintAddOn.prototype.executeConstraint = function(node,name,callback){
         var self = this,
             script = self.core.getConstraint(node,name).script;
 

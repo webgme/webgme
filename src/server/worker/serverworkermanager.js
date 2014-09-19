@@ -109,11 +109,10 @@ function(ASSERT,Child,CONSTANTS){
                             ip:_parameters.mongoip,
                             port:_parameters.mongoport,
                             db:_parameters.mongodb,
-                            pluginBasePaths:_parameters.pluginBasePaths,
-                            interpreteroutputdirectory:_parameters.intoutdir,
                             serverPort:_parameters.serverPort,
                             paths: webGMEGlobal.getConfig().paths,
-                            auth: _parameters.auth
+                            auth: _parameters.auth,
+                            globConf : webGMEGlobal.getConfig()
                         });
                         break;
                     case CONSTANTS.msgTypes.initialized:

@@ -43,11 +43,9 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
         resultId = null,
         error = null,
         initialized = false,
-        pluginBasePaths = null,
-        pluginOutputDirectory = null,
-        serverPort = 80,
         AUTH =null,
-        _addOn = null;
+        _addOn = null,
+        _CONFIG = null;
 
     var initResult = function(){
         core = null;
@@ -60,21 +58,13 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
     var initialize = function(parameters){
         if(initialized !== true){
             initialized = true;
-            if(parameters.auth){
+
+            webGMEGlobal.setConfig(parameters.globConf);
+            _CONFIG = parameters.globConf;
+            if(_CONFIG.authorization === true){
                 AUTH = GMEAUTH(parameters.auth);
             }
-            pluginBasePaths = parameters.pluginBasePaths;
-            webGMEGlobal.setConfig({paths:parameters.paths,pluginBasePaths:parameters.pluginBasePaths});
-            serverPort = parameters.serverPort || 80;
-            pluginOutputDirectory = parameters.interpreteroutputdirectory || "";
-            if(pluginOutputDirectory){
-                try{
-                    FS.mkdirSync(PATH.resolve(pluginOutputDirectory));
-                } catch(e){
-                    console.log('output directory cannot be created');
-                }
-            }
-            storage = new Storage({'host':parameters.ip,'port':parameters.port,'database':parameters.db,'log':logManager.create('SERVER-WORKER-'+process.pid)});
+            storage = new Storage({'host':_CONFIG.mongoip,'port':_CONFIG.mongoport,'database':_CONFIG.mongodatabase,'log':logManager.create('SERVER-WORKER-'+process.pid)});
             storage.openDatabase(function(err){
                 if(err){
                     initialized = false;
@@ -162,7 +152,7 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
 
     //TODO the getContext should be refactored!!!
     var getConnectedStorage = function(sessionId,callback){
-        var connStorage = new ConnectedStorage({type:'node',host:'127.0.0.1',port:serverPort,log:logManager.create('SERVER-WORKER-PLUGIN-'+process.pid),webGMESessionId:sessionId});
+        var connStorage = new ConnectedStorage({type:'node',host:'127.0.0.1',port:_CONFIG.port,log:logManager.create('SERVER-WORKER-PLUGIN-'+process.pid),webGMESessionId:sessionId});
         connStorage.openDatabase(function(err){
             callback(err,connStorage);
         });
@@ -199,7 +189,7 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
                     var plugins = {};
                     plugins[name] = interpreter;
                     var manager = new PluginManagerBase(project,Core,plugins);
-                    context.managerConfig.blobClient = new BlobServerClient({serverPort:serverPort,sessionId:sessionId});
+                    context.managerConfig.blobClient = new BlobServerClient({serverPort:_CONFIG.port,sessionId:sessionId});
 
                     manager.initialize(null, function (pluginConfigs, configSaveCallback) {
                         if (configSaveCallback) {
