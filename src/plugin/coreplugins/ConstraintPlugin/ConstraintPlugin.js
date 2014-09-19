@@ -227,7 +227,7 @@ define(['plugin/PluginConfig',
 
     ConstraintPlugin.prototype.getConfigStructure = function () {
         var config = [],
-            constraints = [ 'Unique Name', 'OneStartBlock' ];
+            constraints = [ 'Unique Name', 'OneStartBlock', "Limited Connection Count" ];
 
         //Apply To All Option
         config.push({ name: 'applyAll',
@@ -516,6 +516,7 @@ define(['plugin/PluginConfig',
             'getKeysFromMap': "Object.keys(%map)",
 
             'getItemFromCollection': "%collection[%first]",
+            'getItemFromMap': "%map[%first]",
 
             //Collection mappings
             'addToCollection': 'if(' + PRIVATE_VARIABLES.GET_DIMENSION + '(%collection)'+
