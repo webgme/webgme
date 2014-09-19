@@ -58,12 +58,16 @@
      data-secondary="fill:#73446d;stroke:#73446d"
      transform="translate(-0.01249999,-0.09525007)">
 -->
+  <g
+     id="colors"
+     style="fill:#CF5AE3;stroke:#CF5AE3;"
+     data-secondary="fill:#E974FD;stroke:#E974FD;">
   <rect
      x="28.82653"
      y="1.3166944"
      width="49.537613"
      height="21.796612"
-     style="fill:#a16eb5;stroke:#a16eb5;stroke-width:1.50838876"
+     style="stroke-width:1.50838876"
      id="firstRectVertical"
      data-stretch="x-first y-collection y-first " />
   <rect
@@ -71,7 +75,7 @@
      width="25.365753"
      y="1.1696231"
      height="22.090754"
-     style="fill:#a16eb5;stroke:#a16eb5;stroke-width:1.21424639"
+     style="stroke-width:1.21424639"
      id="collectionRectVertical"
      data-shift="x-firstRect"
      data-stretch="x-collection y-collection y-first" />
@@ -83,7 +87,7 @@
      r="0"
      rx="0"
      ry="0"
-     style="fill:#a16eb5;stroke:#a16eb5;stroke-width:0.74818552;overflow:hidden"
+     style="stroke-width:0.74818552;overflow:hidden"
      data-stretch="x-collection y-collection y-first"
      data-shift="x-firstRect"
      id="collectionRect"
@@ -96,7 +100,7 @@
      r="0"
      rx="0"
      ry="0"
-     style="fill:#a16eb5;stroke:#a16eb5;stroke-width:0.79709959;overflow:hidden"
+     style="stroke-width:0.79709959;overflow:hidden"
      data-stretch="x-first y-collection y-first"
      id="firstRect"
      inkscape:label="#rect10-2-1" />
@@ -110,12 +114,12 @@
      inkscape:label="#rect2992" />
   <path
      d="m 0.6026685,5.2581685 a 3.5336527,3.8448907 0 0 1 3.533652,-3.8448906 l 7.0673055,0 3.533653,3.8448906 9.423074,0 3.533653,-3.7167276 0,3.7167276"
-     style="fill:#a16eb5;stroke:#a16eb5;stroke-width:1.22866261"
+     style="stroke-width:1.22866261"
      id="dent-in"
      inkscape:connector-curvature="0"
      inkscape:label="#path8" />
   <path
-     style="fill:#a16eb5;stroke:#a16eb5;stroke-width:1.17999995"
+     style="stroke-width:1.17999995"
      d="m 78.132087,1.1547499 0,3.53125 26.125003,0 a 3.54,3.54 0 0 0 -3.5625,-3.53125 l -22.562503,0 z"
      id="TRCorner"
      data-shift="x-collectionRect"
@@ -129,19 +133,19 @@
      r="0"
      rx="0"
      ry="0"
-     style="fill:#a16eb5;stroke:#a16eb5;stroke-width:0.79709959"
+     style="stroke-width:0.79709959"
      id="nameRect"
      data-stretch="y-collection y-first"
      inkscape:label="#rect10" />
   <path
      d="m 0.5783365,19.9145 a 3.54,3.54 0 0 0 3.54,3.54 l 7.0800005,0 3.54,3.54 9.44,0 3.54,-3.54 0,-3.658"
-     style="fill:#a16eb5;stroke:#a16eb5;stroke-width:1.17999995"
+     style="stroke-width:1.17999995"
      id="dent-out"
      data-shift="y-nameRect"
      inkscape:connector-curvature="0"
      inkscape:label="#path12" />
   <path
-     style="fill:#a16eb5;stroke:#a16eb5;stroke-width:1.17999995"
+     style="stroke-width:1.17999995"
      d="m 77.038337,19.7485 0,3.53125 23.656253,0 a 3.54,3.54 0 0 0 3.5625,-3.53125 l -27.218753,0 z"
      id="BRCorner"
      data-shift="x-collectionRect y-collectionRect"
@@ -168,6 +172,7 @@
      text-stretch-only="true"
      data-align-center="y-firstRect"
      style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:1.61639428px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;overflow:hidden" />
+  </g>
   <!-- Text -->
   <text
      x="9.9008369"

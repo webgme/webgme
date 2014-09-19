@@ -178,11 +178,21 @@
        id="topRightRect"
        inkscape:label="#rect10-9" />
     <rect
-       data-stretch="y-cond y-name y-true_next"
+       data-stretch="y-cond"
        x="2.155472"
        y="4.7386951"
        width="7.9311714"
-       height="50.328293"
+       height="27.328293"
+       style="stroke-width:4.31094408;overflow:hidden"
+       id="topSpine"
+       inkscape:label="#rect11-1-0" />
+    <rect
+       data-stretch="y-true_next"
+       data-shift="y-topSpine"
+       x="2.155472"
+       y="29.7386951"
+       width="7.9311714"
+       height="25.328293"
        style="stroke-width:4.31094408;overflow:hidden"
        id="spine"
        inkscape:label="#rect11-1-0" />
@@ -308,6 +318,16 @@
      x2="50"
      y2="11"
      id="cond-out" />
+  <!-- custom connection highlights -->
+  <line
+     class="connection-highlight"
+     style="opacity:0"
+     data-ptr="true_next"
+     data-role="out"
+     x1="10"
+     y1="20"
+     x2="80"
+     y2="20"/>
   <!-- initial measures -->
   <rect
      style="opacity:0"
@@ -323,8 +343,8 @@
      style="opacity:0"
      data-ptr="true_next"
      class="initial-measure"
-     width="0"
-     height="7"
+     width="20"
+     height="29.5"
      x="0"
      y="0"
      inkscape:label="#rect3008"

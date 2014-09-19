@@ -130,7 +130,7 @@
   <!-- connection areas -->
   <line
      class="connection-area"
-     data-ptr="iter collection cond first second node"
+     data-ptr="iter collection first second node"
      data-role="in"
      data-align-center="y-nameRect"
      x1="4.5"
