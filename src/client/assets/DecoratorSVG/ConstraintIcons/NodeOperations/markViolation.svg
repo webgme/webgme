@@ -101,9 +101,9 @@
      style="fill:#f36d69;stroke:#f36d69;stroke-width:0.82999617"
      id="messageRect"
      ry="0"
-     rx="0"
+     rx="2.2"
      r="0"
-     height="27.465006"
+     height="31"
      width="103.89097"
      y="35.760117"
      x="0.52472442"
@@ -138,7 +138,7 @@
      height="8.3551264"
      width="36.769127"
      class="edit-message"
-     id="msgbox"
+     id="msgBox"
      data-align-center="y-messageRect"
      data-shift="y-conflictRect"
      text-stretch-only="true"
@@ -192,12 +192,24 @@
      class="connection-area"
      data-ptr="node"
      data-role="out"
-     data-align-center="y-conflictRect"
+     data-shift="y-conflictBox"
      x1="59.979141"
      y1="35.112183"
      x2="65.979141"
      y2="35.112183"
-     id="line23" />
+     id="node-out" />
+  <line
+     style="overflow:hidden"
+     class="connection-area"
+     data-ptr="message"
+     data-role="out"
+     data-shift="y-msgBox"
+     x1="54.34"
+     y1="52.526127"
+     x2="60.340004"
+     y2="52.526127"
+     id="message-out"
+     inkscape:label="#line23-1" />
   <!-- custom highlighting areas are now supported - must be a line, however -->
   <!-- Initial Measurements -->
   <rect
@@ -228,16 +240,4 @@
      height="14.032192"
      x="44.492043"
      y="54.940437" />
-  <line
-     style="overflow:hidden"
-     class="connection-area"
-     data-ptr="node"
-     data-role="out"
-     data-align-center="y-conflictRect"
-     x1="54.34"
-     y1="52.526127"
-     x2="60.340004"
-     y2="52.526127"
-     id="message-out"
-     inkscape:label="#line23-1" />
 </svg>
