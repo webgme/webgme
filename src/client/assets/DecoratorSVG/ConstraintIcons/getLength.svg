@@ -64,7 +64,7 @@
      data-secondary="fill:#54b868;stroke:#54b868;">
   <rect
      inkscape:label="#nameRect-7"
-     data-stretch="y-first y-name x-name"
+     data-stretch="y-collection y-name x-name"
      style="stroke-width:5.30862522;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;overflow:hidden"
      width="51.595375"
      height="17.080511"
@@ -76,7 +76,7 @@
   <rect
      inkscape:label="#nameRect"
      data-shift="x-nameRect"
-     data-stretch="y-first y-name x-first"
+     data-stretch="y-collection y-name x-collection"
      style="stroke-width:5.30862522;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
      width="51.595375"
      height="17.080511"
@@ -84,7 +84,7 @@
      rx="3.2050281"
      x="45.668812"
      y="2.6543131"
-     id="firstRect" />
+     id="collectionRect" />
   <rect
      y="4.7405581"
      x="75.739922"
@@ -97,7 +97,7 @@
      text-stretch-only="true"
      data-align-center="y-nameRect"
      data-shift="x-nameRect"
-     data-stretch="y-first" />
+     data-stretch="y-collection" />
 </g>
   <!-- NAME AND CONNECTION INFO -->
   <text
@@ -118,7 +118,7 @@
      id="conn-area-in" />
   <line
      class="connection-area"
-     data-ptr="first"
+     data-ptr="collection"
      data-role="out"
      data-shift="x-nameRect"
      data-align-center="y-nameRect"
@@ -126,11 +126,11 @@
      y1="10"
      x2="73"
      y2="10"
-     id="first-out" />
+     id="collection-out" />
   <!-- initial measures -->
   <rect
      style="opacity:0"
-     data-ptr="first"
+     data-ptr="collection"
      class="initial-measure"
      width="20"
      height="15"
