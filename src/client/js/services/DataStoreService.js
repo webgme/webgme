@@ -242,6 +242,7 @@ define(['js/client'], function (Client) {
             };
 
             NodeObj = function (context, id) {
+                var thisNode = this;
                 this.id = id;
                 this.territories = [ ];
                 this.context = context;
@@ -251,8 +252,8 @@ define(['js/client'], function (Client) {
                 this._onUnload = function (id) { };
                 // This will always be called on unload.
                 this.__onUnload = function () {
-                    this.cleanUpNode();
-                    // TODO: The node must be removed from the region
+                    thisNode.cleanUpNode();
+                    delete thisNode.databaseConnection.nodeService.regions[context.regionId].nodes[thisNode.id];
                 };
             };
 
@@ -446,10 +447,13 @@ define(['js/client'], function (Client) {
             this.loadNode = function (context, id) {
                 var deferred = $q.defer(),
                     dbConn = DataStoreService.getDatabaseConnection(context),
-                    territoryId = context.regionId + '_' + id,
+                    territoryId,
                     territoryPattern = {},
                     nodes;
 
+                console.assert(typeof context.regionId === 'string');
+
+                territoryId = context.regionId + '_' + id;
                 dbConn.nodeService = dbConn.nodeService || {};
                 dbConn.nodeService.regions = dbConn.nodeService.regions || {};
                 dbConn.nodeService.regions[context.regionId] = dbConn.nodeService.regions[context.regionId] || {
