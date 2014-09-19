@@ -38,7 +38,8 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
 
     "use strict";
 
-    var AXIS = { X:'x', Y:'y' },
+    var DEBUG = false,
+        AXIS = { X:'x', Y:'y' },
         SPLITTER = '-';
 
     var SVGDecoratorSnapEditorWidgetStretch = function(){
@@ -315,12 +316,15 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      * @return {String} id
      */
     SVGDecoratorSnapEditorWidgetStretch.prototype._genSVGId = function () {
+        return this._genUniqueId('SVG');
+    };
 
+    SVGDecoratorSnapEditorWidgetStretch.prototype._genUniqueId = function (baseId) {
         var MAX_ID = 10000000,
-            id = "SVG_" + Math.floor(Math.random()*MAX_ID);
+            id = baseId + Math.floor(Math.random()*MAX_ID);
 
         while(this._transforms[id]){
-            id = "SVG_" + Math.floor(Math.random()*MAX_ID);
+            id = baseId + Math.floor(Math.random()*MAX_ID);
         }
 
         return id;
@@ -337,6 +341,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
             data,
             base,
             self = this,
+            ids = [],
             initializeShiftData = function (id){
                 if (!self._connAreaShifts[id]){
                     self._connAreaShifts[connectionAreas[i].id] = {};
@@ -344,12 +349,30 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
                     self._connAreaShifts[connectionAreas[i].id][AXIS.Y] = 0;
                 }
             },
-            j;
+            makeUniqueId = function (area){//Get unique connection id
+                var baseid = area.ptr + '-' + area.role,
+                    id;
+
+                while (ids.indexOf(id) !== -1){
+                    id = self._genUniqueId(baseid);
+                }
+                return id;
+            },
+            j,
+            i;
 
         this._connAreaShiftParents = {};
 
-        for (var i = 0; i < connectionAreas.length; i++){
+        for (i = 0; i < connectionAreas.length; i++){
+            ids.push(connectionAreas[i].id);
+        };
 
+        for (i = 0; i < connectionAreas.length; i++){
+
+            //Create id if needed
+            if(!connectionAreas[i].id){
+                connectionAreas[i].id = makeUniqueId(connectionAreas[i]);
+            }
             //Initialize shift coefficients
             this._connAreaShiftCoefficients[connectionAreas[i].id] = {};
             this._connAreaShiftCoefficients[connectionAreas[i].id][AXIS.X] = 1;
@@ -445,6 +468,9 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
                         //shift the connection area
                         area[axis + "1"] -= shift[axis] || 0;
                         area[axis + "2"] -= shift[axis] || 0;
+
+                        //shift the highlight
+                        this._shiftCustomConnectionHighlightAreas(area.ptr, area.role, axis, -shift);
                     }
                     this._connAreaShifts[id][axis] = 0;
                 }
@@ -521,13 +547,14 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
                             areas[i][axis + "1"] += shift;
                             areas[i][axis + "2"] += shift;
 
+                            //Shift any custom connection highlight areas
+                            this._shiftCustomConnectionHighlightAreas(areas[i].ptr, areas[i].role, axis, shift);
+
                             this._connAreaShifts[areas[i].id][axis] += shift || 0;
                         }
                     }
                 }
             }
-
-            //this._shiftCustomConnectionHighlightAreas(id, axis, shift);//TODO
         }
     };
 
@@ -537,19 +564,17 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      * @param {String} id
      * @param {Object} shift
      */
-    SVGDecoratorSnapEditorWidgetStretch.prototype._shiftCustomConnectionHighlightAreas = function (id, shift) {
+    SVGDecoratorSnapEditorWidgetStretch.prototype._shiftCustomConnectionHighlightAreas = function (ptr, role, axis, shift) {
         if (this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT]){
 
             var i = this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT].length;
 
             while(i--){
-                if(this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].class && this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].class.indexOf(id) !== -1){
+                if(this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].ptr === ptr && 
+                   this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].role === role){
                        //shift the connection area highlight
-                       this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].x1 += shift.x || 0;
-                       this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].x2 += shift.x || 0;
-
-                       this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].y1 += shift.y || 0;
-                       this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].y2 += shift.y || 0;
+                       this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i][axis + '1'] += shift || 0;
+                       this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i][axis + '2'] += shift || 0;
                    }
             }
         }
@@ -604,6 +629,10 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
             if (this._svgSize.hasOwnProperty(dim)){
                 this.$svgElement[0].setAttribute(dim, this._svgSize[dim]);
             }
+        }
+
+        if (DEBUG){
+            this.displayAllConnectionAreas();
         }
 
     };

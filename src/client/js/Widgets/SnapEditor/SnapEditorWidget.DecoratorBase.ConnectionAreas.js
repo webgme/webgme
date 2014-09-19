@@ -15,7 +15,7 @@ define(['./SnapEditorWidget.Constants'], function (SNAP_CONSTANTS){
     var CONN_AREA_EDIT_CLASS = "conn-area-edit",
         CONN_AREA_SIZE = 8,
         CONN_AREA = "conn-area-edit-bg",
-        DATA_CONN_AREA_ID = "CONN_AREA_ID",
+        DATA_CONN_AREA_ID = "connection-id",
         DEFAULT_COLOR = "#666666";//FIXME Move to css
 
     var SnapEditorWidgetDecoratorBaseConnectionAreas = function(){
@@ -28,6 +28,7 @@ define(['./SnapEditorWidget.Constants'], function (SNAP_CONSTANTS){
             i = areas.length,
             id;
 
+        options = options || {};
         this.hideConnectionAreas();
         while (i--){
             id = areas[i].id;
@@ -45,7 +46,8 @@ define(['./SnapEditorWidget.Constants'], function (SNAP_CONSTANTS){
         var w = this.$el.outerWidth(true),
             h = this.$el.outerHeight(true),
             shiftVal = CONN_AREA_SIZE/2,
-            line = this._getConnectionHighlightById(id) || this._getConnectionAreaById(id),
+            conn = this._getConnectionAreaById(id),
+            line = this._getConnectionHighlight(conn.ptr, conn.role) || conn,
             highlight;
 
         //Color
@@ -86,22 +88,23 @@ define(['./SnapEditorWidget.Constants'], function (SNAP_CONSTANTS){
             }
 
             var path = this._svg.path('M ' + line.x1 + ',' + line.y1 + 'L' + line.x2 + ',' + line.y2);
-            $(path.node).data(DATA_CONN_AREA_ID, line.id);
-            path.attr({ "stroke-width": CONN_AREA_SIZE, "fill": color });
+            $(path.node).attr(DATA_CONN_AREA_ID, id);
+            path.attr({ 'stroke-width': CONN_AREA_SIZE, 'fill': color });
             $(path.node).attr({ "class": CONN_AREA_EDIT_CLASS });        
 
             this.$el.append(this._connHighlight);
         }
     };
 
-    SnapEditorWidgetDecoratorBaseConnectionAreas.prototype._getConnectionHighlightById = function (id) {
+    SnapEditorWidgetDecoratorBaseConnectionAreas.prototype._getConnectionHighlight = function (ptr, role) {
         var highlights = this.getSVGCustomData(SNAP_CONSTANTS.CONNECTION_HIGHLIGHT),
             i;
 
         if (highlights){
             i = highlights.length;
             while (i--){
-                if (highlights[i].id === id){
+                if (highlights[i].ptr === ptr && 
+                    highlights[i].role === role){
                     return _.extend({}, highlights[i]);
                 }
             }
