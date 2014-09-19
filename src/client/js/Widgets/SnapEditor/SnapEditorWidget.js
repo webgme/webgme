@@ -42,8 +42,8 @@ define(['logManager',
     var SnapEditorWidget,
         CANVAS_EDGE = 100,
         GUID_DIGITS = 6,
-        WIDGET_CLASS = 'diagram-designer',  // must be same as scss/Widgets/DiagramDesignerWidget.scss
-        BACKGROUND_TEXT_COLOR = '#DEDEDE',  //TODO Change WIDGET_CLASS to snap-editor
+        WIDGET_CLASS = 'snap-editor',  // must be same as scss/Widgets/DiagramDesignerWidget.scss
+        BACKGROUND_TEXT_COLOR = '#DEDEDE',  
         BACKGROUND_TEXT_SIZE = 30;
 
     var defaultParams = {'loggerName': 'SnapEditorWidget',

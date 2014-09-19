@@ -54,11 +54,13 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants',
         while (i--){
             if (this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].tagName === 'line'){//Only support lines for now
                 line = {};
+                line.ptr = this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].getAttribute('data-ptr');
+                line.role = this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].getAttribute('data-role');
+
                 line.x1 = this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].x1.baseVal.value;
                 line.x2 = this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].x2.baseVal.value;
                 line.y1 = this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].y1.baseVal.value;
                 line.y2 = this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].y2.baseVal.value;
-                line.id = this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].id;
                 line.class = this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].getAttribute('class');
 
                 this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i] = line;

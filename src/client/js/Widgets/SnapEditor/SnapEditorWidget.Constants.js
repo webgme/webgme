@@ -19,7 +19,7 @@ define([], function () {
          * CLASS DEFINITIONS
          * May need to change some of these (if I don't use the "designer item")
          */
-        DESIGNER_ITEM_CLASS : "clickable-item",
+        DESIGNER_ITEM_CLASS : "snappable-item",
         HIGHLIGHT_MODE_CLASS: 'highlight-mode',
         ITEM_HIGHLIGHT_CLASS: 'highlighted',
         DROP_REGION_CLASS: 'drop-region',
