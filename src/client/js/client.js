@@ -176,7 +176,7 @@ define([
             function addCommit(commitHash){
                 _commitCache.newCommit(commitHash);
                 _recentCommits.unshift(commitHash);
-                if(_recentCommits.length > 10){
+                if(_recentCommits.length > 100){
                     _recentCommits.pop();
                 }
             }
@@ -428,6 +428,16 @@ define([
                                     _project.loadObject(newhash,function(err,commitObj){
                                         if(!err && commitObj){
                                             loading(commitObj.root);
+                                        } else {
+                                            setTimeout(function(){
+                                                _project.loadObject(newhash,function(err,commitObj){
+                                                    if(!err && commitObj){
+                                                        loading(commitObj.root);
+                                                    } else {
+                                                        console.log("second load try failed on commit!!!",err);
+                                                    }
+                                                });
+                                            },1000);
                                         }
                                     });
                                 }
