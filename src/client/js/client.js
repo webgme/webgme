@@ -14,8 +14,6 @@ define([
     'coreclient/dumpmore',
     'coreclient/import',
     'coreclient/copyimport',
-    '/listAllDecorators',
-    '/listAllPlugins',
     'coreclient/serialization'
 ],
     function (
@@ -32,8 +30,6 @@ define([
         DumpMore,
         MergeImport,
         Import,
-        AllDecorators,
-        AllPlugins,
         Serialization
         ) {
 
@@ -81,7 +77,13 @@ define([
                 _rootHash = null,
                 _gHash = 0,
                 _addOns = {},
-                _constraintCallback = null;
+                _constraintCallback = null,
+                AllPlugins,AllDecorators;
+
+            require(['/listAllDecorators','/listAllPlugins'],function(d,p){
+                AllDecorators = d;
+                AllPlugins = p;
+            });
 
             function print_nodes(pretext){
                 if(pretext){
@@ -107,7 +109,12 @@ define([
             _configuration.autostart = _configuration.autostart === null || _configuration.autostart === undefined ? false : _configuration.autostart;
 
 
-            $.extend(_self, new EventDispatcher());
+            //TODO remove the usage of jquery
+            //$.extend(_self, new EventDispatcher());
+            var eDisp = new EventDispatcher();
+            for(var i in eDisp){
+                _self[i] = eDisp[i];
+            }
             _self.events = {
                 "NETWORKSTATUS_CHANGED" : "NETWORKSTATUS_CHANGED",
                 "BRANCHSTATUS_CHANGED"  : "BRANCHSTATUS_CHANGED",
@@ -2915,6 +2922,8 @@ define([
             };
         }
 
+        WebGMEGlobal.classes = WebGMEGlobal.classes || {};
+        WebGMEGlobal.classes.Client = Client;
+
         return Client;
     });
-
