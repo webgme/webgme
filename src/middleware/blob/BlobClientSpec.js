@@ -68,7 +68,11 @@ describe('BlobClient', function () {
                     if (err)
                         done(err);
                     expect(res instanceof ArrayBuffer).to.equal(true);
-                    expect(Array.apply([], new Uint8Array(res)).length).to.equal(157);
+                    var data2 = Array.apply([], new Uint8Array(res));
+                    expect(data.length).to.equal(data2.length);
+                    for (var i = 0; i < data.length; ++i) {
+                        expect(data[i]).to.equal(data2[i]);
+                    }
                     done();
                 });
             });

@@ -54,6 +54,18 @@ define(['./Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, Bl
 
 
     BlobClient.prototype.putFile = function (name, data, callback) {
+        function toArrayBuffer(buffer) {
+            var ab = new ArrayBuffer(buffer.length);
+            var view = new Uint8Array(ab);
+            for (var i = 0; i < buffer.length; ++i) {
+                view[i] = buffer[i];
+            }
+            return ab;
+        }
+        // on node-webkit, we use XMLHttpRequest, but xhr.send thinks a Buffer is a string and encodes it in utf-8. Send an ArrayBuffer instead
+        if (typeof window !== 'undefined' && typeof Buffer !== 'undefined' && data instanceof Buffer) {
+            data = toArrayBuffer(data); // FIXME will this have performance problems
+        }
         superagent.post(this.getCreateURL(name))
             .set('Content-Type', 'application/octet-stream')
             .set('Content-Length', data.length)
