@@ -9,28 +9,31 @@ define(['logManager',
         'raphaeljs',
         './SnapEditorWidget.Zoom',
         './SnapEditorWidget.Mouse',
-        './SnapEditorWidget.ClickableItem',
+        './SnapEditorWidget.LinkableItem',
         'js/Widgets/SnapEditor/SnapEditorWidget.EventDispatcher',
         './SnapEditorWidget.OperatingModes',
         './SnapEditorWidget.Keyboard',
         './SnapEditorWidget.Draggable',
         './SnapEditorWidget.Droppable',
         './SnapEditorWidget.HighlightUpdater',
+        './SnapEditorWidget.ContextMenu',
         './SearchManager',
         './SelectionManager',
         './HighlightManager',
         'util/assert',
-        'loaderCircles'], function (logManager,
+        'loaderCircles',
+        'css!./styles/SnapEditorWidget.css'], function (logManager,
                                     raphaeljs,
                                     SnapEditorWidgetZoom,
                                     SnapEditorWidgetMouse,
-                                    SnapEditorWidgetClickableItem,
+                                    SnapEditorWidgetLinkableItem,
                                     SnapEditorWidgetEventDispatcher,
                                     SnapEditorWidgetOperatingModes,
                                     SnapEditorWidgetKeyboard,
                                     SnapEditorWidgetDraggable,
                                     SnapEditorWidgetDroppable,
                                     SnapEditorWidgetHighlightUpdater,
+                                    SnapEditorWidgetContextMenu,
                                     SearchManager,
                                     SelectionManager,
                                     HighlightManager,
@@ -42,7 +45,7 @@ define(['logManager',
     var SnapEditorWidget,
         CANVAS_EDGE = 100,
         GUID_DIGITS = 6,
-        WIDGET_CLASS = 'snap-editor',  // must be same as scss/Widgets/DiagramDesignerWidget.scss
+        WIDGET_CLASS = 'snap-editor',  
         BACKGROUND_TEXT_COLOR = '#DEDEDE',  
         BACKGROUND_TEXT_SIZE = 30;
 
@@ -66,10 +69,10 @@ define(['logManager',
         this.itemIds = [];
         this._itemIDCounter = 0;
 
-        /*clickable item accounting*/
-        this._insertedClickableItemIDs = [];
-        this._updatedClickableItemIDs = [];
-        this._deletedClickableItemIDs = [];
+        /*linkable item accounting*/
+        this._insertedLinkableItemIDs = [];
+        this._updatedLinkableItemIDs = [];
+        this._deletedLinkableItemIDs = [];
 
  
         /* * * * * * * * * * UI Components * * * * * * * * * */
@@ -431,15 +434,15 @@ define(['logManager',
     /* * * * * * * * * * * * * * END COPY PASTE API * * * * * * * * * * * * * */
 
     /************************* DESIGNER ITEM DRAGGABLE & COPYABLE CHECK ON DRAG START ************************/
-    SnapEditorWidget.prototype.onDragStartClickableItemDraggable = function (itemID) {
-        this.logger.warning("SnapEditorWidget.prototype.onClickableItemDraggable not overridden in controller. itemID: " + itemID);
+    SnapEditorWidget.prototype.onDragStartLinkableItemDraggable = function (itemID) {
+        this.logger.warning("SnapEditorWidget.prototype.onLinkableItemDraggable not overridden in controller. itemID: " + itemID);
 
         return true;
     };
 
 
-    SnapEditorWidget.prototype.onDragStartClickableItemCopyable = function (itemID) {
-        this.logger.warning("SnapEditorWidget.prototype.onDragStartClickableItemCopyable not overridden in controller. itemID: " + itemID);
+    SnapEditorWidget.prototype.onDragStartLinkableItemCopyable = function (itemID) {
+        this.logger.warning("SnapEditorWidget.prototype.onDragStartLinkableItemCopyable not overridden in controller. itemID: " + itemID);
 
         return true;
     };
@@ -453,8 +456,8 @@ define(['logManager',
     /************************* END OF --- DESIGNER ITEM DRAGGABLE & COPYABLE CHECK ON DRAG START ************************/
 
     /************************** DRAG ITEM ***************************/
-    //TODO Update this to show "Clickable Regions"
-    SnapEditorWidget.prototype.onClickableItemDragStart = function (draggedItemId, allDraggedItemIDs) {
+    //TODO Update this to show "Linkable Regions"
+    SnapEditorWidget.prototype.onLinkableItemDragStart = function (draggedItemId, allDraggedItemIDs) {
         /*
          * Change the next couple methods to support Snap! like stuff
          * This should trigger the displaying of the connection areas
@@ -471,7 +474,7 @@ define(['logManager',
         }
     };
 
-    SnapEditorWidget.prototype.onClickableItemDrag = function (draggedItemId, allDraggedItemIDs) {
+    SnapEditorWidget.prototype.onLinkableItemDrag = function (draggedItemId, allDraggedItemIDs) {
         var i = allDraggedItemIDs.length,
             connectionIDsToUpdate,
             redrawnConnectionIDs,
@@ -504,7 +507,7 @@ define(['logManager',
         i = redrawnConnectionIDs.len;
     };
 
-    SnapEditorWidget.prototype.onClickableItemDragStop = function (draggedItemId, allDraggedItemIDs) {
+    SnapEditorWidget.prototype.onLinkableItemDragStop = function (draggedItemId, allDraggedItemIDs) {
         this.selectionManager.showSelectionOutline();
 
         delete this._preDragActualSize;
@@ -572,12 +575,12 @@ define(['logManager',
         this._updating = true;
 
         /*designer item accounting*/
-        this._insertedClickableItemIDs = [];
-        this._updatedClickableItemIDs = [];
-        this._deletedClickableItemIDs = [];
+        this._insertedLinkableItemIDs = [];
+        this._updatedLinkableItemIDs = [];
+        this._deletedLinkableItemIDs = [];
 
-        /*clickable item stuff*/
-        this._clickableItems2Update = {};
+        /*linkable item stuff*/
+        this._linkableItems2Update = {};
     };
 
     SnapEditorWidget.prototype.endUpdate = function () {
@@ -597,9 +600,9 @@ define(['logManager',
         //check whether controller update finished or not
         if (this._updating !== true) {
 
-            insertedLen += this._insertedClickableItemIDs.length;
-            updatedLen += this._updatedClickableItemIDs.length;
-            deletedLen += this._deletedClickableItemIDs.length;
+            insertedLen += this._insertedLinkableItemIDs.length;
+            updatedLen += this._updatedLinkableItemIDs.length;
+            deletedLen += this._deletedLinkableItemIDs.length;
 
             msg += "I: " + insertedLen;
             msg += " U: " + updatedLen;
@@ -656,20 +659,20 @@ define(['logManager',
                 maxHeight = Math.max(maxHeight, itemBBox.y2);
             }
         };
-        doRenderGetLayout(this._insertedClickableItemIDs);
-        doRenderGetLayout(this._updatedClickableItemIDs);
+        doRenderGetLayout(this._insertedLinkableItemIDs);
+        doRenderGetLayout(this._updatedLinkableItemIDs);
 
-        //Update the text fields of all clickable items
+        //Update the text fields of all linkable items
         doRenderSetText = function (itemIDList) {
             for (var i = itemIDList.length-1; i >= 0; i--){
                 items[itemIDList[i]].renderSetTextInfo();
             }
         };
-        doRenderSetText(this._insertedClickableItemIDs);
-        doRenderSetText(this._updatedClickableItemIDs);
+        doRenderSetText(this._insertedLinkableItemIDs);
+        doRenderSetText(this._updatedLinkableItemIDs);
         
-        //Update all clickable items that need updating
-        this._updateClickableItems();
+        //Update all linkable items that need updating
+        this._updateLinkableItems();
 
         //STEP 2: call the inserted and updated items' setRenderLayout
         doRenderSetLayout = function (itemIDList) {
@@ -681,8 +684,8 @@ define(['logManager',
             }
         };
         
-        doRenderSetLayout(this._insertedClickableItemIDs);
-        doRenderSetLayout(this._updatedClickableItemIDs);
+        doRenderSetLayout(this._insertedLinkableItemIDs);
+        doRenderSetLayout(this._updatedLinkableItemIDs);
 
 
         /*********** SEND CREATE / UPDATE EVENTS about created/updated items **********/
@@ -693,12 +696,12 @@ define(['logManager',
                 self.dispatchEvent(eventType, itemIDList[i]);
             }
         };
-        dispatchEvents(this._insertedClickableItemIDs, this.events.ON_COMPONENT_CREATE);
-        dispatchEvents(this._updatedClickableItemIDs, this.events.ON_COMPONENT_UPDATE);
+        dispatchEvents(this._insertedLinkableItemIDs, this.events.ON_COMPONENT_CREATE);
+        dispatchEvents(this._updatedLinkableItemIDs, this.events.ON_COMPONENT_UPDATE);
         /*********************/
 
 
-        affectedItems = this._insertedClickableItemIDs.concat(this._updatedClickableItemIDs, this._deletedClickableItemIDs);
+        affectedItems = this._insertedLinkableItemIDs.concat(this._updatedLinkableItemIDs, this._deletedLinkableItemIDs);
 
         //adjust the canvas size to the new 'grown' are that the inserted / updated require
         //TODO: canvas size decrease not handled yet
@@ -707,9 +710,9 @@ define(['logManager',
         this._resizeItemContainer();
 
         /* clear collections */
-        this._insertedClickableItemIDs = [];
-        this._updatedClickableItemIDs = [];
-        this._deletedClickableItemIDs = [];
+        this._insertedLinkableItemIDs = [];
+        this._updatedLinkableItemIDs = [];
+        this._deletedLinkableItemIDs = [];
 
         if (this.mode === this.OPERATING_MODES.DESIGN ||
             this.mode === this.OPERATING_MODES.READ_ONLY) {
@@ -760,19 +763,19 @@ define(['logManager',
      *
      * @return {undefined}
      */
-    SnapEditorWidget.prototype._updateClickableItems = function () {
+    SnapEditorWidget.prototype._updateLinkableItems = function () {
         //First, finding the highest node in the dependency tree that could
         //affected by the change
         
         //Add removed items' parents
         //TODO
-        var items = Object.keys(this._clickableItems2Update),
+        var items = Object.keys(this._linkableItems2Update),
             item,
             params,
             i = -1;
 
         while (++i < items.length){
-            delete this._clickableItems2Update[items[i]];
+            delete this._linkableItems2Update[items[i]];
             item = items[i];
 
             //get the "highest" item possibly affected
@@ -781,7 +784,7 @@ define(['logManager',
             }
 
             //Add item if not already there
-            this._clickableItems2Update[item] = true;
+            this._linkableItems2Update[item] = true;
         }
 
         //For each of the items left:
@@ -839,7 +842,7 @@ define(['logManager',
                 return sorted;
             };
 
-        items = Object.keys(this._clickableItems2Update);
+        items = Object.keys(this._linkableItems2Update);
         params = { propogate: false, resize: false };
         while(items.length){
             item = items.pop();
@@ -862,7 +865,7 @@ define(['logManager',
             }
         }
 
-        this._clickableItems2Update = {};
+        this._linkableItems2Update = {};
     };
     SnapEditorWidget.prototype.clear = function () {
 
@@ -897,9 +900,9 @@ define(['logManager',
 
         this.items = {};
 
-        this._insertedClickableItemIDs = [];
-        this._updatedClickableItemIDs = [];
-        this._deletedClickableItemIDs = [];
+        this._insertedLinkableItemIDs = [];
+        this._updatedLinkableItemIDs = [];
+        this._deletedLinkableItemIDs = [];
     };
     
 
@@ -907,7 +910,7 @@ define(['logManager',
         //let the selection manager / drag-manager / connection drawing manager / etc know about the deletion
         this.dispatchEvent(this.events.ON_COMPONENT_DELETE, componentId);
 
-        this.deleteClickableItem(componentId);
+        this.deleteLinkableItem(componentId);
     };
 
 
@@ -987,11 +990,12 @@ define(['logManager',
     _.extend(SnapEditorWidget.prototype, SnapEditorWidgetMouse.prototype);
     _.extend(SnapEditorWidget.prototype, SnapEditorWidgetKeyboard.prototype);
     _.extend(SnapEditorWidget.prototype, SnapEditorWidgetOperatingModes.prototype);
-    _.extend(SnapEditorWidget.prototype, SnapEditorWidgetClickableItem.prototype);
+    _.extend(SnapEditorWidget.prototype, SnapEditorWidgetLinkableItem.prototype);
     _.extend(SnapEditorWidget.prototype, SnapEditorWidgetEventDispatcher.prototype);
     _.extend(SnapEditorWidget.prototype, SnapEditorWidgetDraggable.prototype);
     _.extend(SnapEditorWidget.prototype, SnapEditorWidgetDroppable.prototype);
     _.extend(SnapEditorWidget.prototype, SnapEditorWidgetHighlightUpdater.prototype);
+    _.extend(SnapEditorWidget.prototype, SnapEditorWidgetContextMenu.prototype);
 
     return SnapEditorWidget;
 });

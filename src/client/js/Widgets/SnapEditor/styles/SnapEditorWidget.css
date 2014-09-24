@@ -1,59 +1,92 @@
-/*
-Syntax error: File to import not found or unreadable: Connector.
-              Load paths:
-                /home/brian/Programming/snap_gme/webgme/utils/build (DEPRECATED)
-                /home/brian/Programming/snap_gme/webgme
-        on line 1 of ../../src/client/js/Widgets/SnapEditor/styles/SnapEditorWidget.scss
+/*error decorator properties*/
+.snap-editor {
+  outline: none; }
+  .snap-editor .items {
+    position: absolute; }
+    .snap-editor .items .linkable-item {
+      cursor: pointer; }
+    .snap-editor .items .selection-outline {
+      background: rgba(255, 255, 0, 0.05);
+      border: rgba(0, 0, 0, 0.5) dashed 1px;
+      position: absolute;
+      pointer-events: none;
+      z-index: 100;
+      -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075) 0 0 4px rgba(0, 0, 0, 0.3);
+      -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 4px rgba(0, 0, 0, 0.3);
+      box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 4px rgba(0, 0, 0, 0.3); }
+      .snap-editor .items .selection-outline .s-btn {
+        position: absolute;
+        background-color: white;
+        border: none;
+        line-height: 14px;
+        padding: 3px 4px;
+        border-radius: 4px;
+        pointer-events: all;
+        cursor: pointer;
+        -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075) 0 0 4px rgba(0, 0, 0, 0.3);
+        -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 4px rgba(0, 0, 0, 0.3);
+        box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 4px rgba(0, 0, 0, 0.3);
+        background-color: #000;
+        color: #fff; }
+        .snap-editor .items .selection-outline .s-btn.delete {
+          top: -13px;
+          right: -13px; }
+        .snap-editor .items .selection-outline .s-btn.rotate.bottom {
+          left: 50%;
+          margin-left: -13px;
+          bottom: -13px; }
+        .snap-editor .items .selection-outline .s-btn.contextmenu {
+          bottom: -13px;
+          right: -13px; }
+        .snap-editor .items .selection-outline .s-btn.move {
+          top: -13px;
+          left: 50%;
+          margin-left: -13px; }
+        .snap-editor .items .selection-outline .s-btn:hover {
+          background-color: #428bca; }
+    .snap-editor .items .error-decorator {
+      background-color: #f2dede;
+      padding: 3px;
+      text-align: center;
+      border: 2px solid #000000; }
+    .snap-editor .items div.c-t {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 0; }
+      .snap-editor .items div.c-t div.c-text {
+        position: absolute;
+        font-size: 10px;
+        white-space: nowrap; }
+        .snap-editor .items div.c-t div.c-text .c-name {
+          position: relative;
+          left: -50%;
+          cursor: default; }
+          .snap-editor .items div.c-t div.c-text .c-name.v {
+            left: 1px; }
+        .snap-editor .items div.c-t div.c-text input {
+          height: 20px !important;
+          min-width: 50px; }
+    .snap-editor .items.highlight-mode .linkable-item,
+    .snap-editor .items.highlight-mode .linkable-item.highlighted {
+      opacity: 0.1;
+      cursor: pointer; }
+  .snap-editor .drop-region {
+    width: 0;
+    height: 0;
+    position: absolute;
+    top: 0;
+    left: 0; }
+    .snap-editor .drop-region.accept-droppable {
+      background-color: rgba(0, 255, 0, 0.1); }
+    .snap-editor .drop-region.reject-droppable {
+      background-color: rgba(255, 0, 0, 0.1); }
 
-1: @import "Connector";
-2: 
-3: $snap-editor-selection-outline-background-color: rgba(255, 255, 0, 0.05);
-4: $snap-editor-selection-outline-border: rgba(0,0,0,0.5) dashed 1px;
-5: $snap-editor-selection-outline-shadow-start: rgba(0, 0, 0, 0.075);
-6: $snap-editor-selection-outline-shadow-end: rgba(0, 0, 0, 0.3);
+div.css-zoom.snap-editor-zoom {
+  position: absolute;
+  top: 30px;
+  left: 10px; }
 
-Backtrace:
-../../src/client/js/Widgets/SnapEditor/styles/SnapEditorWidget.scss:1
-/home/brian/.gem/ruby/2.1.0/gems/sass-3.3.10/lib/sass/tree/import_node.rb:66:in `rescue in import'
-/home/brian/.gem/ruby/2.1.0/gems/sass-3.3.10/lib/sass/tree/import_node.rb:45:in `import'
-/home/brian/.gem/ruby/2.1.0/gems/sass-3.3.10/lib/sass/tree/import_node.rb:28:in `imported_file'
-/home/brian/.gem/ruby/2.1.0/gems/sass-3.3.10/lib/sass/tree/import_node.rb:37:in `css_import?'
-/home/brian/.gem/ruby/2.1.0/gems/sass-3.3.10/lib/sass/tree/visitors/perform.rb:283:in `visit_import'
-/home/brian/.gem/ruby/2.1.0/gems/sass-3.3.10/lib/sass/tree/visitors/base.rb:36:in `visit'
-/home/brian/.gem/ruby/2.1.0/gems/sass-3.3.10/lib/sass/tree/visitors/perform.rb:152:in `block in visit'
-/home/brian/.gem/ruby/2.1.0/gems/sass-3.3.10/lib/sass/stack.rb:79:in `block in with_base'
-/home/brian/.gem/ruby/2.1.0/gems/sass-3.3.10/lib/sass/stack.rb:121:in `with_frame'
-/home/brian/.gem/ruby/2.1.0/gems/sass-3.3.10/lib/sass/stack.rb:79:in `with_base'
-/home/brian/.gem/ruby/2.1.0/gems/sass-3.3.10/lib/sass/tree/visitors/perform.rb:152:in `visit'
-/home/brian/.gem/ruby/2.1.0/gems/sass-3.3.10/lib/sass/tree/visitors/base.rb:52:in `block in visit_children'
-/home/brian/.gem/ruby/2.1.0/gems/sass-3.3.10/lib/sass/tree/visitors/base.rb:52:in `map'
-/home/brian/.gem/ruby/2.1.0/gems/sass-3.3.10/lib/sass/tree/visitors/base.rb:52:in `visit_children'
-/home/brian/.gem/ruby/2.1.0/gems/sass-3.3.10/lib/sass/tree/visitors/perform.rb:161:in `block in visit_children'
-/home/brian/.gem/ruby/2.1.0/gems/sass-3.3.10/lib/sass/tree/visitors/perform.rb:173:in `with_environment'
-/home/brian/.gem/ruby/2.1.0/gems/sass-3.3.10/lib/sass/tree/visitors/perform.rb:160:in `visit_children'
-/home/brian/.gem/ruby/2.1.0/gems/sass-3.3.10/lib/sass/tree/visitors/base.rb:36:in `block in visit'
-/home/brian/.gem/ruby/2.1.0/gems/sass-3.3.10/lib/sass/tree/visitors/perform.rb:180:in `visit_root'
-/home/brian/.gem/ruby/2.1.0/gems/sass-3.3.10/lib/sass/tree/visitors/base.rb:36:in `visit'
-/home/brian/.gem/ruby/2.1.0/gems/sass-3.3.10/lib/sass/tree/visitors/perform.rb:151:in `visit'
-/home/brian/.gem/ruby/2.1.0/gems/sass-3.3.10/lib/sass/tree/visitors/perform.rb:8:in `visit'
-/home/brian/.gem/ruby/2.1.0/gems/sass-3.3.10/lib/sass/tree/root_node.rb:36:in `css_tree'
-/home/brian/.gem/ruby/2.1.0/gems/sass-3.3.10/lib/sass/tree/root_node.rb:20:in `render'
-/home/brian/.gem/ruby/2.1.0/gems/sass-3.3.10/lib/sass/engine.rb:274:in `render'
-/home/brian/.gem/ruby/2.1.0/gems/sass-3.3.10/lib/sass/plugin/compiler.rb:378:in `update_stylesheet'
-/home/brian/.gem/ruby/2.1.0/gems/sass-3.3.10/lib/sass/plugin/compiler.rb:189:in `block in update_stylesheets'
-/home/brian/.gem/ruby/2.1.0/gems/sass-3.3.10/lib/sass/plugin/compiler.rb:186:in `each'
-/home/brian/.gem/ruby/2.1.0/gems/sass-3.3.10/lib/sass/plugin/compiler.rb:186:in `update_stylesheets'
-/home/brian/.gem/ruby/2.1.0/gems/sass-3.3.10/lib/sass/plugin/compiler.rb:357:in `on_file_changed'
-/home/brian/.gem/ruby/2.1.0/gems/sass-3.3.10/lib/sass/plugin/compiler.rb:250:in `block in watch'
-/home/brian/.gem/ruby/2.1.0/gems/listen-1.3.1/lib/listen/listener.rb:252:in `call'
-/home/brian/.gem/ruby/2.1.0/gems/listen-1.3.1/lib/listen/listener.rb:252:in `on_change'
-/home/brian/.gem/ruby/2.1.0/gems/listen-1.3.1/lib/listen/listener.rb:290:in `block in initialize_adapter'
-/home/brian/.gem/ruby/2.1.0/gems/listen-1.3.1/lib/listen/adapter.rb:252:in `call'
-/home/brian/.gem/ruby/2.1.0/gems/listen-1.3.1/lib/listen/adapter.rb:252:in `report_changes'
-/home/brian/.gem/ruby/2.1.0/gems/listen-1.3.1/lib/listen/adapter.rb:321:in `poll_changed_directories'
-/home/brian/.gem/ruby/2.1.0/gems/listen-1.3.1/lib/listen/adapter.rb:297:in `block in start_poller'
-*/
-body:before {
-  white-space: pre;
-  font-family: monospace;
-  content: "Syntax error: File to import not found or unreadable: Connector.\A               Load paths:\A                 /home/brian/Programming/snap_gme/webgme/utils/build (DEPRECATED)\A                 /home/brian/Programming/snap_gme/webgme\A         on line 1 of ../../src/client/js/Widgets/SnapEditor/styles/SnapEditorWidget.scss\A \A 1: @import \"Connector\";\A 2: \A 3: $snap-editor-selection-outline-background-color: rgba(255, 255, 0, 0.05);\A 4: $snap-editor-selection-outline-border: rgba(0,0,0,0.5) dashed 1px;\A 5: $snap-editor-selection-outline-shadow-start: rgba(0, 0, 0, 0.075);\A 6: $snap-editor-selection-outline-shadow-end: rgba(0, 0, 0, 0.3);"; }
+div.snap-editor-drag-outline {
+  white-space: nowrap; }
