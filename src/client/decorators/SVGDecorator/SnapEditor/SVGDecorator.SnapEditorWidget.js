@@ -695,15 +695,11 @@ define(['js/Constants',
     /**** Override from SnapEditorWidgetDecoratorBase ****/
     //Shows the 'connectors' - appends them to the DOM
     SVGDecoratorSnapEditorWidget.prototype.showSourceConnectors = function (/*params*/) {
-        //Show "clickable" areas?
-        //TODO
     };
 
     /**** Override from SnapEditorWidgetDecoratorBase ****/
     //Hides the 'connectors' - detaches them from the DOM
     SVGDecoratorSnapEditorWidget.prototype.hideSourceConnectors = function () {
-        //Hide "clickable" areas?
-        //TODO
     };
 
 
