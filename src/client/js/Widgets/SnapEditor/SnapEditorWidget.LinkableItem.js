@@ -3,18 +3,18 @@
  * @author brollb / https://github/brollb
  */
 
-define(['./ClickableItem',
-        './SnapEditorWidget.Constants'], function (ClickableItem,
+define(['./LinkableItem',
+        './SnapEditorWidget.Constants'], function (LinkableItem,
                                                    CONSTANTS) {
     "use strict";
 
-    var SnapEditorWidgetClickableItems;
+    var SnapEditorWidgetLinkableItems;
 
-    SnapEditorWidgetClickableItems = function () {
+    SnapEditorWidgetLinkableItems = function () {
 
     };
 
-    SnapEditorWidgetClickableItems.prototype.createClickableItem = function (objD) {
+    SnapEditorWidgetLinkableItems.prototype.createLinkableItem = function (objD) {
         var componentId = this._getGuid(),
             objDescriptor = _.extend({}, objD),
             alignedPosition = this._alignPositionToGrid(objDescriptor.position.x, objDescriptor.position.y),
@@ -32,9 +32,9 @@ define(['./ClickableItem',
         this.itemIds.push(componentId);
 
         //add to accounting queues for performance optimization
-        this._insertedClickableItemIDs.push(componentId);
+        this._insertedLinkableItemIDs.push(componentId);
 
-        newComponent = this.items[componentId] = new ClickableItem(componentId, this);
+        newComponent = this.items[componentId] = new LinkableItem(componentId, this);
         newComponent.moveTo(objDescriptor.position.x, objDescriptor.position.y);
 
         //Store Attributes
@@ -56,14 +56,14 @@ define(['./ClickableItem',
         newComponent.updateDisplayedAttributeText();
 
         //set the item to be able to be "clicked" to with drag'n'drop
-        this.setClickable(newComponent);
+        this.setLinkable(newComponent);
 
-        this._clickableItems2Update[componentId] = "created";
+        this._linkableItems2Update[componentId] = "created";
 
         return newComponent;
     };
 
-    SnapEditorWidgetClickableItems.prototype._alignPositionToGrid = function (pX, pY) {
+    SnapEditorWidgetLinkableItems.prototype._alignPositionToGrid = function (pX, pY) {
         var posXDelta,
             posYDelta;
 
@@ -89,7 +89,7 @@ define(['./ClickableItem',
             "y": pY };
     };
 
-    SnapEditorWidgetClickableItems.prototype.updateClickableItem  = function (componentId, objDescriptor) {
+    SnapEditorWidgetLinkableItems.prototype.updateLinkableItem  = function (componentId, objDescriptor) {
         var alignedPosition,
             addToUpdateList = null,
             item;
@@ -115,23 +115,23 @@ define(['./ClickableItem',
             }
 
             //add to accounting queues for performance optimization
-            this._updatedClickableItemIDs.push(componentId);
+            this._updatedLinkableItemIDs.push(componentId);
 
             addToUpdateList = this.items[componentId].update(objDescriptor) || addToUpdateList;
 
             if (addToUpdateList){
-                this._clickableItems2Update[componentId] = addToUpdateList;
+                this._linkableItems2Update[componentId] = addToUpdateList;
             }
         }
     };
 
-    SnapEditorWidgetClickableItems.prototype.deleteClickableItem  = function (id) {
+    SnapEditorWidgetLinkableItems.prototype.deleteLinkableItem  = function (id) {
         var idx;
 
-        this.logger.debug("Deleting ClickableItem with ID: '" + id + "'");
+        this.logger.debug("Deleting LinkableItem with ID: '" + id + "'");
 
         //keep up accounting
-        this._deletedClickableItemIDs.push(id);
+        this._deletedLinkableItemIDs.push(id);
 
         idx = this.itemIds.indexOf(id);
         this.itemIds.splice(idx, 1);
@@ -141,18 +141,18 @@ define(['./ClickableItem',
     };
 
     //NOTE: could/should be overridden in the CONTROLLER
-    SnapEditorWidgetClickableItems.prototype.onClickableItemDoubleClick = function (id, event) {
-        this.logger.debug("ClickableItem '" + id + "' received double click at pos: [" + event.offsetX + ", " + event.offsetY + "]");
+    SnapEditorWidgetLinkableItems.prototype.onLinkableItemDoubleClick = function (id, event) {
+        this.logger.debug("LinkableItem '" + id + "' received double click at pos: [" + event.offsetX + ", " + event.offsetY + "]");
     };
 
-    SnapEditorWidgetClickableItems.prototype.notifyItemComponentEvents = function (itemId, eventList) {
+    SnapEditorWidgetLinkableItems.prototype.notifyItemComponentEvents = function (itemId, eventList) {
         if (this.itemIds.indexOf(itemId) !== -1) {
-            this._updatedClickableItemIDs.push(itemId);
+            this._updatedLinkableItemIDs.push(itemId);
             this.items[itemId].onItemComponentEvents(eventList);
         }
     };
 
-    SnapEditorWidgetClickableItems.prototype.connect = function (id1, id2) {
+    SnapEditorWidgetLinkableItems.prototype.connect = function (id1, id2) {
         //This connects connArea1 and connArea2 on the screen as being connected. That is
         //it positions the parents of connArea1 and connArea2 such that connArea1 and connArea2
         //are overlapping and centered on each other.
@@ -164,7 +164,7 @@ define(['./ClickableItem',
         item1.connectToActive(item2);
     };
 
-    SnapEditorWidgetClickableItems.prototype.setToConnect = function (id1, id2, ptrName) {
+    SnapEditorWidgetLinkableItems.prototype.setToConnect = function (id1, id2, ptrName) {
         //This sets the pointers for the relevant ids and sizes them but does not move them
         var item1 = this.items[id1],
             item2 = this.items[id2];
@@ -172,13 +172,13 @@ define(['./ClickableItem',
         item2.setPtr(ptrName, CONSTANTS.CONN_ACCEPTING, item1);
     };
 
-    SnapEditorWidgetClickableItems.prototype.updateItemDependents = function (id1) {
+    SnapEditorWidgetLinkableItems.prototype.updateItemDependents = function (id1) {
         this.items[id1].updateDependents();
     };
 
     //I will need to calculate the distance between objects
     //for when I drop an object to point to the recipient.
-    SnapEditorWidgetClickableItems.prototype.getConnectionDistance = function (options) {
+    SnapEditorWidgetLinkableItems.prototype.getConnectionDistance = function (options) {
         var src = this.items[options.src];//src has the CONN_PASSING role
 
         delete options.src;
@@ -187,19 +187,19 @@ define(['./ClickableItem',
         return src.getConnectionDistance(options);
     };
 
-    SnapEditorWidgetClickableItems.prototype.itemHasPtr = function (id1, ptrName) {
+    SnapEditorWidgetLinkableItems.prototype.itemHasPtr = function (id1, ptrName) {
         return this.items[id1].hasPtr(ptrName);
     };
 
-    SnapEditorWidgetClickableItems.prototype.getItemsPointingTo = function (id) {
+    SnapEditorWidgetLinkableItems.prototype.getItemsPointingTo = function (id) {
         var item = this.items[id];
 
         return _.extend({}, item.ptrs[CONSTANTS.CONN_ACCEPTING]);
     };
 
-    SnapEditorWidgetClickableItems.prototype.removePtr = function (itemId, ptr, role) {
+    SnapEditorWidgetLinkableItems.prototype.removePtr = function (itemId, ptr, role) {
         this.items[itemId].removePtr(ptr, role, true);
     };
 
-    return SnapEditorWidgetClickableItems;
+    return SnapEditorWidgetLinkableItems;
 });

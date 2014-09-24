@@ -147,9 +147,9 @@ define(['js/DragDrop/DropTarget',
         }
     };
 
-    /* * * * * * * * * * * * * Dropping on Clickable Item* * * * * * * * * * * * */
+    /* * * * * * * * * * * * * Dropping on Linkable Item* * * * * * * * * * * * */
 
-    SnapEditorWidgetDroppable.prototype.setClickable = function (item) {
+    SnapEditorWidgetDroppable.prototype.setLinkable = function (item) {
         var self = this;
         //Set the item to droppable
         //item.$el.addClass(CLICKABLE_CLASS);

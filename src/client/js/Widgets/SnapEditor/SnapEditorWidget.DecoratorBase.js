@@ -101,7 +101,7 @@ define(['js/Decorators/WidgetDecoratorBase',
     };
 
     //NOTE - SHALL BE OVERRIDDEN WHEN NEEDED
-    SnapEditorWidgetDecoratorBase.prototype.getClickableAreas = function (id) {
+    SnapEditorWidgetDecoratorBase.prototype.getLinkableAreas = function (id) {
         var result = [];
 
         //by default return the center point of the item

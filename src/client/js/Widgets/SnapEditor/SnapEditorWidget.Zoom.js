@@ -17,7 +17,7 @@ define(['jquery-csszoom'], function () {
             zoomValues = params.zoomValues || DEFAULT_ZOOM_VALUES;
 
         //zoom
-        this._zoomSlider = $('<div/>', { 'class': 'diagram-designer-zoom' });
+        this._zoomSlider = $('<div/>', { 'class': 'snap-editor-zoom' });
         this.$el.parent().append(this._zoomSlider);
 
         this._zoomSlider.csszoom({

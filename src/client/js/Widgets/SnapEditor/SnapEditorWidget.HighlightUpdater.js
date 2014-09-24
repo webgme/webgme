@@ -85,7 +85,7 @@ define(['./SnapEditorWidget.Constants.js'], function (SNAP_CONSTANTS) {
             draggedUI = self._ui;
             selector = '#' + draggedUI.attr('id') + '.' + draggedUI.attr('class');
             draggedId = draggedUI.attr('id');
-            dragged = self.items[draggedId];
+            dragged = self.items[draggedId];//from the canvas
             draggedIds = [];
             minDistance = null;
             closestItem = null;

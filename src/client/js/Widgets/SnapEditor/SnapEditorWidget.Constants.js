@@ -19,7 +19,7 @@ define([], function () {
          * CLASS DEFINITIONS
          * May need to change some of these (if I don't use the "designer item")
          */
-        DESIGNER_ITEM_CLASS : "snappable-item",
+        DESIGNER_ITEM_CLASS : "linkable-item",
         HIGHLIGHT_MODE_CLASS: 'highlight-mode',
         ITEM_HIGHLIGHT_CLASS: 'highlighted',
         DROP_REGION_CLASS: 'drop-region',
@@ -27,7 +27,7 @@ define([], function () {
         DROP_REGION_REJECT_DROPPABLE_CLASS: 'reject-droppable',
 
         /*
-         * Clickable constants
+         * Linkable constants
          */
         CONN_ACCEPTING: "in",
         CONN_PASSING: "out",

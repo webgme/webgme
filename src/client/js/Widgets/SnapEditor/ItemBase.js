@@ -20,7 +20,7 @@ define(['logManager',
     };
 
     ItemBase.prototype._super = function (name, objId, canvas) {
-        EVENT_POSTFIX = "ClickableItem";
+        EVENT_POSTFIX = "LinkableItem";
         ITEM_CLASS = name;
 
         this.id = objId;
@@ -365,11 +365,6 @@ define(['logManager',
         this.selected = true;
         this.selectedInMultiSelection = multiSelection;
         this.$el.addClass("selected");
-
-        //when selected, no clickable areas are available
-        //if (multiSelection === true) {
-            //this.hideSourceConnectors();
-        //}
 
         //let the decorator know that this item became selected
         this._callDecoratorMethod("onSelect");

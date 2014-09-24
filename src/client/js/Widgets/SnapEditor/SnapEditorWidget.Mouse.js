@@ -24,7 +24,7 @@ define(['./SnapEditorWidget.Constants'], function (SnapEditorWidgetConstants) {
         var self = this,
             logger = this.logger;
 
-        //handle click on clickable-items
+        //handle click on linkable-items
         this.$el.on('mousedown.' + EVENT_POSTFIX, 'div.' + SnapEditorWidgetConstants.DESIGNER_ITEM_CLASS,  function (event) {
             var itemId = $(this).attr("id"),
                 eventDetails = self._processMouseEvent(event, true, false, true, true);

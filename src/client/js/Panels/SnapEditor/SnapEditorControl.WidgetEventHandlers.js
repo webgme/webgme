@@ -840,7 +840,7 @@ define(['logManager',
                 if (this._GmeID2ComponentID.hasOwnProperty(gmeID)) {
                     componentID = this._GmeID2ComponentID[gmeID];
                     selectedIDs.push(componentID);
-                    this.snapCanvas.updateClickableItem(componentID, { "position": {"x": dropPosition.x + oldPos.x, "y": dropPosition.y + oldPos.y }});
+                    this.snapCanvas.updateLinkableItem(componentID, { "position": {"x": dropPosition.x + oldPos.x, "y": dropPosition.y + oldPos.y }});
                 }
             }
 

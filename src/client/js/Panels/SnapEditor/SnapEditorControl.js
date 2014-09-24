@@ -558,7 +558,7 @@ console.log("Object changed to " + nodeId);
                     objDesc.metaInfo = {};
                     objDesc.metaInfo[CONSTANTS.GME_ID] = gmeID;
 
-                    uiComponent = this.snapCanvas.createClickableItem(objDesc);
+                    uiComponent = this.snapCanvas.createLinkableItem(objDesc);
 
                     this._GmeID2ComponentID[gmeID] = uiComponent.id; //Formerly was an array..
                     this._ComponentID2GmeID[uiComponent.id] = gmeID;
@@ -662,7 +662,7 @@ console.log("Object changed to " + nodeId);
                         componentID = this._GmeID2ComponentID[gmeID];
                         this._extendObjectDescriptor(objDesc, node);
 
-                        this.snapCanvas.updateClickableItem(componentID, objDesc);
+                        this.snapCanvas.updateLinkableItem(componentID, objDesc);
                     }
                 }
             }
