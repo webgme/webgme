@@ -147,12 +147,13 @@
   <line
      class="connection-highlight"
      style="opacity:0;stroke:#444444;stroke-width:10.10658169"
+     data-align-center="y-vertical-body"
      data-ptr="map"
      data-role="out"
-     x1="5.0532908"
-     y1="26.904751"
-     x2="79.852669"
-     y2="26.904751"
+     x1="105"
+     y1="12"
+     x2="125"
+     y2="12"
      id="line17" />
   <!-- initial measurements -->
   <rect
