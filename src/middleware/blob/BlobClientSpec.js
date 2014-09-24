@@ -52,11 +52,8 @@ describe('BlobClient', function () {
         });
     });
 
-    it('should create zip', function (done) {
+    function createZip(data, done) {
         var bc = new BlobClient();
-        var data = base64DecToArr("UEsDBAoAAAAAACNaNkWtbMPDBwAAAAcAAAAIAAAAZGF0YS5iaW5kYXRhIA0KUEsBAj8ACgAAAAAA\n" +
-            "I1o2Ra1sw8MHAAAABwAAAAgAJAAAAAAAAAAgAAAAAAAAAGRhdGEuYmluCgAgAAAAAAABABgAn3xF\n" +
-            "poDWzwGOVUWmgNbPAY5VRaaA1s8BUEsFBgAAAAABAAEAWgAAAC0AAAAAAA==");
         bc.putFile("testzip.zip", data, function(err, hash) {
             if (err)
                 done(err);
@@ -77,7 +74,24 @@ describe('BlobClient', function () {
                 });
             });
         });
+    }
+
+    it('should create zip', function (done) {
+        var data = base64DecToArr("UEsDBAoAAAAAACNaNkWtbMPDBwAAAAcAAAAIAAAAZGF0YS5iaW5kYXRhIA0KUEsBAj8ACgAAAAAA\n" +
+            "I1o2Ra1sw8MHAAAABwAAAAgAJAAAAAAAAAAgAAAAAAAAAGRhdGEuYmluCgAgAAAAAAABABgAn3xF\n" +
+            "poDWzwGOVUWmgNbPAY5VRaaA1s8BUEsFBgAAAAABAAEAWgAAAC0AAAAAAA==");
+        createZip(data, done);
     });
+
+    if (typeof global !== 'undefined') { // i.e. if running under node-webkit
+        // need this in package.json: "node-remote": "localhost"
+        it('should create zip from node-webkit Buffer', function (done) {
+            var data = base64DecToArr("UEsDBAoAAAAAACNaNkWtbMPDBwAAAAcAAAAIAAAAZGF0YS5iaW5kYXRhIA0KUEsBAj8ACgAAAAAA\n" +
+                "I1o2Ra1sw8MHAAAABwAAAAgAJAAAAAAAAAAgAAAAAAAAAGRhdGEuYmluCgAgAAAAAAABABgAn3xF\n" +
+                "poDWzwGOVUWmgNbPAY5VRaaA1s8BUEsFBgAAAAABAAEAWgAAAC0AAAAAAA==");
+            createZip(new Buffer(data), done);
+        });
+    }
 
     it('should create metadata', function (done) {
         var artifact = new Artifact('testartifact', new BlobClient());
