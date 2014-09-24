@@ -147,7 +147,7 @@ define(['addon/AddOnBase'],function(Base) {
             error = error || err;
             message[self.core.getGuid(node)] = msg;
             if(msg){
-                message.info = "node ["+self.core.getPath(node)+"] validation";
+                message.info = "node ["+(self.core.getAttribute(node,'name') || "")+"] validation"; //TODO what should be the proper identification
                 message.commit = self.commit;
                 message.hasViolation = msg.hasViolation === true;
             }

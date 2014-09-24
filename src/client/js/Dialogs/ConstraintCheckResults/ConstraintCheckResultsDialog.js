@@ -124,7 +124,7 @@ define(['clientUtil',
                 nodeEntry.append(NODE_BTN_BASE.clone());
 
                 spanResultTitle = RESULT_NAME_BASE.clone();
-                spanResultTitle.text(result[nodeGuids[j]]._name +"["+nodeGuids[j]+"]");
+                spanResultTitle.text(result[nodeGuids[j]]._name /*+"["+nodeGuids[j]+"]"*/); //TODO GUID removed, come up some real identification text
 
                 nodeEntry.append(spanResultTitle);
 
