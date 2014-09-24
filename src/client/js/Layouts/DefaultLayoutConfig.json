@@ -27,11 +27,6 @@
         {"id": "PropertyEditorPanel",
             "panel": "PropertyEditor/PropertyEditorPanel",
             "container": "east",
-            "DEBUG_ONLY": false},
-
-        {"id": "TestPanel",
-            "panel": "DebugTest/DebugTestPanel",
-            "container": "east",
             "DEBUG_ONLY": false}
     ]
 }
