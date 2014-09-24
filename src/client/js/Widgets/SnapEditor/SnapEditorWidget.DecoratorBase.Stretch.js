@@ -470,7 +470,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
                         area[axis + "2"] -= shift[axis] || 0;
 
                         //shift the highlight
-                        this._shiftCustomConnectionHighlightAreas(area.ptr, area.role, axis, -shift);
+                        this._shiftCustomConnectionHighlightAreas(area.ptr, area.role, axis, -shift[axis]);
                     }
                     this._connAreaShifts[id][axis] = 0;
                 }
