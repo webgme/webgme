@@ -38,7 +38,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
 
     "use strict";
 
-    var DEBUG = true,
+    var DEBUG = false,
         AXIS = { X:'x', Y:'y' },
         SPLITTER = '-';
 
