@@ -12,11 +12,10 @@ define(['./SnapEditorWidget.Constants'], function (SNAP_CONSTANTS){
     "use strict";
 
     //Stuff for displaying connection area
-    var CONN_AREA_EDIT_CLASS = "conn-area-edit",
+    var CONN_AREA_EDIT_CLASS = "conn-area-line",
         CONN_AREA_SIZE = 8,
-        CONN_AREA = "conn-area-edit-bg",
-        DATA_CONN_AREA_ID = "connection-id",
-        DEFAULT_COLOR = "#666666";//FIXME Move to css
+        CONN_AREA = "conn-area",
+        DATA_CONN_AREA_ID = "connection-id";
 
     var SnapEditorWidgetDecoratorBaseConnectionAreas = function(){
     };
@@ -32,17 +31,17 @@ define(['./SnapEditorWidget.Constants'], function (SNAP_CONSTANTS){
         this.hideConnectionAreas();
         while (i--){
             id = areas[i].id;
-            this._displayConnectionArea(id, options[id] || DEFAULT_COLOR);
+            this._displayConnectionArea(id);
         }
     };
 
     //Displaying Connection Area
-    SnapEditorWidgetDecoratorBaseConnectionAreas.prototype.displayConnectionArea = function (id, color) {
+    SnapEditorWidgetDecoratorBaseConnectionAreas.prototype.displayConnectionArea = function (id) {
         this.hideConnectionAreas();
-        this._displayConnectionArea(id, color);
+        this._displayConnectionArea(id);
     };
 
-    SnapEditorWidgetDecoratorBaseConnectionAreas.prototype._displayConnectionArea = function (id, color) {
+    SnapEditorWidgetDecoratorBaseConnectionAreas.prototype._displayConnectionArea = function (id) {
         var w = this.$el.outerWidth(true),
             h = this.$el.outerHeight(true),
             shiftVal = CONN_AREA_SIZE/2,
@@ -51,8 +50,6 @@ define(['./SnapEditorWidget.Constants'], function (SNAP_CONSTANTS){
             highlight;
 
         //Color
-        color = color || DEFAULT_COLOR;
-
         if(line){
             if(this._connHighlight === undefined){
                 this._connHighlight = $('<div/>', { 'class': CONN_AREA,
@@ -89,7 +86,7 @@ define(['./SnapEditorWidget.Constants'], function (SNAP_CONSTANTS){
 
             var path = this._svg.path('M ' + line.x1 + ',' + line.y1 + 'L' + line.x2 + ',' + line.y2);
             $(path.node).attr(DATA_CONN_AREA_ID, id);
-            path.attr({ 'stroke-width': CONN_AREA_SIZE, 'fill': color });
+            path.attr({ 'stroke-width': CONN_AREA_SIZE });
             $(path.node).attr({ "class": CONN_AREA_EDIT_CLASS });        
 
             this.$el.append(this._connHighlight);

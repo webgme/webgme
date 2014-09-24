@@ -4,38 +4,21 @@
  * Author: Robert Kereskenyi
  */
 
-$conn-area-edit-color: #00FF00;
-$conn-area-edit-disabled-color: #FF0000;
-$darkenValue: 20%;
+$conn-area-color: #555555;
 
-.designer-item {
-  .decorator-edit {
-    opacity: 0.2;
-  }
-
-  .conn-area-edit-bg {
+.linkable-item {
+  .conn-area{
     position: absolute;
     top: 0;
     left: 0;
   }
 
-  path.conn-area-edit {
+  path.conn-area-line {
     position: absolute;
     top: 0;
     left: 0;
     opacity: 0.5;
-    stroke: $conn-area-edit-color;
+    stroke: $conn-area-color;
 
-    &:hover {
-      stroke: darken($conn-area-edit-color, $darkenValue);
-    }
-
-    &.disabled {
-      stroke: $conn-area-edit-disabled-color;
-
-      &:hover {
-        stroke: darken($conn-area-edit-disabled-color, $darkenValue);
-      }
-    }
   }
 }
