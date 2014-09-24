@@ -342,8 +342,13 @@ define(['js/client'], function (Client) {
 
             };
 
-            NodeObj.prototype.destroy = function () {
-
+            /**
+             * Removes the node from the data-base. (All regions within the same context should get onUnload events).
+             * @param [msg] - Optional commit message.
+             */
+            NodeObj.prototype.destroy = function (msg) {
+                // TODO: Perhaps remove the node from its context/region at this point? Now it waits for the unload event
+                self.destroyNode(this.context, this.id, msg);
             };
 
             NodeObj.prototype.getMemberIds = function (name) {
@@ -552,8 +557,15 @@ define(['js/client'], function (Client) {
                 // NS.createChild({parent: parentNode/id, base: baseNode/id}) – current one on client takes {parentId and baseId}
             };
 
-            this.destroyNode = function (context, nodeOrId) {
-                // NS.destroyNode(node/Id);
+            this.destroyNode = function (context, nodeOrId, msg) {
+                var dbConn = DataStoreService.getDatabaseConnection(context),
+                    id = getIdFromNodeOrString(nodeOrId),
+                    nodeToDelete = dbConn.client.getNode(id);
+                if (nodeToDelete) {
+                    dbConn.client.delMoreNodes([id], msg);
+                } else {
+                    console.warn('Requested deletion of node that does not exist in context! (id, context) ', id, context);
+                }
             };
 
             this.cleanUpRegion = function (context) {
