@@ -89,8 +89,7 @@
        style="stroke-width:1.17999995;overflow:hidden"
        d="m 82.790488,0.62299493 0,3.53124987 3.59375,0 a 3.54,3.54 0 0 0 -3.5625,-3.53124987 l -0.0312,0 z"
        id="TRCorner"
-       inkscape:connector-curvature="0"
-       class="x-shift-name x-shift-first x-shift-first x-shift-second x-shift-second" />
+       inkscape:connector-curvature="0"/>
     <path
        data-shift="y-RRect x-BRRect"
        style="stroke-width:1.17999995;overflow:hidden"

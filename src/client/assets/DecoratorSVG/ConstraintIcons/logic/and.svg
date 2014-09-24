@@ -85,7 +85,6 @@
      data-shift="x-nameRect"
      data-stretch="x-second y-first y-second y-name" />
   <path
-     class="x-shift-name x-shift-first x-shift-first x-shift-second x-shift-second"
      inkscape:connector-curvature="0"
      id="TRCorner"
      d="m 88.790488,0.62299493 0,3.53124987 3.59375,0 a 3.54,3.54 0 0 0 -3.5625,-3.53124987 l -0.0312,0 z"

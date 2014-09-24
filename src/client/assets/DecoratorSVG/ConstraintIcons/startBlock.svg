@@ -81,11 +81,9 @@
        height="14.762793"
        width="83.923454"
        y="14.281104"
-       x="1.0566038"
-       class="x-name y-name" />
+       x="1.0566038"/>
     <path
        inkscape:connector-curvature="0"
-       class="y-shift-name"
        id="path12"
        style="fill:#ffdc40;stroke:#ffdc40;stroke-width:1.17999995"
        d="m 1.165,28.8535 a 3.54,3.54 0 0 0 3.54,3.54 l 7.08,0 3.54,3.54 9.44,0 3.54,-3.54 0,-3.658" />
@@ -96,8 +94,7 @@
        height="1.0256605"
        width="7.3817625"
        id="rectXStretchName"
-       style="fill:#ffdc40;stroke:#ffdc40;stroke-width:2.79649115;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
-       class="x-name y-shift-name" />
+       style="fill:#ffdc40;stroke:#ffdc40;stroke-width:2.79649115;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"/>
     <path
        style="fill:#ffdc40;stroke:#ffdc40;stroke-width:1.1485492;overflow:hidden"
        d="m 4.0458179,13.506456 0,-3.5912402 A 3.294124,3.6041416 0 0 0 1.1434151,13.506456 l 2.9024028,0 z"
@@ -105,7 +102,6 @@
        inkscape:connector-curvature="0"
        inkscape:label="#path15-9" />
     <path
-       class="x-shift-name"
        style="fill:#ffdc40;stroke:#ffdc40;stroke-width:1.13584208;overflow:hidden"
        d="m 81.975717,13.341181 0,-3.4969069 a 3.3085461,3.5094677 0 0 1 2.915111,3.4969069 l -2.915111,0 z"
        id="TLCorner"
@@ -118,10 +114,8 @@
        height="0.34530222"
        width="72.197784"
        id="TopBar"
-       style="fill:#ffdc40;stroke:#ffdc40;stroke-width:5.07449913;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;overflow:hidden"
-       class="x-name" />
+       style="fill:#ffdc40;stroke:#ffdc40;stroke-width:5.07449913;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;overflow:hidden"/>
     <path
-       class="x-shift-name"
        style="fill:#ffdc40;stroke:#ffdc40;stroke-width:1.05383587;overflow:hidden"
        d="m 81.965971,29.056373 0,2.927828 a 3.4016195,2.9383451 0 0 0 2.99711,-2.927828 l -2.99711,0 z"
        id="TLCorner-0"
@@ -134,13 +128,12 @@
        height="0.48673129"
        width="48.404102"
        id="TopBar-8"
-       style="fill:#ffdc40;stroke:#ffdc40;stroke-width:4.93307018;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;overflow:hidden"
-       class="x-name" />
+       style="fill:#ffdc40;stroke:#ffdc40;stroke-width:4.93307018;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;overflow:hidden"/>
   </g>
   <text
      x="5.9058795"
      y="16.186327"
-     style="font-size:12px">Start</text>
+     style="font-size:12px">Begin</text>
   <line
      class="connection-area"
      data-ptr="next"

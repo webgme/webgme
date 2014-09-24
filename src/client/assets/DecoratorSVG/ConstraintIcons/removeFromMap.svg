@@ -52,14 +52,6 @@
      fit-margin-left="0"
      fit-margin-right="0"
      fit-margin-bottom="0" />
-  <rect
-     style="opacity:0.54863808;fill:#ffffff;fill-opacity:0;stroke:#000000;stroke-width:2.03220844;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none"
-     id="name-bounding-box"
-     width="40.448757"
-     height="8.3728704"
-     x="6.9949174"
-     y="8.0343323"
-     inkscape:label="#rect2992" />
   <!--
   <g
      id="colors"
@@ -79,46 +71,87 @@
      style="stroke-width:1.17999995"
      d="m 155.707,0.59224993 0,3.53124997 26.125,0 a 3.54,3.54 0 0 0 -3.5625,-3.53124997 l -22.5625,0 z"
      id="path3009"
-     class="x-shift-name x-shift-first x-shift-second x-shift-map"
+     data-shift="x-collectionRect"
      inkscape:connector-curvature="0" />
   <rect
-     class="x-name x-first x-second x-map y-name y-first y-second y-map"
+     data-stretch="y-map y-first"
      x="29.838207"
      y="1.1908714"
-     width="128.66426"
+     width="65"
      height="20.923256"
      style="stroke-width:2.38174272"
-     id="rect11" />
+     id="bodyRect" />
   <rect
-     class="x-name x-first x-second x-map y-name y-first y-second y-map"
+     data-stretch="x-map y-map y-first"
+     data-shift="x-firstRect"
+     x="89.838207"
+     y="1.1908714"
+     width="68.66426"
+     height="20.923256"
+     style="stroke-width:2.38174272"
+     id="collectionRect" />
+  <rect
+     data-stretch="x-first y-first y-map"
+     x="89.838207"
+     y="1.1908714"
+     width="68.66426"
+     height="20.923256"
+     style="stroke-width:2.38174272"
+     id="firstRect" />
+  <rect
      x="1.4137776"
      y="4.8984404"
-     width="180.11913"
+     width="60.11913"
      height="14.275121"
      r="0"
      rx="0"
      ry="0"
      style="stroke-width:1.70088053"
-     id="rect10" />
+     data-stretch="y-map y-first"
+     id="firstWideRect" />
+  <rect
+     x="61.4137776"
+     y="4.8984404"
+     width="60.11913"
+     height="14.275121"
+     r="0"
+     rx="0"
+     ry="0"
+     data-stretch="x-map y-map y-first"
+     data-shift="x-firstWideRect"
+     style="stroke-width:1.70088053"
+     id="secondWideRect" />
+  <rect
+     x="121.4137776"
+     y="4.8984404"
+     width="60.11913"
+     height="14.275121"
+     r="0"
+     rx="0"
+     ry="0"
+     style="stroke-width:1.70088053"
+     data-stretch="x-first y-map y-first"
+     data-shift="x-secondWideRect"
+     id="thirdWideRect" />
   <path
      d="m 1.1533373,19.352 a 3.54,3.54 0 0 0 3.54,3.54 l 7.0799997,0 3.54,3.54 9.44,0 3.54,-3.54 0,-3.658"
      style="stroke-width:1.17999995"
      id="path12"
-     class="y-shift-name y-shift-first y-shift-second y-shift-map"
+     data-shift="y-firstWideRect"
      inkscape:connector-curvature="0" />
   <path
      style="stroke-width:1.17999995"
      d="m 154.613,19.186 0,3.53125 23.65625,0 a 3.54,3.54 0 0 0 3.5625,-3.53125 l -27.21875,0 z"
-     id="path15"
-     class="y-shift-name y-shift-first y-shift-second y-shift-map x-shift-name x-shift-first x-shift-second x-shift-map"
+     id="BRCorner"
+     data-shift="x-thirdWideRect y-thirdWideRect"
      inkscape:connector-curvature="0" />
   <path
      inkscape:label="#rect3006"
      inkscape:connector-curvature="0"
      id="first_box"
-     d="m 112.69948,5.7697069 0,0.4034183 -0.23906,-0.2390625 -6.4248,6.4248053 6.4248,6.424805 0.23906,-0.239063 0,0.313769 10.11534,0 0,-0.373535 0.26894,0.268945 6.42481,-6.439746 -6.42481,-6.4248049 -0.26894,0.2689454 0,-0.3884766 -10.11534,0 z"
+     d="m 105.69948,5.7697069 0,0.4034183 -0.23906,-0.2390625 -6.4248,6.4248053 6.4248,6.424805 0.23906,-0.239063 0,0.313769 10.11534,0 0,-0.373535 0.26894,0.268945 6.42481,-6.439746 -6.42481,-6.4248049 -0.26894,0.2689454 0,-0.3884766 -10.11534,0 z"
      style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0.47324049px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-     class="x-shift-name x-shift-second" />
+     data-align-center="y-firstRect" />
   <rect
      inkscape:label="#rect3797-2"
      rx="5"
@@ -128,18 +161,19 @@
      width="23.394461"
      id="map_box"
      style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:0.58804238px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;overflow:hidden"
-     class="x-shift-second x-shift-first x-shift-name" />
+     data-align-center="y-firstRect"
+     data-shift="x-firstRect"/>
   </g>
   <!-- Extra SVG info for WebGME -->
   <!-- Text -->
   <text
-     id="name-6-6"
-     class="x-shift-first x-shift-name"
-     x="135.11314"
+     data-align-center="y-firstRect"
+     data-shift="x-firstRect"
+     x="130.11314"
      y="17.000078"
      style="font-size:12px;overflow:hidden">in</text>
   <text
-     id="name"
+     data-align-center="y-firstRect"
      x="6.4633374"
      y="17"
      style="font-size:12px">remove item at</text>
@@ -158,7 +192,7 @@
      class="connection-area"
      data-ptr="next"
      data-role="out"
-     data-shift="y-shift-first y-shift-name y-shift-map"
+     data-shift="y-path12"
      x1="15.550838"
      y1="26.904751"
      x2="24.550837"
@@ -168,25 +202,26 @@
      class="connection-area"
      data-ptr="first"
      data-role="out"
-     data-shift="x-shift-name"
+     data-align-center="y-firstRect"
      id="first-out"
-     x1="105.008"
-     y1="4.062922"
-     x2="111.008"
-     y2="10.062922" />
+     x1="96"
+     y1="12"
+     x2="96"
+     y2="12" />
   <line
      class="connection-area"
      data-ptr="map"
      data-role="out"
-     data-shift="x-shift-first x-shift-name"
+     data-shift="x-firstRect"
+     data-align-center="y-firstRect"
      id="map-out"
-     x1="149.38612"
-     y1="3.0239666"
-     x2="155.10274"
-     y2="9.0907536" />
+     x1="148"
+     y1="12"
+     x2="148"
+     y2="12" />
   <!-- custom highlighting areas are now supported - must be a line, however -->
   <line
-     class="connection-highlight x-name x-first x-second x-map"
+     class="connection-highlight"
      style="opacity:0;stroke:#444444;stroke-width:10.10658169"
      data-ptr="next"
      data-role="out"
@@ -199,29 +234,20 @@
   <rect
      style="opacity:0"
      class="initial-measure"
-     data-ptr="name"
-     width="69"
-     height="19"
-     x="0.56333733"
-     y="0"
-     id="rect19" />
-  <rect
-     style="opacity:0"
-     class="initial-measure"
      data-ptr="first"
-     width="24"
+     width="30"
      height="15"
      x="0.56333733"
      y="0"
-     id="rect19" />
+     id="rect20" />
   <rect
      style="opacity:0"
      class="initial-measure"
      data-ptr="map"
-     width="24"
+     width="28"
      height="15"
      x="0.56333733"
      y="0"
-     id="rect19" />
+     id="rect21" />
 
 </svg>
