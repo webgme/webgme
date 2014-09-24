@@ -8,7 +8,9 @@
         core:"common/core",
         coreclient:"common/core/users",
         storage:"common/storage",
-        logManager:"common/LogManager"
+        logManager:"common/LogManager",
+        blob:"middleware/blob",
+        superagent:"../node_modules/superagent/superagent"
     },
     optimize:"none",
     insertRequire:["client/js/client"],

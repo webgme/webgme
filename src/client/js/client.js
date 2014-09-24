@@ -14,7 +14,8 @@ define([
     'coreclient/dumpmore',
     'coreclient/import',
     'coreclient/copyimport',
-    'coreclient/serialization'
+    'coreclient/serialization',
+    'blob/BlobClient' //TODO probably there should be other ways to do this
 ],
     function (
         ASSERT,
@@ -30,7 +31,8 @@ define([
         DumpMore,
         MergeImport,
         Import,
-        Serialization
+        Serialization,
+        BlobClient
         ) {
 
         "use strict";
@@ -2924,6 +2926,7 @@ define([
 
         WebGMEGlobal.classes = WebGMEGlobal.classes || {};
         WebGMEGlobal.classes.Client = Client;
+        WebGMEGlobal.classes.BlobClient = BlobClient;
 
         return Client;
     });
