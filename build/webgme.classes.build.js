@@ -1,4 +1,4 @@
-/** vim: et:ts=4:sw=4:sts=4
+var WebGMEGlobal = WebGMEGlobal || {}; WebGMEGlobal.classes = WebGMEGlobal.classes || {};(function(){/** vim: et:ts=4:sw=4:sts=4
  * @license RequireJS 2.1.11 Copyright (c) 2010-2014, The Dojo Foundation All Rights Reserved.
  * Available via the MIT or new BSD license.
  * see: http://github.com/jrburke/requirejs for details
@@ -18834,8 +18834,6 @@ define('blob/BlobClient',['./Artifact', 'blob/BlobMetadata', 'superagent'], func
 
     return BlobClient;
 });
-var WebGMEGlobal = WebGMEGlobal || {};
-WebGMEGlobal.classes = WebGMEGlobal.classes || {};
 define('webgme.classes',['client','blob/BlobClient'],function(Client,BlobClient){
     WebGMEGlobal.classes.Client = Client;
     WebGMEGlobal.classes.BlobClient = BlobClient;
@@ -18843,3 +18841,4 @@ define('webgme.classes',['client','blob/BlobClient'],function(Client,BlobClient)
 
 
 require(["webgme.classes"]);
+}());
