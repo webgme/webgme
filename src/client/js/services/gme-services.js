@@ -247,6 +247,15 @@ angular.module('gme.services', [])
             NodeObj,
             getIdFromNodeOrString;
 
+        /**
+         * Loads the meta nodes from the context (will create a node-service on the dbConn with regions if not present when invoked).
+         * @param {object} context - From where to load the nodes.
+         * @param {string} context.db - Database where the nodes will be loaded from.
+         * @param {string} context.projectId - Project where the nodes will be loaded from.
+         * @param {string} context.branchId - Branch where the nodes will be loaded from.
+         * @param {string} context.regionId - Region where the NodeObjs will be stored.
+         * @returns {Promise} - Returns an array of NodeObjs when resolved.
+         */
         this.getMetaNodes = function (context) {
             var deferred = $q.defer();
             self.loadNode(context, '').then(function (rootNode) {
@@ -274,6 +283,16 @@ angular.module('gme.services', [])
             return deferred.promise;
         };
 
+        /**
+         * Loads a node from context (will create a node-service on the dbConn with regions if not present when invoked).
+         * @param {object} context - From where to look for the node.
+         * @param {string} context.db - Database where the node will be looked for.
+         * @param {string} context.projectId - Project where the node will be looked for.
+         * @param {string} context.branchId - Branch where the node will be looked for.
+         * @param {string} context.regionId - Region where the NodeObj will be stored.
+         * @param {string} id - Path to the node.
+         * @returns {Promise} - Returns a NodeObj when resolved.
+         */
         this.loadNode = function (context, id) {
             var deferred = $q.defer(),
                 dbConn = DataStoreService.getDatabaseConnection(context),
@@ -328,6 +347,18 @@ angular.module('gme.services', [])
             return deferred.promise;
         };
 
+        /**
+         * Creates a new node in the database and returns with the NodeObj.
+         * @param {object} context - Where to create the node.
+         * @param {string} context.db - Database where the node will be created.
+         * @param {string} context.projectId - Project where the node will be created.
+         * @param {string} context.branchId - Branch where the node will be created.
+         * @param {string} context.regionId - Region where the NodeObj will be stored.
+         * @param {NodeObj|string} parent - model where the node should be created.
+         * @param {NodeObj|string} base - base, e.g. meta-type, of the new node.
+         * @param {string} [msg] - optional commit message.
+         * @returns {Promise} - Evaluates to the newly created node (inside context).
+         */
         this.createNode = function (context, parent, base, msg) {
             var deferred = $q.defer(),
                 dbConn = DataStoreService.getDatabaseConnection(context),
@@ -344,11 +375,30 @@ angular.module('gme.services', [])
             return deferred.promise;
         };
 
+        /**
+         * Creates a new node in the database and returns with its assigned id (path).
+         * @param {object} context - Where to create the node.
+         * @param {string} context.db - Database where the node will be created.
+         * @param {string} context.projectId - Project where the node will be created.
+         * @param {string} context.branchId - Branch where the node will be created.
+         * @param {object} parameters - as in client.createChild (see this.createNode for example).
+         * @param {string} [msg] - optional commit message.
+         * @returns {string} - id (path) of new node.
+         */
         this.createChild = function (context, parameters, msg) {
             var dbConn = DataStoreService.getDatabaseConnection(context);
             return dbConn.client.createChild(parameters, msg);
         };
 
+        /**
+         * Removes the node from the context.
+         * @param {object} context - From where to delete the node.
+         * @param {string} context.db - Database from where the node will be deleted.
+         * @param {string} context.projectId - Project from where the node will be deleted.
+         * @param {string} context.branchId - Branch from where the node will be deleted.
+         * @param {NodeObj|string} nodeOrId - node that should be deleted (the NodeObj(s) will be removed from all regions through __OnUnload()).
+         * @param {string} [msg] - optional commit message.
+         */
         this.destroyNode = function (context, nodeOrId, msg) {
             var dbConn = DataStoreService.getDatabaseConnection(context),
                 id = getIdFromNodeOrString(nodeOrId),
@@ -360,6 +410,13 @@ angular.module('gme.services', [])
             }
         };
 
+        /**
+         * Removes all references and listeners attached to any NodeObj in the region.
+         * N.B. This function must be invoked for all regions that a "user" created.
+         * This is typically done in the "$scope.on($destroy)"-function of a controller.
+         * @param {object} context - context region is part of.
+         * @param {string} context.regionId - Region to clean-up.
+         */
         this.cleanUpRegion = function (context) {
             var key,
                 dbConn = DataStoreService.getDatabaseConnection(context),
@@ -374,6 +431,10 @@ angular.module('gme.services', [])
             delete dbConn.nodeService.regions[context.regionId];
         };
 
+        /**
+         * Logs the data-base connection with its node-services and regions therein.
+         * @param context - The context to log.
+         */
         this.logContext = function (context) {
             var dbConn = DataStoreService.getDatabaseConnection(context);
             console.log('logContext: ', context.regionId, dbConn);
@@ -422,14 +483,16 @@ angular.module('gme.services', [])
         };
 
         /** Gets nodeIds of nodes this node points 'to' and is pointed to 'from'.
-         * @param name - name of pointer.
-         * @returns {object} - with keys 'to' {string} and 'from' {[string]}
+         * @param {string} name - name of pointer, e.g. 'src', 'dst'.
+         * @returns {object} pointers - object with ids.
+         * @returns {string} pointers.to - node id the pointer of this NodeObj points to.
+         * @returns {[string]} pointers.from - node ids of nodes that points to this NodeObj through the pointer.
          */
         NodeObj.prototype.getPointer = function (name) {
             return this.databaseConnection.client.getNode(this.id).getPointer(name);
         };
 
-        NodeObj.prototype.setPointer = function (name, nodeOrId) {
+        NodeObj.prototype.setPointer = function (name, nodeOrId, msg) {
 
         };
 
