@@ -17,7 +17,7 @@
     text-overflow: ellipsis;
     height: 16px;
     line-height: 16px;
-    background-color: #fff; }
+    /*background-color: #fff;*/ }
   .svg-decorator.abstract .name {
     font-style: italic;
     color: #aaaaaa; }
