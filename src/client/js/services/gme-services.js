@@ -244,23 +244,139 @@ angular.module('gme.services', [])
 
     .service('NodeService', function ($timeout, $q, DataStoreService, BranchService) {
         var self = this,
-            Node,
+            NodeObj,
             getIdFromNodeOrString;
 
-        getIdFromNodeOrString = function (nodeOrId) {
-            if (typeof nodeOrId === 'string') {
-                return nodeOrId;
+        this.getMetaNodes = function (context) {
+            var deferred = $q.defer();
+            self.loadNode(context, '').then(function (rootNode) {
+                var metaNodeIds = rootNode.getMemberIds('MetaAspectSet'),
+                    queueList = [],
+                    i;
+                //console.log(metaNodeIds);
+                for (i = 0; i < metaNodeIds.length; i += 1) {
+                    queueList.push(self.loadNode(context, metaNodeIds[i]));
+                }
+                $q.all(queueList).then(function (metaNodes) {
+                    var key,
+                        metaNode,
+                        meta = {};
+                    for (key in metaNodes) {
+                        if (metaNodes.hasOwnProperty(key)) {
+                            metaNode = metaNodes[key];
+                            meta[metaNode.getAttribute('name')] = metaNode;
+                        }
+                    }
+                    deferred.resolve(meta);
+                });
+            });
+
+            return deferred.promise;
+        };
+
+        this.loadNode = function (context, id) {
+            var deferred = $q.defer(),
+                dbConn = DataStoreService.getDatabaseConnection(context),
+                territoryId,
+                territoryPattern = {},
+                nodes;
+
+            console.assert(typeof context.regionId === 'string');
+
+            territoryId = context.regionId + '_' + id;
+            dbConn.nodeService = dbConn.nodeService || {};
+            dbConn.nodeService.regions = dbConn.nodeService.regions || {};
+            dbConn.nodeService.regions[context.regionId] = dbConn.nodeService.regions[context.regionId] || {
+                regionId: context.regionId,
+                nodes: {}
+            };
+
+            nodes = dbConn.nodeService.regions[context.regionId].nodes;
+            //console.log('territoryId', territoryId);
+            if (nodes.hasOwnProperty(id)) {
+                console.log('Node already loaded..', id);
+                deferred.resolve(nodes[id]);
+            } else {
+                dbConn.client.addUI({}, function (events) {
+                    var i,
+                        event;
+
+                    for (i = 0; i < events.length; i += 1) {
+                        event = events[i];
+                        if (id !== event.eid) {
+                            continue;
+                        }
+                        if (event.etype === 'load') {
+                            nodes[id] = new NodeObj(context, id);
+                            nodes[id].territories.push(territoryId);
+                            deferred.resolve(nodes[id]);
+                        } else if (event.etype === 'update') {
+                            nodes[id]._onUpdate(event.eid);
+                        } else if (event.etype === 'unload') {
+                            nodes[id]._onUnload(event.eid);
+                            nodes[id].__onUnload();
+                        } else {
+                            throw 'Unexpected event type' + events[i].etype;
+                        }
+                    }
+                }, territoryId);
+
+                territoryPattern[id] = {children: 0};
+                dbConn.client.updateTerritory(territoryId, territoryPattern);
             }
 
-            if (typeof nodeOrId === 'object') {
-                if (nodeOrId.hasOwnProperty('getId')) {
-                    return nodeOrId.getId();
-                } else {
-                    console.error(nodeOrId, ' does not have a getId function');
-                }
+            return deferred.promise;
+        };
+
+        this.createNode = function (context, parent, base, msg) {
+            var deferred = $q.defer(),
+                dbConn = DataStoreService.getDatabaseConnection(context),
+                parentId = getIdFromNodeOrString(parent),
+                baseId = getIdFromNodeOrString(base),
+                id;
+
+            id = dbConn.client.createChild({parentId: parentId, baseId: baseId}, msg);
+
+            self.loadNode(context, id, function (node) {
+                deferred.resolve(node);
+            });
+
+            return deferred.promise;
+        };
+
+        this.createChild = function (context, parameters, msg) {
+            var dbConn = DataStoreService.getDatabaseConnection(context);
+            return dbConn.client.createChild(parameters, msg);
+        };
+
+        this.destroyNode = function (context, nodeOrId, msg) {
+            var dbConn = DataStoreService.getDatabaseConnection(context),
+                id = getIdFromNodeOrString(nodeOrId),
+                nodeToDelete = dbConn.client.getNode(id);
+            if (nodeToDelete) {
+                dbConn.client.delMoreNodes([id], msg);
             } else {
-                console.error(nodeOrId, ' is not a string nor an object.');
+                console.warn('Requested deletion of node that does not exist in context! (id, context) ', id, context);
             }
+        };
+
+        this.cleanUpRegion = function (context) {
+            var key,
+                dbConn = DataStoreService.getDatabaseConnection(context),
+                nodes = dbConn.nodeService.regions[context.regionId].nodes;
+            // Go through all nodes and remove the territories associated with each node.
+            for (key in nodes) {
+                if (nodes.hasOwnProperty(key)) {
+                    nodes[key].cleanUpNode();
+                }
+            }
+            // Remove the reference to the region (includes) nodes.
+            delete dbConn.nodeService.regions[context.regionId];
+        };
+
+        this.logContext = function (context) {
+            var dbConn = DataStoreService.getDatabaseConnection(context);
+            console.log('logContext: ', context.regionId, dbConn);
         };
 
         NodeObj = function (context, id) {
@@ -352,7 +468,6 @@ angular.module('gme.services', [])
         NodeObj.prototype.loadChildren = function () {
             var childrenIds = this.getChildrenIds(),
                 queueList = [],
-                all,
                 i;
 
             for (i = 0; i < childrenIds.length; i += 1) {
@@ -410,7 +525,6 @@ angular.module('gme.services', [])
             var dbConn = this.databaseConnection,
                 context = this.context,
                 territoryPattern = {},
-                nodes,
                 id = this.id,
                 terrId = context.regionId + '_' + id + '_new_children_watch';
             //console.log(dbConn);
@@ -444,171 +558,20 @@ angular.module('gme.services', [])
             }
         };
 
-        this.getMetaNodes = function (context) {
-            var deferred = $q.defer(),
-                dbConn = DataStoreService.getDatabaseConnection(context),
-                metaNodes;
-            self.loadNode(context, '').then(function (rootNode) {
-                var metaNodeIds = rootNode.getMemberIds('MetaAspectSet'),
-                    queueList = [],
-                    i;
-                //console.log(metaNodeIds);
-                for (i = 0; i < metaNodeIds.length; i += 1) {
-                    queueList.push(self.loadNode(context, metaNodeIds[i]));
-                }
-                $q.all(queueList).then(function (metaNodes) {
-                    var key,
-                        metaNode,
-                        meta = {};
-                    for (key in metaNodes) {
-                        if (metaNodes.hasOwnProperty(key)) {
-                            metaNode = metaNodes[key];
-                            meta[metaNode.getAttribute('name')] = metaNode;
-                        }
-                    }
-                    deferred.resolve(meta);
-                });
-            });
-
-            return deferred.promise;
-        }
-
-        this.loadNode = function (context, id) {
-            var deferred = $q.defer(),
-                dbConn = DataStoreService.getDatabaseConnection(context),
-                territoryId,
-                territoryPattern = {},
-                nodes;
-
-            console.assert(typeof context.regionId === 'string');
-
-            territoryId = context.regionId + '_' + id;
-            dbConn.nodeService = dbConn.nodeService || {};
-            dbConn.nodeService.regions = dbConn.nodeService.regions || {};
-            dbConn.nodeService.regions[context.regionId] = dbConn.nodeService.regions[context.regionId] || {
-                regionId: context.regionId,
-                nodes: {}
-            };
-
-            nodes = dbConn.nodeService.regions[context.regionId].nodes;
-            //console.log('territoryId', territoryId);
-            if (nodes.hasOwnProperty(id)) {
-                console.log('Node already loaded..');
-                deferred.resolve(nodes[id]);
-            } else {
-                dbConn.client.addUI({}, function (events) {
-                    var i,
-                        event;
-
-                    for (i = 0; i < events.length; i += 1) {
-                        event = events[i];
-                        if (id !== event.eid) {
-                            continue;
-                        }
-                        if (event.etype === 'load') {
-                            nodes[id] = new NodeObj(context, id);
-                            nodes[id].territories.push(territoryId);
-                            deferred.resolve(nodes[id]);
-                        } else if (event.etype === 'update') {
-                            nodes[id]._onUpdate(event.eid);
-                        } else if (event.etype === 'unload') {
-                            nodes[id]._onUnload(event.eid);
-                            nodes[id].__onUnload();
-                        } else {
-                            throw 'Unexpected event type' + events[i].etype;
-                        }
-                    }
-                }, territoryId);
-
-                territoryPattern[id] = {children: 0};
-                dbConn.client.updateTerritory(territoryId, territoryPattern);
+        getIdFromNodeOrString = function (nodeOrId) {
+            if (typeof nodeOrId === 'string') {
+                return nodeOrId;
             }
 
-            return deferred.promise;
-        };
-
-        this.loadNodeOld = function (context, id) {
-            var deferred = $q.defer(),
-                dbConn = DataStoreService.getDatabaseConnection(context),
-                territory,
-                nodes;
-
-            dbConn.nodeService = dbConn.nodeService || {};
-            dbConn.nodeService.nodes = dbConn.nodeService.nodes || {};
-            dbConn.nodeService.territories = dbConn.nodeService.territories || {};
-
-            nodes = dbConn.nodeService.nodes;
-
-            if (nodes.hasOwnProperty(id)) {
-                deferred.resolve(nodes[id]);
-            } else {
-                // TODO: create territory if does not exist
-                if (dbConn.nodeService.territories.hasOwnProperty(context.territoryId)) {
-                    territory = dbConn.nodeService.territories[context.territoryId];
+            if (typeof nodeOrId === 'object') {
+                if (typeof nodeOrId['getId'] === 'function') {
+                    return nodeOrId.getId();
                 } else {
-                    dbConn.client.addUI({}, function (events) {
-                        var i,
-                            event;
-
-                        // TODO: fill in this
-                        for (i = 0; i < events.length; i += 1) {
-                            event = events[i];
-                            if (event.eid === id && event.etype === 'load') {
-                                // TODO: when node is loaded resolve promise
-                                nodes[id] = new NodeObj(dbConn, id);
-                                deferred.resolve(nodes[id]);
-                            }
-                        }
-
-                    }, context.territoryId);
-
-                    // TODO: add territory rule
-                    territory = {};
-                    territory.id = context.territoryId;
-                    territory.patterns = territory.patterns || {};
-                    territory.patterns[id] = {children: 0}; // FIXME: how to update this correctly ???
-
-                    dbConn.nodeService.territories[context.territoryId] = territory;
-
-                    dbConn.client.updateTerritory(context.territoryId, territory.patterns);
+                    console.error(nodeOrId, ' does not have a getId function');
                 }
-            }
-
-            return deferred.promise;
-        };
-
-        this.createChild = function (context, parameters) {
-            // NS.createChild({parent: parentNode/id, base: baseNode/id}) – current one on client takes {parentId and baseId}
-        };
-
-        this.destroyNode = function (context, nodeOrId, msg) {
-            var dbConn = DataStoreService.getDatabaseConnection(context),
-                id = getIdFromNodeOrString(nodeOrId),
-                nodeToDelete = dbConn.client.getNode(id);
-            if (nodeToDelete) {
-                dbConn.client.delMoreNodes([id], msg);
             } else {
-                console.warn('Requested deletion of node that does not exist in context! (id, context) ', id, context);
+                console.error(nodeOrId, ' is not a string nor an object.');
             }
-        };
-
-        this.cleanUpRegion = function (context) {
-            var key,
-                dbConn = DataStoreService.getDatabaseConnection(context),
-                nodes = dbConn.nodeService.regions[context.regionId].nodes;
-            // Go through all nodes and remove the territories associated with each node.
-            for (key in nodes) {
-                if (nodes.hasOwnProperty(key)) {
-                    nodes[key].cleanUpNode();
-                }
-            }
-            // Remove the reference to the region (includes) nodes.
-            delete dbConn.nodeService.regions[context.regionId];
-        };
-
-        this.logContext = function (context) {
-            var dbConn = DataStoreService.getDatabaseConnection(context);
-            console.log('logContext: ', context.regionId, dbConn);
         };
 
         this.on = function (context, eventName, fn) {
