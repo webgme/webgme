@@ -14,8 +14,7 @@ define([
     'coreclient/dumpmore',
     'coreclient/import',
     'coreclient/copyimport',
-    'coreclient/serialization',
-    'blob/BlobClient' //TODO probably there should be other ways to do this
+    'coreclient/serialization'
 ],
     function (
         ASSERT,
@@ -82,7 +81,14 @@ define([
                 _constraintCallback = null,
                 AllPlugins,AllDecorators;
 
-            require(['/listAllDecorators','/listAllPlugins'],function(d,p){
+            if(!_configuration.host){
+                if(window){
+                    _configuration.host = window.location.protocol+"//"+window.location.host;
+                } else {
+                    _configuration.host = "";
+                }
+            }
+            require([_configuration.host+'/listAllDecorators',_configuration.host+'/listAllPlugins'],function(d,p){
                 AllDecorators = d;
                 AllPlugins = p;
             });
@@ -150,7 +156,7 @@ define([
             }
 
             function newDatabase(){
-                return Storage({log:LogManager.create('client-storage'),user:getUserId()});
+                return Storage({log:LogManager.create('client-storage'),user:getUserId(),host:_configuration.host});
             }
 
             function changeBranchState(newstate){
@@ -2923,10 +2929,6 @@ define([
 
             };
         }
-
-        WebGMEGlobal.classes = WebGMEGlobal.classes || {};
-        WebGMEGlobal.classes.Client = Client;
-        WebGMEGlobal.classes.BlobClient = BlobClient;
 
         return Client;
     });

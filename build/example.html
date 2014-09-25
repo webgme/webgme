@@ -2,29 +2,52 @@
 <html>
 <head lang="en">
     <meta charset="UTF-8">
-    <script src="client.build.js"></script>
+    <script src="webgme.classes.build.js"></script>
     <title>example page for webgme server test</title>
 </head>
 <body>
-<button type="button" onclick=checkWebGME()>Click Me!</button>
+<button type="button" onclick=checkWebGME()>Click Me!</button><br>
+<textarea id="onScreenConsole" cols="100" rows="20"></textarea>
 </body>
 <script>
+    var consoleText = "";
+    var logToScreen = function(txt){
+        consoleText += txt + "\n";
+        document.getElementById("onScreenConsole").innerText = consoleText;
+    };
     var checkWebGME = function(){
-        console.log('built client script loaded');
-        console.log(typeof WebGMEGlobal);
         if(WebGMEGlobal){
+            logToScreen('global entity WebGMEGlobal exists');
             if(WebGMEGlobal.classes && WebGMEGlobal.classes.Client){
-                var myClient = new WebGMEGlobal.classes.Client({host:'http://127.0.0.1:8080'});
+                logToScreen('Client class exists');
+                var myClient = new WebGMEGlobal.classes.Client({
+                    host:'http://127.0.0.1',
+                    mongodatabase:'multi',
+                    mongoip:'127.0.0.1',
+                    mongoport:27017
+                });
                 if(myClient){
-
+                    logToScreen("Client object have been created successfully");
+                    myClient.connectToDatabaseAsync({},function(err){
+                        logToScreen('connected to webGME server ['+JSON.stringify(err || null)+']');
+                        if(!err){
+                            myClient.getFullProjectsInfoAsync(function(err,info){
+                                logToScreen('getting project info finished ['+JSON.stringify(err || null)+']');
+                                if(!err){
+                                    logToScreen(JSON.stringify(info || {},null,2));
+                                    logToScreen('Client class is useful and connection seems good!');
+                                }
+                            });
+                        }
+                    });
                 } else {
-                    console.log('cannot create client object');
+                    logToScreen('cannot create client object');
                 }
             } else {
-                console.log('the structure of WebGMEGlobal is wrong');
+                logToScreen('the structure of WebGMEGlobal is wrong');
             }
         } else {
-            console.log("WebGMEGlobal have not been created!!!");
+            logToScreen("WebGMEGlobal have not been created!!!");
         }
     };
 </script>
