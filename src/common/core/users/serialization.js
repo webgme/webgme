@@ -51,7 +51,7 @@ define(['util/assert'],function(ASSERT){
             _export.relids = getRelIdInfo();
             _export.containment = {}; fillContainmentTree(libraryRoot,_export.containment);
             _export.nodes = getNodesData();
-            _export.metaSheets = getMetaSheetInfo(_core.getRoot(libraryRoot));
+            _export.metaSheets = core.getParent(libraryRoot) ? getMetaSheetInfo(_core.getRoot(libraryRoot)) : {}; //we export MetaSheet info only if not the whole project is exported!!!
 
             callback(null,_export);
 
