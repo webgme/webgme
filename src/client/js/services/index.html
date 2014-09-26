@@ -88,7 +88,7 @@
                         console.log('Setup connection', databaseId);
                         DataStoreService.connectToDatabase(databaseId, {host: window.location.basename})
                                 .then(function () {
-                                    console.log('Connection is ready.');
+                                    console.log('Connection is ready.', databaseId);
 
                                     registerForNodeService(databaseId);
 
@@ -127,6 +127,10 @@
                                     console.log(node.getAttribute('name'), {db: context1, regionId: 'TestRegion2'}, ' - 2nd update implementation');
                                 });
                                 node.setAttribute('name', 'Root ' + (new Date()).toISOString());
+
+                                setTimeout(function () {
+                                    BranchService.selectBranch(context1, 'b1');
+                                }, 500);
                             })
                             .catch(function (reason) {
                                 console.error(reason);
