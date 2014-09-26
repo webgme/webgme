@@ -6,7 +6,7 @@
 </head>
 <body>
 
-<script src="/extlib/build/webgme.classes.build.js"></script>
+<script src="/extlib/dist/webgme.classes.build.js"></script>
 
 <script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.20/angular.js"></script>
 <script src="gme-services.js"></script>
@@ -83,11 +83,21 @@
                     };
 
                     setupConnection = function (databaseId) {
-                        var deferred = new $q.defer();
+                        var deferred = new $q.defer(),
+                            connectionOptions = {
+                                host: window.location.basename
+                            };
+
+//                        {
+//                            host:'http://dev.webgme.org',
+//                            mongodatabase:'webgme',
+//                            mongoip:'127.0.0.1',
+//                            mongoport:27017
+//                        }
 
                         console.log('Setup connection', databaseId);
 
-                        DataStoreService.connectToDatabase(databaseId, {host: window.location.basename})
+                        DataStoreService.connectToDatabase(databaseId, connectionOptions)
                                 .then(function () {
                                     console.log('Connection is ready.', databaseId);
 
