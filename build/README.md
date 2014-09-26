@@ -19,13 +19,9 @@ This module offers our main classes to build a specialized web-site.
    * !!! webgme.classes.build.js is currently not generated automatically so please whenever you make update to the webgme project, recreate it !!!
    * The makefile to build webgme.classes.build.js is build\cbuild.js. To build you have to use the requirejs's optimizer with the cbuild.js make file.
 ```
-    //windows example executing from build directory
-    C:...\build> node ..\node_modules\requirejs\bin\r.js -o cbuild.js
+    //example executing from build directory - works on 
+    node ..\node_modules\requirejs\bin\r.js -o cbuild.js
 ```
-```    
-    //linux example executing from build directory
-    .../build> node ../node_modules/requirejs/requirejs.js -o cbuild.js
-```    
    * Please note that in some cases you may also update the cbuild.js (with the new paths for example).
    * To provide a new class through this module you have to update webgme.classes.js module
 
