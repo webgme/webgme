@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+
+<script src="/extlib/build/webgme.classes.build.js"></script>
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.20/angular.js"></script>
+<script src="gme-services.js"></script>
+
+<script type="text/javascript">
+    var clientLoaded,
+            timeout = 5000, // 10 seconds
+            waitCounter = 0,
+            i,
+            success,
+            usedClasses = ["Client"],
+            interval = 200, // 100 milliseconds interval
+            waitForLoadId = setInterval(function () {
+                if (window.WebGMEGlobal &&
+                        window.WebGMEGlobal.classes) {
+                    // TODO: check for all classes that we use
+                    clearInterval(waitForLoadId);
+                    success = true;
+
+                    for (i = 0; i < usedClasses.length; i += 1) {
+                        if (window.WebGMEGlobal.classes.hasOwnProperty(usedClasses[i])) {
+                            console.log('WebGME ' + usedClasses[i] + ' is available.');
+                        } else {
+                            console.error('WebGME ' + usedClasses[i] + ' was not found.');
+                            success = false;
+                        }
+                    }
+
+                    if (success) {
+                        console.log('WebGME client library is ready to use.');
+                        clientLoaded();
+                    }
+                } else {
+                    console.log('Waiting for WebGME client library to load.');
+                    waitCounter += 1;
+                    if (waitCounter >= timeout / interval) {
+                        clearInterval(waitForLoadId);
+                        console.error('WebGME client library was not loaded within a reasonable time. (' + (timeout / 1000) + ' s)');
+                    }
+                }
+            }, interval);
+
+    clientLoaded = function () {
+        // main entry point of the app.js
+        // once the webgme Client is loaded and ready we can use it.
+
+
+        var testApp = angular.module('testApp', ['gme.services'])
+                .run(function (DataStoreService, ProjectService, BranchService, NodeService) {
+                    var context = {db: 'my-connection-id'};
+
+
+                    console.log('test app is running.');
+
+
+                    console.log('Setup connection', context);
+                    DataStoreService.connectToDatabase(context)
+                            .then(function () {
+                                console.log('Connection is ready.');
+
+
+                                console.log('Setup node service', context);
+                                NodeService.on(context, 'initialize', function () {
+                                    var contextWithRegion = {
+                                        db: context.db,
+                                        regionId: 'TestRegion'
+                                    };
+
+                                    console.log('Initialize called', context);
+                                    console.log('Loading node for', contextWithRegion);
+                                    NodeService.loadNode(contextWithRegion, '')
+                                            .then(function (node) {
+                                                console.log('Node was loaded', node);
+                                                node.onUpdate(function () {
+                                                      console.log(node.getAttribute('name'));
+                                                });
+                                            });
+                                });
+
+
+                                console.log('Selecting project Test', context);
+                                ProjectService.openProject({db: context.db, projectId: 'Test'})
+                                        .then(function () {
+                                            console.log('Project ADMEditor is opened.');
+
+                                            console.log('Selecting b1 branch', context);
+                                            BranchService.selectBranch({db: context.db, projectId: 'Test', branchId: 'b1'})
+                                                    .then(function () {
+                                                        console.log('b1 branch is selected.');
+
+
+                                                        console.log('Selecting master branch', context);
+                                                        BranchService.selectBranch({db: context.db, projectId: 'Test', branchId: 'master'})
+                                                                .then(function () {
+                                                                    console.log('master branch is selected.');
+                                                                });
+                                                    });
+                                        })
+                                        .catch(function (reason) {
+                                            console.error(reason);
+                                        });
+
+                            });
+                });
+
+        angular.bootstrap(document, ['testApp']);
+
+    };
+
+</script>
+
+</body>
+</html>

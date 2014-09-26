@@ -431,6 +431,22 @@ angular.module('gme.services', [])
             delete dbConn.nodeService.regions[context.regionId];
         };
 
+
+        this.cleanUpAllRegions = function (context) {
+            var dbConn = DataStoreService.getDatabaseConnection(context),
+                regionId;
+
+            if (dbConn.nodeService) {
+                console.log(dbConn.nodeService.regions);
+                for (regionId in dbConn.nodeService.regions) {
+                    if (dbConn.nodeService.regions.hasOwnProperty(regionId)) {
+                        self.cleanUpRegion({db: context.db, regionId: regionId});
+                    }
+                }
+                console.log(dbConn.nodeService.regions);
+            }
+        };
+
         /**
          * Logs the data-base connection with its node-services and regions therein.
          * @param context - The context to log.
@@ -653,6 +669,8 @@ angular.module('gme.services', [])
                 BranchService.on(context, 'initialize', function (c) {
                     var dbConnEvent = DataStoreService.getDatabaseConnection(c),
                         i;
+
+                    self.cleanUpAllRegions(c);
 
                     if (dbConnEvent.nodeService &&
                         dbConnEvent.nodeService.events &&
