@@ -1,1 +1,1 @@
-sass --watch ..\..\:..\..\
+sass --watch .\:.\
