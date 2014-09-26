@@ -703,7 +703,9 @@ define( [
 
   ProjectNavigatorController.prototype.removeBranch = function ( projectId, branchId ) {
     var self = this,
-      i;
+        currentProject = self.$scope.navigator.items[self.navIdProject],
+        currentBranch = self.$scope.navigator.items[self.navIdBranch],
+        i;
 
     if ( self.projects.hasOwnProperty( projectId ) && self.projects[projectId].branches.hasOwnProperty( branchId ) ) {
       delete self.projects[projectId].branches[branchId];
@@ -719,7 +721,9 @@ define( [
         }
       }
 
-      self.selectProject( {projectId: projectId} );
+      if(currentProject === projectId && currentBranch === branchId){
+          self.selectProject( {projectId: projectId} );
+      }
 
       self.update();
     }
