@@ -124,7 +124,7 @@
                             .then(function (node) {
                                 console.log(node);
                                 node.onUpdate(function () {
-                                    console.log('2nd update implementation:', node.getAttribute('name'), {db: context1, regionId: 'TestRegion2'});
+                                    console.log(node.getAttribute('name'), {db: context1, regionId: 'TestRegion2'}, ' - 2nd update implementation');
                                 });
                                 node.setAttribute('name', 'Root ' + (new Date()).toISOString());
                             })

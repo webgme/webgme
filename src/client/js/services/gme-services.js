@@ -42,6 +42,8 @@ angular.module('gme.services', [])
 
             console.error(databaseId + ' does not have an active database connection.');
         };
+
+        // TODO: on selected project changed, on initialize and on destroy (socket.io connected/disconnected)
     })
 
     .service('ProjectService', function ($timeout, $q, DataStoreService) {
@@ -94,6 +96,8 @@ angular.module('gme.services', [])
 
             return deferred.promise;
         };
+
+        // TODO: on selected project changed, on initialize and on destroy
     })
 
     .service('BranchService', function ($timeout, $q, ProjectService, DataStoreService) {
@@ -125,7 +129,8 @@ angular.module('gme.services', [])
         };
 
         this.on = function (databaseId, eventName, fn) {
-            var dbConn;
+            var dbConn,
+                i;
 
             console.assert(typeof databaseId === 'string');
             console.assert(typeof eventName === 'string');
@@ -140,42 +145,39 @@ angular.module('gme.services', [])
                 // TODO: register for project events
 
                 // this should not be an inline function
-                (function (dbConnEvent, dbId) {
-                    var i;
 
-                    dbConnEvent.client.addEventListener(dbConnEvent.client.events.BRANCH_CHANGED, function (projectId /* FIXME */, branchId) {
+                dbConn.client.addEventListener(dbConn.client.events.BRANCH_CHANGED, function (projectId /* FIXME */, branchId) {
 
-                        dbConnEvent.branchService.branchId = branchId;
+                    dbConn.branchService.branchId = branchId;
 
-                        console.log('There was a BRANCH_CHANGED event', branchId);
-                        if (branchId) {
-                            // initialize
-                            if (dbConnEvent.branchService &&
-                                dbConnEvent.branchService.events &&
-                                dbConnEvent.branchService.events.initialize) {
+                    console.log('There was a BRANCH_CHANGED event', branchId);
+                    if (branchId) {
+                        // initialize
+                        if (dbConn.branchService &&
+                            dbConn.branchService.events &&
+                            dbConn.branchService.events.initialize) {
 
-                                dbConnEvent.branchService.isInitialized = true;
+                            dbConn.branchService.isInitialized = true;
 
-                                for (i = 0; i < dbConnEvent.branchService.events.initialize.length; i += 1) {
-                                    dbConnEvent.branchService.events.initialize[i](dbId);
-                                }
-                            }
-                        } else {
-                            // branchId is falsy, empty or null or undefined
-                            // destroy
-                            if (dbConnEvent.branchService &&
-                                dbConnEvent.branchService.events &&
-                                dbConnEvent.branchService.events.destroy) {
-
-                                dbConnEvent.branchService.isInitialized = false;
-
-                                for (i = 0; i < dbConnEvent.branchService.events.destroy.length; i += 1) {
-                                    dbConnEvent.branchService.events.destroy[i](dbId);
-                                }
+                            for (i = 0; i < dbConn.branchService.events.initialize.length; i += 1) {
+                                dbConn.branchService.events.initialize[i](databaseId);
                             }
                         }
-                    });
-                })(dbConn, databaseId);
+                    } else {
+                        // branchId is falsy, empty or null or undefined
+                        // destroy
+                        if (dbConn.branchService &&
+                            dbConn.branchService.events &&
+                            dbConn.branchService.events.destroy) {
+
+                            dbConn.branchService.isInitialized = false;
+
+                            for (i = 0; i < dbConn.branchService.events.destroy.length; i += 1) {
+                                dbConn.branchService.events.destroy[i](databaseId);
+                            }
+                        }
+                    }
+                });
 
             }
 
