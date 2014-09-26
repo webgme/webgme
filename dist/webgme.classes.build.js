@@ -2067,7 +2067,7 @@ var requirejs, require, define;
     req(cfg);
 }(this));
 
-define("../node_modules/requirejs/require", function(){});
+define("node_modules/requirejs/require", function(){});
 
 /*
  * Copyright (C) 2012 Vanderbilt University, All rights reserved.
@@ -18834,7 +18834,7 @@ define('blob/BlobClient',['./Artifact', 'blob/BlobMetadata', 'superagent'], func
 
     return BlobClient;
 });
-define('webgme.classes',['client','blob/BlobClient'],function(Client,BlobClient){
+define('webgme.classes', ['client','blob/BlobClient'],function(Client,BlobClient){
     WebGMEGlobal.classes.Client = Client;
     WebGMEGlobal.classes.BlobClient = BlobClient;
 });

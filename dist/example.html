@@ -18,6 +18,7 @@
     var checkWebGME = function(){
         if(WebGMEGlobal){
             logToScreen('global entity WebGMEGlobal exists');
+
             if(WebGMEGlobal.classes && WebGMEGlobal.classes.Client){
                 logToScreen('Client class exists');
                 var myClient = new WebGMEGlobal.classes.Client({
