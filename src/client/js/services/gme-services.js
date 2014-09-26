@@ -131,32 +131,34 @@
                 dbConn.client.addEventListener(dbConn.client.events.PROJECT_OPENED,
                     function (dummy /* FIXME */, projectId) {
 
-                        dbConn.projectService.projectId = projectId;
+                        if (dbConn.projectService.projectId !== projectId) {
+                            dbConn.projectService.projectId = projectId;
 
-                        console.log('There was a PROJECT_OPENED event', projectId);
-                        if (projectId) {
-                            // initialize
-                            if (dbConn.projectService &&
-                                dbConn.projectService.events &&
-                                dbConn.projectService.events.initialize) {
+                            console.log('There was a PROJECT_OPENED event', projectId);
+                            if (projectId) {
+                                // initialize
+                                if (dbConn.projectService &&
+                                    dbConn.projectService.events &&
+                                    dbConn.projectService.events.initialize) {
 
-                                dbConn.projectService.isInitialized = true;
+                                    dbConn.projectService.isInitialized = true;
 
-                                for (i = 0; i < dbConn.projectService.events.initialize.length; i += 1) {
-                                    dbConn.projectService.events.initialize[i](databaseId);
+                                    for (i = 0; i < dbConn.projectService.events.initialize.length; i += 1) {
+                                        dbConn.projectService.events.initialize[i](databaseId);
+                                    }
                                 }
-                            }
-                        } else {
-                            // branchId is falsy, empty or null or undefined
-                            // destroy
-                            if (dbConn.projectService &&
-                                dbConn.projectService.events &&
-                                dbConn.projectService.events.destroy) {
+                            } else {
+                                // branchId is falsy, empty or null or undefined
+                                // destroy
+                                if (dbConn.projectService &&
+                                    dbConn.projectService.events &&
+                                    dbConn.projectService.events.destroy) {
 
-                                dbConn.projectService.isInitialized = false;
+                                    dbConn.projectService.isInitialized = false;
 
-                                for (i = 0; i < dbConn.projectService.events.destroy.length; i += 1) {
-                                    dbConn.projectService.events.destroy[i](databaseId);
+                                    for (i = 0; i < dbConn.projectService.events.destroy.length; i += 1) {
+                                        dbConn.projectService.events.destroy[i](databaseId);
+                                    }
                                 }
                             }
                         }
@@ -297,33 +299,36 @@
                 dbConn.client.addEventListener(dbConn.client.events.BRANCH_CHANGED,
                     function (projectId /* FIXME */, branchId) {
 
-                        dbConn.branchService.branchId = branchId;
+                        if (dbConn.branchService.branchId !== branchId) {
 
-                        console.log('There was a BRANCH_CHANGED event', branchId);
-                        if (branchId) {
-                            // initialize
-                            if (dbConn.branchService &&
-                                dbConn.branchService.events &&
-                                dbConn.branchService.events.initialize) {
+                            dbConn.branchService.branchId = branchId;
 
-                                dbConn.branchService.isInitialized = true;
+                            console.log('There was a BRANCH_CHANGED event', branchId);
+                            if (branchId) {
+                                // initialize
+                                if (dbConn.branchService &&
+                                    dbConn.branchService.events &&
+                                    dbConn.branchService.events.initialize) {
 
-                                for (i = 0; i < dbConn.branchService.events.initialize.length; i += 1) {
-                                    dbConn.branchService.events.initialize[i](databaseId);
+                                    dbConn.branchService.isInitialized = true;
+
+                                    for (i = 0; i < dbConn.branchService.events.initialize.length; i += 1) {
+                                        dbConn.branchService.events.initialize[i](databaseId);
+                                    }
                                 }
-                            }
-                        } else {
-                            // branchId is falsy, empty or null or undefined
-                            // destroy
-                            if (dbConn.branchService &&
-                                dbConn.branchService.events &&
-                                dbConn.branchService.events.destroy) {
+                            } else {
+                                // branchId is falsy, empty or null or undefined
+                                // destroy
+                                if (dbConn.branchService &&
+                                    dbConn.branchService.events &&
+                                    dbConn.branchService.events.destroy) {
 
-                                dbConn.branchService.isInitialized = false;
-                                delete dbConn.branchService.branchId;
+                                    dbConn.branchService.isInitialized = false;
+                                    delete dbConn.branchService.branchId;
 
-                                for (i = 0; i < dbConn.branchService.events.destroy.length; i += 1) {
-                                    dbConn.branchService.events.destroy[i](databaseId);
+                                    for (i = 0; i < dbConn.branchService.events.destroy.length; i += 1) {
+                                        dbConn.branchService.events.destroy[i](databaseId);
+                                    }
                                 }
                             }
                         }
