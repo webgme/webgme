@@ -1,10 +1,8 @@
 /*globals angular, console */
 
-angular.module('gme.services', [])
-
-    .service('DataStoreService', function ($timeout, $q) {
-        'use strict';
-
+(function () {
+    'use strict';
+    function DataStoreService($q) {
         var datastores = {};
 
         this.connectToDatabase = function (databaseId, options) {
@@ -44,11 +42,9 @@ angular.module('gme.services', [])
         };
 
         // TODO: on selected project changed, on initialize and on destroy (socket.io connected/disconnected)
-    })
+    }
 
-    .service('ProjectService', function ($timeout, $q, DataStoreService) {
-        'use strict';
-
+    function ProjectService($q, DataStoreService) {
         this.getProjects = function (databaseId) {
             var dbConn = DataStoreService.getDatabaseConnection(databaseId),
                 deferred = new $q.defer();
@@ -87,7 +83,8 @@ angular.module('gme.services', [])
                             deferred.resolve(projectId);
                         });
                     } else {
-                        deferred.reject(new Error('Project does not exist. ' + projectId + ' databaseId: ' + databaseId));
+                        deferred.reject(new Error('Project does not exist. ' + projectId + ' databaseId: ' +
+                                                  databaseId));
                     }
                 })
                 .catch(function (reason) {
@@ -98,9 +95,9 @@ angular.module('gme.services', [])
         };
 
         // TODO: on selected project changed, on initialize and on destroy
-    })
+    }
 
-    .service('BranchService', function ($timeout, $q, ProjectService, DataStoreService) {
+    function BranchService($q, DataStoreService, ProjectService) {
         'use strict';
 
         this.selectBranch = function (databaseId, branchId) {
@@ -146,38 +143,39 @@ angular.module('gme.services', [])
 
                 // this should not be an inline function
 
-                dbConn.client.addEventListener(dbConn.client.events.BRANCH_CHANGED, function (projectId /* FIXME */, branchId) {
+                dbConn.client.addEventListener(dbConn.client.events.BRANCH_CHANGED,
+                    function (projectId /* FIXME */, branchId) {
 
-                    dbConn.branchService.branchId = branchId;
+                        dbConn.branchService.branchId = branchId;
 
-                    console.log('There was a BRANCH_CHANGED event', branchId);
-                    if (branchId) {
-                        // initialize
-                        if (dbConn.branchService &&
-                            dbConn.branchService.events &&
-                            dbConn.branchService.events.initialize) {
+                        console.log('There was a BRANCH_CHANGED event', branchId);
+                        if (branchId) {
+                            // initialize
+                            if (dbConn.branchService &&
+                                dbConn.branchService.events &&
+                                dbConn.branchService.events.initialize) {
 
-                            dbConn.branchService.isInitialized = true;
+                                dbConn.branchService.isInitialized = true;
 
-                            for (i = 0; i < dbConn.branchService.events.initialize.length; i += 1) {
-                                dbConn.branchService.events.initialize[i](databaseId);
+                                for (i = 0; i < dbConn.branchService.events.initialize.length; i += 1) {
+                                    dbConn.branchService.events.initialize[i](databaseId);
+                                }
+                            }
+                        } else {
+                            // branchId is falsy, empty or null or undefined
+                            // destroy
+                            if (dbConn.branchService &&
+                                dbConn.branchService.events &&
+                                dbConn.branchService.events.destroy) {
+
+                                dbConn.branchService.isInitialized = false;
+
+                                for (i = 0; i < dbConn.branchService.events.destroy.length; i += 1) {
+                                    dbConn.branchService.events.destroy[i](databaseId);
+                                }
                             }
                         }
-                    } else {
-                        // branchId is falsy, empty or null or undefined
-                        // destroy
-                        if (dbConn.branchService &&
-                            dbConn.branchService.events &&
-                            dbConn.branchService.events.destroy) {
-
-                            dbConn.branchService.isInitialized = false;
-
-                            for (i = 0; i < dbConn.branchService.events.destroy.length; i += 1) {
-                                dbConn.branchService.events.destroy[i](databaseId);
-                            }
-                        }
-                    }
-                });
+                    });
 
             }
 
@@ -197,9 +195,9 @@ angular.module('gme.services', [])
 
             // TODO: register for branch change event OR BranchService onInitialize
         };
-    })
+    }
 
-    .service('NodeService', function ($timeout, $q, DataStoreService, BranchService) {
+    function NodeService($q, DataStoreService, BranchService) {
         'use strict';
 
         var self = this,
@@ -365,7 +363,9 @@ angular.module('gme.services', [])
             if (nodeToDelete) {
                 dbConn.client.delMoreNodes([id], msg);
             } else {
-                console.warn('Requested deletion of node that does not exist in context! (id, context) ', id, context);
+                console.warn('Requested deletion of node that does not exist in context! (id, context) ',
+                    id,
+                    context);
             }
         };
 
@@ -576,7 +576,8 @@ angular.module('gme.services', [])
                     for (i = 0; i < events.length; i += 1) {
                         event = events[i];
                         if (event.etype === 'load') {
-                            if (dbConn.nodeService.regions[context.regionId].nodes.hasOwnProperty(event.eid) === false) {
+                            if (dbConn.nodeService.regions[context.regionId].nodes.hasOwnProperty(event.eid) ===
+                                false) {
                                 self.loadNode(context, event.eid).then(function (newNode) {
                                     fn(newNode);
                                     //console.log('Added new territory through onNewChildLoaded ', event.eid);
@@ -676,4 +677,11 @@ angular.module('gme.services', [])
                 }
             }
         };
-    });
+    }
+
+    angular.module('gme.services', [])
+        .service('DataStoreService', DataStoreService)
+        .service('ProjectService', ProjectService)
+        .service('BranchService', BranchService)
+        .service('NodeService', NodeService);
+})();
