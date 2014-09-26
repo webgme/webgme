@@ -249,6 +249,7 @@ define( [
         currentBranch = currentBranch.id;
       }
 
+      //FIXME TODO there is a need for a real update instead of delete and create!!!
       self.removeBranch( parameters.project, parameters.branch );
       self.addBranch( parameters.project, parameters.branch, parameters.commit );
 
@@ -262,8 +263,15 @@ define( [
     } );
 
     self.gmeClient.addEventListener( self.gmeClient.events.SERVER_BRANCH_DELETED, function ( client, parameters ) {
-      //console.log(self.gmeClient.events.SERVER_BRANCH_DELETED, parameters);
+      var currentProject = self.$scope.navigator.items[self.navIdProject],
+        currentBranch = self.$scope.navigator.items[self.navIdBranch];
+
       self.removeBranch( parameters.project, parameters.branch );
+
+      if(currentBranch === parameters.branch && currentProject === parameters.project){
+        self.selectProject(parameters.project);
+      }
+
     } );
 
   };
@@ -571,7 +579,7 @@ define( [
           dialogContentTemplate: 'DeleteDialogTemplate.html',
           onOk: function () {
             self.removeBranch( data.projectId, data.branchId );
-            self.selectProject( data );
+            //self.selectProject( data ); you cannot delete the actual branch so there is no need for re-selection
           },
           scope: self.$scope
         } );
@@ -703,8 +711,6 @@ define( [
 
   ProjectNavigatorController.prototype.removeBranch = function ( projectId, branchId ) {
     var self = this,
-        currentProject = self.$scope.navigator.items[self.navIdProject],
-        currentBranch = self.$scope.navigator.items[self.navIdBranch],
         i;
 
     if ( self.projects.hasOwnProperty( projectId ) && self.projects[projectId].branches.hasOwnProperty( branchId ) ) {
@@ -719,10 +725,6 @@ define( [
           self.projects[projectId].menu[i].items = self.mapToArray( self.projects[projectId].branches );
           break;
         }
-      }
-
-      if(currentProject === projectId && currentBranch === branchId){
-          self.selectProject( {projectId: projectId} );
       }
 
       self.update();

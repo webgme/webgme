@@ -86,6 +86,7 @@
                         var deferred = new $q.defer();
 
                         console.log('Setup connection', databaseId);
+
                         DataStoreService.connectToDatabase(databaseId, {host: window.location.basename})
                                 .then(function () {
                                     console.log('Connection is ready.', databaseId);
@@ -109,6 +110,17 @@
                                 .catch(function (reason) {
                                     deferred.reject(reason);
                                 });
+
+
+                        DataStoreService.connectToDatabase(databaseId, {host: window.location.basename})
+                                .then(function () {
+                                    console.log('Connection is ready.', databaseId);
+                                })
+                                .catch(function (reason) {
+
+                                });
+
+                        ProjectService.selectProject(databaseId, 'Test');
 
                         return deferred.promise;
                     };

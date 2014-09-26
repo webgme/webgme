@@ -41,6 +41,16 @@
             console.error(databaseId + ' does not have an active database connection.');
         };
 
+        this.watchConnection = function (databaseId) {
+            // TODO: handle events
+            // TODO: CONNECTED
+            // TODO: DISCONNECTED
+
+            // TODO: NETWORKSTATUS_CHANGED
+
+            throw new Error('Not implemented yet.');
+        };
+
         // TODO: on selected project changed, on initialize and on destroy (socket.io connected/disconnected)
     }
 
@@ -94,7 +104,99 @@
             return deferred.promise;
         };
 
-        // TODO: on selected project changed, on initialize and on destroy
+        this.watchProjects = function (databaseId) {
+            // TODO: register for project events
+            // TODO: SERVER_PROJECT_CREATED
+            // TODO: SERVER_PROJECT_DELETED
+
+            throw new Error('Not implemented yet.');
+        };
+
+        this.on = function (databaseId, eventName, fn) {
+            var dbConn,
+                i;
+
+            console.assert(typeof databaseId === 'string');
+            console.assert(typeof eventName === 'string');
+            console.assert(typeof fn === 'function');
+
+            dbConn = DataStoreService.getDatabaseConnection(databaseId);
+            dbConn.projectService = dbConn.projectService || {};
+
+            dbConn.projectService.isInitialized = dbConn.projectService.isInitialized || false;
+
+            if (typeof dbConn.projectService.events === 'undefined') {
+                // this should not be an inline function
+
+                dbConn.client.addEventListener(dbConn.client.events.PROJECT_OPENED,
+                    function (dummy /* FIXME */, projectId) {
+
+                        dbConn.projectService.projectId = projectId;
+
+                        console.log('There was a PROJECT_OPENED event', projectId);
+                        if (projectId) {
+                            // initialize
+                            if (dbConn.projectService &&
+                                dbConn.projectService.events &&
+                                dbConn.projectService.events.initialize) {
+
+                                dbConn.projectService.isInitialized = true;
+
+                                for (i = 0; i < dbConn.projectService.events.initialize.length; i += 1) {
+                                    dbConn.projectService.events.initialize[i](databaseId);
+                                }
+                            }
+                        } else {
+                            // branchId is falsy, empty or null or undefined
+                            // destroy
+                            if (dbConn.projectService &&
+                                dbConn.projectService.events &&
+                                dbConn.projectService.events.destroy) {
+
+                                dbConn.projectService.isInitialized = false;
+
+                                for (i = 0; i < dbConn.projectService.events.destroy.length; i += 1) {
+                                    dbConn.projectService.events.destroy[i](databaseId);
+                                }
+                            }
+                        }
+                    });
+
+                dbConn.client.addEventListener(dbConn.client.events.PROJECT_CLOSED,
+                    function (dummy /* FIXME */) {
+                        console.log('There was a PROJECT_CLOSED event', dbConn.projectService.projectId);
+
+                        delete dbConn.projectService.projectId;
+
+                        // destroy
+                        if (dbConn.projectService &&
+                            dbConn.projectService.events &&
+                            dbConn.projectService.events.destroy) {
+
+                            dbConn.projectService.isInitialized = false;
+
+                            for (i = 0; i < dbConn.projectService.events.destroy.length; i += 1) {
+                                dbConn.projectService.events.destroy[i](databaseId);
+                            }
+                        }
+
+                    });
+            }
+
+            dbConn.projectService.events = dbConn.projectService.events || {};
+            dbConn.projectService.events[eventName] = dbConn.projectService.events[eventName] || [];
+            dbConn.projectService.events[eventName].push(fn);
+
+            if (dbConn.projectService.isInitialized) {
+                if (eventName === 'initialize') {
+                    fn(databaseId);
+                }
+            } else {
+                if (eventName === 'destroy') {
+                    fn(databaseId);
+                }
+            }
+        };
     }
 
     function BranchService($q, DataStoreService, ProjectService) {
@@ -125,6 +227,26 @@
             throw new Error('Not implemented yet.');
         };
 
+        this.watchBranches = function (databaseId) {
+            // TODO: register for branch events
+            // TODO: SERVER_BRANCH_CREATED
+            // TODO: SERVER_BRANCH_UPDATED
+            // TODO: SERVER_BRANCH_DELETED
+
+            throw new Error('Not implemented yet.');
+        };
+
+        this.watchBranchState = function (databaseId) {
+            // TODO: register for branch state events
+            // TODO: SYNC
+            // TODO: FORKED
+            // TODO: OFFLINE
+
+            // TODO: BRANCHSTATUS_CHANGED
+
+            throw new Error('Not implemented yet.');
+        };
+
         this.on = function (databaseId, eventName, fn) {
             var dbConn,
                 i;
@@ -139,9 +261,38 @@
             dbConn.branchService.isInitialized = dbConn.branchService.isInitialized || false;
 
             if (typeof dbConn.branchService.events === 'undefined') {
-                // TODO: register for project events
+                // register for project events
+                ProjectService.on(databaseId, 'initialize', function (dbId) {
+                    var dbConnEvent = DataStoreService.getDatabaseConnection(dbId),
+                        i;
 
-                // this should not be an inline function
+                    if (dbConnEvent.branchService &&
+                        dbConnEvent.branchService.events &&
+                        dbConnEvent.branchService.events.initialize) {
+
+                        dbConnEvent.branchService.isInitialized = true;
+
+                        for (i = 0; i < dbConnEvent.branchService.events.initialize.length; i += 1) {
+                            dbConnEvent.branchService.events.initialize[i](dbId);
+                        }
+                    }
+                });
+
+                ProjectService.on(databaseId, 'destroy', function (dbId) {
+                    var dbConnEvent = DataStoreService.getDatabaseConnection(dbId),
+                        i;
+
+                    if (dbConnEvent.branchService &&
+                        dbConnEvent.branchService.events &&
+                        dbConnEvent.branchService.events.destroy) {
+
+                        dbConnEvent.branchService.isInitialized = false;
+
+                        for (i = 0; i < dbConnEvent.nodeService.events.destroy.length; i += 1) {
+                            dbConnEvent.branchService.events.destroy[i](dbId);
+                        }
+                    }
+                });
 
                 dbConn.client.addEventListener(dbConn.client.events.BRANCH_CHANGED,
                     function (projectId /* FIXME */, branchId) {
@@ -169,6 +320,7 @@
                                 dbConn.branchService.events.destroy) {
 
                                 dbConn.branchService.isInitialized = false;
+                                delete dbConn.branchService.branchId;
 
                                 for (i = 0; i < dbConn.branchService.events.destroy.length; i += 1) {
                                     dbConn.branchService.events.destroy[i](databaseId);
@@ -176,7 +328,6 @@
                             }
                         }
                     });
-
             }
 
             dbConn.branchService.events = dbConn.branchService.events || {};
