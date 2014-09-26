@@ -2,32 +2,6 @@
 
 angular.module('gme.services', [])
 
-    .service('DataStoreServiceTest', function ($timeout, $q) {
-
-        this.connectToDatabase = function (context) {
-            console.log('connecting to database...');
-
-            var client = new WebGMEGlobal.classes.Client({
-                host: window.location.origin
-            });
-
-            client.connectToDatabaseAsync({}, function (err) {
-                if (err) {
-                    console.error(err);
-                    return;
-                }
-
-                client.getAvailableProjectsAsync(function (err, list) {
-                    if (err) {
-                        console.error(err);
-                        return;
-                    }
-
-                    console.log(list);
-                });
-            });
-        };
-    })
     .service('DataStoreService', function ($timeout, $q) {
         var datastores = {};
 
@@ -192,7 +166,7 @@ angular.module('gme.services', [])
                     dbConnEvent.client.addEventListener(dbConnEvent.client.events.BRANCH_CHANGED, function (projectId /* FIXME */, branchId) {
 
                         dbConnEvent.branchId = branchId;
-                        console.log('There was a BRANCH_CHANGED event');
+                        console.log('There was a BRANCH_CHANGED event', branchId);
                         if (branchId) {
                             // initialize
                             if (dbConnEvent.branchService &&
@@ -437,13 +411,13 @@ angular.module('gme.services', [])
                 regionId;
 
             if (dbConn.nodeService) {
-                console.log(dbConn.nodeService.regions);
+//                console.log(dbConn.nodeService.regions);
                 for (regionId in dbConn.nodeService.regions) {
                     if (dbConn.nodeService.regions.hasOwnProperty(regionId)) {
                         self.cleanUpRegion({db: context.db, regionId: regionId});
                     }
                 }
-                console.log(dbConn.nodeService.regions);
+//                console.log(dbConn.nodeService.regions);
             }
         };
 

@@ -55,60 +55,79 @@
 
 
         var testApp = angular.module('testApp', ['gme.services'])
-                .run(function (DataStoreService, ProjectService, BranchService, NodeService) {
-                    var context = {db: 'my-connection-id'};
+                .run(function ($q, DataStoreService, ProjectService, BranchService, NodeService) {
+                    var context1 = {db: 'my-connection-id'},
+                        context2 = {db: 'my-conn-id-3'},
+                        registerForNodeService,
+                        setupConnection;
 
+
+
+                    registerForNodeService = function (c) {
+                        console.log('Registering for node service', c);
+                        NodeService.on(c, 'initialize', function () {
+                            var contextWithRegion = {
+                                db: c.db,
+                                regionId: 'TestRegion'
+                            };
+
+                            console.log('NodeService initialize called', c);
+                            console.log('Loading node for', contextWithRegion);
+                            NodeService.loadNode(contextWithRegion, '')
+                                    .then(function (node) {
+                                        console.log('Node was loaded', node);
+                                        node.onUpdate(function () {
+                                            console.log(node.getAttribute('name'), contextWithRegion);
+                                        });
+                                    });
+                        });
+                    };
+
+                    setupConnection = function (context) {
+                        var deferred = new $q.defer();
+
+                        console.log('Setup connection', context);
+                        DataStoreService.connectToDatabase(context)
+                                .then(function () {
+                                    console.log('Connection is ready.');
+
+                                    registerForNodeService(context);
+
+                                    console.log('Selecting project Test', context);
+                                    return ProjectService.openProject({db: context.db, projectId: 'Test'});
+                                }).then(function () {
+                                    console.log('Project ADMEditor is opened.');
+                                    console.log('Selecting b1 branch', context);
+                                    return BranchService.selectBranch({db: context.db, projectId: 'Test', branchId: 'b1'});
+                                }).then(function () {
+                                    console.log('b1 branch is selected.');
+                                    console.log('Selecting master branch', context);
+                                    return BranchService.selectBranch({db: context.db, projectId: 'Test', branchId: 'master'});
+                                }).then(function () {
+                                    console.log('master branch is selected.');
+                                    deferred.resolve();
+                                })
+                                .catch(function (reason) {
+                                    deferred.reject(reason);
+                                });
+
+                        return deferred.promise;
+                    };
 
                     console.log('test app is running.');
 
-
-                    console.log('Setup connection', context);
-                    DataStoreService.connectToDatabase(context)
+                    $q.all([setupConnection(context1), setupConnection(context2)])
                             .then(function () {
-                                console.log('Connection is ready.');
+                                console.log('Done with loading.');
 
-
-                                console.log('Setup node service', context);
-                                NodeService.on(context, 'initialize', function () {
-                                    var contextWithRegion = {
-                                        db: context.db,
-                                        regionId: 'TestRegion'
-                                    };
-
-                                    console.log('Initialize called', context);
-                                    console.log('Loading node for', contextWithRegion);
-                                    NodeService.loadNode(contextWithRegion, '')
-                                            .then(function (node) {
-                                                console.log('Node was loaded', node);
-                                                node.onUpdate(function () {
-                                                      console.log(node.getAttribute('name'));
-                                                });
-                                            });
-                                });
-
-
-                                console.log('Selecting project Test', context);
-                                ProjectService.openProject({db: context.db, projectId: 'Test'})
-                                        .then(function () {
-                                            console.log('Project ADMEditor is opened.');
-
-                                            console.log('Selecting b1 branch', context);
-                                            BranchService.selectBranch({db: context.db, projectId: 'Test', branchId: 'b1'})
-                                                    .then(function () {
-                                                        console.log('b1 branch is selected.');
-
-
-                                                        console.log('Selecting master branch', context);
-                                                        BranchService.selectBranch({db: context.db, projectId: 'Test', branchId: 'master'})
-                                                                .then(function () {
-                                                                    console.log('master branch is selected.');
-                                                                });
-                                                    });
-                                        })
-                                        .catch(function (reason) {
-                                            console.error(reason);
-                                        });
-
+                                return NodeService.loadNode({db: context1.db, regionId: 'TestRegion'}, '');
+                            })
+                            .then(function (node) {
+                                console.log(node);
+                                node.setAttribute('name', 'Root ' + (new Date()).toISOString());
+                            })
+                            .catch(function (reason) {
+                                console.error(reason);
                             });
                 });
 
