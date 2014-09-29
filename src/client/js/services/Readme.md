@@ -17,6 +17,37 @@
 13. Create new branch from current commit and switch to it
 14. Remote connection is lost (enter read-only mode?, try to auto-reconnect)
 
+
+## Design ##
+
+### `DataStoreService` ###
+
+Manages `Client` instances by its connection id called `databaseId`.
+
+Functions: `connectToDatabase`, `getDatabaseConnection`, `watchConnection`
+
+### `ProjectService` ###
+
+Having an active database connection using `DataStoreService`, this service provides listing of projects `getProjects`, selecting a project `selectProject`, watching projects (e.g. project list changed on server side) `watchProjects`, and `initialize`, `destory` events on project open/close/delete.
+
+### `BranchService` ###
+
+Having an active database connection using `DataStoreService`, this service provides listing of branches `getBranches`, selecting a branch `selectBranch`, watching brnaches (e.g. branch list changed on server side) `watchBRanches`, and `initialize`, `destory` events on branch open/close/delete/selected/updated.
+
+### `NodeService` ###
+
+Having an active database connection using `DataStoreService`, this service provides access to the graph nodes. The `initialize` and `destory` events used to notify if the nodes are available or not.
+The `NodeService` can load `loadNode`, create, and destroy nodes.
+
+### Use cases and expected behavior ###
+
+`DataStoreService` connection is not initialized: Usage of any services `Project`, `Branch`, `Node` are hard errors, except registering for events like `initialize` and `destroy`
+
+
 ## Services and event notification mechanism ##
 
-TODO...
+`Project`, `Branch`, and `Node` services provide an `on` function, which is used to register event handlers for `initialize` and `destory` events.
+
+- On `initialize` event all previously provided data has to be ignored/cleaned up and new data is provided.
+- On `destory` event all previously provided data has to be ignored/removed/cleaned up.
+
