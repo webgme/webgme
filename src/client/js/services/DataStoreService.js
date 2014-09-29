@@ -1,4 +1,4 @@
-/*globals define, console, angular*/
+/*globals define, console, angular, window*/
 
 
 define(['js/client'], function (Client) {
@@ -19,7 +19,7 @@ define(['js/client'], function (Client) {
                     deferred.resolve();
                 } else {
                     // TODO: replace CONFIG with context
-                    client = new Client(/*CONFIG*/);
+                    client = new Client({host: window.location.basename});
 
                     // hold a reference to the client instance
                     datastores[context.db] = {client: client};
