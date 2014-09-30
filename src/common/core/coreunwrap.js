@@ -67,6 +67,10 @@ define([ "util/assert", "core/tasync" ], function(ASSERT, TASYNC) {
             core.generateTreeDiff = TASYNC.unwrap(oldcore.generateTreeDiff);
         }
 
+    if(typeof  oldcore.generateLightTreeDiff === 'function'){
+      core.generateLightTreeDiff = TASYNC.unwrap(oldcore.generateLightTreeDiff);
+    }
+
 		return core;
 	};
 

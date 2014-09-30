@@ -1121,9 +1121,14 @@ define([
                 }
             }
 
-            if(found && diffObj){
-                if(diffObj.reg || diffObj.atr || diffObj.pointer || diffObj.set || diffObj.children || diffObj.meta){
-                    return true;
+            
+                if(found && diffObj){
+                  if(diffObj.removed !== undefined){
+                    return false;
+                  }
+                  if(diffObj.reg || diffObj.attr || diffObj.pointer || diffObj.set || diffObj.meta){
+                      return true;
+                  }
                 }
             }
 
@@ -1419,7 +1424,29 @@ define([
         }
         return ordered;
       }
+function getEventTree(oldRootHash,newRootHash,callback){
+                var error = null,
+                    sRoot = null,
+                    tRoot = null,
+                    start = new Date().getTime(),
+                    loadRoot = function(hash,root){
+                        _core.loadRoot(hash,function(err,r){
 
+                    },
+                    rootsLoaded = function(){
+                        if(error){
+                            return callback(error);
+                        }
+                        _core.generateLightTreeDiff(sRoot,tRoot,function(err,diff){
+                            console.log('genDiffTree',new Date().getTime()-start);
+                            console.log('diffTree',diff);
+                            callback(err,diff);
+                        });
+                    },
+                    needed = 2;
+                loadRoot(oldRootHash,sRoot);
+                loadRoot(newRootHash,tRoot);
+        }
         function loadRoot(newRootHash,callback){
             //with the newer approach we try to optimize a bit the mechanizm of the loading and try to get rid of the paralellism behind it
             var patterns = {},
@@ -1666,7 +1693,7 @@ define([
                   if (--wait === 0) {
                     callback(null, fullList);
                   }
-                })
+                });
               }
             } else {
               callback(null, {});
