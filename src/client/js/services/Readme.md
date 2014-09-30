@@ -28,16 +28,16 @@ Functions: `connectToDatabase`, `getDatabaseConnection`, `watchConnection`
 
 ### `ProjectService` ###
 
-Having an active database connection using `DataStoreService`, this service provides listing of projects `getProjects`, selecting a project `selectProject`, watching projects (e.g. project list changed on server side) `watchProjects`, and `initialize`, `destory` events on project open/close/delete.
+Having an active database connection using `DataStoreService`, this service provides listing of projects `getProjects`, selecting a project `selectProject`, watching projects (e.g. project list changed on server side) `watchProjects`, and `initialize`, `destroy` events on project open/close/delete.
 
 ### `BranchService` ###
 
-Having an active database connection using `DataStoreService`, this service provides listing of branches `getBranches`, selecting a branch `selectBranch`, watching brnaches (e.g. branch list changed on server side) `watchBRanches`, and `initialize`, `destory` events on branch open/close/delete/selected/updated.
+Having an active database connection using `DataStoreService`, this service provides listing of branches `getBranches`, selecting a branch `selectBranch`, watching branches (e.g. branch list changed on server side) `watchBranches`, and `initialize`, `destroy` events on branch open/close/delete/selected/updated.
 
 ### `NodeService` ###
 
-Having an active database connection using `DataStoreService`, this service provides access to the graph nodes. The `initialize` and `destory` events used to notify if the nodes are available or not.
-The `NodeService` can load `loadNode`, create, and destroy nodes.
+Having an active database connection using `DataStoreService`, this service provides access to the graph nodes. The `initialize` and `destroy` events used to notify if the nodes are available or not.
+The `NodeService` can load (`loadNode`), create (`createNode`), and destroy (`destroyNode`) nodes. Nodes are wrappen in `NodeObj`s that exposes the node operations such as `getAttribute` and `setAttribute`, `getId`, `getGuid` etc. Using the `NodeObj`s users can also attach watcher functions via `onUpdate`, `unUnload` and `onNewChildLoaded`.
 
 ### Use cases and expected behavior ###
 
@@ -46,7 +46,7 @@ The `NodeService` can load `loadNode`, create, and destroy nodes.
 
 ## Services and event notification mechanism ##
 
-`Project`, `Branch`, and `Node` services provide an `on` function, which is used to register event handlers for `initialize` and `destory` events.
+`Project`, `Branch`, and `Node` services provide an `on` function, which is used to register event handlers for `initialize` and `destroy` events.
 
 - On `initialize` event all previously provided data has to be ignored/cleaned up and new data is provided.
 - On `destory` event all previously provided data has to be ignored/removed/cleaned up.
