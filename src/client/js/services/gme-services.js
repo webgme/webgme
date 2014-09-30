@@ -364,8 +364,6 @@
          * Loads the meta nodes from the context (will create a node-service on the dbConn with regions if not present when invoked).
          * @param {object} context - From where to load the nodes.
          * @param {string} context.db - Database where the nodes will be loaded from.
-         * @param {string} context.projectId - Project where the nodes will be loaded from.
-         * @param {string} context.branchId - Branch where the nodes will be loaded from.
          * @param {string} context.regionId - Region where the NodeObjs will be stored.
          * @returns {Promise} - Returns an array of NodeObjs when resolved.
          */
@@ -400,8 +398,6 @@
          * Loads a node from context (will create a node-service on the dbConn with regions if not present when invoked).
          * @param {object} context - From where to look for the node.
          * @param {string} context.db - Database where the node will be looked for.
-         * @param {string} context.projectId - Project where the node will be looked for.
-         * @param {string} context.branchId - Branch where the node will be looked for.
          * @param {string} context.regionId - Region where the NodeObj will be stored.
          * @param {string} id - Path to the node.
          * @returns {Promise} - Returns a NodeObj when resolved.
@@ -464,8 +460,6 @@
          * Creates a new node in the database and returns with the NodeObj.
          * @param {object} context - Where to create the node.
          * @param {string} context.db - Database where the node will be created.
-         * @param {string} context.projectId - Project where the node will be created.
-         * @param {string} context.branchId - Branch where the node will be created.
          * @param {string} context.regionId - Region where the NodeObj will be stored.
          * @param {NodeObj|string} parent - model where the node should be created.
          * @param {NodeObj|string} base - base, e.g. meta-type, of the new node.
@@ -481,7 +475,7 @@
 
             id = dbConn.client.createChild({parentId: parentId, baseId: baseId}, msg);
 
-            self.loadNode(context, id, function (node) {
+            self.loadNode(context, id).then(function (node) {
                 deferred.resolve(node);
             });
 
@@ -492,8 +486,6 @@
          * Creates a new node in the database and returns with its assigned id (path).
          * @param {object} context - Where to create the node.
          * @param {string} context.db - Database where the node will be created.
-         * @param {string} context.projectId - Project where the node will be created.
-         * @param {string} context.branchId - Branch where the node will be created.
          * @param {object} parameters - as in client.createChild (see this.createNode for example).
          * @param {string} [msg] - optional commit message.
          * @returns {string} - id (path) of new node.
@@ -504,11 +496,9 @@
         };
 
         /**
-         * Removes the node from the context.
+         * Removes the node from the data-base connection.
          * @param {object} context - From where to delete the node.
          * @param {string} context.db - Database from where the node will be deleted.
-         * @param {string} context.projectId - Project from where the node will be deleted.
-         * @param {string} context.branchId - Branch from where the node will be deleted.
          * @param {NodeObj|string} nodeOrId - node that should be deleted (the NodeObj(s) will be removed from all regions through __OnUnload()).
          * @param {string} [msg] - optional commit message.
          */
@@ -529,8 +519,8 @@
          * Removes all references and listeners attached to any NodeObj in the region.
          * N.B. This function must be invoked for all regions that a "user" created.
          * This is typically done in the "$scope.on($destroy)"-function of a controller.
-         * @param {object} context - context region is part of.
-         * @param {string} context.regionId - Region to clean-up.
+         * @param {string} databaseId - data-base connection from where the region will be removed.
+         * @param {string} regionId - Region to clean-up.
          */
         this.cleanUpRegion = function (databaseId, regionId) {
             var key,
@@ -562,14 +552,14 @@
             }
         };
 
-//        /**
-//         * Logs the database connection with its node-services and regions therein.
-//         * @param context - The context to log.
-//         */
-//        this.logContext = function (context) {
-//            var dbConn = DataStoreService.getDatabaseConnection(context);
-//            console.log('logContext: ', context.regionId, dbConn);
-//        };
+        /**
+         * Logs the regions of the database connection.
+         * @param {string} databaseId - Id of database to log.
+         */
+        this.logContext = function (databaseId) {
+            var dbConn = DataStoreService.getDatabaseConnection(databaseId);
+            console.log('logContext: ', dbConn);
+        };
 
         NodeObj = function (context, id) {
             var thisNode = this;
@@ -791,11 +781,13 @@
                     if (dbConnEvent.nodeService &&
                         dbConnEvent.nodeService.events &&
                         dbConnEvent.nodeService.events.initialize) {
+                        // NodeService requires a selected branch.
+                        if (dbConn.branchService.branchId) {
+                            dbConnEvent.nodeService.isInitialized = true;
 
-                        dbConnEvent.nodeService.isInitialized = true;
-
-                        for (i = 0; i < dbConnEvent.nodeService.events.initialize.length; i += 1) {
-                            dbConnEvent.nodeService.events.initialize[i](dbId);
+                            for (i = 0; i < dbConnEvent.nodeService.events.initialize.length; i += 1) {
+                                dbConnEvent.nodeService.events.initialize[i](dbId);
+                            }
                         }
                     }
                 });
@@ -803,6 +795,8 @@
                 BranchService.on(databaseId, 'destroy', function (dbId) {
                     var dbConnEvent = DataStoreService.getDatabaseConnection(dbId),
                         i;
+
+                    self.cleanUpAllRegions(dbId);
 
                     if (dbConnEvent.nodeService &&
                         dbConnEvent.nodeService.events &&

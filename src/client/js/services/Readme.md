@@ -36,8 +36,8 @@ Having an active database connection using `DataStoreService`, this service prov
 
 ### `NodeService` ###
 
-Having an active database connection using `DataStoreService`, this service provides access to the graph nodes. The `initialize` and `destroy` events used to notify if the nodes are available or not.
-The `NodeService` can load (`loadNode`), create (`createNode`), and destroy (`destroyNode`) nodes. Nodes are wrappen in `NodeObj`s that exposes the node operations such as `getAttribute` and `setAttribute`, `getId`, `getGuid` etc. Using the `NodeObj`s users can also attach watcher functions via `onUpdate`, `unUnload` and `onNewChildLoaded`.
+Having an active database connection using `DataStoreService`, this service provides access to the graph nodes (if there is an open project and a selected branch). The `initialize` and `destroy` events used to notify if the nodes are available or not.
+The `NodeService` can load (`loadNode`), create (`createNode`), and destroy (`destroyNode`) nodes. Nodes are wrapped in `NodeObj`s that expose metods such as `getAttribute` and `setAttribute`, `getId`, `getGuid` etc. Using the `NodeObj`s users can also attach watchers via `onUpdate`, `unUnload` and `onNewChildLoaded`.
 
 ### Use cases and expected behavior ###
 
