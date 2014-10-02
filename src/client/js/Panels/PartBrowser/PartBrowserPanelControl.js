@@ -51,7 +51,9 @@ define(['logManager',
         });
 
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_ASPECT, function (model, activeAspect) {
+          if(activeAspect !== undefined){
             self.selectedAspectChanged(activeAspect);
+          }
         });
     };
 
