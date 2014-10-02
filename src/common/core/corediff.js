@@ -366,9 +366,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASS
         sRelids = Object.keys(sChildrenHashes),
         tRelids = Object.keys(tChildrenHAshes),
         diff = _core.nodeDiff(sourceRoot, targetRoot) || {},
-        //oDiff = ovr_diff(sourceRoot, targetRoot),
-        /*sChildren = _core.loadChildren(sourceRoot),
-        tChildren = _core.loadChildren(targetRoot),*/
+        oDiff = ovr_diff(sourceRoot, targetRoot),
         getChild = function (childArray, relid) {
           for (var i = 0; i < childArray.length; i++) {
             if (_core.getRelid(childArray[i]) === relid) {
@@ -377,6 +375,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASS
           }
           return null;
         };
+      console.log('kecso oD',oDiff);
       return TASYNC.call(function (sChildren,tChildren) {
         ASSERT(sChildren.length >=0 && tChildren.length >= 0);
 
@@ -415,6 +414,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASS
         }
         return TASYNC.call(function () {
           delete diff.children;
+          extendDiffWithOvr(diff,oDiff);
           normalize(diff);
           if (Object.keys(diff).length > 0) {
             diff.guid = _core.getGuid(targetRoot) === EMPTYGUID ? _core.getGuid(sourceRoot) : _core.getGuid(targetRoot);
