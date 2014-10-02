@@ -782,11 +782,12 @@ define(['logManager',
         while (i--) {
             e = events[i];
 
-            if (e.etype === CONSTANTS.TERRITORY_EVENT_UNLOAD) {
+            if(e.etype !== CONSTANTS.TERRITORY_EVENT_COMPLETE && e.etype !== CONSTANTS.TERRITORY_EVENT_INCOMPLETE){
+              if (e.etype === CONSTANTS.TERRITORY_EVENT_UNLOAD) {
                 unloadEvents.push(e);
-            } else if (e.desc.isConnection === false) {
+              } else if (e.desc.isConnection === false) {
                 orderedItemEvents.push(e);
-            } else if (e.desc.isConnection === true) {
+              } else if (e.desc.isConnection === true) {
                 var srcGMEID  = e.desc.srcID;
                 var dstGMEID = e.desc.dstID;
 
@@ -796,16 +797,16 @@ define(['logManager',
                 var dstConnIdx = -1;
                 j = orderedConnectionEvents.length;
                 while (j--) {
-                    ce = orderedConnectionEvents[j];
-                    if (ce.id === srcGMEID) {
-                        srcConnIdx = j;
-                    } else if (ce.id === dstGMEID) {
-                        dstConnIdx = j;
-                    }
+                  ce = orderedConnectionEvents[j];
+                  if (ce.id === srcGMEID) {
+                    srcConnIdx = j;
+                  } else if (ce.id === dstGMEID) {
+                    dstConnIdx = j;
+                  }
 
-                    if (srcConnIdx !== -1 && dstConnIdx !== -1) {
-                        break;
-                    }
+                  if (srcConnIdx !== -1 && dstConnIdx !== -1) {
+                    break;
+                  }
                 }
 
                 var insertIdxAfter = Math.max(srcConnIdx, dstConnIdx);
@@ -817,33 +818,34 @@ define(['logManager',
                 var depDstConnIdx = MAX_VAL;
                 j = orderedConnectionEvents.length;
                 while (j--) {
-                    ce = orderedConnectionEvents[j];
-                    if (e.eid === ce.desc.srcID) {
-                        depSrcConnIdx = j;
-                    } else if (e.eid === ce.desc.dstID) {
-                        depDstConnIdx = j;
-                    }
+                  ce = orderedConnectionEvents[j];
+                  if (e.eid === ce.desc.srcID) {
+                    depSrcConnIdx = j;
+                  } else if (e.eid === ce.desc.dstID) {
+                    depDstConnIdx = j;
+                  }
 
-                    if (depSrcConnIdx !== MAX_VAL && depDstConnIdx !== MAX_VAL) {
-                        break;
-                    }
+                  if (depSrcConnIdx !== MAX_VAL && depDstConnIdx !== MAX_VAL) {
+                    break;
+                  }
                 }
 
                 var insertIdxBefore = Math.min(depSrcConnIdx, depDstConnIdx);
                 if (insertIdxAfter === -1 && insertIdxBefore === MAX_VAL) {
-                    orderedConnectionEvents.push(e);
+                  orderedConnectionEvents.push(e);
                 } else {
-                    if (insertIdxAfter !== -1 &&
-                        insertIdxBefore === MAX_VAL) {
-                        orderedConnectionEvents.splice(insertIdxAfter + 1,0,e);
-                    } else if (insertIdxAfter === -1 &&
-                        insertIdxBefore !== MAX_VAL) {
-                        orderedConnectionEvents.splice(insertIdxBefore,0,e);
-                    } else if (insertIdxAfter !== -1 &&
-                        insertIdxBefore !== MAX_VAL) {
-                        orderedConnectionEvents.splice(insertIdxBefore,0,e);
-                    }
+                  if (insertIdxAfter !== -1 &&
+                    insertIdxBefore === MAX_VAL) {
+                    orderedConnectionEvents.splice(insertIdxAfter + 1,0,e);
+                  } else if (insertIdxAfter === -1 &&
+                    insertIdxBefore !== MAX_VAL) {
+                    orderedConnectionEvents.splice(insertIdxBefore,0,e);
+                  } else if (insertIdxAfter !== -1 &&
+                    insertIdxBefore !== MAX_VAL) {
+                    orderedConnectionEvents.splice(insertIdxBefore,0,e);
+                  }
                 }
+              }
             }
         }
 
