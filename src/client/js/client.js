@@ -1126,7 +1126,7 @@ define([
                   if(diffObj.removed !== undefined){
                     return false;
                   }
-                  if(diffObj.reg || diffObj.attr || diffObj.pointer || diffObj.set || diffObj.meta){
+                  if(diffObj.reg || diffObj.attr || diffObj.pointer || diffObj.set || diffObj.meta || diffObj.childrenListChanged){
                       return true;
                   }
                 }
