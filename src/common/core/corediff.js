@@ -241,7 +241,13 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASS
     }
 
     function metaRulesChanged(source, target) {
-      return CANON.stringify(_core.getJsonMeta(source)) !== CANON.stringify(_core.getJsonMeta(target));
+      return CANON.stringify(_core.getOwnJsonMeta(source)) !== CANON.stringify(_core.getOwnJsonMeta(target));
+    }
+    function meta_diff(source,target){
+      if(CANON.stringify(_core.getOwnJsonMeta(source)) !== CANON.stringify(_core.getOwnJsonMeta(target))){
+        return _core.getOwnJsonMeta(target);
+      }
+      return {};
     }
 
     function isEmptyDiff(diff) {
@@ -277,28 +283,35 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASS
         i, j,
         keys = Object.keys(oDiff),
         names,
-        wholeNodeDelete = false,
+        alreadyChecked = false,
         tDiff;
 
       for (i = 0; i < keys.length; i++) {
+        console.log('ED',keys[i]);
         tDiff = diff;
-        wholeNodeDelete = false;
+        alreadyChecked = false;
         names = Object.keys(oDiff[keys[i]]);
         patharray = keys[i].split('/');
         patharray.shift();
         if (patharray.length > 0) {
           for (j = 0; j < patharray.length; j++) {
-            if (tDiff.children && tDiff.children.removed && tDiff.children.removed.indexOf(patharray[j]) !== -1) {
-              wholeNodeDelete = true;
+            if (tDiff.removed === true) {
+              alreadyChecked = true;
             }
             if (!tDiff[patharray[j]]) {
               tDiff[patharray[j]] = {};
             }
             tDiff = tDiff[patharray[j]];
           }
-          //now we should iterate through all pointers in the oDiff
-          if (!wholeNodeDelete) {
+          console.log('ED_',tDiff);
+          if(typeof tDiff.guid === 'string'){
+            alreadyChecked = true;
+          }
+
+          if (!alreadyChecked) {
+            //now we should iterate through all pointers in the oDiff
             for (j = 0; j < names.length; j++) {
+              console.log('ED__',names[j],oDiff[keys[i]][names[j]]);
               switch (oDiff[keys[i]][names[j]].type) {
                 case "added":
                   if (!(tDiff.pointer && tDiff.pointer.added && tDiff.pointer.added.indexOf(names[j]) !== -1)) {
@@ -375,7 +388,6 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASS
           }
           return null;
         };
-      console.log('kecso oD',oDiff);
       return TASYNC.call(function (sChildren,tChildren) {
         ASSERT(sChildren.length >=0 && tChildren.length >= 0);
 
@@ -417,11 +429,41 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASS
           extendDiffWithOvr(diff,oDiff);
           normalize(diff);
           if (Object.keys(diff).length > 0) {
-            diff.guid = _core.getGuid(targetRoot) === EMPTYGUID ? _core.getGuid(sourceRoot) : _core.getGuid(targetRoot);
+            diff.guid =  _core.getGuid(targetRoot);
+            diff.hash = _core.getHash(targetRoot);
+            return TASYNC.call(function(finalDiff){
+              return finalDiff;
+            },fillMissingGuid(targetRoot,'',diff));
+          } else {
+            return diff;
           }
-          return diff;
+
         }, done);
       }, _core.loadChildren(sourceRoot), _core.loadChildren(targetRoot));
+    }
+
+    function fillMissingGuid(root,path,diff){
+      var relids = getDiffChildrenRelids(diff),
+        i,
+        done;
+
+      for(i=0;i<relids.length;i++){
+        done = TASYNC.call(function(cDiff,relid){
+          diff[relid] = cDiff;
+          return null;
+        },fillMissingGuid(root,path+'/'+relids[i],diff[relids[i]]),relids[i]);
+      }
+      return TASYNC.call(function(){
+        if(diff.guid){
+          return diff;
+        } else {
+          return TASYNC.call(function(child){
+            diff.guid = _core.getGuid(child);
+            diff.hash = _core.getHash(child);
+            return diff;
+          },_core.loadByPath(root,path));
+        }
+      },done);
     }
 
     function expandDiff(root,isDeleted) {
@@ -519,11 +561,10 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASS
         attr: attr_diff(source, target),
         reg: reg_diff(source, target),
         pointer: pointer_diff(source, target),
-        set: set_diff(source, target)
+        set: set_diff(source, target),
+        meta: meta_diff(source,target)
       };
-      if (metaRulesChanged(source, target)) {
-        diff.meta = true;
-      }
+
       normalize(diff);
       return isEmptyNodeDiff(diff) ? null : diff;
     };
@@ -541,6 +582,51 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASS
 
     _core.generateLightTreeDiff = function (sRoot,tRoot){
       return updateDiff(sRoot,tRoot);
+    };
+
+    function getDiffChildrenRelids(diff){
+      var keys = Object.keys(diff),
+        i,
+        filteredKeys = [],
+        forbiddenWords = {
+          guid:true,
+          hash:true,
+          attr:true,
+          reg:true,
+          pointer:true,
+          set:true,
+          meta:true,
+          removed:true,
+          movedFrom:true,
+          childrenListChanged:true
+        };
+      for(i=0;i<keys.length;i++){
+        if(!forbiddenWords[keys[i]]){
+          filteredKeys.push(keys[i]);
+        }
+      }
+      return filteredKeys;
+    }
+
+    function getMoveSources(diff,path){
+      var relids = getDiffChildrenRelids(diff),
+        i,paths=[];
+
+      for(i=0;i<relids.length;i++){
+        paths = paths.concat(getMoveSources(diff[relids[i]],path+'/'+relids[i]));
+      }
+
+      if(typeof diff.movedFrom === 'string'){
+        paths.push(diff.movedFrom);
+      }
+
+      return paths;
+    }
+
+    _core.applyTreeDiff = function(root,diff){
+      var moveSources = getMoveSources(diff,'');
+
+      return null;
     };
 
     return _core;

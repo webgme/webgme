@@ -2928,15 +2928,75 @@ define([
         });
       }
 
-      function getExportItemsUrlAsync(paths, filename, callback) {
-        _database.simpleRequest({command: 'dumpMoreNodes', name: _projectName, hash: _rootHash || _core.getHash(_nodes[ROOT_PATH].node), nodes: paths}, function (err, resId) {
-          if (err) {
-            callback(err);
-          } else {
-            callback(null, window.location.protocol + '//' + window.location.host + '/worker/simpleResult/' + resId + '/' + filename);
-          }
-        });
-      }
+            //testing
+            function testMethod(testnumber){
+                switch(testnumber){
+                    case 1:
+                      _core.loadRoot(_previousRootHash,function(err,root){
+                        if(!err && root){
+                          _core.applyTreeDiff(root,_changeTree,function(err){
+                            console.log('kecso finished',err);
+                          });
+                        } else {
+                          console.log('kecso HIBAAAAA');
+                        }
+                      });
+                        break;
+                    case 2:
+                        //here we try to check every element in _nodes...
+                        var start = new Date().getTime(),
+                            sized,
+                            end;
+                        console.log("allupdatestart");
+                        var keys = Object.keys(_nodes),
+                            oldroot,
+                            updates = {},
+                            index = 0,
+                            checkNextNode = function(path){
+                                if(index<keys.length){
+                                    _core.loadByPath(oldroot,path,function(err,node){
+                                        if(!err && node){
+                                            updates[path] = _core.nodeDiff(node,_nodes[path].node);
+                                            if(updates[path] === null){
+                                                delete updates[path];
+                                            }
+                                        } else {
+                                            updates[path] = "HIBAAAA";
+                                        }
+                                        checkNextNode(keys[++index]);
+                                    });
+                                } else {
+                                    finished();
+                                }
+                            },
+                            finished = function(){
+                                console.log(updates);
+                                end = new Date().getTime();
+                                sized = (end-start)/keys.length;
+                                console.log("allupdateend",end-start,sized);
+                            };
+                        _core.loadRoot(_previousRootHash,function(err,root){
+                            if(!err && root){
+                                oldroot = root;
+                                checkNextNode(keys[index]);
+                            } else {
+                                updates[""] = "NAGYHIBAAA";
+                                finished();
+                            }
+                        });
+                        break;
+                    case 3:
+                        var start = new Date().getTime(),
+                            end;
+                        _core.loadRoot(_previousRootHash,function(err,root){
+                            if(!err && root){
+                                _core.generateTreeDiff(root,_nodes[""].node,function(err,diff){
+                                    end = new Date().getTime();
+                                    console.log('treediff',end-start,err,diff);
+                                });
+                            }
+                        });
+                }
 
       function getExternalInterpreterConfigUrlAsync(selectedItemsPaths, filename, callback) {
         var config = {};
