@@ -629,6 +629,21 @@ define( [
         {
           items: [
             {
+              id: 'undoLastCommit',
+              label: 'Undo last commit',
+              iconClass: 'glyphicon glyphicon-plus',
+              disabled: true,
+              action: function(actionData) {
+                console.log('Undoing last commit', actionData);
+              },
+              // Put whatever you need to get passed back above
+              actionData: {
+                projectId: projectId,
+                branchId: branchId,
+                branchInfo: branchInfo
+              }
+            },
+            {
               id: 'createBranch',
               label: 'Create branch',
               iconClass: 'glyphicon glyphicon-plus',
