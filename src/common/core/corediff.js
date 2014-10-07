@@ -290,7 +290,6 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
         tDiff;
 
       for (i = 0; i < keys.length; i++) {
-        console.log('ED', keys[i]);
         tDiff = diff;
         alreadyChecked = false;
         names = Object.keys(oDiff[keys[i]]);
@@ -313,7 +312,6 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
           if (!alreadyChecked) {
             //now we should iterate through all pointers in the oDiff
             for (j = 0; j < names.length; j++) {
-              console.log('ED__', names[j], oDiff[keys[i]][names[j]]);
               switch (oDiff[keys[i]][names[j]].type) {
                 case "added":
                   if (!(tDiff.pointer && tDiff.pointer.added && tDiff.pointer.added[names[j]] !== undefined)) {
@@ -413,7 +411,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
         for (i = 0; i < tChildren.length; i++) {
           child = getChild(sChildren, _core.getRelid(tChildren[i]));
           if (child && _core.getHash(tChildren[i]) !== _core.getHash(child)) {
-            done = TASYNC.call(function (cDiff, relid) {
+            done = TASYNC.call(function (cDiff, relid,d) {
               diff[relid] = cDiff;
               return null;
             }, updateDiff(child, tChildren[i]), _core.getRelid(child), done);
@@ -649,8 +647,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       for (i = 0; i < relids.length; i++) {
         if (diff[relids[i]].removed === false && !diff[relids[i]].movedFrom) {
           //we have to create the child with the exact hash and then recursively call the function for it
-          //TODO this is a HACK
-          console.log('node ' + _core.getPath(node) + '/' + relids[i] + ' is created');
+          //TODO this is a partial HACK
           var newChild = _core.getChild(node, relids[i]);
           _core.setHashed(newChild, true);
           newChild.data = diff[relids[i]].hash;
@@ -702,8 +699,13 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
         }
         applyAttributeChanges(n, nodeDiff.attr || {});
         applyRegistryChanges(n, nodeDiff.reg || {});
+        done = applyPointerChanges(n,nodeDiff.pointer || {});
+        done = applySetChanges(n,nodeDiff.set || {});
+        done = applyMetaChanges(n,nodeDiff.meta || {});
         for(i=0;i<relids.length;i++){
-          done = applyNodeChange(root,path+'/'+relids[i],nodeDiff[relids[i]]);
+          done = TASYNC.call(function(d,d2) {
+              return null;
+            },applyNodeChange(root,path+'/'+relids[i],nodeDiff[relids[i]]),done);
         }
         TASYNC.call(function(d){
           return done;
@@ -749,16 +751,94 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       }
     }
 
+    function setPointer(node,name,target){
+      return TASYNC.call(function(t){
+        if(name === 'base'){ //TODO watch if handling of base changes!!!
+          _core.setBase(node,t);
+        } else {
+          _core.setPointer(node,name,t);
+        }
+        return;
+      },_core.loadByPath(_core.getRoot(node),target));
+    }
     function applyPointerChanges(node, pointerDiff) {
+      var done,
+        keys,
+        i;
 
+      keys = pointerDiff.removed || [];
+      for(i=0;i<keys.length;i++){
+        _core.deletePointer(node,keys[i]);
+      }
+
+      keys = Object.keys(pointerDiff.added || {});
+      for(i=0;i<keys.length;i++){
+        done = TASYNC.call(function(n,t,d){
+          return setPointer(node,n,t);
+        },keys[i],pointerDiff.added[keys[i]],done);
+      }
+
+      keys = Object.keys(pointerDiff.updated || {});
+      for(i=0;i<keys.length;i++){
+        done = TASYNC.call(function(n,t,d){
+          setPointer(node,n,t)
+          return d;
+        },keys[i],pointerDiff.updated[keys[i]],done);
+      }
+
+      return TASYNC.call(function(d){
+        return null;
+      },done);
     }
 
+    function addMember(node,name,target){
+      console.log('AM',name,target);
+      return TASYNC.call(function(t){
+        console.log('AM_');
+        _core.addMember(node,name,t);
+        return;
+      },_core.loadByPath(_core.getRoot(node),target));
+    }
     function applySetChanges(node, setDiff) {
+      console.log('SC',_core.getPath(node),setDiff);
+      var done,
+        keys,
+        elements,
+        i,j;
 
+      keys = setDiff.removed || [];
+      for(i=0;i<keys.length;i++){
+        _core.deleteSet(node,keys[i]);
+      }
+
+      keys = setDiff.added || [];
+      for(i=0;i<keys.length;i++){
+        _core.createSet(node,keys[i]);
+      }
+
+      keys = Object.keys(setDiff.updated || {});
+      for(i=0;i<keys.length;i++){
+        elements = setDiff.updated[keys[i]].removed || [];
+        for(j=0;j<elements.length;j++){
+          _core.delMember(node,keys[i],elements[j]);
+        }
+
+        elements = setDiff.updated[keys[i]].added || [];
+        for(j=0;j<elements.length;j++){
+          console.log('SC',elements[j],keys[i]);
+          done = TASYNC.call(function(d,d2){
+          },addMember(node,keys[i],elements[j]),done);
+        }
+      }
+
+      return TASYNC.call(function(d){
+        console.log('SC_');
+        return null;
+      },done);
     }
 
     function applyMetaChanges(node, metaDiff) {
-
+      return null;
     }
 
     _core.applyTreeDiff = function (root, diff) {
