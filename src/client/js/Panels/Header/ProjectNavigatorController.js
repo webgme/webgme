@@ -60,8 +60,8 @@ define( [
 
   ProjectNavigatorController.prototype.initialize = function () {
     var self = this,
-      newProject,
-      manageProjects;
+    newProject,
+    manageProjects;
 
     // initialize model structure for view
     self.$scope.navigator = {
@@ -239,7 +239,7 @@ define( [
 //            console.log(self.gmeClient.events.SERVER_BRANCH_UPDATED, parameters);
       // TODO: update branch information
       var currentProject = self.$scope.navigator.items[self.navIdProject],
-        currentBranch = self.$scope.navigator.items[self.navIdBranch];
+      currentBranch = self.$scope.navigator.items[self.navIdBranch];
 
       if ( currentProject ) {
         currentProject = currentProject.id;
@@ -264,12 +264,12 @@ define( [
 
     self.gmeClient.addEventListener( self.gmeClient.events.SERVER_BRANCH_DELETED, function ( client, parameters ) {
       var currentProject = self.$scope.navigator.items[self.navIdProject],
-        currentBranch = self.$scope.navigator.items[self.navIdBranch];
+      currentBranch = self.$scope.navigator.items[self.navIdBranch];
 
       self.removeBranch( parameters.project, parameters.branch );
 
-      if(currentBranch === parameters.branch && currentProject === parameters.project){
-        self.selectProject(parameters.project);
+      if ( currentBranch === parameters.branch && currentProject === parameters.project ) {
+        self.selectProject( parameters.project );
       }
 
     } );
@@ -282,7 +282,7 @@ define( [
     // FIXME: get read=only/viewable/available project?!
     self.gmeClient.getFullProjectsInfoAsync( function ( err, projectList ) {
       var projectId,
-        branchId;
+      branchId;
 
       if ( err ) {
         console.error( err );
@@ -312,13 +312,13 @@ define( [
 
   ProjectNavigatorController.prototype.addProject = function ( projectId, rights ) {
     var self = this,
-      i,
-      showHistory,
-      showAllBranches,
-      deleteProject,
-      selectProject,
-      refreshPage,
-      updateProjectList;
+    i,
+    showHistory,
+    showAllBranches,
+    deleteProject,
+    selectProject,
+    refreshPage,
+    updateProjectList;
 
     rights = rights || {
       'delete': true,
@@ -357,7 +357,7 @@ define( [
 
         var deleteProjectModal;
 
-        self.$scope.thingName = 'project "'+ data.projectId + '"';
+        self.$scope.thingName = 'project "' + data.projectId + '"';
 
         deleteProjectModal = self.$simpleDialog.open( {
           dialogTitle: 'Confirm delete',
@@ -476,14 +476,15 @@ define( [
 
   ProjectNavigatorController.prototype.addBranch = function ( projectId, branchId, branchInfo ) {
     var self = this,
-      i,
-      selectBranch,
-      exportBranch,
-      createBranch,
-      deleteBranch,
-      createCommitMessage,
+    i,
+    selectBranch,
+    exportBranch,
+    createBranch,
+    deleteBranch,
+    createCommitMessage,
 
-      deleteBranchItem;
+    deleteBranchItem,
+    undoLastCommitItem;
 
     if ( self.projects[projectId].disabled ) {
       // do not show any branches if the project is disabled
@@ -506,6 +507,9 @@ define( [
       };
 
       createBranch = function ( data ) {
+
+        console.log('create branch');
+
         // TODO: get available branch name for project
         var newBranchName = data.branchId + '_copy';
 
@@ -525,7 +529,7 @@ define( [
 
         var deleteBranchModal;
 
-        self.$scope.thingName = 'branch "'+ data.branchId + '"';
+        self.$scope.thingName = 'branch "' + data.branchId + '"';
 
         deleteBranchModal = self.$simpleDialog.open( {
           dialogTitle: 'Confirm delete',
@@ -563,7 +567,6 @@ define( [
       };
 
       createBranch = function ( data ) {
-        console.log( 'createBranch: ', data );
         self.addBranch( data.projectId, data.branchId + ' _copy' );
         self.selectProject( {projectId: data.projectId, branchId: data.branchId + '_copy'} );
       };
@@ -571,6 +574,8 @@ define( [
       deleteBranch = function ( data ) {
 
         var deleteBranchModal;
+
+        console.log('delete branch');
 
         self.$scope.thingName = data.branchId;
 
@@ -609,6 +614,22 @@ define( [
       }
     };
 
+    undoLastCommitItem = {
+      id: 'undoLastCommit',
+      label: 'Undo last commit',
+      iconClass: 'fa fa-reply',
+      disabled: true, // TODO: set this from handler to enable/disable
+      action: function ( actionData ) {
+        console.log( 'Undoing last commit', actionData );
+      },
+      // Put whatever you need to get passed back above
+      actionData: {
+        projectId: projectId,
+        branchId: branchId,
+        branchInfo: branchInfo
+      }
+    };
+
     // create the new branch structure
     self.projects[projectId].branches[branchId] = {
       id: branchId,
@@ -628,21 +649,7 @@ define( [
       menu: [
         {
           items: [
-            {
-              id: 'undoLastCommit',
-              label: 'Undo last commit',
-              iconClass: 'glyphicon glyphicon-plus',
-              disabled: true,
-              action: function(actionData) {
-                console.log('Undoing last commit', actionData);
-              },
-              // Put whatever you need to get passed back above
-              actionData: {
-                projectId: projectId,
-                branchId: branchId,
-                branchInfo: branchInfo
-              }
-            },
+            undoLastCommitItem,
             {
               id: 'createBranch',
               label: 'Create branch',
@@ -700,7 +707,7 @@ define( [
 
   ProjectNavigatorController.prototype.removeProject = function ( projectId, callback ) {
     var self = this,
-      i;
+    i;
 
     if ( self.projects.hasOwnProperty( projectId ) ) {
       delete self.projects[projectId];
@@ -726,7 +733,7 @@ define( [
 
   ProjectNavigatorController.prototype.removeBranch = function ( projectId, branchId ) {
     var self = this,
-        i;
+    i;
 
     if ( self.projects.hasOwnProperty( projectId ) && self.projects[projectId].branches.hasOwnProperty( branchId ) ) {
       delete self.projects[projectId].branches[branchId];
@@ -752,10 +759,10 @@ define( [
 
   ProjectNavigatorController.prototype.selectBranch = function ( data, callback ) {
     var self = this,
-      projectId = data.projectId,
-      branchId = data.branchId,
-      currentProject = self.$scope.navigator.items[self.navIdProject],
-      currentBranch = self.$scope.navigator.items[self.navIdBranch];
+    projectId = data.projectId,
+    branchId = data.branchId,
+    currentProject = self.$scope.navigator.items[self.navIdProject],
+    currentBranch = self.$scope.navigator.items[self.navIdBranch];
 
     callback = callback || function () {};
 
@@ -874,10 +881,10 @@ define( [
 
   ProjectNavigatorController.prototype.dummyProjectsGenerator = function ( name, maxCount ) {
     var self = this,
-      i,
-      id,
-      count,
-      rights;
+    i,
+    id,
+    count,
+    rights;
 
     count = Math.max( Math.round( Math.random() * maxCount ), 3 );
 
@@ -903,9 +910,9 @@ define( [
 
   ProjectNavigatorController.prototype.dummyBranchGenerator = function ( name, maxCount, projectId ) {
     var self = this,
-      i,
-      id,
-      count;
+    i,
+    id,
+    count;
 
     count = Math.max( Math.round( Math.random() * maxCount ), 3 );
 
@@ -917,14 +924,14 @@ define( [
 
   ProjectNavigatorController.prototype.mapToArray = function ( hashMap, orderBy ) {
     var keys = Object.keys( hashMap ),
-      values = keys.map( function ( v ) { return hashMap[v]; } );
+    values = keys.map( function ( v ) { return hashMap[v]; } );
 
     // keys precedence to order
     orderBy = orderBy || [];
 
     values.sort( function ( a, b ) {
       var i,
-        key;
+      key;
 
       for ( i = 0; i < orderBy.length; i += 1 ) {
         key = orderBy[i];

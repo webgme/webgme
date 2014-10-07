@@ -73,6 +73,16 @@
       font-size: 90%;
     }
 
+    .disabled {
+      opacity: .65;
+      a {
+        cursor: not-allowed;
+        &:hover {
+          background-color: transparent;
+        }
+      }
+    }
+
     .dropdown-submenu {
       position: relative;
     }

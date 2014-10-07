@@ -107,7 +107,7 @@ require.config({
             'jquery-WebGME',
             'css!/css/main.css',
             'css!/css/themes/dawn.css',
-            //'css!/fonts/font-awesome/css/font-awesome.min.css',
+            'css!/fonts/font-awesome/css/font-awesome.min.css',
             'css!/fonts/webgme-icons/style.css'
         ],
         'jquery-csszoom': ['jquery-ui'],
