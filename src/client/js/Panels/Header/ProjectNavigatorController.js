@@ -620,7 +620,9 @@ define( [
       iconClass: 'fa fa-reply',
       disabled: true, // TODO: set this from handler to enable/disable
       action: function ( actionData ) {
+
         console.log( 'Undoing last commit', actionData );
+
       },
       // Put whatever you need to get passed back above
       actionData: {
