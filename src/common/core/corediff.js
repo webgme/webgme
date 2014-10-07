@@ -298,13 +298,12 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASS
             if (tDiff.removed === true) {
               alreadyChecked = true;
             }
-            if (!tDiff[patharray[j]]) {
-              tDiff[patharray[j]] = {};
-            }
+
+            tDiff[patharray[j]] = tDiff[patharray[j]] || {};
             tDiff = tDiff[patharray[j]];
           }
-          console.log('ED_',tDiff);
-          if(typeof tDiff.guid === 'string'){
+
+          if (tDiff.removed === true) {
             alreadyChecked = true;
           }
 
@@ -314,7 +313,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASS
               console.log('ED__',names[j],oDiff[keys[i]][names[j]]);
               switch (oDiff[keys[i]][names[j]].type) {
                 case "added":
-                  if (!(tDiff.pointer && tDiff.pointer.added && tDiff.pointer.added.indexOf(names[j]) !== -1)) {
+                  if (!(tDiff.pointer && tDiff.pointer.added && tDiff.pointer.added[names[j]] !== undefined)) {
                     if (tDiff.pointer && tDiff.pointer.removed && tDiff.pointer.removed.indexOf(names[j]) !== -1) {
                       //the relation got updated but it switched level regarding the containment
                       tDiff.pointer.removed.splice(tDiff.pointer.removed.indexOf(names[j]), 1);
@@ -345,18 +344,12 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASS
                   break;
                 case "removed":
                   if (!(tDiff.pointer && tDiff.pointer.removed && tDiff.pointer.removed.indexOf(names[j]) !== -1)) {
-                    if (tDiff.pointer && tDiff.pointer.added && tDiff.pointer.added.indexOf(names[j]) !== -1) {
+                    if (tDiff.pointer && tDiff.pointer.added && tDiff.pointer.added[names[j]] !== undefined ) {
                       //the relation got updated but it switched level regarding the containment
-                      tDiff.pointer.added.splice(tDiff.pointer.added.indexOf(names[j]), 1);
-                      if (tDiff.pointer.added.length === 0) {
-                        delete tDiff.pointer.added;
-                      }
-                      if (Object.keys(tDiff.pointer).length === 0) {
-                        delete tDiff.pointer;
-                      }
                       tDiff.pointer = tDiff.pointer || {};
                       tDiff.pointer.updated = tDiff.pointer.updated || {};
-                      tDiff.pointer.updated[names[j]] = oDiff[keys[i]][names[j]].target;
+                      tDiff.pointer.updated[names[j]] = tDiff.pointer.added[names[j]];
+                      delete tDiff.pointer.added[names[j]];
                     } else {
                       //this is the first encounter of the pointer
                       tDiff.pointer = tDiff.pointer || {};
@@ -368,7 +361,6 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASS
               }
             }
           }
-
         }
       }
     }
@@ -481,6 +473,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASS
             hash: _core.getHash(children[i]),
             removed: isDeleted === true
           };
+
           if(isDeleted){
             _yetToCompute[guid] = _yetToCompute[guid] || {};
             _yetToCompute[guid].from = children[i];
@@ -504,7 +497,30 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASS
       for(i=0;i<pathArray.length;i++){
         sDiff = sDiff[pathArray[i]];
       }
-      sDiff[relid] = diff;
+      //sDiff[relid] = diff;
+      sDiff[relid] = mergeObjects(sDiff[relid],diff);
+    }
+
+    function mergeObjects(source,target){
+      var merged = {},
+        sKeys = Object.keys(source),
+        tKeys = Object.keys(target);
+      for(i=0;i<sKeys.length;i++){
+        merged[sKeys[i]] = source[sKeys[i]];
+      }
+      for(i=0;i<tKeys.length;i++){
+        if(sKeys.indexOf(tKeys[i]) === -1){
+          merged[tKeys[i]] = target[tKeys[i]];
+        } else {
+          if(typeof target[tKeys[i]] === typeof source[tKeys[i]] && typeof target[tKeys[i]] === 'object' && !(target instanceof Array) ){
+            merged[tKeys[i]] = mergeObjects(source[tKeys[i]],target[tKeys[i]]);
+          } else {
+            merged[tKeys[i]] = target[tKeys[i]];
+          }
+        }
+      }
+
+      return merged;
     }
 
     function checkRound() {
@@ -608,23 +624,88 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASS
       return filteredKeys;
     }
 
-    function getMoveSources(diff,path){
+    function getMoveSources(diff,path,toFrom,fromTo){
       var relids = getDiffChildrenRelids(diff),
         i,paths=[];
 
       for(i=0;i<relids.length;i++){
-        paths = paths.concat(getMoveSources(diff[relids[i]],path+'/'+relids[i]));
+       getMoveSources(diff[relids[i]],path+'/'+relids[i],toFrom,fromTo);
       }
 
       if(typeof diff.movedFrom === 'string'){
-        paths.push(diff.movedFrom);
+        toFrom[path] = diff.movedFrom;
+        fromTo[diff.movedFrom] = path;
+      }
+    }
+
+    function createNewNodes(node,diff){
+      var relids = getDiffChildrenRelids(diff),
+        i,
+        done;
+
+      for(i=0;i<relids.length;i++){
+        if(diff[relids[i]].removed === false && !diff[relids[i]].movedFrom){
+          //we have to create the child with the exact hash and then recursively call the function for it
+          //TODO this is a HACK
+          console.log('node '+_core.getPath(node)+'/'+relids[i]+' is created');
+          var newChild = _core.getChild(node,relids[i]);
+          _core.setHashed(newChild,true);
+          newChild.data = diff[relids[i]].hash;
+        }
+
+        done = TASYNC.call(function(a,b,c){
+          return createNewNodes(a,b);
+        },_core.loadChild(node,relids[i]),diff[relids[i]],done);
+
       }
 
-      return paths;
+      return TASYNC.call(function(d){
+        return null;
+      },done);
+    }
+
+    function applyNodeChange(root,path,nodeDiff){
+      //check for move
+      var node;
+      if(typeof nodeDiff.movedFrom === 'string'){
+
+      } else {
+        node = _core.loadByPath(root,path);
+      }
+    }
+
+    function applyAttributeChanges(node,attrDiff){
+
+    }
+
+    function applyRegistryChanges(node,regDiff){
+
+    }
+
+    function applyPointerChanges(node,pointerDiff){
+
+    }
+
+    function applySetChanges(node,setDiff){
+
+    }
+
+    function applyMetaChanges(node,metaDiff){
+
     }
 
     _core.applyTreeDiff = function(root,diff){
-      var moveSources = getMoveSources(diff,'');
+      var toFrom = {},
+        fromTo = {},
+        done;
+      getMoveSources(diff,'',toFrom,fromTo);
+
+      done = createNewNodes(root,diff);
+
+      TASYNC.call(function(d){
+        console.log('create is done');
+      },done);
+
 
       return null;
     };
