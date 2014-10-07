@@ -14,7 +14,9 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASS
       _needChecking = true,
       _rounds = 0,
       EMPTYGUID = "00000000-0000-0000-0000-000000000000",
-      EMPTYNODE = _innerCore.createNode({base:null,parent:null,guid:EMPTYGUID});
+      EMPTYNODE = _innerCore.createNode({base:null,parent:null,guid:EMPTYGUID}),
+      toFrom = {}, //TODO should not be global
+      fromTo = {}; //TODO should not be global
 
     for (var i in _innerCore) {
       _core[i] = _innerCore[i];
@@ -664,22 +666,77 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASS
       },done);
     }
 
+    function getMovedNode(root,from,to){
+        ASSERT(typeof from === 'string' && typeof to === 'string' && to !== '');
+        var parentPath = to.substring(0, to.lastIndexOf('/')),
+            parent = _core.loadByPath(root,fromTo[parentPath] || parentPath),
+            old = _core.loadByPath(root,from);
+
+        //clear the directories
+        delete fromTo[from];
+        delete toFrom[to];
+
+        return TASYNC.call(function(p,o){
+            return _core.moveNode(o,p);
+        },parent,old);
+
+    }
     function applyNodeChange(root,path,nodeDiff){
       //check for move
       var node;
       if(typeof nodeDiff.movedFrom === 'string'){
-
+        node = getMovedNode(root,nodeDiff.movedFrom,path);
       } else {
         node = _core.loadByPath(root,path);
       }
+
+      TASYNC.call(function(n){
+        if(nodeDiff.removed === true){
+            _core.deleteNode(n);
+            return;
+        }
+        applyAttributeChanges(n,nodeDiff.attr || {});
+        applyRegistryChanges(n,nodeDiff.reg || {});
+        return;
+      },node);
     }
 
     function applyAttributeChanges(node,attrDiff){
+        var i,keys;
+        keys = Object.keys(attrDiff.added || {});
+        for(i=0;i<keys.length;i++){
+            _core.setAttribute(node,keys[i],attrDiff.added[keys[i]]);
+        }
 
+        keys = Object.keys(attrDiff.updated || {});
+        for(i=0;i<keys.length;i++){
+            _core.setAttribute(node,keys[i],attrDiff.updated[keys[i]]);
+        }
+
+        if(attrDiff.removed && attrDiff.removed.length > 0){
+            for(i=0;i<attrDiff.removed.length;i++){
+                _core.delAttribute(node,attrDiff.removed[i]);
+            }
+        }
     }
 
     function applyRegistryChanges(node,regDiff){
+        var i,keys;
+        keys = Object.keys(regDiff.added || {});
+        for(i=0;i<keys.length;i++){
+            _core.setRegistry(node,keys[i],regDiff.added[keys[i]]);
+        }
 
+        keys = Object.keys(regDiff.updated || {});
+        for(i=0;i<keys.length;i++){
+            _core.setRegistry(node,keys[i],regDiff.updated[keys[i]]);
+        }
+
+        if(regDiff.removed && regDiff.removed.length > 0){
+            for(i=0;i<regDiff.removed.length;i++){
+                _core.delRegistry(node,regDiff.removed[i]);
+            }
+        }
     }
 
     function applyPointerChanges(node,pointerDiff){
@@ -695,9 +752,10 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASS
     }
 
     _core.applyTreeDiff = function(root,diff){
-      var toFrom = {},
-        fromTo = {},
-        done;
+      var done;
+
+      toFrom = {};
+      fromTo = {};
       getMoveSources(diff,'',toFrom,fromTo);
 
       done = createNewNodes(root,diff);
