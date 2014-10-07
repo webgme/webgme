@@ -3,7 +3,7 @@
  *
  * Author: Tamas Kecskes
  */
-define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASSERT) {
+define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, ASSERT) {
   "use strict";
 
 
@@ -14,7 +14,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASS
       _needChecking = true,
       _rounds = 0,
       EMPTYGUID = "00000000-0000-0000-0000-000000000000",
-      EMPTYNODE = _innerCore.createNode({base:null,parent:null,guid:EMPTYGUID}),
+      EMPTYNODE = _innerCore.createNode({base: null, parent: null, guid: EMPTYGUID}),
       toFrom = {}, //TODO should not be global
       fromTo = {}; //TODO should not be global
 
@@ -245,8 +245,9 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASS
     function metaRulesChanged(source, target) {
       return CANON.stringify(_core.getOwnJsonMeta(source)) !== CANON.stringify(_core.getOwnJsonMeta(target));
     }
-    function meta_diff(source,target){
-      if(CANON.stringify(_core.getOwnJsonMeta(source)) !== CANON.stringify(_core.getOwnJsonMeta(target))){
+
+    function meta_diff(source, target) {
+      if (CANON.stringify(_core.getOwnJsonMeta(source)) !== CANON.stringify(_core.getOwnJsonMeta(target))) {
         return _core.getOwnJsonMeta(target);
       }
       return {};
@@ -289,7 +290,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASS
         tDiff;
 
       for (i = 0; i < keys.length; i++) {
-        console.log('ED',keys[i]);
+        console.log('ED', keys[i]);
         tDiff = diff;
         alreadyChecked = false;
         names = Object.keys(oDiff[keys[i]]);
@@ -312,7 +313,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASS
           if (!alreadyChecked) {
             //now we should iterate through all pointers in the oDiff
             for (j = 0; j < names.length; j++) {
-              console.log('ED__',names[j],oDiff[keys[i]][names[j]]);
+              console.log('ED__', names[j], oDiff[keys[i]][names[j]]);
               switch (oDiff[keys[i]][names[j]].type) {
                 case "added":
                   if (!(tDiff.pointer && tDiff.pointer.added && tDiff.pointer.added[names[j]] !== undefined)) {
@@ -346,7 +347,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASS
                   break;
                 case "removed":
                   if (!(tDiff.pointer && tDiff.pointer.removed && tDiff.pointer.removed.indexOf(names[j]) !== -1)) {
-                    if (tDiff.pointer && tDiff.pointer.added && tDiff.pointer.added[names[j]] !== undefined ) {
+                    if (tDiff.pointer && tDiff.pointer.added && tDiff.pointer.added[names[j]] !== undefined) {
                       //the relation got updated but it switched level regarding the containment
                       tDiff.pointer = tDiff.pointer || {};
                       tDiff.pointer.updated = tDiff.pointer.updated || {};
@@ -367,7 +368,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASS
       }
     }
 
-    function updateDiff(sourceRoot,targetRoot) {
+    function updateDiff(sourceRoot, targetRoot) {
       var sChildrenHashes = _core.getChildrenHashes(sourceRoot),
         tChildrenHAshes = _core.getChildrenHashes(targetRoot),
         sRelids = Object.keys(sChildrenHashes),
@@ -382,17 +383,17 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASS
           }
           return null;
         };
-      return TASYNC.call(function (sChildren,tChildren) {
-        ASSERT(sChildren.length >=0 && tChildren.length >= 0);
+      return TASYNC.call(function (sChildren, tChildren) {
+        ASSERT(sChildren.length >= 0 && tChildren.length >= 0);
 
-        var i, child, done,tDiff,guid;
+        var i, child, done, tDiff, guid;
 
         tDiff = diff.children ? diff.children.removed || [] : [];
         for (i = 0; i < tDiff.length; i++) {
           diff.childrenListChanged = true;
           child = getChild(sChildren, tDiff[i].relid);
           guid = _core.getGuid(child);
-          diff[tDiff[i].relid] = {guid:guid,removed:true,hash:_core.getHash(child)};
+          diff[tDiff[i].relid] = {guid: guid, removed: true, hash: _core.getHash(child)};
           _yetToCompute[guid] = _yetToCompute[guid] || {};
           _yetToCompute[guid].from = child;
           _yetToCompute[guid].fromExpanded = false;
@@ -403,7 +404,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASS
           diff.childrenListChanged = true;
           child = getChild(tChildren, tDiff[i].relid);
           guid = _core.getGuid(child);
-          diff[tDiff[i].relid] = {guid:guid,removed:false,hash:_core.getHash(child)};
+          diff[tDiff[i].relid] = {guid: guid, removed: false, hash: _core.getHash(child)};
           _yetToCompute[guid] = _yetToCompute[guid] || {};
           _yetToCompute[guid].to = child;
           _yetToCompute[guid].toExpanded = false;
@@ -420,14 +421,14 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASS
         }
         return TASYNC.call(function () {
           delete diff.children;
-          extendDiffWithOvr(diff,oDiff);
+          extendDiffWithOvr(diff, oDiff);
           normalize(diff);
           if (Object.keys(diff).length > 0) {
-            diff.guid =  _core.getGuid(targetRoot);
+            diff.guid = _core.getGuid(targetRoot);
             diff.hash = _core.getHash(targetRoot);
-            return TASYNC.call(function(finalDiff){
+            return TASYNC.call(function (finalDiff) {
               return finalDiff;
-            },fillMissingGuid(targetRoot,'',diff));
+            }, fillMissingGuid(targetRoot, '', diff));
           } else {
             return diff;
           }
@@ -436,39 +437,39 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASS
       }, _core.loadChildren(sourceRoot), _core.loadChildren(targetRoot));
     }
 
-    function fillMissingGuid(root,path,diff){
+    function fillMissingGuid(root, path, diff) {
       var relids = getDiffChildrenRelids(diff),
         i,
         done;
 
-      for(i=0;i<relids.length;i++){
-        done = TASYNC.call(function(cDiff,relid){
+      for (i = 0; i < relids.length; i++) {
+        done = TASYNC.call(function (cDiff, relid) {
           diff[relid] = cDiff;
           return null;
-        },fillMissingGuid(root,path+'/'+relids[i],diff[relids[i]]),relids[i]);
+        }, fillMissingGuid(root, path + '/' + relids[i], diff[relids[i]]), relids[i]);
       }
-      return TASYNC.call(function(){
-        if(diff.guid){
+      return TASYNC.call(function () {
+        if (diff.guid) {
           return diff;
         } else {
-          return TASYNC.call(function(child){
+          return TASYNC.call(function (child) {
             diff.guid = _core.getGuid(child);
             diff.hash = _core.getHash(child);
             return diff;
-          },_core.loadByPath(root,path));
+          }, _core.loadByPath(root, path));
         }
-      },done);
+      }, done);
     }
 
-    function expandDiff(root,isDeleted) {
+    function expandDiff(root, isDeleted) {
       var diff = {
         guid: _core.getGuid(root),
         hash: _core.getHash(root),
         removed: isDeleted === true
       };
-      return TASYNC.call(function(children){
+      return TASYNC.call(function (children) {
         var guid;
-        for(var i=0;i<children.length;i++){
+        for (var i = 0; i < children.length; i++) {
           guid = _core.getGuid(children[i]);
           diff[_core.getRelid(children[i])] = {
             guid: guid,
@@ -476,7 +477,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASS
             removed: isDeleted === true
           };
 
-          if(isDeleted){
+          if (isDeleted) {
             _yetToCompute[guid] = _yetToCompute[guid] || {};
             _yetToCompute[guid].from = children[i];
             _yetToCompute[guid].fromExpanded = false;
@@ -487,35 +488,35 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASS
           }
         }
         return diff;
-      },_core.loadChildren(root));
+      }, _core.loadChildren(root));
     }
 
-    function insertIntoDiff(path,diff){
+    function insertIntoDiff(path, diff) {
       var pathArray = path.split('/'),
         relid = pathArray.pop(),
         sDiff = _DIFF,
         i;
       pathArray.shift();
-      for(i=0;i<pathArray.length;i++){
+      for (i = 0; i < pathArray.length; i++) {
         sDiff = sDiff[pathArray[i]];
       }
       //sDiff[relid] = diff;
-      sDiff[relid] = mergeObjects(sDiff[relid],diff);
+      sDiff[relid] = mergeObjects(sDiff[relid], diff);
     }
 
-    function mergeObjects(source,target){
+    function mergeObjects(source, target) {
       var merged = {},
         sKeys = Object.keys(source),
         tKeys = Object.keys(target);
-      for(i=0;i<sKeys.length;i++){
+      for (i = 0; i < sKeys.length; i++) {
         merged[sKeys[i]] = source[sKeys[i]];
       }
-      for(i=0;i<tKeys.length;i++){
-        if(sKeys.indexOf(tKeys[i]) === -1){
+      for (i = 0; i < tKeys.length; i++) {
+        if (sKeys.indexOf(tKeys[i]) === -1) {
           merged[tKeys[i]] = target[tKeys[i]];
         } else {
-          if(typeof target[tKeys[i]] === typeof source[tKeys[i]] && typeof target[tKeys[i]] === 'object' && !(target instanceof Array) ){
-            merged[tKeys[i]] = mergeObjects(source[tKeys[i]],target[tKeys[i]]);
+          if (typeof target[tKeys[i]] === typeof source[tKeys[i]] && typeof target[tKeys[i]] === 'object' && !(target instanceof Array)) {
+            merged[tKeys[i]] = mergeObjects(source[tKeys[i]], target[tKeys[i]]);
           } else {
             merged[tKeys[i]] = target[tKeys[i]];
           }
@@ -527,50 +528,50 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASS
 
     function checkRound() {
       var guids = Object.keys(_yetToCompute),
-        done,ytc,
+        done, ytc,
         i;
-      if (_needChecking !== true || guids.length < 1){
+      if (_needChecking !== true || guids.length < 1) {
         return _DIFF;
       }
       _needChecking = false;
-      for(i=0;i<guids.length;i++){
+      for (i = 0; i < guids.length; i++) {
         ytc = _yetToCompute[guids[i]];
-        if(ytc.from && ytc.to){
+        if (ytc.from && ytc.to) {
           //move
           _needChecking = true;
           delete _yetToCompute[guids[i]];
-          done = TASYNC.call(function(mDiff,info){
+          done = TASYNC.call(function (mDiff, info) {
             mDiff.movedFrom = _core.getPath(info.from);
-            insertIntoDiff(_core.getPath(info.to),mDiff);
+            insertIntoDiff(_core.getPath(info.to), mDiff);
             return null;
-          },updateDiff(ytc.from,ytc.to),ytc);
+          }, updateDiff(ytc.from, ytc.to), ytc);
         } else {
-          if(ytc.from && ytc.fromExpanded === false){
+          if (ytc.from && ytc.fromExpanded === false) {
             //expand from
             ytc.fromExpanded = true;
             _needChecking = true;
-            done = TASYNC.call(function(mDiff,info){
+            done = TASYNC.call(function (mDiff, info) {
               mDiff.hash = _core.getHash(info.from);
               mDiff.removed = true;
-              insertIntoDiff(_core.getPath(info.from),mDiff);
+              insertIntoDiff(_core.getPath(info.from), mDiff);
               return null;
-            },expandDiff(ytc.from,true),ytc);
-          } else if(ytc.to && ytc.toExpanded === false){
+            }, expandDiff(ytc.from, true), ytc);
+          } else if (ytc.to && ytc.toExpanded === false) {
             //expand to
             ytc.toExpanded = true;
             _needChecking = true;
-            done = TASYNC.call(function(mDiff,info){
+            done = TASYNC.call(function (mDiff, info) {
               mDiff.hash = _core.getHash(info.to);
               mDiff.removed = false;
-              insertIntoDiff(_core.getPath(info.to),mDiff);
+              insertIntoDiff(_core.getPath(info.to), mDiff);
               return null;
-            },expandDiff(ytc.to,false),ytc);
+            }, expandDiff(ytc.to, false), ytc);
           }
         }
       }
-      return TASYNC.call(function(){
+      return TASYNC.call(function () {
         return checkRound();
-      },done);
+      }, done);
     }
 
     _core.nodeDiff = function (source, target) {
@@ -580,189 +581,198 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC,ASS
         reg: reg_diff(source, target),
         pointer: pointer_diff(source, target),
         set: set_diff(source, target),
-        meta: meta_diff(source,target)
+        meta: meta_diff(source, target)
       };
 
       normalize(diff);
       return isEmptyNodeDiff(diff) ? null : diff;
     };
 
-    _core.generateTreeDiff = function (sRoot,tRoot){
+    _core.generateTreeDiff = function (sRoot, tRoot) {
       _yetToCompute = {};
       _DIFF = {};
       _needChecking = true;
       _rounds = 0;
-      return TASYNC.call(function(d){
+      return TASYNC.call(function (d) {
         _DIFF = d;
         return checkRound();
-      },updateDiff(sRoot,tRoot));
+      }, updateDiff(sRoot, tRoot));
     };
 
-    _core.generateLightTreeDiff = function (sRoot,tRoot){
-      return updateDiff(sRoot,tRoot);
+    _core.generateLightTreeDiff = function (sRoot, tRoot) {
+      return updateDiff(sRoot, tRoot);
     };
 
-    function getDiffChildrenRelids(diff){
+    function getDiffChildrenRelids(diff) {
       var keys = Object.keys(diff),
         i,
         filteredKeys = [],
         forbiddenWords = {
-          guid:true,
-          hash:true,
-          attr:true,
-          reg:true,
-          pointer:true,
-          set:true,
-          meta:true,
-          removed:true,
-          movedFrom:true,
-          childrenListChanged:true
+          guid: true,
+          hash: true,
+          attr: true,
+          reg: true,
+          pointer: true,
+          set: true,
+          meta: true,
+          removed: true,
+          movedFrom: true,
+          childrenListChanged: true
         };
-      for(i=0;i<keys.length;i++){
-        if(!forbiddenWords[keys[i]]){
+      for (i = 0; i < keys.length; i++) {
+        if (!forbiddenWords[keys[i]]) {
           filteredKeys.push(keys[i]);
         }
       }
       return filteredKeys;
     }
 
-    function getMoveSources(diff,path,toFrom,fromTo){
+    function getMoveSources(diff, path, toFrom, fromTo) {
       var relids = getDiffChildrenRelids(diff),
-        i,paths=[];
+        i, paths = [];
 
-      for(i=0;i<relids.length;i++){
-       getMoveSources(diff[relids[i]],path+'/'+relids[i],toFrom,fromTo);
+      for (i = 0; i < relids.length; i++) {
+        getMoveSources(diff[relids[i]], path + '/' + relids[i], toFrom, fromTo);
       }
 
-      if(typeof diff.movedFrom === 'string'){
+      if (typeof diff.movedFrom === 'string') {
         toFrom[path] = diff.movedFrom;
         fromTo[diff.movedFrom] = path;
       }
     }
 
-    function createNewNodes(node,diff){
+    function createNewNodes(node, diff) {
       var relids = getDiffChildrenRelids(diff),
         i,
         done;
 
-      for(i=0;i<relids.length;i++){
-        if(diff[relids[i]].removed === false && !diff[relids[i]].movedFrom){
+      for (i = 0; i < relids.length; i++) {
+        if (diff[relids[i]].removed === false && !diff[relids[i]].movedFrom) {
           //we have to create the child with the exact hash and then recursively call the function for it
           //TODO this is a HACK
-          console.log('node '+_core.getPath(node)+'/'+relids[i]+' is created');
-          var newChild = _core.getChild(node,relids[i]);
-          _core.setHashed(newChild,true);
+          console.log('node ' + _core.getPath(node) + '/' + relids[i] + ' is created');
+          var newChild = _core.getChild(node, relids[i]);
+          _core.setHashed(newChild, true);
           newChild.data = diff[relids[i]].hash;
         }
 
-        done = TASYNC.call(function(a,b,c){
-          return createNewNodes(a,b);
-        },_core.loadChild(node,relids[i]),diff[relids[i]],done);
+        done = TASYNC.call(function (a, b, c) {
+          return createNewNodes(a, b);
+        }, _core.loadChild(node, relids[i]), diff[relids[i]], done);
 
       }
 
-      return TASYNC.call(function(d){
+      return TASYNC.call(function (d) {
         return null;
-      },done);
+      }, done);
     }
 
-    function getMovedNode(root,from,to){
-        ASSERT(typeof from === 'string' && typeof to === 'string' && to !== '');
-        var parentPath = to.substring(0, to.lastIndexOf('/')),
-            parent = _core.loadByPath(root,fromTo[parentPath] || parentPath),
-            old = _core.loadByPath(root,from);
+    function getMovedNode(root, from, to) {
+      ASSERT(typeof from === 'string' && typeof to === 'string' && to !== '');
+      var parentPath = to.substring(0, to.lastIndexOf('/')),
+        parent = _core.loadByPath(root, fromTo[parentPath] || parentPath),
+        old = _core.loadByPath(root, from);
 
-        //clear the directories
-        delete fromTo[from];
-        delete toFrom[to];
+      //clear the directories
+      delete fromTo[from];
+      delete toFrom[to];
 
-        return TASYNC.call(function(p,o){
-            return _core.moveNode(o,p);
-        },parent,old);
+      return TASYNC.call(function (p, o) {
+        return _core.moveNode(o, p);
+      }, parent, old);
 
     }
-    function applyNodeChange(root,path,nodeDiff){
+
+    function applyNodeChange(root, path, nodeDiff) {
       //check for move
       var node;
-      if(typeof nodeDiff.movedFrom === 'string'){
-        node = getMovedNode(root,nodeDiff.movedFrom,path);
+      if (typeof nodeDiff.movedFrom === 'string') {
+        node = getMovedNode(root, nodeDiff.movedFrom, path);
       } else {
-        node = _core.loadByPath(root,path);
+        node = _core.loadByPath(root, path);
       }
 
-      TASYNC.call(function(n){
-        if(nodeDiff.removed === true){
-            _core.deleteNode(n);
-            return;
+      TASYNC.call(function (n) {
+        var done,
+          relids = getDiffChildrenRelids(nodeDiff),
+          i;
+        if (nodeDiff.removed === true) {
+          _core.deleteNode(n);
+          return;
         }
-        applyAttributeChanges(n,nodeDiff.attr || {});
-        applyRegistryChanges(n,nodeDiff.reg || {});
-        return;
-      },node);
+        applyAttributeChanges(n, nodeDiff.attr || {});
+        applyRegistryChanges(n, nodeDiff.reg || {});
+        for(i=0;i<relids.length;i++){
+          done = applyNodeChange(root,path+'/'+relids[i],nodeDiff[relids[i]]);
+        }
+        TASYNC.call(function(d){
+          return done;
+        },done);
+      }, node);
     }
 
-    function applyAttributeChanges(node,attrDiff){
-        var i,keys;
-        keys = Object.keys(attrDiff.added || {});
-        for(i=0;i<keys.length;i++){
-            _core.setAttribute(node,keys[i],attrDiff.added[keys[i]]);
-        }
+    function applyAttributeChanges(node, attrDiff) {
+      var i, keys;
+      keys = Object.keys(attrDiff.added || {});
+      for (i = 0; i < keys.length; i++) {
+        _core.setAttribute(node, keys[i], attrDiff.added[keys[i]]);
+      }
 
-        keys = Object.keys(attrDiff.updated || {});
-        for(i=0;i<keys.length;i++){
-            _core.setAttribute(node,keys[i],attrDiff.updated[keys[i]]);
-        }
+      keys = Object.keys(attrDiff.updated || {});
+      for (i = 0; i < keys.length; i++) {
+        _core.setAttribute(node, keys[i], attrDiff.updated[keys[i]]);
+      }
 
-        if(attrDiff.removed && attrDiff.removed.length > 0){
-            for(i=0;i<attrDiff.removed.length;i++){
-                _core.delAttribute(node,attrDiff.removed[i]);
-            }
+      if (attrDiff.removed && attrDiff.removed.length > 0) {
+        for (i = 0; i < attrDiff.removed.length; i++) {
+          _core.delAttribute(node, attrDiff.removed[i]);
         }
+      }
     }
 
-    function applyRegistryChanges(node,regDiff){
-        var i,keys;
-        keys = Object.keys(regDiff.added || {});
-        for(i=0;i<keys.length;i++){
-            _core.setRegistry(node,keys[i],regDiff.added[keys[i]]);
-        }
+    function applyRegistryChanges(node, regDiff) {
+      var i, keys;
+      keys = Object.keys(regDiff.added || {});
+      for (i = 0; i < keys.length; i++) {
+        _core.setRegistry(node, keys[i], regDiff.added[keys[i]]);
+      }
 
-        keys = Object.keys(regDiff.updated || {});
-        for(i=0;i<keys.length;i++){
-            _core.setRegistry(node,keys[i],regDiff.updated[keys[i]]);
-        }
+      keys = Object.keys(regDiff.updated || {});
+      for (i = 0; i < keys.length; i++) {
+        _core.setRegistry(node, keys[i], regDiff.updated[keys[i]]);
+      }
 
-        if(regDiff.removed && regDiff.removed.length > 0){
-            for(i=0;i<regDiff.removed.length;i++){
-                _core.delRegistry(node,regDiff.removed[i]);
-            }
+      if (regDiff.removed && regDiff.removed.length > 0) {
+        for (i = 0; i < regDiff.removed.length; i++) {
+          _core.delRegistry(node, regDiff.removed[i]);
         }
+      }
     }
 
-    function applyPointerChanges(node,pointerDiff){
-
-    }
-
-    function applySetChanges(node,setDiff){
+    function applyPointerChanges(node, pointerDiff) {
 
     }
 
-    function applyMetaChanges(node,metaDiff){
+    function applySetChanges(node, setDiff) {
 
     }
 
-    _core.applyTreeDiff = function(root,diff){
+    function applyMetaChanges(node, metaDiff) {
+
+    }
+
+    _core.applyTreeDiff = function (root, diff) {
       var done;
 
       toFrom = {};
       fromTo = {};
-      getMoveSources(diff,'',toFrom,fromTo);
+      getMoveSources(diff, '', toFrom, fromTo);
 
-      done = createNewNodes(root,diff);
+      done = createNewNodes(root, diff);
 
-      TASYNC.call(function(d){
-        console.log('create is done');
-      },done);
+      TASYNC.call(function (d) {
+        return applyNodeChange(root,'',diff);
+      }, done);
 
 
       return null;
