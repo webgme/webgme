@@ -274,6 +274,15 @@ define( [
 
     } );
 
+    self.gmeClient.addEventListener( self.gmeClient.events.UNDO_AVAILABLE, function(client, parameters){
+      console.log('kecso p',parameters);
+      if(parameters){
+        self.$scope.navigator.items[self.navIdBranch].undoLastCommitItem.disabled = false;
+      } else {
+        self.$scope.navigator.items[self.navIdBranch].undoLastCommitItem.disabled = true;
+      }
+    });
+
   };
 
   ProjectNavigatorController.prototype.updateProjectList = function () {
@@ -618,10 +627,13 @@ define( [
       id: 'undoLastCommit',
       label: 'Undo last commit',
       iconClass: 'fa fa-reply',
-      disabled: true, // TODO: set this from handler to enable/disable
+      disabled: false, // TODO: set this from handler to enable/disable
       action: function ( actionData ) {
 
         console.log( 'Undoing last commit', actionData );
+        self.gmeClient.undo(actionData.branchId,function(err){
+          console.log('undo have been done',err);
+        });
 
       },
       // Put whatever you need to get passed back above
@@ -692,6 +704,7 @@ define( [
     };
 
     self.projects[projectId].branches[branchId].deleteBranchItem = deleteBranchItem;
+    self.projects[projectId].branches[branchId].undoLastCommitItem = undoLastCommitItem;
 
     for ( i = 0; i < self.projects[projectId].menu.length; i += 1 ) {
 
