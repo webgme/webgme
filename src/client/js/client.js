@@ -76,6 +76,7 @@ define([
                 _TOKEN = null,
                 META = new BaseMeta(),
                 _rootHash = null,
+                _root = null,
                 _gHash = 0,
                 _addOns = {},
                 _constraintCallback = null,
@@ -821,10 +822,13 @@ define([
             function createEmptyProject(project,callback){
                 var core = getNewCore(project);
                 var root = core.createNode();
-                core.persist(root,function(err){});
-                var rootHash = core.getHash(root);
-                var commitHash = project.makeCommit([],rootHash,'project creation commit',function(err){});
-                project.setBranchHash('master',"",commitHash,callback);
+                core.persist(root,function(err){
+                    var rootHash = core.getHash(root);
+                    var commitHash = project.makeCommit([],rootHash,'project creation commit',function(err){
+                        project.setBranchHash('master',"",commitHash,callback);
+                    });
+                });
+
             }
 
             //loading functions
@@ -1126,6 +1130,8 @@ define([
 
                 //and now the one-by-one loading
                 _core.loadRoot(newRootHash,function(err,root){
+                    ASSERT(err || root);
+                    _root = root;
                     error = error || err;
                     if(!err){
                         //TODO here is the point where we can start / stop our addOns - but we will not wait for them to start
@@ -1310,8 +1316,10 @@ define([
                             //TODO what can we do with the error??
                             openProject(projectname,function(err){
                                 //TODO is there a meaningful error which we should propagate towards user???
-                                reLaunchUsers();
-                                callback();
+                                if(!err){
+                                    reLaunchUsers();
+                                }
+                                callback(err);
                             });
                         });
                     }
@@ -2612,7 +2620,7 @@ define([
                 //if called on an existing project, it will ruin it!!! - although the old commits will be untouched
                 createProjectAsync(projectname,function(err){
                     selectProjectAsync(projectname,function(err){
-                        Serialization.import(_core,_nodes[ROOT_PATH].node,jProject,function(err){
+                        Serialization.import(_core,/*_root*/_nodes[ROOT_PATH].node,jProject,function(err){
                             if(err){
                                 return callback(err);
                             }
