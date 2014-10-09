@@ -1411,14 +1411,6 @@ define(['logManager',
         this.logger.warning("DiagramDesignerWidget.prototype.onSelectionTextColorChanged(selectedElements, color) IS NOT OVERRIDDEN IN CONTROLLER. color: " + color);
     };
 
-    DiagramDesignerWidget.prototype.onUndo = function(){
-        this.logger.warning("DiagramDesignerWidget.prototype.onUndo() IS NOT OVERRIDDEN IN CONTROLLER.");
-    };
-
-    DiagramDesignerWidget.prototype.onRedo = function(){
-        this.logger.warning("DiagramDesignerWidget.prototype.onRedo() IS NOT OVERRIDDEN IN CONTROLLER.");
-    };
-
     /************** END OF - API REGARDING TO MANAGERS ***********************/
 
     //additional code pieces for DiagramDesignerWidget
