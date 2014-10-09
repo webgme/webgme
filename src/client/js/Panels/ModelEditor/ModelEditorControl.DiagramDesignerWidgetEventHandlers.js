@@ -160,6 +160,14 @@ define(['logManager',
             self._onSelectedTabChanged(tabID);
         };
 
+        this.designerCanvas.onUndo = function() {
+            self._onUndo();
+        };
+
+        this.designerCanvas.onRedo = function() {
+            self._onRedo();
+        }
+
         this.logger.debug("attachDiagramDesignerWidgetEventHandlers finished");
     };
 
@@ -1221,6 +1229,18 @@ define(['logManager',
 
             this._initializeSelectedAspect();
         }
+    };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onUndo = function() {
+        this._client.undo(this._client.getActualBranch(),function(err){
+            console.log('undoed',err);
+        });
+    };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onRedo = function() {
+        this._client.redo(this._client.getActualBranch(),function(err){
+            console.log('redoed',err);
+        });
     };
 
     return ModelEditorControlDiagramDesignerWidgetEventHandlers;

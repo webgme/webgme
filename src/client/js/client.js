@@ -38,6 +38,7 @@ define([
     function UndoRedo(_client) {
       var
         currentModification = null,
+        canDo = true,
         addModification = function (commitHash, info) {
           var newElement = {
             previous: currentModification,
@@ -45,11 +46,14 @@ define([
             info: info,
             next: null
           };
+          if(currentModification){
+              currentModification.next = newElement;
+          }
           currentModification = newElement;
         },
         undo = function (branch, callback) {
           var from, to, project;
-          if (currentModification && currentModification.previous) {
+          if (canDo && currentModification && currentModification.previous) {
             project = _client.getProjectObject();
             from = currentModification.commit;
             to = currentModification.previous.commit;
@@ -65,7 +69,7 @@ define([
         },
         redo = function (branch, callback) {
           var from, to, project;
-          if (currentModification && currentModification.next) {
+          if (canDo && currentModification && currentModification.next) {
             project = _client.getProjectObject();
             from = currentModification.commit;
             to = currentModification.next.commit;
@@ -81,8 +85,12 @@ define([
         },
         clean = function() {
           currentModification = null;
+          canDo = true;
         };
 
+      _client.addEventListener(_client.events.UNDO_AVAILABLE,function(client,parameters){
+        canDo = parameters === true;
+      });
       return {
         undo: undo,
         redo: redo,
@@ -1327,11 +1335,11 @@ define([
             });
             _msg = "";
             addCommit(newCommitHash);
+            _selfCommits[newCommitHash] = true;
             _project.setBranchHash(_branch, _recentCommits[1], _recentCommits[0], function (err) {
               //TODO now what??? - could we screw up?
               if(!err){
                 _redoer.addModification(newCommitHash,"");
-                _selfCommits[newCommitHash] = true;
               }
               callback(err);
             });
@@ -2925,7 +2933,18 @@ define([
       if (_configuration.autostart) {
         initialize();
       }
-      _redoer = new UndoRedo({getProjectObject: getProjectObject});
+      _redoer = new UndoRedo({
+          //eventer
+          events: _self.events,
+          networkStates: _self.networkStates,
+          branchStates: _self.branchStates,
+          _eventList: _self._eventList,
+          _getEvent: _self._getEvent,
+          addEventListener: _self.addEventListener,
+          removeEventListener: _self.removeEventListener,
+          removeAllEventListeners: _self.removeAllEventListeners,
+          dispatchEvent: _self.dispatchEvent,
+          getProjectObject: getProjectObject});
 
       return {
         //eventer

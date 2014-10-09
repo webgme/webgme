@@ -63,6 +63,14 @@ define(['js/KeyboardManager/IKeyTarget'], function (IKeyTarget) {
                 this.onClipboardPaste();
                 ret = false;
                 break;*/
+            //undo redo
+            case 'meta+left':
+            case 'ctrl+left':
+                this.onUndo();
+                break;
+            case 'meta+right':
+            case 'ctrl+right':
+                this.onRedo();
         }
 
         return ret;

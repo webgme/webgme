@@ -237,29 +237,7 @@ define( [
 
     self.gmeClient.addEventListener( self.gmeClient.events.SERVER_BRANCH_UPDATED, function ( client, parameters ) {
 //            console.log(self.gmeClient.events.SERVER_BRANCH_UPDATED, parameters);
-      // TODO: update branch information
-      var currentProject = self.$scope.navigator.items[self.navIdProject],
-      currentBranch = self.$scope.navigator.items[self.navIdBranch];
-
-      if ( currentProject ) {
-        currentProject = currentProject.id;
-      }
-
-      if ( currentBranch ) {
-        currentBranch = currentBranch.id;
-      }
-
-      //FIXME TODO there is a need for a real update instead of delete and create!!!
-      self.removeBranch( parameters.project, parameters.branch );
-      self.addBranch( parameters.project, parameters.branch, parameters.commit );
-
-      if ( currentProject === parameters.project && currentBranch === parameters.branch ) {
-        //we also have te re-select the branch
-        self.selectBranch( {
-          projectId: currentProject,
-          branchId: currentBranch
-        } );
-      }
+      self.updateBranch(parameters.project,parameters.branch,parameters.commit);
     } );
 
     self.gmeClient.addEventListener( self.gmeClient.events.SERVER_BRANCH_DELETED, function ( client, parameters ) {
@@ -282,7 +260,6 @@ define( [
         self.$scope.navigator.items[self.navIdBranch].undoLastCommitItem.disabled = true;
       }
     });
-
   };
 
   ProjectNavigatorController.prototype.updateProjectList = function () {
@@ -627,7 +604,7 @@ define( [
       id: 'undoLastCommit',
       label: 'Undo last commit',
       iconClass: 'fa fa-reply',
-      disabled: false, // TODO: set this from handler to enable/disable
+      disabled: true, // TODO: set this from handler to enable/disable
       action: function ( actionData ) {
 
         console.log( 'Undoing last commit', actionData );
@@ -892,6 +869,14 @@ define( [
 
     callback( null );
     self.update();
+  };
+
+  ProjectNavigatorController.prototype.updateBranch = function ( projectId, branchId, branchInfo ){
+      this.projects[projectId].branches[branchId].properties = {
+          hashTag: branchInfo || '#1234567890',
+          lastCommiter: 'petike',
+          lastCommitTime: new Date()
+      }
   };
 
   ProjectNavigatorController.prototype.dummyProjectsGenerator = function ( name, maxCount ) {
