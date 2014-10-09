@@ -259,12 +259,26 @@ define( [
         if (self.$scope.navigator &&
         self.$scope.navigator.items &&
         self.$scope.navigator.items[self.navIdBranch]) {
-
-          console.log('kecso p',parameters);
           if(parameters){
             self.$scope.navigator.items[self.navIdBranch].undoLastCommitItem.disabled = false;
           } else {
             self.$scope.navigator.items[self.navIdBranch].undoLastCommitItem.disabled = true;
+          }
+
+        }
+
+      });
+    });
+    self.gmeClient.addEventListener( self.gmeClient.events.REDO_AVAILABLE, function(client, parameters){
+      self.$timeout(function() {
+
+        if (self.$scope.navigator &&
+          self.$scope.navigator.items &&
+          self.$scope.navigator.items[self.navIdBranch]) {
+          if(parameters){
+            self.$scope.navigator.items[self.navIdBranch].redoLastUndoItem.disabled = false;
+          } else {
+            self.$scope.navigator.items[self.navIdBranch].redoLastUndoItem.disabled = true;
           }
 
         }
@@ -481,7 +495,8 @@ define( [
     createCommitMessage,
 
     deleteBranchItem,
-    undoLastCommitItem;
+    undoLastCommitItem,
+    redoLastUndoItem;
 
     if ( self.projects[projectId].disabled ) {
       // do not show any branches if the project is disabled
@@ -632,6 +647,26 @@ define( [
       }
     };
 
+    redoLastUndoItem = {
+      id: 'redoLastUndo',
+      label: 'Redo last undo',
+      iconClass: 'fa fa-reply',
+      disabled: true, // TODO: set this from handler to enable/disable
+      action: function ( actionData ) {
+
+        console.log( 'Redoing last undo', actionData );
+        self.gmeClient.redo(actionData.branchId,function(err){
+          console.log('redo have been done',err);
+        });
+
+      },
+      // Put whatever you need to get passed back above
+      actionData: {
+        projectId: projectId,
+        branchId: branchId,
+        branchInfo: branchInfo
+      }
+    };
     // create the new branch structure
     self.projects[projectId].branches[branchId] = {
       id: branchId,
@@ -652,6 +687,7 @@ define( [
         {
           items: [
             undoLastCommitItem,
+            redoLastUndoItem,
             {
               id: 'createBranch',
               label: 'Create branch',
@@ -693,6 +729,7 @@ define( [
 
     self.projects[projectId].branches[branchId].deleteBranchItem = deleteBranchItem;
     self.projects[projectId].branches[branchId].undoLastCommitItem = undoLastCommitItem;
+    self.projects[projectId].branches[branchId].redoLastUndoItem = redoLastUndoItem;
 
     for ( i = 0; i < self.projects[projectId].menu.length; i += 1 ) {
 

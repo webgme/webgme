@@ -38,7 +38,8 @@ define([
     function UndoRedo(_client) {
       var
         currentModification = null,
-        canDo = true,
+        canDoUndo = false,
+        canDoRedo = false,
         addModification = function (commitHash, info) {
           var newElement = {
             previous: currentModification,
@@ -53,49 +54,52 @@ define([
         },
         undo = function (branch, callback) {
           var from, to, project;
-          if (canDo && currentModification && currentModification.previous) {
+          if (canDoUndo && currentModification && currentModification.previous) {
             project = _client.getProjectObject();
             from = currentModification.commit;
             to = currentModification.previous.commit;
-            project.setBranchHash(branch, from, to, function (err) {
-              if (!err) {
-                currentModification = currentModification.previous;
-              }
-              callback(err);
-            });
+            currentModification = currentModification.previous;
+            project.setBranchHash(branch, from, to, callback);
           } else {
             callback(new Error('unable to execute undo'));
           }
         },
         redo = function (branch, callback) {
           var from, to, project;
-          if (canDo && currentModification && currentModification.next) {
+          if (canDoRedo && currentModification && currentModification.next) {
             project = _client.getProjectObject();
             from = currentModification.commit;
             to = currentModification.next.commit;
-            project.setBranchHash(branch, from, to, function (err) {
-              if (!err) {
-                currentModification = currentModification.next;
-              }
-              callback(err);
-            });
+            currentModification = currentModification.next;
+            project.setBranchHash(branch, from, to, callback);
           } else {
             callback(new Error('unable to execute redo'));
           }
         },
         clean = function() {
           currentModification = null;
-          canDo = true;
+          canDoUndo = false;
+          canDoRedo = false;
+        },
+        checkStatus = function(){
+          return {
+            undo: currentModification ? currentModification.previous !== null && currentModification.previous !== undefined : false,
+            redo: currentModification ? currentModification.next !== null && currentModification.next !== undefined : false
+          };
         };
 
       _client.addEventListener(_client.events.UNDO_AVAILABLE,function(client,parameters){
-        canDo = parameters === true;
+        canDoUndo = parameters === true;
+      });
+      _client.addEventListener(_client.events.REDO_AVAILABLE,function(client,parameters){
+        canDoRedo = parameters === true;
       });
       return {
         undo: undo,
         redo: redo,
         addModification: addModification,
-        clean: clean
+        clean: clean,
+        checkStatus: checkStatus
       };
 
     }
@@ -190,7 +194,8 @@ define([
         "SERVER_BRANCH_UPDATED": "SERVER_BRANCH_UPDATED",
         "SERVER_BRANCH_DELETED": "SERVER_BRANCH_DELETED",
 
-        "UNDO_AVAILABLE": "UNDO_AVAILABLE"
+        "UNDO_AVAILABLE": "UNDO_AVAILABLE",
+        "REDO_AVAILABLE": "REDO_AVAILABLE"
       };
       _self.networkStates = {
         'CONNECTED': "connected",
@@ -498,6 +503,7 @@ define([
         callback = callback || function () {
         };
         var myCallback = null;
+        var redoerNeedsClean = true;
         var branchHashUpdated = function (err, newhash, forked) {
           if (branch === _branch && !_offline) {
             if (!err && typeof newhash === 'string') {
@@ -511,11 +517,27 @@ define([
                   }
                 });
               } else {
-                if(_selfCommits[newhash]){
-                  _self.dispatchEvent(_self.events.UNDO_AVAILABLE, true);
-                } else {
-                  _self.dispatchEvent(_self.events.UNDO_AVAILABLE, false);
+                if(redoerNeedsClean){
+                  redoerNeedsClean = false;
+                  _redoer.clean();
+                  _redoer.addModification(newhash,"branch initial");
+                  _selfCommits={};_selfCommits[newhash] = true;
                 }
+                var redoInfo = _redoer.checkStatus(),
+                  canUndo = false,
+                  canRedo = false;
+
+                if(_selfCommits[newhash]){
+                  if(redoInfo.undo) {
+                    canUndo = true;
+                  }
+                  if(redoInfo.redo) {
+                    canRedo = true;
+                  }
+                }
+                _self.dispatchEvent(_self.events.UNDO_AVAILABLE, canUndo);
+                _self.dispatchEvent(_self.events.REDO_AVAILABLE, canRedo);
+
 
                 if (/*_recentCommits.indexOf(newhash) === -1*/_recentCommits.indexOf(newhash) !== 0) {
 
@@ -1336,14 +1358,13 @@ define([
             _msg = "";
             addCommit(newCommitHash);
             _selfCommits[newCommitHash] = true;
+            _redoer.addModification(newCommitHash,"");
             _project.setBranchHash(_branch, _recentCommits[1], _recentCommits[0], function (err) {
               //TODO now what??? - could we screw up?
-              if(!err){
-                _redoer.addModification(newCommitHash,"");
-              }
+              loading(newRootHash);
               callback(err);
             });
-            loading(newRootHash);
+            //loading(newRootHash);
           } else {
             _core.persist(_nodes[ROOT_PATH].node, function (err) {
             });
