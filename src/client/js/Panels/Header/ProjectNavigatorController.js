@@ -24,13 +24,14 @@ define( [
   } );
 
 
-  var ProjectNavigatorController = function ( $scope, gmeClient, $simpleDialog ) {
+  var ProjectNavigatorController = function ( $scope, gmeClient, $simpleDialog, $timeout ) {
 
     var self = this;
 
     self.$scope = $scope;
     self.gmeClient = gmeClient;
     self.$simpleDialog = $simpleDialog;
+    self.$timeout = $timeout;
 
     // internal data representation for fast access to objects
     self.projects = {};
@@ -253,12 +254,22 @@ define( [
     } );
 
     self.gmeClient.addEventListener( self.gmeClient.events.UNDO_AVAILABLE, function(client, parameters){
-      console.log('kecso p',parameters);
-      if(parameters){
-        self.$scope.navigator.items[self.navIdBranch].undoLastCommitItem.disabled = false;
-      } else {
-        self.$scope.navigator.items[self.navIdBranch].undoLastCommitItem.disabled = true;
-      }
+      self.$timeout(function() {
+
+        if (self.$scope.navigator &&
+        self.$scope.navigator.items &&
+        self.$scope.navigator.items[self.navIdBranch]) {
+
+          console.log('kecso p',parameters);
+          if(parameters){
+            self.$scope.navigator.items[self.navIdBranch].undoLastCommitItem.disabled = false;
+          } else {
+            self.$scope.navigator.items[self.navIdBranch].undoLastCommitItem.disabled = true;
+          }
+
+        }
+
+      });
     });
   };
 
@@ -876,7 +887,7 @@ define( [
           hashTag: branchInfo || '#1234567890',
           lastCommiter: 'petike',
           lastCommitTime: new Date()
-      }
+      };
   };
 
   ProjectNavigatorController.prototype.dummyProjectsGenerator = function ( name, maxCount ) {
