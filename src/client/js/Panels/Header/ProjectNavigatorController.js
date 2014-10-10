@@ -256,14 +256,33 @@ define( [
 
     angular.element(self.$window).on('keydown', function(e) {
 
-      if ( (e.metaKey || e.ctrlKey) && e.keyCode === 90 ) {
-        self.$timeout(function() {
+      if ( (e.metaKey || e.ctrlKey) ) {
 
-          console.log('No do undo (if can)');
+        if ( e.keyCode === 90 ) {
 
-          // TODO: call undoing function here
+          if (e.shiftKey) {
 
-        });
+            self.$timeout(function() {
+
+              console.log('Now do redo (if can)');
+
+              // TODO: call redoing function here
+
+            });
+
+          } else {
+
+            self.$timeout(function() {
+
+              console.log('Now do undo (if can)');
+
+              // TODO: call undoing function here
+
+            });
+
+          }
+
+        }
       }
     });
 
@@ -664,7 +683,7 @@ define( [
     redoLastUndoItem = {
       id: 'redoLastUndo',
       label: 'Redo last undo',
-      iconClass: 'fa fa-reply',
+      iconClass: 'fa fa-mail-forward',
       disabled: true, // TODO: set this from handler to enable/disable
       action: function ( actionData ) {
 
