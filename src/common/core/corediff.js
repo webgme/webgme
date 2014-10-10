@@ -13,8 +13,9 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       _DIFF = {},
       _needChecking = true,
       _rounds = 0,
-      EMPTYGUID = "00000000-0000-0000-0000-000000000000",
-      EMPTYNODE = _innerCore.createNode({base: null, parent: null, guid: EMPTYGUID}),
+      TODELETESTRING = "*to*delete*",
+    /*EMPTYGUID = "00000000-0000-0000-0000-000000000000",
+     EMPTYNODE = _innerCore.createNode({base: null, parent: null, guid: EMPTYGUID}),*/
       toFrom = {}, //TODO should not be global
       fromTo = {}; //TODO should not be global
 
@@ -43,24 +44,23 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
     }
 
     function attr_diff(source, target) {
-      var sNames = _core.getAttributeNames(source),
-        tNames = _core.getAttributeNames(target),
+      var sNames = _core.getOwnAttributeNames(source),
+        tNames = _core.getOwnAttributeNames(target),
         i,
-        diff = {updated: {}, removed: [], added: []};
+        diff = {};
 
       for (i = 0; i < sNames.length; i++) {
         if (tNames.indexOf(sNames[i]) === -1) {
-          diff.removed.push(sNames[i]);
+          diff[sNames[i]] = TODELETESTRING;
         }
       }
 
       for (i = 0; i < tNames.length; i++) {
         if (_core.getAttribute(source, tNames[i]) === undefined) {
-          diff.updated[tNames[i]] = _core.getAttribute(target, tNames[i]);
-          diff.added.push(tNames[i]);
+          diff[tNames[i]] = _core.getAttribute(target, tNames[i]);
         } else {
           if (CANON.stringify(_core.getAttribute(source, tNames[i])) !== CANON.stringify(_core.getAttribute(target, tNames[i]))) {
-            diff.updated[tNames[i]] = _core.getAttribute(target, tNames[i]);
+            diff[tNames[i]] = _core.getAttribute(target, tNames[i]);
           }
         }
       }
@@ -69,24 +69,23 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
     }
 
     function reg_diff(source, target) {
-      var sNames = _core.getRegistryNames(source),
-        tNames = _core.getRegistryNames(target),
+      var sNames = _core.getOwnRegistryNames(source),
+        tNames = _core.getOwnRegistryNames(target),
         i,
-        diff = {updated: {}, removed: [], added: []};
+        diff = {};
 
       for (i = 0; i < sNames.length; i++) {
         if (tNames.indexOf(sNames[i]) === -1) {
-          diff.removed.push(sNames[i]);
+          diff[sNames[i]] = TODELETESTRING;
         }
       }
 
       for (i = 0; i < tNames.length; i++) {
         if (_core.getRegistry(source, tNames[i]) === undefined) {
-          diff.updated[tNames[i]] = _core.getRegistry(target, tNames[i]);
-          diff.added.push(tNames[i]);
+          diff[tNames[i]] = _core.getRegistry(target, tNames[i]);
         } else {
           if (CANON.stringify(_core.getRegistry(source, tNames[i])) !== CANON.stringify(_core.getRegistry(target, tNames[i]))) {
-            diff.updated[tNames[i]] = _core.getRegistry(target, tNames[i]);
+            diff[tNames[i]] = _core.getRegistry(target, tNames[i]);
           }
         }
       }
@@ -121,22 +120,22 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
     function pointer_diff(source, target) {
       var sNames = _core.getPointerNames(source),
         tNames = _core.getPointerNames(target),
-        i,
-        diff = {added: [], updated: {}, removed: []};
+        i, pTarget,
+        diff = {};
 
       for (i = 0; i < sNames.length; i++) {
         if (tNames.indexOf(sNames[i]) === -1) {
-          diff.removed.push(sNames[i]);
+          diff[sNames[i]];
         }
       }
 
       for (i = 0; i < tNames.length; i++) {
+        pTarget = _core.getPointerPath(target, tNames[i]);
         if (sNames.indexOf(tNames[i]) === -1) {
-          diff.added.push(tNames[i]);
-          diff.updated[tNames[i]] = _core.getPointerPath(target, tNames[i]);
+          diff[tNames[i]] = pTarget;
         } else {
-          if (_core.getPointerPath(source, tNames[i]) !== _core.getPointerPath(target, tNames[i])) {
-            diff.updated[tNames[i]] = _core.getPointerPath(target, tNames[i]);
+          if (_core.getPointerPath(source, tNames[i]) !== pTarget) {
+            diff[tNames[i]] = pTarget;
           }
         }
       }
@@ -147,38 +146,54 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
     function set_diff(source, target) {
       var sNames = _core.getSetNames(source),
         tNames = _core.getSetNames(target),
-        sMembers, tMembers, i, j, memberDiff,
-        diff = {added: [], updated: {}, removed: []};
+        sMembers, tMembers, i, j, memberDiff, sData, tData,
+        diff = {},
+        getMemberData = function (node, setName, memberPath) {
+          var keys,
+            data = {attr: {}, reg: {}},
+            i;
+
+          keys = _core.getMemberOwnAttributeNames(node, setName, memberPath);
+          for (i = 0; i < keys.length; i++) {
+            data.attr[keys[i]] = _core.getMemberAttribute(node, setName, memberPath, keys[i]);
+          }
+
+          keys = _core.getMemberOwnRegistryNames(node, setName, memberPath);
+          for (i = 0; i < keys.length; i++) {
+            data.attr[keys[i]] = _core.getMemberRegistry(node, setName, memberPath, keys[i]);
+          }
+
+          return data;
+        };
 
       for (i = 0; i < sNames.length; i++) {
         if (tNames.indexOf(sNames[i]) === -1) {
-          diff.removed.push(sNames[i]);
+          diff[sNames[i]] = TODELETESTRING;
         }
       }
 
       for (i = 0; i < tNames.length; i++) {
         if (sNames.indexOf(tNames[i]) === -1) {
-          diff.added.push(tNames[i]);
-          diff.updated[tNames[i]] = _core.getMemberPaths(target, tNames[i]);
+          sMembers = [];
         } else {
           sMembers = _core.getMemberPaths(source, tNames[i]);
-          tMembers = _core.getMemberPaths(target, tNames[i]);
-          memberDiff = {added: [], removed: []}; //TODO are we interested in member change (when some data of the member changes
-          for (j = 0; j < sMembers.length; j++) {
-            if (tMembers.indexOf(sMembers[j]) === -1) {
-              memberDiff.removed.push(sMembers[j]);
-            }
-          }
-          for (j = 0; j < tMembers.length; j++) {
-            if (sMembers.indexOf(tMembers[j]) === -1) {
-              memberDiff.added.push(tMembers[j]);
-            }
-          }
-
-          if (!isEmptyDiff(memberDiff)) {
-            diff.updated[tNames[i]] = memberDiff;
+        }
+        tMembers = _core.getMemberPaths(target, tNames[i]);
+        memberDiff = {};
+        for (j = 0; j < sMembers.length; j++) {
+          if (tMembers.indexOf(sMembers[j]) === -1) {
+            memberDiff[sMembers[j]] = TODELETESTRING;
           }
         }
+
+        for (j = 0; j < tMembers.length; j++) {
+          sData = sMembers.indexOf(tMembers[j]) === -1 ? {} : getMemberData(source, tNames[i], tMembers[j]);
+          tData = getMemberData(target, tNames[i], tMembers[j]);
+          if (CANON.stringify(sData) !== CANON.stringify(tData)) {
+            memberDiff[tMembers[j]] = getMemberData(target, tNames[i], tMembers[j]);
+          }
+        }
+        diff[tNames[i]] = memberDiff;
       }
 
       return diff;
@@ -242,10 +257,6 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       return diff;
     }
 
-    function metaRulesChanged(source, target) {
-      return CANON.stringify(_core.getOwnJsonMeta(source)) !== CANON.stringify(_core.getOwnJsonMeta(target));
-    }
-
     function meta_diff(source, target) {
       if (CANON.stringify(_core.getOwnJsonMeta(source)) !== CANON.stringify(_core.getOwnJsonMeta(target))) {
         return _core.getOwnJsonMeta(target);
@@ -267,99 +278,45 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
     }
 
     function isEmptyNodeDiff(diff) {
-      if (isEmptyDiff(diff.children || {})) {
-        if (isEmptyDiff(diff.attr || {})) {
-          if (isEmptyDiff(diff.reg || {})) {
-            if (isEmptyDiff(diff.pointer || {})) {
-              if (isEmptyDiff(diff.set || {})) {
-                return true;
-              }
-            }
-          }
-        }
+      if (
+        Object.keys(diff.children || {}).length > 0 ||
+        Object.keys(diff.attr || {}).length > 0 ||
+        Object.keys(diff.reg || {}).length > 0 ||
+        Object.keys(diff.pointer || {}).length > 0 ||
+        Object.keys(diff.set || {}).length > 0
+        ) {
+        return false;
       }
-      return false;
+      return true;
+    }
+
+    function getPathOfDiff(diff, path) {
+      var pathArray = (path || "").split('/'),
+        i;
+      pathArray.shift();
+      for (i = 0; i < pathArray.length; i++) {
+        diff[pathArray[i]] = diff[pathArray[i]] || {};
+        diff = diff[pathArray[i]];
+      }
+
+      return diff;
     }
 
     function extendDiffWithOvr(diff, oDiff) {
-      var patharray,
-        i, j,
-        keys = Object.keys(oDiff),
-        names,
-        alreadyChecked = false,
-        tDiff;
-
+      var i, j, keys = Object.keys(oDiff || {}),
+        names, tDiff, oDiffObj;
       for (i = 0; i < keys.length; i++) {
-        tDiff = diff;
-        alreadyChecked = false;
-        names = Object.keys(oDiff[keys[i]]);
-        patharray = keys[i].split('/');
-        patharray.shift();
-        if (patharray.length > 0) {
-          for (j = 0; j < patharray.length; j++) {
-            if (tDiff.removed === true) {
-              alreadyChecked = true;
-            }
-
-            tDiff[patharray[j]] = tDiff[patharray[j]] || {};
-            tDiff = tDiff[patharray[j]];
-          }
-
-          if (tDiff.removed === true) {
-            alreadyChecked = true;
-          }
-
-          if (!alreadyChecked) {
-            //now we should iterate through all pointers in the oDiff
-            for (j = 0; j < names.length; j++) {
-              switch (oDiff[keys[i]][names[j]].type) {
-                case "added":
-                  if (!(tDiff.pointer && tDiff.pointer.added && tDiff.pointer.added[names[j]] !== undefined)) {
-                    if (tDiff.pointer && tDiff.pointer.removed && tDiff.pointer.removed.indexOf(names[j]) !== -1) {
-                      //the relation got updated but it switched level regarding the containment
-                      tDiff.pointer.removed.splice(tDiff.pointer.removed.indexOf(names[j]), 1);
-                      if (tDiff.pointer.removed.length === 0) {
-                        delete tDiff.pointer.removed;
-                      }
-                      if (Object.keys(tDiff.pointer).length === 0) {
-                        delete tDiff.pointer;
-                      }
-                      tDiff.pointer = tDiff.pointer || {};
-                      tDiff.pointer.updated = tDiff.pointer.updated || {};
-                      tDiff.pointer.updated[names[j]] = oDiff[keys[i]][names[j]].target;
-                    } else {
-                      //this is the first encounter of the pointer
-                      tDiff.pointer = tDiff.pointer || {};
-                      tDiff.pointer.added = tDiff.pointer.added || {};
-                      tDiff.pointer.added[names[j]] = oDiff[keys[i]][names[j]].target;
-                    }
-                  }
-                  break;
-                case "updated":
-                  //if it is an update in the ovr than it must be an update anywhere
-                  if (!(tDiff.pointer && tDiff.pointer.updated && tDiff.pointer.updated[names[j]])) {
-                    tDiff.pointer = tDiff.pointer || {};
-                    tDiff.pointer.updated = tDiff.pointer.updated || {};
-                    tDiff.pointer.updated[names[j]] = oDiff[keys[i]][names[j]].target;
-                  }
-                  break;
-                case "removed":
-                  if (!(tDiff.pointer && tDiff.pointer.removed && tDiff.pointer.removed.indexOf(names[j]) !== -1)) {
-                    if (tDiff.pointer && tDiff.pointer.added && tDiff.pointer.added[names[j]] !== undefined) {
-                      //the relation got updated but it switched level regarding the containment
-                      tDiff.pointer = tDiff.pointer || {};
-                      tDiff.pointer.updated = tDiff.pointer.updated || {};
-                      tDiff.pointer.updated[names[j]] = tDiff.pointer.added[names[j]];
-                      delete tDiff.pointer.added[names[j]];
-                    } else {
-                      //this is the first encounter of the pointer
-                      tDiff.pointer = tDiff.pointer || {};
-                      tDiff.pointer.removed = tDiff.pointer.removed || [];
-                      tDiff.pointer.removed.push(names[j]);
-                    }
-                  }
-                  break;
-              }
+        tDiff = getPathOfDiff(diff, keys[i]);
+        if (tDiff.removed !== true) {
+          names = Object.keys(oDiff[keys[i]]);
+          for (j = 0; j < names.length; j++) {
+            oDiffObj = oDiff[keys[i]][names[j]];
+            if (oDiffObj.type === 'added' || oDiffObj.type === 'updated') {
+              tDiff.pointer = tDiff.pointer || {};
+              tDiff.pointer[names[j]] = oDiffObj.target;
+            } else if (!tDiff.pointer || !tDiff.pointer[names[j]]) {
+              tDiff.pointer = tDiff.pointer || {};
+              tDiff.pointer[names[j]] = TODELETESTRING;
             }
           }
         }
@@ -411,7 +368,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
         for (i = 0; i < tChildren.length; i++) {
           child = getChild(sChildren, _core.getRelid(tChildren[i]));
           if (child && _core.getHash(tChildren[i]) !== _core.getHash(child)) {
-            done = TASYNC.call(function (cDiff, relid,d) {
+            done = TASYNC.call(function (cDiff, relid, d) {
               diff[relid] = cDiff;
               return null;
             }, updateDiff(child, tChildren[i]), _core.getRelid(child), done);
@@ -699,142 +656,167 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
         }
         applyAttributeChanges(n, nodeDiff.attr || {});
         applyRegistryChanges(n, nodeDiff.reg || {});
-        done = applyPointerChanges(n,nodeDiff.pointer || {});
-        done = applySetChanges(n,nodeDiff.set || {});
-        done = applyMetaChanges(n,nodeDiff.meta || {});
-        for(i=0;i<relids.length;i++){
-          done = TASYNC.call(function(d,d2) {
-              return null;
-            },applyNodeChange(root,path+'/'+relids[i],nodeDiff[relids[i]]),done);
+        done = applyPointerChanges(n, nodeDiff.pointer || {});
+        done = applySetChanges(n, nodeDiff.set || {});
+        done = applyMetaChanges(n, nodeDiff.meta || {});
+        for (i = 0; i < relids.length; i++) {
+          done = TASYNC.call(function (d, d2) {
+            return null;
+          }, applyNodeChange(root, path + '/' + relids[i], nodeDiff[relids[i]]), done);
         }
-        TASYNC.call(function(d){
+        TASYNC.call(function (d) {
           return done;
-        },done);
+        }, done);
       }, node);
     }
 
     function applyAttributeChanges(node, attrDiff) {
       var i, keys;
-      keys = Object.keys(attrDiff.added || {});
+      keys = Object.keys(attrDiff);
       for (i = 0; i < keys.length; i++) {
-        _core.setAttribute(node, keys[i], attrDiff.added[keys[i]]);
-      }
-
-      keys = Object.keys(attrDiff.updated || {});
-      for (i = 0; i < keys.length; i++) {
-        _core.setAttribute(node, keys[i], attrDiff.updated[keys[i]]);
-      }
-
-      if (attrDiff.removed && attrDiff.removed.length > 0) {
-        for (i = 0; i < attrDiff.removed.length; i++) {
-          _core.delAttribute(node, attrDiff.removed[i]);
+        if (attrDiff[keys[i]] === TODELETESTRING) {
+          _core.delAttribute(node, keys[i]);
+        } else {
+          _core.setAttribute(node, keys[i], attrDiff[keys[i]]);
         }
       }
     }
 
     function applyRegistryChanges(node, regDiff) {
       var i, keys;
-      keys = Object.keys(regDiff.added || {});
+      keys = Object.keys(regDiff);
       for (i = 0; i < keys.length; i++) {
-        _core.setRegistry(node, keys[i], regDiff.added[keys[i]]);
-      }
-
-      keys = Object.keys(regDiff.updated || {});
-      for (i = 0; i < keys.length; i++) {
-        _core.setRegistry(node, keys[i], regDiff.updated[keys[i]]);
-      }
-
-      if (regDiff.removed && regDiff.removed.length > 0) {
-        for (i = 0; i < regDiff.removed.length; i++) {
-          _core.delRegistry(node, regDiff.removed[i]);
+        if (regDiff[keys[i]] === TODELETESTRING) {
+          _core.delRegistry(node, keys[i]);
+        } else {
+          _core.setRegistry(node, keys[i], regDiff[keys[i]]);
         }
       }
     }
 
-    function setPointer(node,name,target){
-      return TASYNC.call(function(t){
-        if(name === 'base'){ //TODO watch if handling of base changes!!!
-          _core.setBase(node,t);
+    function setPointer(node, name, target) {
+      return TASYNC.call(function (t) {
+        if (name === 'base') { //TODO watch if handling of base changes!!!
+          _core.setBase(node, t);
         } else {
-          _core.setPointer(node,name,t);
+          _core.setPointer(node, name, t);
         }
         return;
-      },_core.loadByPath(_core.getRoot(node),target));
+      }, _core.loadByPath(_core.getRoot(node), target));
     }
+
     function applyPointerChanges(node, pointerDiff) {
       var done,
-        keys,
+        keys = Object.keys(pointerDiff),
         i;
-
-      keys = pointerDiff.removed || [];
-      for(i=0;i<keys.length;i++){
-        _core.deletePointer(node,keys[i]);
+      for (i = 0; i < keys.length; i++) {
+        if (pointerDiff[keys[i]] === TODELETESTRING) {
+          _core.deletePointer(node, keys[i]);
+        } else {
+          done = setPointer(node, keys[i], pointerDiff[keys[i]]);
+        }
       }
 
-      keys = Object.keys(pointerDiff.added || {});
-      for(i=0;i<keys.length;i++){
-        done = TASYNC.call(function(n,t,d){
-          return setPointer(node,n,t);
-        },keys[i],pointerDiff.added[keys[i]],done);
-      }
-
-      keys = Object.keys(pointerDiff.updated || {});
-      for(i=0;i<keys.length;i++){
-        done = TASYNC.call(function(n,t,d){
-          setPointer(node,n,t)
-          return d;
-        },keys[i],pointerDiff.updated[keys[i]],done);
-      }
-
-      return TASYNC.call(function(d){
+      return TASYNC.call(function (d) {
         return null;
-      },done);
+      }, done);
+
     }
 
-    function addMember(node,name,target){
-      console.log('AM',name,target);
-      return TASYNC.call(function(t){
-        console.log('AM_');
-        _core.addMember(node,name,t);
+    function addMember(node, name, target, data) {
+      var memberAttrSetting = function (diff) {
+          var keys = _core.getMemberOwnAttributeNames(node, name, target),
+            i;
+          for (i = 0; i < keys.length; i++) {
+            _core.delMemberAttribute(node, name, target, keys[i]);
+          }
+
+          keys = Object.keys(diff);
+          for (i = 0; i < keys.length; i++) {
+            _core.setMemberAttribute(node, name, target, keys[i], diff[keys[i]]);
+          }
+        },
+        memberRegSetting = function (diff) {
+          var keys = _core.getMemberOwnRegistryNames(node, name, target),
+            i;
+          for (i = 0; i < keys.length; i++) {
+            _core.delMemberRegistry(node, name, target, keys[i]);
+          }
+
+          keys = Object.keys(diff);
+          for (i = 0; i < keys.length; i++) {
+            _core.setMemberRegistry(node, name, target, keys[i], diff[keys[i]]);
+          }
+        };
+      return TASYNC.call(function (t) {
+        _core.addMember(node, name, t);
+        memberAttrSetting(data.attr || {});
+        memberRegSetting(data.reg || {});
         return;
-      },_core.loadByPath(_core.getRoot(node),target));
+      }, _core.loadByPath(_core.getRoot(node), target));
     }
+
     function applySetChanges(node, setDiff) {
-      console.log('SC',_core.getPath(node),setDiff);
+      var done,
+        setNames = Object.keys(setDiff),
+        elements, i, j;
+      for (i = 0; i < setNames.length; i++) {
+        if (setDiff[setNames[i]] === TODELETESTRING) {
+          _core.deleteSet(node, setNames[i]);
+        } else {
+          elements = Object.keys(setDiff[setNames[i]]);
+          for (j = 0; j < elements.length; j++) {
+            if (setDiff[setNames[i]][elements[j]] === TODELETESTRING) {
+              _core.delMember(node, setNames[i], elements[j]);
+            } else {
+              done = addMember(node, setNames[i], elements[j], setDiff[setNames[i]][elements[j]]);
+            }
+          }
+        }
+      }
+
+      return TASYNC.call(function (d) {
+        return null;
+      }, done);
+
+    }
+
+    function _applySetChanges(node, setDiff) {
+      console.log('SC', _core.getPath(node), setDiff);
       var done,
         keys,
         elements,
-        i,j;
+        i, j;
 
       keys = setDiff.removed || [];
-      for(i=0;i<keys.length;i++){
-        _core.deleteSet(node,keys[i]);
+      for (i = 0; i < keys.length; i++) {
+        _core.deleteSet(node, keys[i]);
       }
 
       keys = setDiff.added || [];
-      for(i=0;i<keys.length;i++){
-        _core.createSet(node,keys[i]);
+      for (i = 0; i < keys.length; i++) {
+        _core.createSet(node, keys[i]);
       }
 
       keys = Object.keys(setDiff.updated || {});
-      for(i=0;i<keys.length;i++){
+      for (i = 0; i < keys.length; i++) {
         elements = setDiff.updated[keys[i]].removed || [];
-        for(j=0;j<elements.length;j++){
-          _core.delMember(node,keys[i],elements[j]);
+        for (j = 0; j < elements.length; j++) {
+          _core.delMember(node, keys[i], elements[j]);
         }
 
         elements = setDiff.updated[keys[i]].added || [];
-        for(j=0;j<elements.length;j++){
-          console.log('SC',elements[j],keys[i]);
-          done = TASYNC.call(function(d,d2){
-          },addMember(node,keys[i],elements[j]),done);
+        for (j = 0; j < elements.length; j++) {
+          console.log('SC', elements[j], keys[i]);
+          done = TASYNC.call(function (d, d2) {
+          }, addMember(node, keys[i], elements[j]), done);
         }
       }
 
-      return TASYNC.call(function(d){
+      return TASYNC.call(function (d) {
         console.log('SC_');
         return null;
-      },done);
+      }, done);
     }
 
     function applyMetaChanges(node, metaDiff) {
@@ -851,7 +833,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       done = createNewNodes(root, diff);
 
       TASYNC.call(function (d) {
-        return applyNodeChange(root,'',diff);
+        return applyNodeChange(root, '', diff);
       }, done);
 
 
