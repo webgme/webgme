@@ -24,11 +24,12 @@ define( [
   } );
 
 
-  var ProjectNavigatorController = function ( $scope, gmeClient, $simpleDialog, $timeout ) {
+  var ProjectNavigatorController = function ( $scope, gmeClient, $simpleDialog, $timeout, $window ) {
 
     var self = this;
 
     self.$scope = $scope;
+    self.$window = $window;
     self.gmeClient = gmeClient;
     self.$simpleDialog = $simpleDialog;
     self.$timeout = $timeout;
@@ -252,6 +253,19 @@ define( [
       }
 
     } );
+
+    angular.element(self.$window).on('keydown', function(e) {
+
+      if ( (e.metaKey || e.ctrlKey) && e.keyCode === 90 ) {
+        self.$timeout(function() {
+
+          console.log('No do undo (if can)');
+
+          // TODO: call undoing function here
+
+        });
+      }
+    });
 
     self.gmeClient.addEventListener( self.gmeClient.events.UNDO_AVAILABLE, function(client, parameters){
       self.$timeout(function() {
