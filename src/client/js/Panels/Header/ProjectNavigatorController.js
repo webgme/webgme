@@ -260,26 +260,18 @@ define( [
 
         if ( e.keyCode === 90 ) {
 
+          //TODO we should block UI until undo/redo is done
           if (e.shiftKey) {
-
             self.$timeout(function() {
-
-              console.log('Now do redo (if can)');
-
-              // TODO: call redoing function here
-
+              self.gmeClient.redo(self.gmeClient.getActualBranch(),function(err){
+              });
             });
-
           } else {
-
             self.$timeout(function() {
-
-              console.log('Now do undo (if can)');
-
-              // TODO: call undoing function here
+              self.gmeClient.undo(self.gmeClient.getActualBranch(),function(err){
+              });
 
             });
-
           }
 
         }
