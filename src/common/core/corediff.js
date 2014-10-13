@@ -818,9 +818,113 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
         return null;
       }, done);
     }
+    function applyMetaAttributes(node,metaAttrDiff){
+      var keys = Object.keys(metaAttrDiff || {}),
+        i;
+      for(i=0;i<keys.length;i++){
+        _core.setAttributeMeta(node,keys[i],metaAttrDiff[keys[i]]);
+      }
+    }
+
+    function applyMetaContraints(node,metaConDiff){
+      var keys,
+        i;
+      keys = _core.getOwnConstraintNames(node);
+      for(i=0;i<keys.length;i++){
+        _core.delConstraint(node,keys[i]);
+      }
+
+      keys = Object.keys(metaConDiff || {});
+      for(i=0;i<keys.length;i++){
+        _core.setConstraint(node,keys[i],metaConDiff[keys[i]]);
+      }
+    }
+
+    function applyMetaChildren(node,metaChildrenDiff){
+      var applyChild = function(child,min,max){
+          _core.setChildMeta(node,child,min,max);
+        },
+        keys = (metaChildrenDiff || {}).items || [],
+        done,
+        i;
+
+      for(i=0;i<keys.length;i++){
+        done = TASYNC.call(
+          applyChild,
+          _core.loadByPath(_core.getRoot(node),keys[i]),
+          metaChildrenDiff.minItems[i],
+          metaChildrenDiff.maxItems[i],
+          done
+        );
+      }
+
+      TASYNC.call(function(d){
+        _core.setChildrenMetaLimits(node,(metaChildrenDiff || {}).min || -1, (metaChildrenDiff || {}).max || -1);
+        return null;
+      },done);
+    }
+
+    function applyMetaPointers(node,metaPointerDiff){
+      var applyPointer = function(name,target,min,max){
+          _core.setPointerMetaTarget(node,name,target,min,max);
+        },
+        i, j,done,names = Object.keys(metaPointerDiff || {}),paths;
+
+      for(i=0;i<names.length;i++){
+        paths = metaPointerDiff[names[i]].items || [];
+        _core.setPointerMetaLimits(node,names[i],metaPointerDiff[names[i]].min,metaPointerDiff[names[i]].max);
+        for(j=0;j<length.paths;j++){
+          done = TASYNC.call(
+            applyPointer,
+            names[i],
+            _core.loadByPath(_core.getRoot(node),paths[j]),
+            (metaPointerDiff[names[i]].minItems || [])[j],
+            (metaPointerDiff[names[i]].maxItems || [])[j],
+            done
+          );
+        }
+      }
+
+      TASYNC.call(function(d){
+        return null;
+      },done);
+    }
+
+    function applyMetaAspects(node,metaAspectsDiff){
+      var applyTarget = function(name,target){
+          _core.setAspectMetaTarget(node,name,target);
+        },
+        i, j,done,names = Object.keys(metaAspectsDiff || {}),paths;
+
+      for(i=0;i<names.length;i++){
+        paths = metaAspectsDiff[names[i]].items || [];
+        for(j=0;j<length.paths;j++){
+          done = TASYNC.call(
+            applyTarget,
+            names[i],
+            _core.loadByPath(_core.getRoot(node),paths[j]),
+            done
+          );
+        }
+      }
+
+      TASYNC.call(function(d){
+        return null;
+      },done);
+    }
 
     function applyMetaChanges(node, metaDiff) {
-      return null;
+      var done;
+      _core.clearMetaRules(node);
+      applyMetaAttributes(node,metaDiff.attributes);
+      applyMetaContraints(node,metaDiff.constraints);
+      done = applyMetaChildren(node,metaDiff.children);
+      done = TASYNC.call(applyMetaPointers,node,metaDiff.pointers,done);
+      done = TASYNC.call(applyMetaAspects,node,metaDiff.aspects,done);
+
+      TASYNC.call(function(d){
+        return null;
+      },done);
     }
 
     _core.applyTreeDiff = function (root, diff) {
