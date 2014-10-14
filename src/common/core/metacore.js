@@ -363,7 +363,7 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv", "util/canon" ], 
         };
 
         core.clearMetaRules = function(node){
-            core.deleteNode(MetaNode(node));
+            core.deleteNode(MetaNode(node),true);
         };
 
         core.setAttributeMeta = function(node,name,value){

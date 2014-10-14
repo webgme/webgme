@@ -662,8 +662,11 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
         applyAttributeChanges(n, nodeDiff.attr || {});
         applyRegistryChanges(n, nodeDiff.reg || {});
         done = applyPointerChanges(n, nodeDiff.pointer || {});
-        done = applySetChanges(n, nodeDiff.set || {});
-        done = applyMetaChanges(n, nodeDiff.meta || {});
+        done = TASYNC.call(applySetChanges,n, nodeDiff.set || {},done);
+        if(nodeDiff.meta){
+          delete nodeDiff.meta.empty;
+          done = TASYNC.call(applyMetaChanges,n, nodeDiff.meta,done);
+        }
         for (i = 0; i < relids.length; i++) {
           done = TASYNC.call(function (d, d2) {
             return null;
@@ -700,6 +703,12 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
     }
 
     function setPointer(node, name, target) {
+      var targetNode;
+      if(target === null){
+        targetNode = null;
+      } else {
+        targetNode = _core.loadByPath(_core.getRoot(node),target);
+      }
       return TASYNC.call(function (t) {
         if (name === 'base') { //TODO watch if handling of base changes!!!
           _core.setBase(node, t);
@@ -707,7 +716,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
           _core.setPointer(node, name, t);
         }
         return;
-      }, _core.loadByPath(_core.getRoot(node), target));
+      }, targetNode);
     }
 
     function applyPointerChanges(node, pointerDiff) {
@@ -786,43 +795,6 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
 
     }
 
-    function _applySetChanges(node, setDiff) {
-      console.log('SC', _core.getPath(node), setDiff);
-      var done,
-        keys,
-        elements,
-        i, j;
-
-      keys = setDiff.removed || [];
-      for (i = 0; i < keys.length; i++) {
-        _core.deleteSet(node, keys[i]);
-      }
-
-      keys = setDiff.added || [];
-      for (i = 0; i < keys.length; i++) {
-        _core.createSet(node, keys[i]);
-      }
-
-      keys = Object.keys(setDiff.updated || {});
-      for (i = 0; i < keys.length; i++) {
-        elements = setDiff.updated[keys[i]].removed || [];
-        for (j = 0; j < elements.length; j++) {
-          _core.delMember(node, keys[i], elements[j]);
-        }
-
-        elements = setDiff.updated[keys[i]].added || [];
-        for (j = 0; j < elements.length; j++) {
-          console.log('SC', elements[j], keys[i]);
-          done = TASYNC.call(function (d, d2) {
-          }, addMember(node, keys[i], elements[j]), done);
-        }
-      }
-
-      return TASYNC.call(function (d) {
-        console.log('SC_');
-        return null;
-      }, done);
-    }
     function applyMetaAttributes(node,metaAttrDiff){
       var keys = Object.keys(metaAttrDiff || {}),
         i;
@@ -864,7 +836,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       }
 
       TASYNC.call(function(d){
-        _core.setChildrenMetaLimits(node,(metaChildrenDiff || {}).min || -1, (metaChildrenDiff || {}).max || -1);
+        _core.setChildrenMetaLimits(node, metaChildrenDiff.min, metaChildrenDiff.max);
         return null;
       },done);
     }
@@ -878,7 +850,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       for(i=0;i<names.length;i++){
         paths = metaPointerDiff[names[i]].items || [];
         _core.setPointerMetaLimits(node,names[i],metaPointerDiff[names[i]].min,metaPointerDiff[names[i]].max);
-        for(j=0;j<length.paths;j++){
+        for(j=0;j<paths.length;j++){
           done = TASYNC.call(
             applyPointer,
             names[i],
@@ -902,8 +874,8 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
         i, j,done,names = Object.keys(metaAspectsDiff || {}),paths;
 
       for(i=0;i<names.length;i++){
-        paths = metaAspectsDiff[names[i]].items || [];
-        for(j=0;j<length.paths;j++){
+        paths = metaAspectsDiff[names[i]];
+        for(j=0;j<paths.length;j++){
           done = TASYNC.call(
             applyTarget,
             names[i],
