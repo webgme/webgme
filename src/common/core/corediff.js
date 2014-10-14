@@ -283,7 +283,8 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
         Object.keys(diff.attr || {}).length > 0 ||
         Object.keys(diff.reg || {}).length > 0 ||
         Object.keys(diff.pointer || {}).length > 0 ||
-        Object.keys(diff.set || {}).length > 0
+        Object.keys(diff.set || {}).length > 0 ||
+        diff.meta
         ) {
         return false;
       }
