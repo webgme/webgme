@@ -258,10 +258,14 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
     }
 
     function meta_diff(source, target) {
+      var diff = {};
       if (CANON.stringify(_core.getOwnJsonMeta(source)) !== CANON.stringify(_core.getOwnJsonMeta(target))) {
-        return _core.getOwnJsonMeta(target);
+        diff = _core.getOwnJsonMeta(target);
+        if(Object.keys(diff).length <1){
+          diff = {empty:true};
+        }//TODO this is just a hack, if we would provide real diff it would not be needed
       }
-      return {};
+      return diff;
     }
 
     function isEmptyDiff(diff) {
