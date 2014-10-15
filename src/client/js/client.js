@@ -2965,12 +2965,11 @@ define([
                                                 delete updates[path];
                                             }
                                         } else {
-                                            updates[path] = "HIBAAAA";
-                                        }
-                                        checkNextNode(keys[++index]);
+                          //console.log(info);
+                          var myInfo = info[getActiveProject()];
+                          _project.getCommonAncestorCommit(myInfo.branches.master,myInfo.branches.masik,function(err,commit){
+                            console.log('common commit',err,commit);
                                     });
-                                } else {
-                                    finished();
                                 }
                             },
                             finished = function () {
