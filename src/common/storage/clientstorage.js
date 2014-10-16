@@ -8,7 +8,7 @@ define(['storage/client', 'storage/failsafe', 'storage/hashcheck', 'storage/cach
     "use strict";
     function client(options){
         //return  new Log(new Commit(new Cache(new Failsafe(new Client(options),options),options),options),options);
-        return  new Commit(new Cache/*(new Failsafe*/(new Client(options)/*,options)*/,options),options);
+        return  new Commit(new Cache(new Failsafe(new Client(options),options),options),options);
     }
 
 

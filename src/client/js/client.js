@@ -30,8 +30,7 @@ define([
     DumpMore,
     MergeImport,
     Import,
-    Serialization,
-    BlobClient) {
+    Serialization) {
 
     "use strict";
 

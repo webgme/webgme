@@ -10104,7 +10104,7 @@ define('storage/clientstorage',['storage/client', 'storage/failsafe', 'storage/h
     
     function client(options){
         //return  new Log(new Commit(new Cache(new Failsafe(new Client(options),options),options),options),options);
-        return  new Commit(new Cache/*(new Failsafe*/(new Client(options)/*,options)*/,options),options);
+        return  new Commit(new Cache(new Failsafe(new Client(options),options),options),options);
     }
 
 
@@ -13837,8 +13837,7 @@ define('client',[
     DumpMore,
     MergeImport,
     Import,
-    Serialization,
-    BlobClient) {
+    Serialization) {
 
     
 
