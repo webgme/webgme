@@ -657,12 +657,7 @@ define( [
       iconClass: 'fa fa-reply',
       disabled: true, // TODO: set this from handler to enable/disable
       action: function ( actionData ) {
-
-        console.log( 'Undoing last commit', actionData );
-        self.gmeClient.undo(actionData.branchId,function(err){
-          console.log('undo have been done',err);
-        });
-
+        self.gmeClient.undo(actionData.branchId,function(err){});
       },
       // Put whatever you need to get passed back above
       actionData: {
@@ -678,12 +673,7 @@ define( [
       iconClass: 'fa fa-mail-forward',
       disabled: true, // TODO: set this from handler to enable/disable
       action: function ( actionData ) {
-
-        console.log( 'Redoing last undo', actionData );
-        self.gmeClient.redo(actionData.branchId,function(err){
-          console.log('redo have been done',err);
-        });
-
+        self.gmeClient.redo(actionData.branchId,function(err){});
       },
       // Put whatever you need to get passed back above
       actionData: {
