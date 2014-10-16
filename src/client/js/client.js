@@ -3035,10 +3035,18 @@ define([
                           });
                         },
                         diffsGenerated = function(){
+                          console.log('diffMaster',baseToMaster);
+                          console.log('diffMasik',baseToMasik);
                           _core.applyTreeDiff(masik,baseToMaster,function(err){
                             _core.applyTreeDiff(master,baseToMasik,function(err){
                               _core.persist(masik,function(err){});
                               _core.persist(master,function(err){});
+                              _core.generateTreeDiff(base,master,function(err,diff){
+                                console.log('base->finalmaster',diff);
+                                _core.generateTreeDiff(base,masik,function(err,diff){
+                                  console.log('base->finalmasik',diff);
+                                });
+                              });
                               _core.generateTreeDiff(master,masik,function(err,diff){
                                 if(Object.keys(diff) < 1){
                                   _core.persist(master,function(){

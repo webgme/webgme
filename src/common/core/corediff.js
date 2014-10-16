@@ -710,11 +710,13 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
         targetNode = _core.loadByPath(_core.getRoot(node),target);
       }
       return TASYNC.call(function (t) {
-        if (name === 'base') { //TODO watch if handling of base changes!!!
-          _core.setBase(node, t);
-        } else {
+        //if (name === 'base') { //TODO watch if handling of base changes!!!
+        //  console.log('setting base',_core.getPath(node),_core.getPath(t));
+        //  _core.setBase(node, t);
+        //} else {
+        console.log('setting pointer',name,_core.getPath(node),_core.getPath(t));
           _core.setPointer(node, name, t);
-        }
+        //}
         return;
       }, targetNode);
     }
@@ -919,6 +921,31 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
 
 
       return null;
+    };
+
+
+    //concat diffs is needed to make 3-way merge
+    function getDiffTreeDictionray(treeDiff){
+      var dictionary = {pathToGuid:{},guidToPath:{}},
+        addElement = function(path,diff){
+          var keys = getDiffChildrenRelids(diff),
+            i;
+          for(i=0;i<keys.length;i++){
+            addElement(path+'/'+keys[i],diff[keys[i]]);
+          }
+          if(diff.guid){
+            dictionary.pathToGuid[path] = diff.guid;
+            if(!dictionary.guidToPath[diff.guid] || diff.movedFrom){
+              dictionary.guidToPath[diff.guid] = path;
+            }
+          }
+        };
+
+      addElement('',treeDiff);
+      return dictionary;
+    }
+    _core.concatTreeDiff = function(first,second) {
+
     };
 
     return _core;
