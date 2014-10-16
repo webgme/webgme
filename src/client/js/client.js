@@ -2989,17 +2989,86 @@ define([
                         });
                         break;
                     case 3:
-                        var start = new Date().getTime(),
-                            end;
-                        _core.loadRoot(_previousRootHash, function (err, root) {
-                            if (!err && root) {
-                                _core.generateTreeDiff(root, _nodes[""].node, function (err, diff) {
-                                    end = new Date().getTime();
-                                    console.log('treediff', end - start, err, diff);
+                      //we try our first merge
+                      var base,master,masik,
+                        baseToMaster,baseToMasik,mastHash,masiHash,
+                        getRootHashes = function(){
+                          var needed = 3;
+                          _project.loadObject(base,function(err,b){
+                            _core.loadRoot(b.root,function(err,r){
+                              base = r;
+                              if(--needed === 0){
+                                rootsLoaded();
+                              }
                                 });
+                          });
+                          _project.loadObject(master,function(err,b){
+                            _core.loadRoot(b.root,function(err,r){
+                              master = r;
+                              if(--needed === 0){
+                                rootsLoaded();
                             }
                         });
+                          });
+                          _project.loadObject(masik,function(err,b){
+                            _core.loadRoot(b.root,function(err,r){
+                              masik = r;
+                              if(--needed === 0){
+                                rootsLoaded();
                 }
+                            });
+                          });
+                        },
+                        rootsLoaded = function(){
+                          var needed = 2;
+                          _core.generateTreeDiff(base,master,function(err,diff){
+                            baseToMaster = diff;
+                            if(--needed===0){
+                              diffsGenerated();
+                            }
+                          });
+                          _core.generateTreeDiff(base,masik,function(err,diff){
+                            baseToMasik = diff;
+                            if(--needed===0){
+                              diffsGenerated();
+                            }
+                          });
+                        },
+                        diffsGenerated = function(){
+                          _core.applyTreeDiff(masik,baseToMaster,function(err){
+                            _core.applyTreeDiff(master,baseToMasik,function(err){
+                              _core.persist(masik,function(err){});
+                              _core.persist(master,function(err){});
+                              _core.generateTreeDiff(master,masik,function(err,diff){
+                                if(Object.keys(diff) < 1){
+                                  _core.persist(master,function(){
+                                    var newHash = _project.makeCommit([mastHash,masiHash], _core.getHash(master), "merging", function(){
+                                      _project.setBranchHash('merged','',newHash,function(err){
+                                        console.log('merged branch created');
+                                      });
+                                    });
+                                  });
+                                } else {
+                                  console.log('there is a bit of a conflict',diff);
+                                }
+                              })
+                            });
+                          });
+                        };
+                      getFullProjectsInfoAsync(function(err,info){
+                          var myInfo = info[getActiveProject()];
+                        master = myInfo.branches.master;
+                        masik = myInfo.branches.masik;
+                        mastHash = master;
+                        masiHash = masik;
+                          _project.getCommonAncestorCommit(master,masik,function(err,commit){
+                            base = commit;
+                            getRootHashes();
+                          });
+                        });
+                        break;
+                }
+
             }
       function getExternalInterpreterConfigUrlAsync(selectedItemsPaths, filename, callback) {
         var config = {};
