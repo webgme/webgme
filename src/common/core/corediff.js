@@ -17,7 +17,10 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
     /*EMPTYGUID = "00000000-0000-0000-0000-000000000000",
      EMPTYNODE = _innerCore.createNode({base: null, parent: null, guid: EMPTYGUID}),*/
       toFrom = {}, //TODO should not be global
-      fromTo = {}; //TODO should not be global
+      fromTo = {}, //TODO should not be global
+      _concat_dictionary,
+      _concat_moves,
+      _concat_result;
 
     for (var i in _innerCore) {
       _core[i] = _innerCore[i];
@@ -944,8 +947,127 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       addElement('',treeDiff);
       return dictionary;
     }
-    _core.concatTreeDiff = function(first,second) {
 
+    function concatNodeChanges(base,dictionary,addition){
+
+    }
+    function getNodeByGuid(guid){
+      var path = _concat_dictionary.guidToPath[guid],
+        object = _concat_result,
+        i;
+      if(typeof path === 'string'){
+        if(path === ''){
+          return _concat_result;
+        }
+
+        path = path.split('/');
+        path.shift();
+        for(i=0;i<path.length;i++){
+          object = object[path[i]];
+        }
+        return object;
+      } else {
+        return null;
+      }
+    }
+    function insertAtPath(path,object){
+      ASSERT(typeof path === 'string');
+      var i,base,relid;
+      if(path === ''){
+        _concat_result = JSON.parse(JSON.stringify(object));
+        return;
+      }
+      path = path.split('/');
+      path.shift();
+      relid = path.pop();
+      base = _concat_result;
+      for(i=0;i<path.length;i++){
+        base[path[i]] = base[path[i]] || {};
+        base = base[path[i]];
+      }
+      base[relid] = JSON.parse(JSON.stringify(object));
+      return;
+    }
+    function getSingleNode(node){
+      //removes the children from the node
+      var result = JSON.parse(JSON.stringify(node)),
+        keys = getDiffChildrenRelids(result),
+        i;
+      for(i=0;i<keys.length;i++){
+        delete result[keys[i]];
+      }
+      return result;
+    }
+    function processConcatNode(path,node){
+      var base = getNodeByGuid(node.guid),
+        singleNode = getSingleNode(node),
+        childrenRelids = getDiffChildrenRelids(node),
+        i;
+      if(base === null){
+        //there is no such object in the base of the concat so we simply insert it
+        insertAtPath(path,singleNode);
+      } else {
+        if(base.removed !== true){
+          insertAtPath(_concat_dictionary.guidToPath[node.guid],jsonConcat(base,singleNode));
+        }
+      }
+
+      for(i=0;i<childrenRelids.length;i++){
+        processConcatNode(path+'/'+childrenRelids[i],node[childrenRelids[i]]);
+      }
+
+    }
+    function jsonConcat(base,extension){
+      var baseKeys = Object.keys(base),
+        extKeys = Object.keys(extension),
+        concat = JSON.parse(JSON.stringify(base)),
+        i;
+      for(i=0;i<extKeys.length;i++){
+        if(baseKeys.indexOf(extKeys[i]) === -1){
+          concat[extKeys[i]] = JSON.parse(JSON.stringify(extension[extKeys[i]]));
+        } else {
+          if(typeof base[extKeys[i]] === 'object' && typeof extension[extKeys[i]] === 'object'){
+            concat[extKeys[i]] = jsonConcat(base[extKeys[i]],extension[extKeys[i]]);
+          } else { //either from value to object or object from value we go with the extension
+            concat[extKeys[i]] = JSON.parse(JSON.stringify(extension[extKeys[i]]));
+          }
+        }
+      }
+      return concat;
+    }
+
+    _core.concatTreeDiff = function(base,extension) {
+      _concat_result = JSON.parse(JSON.stringify(base || {}));
+      _concat_dictionary = getDiffTreeDictionray(base);
+      _concat_moves = {toFrom:{},fromTo:{}};
+      getMoveSources(extension,_concat_moves.toFrom,_concat_moves.fromTo);
+      processConcatNode('',extension);
+      return _concat_result;
+    };
+
+    _core.isEqualDifferences = function(diffOne,diffTwo){
+      var keysOne = Object.keys(diffOne),
+        keysTwo = Object.keys(diffTwo),
+        i,result = true;
+      if(keysOne.sort().join() !== keysTwo.sort().join()){
+        return false;
+      }
+
+      for(i=0;i<keysOne.length;i++){
+        if(keysOne[i] !== 'hash'){
+          if(typeof diffOne[keysOne[i]] === 'object' && typeof diffTwo[keysOne[i]] === 'object'){
+            if(!_core.isEqualDifferences(diffOne[keysOne[i]],diffTwo[keysOne[i]])){
+              result = false;
+            }
+          } else {
+            if(diffOne[keysOne[i]] !== diffTwo[keysOne[i]]){
+              result = false;
+            }
+          }
+        }
+      }
+
+      return result;
     };
 
     return _core;

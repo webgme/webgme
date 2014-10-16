@@ -3037,7 +3037,22 @@ define([
                         diffsGenerated = function(){
                           console.log('diffMaster',baseToMaster);
                           console.log('diffMasik',baseToMasik);
-                          _core.applyTreeDiff(masik,baseToMaster,function(err){
+                          var fullDiffMaster = _core.concatTreeDiff(baseToMaster,baseToMasik),
+                            fullDiffMasik = _core.concatTreeDiff(baseToMasik,baseToMaster);
+                          console.log('fullMaster',fullDiffMaster);
+                          console.log('fullMasik',fullDiffMasik);
+                          if(_core.isEqualDifferences(fullDiffMaster,fullDiffMasik)){
+                            _core.applyTreeDiff(base,fullDiffMaster,function(err){
+                              _core.persist(base,function(err){
+                                var newHash = _project.makeCommit([mastHash,masiHash], _core.getHash(base), "merging", function(){
+                                  _project.setBranchHash('merged','',newHash,function(err){
+                                    console.log('merged branch created');
+                                  });
+                                });
+                              });
+                            });
+                          }
+                          /*_core.applyTreeDiff(masik,baseToMaster,function(err){
                             _core.applyTreeDiff(master,baseToMasik,function(err){
                               _core.persist(masik,function(err){});
                               _core.persist(master,function(err){});
@@ -3061,7 +3076,7 @@ define([
                                 }
                               })
                             });
-                          });
+                          });*/
                         };
                       getFullProjectsInfoAsync(function(err,info){
                           var myInfo = info[getActiveProject()];
