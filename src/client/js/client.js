@@ -16,7 +16,22 @@ define([
     'coreclient/copyimport',
     'coreclient/serialization'
   ],
-  function (ASSERT, EventDispatcher, GUID, Core, Storage, LogManager, URL, BaseMeta, ToJson, Dump, DumpMore, MergeImport, Import, Serialization, BlobClient) {
+  function (
+    ASSERT,
+    EventDispatcher,
+    GUID,
+    Core,
+    Storage,
+    LogManager,
+    URL,
+    BaseMeta,
+    ToJson,
+    Dump,
+    DumpMore,
+    MergeImport,
+    Import,
+    Serialization,
+    BlobClient) {
 
     "use strict";
 
@@ -131,6 +146,7 @@ define([
         _TOKEN = null,
         META = new BaseMeta(),
         _rootHash = null,
+        _root = null,
         _gHash = 0,
         _addOns = {},
         _constraintCallback = null,
@@ -930,14 +946,18 @@ define([
       }
 
       function createEmptyProject(project, callback) {
-        var core = getNewCore(project);
-        var root = core.createNode();
-        core.persist(root, function (err) {
-        });
-        var rootHash = core.getHash(root);
-        var commitHash = project.makeCommit([], rootHash, 'project creation commit', function (err) {
-        });
+        var core = getNewCore(project),
+          root = core.createNode(),
+          rootHash = '',
+          commitHash = '';
         project.setBranchHash('master', "", commitHash, callback);
+        core.persist(root,function(err){
+          rootHash = core.getHash(root);
+          commitHash = project.makeCommit([],rootHash,'project creation commit',function(err){
+            project.setBranchHash('master',"",commitHash,callback);
+          });
+        });
+
       }
 
       //loading functions
@@ -1245,6 +1265,8 @@ define([
 
         //and now the one-by-one loading
         _core.loadRoot(newRootHash, function (err, root) {
+          ASSERT(err || root);
+          _root = root;
           error = error || err;
           if (!err) {
             //TODO here is the point where we can start / stop our addOns - but we will not wait for them to start
@@ -1442,8 +1464,10 @@ define([
               //TODO what can we do with the error??
               openProject(projectname, function (err) {
                 //TODO is there a meaningful error which we should propagate towards user???
-                reLaunchUsers();
-                callback();
+                if(!err){
+                  reLaunchUsers();
+                }
+                callback(err);
               });
             });
           }
@@ -2781,42 +2805,16 @@ define([
         });
       }
 
-      function _createProjectFromFileAsync(projectname, jProject, callback) {
-        _database.simpleRequest({command: 'createProjectFromFile', name: projectname, json: jProject}, function (err, id) {
-          if (err) {
-            return callback(err);
-          }
-          _database.simpleResult(id, callback);
-        });
-      }
-
       function createProjectFromFileAsync(projectname, jProject, callback) {
         //if called on an existing project, it will ruin it!!! - although the old commits will be untouched
         createProjectAsync(projectname, function (err) {
           selectProjectAsync(projectname, function (err) {
-            Serialization.import(_core, _nodes[ROOT_PATH].node, jProject, function (err) {
+            Serialization.import(_core, _root, jProject, function (err) {
               if (err) {
                 return callback(err);
               }
 
               saveRoot("library have been updated...", callback);
-            });
-          });
-        });
-      }
-
-      function _createProjectFromFileAsync(projectname, jNode, callback) {
-        //if called on an existing project, it will ruin it!!! - although the old commits will be untouched
-        createProjectAsync(projectname, function (err) {
-          selectProjectAsync(projectname, function (err) {
-            MergeImport(_core, null, jNode, function (err, root) {
-              if (err) {
-                callback(err);
-              } else {
-                _metaNodes[_core.getPath(root)] = root;
-                _nodes[_core.getPath(root)] = {node: root, hash: ""};
-                saveRoot('import project from file', callback);
-              }
             });
           });
         });
