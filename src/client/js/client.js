@@ -533,7 +533,7 @@ define([
                   }
                 });
               } else {
-                if(redoerNeedsClean){
+                if(redoerNeedsClean || !_selfCommits[newhash]){
                   redoerNeedsClean = false;
                   _redoer.clean();
                   _redoer.addModification(newhash,"branch initial");
