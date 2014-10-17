@@ -453,7 +453,7 @@ define(["mongodb", "util/assert", "util/canon"], function (MONGODB, ASSERT, CANO
             var candidate = checkForCommon(),
               needed = 2,
               bothLoaded = function () {
-                if (newAncestorsA.length > 0 && newAncestorsB.length > 0) {
+                if (newAncestorsA.length > 0 || newAncestorsB.length > 0) {
                   loadStep();
                 } else {
                   callback('unable to find common ancestor commit', null);

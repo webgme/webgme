@@ -640,6 +640,36 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       }
     }
 
+    function getAncestor(node,path){
+      var ownPath = _core.getPath(node),
+        ancestorPath='',
+        i;
+      path=path.split('/');
+      ownPath=ownPath.split('/');
+      ownPath.shift();
+      path.shift();
+      for(i=0;i<ownPath.length;i++){
+        if(ownPath[i] === path[i]){
+          ancestorPath= ancestorPath+'/'+ownPath[i];
+        } else {
+          break;
+        }
+      }
+      ownPath = _core.getPath(node);
+      while(ownPath !== ancestorPath){
+        node = _core.getParent(node);
+        ownPath = _core.getPath(node);
+      }
+      return node;
+    }
+    function setBaseOfNewNode(node,relid,basePath){
+      //TODO this is a kind of low level hack so maybe there should be another way to do this
+      var ancestor = getAncestor(node,basePath),
+        sourcePath = _core.getPath(node).substr(_core.getPath(ancestor).length),
+        targetPath = basePath.substr(_core.getPath(ancestor).length);
+      sourcePath = sourcePath+'/'+relid;
+      _innerCore.overlayInsert(_core.getChild(node,'ovr'),sourcePath,'base',targetPath);
+    }
     function createNewNodes(node, diff) {
       var relids = getDiffChildrenRelids(diff),
         i,
@@ -648,10 +678,16 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       for (i = 0; i < relids.length; i++) {
         if (diff[relids[i]].removed === false && !diff[relids[i]].movedFrom) {
           //we have to create the child with the exact hash and then recursively call the function for it
-          //TODO this is a partial HACK
-          var newChild = _core.getChild(node, relids[i]);
-          _core.setHashed(newChild, true);
-          newChild.data = diff[relids[i]].hash;
+          if(!(node.data[relids[i]] && node.data[relids[i]] === diff[relids[i]].hash)){
+            //if it is a child of a new node we probably do not have to create it again...
+            _core.setProperty(node,relids[i],diff[relids[i]].hash);
+          } else {
+            console.log('child of a new child');
+          }
+          if(diff[relids[i]].pointer && diff[relids[i]].pointer.base){
+            //we can set base if the node has one, otherwise it is 'inheritance internal' node
+            setBaseOfNewNode(node,relids[i],diff[relids[i]].pointer.base);
+          }
         }
 
         done = TASYNC.call(function (a, b, c) {
@@ -662,7 +698,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
 
       return TASYNC.call(function (d) {
         return null;
-      }, done);
+      },done);
     }
 
     function getMovedNode(root, from, to) {
@@ -953,7 +989,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       getMoveSources(diff, '', toFrom, fromTo);
 
       done = createNewNodes(root, diff);
-
+      //done = TASYNC.call(function(d){_core.persist(root)},done);
       TASYNC.call(function (d) {
         return applyNodeChange(root, '', diff);
       }, done);
@@ -1120,6 +1156,9 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
 
       return result;
     };
+
+    //we remove some low level functions as they should not be used on high level
+    delete _core.overlayInsert;
 
     return _core;
   }
