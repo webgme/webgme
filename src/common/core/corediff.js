@@ -489,11 +489,47 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       return merged;
     }
 
+    function removePathFromDiff(diff,path){
+      var relId,i;
+      if(path === ''){
+        diff = null;
+      } else {
+        path = path.split('/');
+        path.shift();
+        relId = path.pop();
+        for(i=0;i<path.length;i++){
+          diff = diff[path[i]];
+        }
+        delete diff[relId];
+      }
+    }
+    function shrinkDiff(rootDiff){
+      var _shrink = function(diff){
+        if(diff){
+          var keys = getDiffChildrenRelids(diff),
+            i;
+          if(typeof diff.movedFrom === 'string'){
+            removePathFromDiff(rootDiff,diff.movedFrom);
+          }
+          if(diff.removed === true){
+            for(i=0;i<keys.length;i++){
+              delete diff[keys[i]];
+            }
+          } else {
+            for(i=0;i<keys.length;i++){
+              _shrink(diff[keys[i]]);
+            }
+          }
+        }
+      };
+      _shrink(rootDiff);
+    }
     function checkRound() {
       var guids = Object.keys(_yetToCompute),
         done, ytc,
         i;
       if (_needChecking !== true || guids.length < 1) {
+        shrinkDiff(_DIFF);
         return _DIFF;
       }
       _needChecking = false;
@@ -1002,13 +1038,28 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       var base = getNodeByGuid(node.guid),
         singleNode = getSingleNode(node),
         childrenRelids = getDiffChildrenRelids(node),
+        basePath = _concat_dictionary.guidToPath[node.guid],
         i;
       if(base === null){
         //there is no such object in the base of the concat so we simply insert it
         insertAtPath(path,singleNode);
       } else {
-        if(base.removed !== true){
+        //simple removal
+        if(node.removed === true){
+          base.removed = true
+        } else {
+          if(base.removed === true){
+            delete base.removed;
+          }
           insertAtPath(_concat_dictionary.guidToPath[node.guid],jsonConcat(base,singleNode));
+          //if we add a move we also have to move :)
+          if(node.movedFrom){
+            //we have to get base again
+            base = getNodeByGuid(node.guid);
+            insertAtPath(path,base);
+            removePathFromDiff(_concat_result,basePath);
+            _concat_dictionary = getDiffTreeDictionray(_concat_result); //we have to recalculate
+          }
         }
       }
 
@@ -1039,8 +1090,8 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
     _core.concatTreeDiff = function(base,extension) {
       _concat_result = JSON.parse(JSON.stringify(base || {}));
       _concat_dictionary = getDiffTreeDictionray(base);
-      _concat_moves = {toFrom:{},fromTo:{}};
-      getMoveSources(extension,_concat_moves.toFrom,_concat_moves.fromTo);
+      _concat_moves = {toFrom:{},fromTo:{},base:{fromTo:{},toFrom:{}}};
+      getMoveSources(extension,'',_concat_moves.toFrom,_concat_moves.fromTo);
       processConcatNode('',extension);
       return _concat_result;
     };
