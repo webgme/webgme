@@ -668,7 +668,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
         sourcePath = _core.getPath(node).substr(_core.getPath(ancestor).length),
         targetPath = basePath.substr(_core.getPath(ancestor).length);
       sourcePath = sourcePath+'/'+relid;
-      _innerCore.overlayInsert(_core.getChild(node,'ovr'),sourcePath,'base',targetPath);
+      _innerCore.overlayInsert(_core.getChild(ancestor,'ovr'),sourcePath,'base',targetPath);
     }
     function createNewNodes(node, diff) {
       var relids = getDiffChildrenRelids(diff),
@@ -681,8 +681,6 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
           if(!(node.data[relids[i]] && node.data[relids[i]] === diff[relids[i]].hash)){
             //if it is a child of a new node we probably do not have to create it again...
             _core.setProperty(node,relids[i],diff[relids[i]].hash);
-          } else {
-            console.log('child of a new child');
           }
           if(diff[relids[i]].pointer && diff[relids[i]].pointer.base){
             //we can set base if the node has one, otherwise it is 'inheritance internal' node
