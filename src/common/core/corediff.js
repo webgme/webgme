@@ -511,18 +511,24 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
           if(typeof diff.movedFrom === 'string'){
             removePathFromDiff(rootDiff,diff.movedFrom);
           }
+
+          if(diff.removed !== false || typeof diff.movedFrom === 'string'){
+            delete diff.hash;
+          }
+
           if(diff.removed === true){
             for(i=0;i<keys.length;i++){
               delete diff[keys[i]];
             }
           } else {
+
             for(i=0;i<keys.length;i++){
               _shrink(diff[keys[i]]);
             }
           }
         }
       };
-      _shrink(rootDiff);
+      _shrink(rootDiff,false);
     }
     function checkRound() {
       var guids = Object.keys(_yetToCompute),
@@ -560,7 +566,9 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
             ytc.toExpanded = true;
             _needChecking = true;
             done = TASYNC.call(function (mDiff, info) {
-              mDiff.hash = _core.getHash(info.to);
+              if(!mDiff.hash){
+                mDiff.hash = _core.getHash(info.to);
+              }
               mDiff.removed = false;
               insertIntoDiff(_core.getPath(info.to), mDiff);
               return null;
@@ -678,9 +686,21 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       for (i = 0; i < relids.length; i++) {
         if (diff[relids[i]].removed === false && !diff[relids[i]].movedFrom) {
           //we have to create the child with the exact hash and then recursively call the function for it
-          if(!(node.data[relids[i]] && node.data[relids[i]] === diff[relids[i]].hash)){
+          /*if(!(node.data[relids[i]] && node.data[relids[i]] === diff[relids[i]].hash)){
             //if it is a child of a new node we probably do not have to create it again...
+            if(diff[relids[i]].hash){
+              _core.setProperty(node,relids[i],diff[relids[i]].hash);
+            } else {
+              //create an empty child
+              var child = _core.getChild(node,relids[i]);
+              _core.setHashed(child,true);
+            }
+          }*/
+          if(diff[relids[i]].hash){
             _core.setProperty(node,relids[i],diff[relids[i]].hash);
+          } else {
+            var child = _core.getChild(node,relids[i]);
+            _core.setHashed(child,true);
           }
           if(diff[relids[i]].pointer && diff[relids[i]].pointer.base){
             //we can set base if the node has one, otherwise it is 'inheritance internal' node
