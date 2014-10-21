@@ -1,2 +1,19 @@
-<p>Merging ended with error : <b>{{ mergeError }}</b>.</p>
-<p>{{mergeConflict}}</p>
+<p>{{mergeError}}</p>
+<table>
+    <tr>
+        <td>
+            <b>{{mergeConflict.theirHeader}}</b>
+        </td>
+        <td>
+            <b>{{mergeConflict.mineHeader}}</b>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            {{mergeConflict.theirs}}
+        </td>
+        <td>
+            {{mergeConflict.mine}}
+        </td>
+    </tr>
+</table>

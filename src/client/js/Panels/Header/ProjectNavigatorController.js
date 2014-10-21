@@ -970,9 +970,17 @@ define( [
               console.log('mergeCommits',whatCommit,whereCommit);
             self.gmeClient.merge(whereBranchId,whatCommit,whereCommit,function(err,conflict){
               //console.log('merge result',err);
-              conflict = conflict || {};
-              self.$scope.mergeError = err.toString();
-              self.$scope.mergeConflict = JSON.stringify(conflict,null,2);
+              if(err){
+                self.$scope.mergeError = "The merge ended with result: "+err.toString();
+                if(conflict){
+                  self.$scope.mergeConflict = {theirs:conflict.theirs,theirHeader:"THEIRS",mine:conflict.mine,mineHeader:"MINE"};
+                } else {
+                  self.$scope.mergeConflict = {theirs:"",theirHeader:"",mine:"",mineHeader:""};
+                }
+              } else {
+                self.$scope.mergeError = "The merge have been completed successfully!";
+                self.$scope.mergeConflict = {theirs:"",theirHeader:"",mine:"",mineHeader:""};
+              }
               self.$simpleDialog.open({
                 dialogTitle: 'Merge result',
                 dialogContentTemplate: 'AfterMergeTemplate.html',

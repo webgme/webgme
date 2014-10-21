@@ -3385,7 +3385,7 @@ define([
                     }
                   });
                 } else {
-                  callback(new Error('there is a conflict...'));
+                  callback(new Error('there is a conflict...'),{theirs:endingWhatDiff,mine:endingWhereDiff});
                 }
               };
 
