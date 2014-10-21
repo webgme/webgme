@@ -3330,6 +3330,134 @@ define([
         });
       }
 
+      function merge(whereBranch,whatCommit,whereCommit,callback){
+        ASSERT(_project && typeof whatCommit === 'string' && typeof whereCommit === 'string' && typeof callback === 'function');
+        _project.getCommonAncestorCommit(whatCommit,whereCommit,function(err,baseCommit){
+          if(!err && baseCommit){
+            var base,what,where,baseToWhat,baseToWhere,rootNeeds = 3,error = null,
+            rootsLoaded = function(){
+                var needed = 2,error = null;
+                _core.generateTreeDiff(base,what,function(err,diff){
+                  error = error || err;
+                  baseToWhat = diff;
+                  if(--needed===0){
+                    if(!error){
+                      diffsGenerated();
+                    } else {
+                      callback(error);
+                    }
+                  }
+                });
+                _core.generateTreeDiff(base,where,function(err,diff){
+                  error = error || err;
+                  baseToWhere = diff;
+                  if(--needed===0){
+                    if(!error){
+                      diffsGenerated();
+                    } else {
+                      callback(error);
+                    }
+                  }
+                });
+              },
+              diffsGenerated = function(){
+                var endingWhatDiff = _core.concatTreeDiff(baseToWhere,baseToWhat),
+                  endingWhereDiff = _core.concatTreeDiff(baseToWhat,baseToWhere);
+                if(_core.isEqualDifferences(endingWhereDiff,endingWhatDiff)){
+                  _core.applyTreeDiff(base,endingWhatDiff,function(err){
+                    if(err){
+                      callback(err);
+                    } else {
+                      _core.persist(base,function(err){
+                        if(err){
+                          callback(err);
+                        } else {
+                          var newHash = _project.makeCommit([whatCommit,whereCommit],_core.getHash(base), "merging", function(err){
+                            if(err){
+                              callback(err);
+                            } else {
+                              console.log('setting branch hash after merge');
+                              _project.setBranchHash(whereBranch,whereCommit,newHash,callback);
+                            }
+                          });
+                        }
+                      });
+                    }
+                  });
+                } else {
+                  callback(new Error('there is a conflict...'));
+                }
+              };
+
+              _project.loadObject(baseCommit,function(err,baseCommitObject){
+                error = error || err;
+                if(!error && baseCommitObject){
+                  _core.loadRoot(baseCommitObject.root,function(err,r){
+                    error = error || err;
+                    base = r;
+                    if(--rootNeeds === 0){
+                      if(!error){
+                        rootsLoaded();
+                      } else {
+                        callback(error);
+                      }
+                    }
+                  });
+                } else {
+                  error = error || new Error('cannot load common ancestor commit');
+                  if(--rootNeeds === 0){
+                    callback(error);
+                  }
+                }
+              });
+              _project.loadObject(whatCommit,function(err,whatCommitObject){
+                error = error || err;
+                if(!error && whatCommitObject){
+                  _core.loadRoot(whatCommitObject.root,function(err,r){
+                    error = error || err;
+                    what = r;
+                    if(--rootNeeds === 0){
+                      if(!error){
+                        rootsLoaded();
+                      } else {
+                        callback(error);
+                      }
+                    }
+                  });
+                } else {
+                  error = error || new Error('cannot load the commit to merge');
+                  if(--rootNeeds === 0){
+                    callback(error);
+                  }
+                }
+              });
+              _project.loadObject(whereCommit,function(err,whereCommitObject){
+                error = error || err;
+                if(!error && whereCommitObject){
+                  _core.loadRoot(whereCommitObject.root,function(err,r){
+                    error = error || err;
+                    where = r;
+                    if(--rootNeeds === 0){
+                      if(!error){
+                        rootsLoaded();
+                      } else {
+                        callback(error);
+                      }
+                    }
+                  });
+                } else {
+                  error = error || new Error('cannot load the commit to merge into');
+                  if(--rootNeeds === 0){
+                    callback(error);
+                  }
+                }
+              });
+          } else {
+            callback(err || new Error('we cannot locate common ancestor commit!!!'));
+          }
+        });
+      }
+
       //initialization
       function initialize() {
         _database = newDatabase();
@@ -3541,6 +3669,9 @@ define([
         //undo - redo
         undo: _redoer.undo,
         redo: _redoer.redo,
+
+        //merge
+        merge: merge,
 
         //testing
         testMethod: testMethod

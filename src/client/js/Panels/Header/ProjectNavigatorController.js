@@ -521,7 +521,8 @@ define( [
 
     deleteBranchItem,
     undoLastCommitItem,
-    redoLastUndoItem;
+    redoLastUndoItem,
+    mergeBranchItem;
 
     if ( self.projects[projectId].disabled ) {
       // do not show any branches if the project is disabled
@@ -669,6 +670,22 @@ define( [
         branchInfo: branchInfo
       }
     };
+
+    mergeBranchItem = {
+      id: 'mergeBranch',
+      label: 'Merge into current branch',
+      iconClass: 'glyphicon glyphicon-random',
+      disabled: false, // TODO: set this from handler to enable/disable
+      action: function ( actionData ) {
+        self.mergeBranch(actionData.projectId,actionData.branchId,self.$scope.navigator.items[self.navIdBranch].id);
+      },
+      // Put whatever you need to get passed back above
+      actionData: {
+        projectId: projectId,
+        branchId: branchId,
+        branchInfo: branchInfo
+      }
+    }
     // create the new branch structure
     self.projects[projectId].branches[branchId] = {
       id: branchId,
@@ -713,6 +730,7 @@ define( [
                 branchId: branchId
               }
             },
+            mergeBranchItem,
             {
               id: 'createCommitMessage',
               label: 'Create commit message',
@@ -732,6 +750,7 @@ define( [
     self.projects[projectId].branches[branchId].deleteBranchItem = deleteBranchItem;
     self.projects[projectId].branches[branchId].undoLastCommitItem = undoLastCommitItem;
     self.projects[projectId].branches[branchId].redoLastUndoItem = redoLastUndoItem;
+    self.projects[projectId].branches[branchId].mergeBranchItem = mergeBranchItem;
 
     for ( i = 0; i < self.projects[projectId].menu.length; i += 1 ) {
 
@@ -816,6 +835,7 @@ define( [
     if ( currentBranch ) {
       currentBranch.isSelected = false;
       currentBranch.deleteBranchItem.disabled = false;
+      currentBranch.mergeBranchItem.disabled = false;
     }
 
     if ( projectId || projectId === '' ) {
@@ -835,6 +855,7 @@ define( [
         if ( currentBranch ) {
           currentBranch.isSelected = true;
           currentBranch.deleteBranchItem.disabled = true;
+          currentBranch.mergeBranchItem.disabled = true;
         }
 
         return;
@@ -891,6 +912,7 @@ define( [
         self.projects[projectId].branches[branchId].isSelected = true;
 
         self.projects[projectId].branches[branchId].deleteBranchItem.disabled = true;
+        self.projects[projectId].branches[branchId].mergeBranchItem.disabled = true;
 
         if ( self.gmeClient ) {
           if ( branchId !== self.gmeClient.getActualBranch() ) {
@@ -927,6 +949,17 @@ define( [
           lastCommiter: 'petike',
           lastCommitTime: new Date()
       };
+  };
+
+  ProjectNavigatorController.prototype.mergeBranch = function(projectId, whatBranchId, whereBranchId){
+    console.log('merge',projectId,whatBranchId,whereBranchId);
+    var self = this,
+      whatCommit = self.projects[projectId].branches[whatBranchId].properties.hashTag,
+      whereCommit = self.projects[projectId].branches[whereBranchId].properties.hashTag;
+    console.log('mergeCommits',whatCommit,whereCommit);
+    self.gmeClient.merge(whereBranchId,whatCommit,whereCommit,function(err,conflict){
+      console.log('merge result',err);
+    });
   };
 
   ProjectNavigatorController.prototype.dummyProjectsGenerator = function ( name, maxCount ) {
