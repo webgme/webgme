@@ -679,7 +679,7 @@ define( [
     mergeBranchItem = {
       id: 'mergeBranch',
       label: 'Merge into current branch',
-      iconClass: 'glyphicon glyphicon-random',
+      iconClass: 'fa fa-share-alt fa-rotate-90',
       disabled: false, // TODO: set this from handler to enable/disable
       action: function ( actionData ) {
         self.mergeBranch(actionData.projectId,actionData.branchId,self.$scope.navigator.items[self.navIdBranch].id);
