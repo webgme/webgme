@@ -12,15 +12,20 @@ define( [
 
   'isis-ui-components/simpleDialog/simpleDialog',
 
-  'text!js/Dialogs/Projects/templates/DeleteDialogTemplate.html'
+  'text!js/Dialogs/Projects/templates/DeleteDialogTemplate.html',
+
+  'text!js/Dialogs/Projects/templates/BeforeMergeTemplate.html',
+  'text!js/Dialogs/Projects/templates/AfterMergeTemplate.html'
 
 
-], function ( ng, ProjectsDialog, CommitDialog, ProjectRepositoryDialog, ConfirmDialog, DeleteDialogTemplate ) {
+], function ( ng, ProjectsDialog, CommitDialog, ProjectRepositoryDialog, ConfirmDialog, DeleteDialogTemplate, BeforeMergeTemplate, AfterMergeTemplate ) {
   "use strict";
 
 
   angular.module( 'gme.ui.ProjectNavigator', [] ).run( function ( $templateCache ) {
     $templateCache.put( 'DeleteDialogTemplate.html', DeleteDialogTemplate );
+    $templateCache.put( 'BeforeMergeTemplate.html', BeforeMergeTemplate );
+    $templateCache.put( 'AfterMergeTemplate.html', AfterMergeTemplate );
   } );
 
 
@@ -952,14 +957,32 @@ define( [
   };
 
   ProjectNavigatorController.prototype.mergeBranch = function(projectId, whatBranchId, whereBranchId){
-    console.log('merge',projectId,whatBranchId,whereBranchId);
-    var self = this,
-      whatCommit = self.projects[projectId].branches[whatBranchId].properties.hashTag,
-      whereCommit = self.projects[projectId].branches[whereBranchId].properties.hashTag;
-    console.log('mergeCommits',whatCommit,whereCommit);
-    self.gmeClient.merge(whereBranchId,whatCommit,whereCommit,function(err,conflict){
-      console.log('merge result',err);
-    });
+    var self = this;
+    self.$scope.whatBranch = whatBranchId;
+    self.$scope.whereBranch = whereBranchId;
+    self.$simpleDialog.open( {
+          dialogTitle: 'Confirm merge',
+          dialogContentTemplate: 'BeforeMergeTemplate.html',
+          onOk: function () {
+            console.log('merge',projectId,whatBranchId,whereBranchId);
+            var whatCommit = self.projects[projectId].branches[whatBranchId].properties.hashTag,
+              whereCommit = self.projects[projectId].branches[whereBranchId].properties.hashTag;
+              console.log('mergeCommits',whatCommit,whereCommit);
+            self.gmeClient.merge(whereBranchId,whatCommit,whereCommit,function(err,conflict){
+              //console.log('merge result',err);
+              conflict = conflict || {};
+              self.$scope.mergeError = err.toString();
+              self.$scope.mergeConflict = JSON.stringify(conflict,null,2);
+              self.$simpleDialog.open({
+                dialogTitle: 'Merge result',
+                dialogContentTemplate: 'AfterMergeTemplate.html',
+                //onOk:function(){},
+                scope: self.$scope
+              });
+            });
+          },
+          scope: self.$scope
+        } );
   };
 
   ProjectNavigatorController.prototype.dummyProjectsGenerator = function ( name, maxCount ) {
