@@ -20,7 +20,8 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       fromTo = {}, //TODO should not be global
       _concat_dictionary,
       _concat_moves,
-      _concat_result;
+      _concat_result,
+      _diff_moves = {};
 
     for (var i in _innerCore) {
       _core[i] = _innerCore[i];
@@ -262,10 +263,11 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
 
     function meta_diff(source, target) {
       var diff = {};
-      if (CANON.stringify(_core.getOwnJsonMeta(source)) !== CANON.stringify(_core.getOwnJsonMeta(target))) {
+      console.log('kecso',_core.getOwnMetaInJson(source),_core.getOwnMetaInJson(target),diffObjects(_core.getOwnMetaInJson(source),_core.getOwnMetaInJson(target)));
+      if (CANON.stringify(_core.getOwnMetaInJson(source)) !== CANON.stringify(_core.getOwnMetaInJson(target))) {
         diff = _core.getOwnJsonMeta(target);
         if(Object.keys(diff).length <1){
-          diff = {empty:true};
+          //diff = {empty:true};
         }//TODO this is just a hack, if we would provide real diff it would not be needed
       }
       return diff;
@@ -467,6 +469,33 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       sDiff[relid] = mergeObjects(sDiff[relid], diff);
     }
 
+    function diffObjects(source,target) {
+      var diff = {},
+        sKeys = Object.keys(source),
+        tKeys = Object.keys(target),
+        tDiff,i;
+      for (i = 0; i < sKeys.length; i++) {
+        if(tKeys.indexOf(sKeys[i]) === -1){
+          diff[sKeys[i]] = TODELETESTRING;
+        }
+      }
+      for (i = 0; i < tKeys.length; i++) {
+        if (sKeys.indexOf(tKeys[i]) === -1) {
+          diff[tKeys[i]] = target[tKeys[i]];
+        } else {
+          if (typeof target[tKeys[i]] === typeof source[tKeys[i]] && typeof target[tKeys[i]] === 'object' && !(target instanceof Array)) {
+            tDiff = diffObjects(source[tKeys[i]], target[tKeys[i]]);
+            if(Object.keys(tDiff).length > 0){
+              diff[tKeys[i]] = tDiff;
+            }
+          } else if(source[tKeys[i]] !== target[tKeys[i]]) {
+            diff[tKeys[i]] = target[tKeys[i]];
+          }
+        }
+      }
+      return diff;
+    }
+
     function mergeObjects(source, target) {
       var merged = {},
         sKeys = Object.keys(source),
@@ -547,6 +576,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
           delete _yetToCompute[guids[i]];
           done = TASYNC.call(function (mDiff, info) {
             mDiff.movedFrom = _core.getPath(info.from);
+            _diff_moves[_core.getPath(info.from)] = _core.getPath(info.to);
             insertIntoDiff(_core.getPath(info.to), mDiff);
             return null;
           }, updateDiff(ytc.from, ytc.to), ytc);
@@ -598,11 +628,14 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
     _core.generateTreeDiff = function (sRoot, tRoot) {
       _yetToCompute = {};
       _DIFF = {};
+      _diff_moves = {};
       _needChecking = true;
       _rounds = 0;
       return TASYNC.call(function (d) {
         _DIFF = d;
-        return checkRound();
+        return TASYNC.call(function(d){
+          return _DIFF;
+        },checkRound());
       }, updateDiff(sRoot, tRoot));
     };
 
