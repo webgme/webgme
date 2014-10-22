@@ -288,8 +288,8 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       var relids = getDiffChildrenRelids(diff),
       i,sMeta,tMeta;
       if(diff.meta){
-        sMeta = diff.meta.source;
-        tMeta = diff.meta.target;
+        sMeta = diff.meta.source || {};
+        tMeta = diff.meta.target || {};
         combineMoveIntoMetaDiff(sMeta);
         diff.meta = diffObjects(sMeta,tMeta);  
       }
@@ -735,6 +735,46 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       sourcePath = sourcePath+'/'+relid;
       _innerCore.overlayInsert(_core.getChild(ancestor,'ovr'),sourcePath,'base',targetPath);
     }
+    function makeInitialContainmentChanges(node,diff){
+      var relids = getDiffChildrenRelids(diff),
+        i,done,child,moved;
+
+      for(i=0;i<relids.length;i++){
+        moved = false;
+        if(diff[relids[i]].removed === false){
+          if(diff[relids[i]].movedFrom){
+            moved = true;
+            child = _core.loadByPath(_core.getRoot(node),diff[relids[i]].movedFrom);
+          } else {
+            //first we hack the pointer, then we create the node
+            if(diff[relids[i]].pointer && diff[relids[i]].pointer.base){
+              //we can set base if the node has one, otherwise it is 'inheritance internal' node
+              setBaseOfNewNode(node,relids[i],diff[relids[i]].pointer.base);
+            }
+            if(diff[relids[i]].hash){
+              _core.setProperty(node,relids[i],diff[relids[i]].hash);
+              child = _core.loadChild(node,relids[i]);
+            } else {
+              child = _core.getChild(node,relids[i]);
+              _core.setHashed(child,true);
+            }
+          }
+        } else {
+          //we just load the child
+          child = _core.loadChild(node,relids[i]);
+        }
+        done = TASYNC.call(function(n,di,p,m,d){
+          if(m === true){
+            n = _core.moveNode(n,p);
+          }
+          return makeInitialContainmentChanges(n,di);
+        },child,diff[relids[i]],node,moved,done);
+      }
+
+      TASYNC.call(function(d){
+        return null;
+      },done);
+    }
     function createNewNodes(node, diff) {
       var relids = getDiffChildrenRelids(diff),
         i,
@@ -795,11 +835,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
     function applyNodeChange(root, path, nodeDiff) {
       //check for move
       var node;
-      if (typeof nodeDiff.movedFrom === 'string') {
-        node = getMovedNode(root, nodeDiff.movedFrom, path);
-      } else {
-        node = _core.loadByPath(root, path);
-      }
+      node = _core.loadByPath(root, path);
 
       TASYNC.call(function (n) {
         var done,
@@ -948,69 +984,111 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
     }
 
     function applyMetaAttributes(node,metaAttrDiff){
-      var keys = Object.keys(metaAttrDiff || {}),
-        i;
-      for(i=0;i<keys.length;i++){
-        _core.setAttributeMeta(node,keys[i],metaAttrDiff[keys[i]]);
+      var i,keys,newValue;
+      if(metaAttrDiff === TODELETESTRING){
+        //we should delete all MetaAttributes
+        keys = _core.getValidAttributeNames(node);
+        for(i=0;i<keys.length;i++){
+          _core.delAttributeMeta(node,keys[i]);
+        }
+      } else {
+        keys = Object.keys(metaAttrDiff);
+        for(i=0;i<keys.length;i++){
+          if(metaAttrDiff[keys[i]] === TODELETESTRING){
+            _core.delAttributeMeta(node,keys[i]);
+          } else {
+            newValue = jsonConcat(_core.getAttributeMeta(node,keys[i]) || {},metaAttrDiff[keys[i]]);
+            _core.setAttributeMeta(node,keys[i],newValue);
+          }
+        }
       }
     }
 
-    function applyMetaContraints(node,metaConDiff){
-      var keys,
-        i;
-      keys = _core.getOwnConstraintNames(node);
-      for(i=0;i<keys.length;i++){
-        _core.delConstraint(node,keys[i]);
-      }
-
-      keys = Object.keys(metaConDiff || {});
-      for(i=0;i<keys.length;i++){
-        _core.setConstraint(node,keys[i],metaConDiff[keys[i]]);
+    function applyMetaConstraints(node,metaConDiff){
+      var keys,i;
+      if(metaConDiff === TODELETESTRING){
+        //remove all constraints
+        keys = _core.getConstraintNames(node);
+        for(i=0;i<keys.length;i++){
+          _core.delConstraint(node,keys[i]);
+        }
+      } else {
+        keys = Object.keys(metaConDiff);
+        for(i=0;i<keys.length;i++){
+          if(metaConDiff[keys[i]] === TODELETESTRING){
+            _core.delConstraint(node,keys[i]);
+          } else {
+            _core.setConstraint(node,keys[i],jsonConcat(_core.getConstraint(node,keys[i]) || {},metaConDiff[keys[i]]));
+          }
+        }
       }
     }
 
     function applyMetaChildren(node,metaChildrenDiff){
-      var applyChild = function(child,min,max){
-          _core.setChildMeta(node,child,min,max);
-        },
-        keys = (metaChildrenDiff || {}).items || [],
-        done,
-        i;
-
-      for(i=0;i<keys.length;i++){
-        done = TASYNC.call(
-          applyChild,
-          _core.loadByPath(_core.getRoot(node),keys[i]),
-          metaChildrenDiff.minItems[i],
-          metaChildrenDiff.maxItems[i],
-          done
-        );
+      var keys, i,done,
+        setChild = function(target,data,d){
+          _core.setChildMeta(node,target,data.min,data.max);
+        };
+      if(metaChildrenDiff === TODELETESTRING){
+        //remove all valid child
+        keys = _core.getValidChildrenTypes(node);
+        for(i=0;i<keys.length;i++){
+          _core.delChildMeta(node,keys[i]);
+        }
+      } else {
+        _core.setChildrenMetaLimits(node, metaChildrenDiff.min, metaChildrenDiff.max);
+        delete metaChildrenDiff.max; //TODO we do not need it anymore, but maybe there is a better way
+        delete metaChildrenDiff.min;
+        keys = Object.keys(metaChildrenDiff);
+        for(i=0;i<keys.length;i++){
+          if(metaChildrenDiff[keys[i]] === TODELETESTRING){
+            _core.delChildMeta(node,keys[i]);
+          } else {
+            done = TASYNC.call(setChild,_core.loadByPath(_core.getRoot(node),keys[i]),metaChildrenDiff[keys[i]],done);
+          }
+        }
       }
 
       TASYNC.call(function(d){
-        _core.setChildrenMetaLimits(node, metaChildrenDiff.min, metaChildrenDiff.max);
         return null;
       },done);
     }
 
     function applyMetaPointers(node,metaPointerDiff){
-      var applyPointer = function(name,target,min,max){
-          _core.setPointerMetaTarget(node,name,target,min,max);
-        },
-        i, j,done,names = Object.keys(metaPointerDiff || {}),paths;
+      var names,targets, i, j,done,
+        setPointer = function(name,target,data,d){
+          _core.setPointerMetaTarget(node,name,target,data.min,data.max);
+        };
+      if(metaPointerDiff === TODELETESTRING){
+        //remove all pointers,sets and their targets
+        names = _core.getValidPointerNames(node);
+        for(i=0;i<names.length;i++){
+          _core.delPointerMeta(node,names[i]);
+        }
 
+        names = _core.getValidSetNames(node);
+        for(i=0;i<names.length;i++){
+          _core.delPointerMeta(node,names[i]);
+        }
+        return;
+      }
+
+      names = Object.keys(metaPointerDiff);
       for(i=0;i<names.length;i++){
-        paths = metaPointerDiff[names[i]].items || [];
-        _core.setPointerMetaLimits(node,names[i],metaPointerDiff[names[i]].min,metaPointerDiff[names[i]].max);
-        for(j=0;j<paths.length;j++){
-          done = TASYNC.call(
-            applyPointer,
-            names[i],
-            _core.loadByPath(_core.getRoot(node),paths[j]),
-            (metaPointerDiff[names[i]].minItems || [])[j],
-            (metaPointerDiff[names[i]].maxItems || [])[j],
-            done
-          );
+        if(metaPointerDiff[names[i]] === TODELETESTRING){
+          _core.delPointerMeta(node,names[i]);
+        } else {
+          _core.setPointerMetaLimits(node,names[i],metaPointerDiff[names[i]].min,metaPointerDiff[names[i]].max);
+          delete metaPointerDiff[names[i]].max; //TODO we do not need it anymore, but maybe there is a better way
+          delete metaPointerDiff[names[i]].min;
+          targets = Object.keys(metaPointerDiff[names[i]]);
+          for(j=0;j<targets.length;j++){
+            if(metaPointerDiff[names[i]][targets[j]] === TODELETESTRING){
+              _core.delPointerMetaTarget(node,names[i],targets[j]);
+            } else {
+              done = TASYNC.call(setPointer,names[i],_core.loadByPath(_core.getRoot(node),targets[j]),metaPointerDiff[names[i]][targets[j]],done);
+            }
+          }
         }
       }
 
@@ -1020,20 +1098,32 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
     }
 
     function applyMetaAspects(node,metaAspectsDiff){
-      var applyTarget = function(name,target){
+      var names,targets, i, j,done,
+        setAspect = function(name,target,d){
           _core.setAspectMetaTarget(node,name,target);
-        },
-        i, j,done,names = Object.keys(metaAspectsDiff || {}),paths;
+        };
+      if(metaAspectsDiff === TODELETESTRING){
+        //remove all aspects
+        names = _core.getValidAspectNames(node);
+        for(i=0;i<names.length;i++){
+          _core.delAspectMeta(node,names[i]);
+        }
+        return;
+      }
 
+      names = Object.keys(metaAspectsDiff);
       for(i=0;i<names.length;i++){
-        paths = metaAspectsDiff[names[i]];
-        for(j=0;j<paths.length;j++){
-          done = TASYNC.call(
-            applyTarget,
-            names[i],
-            _core.loadByPath(_core.getRoot(node),paths[j]),
-            done
-          );
+        if(metaAspectsDiff[names[i]] === TODELETESTRING){
+          _core.delAspectMeta(node,names[i]);
+        } else {
+          targets = Object.keys(metaAspectsDiff[names[i]]);
+          for(j=0;j<targets.length;j++){
+            if(metaAspectsDiff[names[i]][targets[j]] === TODELETESTRING){
+              _core.delAspectMetaTarget(node,names[i],targets[j]);
+            } else {
+              done = TASYNC.call(setAspect,names[i],_core.loadByPath(_core.getRoot(node),targets[j]),done);
+            }
+          }
         }
       }
 
@@ -1044,12 +1134,11 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
 
     function applyMetaChanges(node, metaDiff) {
       var done;
-      _core.clearMetaRules(node);
-      applyMetaAttributes(node,metaDiff.attributes);
-      applyMetaContraints(node,metaDiff.constraints);
-      done = applyMetaChildren(node,metaDiff.children);
-      done = TASYNC.call(applyMetaPointers,node,metaDiff.pointers,done);
-      done = TASYNC.call(applyMetaAspects,node,metaDiff.aspects,done);
+      applyMetaAttributes(node,metaDiff.attributes || TODELETESTRING);
+      applyMetaConstraints(node,metaDiff.constraints || TODELETESTRING);
+      done = applyMetaChildren(node,metaDiff.children || TODELETESTRING);
+      done = TASYNC.call(applyMetaPointers,node,metaDiff.pointers || TODELETESTRING,done);
+      done = TASYNC.call(applyMetaAspects,node,metaDiff.aspects || TODELETESTRING,done);
 
       TASYNC.call(function(d){
         return null;
@@ -1063,14 +1152,10 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       fromTo = {};
       getMoveSources(diff, '', toFrom, fromTo);
 
-      done = createNewNodes(root, diff);
-      //done = TASYNC.call(function(d){_core.persist(root)},done);
-      TASYNC.call(function (d) {
+      done = makeInitialContainmentChanges(root,diff);
+      return TASYNC.call(function (d) {
         return applyNodeChange(root, '', diff);
       }, done);
-
-
-      return null;
     };
 
 
@@ -1095,9 +1180,6 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       return dictionary;
     }
 
-    function concatNodeChanges(base,dictionary,addition){
-
-    }
     function getNodeByGuid(guid){
       var path = _concat_dictionary.guidToPath[guid],
         object = _concat_result,
@@ -1135,6 +1217,40 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       base[relid] = JSON.parse(JSON.stringify(object));
       return;
     }
+    function changeMovedPaths(singleNode){
+      var keys,i;
+      keys = Object.keys(singleNode);
+      for(i=0;i<keys.length;i++){
+        if(_concat_moves.fromTo[keys[i]]){
+          singleNode[_concat_moves.fromTo[keys[i]]] = singleNode[keys[i]];
+          delete singleNode[keys[i]];
+          if(typeof singleNode[_concat_moves.fromTo[keys[i]]] === 'object' && singleNode[_concat_moves.fromTo[keys[i]]] !== null){
+            changeMovedPaths(singleNode[_concat_moves.fromTo[keys[i]]]);
+          }
+        } else {
+          if(typeof singleNode[keys[i]] === 'string' && keys[i] !== 'movedFrom' && _concat_moves.fromTo[singleNode[keys[i]]]){
+            singleNode[keys[i]] = _concat_moves.fromTo[keys[i]];
+          }
+
+          if(typeof singleNode[keys[i]] === 'object' && singleNode[keys[i]] !== null){
+            changeMovedPaths(singleNode[keys[i]]);
+          }
+        }
+
+      }
+      if(typeof singleNode === 'object' && singleNode !== null){
+        keys = Object.keys(singleNode);
+        for(i=0;i<keys.length;i++){
+          if(_concat_moves.fromTo[keys[i]]){
+            singleNode[_concat_moves.fromTo[keys[i]]] = singleNode[keys[i]];
+            delete singleNode[keys[i]];
+          }
+        }
+      } else if(typeof singleNode === 'string') {
+
+      }
+
+    }
     function getSingleNode(node){
       //removes the children from the node
       var result = JSON.parse(JSON.stringify(node)),
@@ -1143,6 +1259,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       for(i=0;i<keys.length;i++){
         delete result[keys[i]];
       }
+      changeMovedPaths(result);
       return result;
     }
     function processConcatNode(path,node){
@@ -1217,7 +1334,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
 
       for(i=0;i<keysOne.length;i++){
         if(keysOne[i] !== 'hash'){
-          if(typeof diffOne[keysOne[i]] === 'object' && typeof diffTwo[keysOne[i]] === 'object'){
+          if(typeof diffOne[keysOne[i]] === 'object' && typeof diffTwo[keysOne[i]] === 'object' && diffOne[keysOne[i]] !== null && diffTwo[keysOne[i]] !== null){
             if(!_core.isEqualDifferences(diffOne[keysOne[i]],diffTwo[keysOne[i]])){
               result = false;
             }

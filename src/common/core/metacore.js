@@ -271,6 +271,7 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv", "util/canon" ], 
                       diff.items.push(bigItem.items[index]);
                       diff.minItems.push(bigItem.minItems[index]);
                       diff.maxItems.push(bigItem.maxItems[index]);
+
                   }
                   if(bigItem.min && ((smallItem.min && bigItem.min !== smallItem.min) || !smallItem.min)){
                       diff = diff || {};

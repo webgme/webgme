@@ -3338,6 +3338,7 @@ define([
             rootsLoaded = function(){
                 var needed = 2,error = null;
                 _core.generateTreeDiff(base,what,function(err,diff){
+                  console.log('kecso whatdiff',diff);
                   error = error || err;
                   baseToWhat = diff;
                   if(--needed===0){
@@ -3349,6 +3350,7 @@ define([
                   }
                 });
                 _core.generateTreeDiff(base,where,function(err,diff){
+                  console.log('kecso wherediff',diff);
                   error = error || err;
                   baseToWhere = diff;
                   if(--needed===0){
@@ -3363,6 +3365,8 @@ define([
               diffsGenerated = function(){
                 var endingWhatDiff = _core.concatTreeDiff(baseToWhere,baseToWhat),
                   endingWhereDiff = _core.concatTreeDiff(baseToWhat,baseToWhere);
+                console.log('kecso endingwhatdiff',endingWhatDiff);
+                console.log('kecso endingwherediff',endingWhereDiff);
                 if(_core.isEqualDifferences(endingWhereDiff,endingWhatDiff)){
                   _core.applyTreeDiff(base,endingWhatDiff,function(err){
                     if(err){
