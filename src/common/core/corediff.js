@@ -262,15 +262,40 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
     }
 
     function meta_diff(source, target) {
-      var diff = {};
-      console.log('kecso',_core.getOwnMetaInJson(source),_core.getOwnMetaInJson(target),diffObjects(_core.getOwnMetaInJson(source),_core.getOwnMetaInJson(target)));
-      if (CANON.stringify(_core.getOwnMetaInJson(source)) !== CANON.stringify(_core.getOwnMetaInJson(target))) {
-        diff = _core.getOwnJsonMeta(target);
-        if(Object.keys(diff).length <1){
-          //diff = {empty:true};
-        }//TODO this is just a hack, if we would provide real diff it would not be needed
+      var sMeta = _core.getOwnMetaInJson(source),
+      tMeta = _core.getOwnMetaInJson(target);
+      if (CANON.stringify(sMeta) !== CANON.stringify(tMeta)) {
+        return {source: sMeta, target: tMeta};
       }
-      return diff;
+      return {};
+    }
+
+    function combineMoveIntoMetaDiff(diff){
+      var keys = Object.keys(diff),
+      i;
+      for(i=0;i<keys.length;i++){
+        if(_diff_moves[keys[i]]){
+          diff[_diff_moves[keys[i]]] = diff[keys[i]];
+          delete diff[keys[i]];
+        } else if(typeof diff[keys[i]] === 'object'){
+          combineMoveIntoMetaDiff(diff[keys[i]]);
+        }
+      }
+    }
+
+    function finalizeMetaDiff(diff){
+      //at this point _DIFF is ready and the _diff_moves is complete...
+      var relids = getDiffChildrenRelids(diff),
+      i,sMeta,tMeta;
+      if(diff.meta){
+        sMeta = diff.meta.source;
+        tMeta = diff.meta.target;
+        combineMoveIntoMetaDiff(sMeta);
+        diff.meta = diffObjects(sMeta,tMeta);  
+      }
+      for(i=0;i<relids.length;i++){
+        finalizeMetaDiff(diff[relids[i]]);
+      }
     }
 
     function isEmptyDiff(diff) {
@@ -565,6 +590,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
         i;
       if (_needChecking !== true || guids.length < 1) {
         shrinkDiff(_DIFF);
+        finalizeMetaDiff(_DIFF);
         return _DIFF;
       }
       _needChecking = false;
@@ -633,9 +659,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       _rounds = 0;
       return TASYNC.call(function (d) {
         _DIFF = d;
-        return TASYNC.call(function(d){
-          return _DIFF;
-        },checkRound());
+        return checkRound();
       }, updateDiff(sRoot, tRoot));
     };
 
