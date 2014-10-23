@@ -45,6 +45,11 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
           }
         }
       }
+      keys = Object.keys(obj);
+      if(keys.length === 1){
+        //it only has the GUID, so the node doesn't changed at all
+        delete obj.guid;
+      }
     }
 
     function attr_diff(source, target) {
@@ -122,32 +127,58 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
     }
 
     function pointer_diff(source, target) {
-      var sNames = _core.getPointerNames(source),
-        tNames = _core.getPointerNames(target),
-        i, pTarget,
-        diff = {};
-
-      for (i = 0; i < sNames.length; i++) {
-        if (tNames.indexOf(sNames[i]) === -1) {
-          diff[sNames[i]];
+      var getPointerData = function(node){
+        var data = {},
+        names = _core.getPointerNames(node),
+        i;
+        for(i=0;i<names.length;i++){
+          data[names[i]] = _core.getPointerPath(node,names[i]);
         }
-      }
+        return data;
+      }, 
+      sPointer = getPointerData(source), 
+      tPointer = getPointerData(target);
 
-      for (i = 0; i < tNames.length; i++) {
-        pTarget = _core.getPointerPath(target, tNames[i]);
-        if (sNames.indexOf(tNames[i]) === -1) {
-          diff[tNames[i]] = pTarget;
-        } else {
-          if (_core.getPointerPath(source, tNames[i]) !== pTarget) {
-            diff[tNames[i]] = pTarget;
-          }
-        }
+      if(CANON.stringify(sPointer) !== CANON.stringify(tPointer)){
+        return {source: sPointer,target:tPointer};
       }
-
-      return diff;
+      return {};
     }
 
-    function set_diff(source, target) {
+    function set_diff(source,target){
+      var getSetData = function(node){
+        var data = {},
+        names,targets,keys,i,j,k;
+
+        names = _core.getSetNames(node);
+        for(i=0;i<names.length;i++){
+          data[names[i]] = {};
+          targets = _core.getMemberPaths(node,names[i]);
+          for(j=0;j<targets.length;j++){
+            data[names[i]][targets[j]] = {attr:{},reg:{}};
+            keys = _core.getMemberOwnAttributeNames(node,names[i],targets[j]);
+            for(k=0;k<keys.length;k++){
+              data[names[i]][targets[j]].attr[keys[i]] = _core.getMemberAttribute(node,names[i],targets[j],keys[i]);
+            }
+            keys = _core.getMemberRegistryNames(node,names[i],targets[j]);
+            for(k=0;k<keys.length;k++){
+              data[names[i]][targets[j]].reg[keys[k]] = _core.getMemberRegistry(node,names[i],targets[j],keys[k]);
+            }
+          }
+        }
+
+        return data;
+
+      },
+      sSet = getSetData(source),
+      tSet = getSetData(target);
+
+      if(CANON.stringify(sSet) !== CANON.stringify(tSet)){
+        return {source:sSet,target:tSet};
+      }
+      return {};
+    }
+    function _set_diff(source, target) {
       var sNames = _core.getSetNames(source),
         tNames = _core.getSetNames(target),
         sMembers, tMembers, i, j, memberDiff, sData, tData,
@@ -202,8 +233,37 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
 
       return diff;
     }
+    function ovr_diff(source,target){
+      var getOvrData = function(node){
+        var paths,names,i,j,
+        ovr = _core.getProperty(node, 'ovr') || {},
+        data = {},
+        base = _core.getPath(node);
 
-    function ovr_diff(source, target) {
+        paths = Object.keys(ovr);
+        for(i=0;i<paths.length;i++){
+          if(paths[i].indexOf('_') === -1){
+            data[paths[i]] = {};
+            names = Object.keys(ovr[paths[i]]);
+            for(j=0;j<names.length;j++){
+              if(names[j].slice(-4) !== '-inv' && ovr[paths[i]][names[j]].indexOf('_') === -1){
+                data[paths[i]][names[j]] = _core.joinPaths(base,ovr[paths[i]][names[j]]);
+              }
+            }
+          }
+        }
+        return data;
+      },
+      sOvr = getOvrData(source),
+      tOvr = getOvrData(target);
+
+      if(CANON.stringify(sOvr) !== CANON.stringify(tOvr)){
+        return {source:sOvr,target:tOvr};
+      }
+      return {};
+    }
+
+    function _ovr_diff(source, target) {
       // structure: path:{pointername:"targetpath"}
       // diff structure: path:{pointername:{target:path,type:updated/removed/added}}
       var i, j, paths, pNames,
@@ -282,7 +342,22 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
         }
       }
     }
+    function combineMoveIntoPointerDiff(diff){
+      var keys = Object.keys(diff),
+      i;
+      for(i=0;i<keys.length;i++){
+        if(_diff_moves[diff[keys[i]]]){
+         diff[keys[i]] = _diff_moves[diff[keys[i]]];
+        }
+      }
+    }
 
+    function finalizeDiff(){
+      finalizeMetaDiff(_DIFF);
+      finalizePointerDiff(_DIFF);
+      finalizeSetDiff(_DIFF);
+      normalize(_DIFF);
+    } 
     function finalizeMetaDiff(diff){
       //at this point _DIFF is ready and the _diff_moves is complete...
       var relids = getDiffChildrenRelids(diff),
@@ -295,6 +370,35 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       }
       for(i=0;i<relids.length;i++){
         finalizeMetaDiff(diff[relids[i]]);
+      }
+    }
+    function finalizePointerDiff(diff){
+      var relids = getDiffChildrenRelids(diff),
+      i,sPointer,tPointer;
+      if(diff.pointer){
+        sPointer = diff.pointer.source || {};
+        tPointer = diff.pointer.target || {};
+        if(diff.movedFrom && !sPointer.base && tPointer.base){
+          delete tPointer.base;
+        }
+        combineMoveIntoPointerDiff(sPointer);
+        diff.pointer = diffObjects(sPointer,tPointer);
+      }
+      for(i=0;i<relids.length;i++){
+        finalizePointerDiff(diff[relids[i]]);
+      } 
+    }
+    function finalizeSetDiff(diff){
+      var relids = getDiffChildrenRelids(diff),
+      i,sSet,tSet;
+      if(diff.set){
+        sSet = diff.set.source || {};
+        tSet = diff.set.target || {};
+        combineMoveIntoMetaDiff(sSet);
+        diff.set = diffObjects(sSet,tSet);
+      }
+      for(i=0;i<relids.length;i++){
+        finalizeSetDiff(diff[relids[i]]);
       }
     }
 
@@ -337,7 +441,27 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       return diff;
     }
 
-    function extendDiffWithOvr(diff, oDiff) {
+    function extendDiffWithOvr(diff,oDiff){
+      var i,paths,tDiff;
+      //first extend sources
+      paths = Object.keys(oDiff.source || {});
+      for(i=0;i<paths.length;i++){
+        tDiff = getPathOfDiff(diff, paths[i]);
+        if(!(tDiff.pointer && tDiff.pointer.checked === true) && !tDiff.removed === true){
+          tDiff.pointer = {source:oDiff.source[paths[i]]};
+        }
+      }
+      //then targets
+      paths = Object.keys(oDiff.target || {});
+      for(i=0;i<paths.length;i++){
+        tDiff = getPathOfDiff(diff, paths[i]);
+        if(!(tDiff.pointer && tDiff.pointer.checked === true) && !tDiff.removed === true){
+          tDiff.pointer = tDiff.pointer || {};
+          tDiff.pointer.target = oDiff.target[paths[i]];
+        }
+      }
+    }
+    function _extendDiffWithOvr(diff, oDiff) {
       var i, j, keys = Object.keys(oDiff || {}),
         names, tDiff, oDiffObj;
       for (i = 0; i < keys.length; i++) {
@@ -376,7 +500,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       return TASYNC.call(function (sChildren, tChildren) {
         ASSERT(sChildren.length >= 0 && tChildren.length >= 0);
 
-        var i, child, done, tDiff, guid;
+        var i, child, done, tDiff, guid, base;
 
         tDiff = diff.children ? diff.children.removed || [] : [];
         for (i = 0; i < tDiff.length; i++) {
@@ -394,7 +518,11 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
           diff.childrenListChanged = true;
           child = getChild(tChildren, tDiff[i].relid);
           guid = _core.getGuid(child);
-          diff[tDiff[i].relid] = {guid: guid, removed: false, hash: _core.getHash(child)};
+          base =_core.getBase(child);
+          if(base){
+            base = _core.getPath(base);
+          }
+          diff[tDiff[i].relid] = {guid: guid, removed: false, hash: _core.getHash(child), pointer:{source:{},target:{base:base}}};
           _yetToCompute[guid] = _yetToCompute[guid] || {};
           _yetToCompute[guid].to = child;
           _yetToCompute[guid].toExpanded = false;
@@ -590,7 +718,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
         i;
       if (_needChecking !== true || guids.length < 1) {
         shrinkDiff(_DIFF);
-        finalizeMetaDiff(_DIFF);
+        finalizeDiff();
         return _DIFF;
       }
       _needChecking = false;
