@@ -379,6 +379,9 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv", "util/canon" ], 
             return core.getAttribute(MetaNode(node),name);
         };
 
+      core.getValidChildrenPaths = function(node){
+        return core.getMemberPaths(MetaChildrenNode(node),'items');
+      };
         core.setChildMeta = function(node,child,min,max){
             core.addMember(MetaChildrenNode(node),'items',child);
             min = min || -1;

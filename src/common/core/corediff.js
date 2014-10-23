@@ -34,11 +34,15 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       var keys = Object.keys(obj),
         i;
       for (i = 0; i < keys.length; i++) {
-        if (Array.isArray(obj[keys[i]])) {
+        /*if (Array.isArray(obj[keys[i]])) {
           if (obj[keys[i]].length === 0) {
             delete obj[keys[i]];
-          }
-        } else if (typeof obj[keys[i]] === 'object') {
+          }*/
+        if(Array.isArray(obj[keys[i]])) {
+          //do nothing, leave the array as is
+        } else if(obj[keys[i]] === undefined) {
+          delete obj[keys[i]]; //there cannot be undefined in the object
+        } else if (typeof obj[keys[i]] === 'object'){
           normalize(obj[keys[i]]);
           if (obj[keys[i]] && Object.keys(obj[keys[i]]).length === 0) {
             delete obj[keys[i]];
@@ -246,7 +250,9 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
             data[paths[i]] = {};
             names = Object.keys(ovr[paths[i]]);
             for(j=0;j<names.length;j++){
-              if(names[j].slice(-4) !== '-inv' && ovr[paths[i]][names[j]].indexOf('_') === -1){
+              if(ovr[paths[i]][names[j]] === "/_nullptr"){
+                data[paths[i]][names[j]] = null;
+              }else if(names[j].slice(-4) !== '-inv' && ovr[paths[i]][names[j]].indexOf('_') === -1){
                 data[paths[i]][names[j]] = _core.joinPaths(base,ovr[paths[i]][names[j]]);
               }
             }
@@ -378,9 +384,9 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       if(diff.pointer){
         sPointer = diff.pointer.source || {};
         tPointer = diff.pointer.target || {};
-        if(diff.movedFrom && !sPointer.base && tPointer.base){
+        /*if(diff.movedFrom && !sPointer.base && tPointer.base){
           delete tPointer.base;
-        }
+        }*/
         combineMoveIntoPointerDiff(sPointer);
         diff.pointer = diffObjects(sPointer,tPointer);
       }
@@ -442,22 +448,29 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
     }
 
     function extendDiffWithOvr(diff,oDiff){
-      var i,paths,tDiff;
+      var i,paths,names, j, tDiff;
       //first extend sources
       paths = Object.keys(oDiff.source || {});
       for(i=0;i<paths.length;i++){
         tDiff = getPathOfDiff(diff, paths[i]);
-        if(!(tDiff.pointer && tDiff.pointer.checked === true) && !tDiff.removed === true){
-          tDiff.pointer = {source:oDiff.source[paths[i]]};
+        if(!tDiff.removed === true){
+          tDiff.pointer = tDiff.pointer || {source:{},target:{}};
+          names = Object.keys(oDiff.source[paths[i]]);
+          for(j=0;j<names.length;j++){
+            tDiff.pointer.source[names[j]] = oDiff.source[paths[i]][names[j]];
+          }
         }
       }
       //then targets
       paths = Object.keys(oDiff.target || {});
       for(i=0;i<paths.length;i++){
         tDiff = getPathOfDiff(diff, paths[i]);
-        if(!(tDiff.pointer && tDiff.pointer.checked === true) && !tDiff.removed === true){
-          tDiff.pointer = tDiff.pointer || {};
-          tDiff.pointer.target = oDiff.target[paths[i]];
+        if(!tDiff.removed === true){
+          tDiff.pointer = tDiff.pointer || {source:{},target:{}};
+          names = Object.keys(oDiff.target[paths[i]]);
+          for(j=0;j<names.length;j++){
+            tDiff.pointer.target[names[j]] = oDiff.target[paths[i]][names[j]];
+          }
         }
       }
     }
@@ -636,7 +649,9 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
         if (sKeys.indexOf(tKeys[i]) === -1) {
           diff[tKeys[i]] = target[tKeys[i]];
         } else {
-          if (typeof target[tKeys[i]] === typeof source[tKeys[i]] && typeof target[tKeys[i]] === 'object' && !(target instanceof Array)) {
+          if (typeof target[tKeys[i]] === typeof source[tKeys[i]] &&
+            typeof target[tKeys[i]] === 'object' &&
+            (target[tKeys[i]] !== null && source[tKeys[i]] !== null)) {
             tDiff = diffObjects(source[tKeys[i]], target[tKeys[i]]);
             if(Object.keys(tDiff).length > 0){
               diff[tKeys[i]] = tDiff;
@@ -1159,7 +1174,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
         };
       if(metaChildrenDiff === TODELETESTRING){
         //remove all valid child
-        keys = _core.getValidChildrenTypes(node);
+        keys = _core.getValidChildrenPaths(node);
         for(i=0;i<keys.length;i++){
           _core.delChildMeta(node,keys[i]);
         }
@@ -1443,12 +1458,120 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       return concat;
     }
 
+    function finalizeConcatMeta(conMeta){
+      var i, j,names,paths,tempJson;
+      //children target harmonization
+      if(conMeta.children){
+        tempJson = JSON.parse(JSON.stringify(conMeta.children));
+        delete tempJson.min;
+        delete tempJson.max;
+        paths = Object.keys(tempJson);
+        for(i=0;i<paths.length;i++){
+          if(_concat_moves.finalize[paths[i]]){
+            conMeta.children[_concat_moves.finalize[paths[i]]] = conMeta.children[paths[i]];
+            delete conMeta.children[paths[i]];
+          }
+        }
+      }
+      // pointer target harmonization
+      if(conMeta.pointers){
+        names = Object.keys(conMeta.pointers);
+        for(i=0;i<names.length;i++){
+          tempJson = JSON.parse(JSON.stringify(conMeta.pointers[names[i]]));
+          delete tempJson.min;
+          delete tempJson.max;
+          paths = Object.keys(tempJson);
+          for(j=0;j<paths.length;j++){
+            if(_concat_moves.finalize[paths[j]]){
+              conMeta.pointers[names[i]][_concat_moves.finalize[paths[j]]] = conMeta.pointers[names[i]][paths[j]];
+              delete conMeta.pointers[names[i]][paths[j]];
+            }
+          }
+        }
+      }
+      //aspect target harmonization
+      if(conMeta.aspects){
+        names = Object.keys(conMeta.aspects);
+        for(i=0;i<names.length;i++){
+          paths = Object.keys(conMeta.aspects[names[i]]);
+          for(j=0;j<paths.length;j++){
+            if(_concat_moves.finalize[paths[j]]){
+              conMeta.aspects[names[i]][_concat_moves.finalize[paths[j]]] = true;
+              delete conMeta.aspects[names[i]][paths[j]];
+            }
+          }
+        }
+      }
+    }
+    function finalizeConcatPointer(conPointer){
+      var names, i;
+      names = Object.keys(conPointer);
+      for(i=0;i<names.length;i++){
+        if(_concat_moves.finalize[conPointer[names[i]]]){
+          conPointer[names[i]] = _concat_moves.finalize[conPointer[names[i]]];
+        }
+      }
+    }
+    function finalizeConcatSet(conSet){
+      var names,paths, i,j;
+      names = Object.keys(conSet);
+      for(i=0;i<names.length;i++){
+        paths = Object.keys(conSet[names[i]]);
+        for(j=0;j<paths.length;j++){
+          if(_concat_moves.finalize[paths[j]]){
+            conSet[names[i]][_concat_moves.finalize[paths[j]]] = conSet[names[i]][paths[j]];
+            delete conSet[names[i]][paths[j]];
+          }
+        }
+      }
+    }
+    function finalizeConcat(concat){
+      var relids = getDiffChildrenRelids(concat),
+        i;
+      if(concat.pointer){
+        finalizeConcatPointer(concat.pointer);
+      }
+      if(concat.meta){
+        finalizeConcatMeta(concat.meta);
+      }
+      if(concat.set){
+        finalizeConcatSet(concat.set);
+      }
+
+      for(i=0;i<relids.length;i++){
+        finalizeConcat(concat[relids[i]]);
+      }
+    }
+    function createFinalizeDirectory(){
+      var keys,i;
+
+      keys = Object.keys(_concat_moves.fromTo);
+      for(i=0;i<keys.length;i++){
+        _concat_moves.finalize[keys[i]] = _concat_moves.fromTo[keys[i]];
+      }
+      keys = Object.keys(_concat_moves.finalize.fromToBase);
+      for(i=0;i<keys.length;i++){
+        if(_concat_moves.finalize[keys[i]]){
+          _concat_moves.finalize[_concat_moves.finalize.fromToBase[keys[i]]] = _concat_moves.finalize[keys[i]];
+        } else {
+          _concat_moves.finalize[keys[i]] = _concat_moves.finalize.fromToBase[keys[i]]
+        }
+      }
+
+      delete _concat_moves.finalize.toFromBase;
+      delete _concat_moves.finalize.fromToBase;
+    }
     _core.concatTreeDiff = function(base,extension) {
       _concat_result = JSON.parse(JSON.stringify(base || {}));
       _concat_dictionary = getDiffTreeDictionray(base);
-      _concat_moves = {toFrom:{},fromTo:{},base:{fromTo:{},toFrom:{}}};
+      _concat_moves = {toFrom:{},fromTo:{}};
       getMoveSources(extension,'',_concat_moves.toFrom,_concat_moves.fromTo);
+      _concat_moves.finalize = {toFromBase:{},fromToBase:{}};
+      getMoveSources(base,'',_concat_moves.finalize.toFromBase,_concat_moves.finalize.fromToBase);
+      createFinalizeDirectory();
+
       processConcatNode('',extension);
+      finalizeConcat(_concat_result);
       return _concat_result;
     };
 
