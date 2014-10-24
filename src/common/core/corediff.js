@@ -21,7 +21,8 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       _concat_dictionary,
       _concat_moves,
       _concat_result,
-      _diff_moves = {};
+      _diff_moves = {},
+      _conflict_items = [];
 
     for (var i in _innerCore) {
       _core[i] = _innerCore[i];
@@ -1598,6 +1599,45 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       }
 
       return result;
+    };
+
+    function attributeOrRegistryConflict(path,mine,theirs){
+      var keys,i;
+      keys = Object.keys(mine);
+      for(i=0;i<keys.length;i++){
+        if(CANON.stringify(mine[keys[i]])!==CANON.stringify(mine[keys[i]])){
+          _conflict_items.push({
+            path:path+'/'+keys[i],
+            mine:{
+              value : mine[keys[i]],
+              info  : mine[keys[i]] === TODELETESTRING ? "removed" : JSON.stringify(mine[keys[i]])
+            },
+            theirs:{
+              value : theirs[keys[i]],
+              info  : theirs[keys[i]] === TODELETESTRING ? "removed" : JSON.stringify(mine[keys[i]])
+            }
+          });
+        }
+      }
+    }
+    function nodeConflicts(path, mine, theirs){
+      var relids = getDiffChildrenRelids(mine),
+      i;
+      if(mine.attr){
+        attributeOrRegistryConflict(path+'/attr', mine.attr, theirs.attr);
+      }
+      if(mine.reg){
+        attributeOrRegistryConflict(path+'/reg', mine.attr,theirs.attr);
+      }
+
+      for(i=0;i<relids.length;i++){
+        nodeConflicts(path+'/'+relids[i],mine[relids[i]],theirs[relids[i]]);
+      }
+    }
+    _core.getConflictItems = function(mine, theirs){
+      _conflict_items = [];
+      nodeConflicts('',mine,theirs);
+      return _conflict_items;
     };
 
     //we remove some low level functions as they should not be used on high level

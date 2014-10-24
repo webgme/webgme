@@ -15,10 +15,12 @@ define( [
   'text!js/Dialogs/Projects/templates/DeleteDialogTemplate.html',
 
   'text!js/Dialogs/Projects/templates/BeforeMergeTemplate.html',
-  'text!js/Dialogs/Projects/templates/AfterMergeTemplate.html'
+  'text!js/Dialogs/Projects/templates/AfterMergeTemplate.html',
+  'text!js/Dialogs/Projects/templates/ConflictDialogTemplate.html'
 
 
-], function ( ng, ProjectsDialog, CommitDialog, ProjectRepositoryDialog, ConfirmDialog, DeleteDialogTemplate, BeforeMergeTemplate, AfterMergeTemplate ) {
+
+], function ( ng, ProjectsDialog, CommitDialog, ProjectRepositoryDialog, ConfirmDialog, DeleteDialogTemplate, BeforeMergeTemplate, AfterMergeTemplate, ConflictDialogTemplate ) {
   "use strict";
 
 
@@ -26,6 +28,7 @@ define( [
     $templateCache.put( 'DeleteDialogTemplate.html', DeleteDialogTemplate );
     $templateCache.put( 'BeforeMergeTemplate.html', BeforeMergeTemplate );
     $templateCache.put( 'AfterMergeTemplate.html', AfterMergeTemplate );
+    $templateCache.put( 'ConflictDialogTemplate.html', ConflictDialogTemplate );
   } );
 
 
@@ -960,7 +963,23 @@ define( [
     var self = this;
     self.$scope.whatBranch = whatBranchId;
     self.$scope.whereBranch = whereBranchId;
-    self.$simpleDialog.open( {
+    var items = [
+    {id:1,theirs:"ovek",mine:"enyim nagyon hosszu embertelunl szoveg es nem fer ki \n rakok bele entert is",selected:"mine"},
+    {id:2,theirs:"ezisovek",mine:"ezisenyim",selected:"mine"},
+    {id:3,theirs:1,mine:2,selected:"mine"}
+    ];
+    self.$scope.items = items;
+    self.$scope.gombotNyom = function(id,isTheirs){
+      console.log('itt nyomta',id,isTheirs);};
+    self.$simpleDialog.open({
+      dialogTitle: 'Conflict Handling',
+      dialogContentTemplate: 'ConflictDialogTemplate.html',
+      gombotNyom: function(){
+        console.log('megnyomtaaa!!!!');
+      },
+      scope: self.$scope
+    });
+    /*self.$simpleDialog.open( {
           dialogTitle: 'Confirm merge',
           dialogContentTemplate: 'BeforeMergeTemplate.html',
           onOk: function () {
@@ -990,7 +1009,7 @@ define( [
             });
           },
           scope: self.$scope
-        } );
+        } );*/
   };
 
   ProjectNavigatorController.prototype.dummyProjectsGenerator = function ( name, maxCount ) {
