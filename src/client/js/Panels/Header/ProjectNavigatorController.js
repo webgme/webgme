@@ -963,10 +963,10 @@ define( [
     var self = this;
     self.$scope.whatBranch = whatBranchId;
     self.$scope.whereBranch = whereBranchId;
-    var items = [
-    {id:1,theirs:"ovek",mine:"enyim nagyon hosszu embertelunl szoveg es nem fer ki \n rakok bele entert is",selected:"mine"},
-    {id:2,theirs:"ezisovek",mine:"ezisenyim",selected:"mine"},
-    {id:3,theirs:1,mine:2,selected:"mine"}
+    /*var items = [
+    {id:1,info:"egynek",theirs:"ovek",mine:"enyim nagyon hosszu embertelunl szoveg es nem fer ki \n rakok bele entert is",selected:"mine"},
+    {id:2,info:"masiknka",theirs:"ezisovek",mine:"ezisenyim",selected:"mine"},
+    {id:3,info:"/ssdfg/hjkli/guyut attribute",theirs:1,mine:2,selected:"mine"}
     ];
     self.$scope.items = items;
     self.$scope.gombotNyom = function(id,isTheirs){
@@ -978,8 +978,8 @@ define( [
         console.log('megnyomtaaa!!!!');
       },
       scope: self.$scope
-    });
-    /*self.$simpleDialog.open( {
+    });*/
+    self.$simpleDialog.open( {
           dialogTitle: 'Confirm merge',
           dialogContentTemplate: 'BeforeMergeTemplate.html',
           onOk: function () {
@@ -990,26 +990,25 @@ define( [
             self.gmeClient.merge(whereBranchId,whatCommit,whereCommit,function(err,conflict){
               //console.log('merge result',err);
               if(err){
-                self.$scope.mergeError = "The merge ended with result: "+err.toString();
-                if(conflict){
-                  self.$scope.mergeConflict = {theirs:conflict.theirs,theirHeader:"THEIRS",mine:conflict.mine,mineHeader:"MINE"};
-                } else {
-                  self.$scope.mergeConflict = {theirs:"",theirHeader:"",mine:"",mineHeader:""};
-                }
+                self.$scope.items = conflict;
+                self.$simpleDialog.open({
+                  dialogTitle: 'Merge conflicted',
+                  dialogContentTemplate: 'ConflictDialogTemplate.html',
+                  //onOk:function(){},
+                  scope: self.$scope
+                });
               } else {
-                self.$scope.mergeError = "The merge have been completed successfully!";
-                self.$scope.mergeConflict = {theirs:"",theirHeader:"",mine:"",mineHeader:""};
+                self.$simpleDialog.open({
+                  dialogTitle: 'Merge SuccessFul',
+                  dialogContentTemplate: 'AfterMergeTemplate.html',
+                  //onOk:function(){},
+                  scope: self.$scope
+                });
               }
-              self.$simpleDialog.open({
-                dialogTitle: 'Merge result',
-                dialogContentTemplate: 'AfterMergeTemplate.html',
-                //onOk:function(){},
-                scope: self.$scope
-              });
             });
           },
           scope: self.$scope
-        } );*/
+        } );
   };
 
   ProjectNavigatorController.prototype.dummyProjectsGenerator = function ( name, maxCount ) {

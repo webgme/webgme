@@ -1605,16 +1605,19 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       var keys,i;
       keys = Object.keys(mine);
       for(i=0;i<keys.length;i++){
-        if(CANON.stringify(mine[keys[i]])!==CANON.stringify(mine[keys[i]])){
+        if(CANON.stringify(mine[keys[i]])!==CANON.stringify(theirs[keys[i]])){
           _conflict_items.push({
+            id:_conflict_items.length,
             path:path+'/'+keys[i],
+            info: path.replace(/\//g,"/ ")+" "+keys[i],
+            selected: "mine",
             mine:{
               value : mine[keys[i]],
-              info  : mine[keys[i]] === TODELETESTRING ? "removed" : JSON.stringify(mine[keys[i]])
+              info  : mine[keys[i]] === TODELETESTRING ? "removed" : JSON.stringify(mine[keys[i]],null,2)
             },
             theirs:{
               value : theirs[keys[i]],
-              info  : theirs[keys[i]] === TODELETESTRING ? "removed" : JSON.stringify(mine[keys[i]])
+              info  : theirs[keys[i]] === TODELETESTRING ? "removed" : JSON.stringify(theirs[keys[i]],null,2)
             }
           });
         }
@@ -1624,10 +1627,10 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       var relids = getDiffChildrenRelids(mine),
       i;
       if(mine.attr){
-        attributeOrRegistryConflict(path+'/attr', mine.attr, theirs.attr);
+        attributeOrRegistryConflict(path+'/attr', mine.attr, theirs.attr, "attribute");
       }
       if(mine.reg){
-        attributeOrRegistryConflict(path+'/reg', mine.attr,theirs.attr);
+        attributeOrRegistryConflict(path+'/reg', mine.reg,theirs.reg, "registry");
       }
 
       for(i=0;i<relids.length;i++){
