@@ -22,7 +22,9 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       _concat_moves,
       _concat_result,
       _diff_moves = {},
-      _conflict_items = [];
+      _conflict_items = [],
+      _conflict_mine,
+      _conflict_theirs;
 
     for (var i in _innerCore) {
       _core[i] = _innerCore[i];
@@ -1418,7 +1420,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       } else {
         //simple removal
         if(node.removed === true){
-          base.removed = true
+          base.removed = true;
         } else {
           if(base.removed === true){
             delete base.removed;
@@ -1601,45 +1603,190 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       return result;
     };
 
-    function attributeOrRegistryConflict(path,mine,theirs){
-      var keys,i;
+    function simpleKeyValueConflicts(guid,info,minePath,theirsPath){
+      var keys,i,mine,theirs;
+      mine = getPathOfDiff(_conflict_mine,minePath);
+      theirs = getPathOfDiff(_conflict_theirs,theirsPath);
       keys = Object.keys(mine);
       for(i=0;i<keys.length;i++){
         if(CANON.stringify(mine[keys[i]])!==CANON.stringify(theirs[keys[i]])){
           _conflict_items.push({
             id:_conflict_items.length,
-            path:path+'/'+keys[i],
-            info: path.replace(/\//g,"/ ")+" "+keys[i],
+            guid:guid,
+            info: guid +" : "+ info +" : "+keys[i],
             selected: "mine",
             mine:{
+              path  : minePath+'/'+keys[i],
               value : mine[keys[i]],
-              info  : mine[keys[i]] === TODELETESTRING ? "removed" : JSON.stringify(mine[keys[i]],null,2)
+              info  : mine[keys[i]] === TODELETESTRING ? "remove" : JSON.stringify(mine[keys[i]],null,2)
             },
             theirs:{
+              path  : theirsPath+'/'+keys[i],
               value : theirs[keys[i]],
-              info  : theirs[keys[i]] === TODELETESTRING ? "removed" : JSON.stringify(theirs[keys[i]],null,2)
+              info  : theirs[keys[i]] === TODELETESTRING ? "remove" : JSON.stringify(theirs[keys[i]],null,2)
             }
           });
         }
       }
     }
-    function nodeConflicts(path, mine, theirs){
-      var relids = getDiffChildrenRelids(mine),
-      i;
-      if(mine.attr){
-        attributeOrRegistryConflict(path+'/attr', mine.attr, theirs.attr, "attribute");
-      }
-      if(mine.reg){
-        attributeOrRegistryConflict(path+'/reg', mine.reg,theirs.reg, "registry");
-      }
-
-      for(i=0;i<relids.length;i++){
-        nodeConflicts(path+'/'+relids[i],mine[relids[i]],theirs[relids[i]]);
+    function setConflicts(guid,info,minePath,theirsPath){
+      var names,elements,i,j,mine,theirs;
+      mine = getPathOfDiff(_conflict_mine,minePath);
+      theirs = getPathOfDiff(_conflict_theirs,theirsPath);
+      names = Object.keys(mine);
+      for(i=0;i<names.length;i++){
+        if(mine[names[i]] === TODELETESTRING || theirs[names[i]] === TODELETESTRING){
+          //the whole set has been deleted
+          _conflict_items.push({
+            id:_conflict_items.length,
+            guid:guid,
+            info: guid +" : "+ info +" : "+names[i],
+            selected: "mine",
+            mine:{
+              path  : minePath+'/'+names[i],
+              value : mine[names[i]],
+              info  : mine[names[i]] === TODELETESTRING ? "remove" : JSON.stringify(mine[names[i]],null,2)
+            },
+            theirs:{
+              path  : theirsPath+'/'+names[i],
+              value : theirs[names[i]],
+              info  : theirs[names[i]] === TODELETESTRING ? "remove" : JSON.stringify(theirs[names[i]],null,2)
+            }
+          });
+        } else {
+          elements = Object.keys(mine[names[i]]);
+          for(j=0;j<elements.length;j++){
+            if(CANON.stringify(mine[names[i]][elements[j]]) !== CANON.stringify(theirs[names[i]][elements[j]])){
+              //something differs in the element
+              if(mine[names[i]][elements[j]] === TODELETESTRING || theirs[names[i]][elements[j]] === TODELETESTRING){
+                //the whole element was removed so there is no need for further check
+                _conflict_items.push({
+                  id:_conflict_items.length,
+                  guid:guid,
+                  info: guid +" : "+ info +" : "+names[i]+" : "+elements[j],
+                  selected: "mine",
+                  mine:{
+                    path  : minePath+'/'+names[i]+'/'+elements[j],
+                    value : mine[names[i]][elements[j]],
+                    info  : mine[names[i]][elements[j]] === TODELETESTRING ? "remove" : JSON.stringify(mine[names[i]][elements[j]],null,2)
+                  },
+                  theirs:{
+                    path  : theirsPath+'/'+names[i]+'/'+elements[j],
+                    value : theirs[names[i]][elements[j]],
+                    info  : theirs[names[i]][elements[j]] === TODELETESTRING ? "remove" : JSON.stringify(theirs[names[i]][elements[j]],null,2)
+                  }
+                });
+              } else {
+                if(mine[names[i]][elements[j]].reg){
+                  simpleKeyValueConflicts(guid,"regitry of element ["+element[j]+"] of set ["+names[i]+"]",minePath+'/'+names[i]+'/'+elements[j]+'/reg',theirsPath+'/'+names[i]+'/'+elements[j]+'/reg');
+                }
+                if(mine[names[i]][elements[j]].attr){
+                  simpleKeyValueConflicts(guid,"attributes of element ["+element[j]+"] of set ["+names[i]+"]",minePath+'/'+names[i]+'/'+elements[j]+'/attr',theirsPath+'/'+names[i]+'/'+elements[j]+'/attr');
+                }
+              }
+            }
+          }
+        }
       }
     }
+    function getConflictByGuid(conflict,guid){
+      var relids,i,result;
+      if(conflict.guid === guid){
+        return conflict;
+      }
+      relids = getDiffChildrenRelids(conflict);
+      for(i=0;i<relids.length;i++){
+        result = getConflictByGuid(conflict[relids[i]],guid);
+        if(result){
+          return result;
+        }
+      }
+      return null;
+    }
+    function getPathByGuid(conflict,guid,path){
+      var relids,i,result;
+      if(conflict.guid === guid){
+        return path;
+      }
+      relids = getDiffChildrenRelids(conflict);
+      for(i=0;i<relids.length;i++){
+        result = getPathByGuid(conflict[relids[i]],guid,path+'/'+relids[i]);
+        if(result){
+          return result;
+        }
+      }
+      return null;
+    }
+    function nodeConflicts(guid){
+      var relids,i,mine,theirs,minePath,theirsPath;
+      mine = getConflictByGuid(_conflict_mine,guid);
+      minePath = getPathByGuid(_conflict_mine,guid,'');
+      theirs = getConflictByGuid(_conflict_theirs,guid);
+      theirsPath = getPathByGuid(_conflict_theirs,guid,'');
+
+      ASSERT(mine && typeof minePath === 'string' && theirs && typeof theirsPath === 'string');
+
+      if((mine.removed === true && theirs.removed !== true) || (theirs.removed === true && mine.removed !== true)){
+        _conflict_items.push({
+          id:_conflict_items.length,
+          guid:guid,
+          info: guid,
+          selected: "mine",
+          mine:{
+            path  : minePath+'/removed',
+            value : mine.removed,
+            info  : mine.removed === true ? "remove" : "keep"
+          },
+          theirs:{
+            path  : theirsPath+'/removed',
+            value : theirs.removed,
+            info  : theirs.removed === true ? "remove" : "keep"
+          }
+        }); 
+      }
+      if(typeof mine.movedFrom === 'string' && typeof theirs.movedFrom === 'string' && minePath !== theirsPath){
+        //double move conflict
+        _conflict_items.push({
+          id:_conflict_items.length,
+          guid:guid,
+          info: guid,
+          selected: "mine",
+          mine:{
+            path  : minePath,
+            value : null,
+            info  : "move to path "+minePath
+          },
+          theirs:{
+            path  : theirsPath,
+            value : null,
+            info  : "move to path "+theirsPath
+          }
+        });
+      }
+      if(mine.attr){
+        simpleKeyValueConflicts(guid,'attribute',minePath+'/attr', theirsPath+'/attr');
+      }
+      if(mine.reg){
+        simpleKeyValueConflicts(guid,'registry',minePath+'/reg', theirsPath+'/reg');
+      }
+      if(mine.pointer){
+        simpleKeyValueConflicts(guid,'pointer',minePath+'/pointer', theirsPath+'/pointer');
+      }
+      if(mine.set){
+        setConflicts(guid,'set',minePath+'/set', theirsPath+'/set');
+      }
+
+      relids = getDiffChildrenRelids(mine);
+      for(i=0;i<relids.length;i++){
+        nodeConflicts(mine[relids[i]].guid);
+      }
+    }
+
     _core.getConflictItems = function(mine, theirs){
       _conflict_items = [];
-      nodeConflicts('',mine,theirs);
+      _conflict_mine = mine;
+      _conflict_theirs = theirs;
+      nodeConflicts(mine.guid);
       return _conflict_items;
     };
 
