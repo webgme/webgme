@@ -1,6 +1,11 @@
 <div class="container-fluid">
+    <div class="row table-bordered">
+        <div class="col-md-2 bg-primary"><b>Conflict identifier</b></div>
+        <div class="col-md-5 bg-primary"><b>MINE</b></div>
+        <div class="col-md-5 bg-primary"><b>THEIRS</b></div>
+    </div>
     <div class="row table-bordered" ng-repeat="item in items">
-        <div class="col-md-2"><label style="width:100%"><b>{{item.info}}</b></label></div>
+        <div class="col-md-2 bg-primary"><label style="width:100%"><b>{{item.info}}</b></label></div>
         <div class="col-md-5" ng-click="item.selected='mine'">
             <input type="radio" name={{item.id}} value="mine" checked ng-model="item.selected">
             <label style="width:100%">{{item.mine.info}}</label>
@@ -10,3 +15,4 @@
             <label style="width:100%">{{item.theirs.info}}</label>
         </div>
     </div>
+</div>
