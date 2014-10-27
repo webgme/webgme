@@ -1413,26 +1413,30 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
         singleNode = getSingleNode(node),
         childrenRelids = getDiffChildrenRelids(node),
         basePath = _concat_dictionary.guidToPath[node.guid],
-        i;
-      if(base === null){
-        //there is no such object in the base of the concat so we simply insert it
-        insertAtPath(path,singleNode);
-      } else {
-        //simple removal
-        if(node.removed === true){
-          base.removed = true;
+        i,
+        isBaseDeleted=isPathToRemove(_concat_result,node.movedFrom || '') || isPathToRemove(_concat_result,path);
+      if(!isBaseDeleted){
+        //if the node or its container was already removed we cannot concat any further change to it
+        if(base === null){
+          //there is no such object in the base of the concat so we simply insert it
+          insertAtPath(path,singleNode);
         } else {
-          if(base.removed === true){
-            delete base.removed;
-          }
-          insertAtPath(_concat_dictionary.guidToPath[node.guid],jsonConcat(base,singleNode));
-          //if we add a move we also have to move :)
-          if(node.movedFrom){
-            //we have to get base again
-            base = getNodeByGuid(node.guid);
-            insertAtPath(path,base);
-            removePathFromDiff(_concat_result,basePath);
-            _concat_dictionary = getDiffTreeDictionray(_concat_result); //we have to recalculate
+          //simple removal
+          if(node.removed === true){
+            base.removed = true;
+          } else {
+            if(base.removed === true){
+              delete base.removed;
+            }
+            insertAtPath(_concat_dictionary.guidToPath[node.guid],jsonConcat(base,singleNode));
+            //if we add a move we also have to move :)
+            if(node.movedFrom){
+              //we have to get base again
+              base = getNodeByGuid(node.guid);
+              insertAtPath(path,base);
+              removePathFromDiff(_concat_result,basePath);
+              _concat_dictionary = getDiffTreeDictionray(_concat_result); //we have to recalculate
+            }
           }
         }
       }
@@ -1717,35 +1721,35 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       }
       return null;
     }
+    function isPathToRemove(diff,path){
+      var i;
+      path = (path || "").split('/');
+      path.shift();
+      for (i = 0; i < path.length; i++) {
+        if(diff.removed === true){
+          return true;
+        }
+        if(diff[path[i]]){
+          diff = diff[path[i]]
+        } else {
+          return false;
+        }
+      }
+      return diff.removed === true;
+    }
     function nodeConflicts(guid){
-      var relids,i,mine,theirs,minePath,theirsPath;
+      var relids,i,mine,theirs,minePath,theirsPath,mineToDelete,theirsToDelete;
       mine = getConflictByGuid(_conflict_mine,guid);
       minePath = getPathByGuid(_conflict_mine,guid,'');
       theirs = getConflictByGuid(_conflict_theirs,guid);
       theirsPath = getPathByGuid(_conflict_theirs,guid,'');
+      mineToDelete = isPathToRemove(_conflict_mine,minePath);
+      theirsToDelete = isPathToRemove(_conflict_theirs,theirsPath);
 
-      ASSERT(mine && typeof minePath === 'string' && theirs && typeof theirsPath === 'string');
+      ASSERT((mine || theirs) && (typeof minePath === 'string' || typeof theirsPath === 'string'));
 
-      if((mine.removed === true && theirs.removed !== true) || (theirs.removed === true && mine.removed !== true)){
-        _conflict_items.push({
-          id:_conflict_items.length,
-          guid:guid,
-          info: guid,
-          selected: "mine",
-          mine:{
-            path  : minePath+'/removed',
-            value : mine.removed,
-            info  : mine.removed === true ? "remove" : "keep"
-          },
-          theirs:{
-            path  : theirsPath+'/removed',
-            value : theirs.removed,
-            info  : theirs.removed === true ? "remove" : "keep"
-          }
-        }); 
-      }
-      if(typeof mine.movedFrom === 'string' && typeof theirs.movedFrom === 'string' && minePath !== theirsPath){
-        //double move conflict
+      //node removal cases
+      if(mine === null || theirs === null){
         _conflict_items.push({
           id:_conflict_items.length,
           guid:guid,
@@ -1753,42 +1757,97 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
           selected: "mine",
           mine:{
             path  : minePath,
-            value : null,
-            info  : "move to path "+minePath
+            value : mine,
+            info  : mine === null ? "remove" : "keep"
           },
           theirs:{
             path  : theirsPath,
-            value : null,
-            info  : "move to path "+theirsPath
+            value : theirs,
+            info  : theirs === null ? "remove" : "keep"
           }
         });
-      }
-      if(mine.attr){
-        simpleKeyValueConflicts(guid,'attribute',minePath+'/attr', theirsPath+'/attr');
-      }
-      if(mine.reg){
-        simpleKeyValueConflicts(guid,'registry',minePath+'/reg', theirsPath+'/reg');
-      }
-      if(mine.pointer){
-        simpleKeyValueConflicts(guid,'pointer',minePath+'/pointer', theirsPath+'/pointer');
-      }
-      if(mine.set){
-        setConflicts(guid,'set',minePath+'/set', theirsPath+'/set');
-      }
-
-      relids = getDiffChildrenRelids(mine);
-      for(i=0;i<relids.length;i++){
-        nodeConflicts(mine[relids[i]].guid);
+      } else {
+        if((mine.removed === true && theirs.removed !== true) || (theirs.removed === true && mine.removed !== true)){
+          _conflict_items.push({
+            id:_conflict_items.length,
+            guid:guid,
+            info: guid,
+            selected: "mine",
+            mine:{
+              path  : minePath+'/removed',
+              value : mine.removed,
+              info  : mine.removed === true ? "remove" : "keep"
+            },
+            theirs:{
+              path  : theirsPath+'/removed',
+              value : theirs.removed,
+              info  : theirs.removed === true ? "remove" : "keep"
+            }
+          });
+        }
+        if(typeof mine.movedFrom === 'string' && typeof theirs.movedFrom === 'string' && minePath !== theirsPath){
+          //double move conflict
+          _conflict_items.push({
+            id:_conflict_items.length,
+            guid:guid,
+            info: guid,
+            selected: "mine",
+            mine:{
+              path  : minePath,
+              value : null,
+              info  : "move to path "+minePath
+            },
+            theirs:{
+              path  : theirsPath,
+              value : null,
+              info  : "move to path "+theirsPath
+            }
+          });
+        }
+        if(mine.attr){
+          simpleKeyValueConflicts(guid,'attribute',minePath+'/attr', theirsPath+'/attr');
+        }
+        if(mine.reg){
+          simpleKeyValueConflicts(guid,'registry',minePath+'/reg', theirsPath+'/reg');
+        }
+        if(mine.pointer){
+          simpleKeyValueConflicts(guid,'pointer',minePath+'/pointer', theirsPath+'/pointer');
+        }
+        if(mine.set){
+          setConflicts(guid,'set',minePath+'/set', theirsPath+'/set');
+        }
       }
     }
 
+    function getGuidsOfDiff(diff){
+      var relids = getDiffChildrenRelids(diff),
+        i,
+        result = [diff.guid];
+      for(i=0;i<relids.length;i++){
+        result = result.concat(getGuidsOfDiff(diff[relids[i]]));
+      }
+      return result;
+    }
     _core.getConflictItems = function(mine, theirs){
+      var guids = getGuidsOfDiff(mine),
+        otherGuids = getGuidsOfDiff(theirs),
+        i;
       _conflict_items = [];
       _conflict_mine = mine;
       _conflict_theirs = theirs;
-      nodeConflicts(mine.guid);
+      for(i=0;i<otherGuids.length;i++){
+        if(guids.indexOf(otherGuids[i]) === -1){
+          guids.push(otherGuids[i]);
+        }
+      }
+      
+      for(i=0;i<guids.length;i++){
+        nodeConflicts(guids[i]);
+      }
       return _conflict_items;
     };
+
+
 
     //we remove some low level functions as they should not be used on high level
     delete _core.overlayInsert;
