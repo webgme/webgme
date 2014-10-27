@@ -19039,9 +19039,1107 @@ define('blob/BlobClient',['./Artifact', 'blob/BlobMetadata', 'superagent'], func
 
     return BlobClient;
 });
-define('webgme.classes', ['client','blob/BlobClient'],function(Client,BlobClient){
+/*
+ * Copyright (C) 2014 Vanderbilt University, All rights reserved.
+ *
+ * Author: Zsolt Lattmann
+ */
+
+
+define('plugin/PluginConfig',[], function () {
+
+    /**
+     * Initializes a new instance of plugin configuration.
+     *
+     * Note: this object is JSON serializable see serialize method.
+     *
+     * @param config - deserializes an existing configuration to this object.
+     * @constructor
+     */
+    var PluginConfig = function (config) {
+        if (config) {
+            var keys = Object.keys(config);
+            for (var i = 0; i < keys.length; i += 1) {
+                // TODO: check for type on deserialization
+                this[keys[i]] = config[keys[i]];
+            }
+        }
+    };
+
+    /**
+     * Serializes this object to a JSON representation.
+     *
+     * @returns {{}}
+     */
+    PluginConfig.prototype.serialize = function () {
+        var keys = Object.keys(this);
+        var result = {};
+
+        for (var i = 0; i < keys.length; i += 1) {
+            // TODO: check for type on serialization
+            result[keys[i]] = this[keys[i]];
+        }
+
+        return result;
+    };
+
+
+    return PluginConfig;
+});
+/*
+ * Copyright (C) 2014 Vanderbilt University, All rights reserved.
+ *
+ * Author: Zsolt Lattmann
+ */
+
+
+define('plugin/PluginNodeDescription',[], function () {
+
+    /**
+     * Initializes a new instance of plugin node description object.
+     *
+     * Note: this object is JSON serializable see serialize method.
+     *
+     * @param config - deserializes an existing configuration to this object.
+     * @constructor
+     */
+    var PluginNodeDescription = function (config) {
+        if (config) {
+            this.name = config.name;
+            this.id = config.id;
+        } else {
+            this.name = '';
+            this.id = '';
+        }
+    };
+
+    /**
+     * Serializes this object to a JSON representation.
+     *
+     * @returns {{}}
+     */
+    PluginNodeDescription.prototype.serialize = function() {
+        var keys = Object.keys(this);
+        var result = {};
+
+        for (var i = 0; i < keys.length; i += 1) {
+            // TODO: check for type on serialization
+            result[keys[i]] = this[keys[i]];
+        }
+
+        return result;
+    };
+
+    return PluginNodeDescription;
+});
+/*
+ * Copyright (C) 2014 Vanderbilt University, All rights reserved.
+ *
+ * Author: Zsolt Lattmann
+ */
+
+
+define('plugin/PluginMessage',['plugin/PluginNodeDescription'], function (PluginNodeDescription) {
+
+    /**
+     * Initializes a new instance of plugin message.
+     *
+     * Note: this object is JSON serializable see serialize method.
+     *
+     * @param config - deserializes an existing configuration to this object.
+     * @constructor
+     */
+    var PluginMessage = function (config) {
+        if (config) {
+            this.commitHash = config.commitHash;
+            if (config.activeNode instanceof PluginNodeDescription) {
+                this.activeNode = config.activeNode;
+            } else {
+                this.activeNode = new PluginNodeDescription(config.activeNode);
+            }
+
+            this.message = config.message;
+            if (config.severity) {
+                this.severity = config.severity;
+            } else {
+                this.severity = 'info';
+            }
+        } else {
+            this.commitHash = '';
+            this.activeNode = new PluginNodeDescription();
+            this.message = '';
+            this.severity = 'info';
+        }
+    };
+
+    /**
+     * Serializes this object to a JSON representation.
+     *
+     * @returns {{}}
+     */
+    PluginMessage.prototype.serialize = function () {
+        var result = {
+            commitHash: this.commitHash,
+            activeNode: this.activeNode.serialize(),
+            message: this.message,
+            severity: this.severity
+        };
+
+        return result;
+    };
+
+    return PluginMessage;
+});
+/**
+ * Created by zsolt on 3/20/14.
+ */
+
+
+define('plugin/PluginResult',['plugin/PluginMessage'], function (PluginMessage) {
+
+    /**
+     * Initializes a new instance of a plugin result object.
+     *
+     * Note: this object is JSON serializable see serialize method.
+     *
+     * @param config - deserializes an existing configuration to this object.
+     * @constructor
+     */
+    var PluginResult = function (config) {
+        if (config) {
+            this.success = config.success;
+            this.pluginName = config.pluginName;
+            this.startTime = config.startTime;
+            this.finishTime = config.finishTime;
+            this.messages = [];
+            this.artifacts = config.artifacts;
+            this.error = config.error;
+
+            for (var i = 0; i < config.messages.length; i += 1) {
+                var pluginMessage;
+                if (config.messages[i] instanceof PluginMessage) {
+                    pluginMessage = config.messages[i];
+                } else {
+                    pluginMessage = new PluginMessage(config.messages[i]);
+                }
+                this.messages.push(pluginMessage);
+            }
+        } else {
+            this.success = false;
+            this.messages = []; // array of PluginMessages
+            this.artifacts = []; // array of hashes
+            this.pluginName = 'PluginName N/A';
+            this.startTime = null;
+            this.finishTime = null;
+            this.error = null;
+        }
+    };
+
+    /**
+     * Gets the success flag of this result object
+     *
+     * @returns {boolean}
+     */
+    PluginResult.prototype.getSuccess = function () {
+        return this.success;
+    };
+
+    /**
+     * Sets the success flag of this result.
+     *
+     * @param {boolean} value
+     */
+    PluginResult.prototype.setSuccess = function (value) {
+        this.success = value;
+    };
+
+    /**
+     * Returns with the plugin messages.
+     *
+     * @returns {plugin.PluginMessage[]}
+     */
+    PluginResult.prototype.getMessages = function () {
+        return this.messages;
+    };
+
+    /**
+     * Adds a new plugin message to the messages list.
+     *
+     * @param {plugin.PluginMessage} pluginMessage
+     */
+    PluginResult.prototype.addMessage = function (pluginMessage) {
+        this.messages.push(pluginMessage);
+    };
+
+    PluginResult.prototype.getArtifacts = function () {
+        return this.artifacts;
+    };
+
+    PluginResult.prototype.addArtifact = function (hash) {
+        this.artifacts.push(hash);
+    };
+
+    /**
+     * Gets the name of the plugin to which the result object belongs to.
+     *
+     * @returns {string}
+     */
+    PluginResult.prototype.getPluginName = function () {
+        return this.pluginName;
+    };
+
+    //------------------------------------------------------------------------------------------------------------------
+    //--------------- Methods used by the plugin manager
+
+    /**
+     * Sets the name of the plugin to which the result object belongs to.
+     *
+     * @param pluginName - name of the plugin
+     */
+    PluginResult.prototype.setPluginName = function (pluginName) {
+        this.pluginName = pluginName;
+    };
+
+    /**
+     * Gets the ISO 8601 representation of the time when the plugin started its execution.
+     *
+     * @returns {string}
+     */
+    PluginResult.prototype.getStartTime = function () {
+        return this.startTime;
+    };
+
+    /**
+     * Sets the ISO 8601 representation of the time when the plugin started its execution.
+     *
+     * @param {string} time
+     */
+    PluginResult.prototype.setStartTime = function (time) {
+        this.startTime = time;
+    };
+
+    /**
+     * Gets the ISO 8601 representation of the time when the plugin finished its execution.
+     *
+     * @returns {string}
+     */
+    PluginResult.prototype.getFinishTime = function () {
+        return this.finishTime;
+    };
+
+    /**
+     * Sets the ISO 8601 representation of the time when the plugin finished its execution.
+     *
+     * @param {string} time
+     */
+    PluginResult.prototype.setFinishTime = function (time) {
+        this.finishTime = time;
+    };
+
+    /**
+     * Gets error if any error occured during execution.
+     * FIXME: should this be an Error object?
+     * @returns {string}
+     */
+    PluginResult.prototype.getError = function () {
+        return this.error;
+    };
+
+    /**
+     * Sets the error string if any error occured during execution.
+     * FIXME: should this be an Error object?
+     * @param {string} time
+     */
+    PluginResult.prototype.setError = function (error) {
+        this.error = error;
+    };
+
+    /**
+     * Serializes this object to a JSON representation.
+     *
+     * @returns {{success: boolean, messages: plugin.PluginMessage[], pluginName: string, finishTime: stirng}}
+     */
+    PluginResult.prototype.serialize = function () {
+        var result = {
+            success: this.success,
+            messages: [],
+            artifacts: this.artifacts,
+            pluginName: this.pluginName,
+            startTime: this.startTime,
+            finishTime: this.finishTime,
+            error: this.error
+        };
+
+        for (var i = 0; i < this.messages.length; i += 1) {
+            result.messages.push(this.messages[i].serialize());
+        }
+
+        return result;
+    };
+
+    return PluginResult;
+});
+/*
+ * Copyright (C) 2014 Vanderbilt University, All rights reserved.
+ *
+ * Author: Zsolt Lattmann
+ */
+
+
+define('plugin/PluginBase',['plugin/PluginConfig',
+    'plugin/PluginResult',
+    'plugin/PluginMessage',
+    'plugin/PluginNodeDescription'],
+    function (PluginConfig, PluginResult, PluginMessage, PluginNodeDescription) {
+
+
+        /**
+         * Initializes a new instance of a plugin object, which should be a derived class.
+         *
+         * @constructor
+         */
+        var PluginBase = function () {
+            // set by initialize
+            this.logger = null;
+            this.blobClient = null;
+            this._currentConfig = null;
+
+            // set by configure
+            this.core = null;
+            this.project = null;
+            this.projectName = null;
+            this.branchName = null;
+            this.branchHash = null;
+            this.commitHash = null;
+            this.currentHash = null;
+            this.rootNode = null;
+            this.activeNode = null;
+            this.activeSelection = [];
+            this.META = null;
+
+            this.result = null;
+            this.isConfigured = false;
+        };
+
+        //--------------------------------------------------------------------------------------------------------------
+        //---------- Methods must be overridden by the derived classes
+
+        /**
+         * Main function for the plugin to execute. This will perform the execution.
+         * Notes:
+         * - do NOT use console.log use this.logger.[error,warning,info,debug] instead
+         * - do NOT put any user interaction logic UI, etc. inside this function
+         * - callback always have to be called even if error happened
+         *
+         * @param {function(string, plugin.PluginResult)} callback - the result callback
+         */
+        PluginBase.prototype.main = function (callback) {
+            throw new Error('implement this function in the derived class');
+        };
+
+        /**
+         * Readable name of this plugin that can contain spaces.
+         *
+         * @returns {string}
+         */
+        PluginBase.prototype.getName = function () {
+            throw new Error('implement this function in the derived class - getting type automatically is a bad idea,' +
+                'when the js scripts are minified names are useless.');
+        };
+
+        //--------------------------------------------------------------------------------------------------------------
+        //---------- Methods could be overridden by the derived classes
+
+        /**
+         * Current version of this plugin using semantic versioning.
+         * @returns {string}
+         */
+        PluginBase.prototype.getVersion = function () {
+            return '0.1.0';
+        };
+
+        /**
+         * A detailed description of this plugin and its purpose. It can be one or more sentences.
+         *
+         * @returns {string}
+         */
+        PluginBase.prototype.getDescription = function () {
+            return '';
+        };
+
+        /**
+         * Configuration structure with names, descriptions, minimum, maximum values, default values and
+         * type definitions.
+         *
+         * Example:
+         *
+         * [{
+         *    "name": "logChildrenNames",
+         *    "displayName": "Log Children Names",
+         *    "description": '',
+         *    "value": true, // this is the 'default config'
+         *    "valueType": "boolean",
+         *    "readOnly": false
+         * },{
+         *    "name": "logLevel",
+         *    "displayName": "Logger level",
+         *    "description": '',
+         *    "value": "info",
+         *    "valueType": "string",
+         *    "valueItems": [
+         *          "debug",
+         *          "info",
+         *          "warn",
+         *          "error"
+         *      ],
+         *    "readOnly": false
+         * },{
+         *    "name": "maxChildrenToLog",
+         *    "displayName": "Maximum children to log",
+         *    "description": 'Set this parameter to blabla',
+         *    "value": 4,
+         *    "minValue": 1,
+         *    "valueType": "number",
+         *    "readOnly": false
+         * }]
+         *
+         * @returns {object[]}
+         */
+        PluginBase.prototype.getConfigStructure = function () {
+            return [];
+        };
+
+        //--------------------------------------------------------------------------------------------------------------
+        //---------- Methods that can be used by the derived classes
+
+        /**
+         * Updates the current success flag with a new value.
+         *
+         * NewValue = OldValue && Value
+         *
+         * @param {boolean} value - apply this flag on current success value
+         * @param {string|null} message - optional detailed message
+         */
+        PluginBase.prototype.updateSuccess = function (value, message) {
+            var prevSuccess = this.result.getSuccess();
+            var newSuccessValue = prevSuccess && value;
+
+            this.result.setSuccess(newSuccessValue);
+            var msg = '';
+            if (message) {
+                msg = ' - ' + message;
+            }
+
+            this.logger.debug('Success was updated from ' + prevSuccess + ' to ' + newSuccessValue + msg);
+        };
+
+        /**
+         * WebGME can export the META types as path and this method updates the generated domain specific types with
+         * webgme node objects. These can be used to define the base class of new objects created through the webgme API.
+         *
+         * @param {object} generatedMETA
+         */
+        PluginBase.prototype.updateMETA = function (generatedMETA) {
+            var name;
+            for (name in this.META) {
+                if (this.META.hasOwnProperty(name)) {
+                    generatedMETA[name] = this.META[name];
+                }
+            }
+
+            // TODO: check if names are not the same
+            // TODO: log if META is out of date
+        };
+
+        /**
+         * Checks if the given node is of the given meta-type.
+         * Usage: <tt>self.isMetaTypeOf(aNode, self.META['FCO']);</tt>
+         * @param node - Node to be checked for type.
+         * @param metaNode - Node object defining the meta type.
+         * @returns {boolean} - True if the given object was of the META type.
+         */
+        PluginBase.prototype.isMetaTypeOf = function (node, metaNode) {
+            var self = this;
+            while (node) {
+                if (node === metaNode) {
+                    return true;
+                }
+                node = self.core.getBase(node);
+            }
+            return false;
+        };
+
+        /**
+         * Finds and returns the node object defining the meta type for the given node.
+         * @param node - Node to be checked for type.
+         * @returns {Object} - Node object defining the meta type of node.
+         */
+        PluginBase.prototype.getMetaType = function (node) {
+            var self = this,
+                name;
+            while (node) {
+                name = self.core.getAttribute(node, 'name');
+                if (self.META.hasOwnProperty(name) && self.META[name] === node) {
+                    break;
+                }
+                node = self.core.getBase(node);
+            }
+            return node;
+        };
+
+        /**
+         * Returns true if node is a direct instance of a meta-type node (or a meta-type node itself).
+         * @param node - Node to be checked.
+         * @returns {boolean}
+         */
+        PluginBase.prototype.baseIsMeta = function (node) {
+            var self = this,
+                baseName,
+                baseNode = self.core.getBase(node);
+            if (!baseNode) {
+                // FCO does not have a base node, by definition function returns true.
+                return true;
+            }
+            baseName = self.core.getAttribute(baseNode, 'name');
+            return self.META.hasOwnProperty(baseName) && self.META[baseName] === baseNode;
+        };
+
+        /**
+         * Gets the current configuration of the plugin that was set by the user and plugin manager.
+         *
+         * @returns {object}
+         */
+        PluginBase.prototype.getCurrentConfig = function () {
+            return this._currentConfig;
+        };
+
+        /**
+         * Creates a new message for the user and adds it to the result.
+         *
+         * @param {object} node - webgme object which is related to the message
+         * @param {string} message - feedback to the user
+         * @param {string} severity - severity level of the message: 'debug', 'info' (default), 'warning', 'error'.
+         */
+        PluginBase.prototype.createMessage = function (node, message, severity) {
+            var severityLevel = severity || 'info';
+            //this occurence of the function will always handle a single node
+
+            var descriptor = new PluginNodeDescription({
+                    name: node ? this.core.getAttribute(node, 'name') : "",
+                    id: node ? this.core.getPath(node) : ""
+                });
+            var pluginMessage = new PluginMessage({
+                    commitHash: this.currentHash,
+                    activeNode: descriptor,
+                    message: message,
+                    severity: severityLevel
+                });
+
+            this.result.addMessage(pluginMessage);
+        };
+
+        /**
+         * Saves all current changes if there is any to a new commit.
+         * If the changes were started from a branch, then tries to fast forward the branch to the new commit.
+         * Note: Does NOT handle any merges at this point.
+         *
+         * @param {string|null} message - commit message
+         * @param callback
+         */
+        PluginBase.prototype.save = function (message, callback) {
+            var self = this;
+
+            this.logger.debug('Saving project');
+
+            // Commit changes.
+            this.core.persist(this.rootNode, function (err) {
+                // TODO: any error here?
+                if (err) {
+                    self.logger.error(err);
+                }
+            });
+
+            var newRootHash = this.core.getHash(this.rootNode);
+
+            var commitMessage = '[Plugin] ' + this.getName() + ' (v' + this.getVersion() + ') updated the model.';
+            if (message) {
+                commitMessage += ' - ' + message;
+            }
+
+            this.currentHash = this.project.makeCommit([this.currentHash], newRootHash, commitMessage, function (err) {
+                // TODO: any error handling here?
+                if (err) {
+                    self.logger.error(err);
+                }
+            });
+
+            if (this.branchName) {
+                // try to fast forward branch if there was a branch name defined
+
+                // FIXME: what if master branch is already in a different state?
+
+                this.project.getBranchNames(function (err, branchNames) {
+                    if (branchNames.hasOwnProperty(self.branchName)) {
+                        var branchHash = branchNames[self.branchName];
+                        if (branchHash === self.branchHash) {
+                            // the branch does not have any new commits
+                            // try to fast forward branch to the current commit
+                            self.project.setBranchHash(self.branchName, self.branchHash, self.currentHash, function (err) {
+                                if (err) {
+                                    // fast forward failed
+                                    self.logger.error(err);
+                                    self.logger.info('"' + self.branchName + '" was NOT updated');
+                                    self.logger.info('Project was saved to ' + self.currentHash + ' commit.');
+                                } else {
+                                    // successful fast forward of branch to the new commit
+                                    self.logger.info('"' + self.branchName + '" was updated to the new commit.');
+                                    // roll starting point on success
+                                    self.branchHash = self.currentHash;
+                                }
+                                callback(err);
+                            });
+                        } else {
+                            // branch has changes a merge is required
+                            // TODO: try auto-merge, if fails ...
+                            self.logger.warn('Cannot fast forward "' + self.branchName + '" branch. Merge is required but not supported yet.');
+                            self.logger.info('Project was saved to ' + self.currentHash + ' commit.');
+                            callback(null);
+                        }
+                    } else {
+                        // branch was deleted or not found, do nothing
+                        self.logger.info('Project was saved to ' + self.currentHash + ' commit.');
+                        callback(null);
+                    }
+                });
+                // FIXME: is this call async??
+                // FIXME: we are not tracking all commits that we make
+
+            } else {
+                // making commits, we have not started from a branch
+                this.logger.info('Project was saved to ' + this.currentHash + ' commit.');
+                callback(null);
+            }
+        };
+
+        //--------------------------------------------------------------------------------------------------------------
+        //---------- Methods that are used by the Plugin Manager. Derived classes should not use these methods
+
+        /**
+         * Initializes the plugin with objects that can be reused within the same plugin instance.
+         *
+         * @param {logManager} logger - logging capability to console (or file) based on PluginManager configuration
+         * @param {blob.BlobClient} blobClient - virtual file system where files can be generated then saved as a zip file.
+         */
+        PluginBase.prototype.initialize = function (logger, blobClient) {
+            if (logger) {
+                this.logger = logger;
+            } else {
+                this.logger = console;
+            }
+
+            this.blobClient = blobClient;
+
+            this._currentConfig = null;
+            // initialize default configuration
+            this.setCurrentConfig(this.getDefaultConfig());
+
+            this.isConfigured = false;
+        };
+
+        /**
+         * Configures this instance of the plugin for a specific execution. This function is called before the main by
+         * the PluginManager.
+         * Initializes the result with a new object.
+         *
+         * @param {PluginContext} config - specific context: project, branch, core, active object and active selection.
+         */
+        PluginBase.prototype.configure = function (config) {
+            this.core = config.core;
+            this.project = config.project;
+            this.projectName = config.projectName;
+            this.branchName = config.branchName;
+            this.branchHash = config.branchName ? config.commitHash : null;
+            this.commitHash = config.commitHash;
+            this.currentHash = config.commitHash;
+            this.rootNode = config.rootNode;
+            this.activeNode = config.activeNode;
+            this.activeSelection = config.activeSelection;
+            this.META = config.META;
+
+            this.result = new PluginResult();
+
+
+            this.isConfigured = true;
+        };
+
+        /**
+         * Gets the default configuration based on the configuration structure for this plugin.
+         *
+         * @returns {plugin.PluginConfig}
+         */
+        PluginBase.prototype.getDefaultConfig = function () {
+            var configStructure = this.getConfigStructure();
+
+            var defaultConfig = new PluginConfig();
+
+            for (var i = 0; i < configStructure.length; i += 1) {
+                defaultConfig[configStructure[i].name] = configStructure[i].value;
+            }
+
+            return defaultConfig;
+        };
+
+        /**
+         * Sets the current configuration of the plugin.
+         *
+         * @param {object} newConfig - this is the actual configuration and NOT the configuration structure.
+         */
+        PluginBase.prototype.setCurrentConfig = function (newConfig) {
+            this._currentConfig = newConfig;
+        };
+
+        return PluginBase;
+    });
+/*
+ * Copyright (C) 2014 Vanderbilt University, All rights reserved.
+ *
+ * Author: Zsolt Lattmann
+ */
+
+
+define('plugin/PluginContext',[], function () {
+
+    /**
+     * Initializes a new instance of PluginContext. This context is set through PluginBase.configure method for a given
+     * plugin instance and execution.
+     *
+     * @constructor
+     */
+    var PluginContext = function () {
+
+        // TODO: something like this
+//        context.project = project;
+//        context.projectName = config.project;
+//        context.core = new Core(context.project);
+//        context.commitHash = config.commit;
+//        context.selected = config.selected;
+//        context.storage = null;
+
+    };
+
+
+    return PluginContext;
+});
+/*
+ * Copyright (C) 2014 Vanderbilt University, All rights reserved.
+ *
+ * Author: Zsolt Lattmann
+ */
+
+// TODO: Use PluginManagerConfiguration
+// TODO: Load ActiveSelection objects and pass it correctly
+// TODO: Add more statistics to the result object
+// TODO: Result object rename name -> pluginName, time -> finishTime)
+// TODO: Make this class testable
+// TODO: PluginManager should download the plugins
+
+
+define('plugin/PluginManagerBase',[
+        './PluginBase',
+        './PluginContext',
+        'logManager'],
+    function (PluginBase, PluginContext, LogManager) {
+
+        var PluginManagerBase = function (storage, Core, plugins) {
+            this.logger = LogManager.create("PluginManager");
+            this._Core = Core;       // webgme core class is used to operate on objects
+            this._storage = storage; // webgme storage
+            this._plugins = plugins; // key value pair of pluginName: pluginType - plugins are already loaded/downloaded
+            this._pluginConfigs = {}; // keeps track of the current configuration for each plugins by name
+
+            var pluginNames = Object.keys(this._plugins);
+            for (var i = 0; i < pluginNames.length; i += 1) {
+                var p = new this._plugins[pluginNames[i]]();
+                this._pluginConfigs[pluginNames[i]] = p.getDefaultConfig();
+            }
+        };
+
+        PluginManagerBase.prototype.initialize = function (managerConfiguration, configCallback, callbackContext) {
+            var self = this,
+                plugins = this._plugins;
+
+            //#1: PluginManagerBase should load the plugins
+
+            //#2: PluginManagerBase iterates through each plugin and collects the config data
+            var pluginConfigs = {};
+
+            for (var p in plugins) {
+                if (plugins.hasOwnProperty(p)) {
+                    var plugin = new plugins[p]();
+                    pluginConfigs[p] = plugin.getConfigStructure();
+                }
+            }
+
+            if (configCallback) {
+                configCallback.call(callbackContext, pluginConfigs, function (updatedPluginConfig) {
+                    for (var p in updatedPluginConfig) {
+                        if (updatedPluginConfig.hasOwnProperty(p)) {
+                            //save it back to the plugin
+                            self._pluginConfigs[p] = updatedPluginConfig[p];
+                        }
+                    }
+                });
+            }
+        };
+
+        /**
+         * Gets a new instance of a plugin by name.
+         *
+         * @param {string} name
+         * @returns {plugin.PluginBase}
+         */
+        PluginManagerBase.prototype.getPluginByName = function (name) {
+            return this._plugins[name];
+        };
+
+        PluginManagerBase.prototype.loadMetaNodes = function (pluginContext, callback) {
+            var self = this;
+
+            this.logger.debug('Loading meta nodes');
+
+            // get meta members
+            var metaIDs = pluginContext.core.getMemberPaths(pluginContext.rootNode, 'MetaAspectSet');
+
+            var len = metaIDs.length;
+
+            var nodeObjs = [];
+
+
+            var allObjectsLoadedHandler = function () {
+                var len2 = nodeObjs.length;
+
+                var nameObjMap = {};
+
+                while (len2--) {
+                    var nodeObj = nodeObjs[len2];
+
+                    nameObjMap[pluginContext.core.getAttribute(nodeObj, 'name')] = nodeObj;
+                }
+
+                pluginContext.META = nameObjMap;
+
+                self.logger.debug('Meta nodes are loaded');
+
+                callback(null, pluginContext);
+            };
+
+            var loadedMetaObjectHandler = function (err, nodeObj) {
+                nodeObjs.push(nodeObj);
+
+                if (nodeObjs.length === metaIDs.length) {
+                    allObjectsLoadedHandler();
+                }
+            };
+
+            while (len--) {
+                pluginContext.core.loadByPath(pluginContext.rootNode, metaIDs[len], loadedMetaObjectHandler);
+            }
+        };
+
+        /**
+         *
+         * @param {plugin.PluginManagerConfiguration} managerConfiguration
+         * @param {function} callback
+         */
+        PluginManagerBase.prototype.getPluginContext = function (managerConfiguration, callback) {
+
+            // TODO: check if callback is a function
+
+            var self = this;
+
+            var pluginContext = new PluginContext();
+
+            // based on the string values get the node objects
+            // 1) Open project
+            // 2) Load branch OR commit hash
+            // 3) Load rootNode
+            // 4) Load active object
+            // 5) Load active selection
+            // 6) Update context
+            // 7) return
+
+            pluginContext.project = this._storage;
+            pluginContext.projectName = managerConfiguration.project;
+            pluginContext.core = new self._Core(pluginContext.project);
+            pluginContext.commitHash = managerConfiguration.commit;
+            pluginContext.activeNode = null;    // active object
+            pluginContext.activeSelection = []; // selected objects
+
+            // add activeSelection
+            var loadActiveSelectionAndMetaNodes = function () {
+                if (managerConfiguration.activeSelection.length === 0) {
+                    self.loadMetaNodes(pluginContext, callback);
+                } else {
+                    var remaining = managerConfiguration.activeSelection.length;
+
+                    for (var i = 0; i < managerConfiguration.activeSelection.length; i += 1) {
+                        (function (activeNodePath) {
+                            pluginContext.core.loadByPath(pluginContext.rootNode, activeNodePath, function (err, activeNode) {
+                                remaining -= 1;
+
+                                if (err) {
+                                    self.logger.error('unable to load active selection: ' + activeNodePath);
+                                    return;
+                                }
+
+                                pluginContext.activeSelection.push(activeNode);
+
+                                if (remaining === 0) {
+                                    // all nodes from active selection are loaded
+                                    self.loadMetaNodes(pluginContext, callback);
+                                }
+                            });
+                        })(managerConfiguration.activeSelection[i]);
+                    }
+                }
+            };
+
+            // add activeNode
+            var loadCommitHashAndRun = function (commitHash) {
+                self.logger.info('Loading commit ' + commitHash);
+                pluginContext.project.loadObject(commitHash, function (err, commitObj) {
+                    if (err) {
+                        callback(err, pluginContext);
+                        return;
+                    }
+
+                    if (typeof commitObj === 'undefined' || commitObj === null) {
+                        callback('cannot find commit', pluginContext);
+                        return;
+                    }
+
+                    pluginContext.core.loadRoot(commitObj.root, function (err, rootNode) {
+                        if (err) {
+                            callback("unable to load root", pluginContext);
+                            return;
+                        }
+
+                        pluginContext.rootNode = rootNode;
+                        if (typeof managerConfiguration.activeNode === 'string') {
+                            pluginContext.core.loadByPath(pluginContext.rootNode, managerConfiguration.activeNode, function (err, activeNode) {
+                                if (err) {
+                                    callback("unable to load selected object", pluginContext);
+                                    return;
+                                }
+
+                                pluginContext.activeNode = activeNode;
+                                loadActiveSelectionAndMetaNodes();
+                            });
+                        } else {
+                            pluginContext.activeNode = null;
+                            loadActiveSelectionAndMetaNodes();
+                        }
+                    });
+                });
+            };
+
+            // load commit hash and run based on branch name or commit hash
+            if (managerConfiguration.branchName) {
+                pluginContext.project.getBranchNames(function (err, branchNames) {
+                    self.logger.debug(branchNames);
+
+                    if (branchNames.hasOwnProperty(managerConfiguration.branchName)) {
+                        pluginContext.commitHash = branchNames[managerConfiguration.branchName];
+                        pluginContext.branchName = managerConfiguration.branchName;
+                        loadCommitHashAndRun(pluginContext.commitHash);
+                    } else {
+                        callback('cannot find branch \'' + managerConfiguration.branchName + '\'', pluginContext);
+                    }
+                });
+            } else {
+                loadCommitHashAndRun(pluginContext.commitHash);
+            }
+
+        };
+
+        PluginManagerBase.prototype.executePlugin = function (name, managerConfiguration, callback) {
+            // TODO: check if name is a string
+            // TODO: check if managerConfiguration is an instance of PluginManagerConfiguration
+            // TODO: check if callback is a function
+            var self = this;
+
+            var PluginClass = this.getPluginByName(name);
+
+            var plugin = new PluginClass();
+
+            var pluginLogger = LogManager.create('Plugin.' + name);
+
+            plugin.initialize(pluginLogger, managerConfiguration.blobClient);
+
+            plugin.setCurrentConfig(this._pluginConfigs[name]);
+            for (var key in managerConfiguration.pluginConfig) {
+                if (managerConfiguration.pluginConfig.hasOwnProperty(key) && plugin._currentConfig.hasOwnProperty(key)) {
+                    plugin._currentConfig[key] = managerConfiguration.pluginConfig[key];
+                }
+            }
+            self.getPluginContext(managerConfiguration, function (err, pluginContext) {
+                if (err) {
+                    // TODO: this has to return with an empty PluginResult object and NOT with null.
+                    callback(err, null);
+                    return;
+
+                }
+
+                //set logging level at least to INFO level since the plugins write messages with INFO level onto the console
+                var logLevel = LogManager.getLogLevel();
+                if (logLevel < LogManager.logLevels.INFO) {
+                    // elevate log level if it is less then info
+                    LogManager.setLogLevel(LogManager.logLevels.INFO);
+                }
+
+                // TODO: Would be nice to log to file and to console at the same time.
+                //LogManager.setFileLogPath('PluginManager.log');
+
+                plugin.configure(pluginContext);
+
+                var startTime = (new Date()).toISOString();
+
+                plugin.main(function (err, result) {
+                    //set logging level back to previous value
+                    LogManager.setLogLevel(logLevel);
+
+                    // set common information (meta info) about the plugin and measured execution times
+                    result.setFinishTime((new Date()).toISOString());
+                    result.setStartTime(startTime);
+
+                    result.setPluginName(plugin.getName());
+                    result.setError(err);
+
+                    callback(err, result);
+                });
+
+            });
+
+        };
+
+
+        return PluginManagerBase;
+    });
+define('webgme.classes',
+  [
+    'client',
+    'blob/BlobClient',
+    'plugin/PluginManagerBase',
+    'plugin/PluginResult',
+  ],function(
+    Client,
+    BlobClient,
+    PluginManagerBase,
+    PluginResult){
     WebGMEGlobal.classes.Client = Client;
     WebGMEGlobal.classes.BlobClient = BlobClient;
+    WebGMEGlobal.classes.PluginManagerBase = PluginManagerBase;
+    WebGMEGlobal.classes.PluginResult = PluginResult;
 });
 
 
