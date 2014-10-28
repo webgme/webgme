@@ -3389,7 +3389,15 @@ define([
                     }
                   });
                 } else {
-                  callback(new Error('there is a conflict...'),_core.getConflictItems(endingWhereDiff,endingWhatDiff));
+                  callback(new Error('there is a conflict...'),{
+                    baseObject:base,
+                    baseCommit:baseCommit,
+                    branch: whereBranch,
+                    mine:endingWhereDiff,
+                    mineCommit: whereCommit,
+                    theirs:endingWhatDiff,
+                    theirsCommit:whatCommit,
+                    conflictItems:_core.getConflictItems(endingWhereDiff,endingWhatDiff)});
                 }
               };
 
@@ -3461,7 +3469,29 @@ define([
           }
         });
       }
-
+      function resolve(baseObject,mineDiff,branch,mineCommit,theirsCommit,resolvedConflictItems,callback){
+        mineDiff = _core.applyResolution(mineDiff,resolvedConflictItems);
+        _core.applyTreeDiff(baseObject,mineDiff,function(err){
+          if(err){
+            callback(err);
+          } else {
+            _core.persist(baseObject,function(err){
+              if(err){
+                callback(err);
+              } else {
+                var newHash = _project.makeCommit([theirsCommit,mineCommit],_core.getHash(baseObject), "merging", function(err){
+                  if(err){
+                    callback(err);
+                  } else {
+                    console.log('setting branch hash after merge');
+                    _project.setBranchHash(branch,mineCommit,newHash,callback);
+                  }
+                });
+              }
+            });
+          }
+        });
+      }
       //initialization
       function initialize() {
         _database = newDatabase();
@@ -3676,6 +3706,7 @@ define([
 
         //merge
         merge: merge,
+        resolve: resolve,
 
         //testing
         testMethod: testMethod

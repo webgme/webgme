@@ -1840,11 +1840,48 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
           guids.push(otherGuids[i]);
         }
       }
-      
+
       for(i=0;i<guids.length;i++){
         nodeConflicts(guids[i]);
       }
       return _conflict_items;
+    };
+
+    function applyToPath(diff,path,value){
+      var i,finalPath,keys;
+      path = (path || "").split('/');
+      path.shift();
+      finalPath = path.pop();
+      for(i=0;i<path.length;i++){
+        diff = diff[path[i]];
+      }
+
+      if(typeof value === 'object'){
+        keys = Object.keys(value);
+        for(i=0;i<keys.length;i++){
+          diff[finalPath][keys[i]] = value[keys[i]];
+        }
+      } else {
+        diff[finalPath] = value;
+      }
+    }
+    function applyResolutionItem(diff,item){
+
+      //let's start with the easy ones
+      if(item.mine.path === item.theirs.path){
+        //we just simply apply it over our own diff
+        applyToPath(diff,item.theirs.path,item.theirs.value);
+      }
+
+    }
+    _core.applyResolution = function(mine,conflicts){
+      var i;
+      for(i=0;i<conflicts.length;i++){
+        if(conflicts[i].selected === 'theirs'){
+          applyResolutionItem(mine,conflicts[i]);
+        }
+      }
+      return mine;
     };
 
 

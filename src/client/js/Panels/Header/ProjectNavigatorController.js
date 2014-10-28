@@ -960,7 +960,15 @@ define( [
   };
 
   ProjectNavigatorController.prototype.mergeBranch = function(projectId, whatBranchId, whereBranchId){
-    var self = this;
+    var self = this,
+      finalCall = function(err){
+        self.$simpleDialog.open({
+          dialogTitle: 'Merge SuccessFul',
+          dialogContentTemplate: 'AfterMergeTemplate.html',
+          //onOk:function(){},
+          scope: self.$scope
+        });
+      };
     self.$scope.whatBranch = whatBranchId;
     self.$scope.whereBranch = whereBranchId;
     /*var items = [
@@ -990,20 +998,17 @@ define( [
             self.gmeClient.merge(whereBranchId,whatCommit,whereCommit,function(err,conflict){
               //console.log('merge result',err);
               if(err){
-                self.$scope.items = conflict;
+                self.$scope.items = conflict.conflictItems;
                 self.$simpleDialog.open({
                   dialogTitle: 'Merge conflicted',
                   dialogContentTemplate: 'ConflictDialogTemplate.html',
-                  //onOk:function(){},
+                  onOk:function(){
+                    self.gmeClient.resolve(conflict.baseObject,conflict.mine,conflict.branch,conflict.mineCommit,conflict.theirsCommit,conflict.conflictItems,finalCall);
+                  },
                   scope: self.$scope
                 });
               } else {
-                self.$simpleDialog.open({
-                  dialogTitle: 'Merge SuccessFul',
-                  dialogContentTemplate: 'AfterMergeTemplate.html',
-                  //onOk:function(){},
-                  scope: self.$scope
-                });
+                finalCall(err);
               }
             });
           },
