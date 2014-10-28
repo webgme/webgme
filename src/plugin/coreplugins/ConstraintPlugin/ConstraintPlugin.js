@@ -458,8 +458,10 @@ define(['plugin/PluginConfig',
             ' = function(node, cb){\ncore.loadChildren(node, function(e,'+
             ' children){\nif (!e){\nid = core.getPath(node);\nresult.push(id);\n'+
             'count += children.length;\n'+ PRIVATE_VARIABLES.CACHE + '[id] = node;\n'+
-            'for (var i = children.length-1; i >= 0; i--){\nload'+
-            '(children[i], cb);\n}\nif (count === result.length){\ncb(result);'+
+            'for (var i = children.length-1; i >= 0; i--){\n'+
+            //'setTimeout(load, 0, children[i], cb);'+
+            'load(children[i], cb);'+
+            '\n}\nif (count === result.length){\ncb(result);'+
             '\n}\n} else {\n' + PRIVATE_VARIABLES.ERROR + ' = e;\n}\n});\n};\n'+
             'load(n, _callback);\n\n};\n';
 
@@ -530,7 +532,7 @@ define(['plugin/PluginConfig',
                 " message: %message, nodes: %node };\n\n%next",
 
             'not': "!(%first)",
-            'getLength': "Object.keys(%first).length",
+            'getLength': "Object.keys(%collection).length",
 
             //A few basic utilities
             'return': "return %first;\n%next",
@@ -591,9 +593,9 @@ define(['plugin/PluginConfig',
 
             //additional end code by node type
             this._constraintEndCode = {
-                'forEach': PLACEHOLDER.FUNCTION + "();\n",
-                'repeat': PLACEHOLDER.FUNCTION + "(++" + PLACEHOLDER.ITERATOR + ");\n",
-                'while': PLACEHOLDER.FUNCTION + "();\n",
+                'forEach': 'setTimeout(' + PLACEHOLDER.FUNCTION + ", 0);\n",
+                'repeat': 'setTimeout(' + PLACEHOLDER.FUNCTION + ', 0, ++' + PLACEHOLDER.ITERATOR + ");\n",
+                'while': 'setTimeout(' + PLACEHOLDER.FUNCTION + ", 0);\n",
 
                 'constraint': '\ncallback( ' + PRIVATE_VARIABLES.ERROR + 
                     ', ' + PRIVATE_VARIABLES.VIOLATION + ');\n'

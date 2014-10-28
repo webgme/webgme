@@ -91,8 +91,8 @@ define(['./FakeCore',
 
     ConstraintTestEnvironment.prototype.buildTrees = function(){
         //I will create a tree with a branching factor of 5
-        var branchingFactor = 4,
-            height = 5,
+        var branchingFactor = 3,
+            height = 4,
             nodesAtCurrentLevel = [],
             nodesAtNextLevel = [],
             parent,
