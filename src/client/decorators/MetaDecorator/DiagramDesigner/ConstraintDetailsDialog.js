@@ -140,8 +140,8 @@ define(['clientUtil',
 
         //fill controls based on the currently edited constraint
         this._inputName.val(constraintDesc.name).focus();
-        this._inputPriority.val(constraintDesc.priority);
-        this._inputMessage.val(constraintDesc.message);
+        //this._inputPriority.val(constraintDesc.priority);
+        this._inputMessage.val(constraintDesc.info);
 
        this._codeMirror = CodeMirror(this._scriptEditor[0], {
             value: constraintDesc.script,

@@ -5,7 +5,7 @@
 
 # Program usage
 
-All runnable javascript programs are stored in the bin directory, you should start them with node, e.g. `node bin/start_server.js`.
+All runnable javascript programs are stored in the src/bin directory, you should start them with node, e.g. `node src/bin/start_server.js`.
 Each script supports the `-help` command line parameter which will list all possible parameters.
 
 * start_server: it start a webserver which open a data connection towards the configured mongoDb and functions as a webgme server as well.

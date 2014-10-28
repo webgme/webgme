@@ -15,7 +15,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
 
         var _hostAddress = null;
         if(options.type === "browser") {
-            _hostAddress = window.location.protocol + '//' + window.location.host;
+            _hostAddress = options.host || window.location.protocol + '//' + window.location.host;
         } else {
             _hostAddress = options.host + (options.port ? ':'+options.port : "");
         }

@@ -157,8 +157,8 @@ define(['js/Constants',
 
         desc = {'name': cName,
             'script': SCRIPT_TEMPLATE,
-            'priority': 0,
-            'message': ''};
+            /*'priority': 0,*/
+            'info': ''};
 
         dialog.show(desc, constraintNames, function (cDesc) {
             self.saveConstraintDescriptor(cName, cDesc);

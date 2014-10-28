@@ -4,11 +4,10 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  * @author nabana / https://github.com/nabana
  */
+var WebGMEGlobal = WebGMEGlobal || {};
+WebGMEGlobal.version = 'x';
+WebGMEGlobal['SUPPORTS_TOUCH'] = 'ontouchstart' in window || navigator.msMaxTouchPoints;
 
-var WebGMEGlobal = {
-    'version': 'x',                                                             //will be set from Node's package.json
-    'SUPPORTS_TOUCH': 'ontouchstart' in window || navigator.msMaxTouchPoints    //touch device detection}
-};
 
 // let require load all the toplevel needed script and call us on domReady
 define(['logManager',

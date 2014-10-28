@@ -1,4 +1,4 @@
-/*globals define, console, angular*/
+/*globals define, console, angular, window*/
 
 
 define(['js/client'], function (Client) {
@@ -19,7 +19,7 @@ define(['js/client'], function (Client) {
                     deferred.resolve();
                 } else {
                     // TODO: replace CONFIG with context
-                    client = new Client(/*CONFIG*/);
+                    client = new Client({host: window.location.basename});
 
                     // hold a reference to the client instance
                     datastores[context.db] = {client: client};
@@ -242,6 +242,7 @@ define(['js/client'], function (Client) {
             };
 
             NodeObj = function (context, id) {
+                var thisNode = this;
                 this.id = id;
                 this.territories = [ ];
                 this.context = context;
@@ -251,8 +252,8 @@ define(['js/client'], function (Client) {
                 this._onUnload = function (id) { };
                 // This will always be called on unload.
                 this.__onUnload = function () {
-                    this.cleanUpNode();
-                    // TODO: The node must be removed from the region
+                    thisNode.cleanUpNode();
+                    delete thisNode.databaseConnection.nodeService.regions[context.regionId].nodes[thisNode.id];
                 };
             };
 
@@ -341,8 +342,13 @@ define(['js/client'], function (Client) {
 
             };
 
-            NodeObj.prototype.destroy = function () {
-
+            /**
+             * Removes the node from the data-base. (All regions within the same context should get onUnload events).
+             * @param [msg] - Optional commit message.
+             */
+            NodeObj.prototype.destroy = function (msg) {
+                // TODO: Perhaps remove the node from its context/region at this point? Now it waits for the unload event
+                self.destroyNode(this.context, this.id, msg);
             };
 
             NodeObj.prototype.getMemberIds = function (name) {
@@ -446,10 +452,13 @@ define(['js/client'], function (Client) {
             this.loadNode = function (context, id) {
                 var deferred = $q.defer(),
                     dbConn = DataStoreService.getDatabaseConnection(context),
-                    territoryId = context.regionId + '_' + id,
+                    territoryId,
                     territoryPattern = {},
                     nodes;
 
+                console.assert(typeof context.regionId === 'string');
+
+                territoryId = context.regionId + '_' + id;
                 dbConn.nodeService = dbConn.nodeService || {};
                 dbConn.nodeService.regions = dbConn.nodeService.regions || {};
                 dbConn.nodeService.regions[context.regionId] = dbConn.nodeService.regions[context.regionId] || {
@@ -548,8 +557,15 @@ define(['js/client'], function (Client) {
                 // NS.createChild({parent: parentNode/id, base: baseNode/id}) – current one on client takes {parentId and baseId}
             };
 
-            this.destroyNode = function (context, nodeOrId) {
-                // NS.destroyNode(node/Id);
+            this.destroyNode = function (context, nodeOrId, msg) {
+                var dbConn = DataStoreService.getDatabaseConnection(context),
+                    id = getIdFromNodeOrString(nodeOrId),
+                    nodeToDelete = dbConn.client.getNode(id);
+                if (nodeToDelete) {
+                    dbConn.client.delMoreNodes([id], msg);
+                } else {
+                    console.warn('Requested deletion of node that does not exist in context! (id, context) ', id, context);
+                }
             };
 
             this.cleanUpRegion = function (context) {

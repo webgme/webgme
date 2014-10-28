@@ -24,13 +24,15 @@ define( [
   } );
 
 
-  var ProjectNavigatorController = function ( $scope, gmeClient, $simpleDialog ) {
+  var ProjectNavigatorController = function ( $scope, gmeClient, $simpleDialog, $timeout, $window ) {
 
     var self = this;
 
     self.$scope = $scope;
+    self.$window = $window;
     self.gmeClient = gmeClient;
     self.$simpleDialog = $simpleDialog;
+    self.$timeout = $timeout;
 
     // internal data representation for fast access to objects
     self.projects = {};
@@ -60,8 +62,8 @@ define( [
 
   ProjectNavigatorController.prototype.initialize = function () {
     var self = this,
-      newProject,
-      manageProjects;
+    newProject,
+    manageProjects;
 
     // initialize model structure for view
     self.$scope.navigator = {
@@ -237,35 +239,77 @@ define( [
 
     self.gmeClient.addEventListener( self.gmeClient.events.SERVER_BRANCH_UPDATED, function ( client, parameters ) {
 //            console.log(self.gmeClient.events.SERVER_BRANCH_UPDATED, parameters);
-      // TODO: update branch information
-      var currentProject = self.$scope.navigator.items[self.navIdProject],
-        currentBranch = self.$scope.navigator.items[self.navIdBranch];
-
-      if ( currentProject ) {
-        currentProject = currentProject.id;
-      }
-
-      if ( currentBranch ) {
-        currentBranch = currentBranch.id;
-      }
-
-      self.removeBranch( parameters.project, parameters.branch );
-      self.addBranch( parameters.project, parameters.branch, parameters.commit );
-
-      if ( currentProject === parameters.project && currentBranch === parameters.branch ) {
-        //we also have te re-select the branch
-        self.selectBranch( {
-          projectId: currentProject,
-          branchId: currentBranch
-        } );
-      }
+      self.updateBranch(parameters.project,parameters.branch,parameters.commit);
     } );
 
     self.gmeClient.addEventListener( self.gmeClient.events.SERVER_BRANCH_DELETED, function ( client, parameters ) {
-      //console.log(self.gmeClient.events.SERVER_BRANCH_DELETED, parameters);
+      var currentProject = self.$scope.navigator.items[self.navIdProject],
+      currentBranch = self.$scope.navigator.items[self.navIdBranch];
+
       self.removeBranch( parameters.project, parameters.branch );
+
+      if ( currentBranch === parameters.branch && currentProject === parameters.project ) {
+        self.selectProject( parameters.project );
+      }
+
     } );
 
+    angular.element(self.$window).on('keydown', function(e) {
+
+      if ( (e.metaKey || e.ctrlKey) ) {
+
+        if ( e.keyCode === 90 ) {
+
+          //TODO we should block UI until undo/redo is done
+          if (e.shiftKey) {
+            self.$timeout(function() {
+              self.gmeClient.redo(self.gmeClient.getActualBranch(),function(err){
+              });
+            });
+          } else {
+            self.$timeout(function() {
+              self.gmeClient.undo(self.gmeClient.getActualBranch(),function(err){
+              });
+
+            });
+          }
+
+        }
+      }
+    });
+
+    self.gmeClient.addEventListener( self.gmeClient.events.UNDO_AVAILABLE, function(client, parameters){
+      self.$timeout(function() {
+
+        if (self.$scope.navigator &&
+        self.$scope.navigator.items &&
+        self.$scope.navigator.items[self.navIdBranch]) {
+          if(parameters){
+            self.$scope.navigator.items[self.navIdBranch].undoLastCommitItem.disabled = false;
+          } else {
+            self.$scope.navigator.items[self.navIdBranch].undoLastCommitItem.disabled = true;
+          }
+
+        }
+
+      });
+    });
+    self.gmeClient.addEventListener( self.gmeClient.events.REDO_AVAILABLE, function(client, parameters){
+      self.$timeout(function() {
+
+        if (self.$scope.navigator &&
+          self.$scope.navigator.items &&
+          self.$scope.navigator.items[self.navIdBranch]) {
+          if(parameters){
+            self.$scope.navigator.items[self.navIdBranch].redoLastUndoItem.disabled = false;
+          } else {
+            self.$scope.navigator.items[self.navIdBranch].redoLastUndoItem.disabled = true;
+          }
+
+        }
+
+      });
+    });
   };
 
   ProjectNavigatorController.prototype.updateProjectList = function () {
@@ -274,7 +318,7 @@ define( [
     // FIXME: get read=only/viewable/available project?!
     self.gmeClient.getFullProjectsInfoAsync( function ( err, projectList ) {
       var projectId,
-        branchId;
+      branchId;
 
       if ( err ) {
         console.error( err );
@@ -304,13 +348,13 @@ define( [
 
   ProjectNavigatorController.prototype.addProject = function ( projectId, rights ) {
     var self = this,
-      i,
-      showHistory,
-      showAllBranches,
-      deleteProject,
-      selectProject,
-      refreshPage,
-      updateProjectList;
+    i,
+    showHistory,
+    showAllBranches,
+    deleteProject,
+    selectProject,
+    refreshPage,
+    updateProjectList;
 
     rights = rights || {
       'delete': true,
@@ -349,7 +393,7 @@ define( [
 
         var deleteProjectModal;
 
-        self.$scope.thingName = 'project "'+ data.projectId + '"';
+        self.$scope.thingName = 'project "' + data.projectId + '"';
 
         deleteProjectModal = self.$simpleDialog.open( {
           dialogTitle: 'Confirm delete',
@@ -468,14 +512,16 @@ define( [
 
   ProjectNavigatorController.prototype.addBranch = function ( projectId, branchId, branchInfo ) {
     var self = this,
-      i,
-      selectBranch,
-      exportBranch,
-      createBranch,
-      deleteBranch,
-      createCommitMessage,
+    i,
+    selectBranch,
+    exportBranch,
+    createBranch,
+    deleteBranch,
+    createCommitMessage,
 
-      deleteBranchItem;
+    deleteBranchItem,
+    undoLastCommitItem,
+    redoLastUndoItem;
 
     if ( self.projects[projectId].disabled ) {
       // do not show any branches if the project is disabled
@@ -498,6 +544,9 @@ define( [
       };
 
       createBranch = function ( data ) {
+
+        console.log('create branch');
+
         // TODO: get available branch name for project
         var newBranchName = data.branchId + '_copy';
 
@@ -517,7 +566,7 @@ define( [
 
         var deleteBranchModal;
 
-        self.$scope.thingName = 'branch "'+ data.branchId + '"';
+        self.$scope.thingName = 'branch "' + data.branchId + '"';
 
         deleteBranchModal = self.$simpleDialog.open( {
           dialogTitle: 'Confirm delete',
@@ -555,7 +604,6 @@ define( [
       };
 
       createBranch = function ( data ) {
-        console.log( 'createBranch: ', data );
         self.addBranch( data.projectId, data.branchId + ' _copy' );
         self.selectProject( {projectId: data.projectId, branchId: data.branchId + '_copy'} );
       };
@@ -564,6 +612,8 @@ define( [
 
         var deleteBranchModal;
 
+        console.log('delete branch');
+
         self.$scope.thingName = data.branchId;
 
         deleteBranchModal = self.$simpleDialog.open( {
@@ -571,7 +621,7 @@ define( [
           dialogContentTemplate: 'DeleteDialogTemplate.html',
           onOk: function () {
             self.removeBranch( data.projectId, data.branchId );
-            self.selectProject( data );
+            //self.selectProject( data ); you cannot delete the actual branch so there is no need for re-selection
           },
           scope: self.$scope
         } );
@@ -601,6 +651,37 @@ define( [
       }
     };
 
+    undoLastCommitItem = {
+      id: 'undoLastCommit',
+      label: 'Undo last commit',
+      iconClass: 'fa fa-reply',
+      disabled: true, // TODO: set this from handler to enable/disable
+      action: function ( actionData ) {
+        self.gmeClient.undo(actionData.branchId,function(err){});
+      },
+      // Put whatever you need to get passed back above
+      actionData: {
+        projectId: projectId,
+        branchId: branchId,
+        branchInfo: branchInfo
+      }
+    };
+
+    redoLastUndoItem = {
+      id: 'redoLastUndo',
+      label: 'Redo last undo',
+      iconClass: 'fa fa-mail-forward',
+      disabled: true, // TODO: set this from handler to enable/disable
+      action: function ( actionData ) {
+        self.gmeClient.redo(actionData.branchId,function(err){});
+      },
+      // Put whatever you need to get passed back above
+      actionData: {
+        projectId: projectId,
+        branchId: branchId,
+        branchInfo: branchInfo
+      }
+    };
     // create the new branch structure
     self.projects[projectId].branches[branchId] = {
       id: branchId,
@@ -620,6 +701,8 @@ define( [
       menu: [
         {
           items: [
+            undoLastCommitItem,
+            redoLastUndoItem,
             {
               id: 'createBranch',
               label: 'Create branch',
@@ -660,6 +743,8 @@ define( [
     };
 
     self.projects[projectId].branches[branchId].deleteBranchItem = deleteBranchItem;
+    self.projects[projectId].branches[branchId].undoLastCommitItem = undoLastCommitItem;
+    self.projects[projectId].branches[branchId].redoLastUndoItem = redoLastUndoItem;
 
     for ( i = 0; i < self.projects[projectId].menu.length; i += 1 ) {
 
@@ -677,7 +762,7 @@ define( [
 
   ProjectNavigatorController.prototype.removeProject = function ( projectId, callback ) {
     var self = this,
-      i;
+    i;
 
     if ( self.projects.hasOwnProperty( projectId ) ) {
       delete self.projects[projectId];
@@ -703,7 +788,7 @@ define( [
 
   ProjectNavigatorController.prototype.removeBranch = function ( projectId, branchId ) {
     var self = this,
-      i;
+    i;
 
     if ( self.projects.hasOwnProperty( projectId ) && self.projects[projectId].branches.hasOwnProperty( branchId ) ) {
       delete self.projects[projectId].branches[branchId];
@@ -719,8 +804,6 @@ define( [
         }
       }
 
-      self.selectProject( {projectId: projectId} );
-
       self.update();
     }
   };
@@ -731,10 +814,10 @@ define( [
 
   ProjectNavigatorController.prototype.selectBranch = function ( data, callback ) {
     var self = this,
-      projectId = data.projectId,
-      branchId = data.branchId,
-      currentProject = self.$scope.navigator.items[self.navIdProject],
-      currentBranch = self.$scope.navigator.items[self.navIdBranch];
+    projectId = data.projectId,
+    branchId = data.branchId,
+    currentProject = self.$scope.navigator.items[self.navIdProject],
+    currentBranch = self.$scope.navigator.items[self.navIdBranch];
 
     callback = callback || function () {};
 
@@ -851,12 +934,20 @@ define( [
     self.update();
   };
 
+  ProjectNavigatorController.prototype.updateBranch = function ( projectId, branchId, branchInfo ){
+      this.projects[projectId].branches[branchId].properties = {
+          hashTag: branchInfo || '#1234567890',
+          lastCommiter: 'petike',
+          lastCommitTime: new Date()
+      };
+  };
+
   ProjectNavigatorController.prototype.dummyProjectsGenerator = function ( name, maxCount ) {
     var self = this,
-      i,
-      id,
-      count,
-      rights;
+    i,
+    id,
+    count,
+    rights;
 
     count = Math.max( Math.round( Math.random() * maxCount ), 3 );
 
@@ -882,9 +973,9 @@ define( [
 
   ProjectNavigatorController.prototype.dummyBranchGenerator = function ( name, maxCount, projectId ) {
     var self = this,
-      i,
-      id,
-      count;
+    i,
+    id,
+    count;
 
     count = Math.max( Math.round( Math.random() * maxCount ), 3 );
 
@@ -896,14 +987,14 @@ define( [
 
   ProjectNavigatorController.prototype.mapToArray = function ( hashMap, orderBy ) {
     var keys = Object.keys( hashMap ),
-      values = keys.map( function ( v ) { return hashMap[v]; } );
+    values = keys.map( function ( v ) { return hashMap[v]; } );
 
     // keys precedence to order
     orderBy = orderBy || [];
 
     values.sort( function ( a, b ) {
       var i,
-        key;
+      key;
 
       for ( i = 0; i < orderBy.length; i += 1 ) {
         key = orderBy[i];

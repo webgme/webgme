@@ -225,7 +225,8 @@ var setConfig = function(configObject){
 webGMEGlobal = {
     baseDir : PATH.resolve(baseDir),
     getConfig : getConfig,
-    setConfig : setConfig
+    setConfig : setConfig,
+    requirejs : requirejs
 };
 
 //setting the default array elements

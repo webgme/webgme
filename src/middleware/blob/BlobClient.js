@@ -54,6 +54,18 @@ define(['./Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, Bl
 
 
     BlobClient.prototype.putFile = function (name, data, callback) {
+        function toArrayBuffer(buffer) {
+            var ab = new ArrayBuffer(buffer.length);
+            var view = new Uint8Array(ab);
+            for (var i = 0; i < buffer.length; ++i) {
+                view[i] = buffer[i];
+            }
+            return ab;
+        }
+        // on node-webkit, we use XMLHttpRequest, but xhr.send thinks a Buffer is a string and encodes it in utf-8. Send an ArrayBuffer instead
+        if (typeof window !== 'undefined' && typeof Buffer !== 'undefined' && data instanceof Buffer) {
+            data = toArrayBuffer(data); // FIXME will this have performance problems
+        }
         superagent.post(this.getCreateURL(name))
             .set('Content-Type', 'application/octet-stream')
             .set('Content-Length', data.length)
@@ -140,6 +152,7 @@ define(['./Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, Bl
                 return obj;
             }
         }
+        //superagent.parse['application/json'] = superagent.parse['application/zip'];
 
         var req = superagent.get(this.getViewURL(hash));
         if (req.pipe) {
@@ -167,19 +180,29 @@ define(['./Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, Bl
             });
             req.pipe(buffers);
         } else {
+            req.removeAllListeners('end');
             req.on('request', function () {
                 if (typeof this.xhr !== 'undefined') {
                     this.xhr.responseType = 'arraybuffer';
                 }
-            })
-            .end(function (err, res) {
-                if (err || res.status > 399) {
-                    callback(err || res.status);
+            });
+            // req.on('error', callback);
+            req.on('end', function() {
+                if (req.xhr.status > 399) {
+                    callback(req.xhr.status);
                 } else {
-                    // response is an arraybuffer
-                    callback(null, res.xhr.response);
+                    var contentType = req.xhr.getResponseHeader('content-type');
+                    var response = req.xhr.response; // response is an arraybuffer
+                    if (contentType == 'application/json') {
+                        function utf8ArrayToString(uintArray) {
+                            return decodeURIComponent(escape(String.fromCharCode.apply(null, uintArray)));
+                        }
+                        response = JSON.parse(utf8ArrayToString(new Uint8Array(response)));
+                    }
+                    callback(null, response);
                 }
             });
+            req.end(callback);
         }
     };
 
