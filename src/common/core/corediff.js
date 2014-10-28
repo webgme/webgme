@@ -23,6 +23,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       _concat_result,
       _diff_moves = {},
       _conflict_items = [],
+      _conflict_parents = {},
       _conflict_mine,
       _conflict_theirs;
 
@@ -1326,13 +1327,13 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       return dictionary;
     }
 
-    function getNodeByGuid(guid){
+    function getNodeByGuid(diff,guid){
       var path = _concat_dictionary.guidToPath[guid],
-        object = _concat_result,
+        object = diff,
         i;
       if(typeof path === 'string'){
         if(path === ''){
-          return _concat_result;
+          return diff;
         }
 
         path = path.split('/');
@@ -1345,7 +1346,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
         return null;
       }
     }
-    function insertAtPath(path,object){
+    function insertAtPath(diff,path,object){
       ASSERT(typeof path === 'string');
       var i,base,relid;
       if(path === ''){
@@ -1355,7 +1356,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       path = path.split('/');
       path.shift();
       relid = path.pop();
-      base = _concat_result;
+      base = diff;
       for(i=0;i<path.length;i++){
         base[path[i]] = base[path[i]] || {};
         base = base[path[i]];
@@ -1409,17 +1410,17 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       return result;
     }
     function processConcatNode(path,node){
-      var base = getNodeByGuid(node.guid),
+      var base = getNodeByGuid(_concat_result,node.guid),
         singleNode = getSingleNode(node),
         childrenRelids = getDiffChildrenRelids(node),
         basePath = _concat_dictionary.guidToPath[node.guid],
         i,
-        isBaseDeleted=isPathToRemove(_concat_result,node.movedFrom || '') || isPathToRemove(_concat_result,path);
+        isBaseDeleted=removedParentGuid(_concat_result,node.movedFrom || '') || removedParentGuid(_concat_result,path);
       if(!isBaseDeleted){
         //if the node or its container was already removed we cannot concat any further change to it
         if(base === null){
           //there is no such object in the base of the concat so we simply insert it
-          insertAtPath(path,singleNode);
+          insertAtPath(_concat_result,path,singleNode);
         } else {
           //simple removal
           if(node.removed === true){
@@ -1428,12 +1429,12 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
             if(base.removed === true){
               delete base.removed;
             }
-            insertAtPath(_concat_dictionary.guidToPath[node.guid],jsonConcat(base,singleNode));
+            insertAtPath(_concat_result,_concat_dictionary.guidToPath[node.guid],jsonConcat(base,singleNode));
             //if we add a move we also have to move :)
             if(node.movedFrom){
               //we have to get base again
-              base = getNodeByGuid(node.guid);
-              insertAtPath(path,base);
+              base = getNodeByGuid(_concat_result,node.guid);
+              insertAtPath(_concat_result,path,base);
               removePathFromDiff(_concat_result,basePath);
               _concat_dictionary = getDiffTreeDictionray(_concat_result); //we have to recalculate
             }
@@ -1721,50 +1722,67 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       }
       return null;
     }
-    function isPathToRemove(diff,path){
+    function removedParentGuid(diff,path){
       var i;
       path = (path || "").split('/');
       path.shift();
       for (i = 0; i < path.length; i++) {
         if(diff.removed === true){
-          return true;
+          return diff.guid;
         }
         if(diff[path[i]]){
           diff = diff[path[i]]
         } else {
-          return false;
+          return null;
         }
       }
-      return diff.removed === true;
+      return diff.removed === true ? diff.guid : null;
     }
     function nodeConflicts(guid){
-      var relids,i,mine,theirs,minePath,theirsPath,mineToDelete,theirsToDelete;
+      var temp,index,mine,theirs,minePath,theirsPath,mineToDelete,theirsToDelete;
       mine = getConflictByGuid(_conflict_mine,guid);
       minePath = getPathByGuid(_conflict_mine,guid,'');
       theirs = getConflictByGuid(_conflict_theirs,guid);
       theirsPath = getPathByGuid(_conflict_theirs,guid,'');
-      mineToDelete = isPathToRemove(_conflict_mine,minePath);
-      theirsToDelete = isPathToRemove(_conflict_theirs,theirsPath);
+      mineToDelete = removedParentGuid(_conflict_mine,minePath);
+      theirsToDelete = removedParentGuid(_conflict_theirs,theirsPath);
 
       ASSERT((mine || theirs) && (typeof minePath === 'string' || typeof theirsPath === 'string'));
 
-      //node removal cases
       if(mine === null || theirs === null){
-        _conflict_items.push({
-          id:_conflict_items.length,
+        temp = mineToDelete || theirsToDelete;
+        ASSERT(temp);
+        //the parent conflict
+        if(!_conflict_parents[temp]){
+          //first create the parent conflict
+          index = _conflict_items.length;
+          _conflict_items.push({
+            id:index,
+            guid:guid,
+            info: guid,
+            selected: "mine",
+            mine:{
+              path  : getPathByGuid(_conflict_mine,temp)+'/removed',
+              value : mine === null ? true : false,
+              info  : mine === null ? "remove" : "keep"
+            },
+            theirs:{
+              path  : getPathByGuid(_conflict_theirs,temp)+'/removed',
+              value : theirs === null ? true : false,
+              info  : theirs === null ? "remove" : "keep"
+            },
+            children:[]
+          });
+          _conflict_parents[temp] = _conflict_items[index];
+        }
+        //child conflict ...
+        _conflict_parents[temp].children.push({
+          id:_conflict_parents[temp].children.length,
           guid:guid,
-          info: guid,
-          selected: "mine",
-          mine:{
-            path  : minePath,
-            value : mine,
-            info  : mine === null ? "remove" : "keep"
-          },
-          theirs:{
-            path  : theirsPath,
-            value : theirs,
-            info  : theirs === null ? "remove" : "keep"
-          }
+          info:mine || theirs,
+          minepath: minePath,
+          theirspath: theirsPath,
+          value: mine || theirs
         });
       } else {
         if((mine.removed === true && theirs.removed !== true) || (theirs.removed === true && mine.removed !== true)){
@@ -1833,6 +1851,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
         otherGuids = getGuidsOfDiff(theirs),
         i;
       _conflict_items = [];
+      _conflict_parents = {};
       _conflict_mine = mine;
       _conflict_theirs = theirs;
       for(i=0;i<otherGuids.length;i++){
@@ -1853,6 +1872,9 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       path.shift();
       finalPath = path.pop();
       for(i=0;i<path.length;i++){
+        if(!diff[path[i]]){
+          diff[path[i]] = {};
+        }
         diff = diff[path[i]];
       }
 
@@ -1871,6 +1893,18 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       if(item.mine.path === item.theirs.path){
         //we just simply apply it over our own diff
         applyToPath(diff,item.theirs.path,item.theirs.value);
+      } else {
+        var currentPath = getPathByGuid(diff,item.guid,'');
+        if(item.mine.path.indexOf(currentPath) === 0){
+          //not yet moved so we move right now
+          insertAtPath(diff,item.theirs.path,getNodeByGuid(diff,item.guid));
+          //and remove from its original path
+          insertAtPath(diff,currentPath,{});
+          //with the move there is no data to apply...
+        } else {
+          //the move have already been made, so it is enough if we apply
+          applyToPath(diff,item.theirs.path,item.theirs.value);
+        }
       }
 
     }
