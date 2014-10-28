@@ -37,7 +37,7 @@ define(['./Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, Bl
         if (subpath) {
             subpathURL = subpath;
         }
-        return this.blobUrl + 'view/' + hash + '/' + subpathURL;
+        return this.blobUrl + 'view/' + hash + '/' + encodeURIComponent(subpathURL);
     };
 
     BlobClient.prototype.getDownloadURL = function (hash) {
@@ -48,7 +48,7 @@ define(['./Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, Bl
         if (isMetadata) {
             return this.blobUrl + 'createMetadata/';
         } else {
-            return this.blobUrl + 'createFile/' + filename;
+            return this.blobUrl + 'createFile/' + encodeURIComponent(filename);
         }
     };
 

@@ -76,6 +76,28 @@ describe('BlobClient', function () {
         });
     }
 
+    it('should create strange filenames', function (done) {
+        var bc = new BlobClient();
+
+        bc.putFile("te%s#t.json", str2ab('{"1":2}'), function(err, hash) {
+            if (err)
+                done(err);
+            bc.getMetadata(hash, function(err, metadata) {
+                if (err)
+                    done(err);
+                expect(metadata.mime).to.equal('application/json');
+                bc.getObject(hash, function(err, res) {
+                    if (err)
+                        done(err);
+                    expect(typeof res).to.equal('object');
+                    expect(typeof res.prototype).to.equal('undefined');
+                    expect(res[1]).to.equal(2);
+                    done();
+                });
+            });
+        });
+    });
+
     it('should create zip', function (done) {
         var data = base64DecToArr("UEsDBAoAAAAAACNaNkWtbMPDBwAAAAcAAAAIAAAAZGF0YS5iaW5kYXRhIA0KUEsBAj8ACgAAAAAA\n" +
             "I1o2Ra1sw8MHAAAABwAAAAgAJAAAAAAAAAAgAAAAAAAAAGRhdGEuYmluCgAgAAAAAAABABgAn3xF\n" +
@@ -101,6 +123,34 @@ describe('BlobClient', function () {
             expect(Object.keys(hashes).length).to.equal(2);
             
             done();
+        });
+    });
+    
+    it('should create zip', function (done) {
+        var filesToAdd = {
+                'j%s#on.json': '{1:2}',
+                'x#m%l.xml': '<doc/>'
+            },
+            artifact = new BlobClient().createArtifact('xmlAndJson');
+        artifact.addFiles(filesToAdd, function (err, hashes) {
+            if (err) {
+                done('Could not add files : err' + err.toString(), self.result);
+            }
+            artifact.save(function (err, hash) {
+                if (err) {
+                    done('Could not save artifact : err' + err.toString(), self.result);
+                }
+                var req = new XMLHttpRequest();
+                req.open("GET", new BlobClient().getViewURL(hash, 'j%s#on.json'), true);
+                req.onreadystatechange = function () {
+                    if (req.readyState != 4) return;
+                    if (req.status != 200) {
+                        done(req.status);
+                    }
+                    done();
+                }
+                req.send();
+            });
         });
     });
 
