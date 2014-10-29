@@ -1409,7 +1409,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       changeMovedPaths(result);
       return result;
     }
-    function processConcatNode(path,node){
+    function processConcatNode(path,node,removedDescendant){
       var base = getNodeByGuid(_concat_result,node.guid),
         singleNode = getSingleNode(node),
         childrenRelids = getDiffChildrenRelids(node),
@@ -1418,32 +1418,34 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
         isBaseDeleted=removedParentGuid(_concat_result,node.movedFrom || '') || removedParentGuid(_concat_result,path);
       if(!isBaseDeleted){
         //if the node or its container was already removed we cannot concat any further change to it
-        if(base === null){
-          //there is no such object in the base of the concat so we simply insert it
-          insertAtPath(_concat_result,path,singleNode);
-        } else {
-          //simple removal
-          if(node.removed === true){
-            base.removed = true;
+        if(base !== null || !removedDescendant){
+          if(base === null){
+            //there is no such object in the base of the concat so we simply insert it
+            insertAtPath(_concat_result,path,singleNode);
           } else {
-            if(base.removed === true){
-              delete base.removed;
-            }
-            insertAtPath(_concat_result,_concat_dictionary.guidToPath[node.guid],jsonConcat(base,singleNode));
-            //if we add a move we also have to move :)
-            if(node.movedFrom){
-              //we have to get base again
-              base = getNodeByGuid(_concat_result,node.guid);
-              insertAtPath(_concat_result,path,base);
-              removePathFromDiff(_concat_result,basePath);
-              _concat_dictionary = getDiffTreeDictionray(_concat_result); //we have to recalculate
+            //simple removal
+            if(node.removed === true){
+              base.removed = true;
+            } else {
+              if(base.removed === true){
+                delete base.removed;
+              }
+              insertAtPath(_concat_result,_concat_dictionary.guidToPath[node.guid],jsonConcat(base,singleNode));
+              //if we add a move we also have to move :)
+              if(node.movedFrom){
+                //we have to get base again
+                base = getNodeByGuid(_concat_result,node.guid);
+                insertAtPath(_concat_result,path,base);
+                removePathFromDiff(_concat_result,basePath);
+                _concat_dictionary = getDiffTreeDictionray(_concat_result); //we have to recalculate
+              }
             }
           }
         }
       }
 
       for(i=0;i<childrenRelids.length;i++){
-        processConcatNode(path+'/'+childrenRelids[i],node[childrenRelids[i]]);
+        processConcatNode(path+'/'+childrenRelids[i],node[childrenRelids[i]],isBaseDeleted || removedDescendant);
       }
 
     }
@@ -1578,7 +1580,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       getMoveSources(base,'',_concat_moves.finalize.toFromBase,_concat_moves.finalize.fromToBase);
       createFinalizeDirectory();
 
-      processConcatNode('',extension);
+      processConcatNode('',extension,false);
       finalizeConcat(_concat_result);
       return _concat_result;
     };
@@ -1758,21 +1760,26 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
           index = _conflict_items.length;
           _conflict_items.push({
             id:index,
-            guid:guid,
-            info: guid,
+            guid:temp,
+            info: temp,
             selected: "mine",
             mine:{
-              path  : getPathByGuid(_conflict_mine,temp)+'/removed',
-              value : mine === null ? true : false,
+              path  : getPathByGuid(_conflict_mine,temp),
+              value : mine === null ? {} : mine,
               info  : mine === null ? "remove" : "keep"
             },
             theirs:{
-              path  : getPathByGuid(_conflict_theirs,temp)+'/removed',
-              value : theirs === null ? true : false,
+              path  : getPathByGuid(_conflict_theirs,temp),
+              value : theirs === null ? {} : theirs,
               info  : theirs === null ? "remove" : "keep"
             },
             children:[]
           });
+          if(theirs){
+            _conflict_items[index].theirs.value.removed = false;
+          } else {
+            _conflict_items[index].mine.value.removed = false;
+          }
           _conflict_parents[temp] = _conflict_items[index];
         }
         //child conflict ...
@@ -1803,36 +1810,39 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
             }
           });
         }
-        if(typeof mine.movedFrom === 'string' && typeof theirs.movedFrom === 'string' && minePath !== theirsPath){
-          //double move conflict
-          _conflict_items.push({
-            id:_conflict_items.length,
-            guid:guid,
-            info: guid,
-            selected: "mine",
-            mine:{
-              path  : minePath,
-              value : null,
-              info  : "move to path "+minePath
-            },
-            theirs:{
-              path  : theirsPath,
-              value : null,
-              info  : "move to path "+theirsPath
-            }
-          });
-        }
-        if(mine.attr){
-          simpleKeyValueConflicts(guid,'attribute',minePath+'/attr', theirsPath+'/attr');
-        }
-        if(mine.reg){
-          simpleKeyValueConflicts(guid,'registry',minePath+'/reg', theirsPath+'/reg');
-        }
-        if(mine.pointer){
-          simpleKeyValueConflicts(guid,'pointer',minePath+'/pointer', theirsPath+'/pointer');
-        }
-        if(mine.set){
-          setConflicts(guid,'set',minePath+'/set', theirsPath+'/set');
+        if(mine.removed !== true || theirs.removed !== true){
+          //we only interested in any sub-node change if at least one outcome kept the node
+          if(typeof mine.movedFrom === 'string' && typeof theirs.movedFrom === 'string' && minePath !== theirsPath){
+            //double move conflict
+            _conflict_items.push({
+              id:_conflict_items.length,
+              guid:guid,
+              info: guid,
+              selected: "mine",
+              mine:{
+                path  : minePath,
+                value : null,
+                info  : "move to path "+minePath
+              },
+              theirs:{
+                path  : theirsPath,
+                value : null,
+                info  : "move to path "+theirsPath
+              }
+            });
+          }
+          if(mine.attr){
+            simpleKeyValueConflicts(guid,'attribute',minePath+'/attr', theirsPath+'/attr');
+          }
+          if(mine.reg){
+            simpleKeyValueConflicts(guid,'registry',minePath+'/reg', theirsPath+'/reg');
+          }
+          if(mine.pointer){
+            simpleKeyValueConflicts(guid,'pointer',minePath+'/pointer', theirsPath+'/pointer');
+          }
+          if(mine.set){
+            setConflicts(guid,'set',minePath+'/set', theirsPath+'/set');
+          }
         }
       }
     }
