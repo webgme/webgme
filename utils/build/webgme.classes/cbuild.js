@@ -13,7 +13,8 @@
     blob: "./src/middleware/blob",
     superagent: "./node_modules/superagent/superagent",
     client: "./src/client/js/client",
-    plugin: "./src/plugin"
+    plugin: "./src/plugin",
+    'js/Dialogs/PluginConfig/PluginConfigDialog': 'empty:'
   },
   optimize: "none",
   insertRequire: ["webgme.classes"],
