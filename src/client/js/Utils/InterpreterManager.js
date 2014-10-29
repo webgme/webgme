@@ -12,7 +12,7 @@ define(['core/core',
                                                PluginConfigDialog) {
     "use strict";
 
-    var ClientInterpreterManager = function (client) {
+    var InterpreterManager = function (client) {
         this._client = client;
         //this._manager = new PluginManagerBase();
         this._savedConfigs = {};
@@ -29,16 +29,16 @@ define(['core/core',
         );
     };
 
-    ClientInterpreterManager.prototype.run = function (name,callback) {
+    InterpreterManager.prototype.run = function (name, silentPluginCfg, callback) {
         var self = this;
         getPlugin(name,function(err,plugin){
             if(!err && plugin) {
-                var plugins = {};
+                var plugins = {},
+                    runWithConfiguration;
                 plugins[name] = plugin;
                 var pluginManager = new PluginManagerBase(self._client.getProjectObject(), Core, plugins);
                 pluginManager.initialize(null, function (pluginConfigs, configSaveCallback) {
                     //#1: display config to user
-                    var d = new PluginConfigDialog();
                     var hackedConfig = {
                         'Global Options': [
                             {
@@ -71,8 +71,9 @@ define(['core/core',
                         }
                     }
 
-                    d.show(hackedConfig, function (updatedConfig) {
+                    runWithConfiguration = function (updatedConfig) {
                         //when Save&Run is clicked in the dialog
+                        console.log('updatedConfig', updatedConfig);
                         var globalconfig = updatedConfig['Global Options'];
                         delete updatedConfig['Global Options'];
 
@@ -89,8 +90,8 @@ define(['core/core',
                             var config = {
                                 "project": self._client.getActiveProjectName(),
                                 "token": "",
-                                "activeNode": WebGMEGlobal.State.getActiveObject(), // active object in the editor
-                                "activeSelection": WebGMEGlobal.State.getActiveSelection() || [], // selected objects
+                                "activeNode": silentPluginCfg.activeNode || WebGMEGlobal.State.getActiveObject(), // active object in the editor
+                                "activeSelection": silentPluginCfg.activeSelection || WebGMEGlobal.State.getActiveSelection() || [], // selected objects
                                 "commit": self._client.getActualCommit(), //"#668b3babcdf2ddcd7ba38b51acb62d63da859d90",
                                 "branchName": self._client.getActualBranch() // this has priority over the commit if not null
                             };
@@ -120,7 +121,15 @@ define(['core/core',
                                 });
                             }
                         }
-                    });
+                    };
+                    if (silentPluginCfg) {
+
+                    } else {
+                        var d = new PluginConfigDialog();
+                        silentPluginCfg = {};
+                        console.log('hackedConfig', hackedConfig);
+                        d.show(hackedConfig, runWithConfiguration);
+                    }
                 });
             } else {
                 console.error(err);
@@ -132,5 +141,5 @@ define(['core/core',
 
     //TODO somehow it would feel more right if we do run in async mode, but if not then we should provide getState and getResult synchronous functions as well
 
-    return ClientInterpreterManager;
+    return InterpreterManager;
 });
