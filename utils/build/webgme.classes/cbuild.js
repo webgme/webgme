@@ -14,7 +14,7 @@
     superagent: "./node_modules/superagent/superagent",
     client: "./src/client/js/client",
     plugin: "./src/plugin",
-    'js/Dialogs/PluginConfig/PluginConfigDialog': 'empty:'
+    'js/Dialogs/PluginConfig/PluginConfigDialog': './utils/build/empty/empty'
   },
   optimize: "none",
   insertRequire: ["webgme.classes"],

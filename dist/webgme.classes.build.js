@@ -20125,6 +20125,10 @@ define('plugin/PluginManagerBase',[
 
         return PluginManagerBase;
     });
+define('js/Dialogs/PluginConfig/PluginConfigDialog',[], function () {
+   return;
+});
+
 /*globals define, _, requirejs, WebGMEGlobal*/
 
 define('src/client/js/Utils/InterpreterManager',['core/core',
