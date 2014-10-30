@@ -19,14 +19,18 @@ define(['core/core',
     };
 
     var getPlugin = function(name,callback){
-        requirejs(['/plugin/'+name+'/'+name+'/'+name],
-            function(InterpreterClass){
-                callback(null, InterpreterClass);
-            },
-            function(err){
-                callback(err,null);
-            }
-        );
+        if (WebGMEGlobal && WebGMEGlobal.plugins && WebGMEGlobal.plugins.hasOwnProperty(name)) {
+            callback(null, WebGMEGlobal.plugins[name]);
+        } else {
+            requirejs(['/plugin/' + name + '/' + name + '/' + name],
+                function (InterpreterClass) {
+                    callback(null, InterpreterClass);
+                },
+                function (err) {
+                    callback(err, null);
+                }
+            );
+        }
     };
 
     /**
