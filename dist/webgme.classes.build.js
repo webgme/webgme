@@ -20131,7 +20131,7 @@ define('js/Dialogs/PluginConfig/PluginConfigDialog',[], function () {
 
 /*globals define, _, requirejs, WebGMEGlobal*/
 
-define('src/client/js/Utils/InterpreterManager',['core/core',
+define('js/Utils/InterpreterManager',['core/core',
         'plugin/PluginManagerBase',
         'plugin/PluginResult',
         'blob/BlobClient',
@@ -20316,7 +20316,7 @@ define('webgme.classes',
   [
     'client',
     'blob/BlobClient',
-    './src/client/js/Utils/InterpreterManager'
+    'js/Utils/InterpreterManager'
   ], function (Client, BlobClient, InterpreterManager) {
     WebGMEGlobal.classes.Client = Client;
     WebGMEGlobal.classes.BlobClient = BlobClient;
