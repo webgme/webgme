@@ -971,23 +971,69 @@ define( [
       };
     self.$scope.whatBranch = whatBranchId;
     self.$scope.whereBranch = whereBranchId;
-    /*var items = [
-    {id:1,info:"egynek",theirs:"ovek",mine:"enyim nagyon hosszu embertelunl szoveg es nem fer ki \n rakok bele entert is",selected:"mine"},
-    {id:2,info:"masiknka",theirs:"ezisovek",mine:"ezisenyim",selected:"mine"},
-    {id:3,info:"/ssdfg/hjkli/guyut attribute",theirs:1,mine:2,selected:"mine"}
+    var items = [
+      {
+        mine:{
+          info:"enyim",
+          path:"one"
+        },
+        theirs:{
+          info:"ovek"
+        },
+        selected: "mine"
+      },
+      {
+        mine:{
+          info:"enyim",
+          path:"two"
+        },
+        theirs:{
+          info:"ovek"
+        },
+        selected: "theirs"
+      },
+      {
+        mine:{
+          info:"enyim",
+          path:"one"
+        },
+        theirs:{
+          info:"ovek"
+        },
+        selected: "none"
+      }
     ];
     self.$scope.items = items;
+    self.$scope.getButtonClass = function(asked,owned){
+      if(asked === owned){
+        return "btn btn-default btn-lg btn-block active";
+      }
+      return "btn btn-default btn-lg btn-block";
+    };
+    self.$scope.pushButton = function(item,mine){
+      var path,i;
+      if(mine && item.selected !== "mine"){
+        item.selected = "mine";
+        path = item.mine.path;
+      } else if(!mine && item.selected !== "theirs"){
+        item.selected = "theirs";
+      }
+      if(path){
+        for(i=0;i<self.$scope.items.length;i++){
+          if(self.$scope.items[i].mine.path === path){
+            self.$scope.items[i].selected = "mine";
+          }
+        }
+      }
+    };
     self.$scope.gombotNyom = function(id,isTheirs){
       console.log('itt nyomta',id,isTheirs);};
     self.$simpleDialog.open({
       dialogTitle: 'Conflict Handling',
       dialogContentTemplate: 'ConflictDialogTemplate.html',
-      gombotNyom: function(){
-        console.log('megnyomtaaa!!!!');
-      },
       scope: self.$scope
-    });*/
-    self.$scope.showChildren = function(item){
+    });
+    /*self.$scope.showChildren = function(item){
       console.log('kecso');
     };
     self.$simpleDialog.open( {
@@ -1019,7 +1065,7 @@ define( [
             });
           },
           scope: self.$scope
-        } );
+        } );*/
   };
 
   ProjectNavigatorController.prototype.dummyProjectsGenerator = function ( name, maxCount ) {
