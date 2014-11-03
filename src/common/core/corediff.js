@@ -27,7 +27,8 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       _conflict_mine,
       _conflict_theirs,
       _concat_base,
-      _concat_extension;
+      _concat_extension,
+      _concat_base_removals;
 
     for (var i in _innerCore) {
       _core[i] = _innerCore[i];
@@ -1998,6 +1999,17 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       }
       return origin;
     }
+    function getConcatBaseRemovals(diff){
+      var relids = getDiffChildrenRelids(diff),
+        i;
+      if(diff.removed !== true){
+        for(i=0;i<relids.length;i++){
+          getConcatBaseRemovals(diff[relids[i]]);
+        }
+      } else {
+        _concat_base_removals[diff.guid] = true;
+      }
+    }
     function tryToConcatNodeChange(path){
       var extNode = getPathOfDiff(_concat_extension,path),
         guid = extNode.guid,
@@ -2155,6 +2167,8 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       _conflict_items = [];
       _concat_base = base;
       _concat_extension = extension;
+      _concat_base_removals = {};
+      getConcatBaseRemovals(base);
       tryToConcatNodeChange('');
 
       return {concat:_concat_base,conflicts:_conflict_items};
