@@ -28,7 +28,8 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       _conflict_theirs,
       _concat_base,
       _concat_extension,
-      _concat_base_removals;
+      _concat_base_removals,
+      _concat_moves;
 
     for (var i in _innerCore) {
       _core[i] = _innerCore[i];
@@ -564,7 +565,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
           if (Object.keys(diff).length > 0) {
             diff.guid = _core.getGuid(targetRoot);
             diff.hash = _core.getHash(targetRoot);
-            diff.oGuids = getObstructiveGuids(targetRoot);
+            diff.oGuids = gatherObstructiveGuids(targetRoot);
             return TASYNC.call(function (finalDiff) {
               return finalDiff;
             }, fillMissingGuid(targetRoot, '', diff));
@@ -576,7 +577,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       }, _core.loadChildren(sourceRoot), _core.loadChildren(targetRoot));
     }
 
-    function getObstructiveGuids(node){
+    function gatherObstructiveGuids(node){
       var result = {},
         putParents = function(n){
           while(n){
@@ -608,7 +609,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
           return TASYNC.call(function (child) {
             diff.guid = _core.getGuid(child);
             diff.hash = _core.getHash(child);
-            diff.oGuids = getObstructiveGuids(child);
+            diff.oGuids = gatherObstructiveGuids(child);
             return diff;
           }, _core.loadByPath(root, path));
         }
@@ -768,7 +769,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
           delete _yetToCompute[guids[i]];
           done = TASYNC.call(function (mDiff, info) {
             mDiff.movedFrom = _core.getPath(info.from);
-            mDiff.ooGuids = getObstructiveGuids(info.from);
+            mDiff.ooGuids = gatherObstructiveGuids(info.from);
             _diff_moves[_core.getPath(info.from)] = _core.getPath(info.to);
             insertIntoDiff(_core.getPath(info.to), mDiff);
             return null;
@@ -1349,7 +1350,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       return dictionary;
     }
 
-    function getNodeByGuid(diff,guid){
+    function _getNodeByGuid(diff,guid){
       var path = _concat_dictionary.guidToPath[guid],
         object = diff,
         i;
@@ -1367,6 +1368,21 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       } else {
         return null;
       }
+    }
+    function getNodeByGuid(diff,guid){
+      var relids, i,temp;
+      if(diff.guid === guid){
+        return diff;
+      }
+
+      relids = getDiffChildrenRelids(diff);
+      for(i=0;i<relids.length;i++){
+        temp = getNodeByGuid(diff[relids[i]],guid);
+        if(temp){
+          return temp;
+        }
+      }
+      return null;
     }
     function insertAtPath(diff,path,object){
       ASSERT(typeof path === 'string');
@@ -1951,227 +1967,254 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
     };
 
     //now we try a different approach, which maybe more simple
-    function getObstructiveBaseGuid(diff,baseGuids){
-      var i,temp;
-      for(i=0;i<baseGuids.length;i++){
-        temp = getNodeByGuid(diff,baseGuids[i]);
-        if(temp && temp.removed === true){
-          return temp.guid;
-        }
+    function getCommonPathForConcat(path){
+      if(_concat_moves.getExtensionSourceFromDestination[path]){
+        path = _concat_moves.getExtensionSourceFromDestination[path];
       }
-      return null;
-    }
-    function getObstructiveParentGuid(diff,path){
-      var i;
-      path = (path || "").split('/');
-      path.shift();
-      for (i = 0; i < path.length; i++) {
-        if(diff.removed === true){
-          return diff.guid;
-        }
-        if(diff[path[i]]){
-          diff = diff[path[i]]
-        } else {
-          return null;
-        }
+      if(_concat_moves.getBaseDestinationFromSource[path]){
+        path = _concat_moves.getBaseDestinationFromSource[path];
       }
-      return null;
-    }
-
-    function getOriginalPath(diff,path){
-      //if in our diff, the path we are pointing is a descendant of a moved path, we could get the original path of the given path
-      var i, origin='';
-      path = (path || "").split('/');
-      path.shift();
-      for(i=0;i<path.length;i++){
-        if(diff.movedFrom){
-          //we should modify the path so far
-          origin = diff.movedFrom;
-        }
-        if(diff[path[i]]){
-          origin+='/'+path[i];
-          diff = diff[path[i]];
-        } else {
-          //we have to assume that our path is the origin fro here on
-          diff = {};
-          origin+='/'+path[i];
-        }
-      }
-      return origin;
+      return path;
     }
     function getConcatBaseRemovals(diff){
       var relids = getDiffChildrenRelids(diff),
         i;
       if(diff.removed !== true){
+        if(diff.movedFrom){
+          if(_concat_base_removals[diff.guid] !== undefined){
+            delete _concat_base_removals[diff.guid];
+          } else {
+            _concat_base_removals[diff.guid] = false;
+          }
+        }
         for(i=0;i<relids.length;i++){
           getConcatBaseRemovals(diff[relids[i]]);
         }
       } else {
-        _concat_base_removals[diff.guid] = true;
+        if(_concat_base_removals[diff.guid] === false){
+          delete _concat_base_removals[diff.guid];
+        } else {
+          _concat_base_removals[diff.guid] = true;
+        }
       }
     }
-    function tryToConcatNodeChange(path){
-      var extNode = getPathOfDiff(_concat_extension,path),
-        guid = extNode.guid,
-        oPath = getOriginalPath(_concat_extension,path),
+    function getObstructiveGuids(diffNode){
+      var result = [],
+        keys,i;
+      keys = Object.keys(diffNode.oGuids || {});
+      for(i=0;i<keys.length;i++){
+        if(_concat_base_removals[keys[i]]){
+          result.push(keys[i]);
+        }
+      }
+      keys = Object.keys(diffNode.ooGuids || {});
+      for(i=0;i<keys.length;i++){
+        if(_concat_base_removals[keys[i]]){
+          result.push(keys[i]);
+        }
+      }
+      return result;
+    }
+    function gatherFullNodeConflicts(diffNode,mine,path,opposingPath){
+      var conflict,
+        opposingConflict,
+        createSingleKeyValuePairConflicts = function(pathBase,data){
+        var keys, i;
+        keys = Object.keys(data);
+        for(i=0;i<keys.length;i++){
+          conflict[pathBase+'/'+keys[i]] = {value:data[keys[i]],conflictingPaths:{}};
+          conflict[pathBase+'/'+keys[i]].conflictingPaths[opposingPath] = true;
+          opposingConflict.conflictingPaths[pathBase+'/'+keys[i]] = true;
+        }
+      };
+
+      //setting the conflicts
+      if(mine === true){
+        conflict = _conflict_mine;
+        opposingConflict = _conflict_theirs[opposingPath];
+      } else {
+        conflict = _conflict_theirs;
+        opposingConflict = _conflict_mine[opposingPath];
+      }
+      ASSERT(opposingConflict);
+      //if the node was moved we should make a conflict for the whole node as well
+      if(diffNode.movedFrom){
+        conflict[path] = {value:path,conflictingPaths:{}};
+        conflict[path].conflictingPaths[opposingPath] = true;
+        opposingConflict.conflictingPaths[path] = true;
+      }
+      createSingleKeyValuePairConflicts(path+'/attr',diffNode.attr || {});
+      createSingleKeyValuePairConflicts(path+'/reg',diffNode.reg || {});
+      createSingleKeyValuePairConflicts(path+'/pointer',diffNode.pointer || {});
+    }
+    function tryToConcatNodeChange(extNode,path){
+      var guid = extNode.guid,
+        oGuids =  getObstructiveGuids(extNode),
         baseNode = getNodeByGuid(_concat_base,guid),
-        oBase = getObstructiveBaseGuid(base,Object.keys(extNode.bases || {})),
-        oParent = getObstructiveParentGuid(base,oPath),
-        index, wholeConflicted = false,
-        relids = getDiffChildrenRelids(extNode),
+        basePath = getPathByGuid(_concat_base,guid,''),
         i,
-        concatSingleValues=function(offset,base,extension){
-          var keys = Object.keys(extension),
-            i;
+        relids,
+        concatSingleKeyValuePairs = function(path,base,extension){
+          var keys, i,temp;
+          keys = Object.keys(extension);
           for(i=0;i<keys.length;i++){
-            if(base[keys[i]]){
-              if(CANON.stringify(base[keys[i]])!==CANON.stringify(extension[keys[i]])){
-                _conflict_items.push({
-                  id:_conflict_items.length,
-                  guid:guid,
-                  info: guid +" : "+ info +" : "+keys[i],
-                  path: path+offset+'/'+keys[i],
-                  selected: "mine",
-                  mine:{
-                    value : mine[keys[i]],
-                    info  : mine[keys[i]] === TODELETESTRING ? "remove" : JSON.stringify(mine[keys[i]],null,2)
-                  },
-                  theirs:{
-                    value : theirs[keys[i]],
-                    info  : theirs[keys[i]] === TODELETESTRING ? "remove" : JSON.stringify(theirs[keys[i]],null,2)
-                  }
-                });
-              }
+            temp = extension[keys[i]];
+            if(typeof temp === 'string' && temp !== TODELETESTRING){
+              temp = getCommonPathForConcat(temp);
+            }
+            if(base[keys[i]] && CANON.stringify(base[keys[i]]) !== CANON.stringify(temp)){
+              //conflict
+              _conflict_mine[path+'/'+keys[i]] = {value:base[keys[i]],conflictingPaths:{}};
+              _conflict_theirs[path+'/'+keys[i]] = {value:extension[keys[i]],conflictingPaths:{}};
+              _conflict_mine[path+'/'+keys[i]].conflictingPaths[path+'/'+keys[i]] = true;
+              _conflict_theirs[path+'/'+keys[i]].conflictingPaths[path+'/'+keys[i]] = true;
             } else {
               base[keys[i]] = extension[keys[i]];
             }
           }
+        },concatSet = function(path,base,extension){
+          var names = Object.keys(extension),
+            members, i, j;
+
+          for(i=0;i<names.length;i++){
+            if(base[names[i]]){
+              if(base[names[i]] === TODELETESTRING || extension[names[i]] === TODELETESTRING){
+                //whole set conflict
+                
+              }
+            } else {
+              //simple concatenation
+              base[names[i]] = extension[names[i]];
+            }
+          }
         };
 
+
       if(extNode.removed === true){
-        //either a conflict or not, but we stop the recursion here
         if(baseNode && baseNode.removed !== true){
-          //create a conflict as we modified something at the node or under it, but now we try to remove that
-          _conflict_items.push({
-            id:_conflict_items.length,
-            guid:guid,
-            info: guid,
-            selected: "mine",
-            path: getPathByGuid(_concat_base,guid,''),
-            mine:{
-              value : null,
-              info  : "keep"
-            },
-            theirs:{
-              value : {removed:true},
-              info  : "remove"
-            },
-            children:[] //TODO we should add all descendant of this node in the base as a child conflict
-          });
+          _conflict_theirs[basePath+'/removed'] = {value:true,conflictingPaths:{}};
+          gatherFullNodeConflicts(baseNode,true,basePath,basePath+'/removed');
+        } else {
+          //we simply concat the deletion
+          insertAtPath(_concat_base,path,extNode);
         }
       } else {
-        if(oBase){
-          //it has an obstructive base so we have to add a conflict
-          wholeConflicted = true;
-          if(!_conflict_parents[oBase]){
-            //we have to create the parent conflict
-            index = _conflict_items.length;
-            _conflict_items.push({
-              id:index,
-              guid:oBase,
-              info: oBase,
-              selected: "mine",
-              path: getPathByGuid(_concat_extension,oBase,''),
-              mine:{
-                value : null,
-                info  : "removed"
-              },
-              theirs:{
-                value : getSingleNode(getNodeByGuid(_concat_extension,oBase)),
-                info  : "keep"
-              },
-              children:[]
-            });
-            _conflict_items[index].theirs.value.removed = false;
-            _conflict_parents[oBase] = _conflict_items[index];
-          }
-          //child conflict ...
-          _conflict_parents[oBase].children.push({
-            id:_conflict_parents[oBase].children.length,
-            guid:guid,
-            info:getSingleNode(extNode),
-            path:path,
-            value: getSingleNode(extNode),
-            hasTwoObstruction: oParent && oBase !== oParent
-          });
-        }
-        if(oParent && oBase !== oParent){
-          wholeConflicted = true;
-          //it has a different obstructive parent as well
-          if(!_conflict_parents[oParent]){
-            //we have to create the parent conflict
-            index = _conflict_items.length;
-            _conflict_items.push({
-              id:index,
-              guid:oParent,
-              info: oParent,
-              selected: "mine",
-              path: getPathByGuid(_concat_extension,oParent,''),
-              mine:{
-                value : null,
-                info  : "removed"
-              },
-              theirs:{
-                value : getSingleNode(getNodeByGuid(_concat_extension,oParent)),
-                info  : "keep"
-              },
-              children:[]
-            });
-            _conflict_items[index].theirs.value.removed = false;
-            _conflict_parents[oParent] = _conflict_items[index];
-          }
-          //child conflict ...
-          _conflict_parents[oParent].children.push({
-            id: _conflict_parents[oParent].children.length,
-            guid: guid,
-            info: getSingleNode(extNode),
-            path: path,
-            value: getSingleNode(extNode),
-            hasTwoObstruction: oBase !== null
-          });
-        }
-
-        if(!wholeConflicted){
-          //now we can try to concat any change that is possible
-          if(baseNode){
-            baseNode.attr = baseNode.attr || {};
-            concatSingleValues('/attr',baseNode.attr,extNode.attr || {});
-            baseNode.reg = baseNode.reg || {};
-            concatSingleValues('/reg',baseNode.reg,extNode.reg || {});
-            baseNode.pointer = baseNode.pointer || {};
-            concatSingleValues('/pointer',baseNode.pointer,extNode.pointer || {});
-
-          }
+        if(oGuids.length > 0){
+            for(i=0;i<oGuids.length;i++){
+              baseNode = getNodeByGuid(_concat_base,oGuids[i]);
+              basePath = getPathByGuid(_concat_base,oGuids[i],'');
+              if(!_conflict_mine[basePath+'/removed']){
+                _conflict_mine[basePath+'/removed'] = {value:true,conflictingPaths:{}};
+              }
+              gatherFullNodeConflicts(extNode,false,path,basePath+'/removed');
+            }
         } else {
-          //there were no change to this node earlier and it is possible to modify it
-          insertAtPath(_concat_base,path,getSingleNode(extNode));
-        }
+          //here we are able to check the sub-node conflicts
+          //check double moves - we do not care if they moved under the same parent
+          if(extNode.movedFrom){
+            if(baseNode.movedFrom && path !== basePath){
+              _conflict_mine[basePath] = {value:"move",conflictingPaths:{}};
+              _conflict_theirs[path] = {value:"move",conflictingPaths:{}};
+              _conflict_mine[basePath].conflictingPaths[path]=true;
+              _conflict_theirs[path].conflictingPaths[basePath] = true;
+              //we keep the node where it is, but synchronize the paths
+              path = basePath;
+            } else if(path !== basePath){
+              //first we move the base object to its new path
+              insertAtPath(_concat_base,path,baseNode);
+              removePathFromDiff(_concat_base,basePath);
+              baseNode = getNodeByGuid(_concat_base,guid);
+              basePath = getPathByGuid(_concat_base,guid,'');
+              ASSERT(path === basePath);
+            }
+          }
 
-        for(i=0;i<relids.length;i++){
-          tryToConcatNodeChange(path+'/'+relids[i]);
+          ASSERT(basePath === path || baseNode.movedFrom === path);
+          path = basePath; //the base was moved
+
+
+          //and now the sub-node conflicts
+          if(extNode.attr){
+            if(baseNode.attr){
+              concatSingleKeyValuePairs(path+'/attr',baseNode.attr,extNode.attr);
+            } else {
+              insertAtPath(_concat_base,path+'/attr',extNode.attr);
+            }
+          }
+          if(extNode.reg){
+            if(baseNode.reg){
+              concatSingleKeyValuePairs(path+'/reg',baseNode.reg,extNode.reg);
+            } else {
+              insertAtPath(_concat_base,path+'/reg',extNode.reg);
+            }
+          }
+          if(extNode.pointer){
+            if(baseNode.pointer){
+              concatSingleKeyValuePairs(path+'/pointer',baseNode.pointer,extNode.pointer);
+            } else {
+              insertAtPath(_concat_base,path+'/pointer',extNode.pointer);
+            }
+          }
         }
       }
+
+      //here comes the recursion
+      relids = getDiffChildrenRelids(extNode);
+      for(i=0;i<relids.length;i++){
+        tryToConcatNodeChange(extNode[relids[i]],path+'/'+relids[i]);
+      }
+
+    }
+
+    function generateConflictItems(){
+      var items = [],
+        keys, i, j,conflicts;
+      keys = Object.keys(_conflict_mine);
+
+      for(i=0;i<keys.length;i++){
+        conflicts = Object.keys(_conflict_mine[keys[i]].conflictingPaths || {});
+        ASSERT(conflicts.length > 0);
+        for(j=0;j<conflicts.length;j++){
+          items.push({
+            selected:"mine",
+            mine:{
+              path: keys[i],
+              info: keys[i]
+            },
+            theirs:{
+              path:conflicts[j],
+              info:conflicts[j]
+            }
+          });
+        }
+      }
+      return items;
     }
 
     _core.tryToConcatChanges = function(base,extension){
+      var result = {};
       _conflict_items = [];
+      _conflict_mine = {};
+      _conflict_theirs = {};
       _concat_base = base;
       _concat_extension = extension;
       _concat_base_removals = {};
+      _concat_moves = {
+        getBaseSourceFromDestination : {},
+        getBaseDestinationFromSource : {},
+        getExtensionSourceFromDestination : {},
+        getExtensionDestinationFromSource : {}
+      };
+      getMoveSources(base,'',_concat_moves.getBaseDestinationFromSource,_concat_moves.getBaseSourceFromDestination);
+      getMoveSources(extension,'',_concat_moves.getExtensionDestinationFromSource,_concat_moves.getExtensionSourceFromDestination);
       getConcatBaseRemovals(base);
-      tryToConcatNodeChange('');
+      tryToConcatNodeChange(_concat_extension,'');
 
-      return {concat:_concat_base,conflicts:_conflict_items};
+      result.items = generateConflictItems();
+      result.mine = _conflict_mine;
+      result.theirs = _conflict_theirs;
+      result.merge = _concat_base;
+      return result;
     };
 
 

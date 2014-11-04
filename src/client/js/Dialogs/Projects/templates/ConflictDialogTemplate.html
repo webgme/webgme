@@ -21,20 +21,14 @@
 </div>
 !-->
 <div class="container-fluid">
-    <div>
-        <div class="col-md-6">
-            <b>MINE</b>
-        </div>
-        <div class="col-md-6">
-            <b>THEIRS</b>
-        </div>
-        <div ng-repeat="item in items">
-            <div class="col-md-6">
-                <button class={{getButtonClass("mine",item.selected)}} ng-click="pushButton(item,true)">{{item.mine.info}}</button>
-            </div>
-            <div class="col-md-6">
-                <button class={{getButtonClass("theirs",item.selected)}} ng-click="pushButton(item,false)">{{item.theirs.info}}</button>
-            </div>
-        </div>
+    <div class="col-md-6">
+        <b>MINE</b>
+    </div>
+    <div class="col-md-6">
+        <b>THEIRS</b>
+    </div>
+    <div ng-repeat="item in items">
+        <div class={{getButtonClass("mine",item.selected)}} ng-click="pushButton(item,'mine')">{{item.mine.info}}</div>
+        <div class={{getButtonClass("theirs",item.selected)}} ng-click="pushButton(item,'theirs')">{{item.theirs.info}}</div>
     </div>
 </div>

@@ -3363,7 +3363,34 @@ define([
                 });
               },
               diffsGenerated = function(){
-                var endingWhatDiff = _core.concatTreeDiff(baseToWhere,baseToWhat),
+                var conflict = _core.tryToConcatChanges(baseToWhere,baseToWhat);
+                if(conflict.items.length === 0){
+                  //no conflict
+                  console.log('there were no conflict',baseCommit,whatCommit,whereCommit,baseToWhat,baseToWhere,conflict.merge);
+                  callback(null,conflict);
+                  /*
+                  _core.applyTreeDiff(base,conflict.merge,function(err){
+                    if(err){
+                      return callback(err);
+                    }
+                    _core.persist(base,function(err){
+                      if(err){
+                        callback(err);
+                      } else {
+                        var newHash = _project.makeCommit([whatCommit,whereCommit],_core.getHash(base), "merging", function(err){
+                          if(err){
+                            callback(err);
+                          } else {
+                            _project.setBranchHash(whereBranch,whereCommit,newHash,callback);
+                          }
+                        });
+                      }
+                    });
+                  });*/
+                } else {
+                  callback(null,conflict);
+                }
+                /*var endingWhatDiff = _core.concatTreeDiff(baseToWhere,baseToWhat),
                   endingWhereDiff = _core.concatTreeDiff(baseToWhat,baseToWhere);
                 console.log('kecso endingwhatdiff',endingWhatDiff);
                 console.log('kecso endingwherediff',endingWhereDiff);
@@ -3387,6 +3414,7 @@ define([
                         }
                       });
                     }
+
                   });
                 } else {
                   callback(new Error('there is a conflict...'),{
@@ -3398,7 +3426,7 @@ define([
                     theirs:endingWhatDiff,
                     theirsCommit:whatCommit,
                     conflictItems:_core.getConflictItems(endingWhereDiff,endingWhatDiff)});
-                }
+                }*/
               };
 
               _project.loadObject(baseCommit,function(err,baseCommitObject){

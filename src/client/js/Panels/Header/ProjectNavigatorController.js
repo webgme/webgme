@@ -971,7 +971,73 @@ define( [
       };
     self.$scope.whatBranch = whatBranchId;
     self.$scope.whereBranch = whereBranchId;
-    var items = [
+    self.$scope.getButtonClass = function(asked,owned){
+      if(asked === owned){
+        return "col-md-6 bg-primary";
+      }
+      return "col-md-6";
+    };
+    self.$scope.pushButton = function(item,selection){
+      var i,
+        selectingTasks = [],
+        handleSelectingTask = function(path,isSelect){
+          var i,selections = {},deselections = {};
+          for(i=0;i<self.$scope.items.length;i++){
+            if(isSelect){
+              if(path === self.$scope.items[i].mine.path && self.$scope.items[i].selected !== "mine"){
+                self.$scope.items[i].selected = "mine";
+                if(self.$scope.items[i].theirs.path !== path){
+                  deselections[self.$scope.items[i].theirs.path] = true;
+                }
+              } else if(path === self.$scope.items[i].theirs.path && self.$scope.items[i].selected !== "theirs"){
+                self.$scope.items[i].selected = "theirs";
+                if(self.$scope.items[i].mine.path !== path){
+                  deselections[self.$scope.items[i].mine.path] = true;
+                }
+              }
+            } else {
+              if(path === self.$scope.items[i].mine.path && self.$scope.items[i].selected === "mine"){
+                self.$scope.items[i].selected = "theirs";
+                if(self.$scope.items[i].theirs.path !== path){
+                  selections[self.$scope.items[i].theirs.path] = true;
+                }
+              } else if(path === self.$scope.items[i].theirs.path && self.$scope.items[i].selected === "theirs"){
+                self.$scope.items[i].selected = "mine";
+                if(self.$scope.items[i].mine.path !== path){
+                  selections[self.$scope.items[i].mine.path] = true;
+                }
+              }
+            }
+          }
+          selections = Object.keys(selections);
+          for(i=0;i<selections.length;i++){
+            selectingTasks.push({path:selections[i],selection:true});
+          }
+          deselections = Object.keys(deselections);
+          for(i=0;i<deselections.length;i++){
+            selectingTasks.push({path:deselections[i],selection:false});
+          }
+        };
+      if(item.selected !== selection){
+        if(selection === "mine"){
+          selectingTasks.push({path:item.mine.path,selection:true});
+          if(item.theirs.path !== item.mine.path){
+            selectingTasks.push({path:item.theirs.path,selection:false});
+          }
+        } else {
+          if(item.theirs.path !== item.mine.path){
+            selectingTasks.push({path:item.mine.path,selection:false});
+          }
+          selectingTasks.push({path:item.theirs.path,selection:true});
+        }
+      }
+
+      while(selectingTasks.length > 0){
+        i = selectingTasks.shift();
+        handleSelectingTask(i.path, i.selection);
+      }
+    };
+    /*var items = [
       {
         mine:{
           info:"enyim",
@@ -1003,36 +1069,16 @@ define( [
         selected: "none"
       }
     ];
-    self.$scope.items = items;
-    self.$scope.getButtonClass = function(asked,owned){
-      if(asked === owned){
-        return "btn btn-default btn-lg btn-block active";
-      }
-      return "btn btn-default btn-lg btn-block";
-    };
-    self.$scope.pushButton = function(item,mine){
-      var path,i;
-      if(mine && item.selected !== "mine"){
-        item.selected = "mine";
-        path = item.mine.path;
-      } else if(!mine && item.selected !== "theirs"){
-        item.selected = "theirs";
-      }
-      if(path){
-        for(i=0;i<self.$scope.items.length;i++){
-          if(self.$scope.items[i].mine.path === path){
-            self.$scope.items[i].selected = "mine";
-          }
-        }
-      }
-    };
-    self.$scope.gombotNyom = function(id,isTheirs){
-      console.log('itt nyomta',id,isTheirs);};
-    self.$simpleDialog.open({
-      dialogTitle: 'Conflict Handling',
-      dialogContentTemplate: 'ConflictDialogTemplate.html',
-      scope: self.$scope
+    self.$scope.items = items;*/
+    self.gmeClient.merge(whereBranchId,self.projects[projectId].branches[whatBranchId].properties.hashTag,self.projects[projectId].branches[whereBranchId].properties.hashTag,function(err,conflict){
+      self.$scope.items = conflict.items || [];
+      self.$simpleDialog.open({
+        dialogTitle: 'Conflict Handling',
+        dialogContentTemplate: 'ConflictDialogTemplate.html',
+        scope: self.$scope
+      });
     });
+
     /*self.$scope.showChildren = function(item){
       console.log('kecso');
     };
