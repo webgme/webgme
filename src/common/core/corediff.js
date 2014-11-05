@@ -2109,41 +2109,41 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
           if(base[names[i]] === TODELETESTRING){
             if(extension[names[i]] !== TODELETESTRING){
               //whole set conflict
-              _conflict_mine[path+'/'+names[i]]={value:TODELETESTRING,opposingPaths:{}};
+              _conflict_mine[path+'/'+names[i]]={value:TODELETESTRING,conflictingPaths:{}};
               gatherFullSetConflicts(extension[names[i]],false,path+'/'+names[i],path+'/'+names[i]);
             }
           } else {
             if(extension[names[i]] === TODELETESTRING){
               //whole set conflict
-              _conflict_theirs[path+'/'+names[i]]={value:TODELETESTRING,opposingPaths:{}};
+              _conflict_theirs[path+'/'+names[i]]={value:TODELETESTRING,conflictingPaths:{}};
               gatherFullSetConflicts(base[names[i]],true,path+'/'+names[i],path+'/'+names[i]);
             } else {
               //now we can only have member or sub-member conflicts...
               members = getDiffChildrenRelids(extension[names[i]]);
-              for(j=0;j<member.length;j++){
+              for(j=0;j<members.length;j++){
                 if(base[names[i]][members[j]]){
                   if(base[names[i]][members[j]] === TODELETESTRING){
                     if(extension[names[i]][members[j]] !== TODELETESTRING){
                       //whole member conflict
-                      _conflict_mine[path+'/'+names[i]+'/'+members[j]] = {value:TODELETESTRING,opposingPaths:{}};
-                      gatherFullNodeConflicts(extension[names[i]][members[j]],false,path+'/'+names[i]+'/'+members[j],path+'/'+names[i]+'/'+members[j]);
+                      _conflict_mine[path+'/'+names[i]+members[j]] = {value:TODELETESTRING,conflictingPaths:{}};
+                      gatherFullNodeConflicts(extension[names[i]][members[j]],false,path+'/'+names[i]+members[j],path+'/'+names[i]+members[j]);
                     }
                   } else {
                     if(extension[names[i]][members[j]] === TODELETESTRING){
                       //whole member conflict
-                      _conflict_theirs[path+'/'+names[i]+'/'+members[j]] = {value:TODELETESTRING,opposingPaths:{}};
-                      gatherFullNodeConflicts(base[names[i]][members[j]],true,path+'/'+names[i]+'/'+members[j],path+'/'+names[i]+'/'+members[j]);
+                      _conflict_theirs[path+'/'+names[i]+members[j]] = {value:TODELETESTRING,conflictingPaths:{}};
+                      gatherFullNodeConflicts(base[names[i]][members[j]],true,path+'/'+names[i]+members[j],path+'/'+names[i]+members[j]);
                     } else {
                       if(extension[names[i]][members[j]].attr){
                         if(base[names[i]][members[j]].attr){
-                          concatSingleKeyValuePairs(path+'/'+names[i]+'/'+members[j]+'/attr',base[names[i]][members[j]].attr,extension[names[i]][members[j]].attr);
+                          concatSingleKeyValuePairs(path+'/'+names[i]+members[j]+'/attr',base[names[i]][members[j]].attr,extension[names[i]][members[j]].attr);
                         } else {
                           base[names[i]][members[j]].attr = extension[names[i]][members[j]].attr;
                         }
                       }
                       if(extension[names[i]][members[j]].reg){
                         if(base[names[i]][members[j]].reg){
-                          concatSingleKeyValuePairs(path+'/'+names[i]+'/'+members[j]+'/reg',base[names[i]][members[j]].reg,extension[names[i]][members[j]].reg);
+                          concatSingleKeyValuePairs(path+'/'+names[i]+members[j]+'/reg',base[names[i]][members[j]].reg,extension[names[i]][members[j]].reg);
                         } else {
                           base[names[i]][members[j]].reg = extension[names[i]][members[j]].reg;
                         }
