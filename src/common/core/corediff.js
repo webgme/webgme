@@ -1444,7 +1444,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       for(i=0;i<keys.length;i++){
         delete result[keys[i]];
       }
-      changeMovedPaths(result);
+      //changeMovedPaths(result);
       return result;
     }
     function processConcatNode(path,node,removedDescendant){
@@ -2191,7 +2191,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
               }
               gatherFullNodeConflicts(extNode,false,path,basePath+'/removed');
             }
-        } else {
+        } else if(baseNode){
           //here we are able to check the sub-node conflicts
           //check double moves - we do not care if they moved under the same parent
           if(extNode.movedFrom){
@@ -2245,6 +2245,9 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
               insertAtPath(_concat_base,path+'/set',extNode.set);
             }
           }
+        } else {
+          //there is no basenode so we can concat the whole node
+          insertAtPath(_concat_base,path,getSingleNode(extNode));
         }
       }
 
