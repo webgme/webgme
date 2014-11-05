@@ -504,7 +504,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                                                 fireEvent({type:SERVER_EVENT.BRANCH_CREATED,project:projectName,branch:branch,commit:newhash});
                                             } else if(oldhash !== '' && newhash === ''){
                                                 fireEvent({type:SERVER_EVENT.BRANCH_DELETED,project:projectName,branch:branch});
-                                            } else {
+                                            } else if(oldhash !== '' && newhash !== ''){
                                                 fireEvent({type:SERVER_EVENT.BRANCH_UPDATED,project:projectName,branch:branch,commit:newhash});
                                             }
                                         }
