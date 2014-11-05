@@ -2047,47 +2047,130 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       createSingleKeyValuePairConflicts(path+'/reg',diffNode.reg || {});
       createSingleKeyValuePairConflicts(path+'/pointer',diffNode.pointer || {});
     }
+    function gatherFullSetConflicts(diffSet,mine,path,opposingPath){
+      var relids = getDiffChildrenRelids(diffSet),
+        i,keys, j,conflict,opposingConflict;
+
+      //setting the conflicts
+      if(mine === true){
+        conflict = _conflict_mine;
+        opposingConflict = _conflict_theirs[opposingPath];
+      } else {
+        conflict = _conflict_theirs;
+        opposingConflict = _conflict_mine[opposingPath];
+      }
+      for(i=0;i<relids.length;i++){
+        if(diffSet[relids[i]] === TODELETESTRING){
+          //single conflict as the element was removed
+          conflict[path+'/'+relids[i]] = {value:TODELETESTRING,conflictingPaths:{}};
+          conflict[path+'/'+relids[i]].conflictingPaths[opposingPath] = true;
+          opposingConflict.conflictingPaths[path+'/'+relids[i]] = true;
+        } else {
+          keys = Object.keys(diffSet[relids[i]].attr || {});
+          for(j=0;j<keys.length;j++){
+            conflict[path+'/'+relids[i]+'/attr/'+keys[j]] = {value:diffSet[relids[i]].attr[keys[j]],conflictingPaths:{}};
+            conflict[path+'/'+relids[i]+'/attr/'+keys[j]].conflictingPaths[opposingPath] = true;
+            opposingConflict.conflictingPaths[path+'/'+relids[i]+'/attr/'+keys[j]] = true;
+          }
+          keys = Object.keys(diffSet[relids[i]].reg || {});
+          for(j=0;j<keys.length;j++){
+            conflict[path+'/'+relids[i]+'/reg/'+keys[j]] = {value:diffSet[relids[i]].reg[keys[j]],conflictingPaths:{}};
+            conflict[path+'/'+relids[i]+'/reg/'+keys[j]].conflictingPaths[opposingPath] = true;
+            opposingConflict.conflictingPaths[path+'/'+relids[i]+'/reg/'+keys[j]] = true;
+          }
+        }
+      }
+    }
+    function concatSingleKeyValuePairs(path,base,extension){
+      var keys, i,temp;
+      keys = Object.keys(extension);
+      for(i=0;i<keys.length;i++){
+        temp = extension[keys[i]];
+        if(typeof temp === 'string' && temp !== TODELETESTRING){
+          temp = getCommonPathForConcat(temp);
+        }
+        if(base[keys[i]] && CANON.stringify(base[keys[i]]) !== CANON.stringify(temp)){
+          //conflict
+          _conflict_mine[path+'/'+keys[i]] = {value:base[keys[i]],conflictingPaths:{}};
+          _conflict_theirs[path+'/'+keys[i]] = {value:extension[keys[i]],conflictingPaths:{}};
+          _conflict_mine[path+'/'+keys[i]].conflictingPaths[path+'/'+keys[i]] = true;
+          _conflict_theirs[path+'/'+keys[i]].conflictingPaths[path+'/'+keys[i]] = true;
+        } else {
+          base[keys[i]] = extension[keys[i]];
+        }
+      }
+    }
+    function concatSet(path,base,extension){
+      var names = Object.keys(extension),
+        members, i, j;
+
+      for(i=0;i<names.length;i++){
+        if(base[names[i]]){
+          if(base[names[i]] === TODELETESTRING){
+            if(extension[names[i]] !== TODELETESTRING){
+              //whole set conflict
+              _conflict_mine[path+'/'+names[i]]={value:TODELETESTRING,opposingPaths:{}};
+              gatherFullSetConflicts(extension[names[i]],false,path+'/'+names[i],path+'/'+names[i]);
+            }
+          } else {
+            if(extension[names[i]] === TODELETESTRING){
+              //whole set conflict
+              _conflict_theirs[path+'/'+names[i]]={value:TODELETESTRING,opposingPaths:{}};
+              gatherFullSetConflicts(base[names[i]],true,path+'/'+names[i],path+'/'+names[i]);
+            } else {
+              //now we can only have member or sub-member conflicts...
+              members = getDiffChildrenRelids(extension[names[i]]);
+              for(j=0;j<member.length;j++){
+                if(base[names[i]][members[j]]){
+                  if(base[names[i]][members[j]] === TODELETESTRING){
+                    if(extension[names[i]][members[j]] !== TODELETESTRING){
+                      //whole member conflict
+                      _conflict_mine[path+'/'+names[i]+'/'+members[j]] = {value:TODELETESTRING,opposingPaths:{}};
+                      gatherFullNodeConflicts(extension[names[i]][members[j]],false,path+'/'+names[i]+'/'+members[j],path+'/'+names[i]+'/'+members[j]);
+                    }
+                  } else {
+                    if(extension[names[i]][members[j]] === TODELETESTRING){
+                      //whole member conflict
+                      _conflict_theirs[path+'/'+names[i]+'/'+members[j]] = {value:TODELETESTRING,opposingPaths:{}};
+                      gatherFullNodeConflicts(base[names[i]][members[j]],true,path+'/'+names[i]+'/'+members[j],path+'/'+names[i]+'/'+members[j]);
+                    } else {
+                      if(extension[names[i]][members[j]].attr){
+                        if(base[names[i]][members[j]].attr){
+                          concatSingleKeyValuePairs(path+'/'+names[i]+'/'+members[j]+'/attr',base[names[i]][members[j]].attr,extension[names[i]][members[j]].attr);
+                        } else {
+                          base[names[i]][members[j]].attr = extension[names[i]][members[j]].attr;
+                        }
+                      }
+                      if(extension[names[i]][members[j]].reg){
+                        if(base[names[i]][members[j]].reg){
+                          concatSingleKeyValuePairs(path+'/'+names[i]+'/'+members[j]+'/reg',base[names[i]][members[j]].reg,extension[names[i]][members[j]].reg);
+                        } else {
+                          base[names[i]][members[j]].reg = extension[names[i]][members[j]].reg;
+                        }
+                      }
+
+                    }
+                  }
+                } else {
+                  //concat
+                  base[names[i]][members[j]] = extension[names[i]][members[j]];
+                }
+              }
+            }
+          }
+        } else {
+          //simple concatenation
+          base[names[i]] = extension[names[i]];
+        }
+      }
+    }
     function tryToConcatNodeChange(extNode,path){
       var guid = extNode.guid,
         oGuids =  getObstructiveGuids(extNode),
         baseNode = getNodeByGuid(_concat_base,guid),
         basePath = getPathByGuid(_concat_base,guid,''),
         i,
-        relids,
-        concatSingleKeyValuePairs = function(path,base,extension){
-          var keys, i,temp;
-          keys = Object.keys(extension);
-          for(i=0;i<keys.length;i++){
-            temp = extension[keys[i]];
-            if(typeof temp === 'string' && temp !== TODELETESTRING){
-              temp = getCommonPathForConcat(temp);
-            }
-            if(base[keys[i]] && CANON.stringify(base[keys[i]]) !== CANON.stringify(temp)){
-              //conflict
-              _conflict_mine[path+'/'+keys[i]] = {value:base[keys[i]],conflictingPaths:{}};
-              _conflict_theirs[path+'/'+keys[i]] = {value:extension[keys[i]],conflictingPaths:{}};
-              _conflict_mine[path+'/'+keys[i]].conflictingPaths[path+'/'+keys[i]] = true;
-              _conflict_theirs[path+'/'+keys[i]].conflictingPaths[path+'/'+keys[i]] = true;
-            } else {
-              base[keys[i]] = extension[keys[i]];
-            }
-          }
-        },concatSet = function(path,base,extension){
-          var names = Object.keys(extension),
-            members, i, j;
-
-          for(i=0;i<names.length;i++){
-            if(base[names[i]]){
-              if(base[names[i]] === TODELETESTRING || extension[names[i]] === TODELETESTRING){
-                //whole set conflict
-                
-              }
-            } else {
-              //simple concatenation
-              base[names[i]] = extension[names[i]];
-            }
-          }
-        };
+        relids;
 
 
       if(extNode.removed === true){
@@ -2153,6 +2236,13 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
               concatSingleKeyValuePairs(path+'/pointer',baseNode.pointer,extNode.pointer);
             } else {
               insertAtPath(_concat_base,path+'/pointer',extNode.pointer);
+            }
+          }
+          if(extNode.set){
+            if(baseNode.set){
+              concatSet(path+'/set',baseNode.set,extNode.set);
+            } else {
+              insertAtPath(_concat_base,path+'/set',extNode.set);
             }
           }
         }
