@@ -691,7 +691,8 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
     function mergeObjects(source, target) {
       var merged = {},
         sKeys = Object.keys(source),
-        tKeys = Object.keys(target);
+        tKeys = Object.keys(target),
+        i;
       for (i = 0; i < sKeys.length; i++) {
         merged[sKeys[i]] = source[sKeys[i]];
       }
