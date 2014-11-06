@@ -1447,46 +1447,6 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       //changeMovedPaths(result);
       return result;
     }
-    function processConcatNode(path,node,removedDescendant){
-      var base = getNodeByGuid(_concat_result,node.guid),
-        singleNode = getSingleNode(node),
-        childrenRelids = getDiffChildrenRelids(node),
-        basePath = _concat_dictionary.guidToPath[node.guid],
-        i,
-        isBaseDeleted=removedParentGuid(_concat_result,node.movedFrom || '') || removedParentGuid(_concat_result,path);
-      if(!isBaseDeleted){
-        //if the node or its container was already removed we cannot concat any further change to it
-        if(base !== null || !removedDescendant){
-          if(base === null){
-            //there is no such object in the base of the concat so we simply insert it
-            insertAtPath(_concat_result,path,singleNode);
-          } else {
-            //simple removal
-            if(node.removed === true){
-              base.removed = true;
-            } else {
-              if(base.removed === true){
-                delete base.removed;
-              }
-              insertAtPath(_concat_result,_concat_dictionary.guidToPath[node.guid],jsonConcat(base,singleNode));
-              //if we add a move we also have to move :)
-              if(node.movedFrom){
-                //we have to get base again
-                base = getNodeByGuid(_concat_result,node.guid);
-                insertAtPath(_concat_result,path,base);
-                removePathFromDiff(_concat_result,basePath);
-                _concat_dictionary = getDiffTreeDictionray(_concat_result); //we have to recalculate
-              }
-            }
-          }
-        }
-      }
-
-      for(i=0;i<childrenRelids.length;i++){
-        processConcatNode(path+'/'+childrenRelids[i],node[childrenRelids[i]],isBaseDeleted || removedDescendant);
-      }
-
-    }
     function jsonConcat(base,extension){
       var baseKeys = Object.keys(base),
         extKeys = Object.keys(extension),
@@ -1506,234 +1466,8 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       return concat;
     }
 
-    function finalizeConcatMeta(conMeta){
-      var i, j,names,paths,tempJson;
-      //children target harmonization
-      if(conMeta.children){
-        tempJson = JSON.parse(JSON.stringify(conMeta.children));
-        delete tempJson.min;
-        delete tempJson.max;
-        paths = Object.keys(tempJson);
-        for(i=0;i<paths.length;i++){
-          if(_concat_moves.finalize[paths[i]]){
-            conMeta.children[_concat_moves.finalize[paths[i]]] = conMeta.children[paths[i]];
-            delete conMeta.children[paths[i]];
-          }
-        }
-      }
-      // pointer target harmonization
-      if(conMeta.pointers){
-        names = Object.keys(conMeta.pointers);
-        for(i=0;i<names.length;i++){
-          tempJson = JSON.parse(JSON.stringify(conMeta.pointers[names[i]]));
-          delete tempJson.min;
-          delete tempJson.max;
-          paths = Object.keys(tempJson);
-          for(j=0;j<paths.length;j++){
-            if(_concat_moves.finalize[paths[j]]){
-              conMeta.pointers[names[i]][_concat_moves.finalize[paths[j]]] = conMeta.pointers[names[i]][paths[j]];
-              delete conMeta.pointers[names[i]][paths[j]];
-            }
-          }
-        }
-      }
-      //aspect target harmonization
-      if(conMeta.aspects){
-        names = Object.keys(conMeta.aspects);
-        for(i=0;i<names.length;i++){
-          paths = Object.keys(conMeta.aspects[names[i]]);
-          for(j=0;j<paths.length;j++){
-            if(_concat_moves.finalize[paths[j]]){
-              conMeta.aspects[names[i]][_concat_moves.finalize[paths[j]]] = true;
-              delete conMeta.aspects[names[i]][paths[j]];
-            }
-          }
-        }
-      }
-    }
-    function finalizeConcatPointer(conPointer){
-      var names, i;
-      names = Object.keys(conPointer);
-      for(i=0;i<names.length;i++){
-        if(_concat_moves.finalize[conPointer[names[i]]]){
-          conPointer[names[i]] = _concat_moves.finalize[conPointer[names[i]]];
-        }
-      }
-    }
-    function finalizeConcatSet(conSet){
-      var names,paths, i,j;
-      names = Object.keys(conSet);
-      for(i=0;i<names.length;i++){
-        paths = Object.keys(conSet[names[i]]);
-        for(j=0;j<paths.length;j++){
-          if(_concat_moves.finalize[paths[j]]){
-            conSet[names[i]][_concat_moves.finalize[paths[j]]] = conSet[names[i]][paths[j]];
-            delete conSet[names[i]][paths[j]];
-          }
-        }
-      }
-    }
-    function finalizeConcat(concat){
-      var relids = getDiffChildrenRelids(concat),
-        i;
-      if(concat.pointer){
-        finalizeConcatPointer(concat.pointer);
-      }
-      if(concat.meta){
-        finalizeConcatMeta(concat.meta);
-      }
-      if(concat.set){
-        finalizeConcatSet(concat.set);
-      }
 
-      for(i=0;i<relids.length;i++){
-        finalizeConcat(concat[relids[i]]);
-      }
-    }
-    function createFinalizeDirectory(){
-      var keys,i;
 
-      keys = Object.keys(_concat_moves.fromTo);
-      for(i=0;i<keys.length;i++){
-        _concat_moves.finalize[keys[i]] = _concat_moves.fromTo[keys[i]];
-      }
-      keys = Object.keys(_concat_moves.finalize.fromToBase);
-      for(i=0;i<keys.length;i++){
-        if(_concat_moves.finalize[keys[i]]){
-          _concat_moves.finalize[_concat_moves.finalize.fromToBase[keys[i]]] = _concat_moves.finalize[keys[i]];
-        } else {
-          _concat_moves.finalize[keys[i]] = _concat_moves.finalize.fromToBase[keys[i]]
-        }
-      }
-
-      delete _concat_moves.finalize.toFromBase;
-      delete _concat_moves.finalize.fromToBase;
-    }
-    _core.concatTreeDiff = function(base,extension) {
-      _concat_result = JSON.parse(JSON.stringify(base || {}));
-      _concat_dictionary = getDiffTreeDictionray(base);
-      _concat_moves = {toFrom:{},fromTo:{}};
-      getMoveSources(extension,'',_concat_moves.toFrom,_concat_moves.fromTo);
-      _concat_moves.finalize = {toFromBase:{},fromToBase:{}};
-      getMoveSources(base,'',_concat_moves.finalize.toFromBase,_concat_moves.finalize.fromToBase);
-      createFinalizeDirectory();
-
-      processConcatNode('',extension,false);
-      finalizeConcat(_concat_result);
-      return _concat_result;
-    };
-
-    _core.isEqualDifferences = function(diffOne,diffTwo){
-      var keysOne = Object.keys(diffOne),
-        keysTwo = Object.keys(diffTwo),
-        i,result = true;
-      if(keysOne.sort().join() !== keysTwo.sort().join()){
-        return false;
-      }
-
-      for(i=0;i<keysOne.length;i++){
-        if(keysOne[i] !== 'hash'){
-          if(typeof diffOne[keysOne[i]] === 'object' && typeof diffTwo[keysOne[i]] === 'object' && diffOne[keysOne[i]] !== null && diffTwo[keysOne[i]] !== null){
-            if(!_core.isEqualDifferences(diffOne[keysOne[i]],diffTwo[keysOne[i]])){
-              result = false;
-            }
-          } else {
-            if(diffOne[keysOne[i]] !== diffTwo[keysOne[i]]){
-              result = false;
-            }
-          }
-        }
-      }
-
-      return result;
-    };
-
-    function simpleKeyValueConflicts(guid,info,minePath,theirsPath){
-      var keys,i,mine,theirs;
-      mine = getPathOfDiff(_conflict_mine,minePath);
-      theirs = getPathOfDiff(_conflict_theirs,theirsPath);
-      keys = Object.keys(mine);
-      for(i=0;i<keys.length;i++){
-        if(CANON.stringify(mine[keys[i]])!==CANON.stringify(theirs[keys[i]])){
-          _conflict_items.push({
-            id:_conflict_items.length,
-            guid:guid,
-            info: guid +" : "+ info +" : "+keys[i],
-            selected: "mine",
-            mine:{
-              path  : minePath+'/'+keys[i],
-              value : mine[keys[i]],
-              info  : mine[keys[i]] === TODELETESTRING ? "remove" : JSON.stringify(mine[keys[i]],null,2)
-            },
-            theirs:{
-              path  : theirsPath+'/'+keys[i],
-              value : theirs[keys[i]],
-              info  : theirs[keys[i]] === TODELETESTRING ? "remove" : JSON.stringify(theirs[keys[i]],null,2)
-            }
-          });
-        }
-      }
-    }
-    function setConflicts(guid,info,minePath,theirsPath){
-      var names,elements,i,j,mine,theirs;
-      mine = getPathOfDiff(_conflict_mine,minePath);
-      theirs = getPathOfDiff(_conflict_theirs,theirsPath);
-      names = Object.keys(mine);
-      for(i=0;i<names.length;i++){
-        if(mine[names[i]] === TODELETESTRING || theirs[names[i]] === TODELETESTRING){
-          //the whole set has been deleted
-          _conflict_items.push({
-            id:_conflict_items.length,
-            guid:guid,
-            info: guid +" : "+ info +" : "+names[i],
-            selected: "mine",
-            mine:{
-              path  : minePath+'/'+names[i],
-              value : mine[names[i]],
-              info  : mine[names[i]] === TODELETESTRING ? "remove" : JSON.stringify(mine[names[i]],null,2)
-            },
-            theirs:{
-              path  : theirsPath+'/'+names[i],
-              value : theirs[names[i]],
-              info  : theirs[names[i]] === TODELETESTRING ? "remove" : JSON.stringify(theirs[names[i]],null,2)
-            }
-          });
-        } else {
-          elements = Object.keys(mine[names[i]]);
-          for(j=0;j<elements.length;j++){
-            if(CANON.stringify(mine[names[i]][elements[j]]) !== CANON.stringify(theirs[names[i]][elements[j]])){
-              //something differs in the element
-              if(mine[names[i]][elements[j]] === TODELETESTRING || theirs[names[i]][elements[j]] === TODELETESTRING){
-                //the whole element was removed so there is no need for further check
-                _conflict_items.push({
-                  id:_conflict_items.length,
-                  guid:guid,
-                  info: guid +" : "+ info +" : "+names[i]+" : "+elements[j],
-                  selected: "mine",
-                  mine:{
-                    path  : minePath+'/'+names[i]+'/'+elements[j],
-                    value : mine[names[i]][elements[j]],
-                    info  : mine[names[i]][elements[j]] === TODELETESTRING ? "remove" : JSON.stringify(mine[names[i]][elements[j]],null,2)
-                  },
-                  theirs:{
-                    path  : theirsPath+'/'+names[i]+'/'+elements[j],
-                    value : theirs[names[i]][elements[j]],
-                    info  : theirs[names[i]][elements[j]] === TODELETESTRING ? "remove" : JSON.stringify(theirs[names[i]][elements[j]],null,2)
-                  }
-                });
-              } else {
-                if(mine[names[i]][elements[j]].reg){
-                  simpleKeyValueConflicts(guid,"regitry of element ["+element[j]+"] of set ["+names[i]+"]",minePath+'/'+names[i]+'/'+elements[j]+'/reg',theirsPath+'/'+names[i]+'/'+elements[j]+'/reg');
-                }
-                if(mine[names[i]][elements[j]].attr){
-                  simpleKeyValueConflicts(guid,"attributes of element ["+element[j]+"] of set ["+names[i]+"]",minePath+'/'+names[i]+'/'+elements[j]+'/attr',theirsPath+'/'+names[i]+'/'+elements[j]+'/attr');
-                }
-              }
-            }
-          }
-        }
-      }
-    }
     function getConflictByGuid(conflict,guid){
       var relids,i,result;
       if(conflict.guid === guid){
@@ -1778,112 +1512,6 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       }
       return diff.removed === true ? diff.guid : null;
     }
-    function nodeConflicts(guid){
-      var temp,index,mine,theirs,minePath,theirsPath,mineToDelete,theirsToDelete;
-      mine = getConflictByGuid(_conflict_mine,guid);
-      minePath = getPathByGuid(_conflict_mine,guid,'');
-      theirs = getConflictByGuid(_conflict_theirs,guid);
-      theirsPath = getPathByGuid(_conflict_theirs,guid,'');
-      mineToDelete = removedParentGuid(_conflict_mine,minePath);
-      theirsToDelete = removedParentGuid(_conflict_theirs,theirsPath);
-
-      ASSERT((mine || theirs) && (typeof minePath === 'string' || typeof theirsPath === 'string'));
-
-      if(mine === null || theirs === null){
-        temp = mineToDelete || theirsToDelete;
-        ASSERT(temp);
-        //the parent conflict
-        if(!_conflict_parents[temp]){
-          //first create the parent conflict
-          index = _conflict_items.length;
-          _conflict_items.push({
-            id:index,
-            guid:temp,
-            info: temp,
-            selected: "mine",
-            mine:{
-              path  : getPathByGuid(_conflict_mine,temp),
-              value : mine === null ? {} : mine,
-              info  : mine === null ? "remove" : "keep"
-            },
-            theirs:{
-              path  : getPathByGuid(_conflict_theirs,temp),
-              value : theirs === null ? {} : theirs,
-              info  : theirs === null ? "remove" : "keep"
-            },
-            children:[]
-          });
-          if(theirs){
-            _conflict_items[index].theirs.value.removed = false;
-          } else {
-            _conflict_items[index].mine.value.removed = false;
-          }
-          _conflict_parents[temp] = _conflict_items[index];
-        }
-        //child conflict ...
-        _conflict_parents[temp].children.push({
-          id:_conflict_parents[temp].children.length,
-          guid:guid,
-          info:mine || theirs,
-          minepath: minePath,
-          theirspath: theirsPath,
-          value: mine || theirs
-        });
-      } else {
-        if((mine.removed === true && theirs.removed !== true) || (theirs.removed === true && mine.removed !== true)){
-          _conflict_items.push({
-            id:_conflict_items.length,
-            guid:guid,
-            info: guid,
-            selected: "mine",
-            mine:{
-              path  : minePath+'/removed',
-              value : mine.removed,
-              info  : mine.removed === true ? "remove" : "keep"
-            },
-            theirs:{
-              path  : theirsPath+'/removed',
-              value : theirs.removed,
-              info  : theirs.removed === true ? "remove" : "keep"
-            }
-          });
-        }
-        if(mine.removed !== true || theirs.removed !== true){
-          //we only interested in any sub-node change if at least one outcome kept the node
-          if(typeof mine.movedFrom === 'string' && typeof theirs.movedFrom === 'string' && minePath !== theirsPath){
-            //double move conflict
-            _conflict_items.push({
-              id:_conflict_items.length,
-              guid:guid,
-              info: guid,
-              selected: "mine",
-              mine:{
-                path  : minePath,
-                value : null,
-                info  : "move to path "+minePath
-              },
-              theirs:{
-                path  : theirsPath,
-                value : null,
-                info  : "move to path "+theirsPath
-              }
-            });
-          }
-          if(mine.attr){
-            simpleKeyValueConflicts(guid,'attribute',minePath+'/attr', theirsPath+'/attr');
-          }
-          if(mine.reg){
-            simpleKeyValueConflicts(guid,'registry',minePath+'/reg', theirsPath+'/reg');
-          }
-          if(mine.pointer){
-            simpleKeyValueConflicts(guid,'pointer',minePath+'/pointer', theirsPath+'/pointer');
-          }
-          if(mine.set){
-            setConflicts(guid,'set',minePath+'/set', theirsPath+'/set');
-          }
-        }
-      }
-    }
 
     function getGuidsOfDiff(diff){
       var relids = getDiffChildrenRelids(diff),
@@ -1894,25 +1522,6 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       }
       return result;
     }
-    _core.getConflictItems = function(mine, theirs){
-      var guids = getGuidsOfDiff(mine),
-        otherGuids = getGuidsOfDiff(theirs),
-        i;
-      _conflict_items = [];
-      _conflict_parents = {};
-      _conflict_mine = mine;
-      _conflict_theirs = theirs;
-      for(i=0;i<otherGuids.length;i++){
-        if(guids.indexOf(otherGuids[i]) === -1){
-          guids.push(otherGuids[i]);
-        }
-      }
-
-      for(i=0;i<guids.length;i++){
-        nodeConflicts(guids[i]);
-      }
-      return _conflict_items;
-    };
 
     function applyToPath(diff,path,value){
       var i,finalPath,keys;
@@ -2102,7 +1711,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
     }
     function concatSet(path,base,extension){
       var names = Object.keys(extension),
-        members, i, j;
+        members, i, j,memberPath;
 
       for(i=0;i<names.length;i++){
         if(base[names[i]]){
@@ -2121,31 +1730,32 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
               //now we can only have member or sub-member conflicts...
               members = getDiffChildrenRelids(extension[names[i]]);
               for(j=0;j<members.length;j++){
-                if(base[names[i]][members[j]]){
-                  if(base[names[i]][members[j]] === TODELETESTRING){
+                memberPath = getCommonPathForConcat(members[j]);
+                if(base[names[i]][memberPath]){
+                  if(base[names[i]][memberPath] === TODELETESTRING){
                     if(extension[names[i]][members[j]] !== TODELETESTRING){
                       //whole member conflict
-                      _conflict_mine[path+'/'+names[i]+members[j]] = {value:TODELETESTRING,conflictingPaths:{}};
-                      gatherFullNodeConflicts(extension[names[i]][members[j]],false,path+'/'+names[i]+members[j],path+'/'+names[i]+members[j]);
+                      _conflict_mine[path+'/'+names[i]+memberPath] = {value:TODELETESTRING,conflictingPaths:{}};
+                      gatherFullNodeConflicts(extension[names[i]][members[j]],false,path+'/'+names[i]+memberPath,path+'/'+names[i]+memberPath);
                     }
                   } else {
                     if(extension[names[i]][members[j]] === TODELETESTRING){
                       //whole member conflict
-                      _conflict_theirs[path+'/'+names[i]+members[j]] = {value:TODELETESTRING,conflictingPaths:{}};
-                      gatherFullNodeConflicts(base[names[i]][members[j]],true,path+'/'+names[i]+members[j],path+'/'+names[i]+members[j]);
+                      _conflict_theirs[path+'/'+names[i]+memberPath] = {value:TODELETESTRING,conflictingPaths:{}};
+                      gatherFullNodeConflicts(base[names[i]][memberPath],true,path+'/'+names[i]+memberPath,path+'/'+names[i]+memberPath);
                     } else {
                       if(extension[names[i]][members[j]].attr){
-                        if(base[names[i]][members[j]].attr){
-                          concatSingleKeyValuePairs(path+'/'+names[i]+members[j]+'/attr',base[names[i]][members[j]].attr,extension[names[i]][members[j]].attr);
+                        if(base[names[i]][memberPath].attr){
+                          concatSingleKeyValuePairs(path+'/'+names[i]+memberPath+'/attr',base[names[i]][memberPath].attr,extension[names[i]][members[j]].attr);
                         } else {
-                          base[names[i]][members[j]].attr = extension[names[i]][members[j]].attr;
+                          base[names[i]][memberPath].attr = extension[names[i]][members[j]].attr;
                         }
                       }
                       if(extension[names[i]][members[j]].reg){
-                        if(base[names[i]][members[j]].reg){
-                          concatSingleKeyValuePairs(path+'/'+names[i]+members[j]+'/reg',base[names[i]][members[j]].reg,extension[names[i]][members[j]].reg);
+                        if(base[names[i]][memberPath].reg){
+                          concatSingleKeyValuePairs(path+'/'+names[i]+memberPath+'/reg',base[names[i]][memberPath].reg,extension[names[i]][members[j]].reg);
                         } else {
-                          base[names[i]][members[j]].reg = extension[names[i]][members[j]].reg;
+                          base[names[i]][memberPath].reg = extension[names[i]][members[j]].reg;
                         }
                       }
 
@@ -2153,13 +1763,14 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
                   }
                 } else {
                   //concat
-                  base[names[i]][members[j]] = extension[names[i]][members[j]];
+                  base[names[i]][memberPath] = extension[names[i]][members[j]];
                 }
               }
             }
           }
         } else {
           //simple concatenation
+          //TODO the path fo members should be replaced here as well...
           base[names[i]] = extension[names[i]];
         }
       }
@@ -2170,7 +1781,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
         baseNode = getNodeByGuid(_concat_base,guid),
         basePath = getPathByGuid(_concat_base,guid,''),
         i,
-        relids;
+        relids = getDiffChildrenRelids(extNode);
 
 
       if(extNode.removed === true){
@@ -2252,13 +1863,11 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       }
 
       //here comes the recursion
-      relids = getDiffChildrenRelids(extNode);
       for(i=0;i<relids.length;i++){
         tryToConcatNodeChange(extNode[relids[i]],path+'/'+relids[i]);
       }
 
     }
-
     function generateConflictItems(){
       var items = [],
         keys, i, j,conflicts;
@@ -2298,8 +1907,8 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
         getExtensionSourceFromDestination : {},
         getExtensionDestinationFromSource : {}
       };
-      getMoveSources(base,'',_concat_moves.getBaseDestinationFromSource,_concat_moves.getBaseSourceFromDestination);
-      getMoveSources(extension,'',_concat_moves.getExtensionDestinationFromSource,_concat_moves.getExtensionSourceFromDestination);
+      getMoveSources(base,'',_concat_moves.getBaseSourceFromDestination,_concat_moves.getBaseDestinationFromSource);
+      getMoveSources(extension,'',_concat_moves.getExtensionSourceFromDestination,_concat_moves.getExtensionDestinationFromSource);
       getConcatBaseRemovals(base);
       tryToConcatNodeChange(_concat_extension,'');
 
@@ -2308,6 +1917,11 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       result.theirs = _conflict_theirs;
       result.merge = _concat_base;
       return result;
+    };
+
+    _core.applyResolution = function(conflictObject){
+      //we apply conflict items to the merge and return it as a diff
+
     };
 
 
