@@ -19,7 +19,6 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       toFrom = {}, //TODO should not be global
       fromTo = {}, //TODO should not be global
       _concat_dictionary,
-      _concat_moves,
       _concat_result,
       _diff_moves = {},
       _conflict_items = [],
@@ -29,7 +28,8 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       _concat_base,
       _concat_extension,
       _concat_base_removals,
-      _concat_moves;
+      _concat_moves,
+      _resolve_moves;
 
     for (var i in _innerCore) {
       _core[i] = _innerCore[i];
@@ -1816,6 +1816,8 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
               path = basePath;
             } else if(path !== basePath){
               //first we move the base object to its new path
+              //we copy the moved from information right here
+              baseNode.movedFrom = extNode.movedFrom;
               insertAtPath(_concat_base,path,baseNode);
               removePathFromDiff(_concat_base,basePath);
               baseNode = getNodeByGuid(_concat_base,guid);
@@ -1893,6 +1895,30 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       }
       return items;
     }
+    function harmonizeConflictPaths(diff){
+      var relids = getDiffChildrenRelids(diff),
+        keys, i,members,j;
+
+      keys = Object.keys(diff.pointer || {});
+      for(i=0;i<keys.length;i++){
+        diff.pointer[keys[i]] = getCommonPathForConcat(diff.pointer[keys[i]]);
+      }
+      keys = Object.keys(diff.set || {});
+      for(i=0;i<keys.length;i++){
+        members = Object.keys(diff.set[keys[i]] || {});
+        for(j=0;j<members.length;j++){
+          if(members[j] !== getCommonPathForConcat(members[j])){
+            diff.set[keys[i]][getCommonPathForConcat(members[j])] = diff.set[keys[i]][members[j]];
+            delete diff.set[keys[i]][members[j]];
+          }
+        }
+      }
+
+      //TODO we have to do the meta as well
+      for(i=0;i<relids.length;i++){
+        harmonizeConflictPaths(diff[relids[i]]);
+      }
+    }
 
     _core.tryToConcatChanges = function(base,extension){
       var result = {};
@@ -1917,12 +1943,76 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       result.mine = _conflict_mine;
       result.theirs = _conflict_theirs;
       result.merge = _concat_base;
+      harmonizeConflictPaths(result.merge);
       return result;
     };
 
+    function depthOfPath(path){
+      ASSERT(typeof path === "string");
+      return path.split('/').length;
+    }
+    function resolveMoves(resolveObject){
+      var i,moves = {},filteredItems=[],path,
+        moveBaseOfPath = function(path){
+          var keys = Object.keys(moves),
+            i,maxDepth = -1,base=null;
+          for(i=0;i<keys.length;i++){
+            if(path.indexOf(keys[i]) === 1 && depthOfPath(keys[i])>maxDepth){
+              base = keys[i];
+              maxDepth = depthOfPath(keys[i]);
+            }
+          }
+          return base;
+        };
+      for(i=0;i<resolveObject.items.length;i++){
+        if(resolveObject.items[i].selected === "theirs" && resolveObject.items[i].theirs.value === "move"){
+          moves[resolveObject.items[i].mine.path] = resolveObject.items[i].theirs.path;
+          //and we also make the move
+          insertAtPath(resolveObject.merge,resolveObject.items[i].theirs.path,getPathOfDiff(resolveObject.merge,resolveObject.items[i].mine.path));
+          removePathFromDiff(resolveObject.merge,resolveObject.items[i].mine.path);
+        } else {
+          filteredItems.push(resolveObject.items[i]);
+        }
+      }
+      resolveObject.items = filteredItems;
+
+      //in a second run we modify all sub-path of the moves paths
+      for(i=0;i<resolveObject.items.length;i++){
+        if(resolveObject.items[i].selected === "theirs"){
+          path = moveBaseOfPath(resolveObject.items[i].theirs.path);
+          if(path){
+            resolveObject.items[i].theirs.path = resolveObject.items[i].theirs.path.replace(path,moves[path]);
+          }
+          path = moveBaseOfPath(resolveObject.items[i].mine.path);
+          if(path){
+            resolveObject.items[i].mine.path = resolveObject.items[i].mine.path.replace(path,moves[path]);
+          }
+        }
+      }
+    }
+
+    /*function resolveConflictItem(diff,conflictItem){
+
+      //let's start with the easy ones :)
+
+      //if the two path is equal, the we can simply replace the base value
+      if(conflictItem.mine.path === conflictItem.theirs.path){
+        insertAtPath(diff,conflictItem.theirs.path,conflictItem.theirs.value);
+      }
+    }*/
+
     _core.applyResolution = function(conflictObject){
       //we apply conflict items to the merge and return it as a diff
+      var i;
+      resolveMoves(conflictObject);
+      for(i=0;i<conflictObject.items.length;i++){
+        if(conflictObject.items[i].selected !== "mine"){
+          //resolveConflictItem(conflictObject.merge,conflictObject.items[i]);
+          insertAtPath(conflictObject.merge,conflictObject.items[i].theirs.path,conflictObject.items[i].theirs.value);
+        }
+      }
 
+      return conflictObject.merge;
     };
 
 

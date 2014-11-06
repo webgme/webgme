@@ -3338,7 +3338,6 @@ define([
             rootsLoaded = function(){
                 var needed = 2,error = null;
                 _core.generateTreeDiff(base,what,function(err,diff){
-                  console.log('kecso whatdiff',diff);
                   error = error || err;
                   baseToWhat = diff;
                   if(--needed===0){
@@ -3350,7 +3349,6 @@ define([
                   }
                 });
                 _core.generateTreeDiff(base,where,function(err,diff){
-                  console.log('kecso wherediff',diff);
                   error = error || err;
                   baseToWhere = diff;
                   if(--needed===0){
@@ -3364,9 +3362,9 @@ define([
               },
               diffsGenerated = function(){
                 var conflict = _core.tryToConcatChanges(baseToWhere,baseToWhat);
+                console.log('conflict object',conflict);
                 if(conflict.items.length === 0){
                   //no conflict
-                  console.log('there were no conflict',baseCommit,whatCommit,whereCommit,baseToWhat,baseToWhere,conflict.merge);
                   callback(null,conflict);
                   /*
                   _core.applyTreeDiff(base,conflict.merge,function(err){
