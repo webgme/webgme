@@ -1884,11 +1884,13 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
             selected:"mine",
             mine:{
               path: keys[i],
-              info: keys[i]
+              info: keys[i],
+              value: _conflict_mine[keys[i]].value
             },
             theirs:{
               path:conflicts[j],
-              info:conflicts[j]
+              info:conflicts[j],
+              value:_conflict_theirs[conflicts[j]].value
             }
           });
         }

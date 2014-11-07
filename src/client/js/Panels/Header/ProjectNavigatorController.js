@@ -1075,7 +1075,10 @@ define( [
       self.$simpleDialog.open({
         dialogTitle: 'Conflict Handling',
         dialogContentTemplate: 'ConflictDialogTemplate.html',
-        scope: self.$scope
+        scope: self.$scope,
+        onOk: function(){
+          console.log('resolution',self.gmeClient.getResolve(conflict));
+        }
       });
     });
 

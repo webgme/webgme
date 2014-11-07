@@ -3495,6 +3495,9 @@ define([
           }
         });
       }
+      function getResolve(resolveObject){
+        return _core.applyResolution(resolveObject);
+      }
       function resolve(baseObject,mineDiff,branch,mineCommit,theirsCommit,resolvedConflictItems,callback){
         mineDiff = _core.applyResolution(mineDiff,resolvedConflictItems);
         _core.applyTreeDiff(baseObject,mineDiff,function(err){
@@ -3732,6 +3735,7 @@ define([
 
         //merge
         merge: merge,
+        getResolve: getResolve,
         resolve: resolve,
 
         //testing
