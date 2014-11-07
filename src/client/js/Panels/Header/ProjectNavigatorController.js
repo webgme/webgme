@@ -968,7 +968,10 @@ define( [
           //onOk:function(){},
           scope: self.$scope
         });
-      };
+      },
+      baseCommit,
+      mineDiff,theirDiff,
+      conflict,fullDiff;
     self.$scope.whatBranch = whatBranchId;
     self.$scope.whereBranch = whereBranchId;
     self.$scope.getButtonClass = function(asked,owned){
@@ -1037,84 +1040,57 @@ define( [
         handleSelectingTask(i.path, i.selection);
       }
     };
-    /*var items = [
-      {
-        mine:{
-          info:"enyim",
-          path:"one"
-        },
-        theirs:{
-          info:"ovek"
-        },
-        selected: "mine"
-      },
-      {
-        mine:{
-          info:"enyim",
-          path:"two"
-        },
-        theirs:{
-          info:"ovek"
-        },
-        selected: "theirs"
-      },
-      {
-        mine:{
-          info:"enyim",
-          path:"one"
-        },
-        theirs:{
-          info:"ovek"
-        },
-        selected: "none"
-      }
-    ];
-    self.$scope.items = items;*/
-    self.gmeClient.merge(whereBranchId,self.projects[projectId].branches[whatBranchId].properties.hashTag,self.projects[projectId].branches[whereBranchId].properties.hashTag,function(err,conflict){
-      self.$scope.items = conflict.items || [];
-      self.$simpleDialog.open({
-        dialogTitle: 'Conflict Handling',
-        dialogContentTemplate: 'ConflictDialogTemplate.html',
-        scope: self.$scope,
-        onOk: function(){
-          console.log('resolution',self.gmeClient.getResolve(conflict));
-        }
+
+    self.gmeClient.getBaseOfCommits(
+      self.projects[projectId].branches[whatBranchId].properties.hashTag,
+      self.projects[projectId].branches[whereBranchId].properties.hashTag,
+    function(err,c){
+      console.log('baseCommit',err,baseCommit);
+      //TODO check the no-merge and fast-forward cases
+      baseCommit = c;
+
+      //TODO the diff generation could be paralellized
+      self.gmeClient.getDiffTree(baseCommit,self.projects[projectId].branches[whatBranchId].properties.hashTag,function(err,diff){
+        //TODO error handling
+        console.log('their diff',err,diff);
+        theirDiff = diff;
+        self.gmeClient.getDiffTree(baseCommit,self.projects[projectId].branches[whereBranchId].properties.hashTag,function(err,diff){
+          //TODO error handling
+          console.log('mine diff',err,diff);
+          mineDiff = diff;
+
+          conflict = self.gmeClient.getConflictOfDiffs(mineDiff,theirDiff);
+          console.log('conflict',conflict);
+          self.$scope.items = conflict.items || [];
+          self.$simpleDialog.open({
+            dialogTitle: 'Conflict Handling',
+            dialogContentTemplate: 'ConflictDialogTemplate.html',
+            scope: self.$scope,
+            onOk: function(){
+              if(conflict.items.length === 0){
+                fullDiff = conflict.merge;
+              } else {
+                fullDiff = self.gmeClient.getResolve(conflict);
+              }
+              console.log('resolution',fullDiff);
+
+              self.gmeClient.applyDiff(
+                whereBranchId,
+                baseCommit,
+                [
+                  self.projects[projectId].branches[whatBranchId].properties.hashTag,
+                  self.projects[projectId].branches[whereBranchId].properties.hashTag
+                ],
+                fullDiff,
+                function(err){
+                  console.log('merged',err);
+                }
+              );
+            }
+          });
+        });
       });
     });
-
-    /*self.$scope.showChildren = function(item){
-      console.log('kecso');
-    };
-    self.$simpleDialog.open( {
-          dialogTitle: 'Confirm merge',
-          dialogContentTemplate: 'BeforeMergeTemplate.html',
-          onOk: function () {
-            console.log('merge',projectId,whatBranchId,whereBranchId);
-            var whatCommit = self.projects[projectId].branches[whatBranchId].properties.hashTag,
-              whereCommit = self.projects[projectId].branches[whereBranchId].properties.hashTag;
-              console.log('mergeCommits',whatCommit,whereCommit);
-            self.gmeClient.merge(whereBranchId,whatCommit,whereCommit,function(err,conflict){
-              //console.log('merge result',err);
-              if(err){
-                self.$scope.items = conflict.conflictItems;
-                self.$simpleDialog.open({
-                  dialogTitle: 'Merge conflicted',
-                  dialogContentTemplate: 'ConflictDialogTemplate.html',
-                  onOk:function(){
-                    self.gmeClient.resolve(conflict.baseObject,conflict.mine,conflict.branch,conflict.mineCommit,conflict.theirsCommit,conflict.conflictItems,finalCall);
-                  },
-                  onCancel:function(){
-                    console.log('kecso');
-                  },
-                  scope: self.$scope
-                });
-              } else {
-                finalCall(err);
-              }
-            });
-          },
-          scope: self.$scope
-        } );*/
   };
 
   ProjectNavigatorController.prototype.dummyProjectsGenerator = function ( name, maxCount ) {

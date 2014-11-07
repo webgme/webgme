@@ -3330,6 +3330,86 @@ define([
         });
       }
 
+      //TODO probably it would be a good idea to put this functionality to server
+      function getBaseOfCommits(one,other,callback){
+        _project.getCommonAncestorCommit(one,other,callback);
+      }
+      //TODO probably this would also beneficial if this would work on server as well
+      function getDiffTree(from,to,callback){
+        var needed = 2,error = null,
+          core = getNewCore(_project),
+          fromRoot={root:{},commit:from},
+          toRoot={root:{},commit:to},
+          rootsLoaded = function(){
+            if(error){
+              return callback(error,{});
+            }
+            _core.generateTreeDiff(fromRoot.root,toRoot.root,callback);
+          },
+          loadRoot = function(root){
+            _project.loadObject(root.commit,function(err,c){
+              error = error || ( err || c ? null : new Error('no commit object was found'));
+              if(!err && c){
+                core.loadRoot(c.root,function(err,r){
+                  error = error || ( err || r ? null : new Error('no root was found'));
+                  root.root = r;
+                  if(--needed === 0){
+                    rootsLoaded();
+                  }
+                });
+              } else {
+                if(--needed === 0){
+                  rootsLoaded();
+                }
+              }
+            });
+          };
+        loadRoot(fromRoot);
+        loadRoot(toRoot);
+
+      }
+
+      function getConflictOfDiffs(base,extension){
+        return _core.tryToConcatChanges(base,extension);
+      }
+      function getResolve(resolveObject){
+        return _core.applyResolution(resolveObject);
+      }
+      //TODO move to server
+      function applyDiff(branch,commit,parents,diff,callback){
+        _project.loadObject(commit,function(err,cObject){
+          var core = getNewCore(_project);
+          if(!err && cObject){
+            core.loadRoot(cObject.root,function(err,root){
+              if(!err && root){
+                core.applyTreeDiff(root,diff,function(err){
+                  if(err){
+                    return callback(err);
+                  }
+
+                  core.persist(root,function(err){
+                    if(err){
+                      return callback(err);
+                    }
+
+                    var newHash = _project.makeCommit(parents,core.getHash(root),"merging",function(err){
+                      if(err){
+                        return callback(err);
+                      }
+                      _project.setBranchHash(branch,commit,newHash,callback);
+                    });
+                  });
+                });
+              } else {
+                callback(err || new Error('no root was found'));
+              }
+            });
+          } else {
+            callback(err || new Error('no commit object was found'));
+          }
+        });
+      }
+
       function merge(whereBranch,whatCommit,whereCommit,callback){
         ASSERT(_project && typeof whatCommit === 'string' && typeof whereCommit === 'string' && typeof callback === 'function');
         _project.getCommonAncestorCommit(whatCommit,whereCommit,function(err,baseCommit){
@@ -3495,9 +3575,7 @@ define([
           }
         });
       }
-      function getResolve(resolveObject){
-        return _core.applyResolution(resolveObject);
-      }
+
       function resolve(baseObject,mineDiff,branch,mineCommit,theirsCommit,resolvedConflictItems,callback){
         mineDiff = _core.applyResolution(mineDiff,resolvedConflictItems);
         _core.applyTreeDiff(baseObject,mineDiff,function(err){
@@ -3734,6 +3812,10 @@ define([
         redo: _redoer.redo,
 
         //merge
+        getBaseOfCommits: getBaseOfCommits,
+        getDiffTree: getDiffTree,
+        getConflictOfDiffs: getConflictOfDiffs,
+        applyDiff: applyDiff,
         merge: merge,
         getResolve: getResolve,
         resolve: resolve,
