@@ -949,11 +949,12 @@ define([
           root = core.createNode(),
           rootHash = '',
           commitHash = '';
-        project.setBranchHash('master', "", commitHash, callback);
         core.persist(root,function(err){
           rootHash = core.getHash(root);
           commitHash = project.makeCommit([],rootHash,'project creation commit',function(err){
-            project.setBranchHash('master',"",commitHash,callback);
+            project.setBranchHash('master',"",commitHash, function (err) {
+                    callback(err, commitHash);
+                });
           });
         });
 
