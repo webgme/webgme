@@ -61,6 +61,8 @@ define([ "util/assert" ], function (ASSERT) {
             closeProject: project.closeProject,
             loadObject: project.loadObject,
             insertObject: project.insertObject,
+            getInfo: project.getInfo,
+            setInfo: project.setInfo,
             findHash: project.findHash,
             dumpObjects: project.dumpObjects,
             getBranchNames: project.getBranchNames,

@@ -296,18 +296,40 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
             },
             getProjectInfo = function(name,cb){
                 storage.openProject(name,function(err,project){
+                    var needed = 2,
+                      info = {info:null,branches:{}},
+                      error = null;
+
                     if(err){
                         return cb(err);
                     }
 
                     project.getBranchNames(function(err,branches){
-                        return cb(err,name,branches);
+                        error = error || err;
+                        if(!err && branches){
+                            info.branches = branches;
+                        }
+
+                        if(--needed === 0){
+                            return cb(error,name,info);
+                        }
                     });
+                    project.getInfo(function(err,i){
+                        error = error || err;
+
+                        if(!err && i){
+                            info.info = i;
+                        }
+
+                        if(--needed === 0){
+                            return cb(error,name,info);
+                        }
+                    })
                 });
             },
-            projectInfoReceived = function(err,name,branches){
+            projectInfoReceived = function(err,name,info){
                 if(!err){
-                    completeInfo[name] = {branches:branches};
+                    completeInfo[name] = {info:info.info,branches:info.branches};
                     addUserAuthInfo(name);
                 }
 

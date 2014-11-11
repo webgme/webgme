@@ -121,6 +121,8 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
 						closeProject: project.closeProject,
 						loadObject: loadObject,
 						insertObject: insertObject,
+						getInfo: project.getInfo,
+						setInfo: project.setInfo,
 						findHash: project.findHash,
 						dumpObjects: project.dumpObjects,
 						getBranchNames: getBranchNames,

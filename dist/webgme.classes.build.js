@@ -8460,6 +8460,8 @@ define('storage/client',[ "util/assert", "util/guid" ], function (ASSERT, GUID) 
                                     closeProject: closeProject,
                                     loadObject: loadObject,
                                     insertObject: insertObject,
+                                    getInfo: getInfo,
+                                    setInfo: setInfo,
                                     findHash: findHash,
                                     dumpObjects: dumpObjects,
                                     getBranchNames: getBranchNames,
@@ -8651,6 +8653,44 @@ define('storage/client',[ "util/assert", "util/guid" ], function (ASSERT, GUID) 
                         to: setTimeout(callbackTimeout, options.timeout, guid)
                     };
                     socket.emit('insertObject', project, object, function (err) {
+                        if (callbacks[guid]) {
+                            clearTimeout(callbacks[guid].to);
+                            delete callbacks[guid];
+                            callback(err);
+                        }
+                    });
+                } else {
+                    callback(new Error(ERROR_DISCONNECTED));
+                }
+            }
+            function getInfo(callback){
+                ASSERT(typeof callback === 'function');
+                if (socketConnected) {
+                    var guid = GUID();
+                    callbacks[guid] = {
+                        cb: callback,
+                        to: setTimeout(callbackTimeout, options.timeout, guid)
+                    };
+                    socket.emit('getInfo', project, function (err,info) {
+                        if (callbacks[guid]) {
+                            clearTimeout(callbacks[guid].to);
+                            delete callbacks[guid];
+                            callback(err,info);
+                        }
+                    });
+                } else {
+                    callback(new Error(ERROR_DISCONNECTED));
+                }
+            }
+            function setInfo(info,callback){
+                ASSERT(typeof info === 'object' && typeof callback === 'function');
+                if (socketConnected) {
+                    var guid = GUID();
+                    callbacks[guid] = {
+                        cb: callback,
+                        to: setTimeout(callbackTimeout, options.timeout, guid)
+                    };
+                    socket.emit('setInfo', project, info, function (err) {
                         if (callbacks[guid]) {
                             clearTimeout(callbacks[guid].to);
                             delete callbacks[guid];
@@ -9035,6 +9075,8 @@ define('storage/failsafe',[ "util/assert", "util/guid" ], function (ASSERT, GUID
 						closeProject: project.closeProject,
 						loadObject: loadObject,
 						insertObject: insertObject,
+						getInfo: project.getInfo,
+						setInfo: project.setInfo,
 						findHash: project.findHash,
 						dumpObjects: project.dumpObjects,
 						getBranchNames: getBranchNames,
@@ -9764,6 +9806,8 @@ define('storage/cache',[ "util/assert" ], function (ASSERT) {
 					closeProject: closeProject,
 					loadObject: loadObject,
 					insertObject: insertObject,
+					getInfo: project.getInfo,
+					setInfo: project.setInfo,
 					findHash: project.findHash,
 					dumpObjects: project.dumpObjects,
 					getBranchNames: project.getBranchNames,
@@ -9831,6 +9875,8 @@ define('storage/commit',[ "util/assert", "util/zssha1", "util/canon" ], function
 						closeProject: _project.closeProject,
 						loadObject: _project.loadObject,
 						insertObject: _project.insertObject,
+						getInfo: _project.getInfo,
+						setInfo: _project.setInfo,
 						findHash: _project.findHash,
 						dumpObjects: _project.dumpObjects,
 						getBranchNames: _project.getBranchNames,
@@ -9975,6 +10021,8 @@ define('storage/log',[ "util/assert" ], function (ASSERT) {
 						fsyncDatabase: fsyncDatabase,
 						closeProject: closeProject,
 						loadObject: loadObject,
+						getInfo: getInfo,
+						setInfo: setInfo,
 						insertObject: insertObject,
 						findHash: findHash,
 						dumpObjects: dumpObjects,
@@ -10009,6 +10057,16 @@ define('storage/log',[ "util/assert" ], function (ASSERT) {
 			function loadObject (hash, callback) {
 				logger.debug(projectName + '.loadObject(' + hash + ")");
 				project.loadObject(hash, callback);
+			}
+
+			function getInfo (callback){
+				logger.debug(projectName + '.getInfo()');
+				project.getInfo(callback);
+			}
+
+			function setInfo (info,callback){
+				logger.debug(projectName + '.setInfo('+JSON.stringify(info)+')');
+				project.setInfo(info,callback);
 			}
 
 			function findHash (beginning, callback) {
@@ -15294,7 +15352,17 @@ define('client',[
                   if (!err && p) {
                     createEmptyProject(p, function (err, commit) {
                       if (!err && commit) {
-                        callback(null);
+                        //TODO currently this is just a hack
+                        p.setInfo({
+                          visibleName:projectname,
+                          description:"project in webGME",
+                          tags:{
+                            "1":"sample",
+                            "2":"other"
+                          }
+                        },function(err){
+                          callback(err);
+                        });
                       } else {
                         callback(err);
                       }
@@ -16709,6 +16777,7 @@ define('client',[
           _database.simpleResult(id, callback);
         });
       }
+
 
       function createGenericBranchAsync(project, branch, commit, callback) {
         _database.simpleRequest({command: 'setBranch', project: project, branch: branch, old: '', new: commit}, function (err, id) {

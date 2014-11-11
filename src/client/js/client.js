@@ -1485,7 +1485,17 @@ define([
                   if (!err && p) {
                     createEmptyProject(p, function (err, commit) {
                       if (!err && commit) {
-                        callback(null);
+                        //TODO currently this is just a hack
+                        p.setInfo({
+                          visibleName:projectname,
+                          description:"project in webGME",
+                          tags:{
+                            "1":"sample",
+                            "2":"other"
+                          }
+                        },function(err){
+                          callback(err);
+                        });
                       } else {
                         callback(err);
                       }
@@ -2900,6 +2910,7 @@ define([
           _database.simpleResult(id, callback);
         });
       }
+
 
       function createGenericBranchAsync(project, branch, commit, callback) {
         _database.simpleRequest({command: 'setBranch', project: project, branch: branch, old: '', new: commit}, function (err, id) {

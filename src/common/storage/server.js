@@ -453,6 +453,25 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                     });
                 });
 
+                socket.on('getInfo', function(projectName,callback){
+                    checkProject(getSessionID(socket),projectName,function(err,project){
+                        if(err){
+                            callback(err);
+                        } else {
+                            project.getInfo(callback);
+                        }
+                    });
+                });
+                socket.on('setInfo', function(projectName,info,callback){
+                    checkProject(getSessionID(socket),projectName,function(err,project){
+                        if(err){
+                            callback(err);
+                        } else {
+                            project.setInfo(info,callback);
+                        }
+                    });
+                });
+
                 socket.on('findHash', function(projectName,beginning,callback){
                     checkProject(getSessionID(socket),projectName,function(err,project){
                         if(err){

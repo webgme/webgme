@@ -15,6 +15,7 @@ define([ "mongodb", "util/assert", "util/canon" ], function (MONGODB, ASSERT, CA
 	var STATUS_UNREACHABLE = "mongodb unreachable";
 	var STATUS_CONNECTED = "connected";
 
+	var PROJECT_INFO_ID = '*info*';
 	var ID_NAME = "_id";
 
 	function Database (options) {
@@ -185,6 +186,8 @@ define([ "mongodb", "util/assert", "util/canon" ], function (MONGODB, ASSERT, CA
 						closeProject: closeProject,
 						loadObject: loadObject,
 						insertObject: insertObject,
+						getInfo: getInfo,
+						setInfo: setInfo,
 						findHash: findHash,
 						dumpObjects: dumpObjects,
 						getBranchNames: getBranchNames,
@@ -231,6 +234,23 @@ define([ "mongodb", "util/assert", "util/canon" ], function (MONGODB, ASSERT, CA
 						callback(err);
 					}
 				});
+			}
+
+			function getInfo (callback){
+				ASSERT(typeof callback === 'function');
+				collection.findOne({
+					_id:PROJECT_INFO_ID
+				},function(err,info){
+					if(info){
+						delete info._id;
+					}
+					callback(err,info);
+				});
+			}
+
+			function setInfo(info, callback){
+				ASSERT(typeof info === 'object' && typeof callback === 'function');
+				collection.update({_id:PROJECT_INFO_ID},info,{upsert:true},callback);
 			}
 
 			function findHash (beginning, callback) {

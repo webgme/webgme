@@ -24,6 +24,8 @@ define([ "util/assert", "util/zssha1", "util/canon" ], function (ASSERT, SHA1, C
 						closeProject: _project.closeProject,
 						loadObject: _project.loadObject,
 						insertObject: _project.insertObject,
+						getInfo: _project.getInfo,
+						setInfo: _project.setInfo,
 						findHash: _project.findHash,
 						dumpObjects: _project.dumpObjects,
 						getBranchNames: _project.getBranchNames,

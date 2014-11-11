@@ -395,6 +395,8 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                                     closeProject: closeProject,
                                     loadObject: loadObject,
                                     insertObject: insertObject,
+                                    getInfo: getInfo,
+                                    setInfo: setInfo,
                                     findHash: findHash,
                                     dumpObjects: dumpObjects,
                                     getBranchNames: getBranchNames,
@@ -586,6 +588,44 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                         to: setTimeout(callbackTimeout, options.timeout, guid)
                     };
                     socket.emit('insertObject', project, object, function (err) {
+                        if (callbacks[guid]) {
+                            clearTimeout(callbacks[guid].to);
+                            delete callbacks[guid];
+                            callback(err);
+                        }
+                    });
+                } else {
+                    callback(new Error(ERROR_DISCONNECTED));
+                }
+            }
+            function getInfo(callback){
+                ASSERT(typeof callback === 'function');
+                if (socketConnected) {
+                    var guid = GUID();
+                    callbacks[guid] = {
+                        cb: callback,
+                        to: setTimeout(callbackTimeout, options.timeout, guid)
+                    };
+                    socket.emit('getInfo', project, function (err,info) {
+                        if (callbacks[guid]) {
+                            clearTimeout(callbacks[guid].to);
+                            delete callbacks[guid];
+                            callback(err,info);
+                        }
+                    });
+                } else {
+                    callback(new Error(ERROR_DISCONNECTED));
+                }
+            }
+            function setInfo(info,callback){
+                ASSERT(typeof info === 'object' && typeof callback === 'function');
+                if (socketConnected) {
+                    var guid = GUID();
+                    callbacks[guid] = {
+                        cb: callback,
+                        to: setTimeout(callbackTimeout, options.timeout, guid)
+                    };
+                    socket.emit('setInfo', project, info, function (err) {
                         if (callbacks[guid]) {
                             clearTimeout(callbacks[guid].to);
                             delete callbacks[guid];
