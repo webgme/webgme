@@ -61,7 +61,7 @@ define(['js/Dialogs/PluginResults/PluginResultsDialog'], function (PluginResults
         };
 
         executePlugin = function( name ){
-            WebGMEGlobal.InterpreterManager.run(name,function(result){
+            WebGMEGlobal.InterpreterManager.run(name, null, function(result){
                 result.__unread = true;
                 results.splice(0, 0, result);
                 unreadResults += 1;

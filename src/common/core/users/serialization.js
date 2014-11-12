@@ -92,7 +92,7 @@ define(['util/assert'],function(ASSERT){
             elements,guid,
             i,j;
         for(i=0;i<keys.length;i++){
-            if(keys[i].indexOf("MetaAspectSet_") === 0){
+            if(keys[i].indexOf("MetaAspectSet") === 0){
                 elements = _core.getMemberPaths(root,keys[i]);
                 for(j=0;j<elements.length;j++){
                     guid = _pathToGuidMap[elements[j]] || _extraBasePaths[elements[j]];
@@ -102,7 +102,7 @@ define(['util/assert'],function(ASSERT){
                     }
                 }
 
-                if(sheets[keys[i]]){
+                if(sheets[keys[i]] && keys[i] !== "MetaAspectSet"){
                     //we add the global registry values as well
                     sheets[keys[i]].global = getRegistryEntry(keys[i]);
                 }
@@ -144,8 +144,10 @@ define(['util/assert'],function(ASSERT){
 
                 memberguids.splice(memberguids.indexOf('global'),1);
 
-                registry.push(oldSheets[name].global);
-                _core.setRegistry(root,"MetaSheets",registry);
+                if(name !== 'MetaAspectSet'){
+                  registry.push(oldSheets[name].global);
+                  _core.setRegistry(root,"MetaSheets",registry);
+                }
 
                 _core.createSet(root,name);
                 for(i=0;i<memberguids.length;i++) {

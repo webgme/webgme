@@ -13097,7 +13097,7 @@ define('coreclient/serialization',['util/assert'],function(ASSERT){
             elements,guid,
             i,j;
         for(i=0;i<keys.length;i++){
-            if(keys[i].indexOf("MetaAspectSet_") === 0){
+            if(keys[i].indexOf("MetaAspectSet") === 0){
                 elements = _core.getMemberPaths(root,keys[i]);
                 for(j=0;j<elements.length;j++){
                     guid = _pathToGuidMap[elements[j]] || _extraBasePaths[elements[j]];
@@ -13107,7 +13107,7 @@ define('coreclient/serialization',['util/assert'],function(ASSERT){
                     }
                 }
 
-                if(sheets[keys[i]]){
+                if(sheets[keys[i]] && keys[i] !== "MetaAspectSet"){
                     //we add the global registry values as well
                     sheets[keys[i]].global = getRegistryEntry(keys[i]);
                 }
@@ -13149,8 +13149,10 @@ define('coreclient/serialization',['util/assert'],function(ASSERT){
 
                 memberguids.splice(memberguids.indexOf('global'),1);
 
-                registry.push(oldSheets[name].global);
-                _core.setRegistry(root,"MetaSheets",registry);
+                if(name !== 'MetaAspectSet'){
+                  registry.push(oldSheets[name].global);
+                  _core.setRegistry(root,"MetaSheets",registry);
+                }
 
                 _core.createSet(root,name);
                 for(i=0;i<memberguids.length;i++) {
@@ -14756,11 +14758,12 @@ define('client',[
           root = core.createNode(),
           rootHash = '',
           commitHash = '';
-        project.setBranchHash('master', "", commitHash, callback);
         core.persist(root,function(err){
           rootHash = core.getHash(root);
           commitHash = project.makeCommit([],rootHash,'project creation commit',function(err){
-            project.setBranchHash('master',"",commitHash,callback);
+            project.setBranchHash('master',"",commitHash, function (err) {
+                    callback(err, commitHash);
+                });
           });
         });
 
@@ -18799,23 +18802,27 @@ define('blob/BlobClient',['./Artifact', 'blob/BlobMetadata', 'superagent'], func
         }
     };
 
-    BlobClient.prototype.getViewURL = function (hash, subpath) {
+    BlobClient.prototype._getURL = function (base, hash, subpath) {
         var subpathURL = '';
         if (subpath) {
             subpathURL = subpath;
         }
-        return this.blobUrl + 'view/' + hash + '/' + subpathURL;
+        return this.blobUrl + base + '/' + hash + '/' + encodeURIComponent(subpathURL);
     };
 
-    BlobClient.prototype.getDownloadURL = function (hash) {
-        return this.blobUrl + 'download/' + hash;
+    BlobClient.prototype.getViewURL = function (hash, subpath) {
+        return this._getURL('view', hash, subpath);
+    };
+
+    BlobClient.prototype.getDownloadURL = function (hash, subpath) {
+        return this._getURL('download', hash, subpath);
     };
 
     BlobClient.prototype.getCreateURL = function (filename, isMetadata) {
         if (isMetadata) {
             return this.blobUrl + 'createMetadata/';
         } else {
-            return this.blobUrl + 'createFile/' + filename;
+            return this.blobUrl + 'createFile/' + encodeURIComponent(filename);
         }
     };
 
@@ -18911,7 +18918,11 @@ define('blob/BlobClient',['./Artifact', 'blob/BlobMetadata', 'superagent'], func
         }
     };
 
-    BlobClient.prototype.getObject = function (hash, callback) {
+    BlobClient.prototype.getSubObject = function (hash, subpath, callback) {
+        return this.getObject(hash, callback, subpath);
+    }
+
+    BlobClient.prototype.getObject = function (hash, callback, subpath) {
         superagent.parse['application/zip'] = function (obj, parseCallback) {
             if (parseCallback) {
                 // Running on node; this should be unreachable due to req.pipe() below
@@ -18921,7 +18932,7 @@ define('blob/BlobClient',['./Artifact', 'blob/BlobMetadata', 'superagent'], func
         }
         //superagent.parse['application/json'] = superagent.parse['application/zip'];
 
-        var req = superagent.get(this.getViewURL(hash));
+        var req = superagent.get(this.getViewURL(hash, subpath));
         if (req.pipe) {
             // running on node
             var Writable = require('stream').Writable;
@@ -19657,68 +19668,69 @@ define('plugin/PluginBase',['plugin/PluginConfig',
                 if (err) {
                     self.logger.error(err);
                 }
-            });
 
-            var newRootHash = this.core.getHash(this.rootNode);
+                var newRootHash = self.core.getHash(self.rootNode);
 
-            var commitMessage = '[Plugin] ' + this.getName() + ' (v' + this.getVersion() + ') updated the model.';
-            if (message) {
-                commitMessage += ' - ' + message;
-            }
-
-            this.currentHash = this.project.makeCommit([this.currentHash], newRootHash, commitMessage, function (err) {
-                // TODO: any error handling here?
-                if (err) {
-                    self.logger.error(err);
+                var commitMessage = '[Plugin] ' + self.getName() + ' (v' + self.getVersion() + ') updated the model.';
+                if (message) {
+                    commitMessage += ' - ' + message;
                 }
-            });
 
-            if (this.branchName) {
-                // try to fast forward branch if there was a branch name defined
+                self.currentHash = self.project.makeCommit([self.currentHash], newRootHash, commitMessage, function (err) {
+                    // TODO: any error handling here?
+                    if (err) {
+                        self.logger.error(err);
+                    }
 
-                // FIXME: what if master branch is already in a different state?
+                    if (self.branchName) {
+                        // try to fast forward branch if there was a branch name defined
 
-                this.project.getBranchNames(function (err, branchNames) {
-                    if (branchNames.hasOwnProperty(self.branchName)) {
-                        var branchHash = branchNames[self.branchName];
-                        if (branchHash === self.branchHash) {
-                            // the branch does not have any new commits
-                            // try to fast forward branch to the current commit
-                            self.project.setBranchHash(self.branchName, self.branchHash, self.currentHash, function (err) {
-                                if (err) {
-                                    // fast forward failed
-                                    self.logger.error(err);
-                                    self.logger.info('"' + self.branchName + '" was NOT updated');
-                                    self.logger.info('Project was saved to ' + self.currentHash + ' commit.');
+                        // FIXME: what if master branch is already in a different state?
+
+                        self.project.getBranchNames(function (err, branchNames) {
+                            if (branchNames.hasOwnProperty(self.branchName)) {
+                                var branchHash = branchNames[self.branchName];
+                                if (branchHash === self.branchHash) {
+                                    // the branch does not have any new commits
+                                    // try to fast forward branch to the current commit
+                                    self.project.setBranchHash(self.branchName, self.branchHash, self.currentHash, function (err) {
+                                        if (err) {
+                                            // fast forward failed
+                                            self.logger.error(err);
+                                            self.logger.info('"' + self.branchName + '" was NOT updated');
+                                            self.logger.info('Project was saved to ' + self.currentHash + ' commit.');
+                                        } else {
+                                            // successful fast forward of branch to the new commit
+                                            self.logger.info('"' + self.branchName + '" was updated to the new commit.');
+                                            // roll starting point on success
+                                            self.branchHash = self.currentHash;
+                                        }
+                                        callback(err);
+                                    });
                                 } else {
-                                    // successful fast forward of branch to the new commit
-                                    self.logger.info('"' + self.branchName + '" was updated to the new commit.');
-                                    // roll starting point on success
-                                    self.branchHash = self.currentHash;
+                                    // branch has changes a merge is required
+                                    // TODO: try auto-merge, if fails ...
+                                    self.logger.warn('Cannot fast forward "' + self.branchName + '" branch. Merge is required but not supported yet.');
+                                    self.logger.info('Project was saved to ' + self.currentHash + ' commit.');
+                                    callback(null);
                                 }
-                                callback(err);
-                            });
-                        } else {
-                            // branch has changes a merge is required
-                            // TODO: try auto-merge, if fails ...
-                            self.logger.warn('Cannot fast forward "' + self.branchName + '" branch. Merge is required but not supported yet.');
-                            self.logger.info('Project was saved to ' + self.currentHash + ' commit.');
-                            callback(null);
-                        }
+                            } else {
+                                // branch was deleted or not found, do nothing
+                                self.logger.info('Project was saved to ' + self.currentHash + ' commit.');
+                                callback(null);
+                            }
+                        });
+                        // FIXME: is this call async??
+                        // FIXME: we are not tracking all commits that we make
+
                     } else {
-                        // branch was deleted or not found, do nothing
+                        // making commits, we have not started from a branch
                         self.logger.info('Project was saved to ' + self.currentHash + ' commit.');
                         callback(null);
                     }
                 });
-                // FIXME: is this call async??
-                // FIXME: we are not tracking all commits that we make
 
-            } else {
-                // making commits, we have not started from a branch
-                this.logger.info('Project was saved to ' + this.currentHash + ' commit.');
-                callback(null);
-            }
+            });
         };
 
         //--------------------------------------------------------------------------------------------------------------
@@ -20125,22 +20137,203 @@ define('plugin/PluginManagerBase',[
 
         return PluginManagerBase;
     });
+define('js/Dialogs/PluginConfig/PluginConfigDialog',[], function () {
+   return;
+});
+
+/*globals define, _, requirejs, WebGMEGlobal*/
+
+define('js/Utils/InterpreterManager',['core/core',
+        'plugin/PluginManagerBase',
+        'plugin/PluginResult',
+        'blob/BlobClient',
+        'js/Dialogs/PluginConfig/PluginConfigDialog'
+                                    ], function (Core,
+                                               PluginManagerBase,
+                                               PluginResult,
+                                               BlobClient,
+                                               PluginConfigDialog) {
+    
+
+    var InterpreterManager = function (client) {
+        this._client = client;
+        //this._manager = new PluginManagerBase();
+        this._savedConfigs = {};
+    };
+
+    var getPlugin = function(name,callback){
+        if (WebGMEGlobal && WebGMEGlobal.plugins && WebGMEGlobal.plugins.hasOwnProperty(name)) {
+            callback(null, WebGMEGlobal.plugins[name]);
+        } else {
+            requirejs(['/plugin/' + name + '/' + name + '/' + name],
+                function (InterpreterClass) {
+                    callback(null, InterpreterClass);
+                },
+                function (err) {
+                    callback(err, null);
+                }
+            );
+        }
+    };
+
+    /**
+     *
+     * @param {string} name - name of plugin to be executed.
+     * @param {object} silentPluginCfg - if falsy dialog window will be shown.
+     * @param {object.string} silentPluginCfg.activeNode - Path to activeNode.
+     * @param {object.Array.<string>} silentPluginCfg.activeSelection - Paths to nodes in activeSelection.
+     * @param {object.boolean} silentPluginCfg.runOnServer - Whether to run the plugin on the server or not.
+     * @param {object.object} silentPluginCfg.pluginConfig - Plugin specific options.
+     * @param callback
+     */
+    InterpreterManager.prototype.run = function (name, silentPluginCfg, callback) {
+        var self = this;
+        getPlugin(name,function(err,plugin){
+            if(!err && plugin) {
+                var plugins = {},
+                    runWithConfiguration;
+                plugins[name] = plugin;
+                var pluginManager = new PluginManagerBase(self._client.getProjectObject(), Core, plugins);
+                pluginManager.initialize(null, function (pluginConfigs, configSaveCallback) {
+                    //#1: display config to user
+                    var hackedConfig = {
+                        'Global Options': [
+                            {
+                                "name": "runOnServer",
+                                "displayName": "Execute on Server",
+                                "description": '',
+                                "value": false, // this is the 'default config'
+                                "valueType": "boolean",
+                                "readOnly": false
+                            }
+                        ]
+                    };
+
+                    for (var i in pluginConfigs) {
+                        if (pluginConfigs.hasOwnProperty(i)) {
+                            hackedConfig[i] = pluginConfigs[i];
+
+                            // retrieve user settings from previous run
+                            if (self._savedConfigs.hasOwnProperty(i)) {
+                                var iConfig = self._savedConfigs[i];
+                                var len = hackedConfig[i].length;
+
+                                while (len--) {
+                                    if (iConfig.hasOwnProperty(hackedConfig[i][len].name)) {
+                                        hackedConfig[i][len].value = iConfig[hackedConfig[i][len].name];
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+
+                    runWithConfiguration = function (updatedConfig) {
+                        //when Save&Run is clicked in the dialog (or silentPluginCfg was passed)
+                        var globalconfig = updatedConfig['Global Options'],
+                            activeNode,
+                            activeSelection;
+                        delete updatedConfig['Global Options'];
+
+                        activeNode = silentPluginCfg.activeNode;
+                        if (!activeNode && WebGMEGlobal && WebGMEGlobal.State) {
+                                activeNode = WebGMEGlobal.State.getActiveObject();
+                        }
+                        activeSelection = silentPluginCfg.activeSelection;
+                        if (!activeSelection && WebGMEGlobal && WebGMEGlobal.State) {
+                            activeSelection = WebGMEGlobal.State.getActiveSelection();
+                        }
+                        // save config from user
+                        for (var i in updatedConfig) {
+                            self._savedConfigs[i] = updatedConfig[i];
+                        }
+
+                        //#2: save it back and run the plugin
+                        if (configSaveCallback) {
+                            configSaveCallback(updatedConfig);
+
+                            // TODO: if global config says try to merge branch then we should pass the name of the branch
+                            var config = {
+                                "project": self._client.getActiveProjectName(),
+                                "token": "",
+                                "activeNode": activeNode, // active object in the editor
+                                "activeSelection": activeSelection || [],
+                                "commit": self._client.getActualCommit(), //"#668b3babcdf2ddcd7ba38b51acb62d63da859d90",
+                                "branchName": self._client.getActualBranch() // this has priority over the commit if not null
+                            };
+
+                            if(globalconfig.runOnServer === true || silentPluginCfg.runOnServer === true){
+                                var context = {
+                                    managerConfig: config,
+                                    pluginConfigs:updatedConfig
+                                };
+                                self._client.runServerPlugin(name,context,function(err,result){
+                                    if(err){
+                                        console.error(err);
+                                        callback(new PluginResult()); //TODO return proper error result
+                                    } else {
+                                        var resultObject = new PluginResult(result);
+                                        callback(resultObject);
+                                    }
+                                });
+                            } else {
+                                config.blobClient = new BlobClient();
+
+                                pluginManager.executePlugin(name, config, function (err, result) {
+                                    if (err) {
+                                        console.error(err);
+                                    }
+                                    callback(result);
+                                });
+                            }
+                        }
+                    };
+
+                    if (silentPluginCfg) {
+                        var updatedConfig = {};
+                        for (var i in hackedConfig) {
+                            updatedConfig[i] = {};
+                            var len = hackedConfig[i].length;
+                            while (len--) {
+                                updatedConfig[i][hackedConfig[i][len].name] = hackedConfig[i][len].value;
+                            }
+
+                            if (silentPluginCfg && silentPluginCfg.pluginConfig) {
+                                for (var j in silentPluginCfg.pluginConfig) {
+                                    updatedConfig[i][j] = silentPluginCfg.pluginConfig[j];
+                                }
+                            }
+                        }
+                        runWithConfiguration(updatedConfig);
+                    } else {
+                        var d = new PluginConfigDialog();
+                        silentPluginCfg = {};
+                        d.show(hackedConfig, runWithConfiguration);
+                    }
+                });
+            } else {
+                console.error(err);
+                console.error('unable to load plugin');
+                callback(null); //TODO proper result
+            }
+        });
+    };
+
+    //TODO somehow it would feel more right if we do run in async mode, but if not then we should provide getState and getResult synchronous functions as well
+
+    return InterpreterManager;
+});
+
 define('webgme.classes',
   [
     'client',
     'blob/BlobClient',
-    'plugin/PluginManagerBase',
-    'plugin/PluginResult',
-  ],function(
-    Client,
-    BlobClient,
-    PluginManagerBase,
-    PluginResult){
+    'js/Utils/InterpreterManager'
+  ], function (Client, BlobClient, InterpreterManager) {
     WebGMEGlobal.classes.Client = Client;
     WebGMEGlobal.classes.BlobClient = BlobClient;
-    WebGMEGlobal.classes.PluginManagerBase = PluginManagerBase;
-    WebGMEGlobal.classes.PluginResult = PluginResult;
-});
+    WebGMEGlobal.classes.InterpreterManager = InterpreterManager;
+  });
 
 
 require(["webgme.classes"]);

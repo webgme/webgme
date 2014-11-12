@@ -347,7 +347,7 @@ define(['logManager',
             __httpServer = null,
             __logoutUrl = CONFIG.logoutUrl || '/',
             __baseDir = webGMEGlobal.baseDir,
-            __clientBaseDir = __baseDir+'/client',
+            __clientBaseDir = CONFIG.clientAppDir || __baseDir+'/client',
             __requestCounter = 0,
             __reportedRequestCounter = 0,
             __requestCheckInterval = 2500;
