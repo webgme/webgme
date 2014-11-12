@@ -846,7 +846,6 @@ define(['logManager',
             role = SNAP_CONSTANTS.CONN_PASSING;
         }
 
-        //TODO Select the correct area for connArea
         if(ptr instanceof Array){//Find the closest compatible area
             var ptrs = ptr,
                 shortestDistance,

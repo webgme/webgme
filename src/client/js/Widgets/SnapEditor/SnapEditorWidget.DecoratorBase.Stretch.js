@@ -680,7 +680,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      * @return {Boolean} return true if size has changed
      */
     SVGDecoratorSnapEditorWidgetStretch.prototype._setTextAndStretch = function (element, newText, stretchId, extra) {
-        //READ-ONLY wrt the DOM FIXME
+        //READ-ONLY wrt the DOM
         var oldText = element.text(),
             oldWidth = element.width(),
             width = 0,

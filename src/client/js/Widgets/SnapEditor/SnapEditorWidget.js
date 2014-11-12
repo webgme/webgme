@@ -232,12 +232,7 @@ define(['logManager',
         });
     };
 
-    SnapEditorWidget.prototype.setTitle = function (){
-        //Receive info 
-        ////TODO
-    };
-
-    /************** WAITPROGRS *********************/
+    /************** WAITPROGRESS *********************/
     SnapEditorWidget.prototype.showProgressbar = function (){
         this.__loader.start();
     };
@@ -246,9 +241,6 @@ define(['logManager',
         this.__loader.stop();
     };
 
-    SnapEditorWidget.prototype.onActivate = function (){
-        //this._displayToolbarItems();
-    };
     /************** END WAITPROGRESS *********************/
 
     SnapEditorWidget.prototype.onDeactivate = function (){
@@ -354,8 +346,6 @@ define(['logManager',
             itemID,
             item;
 
-        //Not sure if I need this method! //TODO
-
         //check if position has to be adjusted to not to put it on some other model
         while (posChanged === true) {
             posChanged = false;
@@ -413,7 +403,6 @@ define(['logManager',
     /************************** SELECTION CHANGED HANDLER ****************************/
 
     SnapEditorWidget.prototype._onSelectionChanged = function (selectedIds) {
-        //TODO
         this.onSelectionChanged(selectedIds);
     };
 
@@ -458,13 +447,7 @@ define(['logManager',
     /************************* END OF --- DESIGNER ITEM DRAGGABLE & COPYABLE CHECK ON DRAG START ************************/
 
     /************************** DRAG ITEM ***************************/
-    //TODO Update this to show "Linkable Regions"
     SnapEditorWidget.prototype.onLinkableItemDragStart = function (draggedItemId, allDraggedItemIDs) {
-        /*
-         * Change the next couple methods to support Snap! like stuff
-         * This should trigger the displaying of the connection areas
-         * TODO
-         */
         this.selectionManager.hideSelectionOutline();
 
         this._preDragActualSize = {"w": this._actualSize.w,
@@ -592,7 +575,6 @@ define(['logManager',
         this._tryRefreshScreen();
     };
 
-    //TODO REMOVE CONNECTION STUFF FROM NEXT TWO METHODS
     SnapEditorWidget.prototype._tryRefreshScreen = function () {
         var insertedLen = 0,
             updatedLen = 0,
@@ -633,11 +615,6 @@ define(['logManager',
             self = this;
 
         this.logger.debug("_refreshScreen START");
-
-        //TODO: updated items probably touched the DOM for modification
-        //hopefully none of them forced a reflow by reading values, only setting values
-        //browsers will optimize this
-        //http://www.phpied.com/rendering-repaint-reflowrelayout-restyle/ --- BROWSER ARE SMART
 
         /***************** FIRST HANDLE THE DESIGNER ITEMS *****************/
         //add all the inserted items, they are still on a document Fragment
@@ -921,11 +898,8 @@ define(['logManager',
         if (this.mode !== mode) {
             this.highlightManager.deactivate();
             this.selectionManager.deactivate();
-            //this.dragManager.deactivate();
             this.searchManager.deactivate();
             this._setComponentsReadOnly(true);
-            //this._addTabsButtonEnabled(false);
-            //this._destroyTabsSortable();
             switch (mode) {
                 case SnapEditorWidgetOperatingModes.prototype.OPERATING_MODES.READ_ONLY:
                     this.mode = this.OPERATING_MODES.READ_ONLY;
@@ -935,11 +909,8 @@ define(['logManager',
                 case SnapEditorWidgetOperatingModes.prototype.OPERATING_MODES.DESIGN:
                     this.mode = this.OPERATING_MODES.DESIGN;
                     this.selectionManager.activate();
-                    //this.dragManager.activate();
                     this.searchManager.activate();
                     this._setComponentsReadOnly(false);
-                    //this._addTabsButtonEnabled(true);
-                    //this._makeTabsSortable();
                     break;
                 case SnapEditorWidgetOperatingModes.prototype.OPERATING_MODES.HIGHLIGHT:
                     this.mode = this.OPERATING_MODES.HIGHLIGHT;
