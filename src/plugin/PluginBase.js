@@ -277,25 +277,25 @@ define(['plugin/PluginConfig',
                     self.logger.error(err);
                 }
 
-                var newRootHash = this.core.getHash(this.rootNode);
+                var newRootHash = self.core.getHash(self.rootNode);
 
-                var commitMessage = '[Plugin] ' + this.getName() + ' (v' + this.getVersion() + ') updated the model.';
+                var commitMessage = '[Plugin] ' + self.getName() + ' (v' + self.getVersion() + ') updated the model.';
                 if (message) {
                     commitMessage += ' - ' + message;
                 }
 
-                this.currentHash = this.project.makeCommit([this.currentHash], newRootHash, commitMessage, function (err) {
+                self.currentHash = self.project.makeCommit([self.currentHash], newRootHash, commitMessage, function (err) {
                     // TODO: any error handling here?
                     if (err) {
                         self.logger.error(err);
                     }
 
-                    if (this.branchName) {
+                    if (self.branchName) {
                         // try to fast forward branch if there was a branch name defined
 
                         // FIXME: what if master branch is already in a different state?
 
-                        this.project.getBranchNames(function (err, branchNames) {
+                        self.project.getBranchNames(function (err, branchNames) {
                             if (branchNames.hasOwnProperty(self.branchName)) {
                                 var branchHash = branchNames[self.branchName];
                                 if (branchHash === self.branchHash) {
@@ -333,7 +333,7 @@ define(['plugin/PluginConfig',
 
                     } else {
                         // making commits, we have not started from a branch
-                        this.logger.info('Project was saved to ' + this.currentHash + ' commit.');
+                        self.logger.info('Project was saved to ' + self.currentHash + ' commit.');
                         callback(null);
                     }
                 });
