@@ -9706,7 +9706,7 @@ define('storage/cache',[ "util/assert" ], function (ASSERT) {
 				cacheSize = 0;
 			}
 
-			/*function getBranchHash (name, oldhash, callback) {
+			function getBranchHash (name, oldhash, callback) {
 				ASSERT(typeof name === "string" && typeof callback === "function");
 				ASSERT(typeof oldhash === "string" || oldhash === null);
 
@@ -9729,9 +9729,9 @@ define('storage/cache',[ "util/assert" ], function (ASSERT) {
 				} else {
 					branch.push(callback);
 				}
-			}*/
+			}
 
-			/*function setBranchHash (name, oldhash, newhash, callback) {
+			function setBranchHash (name, oldhash, newhash, callback) {
 				ASSERT(typeof name === "string" && typeof oldhash === "string");
 				ASSERT(typeof newhash === "string" && typeof callback === "function");
 
@@ -9752,7 +9752,7 @@ define('storage/cache',[ "util/assert" ], function (ASSERT) {
 
 					callback(err);
 				});
-			}*/
+			}
 
 			function reopenProject (callback) {
 				ASSERT(project !== null && refcount >= 0 && typeof callback === "function");
@@ -9767,10 +9767,10 @@ define('storage/cache',[ "util/assert" ], function (ASSERT) {
 					findHash: project.findHash,
 					dumpObjects: project.dumpObjects,
 					getBranchNames: project.getBranchNames,
-					//getBranchHash: getBranchHash,
-					//setBranchHash: setBranchHash,
-          getBranchHash: project.getBranchHash,
-          setBranchHash: project.setBranchHash,
+					getBranchHash: getBranchHash,
+					setBranchHash: setBranchHash,
+          //getBranchHash: project.getBranchHash,
+          //setBranchHash: project.setBranchHash,
 					getCommits: project.getCommits,
 					makeCommit: project.makeCommit,
 					ID_NAME: project.ID_NAME
@@ -13863,6 +13863,7 @@ define('client',[
         currentModification = null,
         canDoUndo = false,
         canDoRedo = false,
+        currentTarget = null,
         addModification = function (commitHash, info) {
           var newElement = {
             previous: currentModification,
@@ -13882,6 +13883,7 @@ define('client',[
             from = currentModification.commit;
             to = currentModification.previous.commit;
             currentModification = currentModification.previous;
+            currentTarget = to;
             project.setBranchHash(branch, from, to, callback);
           } else {
             callback(new Error('unable to execute undo'));
@@ -13894,6 +13896,7 @@ define('client',[
             from = currentModification.commit;
             to = currentModification.next.commit;
             currentModification = currentModification.next;
+            currentTarget = to;
             project.setBranchHash(branch, from, to, callback);
           } else {
             callback(new Error('unable to execute redo'));
@@ -13909,6 +13912,13 @@ define('client',[
             undo: currentModification ? currentModification.previous !== null && currentModification.previous !== undefined : false,
             redo: currentModification ? currentModification.next !== null && currentModification.next !== undefined : false
           };
+        },
+        isCurrentTarget = function(commitHash){
+          if(currentTarget === commitHash){
+            currentTarget = null;
+            return true;
+          }
+          return false;
         };
 
       _client.addEventListener(_client.events.UNDO_AVAILABLE,function(client,parameters){
@@ -13922,7 +13932,8 @@ define('client',[
         redo: redo,
         addModification: addModification,
         clean: clean,
-        checkStatus: checkStatus
+        checkStatus: checkStatus,
+        isCurrentTarget: isCurrentTarget
       };
 
     }
@@ -14329,6 +14340,7 @@ define('client',[
         var myCallback = null;
         var redoerNeedsClean = true;
         var branchHashUpdated = function (err, newhash, forked) {
+          var doUpdate = false;
           if (branch === _branch && !_offline) {
             if (!err && typeof newhash === 'string') {
               if (newhash === '') {
@@ -14341,7 +14353,69 @@ define('client',[
                   }
                 });
               } else {
-                if(redoerNeedsClean || !_selfCommits[newhash]){
+                if(_redoer.isCurrentTarget(newhash)){
+                  addCommit(newhash);
+                  doUpdate = true;
+                } else if(!_selfCommits[newhash] || redoerNeedsClean){
+                  redoerNeedsClean = false;
+                  _redoer.clean();
+                  _redoer.addModification(newhash,"branch initial");
+                  _selfCommits={};
+                  _selfCommits[newhash] = true;
+                  doUpdate = true;
+                  addCommit(newhash);
+                }
+                var redoInfo = _redoer.checkStatus(),
+                  canUndo = false,
+                  canRedo = false;
+
+                if(_selfCommits[newhash]){
+                  if(redoInfo.undo) {
+                    canUndo = true;
+                  }
+                  if(redoInfo.redo) {
+                    canRedo = true;
+                  }
+                }
+                _self.dispatchEvent(_self.events.UNDO_AVAILABLE, canUndo);
+                _self.dispatchEvent(_self.events.REDO_AVAILABLE, canRedo);
+
+                if(doUpdate){
+                  _project.loadObject(newhash, function (err, commitObj) {
+                    if (!err && commitObj) {
+                      loading(commitObj.root);
+                    } else {
+                      setTimeout(function () {
+                        _project.loadObject(newhash, function (err, commitObj) {
+                          if (!err && commitObj) {
+                            loading(commitObj.root);
+                          } else {
+                            console.log("second load try failed on commit!!!", err);
+                          }
+                        });
+                      }, 1000);
+                    }
+                  });
+                }
+
+                if (callback) {
+                  myCallback = callback;
+                  callback = null;
+                  myCallback();
+                }
+
+                //branch status update
+                if (_offline) {
+                  changeBranchState(_self.branchStates.OFFLINE);
+                } else {
+                  if (forked) {
+                    changeBranchState(_self.branchStates.FORKED);
+                  }
+                }
+
+                return _project.getBranchHash(branch, _recentCommits[0], branchHashUpdated);
+
+                /*if(redoerNeedsClean || !_selfCommits[newhash]){
                   redoerNeedsClean = false;
                   _redoer.clean();
                   _redoer.addModification(newhash,"branch initial");
@@ -14363,7 +14437,7 @@ define('client',[
                 _self.dispatchEvent(_self.events.REDO_AVAILABLE, canRedo);
 
 
-                if (/*_recentCommits.indexOf(newhash) === -1*/_recentCommits.indexOf(newhash) !== 0) {
+                if (/*_recentCommits.indexOf(newhash) === -1/_recentCommits.indexOf(newhash) !== 0) {
 
                   addCommit(newhash);
 
@@ -14400,10 +14474,10 @@ define('client',[
                   }
                   /* else {
                    changeBranchState(_self.branchStates.SYNC);
-                   }*/
+                   }/
                 }
 
-                return _project.getBranchHash(branch, _recentCommits[0], branchHashUpdated);
+                return _project.getBranchHash(branch, _recentCommits[0], branchHashUpdated);*/
               }
             } else {
               if (callback) {
