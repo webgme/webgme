@@ -109,9 +109,23 @@ describe('BlobClient', function () {
         // need this in package.json: "node-remote": "localhost"
         it('should create zip from node-webkit Buffer', function (done) {
             var data = base64DecToArr("UEsDBAoAAAAAACNaNkWtbMPDBwAAAAcAAAAIAAAAZGF0YS5iaW5kYXRhIA0KUEsBAj8ACgAAAAAA\n" +
-                "I1o2Ra1sw8MHAAAABwAAAAgAJAAAAAAAAAAgAAAAAAAAAGRhdGEuYmluCgAgAAAAAAABABgAn3xF\n" +
-                "poDWzwGOVUWmgNbPAY5VRaaA1s8BUEsFBgAAAAABAAEAWgAAAC0AAAAAAA==");
+            "I1o2Ra1sw8MHAAAABwAAAAgAJAAAAAAAAAAgAAAAAAAAAGRhdGEuYmluCgAgAAAAAAABABgAn3xF\n" +
+            "poDWzwGOVUWmgNbPAY5VRaaA1s8BUEsFBgAAAAABAAEAWgAAAC0AAAAAAA==");
             createZip(new Buffer(data), done);
+        });
+    }
+
+    if (typeof global !== 'undefined') { // i.e. if running under node-webkit
+        // need this in package.json: "node-remote": "localhost"
+        it('should create zip from node-webkit File', function (done) {
+            var f = new File('./npm_install.cmd', 'npm_install.cmd');
+            //expect(Object.getOwnPropertyNames(f).join(' ')).to.equal(0);
+            var bc = new BlobClient();
+            bc.putFile("npm_install.cmd", f, function(err, hash) {
+                if (err)
+                    done(err);
+                done();
+            });
         });
     }
 
