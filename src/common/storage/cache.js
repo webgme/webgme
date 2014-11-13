@@ -240,7 +240,7 @@ define([ "util/assert" ], function (ASSERT) {
 				cacheSize = 0;
 			}
 
-			/*function getBranchHash (name, oldhash, callback) {
+			function getBranchHash (name, oldhash, callback) {
 				ASSERT(typeof name === "string" && typeof callback === "function");
 				ASSERT(typeof oldhash === "string" || oldhash === null);
 
@@ -263,9 +263,9 @@ define([ "util/assert" ], function (ASSERT) {
 				} else {
 					branch.push(callback);
 				}
-			}*/
+			}
 
-			/*function setBranchHash (name, oldhash, newhash, callback) {
+			function setBranchHash (name, oldhash, newhash, callback) {
 				ASSERT(typeof name === "string" && typeof oldhash === "string");
 				ASSERT(typeof newhash === "string" && typeof callback === "function");
 
@@ -286,7 +286,7 @@ define([ "util/assert" ], function (ASSERT) {
 
 					callback(err);
 				});
-			}*/
+			}
 
 			function reopenProject (callback) {
 				ASSERT(project !== null && refcount >= 0 && typeof callback === "function");
@@ -301,10 +301,10 @@ define([ "util/assert" ], function (ASSERT) {
 					findHash: project.findHash,
 					dumpObjects: project.dumpObjects,
 					getBranchNames: project.getBranchNames,
-					//getBranchHash: getBranchHash,
-					//setBranchHash: setBranchHash,
-          getBranchHash: project.getBranchHash,
-          setBranchHash: project.setBranchHash,
+					getBranchHash: getBranchHash,
+					setBranchHash: setBranchHash,
+          //getBranchHash: project.getBranchHash,
+          //setBranchHash: project.setBranchHash,
 					getCommits: project.getCommits,
 					makeCommit: project.makeCommit,
 					ID_NAME: project.ID_NAME
