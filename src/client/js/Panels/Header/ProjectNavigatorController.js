@@ -1077,6 +1077,7 @@ define( [
               self.gmeClient.applyDiff(
                 whereBranchId,
                 baseCommit,
+                self.projects[projectId].branches[whereBranchId].properties.hashTag,
                 [
                   self.projects[projectId].branches[whatBranchId].properties.hashTag,
                   self.projects[projectId].branches[whereBranchId].properties.hashTag

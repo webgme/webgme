@@ -3376,8 +3376,8 @@ define([
         return _core.applyResolution(resolveObject);
       }
       //TODO move to server
-      function applyDiff(branch,commit,parents,diff,callback){
-        _project.loadObject(commit,function(err,cObject){
+      function applyDiff(branch,baseCommitHash,branchCommitHash,parents,diff,callback){
+        _project.loadObject(baseCommitHash,function(err,cObject){
           var core = getNewCore(_project);
           if(!err && cObject){
             core.loadRoot(cObject.root,function(err,root){
@@ -3396,7 +3396,7 @@ define([
                       if(err){
                         return callback(err);
                       }
-                      _project.setBranchHash(branch,commit,newHash,callback);
+                      _project.setBranchHash(branch,branchCommitHash,newHash,callback);
                     });
                   });
                 });
