@@ -467,7 +467,13 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                         if(err){
                             callback(err);
                         } else {
-                            project.setInfo(info,callback);
+                            options.authorization(getSessionID(socket),projectName,'write',function(err,cando) {
+                                if(!err && cando === true){
+                                    project.setInfo(info, callback);
+                                } else {
+                                    callback(err || "insufficient authorization for operation");
+                                }
+                            });
                         }
                     });
                 });
