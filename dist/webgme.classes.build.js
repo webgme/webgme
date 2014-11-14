@@ -9748,7 +9748,7 @@ define('storage/cache',[ "util/assert" ], function (ASSERT) {
 				cacheSize = 0;
 			}
 
-			/*function getBranchHash (name, oldhash, callback) {
+			function getBranchHash (name, oldhash, callback) {
 				ASSERT(typeof name === "string" && typeof callback === "function");
 				ASSERT(typeof oldhash === "string" || oldhash === null);
 
@@ -9771,9 +9771,9 @@ define('storage/cache',[ "util/assert" ], function (ASSERT) {
 				} else {
 					branch.push(callback);
 				}
-			}*/
+			}
 
-			/*function setBranchHash (name, oldhash, newhash, callback) {
+			function setBranchHash (name, oldhash, newhash, callback) {
 				ASSERT(typeof name === "string" && typeof oldhash === "string");
 				ASSERT(typeof newhash === "string" && typeof callback === "function");
 
@@ -9794,7 +9794,7 @@ define('storage/cache',[ "util/assert" ], function (ASSERT) {
 
 					callback(err);
 				});
-			}*/
+			}
 
 			function reopenProject (callback) {
 				ASSERT(project !== null && refcount >= 0 && typeof callback === "function");
@@ -9811,10 +9811,10 @@ define('storage/cache',[ "util/assert" ], function (ASSERT) {
 					findHash: project.findHash,
 					dumpObjects: project.dumpObjects,
 					getBranchNames: project.getBranchNames,
-					//getBranchHash: getBranchHash,
-					//setBranchHash: setBranchHash,
-          getBranchHash: project.getBranchHash,
-          setBranchHash: project.setBranchHash,
+					getBranchHash: getBranchHash,
+					setBranchHash: setBranchHash,
+          //getBranchHash: project.getBranchHash,
+          //setBranchHash: project.setBranchHash,
 					getCommits: project.getCommits,
 					makeCommit: project.makeCommit,
 					ID_NAME: project.ID_NAME
@@ -13921,6 +13921,7 @@ define('client',[
         currentModification = null,
         canDoUndo = false,
         canDoRedo = false,
+        currentTarget = null,
         addModification = function (commitHash, info) {
           var newElement = {
             previous: currentModification,
@@ -13940,6 +13941,7 @@ define('client',[
             from = currentModification.commit;
             to = currentModification.previous.commit;
             currentModification = currentModification.previous;
+            currentTarget = to;
             project.setBranchHash(branch, from, to, callback);
           } else {
             callback(new Error('unable to execute undo'));
@@ -13952,6 +13954,7 @@ define('client',[
             from = currentModification.commit;
             to = currentModification.next.commit;
             currentModification = currentModification.next;
+            currentTarget = to;
             project.setBranchHash(branch, from, to, callback);
           } else {
             callback(new Error('unable to execute redo'));
@@ -13967,6 +13970,13 @@ define('client',[
             undo: currentModification ? currentModification.previous !== null && currentModification.previous !== undefined : false,
             redo: currentModification ? currentModification.next !== null && currentModification.next !== undefined : false
           };
+        },
+        isCurrentTarget = function(commitHash){
+          if(currentTarget === commitHash){
+            currentTarget = null;
+            return true;
+          }
+          return false;
         };
 
       _client.addEventListener(_client.events.UNDO_AVAILABLE,function(client,parameters){
@@ -13980,7 +13990,8 @@ define('client',[
         redo: redo,
         addModification: addModification,
         clean: clean,
-        checkStatus: checkStatus
+        checkStatus: checkStatus,
+        isCurrentTarget: isCurrentTarget
       };
 
     }
@@ -14387,6 +14398,7 @@ define('client',[
         var myCallback = null;
         var redoerNeedsClean = true;
         var branchHashUpdated = function (err, newhash, forked) {
+          var doUpdate = false;
           if (branch === _branch && !_offline) {
             if (!err && typeof newhash === 'string') {
               if (newhash === '') {
@@ -14399,7 +14411,69 @@ define('client',[
                   }
                 });
               } else {
-                if(redoerNeedsClean || !_selfCommits[newhash]){
+                if(_redoer.isCurrentTarget(newhash)){
+                  addCommit(newhash);
+                  doUpdate = true;
+                } else if(!_selfCommits[newhash] || redoerNeedsClean){
+                  redoerNeedsClean = false;
+                  _redoer.clean();
+                  _redoer.addModification(newhash,"branch initial");
+                  _selfCommits={};
+                  _selfCommits[newhash] = true;
+                  doUpdate = true;
+                  addCommit(newhash);
+                }
+                var redoInfo = _redoer.checkStatus(),
+                  canUndo = false,
+                  canRedo = false;
+
+                if(_selfCommits[newhash]){
+                  if(redoInfo.undo) {
+                    canUndo = true;
+                  }
+                  if(redoInfo.redo) {
+                    canRedo = true;
+                  }
+                }
+                _self.dispatchEvent(_self.events.UNDO_AVAILABLE, canUndo);
+                _self.dispatchEvent(_self.events.REDO_AVAILABLE, canRedo);
+
+                if(doUpdate){
+                  _project.loadObject(newhash, function (err, commitObj) {
+                    if (!err && commitObj) {
+                      loading(commitObj.root);
+                    } else {
+                      setTimeout(function () {
+                        _project.loadObject(newhash, function (err, commitObj) {
+                          if (!err && commitObj) {
+                            loading(commitObj.root);
+                          } else {
+                            console.log("second load try failed on commit!!!", err);
+                          }
+                        });
+                      }, 1000);
+                    }
+                  });
+                }
+
+                if (callback) {
+                  myCallback = callback;
+                  callback = null;
+                  myCallback();
+                }
+
+                //branch status update
+                if (_offline) {
+                  changeBranchState(_self.branchStates.OFFLINE);
+                } else {
+                  if (forked) {
+                    changeBranchState(_self.branchStates.FORKED);
+                  }
+                }
+
+                return _project.getBranchHash(branch, _recentCommits[0], branchHashUpdated);
+
+                /*if(redoerNeedsClean || !_selfCommits[newhash]){
                   redoerNeedsClean = false;
                   _redoer.clean();
                   _redoer.addModification(newhash,"branch initial");
@@ -14421,7 +14495,7 @@ define('client',[
                 _self.dispatchEvent(_self.events.REDO_AVAILABLE, canRedo);
 
 
-                if (/*_recentCommits.indexOf(newhash) === -1*/_recentCommits.indexOf(newhash) !== 0) {
+                if (/*_recentCommits.indexOf(newhash) === -1/_recentCommits.indexOf(newhash) !== 0) {
 
                   addCommit(newhash);
 
@@ -14458,10 +14532,10 @@ define('client',[
                   }
                   /* else {
                    changeBranchState(_self.branchStates.SYNC);
-                   }*/
+                   }/
                 }
 
-                return _project.getBranchHash(branch, _recentCommits[0], branchHashUpdated);
+                return _project.getBranchHash(branch, _recentCommits[0], branchHashUpdated);*/
               }
             } else {
               if (callback) {
@@ -18871,16 +18945,20 @@ define('blob/BlobClient',['./Artifact', 'blob/BlobMetadata', 'superagent'], func
         }
     };
 
-    BlobClient.prototype.getViewURL = function (hash, subpath) {
+    BlobClient.prototype._getURL = function (base, hash, subpath) {
         var subpathURL = '';
         if (subpath) {
             subpathURL = subpath;
         }
-        return this.blobUrl + 'view/' + hash + '/' + encodeURIComponent(subpathURL);
+        return this.blobUrl + base + '/' + hash + '/' + encodeURIComponent(subpathURL);
     };
 
-    BlobClient.prototype.getDownloadURL = function (hash) {
-        return this.blobUrl + 'download/' + hash;
+    BlobClient.prototype.getViewURL = function (hash, subpath) {
+        return this._getURL('view', hash, subpath);
+    };
+
+    BlobClient.prototype.getDownloadURL = function (hash, subpath) {
+        return this._getURL('download', hash, subpath);
     };
 
     BlobClient.prototype.getCreateURL = function (filename, isMetadata) {
@@ -18983,7 +19061,11 @@ define('blob/BlobClient',['./Artifact', 'blob/BlobMetadata', 'superagent'], func
         }
     };
 
-    BlobClient.prototype.getObject = function (hash, callback) {
+    BlobClient.prototype.getSubObject = function (hash, subpath, callback) {
+        return this.getObject(hash, callback, subpath);
+    }
+
+    BlobClient.prototype.getObject = function (hash, callback, subpath) {
         superagent.parse['application/zip'] = function (obj, parseCallback) {
             if (parseCallback) {
                 // Running on node; this should be unreachable due to req.pipe() below
@@ -18993,7 +19075,7 @@ define('blob/BlobClient',['./Artifact', 'blob/BlobMetadata', 'superagent'], func
         }
         //superagent.parse['application/json'] = superagent.parse['application/zip'];
 
-        var req = superagent.get(this.getViewURL(hash));
+        var req = superagent.get(this.getViewURL(hash, subpath));
         if (req.pipe) {
             // running on node
             var Writable = require('stream').Writable;
@@ -19729,68 +19811,69 @@ define('plugin/PluginBase',['plugin/PluginConfig',
                 if (err) {
                     self.logger.error(err);
                 }
-            });
 
-            var newRootHash = this.core.getHash(this.rootNode);
+                var newRootHash = self.core.getHash(self.rootNode);
 
-            var commitMessage = '[Plugin] ' + this.getName() + ' (v' + this.getVersion() + ') updated the model.';
-            if (message) {
-                commitMessage += ' - ' + message;
-            }
-
-            this.currentHash = this.project.makeCommit([this.currentHash], newRootHash, commitMessage, function (err) {
-                // TODO: any error handling here?
-                if (err) {
-                    self.logger.error(err);
+                var commitMessage = '[Plugin] ' + self.getName() + ' (v' + self.getVersion() + ') updated the model.';
+                if (message) {
+                    commitMessage += ' - ' + message;
                 }
-            });
 
-            if (this.branchName) {
-                // try to fast forward branch if there was a branch name defined
+                self.currentHash = self.project.makeCommit([self.currentHash], newRootHash, commitMessage, function (err) {
+                    // TODO: any error handling here?
+                    if (err) {
+                        self.logger.error(err);
+                    }
 
-                // FIXME: what if master branch is already in a different state?
+                    if (self.branchName) {
+                        // try to fast forward branch if there was a branch name defined
 
-                this.project.getBranchNames(function (err, branchNames) {
-                    if (branchNames.hasOwnProperty(self.branchName)) {
-                        var branchHash = branchNames[self.branchName];
-                        if (branchHash === self.branchHash) {
-                            // the branch does not have any new commits
-                            // try to fast forward branch to the current commit
-                            self.project.setBranchHash(self.branchName, self.branchHash, self.currentHash, function (err) {
-                                if (err) {
-                                    // fast forward failed
-                                    self.logger.error(err);
-                                    self.logger.info('"' + self.branchName + '" was NOT updated');
-                                    self.logger.info('Project was saved to ' + self.currentHash + ' commit.');
+                        // FIXME: what if master branch is already in a different state?
+
+                        self.project.getBranchNames(function (err, branchNames) {
+                            if (branchNames.hasOwnProperty(self.branchName)) {
+                                var branchHash = branchNames[self.branchName];
+                                if (branchHash === self.branchHash) {
+                                    // the branch does not have any new commits
+                                    // try to fast forward branch to the current commit
+                                    self.project.setBranchHash(self.branchName, self.branchHash, self.currentHash, function (err) {
+                                        if (err) {
+                                            // fast forward failed
+                                            self.logger.error(err);
+                                            self.logger.info('"' + self.branchName + '" was NOT updated');
+                                            self.logger.info('Project was saved to ' + self.currentHash + ' commit.');
+                                        } else {
+                                            // successful fast forward of branch to the new commit
+                                            self.logger.info('"' + self.branchName + '" was updated to the new commit.');
+                                            // roll starting point on success
+                                            self.branchHash = self.currentHash;
+                                        }
+                                        callback(err);
+                                    });
                                 } else {
-                                    // successful fast forward of branch to the new commit
-                                    self.logger.info('"' + self.branchName + '" was updated to the new commit.');
-                                    // roll starting point on success
-                                    self.branchHash = self.currentHash;
+                                    // branch has changes a merge is required
+                                    // TODO: try auto-merge, if fails ...
+                                    self.logger.warn('Cannot fast forward "' + self.branchName + '" branch. Merge is required but not supported yet.');
+                                    self.logger.info('Project was saved to ' + self.currentHash + ' commit.');
+                                    callback(null);
                                 }
-                                callback(err);
-                            });
-                        } else {
-                            // branch has changes a merge is required
-                            // TODO: try auto-merge, if fails ...
-                            self.logger.warn('Cannot fast forward "' + self.branchName + '" branch. Merge is required but not supported yet.');
-                            self.logger.info('Project was saved to ' + self.currentHash + ' commit.');
-                            callback(null);
-                        }
+                            } else {
+                                // branch was deleted or not found, do nothing
+                                self.logger.info('Project was saved to ' + self.currentHash + ' commit.');
+                                callback(null);
+                            }
+                        });
+                        // FIXME: is this call async??
+                        // FIXME: we are not tracking all commits that we make
+
                     } else {
-                        // branch was deleted or not found, do nothing
+                        // making commits, we have not started from a branch
                         self.logger.info('Project was saved to ' + self.currentHash + ' commit.');
                         callback(null);
                     }
                 });
-                // FIXME: is this call async??
-                // FIXME: we are not tracking all commits that we make
 
-            } else {
-                // making commits, we have not started from a branch
-                this.logger.info('Project was saved to ' + this.currentHash + ' commit.');
-                callback(null);
-            }
+            });
         };
 
         //--------------------------------------------------------------------------------------------------------------

@@ -32,16 +32,20 @@ define(['./Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, Bl
         }
     };
 
-    BlobClient.prototype.getViewURL = function (hash, subpath) {
+    BlobClient.prototype._getURL = function (base, hash, subpath) {
         var subpathURL = '';
         if (subpath) {
             subpathURL = subpath;
         }
-        return this.blobUrl + 'view/' + hash + '/' + encodeURIComponent(subpathURL);
+        return this.blobUrl + base + '/' + hash + '/' + encodeURIComponent(subpathURL);
     };
 
-    BlobClient.prototype.getDownloadURL = function (hash) {
-        return this.blobUrl + 'download/' + hash;
+    BlobClient.prototype.getViewURL = function (hash, subpath) {
+        return this._getURL('view', hash, subpath);
+    };
+
+    BlobClient.prototype.getDownloadURL = function (hash, subpath) {
+        return this._getURL('download', hash, subpath);
     };
 
     BlobClient.prototype.getCreateURL = function (filename, isMetadata) {
@@ -144,7 +148,11 @@ define(['./Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, Bl
         }
     };
 
-    BlobClient.prototype.getObject = function (hash, callback) {
+    BlobClient.prototype.getSubObject = function (hash, subpath, callback) {
+        return this.getObject(hash, callback, subpath);
+    }
+
+    BlobClient.prototype.getObject = function (hash, callback, subpath) {
         superagent.parse['application/zip'] = function (obj, parseCallback) {
             if (parseCallback) {
                 // Running on node; this should be unreachable due to req.pipe() below
@@ -154,7 +162,7 @@ define(['./Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, Bl
         }
         //superagent.parse['application/json'] = superagent.parse['application/zip'];
 
-        var req = superagent.get(this.getViewURL(hash));
+        var req = superagent.get(this.getViewURL(hash, subpath));
         if (req.pipe) {
             // running on node
             var Writable = require('stream').Writable;

@@ -11,3 +11,4 @@
    * Please note that in some cases you may also update the cbuild.js (with the new paths for example).
    * To provide a new class through this module you have to update webgme.classes.js module
 
+ 

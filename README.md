@@ -20,7 +20,7 @@ Each script supports the `-help` command line parameter which will list all poss
 # Library usage
 
 You can get all core functionality (not related to the GUI) by using node import `require('webgme')`, or get specific part of the library 
-using requirejs (see the scripts in the bin directory). 
+using requirejs (see the scripts in the src/bin directory). 
 
 ```
     //this example shows how you able to connect directly from code to your own mongoDB instance
