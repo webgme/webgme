@@ -1628,6 +1628,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
     function gatherFullNodeConflicts(diffNode,mine,path,opposingPath){
       var conflict,
         opposingConflict,
+        relids, i,
         createSingleKeyValuePairConflicts = function(pathBase,data){
         var keys, i;
         keys = Object.keys(data);
@@ -1656,6 +1657,15 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       createSingleKeyValuePairConflicts(path+'/attr',diffNode.attr || {});
       createSingleKeyValuePairConflicts(path+'/reg',diffNode.reg || {});
       createSingleKeyValuePairConflicts(path+'/pointer',diffNode.pointer || {});
+
+      //if the opposing item is theirs, we have to recursively go down in our changes
+      if(mine){
+        relids = getDiffChildrenRelids(diffNode);
+        for(i=0;i<relids.length;i++){
+          gatherFullNodeConflicts(diffNode[relids[i]],true,path+'/'+relids[i],opposingPath);
+        }
+      }
+
     }
     function gatherFullSetConflicts(diffSet,mine,path,opposingPath){
       var relids = getDiffChildrenRelids(diffSet),
@@ -1884,12 +1894,12 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
             selected:"mine",
             mine:{
               path: keys[i],
-              info: keys[i],
+              info: keys[i].replace(/\//g," / "),
               value: _conflict_mine[keys[i]].value
             },
             theirs:{
               path:conflicts[j],
-              info:conflicts[j],
+              info:conflicts[j].replace(/\//g," / "),
               value:_conflict_theirs[conflicts[j]].value
             }
           });
