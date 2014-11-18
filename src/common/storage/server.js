@@ -31,6 +31,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
             _databaseOpened = false,
             ERROR_DEAD_GUID = 'the given object does not exists',
             _workerManager = null,
+            _connectedWorkers = {},
             _eventHistory = [],
             _events = {},
             _waitingEventCallbacks = [],
@@ -533,10 +534,16 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                     if(socket.handshake){
                         parameters.webGMESessionId = getSessionID(socket) || null;
                     }
-                    _workerManager.request(parameters,callback);
+                    _workerManager.request(parameters,function(err,id){
+                        if(!err && id){
+                            registerConnectedWorker(socket.id,id);
+                        }
+                        callback(err,id);
+                    });
                 });
 
                 socket.on('simpleResult',function(resultId,callback){
+                    deregisterConnectedWorker(socket.id,resultId);
                     getWorkerResult(resultId,callback);
                 });
 
@@ -556,6 +563,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
 
                 socket.on('disconnect',function(){
                     //TODO temporary the disconnect function has been removed
+                    stopConnectedWorkers(socket.id);
                 });
             });
 
@@ -602,6 +610,39 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
 
         function getWorkerResult(resultId,callback){
             _workerManager.result(resultId,callback);
+        }
+
+        //connected worker handlings for cleanup
+        function registerConnectedWorker(socketId,workerId){
+            var index;
+            _connectedWorkers[socketId] = _connectedWorkers[socketId] || [];
+            index = _connectedWorkers[socketId].indexOf(workerId);
+            if(index === -1){
+                _connectedWorkers[socketId].push(workerId);
+            }
+        }
+        function deregisterConnectedWorker(socketId,workerId){
+            var index;
+            _connectedWorkers[socketId] = _connectedWorkers[socketId] || [];
+            index = _connectedWorkers[socketId].indexOf(workerId);
+            if(index !== -1){
+                _connectedWorkers[socketId].splice(index,1);
+            }
+        }
+        function stopConnectedWorkers(socketId){
+            var i;
+            if(_workerManager){
+                _connectedWorkers[socketId] = _connectedWorkers[socketId] || [];
+                for(i=0;i<_connectedWorkers[socketId].length;i++){
+                    //TODO probably we would need some kind of result handling
+                    _workerManager.result(_connectedWorkers[socketId][i],function(err){
+                        if(err){
+                            options.log.error("unable to stop connected worker ["+_connectedWorkers[socketId][i]+"] of socket "+socketId);
+                        }
+                    });
+                }
+                delete _connectedWorkers[socketId];
+            }
         }
 
         return {
