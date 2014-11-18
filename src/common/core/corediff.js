@@ -772,7 +772,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
             mDiff.movedFrom = _core.getPath(info.from);
             mDiff.ooGuids = gatherObstructiveGuids(info.from);
             _diff_moves[_core.getPath(info.from)] = _core.getPath(info.to);
-            insertIntoDiff(_core.getPath(info.to), mDiff);
+            insertAtPath(_DIFF,_core.getPath(info.to),mDiff);
             return null;
           }, updateDiff(ytc.from, ytc.to), ytc);
         } else {
