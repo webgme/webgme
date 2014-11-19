@@ -852,7 +852,9 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
           movedFrom: true,
           childrenListChanged: true,
           oGuids: true,
-          ooGuids: true
+          ooGuids: true,
+          min: true,
+          max: true
         };
       for (i = 0; i < keys.length; i++) {
         if (!forbiddenWords[keys[i]]) {
@@ -1387,13 +1389,21 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
     }
     function insertAtPath(diff,path,object){
       ASSERT(typeof path === 'string');
-      var i,base,relid;
+      var i,base,relid,nodepath;
       if(path === ''){
         _concat_result = JSON.parse(JSON.stringify(object));
         return;
       }
+      nodepath = path.match(/\/\/.*\/\//);
+      nodepath = nodepath[0];
+      path = path.replace(nodepath,"/*nodepath*/");
+      nodepath = nodepath.replace(/\/\//g,"/");
+      nodepath = nodepath.slice(0,-1);
       path = path.split('/');
       path.shift();
+      if(path.indexOf("*nodepath*") !== -1){
+        path[path.indexOf("*nodepath*")] = nodepath;
+      }
       relid = path.pop();
       base = diff;
       for(i=0;i<path.length;i++){
@@ -1658,6 +1668,11 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       createSingleKeyValuePairConflicts(path+'/reg',diffNode.reg || {});
       createSingleKeyValuePairConflicts(path+'/pointer',diffNode.pointer || {});
 
+      //TODO gather set conflicts
+      if(diffNode.meta){
+        gatherFullMetaConflicts(diffNode.meta,mine,path+'/meta',opposingPath);
+      }
+
       //if the opposing item is theirs, we have to recursively go down in our changes
       if(mine){
         relids = getDiffChildrenRelids(diffNode);
@@ -1746,25 +1761,25 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
                   if(base[names[i]][memberPath] === TODELETESTRING){
                     if(extension[names[i]][members[j]] !== TODELETESTRING){
                       //whole member conflict
-                      _conflict_mine[path+'/'+names[i]+memberPath] = {value:TODELETESTRING,conflictingPaths:{}};
-                      gatherFullNodeConflicts(extension[names[i]][members[j]],false,path+'/'+names[i]+memberPath,path+'/'+names[i]+memberPath);
+                      _conflict_mine[path+'/'+names[i]+'/'+memberPath+'//'] = {value:TODELETESTRING,conflictingPaths:{}};
+                      gatherFullNodeConflicts(extension[names[i]][members[j]],false,path+'/'+names[i]+'/'+memberPath+'//',path+'/'+names[i]+'/'+memberPath+'//');
                     }
                   } else {
                     if(extension[names[i]][members[j]] === TODELETESTRING){
                       //whole member conflict
-                      _conflict_theirs[path+'/'+names[i]+memberPath] = {value:TODELETESTRING,conflictingPaths:{}};
-                      gatherFullNodeConflicts(base[names[i]][memberPath],true,path+'/'+names[i]+memberPath,path+'/'+names[i]+memberPath);
+                      _conflict_theirs[path+'/'+names[i]+'/'+memberPath+'//'] = {value:TODELETESTRING,conflictingPaths:{}};
+                      gatherFullNodeConflicts(base[names[i]][memberPath],true,path+'/'+names[i]+'/'+memberPath+'//',path+'/'+names[i]+'/'+memberPath+'//');
                     } else {
                       if(extension[names[i]][members[j]].attr){
                         if(base[names[i]][memberPath].attr){
-                          concatSingleKeyValuePairs(path+'/'+names[i]+memberPath+'/attr',base[names[i]][memberPath].attr,extension[names[i]][members[j]].attr);
+                          concatSingleKeyValuePairs(path+'/'+names[i]+'/'+memberPath+'/'+'/attr',base[names[i]][memberPath].attr,extension[names[i]][members[j]].attr);
                         } else {
                           base[names[i]][memberPath].attr = extension[names[i]][members[j]].attr;
                         }
                       }
                       if(extension[names[i]][members[j]].reg){
                         if(base[names[i]][memberPath].reg){
-                          concatSingleKeyValuePairs(path+'/'+names[i]+memberPath+'/reg',base[names[i]][memberPath].reg,extension[names[i]][members[j]].reg);
+                          concatSingleKeyValuePairs(path+'/'+names[i]+'/'+memberPath+'/'+'/reg',base[names[i]][memberPath].reg,extension[names[i]][members[j]].reg);
                         } else {
                           base[names[i]][memberPath].reg = extension[names[i]][members[j]].reg;
                         }
@@ -1786,6 +1801,125 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
         }
       }
     }
+    function gatherFullMetaConflicts(diffMeta,mine,path,opposingPath){
+      var conflict,opposingConflict,
+        relids, i, j, keys, tPath;
+
+      if(mine){
+        conflict = _conflict_mine;
+        opposingConflict = _conflict_theirs[opposingPath];
+      } else {
+        conflict = _conflict_theirs;
+        opposingConflict = _conflict_mine[opposingPath];
+      }
+
+      if(diffMeta === TODELETESTRING){
+        conflict[path] = {value:TODELETESTRING,conflictingPaths:{}};
+        conflict[path].conflictingPaths[opposingPath] = true;
+        opposingConflict.conflictingPaths[path] = true;
+        return; //there is no other conflict
+      }
+
+      //children
+      if(diffMeta.children){
+        if(diffMeta.children === TODELETESTRING){
+          conflict[path+'/children'] = {value:TODELETESTRING,conflictingPaths:{}};
+          conflict[path+'/children'].conflictingPaths[opposingPath] = true;
+          opposingConflict.conflictingPaths[path+'/children'] = true;
+        } else {
+          if(diffMeta.children.max){
+            conflict[path+'/children/max'] = {value:diffMeta.children.max,conflictingPaths:{}};
+            conflict[path+'/children/max'].conflictingPaths[opposingPath] = true;
+            opposingConflict.conflictingPaths[path+'/children/max'] = true;
+          }
+          if(diffMeta.children.min){
+            conflict[path+'/children/min'] = {value:diffMeta.children.min,conflictingPaths:{}};
+            conflict[path+'/children/min'].conflictingPaths[opposingPath] = true;
+            opposingConflict.conflictingPaths[path+'/children/min'] = true;
+          }
+          relids = getDiffChildrenRelids(diffMeta.children);
+          for(i=0;i<relids.length;i++){
+            conflict[path+'/children/'+relids[i]] = {value:diffMeta.children[relids[i]],conflictingPaths:{}};
+            conflict[path+'/children/'+relids[i]].conflictingPaths[opposingPath] = true;
+            opposingConflict.conflictingPaths[path+'/children/'+relids[i]] = true;
+          }
+        }
+      }
+      //attributes
+      if(diffMeta.attributes){
+        if(diffMeta.attributes === TODELETESTRING){
+          conflict[path+'/attributes'] = {value:TODELETESTRING,conflictingPaths:{}};
+          conflict[path+'/attributes'].conflictingPaths[opposingPath] = true;
+          opposingConflict.conflictingPaths[path+'/attributes'] = true;
+        } else {
+          keys = Object.keys(diffMeta.attributes);
+          for(i=0;i<keys.length;i++){
+            conflict[path+'/attributes/'+keys[i]] = {value:diffMeta.attributes[keys[i]],conflictingPaths:{}};
+            conflict[path+'/attributes'].conflictingPaths[opposingPath] = true;
+            opposingConflict.conflictingPaths[path+'/attributes'] = true;
+          }
+        }
+      }
+      //pointers
+      if(diffMeta.pointers){
+        if(diffMeta.pointers === TODELETESTRING){
+          conflict[path+'/pointers'] = {value:TODELETESTRING,conflictingPaths:{}};
+          conflict[path+'/pointers'].conflictingPaths[opposingPath] = true;
+          opposingConflict.conflictingPaths[path+'/pointers'] = true;
+        } else {
+          keys = Object.keys(diffMeta.pointers);
+          for(i=0;i<keys.length;i++){
+            if(diffMeta.pointers[keys[i]] === TODELETESTRING){
+              conflict[path+'/pointers/'+keys[i]] = {value:TODELETESTRING,conflictingPaths:{}};
+              conflict[path+'/pointers/'+keys[i]].conflictingPaths[opposingPath] = true;
+              opposingConflict.conflictingPaths[path+'/pointers/'+keys[i]] = true;
+            } else {
+              if(diffMeta.pointers[keys[i]].max){
+                conflict[path+'/pointers/'+keys[i]+'/max'] = {value:diffMeta.pointers[keys[i]].max,conflictingPaths:{}};
+                conflict[path+'/pointers/'+keys[i]+'/max'].conflictingPaths[opposingPath] = true;
+                opposingConflict.conflictingPaths[path+'/pointers/'+keys[i]+'/max'] = true;
+              }
+              if(diffMeta.pointers[keys[i]].min){
+                conflict[path+'/pointers/'+keys[i]+'/min'] = {value:diffMeta.pointers[keys[i]].min,conflictingPaths:{}};
+                conflict[path+'/pointers/'+keys[i]+'/min'].conflictingPaths[opposingPath] = true;
+                opposingConflict.conflictingPaths[path+'/pointers/'+keys[i]+'/min'] = true;
+              }
+              relids = getDiffChildrenRelids(diffMeta.children);
+              for(j=0;j<relids.length;j++){
+                tPath = getCommonPathForConcat(relids[j]);
+                conflict[path+'/pointers/'+keys[i]+'/'+tPath] = {value:diffMeta.pointers[keys[i]][relids[j]],conflictingPaths:{}};
+                conflict[path+'/pointers/'+keys[i]+'/'+tPath].conflictingPaths[opposingPath] = true;
+                opposingConflict.conflictingPaths[path+'/pointers/'+keys[i]+'/'+tPath] = true;
+              }
+            }
+          }
+        }
+      }
+      //aspects
+      //TODO
+    }
+    function concatMeta(path,base,extension){
+
+      if(CANON.stringify(base) !== CANON.stringify(extension)){
+        if(base === TODELETESTRING){
+          _conflict_mine[path] = {value:TODELETESTRING,conflictingPaths:{}};
+          gatherFullMetaConflicts(extension,false,path,path);
+        } else {
+          if(extension === TODELETESTRING){
+            _conflict_theirs[path] = {value:TODELETESTRING,conflictingPaths:{}};
+            gatherFullMetaConflicts(base,true,path,path);
+          } else {
+            //no check for sub-meta conflicts
+
+            //children
+            //attributes
+            //pointers
+            //aspects
+          }
+        }
+      }
+    }
+
     function tryToConcatNodeChange(extNode,path){
       var guid = extNode.guid,
         oGuids =  getObstructiveGuids(extNode),
@@ -1867,6 +2001,13 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
               concatSet(path+'/set',baseNode.set,extNode.set);
             } else {
               insertAtPath(_concat_base,path+'/set',extNode.set);
+            }
+          }
+          if(extNode.meta){
+            if(baseNode.meta){
+              concatMeta(path+'/meta',baseNode.meta,extNode.meta);
+            } else {
+              insertAtPath(_concat_base,path+'/meta',extNode.meta);
             }
           }
         } else {
