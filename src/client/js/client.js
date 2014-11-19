@@ -1526,7 +1526,49 @@ define([
       }
 
       //this is just a first brute implementation it needs serious optimization!!!
-      function loading(newRootHash, callback) {
+      function loading(newRootHash,callback){
+        var finalEvents = function () {
+          var modifiedPaths;
+          modifiedPaths = getModifiedNodes(_loadNodes);
+          _nodes = _loadNodes;
+          _loadNodes = {};
+          for (var i in _users) {
+            userEvents(i, modifiedPaths);
+          }
+          callback(null);
+        };
+        callback = callback || function(err){};
+        _previousRootHash = _rootHash;
+        _rootHash = newRootHash;
+        if(_previousRootHash){
+          getEventTree(_previousRootHash,_rootHash,function(err,diffTree){
+            if(err){
+              _rootHash = null;
+              callback(err);
+            } else {
+              _changeTree = diffTree;
+              loadRoot(newRootHash,function(err){
+                if(err){
+                  _rootHash = null;
+                  callback(err);
+                } else {
+                  finalEvents();
+                }
+              });
+            }
+          });
+        } else {
+          loadRoot(newRootHash,function(err){
+            if(err){
+              _rootHash = null;
+              callback(err);
+            } else {
+              finalEvents();
+            }
+          });
+        }
+      }
+      function _loading(newRootHash, callback) {
         callback = callback || function () {
         };
         var incomplete = false;

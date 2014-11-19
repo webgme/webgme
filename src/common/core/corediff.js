@@ -940,7 +940,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
           //simple node
           child = _core.loadChild(node,relids[i]);
         }
-        
+
         done = TASYNC.call(function(n,di,p,m,d){
           if(m === true){
             n = _core.moveNode(n,p);
