@@ -527,26 +527,30 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
         for (i = 0; i < tDiff.length; i++) {
           diff.childrenListChanged = true;
           child = getChild(sChildren, tDiff[i].relid);
-          guid = _core.getGuid(child);
-          diff[tDiff[i].relid] = {guid: guid, removed: true, hash: _core.getHash(child)};
-          _yetToCompute[guid] = _yetToCompute[guid] || {};
-          _yetToCompute[guid].from = child;
-          _yetToCompute[guid].fromExpanded = false;
+          if(child){
+            guid = _core.getGuid(child);
+            diff[tDiff[i].relid] = {guid: guid, removed: true, hash: _core.getHash(child)};
+            _yetToCompute[guid] = _yetToCompute[guid] || {};
+            _yetToCompute[guid].from = child;
+            _yetToCompute[guid].fromExpanded = false;
+          }
         }
 
         tDiff = diff.children ? diff.children.added || [] : [];
         for (i = 0; i < tDiff.length; i++) {
           diff.childrenListChanged = true;
           child = getChild(tChildren, tDiff[i].relid);
-          guid = _core.getGuid(child);
-          base =_core.getBase(child);
-          if(base){
-            base = _core.getPath(base);
+          if(child){
+            guid = _core.getGuid(child);
+            base =_core.getBase(child);
+            if(base){
+              base = _core.getPath(base);
+            }
+            diff[tDiff[i].relid] = {guid: guid, removed: false, hash: _core.getHash(child), pointer:{source:{},target:{base:base}}};
+            _yetToCompute[guid] = _yetToCompute[guid] || {};
+            _yetToCompute[guid].to = child;
+            _yetToCompute[guid].toExpanded = false;
           }
-          diff[tDiff[i].relid] = {guid: guid, removed: false, hash: _core.getHash(child), pointer:{source:{},target:{base:base}}};
-          _yetToCompute[guid] = _yetToCompute[guid] || {};
-          _yetToCompute[guid].to = child;
-          _yetToCompute[guid].toExpanded = false;
         }
 
         for (i = 0; i < tChildren.length; i++) {
@@ -914,28 +918,29 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
 
       for(i=0;i<relids.length;i++){
         moved = false;
-        if(diff[relids[i]].removed === false){
-          if(diff[relids[i]].movedFrom){
-            moved = true;
-            child = _core.loadByPath(_core.getRoot(node),diff[relids[i]].movedFrom);
+        if(diff[relids[i]].movedFrom){
+          //moved node
+          moved = true;
+          child = _core.loadByPath(_core.getRoot(node),diff[relids[i]].movedFrom);
+        } else if(diff[relids[i]].removed === false){
+          //added node
+          //first we hack the pointer, then we create the node
+          if(diff[relids[i]].pointer && diff[relids[i]].pointer.base){
+            //we can set base if the node has one, otherwise it is 'inheritance internal' node
+            setBaseOfNewNode(node,relids[i],diff[relids[i]].pointer.base);
+          }
+          if(diff[relids[i]].hash){
+            _core.setProperty(node,relids[i],diff[relids[i]].hash);
+            child = _core.loadChild(node,relids[i]);
           } else {
-            //first we hack the pointer, then we create the node
-            if(diff[relids[i]].pointer && diff[relids[i]].pointer.base){
-              //we can set base if the node has one, otherwise it is 'inheritance internal' node
-              setBaseOfNewNode(node,relids[i],diff[relids[i]].pointer.base);
-            }
-            if(diff[relids[i]].hash){
-              _core.setProperty(node,relids[i],diff[relids[i]].hash);
-              child = _core.loadChild(node,relids[i]);
-            } else {
-              child = _core.getChild(node,relids[i]);
-              _core.setHashed(child,true);
-            }
+            child = _core.getChild(node,relids[i]);
+            _core.setHashed(child,true);
           }
         } else {
-          //we just load the child
+          //simple node
           child = _core.loadChild(node,relids[i]);
         }
+        
         done = TASYNC.call(function(n,di,p,m,d){
           if(m === true){
             n = _core.moveNode(n,p);
@@ -1814,7 +1819,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
           }
         } else {
           //simple concatenation
-          //TODO the path fo members should be replaced here as well...
+          //TODO the path for members should be replaced here as well...
           base[names[i]] = extension[names[i]];
         }
       }
