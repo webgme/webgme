@@ -1394,8 +1394,8 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
         _concat_result = JSON.parse(JSON.stringify(object));
         return;
       }
-      nodepath = path.match(/\/\/.*\/\//);
-      nodepath = nodepath[0];
+      nodepath = path.match(/\/\/.*\/\//) || [];
+      nodepath = nodepath[0] || "there is no nodepath in the path";
       path = path.replace(nodepath,"/*nodepath*/");
       nodepath = nodepath.replace(/\/\//g,"/");
       nodepath = nodepath.slice(0,-1);
@@ -1555,7 +1555,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
         diff[finalPath] = value;
       }
     }
-    function applyResolutionItem(diff,item){
+    /*function applyResolutionItem(diff,item){
 
       //let's start with the easy ones
       if(item.mine.path === item.theirs.path){
@@ -1584,7 +1584,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
         }
       }
       return mine;
-    };
+    };*/
 
     //now we try a different approach, which maybe more simple
     function getCommonPathForConcat(path){
@@ -1638,7 +1638,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
     function gatherFullNodeConflicts(diffNode,mine,path,opposingPath){
       var conflict,
         opposingConflict,
-        relids, i,
+        keys, i,
         createSingleKeyValuePairConflicts = function(pathBase,data){
         var keys, i;
         keys = Object.keys(data);
@@ -1668,16 +1668,34 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       createSingleKeyValuePairConflicts(path+'/reg',diffNode.reg || {});
       createSingleKeyValuePairConflicts(path+'/pointer',diffNode.pointer || {});
 
-      //TODO gather set conflicts
+      if(diffNode.set){
+        if(diffNode.set === TODELETESTRING){
+          conflict[path+'/set'] = {value:TODELETESTRING,conflictingPaths:{}};
+          conflict[path+'/set'].conflictingPaths[opposingPath] = true;
+          opposingConflict.conflictingPaths[path+'/set'] = true;
+        } else {
+          keys = Object.keys(diffNode.set);
+          for(i=0;i<keys.length;i++){
+            if(diffNode.set[keys[i]] === TODELETESTRING){
+              conflict[path+'/set/'+keys[i]] = {value:TODELETESTRING,conflictingPaths:{}};
+              conflict[path+'/set/'+keys[i]].conflictingPaths[opposingPath] = true;
+              opposingConflict.conflictingPaths[path+'/set/'+keys[i]] = true;
+            } else {
+              gatherFullSetConflicts(diffNode.set[keys[i]],mine,path+'/set/'+keys[i],opposingPath);
+            }
+          }
+        }
+      }
+
       if(diffNode.meta){
         gatherFullMetaConflicts(diffNode.meta,mine,path+'/meta',opposingPath);
       }
 
       //if the opposing item is theirs, we have to recursively go down in our changes
       if(mine){
-        relids = getDiffChildrenRelids(diffNode);
-        for(i=0;i<relids.length;i++){
-          gatherFullNodeConflicts(diffNode[relids[i]],true,path+'/'+relids[i],opposingPath);
+        keys = getDiffChildrenRelids(diffNode);
+        for(i=0;i<keys.length;i++){
+          gatherFullNodeConflicts(diffNode[keys[i]],true,path+'/'+keys[i],opposingPath);
         }
       }
 
@@ -1697,21 +1715,21 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       for(i=0;i<relids.length;i++){
         if(diffSet[relids[i]] === TODELETESTRING){
           //single conflict as the element was removed
-          conflict[path+'/'+relids[i]] = {value:TODELETESTRING,conflictingPaths:{}};
-          conflict[path+'/'+relids[i]].conflictingPaths[opposingPath] = true;
-          opposingConflict.conflictingPaths[path+'/'+relids[i]] = true;
+          conflict[path+'/'+relids[i]+'/'] = {value:TODELETESTRING,conflictingPaths:{}};
+          conflict[path+'/'+relids[i]+'/'].conflictingPaths[opposingPath] = true;
+          opposingConflict.conflictingPaths[path+'/'+relids[i]+'/'] = true;
         } else {
           keys = Object.keys(diffSet[relids[i]].attr || {});
           for(j=0;j<keys.length;j++){
-            conflict[path+'/'+relids[i]+'/attr/'+keys[j]] = {value:diffSet[relids[i]].attr[keys[j]],conflictingPaths:{}};
-            conflict[path+'/'+relids[i]+'/attr/'+keys[j]].conflictingPaths[opposingPath] = true;
-            opposingConflict.conflictingPaths[path+'/'+relids[i]+'/attr/'+keys[j]] = true;
+            conflict[path+'/'+relids[i]+'//attr/'+keys[j]] = {value:diffSet[relids[i]].attr[keys[j]],conflictingPaths:{}};
+            conflict[path+'/'+relids[i]+'//attr/'+keys[j]].conflictingPaths[opposingPath] = true;
+            opposingConflict.conflictingPaths[path+'/'+relids[i]+'//attr/'+keys[j]] = true;
           }
           keys = Object.keys(diffSet[relids[i]].reg || {});
           for(j=0;j<keys.length;j++){
-            conflict[path+'/'+relids[i]+'/reg/'+keys[j]] = {value:diffSet[relids[i]].reg[keys[j]],conflictingPaths:{}};
-            conflict[path+'/'+relids[i]+'/reg/'+keys[j]].conflictingPaths[opposingPath] = true;
-            opposingConflict.conflictingPaths[path+'/'+relids[i]+'/reg/'+keys[j]] = true;
+            conflict[path+'/'+relids[i]+'//reg/'+keys[j]] = {value:diffSet[relids[i]].reg[keys[j]],conflictingPaths:{}};
+            conflict[path+'/'+relids[i]+'//reg/'+keys[j]].conflictingPaths[opposingPath] = true;
+            opposingConflict.conflictingPaths[path+'/'+relids[i]+'//reg/'+keys[j]] = true;
           }
         }
       }
@@ -2160,7 +2178,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       resolveMoves(conflictObject);
       for(i=0;i<conflictObject.items.length;i++){
         if(conflictObject.items[i].selected !== "mine"){
-          //resolveConflictItem(conflictObject.merge,conflictObject.items[i]);
+          removePathFromDiff(conflictObject.merge,conflictObject.items[i].mine.path);
           insertAtPath(conflictObject.merge,conflictObject.items[i].theirs.path,conflictObject.items[i].theirs.value);
         }
       }
