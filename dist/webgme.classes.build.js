@@ -10514,7 +10514,7 @@ define('coreclient/meta',[], function () {
             var node = _nodes[path] || null;
             if(node){
                 var metaNode = _core.getChild(node,"_meta");
-                _core.deleteNode(metaNode);
+                _core.deleteNode(metaNode,true);
                 metaNode = _core.getChild(node,"_meta");
                 if(meta.children){
                     var childrenNode = _core.getChild(metaNode,"children");
@@ -10540,7 +10540,7 @@ define('coreclient/meta',[], function () {
                         }
 
                     } else {
-                        _core.deleteNode(childrenNode);
+                        _core.deleteNode(childrenNode,true);
                     }
                 }
 
@@ -13301,6 +13301,29 @@ define('coreclient/serialization',['util/assert'],function(ASSERT){
         return null;*/
         return _extraBasePaths[path];
     }
+
+    var sortMultipleArrays = function () {
+        var index = getSortedIndex(arguments[0]);
+        for (var j = 0; j < arguments.length; j++) {
+            var _arr = arguments[j].slice();
+            for(var i = 0; i < _arr.length; i++) {
+                arguments[j][i] = _arr[index[i]];
+            }
+        }
+    };
+
+    var getSortedIndex = function (arr) {
+        var index = [];
+        for (var i = 0; i < arr.length; i++) {
+            index.push(i);
+        }
+        index = index.sort((function(arr){
+            return function (a, b) {return ((arr[a] > arr[b]) ? 1 : ((arr[a] < arr[b]) ? -1 : 0));
+            };
+        })(arr));
+        return index;
+    };
+
     function pathsToGuids(jsonObject){
         if(jsonObject && typeof jsonObject === 'object'){
             var keys = Object.keys(jsonObject),
@@ -13329,6 +13352,7 @@ define('coreclient/serialization',['util/assert'],function(ASSERT){
                             jsonObject.maxItems.splice(toDelete[j], 1);
                         }
                     }
+                    sortMultipleArrays(jsonObject.items, jsonObject.minItems, jsonObject.maxItems);
                 } else if(keys[i] === 'aspects'){
                     //aspects are a bunch of named path list, so we have to handle them separately
                     tArray = Object.keys(jsonObject[keys[i]]);
