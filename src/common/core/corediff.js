@@ -1640,6 +1640,23 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       }
       return result;
     }
+    function getWhomIObstructGuids(guid){
+      //this function is needed when the extension contains a deletion where the base did not delete the node
+      var guids = [],
+        checkNode = function(diffNode){
+          var relids,i;
+          if((diffNode.oGuids && diffNode.oGuids[guid]) || (diffNode.ooGuids && diffNode.ooGuids[guid])){
+            guids.push(diffNode.guid);
+          }
+
+          relids = getDiffChildrenRelids(diffNode);
+          for(i=0;i<relids.length;i++){
+            checkNode(diffNode[relids[i]]);
+          }
+        };
+      checkNode(_concat_base);
+      return guids;
+    }
     function gatherFullNodeConflicts(diffNode,mine,path,opposingPath){
       var conflict,
         opposingConflict,
@@ -1648,7 +1665,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
         var keys, i;
         keys = Object.keys(data);
         for(i=0;i<keys.length;i++){
-          conflict[pathBase+'/'+keys[i]] = {value:data[keys[i]],conflictingPaths:{}};
+          conflict[pathBase+'/'+keys[i]] = conflict[pathBase+'/'+keys[i]] || {value:data[keys[i]],conflictingPaths:{}};
           conflict[pathBase+'/'+keys[i]].conflictingPaths[opposingPath] = true;
           opposingConflict.conflictingPaths[pathBase+'/'+keys[i]] = true;
         }
@@ -1665,7 +1682,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       ASSERT(opposingConflict);
       //if the node was moved we should make a conflict for the whole node as well
       if(diffNode.movedFrom){
-        conflict[path] = {value:path,conflictingPaths:{}};
+        conflict[path] = conflict[path] || {value:path,conflictingPaths:{}};
         conflict[path].conflictingPaths[opposingPath] = true;
         opposingConflict.conflictingPaths[path] = true;
       }
@@ -1675,14 +1692,14 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
 
       if(diffNode.set){
         if(diffNode.set === TODELETESTRING){
-          conflict[path+'/set'] = {value:TODELETESTRING,conflictingPaths:{}};
+          conflict[path+'/set'] = conflict[path+'/set'] || {value:TODELETESTRING,conflictingPaths:{}};
           conflict[path+'/set'].conflictingPaths[opposingPath] = true;
           opposingConflict.conflictingPaths[path+'/set'] = true;
         } else {
           keys = Object.keys(diffNode.set);
           for(i=0;i<keys.length;i++){
             if(diffNode.set[keys[i]] === TODELETESTRING){
-              conflict[path+'/set/'+keys[i]] = {value:TODELETESTRING,conflictingPaths:{}};
+              conflict[path+'/set/'+keys[i]] = conflict[path+'/set/'+keys[i]] || {value:TODELETESTRING,conflictingPaths:{}};
               conflict[path+'/set/'+keys[i]].conflictingPaths[opposingPath] = true;
               opposingConflict.conflictingPaths[path+'/set/'+keys[i]] = true;
             } else {
@@ -1720,19 +1737,19 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       for(i=0;i<relids.length;i++){
         if(diffSet[relids[i]] === TODELETESTRING){
           //single conflict as the element was removed
-          conflict[path+'/'+relids[i]+'/'] = {value:TODELETESTRING,conflictingPaths:{}};
+          conflict[path+'/'+relids[i]+'/'] = conflict[path+'/'+relids[i]+'/'] || {value:TODELETESTRING,conflictingPaths:{}};
           conflict[path+'/'+relids[i]+'/'].conflictingPaths[opposingPath] = true;
           opposingConflict.conflictingPaths[path+'/'+relids[i]+'/'] = true;
         } else {
           keys = Object.keys(diffSet[relids[i]].attr || {});
           for(j=0;j<keys.length;j++){
-            conflict[path+'/'+relids[i]+'//attr/'+keys[j]] = {value:diffSet[relids[i]].attr[keys[j]],conflictingPaths:{}};
+            conflict[path+'/'+relids[i]+'//attr/'+keys[j]] = conflict[path+'/'+relids[i]+'//attr/'+keys[j]] || {value:diffSet[relids[i]].attr[keys[j]],conflictingPaths:{}};
             conflict[path+'/'+relids[i]+'//attr/'+keys[j]].conflictingPaths[opposingPath] = true;
             opposingConflict.conflictingPaths[path+'/'+relids[i]+'//attr/'+keys[j]] = true;
           }
           keys = Object.keys(diffSet[relids[i]].reg || {});
           for(j=0;j<keys.length;j++){
-            conflict[path+'/'+relids[i]+'//reg/'+keys[j]] = {value:diffSet[relids[i]].reg[keys[j]],conflictingPaths:{}};
+            conflict[path+'/'+relids[i]+'//reg/'+keys[j]] = conflict[path+'/'+relids[i]+'//reg/'+keys[j]] || {value:diffSet[relids[i]].reg[keys[j]],conflictingPaths:{}};
             conflict[path+'/'+relids[i]+'//reg/'+keys[j]].conflictingPaths[opposingPath] = true;
             opposingConflict.conflictingPaths[path+'/'+relids[i]+'//reg/'+keys[j]] = true;
           }
@@ -1837,7 +1854,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       }
 
       if(diffMeta === TODELETESTRING){
-        conflict[path] = {value:TODELETESTRING,conflictingPaths:{}};
+        conflict[path] = conflict[path] || {value:TODELETESTRING,conflictingPaths:{}};
         conflict[path].conflictingPaths[opposingPath] = true;
         opposingConflict.conflictingPaths[path] = true;
         return; //there is no other conflict
@@ -1846,23 +1863,23 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       //children
       if(diffMeta.children){
         if(diffMeta.children === TODELETESTRING){
-          conflict[path+'/children'] = {value:TODELETESTRING,conflictingPaths:{}};
+          conflict[path+'/children'] = conflict[path+'/children'] || {value:TODELETESTRING,conflictingPaths:{}};
           conflict[path+'/children'].conflictingPaths[opposingPath] = true;
           opposingConflict.conflictingPaths[path+'/children'] = true;
         } else {
           if(diffMeta.children.max){
-            conflict[path+'/children/max'] = {value:diffMeta.children.max,conflictingPaths:{}};
+            conflict[path+'/children/max'] = conflict[path+'/children/max'] || {value:diffMeta.children.max,conflictingPaths:{}};
             conflict[path+'/children/max'].conflictingPaths[opposingPath] = true;
             opposingConflict.conflictingPaths[path+'/children/max'] = true;
           }
           if(diffMeta.children.min){
-            conflict[path+'/children/min'] = {value:diffMeta.children.min,conflictingPaths:{}};
+            conflict[path+'/children/min'] = conflict[path+'/children/min'] || {value:diffMeta.children.min,conflictingPaths:{}};
             conflict[path+'/children/min'].conflictingPaths[opposingPath] = true;
             opposingConflict.conflictingPaths[path+'/children/min'] = true;
           }
           relids = getDiffChildrenRelids(diffMeta.children);
           for(i=0;i<relids.length;i++){
-            conflict[path+'/children/'+relids[i]] = {value:diffMeta.children[relids[i]],conflictingPaths:{}};
+            conflict[path+'/children/'+relids[i]] = conflict[path+'/children/'+relids[i]] || {value:diffMeta.children[relids[i]],conflictingPaths:{}};
             conflict[path+'/children/'+relids[i]].conflictingPaths[opposingPath] = true;
             opposingConflict.conflictingPaths[path+'/children/'+relids[i]] = true;
           }
@@ -1871,13 +1888,13 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       //attributes
       if(diffMeta.attributes){
         if(diffMeta.attributes === TODELETESTRING){
-          conflict[path+'/attributes'] = {value:TODELETESTRING,conflictingPaths:{}};
+          conflict[path+'/attributes'] = conflict[path+'/attributes'] || {value:TODELETESTRING,conflictingPaths:{}};
           conflict[path+'/attributes'].conflictingPaths[opposingPath] = true;
           opposingConflict.conflictingPaths[path+'/attributes'] = true;
         } else {
           keys = Object.keys(diffMeta.attributes);
           for(i=0;i<keys.length;i++){
-            conflict[path+'/attributes/'+keys[i]] = {value:diffMeta.attributes[keys[i]],conflictingPaths:{}};
+            conflict[path+'/attributes/'+keys[i]] = conflict[path+'/attributes/'+keys[i]] || {value:diffMeta.attributes[keys[i]],conflictingPaths:{}};
             conflict[path+'/attributes'].conflictingPaths[opposingPath] = true;
             opposingConflict.conflictingPaths[path+'/attributes'] = true;
           }
@@ -1886,31 +1903,31 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       //pointers
       if(diffMeta.pointers){
         if(diffMeta.pointers === TODELETESTRING){
-          conflict[path+'/pointers'] = {value:TODELETESTRING,conflictingPaths:{}};
+          conflict[path+'/pointers'] = conflict[path+'/pointers'] || {value:TODELETESTRING,conflictingPaths:{}};
           conflict[path+'/pointers'].conflictingPaths[opposingPath] = true;
           opposingConflict.conflictingPaths[path+'/pointers'] = true;
         } else {
           keys = Object.keys(diffMeta.pointers);
           for(i=0;i<keys.length;i++){
             if(diffMeta.pointers[keys[i]] === TODELETESTRING){
-              conflict[path+'/pointers/'+keys[i]] = {value:TODELETESTRING,conflictingPaths:{}};
+              conflict[path+'/pointers/'+keys[i]] = conflict[path+'/pointers/'+keys[i]] || {value:TODELETESTRING,conflictingPaths:{}};
               conflict[path+'/pointers/'+keys[i]].conflictingPaths[opposingPath] = true;
               opposingConflict.conflictingPaths[path+'/pointers/'+keys[i]] = true;
             } else {
               if(diffMeta.pointers[keys[i]].max){
-                conflict[path+'/pointers/'+keys[i]+'/max'] = {value:diffMeta.pointers[keys[i]].max,conflictingPaths:{}};
+                conflict[path+'/pointers/'+keys[i]+'/max'] = conflict[path+'/pointers/'+keys[i]+'/max'] || {value:diffMeta.pointers[keys[i]].max,conflictingPaths:{}};
                 conflict[path+'/pointers/'+keys[i]+'/max'].conflictingPaths[opposingPath] = true;
                 opposingConflict.conflictingPaths[path+'/pointers/'+keys[i]+'/max'] = true;
               }
               if(diffMeta.pointers[keys[i]].min){
-                conflict[path+'/pointers/'+keys[i]+'/min'] = {value:diffMeta.pointers[keys[i]].min,conflictingPaths:{}};
+                conflict[path+'/pointers/'+keys[i]+'/min'] = conflict[path+'/pointers/'+keys[i]+'/min'] || {value:diffMeta.pointers[keys[i]].min,conflictingPaths:{}};
                 conflict[path+'/pointers/'+keys[i]+'/min'].conflictingPaths[opposingPath] = true;
                 opposingConflict.conflictingPaths[path+'/pointers/'+keys[i]+'/min'] = true;
               }
               relids = getDiffChildrenRelids(diffMeta.pointers[keys[i]]);
               for(j=0;j<relids.length;j++){
                 tPath = getCommonPathForConcat(relids[j]);
-                conflict[path+'/pointers/'+keys[i]+'/'+tPath+'//'] = {value:diffMeta.pointers[keys[i]][relids[j]],conflictingPaths:{}};
+                conflict[path+'/pointers/'+keys[i]+'/'+tPath+'//'] = conflict[path+'/pointers/'+keys[i]+'/'+tPath+'//'] || {value:diffMeta.pointers[keys[i]][relids[j]],conflictingPaths:{}};
                 conflict[path+'/pointers/'+keys[i]+'/'+tPath+'//'].conflictingPaths[opposingPath] = true;
                 opposingConflict.conflictingPaths[path+'/pointers/'+keys[i]+'/'+tPath+'//'] = true;
               }
@@ -1925,11 +1942,11 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
 
       if(CANON.stringify(base) !== CANON.stringify(extension)){
         if(base === TODELETESTRING){
-          _conflict_mine[path] = {value:TODELETESTRING,conflictingPaths:{}};
+          _conflict_mine[path] = _conflict_mine[path] || {value:TODELETESTRING,conflictingPaths:{}};
           gatherFullMetaConflicts(extension,false,path,path);
         } else {
           if(extension === TODELETESTRING){
-            _conflict_theirs[path] = {value:TODELETESTRING,conflictingPaths:{}};
+            _conflict_theirs[path] = _conflict_theirs[path] || {value:TODELETESTRING,conflictingPaths:{}};
             gatherFullMetaConflicts(base,true,path,path);
           } else {
             //no check for sub-meta conflicts
@@ -1948,14 +1965,21 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
         oGuids =  getObstructiveGuids(extNode),
         baseNode = getNodeByGuid(_concat_base,guid),
         basePath = getPathByGuid(_concat_base,guid,''),
-        i,
+        i,tPath,
         relids = getDiffChildrenRelids(extNode);
 
 
       if(extNode.removed === true){
         if(baseNode && baseNode.removed !== true){
-          _conflict_theirs[basePath+'/removed'] = {value:true,conflictingPaths:{}};
-          gatherFullNodeConflicts(baseNode,true,basePath,basePath+'/removed');
+          tPath = basePath+'/removed';
+          _conflict_theirs[tPath] = _conflict_theirs[tPath] || {value:true,conflictingPaths:{}};
+          oGuids = getWhomIObstructGuids(guid);
+          ASSERT(oGuids.length > 0);
+          for(i=0;i<oGuids.length;i++){
+            baseNode = getNodeByGuid(_concat_base,oGuids[i]);
+            basePath = getPathByGuid(_concat_base,oGuids[i],'');
+            gatherFullNodeConflicts(baseNode,true,basePath,tPath);
+          }
         } else {
           //we simply concat the deletion
           insertAtPath(_concat_base,path,extNode);
@@ -1965,9 +1989,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
             for(i=0;i<oGuids.length;i++){
               baseNode = getNodeByGuid(_concat_base,oGuids[i]);
               basePath = getPathByGuid(_concat_base,oGuids[i],'');
-              if(!_conflict_mine[basePath+'/removed']){
-                _conflict_mine[basePath+'/removed'] = {value:true,conflictingPaths:{}};
-              }
+              _conflict_mine[basePath+'/removed'] = _conflict_mine[basePath+'/removed'] || {value:true,conflictingPaths:{}};
               gatherFullNodeConflicts(extNode,false,path,basePath+'/removed');
             }
         } else if(baseNode){
@@ -1975,8 +1997,8 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
           //check double moves - we do not care if they moved under the same parent
           if(extNode.movedFrom){
             if(baseNode.movedFrom && path !== basePath){
-              _conflict_mine[basePath] = {value:"move",conflictingPaths:{}};
-              _conflict_theirs[path] = {value:"move",conflictingPaths:{}};
+              _conflict_mine[basePath] = _conflict_mine[basePath] || {value:"move",conflictingPaths:{}};
+              _conflict_theirs[path] = _conflict_theirs[path] || {value:"move",conflictingPaths:{}};
               _conflict_mine[basePath].conflictingPaths[path]=true;
               _conflict_theirs[path].conflictingPaths[basePath] = true;
               //we keep the node where it is, but synchronize the paths
@@ -2045,6 +2067,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       }
 
     }
+
     function generateConflictItems(){
       var items = [],
         keys, i, j,conflicts;
