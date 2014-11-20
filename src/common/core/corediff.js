@@ -1907,12 +1907,12 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
                 conflict[path+'/pointers/'+keys[i]+'/min'].conflictingPaths[opposingPath] = true;
                 opposingConflict.conflictingPaths[path+'/pointers/'+keys[i]+'/min'] = true;
               }
-              relids = getDiffChildrenRelids(diffMeta.children);
+              relids = getDiffChildrenRelids(diffMeta.pointers[keys[i]]);
               for(j=0;j<relids.length;j++){
                 tPath = getCommonPathForConcat(relids[j]);
-                conflict[path+'/pointers/'+keys[i]+'/'+tPath] = {value:diffMeta.pointers[keys[i]][relids[j]],conflictingPaths:{}};
-                conflict[path+'/pointers/'+keys[i]+'/'+tPath].conflictingPaths[opposingPath] = true;
-                opposingConflict.conflictingPaths[path+'/pointers/'+keys[i]+'/'+tPath] = true;
+                conflict[path+'/pointers/'+keys[i]+'/'+tPath+'//'] = {value:diffMeta.pointers[keys[i]][relids[j]],conflictingPaths:{}};
+                conflict[path+'/pointers/'+keys[i]+'/'+tPath+'//'].conflictingPaths[opposingPath] = true;
+                opposingConflict.conflictingPaths[path+'/pointers/'+keys[i]+'/'+tPath+'//'] = true;
               }
             }
           }
