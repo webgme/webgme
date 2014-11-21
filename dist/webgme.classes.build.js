@@ -19670,7 +19670,7 @@ define('plugin/PluginBase',['plugin/PluginConfig',
         PluginBase.prototype.isMetaTypeOf = function (node, metaNode) {
             var self = this;
             while (node) {
-                if (node === metaNode) {
+                if (self.core.getGuid(node) === self.core.getGuid(metaNode)) {
                     return true;
                 }
                 node = self.core.getBase(node);
@@ -19688,7 +19688,7 @@ define('plugin/PluginBase',['plugin/PluginConfig',
                 name;
             while (node) {
                 name = self.core.getAttribute(node, 'name');
-                if (self.META.hasOwnProperty(name) && self.META[name] === node) {
+                if (self.META.hasOwnProperty(name) && self.core.getGuid(node) === self.core.getGuid(self.META[name])) {
                     break;
                 }
                 node = self.core.getBase(node);
@@ -19710,7 +19710,7 @@ define('plugin/PluginBase',['plugin/PluginConfig',
                 return true;
             }
             baseName = self.core.getAttribute(baseNode, 'name');
-            return self.META.hasOwnProperty(baseName) && self.META[baseName] === baseNode;
+            return self.META.hasOwnProperty(baseName) && self.core.getGuid(self.META[baseName]) === self.core.getGuid(baseNode);
         };
 
         /**
