@@ -181,7 +181,8 @@ define(['logManager',
                                             });
                                         } else {
                                             //we create the project
-                                            client.createProjectAsync(initialThingsToDo.projectToLoad,function(err){
+                                            //TODO probably some meaningful INFO is needed
+                                            client.createProjectAsync(initialThingsToDo.projectToLoad,null,function(err){
                                                 if(err){
                                                     logger.error(err);
                                                     openProjectLoadDialog();

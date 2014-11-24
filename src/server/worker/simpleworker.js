@@ -368,6 +368,32 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
         }
 
     };
+    var setProjectInfo = function(sessionId,projectId,info,callback){
+        if(storage){
+            if(initialized){
+                storage.getProjectNames(function(err,projectlist){
+                    if(err){
+                        return callback(err);
+                    }
+
+                    if(projectlist.indexOf(projectId) === -1){
+                        return callback(new Error('no such project'));
+                    }
+                    getProject(projectId,sessionId,function(err,project){
+                        if(err){
+                            return callback(err);
+                        }
+
+                        project.setInfo(info,callback);
+                    });
+                });
+            } else {
+                callback(new Error('worker not yet initialized'));
+            }
+        } else {
+            callback(new Error('no active data connection'));
+        }
+    };
 
     var setBranch = function(sessionId,projectName,branchName,oldHash,newHash,callback){
         if(storage){
@@ -548,6 +574,20 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
                     if(resultRequested === true){
                         initResult();
                         process.send({pid:process.pid,type:CONSTANT.msgTypes.result,error:err,result:r});
+                    } else {
+                        resultReady = true;
+                        error = err;
+                        result = null;
+                    }
+                });
+                break;
+            case CONSTANT.workerCommands.setProjectInfo:
+                resultId = GUID();
+                process.send({pid:process.pid,type:CONSTANT.msgTypes.request,error:null,resid:resultId});
+                setProjectInfo(parameters.webGMESessionId,parameters.projectId,parameters.info || {},function(err){
+                    if(resultRequested === true){
+                        initResult();
+                        process.send({pid:process.pid,type:CONSTANT.msgTypes.result,error:err,result:null});
                     } else {
                         resultReady = true;
                         error = err;
