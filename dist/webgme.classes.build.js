@@ -14004,9 +14004,9 @@ define('client',[
           _configuration.host = "";
         }
       }
-      require([_configuration.host + '/listAllDecorators', _configuration.host + '/listAllPlugins'], function (d, p) {
-        AllDecorators = d;
-        AllPlugins = p;
+      require([_configuration.host + '/listAllDecorators', _configuration.host + '/listAllPlugins'], function () {
+        AllDecorators = WebGMEGlobal.allDecorators;
+        AllPlugins = WebGMEGlobal.allPlugins;
       });
 
       function print_nodes(pretext) {
@@ -15383,7 +15383,7 @@ define('client',[
         }
       }
 
-      function createProjectAsync(projectname, callback) {
+      function createProjectAsync(projectname, projectInfo, callback) {
         if (_database) {
           getAvailableProjectsAsync(function (err, names) {
             if (!err && names) {
@@ -15392,7 +15392,14 @@ define('client',[
                   if (!err && p) {
                     createEmptyProject(p, function (err, commit) {
                       if (!err && commit) {
-                        callback(null);
+                        //TODO currently this is just a hack
+                        p.setInfo(projectInfo || {
+                          visibleName:projectname,
+                          description:"project in webGME",
+                          tags:{}
+                        },function(err){
+                          callback(err);
+                        });
                       } else {
                         callback(err);
                       }
@@ -16569,17 +16576,22 @@ define('client',[
         //});
         switch (testnumber) {
           case 1:
-            queryAddOn("HistoryAddOn", {}, function (err, result) {
-              console.log("addon result", err, result);
+            getFullProjectsInfoAsync(function(err,info){
+              console.log('TESTMETHOD - list',err,info);
             });
             break;
           case 2:
-            queryAddOn("ConstraintAddOn", {querytype: 'checkProject'}, function (err, result) {
-              console.log("addon result", err, result);
+            setProjectInfoAsync(getActiveProject(),{
+              visibleName:"TESTMETHOD_"+getActiveProject(),
+              description:"changed by TESTMETHOD",
+              tags:{
+              "1":"sample",
+                "2":"other"
+              }},function(err){
+              console.log('TESTMETHOD - set',err);
             });
             break;
           case 3:
-            console.log(_core.getBaseType(_nodes[WebGMEGlobal.State.getActiveObject()].node));
             break;
         }
 
@@ -16714,7 +16726,8 @@ define('client',[
 
       function createProjectFromFileAsync(projectname, jProject, callback) {
         //if called on an existing project, it will ruin it!!! - although the old commits will be untouched
-        createProjectAsync(projectname, function (err) {
+        //TODO somehow the export / import should contain the INFO field so the tags and description could come from it
+        createProjectAsync(projectname, {}, function (err) {
           selectProjectAsync(projectname, function (err) {
             Serialization.import(_core, _root, jProject, function (err) {
               if (err) {
@@ -16807,6 +16820,16 @@ define('client',[
           _database.simpleResult(id, callback);
         });
       }
+
+      function setProjectInfoAsync(projectId,info,callback){
+        _database.simpleRequest({command:'setProjectInfo',projectId:projectId,info:info},function(err,rId){
+          if(err){
+            return callback(err);
+          }
+          _database.simpleResult(rId,callback);
+        })
+      }
+
 
       function createGenericBranchAsync(project, branch, commit, callback) {
         _database.simpleRequest({command: 'setBranch', project: project, branch: branch, old: '', new: commit}, function (err, id) {
@@ -17012,6 +17035,7 @@ define('client',[
         getFullProjectsInfoAsync: getFullProjectsInfoAsync,
         createGenericBranchAsync: createGenericBranchAsync,
         deleteGenericBranchAsync: deleteGenericBranchAsync,
+        setProjectInfoAsync: setProjectInfoAsync,
 
         //constraint
         setConstraint: setConstraint,
