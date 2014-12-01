@@ -689,7 +689,8 @@ define(['logManager',
             }
             res.status(200);
             res.setHeader('Content-type', 'application/json');
-            res.end("define([],function(){ return "+JSON.stringify(names)+";});");
+            //res.end("define([],function(){ return "+JSON.stringify(names)+";});");
+            res.end("(function(){ WebGMEGlobal.allDecorators = "+JSON.stringify(names)+";}());");
         });
         __app.get('/listAllPlugins',ensureAuthenticated,function(req,res){
             var names = []; //we add only the "*.js" files from the directories
@@ -707,7 +708,8 @@ define(['logManager',
             }
             res.status(200);
             res.setHeader('Content-type', 'application/json');
-            res.end("define([],function(){ return "+JSON.stringify(names)+";});");
+            //res.end("define([],function(){ return "+JSON.stringify(names)+";});");
+            res.end("(function(){ WebGMEGlobal.allPlugins = "+JSON.stringify(names)+";}());");
         });
         __app.get('/listAllVisualizerDescriptors',ensureAuthenticated,function(req,res){
             var allVisualizerDescriptors = getVisualizersDescriptor();

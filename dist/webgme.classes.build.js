@@ -14063,8 +14063,8 @@ define('client',[
         }
       }
       require([_configuration.host + '/listAllDecorators', _configuration.host + '/listAllPlugins'], function (d, p) {
-        AllDecorators = d;
-        AllPlugins = p;
+        AllDecorators = WebGMEGlobal.allDecorators;
+        AllPlugins = WebGMEGlobal.allPlugins;
       });
 
       function print_nodes(pretext) {
