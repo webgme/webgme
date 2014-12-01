@@ -33,6 +33,7 @@ function(){
             'connectedWorkerStart': 'connectedWorkerStart',
             'connectedWorkerQuery': 'connectedWorkerQuery',
             'connectedWorkerStop': 'connectedworkerStop',
+            'getProjectInfo': 'getProjectInfo',
             'setProjectInfo': 'setProjectInfo'
         }
     };

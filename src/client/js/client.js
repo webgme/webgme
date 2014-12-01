@@ -2997,6 +2997,15 @@ define([
         })
       }
 
+      function getProjectInfoAsync(projectId,callback){
+        _database.simpleRequest({command:'getProjectInfo',projectId:projectId},function(err,rId){
+          if(err){
+            return callback(err);
+          }
+          _database.simpleResult(rId,callback);
+        })
+      }
+
 
       function createGenericBranchAsync(project, branch, commit, callback) {
         _database.simpleRequest({command: 'setBranch', project: project, branch: branch, old: '', new: commit}, function (err, id) {
@@ -3203,6 +3212,7 @@ define([
         createGenericBranchAsync: createGenericBranchAsync,
         deleteGenericBranchAsync: deleteGenericBranchAsync,
         setProjectInfoAsync: setProjectInfoAsync,
+        getProjectInfoAsync: getProjectInfoAsync,
 
         //constraint
         setConstraint: setConstraint,
