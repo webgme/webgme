@@ -34,7 +34,8 @@ function(){
             'connectedWorkerQuery': 'connectedWorkerQuery',
             'connectedWorkerStop': 'connectedworkerStop',
             'getProjectInfo': 'getProjectInfo',
-            'setProjectInfo': 'setProjectInfo'
+            'setProjectInfo': 'setProjectInfo',
+            'getAllInfoTags': 'getAllInfoTags'
         }
     };
 });

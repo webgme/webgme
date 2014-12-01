@@ -2759,6 +2759,9 @@ define([
             });
             break;
           case 3:
+            getAllInfoTagsAsync(function(err,tags){
+              console.log('tags',err,tags);
+            });
             break;
         }
 
@@ -3006,6 +3009,14 @@ define([
         })
       }
 
+      function getAllInfoTagsAsync(callback){
+        _database.simpleRequest({command:'getAllInfoTags'},function(err,rId){
+          if(err){
+            return callback(err);
+          }
+          _database.simpleResult(rId,callback);
+        })
+      }
 
       function createGenericBranchAsync(project, branch, commit, callback) {
         _database.simpleRequest({command: 'setBranch', project: project, branch: branch, old: '', new: commit}, function (err, id) {
