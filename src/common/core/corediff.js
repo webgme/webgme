@@ -1939,7 +1939,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       //TODO
     }
     function concatMeta(path,base,extension){
-
+      var tPath, i,bKeys,tKeys,t2Path;
       if(CANON.stringify(base) !== CANON.stringify(extension)){
         if(base === TODELETESTRING){
           _conflict_mine[path] = _conflict_mine[path] || {value:TODELETESTRING,conflictingPaths:{}};
@@ -1949,9 +1949,56 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
             _conflict_theirs[path] = _conflict_theirs[path] || {value:TODELETESTRING,conflictingPaths:{}};
             gatherFullMetaConflicts(base,true,path,path);
           } else {
-            //no check for sub-meta conflicts
+            //now check for sub-meta conflicts
 
             //children
+            if(extension.children){
+              if(base.children){
+                //max
+                if(extension.children.max){
+                  if(base.children.max && base.children.max !== extension.children.max){
+                    tPath = path+'/children/max';
+                    _conflict_mine[tPath] = _conflict_mine[tPath] || {value:base.children.max,conflictingPaths:{}};
+                    _conflict_mine[tPath].conflictingPaths[tPath] = true;
+                    _conflict_theirs[tPath] = _conflict_theirs[tPath] || {value:extension.children.max,conflictingPaths:{}};
+                    _conflict_theirs[tPath].conflictingPaths[tPath] = true;
+                  } else {
+                    base.children.max = extension.children.max;
+                  }
+                }
+                //min
+                if(extension.children.min){
+                  if(base.children.min && base.children.min !== extension.children.min){
+                    tPath = path+'/children/min';
+                    _conflict_mine[tPath] = _conflict_mine[tPath] || {value:base.children.min,conflictingPaths:{}};
+                    _conflict_mine[tPath].conflictingPaths[tPath] = true;
+                    _conflict_theirs[tPath] = _conflict_theirs[tPath] || {value:extension.children.min,conflictingPaths:{}};
+                    _conflict_theirs[tPath].conflictingPaths[tPath] = true;
+                  } else {
+                    base.children.min = extension.children.min;
+                  }
+                }
+                //targets
+                bKeys = getDiffChildrenRelids(base.children);
+                tKeys = getDiffChildrenRelids(extension.children);
+                for(i=0;i<tKeys.length;i++){
+                  tPath = getCommonPathForConcat(tKeys[i]);
+                  if(bKeys.indexOf(tPath) !== -1 && CANON.stringify(base.children[tPath]) !== CANON.stringify(extension.children[tKeys[i]])){
+                    t2Path = tPath;
+                    tPath = path+'/children/'+tPath+'//';
+                    _conflict_mine[tPath] = _conflict_mine[tPath] || {value:base.children[t2Path],conflictingPaths:{}};
+                    _conflict_mine[tPath].conflictingPaths[tPath] = true;
+                    _conflict_theirs[tPath] = _conflict_theirs[tPath] || {value:extension.children[tKeys[i]],conflictingPaths:{}};
+                    _conflict_theirs[tPath].conflictingPaths[tPath] = true;
+                  } else {
+                    base.children[tPath] = extension.children[tKeys[i]];
+                  }
+                }
+              } else {
+                //we just simply merge the extension's
+                base.children = extension.children;
+              }
+            }
             //attributes
             //pointers
             //aspects
