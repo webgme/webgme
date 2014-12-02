@@ -16650,6 +16650,9 @@ define('client',[
             });
             break;
           case 3:
+            getAllInfoTagsAsync(function(err,tags){
+              console.log('tags',err,tags);
+            });
             break;
         }
 
@@ -16888,6 +16891,23 @@ define('client',[
         })
       }
 
+      function getProjectInfoAsync(projectId,callback){
+        _database.simpleRequest({command:'getProjectInfo',projectId:projectId},function(err,rId){
+          if(err){
+            return callback(err);
+          }
+          _database.simpleResult(rId,callback);
+        })
+      }
+
+      function getAllInfoTagsAsync(callback){
+        _database.simpleRequest({command:'getAllInfoTags'},function(err,rId){
+          if(err){
+            return callback(err);
+          }
+          _database.simpleResult(rId,callback);
+        })
+      }
 
       function createGenericBranchAsync(project, branch, commit, callback) {
         _database.simpleRequest({command: 'setBranch', project: project, branch: branch, old: '', new: commit}, function (err, id) {
@@ -17094,6 +17114,8 @@ define('client',[
         createGenericBranchAsync: createGenericBranchAsync,
         deleteGenericBranchAsync: deleteGenericBranchAsync,
         setProjectInfoAsync: setProjectInfoAsync,
+        getProjectInfoAsync: getProjectInfoAsync,
+        getAllInfoTagsAsync: getAllInfoTagsAsync,
 
         //constraint
         setConstraint: setConstraint,

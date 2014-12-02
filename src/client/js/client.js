@@ -3224,6 +3224,7 @@ define([
         deleteGenericBranchAsync: deleteGenericBranchAsync,
         setProjectInfoAsync: setProjectInfoAsync,
         getProjectInfoAsync: getProjectInfoAsync,
+        getAllInfoTagsAsync: getAllInfoTagsAsync,
 
         //constraint
         setConstraint: setConstraint,
