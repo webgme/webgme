@@ -2040,6 +2040,41 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
               }
             }
             //attributes
+            if(extension.attributes){
+              if(base.attributes){
+                if(extension.attributes === TODELETESTRING || base.attributes == TODELETESTRING){
+                  if(CANON.stringify(base.attributes) !== CANON.stringify(extension.attributes)){
+                    tPath = path+'/attributes';
+                    _conflict_mine[tPath] = _conflict_mine[tPath] || {value:base.attributes,conflictingPaths:{}};
+                    _conflict_mine[tPath].conflictingPaths[tPath] = true;
+                    _conflict_theirs[tPath] = _conflict_theirs[tPath] || {value:extension.attributes,conflictingPaths:{}};
+                    _conflict_theirs[tPath].conflictingPaths[tPath] = true;
+                  }
+                } else {
+                  keys = Object.keys(extension.attributes);
+                  for(i=0;i<keys.length;i++){
+                    if(base.attributes[keys[i]]){
+                      if(extension.attributes[keys[i]] === TODELETESTRING || base.attributes[keys[i]] == TODELETESTRING){
+                        if(CANON.stringify(base.attributes[keys[i]]) !== CANON.stringify(extension.attributes[keys[i]])){
+                          tPath = path+'/attributes/'+[keys[i]];
+                          _conflict_mine[tPath] = _conflict_mine[tPath] || {value:base.attributes[keys[i]],conflictingPaths:{}};
+                          _conflict_mine[tPath].conflictingPaths[tPath] = true;
+                          _conflict_theirs[tPath] = _conflict_theirs[tPath] || {value:extension.attributes[keys[i]],conflictingPaths:{}};
+                          _conflict_theirs[tPath].conflictingPaths[tPath] = true;
+                        }
+                      } else {
+                        concatSingleKeyValuePairs(path+'/attributes/'+keys[i],base.attributes[keys[i]],extension.attributes[keys[i]]);
+                      }
+                    } else {
+                      base.attributes[keys[i]] = extension.attributes[keys[i]];
+                    }
+                  }
+
+                }
+              } else {
+                base.attributes = extension.attributes;
+              }
+            }
             //aspects
           }
         }
