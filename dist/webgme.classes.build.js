@@ -4612,7 +4612,6 @@ define('core/corerel',[ "util/assert", "core/coretree", "core/tasync", "util/can
 
 				array = array.slice(0);
 				array.push(source);
-				array.sort();
 			} else {
 				array = [ source ];
 			}
