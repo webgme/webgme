@@ -648,7 +648,7 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
                     } else {
                         resultReady = true;
                         error = err;
-                        result = null;
+                        result = r;
                     }
                 });
                 break;
