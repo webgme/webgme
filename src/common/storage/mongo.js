@@ -173,7 +173,9 @@ define([ "mongodb", "util/assert", "util/canon" ], function (MONGODB, ASSERT, CA
 			ASSERT(mongo !== null && typeof callback === "function");
 			ASSERT(typeof name === "string" && PROJECT_REGEXP.test(name));
 
-			var collection = null;
+			var collection = null,
+				branchUpdateQueue = {},
+				ongoingUpdate = {};
 
 			mongo.collection(name, function (err, result) {
 				if (err) {
@@ -333,12 +335,32 @@ define([ "mongodb", "util/assert", "util/canon" ], function (MONGODB, ASSERT, CA
 				});
 			}
 
+			function checkQueue(branch){
+				var temp;
+				branchUpdateQueue[branch] = branchUpdateQueue[branch] || [];
+				if(branchUpdateQueue[branch].length>0){
+					temp = branchUpdateQueue[branch].shift();
+					setBranchHash(branch,temp.old,temp.new,temp.cb);
+				}
+			}
+			function addToQueue(branch,oldhash,newhash,callback){
+				branchUpdateQueue[branch] = branchUpdateQueue[branch] || [];
+				branchUpdateQueue[branch].push({old:oldhash,new:newhash,cb:callback});
+			}
 			function setBranchHash (branch, oldhash, newhash, callback) {
+				var _branch = branch;
 				branch = '*' + branch;
 				ASSERT(typeof branch === "string" && BRANCH_REGEXP.test(branch));
 				ASSERT(typeof oldhash === "string" && (oldhash === "" || HASH_REGEXP.test(oldhash)));
 				ASSERT(typeof newhash === "string" && (newhash === "" || HASH_REGEXP.test(newhash)));
 				ASSERT(typeof callback === "function");
+
+				if(ongoingUpdate[_branch] === true){
+					addToQueue(_branch,oldhash,newhash,callback);
+					return;
+				} else {
+					ongoingUpdate[_branch] = true;
+				}
 
                 fsyncDatabase(function(){
                     if (oldhash === newhash) {
@@ -349,6 +371,8 @@ define([ "mongodb", "util/assert", "util/canon" ], function (MONGODB, ASSERT, CA
                                 err = new Error("branch hash mismatch");
                             }
                             callback(err);
+							ongoingUpdate[_branch] = false;
+							checkQueue(_branch);
                         });
                     } else if (newhash === "") {
                         collection.remove({
@@ -359,12 +383,18 @@ define([ "mongodb", "util/assert", "util/canon" ], function (MONGODB, ASSERT, CA
                                 err = new Error("branch hash mismatch");
                             }
                             callback(err);
+							ongoingUpdate[_branch] = false;
+							checkQueue(_branch);
                         });
                     } else if (oldhash === "") {
                         collection.insert({
                             _id: branch,
                             hash: newhash
-                        }, callback);
+                        }, function(err){
+							callback(err);
+							ongoingUpdate[_branch] = false;
+							checkQueue(_branch);
+						});
                     } else {
                         collection.update({
                             _id: branch,
@@ -378,6 +408,8 @@ define([ "mongodb", "util/assert", "util/canon" ], function (MONGODB, ASSERT, CA
                                 err = new Error("branch hash mismatch");
                             }
                             callback(err);
+							ongoingUpdate[_branch] = false;
+							checkQueue(_branch);
                         });
                     }
                 });
