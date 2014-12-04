@@ -78,6 +78,7 @@ define(['logManager',
 
             __storageOptions.intoutdir = CONFIG.intoutdir;
             __storageOptions.pluginBasePaths = CONFIG.pluginBasePaths;
+            __storageOptions.cache = CONFIG.cacheSize;
 
             __storageOptions.webServerPort = CONFIG.port;
 
