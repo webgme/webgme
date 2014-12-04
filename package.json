@@ -39,9 +39,12 @@
     "superagent": "=0.18.2"
   },
   "devDependencies": {
-      "gulp": "=3.8.6",
-      "gulp-jshint": "=1.8.0",
-      "jshint-stylish": "=0.4.0"
+    "gulp": "=3.8.6",
+    "gulp-jshint": "=1.8.0",
+    "jshint-stylish": "=0.4.0"
   },
-  "main": "webgme"
+  "main": "webgme",
+  "scripts": {
+    "start": "node src/bin/start_server.js"
+   }
 }
