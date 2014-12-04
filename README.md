@@ -1,7 +1,10 @@
 # Installation
 
+Here are some options to deploy and try WebGME on your infrastructure:
+
 * Fetch the latest version from git directly and start using it (check the package.json for node package dependencies)
 * Install it with npm (`npm install webgme`), and you are ready to go
+* If you have Docker installed: `docker run -p <port>:80 -d webgme/compact`, where <port> is the public host port to be used (e.g.: 80)
 
 # Program usage
 
