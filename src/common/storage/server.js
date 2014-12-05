@@ -133,7 +133,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
             _events[guid] = parameters;
             _eventHistory.unshift(guid);
             if(_eventHistory.length > 1000){
-                _eventHistory.pop();
+                delete _events[_eventHistory.pop()];
             }
 
             for(i=0;i<callbacks.length;i++){
