@@ -1939,7 +1939,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       //TODO
     }
     function concatMeta(path,base,extension){
-      var keys, i,tPath,
+      var keys, i,tPath, j,paths,t2Path,
           mergeMetaItems = function(bPath,bData,eData){
             var bKeys,tKeys, i,tPath,t2Path;
             //delete checks
@@ -2075,8 +2075,57 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
                 base.attributes = extension.attributes;
               }
             }
+
             //aspects
-            //TODO
+            if(extension.aspects){
+              if(base.aspects){
+                if(extension.aspects === TODELETESTRING || base.aspects == TODELETESTRING){
+                  if(CANON.stringify(base.aspects) !== CANON.stringify(extension.aspects)){
+                    tPath = path+'/aspects';
+                    _conflict_mine[tPath] = _conflict_mine[tPath] || {value:base.aspects,conflictingPaths:{}};
+                    _conflict_mine[tPath].conflictingPaths[tPath] = true;
+                    _conflict_theirs[tPath] = _conflict_theirs[tPath] || {value:extension.aspects,conflictingPaths:{}};
+                    _conflict_theirs[tPath].conflictingPaths[tPath] = true;
+                  }
+                } else {
+                  keys = Object.keys(extension.aspects);
+                  for(i=0;i<keys.length;i++){
+                    if(base.aspects[keys[i]]){
+                      if(extension.aspects[keys[i]] === TODELETESTRING || base.aspects[keys[i]] == TODELETESTRING){
+                        if(CANON.stringify(base.aspects[keys[i]]) !== CANON.stringify(extension.aspects[keys[i]])){
+                          tPath = path+'/aspects/'+keys[i];
+                          _conflict_mine[tPath] = _conflict_mine[tPath] || {value:base.aspects[keys[i]],conflictingPaths:{}};
+                          _conflict_mine[tPath].conflictingPaths[tPath] = true;
+                          _conflict_theirs[tPath] = _conflict_theirs[tPath] || {value:extension.aspects[keys[i]],conflictingPaths:{}};
+                          _conflict_theirs[tPath].conflictingPaths[tPath] = true;
+                        }
+                      } else {
+                        paths = Object.keys(extension.aspects[keys[i]]);
+                        for(j=0;j<paths.length;j++){
+                          tPath = getCommonPathForConcat(paths[j]);
+                          if(base.aspects[keys[i]][tPath]){
+                            if(CANON.stringify(base.aspects[keys[i]][tPath]) !== CANON.stringify(extension.aspects[keys[i]][paths[j]])){
+                              t2Path = tPath;
+                              tPath = path+'/aspects/'+keys[i]+'/'+tPath+'//';
+                              _conflict_mine[tPath] = _conflict_mine[tPath] || {value:base.aspects[keys[i]][t2Path],conflictingPaths:{}};
+                              _conflict_mine[tPath].conflictingPaths[tPath] = true;
+                              _conflict_theirs[tPath] = _conflict_theirs[tPath] || {value:extension.aspects[keys[i]][paths[j]],conflictingPaths:{}};
+                              _conflict_theirs[tPath].conflictingPaths[tPath] = true;
+                            }
+                          } else {
+                            base.aspects[keys[i]][tPath] = extension.aspects[keys[i]][paths[j]];
+                          }
+                        }
+                      }
+                    } else {
+                      base.aspects[keys[i]] = extension.aspects[keys[i]];
+                    }
+                  }
+                }
+              } else {
+                base.aspects = extension.aspects;
+              }
+            }
           }
         }
       }
