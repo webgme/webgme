@@ -85,7 +85,6 @@ define(['js/PanelBase/PanelBaseWithHeader',
 
     /* override IActivePanel.prototype.onActivate */
     SnapEditorPanel.prototype.onActivate = function () {
-        this.widget.onActivate();
         this.control.onActivate();
         WebGMEGlobal.KeyboardManager.setListener(this.widget);
         WebGMEGlobal.Toolbar.refresh();
