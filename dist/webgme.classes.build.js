@@ -9299,6 +9299,7 @@ define('storage/failsafe',[ "util/assert", "util/guid" ], function (ASSERT, GUID
 						if (branchObj.local.length === 0) {
 							branchObj.state = BRANCH_STATES.SYNC;
 						}
+						callback(null);
 					} else {
 						/*//we go to disconnected state
 						ASSERT(branchObj.local.length > 0);
@@ -9331,14 +9332,12 @@ define('storage/failsafe',[ "util/assert", "util/guid" ], function (ASSERT, GUID
 					branchObj.state = BRANCH_STATES.AHEAD;
 					branchObj.local = [ newhash, oldhash ];
 					project.setBranchHash(branch, oldhash, newhash, returnFunction);
-					callback(null);
 					return;
 				case BRANCH_STATES.AHEAD:
 					ASSERT(branchObj.local.length > 0);
 					if (oldhash === branchObj.local[0]) {
 						branchObj.local.unshift(newhash);
 						project.setBranchHash(branch, oldhash, newhash, returnFunction);
-						callback(null);
 					} else {
 						callback(new Error("branch hash mismatch"));
 					}
