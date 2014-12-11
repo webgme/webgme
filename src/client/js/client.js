@@ -2725,13 +2725,19 @@ define([
         //});
         switch (testnumber) {
           case 1:
-            queryAddOn("HistoryAddOn", {}, function (err, result) {
+            /*queryAddOn("HistoryAddOn", {}, function (err, result) {
               console.log("addon result", err, result);
+            });*/
+            _core.loadTree(_rootHash,function(err,nodes){
+              console.log(err,nodes);
             });
             break;
           case 2:
-            queryAddOn("ConstraintAddOn", {querytype: 'checkProject'}, function (err, result) {
+            /*queryAddOn("ConstraintAddOn", {querytype: 'checkProject'}, function (err, result) {
               console.log("addon result", err, result);
+            });*/
+            Serialization.export(_core,_root,function(err,json){
+              console.log('ready to export',err,json);
             });
             break;
           case 3:

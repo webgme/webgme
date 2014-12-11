@@ -31,7 +31,6 @@ define(['util/assert'],function(ASSERT){
 
         //loading all library element
         gatherNodesSlowly(libraryRoot,function(err){
-
             if(err){
                 return callback(err);
             }
@@ -177,33 +176,19 @@ define(['util/assert'],function(ASSERT){
         };
     }
     function gatherNodesSlowly(node,callback){
-        //this function collects all the containment sub-tree of the given node
-        var children,
-            guid = _core.getGuid(node),
-            loadNextChildsubTree = function(index){
-                if(index<children.length){
-                    gatherNodesSlowly(children[index],function(err){
-                        if(err){
-                            return callback(err);
-                        }
-
-                        loadNextChildsubTree(index+1);
-                    });
-                } else {
-                    callback(null);
+        _core.loadSubTree(node,function(err,nodes){
+            var guid,i;
+            if(!err && nodes){
+                for(i=0;i<nodes.length;i++){
+                    guid = _core.getGuid(nodes[i]);
+                    _nodes[guid] = nodes[i];
+                    _guidKeys.push(guid);
+                    _pathToGuidMap[_core.getPath(nodes[i])] = guid;
                 }
-            };
-
-        _nodes[guid] = node;
-        _guidKeys.push(guid);
-        _pathToGuidMap[_core.getPath(node)] = guid;
-        _core.loadChildren(node,function(err,c){
-            if(err){
-                return callback(err);
+                callback(null);
+            } else {
+                callback(err);
             }
-
-            children = c;
-            loadNextChildsubTree(0);
         });
     }
     function gatherAncestors(){

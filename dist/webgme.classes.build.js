@@ -5903,6 +5903,8 @@ define('core/coreunwrap',[ "util/assert", "core/tasync" ], function(ASSERT, TASY
 		core.loadPointer = TASYNC.unwrap(oldcore.loadPointer);
 		core.loadCollection = TASYNC.unwrap(oldcore.loadCollection);
 
+		core.loadSubTree = TASYNC.unwrap(oldcore.loadSubTree);
+		core.loadTree = TASYNC.unwrap(oldcore.loadTree);
 		return core;
 	};
 
@@ -8035,14 +8037,63 @@ define('core/metacore',[ "util/assert", "core/core", "core/tasync", "util/jjv" ]
     return MetaCore;
 });
 
+/**
+ * Created by tkecskes on 12/11/2014.
+ */
+define('core/coretreeloader',[ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TASYNC) {
+  
+
+  // ----------------- CoreTreeLoader -----------------
+
+  var MetaCore = function (innerCore) {
+    var core = {},
+      key;
+    for ( key in innerCore) {
+      core[key] = innerCore[key];
+    }
+
+    //adding load functions
+    core.loadSubTree = function(root){
+      var loadSubTrees = function(nodes){
+        for (var i = 0; i < nodes.length; i++) {
+          nodes[i] = core.loadSubTree(nodes[i]);
+        }
+        return TASYNC.lift(nodes);
+
+      };
+      return TASYNC.call(function(children){
+        if(children.length<1){
+          return [root];
+        } else {
+          return TASYNC.call(function(subArrays){
+            var nodes = [],
+              i;
+            for(i=0;i<subArrays.length;i++){
+              nodes = nodes.concat(subArrays[i]);
+            }
+            nodes.unshift(root);
+            return nodes;
+          },loadSubTrees(children));
+        }
+      },core.loadChildren(root));
+    };
+    core.loadTree = function(rootHash) {
+      return TASYNC.call(core.loadSubTree, core.loadRoot(rootHash));
+    };
+
+    return core;
+  };
+  return MetaCore;
+});
+
 /*
  * Copyright (C) 2012 Vanderbilt University, All rights reserved.
  *
  * Author: Tamas Kecskes
  */
 
-define('core/core',["core/corerel",'core/setcore','core/guidcore','core/nullpointercore','core/coreunwrap', 'core/descriptorcore', 'core/coretype', 'core/constraintcore', 'core/coretree', 'core/metacore'],
-			function (CoreRel, Set, Guid, NullPtr, UnWrap, Descriptor, Type, Constraint, CoreTree, MetaCore)
+define('core/core',["core/corerel",'core/setcore','core/guidcore','core/nullpointercore','core/coreunwrap', 'core/descriptorcore', 'core/coretype', 'core/constraintcore', 'core/coretree', 'core/metacore', 'core/coretreeloader'],
+			function (CoreRel, Set, Guid, NullPtr, UnWrap, Descriptor, Type, Constraint, CoreTree, MetaCore, TreeLoader)
 {
     
 
@@ -8050,12 +8101,12 @@ define('core/core',["core/corerel",'core/setcore','core/guidcore','core/nullpoin
         options = options || {};
         options.usetype = options.usertype || 'nodejs';
 
-        var corecon = new MetaCore(new Constraint(new Descriptor(new Guid(new Set(new NullPtr(new Type(new NullPtr(new CoreRel(new CoreTree(storage, options))))))))));
+        var coreCon = new TreeLoader(new MetaCore(new Constraint(new Descriptor(new Guid(new Set(new NullPtr(new Type(new NullPtr(new CoreRel(new CoreTree(storage, options)))))))))));
 
         if(options.usertype === 'tasync'){
-            return corecon;
+            return coreCon;
         } else {
-            return new UnWrap(corecon);
+            return new UnWrap(coreCon);
         }
     }
 
@@ -13035,7 +13086,6 @@ define('coreclient/serialization',['util/assert'],function(ASSERT){
 
         //loading all library element
         gatherNodesSlowly(libraryRoot,function(err){
-
             if(err){
                 return callback(err);
             }
@@ -13181,33 +13231,19 @@ define('coreclient/serialization',['util/assert'],function(ASSERT){
         };
     }
     function gatherNodesSlowly(node,callback){
-        //this function collects all the containment sub-tree of the given node
-        var children,
-            guid = _core.getGuid(node),
-            loadNextChildsubTree = function(index){
-                if(index<children.length){
-                    gatherNodesSlowly(children[index],function(err){
-                        if(err){
-                            return callback(err);
-                        }
-
-                        loadNextChildsubTree(index+1);
-                    });
-                } else {
-                    callback(null);
+        _core.loadSubTree(node,function(err,nodes){
+            var guid,i;
+            if(!err && nodes){
+                for(i=0;i<nodes.length;i++){
+                    guid = _core.getGuid(nodes[i]);
+                    _nodes[guid] = nodes[i];
+                    _guidKeys.push(guid);
+                    _pathToGuidMap[_core.getPath(nodes[i])] = guid;
                 }
-            };
-
-        _nodes[guid] = node;
-        _guidKeys.push(guid);
-        _pathToGuidMap[_core.getPath(node)] = guid;
-        _core.loadChildren(node,function(err,c){
-            if(err){
-                return callback(err);
+                callback(null);
+            } else {
+                callback(err);
             }
-
-            children = c;
-            loadNextChildsubTree(0);
         });
     }
     function gatherAncestors(){
@@ -16557,13 +16593,19 @@ define('client',[
         //});
         switch (testnumber) {
           case 1:
-            queryAddOn("HistoryAddOn", {}, function (err, result) {
+            /*queryAddOn("HistoryAddOn", {}, function (err, result) {
               console.log("addon result", err, result);
+            });*/
+            _core.loadTree(_rootHash,function(err,nodes){
+              console.log(err,nodes);
             });
             break;
           case 2:
-            queryAddOn("ConstraintAddOn", {querytype: 'checkProject'}, function (err, result) {
+            /*queryAddOn("ConstraintAddOn", {querytype: 'checkProject'}, function (err, result) {
               console.log("addon result", err, result);
+            });*/
+            Serialization.export(_core,_root,function(err,json){
+              console.log('ready to export',err,json);
             });
             break;
           case 3:
