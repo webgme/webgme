@@ -16,6 +16,8 @@ define(['plugin/PluginConfig',
     'use strict';
 
     var DEFAULT = '__default__';  // For use with untyped variables
+    var namespace  = { USR: 'USR', LANG: 'LANG' };
+    var varId = 0;
     var CodeGenerator = function() {
 
         PluginBase.call(this);
@@ -52,7 +54,7 @@ define(['plugin/PluginConfig',
     CodeGenerator.prototype.main = function (callback) {
         var self = this,
             changedNode = this.activeNode,
-            options = { codeDefinition: {} },
+            options = { langSpec: {} },
             codeDefs = [],
             saveMessage = "Created code (";
 
@@ -76,7 +78,7 @@ define(['plugin/PluginConfig',
 
                 options.nodes = self.getAllNodeIds();
                 for (var i = 0; i < codeDefs.length; i++) {
-                    options.codeDefinition = codeDefs[i];
+                    options.langSpec = codeDefs[i];
                     self.code[codeDefs[i].ext] = self.createCode(options);
                     saveMessage += (codeDefs.language || codeDefs.ext) + ', ';
                 }
@@ -115,7 +117,7 @@ define(['plugin/PluginConfig',
             nodeIds,
             i;
 
-        this._initLangSpec(opts.codeDefinition);
+        this._initLangSpec(opts.langSpec);
         this.generatedCode = "";
 
         currentNode = null;
@@ -134,9 +136,7 @@ define(['plugin/PluginConfig',
         }
 
         //Declare all the variables
-        this._initializeVariableMap(variables);
         this._declareVariables(variables);
-        this._createCodeMapping();
 
         //Find the last node (for inserting callback)
         this._setNodeEndCode();
@@ -156,7 +156,7 @@ define(['plugin/PluginConfig',
      * @private
      * @return {undefined}
      */
-    CodeGenerator.prototype._initLangSpec = function(codeDefinition) {
+    CodeGenerator.prototype._initLangSpec = function(langSpec) {
 
         this.langSpec = {
             reservedWords: null,
@@ -166,99 +166,58 @@ define(['plugin/PluginConfig',
                            CODE: '__code__',
                            PARENT_SNIPPET_START: '__parentSnippetStart__',
                            PARENT_SNIPPET_END: '__parentSnippetEnd__'},
-            optionalPlaceholders: [],
-            endCode: {},
-            uniqueness: 10000
+            optionalPlaceholders: ['next'],
+            endCode: {}
         };
 
-        codeDefinition.placeholders = codeDefinition.placeholders || {};
+        langSpec.placeholders = langSpec.placeholders || {};
 
-        _.extend(codeDefinition.placeholders, this.langSpec.placeholders);
-        _.extend(this.langSpec, codeDefinition);
-    };
-
-    CodeGenerator.prototype._createCodeMapping = function() {
-
-        //Code map:
-        //
-        //Adding the mapping of node META name to code
-        // {{ }} signs indicates it will be replaced with either 
-        //attribute of the given name or ptr tgt of the given name
-        //
-
-        var keys = Object.keys(this.langSpec);
-        var len = keys.length;
-        var key;
-        var i;
-
-        //Check for name collisions
-        keys = Object.keys(this.langSpec.variables.private);
-        len = keys.length;
-
-        for (i = 0; i < len; i++){
-            key = keys.pop();
-            this.langSpec.variables.private[key] = this._createUniqueName(this.langSpec.variables.private[key]);
-        }
-
-        //Placeholders
-        keys = Object.keys(this.langSpec.placeholders);
-        while (keys.length){
-            key = keys.pop();
-            if (!_.isFunction(this.langSpec.placeholders[key])){
-                this.langSpec.placeholders[key] = this._createUniqueName(this.langSpec.placeholders[key]);
-            }
-        }
-
-        // Create the code map
-        _.extend(this.langSpec, this.langSpec.getCodeMap(this.langSpec));
-
-    };
-
-    CodeGenerator.prototype._initializeVariableMap = function(variables){
-        var names = {},
-            name,
-            node,
-            i;
-
-        this.variables = {};
-
-        //Get all the names from the variables
-        for (i = variables.length-1; i >= 0; i--){
-            node = this.getNode(variables[i]);
-            name = this.core.getAttribute(node, 'name');
-            names[name] = true;
-        }
-
-        //Add js reserved words to variables to prevent collisions
-        for (i = this.langSpec.reservedWords.length-1; i >= 0; i--){
-            name = this.langSpec.reservedWords[i];
-            while (names[name]){
-                name = this.langSpec.reservedWords[i] + '_' + Math.floor(Math.random()*this.langSpec.uniqueness);
-            }
-            this.variables[name] = this.langSpec.reservedWords[i];
-        }
+        _.extend(langSpec.placeholders, this.langSpec.placeholders);
+        _.extend(this.langSpec, langSpec);
     };
 
     CodeGenerator.prototype._declareVariables = function(variables){
         var types = Object.keys(this.langSpec.variables.definitions),
-            variableType,
-            variable,
             declared = {},
+            variableType,
+            names = {},
+            variable,
             name,
-            i,
-            j;
+            node,
+            j,
+            i;
+
+        // Create the variable namespaces
+        this.variables = {};
+        for (var n in namespace) {
+            this.variables[namespace[n]] = {};
+        }
+
+        //Add the following to variables to prevent collisions
+        //  - js reserved words 
+        //  - private variables
+        for (i = this.langSpec.reservedWords.length-1; i >= 0; i--){
+            name = this.langSpec.reservedWords[i];
+            this.variables[namespace.LANG][name] = this.langSpec.reservedWords[i];
+        }
+
+        for (i = this.langSpec.variables.private.length-1; i >= 0; i--){
+            name = this.langSpec.variables.private[i];
+            this.variables[namespace.LANG][name] = this.langSpec.variables.private[i];
+        }
 
         //Remove the initial variable from declaration
         for (i = this.langSpec.variables.public.length -1; i >= 0; i--){
-            this.variables[this.langSpec.variables.public[i]] = this.langSpec.variables.public[i];
-            declared[this.langSpec.variables.public[i]] = true;//don't need to declare these
+            name = this.langSpec.variables.public[i];  // 'public' vars in 
+            this.variables[namespace.USR][name] = this.langSpec.variables.public[i];  // boilerplate are pushed to USR space
+            declared[name] = true;                                     // but we don't declare them
         }
  
         //Declare remaining variables
         for (i = variables.length -1; i >= 0; i--){
             variable = this.getNode(variables[i]);
             name = this.core.getAttribute(variable, 'name');
-            if (declared[name]){
+            if (declared[name]){  // If already declared, skip it
                 continue;
             }
 
@@ -283,13 +242,14 @@ define(['plugin/PluginConfig',
         this.generatedCode += "\n";
     };
 
+    // Declare variable in user namespace
     CodeGenerator.prototype._declareVar = function(variable, typeInfo){
         var name = this.core.getAttribute(variable, 'name'),
             varName = this._getValidVariableName(name.slice());
 
         varName = this._createUniqueName(varName);
         this.generatedCode += typeInfo.replace(this._getPlaceholderRegex('name'), varName) + '\n';
-        this.variables[name] = varName;
+        this.variables[namespace.USR][name] = varName;
     };
 
     CodeGenerator.prototype._getPlaceholderRegex = function(name){
@@ -318,7 +278,7 @@ define(['plugin/PluginConfig',
      * @private
      * @return {undefined}
      */
-    CodeGenerator.prototype._setNodeEndCode = function(){
+    CodeGenerator.prototype._setNodeEndCode = function(){  // FIXME
         var nodeIds = this.getAllNodeIds(),
             nodeType,
             node,
@@ -365,11 +325,12 @@ define(['plugin/PluginConfig',
     CodeGenerator.prototype._createUniqueName = function(variable){
         var self = this,
             newName = variable,
+            namespaces = Object.keys(this.variables),
+            allVars = [],
             variableExists = function(name){
-                var keys = Object.keys(self.variables);
 
-                while (keys.length){
-                    if(name === self.variables[keys.pop()]){
+                for (var v = allVars.length-1; v >= 0; v--) {
+                    if(name === allVars[v]){
                         return true;
                     }
                 }
@@ -377,10 +338,14 @@ define(['plugin/PluginConfig',
                 return false;
             };
 
-        while(variableExists(newName)){
-            newName = variable + '_' + Math.floor(Math.random()*this.langSpec.uniqueness);
+        for (var i = 0; i < namespaces.length; i++) {
+            allVars = allVars.concat(Object.keys(this.variables[namespaces[i]]));
         }
-        this.variables[newName] = newName;//Register the variable name
+
+        while(variableExists(newName)){
+            newName = variable + '_' + (++varId);
+        }
+        this.variables[namespace.USR][newName] = newName;  // Register the variable name
         return newName;
     };
 
@@ -426,7 +391,7 @@ define(['plugin/PluginConfig',
             if (_.isFunction(this.langSpec.placeholders[keys[i]])){
 
                 //resolve all argument names
-                j = 1;  // FIXME
+                j = 1;
                 key = this.langSpec.placeholders[keys[i]](j);
                 snippetTag = this._getPlaceholderRegex(key);
                 while (snippet.match(snippetTag) !== null){
@@ -464,8 +429,9 @@ define(['plugin/PluginConfig',
                 }
 
                 attribute = this.core.getAttribute(node, attributes[i]);
-                if (attributes[i] === "name"){  // Name may be mapped to a variable-safe string
-                    snippetTagContent[attributes[i]] = this.variables[attribute] || attribute;  // namespace these FIXME
+                if (attributes[i] === "name"){
+                    // Retrieve language satisfactory variable name from USR namespace
+                    snippetTagContent[attributes[i]] = this.variables[namespace.USR][attribute] || attribute;
                 } else {
                     snippetTagContent[attributes[i]] = this._getFormattedAttribute(attribute);
                 }
@@ -596,7 +562,8 @@ define(['plugin/PluginConfig',
     CodeGenerator.prototype._mergeCodeSegments = function(){
         var code = this.generatedCode,
             funcDefs = "",//function definitions
-            functions = Object.keys(this.langSpec.functions);
+            functions = Object.keys(this.langSpec.functions),
+            placeholder;
 
         //Add function definitions as needed 
         for (var i = functions.length-1; i >=0; i--){
@@ -606,8 +573,13 @@ define(['plugin/PluginConfig',
             }
         }
 
-        code = this.langSpec.boilerplate.replace(this.langSpec.placeholders.CODE, code);
-        code = code.replace(this.langSpec.placeholders.FUNCTION_DEFS, funcDefs);
+        // Insert code into boilerplate
+        placeholder = this._getPlaceholderRegex(this.langSpec.placeholders.CODE);
+        code = this.langSpec.boilerplate.replace(placeholder, code);
+
+        // Insert functions
+        placeholder = this._getPlaceholderRegex(this.langSpec.placeholders.FUNCTION_DEFS);
+        code = code.replace(placeholder, funcDefs);
 
         this.generatedCode = code;
     };

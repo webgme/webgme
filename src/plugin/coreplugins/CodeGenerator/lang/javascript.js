@@ -23,94 +23,6 @@ define([], function (){
 
     'use strict';
 
-       var getCodeMap = function(params) {
-           // The caller needs to make sure that the 
-           // variables inserted here are the variables
-           // after the collision stuff
-           //
-           // The code generator will need to get the 
-           // private variables, resolve any name 
-           // collisions, then pass the new values as 
-           // parameters to this function
-
-           var privateVariables = params.variables.private;
-           var placeholder = params.placeholders;
-
-           var boilerplate = '"use strict";\n\n'+
-               placeholder.FUNCTION_DEFS + '\n\n' + placeholder.CODE;
-
-           //Functions potentially used in constraint
-           var functions = {};
-
-           //Get Dimension function
-           functions[privateVariables.GET_DIMENSION] =     
-               'var ' + privateVariables.GET_DIMENSION + ' = function(a){\n' +
-               'var dim = 0;\nwhile (a instanceof Array){\na=a[0];\ndim++;\n}\n'+
-               'return dim;\n};\n';
-
-           var codeMap = {
-               //Binary Predicates
-               'add': "{{ first }} + {{ second }}", 
-               'subtract': "{{ first }} - {{ second }}", 
-               'multiply': "({{ first }}) * ({{ second }})", 
-               'divide': "({{ first }})/({{ second }})", 
-
-               'lessThan': "({{ first }}) < ({{ second }})", 
-               'greaterThan': "({{ first }}) > ({{ second }})", 
-               'equal': "({{ first }}) === ({{ second }})", 
-
-               'and': "({{ first }}) && ({{ second }})", 
-               'or': "({{ first }}) || ({{ second }})", 
-               'xor': "(({{ first }}) || ({{ second }})) && !(({{ first }}) && ({{ second }}))", 
-
-               'concat': '(\"\" + {{ first }} + {{ second }})', 
-
-               //Control flow
-               'if': "if ({{ cond }}){\n{{ true_next }}\n}\n{{ next }}",
-               'ifElse': "if ({{ cond }}){\n{{ true_next }}\n} else {\n{{ false_next }}\n}\n{{ next }}",
-
-               //Variables
-               'predicate': "{{ name }}",
-
-               //Map mappings
-               'addToMap': "{{ map }}[{{ first }}] = {{ second }};\n{{ next }}",
-               'removeFromMap': "delete {{ map }}[{{ string }}];\n{{ next }}",
-               'getKeysFromMap': "Object.keys({{ map }})",
-
-               'getItemFromCollection': "{{ collection }}[{{ first }}]",
-               'getItemFromMap': "{{ map }}[{{ first }}]",
-
-               //Collection mappings
-               'addToCollection': 'if(' + privateVariables.GET_DIMENSION + '({{ collection }})'+
-                   ' === ' + privateVariables.GET_DIMENSION +'({{ first }})){\n{{ collection }} = '+
-                   '{{ collection }}.concat({{ first }});\n}else{\n{{ collection }}.push({{ first }});'+
-                   '\n}\n{{ next }}',
-
-               'contains': '{{ collection }}.indexOf({{ first }}) !== -1',
-
-               'not': "!({{ first }})",
-               'getLength': "Object.keys({{ collection }}).length",
-
-               //A few basic utilities
-               'return': "return {{ first }};\n{{ next }}",
-               'set': '{{ first }} = {{ second }};\n{{ next }}',
-
-               'forEach': 'for(var ' + placeholder.ITERATOR + ' in {{ collection }}) {\n' +
-                   '{{ iter }} = {{ collection }}['+placeholder.ITERATOR+'];\n{{ next }}\n}',
-
-               'repeat': 'var ' + placeholder.ITERATOR + ' = {{ count }};\nwhile(--'+
-                   placeholder.ITERATOR+'){\n{{ next }}\n}',
-
-               'while': 'while({{ cond }}){\n{{ next }}\n}'
-           };
-
-           return {
-               functions: functions,
-               boilerplate: boilerplate,
-               codeMap: codeMap 
-           };
-       };
-
     var reservedWords = [ 'break', 'case', 'class', 'catch', 'const', 
         'continue', 'debugger', 'default', 'delete', 'do', 'else', 'export',
         'extends', 'finally', 'for', 'function', 'if', 'import', 'in', 
@@ -119,41 +31,110 @@ define([], function (){
         'enum', 'await', 'implements', 'package', 'protected', 'static', 
         'interface', 'private', 'public', 'null', 'undefined', 'true', 'false'],
 
-       publicVariables = ['currentNode'],
-       privateVariables = {GET_DIMENSION: 'getDimension'},
+        publicVariables = ['currentNode'],
+        privateVariables = ['getDimension'],
 
-       placeholder = { ITERATOR: '{{ __iterator__ }}',
-                       FUNCTION_DEFS: '{{ __func_defs__ }}',
-                       CODE: '{{ __code__ }}'},
-       optionalPlaceholderS = ['next', 'true_next', 'false_next'],
-       uniqueness = 10000000,
+        placeholders = { ITERATOR: '__iterator__',
+                         FUNCTION_DEFS: '__func_defs__',
+                         CODE: '__code__'},
 
-       variableTypes = [ 'map', 'string', 'number', 'boolean', 
-                         'node', 'collection', 'nodeSet'],
-       variableDefinition = { 'map': 'var {{ name }} = {};',
-                              'collection': 'var {{ name }} = [];',
-                              // __default__ refers to any non map or collection
-                              '__default__': 'var {{ name }} = null;' },
+        // Placeholders that can be replaced with '' if empty in model
+        optionalPlaceholders = ['next', 'true_next', 'false_next'],
 
-       extension = 'js';
+        variableTypes = [ 'map', 'string', 'number', 'boolean', 
+                'node', 'collection', 'nodeSet'],
+        variableDefinition = { 'map': 'var {{ name }} = {};',
+                    'collection': 'var {{ name }} = [];',
+                    // __default__ refers to any non map or collection
+                    '__default__': 'var {{ name }} = null;' },
 
+        extension = 'js';
 
-       return {
-           getCodeMap: getCodeMap,
+    var boilerplate = '"use strict";\n\n'+
+        '{{'+placeholders.FUNCTION_DEFS+'}}\n\n{{' + placeholders.CODE + '}}';
 
-           reservedWords: reservedWords,
-           variables: {
-               private: privateVariables,  // With respect to the boilerplate code
-               public: publicVariables,  // With respect to the boilerplate code
-               types: variableTypes,
-               definitions: variableDefinition
-           },
-           placeholders: placeholder,
-           optionalPlaceholders: optionalPlaceholderS,
-           uniqueness: uniqueness,
-           ext: extension,
-           language: 'Javascript'
-       };
+    //Functions potentially used in constraint
+    var functions = {
+
+        getDimension: 'var getDimension = function(a){\n' +
+                'var dim = 0;\nwhile (a instanceof Array)'+
+                '{\na=a[0];\ndim++;\n}\n'+
+                'return dim;\n};\n' 
+    };
+
+    var codeMap = {
+        //Binary Predicates
+        'add': "{{ first }} + {{ second }}", 
+        'subtract': "{{ first }} - {{ second }}", 
+        'multiply': "({{ first }}) * ({{ second }})", 
+        'divide': "({{ first }})/({{ second }})", 
+
+        'lessThan': "({{ first }}) < ({{ second }})", 
+        'greaterThan': "({{ first }}) > ({{ second }})", 
+        'equal': "({{ first }}) === ({{ second }})", 
+
+        'and': "({{ first }}) && ({{ second }})", 
+        'or': "({{ first }}) || ({{ second }})", 
+        'xor': "(({{ first }}) || ({{ second }})) && !(({{ first }}) && ({{ second }}))", 
+
+        'concat': '(\"\" + {{ first }} + {{ second }})', 
+
+        //Control flow
+        'if': "if ({{ cond }}){\n{{ true_next }}\n}\n{{ next }}",
+        'ifElse': "if ({{ cond }}){\n{{ true_next }}\n} else {\n{{ false_next }}\n}\n{{ next }}",
+
+        //Variables
+        'predicate': "{{ name }}",
+
+        //Map mappings
+        'addToMap': "{{ map }}[{{ first }}] = {{ second }};\n{{ next }}",
+        'removeFromMap': "delete {{ map }}[{{ string }}];\n{{ next }}",
+        'getKeysFromMap': "Object.keys({{ map }})",
+
+        'getItemFromCollection': "{{ collection }}[{{ first }}]",
+        'getItemFromMap': "{{ map }}[{{ first }}]",
+
+        //Collection mappings
+        'addToCollection': 'if(getDimension({{ collection }})'+
+            ' === getDimension({{ first }})){\n{{ collection }} = '+
+            '{{ collection }}.concat({{ first }});\n}else{\n{{ collection }}.push({{ first }});'+
+            '\n}\n{{ next }}',
+
+        'contains': '{{ collection }}.indexOf({{ first }}) !== -1',
+
+        'not': "!({{ first }})",
+        'getLength': "Object.keys({{ collection }}).length",
+
+        //A few basic utilities
+        'return': "return {{ first }};\n{{ next }}",
+        'set': '{{ first }} = {{ second }};\n{{ next }}',
+
+        'forEach': 'for(var ' + placeholders.ITERATOR + ' in {{ collection }}) {\n' +
+            '{{ iter }} = {{ collection }}['+placeholders.ITERATOR+'];\n{{ next }}\n}',
+
+        'repeat': 'var ' + placeholders.ITERATOR + ' = {{ count }};\nwhile(--'+
+            placeholders.ITERATOR+'){\n{{ next }}\n}',
+
+        'while': 'while({{ cond }}){\n{{ next }}\n}'
+    };
+
+    return {
+        codeMap: codeMap,
+        functions: functions,
+        boilerplate: boilerplate,
+
+        reservedWords: reservedWords,
+        variables: {
+            private: privateVariables,  // With respect to the boilerplate code
+            public: publicVariables,  // With respect to the boilerplate code
+            types: variableTypes,
+            definitions: variableDefinition
+        },
+        placeholders: placeholders,
+        optionalPlaceholders: optionalPlaceholders,
+        ext: extension,
+        language: 'Javascript'
+    };
 
 });
 
