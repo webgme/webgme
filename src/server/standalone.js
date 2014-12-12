@@ -622,20 +622,26 @@ define(['logManager',
                     res.send(500);
                 } else {
                     __REST.doRESTCommand(__REST.request.GET,req.params.command,req.headers.webGMEToken,req.query,function(httpStatus,object){
+
                         res.header("Access-Control-Allow-Origin", "*");
                         res.header("Access-Control-Allow-Headers", "X-Requested-With");
                         if(req.params.command === __REST.command.etf){
-                            var filename = 'exportedNode.json';
-                            if(req.query.output){
-                                filename = req.query.output;
+                            if(httpStatus === _HTTPError.ok){
+                                var filename = 'exportedNode.json';
+                                if(req.query.output){
+                                    filename = req.query.output;
+                                }
+                                if(filename.indexOf('.') === -1){
+                                    filename += '.json';
+                                }
+                                res.header("Content-Type", "application/json");
+                                res.header("Content-Disposition", "attachment;filename=\""+filename+"\"");
+                                res.status(httpStatus);
+                                res.end(/*CANON*/JSON.stringify(object,null,2));
+                            } else {
+                                console.log(httpStatus,JSON.stringify(object,null,2));
+                                res.status(httpStatus).send(object);
                             }
-                            if(filename.indexOf('.') === -1){
-                                filename += '.json';
-                            }
-                            res.header("Content-Type", "application/json");
-                            res.header("Content-Disposition", "attachment;filename=\""+filename+"\"");
-                            res.status(httpStatus);
-                            res.end(/*CANON*/JSON.stringify(object,null,2));
                         } else {
                             res.json(httpStatus, object || null);
                         }
