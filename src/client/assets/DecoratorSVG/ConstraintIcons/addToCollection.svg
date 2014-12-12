@@ -169,6 +169,8 @@
      height="12.584407"
      width="15.236712"
      id="LInputField"
+     class="edit-first"
+     data-stretch="x-first"
      text-stretch-only="true"
      data-align-center="y-firstRect"
      style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:1.61639428px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;overflow:hidden" />
@@ -187,6 +189,12 @@
      x="64.035767"
      y="17.293364"
      style="font-size:12px;overflow:hidden">to</text>
+  <text
+     data-shift="y-LInputField"
+     id="first"
+     x="41"
+     y="16.635614"
+     style="font-size:12px;overflow:hidden"></text>
   <!-- connection areas -->
   <line
      class="connection-area"
@@ -258,4 +266,15 @@
      x="0.00083875656"
      y="0.65775007"
      id="rect26" />
+  <rect
+     style="opacity:0"
+     class="initial-measure"
+     data-ptr="first"
+     data-type="text"
+     width="10"
+     height="17"
+     x="0.56333733"
+     y="0"
+     id="rect27" />
+
 </svg>
