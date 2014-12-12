@@ -119,23 +119,24 @@ define([], function (){
     };
 
     return {
-        codeMap: codeMap,
-        functions: functions,
+        codeMap: codeMap,  // Mapping of blocks to template snippets
+        functions: functions,  // convenience functions potentially used in some of the templates
         boilerplate: boilerplate,
 
-        reservedWords: reservedWords,
+        reservedWords: reservedWords,  // keywords of the given programming language
         variables: {
             private: privateVariables,  // With respect to the boilerplate code
             public: publicVariables,  // With respect to the boilerplate code
-            types: variableTypes,
-            definitions: variableDefinition
+            types: variableTypes,  // variable types support (referring to block types)
+            definitions: variableDefinition  // template for initializing each block
         },
-        undefined: 'null',  // The value inserted for empty non-optional pointers/attributes in the model
-        placeholders: placeholders,
-        optionalPlaceholders: optionalPlaceholders,
+        undefined: 'null',  // The value inserted for empty required pointers/attributes in the model
+        optionalPlaceholders: optionalPlaceholders,  // template keywords that can be ignored if no value in model
         ext: extension,
 
-        language: 'Javascript'
+        language: 'Javascript',
+        placeholders: placeholders  // allows overriding of default placeholders for code, functions, etc,
+                                    // used in the boilerplate
     };
 
 });

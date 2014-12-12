@@ -160,7 +160,9 @@ define(['plugin/PluginConfig',
 
         this.langSpec = {
             reservedWords: null,
-            variables: null,
+            variables: {
+                format: /^[a-zA-Z_$][0-9a-zA-Z_$]*$/
+            },
             placeholders: {ITERATOR: '__iterator__',
                            FUNCTION_DEFS: '__func_defs__',
                            CODE: '__code__',
@@ -258,8 +260,8 @@ define(['plugin/PluginConfig',
     };
 
     CodeGenerator.prototype._getValidVariableName = function(variableName){
-        var basicRule = new RegExp(/[a-zA-Z_$][0-9a-zA-Z_$]*/),  // Move this to langSpec TODO
-            regexRule = new RegExp(/^[a-zA-Z_$][0-9a-zA-Z_$]*$/),
+        var basicRule = new RegExp(/[a-zA-Z][0-9a-zA-Z_]*/),
+            regexRule = this.langSpec.variables.format,  
             matches;
 
         if (!regexRule.test(variableName)){
