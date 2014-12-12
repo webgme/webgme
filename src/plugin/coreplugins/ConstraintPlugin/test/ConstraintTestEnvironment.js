@@ -167,7 +167,11 @@ define(['./FakeCore',
         //Run test on each tree
         trees = Object.keys(this.currentNode);
         i = trees.length-1;
-        codeFn(this.core, this.currentNode[trees[i]], cb);
+        try {
+            codeFn(this.core, this.currentNode[trees[i]], cb);
+        } catch(e) {
+            throw testName + ' failed with error: ' + e;
+        }
     };
 
     ConstraintTestEnvironment.prototype.compareResults = function(results, testName, tree){
