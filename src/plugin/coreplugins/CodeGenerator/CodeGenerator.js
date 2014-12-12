@@ -161,6 +161,7 @@ define(['plugin/PluginConfig',
         this.langSpec = {
             reservedWords: null,
             variables: {
+                types: [ 'map', 'string', 'number', 'boolean', 'collection'],
                 format: /^[a-zA-Z_$][0-9a-zA-Z_$]*$/
             },
             placeholders: {ITERATOR: '__iterator__',
@@ -170,13 +171,24 @@ define(['plugin/PluginConfig',
                            PARENT_SNIPPET_END: '__parentSnippetEnd__'},
             optionalPlaceholders: ['next', 'true_next', 'false_next'],
             undefined: 'null',
-            endCode: {}
+            endCode: {},
+            codeMap: {},
+            functions: {}
         };
 
         langSpec.placeholders = langSpec.placeholders || {};
 
-        _.extend(langSpec.placeholders, this.langSpec.placeholders);
-        _.extend(this.langSpec, langSpec);
+        // Copy (depth 2) langSpec attributes to this.langSpec
+        //  Merge objects. Overwrite all else.
+        for (var l in langSpec) {
+            if (_.isObject(langSpec[l]) && !_.isArray(langSpec[l])) {
+                for (var k in langSpec[l]) {
+                    this.langSpec[l][k] = langSpec[l][k];
+                }
+            } else {
+                this.langSpec[l] = langSpec[l];
+            }
+        }
     };
 
     CodeGenerator.prototype._declareVariables = function(variables){
@@ -256,7 +268,7 @@ define(['plugin/PluginConfig',
     };
 
     CodeGenerator.prototype._getPlaceholderRegex = function(name){
-        return new RegExp('{{\\s*' + name + '\\s*}}');
+        return new RegExp('{{\\s*' + name + '\\s*}}', 'g');
     };
 
     CodeGenerator.prototype._getValidVariableName = function(variableName){
@@ -394,12 +406,12 @@ define(['plugin/PluginConfig',
             if (_.isFunction(this.langSpec.placeholders[keys[i]])){
 
                 //resolve all argument names
-                j = 1;
+                j = 0;
                 key = this.langSpec.placeholders[keys[i]](j);
                 snippetTag = this._getPlaceholderRegex(key);
                 while (snippet.match(snippetTag) !== null){
-                    if (snippet.match(snippetTag) !== null && this.langSpec.variables.private[keys[i]] !== undefined){
-                        snippetTagContent[key] = this._createUniqueName(this.langSpec.variables.private[keys[i]]);
+                    if (this.langSpec.variables.private.indexOf(keys[i]) !== undefined){
+                        snippetTagContent[key] = this._createUniqueName(this._getValidVariableName(key));
                     }
                     key = this.langSpec.placeholders[keys[i]](++j);
                     snippetTag = this._getPlaceholderRegex(key);
@@ -411,8 +423,8 @@ define(['plugin/PluginConfig',
             }
 
             snippetTag = this._getPlaceholderRegex(key);
-            if (snippet.match(snippetTag) !== null && this.langSpec.variables.private[keys[i]] !== undefined){
-                snippetTagContent[key] = this._createUniqueName(this.langSpec.variables.private[keys[i]]);
+            if (snippet.match(snippetTag) !== null){
+                snippetTagContent[key] = this._createUniqueName(this._getValidVariableName(key));
             }
         }
 
@@ -471,7 +483,7 @@ define(['plugin/PluginConfig',
         //only be 1 set of PARENT_SNIPPET's)
         var parentRegex = this._getPlaceholderRegex(this.langSpec.placeholders.PARENT_SNIPPET_START);
         if (this._isTypeOf(node, this.META.command) ||
-              snippet.match(parentRegex) !== -1){
+              snippet.match(parentRegex) !== null){
             dj = 2;
         }
 
@@ -633,7 +645,7 @@ define(['plugin/PluginConfig',
         var ext;
         while (langExt.length){
             ext = langExt.pop();
-            artifact.addFile(filename + '-' + ext + '.' + ext,
+            artifact.addFile(filename + '.' + ext,
                 this.code[ext], checkIfShouldSaveAll);
         }
     };

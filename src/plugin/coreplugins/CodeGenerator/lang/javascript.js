@@ -34,15 +34,14 @@ define([], function (){
         publicVariables = ['currentNode'],
         privateVariables = ['getDimension'],
 
-        placeholders = { ITERATOR: '__iterator__',
-                         FUNCTION_DEFS: '__func_defs__',
-                         CODE: '__code__'},
+        placeholders = { ITERATOR: 'iter',
+                         FUNCTION_DEFS: 'func_defs',
+                         CODE: 'code'},
 
         // Placeholders that can be replaced with '' if empty in model
         optionalPlaceholders = ['next', 'true_next', 'false_next'],
 
-        variableTypes = [ 'map', 'string', 'number', 'boolean', 
-                'node', 'collection', 'nodeSet'],
+        variableTypes = [ 'map', 'string', 'number', 'boolean', 'collection'],
         variableDefinition = { 'map': 'var {{ name }} = {};',
                     'collection': 'var {{ name }} = [];',
                     // __default__ refers to any non map or collection
@@ -95,10 +94,13 @@ define([], function (){
         'getItemFromMap': "{{ map }}[{{ first }}]",
 
         //Collection mappings
-        'addToCollection': 'if(getDimension({{ collection }})'+
-            ' === getDimension({{ first }})){\n{{ collection }} = '+
-            '{{ collection }}.concat({{ first }});\n}else{\n{{ collection }}.push({{ first }});'+
-            '\n}\n{{ next }}',
+        'addToCollection': '{{collection}}.push({{first}});\n{{next}}',
+
+        // Uncomment the following to detect concatenation
+        //'addToCollection': 'if(getDimension({{ collection }})'+
+            //' === getDimension({{ first }})){\n{{ collection }} = '+
+            //'{{ collection }}.concat({{ first }});\n}else{\n{{ collection }}.push({{ first }});'+
+            //'\n}\n{{ next }}',
 
         'contains': '{{ collection }}.indexOf({{ first }}) !== -1',
 
@@ -109,11 +111,11 @@ define([], function (){
         'return': "return {{ first }};\n{{ next }}",
         'set': '{{ first }} = {{ second }};\n{{ next }}',
 
-        'forEach': 'for(var ' + placeholders.ITERATOR + ' in {{ collection }}) {\n' +
-            '{{ iter }} = {{ collection }}['+placeholders.ITERATOR+'];\n{{ next }}\n}',
+        'forEach': 'for(var {{' + placeholders.ITERATOR + '}} in {{ collection }}) {\n' +
+            '{{ iter }} = {{ collection }}[{{'+placeholders.ITERATOR+'}}];\n{{ next }}\n}',
 
-        'repeat': 'var ' + placeholders.ITERATOR + ' = {{ count }};\nwhile(--'+
-            placeholders.ITERATOR+'){\n{{ next }}\n}',
+        'repeat': 'var {{' + placeholders.ITERATOR + '}} = {{ count }};\nwhile(--{{'+
+            placeholders.ITERATOR+'}}){\n{{ next }}\n}',
 
         'while': 'while({{ cond }}){\n{{ next }}\n}'
     };
@@ -131,7 +133,6 @@ define([], function (){
             definitions: variableDefinition  // template for initializing each block
         },
         undefined: 'null',  // The value inserted for empty required pointers/attributes in the model
-        optionalPlaceholders: optionalPlaceholders,  // template keywords that can be ignored if no value in model
         ext: extension,
 
         language: 'Javascript',
