@@ -42,6 +42,7 @@ define([
             _HTTPError = {
                 'badRequest':400,
                 'forbidden':403,
+                'notFound': 404,
                 'internalServerError':500,
                 'notImplemented':501,
                 'serviceUnavailable':503,
@@ -221,8 +222,11 @@ define([
                 project = null,
                 needRootHash = function(cHash){
                     project.loadObject(cHash,function(err,commit){
-                        if(err || !commit){
-                            return callback(_HTTPError.internalServerError,err || new Error('no such commit'));
+                        if(err){
+                            return callback(_HTTPError.internalServerError,err);
+                        }
+                        if(!commit) {
+                            return callback(_HTTPError.notFound,new Error('no such commit ' + cHash));
                         }
 
                         rootHash = commit.root;
@@ -250,7 +254,7 @@ define([
 
                 names = names || [];
                 if(names.indexOf(name) === -1){
-                    return callback(_HTTPError.badRequest,"unknown project");
+                    return callback(_HTTPError.notFound,"unknown project " + name);
                 }
 
                 _storage.openProject(name,function(err,pr){
