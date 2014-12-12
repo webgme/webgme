@@ -15,12 +15,6 @@ define(['plugin/PluginConfig',
 
     'use strict';
 
-    /*
-     * Since I don't want to pollute any children types'
-     * object namespace, I will use a lot of variables 
-     * here.
-     */
-
     var DEFAULT = '__default__';  // For use with untyped variables
     var CodeGenerator = function() {
 
@@ -167,11 +161,11 @@ define(['plugin/PluginConfig',
         this.langSpec = {
             reservedWords: null,
             variables: null,
-            placeholders: {ITERATOR: '%__iterator__',
-                           FUNCTION_DEFS: '%__func_defs__',
-                           CODE: '%__code__',
-                           PARENT_SNIPPET_START: '%__parentSnippetStart__',
-                           PARENT_SNIPPET_END: '%__parentSnippetEnd__'},
+            placeholders: {ITERATOR: '__iterator__',
+                           FUNCTION_DEFS: '__func_defs__',
+                           CODE: '__code__',
+                           PARENT_SNIPPET_START: '__parentSnippetStart__',
+                           PARENT_SNIPPET_END: '__parentSnippetEnd__'},
             optionalPlaceholders: [],
             endCode: {},
             uniqueness: 10000
@@ -188,7 +182,7 @@ define(['plugin/PluginConfig',
         //Code map:
         //
         //Adding the mapping of node META name to code
-        //% sign indicates it will be replaced with either 
+        // {{ }} signs indicates it will be replaced with either 
         //attribute of the given name or ptr tgt of the given name
         //
 
@@ -294,12 +288,16 @@ define(['plugin/PluginConfig',
             varName = this._getValidVariableName(name.slice());
 
         varName = this._createUniqueName(varName);
-        this.generatedCode += typeInfo.replace(new RegExp("%name", "g"), varName) + '\n';
+        this.generatedCode += typeInfo.replace(this._getPlaceholderRegex('name'), varName) + '\n';
         this.variables[name] = varName;
     };
 
+    CodeGenerator.prototype._getPlaceholderRegex = function(name){
+        return new RegExp('{{\\s*' + name + '\\s*}}');
+    };
+
     CodeGenerator.prototype._getValidVariableName = function(variableName){
-        var basicRule = new RegExp(/[a-zA-Z_$][0-9a-zA-Z_$]*/),
+        var basicRule = new RegExp(/[a-zA-Z_$][0-9a-zA-Z_$]*/),  // Move this to langSpec TODO
             regexRule = new RegExp(/^[a-zA-Z_$][0-9a-zA-Z_$]*$/),
             matches;
 
@@ -403,6 +401,7 @@ define(['plugin/PluginConfig',
             snippetTagContent = {},
             snippetTag,
             keys,
+            key,
             targetNode,
             splitElements,
             subsnippets,
@@ -427,46 +426,49 @@ define(['plugin/PluginConfig',
             if (_.isFunction(this.langSpec.placeholders[keys[i]])){
 
                 //resolve all argument names
-                j = 0;
-                while (snippet.indexOf(this.langSpec.placeholders[keys[i]](++j)) !== -1){
-                    snippetTag = this.langSpec.placeholders[keys[i]](j);
-                    if (snippet.indexOf(snippetTag) !== -1 && this.langSpec.variables.private[keys[i]] !== undefined){
-                        snippetTagContent[snippetTag] = this._createUniqueName(this.langSpec.variables.private[keys[i]]);
+                j = 1;  // FIXME
+                key = this.langSpec.placeholders[keys[i]](j);
+                snippetTag = this._getPlaceholderRegex(key);
+                while (snippet.match(snippetTag) !== null){
+                    if (snippet.match(snippetTag) !== null && this.langSpec.variables.private[keys[i]] !== undefined){
+                        snippetTagContent[key] = this._createUniqueName(this.langSpec.variables.private[keys[i]]);
                     }
+                    key = this.langSpec.placeholders[keys[i]](++j);
+                    snippetTag = this._getPlaceholderRegex(key);
                 }
 
-                snippetTag = this.langSpec.placeholders[keys[i]](0);
+                key = this.langSpec.placeholders[keys[i]](0);
             } else {
-                snippetTag = this.langSpec.placeholders[keys[i]];
+                key = this.langSpec.placeholders[keys[i]];
             }
 
-            if (snippet.indexOf(snippetTag) !== -1 && this.langSpec.variables.private[keys[i]] !== undefined){
-                snippetTagContent[snippetTag] = this._createUniqueName(this.langSpec.variables.private[keys[i]]);
+            snippetTag = this._getPlaceholderRegex(key);
+            if (snippet.match(snippetTag) !== null && this.langSpec.variables.private[keys[i]] !== undefined){
+                snippetTagContent[key] = this._createUniqueName(this.langSpec.variables.private[keys[i]]);
             }
         }
 
         //If the attribute name is in the snippet, substitute the attr name with the value
         i = attributes.length;
         while (i--){
-            snippetTag = '%' + attributes[i];
-            if (snippet.indexOf(snippetTag) !== -1){
-                if (this.langSpec.optionalPlaceholders.indexOf(snippetTag) !== -1){
-                    snippetTagContent[snippetTag] = '';
+            snippetTag = this._getPlaceholderRegex(attributes[i]);
+            if (snippet.match(snippetTag) !== null){
+                if (this.langSpec.optionalPlaceholders.indexOf(attributes[i]) !== -1){
+                    snippetTagContent[attributes[i]] = '';
                     if (this.langSpec.endCode[parentId]){
-                        snippetTagContent[snippetTag] = this.langSpec.endCode[parentId];
+                        snippetTagContent[attributes[i]] = this.langSpec.endCode[parentId];
                     }
 
                 } else {
-                    snippetTagContent[snippetTag] = 'undefined';
+                    snippetTagContent[attributes[i]] = 'undefined';
                 }
 
                 attribute = this.core.getAttribute(node, attributes[i]);
-                if (attributes[i] === "name"){//Name may be mapped to a variable-safe string
-                    snippetTagContent[snippetTag] = this.variables[attribute] || attribute;
+                if (attributes[i] === "name"){  // Name may be mapped to a variable-safe string
+                    snippetTagContent[attributes[i]] = this.variables[attribute] || attribute;  // namespace these FIXME
                 } else {
-                    snippetTagContent[snippetTag] = this._getFormattedAttribute(attribute);
+                    snippetTagContent[attributes[i]] = this._getFormattedAttribute(attribute);
                 }
-
             }
         }
 
@@ -474,21 +476,21 @@ define(['plugin/PluginConfig',
         //ptrs have precedence over attributes
         i = ptrs.length;
         while(i--){
-            snippetTag = '%' + ptrs[i];
-            if (snippet.indexOf(snippetTag) !== -1){ 
+            snippetTag = this._getPlaceholderRegex(ptrs[i]);
+            if (snippet.match(snippetTag) !== null){ 
 
                 if(this.core.getPointerPath(node, ptrs[i])){
                     targetNode = this.core.getPointerPath(node, ptrs[i]);
-                    snippetTagContent[snippetTag] = this._generateCode(targetNode);
+                    snippetTagContent[ptrs[i]] = this._generateCode(targetNode);
                 } 
-                if (!snippetTagContent[snippetTag]){
-                    if (this.langSpec.optionalPlaceholders.indexOf(snippetTag) !== -1){
-                        snippetTagContent[snippetTag] = '';
-                        if (this.langSpec.endCode[parentId]){
-                            snippetTagContent[snippetTag] = this.langSpec.endCode[parentId];
+                if (!snippetTagContent[ptrs[i]]){
+                    if (this.langSpec.optionalPlaceholders.indexOf(ptrs[i]) !== -1){
+                        snippetTagContent[ptrs[i]] = '';
+                        if (this.langSpec.endCode[parentId]){  // FIXME parentId should be META object name not id
+                            snippetTagContent[ptrs[i]] = this.langSpec.endCode[parentId];
                         }
                     } else {
-                        snippetTagContent[snippetTag] = 'undefined';
+                        snippetTagContent[ptrs[i]] = 'undefined';
                     }
                 }
             }
@@ -498,36 +500,37 @@ define(['plugin/PluginConfig',
         //iff the node is a command type or if the snippet
         //already contains PARENT_SNIPPET (should always
         //only be 1 set of PARENT_SNIPPET's)
+        var parentRegex = this._getPlaceholderRegex(this.langSpec.placeholders.PARENT_SNIPPET_START);
         if (this._isTypeOf(node, this.META.command) ||
-              snippet.indexOf(this.langSpec.placeholders.PARENT_SNIPPET_START) !== -1){
+              snippet.match(parentRegex) !== -1){
             dj = 2;
         }
 
         keys = Object.keys(snippetTagContent);
         for (i = keys.length-1; i >= 0; i--){
-            snippetTag = keys[i];
+            snippetTag = this._getPlaceholderRegex(keys[i]);
 
             //Flip the parent, child code if PARENT_SNIPPET
-            if (_.isString(snippetTagContent[snippetTag]) && snippetTagContent[snippetTag].indexOf(this.langSpec.placeholders.PARENT_SNIPPET_START) !== -1){
+            if (_.isString(snippetTagContent[keys[i]]) && snippetTagContent[keys[i]].match(parentRegex) !== null){
                 splitElements = '(' + this.langSpec.placeholders.PARENT_SNIPPET_START + 
                     '|' + this.langSpec.placeholders.PARENT_SNIPPET_END + ')';
-                subsnippets = snippetTagContent[snippetTag].split(new RegExp(splitElements, 'g'));
+                subsnippets = snippetTagContent[keys[i]].split(new RegExp(splitElements, 'g'));
                 newSnippet = "";
                 for (k = 0; k < subsnippets.length; k +=5){
-                    subsnippets[k+2] = snippet.replace(new RegExp(snippetTag, "g"), subsnippets[k+2]);
+                    subsnippets[k+2] = snippet.replace(snippetTag, subsnippets[k+2]);
                     for (j = k; j < k+5; j+=dj){
                         newSnippet += subsnippets[j];
                     }
                 }
                 snippet = newSnippet;
             } else {
-                snippet = snippet.replace(new RegExp(snippetTag, "g"), snippetTagContent[snippetTag]);
+                snippet = snippet.replace(snippetTag, snippetTagContent[keys[i]]);
                 if (this.langSpec.endCode[nodeId]){
                     this.langSpec.endCode[nodeId]
-                      .replace(new RegExp(snippetTag, "g"), snippetTagContent[snippetTag]);
+                      .replace(snippetTag, snippetTagContent[keys[i]]);
                 }
             }
-            delete snippetTagContent[snippetTag];
+            delete snippetTagContent[keys[i]];
         }
 
         return snippet;

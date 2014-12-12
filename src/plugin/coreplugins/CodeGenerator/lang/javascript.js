@@ -50,58 +50,58 @@ define([], function (){
 
            var codeMap = {
                //Binary Predicates
-               'add': "%first + %second", 
-               'subtract': "%first - %second", 
-               'multiply': "(%first) * (%second)", 
-               'divide': "(%first)/(%second)", 
+               'add': "{{ first }} + {{ second }}", 
+               'subtract': "{{ first }} - {{ second }}", 
+               'multiply': "({{ first }}) * ({{ second }})", 
+               'divide': "({{ first }})/({{ second }})", 
 
-               'lessThan': "(%first) < (%second)", 
-               'greaterThan': "(%first) > (%second)", 
-               'equal': "(%first) === (%second)", 
+               'lessThan': "({{ first }}) < ({{ second }})", 
+               'greaterThan': "({{ first }}) > ({{ second }})", 
+               'equal': "({{ first }}) === ({{ second }})", 
 
-               'and': "(%first) && (%second)", 
-               'or': "(%first) || (%second)", 
-               'xor': "((%first) || (%second)) && !((%first) && (%second))", 
+               'and': "({{ first }}) && ({{ second }})", 
+               'or': "({{ first }}) || ({{ second }})", 
+               'xor': "(({{ first }}) || ({{ second }})) && !(({{ first }}) && ({{ second }}))", 
 
-               'concat': '(\"\" + %first + %second)', 
+               'concat': '(\"\" + {{ first }} + {{ second }})', 
 
                //Control flow
-               'if': "if (%cond){\n%true_next\n}\n%next",
-               'ifElse': "if (%cond){\n%true_next\n} else {\n%false_next\n}\n%next",
+               'if': "if ({{ cond }}){\n{{ true_next }}\n}\n{{ next }}",
+               'ifElse': "if ({{ cond }}){\n{{ true_next }}\n} else {\n{{ false_next }}\n}\n{{ next }}",
 
                //Variables
-               'predicate': "%name",
+               'predicate': "{{ name }}",
 
                //Map mappings
-               'addToMap': "%map[%first] = %second;\n%next",
-               'removeFromMap': "delete %map[%string];\n%next",
-               'getKeysFromMap': "Object.keys(%map)",
+               'addToMap': "{{ map }}[{{ first }}] = {{ second }};\n{{ next }}",
+               'removeFromMap': "delete {{ map }}[{{ string }}];\n{{ next }}",
+               'getKeysFromMap': "Object.keys({{ map }})",
 
-               'getItemFromCollection': "%collection[%first]",
-               'getItemFromMap': "%map[%first]",
+               'getItemFromCollection': "{{ collection }}[{{ first }}]",
+               'getItemFromMap': "{{ map }}[{{ first }}]",
 
                //Collection mappings
-               'addToCollection': 'if(' + privateVariables.GET_DIMENSION + '(%collection)'+
-                   ' === ' + privateVariables.GET_DIMENSION +'(%first)){\n%collection = '+
-                   '%collection.concat(%first);\n}else{\n%collection.push(%first);'+
-                   '\n}\n%next',
+               'addToCollection': 'if(' + privateVariables.GET_DIMENSION + '({{ collection }})'+
+                   ' === ' + privateVariables.GET_DIMENSION +'({{ first }})){\n{{ collection }} = '+
+                   '{{ collection }}.concat({{ first }});\n}else{\n{{ collection }}.push({{ first }});'+
+                   '\n}\n{{ next }}',
 
-               'contains': '%collection.indexOf(%first) !== -1',
+               'contains': '{{ collection }}.indexOf({{ first }}) !== -1',
 
-               'not': "!(%first)",
-               'getLength': "Object.keys(%collection).length",
+               'not': "!({{ first }})",
+               'getLength': "Object.keys({{ collection }}).length",
 
                //A few basic utilities
-               'return': "return %first;\n%next",
-               'set': '%first = %second;\n%next',
+               'return': "return {{ first }};\n{{ next }}",
+               'set': '{{ first }} = {{ second }};\n{{ next }}',
 
-               'forEach': 'for(var ' + placeholder.ITERATOR + ' in %collection) {\n' +
-                   '%iter = %collection['+placeholder.ITERATOR+'];\n%next\n}',
+               'forEach': 'for(var ' + placeholder.ITERATOR + ' in {{ collection }}) {\n' +
+                   '{{ iter }} = {{ collection }}['+placeholder.ITERATOR+'];\n{{ next }}\n}',
 
-               'repeat': 'var ' + placeholder.ITERATOR + ' = %count;\nwhile(--'+
-                   placeholder.ITERATOR+'){\n%next\n}',
+               'repeat': 'var ' + placeholder.ITERATOR + ' = {{ count }};\nwhile(--'+
+                   placeholder.ITERATOR+'){\n{{ next }}\n}',
 
-               'while': 'while(%cond){\n%next\n}'
+               'while': 'while({{ cond }}){\n{{ next }}\n}'
            };
 
            return {
@@ -122,18 +122,18 @@ define([], function (){
        publicVariables = ['currentNode'],
        privateVariables = {GET_DIMENSION: 'getDimension'},
 
-       placeholder = { ITERATOR: '%__iterator__',
-                       FUNCTION_DEFS: '%__func_defs__',
-                       CODE: '%__code__'},
-       optionalPlaceholderS = ['%next', '%true_next', '%false_next'],
+       placeholder = { ITERATOR: '{{ __iterator__ }}',
+                       FUNCTION_DEFS: '{{ __func_defs__ }}',
+                       CODE: '{{ __code__ }}'},
+       optionalPlaceholderS = ['next', 'true_next', 'false_next'],
        uniqueness = 10000000,
 
        variableTypes = [ 'map', 'string', 'number', 'boolean', 
                          'node', 'collection', 'nodeSet'],
-       variableDefinition = { 'map': 'var %name = {};',
-                              'collection': 'var %name = [];',
+       variableDefinition = { 'map': 'var {{ name }} = {};',
+                              'collection': 'var {{ name }} = [];',
                               // __default__ refers to any non map or collection
-                              '__default__': 'var %name = null;' },
+                              '__default__': 'var {{ name }} = null;' },
 
        extension = 'js';
 
