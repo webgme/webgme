@@ -130,9 +130,11 @@ define([], function (){
             types: variableTypes,
             definitions: variableDefinition
         },
+        undefined: 'null',  // The value inserted for empty non-optional pointers/attributes in the model
         placeholders: placeholders,
         optionalPlaceholders: optionalPlaceholders,
         ext: extension,
+
         language: 'Javascript'
     };
 

@@ -166,7 +166,8 @@ define(['plugin/PluginConfig',
                            CODE: '__code__',
                            PARENT_SNIPPET_START: '__parentSnippetStart__',
                            PARENT_SNIPPET_END: '__parentSnippetEnd__'},
-            optionalPlaceholders: ['next'],
+            optionalPlaceholders: ['next', 'true_next', 'false_next'],
+            undefined: 'null',
             endCode: {}
         };
 
@@ -425,7 +426,7 @@ define(['plugin/PluginConfig',
                     }
 
                 } else {
-                    snippetTagContent[attributes[i]] = 'undefined';
+                    snippetTagContent[attributes[i]] = this.langSpec.undefined;
                 }
 
                 attribute = this.core.getAttribute(node, attributes[i]);
@@ -456,7 +457,7 @@ define(['plugin/PluginConfig',
                             snippetTagContent[ptrs[i]] = this.langSpec.endCode[parentId];
                         }
                     } else {
-                        snippetTagContent[ptrs[i]] = 'undefined';
+                        snippetTagContent[ptrs[i]] = this.langSpec.undefined;
                     }
                 }
             }
