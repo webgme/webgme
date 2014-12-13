@@ -166,9 +166,9 @@ define(['plugin/PluginConfig',
             },
             placeholders: {ITERATOR: '__iterator__',
                            FUNCTION_DEFS: '__func_defs__',
-                           CODE: '__code__',
-                           PARENT_SNIPPET_START: '__parentSnippetStart__',
-                           PARENT_SNIPPET_END: '__parentSnippetEnd__'},
+                           CODE: '__code__'},
+            async: {START: '_async_start_',
+                    END: '_async_end_'},
             optionalPlaceholders: ['next', 'true_next', 'false_next'],
             undefined: 'null',
             endCode: {},
@@ -269,6 +269,11 @@ define(['plugin/PluginConfig',
 
     CodeGenerator.prototype._getPlaceholderRegex = function(name){
         return new RegExp('{{\\s*' + name + '\\s*}}', 'g');
+    };
+
+    CodeGenerator.prototype._getParentRegex = function(){
+        return new RegExp('{{\\s*' + this.langSpec.async.START+ 
+          '\\s*}}(.*){{\\s*'+this.langSpec.async.END+'\\s*}}', 'g');
     };
 
     CodeGenerator.prototype._getValidVariableName = function(variableName){
@@ -385,7 +390,6 @@ define(['plugin/PluginConfig',
             targetNode,
             splitElements,
             subsnippets,
-            newSnippet,
             parent = this.core.getParent(node),
             parentId = this.core.getPath(parent),
             i,
@@ -481,29 +485,34 @@ define(['plugin/PluginConfig',
         //iff the node is a command type or if the snippet
         //already contains PARENT_SNIPPET (should always
         //only be 1 set of PARENT_SNIPPET's)
-        var parentRegex = this._getPlaceholderRegex(this.langSpec.placeholders.PARENT_SNIPPET_START);
-        if (this._isTypeOf(node, this.META.command) ||
-              snippet.match(parentRegex) !== null){
-            dj = 2;
-        }
+        var parentRegex = this._getParentRegex(),
+            parentStart,
+            parentEnd,
+            subsnippet,
+            match;
 
         keys = Object.keys(snippetTagContent);
         for (i = keys.length-1; i >= 0; i--){
             snippetTag = this._getPlaceholderRegex(keys[i]);
 
             //Flip the parent, child code if PARENT_SNIPPET
+            // There is a much easier way to do this...
             if (_.isString(snippetTagContent[keys[i]]) && snippetTagContent[keys[i]].match(parentRegex) !== null){
-                splitElements = '(' + this.langSpec.placeholders.PARENT_SNIPPET_START + 
-                    '|' + this.langSpec.placeholders.PARENT_SNIPPET_END + ')';
-                subsnippets = snippetTagContent[keys[i]].split(new RegExp(splitElements, 'g'));
-                newSnippet = "";
-                for (k = 0; k < subsnippets.length; k +=5){
-                    subsnippets[k+2] = snippet.replace(snippetTag, subsnippets[k+2]);
-                    for (j = k; j < k+5; j+=dj){
-                        newSnippet += subsnippets[j];
-                    }
-                }
-                snippet = newSnippet;
+                // I can get the matching parent group
+                subsnippet = snippetTagContent[keys[i]];
+                match = snippetTagContent[keys[i]].match(parentRegex)[0];
+
+                //    Remove the parent template markers
+                parentStart = this._getPlaceholderRegex(this.langSpec.async.START);
+                parentEnd = this._getPlaceholderRegex(this.langSpec.async.END);
+                match = match.replace(parentStart, '').replace(parentEnd, '');
+
+                //    Replace the key regex with the result in snippet
+                snippet = snippet.replace(snippetTag, match);
+
+                // Replace the subsnippet with the snippet
+                subsnippet = subsnippet.replace(parentRegex, snippet);
+                snippet = subsnippet;
             } else {
                 snippet = snippet.replace(snippetTag, snippetTagContent[keys[i]]);
                 if (this.langSpec.endCode[nodeId]){

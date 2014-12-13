@@ -269,7 +269,7 @@ define(['plugin/PluginConfig',
 
     ConstraintPlugin.prototype._runSync = function(){
         var constraints = Object.keys(this.constraintNodes),
-            options = {codeDefinition: ConstraintCodeMap},
+            options = {langSpec: ConstraintCodeMap},
             i = constraints.length,
             constNames,
             node = this.activeNode,
