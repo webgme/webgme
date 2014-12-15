@@ -100,9 +100,20 @@ define(['./SnapEditorWidget.Constants'], function (SNAP_CONSTANTS){
         if (highlights){
             i = highlights.length;
             while (i--){
-                if (highlights[i].ptr === ptr && 
-                    highlights[i].role === role){
-                    return _.extend({}, highlights[i]);
+                if (highlights[i].role === role) {
+                    switch(role) {
+                        case 'in':
+                            if (ptr.indexOf(highlights[i].ptr) !== -1) {
+                            return _.extend({}, highlights[i]);
+                        }
+                        break;
+
+                        case 'out':
+                            if (ptr === highlights[i].ptr) {
+                            return _.extend({}, highlights[i]);
+                        }
+                        break;
+                    }
                 }
             }
         }
