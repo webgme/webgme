@@ -1449,7 +1449,7 @@ define([
                         }
                         _core.generateLightTreeDiff(sRoot,tRoot,function(err,diff){
                             console.log('genDiffTree',new Date().getTime()-start);
-                            console.log('diffTree',diff);
+              console.log('diffTree',JSON.stringify(diff,null,2));
                             callback(err,diff);
                         });
                     },
@@ -2989,23 +2989,9 @@ define([
                       });
                         break;
                     case 2:
-                        //here we try to check every element in _nodes...
-                        var start = new Date().getTime(),
-                            sized,
-                            end;
-                        console.log("allupdatestart");
-                        var keys = Object.keys(_nodes),
-                            oldroot,
-                            updates = {},
-                            index = 0,
-                            checkNextNode = function (path) {
-                                if (index < keys.length) {
-                                    _core.loadByPath(oldroot, path, function (err, node) {
-                                        if (!err && node) {
-                                            updates[path] = _core.nodeDiff(node, _nodes[path].node);
-                                            if (updates[path] === null) {
-                                                delete updates[path];
-                                            }
+            /*getFullProjectsInfoAsync(function(err,info){
+              if(err){
+                console.log('hibaaa',err);
                                         } else {
                           //console.log(info);
                           var myInfo = info[getActiveProject()];
@@ -3013,22 +2999,16 @@ define([
                             console.log('common commit',err,commit);
                                     });
                                 }
-                            },
-                            finished = function () {
-                                console.log(updates);
-                                end = new Date().getTime();
-                                sized = (end - start) / keys.length;
-                                console.log("allupdateend", end - start, sized);
-                            };
-                        _core.loadRoot(_previousRootHash, function (err, root) {
-                            if (!err && root) {
-                                oldroot = root;
-                                checkNextNode(keys[index]);
-                            } else {
-                                updates[""] = "NAGYHIBAAA";
-                                finished();
-                            }
-                        });
+            });*/
+            _core.loadRoot('#07e862295417e7140b46b3ad33c7985d37852ccd',function(err,sRoot){
+              _core.loadRoot('#8a188a9138afbd083965d7cb7a7952067221a5d3',function(err,tRoot){
+                _core.generateTreeDiff(sRoot,tRoot,function(err,diff){
+                  console.log(JSON.stringify(diff,null,2));
+                });
+              });
+            });
+          /*#ad2d5574108ff98d36d1a0a0ffbfa2bec88df7f0 - targetcommit - #8a188a9138afbd083965d7cb7a7952067221a5d3
+            #42034ab3144916d2ac9855afbbd65318575e78e4 - sourcecommit - #07e862295417e7140b46b3ad33c7985d37852ccd -rootCommit*/
                         break;
                     case 3:
                       //we try our first merge
