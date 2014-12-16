@@ -773,6 +773,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
           _needChecking = true;
           delete _yetToCompute[guids[i]];
           done = TASYNC.call(function (mDiff, info) {
+            mDiff.guid = _core.getGuid(info.from);
             mDiff.movedFrom = _core.getPath(info.from);
             mDiff.ooGuids = gatherObstructiveGuids(info.from);
             _diff_moves[_core.getPath(info.from)] = _core.getPath(info.to);

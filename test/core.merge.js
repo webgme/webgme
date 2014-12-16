@@ -449,7 +449,7 @@ describe('Core#Merge#Attribute',function(){
         return done(new Error(err));
       }
       if(bc !== baseCommit){
-        console.log(bc,'!=',baseCommit);
+        console.warn(bc,'!=',baseCommit);
         return done(new Error('common ancestor commit mismatch'));
       }
       done();
@@ -642,7 +642,7 @@ describe('Core#Merge#Attribute',function(){
         return done(new Error(err));
       }
       if(bc !== baseCommit){
-        console.log(bc,'!=',baseCommit);
+        console.warn(bc,'!=',baseCommit);
         return done(new Error('common ancestor commit mismatch'));
       }
       done();
@@ -693,7 +693,6 @@ describe('Core#Merge#Attribute',function(){
     }
   });
   it('crate final merged diff',function(){
-    console.log(conflict);
     conflict.items[0].selected = 'theirs';
     mergedDiff = core.applyResolution(conflict);
   });
@@ -737,47 +736,18 @@ describe('Core#Merge#Attribute',function(){
     });
   });
   it('node \'one\' priority => 2',function(done){
-    core.loadRoot(baseRootHash,function(err,r){
-      if(err){
+    core.loadRoot(baseRootHash,function(err,r) {
+      if (err) {
         return done(err);
       }
       commit = baseCommit;
       root = r;
-      applyDiff({
-        "579542227":{
-          "651215756":{
-            "attr":{
-              "priority":2
-            },
-            "guid": "ed1a1ef7-7eb3-af75-11a8-7994220003e6",
-            "oGuids":{
-              "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
-              "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
-              "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true,
-              "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
-              "ed1a1ef7-7eb3-af75-11a8-7994220003e6": true,
-              "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true
-            }
-          },
-          "guid": "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3",
-          "oGuids":{
-            "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
-            "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
-            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true,
-            "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
-            "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true
-          }
-        },
-        "guid": "e687d284-a04a-7cbc-93ed-ea941752d57a",
-        "oGuids":{
-          "e687d284-a04a-7cbc-93ed-ea941752d57a": true
-        }
-      },function(err){
+      core.loadByPath(root,'/579542227/651215756',function(err,node){
         if(err){
           return done(err);
         }
-
-        saveProject('modificationsA',[baseCommit],function(err,c){
+        core.setAttribute(node,'priority',2);
+        saveProject('priority -> 2',[commit],function(err,c) {
           aRootHash = core.getHash(root);
           commitA = c;
           done(err);
@@ -786,67 +756,26 @@ describe('Core#Merge#Attribute',function(){
     });
   });
   it('move node \'one\'',function(done){
-    core.loadRoot(baseRootHash,function(err,r){
-      if(err){
+    core.loadRoot(baseRootHash,function(err,r) {
+      if (err) {
         return done(err);
       }
       commit = baseCommit;
       root = r;
-      applyDiff({
-        "579542227":{
-          "childrenListChanged": true,
-          "guid": "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3",
-          "oGuids":{
-            "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
-            "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
-            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true,
-            "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
-            "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true
-          }
-        },
-        "guid": "e687d284-a04a-7cbc-93ed-ea941752d57a",
-        "oGuids":{
-          "e687d284-a04a-7cbc-93ed-ea941752d57a": true
-        },
-        "1786679144":{
-          "651215756":{
-            "guid": "ed1a1ef7-7eb3-af75-11a8-7994220003e6",
-            "oGuids": {
-              "ed1a1ef7-7eb3-af75-11a8-7994220003e6": true,
-              "8b636e17-3e94-e0c6-2678-1a24ee5e6ae7": true,
-              "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
-              "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true,
-              "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
-              "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
-            },
-            "movedFrom": "/579542227/651215756",
-            "ooGuids": {
-              "ed1a1ef7-7eb3-af75-11a8-7994220003e6": true,
-              "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
-              "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
-              "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true,
-              "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
-              "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
-            }
-          },
-          "childrenListChanged": true,
-          "guid": "8b636e17-3e94-e0c6-2678-1a24ee5e6ae7",
-          "oGuids": {
-            "8b636e17-3e94-e0c6-2678-1a24ee5e6ae7": true,
-            "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
-            "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true,
-            "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
-            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
-          }
-        }
-      },function(err){
+      core.loadByPath(root,'/1786679144',function(err,parent){
         if(err){
           return done(err);
         }
-        saveProject('modificationsB',[baseCommit],function(err,c){
-          bRootHash = core.getHash(root);
-          commitB = c;
-          done(err);
+        core.loadByPath(root,'/579542227/651215756',function(err,node){
+          if(err){
+            return done(err);
+          }
+          core.moveNode(node,parent);
+          saveProject('node moved',[commit],function(err,c) {
+            bRootHash = core.getHash(root);
+            commitB = c;
+            done(err);
+          });
         });
       });
     });
@@ -857,7 +786,7 @@ describe('Core#Merge#Attribute',function(){
         return done(new Error(err));
       }
       if(bc !== baseCommit){
-        console.log(bc,'!=',baseCommit);
+        console.warn(bc,'!=',baseCommit);
         return done(new Error('common ancestor commit mismatch'));
       }
       done();
@@ -906,7 +835,6 @@ describe('Core#Merge#Attribute',function(){
     if(conflict && conflict.items && conflict.items.length > 0 ){
       throw new Error('there are conflicts');
     }
-    console.log(conflict.merge);
     mergedDiff = conflict.merge;
   });
   it('apply merged changes',function(done){
@@ -939,7 +867,7 @@ describe('Core#Merge#Attribute',function(){
       root = r;
       core.loadByPath(r,'/1786679144/651215756',function(err,a){
         error = error || err;
-        if(!err && core.getAttribute(a,'priority')!==100){
+        if(!err && core.getAttribute(a,'priority')!==2){
           error = error || new Error('value of modification is wrong');
         }
         if(--needed === 0){
