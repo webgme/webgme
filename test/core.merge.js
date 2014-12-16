@@ -30,7 +30,6 @@ function saveProject(txt,ancestors,next){
     });
   });
 }
-
 function loadJsonData(path){
   try {
     jsonData = JSON.parse(FS.readFileSync(path, 'utf8'));
@@ -41,7 +40,6 @@ function loadJsonData(path){
 
   return true;
 }
-
 function importProject(projectJson,next) {
 
   storage.getProjectNames(function (err, names) {
@@ -92,6 +90,25 @@ function applyDiff(diffJson,next){
     next(null);
   });
 }
+function loadNodes(paths,next){
+  var needed = paths.length,
+    nodes = {}, error = null, i,
+    loadNode = function(path){
+      core.loadByPath(root,path,function(err,node){
+        error = error || err;
+        nodes[path] = node;
+        if(--needed === 0){
+          next(error,nodes);
+        }
+      })
+    };
+  for(i=0;i<paths.length;i++){
+    loadNode(paths[i]);
+  }
+}
+
+
+
 describe('Core#Merge#Pre',function() {
   it('should open the database connection', function (done) {
     storage.openDatabase(done);
@@ -113,6 +130,7 @@ describe('Core#Merge#Pre',function() {
       });
   });
 });
+/*
 describe('Core#Merge#Attribute',function(){
   var baseRootHash,aRootHash,bRootHash,
     commitA,commitB,diffA,diffB,mergedDiff,mergedCommit,mergedRootHash,conflict;
@@ -2038,12 +2056,13 @@ describe('Core#Merge#Registry',function(){
       });
     });
   });
-});
+});*/
 describe('Core#Merge#Pointer',function(){
   var baseRootHash,aRootHash,bRootHash,
     commitA,commitB,diffA,diffB,mergedDiff,mergedCommit,mergedRootHash,conflict;
   it('check the initial values of pointers',function(done){
     baseRootHash = rootHash;
+    commit = baseCommit;
     core.loadRoot(baseRootHash,function(err,r){
       var needed = 2,error = null;
       if(err){
@@ -2071,13 +2090,140 @@ describe('Core#Merge#Pointer',function(){
     });
   });
   //change different pointer targets
-  
+  it('change src and dst of connectionA',function(done){
+    core.loadRoot(baseRootHash,function(err,r){
+      if(err){
+        return done(err);
+      }
+      root = r;
+      loadNodes([
+        '/579542227/275896267'/*connection*/,
+        '/579542227/1532094116' /*new dst and src 3*/],function(err,nodes){
+        if(err){
+          return done(err);
+        }
+        core.setPointer(nodes['/579542227/275896267'],'src',nodes['/579542227/1532094116']);
+        core.setPointer(nodes['/579542227/275896267'],'dst',nodes['/579542227/1532094116']);
+        saveProject('changed pointer targets',[commit],function(err,c){
+          if(err){
+            return done(err);
+          }
+          commitA = c;
+          aRootHash = core.getHash(root);
+          done();
+        });
+      });
+    });
+  });
+  it('change src and dst of connectionB',function(done){
+    core.loadRoot(baseRootHash,function(err,r){
+      if(err){
+        return done(err);
+      }
+      root = r;
+      loadNodes([
+        '/579542227/684921282'/*connection*/,
+        '/579542227/651215756' /*new dst and src 1*/],function(err,nodes){
+        if(err){
+          return done(err);
+        }
+        core.setPointer(nodes['/579542227/684921282'],'src',nodes['/579542227/651215756']);
+        core.setPointer(nodes['/579542227/684921282'],'dst',nodes['/579542227/651215756']);
+        saveProject('changed pointer targets',[commit],function(err,c){
+          if(err){
+            return done(err);
+          }
+          commitB = c;
+          bRootHash = core.getHash(root);
+          done();
+        });
+      });
+    });
+  });
+  it('common ancestor',function(done){
+    project.getCommonAncestorCommit(commitA,commitB,function(err,bc){
+      if(err){
+        return done(new Error(err));
+      }
+      if(bc !== baseCommit){
+        console.warn(bc,'!=',baseCommit);
+        return done(new Error('common ancestor commit mismatch'));
+      }
+      done();
+    });
+  });
+  it('diff of modificationsA',function(done){
+    core.loadRoot(baseRootHash,function(err,b){
+      if(err){
+        return done(err);
+      }
+      core.loadRoot(aRootHash,function(err,a){
+        if(err){
+          return done(err);
+        }
+        core.generateTreeDiff(b,a,function(err,d){
+          if(err){
+            return done(err);
+          }
+          diffA = d;
+          done();
+        });
+      });
+    });
+  });
+  it('diff of modificationsB',function(done){
+    core.loadRoot(baseRootHash,function(err,b){
+      if(err){
+        return done(err);
+      }
+      core.loadRoot(bRootHash,function(err,a){
+        if(err){
+          return done(err);
+        }
+        core.generateTreeDiff(b,a,function(err,d){
+          if(err){
+            return done(err);
+          }
+          diffB = d;
+          done();
+        });
+      });
+    });
+  });
+  it('get conflict (0)',function(){
+    conflict = core.tryToConcatChanges(diffA,diffB);
+    if(conflict && conflict.items && conflict.items.length > 0 ){
+      throw new Error('there are conflicts');
+    }
+    mergedDiff = conflict.merge;
+  });
+  it('apply merged changes',function(done){
+    core.loadRoot(baseRootHash,function(err,r){
+      if(err){
+        return done(err);
+      }
+      root = r;
+      applyDiff(mergedDiff,function(err){
+        if(err){
+          return done(err);
+        }
+        saveProject('merged modifications',[commitA,commitB],function(err,c){
+          if(err){
+            return done(err);
+          }
+          mergedCommit = c;
+          mergedRootHash = core.getHash(root);
+          done();
+        });
+      });
+    });
+  });
 });
-describe('Core#Merge#Post',function(){
+/*describe('Core#Merge#Post',function(){
   it('should remove the test project',function(done){
     deleteProject(done);
   });
   it('should close the database connection',function(done){
     storage.closeDatabase(done);
   });
-});
+});*/
