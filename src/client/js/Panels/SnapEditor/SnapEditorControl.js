@@ -67,10 +67,6 @@ define(['logManager',
             depth = nodeId === CONSTANTS.PROJECT_ROOT_ID ? 1 : 1000000,
             self = this;
 
-//TODO REMOVE
-console.log("Object changed to " + nodeId);
-//TODO REMOVE_END
-
         this.logger.debug("activeObject '" + nodeId + "'");
 
         //delete everything from model editor
@@ -164,7 +160,6 @@ console.log("Object changed to " + nodeId);
             objDescriptor.parentId = node.getParentId();
 
             if (nodeId !== this.currentNodeInfo.id){
-                //TODO Get all important info about the object..
                 
                 //aspect specific coordinate
                 if (this._selectedAspect === CONSTANTS.ASPECT_ALL) {
