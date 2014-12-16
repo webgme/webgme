@@ -131,7 +131,7 @@
   <!-- connection areas -->
   <line
      class="connection-area"
-     data-ptr="iter cond first second"
+     data-ptr="count iter first second"
      data-role="in"
      x1="4.5"
      y1="11"

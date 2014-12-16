@@ -239,13 +239,40 @@
   <!-- custom highlighting areas are now supported - must be a line, however -->
   <line
      class="connection-highlight"
+     style="opacity:0"
+     data-ptr="first"
+     data-role="out"
+     x1="37"
+     y1="12"
+     x2="59"
+     y2="12"/>
+  <line
+     class="connection-highlight"
+     style="opacity:0"
+     data-ptr="collection"
+     data-role="out"
+     x1="82"
+     y1="12"
+     x2="100"
+     y2="12"/>
+  <line
+     class="connection-highlight"
+     style="opacity:0"
+     data-ptr="next"
+     data-role="in"
+     x1="5"
+     y1="4"
+     x2="80"
+     y2="4"/>
+  <line
+     class="connection-highlight"
      style="opacity:0;stroke:#444444;stroke-width:10.10658169"
      data-ptr="next"
      data-role="out"
-     x1="4.4907908"
-     y1="27.5625"
-     x2="79.290169"
-     y2="27.5625"
+     x1="5.0532908"
+     y1="26.904751"
+     x2="79.852669"
+     y2="26.904751"
      id="line17" />
   <!-- initial measurement of name -->
   <rect

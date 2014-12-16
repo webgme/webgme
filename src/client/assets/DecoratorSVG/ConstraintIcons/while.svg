@@ -99,16 +99,6 @@
      id="colors"
      style="fill:#fd3f49;stroke:#fd3f49"
      data-secondary="fill:#fd5f49;stroke:#fd5f49">
-    <rect
-       data-shift="y-topExpandBox x-topExpandBox"
-       style="opacity:0.54863808;fill:#ffffff;fill-opacity:1;stroke:#0000cc;stroke-width:0.03871261;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
-       id="inputField"
-       width="27.074053"
-       height="11.87143"
-       x="49.002762"
-       y="5.2229028"
-       ry="5.9357157"
-       inkscape:label="#rect4593" />
     <path
        d="M 0.59567424,4.7587612 A 3.538921,3.5909029 0 0 1 4.134596,1.1678584 l 7.077842,0 3.538921,3.5909028 9.437123,0 3.538921,-3.4712061 0,3.4712061"
        style="stroke-width:1.18827236"
@@ -117,9 +107,9 @@
        inkscape:label="#path8" />
     <rect
        data-stretch="y-cond x-cond x-name y-name"
-       x="31.449223"
+       x="31"
        y="3.157517"
-       width="48.27145"
+       width="48.7"
        height="16.997704"
        style="stroke-width:6.30729771"
        id="topExpandBox"
@@ -178,11 +168,21 @@
        id="topRightRect"
        inkscape:label="#rect10-9" />
     <rect
-       data-stretch="y-cond y-name y-true_next"
+       data-stretch="y-cond"
        x="2.155472"
-       y="6.7386951"
+       y="4.7386951"
        width="7.9311714"
-       height="48.328293"
+       height="27.328293"
+       style="stroke-width:4.31094408;overflow:hidden"
+       id="topSpine"
+       inkscape:label="#rect11-1-0" />
+    <rect
+       data-stretch="y-true_next"
+       data-shift="y-topSpine"
+       x="2.155472"
+       y="29.7386951"
+       width="7.9311714"
+       height="25.328293"
        style="stroke-width:4.31094408;overflow:hidden"
        id="spine"
        inkscape:label="#rect11-1-0" />
@@ -261,6 +261,16 @@
        style="stroke-width:2.18415689;overflow:hidden"
        id="bottomLeftBase-7"
        inkscape:label="#rect11-1-0" />
+    <rect
+       data-shift="y-topExpandBox x-topExpandBox"
+       style="opacity:0.54863808;fill:#ffffff;fill-opacity:1;stroke:#0000cc;stroke-width:0.03871261;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="inputField"
+       width="27.074053"
+       height="11.87143"
+       x="49.002762"
+       y="5.2229028"
+       ry="5.9357157"
+       inkscape:label="#rect4593" />
   </g>
   <!-- NAME AND CONNECTIONS -->
   <text
@@ -301,11 +311,40 @@
      class="connection-area"
      data-ptr="cond"
      data-role="out"
-     x1="52.508518"
-     y1="4.439868"
-     x2="48.008518"
-     y2="8.939868"
+     data-align-center="y-topExpandBox"
+     x1="50"
+     y1="11"
+     x2="50"
+     y2="11"
      id="cond-out" />
+  <!-- custom connection highlights -->
+  <line
+     class="connection-highlight"
+     style="opacity:0"
+     data-ptr="next"
+     data-role="in"
+     x1="5"
+     y1="4"
+     x2="80"
+     y2="4"/>
+  <line
+     class="connection-highlight"
+     style="opacity:0"
+     data-ptr="next"
+     data-role="out"
+     x1="5"
+     y1="64"
+     x2="80"
+     y2="64"/>
+  <line
+     class="connection-highlight"
+     style="opacity:0"
+     data-ptr="true_next"
+     data-role="out"
+     x1="10"
+     y1="24"
+     x2="80"
+     y2="24"/>
   <!-- initial measures -->
   <rect
      style="opacity:0"
@@ -322,7 +361,7 @@
      data-ptr="true_next"
      class="initial-measure"
      width="0"
-     height="17"
+     height="30"
      x="0"
      y="0"
      inkscape:label="#rect3008"

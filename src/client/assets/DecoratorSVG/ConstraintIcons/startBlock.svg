@@ -134,6 +134,17 @@
      x="5.9058795"
      y="16.186327"
      style="font-size:12px">Begin</text>
+<!-- Connection Area Highlight -->
+  <line
+     class="connection-highlight"
+     style="opacity:0;stroke:#444444;stroke-width:10.10658169"
+     data-ptr="next"
+     data-role="out"
+     x1="5.0532908"
+     y1="26.904751"
+     x2="79.852669"
+     y2="26.904751"
+     id="line17" />
   <line
      class="connection-area"
      data-ptr="next"
