@@ -130,12 +130,11 @@ describe('Core#Merge#Pre',function() {
       });
   });
 });
-/*
 describe('Core#Merge#Attribute',function(){
   var baseRootHash,aRootHash,bRootHash,
     commitA,commitB,diffA,diffB,mergedDiff,mergedCommit,mergedRootHash,conflict;
   //before
-  it('check original attribute values',function(done){
+  it('[a1] check original attribute values',function(done){
     baseRootHash = rootHash;
     core.loadRoot(baseRootHash,function(err,r){
       var needed = 2,error = null;
@@ -164,7 +163,7 @@ describe('Core#Merge#Attribute',function(){
     });
   });
   //changing attributes of different nodes
-  it('node \'one\' priority => 2',function(done){
+  it('[a2] node \'one\' priority => 2',function(done){
     core.loadRoot(baseRootHash,function(err,r){
       if(err){
         return done(err);
@@ -213,7 +212,7 @@ describe('Core#Merge#Attribute',function(){
       });
     });
   });
-  it('node \'two\' priority => 2',function(done){
+  it('[a2] node \'two\' priority => 2',function(done){
     core.loadRoot(baseRootHash,function(err,r){
       if(err){
         return done(err);
@@ -261,7 +260,7 @@ describe('Core#Merge#Attribute',function(){
       });
     });
   });
-  it('common ancestor',function(done){
+  it('[a2] common ancestor',function(done){
     project.getCommonAncestorCommit(commitA,commitB,function(err,bc){
       if(err){
         return done(new Error(err));
@@ -273,7 +272,7 @@ describe('Core#Merge#Attribute',function(){
       done();
     });
   });
-  it('diff of modificationsA',function(done){
+  it('[a2] diff of modificationsA',function(done){
     core.loadRoot(baseRootHash,function(err,b){
       if(err){
         return done(err);
@@ -292,7 +291,7 @@ describe('Core#Merge#Attribute',function(){
       });
     });
   });
-  it('diff of modificationsB',function(done){
+  it('[a2] diff of modificationsB',function(done){
     core.loadRoot(baseRootHash,function(err,b){
       if(err){
         return done(err);
@@ -311,14 +310,14 @@ describe('Core#Merge#Attribute',function(){
       });
     });
   });
-  it('get conflict (0)',function(){
+  it('[a2] get conflict (0)',function(){
     conflict = core.tryToConcatChanges(diffA,diffB);
     if(conflict && conflict.items && conflict.items.length > 0){
       throw new Error('there are conflicts');
     }
     mergedDiff = conflict.merge;
   });
-  it('apply merged changes',function(done){
+  it('[a2] apply merged changes',function(done){
     core.loadRoot(baseRootHash,function(err,r){
       if(err){
         return done(err);
@@ -339,7 +338,7 @@ describe('Core#Merge#Attribute',function(){
       });
     });
   });
-  it('check changes',function(done){
+  it('[a2] check changes',function(done){
     core.loadRoot(mergedRootHash,function(err,r){
       var needed = 2,error = null;
       if(err){
@@ -367,7 +366,7 @@ describe('Core#Merge#Attribute',function(){
     });
   });
   //changing attribute to same value
-  it('node \'one\' priority => 2',function(done){
+  it('[a3] node \'one\' priority => 2',function(done){
     core.loadRoot(baseRootHash,function(err,r){
       if(err){
         return done(err);
@@ -416,7 +415,7 @@ describe('Core#Merge#Attribute',function(){
       });
     });
   });
-  it('node \'one\' priority => 2',function(done){
+  it('[a3] node \'one\' priority => 2',function(done){
     core.loadRoot(baseRootHash,function(err,r){
       if(err){
         return done(err);
@@ -464,7 +463,7 @@ describe('Core#Merge#Attribute',function(){
       });
     });
   });
-  it('common ancestor',function(done){
+  it('[a3] common ancestor',function(done){
     project.getCommonAncestorCommit(commitA,commitB,function(err,bc){
       if(err){
         return done(new Error(err));
@@ -476,7 +475,7 @@ describe('Core#Merge#Attribute',function(){
       done();
     });
   });
-  it('diff of modificationsA',function(done){
+  it('[a3] diff of modificationsA',function(done){
     core.loadRoot(baseRootHash,function(err,b){
       if(err){
         return done(err);
@@ -495,7 +494,7 @@ describe('Core#Merge#Attribute',function(){
       });
     });
   });
-  it('diff of modificationsB',function(done){
+  it('[a3] diff of modificationsB',function(done){
     core.loadRoot(baseRootHash,function(err,b){
       if(err){
         return done(err);
@@ -514,14 +513,14 @@ describe('Core#Merge#Attribute',function(){
       });
     });
   });
-  it('get conflict (0)',function(){
+  it('[a3] get conflict (0)',function(){
     conflict = core.tryToConcatChanges(diffA,diffB);
     if(conflict && conflict.items && conflict.items.length > 0){
       throw new Error('there are conflicts');
     }
     mergedDiff = conflict.merge;
   });
-  it('apply merged changes',function(done){
+  it('[a3] apply merged changes',function(done){
     core.loadRoot(baseRootHash,function(err,r){
       if(err){
         return done(err);
@@ -542,7 +541,7 @@ describe('Core#Merge#Attribute',function(){
       });
     });
   });
-  it('check changes',function(done){
+  it('[a3] check changes',function(done){
     core.loadRoot(mergedRootHash,function(err,r){
       var needed = 1,error = null;
       if(err){
@@ -561,7 +560,7 @@ describe('Core#Merge#Attribute',function(){
     });
   });
   //changing attribute to different values
-  it('node \'one\' priority => 2',function(done){
+  it('[a4] node \'one\' priority => 2',function(done){
     core.loadRoot(baseRootHash,function(err,r){
       if(err){
         return done(err);
@@ -610,7 +609,7 @@ describe('Core#Merge#Attribute',function(){
       });
     });
   });
-  it('node \'one\' priority => 3',function(done){
+  it('[a4] node \'one\' priority => 3',function(done){
     core.loadRoot(baseRootHash,function(err,r){
       if(err){
         return done(err);
@@ -658,7 +657,7 @@ describe('Core#Merge#Attribute',function(){
       });
     });
   });
-  it('common ancestor',function(done){
+  it('[a4] common ancestor',function(done){
     project.getCommonAncestorCommit(commitA,commitB,function(err,bc){
       if(err){
         return done(new Error(err));
@@ -670,7 +669,7 @@ describe('Core#Merge#Attribute',function(){
       done();
     });
   });
-  it('diff of modificationsA',function(done){
+  it('[a4] diff of modificationsA',function(done){
     core.loadRoot(baseRootHash,function(err,b){
       if(err){
         return done(err);
@@ -689,7 +688,7 @@ describe('Core#Merge#Attribute',function(){
       });
     });
   });
-  it('diff of modificationsB',function(done){
+  it('[a4] diff of modificationsB',function(done){
     core.loadRoot(baseRootHash,function(err,b){
       if(err){
         return done(err);
@@ -708,17 +707,17 @@ describe('Core#Merge#Attribute',function(){
       });
     });
   });
-  it('get conflict (1)',function(){
+  it('[a4] get conflict (1)',function(){
     conflict = core.tryToConcatChanges(diffA,diffB);
     if(conflict && conflict.items && conflict.items.length !== 1){
       throw new Error('insufficient amount of conflicts');
     }
   });
-  it('crate final merged diff',function(){
+  it('[a4] crate final merged diff',function(){
     conflict.items[0].selected = 'theirs';
     mergedDiff = core.applyResolution(conflict);
   });
-  it('apply merged changes',function(done){
+  it('[a4] apply merged changes',function(done){
     core.loadRoot(baseRootHash,function(err,r){
       if(err){
         return done(err);
@@ -739,7 +738,7 @@ describe('Core#Merge#Attribute',function(){
       });
     });
   });
-  it('check changes',function(done){
+  it('[a4] check changes',function(done){
     core.loadRoot(mergedRootHash,function(err,r){
       var needed = 1,error = null;
       if(err){
@@ -758,7 +757,7 @@ describe('Core#Merge#Attribute',function(){
     });
   });
   //change attribute and move node
-  it('node \'one\' priority => 2',function(done){
+  it('[a5] node \'one\' priority => 2',function(done){
     core.loadRoot(baseRootHash,function(err,r) {
       if (err) {
         return done(err);
@@ -778,7 +777,7 @@ describe('Core#Merge#Attribute',function(){
       });
     });
   });
-  it('move node \'one\'',function(done){
+  it('[a5] move node \'one\'',function(done){
     core.loadRoot(baseRootHash,function(err,r) {
       if (err) {
         return done(err);
@@ -803,7 +802,7 @@ describe('Core#Merge#Attribute',function(){
       });
     });
   });
-  it('common ancestor',function(done){
+  it('[a5] common ancestor',function(done){
     project.getCommonAncestorCommit(commitA,commitB,function(err,bc){
       if(err){
         return done(new Error(err));
@@ -815,7 +814,7 @@ describe('Core#Merge#Attribute',function(){
       done();
     });
   });
-  it('diff of modificationsA',function(done){
+  it('[a5] diff of modificationsA',function(done){
     core.loadRoot(baseRootHash,function(err,b){
       if(err){
         return done(err);
@@ -834,7 +833,7 @@ describe('Core#Merge#Attribute',function(){
       });
     });
   });
-  it('diff of modificationsB',function(done){
+  it('[a5] diff of modificationsB',function(done){
     core.loadRoot(baseRootHash,function(err,b){
       if(err){
         return done(err);
@@ -853,14 +852,14 @@ describe('Core#Merge#Attribute',function(){
       });
     });
   });
-  it('get conflict (0)',function(){
+  it('[a5] get conflict (0)',function(){
     conflict = core.tryToConcatChanges(diffA,diffB);
     if(conflict && conflict.items && conflict.items.length > 0 ){
       throw new Error('there are conflicts');
     }
     mergedDiff = conflict.merge;
   });
-  it('apply merged changes',function(done){
+  it('[a5] apply merged changes',function(done){
     core.loadRoot(baseRootHash,function(err,r){
       if(err){
         return done(err);
@@ -881,7 +880,7 @@ describe('Core#Merge#Attribute',function(){
       });
     });
   });
-  it('check changes',function(done){
+  it('[a5] check changes',function(done){
     core.loadRoot(mergedRootHash,function(err,r){
       var needed = 1,error = null;
       if(err){
@@ -900,7 +899,7 @@ describe('Core#Merge#Attribute',function(){
     });
   });
   //remove attributes of different nodes
-  it('node \'one\' and \'two\' priority => 2',function(done){
+  it('[a6] node \'one\' and \'two\' priority => 2',function(done){
     core.loadRoot(baseRootHash,function(err,r){
       if(err){
         return done(err);
@@ -941,7 +940,7 @@ describe('Core#Merge#Attribute',function(){
       });
     });
   });
-  it('removes priority from node \'one\'',function(done){
+  it('[a6] removes priority from node \'one\'',function(done){
     core.loadRoot(baseRootHash,function(err,r){
       if(err){
         return done(err);
@@ -963,7 +962,7 @@ describe('Core#Merge#Attribute',function(){
       });
     });
   });
-  it('removes priority from node \'two\'',function(done){
+  it('[a6] removes priority from node \'two\'',function(done){
     core.loadRoot(baseRootHash,function(err,r){
       if(err){
         return done(err);
@@ -985,7 +984,7 @@ describe('Core#Merge#Attribute',function(){
       });
     });
   });
-  it('common ancestor',function(done){
+  it('[a6] common ancestor',function(done){
     project.getCommonAncestorCommit(commitA,commitB,function(err,bc){
       if(err){
         return done(new Error(err));
@@ -997,7 +996,7 @@ describe('Core#Merge#Attribute',function(){
       done();
     });
   });
-  it('diff of modificationsA',function(done){
+  it('[a6] diff of modificationsA',function(done){
     core.loadRoot(baseRootHash,function(err,b){
       if(err){
         return done(err);
@@ -1016,7 +1015,7 @@ describe('Core#Merge#Attribute',function(){
       });
     });
   });
-  it('diff of modificationsB',function(done){
+  it('[a6] diff of modificationsB',function(done){
     core.loadRoot(baseRootHash,function(err,b){
       if(err){
         return done(err);
@@ -1035,14 +1034,14 @@ describe('Core#Merge#Attribute',function(){
       });
     });
   });
-  it('get conflict (0)',function(){
+  it('[a6] get conflict (0)',function(){
     conflict = core.tryToConcatChanges(diffA,diffB);
     if(conflict && conflict.items && conflict.items.length > 0 ){
       throw new Error('there are conflicts');
     }
     mergedDiff = conflict.merge;
   });
-  it('apply merged changes',function(done){
+  it('[a6] apply merged changes',function(done){
     core.loadRoot(baseRootHash,function(err,r){
       if(err){
         return done(err);
@@ -1063,7 +1062,7 @@ describe('Core#Merge#Attribute',function(){
       });
     });
   });
-  it('check changes',function(done){
+  it('[a6] check changes',function(done){
     core.loadRoot(mergedRootHash,function(err,r){
       var needed = 2,error = null;
       if(err){
@@ -1095,7 +1094,7 @@ describe('Core#Merge#Registry',function(){
   var baseRootHash,aRootHash,bRootHash,
     commitA,commitB,diffA,diffB,mergedDiff,mergedCommit,mergedRootHash,conflict;
   //before
-  it('check original registry values',function(done){
+  it('[r1] check original registry values',function(done){
     baseRootHash = rootHash;
     core.loadRoot(baseRootHash,function(err,r){
       var needed = 2,error = null,position;
@@ -1128,7 +1127,7 @@ describe('Core#Merge#Registry',function(){
     });
   });
   //changing registry of different nodes
-  it('node \'one\' position => 200,200',function(done){
+  it('[r2] node \'one\' position => 200,200',function(done){
     core.loadRoot(baseRootHash,function(err,r){
       if(err){
         return done(err);
@@ -1177,7 +1176,7 @@ describe('Core#Merge#Registry',function(){
       });
     });
   });
-  it('node \'two\' position => 300,300',function(done){
+  it('[r2] node \'two\' position => 300,300',function(done){
     core.loadRoot(baseRootHash,function(err,r){
       if(err){
         return done(err);
@@ -1225,7 +1224,7 @@ describe('Core#Merge#Registry',function(){
       });
     });
   });
-  it('common ancestor',function(done){
+  it('[r2] common ancestor',function(done){
     project.getCommonAncestorCommit(commitA,commitB,function(err,bc){
       if(err){
         return done(new Error(err));
@@ -1237,7 +1236,7 @@ describe('Core#Merge#Registry',function(){
       done();
     });
   });
-  it('diff of modificationsA',function(done){
+  it('[r2] diff of modificationsA',function(done){
     core.loadRoot(baseRootHash,function(err,b){
       if(err){
         return done(err);
@@ -1256,7 +1255,7 @@ describe('Core#Merge#Registry',function(){
       });
     });
   });
-  it('diff of modificationsB',function(done){
+  it('[r2] diff of modificationsB',function(done){
     core.loadRoot(baseRootHash,function(err,b){
       if(err){
         return done(err);
@@ -1275,14 +1274,14 @@ describe('Core#Merge#Registry',function(){
       });
     });
   });
-  it('get conflict (0)',function(){
+  it('[r2] get conflict (0)',function(){
     conflict = core.tryToConcatChanges(diffA,diffB);
     if(conflict && conflict.items && conflict.items.length > 0){
       throw new Error('there are conflicts');
     }
     mergedDiff = conflict.merge;
   });
-  it('apply merged changes',function(done){
+  it('[r2] apply merged changes',function(done){
     core.loadRoot(baseRootHash,function(err,r){
       if(err){
         return done(err);
@@ -1303,7 +1302,7 @@ describe('Core#Merge#Registry',function(){
       });
     });
   });
-  it('check changes',function(done){
+  it('[r2] check changes',function(done){
     core.loadRoot(mergedRootHash,function(err,r){
       var needed = 2,error = null,position;
       if(err){
@@ -1335,7 +1334,7 @@ describe('Core#Merge#Registry',function(){
     });
   });
   //changing attribute to same value
-  it('node \'one\' position => 200,200',function(done){
+  it('[r3] node \'one\' position => 200,200',function(done){
     core.loadRoot(baseRootHash,function(err,r){
       if(err){
         return done(err);
@@ -1384,7 +1383,7 @@ describe('Core#Merge#Registry',function(){
       });
     });
   });
-  it('node \'one\' position => 200,200',function(done){
+  it('[r3] node \'one\' position => 200,200',function(done){
     core.loadRoot(baseRootHash,function(err,r){
       if(err){
         return done(err);
@@ -1432,7 +1431,7 @@ describe('Core#Merge#Registry',function(){
       });
     });
   });
-  it('common ancestor',function(done){
+  it('[r3] common ancestor',function(done){
     project.getCommonAncestorCommit(commitA,commitB,function(err,bc){
       if(err){
         return done(new Error(err));
@@ -1444,7 +1443,7 @@ describe('Core#Merge#Registry',function(){
       done();
     });
   });
-  it('diff of modificationsA',function(done){
+  it('[r3] diff of modificationsA',function(done){
     core.loadRoot(baseRootHash,function(err,b){
       if(err){
         return done(err);
@@ -1463,7 +1462,7 @@ describe('Core#Merge#Registry',function(){
       });
     });
   });
-  it('diff of modificationsB',function(done){
+  it('[r3] diff of modificationsB',function(done){
     core.loadRoot(baseRootHash,function(err,b){
       if(err){
         return done(err);
@@ -1482,14 +1481,14 @@ describe('Core#Merge#Registry',function(){
       });
     });
   });
-  it('get conflict (0)',function(){
+  it('[r3] get conflict (0)',function(){
     conflict = core.tryToConcatChanges(diffA,diffB);
     if(conflict && conflict.items && conflict.items.length > 0){
       throw new Error('there are conflicts');
     }
     mergedDiff = conflict.merge;
   });
-  it('apply merged changes',function(done){
+  it('[r3] apply merged changes',function(done){
     core.loadRoot(baseRootHash,function(err,r){
       if(err){
         return done(err);
@@ -1510,7 +1509,7 @@ describe('Core#Merge#Registry',function(){
       });
     });
   });
-  it('check changes',function(done){
+  it('[r3] check changes',function(done){
     core.loadRoot(mergedRootHash,function(err,r){
       var needed = 1,error = null,position;
       if(err){
@@ -1531,7 +1530,7 @@ describe('Core#Merge#Registry',function(){
     });
   });
   //changing attribute to different values
-  it('node \'one\' position => 200,200',function(done){
+  it('[r4] node \'one\' position => 200,200',function(done){
     core.loadRoot(baseRootHash,function(err,r){
       if(err){
         return done(err);
@@ -1580,7 +1579,7 @@ describe('Core#Merge#Registry',function(){
       });
     });
   });
-  it('node \'one\' position => 300,300',function(done){
+  it('[r4] node \'one\' position => 300,300',function(done){
     core.loadRoot(baseRootHash,function(err,r){
       if(err){
         return done(err);
@@ -1628,7 +1627,7 @@ describe('Core#Merge#Registry',function(){
       });
     });
   });
-  it('common ancestor',function(done){
+  it('[r4] common ancestor',function(done){
     project.getCommonAncestorCommit(commitA,commitB,function(err,bc){
       if(err){
         return done(new Error(err));
@@ -1640,7 +1639,7 @@ describe('Core#Merge#Registry',function(){
       done();
     });
   });
-  it('diff of modificationsA',function(done){
+  it('[r4] diff of modificationsA',function(done){
     core.loadRoot(baseRootHash,function(err,b){
       if(err){
         return done(err);
@@ -1659,7 +1658,7 @@ describe('Core#Merge#Registry',function(){
       });
     });
   });
-  it('diff of modificationsB',function(done){
+  it('[r4] diff of modificationsB',function(done){
     core.loadRoot(baseRootHash,function(err,b){
       if(err){
         return done(err);
@@ -1678,17 +1677,17 @@ describe('Core#Merge#Registry',function(){
       });
     });
   });
-  it('get conflict (1)',function(){
+  it('[r4] get conflict (1)',function(){
     conflict = core.tryToConcatChanges(diffA,diffB);
     if(conflict && conflict.items && conflict.items.length !== 1){
       throw new Error('insufficient amount of conflicts');
     }
   });
-  it('crate final merged diff',function(){
+  it('[r4] crate final merged diff',function(){
     conflict.items[0].selected = 'theirs';
     mergedDiff = core.applyResolution(conflict);
   });
-  it('apply merged changes',function(done){
+  it('[r4] apply merged changes',function(done){
     core.loadRoot(baseRootHash,function(err,r){
       if(err){
         return done(err);
@@ -1709,7 +1708,7 @@ describe('Core#Merge#Registry',function(){
       });
     });
   });
-  it('check changes',function(done){
+  it('[r4] check changes',function(done){
     core.loadRoot(mergedRootHash,function(err,r){
       var needed = 1,error = null,position;
       if(err){
@@ -1730,7 +1729,7 @@ describe('Core#Merge#Registry',function(){
     });
   });
   //change attribute and move node
-  it('node \'one\' position => 200,200',function(done){
+  it('[r5] node \'one\' position => 200,200',function(done){
     core.loadRoot(baseRootHash,function(err,r){
       if(err){
         return done(err);
@@ -1779,7 +1778,7 @@ describe('Core#Merge#Registry',function(){
       });
     });
   });
-  it('move node \'one\'',function(done){
+  it('[r5] move node \'one\'',function(done){
     core.loadRoot(baseRootHash,function(err,r) {
       if (err) {
         return done(err);
@@ -1804,7 +1803,7 @@ describe('Core#Merge#Registry',function(){
       });
     });
   });
-  it('common ancestor',function(done){
+  it('[r5] common ancestor',function(done){
     project.getCommonAncestorCommit(commitA,commitB,function(err,bc){
       if(err){
         return done(new Error(err));
@@ -1816,7 +1815,7 @@ describe('Core#Merge#Registry',function(){
       done();
     });
   });
-  it('diff of modificationsA',function(done){
+  it('[r5] diff of modificationsA',function(done){
     core.loadRoot(baseRootHash,function(err,b){
       if(err){
         return done(err);
@@ -1835,7 +1834,7 @@ describe('Core#Merge#Registry',function(){
       });
     });
   });
-  it('diff of modificationsB',function(done){
+  it('[r5] diff of modificationsB',function(done){
     core.loadRoot(baseRootHash,function(err,b){
       if(err){
         return done(err);
@@ -1854,14 +1853,14 @@ describe('Core#Merge#Registry',function(){
       });
     });
   });
-  it('get conflict (0)',function(){
+  it('[r5] get conflict (0)',function(){
     conflict = core.tryToConcatChanges(diffA,diffB);
     if(conflict && conflict.items && conflict.items.length > 0 ){
       throw new Error('there are conflicts');
     }
     mergedDiff = conflict.merge;
   });
-  it('apply merged changes',function(done){
+  it('[r5] apply merged changes',function(done){
     core.loadRoot(baseRootHash,function(err,r){
       if(err){
         return done(err);
@@ -1882,7 +1881,7 @@ describe('Core#Merge#Registry',function(){
       });
     });
   });
-  it('check changes',function(done){
+  it('[r5] check changes',function(done){
     core.loadRoot(mergedRootHash,function(err,r){
       var needed = 1,error = null,position;
       if(err){
@@ -1903,7 +1902,7 @@ describe('Core#Merge#Registry',function(){
     });
   });
   //remove attributes of different nodes
-  it('removes position from node \'one\'',function(done){
+  it('[r6] removes position from node \'one\'',function(done){
     core.loadRoot(baseRootHash,function(err,r){
       if(err){
         return done(err);
@@ -1925,7 +1924,7 @@ describe('Core#Merge#Registry',function(){
       });
     });
   });
-  it('removes position from node \'two\'',function(done){
+  it('[r6] removes position from node \'two\'',function(done){
     core.loadRoot(baseRootHash,function(err,r){
       if(err){
         return done(err);
@@ -1947,7 +1946,7 @@ describe('Core#Merge#Registry',function(){
       });
     });
   });
-  it('common ancestor',function(done){
+  it('[r6] common ancestor',function(done){
     project.getCommonAncestorCommit(commitA,commitB,function(err,bc){
       if(err){
         return done(new Error(err));
@@ -1959,7 +1958,7 @@ describe('Core#Merge#Registry',function(){
       done();
     });
   });
-  it('diff of modificationsA',function(done){
+  it('[r6] diff of modificationsA',function(done){
     core.loadRoot(baseRootHash,function(err,b){
       if(err){
         return done(err);
@@ -1978,7 +1977,7 @@ describe('Core#Merge#Registry',function(){
       });
     });
   });
-  it('diff of modificationsB',function(done){
+  it('[r6] diff of modificationsB',function(done){
     core.loadRoot(baseRootHash,function(err,b){
       if(err){
         return done(err);
@@ -1997,14 +1996,14 @@ describe('Core#Merge#Registry',function(){
       });
     });
   });
-  it('get conflict (0)',function(){
+  it('[r6] get conflict (0)',function(){
     conflict = core.tryToConcatChanges(diffA,diffB);
     if(conflict && conflict.items && conflict.items.length > 0 ){
       throw new Error('there are conflicts');
     }
     mergedDiff = conflict.merge;
   });
-  it('apply merged changes',function(done){
+  it('[r6] apply merged changes',function(done){
     core.loadRoot(baseRootHash,function(err,r){
       if(err){
         return done(err);
@@ -2025,7 +2024,7 @@ describe('Core#Merge#Registry',function(){
       });
     });
   });
-  it('check changes',function(done){
+  it('[r6] check changes',function(done){
     core.loadRoot(mergedRootHash,function(err,r){
       var needed = 2,error = null,position;
       if(err){
@@ -2056,56 +2055,57 @@ describe('Core#Merge#Registry',function(){
       });
     });
   });
-});*/
-describe('Core#Merge#Pointer',function(){
-  var baseRootHash,aRootHash,bRootHash,
-    commitA,commitB,diffA,diffB,mergedDiff,mergedCommit,mergedRootHash,conflict;
-  it('check the initial values of pointers',function(done){
+});
+describe('Core#Merge#Pointer',function() {
+  var baseRootHash, aRootHash, bRootHash,
+    commitA, commitB, diffA, diffB, mergedDiff, mergedCommit, mergedRootHash, conflict;
+  it('[p1] check the initial values of pointers', function (done) {
     baseRootHash = rootHash;
     commit = baseCommit;
-    core.loadRoot(baseRootHash,function(err,r){
-      var needed = 2,error = null;
-      if(err){
+    console.warn('kecso000', commit);
+    core.loadRoot(baseRootHash, function (err, r) {
+      var needed = 2, error = null;
+      if (err) {
         return done(err);
       }
       root = r;
-      core.loadByPath(root,'/579542227/275896267',function(err,node){
+      core.loadByPath(root, '/579542227/275896267', function (err, node) {
         error = error || err;
-        if(!error && (core.getPointerPath(node,'dst') !== '/579542227/2088994530' || core.getPointerPath(node,'src') !== '/579542227/651215756')){
+        if (!error && (core.getPointerPath(node, 'dst') !== '/579542227/2088994530' || core.getPointerPath(node, 'src') !== '/579542227/651215756')) {
           error = new Error('insufficient target of pointers');
         }
-        if(--needed === 0){
+        if (--needed === 0) {
           done(error);
         }
       });
-      core.loadByPath(root,'/579542227/684921282',function(err,node){
+      core.loadByPath(root, '/579542227/684921282', function (err, node) {
         error = error || err;
-        if(!error && (core.getPointerPath(node,'dst') !== '/579542227/1532094116' || core.getPointerPath(node,'src') !== '/579542227/2088994530')){
+        if (!error && (core.getPointerPath(node, 'dst') !== '/579542227/1532094116' || core.getPointerPath(node, 'src') !== '/579542227/2088994530')) {
           error = new Error('insufficient target of pointers');
         }
-        if(--needed === 0){
+        if (--needed === 0) {
           done(error);
         }
       });
     });
   });
   //change different pointer targets
-  it('change src and dst of connectionA',function(done){
-    core.loadRoot(baseRootHash,function(err,r){
-      if(err){
+  it('[p2] change src and dst of connectionA', function (done) {
+    core.loadRoot(baseRootHash, function (err, r) {
+      if (err) {
         return done(err);
       }
       root = r;
       loadNodes([
         '/579542227/275896267'/*connection*/,
-        '/579542227/1532094116' /*new dst and src 3*/],function(err,nodes){
-        if(err){
+        '/579542227/1532094116' /*new dst and src 3*/], function (err, nodes) {
+        if (err) {
           return done(err);
         }
-        core.setPointer(nodes['/579542227/275896267'],'src',nodes['/579542227/1532094116']);
-        core.setPointer(nodes['/579542227/275896267'],'dst',nodes['/579542227/1532094116']);
-        saveProject('changed pointer targets',[commit],function(err,c){
-          if(err){
+        core.setPointer(nodes['/579542227/275896267'], 'src', nodes['/579542227/1532094116']);
+        core.setPointer(nodes['/579542227/275896267'], 'dst', nodes['/579542227/1532094116']);
+        saveProject('changed pointer targets', [baseCommit], function (err, c) {
+          if (err) {
             return done(err);
           }
           commitA = c;
@@ -2115,21 +2115,764 @@ describe('Core#Merge#Pointer',function(){
       });
     });
   });
-  it('change src and dst of connectionB',function(done){
-    core.loadRoot(baseRootHash,function(err,r){
-      if(err){
+  it('[p2] change src and dst of connectionB', function (done) {
+    core.loadRoot(baseRootHash, function (err, r) {
+      if (err) {
         return done(err);
       }
       root = r;
       loadNodes([
         '/579542227/684921282'/*connection*/,
-        '/579542227/651215756' /*new dst and src 1*/],function(err,nodes){
+        '/579542227/651215756' /*new dst and src 1*/], function (err, nodes) {
+        if (err) {
+          return done(err);
+        }
+        core.setPointer(nodes['/579542227/684921282'], 'src', nodes['/579542227/651215756']);
+        core.setPointer(nodes['/579542227/684921282'], 'dst', nodes['/579542227/651215756']);
+        saveProject('changed pointer targets', [baseCommit], function (err, c) {
+          if (err) {
+            return done(err);
+          }
+          commitB = c;
+          bRootHash = core.getHash(root);
+          done();
+        });
+      });
+    });
+  });
+  it('[p2] common ancestor', function (done) {
+    project.getCommonAncestorCommit(commitA, commitB, function (err, bc) {
+      if (err) {
+        return done(new Error(err));
+      }
+      if (bc !== baseCommit) {
+        console.warn(bc, '!=', baseCommit);
+        return done(new Error('common ancestor commit mismatch'));
+      }
+      done();
+    });
+  });
+  it('[p2] diff of modificationsA', function (done) {
+    core.loadRoot(baseRootHash, function (err, b) {
+      if (err) {
+        return done(err);
+      }
+      core.loadRoot(aRootHash, function (err, a) {
+        if (err) {
+          return done(err);
+        }
+        core.generateTreeDiff(b, a, function (err, d) {
+          if (err) {
+            return done(err);
+          }
+          diffA = d;
+          done();
+        });
+      });
+    });
+  });
+  it('[p2] diff of modificationsB', function (done) {
+    core.loadRoot(baseRootHash, function (err, b) {
+      if (err) {
+        return done(err);
+      }
+      core.loadRoot(bRootHash, function (err, a) {
+        if (err) {
+          return done(err);
+        }
+        core.generateTreeDiff(b, a, function (err, d) {
+          if (err) {
+            return done(err);
+          }
+          diffB = d;
+          done();
+        });
+      });
+    });
+  });
+  it('[p2] get conflict (0)', function () {
+    conflict = core.tryToConcatChanges(diffA, diffB);
+    if (conflict && conflict.items && conflict.items.length > 0) {
+      throw new Error('there are conflicts');
+    }
+    mergedDiff = conflict.merge;
+  });
+  it('[p2] apply merged changes', function (done) {
+    core.loadRoot(baseRootHash, function (err, r) {
+      if (err) {
+        return done(err);
+      }
+      root = r;
+      applyDiff(mergedDiff, function (err) {
+        if (err) {
+          return done(err);
+        }
+        saveProject('merged modifications', [commitA, commitB], function (err, c) {
+          if (err) {
+            return done(err);
+          }
+          mergedCommit = c;
+          mergedRootHash = core.getHash(root);
+          done();
+        });
+      });
+    });
+  });
+  it('[p2] check the merged values of pointers', function (done) {
+    core.loadRoot(mergedRootHash, function (err, r) {
+      if (err) {
+        done(err);
+      }
+      root = r;
+      loadNodes(['/579542227/275896267', '/579542227/684921282'], function (err, nodes) {
+        if (err) {
+          return done(err);
+        }
+        if (core.getPointerPath(nodes['/579542227/275896267'], 'src') !== '/579542227/1532094116' ||
+          core.getPointerPath(nodes['/579542227/275896267'], 'dst') !== '/579542227/1532094116' ||
+          core.getPointerPath(nodes['/579542227/684921282'], 'src') !== '/579542227/651215756' ||
+          core.getPointerPath(nodes['/579542227/684921282'], 'src') !== '/579542227/651215756') {
+          return done(new Error('insufficient pointer values'));
+        }
+        done();
+      });
+    });
+  });
+  //change the same target to the same value
+  it('[p3] change src and dst of connectionA', function (done) {
+    core.loadRoot(baseRootHash, function (err, r) {
+      if (err) {
+        return done(err);
+      }
+      root = r;
+      loadNodes([
+        '/579542227/275896267'/*connection*/,
+        '/579542227/1532094116' /*new dst and src 3*/], function (err, nodes) {
+        if (err) {
+          return done(err);
+        }
+        core.setPointer(nodes['/579542227/275896267'], 'src', nodes['/579542227/1532094116']);
+        core.setPointer(nodes['/579542227/275896267'], 'dst', nodes['/579542227/1532094116']);
+        saveProject('changed pointer targets', [baseCommit], function (err, c) {
+          if (err) {
+            return done(err);
+          }
+          commitA = c;
+          aRootHash = core.getHash(root);
+          done();
+        });
+      });
+    });
+  });
+  it('[p3] change src and dst of connectionB', function (done) {
+    core.loadRoot(baseRootHash, function (err, r) {
+      if (err) {
+        return done(err);
+      }
+      root = r;
+      loadNodes([
+        '/579542227/275896267'/*connection*/,
+        '/579542227/1532094116' /*new dst and src 3*/], function (err, nodes) {
+        if (err) {
+          return done(err);
+        }
+        core.setPointer(nodes['/579542227/275896267'], 'src', nodes['/579542227/1532094116']);
+        core.setPointer(nodes['/579542227/275896267'], 'dst', nodes['/579542227/1532094116']);
+        saveProject('changed pointer targets', [baseCommit], function (err, c) {
+          if (err) {
+            return done(err);
+          }
+          commitB = c;
+          bRootHash = core.getHash(root);
+          done();
+        });
+      });
+    });
+  });
+  it('[p3] common ancestor', function (done) {
+    project.getCommonAncestorCommit(commitA, commitB, function (err, bc) {
+      if (err) {
+        return done(new Error(err));
+      }
+      if (bc !== baseCommit) {
+        console.warn(bc, '!=', baseCommit);
+        return done(new Error('common ancestor commit mismatch'));
+      }
+      done();
+    });
+  });
+  it('[p3] diff of modificationsA', function (done) {
+    core.loadRoot(baseRootHash, function (err, b) {
+      if (err) {
+        return done(err);
+      }
+      core.loadRoot(aRootHash, function (err, a) {
+        if (err) {
+          return done(err);
+        }
+        core.generateTreeDiff(b, a, function (err, d) {
+          if (err) {
+            return done(err);
+          }
+          diffA = d;
+          done();
+        });
+      });
+    });
+  });
+  it('[p3] diff of modificationsB', function (done) {
+    core.loadRoot(baseRootHash, function (err, b) {
+      if (err) {
+        return done(err);
+      }
+      core.loadRoot(bRootHash, function (err, a) {
+        if (err) {
+          return done(err);
+        }
+        core.generateTreeDiff(b, a, function (err, d) {
+          if (err) {
+            return done(err);
+          }
+          diffB = d;
+          done();
+        });
+      });
+    });
+  });
+  it('[p3] get conflict (0)', function () {
+    conflict = core.tryToConcatChanges(diffA, diffB);
+    if (conflict && conflict.items && conflict.items.length > 0) {
+      throw new Error('there are conflicts');
+    }
+    mergedDiff = conflict.merge;
+  });
+  it('[p3] apply merged changes', function (done) {
+    core.loadRoot(baseRootHash, function (err, r) {
+      if (err) {
+        return done(err);
+      }
+      root = r;
+      applyDiff(mergedDiff, function (err) {
+        if (err) {
+          return done(err);
+        }
+        saveProject('merged modifications', [commitA, commitB], function (err, c) {
+          if (err) {
+            return done(err);
+          }
+          mergedCommit = c;
+          mergedRootHash = core.getHash(root);
+          done();
+        });
+      });
+    });
+  });
+  it('[p3] checks the merged values of pointers', function (done) {
+    core.loadRoot(mergedRootHash, function (err, r) {
+      if (err) {
+        return done(err);
+      }
+      root = r;
+      core.loadByPath(root, '/579542227/275896267', function (err, node) {
+        if (err) {
+          return done(err);
+        }
+        if (core.getPointerPath(node, 'src') !== '/579542227/1532094116' ||
+          core.getPointerPath(node, 'src') !== '/579542227/1532094116') {
+          return done(new Error('insufficient pointer values'));
+        }
+        done();
+      });
+    });
+  });
+  //change the same target to different values
+  it('[p4] change src and dst of connectionA', function (done) {
+    core.loadRoot(baseRootHash, function (err, r) {
+      if (err) {
+        return done(err);
+      }
+      root = r;
+      loadNodes([
+        '/579542227/275896267'/*connection*/,
+        '/579542227/1532094116' /*new dst and src 3*/], function (err, nodes) {
+        if (err) {
+          return done(err);
+        }
+        core.setPointer(nodes['/579542227/275896267'], 'src', nodes['/579542227/1532094116']);
+        core.setPointer(nodes['/579542227/275896267'], 'dst', nodes['/579542227/1532094116']);
+        saveProject('changed pointer targets', [baseCommit], function (err, c) {
+          if (err) {
+            return done(err);
+          }
+          commitA = c;
+          aRootHash = core.getHash(root);
+          done();
+        });
+      });
+    });
+  });
+  it('[p4] change src and dst of connectionB', function (done) {
+    core.loadRoot(baseRootHash, function (err, r) {
+      if (err) {
+        return done(err);
+      }
+      root = r;
+      loadNodes([
+        '/579542227/275896267'/*connection*/,
+        '/579542227/651215756' /*new dst 1*/,
+        '/579542227/2088994530' /*new src 2*/], function (err, nodes) {
+        if (err) {
+          return done(err);
+        }
+        core.setPointer(nodes['/579542227/275896267'], 'src', nodes['/579542227/2088994530']);
+        core.setPointer(nodes['/579542227/275896267'], 'dst', nodes['/579542227/651215756']);
+        saveProject('changed pointer targets', [baseCommit], function (err, c) {
+          if (err) {
+            return done(err);
+          }
+          commitB = c;
+          bRootHash = core.getHash(root);
+          done();
+        });
+      });
+    });
+  });
+  it('[p4] common ancestor', function (done) {
+    project.getCommonAncestorCommit(commitA, commitB, function (err, bc) {
+      if (err) {
+        return done(new Error(err));
+      }
+      if (bc !== baseCommit) {
+        console.warn(bc, '!=', baseCommit);
+        return done(new Error('common ancestor commit mismatch'));
+      }
+      done();
+    });
+  });
+  it('[p4] diff of modificationsA', function (done) {
+    core.loadRoot(baseRootHash, function (err, b) {
+      if (err) {
+        return done(err);
+      }
+      core.loadRoot(aRootHash, function (err, a) {
+        if (err) {
+          return done(err);
+        }
+        core.generateTreeDiff(b, a, function (err, d) {
+          if (err) {
+            return done(err);
+          }
+          diffA = d;
+          done();
+        });
+      });
+    });
+  });
+  it('[p4] diff of modificationsB', function (done) {
+    core.loadRoot(baseRootHash, function (err, b) {
+      if (err) {
+        return done(err);
+      }
+      core.loadRoot(bRootHash, function (err, a) {
+        if (err) {
+          return done(err);
+        }
+        core.generateTreeDiff(b, a, function (err, d) {
+          if (err) {
+            return done(err);
+          }
+          diffB = d;
+          done();
+        });
+      });
+    });
+  });
+  it('[p4] get conflict (2)', function () {
+    conflict = core.tryToConcatChanges(diffA, diffB);
+    if (conflict && conflict.items && conflict.items.length !== 2) {
+      throw new Error('insufficient amount of conflicts');
+    }
+    var conflictPaths = [], i;
+    for (i = 0; i < conflict.items.length; i++) {
+      conflictPaths.push(conflict.items[i].mine.path);
+    }
+    if (conflictPaths.indexOf('/579542227/275896267/pointer/src') === -1 ||
+      conflictPaths.indexOf('/579542227/275896267/pointer/dst') === -1) {
+      throw new Error('place of conflict is wrong');
+    }
+  });
+  it('[p4] crate final merged diff', function () {
+    var conflictPaths = [], i;
+    for (i = 0; i < conflict.items.length; i++) {
+      conflictPaths.push(conflict.items[i].mine.path);
+    }
+    conflict.items[conflictPaths.indexOf('/579542227/275896267/pointer/src')].selected = 'theirs';
+    mergedDiff = core.applyResolution(conflict);
+  });
+  it('[p4] apply merged changes', function (done) {
+    core.loadRoot(baseRootHash, function (err, r) {
+      if (err) {
+        return done(err);
+      }
+      root = r;
+      applyDiff(mergedDiff, function (err) {
+        if (err) {
+          return done(err);
+        }
+        saveProject('merged modifications', [commitA, commitB], function (err, c) {
+          if (err) {
+            return done(err);
+          }
+          mergedCommit = c;
+          mergedRootHash = core.getHash(root);
+          done();
+        });
+      });
+    });
+  });
+  it('[p4] checks the merged values of pointers', function (done) {
+    core.loadRoot(mergedRootHash, function (err, r) {
+      if (err) {
+        return done(err);
+      }
+      root = r;
+      core.loadByPath(root, '/579542227/275896267', function (err, node) {
+        if (err) {
+          return done(err);
+        }
+        if (core.getPointerPath(node, 'src') !== '/579542227/2088994530' ||
+          core.getPointerPath(node, 'dst') !== '/579542227/1532094116') {
+          return done(new Error('insufficient pointer values'));
+        }
+        done();
+      });
+    });
+  });
+  //change target and move it
+  it('[p5] change src and dst of connectionA', function (done) {
+    core.loadRoot(baseRootHash, function (err, r) {
+      if (err) {
+        return done(err);
+      }
+      root = r;
+      loadNodes([
+        '/579542227/275896267'/*connection*/,
+        '/579542227/1532094116' /*new dst and src 3*/], function (err, nodes) {
+        if (err) {
+          return done(err);
+        }
+        core.setPointer(nodes['/579542227/275896267'], 'src', nodes['/579542227/1532094116']);
+        core.setPointer(nodes['/579542227/275896267'], 'dst', nodes['/579542227/1532094116']);
+        saveProject('changed pointer targets', [baseCommit], function (err, c) {
+          if (err) {
+            return done(err);
+          }
+          commitA = c;
+          aRootHash = core.getHash(root);
+          done();
+        });
+      });
+    });
+  });
+  it('[p5] move node \'three\'', function (done) {
+    core.loadRoot(baseRootHash, function (err, r) {
+      if (err) {
+        return done(err);
+      }
+      root = r;
+      loadNodes(['/579542227/1532094116', '/1786679144'], function (err, nodes) {
+        if (err) {
+          return done(err);
+        }
+        core.moveNode(nodes['/579542227/1532094116'], nodes['/1786679144']);
+        saveProject('move node', [baseCommit], function (err, c) {
+          if (err) {
+            done(err);
+          }
+          commitB = c;
+          bRootHash = core.getHash(root);
+          done();
+        });
+      });
+    });
+  });
+  it('[p5] common ancestor', function (done) {
+    project.getCommonAncestorCommit(commitA, commitB, function (err, bc) {
+      if (err) {
+        return done(new Error(err));
+      }
+      if (bc !== baseCommit) {
+        console.warn(bc, '!=', baseCommit);
+        return done(new Error('common ancestor commit mismatch'));
+      }
+      done();
+    });
+  });
+  it('[p5] diff of modificationsA', function (done) {
+    core.loadRoot(baseRootHash, function (err, b) {
+      if (err) {
+        return done(err);
+      }
+      core.loadRoot(aRootHash, function (err, a) {
+        if (err) {
+          return done(err);
+        }
+        core.generateTreeDiff(b, a, function (err, d) {
+          if (err) {
+            return done(err);
+          }
+          diffA = d;
+          done();
+        });
+      });
+    });
+  });
+  it('[p5] diff of modificationsB', function (done) {
+    core.loadRoot(baseRootHash, function (err, b) {
+      if (err) {
+        return done(err);
+      }
+      core.loadRoot(bRootHash, function (err, a) {
+        if (err) {
+          return done(err);
+        }
+        core.generateTreeDiff(b, a, function (err, d) {
+          if (err) {
+            return done(err);
+          }
+          diffB = d;
+          done();
+        });
+      });
+    });
+  });
+  it('[p5] get conflict (0)', function () {
+    conflict = core.tryToConcatChanges(diffA, diffB);
+    if (conflict && conflict.items && conflict.items.length > 0) {
+      throw new Error('there are conflicts');
+    }
+    mergedDiff = conflict.merge;
+  });
+  it('[p5] apply merged changes', function (done) {
+    core.loadRoot(baseRootHash, function (err, r) {
+      if (err) {
+        return done(err);
+      }
+      root = r;
+      applyDiff(mergedDiff, function (err) {
+        if (err) {
+          return done(err);
+        }
+        saveProject('merged modifications', [commitA, commitB], function (err, c) {
+          if (err) {
+            return done(err);
+          }
+          mergedCommit = c;
+          mergedRootHash = core.getHash(root);
+          done();
+        });
+      });
+    });
+  });
+  it('[p5] checks the merged values of pointers', function (done) {
+    core.loadRoot(mergedRootHash, function (err, r) {
+      if (err) {
+        return done(err);
+      }
+      root = r;
+      core.loadByPath(root, '/579542227/275896267', function (err, node) {
+        if (err) {
+          return done(err);
+        }
+        if (core.getPointerPath(node, 'src') !== '/1786679144/1532094116' ||
+          core.getPointerPath(node, 'dst') !== '/1786679144/1532094116') {
+          return done(new Error('insufficient pointer values'));
+        }
+        done();
+      });
+    });
+  });
+  //change target and move node
+  it('[p6] change src and dst of connectionA', function (done) {
+    core.loadRoot(baseRootHash, function (err, r) {
+      if (err) {
+        return done(err);
+      }
+      root = r;
+      loadNodes([
+        '/579542227/275896267'/*connection*/,
+        '/579542227/1532094116' /*new dst and src 3*/], function (err, nodes) {
+        if (err) {
+          return done(err);
+        }
+        core.setPointer(nodes['/579542227/275896267'], 'src', nodes['/579542227/1532094116']);
+        core.setPointer(nodes['/579542227/275896267'], 'dst', nodes['/579542227/1532094116']);
+        saveProject('changed pointer targets', [baseCommit], function (err, c) {
+          if (err) {
+            return done(err);
+          }
+          commitA = c;
+          aRootHash = core.getHash(root);
+          done();
+        });
+      });
+    });
+  });
+  it('[p6] move connectionA', function (done) {
+    core.loadRoot(baseRootHash, function (err, r) {
+      if (err) {
+        return done(err);
+      }
+      root = r;
+      loadNodes(['/579542227/275896267', '/1786679144'], function (err, nodes) {
+        if (err) {
+          return done(err);
+        }
+        core.moveNode(nodes['/579542227/275896267'], nodes['/1786679144']);
+        saveProject('move node', [baseCommit], function (err, c) {
+          if (err) {
+            done(err);
+          }
+          commitB = c;
+          bRootHash = core.getHash(root);
+          done();
+        });
+      });
+    });
+  });
+  it('[p6] common ancestor', function (done) {
+    project.getCommonAncestorCommit(commitA, commitB, function (err, bc) {
+      if (err) {
+        return done(new Error(err));
+      }
+      if (bc !== baseCommit) {
+        console.warn(bc, '!=', baseCommit);
+        return done(new Error('common ancestor commit mismatch'));
+      }
+      done();
+    });
+  });
+  it('[p6] diff of modificationsA', function (done) {
+    core.loadRoot(baseRootHash, function (err, b) {
+      if (err) {
+        return done(err);
+      }
+      core.loadRoot(aRootHash, function (err, a) {
+        if (err) {
+          return done(err);
+        }
+        core.generateTreeDiff(b, a, function (err, d) {
+          if (err) {
+            return done(err);
+          }
+          diffA = d;
+          done();
+        });
+      });
+    });
+  });
+  it('[p6] diff of modificationsB', function (done) {
+    core.loadRoot(baseRootHash, function (err, b) {
+      if (err) {
+        return done(err);
+      }
+      core.loadRoot(bRootHash, function (err, a) {
+        if (err) {
+          return done(err);
+        }
+        core.generateTreeDiff(b, a, function (err, d) {
+          if (err) {
+            return done(err);
+          }
+          diffB = d;
+          done();
+        });
+      });
+    });
+  });
+  it('[p6] get conflict (0)', function () {
+    conflict = core.tryToConcatChanges(diffA, diffB);
+    if (conflict && conflict.items && conflict.items.length > 0) {
+      throw new Error('there are conflicts');
+    }
+    mergedDiff = conflict.merge;
+  });
+  it('[p6] apply merged changes', function (done) {
+    core.loadRoot(baseRootHash, function (err, r) {
+      if (err) {
+        return done(err);
+      }
+      root = r;
+      applyDiff(mergedDiff, function (err) {
+        if (err) {
+          return done(err);
+        }
+        saveProject('merged modifications', [commitA, commitB], function (err, c) {
+          if (err) {
+            return done(err);
+          }
+          mergedCommit = c;
+          mergedRootHash = core.getHash(root);
+          done();
+        });
+      });
+    });
+  });
+  it('[p6] checks the merged values of pointers', function (done) {
+    core.loadRoot(mergedRootHash, function (err, r) {
+      if (err) {
+        return done(err);
+      }
+      root = r;
+      core.loadByPath(root, '/1786679144/275896267', function (err, node) {
+        if (err) {
+          return done(err);
+        }
+        if (core.getPointerPath(node, 'src') !== '/579542227/1532094116' ||
+          core.getPointerPath(node, 'dst') !== '/579542227/1532094116') {
+          return done(new Error('insufficient pointer values'));
+        }
+        done();
+      });
+    });
+  });
+  //remove target and delete target
+  it('[p7] delete src and dst of connectionA', function (done) {
+    core.loadRoot(baseRootHash, function (err, r) {
+      if (err) {
+        return done(err);
+      }
+      root = r;
+      loadNodes([
+        '/579542227/275896267'/*connection*/], function (err, nodes) {
+        if (err) {
+          return done(err);
+        }
+        core.deletePointer(nodes['/579542227/275896267'], 'src');
+        core.deletePointer(nodes['/579542227/275896267'], 'dst');
+        saveProject('changed pointer targets', [baseCommit], function (err, c) {
+          if (err) {
+            return done(err);
+          }
+          commitA = c;
+          aRootHash = core.getHash(root);
+          done();
+        });
+      });
+    });
+  });
+  it('[p7] delete node \'one\'',function(done){
+    core.loadRoot(baseRootHash,function(err,r){
+      if(err){
+        return done(err);
+      }
+      root = r;
+      core.loadByPath(root,'/579542227/651215756',function(err,node){
         if(err){
           return done(err);
         }
-        core.setPointer(nodes['/579542227/684921282'],'src',nodes['/579542227/651215756']);
-        core.setPointer(nodes['/579542227/684921282'],'dst',nodes['/579542227/651215756']);
-        saveProject('changed pointer targets',[commit],function(err,c){
+        core.deleteNode(node);
+        saveProject('node removed',[baseCommit],function(err,c){
           if(err){
             return done(err);
           }
@@ -2140,29 +2883,29 @@ describe('Core#Merge#Pointer',function(){
       });
     });
   });
-  it('common ancestor',function(done){
-    project.getCommonAncestorCommit(commitA,commitB,function(err,bc){
-      if(err){
+  it('[p7] common ancestor', function (done) {
+    project.getCommonAncestorCommit(commitA, commitB, function (err, bc) {
+      if (err) {
         return done(new Error(err));
       }
-      if(bc !== baseCommit){
-        console.warn(bc,'!=',baseCommit);
+      if (bc !== baseCommit) {
+        console.warn(bc, '!=', baseCommit);
         return done(new Error('common ancestor commit mismatch'));
       }
       done();
     });
   });
-  it('diff of modificationsA',function(done){
-    core.loadRoot(baseRootHash,function(err,b){
-      if(err){
+  it('[p7] diff of modificationsA', function (done) {
+    core.loadRoot(baseRootHash, function (err, b) {
+      if (err) {
         return done(err);
       }
-      core.loadRoot(aRootHash,function(err,a){
-        if(err){
+      core.loadRoot(aRootHash, function (err, a) {
+        if (err) {
           return done(err);
         }
-        core.generateTreeDiff(b,a,function(err,d){
-          if(err){
+        core.generateTreeDiff(b, a, function (err, d) {
+          if (err) {
             return done(err);
           }
           diffA = d;
@@ -2171,17 +2914,17 @@ describe('Core#Merge#Pointer',function(){
       });
     });
   });
-  it('diff of modificationsB',function(done){
-    core.loadRoot(baseRootHash,function(err,b){
-      if(err){
+  it('[p7] diff of modificationsB', function (done) {
+    core.loadRoot(baseRootHash, function (err, b) {
+      if (err) {
         return done(err);
       }
-      core.loadRoot(bRootHash,function(err,a){
-        if(err){
+      core.loadRoot(bRootHash, function (err, a) {
+        if (err) {
           return done(err);
         }
-        core.generateTreeDiff(b,a,function(err,d){
-          if(err){
+        core.generateTreeDiff(b, a, function (err, d) {
+          if (err) {
             return done(err);
           }
           diffB = d;
@@ -2190,25 +2933,25 @@ describe('Core#Merge#Pointer',function(){
       });
     });
   });
-  it('get conflict (0)',function(){
-    conflict = core.tryToConcatChanges(diffA,diffB);
-    if(conflict && conflict.items && conflict.items.length > 0 ){
+  it('[p7] get conflict (0)', function () {
+    conflict = core.tryToConcatChanges(diffA, diffB);
+    if (conflict && conflict.items && conflict.items.length > 0) {
       throw new Error('there are conflicts');
     }
     mergedDiff = conflict.merge;
   });
-  it('apply merged changes',function(done){
-    core.loadRoot(baseRootHash,function(err,r){
-      if(err){
+  it('[p7] apply merged changes', function (done) {
+    core.loadRoot(baseRootHash, function (err, r) {
+      if (err) {
         return done(err);
       }
       root = r;
-      applyDiff(mergedDiff,function(err){
-        if(err){
+      applyDiff(mergedDiff, function (err) {
+        if (err) {
           return done(err);
         }
-        saveProject('merged modifications',[commitA,commitB],function(err,c){
-          if(err){
+        saveProject('merged modifications', [commitA, commitB], function (err, c) {
+          if (err) {
             return done(err);
           }
           mergedCommit = c;
@@ -2218,12 +2961,30 @@ describe('Core#Merge#Pointer',function(){
       });
     });
   });
+  it('[p7] checks the merged values of pointers',function(done){
+    core.loadRoot(mergedRootHash,function(err,r){
+      if(err){
+        return done(err);
+      }
+      root = r;
+      core.loadByPath(root,'/579542227/275896267',function(err,node){
+        if(err){
+          return done(err);
+        }
+        if(core.getPointerPath(node,'src') !== null ||
+        core.getPointerPath(node,'dst') !== null){
+          return done(new Error('wrong pointer targets'));
+        }
+        done();
+      });
+    });
+  });
 });
-/*describe('Core#Merge#Post',function(){
+describe('Core#Merge#Post',function(){
   it('should remove the test project',function(done){
     deleteProject(done);
   });
   it('should close the database connection',function(done){
     storage.closeDatabase(done);
   });
-});*/
+});

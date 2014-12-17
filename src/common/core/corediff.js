@@ -1072,16 +1072,14 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       if(target === null){
         targetNode = null;
       } else {
+        if(fromTo[target]){
+          target = fromTo[target];
+        }
         targetNode = _core.loadByPath(_core.getRoot(node),target);
       }
       return TASYNC.call(function (t) {
-        //if (name === 'base') { //TODO watch if handling of base changes!!!
-        //  console.log('setting base',_core.getPath(node),_core.getPath(t));
-        //  _core.setBase(node, t);
-        //} else {
-        console.log('setting pointer',name,_core.getPath(node),_core.getPath(t));
-          _core.setPointer(node, name, t);
-        //}
+        //TODO watch if handling of base changes!!!
+        _core.setPointer(node, name, t);
         return;
       }, targetNode);
     }
