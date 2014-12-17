@@ -250,7 +250,8 @@ module.exports = {
     core: requirejs('core/core'),
     standaloneServer: requirejs('server/standalone'),
     logManager: requirejs('logManager'),
-    runPlugin: requirejs('server/runplugin')
+    runPlugin: requirejs('server/runplugin'),
+    serializer: requirejs('core/users/serialization')
 };
 
 })( global );
