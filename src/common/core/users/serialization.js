@@ -345,7 +345,7 @@ define(['util/assert'],function(ASSERT){
                             } else if (baseGuid(jsonObject[keys[i]][tArray[j]][k])) {
                                 jsonObject[keys[i]][tArray[j]][k] = baseGuid(jsonObject[keys[i]][tArray[j]][k]);
                             } else {
-                                toDelete.push(j);
+                                toDelete.push(k);
                             }
                         }
 
@@ -353,7 +353,7 @@ define(['util/assert'],function(ASSERT){
                             toDelete = toDelete.sort();
                             toDelete = toDelete.reverse();
                             for (k = 0; k < toDelete.length; k++) {
-                                jsonObject.items.splice(jsonObject[keys[i]][tArray[j]][k], 1);
+                                jsonObject.aspects[tArray[j]].splice(toDelete[k], 1);
                             }
                         }
 
