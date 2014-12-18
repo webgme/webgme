@@ -566,12 +566,12 @@ define(['util/assert'],function(ASSERT){
                 //we should go among containment hierarchy
                 updateNodes(_import.root.guid,null,_import.containment);
 
-                //now we can add or modify the relations of the nodes - we go along the hierarchy chain
-                updateRelations(_import.root.guid,_import.containment);
-
                 //now update inheritance chain
                 //we assume that our inheritance chain comes from the FCO and that it is identical everywhere
                 updateInheritance();
+
+                //now we can add or modify the relations of the nodes - we go along the hierarchy chain
+                updateRelations();
 
                 //finally we need to update the meta rules of each node - again along the containment hierarchy
                 updateMetaRules(_import.root.guid,_import.containment);
@@ -661,14 +661,31 @@ define(['util/assert'],function(ASSERT){
         updateRegistry(guid);
     }
 
-    function updateRelations(guid,containmentTreeObject){
-        var keys,i;
-        updateNodeRelations(guid);
-        keys = Object.keys(containmentTreeObject);
-        for(i=0;i<keys.length;i++){
-            updateRelations(keys[i],containmentTreeObject[keys[i]]);
+    function getInheritanceBasedGuidOrder(){
+        var inheritanceOrdered = Object.keys(_import.nodes).sort(),i= 0,baseGuid,baseIndex;
+        while(i<inheritanceOrdered.length){
+            baseGuid = _import.nodes[inheritanceOrdered[i]].base;
+            if(baseGuid){
+                baseIndex = inheritanceOrdered.indexOf(baseGuid);
+                if(baseIndex > i){
+                    inheritanceOrdered.splice(baseIndex,1);
+                    inheritanceOrdered.splice(i,0,baseGuid);
+                } else {
+                    ++i;
+                }
+            } else {
+                ++i;
+            }
+        }
+        return inheritanceOrdered;
+    }
+    function updateRelations(){
+        var guids = getInheritanceBasedGuidOrder(),i;
+        for(i=0;i<guids.length;i++){
+            updateNodeRelations(guids[i]);
         }
     }
+
     function updateNodeRelations(guid){
         //although it is possible that we set the base pointer at this point we should go through inheritance just to be sure
         var node = _nodes[guid],
