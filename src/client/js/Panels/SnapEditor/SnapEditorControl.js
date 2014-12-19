@@ -67,6 +67,10 @@ define(['logManager',
             depth = nodeId === CONSTANTS.PROJECT_ROOT_ID ? 1 : 1000000,
             self = this;
 
+//TODO REMOVE
+console.log("Object changed to " + nodeId);
+//TODO REMOVE_END
+
         this.logger.debug("activeObject '" + nodeId + "'");
 
         //delete everything from model editor
@@ -160,6 +164,7 @@ define(['logManager',
             objDescriptor.parentId = node.getParentId();
 
             if (nodeId !== this.currentNodeInfo.id){
+                //TODO Get all important info about the object..
                 
                 //aspect specific coordinate
                 if (this._selectedAspect === CONSTANTS.ASPECT_ALL) {
@@ -877,6 +882,15 @@ define(['logManager',
     };
 
         /* * * * * * * * * * END TOOLBAR * * * * * * * * * * */
+
+    SnapEditorControl.prototype._getValidPointerTypes = function(srcItem, dstItem) {
+        // Call GMEConcepts
+        var dstGmeId = this._ComponentID2GmeID[dstItem.id],
+            srcGmeId = this._ComponentID2GmeID[srcItem.id];
+
+        return GMEConcepts.getValidPointerTypesFromSourceToTarget(srcGmeId, dstGmeId);
+    };
+
 
     _.extend(SnapEditorControl.prototype, SnapEditorEventHandlers.prototype);
 

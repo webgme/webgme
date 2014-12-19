@@ -243,6 +243,10 @@ define(['logManager',
 
     /************** END WAITPROGRESS *********************/
 
+    SnapEditorWidget.prototype.onActivate = function (){
+        // This function is required
+    };
+
     SnapEditorWidget.prototype.onDeactivate = function (){
         this.__loader.destroy();
         //this._hideToolbarItems();

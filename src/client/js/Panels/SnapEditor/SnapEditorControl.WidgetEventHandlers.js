@@ -120,6 +120,10 @@ define(['logManager',
             self._onSelectedTabChanged(tabID);
         };
 
+        this.snapCanvas.getValidPointerTypes = function (srcItem, dstItem) {
+            return self._getValidPointerTypes(srcItem, dstItem);
+        };
+
         this.logger.debug("attachSnapEditorWidgetEventHandlers finished");
  
     };
