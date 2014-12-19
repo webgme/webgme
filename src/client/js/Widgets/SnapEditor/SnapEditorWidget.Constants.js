@@ -29,8 +29,8 @@ define([], function () {
         /*
          * Linkable constants
          */
-        CONN_ACCEPTING: "in",
-        CONN_PASSING: "out",
+        CONN_INCOMING: "in",
+        CONN_OUTGOING: "out",
 
         //Special "pointers"
         PTR_NEXT: "next",

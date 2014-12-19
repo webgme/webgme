@@ -102,17 +102,17 @@ define(['./SnapEditorWidget.Constants'], function (SNAP_CONSTANTS){
             while (i--){
                 if (highlights[i].role === role) {
                     switch(role) {
-                        case SNAP_CONSTANTS.CONN_ACCEPTING:
+                        case SNAP_CONSTANTS.CONN_INCOMING:
                             if (ptr.indexOf(highlights[i].ptr) !== -1) {
-                            return _.extend({}, highlights[i]);
-                        }
-                        break;
+                                return _.extend({}, highlights[i]);
+                            }
+                            break;
 
-                        case SNAP_CONSTANTS.CONN_PASSING:
+                        case SNAP_CONSTANTS.CONN_OUTGOING:
                             if (ptr === highlights[i].ptr) {
-                            return _.extend({}, highlights[i]);
-                        }
-                        break;
+                                return _.extend({}, highlights[i]);
+                            }
+                            break;
                     }
                 }
             }

@@ -579,7 +579,7 @@ define(['js/Constants',
     };
 
     /**** Override from SnapEditorWidgetDecoratorBase ****/
-    SVGDecoratorSnapEditorWidget.prototype.getConnectionAreas = function (/*, isEnd, connectionMetaInfo*/) {
+    SVGDecoratorSnapEditorWidget.prototype.getConnectionAreas = function () {
         var result = [],
             edge = 10,
             xShift = (this.svgContainerWidth - this.svgWidth) / 2;
@@ -589,7 +589,7 @@ define(['js/Constants',
             result = $.extend(true, [], this._customConnectionAreas);
             var i = result.length;
             while (i--) {
-                if(result[i].role === SNAP_CONSTANTS.CONN_ACCEPTING){
+                if(result[i].role === SNAP_CONSTANTS.CONN_INCOMING){
                     //Accepting areas can have multiple possibilities for roles
                     result[i].ptr = result[i].ptr.split(' ');
                 }
@@ -606,8 +606,7 @@ define(['js/Constants',
                 "y1": 0,
                 "x2": this.svgWidth - edge + xShift,
                 "y2": 0,
-                "role": SNAP_CONSTANTS.CONN_ACCEPTING,
-                "ptr": SNAP_CONSTANTS.PTR_NEXT} );
+                "role": SNAP_CONSTANTS.CONN_INCOMING} );
 
             //South side
             result.push( {"id": "S",
@@ -615,7 +614,7 @@ define(['js/Constants',
                 "y1": this.svgHeight,
                 "x2": this.svgWidth - edge + xShift,
                 "y2": this.svgHeight,
-                "role": SNAP_CONSTANTS.CONN_PASSING,
+                "role": SNAP_CONSTANTS.CONN_OUTGOING,
                 "ptr": SNAP_CONSTANTS.PTR_NEXT} );
         }
 
@@ -631,7 +630,7 @@ define(['js/Constants',
         if (this._customConnectionAreas){
             var i = this._customConnectionAreas.length;
             while (i--){
-                if (this._customConnectionAreas[i].role === SNAP_CONSTANTS.CONN_PASSING && ptrs.indexOf(this._customConnectionAreas[i].ptr) === -1){
+                if (this._customConnectionAreas[i].role === SNAP_CONSTANTS.CONN_OUTGOING && ptrs.indexOf(this._customConnectionAreas[i].ptr) === -1){
                         this._customConnectionAreas.splice(i, 1);
                     }
             }

@@ -36,8 +36,8 @@ define(['logManager',
         //That is, the child nodes and the 'next' ptr
         this._metaPtrs = {};//Used for cleaning connections
         this.ptrs = {};
-        this.ptrs[SNAP_CONSTANTS.CONN_ACCEPTING] = {};
-        this.ptrs[SNAP_CONSTANTS.CONN_PASSING] = {};
+        this.ptrs[SNAP_CONSTANTS.CONN_INCOMING] = {};
+        this.ptrs[SNAP_CONSTANTS.CONN_OUTGOING] = {};
 
         this.conn2Item = {};//item connected to sorted by connection area id
         this.item2Conn = {};
@@ -181,7 +181,7 @@ define(['logManager',
         //Update the OUT pointers given a dictionary of ptrs
         //Will need to update the other item as well
         var ptrs = Object.keys(ptrInfo),
-            oldPtrs = Object.keys(this.ptrs[SNAP_CONSTANTS.CONN_PASSING]),
+            oldPtrs = Object.keys(this.ptrs[SNAP_CONSTANTS.CONN_OUTGOING]),
             i = ptrs.length,
             changed = null,
             otherItem,
@@ -197,16 +197,16 @@ define(['logManager',
                 if (k === -1){//didn't have the pointer
                     //Add pointer
                     otherItem = this.canvas.items[ptrInfo[ptr]];
-                    otherItem.setPtr(ptr, SNAP_CONSTANTS.CONN_ACCEPTING, this);
+                    otherItem.setPtr(ptr, SNAP_CONSTANTS.CONN_INCOMING, this);
                     changed = "added ptr";
                 } else {
                     //Check that the pointer is correct
-                    if (this.ptrs[SNAP_CONSTANTS.CONN_PASSING][ptr].id !== ptrInfo[ptr]){
-                        oldItem = this.ptrs[SNAP_CONSTANTS.CONN_PASSING][ptr];
-                        oldItem.removePtr(ptr, SNAP_CONSTANTS.CONN_ACCEPTING, false);
+                    if (this.ptrs[SNAP_CONSTANTS.CONN_OUTGOING][ptr].id !== ptrInfo[ptr]){
+                        oldItem = this.ptrs[SNAP_CONSTANTS.CONN_OUTGOING][ptr];
+                        oldItem.removePtr(ptr, SNAP_CONSTANTS.CONN_INCOMING, false);
 
                         otherItem = this.canvas.items[ptrInfo[ptr]];
-                        otherItem.setPtr(ptr, SNAP_CONSTANTS.CONN_ACCEPTING, this);
+                        otherItem.setPtr(ptr, SNAP_CONSTANTS.CONN_INCOMING, this);
                         changed = "changed ptr";
                     }
                     oldPtrs.splice(k, 1);
@@ -218,7 +218,7 @@ define(['logManager',
         i = oldPtrs.length;
         while (i--){
             ptr = oldPtrs[i];
-            this.removePtr(ptr, SNAP_CONSTANTS.CONN_PASSING, false);
+            this.removePtr(ptr, SNAP_CONSTANTS.CONN_OUTGOING, false);
             changed = "removed ptr";
         }
 
@@ -235,7 +235,7 @@ define(['logManager',
      * @return {Boolean} 
      */
     LinkableItem.prototype.isPositionDependent = function () {
-        return Object.keys(this.ptrs[SNAP_CONSTANTS.CONN_ACCEPTING]).length !== 0;
+        return Object.keys(this.ptrs[SNAP_CONSTANTS.CONN_INCOMING]).length !== 0;
     };
 
     /**
@@ -251,13 +251,13 @@ define(['logManager',
             passingItem = item,
             passingConnection;
 
-        if (role === SNAP_CONSTANTS.CONN_ACCEPTING){
+        if (role === SNAP_CONSTANTS.CONN_INCOMING){
             acceptingItem = this;
             passingItem = item;
         } 
 
-        acceptingConnection = acceptingItem.getConnectionArea(ptr, SNAP_CONSTANTS.CONN_ACCEPTING);
-        passingConnection = passingItem.getConnectionArea(ptr, SNAP_CONSTANTS.CONN_PASSING);
+        acceptingConnection = acceptingItem.getConnectionArea(ptr, SNAP_CONSTANTS.CONN_INCOMING);
+        passingConnection = passingItem.getConnectionArea(ptr, SNAP_CONSTANTS.CONN_OUTGOING);
 
         //Make sure it is a valid 'move'
         if (acceptingItem === passingItem){
@@ -265,11 +265,11 @@ define(['logManager',
         }
 
         //Removing any existing value
-        acceptingItem.removePtr(ptr, SNAP_CONSTANTS.CONN_ACCEPTING);
-        passingItem.removePtr(ptr, SNAP_CONSTANTS.CONN_PASSING);
+        acceptingItem.removePtr(ptr, SNAP_CONSTANTS.CONN_INCOMING);
+        passingItem.removePtr(ptr, SNAP_CONSTANTS.CONN_OUTGOING);
 
-        acceptingItem.ptrs[SNAP_CONSTANTS.CONN_ACCEPTING][ptr] = passingItem;
-        passingItem.ptrs[SNAP_CONSTANTS.CONN_PASSING][ptr] = acceptingItem;
+        acceptingItem.ptrs[SNAP_CONSTANTS.CONN_INCOMING][ptr] = passingItem;
+        passingItem.ptrs[SNAP_CONSTANTS.CONN_OUTGOING][ptr] = acceptingItem;
 
         //Update the colors of the attaching item
         acceptingItem.updateColors();
@@ -344,15 +344,15 @@ define(['logManager',
     LinkableItem.prototype.removePtr = function (ptr, role, resize) {
         //remove pointers and resize
         var item = this.ptrs[role][ptr],
-            otherRole = role === SNAP_CONSTANTS.CONN_ACCEPTING ? 
-                SNAP_CONSTANTS.CONN_PASSING : SNAP_CONSTANTS.CONN_ACCEPTING;
+            otherRole = role === SNAP_CONSTANTS.CONN_INCOMING ? 
+                SNAP_CONSTANTS.CONN_OUTGOING : SNAP_CONSTANTS.CONN_INCOMING;
 
         if (!item){//If the ptr is empty, ignore
             return;
         }
 
         if(resize === true){
-            if (role === SNAP_CONSTANTS.CONN_ACCEPTING){
+            if (role === SNAP_CONSTANTS.CONN_INCOMING){
                 item._updateSize(ptr, null);
             } else {
                 this._updateSize(ptr, null);
@@ -360,7 +360,7 @@ define(['logManager',
         }
         
         //Update decorator to show attributes with given name
-        if (role === SNAP_CONSTANTS.CONN_PASSING){
+        if (role === SNAP_CONSTANTS.CONN_OUTGOING){
             this._decoratorInstance.setAttributeEnabled(ptr, true);
         }
         
@@ -446,7 +446,7 @@ define(['logManager',
                         //dropdown contains enumeration defined in the meta
                         options = this._getAttributeOptions(field);
                     } else {
-                        targetItem = this.getItemAtConnId(this.getConnectionArea(targetPointer, SNAP_CONSTANTS.CONN_PASSING).id);
+                        targetItem = this.getItemAtConnId(this.getConnectionArea(targetPointer, SNAP_CONSTANTS.CONN_OUTGOING).id);
 
                         if (targetItem){
 
@@ -484,13 +484,13 @@ define(['logManager',
      *
      */
     LinkableItem.prototype.setColor = function () {
-        var keys = Object.keys(this.ptrs[SNAP_CONSTANTS.CONN_ACCEPTING]),
+        var keys = Object.keys(this.ptrs[SNAP_CONSTANTS.CONN_INCOMING]),
             changed = false;
 
         if (keys.length){
 
             var basePtr = keys[0],
-                base = this.ptrs[SNAP_CONSTANTS.CONN_ACCEPTING][basePtr],
+                base = this.ptrs[SNAP_CONSTANTS.CONN_INCOMING][basePtr],
                 baseColor = base.getColor();
 
 
@@ -521,10 +521,10 @@ define(['logManager',
     LinkableItem.prototype.updateColors = function () {
         if(this.setColor()){
             //update the colors of dependents
-            var dependentKeys = Object.keys(this.ptrs[SNAP_CONSTANTS.CONN_PASSING]),
+            var dependentKeys = Object.keys(this.ptrs[SNAP_CONSTANTS.CONN_OUTGOING]),
                 i = dependentKeys.length;
             while (i--){
-                this.ptrs[SNAP_CONSTANTS.CONN_PASSING][dependentKeys[i]].updateColors();
+                this.ptrs[SNAP_CONSTANTS.CONN_OUTGOING][dependentKeys[i]].updateColors();
             }
         }
     };
@@ -557,7 +557,7 @@ define(['logManager',
      * @return {LinkableItem}
      */
     LinkableItem.prototype.getNextItem = function () {
-        return this.ptrs[SNAP_CONSTANTS.CONN_PASSING][SNAP_CONSTANTS.PTR_NEXT];
+        return this.ptrs[SNAP_CONSTANTS.CONN_OUTGOING][SNAP_CONSTANTS.PTR_NEXT];
     };
 
     /**
@@ -569,16 +569,16 @@ define(['logManager',
     LinkableItem.prototype.getDependentsByType = function () {
         //Return sibling/non-sibling dependents
         var result = { siblings: [], children: [] },
-            ptrs = Object.keys(this.ptrs[SNAP_CONSTANTS.CONN_PASSING]),
+            ptrs = Object.keys(this.ptrs[SNAP_CONSTANTS.CONN_OUTGOING]),
             ptr;
 
         while (ptrs.length){
             ptr = ptrs.pop();
 
             if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1){
-                result.children.push(this.ptrs[SNAP_CONSTANTS.CONN_PASSING][ptr].id);
+                result.children.push(this.ptrs[SNAP_CONSTANTS.CONN_OUTGOING][ptr].id);
             } else {
-                result.siblings.push(this.ptrs[SNAP_CONSTANTS.CONN_PASSING][ptr].id);
+                result.siblings.push(this.ptrs[SNAP_CONSTANTS.CONN_OUTGOING][ptr].id);
             }
         }
 
@@ -592,7 +592,7 @@ define(['logManager',
      */
     LinkableItem.prototype.getParent = function () {
         //get parent in dependency tree
-        var ptrs = Object.keys(this.ptrs[SNAP_CONSTANTS.CONN_ACCEPTING]),
+        var ptrs = Object.keys(this.ptrs[SNAP_CONSTANTS.CONN_INCOMING]),
             result = null;
 
             if (ptrs.length > 1){
@@ -600,7 +600,7 @@ define(['logManager',
             }
 
             if (ptrs.length === 1){
-                result = this.ptrs[SNAP_CONSTANTS.CONN_ACCEPTING][ptrs.pop()];
+                result = this.ptrs[SNAP_CONSTANTS.CONN_INCOMING][ptrs.pop()];
             }
 
             return result;
@@ -613,10 +613,10 @@ define(['logManager',
      */
     LinkableItem.prototype.getDependents = function () {
         var deps = [],
-            keys = Object.keys(this.ptrs[SNAP_CONSTANTS.CONN_PASSING]);
+            keys = Object.keys(this.ptrs[SNAP_CONSTANTS.CONN_OUTGOING]);
 
         while (keys.length){
-            deps.push(this.ptrs[SNAP_CONSTANTS.CONN_PASSING][keys.pop()]);
+            deps.push(this.ptrs[SNAP_CONSTANTS.CONN_OUTGOING][keys.pop()]);
         }
 
         return deps;
@@ -726,7 +726,7 @@ define(['logManager',
         if(names.length){
             i = names.length;
             while(i--){
-                changed = this._updateSize(names[i], this.ptrs[SNAP_CONSTANTS.CONN_PASSING][names[i]]) || changed;
+                changed = this._updateSize(names[i], this.ptrs[SNAP_CONSTANTS.CONN_OUTGOING][names[i]]) || changed;
             }
         }
 
@@ -765,7 +765,7 @@ define(['logManager',
      * @return {undefined}
      */
     LinkableItem.prototype.updatePosition = function () {
-        var ptrs = Object.keys(this.ptrs[SNAP_CONSTANTS.CONN_ACCEPTING]),
+        var ptrs = Object.keys(this.ptrs[SNAP_CONSTANTS.CONN_INCOMING]),
             params = { ignoreDependents: true, resize: false };//extra params
 
         if (ptrs.length > 1){
@@ -773,8 +773,8 @@ define(['logManager',
         }
 
         if (this.isPositionDependent()){
-            this.connectByPointerName(this.ptrs[SNAP_CONSTANTS.CONN_ACCEPTING][ptrs[0]], 
-                                      ptrs[0], SNAP_CONSTANTS.CONN_ACCEPTING, params);
+            this.connectByPointerName(this.ptrs[SNAP_CONSTANTS.CONN_INCOMING][ptrs[0]], 
+                                      ptrs[0], SNAP_CONSTANTS.CONN_INCOMING, params);
         }
     };
 
@@ -784,20 +784,20 @@ define(['logManager',
      * @return {undefined}
      */
     LinkableItem.prototype.updateDependents = function (params) {
-        var ptrs = Object.keys(this.ptrs[SNAP_CONSTANTS.CONN_PASSING]),
+        var ptrs = Object.keys(this.ptrs[SNAP_CONSTANTS.CONN_OUTGOING]),
             i = ptrs.length;
 
         while (i--){
             if (params.hasOwnProperty("propogate")){
                 if (params.propogate === true){
-                    this.ptrs[SNAP_CONSTANTS.CONN_PASSING][ptrs[i]].updateDependents(params);
+                    this.ptrs[SNAP_CONSTANTS.CONN_OUTGOING][ptrs[i]].updateDependents(params);
                 }
 
                 delete params.propogate;
             }
 
-            this.ptrs[SNAP_CONSTANTS.CONN_PASSING][ptrs[i]]
-                .connectByPointerName(this, ptrs[i], SNAP_CONSTANTS.CONN_ACCEPTING, params);
+            this.ptrs[SNAP_CONSTANTS.CONN_OUTGOING][ptrs[i]]
+                .connectByPointerName(this, ptrs[i], SNAP_CONSTANTS.CONN_INCOMING, params);
         }
     };
 
@@ -811,12 +811,12 @@ define(['logManager',
      */
     LinkableItem.prototype.connectByPointerName = function (otherItem, ptrName, role, extraParams) {
         
-        var otherRole = role === SNAP_CONSTANTS.CONN_ACCEPTING ? //Get the opposite role
-                SNAP_CONSTANTS.CONN_PASSING : SNAP_CONSTANTS.CONN_ACCEPTING,
+        var otherRole = role === SNAP_CONSTANTS.CONN_INCOMING ? //Get the opposite role
+                SNAP_CONSTANTS.CONN_OUTGOING : SNAP_CONSTANTS.CONN_INCOMING,
             connArea1 = this.getConnectionArea(ptrName, role),
             connArea2 = otherItem.getConnectionArea(ptrName, otherRole),
             params = { ptr: ptrName,
-                        role: SNAP_CONSTANTS.CONN_ACCEPTING,
+                        role: SNAP_CONSTANTS.CONN_INCOMING,
                         area1: connArea1,
                         area2: connArea2,
                         otherItem: otherItem };
@@ -839,11 +839,11 @@ define(['logManager',
      */
     LinkableItem.prototype.connectToActive = function (otherItem) {
         var ptr = otherItem.activeConnectionArea.ptr,
-            role = SNAP_CONSTANTS.CONN_ACCEPTING,
+            role = SNAP_CONSTANTS.CONN_INCOMING,
             connArea;
 
-        if(otherItem.activeConnectionArea.role === SNAP_CONSTANTS.CONN_ACCEPTING) {
-            role = SNAP_CONSTANTS.CONN_PASSING;
+        if(otherItem.activeConnectionArea.role === SNAP_CONSTANTS.CONN_INCOMING) {
+            role = SNAP_CONSTANTS.CONN_OUTGOING;
         }
 
         if(ptr instanceof Array){//Find the closest compatible area
@@ -919,7 +919,7 @@ define(['logManager',
 
         //resize as necessary. May need to resize after connecting
         if (params.resize){
-            if (role === SNAP_CONSTANTS.CONN_ACCEPTING){
+            if (role === SNAP_CONSTANTS.CONN_INCOMING){
                 otherItem._updateSize(ptr, this);
             } else {
                 this._updateSize(ptr, otherItem);
@@ -944,19 +944,19 @@ define(['logManager',
      *
      */
     LinkableItem.prototype.updateSizeAndPosition = function () {
-        var ptrs = Object.keys(this.ptrs[SNAP_CONSTANTS.CONN_ACCEPTING]), 
+        var ptrs = Object.keys(this.ptrs[SNAP_CONSTANTS.CONN_INCOMING]), 
             ptr = ptrs.pop(),
-            connArea = this.getConnectionArea(ptr, SNAP_CONSTANTS.CONN_ACCEPTING),
-            otherItem = this.canvas.items[this.ptrs[SNAP_CONSTANTS.CONN_ACCEPTING][ptr]];
+            connArea = this.getConnectionArea(ptr, SNAP_CONSTANTS.CONN_INCOMING),
+            otherItem = this.canvas.items[this.ptrs[SNAP_CONSTANTS.CONN_INCOMING][ptr]];
 
         if(ptrs.length > 1){
             this.logger.error("Item " + this.id + " has " + (ptrs.length + 1) + " incoming connections...");
         }
 
         this._connect({ ptr: ptr,
-                        role: SNAP_CONSTANTS.CONN_ACCEPTING,
+                        role: SNAP_CONSTANTS.CONN_INCOMING,
                         area1: connArea,
-                        area2: otherItem.getConnectionArea(ptr, SNAP_CONSTANTS.CONN_PASSING),
+                        area2: otherItem.getConnectionArea(ptr, SNAP_CONSTANTS.CONN_OUTGOING),
                         otherItem: otherItem });
 
     };
@@ -1034,7 +1034,7 @@ define(['logManager',
         var params = { role: role, ptr: ptr },
             area;
 
-        if (role === SNAP_CONSTANTS.CONN_ACCEPTING){
+        if (role === SNAP_CONSTANTS.CONN_INCOMING){
             params.ptr = function (otherPtrs){
                 return otherPtrs.indexOf(ptr) !== -1;
             };
@@ -1081,9 +1081,9 @@ define(['logManager',
      * @return {Object} distance (dx, dy)
      */
     LinkableItem.prototype.getConnectionDistance = function (options) {
-        var connArea = this.getConnectionArea(options.ptr, SNAP_CONSTANTS.CONN_PASSING),
+        var connArea = this.getConnectionArea(options.ptr, SNAP_CONSTANTS.CONN_OUTGOING),
             item = options.dst,
-            otherArea = item.getConnectionArea(options.ptr, SNAP_CONSTANTS.CONN_ACCEPTING);
+            otherArea = item.getConnectionArea(options.ptr, SNAP_CONSTANTS.CONN_INCOMING);
 
         return this._getDistance(connArea, otherArea);
     };
@@ -1125,11 +1125,11 @@ define(['logManager',
     LinkableItem.prototype.moveByWithDependents = function (dX, dY) {
         this.moveTo(this.positionX + dX, this.positionY + dY);
 
-        var dependents = Object.keys(this.ptrs[SNAP_CONSTANTS.CONN_PASSING]),
+        var dependents = Object.keys(this.ptrs[SNAP_CONSTANTS.CONN_OUTGOING]),
             i = dependents.length;
 
         while (i--){
-            this.ptrs[SNAP_CONSTANTS.CONN_PASSING][dependents[i]].moveByWithDependents(dX, dY);
+            this.ptrs[SNAP_CONSTANTS.CONN_OUTGOING][dependents[i]].moveByWithDependents(dX, dY);
         }
     };
 

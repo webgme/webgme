@@ -198,8 +198,8 @@ define(['js/DragDrop/DropTarget',
                     shortestDistance,
                     connArea,
                     draggedItem = this.items[draggedId],
-                    role = item.activeConnectionArea.role === SnapEditorWidgetConstants.CONN_ACCEPTING ?
-                        SnapEditorWidgetConstants.CONN_PASSING : SnapEditorWidgetConstants.CONN_ACCEPTING;
+                    role = item.activeConnectionArea.role === SnapEditorWidgetConstants.CONN_INCOMING ?
+                        SnapEditorWidgetConstants.CONN_OUTGOING : SnapEditorWidgetConstants.CONN_INCOMING;
 
                 i = ptrs.length;
 

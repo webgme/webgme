@@ -169,7 +169,7 @@ define(['./LinkableItem',
         var item1 = this.items[id1],
             item2 = this.items[id2];
 
-        item2.setPtr(ptrName, CONSTANTS.CONN_ACCEPTING, item1);
+        item2.setPtr(ptrName, CONSTANTS.CONN_INCOMING, item1);
     };
 
     SnapEditorWidgetLinkableItems.prototype.updateItemDependents = function (id1) {
@@ -179,7 +179,7 @@ define(['./LinkableItem',
     //I will need to calculate the distance between objects
     //for when I drop an object to point to the recipient.
     SnapEditorWidgetLinkableItems.prototype.getConnectionDistance = function (options) {
-        var src = this.items[options.src];//src has the CONN_PASSING role
+        var src = this.items[options.src];//src has the CONN_OUTGOING role
 
         delete options.src;
         options.dst = this.items[options.dst];
@@ -194,7 +194,7 @@ define(['./LinkableItem',
     SnapEditorWidgetLinkableItems.prototype.getItemsPointingTo = function (id) {
         var item = this.items[id];
 
-        return _.extend({}, item.ptrs[CONSTANTS.CONN_ACCEPTING]);
+        return _.extend({}, item.ptrs[CONSTANTS.CONN_INCOMING]);
     };
 
     SnapEditorWidgetLinkableItems.prototype.removePtr = function (itemId, ptr, role) {

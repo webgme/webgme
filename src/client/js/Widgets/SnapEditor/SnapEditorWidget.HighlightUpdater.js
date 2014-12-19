@@ -93,8 +93,8 @@ define([
                 for (var j = areas.length-1; j >= 0; j--) {
                     ptr = areas[j].ptr;
                     if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(ptr) !== -1) {
-                        if (current[i].ptrs[SNAP_CONSTANTS.CONN_PASSING][ptr]) {
-                            next.push(current[i].ptrs[SNAP_CONSTANTS.CONN_PASSING][ptr]);
+                        if (current[i].ptrs[SNAP_CONSTANTS.CONN_OUTGOING][ptr]) {
+                            next.push(current[i].ptrs[SNAP_CONSTANTS.CONN_OUTGOING][ptr]);
                         } else {
                             this._draggedConnAreas.push(areas[j]);
                             isLeaf = true;
@@ -150,7 +150,7 @@ define([
 
             for (i = connAreas.length-1; i >= 0; i--) {
                 switch (connAreas[i].role) {
-                    case SNAP_CONSTANTS.CONN_ACCEPTING:
+                    case SNAP_CONSTANTS.CONN_INCOMING:
                         // Check to make sure validPtrsFromDragged contains a sibling ptr
                         // Also check for containment if not sibling ptr TODO
                         hasSiblingPtr = false;
@@ -164,7 +164,7 @@ define([
                         }
                         break;
                     
-                    case SNAP_CONSTANTS.CONN_PASSING:
+                    case SNAP_CONSTANTS.CONN_OUTGOING:
                         if (!validPtrsToDragged[connAreas[i].ptr]) {
                           connAreas.splice(i,1);
                         }
