@@ -63,7 +63,7 @@ define([ "util/assert"], function (ASSERT) {
             var setNode = innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),
               base = innerCore.getBase(setNode),
               allMembers = innerCore.getChildrenRelids(setNode),
-              ownMembers, inheritedMembers, i, j, path;
+              ownMembers, inheritedMembers, i, j, path, names, ownMember, inheritedMember, k;
             if(base){
                 harmonizeMemberData(base,setName); //recursively harmonize base members first
                 inheritedMembers = innerCore.getChildrenRelids(base);
@@ -75,11 +75,24 @@ define([ "util/assert"], function (ASSERT) {
                 }
 
                 for(i=0;i<ownMembers.length;i++){
-                    path = innerCore.getPointerPath(innerCore.getChild(setNode,ownMembers[i]),'member');
+                    ownMember = innerCore.getChild(setNode,ownMembers[i]);
+                    path = innerCore.getPointerPath(ownMember,'member');
                     for(j=0;j<inheritedMembers.length;j++){
-                        if(getMemberPath(node,innerCore.getChild(setNode,inheritedMembers[j])) === path){
+                        inheritedMember = innerCore.getChild(setNode,inheritedMembers[j]);
+                        if(getMemberPath(node,inheritedMember) === path){
                             //redundancy...
-                            //TODO probably some sophisticated comparision would be nice, now we just simply remove the own member
+                            names = innerCore.getAttributeNames(ownMember);
+                            for(k=0;k<names.length;k++){
+                                if(innerCore.getAttribute(ownMember,names[k]) !== innerCore.getAttribute(inheritedMember,names[k])){
+                                    innerCore.setAttribute(inheritedMember,names[k],innerCore.getAttribute(ownMember,names[k]));
+                                }
+                            }
+                            names = innerCore.getRegistryNames(ownMember);
+                            for(k=0;k<names.length;k++){
+                                if(innerCore.getRegistry(ownMember,names[k]) !== innerCore.getRegistry(inheritedMember,names[k])){
+                                    innerCore.setRegistry(inheritedMember,names[k],innerCore.getRegistry(ownMember,names[k]));
+                                }
+                            }
                             innerCore.deleteNode(innerCore.getChild(setNode,ownMembers[i]),true);
                         }
                     }

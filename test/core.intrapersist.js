@@ -241,6 +241,58 @@ describe('Core#IntraPersist#SimpleChanges',function(){
       throw new Error('final target values are wrong');
     }
   });
+  it('checks the set harmonization for member registry',function(){
+    var elements,elementsPrime,position;
+    elements = core.getMemberPaths(nodes[e1NodePath],'mySpecials');
+    elements.sort();
+    elementsPrime = core.getMemberPaths(nodes[e1NodePrimePath],'mySpecials');
+    elementsPrime.sort();
+    if(CANON.stringify(elements) !== CANON.stringify(['/1736622193/1579656591','/1736622193/274170516']) ||
+      CANON.stringify(elementsPrime) !== CANON.stringify(['/1710723537/1579656591','/1710723537/274170516'])){
+      throw new Error('initial set members are wrong');
+    }
+
+    core.delMember(nodes[e1NodePath],'mySpecials',s1NodePath);
+    elements = core.getMemberPaths(nodes[e1NodePath],'mySpecials');
+    elements.sort();
+    elementsPrime = core.getMemberPaths(nodes[e1NodePrimePath],'mySpecials');
+    elementsPrime.sort();
+    if(CANON.stringify(elements) !== CANON.stringify(['/1736622193/1579656591']) ||
+      CANON.stringify(elementsPrime) !== CANON.stringify(['/1710723537/1579656591'])){
+      throw new Error('removed set members are wrong');
+    }
+
+    core.addMember(nodes[e1NodePrimePath],'mySpecials',nodes[s1NodePrimePath]);
+    core.setMemberRegistry(nodes[e1NodePrimePath],'mySpecials',s1NodePrimePath,'position',{x:100,y:200});
+    elements = core.getMemberPaths(nodes[e1NodePath],'mySpecials');
+    elements.sort();
+    elementsPrime = core.getMemberPaths(nodes[e1NodePrimePath],'mySpecials');
+    elementsPrime.sort();
+    position = core.getMemberRegistry(nodes[e1NodePrimePath],'mySpecials',s1NodePrimePath,'position');
+    if(CANON.stringify(elements) !== CANON.stringify(['/1736622193/1579656591']) ||
+      CANON.stringify(elementsPrime) !== CANON.stringify(['/1710723537/1579656591','/1710723537/274170516']) ||
+    position.x !== 100 || position.y !== 200){
+      throw new Error('prime set members are wrong');
+    }
+
+    core.addMember(nodes[e1NodePath],'mySpecials',nodes[s1NodePath]);
+    core.setMemberRegistry(nodes[e1NodePath],'mySpecials',s1NodePath,'position',{x:200,y:300});
+    elements = core.getMemberPaths(nodes[e1NodePath],'mySpecials');
+    elements.sort();
+    elementsPrime = core.getMemberPaths(nodes[e1NodePrimePath],'mySpecials');
+    elementsPrime.sort();
+    position = core.getMemberRegistry(nodes[e1NodePrimePath],'mySpecials',s1NodePrimePath,'position');
+    if(CANON.stringify(elements) !== CANON.stringify(['/1736622193/1579656591','/1736622193/274170516']) ||
+      CANON.stringify(elementsPrime) !== CANON.stringify(['/1710723537/1579656591','/1710723537/274170516']) ||
+      position.x !== 100 || position.y !== 200){
+      throw new Error('prime set member registry value are wrong');
+    }
+    position = core.getMemberRegistry(nodes[e1NodePath],'mySpecials',s1NodePath,'position');
+    if(position.x !== 200 || position.y !== 300){
+      throw new Error('member registry value is wrong');
+    }
+
+  });
   it('modified set elements should be visible in already loaded nodes',function(){
     var elements,elementsPrime;
     elements = core.getMemberPaths(nodes[e1NodePath],'mySpecials');
@@ -283,6 +335,7 @@ describe('Core#IntraPersist#SimpleChanges',function(){
     }
 
     core.addMember(nodes[e1NodePath],'mySpecials',nodes[s1NodePath]);
+    core.setMemberRegistry(nodes[e1NodePath],'mySpecials',s1NodePath,'position',{x: 86,y: 80});
     elements = core.getMemberPaths(nodes[e1NodePath],'mySpecials');
     elements.sort();
     elementsPrime = core.getMemberPaths(nodes[e1NodePrimePath],'mySpecials');
@@ -292,6 +345,108 @@ describe('Core#IntraPersist#SimpleChanges',function(){
       throw new Error('prime set members are wrong');
     }
   });
+});
+describe('Core#IntraPersist#Creation',function(){
+  var nodePath = '/989341553/1009293372',
+    specialPath = '/989341553/138645871',
+    examplePath = '/1736622193',
+    examplePrimePath = '/1710723537',
+    e1NodePath = '/1736622193/1271963336',
+    nodes = null;
+  it('sets the root and commit back to base',function(done){
+    core.loadRoot(rootHash,function(err,r){
+      if(err){
+        return done(err);
+      }
+      root = r;
+      done();
+    });
+  });
+  it('loads all the nodes for the test',function(done){
+    loadNodes([nodePath,specialPath,examplePath,examplePrimePath,e1NodePath],function(err,n){
+      if(err){
+        return done(err);
+      }
+      nodes = n;
+      done();
+    });
+  });
+  it('new node should be available instantaneously',function(){
+    var newNode = core.createNode({parent:nodes[examplePath],base:nodes[specialPath]});
+    if(core.getChildrenPaths(nodes[examplePath]).indexOf(core.getPath(newNode)) === -1){
+      throw new Error('new child is unavailable');
+    }
+    if(core.getChildrenRelids(nodes[examplePrimePath]).indexOf(core.getRelid(newNode)) === -1){
+      throw new Error('new child is unavailable in descendant');
+    }
+    if(core.getAttribute(newNode,'mySpeciality') !== 'nothing'){
+      throw new Error('new node attribute is not available');
+    }
+    core.setAttribute(nodes[specialPath],'mySpeciality',"shit");
+    if(core.getAttribute(newNode,'mySpeciality') !== 'shit'){
+      throw new Error('new node changed attribute is not available');
+    }
+
+    core.setAttribute(nodes[specialPath],'mySpeciality',"nothing");
+    core.deleteNode(newNode);
+  });
+  it('newly created nodes\' set should be fully available',function(){
+    var newNode = core.createNode({parent:root,base:nodes[e1NodePath]}),
+      memberPaths,memberNewPaths;
+    if(core.getAttribute(newNode,'name') !== 'e1' ||
+      core.getRegistry(newNode,'position').x !==194 ||
+      core.getRegistry(newNode,'position').y !==228 ||
+      CANON.stringify(core.getSetNames(newNode)) !== CANON.stringify(['mySpecials'])
+    ){
+      throw new Error('values of the new node are wrong');
+    }
+
+    memberPaths = core.getMemberPaths(nodes[e1NodePath],'mySpecials').sort();
+    memberNewPaths = core.getMemberPaths(newNode,'mySpecials').sort();
+    if(CANON.stringify(memberPaths) !== CANON.stringify(memberNewPaths)){
+      throw new Error('bad set members of new node');
+    }
+
+    core.deleteNode(newNode);
+  });
+  it('children of new node should be visible instantaneously',function(){
+    var newNode = core.createNode({parent:root,base:nodes[examplePath]}),
+      childrenRelids,
+      childrenNewRelids;
+
+    childrenRelids = core.getChildrenRelids(nodes[examplePath]).sort();
+    childrenNewRelids = core.getChildrenRelids(newNode).sort();
+    if(CANON.stringify(childrenRelids) !== CANON.stringify(childrenNewRelids)){
+      throw new Error('wrong chilrdenlist for new node');
+    }
+  });
+});
+describe('Core#IntraPersist#Deletion',function(){
+  var nodePath = '/989341553/1009293372',
+    specialPath = '/989341553/138645871',
+    examplePath = '/1736622193',
+    examplePrimePath = '/1710723537',
+    e1NodePath = '/1736622193/1271963336',
+    nodes = null;
+  it('sets the root and commit back to base',function(done){
+    core.loadRoot(rootHash,function(err,r){
+      if(err){
+        return done(err);
+      }
+      root = r;
+      done();
+    });
+  });
+  it('loads all the nodes for the test',function(done){
+    loadNodes([nodePath,specialPath,examplePath,examplePrimePath,e1NodePath],function(err,n){
+      if(err){
+        return done(err);
+      }
+      nodes = n;
+      done();
+    });
+  });
+  
 });
 describe('Core#IntraPersist#Post',function(){
   it('removes the project',function(done){
