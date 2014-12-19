@@ -128,10 +128,6 @@ define(['js/DragDrop/DragSource',
             maxX = 0,
             maxY = 0;
 
-        //Fix cursor alignment
-        //shiftX = event.pageX - item.$el.parent().offset().left;
-        //shiftY = event.pageY - item.$el.parent().offset().top;
-
         keys = Object.keys(items);
         while(keys.length){
             itemId = keys.pop();
@@ -151,6 +147,10 @@ define(['js/DragDrop/DragSource',
             dragElement.append(itemElement);
         }
 
+        // Handle zoom! FIXME
+        var zoom = this._zoomRatio;
+        dragElement.css('transform', 'scale(' + zoom + ',' + zoom + ')');
+
         //Set height, width of the helper
         maxX += DRAG_HELPER_BUFFER - shiftX;
         maxY += DRAG_HELPER_BUFFER - shiftY;
@@ -159,20 +159,21 @@ define(['js/DragDrop/DragSource',
         dragElement.height(maxY);
 
         //DEBUGGING
-        //dragElement.css("background-color", "grey");
+        dragElement.css("background-color", "grey");
         
         return dragElement;
     };
 
     SnapEditorWidgetDraggable.prototype.getCursorLocation = function (event, itemId) {
-        //Get the correct cursor location
+        //Get the correct cursor location relative to the div
         var location = {},
             item = this.items[itemId],
+            zoom = this._zoomRatio,
             mouseX,
             mouseY;
 
-        mouseX = event.pageX - item.$el.parent().offset().left;
-        mouseY = event.pageY - item.$el.parent().offset().top;
+        mouseX = (event.pageX - item.$el.parent().offset().left)/zoom;
+        mouseY = (event.pageY - item.$el.parent().offset().top)/zoom;
 
         location.left = mouseX - item.positionX + DRAG_HELPER_BUFFER;
         location.top = mouseY - item.positionY + DRAG_HELPER_BUFFER;
