@@ -211,6 +211,43 @@
      id="message-out"
      inkscape:label="#line23-1" />
   <!-- custom highlighting areas are now supported - must be a line, however -->
+  <line
+     class="connection-highlight"
+     style="opacity:0"
+     data-ptr="node"
+     data-role="out"
+     x1="64"
+     y1="35"
+     x2="84"
+     y2="35"/>
+  <line
+     class="connection-highlight"
+     style="opacity:0"
+     data-ptr="message"
+     data-role="out"
+     x1="60"
+     y1="52"
+     x2="96"
+     y2="52"/>
+  <line
+     class="connection-highlight"
+     style="opacity:0"
+     data-ptr="next"
+     data-role="in"
+     x1="5"
+     y1="4"
+     x2="80"
+     y2="4"/>
+  <line
+     class="connection-highlight"
+     style="opacity:0;stroke:#444444;stroke-width:10.10658169"
+     data-ptr="next"
+     data-role="out"
+     x1="5.0532908"
+     y1="70.904751"
+     x2="79.852669"
+     y2="70.904751"
+     id="line17" />
   <!-- Initial Measurements -->
   <rect
      style="opacity:0"

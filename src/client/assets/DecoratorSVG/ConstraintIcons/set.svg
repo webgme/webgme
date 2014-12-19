@@ -227,6 +227,33 @@
   <!-- custom highlighting areas are now supported - must be a line, however -->
   <line
      class="connection-highlight"
+     style="opacity:0"
+     data-ptr="first"
+     data-role="out"
+     x1="30"
+     y1="12"
+     x2="59"
+     y2="12"/>
+  <line
+     class="connection-highlight"
+     style="opacity:0"
+     data-ptr="second"
+     data-role="out"
+     x1="76"
+     y1="12"
+     x2="100"
+     y2="12"/>
+  <line
+     class="connection-highlight"
+     style="opacity:0"
+     data-ptr="next"
+     data-role="in"
+     x1="5"
+     y1="4"
+     x2="80"
+     y2="4"/>
+  <line
+     class="connection-highlight"
      style="opacity:0;stroke:#444444;stroke-width:10.10658169"
      data-ptr="next"
      data-role="out"

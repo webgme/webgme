@@ -365,10 +365,10 @@
      class="connection-area"
      data-ptr="cond"
      data-role="out"
-     x1="41.601912"
-     y1="8"
-     x2="47.935379"
-     y2="4"
+     x1="45"
+     y1="16"
+     x2="45"
+     y2="16"
      id="cond-out"/>
 
   <!-- Initial Measures -->
@@ -386,7 +386,7 @@
      x="0"
      y="0"
      width="0"
-     height="21"
+     height="28"
      style="opacity:0"/>
   <rect
      class="initial-measure"
@@ -394,7 +394,44 @@
      x="0"
      y="0"
      width="0"
-     height="22"
+     height="28"
      style="opacity:0"/>
+  <!-- custom connection highlights -->
+  <line
+     class="connection-highlight"
+     style="opacity:0"
+     data-ptr="next"
+     data-role="in"
+     x1="5"
+     y1="4"
+     x2="80"
+     y2="4"/>
+  <line
+     class="connection-highlight"
+     style="opacity:0"
+     data-ptr="false_next"
+     data-role="out"
+     x1="5"
+     y1="64"
+     x2="80"
+     y2="64"/>
+  <line
+     class="connection-highlight"
+     style="opacity:0"
+     data-ptr="true_next"
+     data-role="out"
+     x1="10"
+     y1="24"
+     x2="80"
+     y2="24"/>
+  <line
+     class="connection-highlight"
+     style="opacity:0"
+     data-ptr="next"
+     data-role="out"
+     x1="5"
+     y1="99"
+     x2="80"
+     y2="99"/>
 
 </svg>

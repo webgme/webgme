@@ -362,4 +362,32 @@
      x="0"
      y="0"
      id="rect34" />
+  <!-- custom connection highlights -->
+  <line
+     class="connection-highlight"
+     style="opacity:0"
+     data-ptr="next"
+     data-role="in"
+     x1="5"
+     y1="4"
+     x2="80"
+     y2="4"/>
+  <line
+     class="connection-highlight"
+     style="opacity:0"
+     data-ptr="next"
+     data-role="out"
+     x1="5"
+     y1="64"
+     x2="80"
+     y2="64"/>
+  <line
+     class="connection-highlight"
+     style="opacity:0"
+     data-ptr="true_next"
+     data-role="out"
+     x1="10"
+     y1="24"
+     x2="80"
+     y2="24"/>
 </svg>
