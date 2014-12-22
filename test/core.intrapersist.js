@@ -421,7 +421,7 @@ describe('Core#IntraPersist#Creation',function(){
     }
   });
 });
-describe('Core#IntraPersist#Deletion',function(){
+describe('Core#IntraPersist#Move',function(){
   var nodePath = '/989341553/1009293372',
     specialPath = '/989341553/138645871',
     examplePath = '/1736622193',
@@ -446,7 +446,15 @@ describe('Core#IntraPersist#Deletion',function(){
       done();
     });
   });
-  
+  it('moved node should be available instantaneously',function(){
+    var movedNode = core.moveNode(nodes[e1NodePath],root);
+    if(core.getPath(movedNode) !== "/1271963336"){
+      throw new Error('bad path of moved node');
+    }
+    if(core.getPath(nodes[e1NodePath]) !== e1NodePath){
+      throw new Error('old object points to old place');
+    }
+  });
 });
 describe('Core#IntraPersist#Post',function(){
   it('removes the project',function(done){
