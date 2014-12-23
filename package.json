@@ -46,6 +46,7 @@
   },
   "main": "webgme",
   "scripts": {
-    "start": "node src/bin/start_server.js"
+    "start": "node src/bin/start_server.js",
+    "test": "node node_modules/mocha/bin/mocha --recursive test"
    }
 }
