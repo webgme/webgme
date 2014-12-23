@@ -1,4 +1,4 @@
-/*globals require, $, console, angular*/
+/*globals require, $, console, angular, __dirname*/
 
 /**
  * @author kecso / https://github.com/kecso
