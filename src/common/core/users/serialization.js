@@ -339,11 +339,11 @@ define(['util/assert'],function(ASSERT){
                     for(j=0;j<tArray.length;j++){
                         //here comes the transformation itself
                         toDelete = [];
-                        for(k=0;k<jsonObject[keys[i]][tArray[j]].length;k++) {
-                            if (_pathToGuidMap[jsonObject[keys[i]][tArray[j]][k]]) {
-                                jsonObject[keys[i]][tArray[j]][k] = _pathToGuidMap[jsonObject[keys[i]][tArray[j]][k]];
-                            } else if (baseGuid(jsonObject[keys[i]][tArray[j]][k])) {
-                                jsonObject[keys[i]][tArray[j]][k] = baseGuid(jsonObject[keys[i]][tArray[j]][k]);
+                        for(k=0;k<jsonObject.aspects[tArray[j]].length;k++) {
+                            if (_pathToGuidMap[jsonObject.aspects[tArray[j]][k]]) {
+                                jsonObject.aspects[tArray[j]][k] = _pathToGuidMap[jsonObject.aspects[tArray[j]][k]];
+                            } else if (baseGuid(jsonObject.aspects[tArray[j]][k])) {
+                                jsonObject.aspects[tArray[j]][k] = baseGuid(jsonObject.aspects[tArray[j]][k]);
                             } else {
                                 toDelete.push(k);
                             }
@@ -356,6 +356,8 @@ define(['util/assert'],function(ASSERT){
                                 jsonObject.aspects[tArray[j]].splice(toDelete[k], 1);
                             }
                         }
+
+                        jsonObject.aspects[tArray[j]] = jsonObject.aspects[tArray[j]].sort();
 
                     }
                 } else {
