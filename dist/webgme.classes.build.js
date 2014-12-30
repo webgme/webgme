@@ -5395,6 +5395,47 @@ define('core/setcore',[ "util/assert"], function (ASSERT) {
             return "" + relid;
         };
 
+        var harmonizeMemberData = function(node,setName){
+            var setNode = innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),
+              base = innerCore.getBase(setNode),
+              allMembers = innerCore.getChildrenRelids(setNode),
+              ownMembers, inheritedMembers, i, j, path, names, ownMember, inheritedMember, k;
+            if(base){
+                harmonizeMemberData(base,setName); //recursively harmonize base members first
+                inheritedMembers = innerCore.getChildrenRelids(base);
+                ownMembers = [];
+                for(i=0;i<allMembers.length;i++){
+                    if(inheritedMembers.indexOf(allMembers[i]) === -1){
+                        ownMembers.push(allMembers[i]);
+                    }
+                }
+
+                for(i=0;i<ownMembers.length;i++){
+                    ownMember = innerCore.getChild(setNode,ownMembers[i]);
+                    path = innerCore.getPointerPath(ownMember,'member');
+                    for(j=0;j<inheritedMembers.length;j++){
+                        inheritedMember = innerCore.getChild(setNode,inheritedMembers[j]);
+                        if(getMemberPath(node,inheritedMember) === path){
+                            //redundancy...
+                            names = innerCore.getAttributeNames(ownMember);
+                            for(k=0;k<names.length;k++){
+                                if(innerCore.getAttribute(ownMember,names[k]) !== innerCore.getAttribute(inheritedMember,names[k])){
+                                    innerCore.setAttribute(inheritedMember,names[k],innerCore.getAttribute(ownMember,names[k]));
+                                }
+                            }
+                            names = innerCore.getRegistryNames(ownMember);
+                            for(k=0;k<names.length;k++){
+                                if(innerCore.getRegistry(ownMember,names[k]) !== innerCore.getRegistry(inheritedMember,names[k])){
+                                    innerCore.setRegistry(inheritedMember,names[k],innerCore.getRegistry(ownMember,names[k]));
+                                }
+                            }
+                            innerCore.deleteNode(innerCore.getChild(setNode,ownMembers[i]),true);
+                        }
+                    }
+                }
+            }
+        };
+
         //copy lower layer
         var setcore = {};
         for(var i in innerCore){
@@ -5430,6 +5471,7 @@ define('core/setcore',[ "util/assert"], function (ASSERT) {
         };
         setcore.getMemberPaths = function(node,setName){
             ASSERT(typeof setName === 'string');
+            harmonizeMemberData(node,setName);
             var setNode = innerCore.getChild(innerCore.getChild(node,SETS_ID),setName);
             var members = [];
             var elements = innerCore.getChildrenRelids(setNode);
@@ -5444,6 +5486,7 @@ define('core/setcore',[ "util/assert"], function (ASSERT) {
         };
         setcore.delMember = function(node,setName,memberPath){
             ASSERT(typeof setName === 'string');
+            harmonizeMemberData(node,setName);
             //we only need the path of the member so we allow to enter only it
             if(typeof memberPath !== 'string'){
                 memberPath = innerCore.getPath(memberPath);
@@ -5463,6 +5506,7 @@ define('core/setcore',[ "util/assert"], function (ASSERT) {
             if(innerCore.getPointerPath(setsNode,setName) === undefined){
                 setcore.createSet(node,setName);
             }
+            harmonizeMemberData(node,setName);
             var setNode = innerCore.getChild(setsNode,setName);
             var setMemberRelId = getMemberRelId(node,setName,setcore.getPath(member));
             if(setMemberRelId === null){
@@ -5475,6 +5519,7 @@ define('core/setcore',[ "util/assert"], function (ASSERT) {
 
         setcore.getMemberAttributeNames = function(node,setName,memberPath){
             ASSERT(typeof setName === 'string');
+            harmonizeMemberData(node,setName);
             var memberRelId = getMemberRelId(node,setName,memberPath);
             if(memberRelId){
                 var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
@@ -5484,6 +5529,7 @@ define('core/setcore',[ "util/assert"], function (ASSERT) {
         };
         setcore.getMemberAttribute = function(node,setName,memberPath,attrName){
             ASSERT(typeof setName === 'string' && typeof attrName === 'string');
+            harmonizeMemberData(node,setName);
             var memberRelId = getMemberRelId(node,setName,memberPath);
             if(memberRelId){
                 var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
@@ -5492,6 +5538,7 @@ define('core/setcore',[ "util/assert"], function (ASSERT) {
         };
         setcore.setMemberAttribute = function(node,setName,memberPath,attrName,attrValue){
             ASSERT(typeof setName === 'string' && typeof attrName === 'string' && attrValue !== undefined);
+            harmonizeMemberData(node,setName);
             var memberRelId = getMemberRelId(node,setName,memberPath);
             if(memberRelId){
                 var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
@@ -5501,6 +5548,7 @@ define('core/setcore',[ "util/assert"], function (ASSERT) {
         };
         setcore.delMemberAttribute = function(node,setName,memberPath,attrName){
             ASSERT(typeof setName === 'string' && typeof attrName === 'string');
+            harmonizeMemberData(node,setName);
             var memberRelId = getMemberRelId(node,setName,memberPath);
             if(memberRelId){
                 var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
@@ -5511,6 +5559,7 @@ define('core/setcore',[ "util/assert"], function (ASSERT) {
 
         setcore.getMemberRegistryNames = function(node,setName,memberPath){
             ASSERT(typeof setName === 'string');
+            harmonizeMemberData(node,setName);
             var memberRelId = getMemberRelId(node,setName,memberPath);
             if(memberRelId){
                 var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
@@ -5520,6 +5569,7 @@ define('core/setcore',[ "util/assert"], function (ASSERT) {
         };
         setcore.getMemberRegistry = function(node,setName,memberPath,regName){
             ASSERT(typeof setName === 'string' && typeof regName === 'string');
+            harmonizeMemberData(node,setName);
             var memberRelId = getMemberRelId(node,setName,memberPath);
             if(memberRelId){
                 var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
@@ -5528,6 +5578,7 @@ define('core/setcore',[ "util/assert"], function (ASSERT) {
         };
         setcore.setMemberRegistry = function(node,setName,memberPath,regName,regValue){
             ASSERT(typeof setName === 'string' && typeof regName === 'string' && regValue !== undefined);
+            harmonizeMemberData(node,setName);
             var memberRelId = getMemberRelId(node,setName,memberPath);
             if(memberRelId){
                 var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
@@ -5537,6 +5588,7 @@ define('core/setcore',[ "util/assert"], function (ASSERT) {
         };
         setcore.delMemberRegistry = function(node,setName,memberPath,regName){
             ASSERT(typeof setName === 'string' && typeof regName === 'string');
+            harmonizeMemberData(node,setName);
             var memberRelId = getMemberRelId(node,setName,memberPath);
             if(memberRelId){
                 var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
@@ -5583,7 +5635,7 @@ define('core/setcore',[ "util/assert"], function (ASSERT) {
             return sets;
         };
 
-        setcore.getDataForSingleHash = function(node){
+        /*setcore.getDataForSingleHash = function(node){
             ASSERT(setcore.isValidNode(node));
             var datas = innerCore.getDataForSingleHash(node);
 
@@ -5598,7 +5650,7 @@ define('core/setcore',[ "util/assert"], function (ASSERT) {
             }
 
             return datas;
-        };
+        };*/
 
         return setcore;
 
@@ -7613,7 +7665,7 @@ define('core/constraintcore',[ "util/assert" ], function (ASSERT) {
     window.jjv = Environment;
 })();
 
-define('core/metacore',[ "util/assert", "core/core", "core/tasync", "util/jjv" ], function(ASSERT, Core, TASYNC, JsonValidator) {
+define('core/metacore',[ "util/assert", "core/core", "core/tasync", "util/jjv", "util/canon" ], function(ASSERT, Core, TASYNC, JsonValidator, CANON) {
     
 
     // ----------------- CoreType -----------------
@@ -7869,50 +7921,104 @@ define('core/metacore',[ "util/assert", "core/core", "core/tasync", "util/jjv" ]
             return meta;
         };
 
-        var isEmptyObject = function(object){
-            if(Object.keys(object).length === 0){
-                return true;
-            }
-            return false;
-        };
-        var getObjectDiff = function(bigger,smaller){
-            var diff = {},
-                names, i,temp;
-            if(smaller === null || smaller === undefined || isEmptyObject(smaller)){
-                if(bigger === null || bigger === undefined){
-                    return {};
-                }
-                return bigger;
-            }
-
-            names = Object.keys(bigger);
-            for(i=0;i<names.length;i++){
-                if(smaller[names[i]] === undefined){
-                    //extra attribute of the bigger object
-                    if(bigger[names[i]] !== undefined){
-                        diff[names[i]] = bigger[names[i]];
-                    } //if both are undefined, then they are equal :)
-                } else {
-                    //they share the attribute
-                    if(typeof smaller[names[i]] === 'object'){
-                        if(typeof bigger[names[i]] === 'object'){
-                            temp = getObjectDiff(bigger[names[i]],smaller[names[i]]);
-                            if(!isEmptyObject(temp)){
-                                diff[names[i]] = temp;
-                            }
-                        } else {
-                            diff[names[i]] = bigger[names[i]];
+        var getMetaObjectDiff = function(bigger,smaller){
+            //TODO this is a specific diff calculation for META rule JSONs
+            var diff = {},names, i,
+              itemedElementDiff = function(bigItem,smallItem){
+                  var diff, diffItems = {}, i,index,names;
+                  for(i=0;i<bigItem.items.length;i++){
+                      if(smallItem.items.indexOf(bigItem.items[i]) === -1){
+                          diffItems[bigItem.items[i]] = true;
+                      }
+                  }
+                  names = Object.keys(diffItems);
+                  for(i=0;i<names.length;i++){
+                      diff = diff || {items:[],minItems:[],maxItems:[]};
+                      index = bigItem.items.indexOf(names[i]);
+                      diff.items.push(bigItem.items[index]);
+                      diff.minItems.push(bigItem.minItems[index]);
+                      diff.maxItems.push(bigItem.maxItems[index]);
+                  }
+                  if(bigItem.min && ((smallItem.min && bigItem.min !== smallItem.min) || !smallItem.min)){
+                      diff = diff || {};
+                      diff.min = bigItem.min;
+                  }
+                  if(bigItem.max && ((smallItem.max && bigItem.max !== smallItem.max) || !smallItem.max)){
+                      diff = diff || {};
+                      diff.max = bigItem.max;
+                  }
+                  return diff || {};
+              };
+            //attributes
+            if(smaller.attributes){
+                names = Object.keys(bigger.attributes);
+                for(i=0;i<names.length;i++){
+                    if(smaller.attributes[names[i]]){
+                        //they both have the attribute - if it differs we keep the whole of the bigger
+                        if(CANON.stringify(smaller.attributes[names[i]] !== CANON.stringify(bigger.attributes[names[i]]))){
+                            diff.attributes = diff.attributes || {};
+                            diff.attributes[names[i]] = bigger.attributes[names[i]];
                         }
                     } else {
-                        if(JSON.stringify(smaller[names[i]]) !== JSON.stringify(bigger[names[i]])){
-                            diff[names[i]] = bigger[names[i]];
-                        }
+                        diff.attributes = diff.attributes || {};
+                        diff.attributes[names[i]] = bigger.attributes[names[i]];
                     }
                 }
+            } else if(bigger.attributes){
+                diff.attributes = bigger.attributes;
+            }
+            //children
+            if(smaller.children){
+                diff.children = itemedElementDiff(bigger.children,smaller.children);
+                if(Object.keys(diff.children).length < 1){
+                    delete diff.children;
+                }
+            } else if(bigger.children){
+                diff.children = bigger.children;
+            }
+            //pointers
+            if(smaller.pointers){
+                diff.pointers = {};
+                names = Object.keys(bigger.pointers);
+                for(i=0;i<names.length;i++){
+                    if(smaller.pointers[names[i]]){
+                        diff.pointers[names[i]] = itemedElementDiff(bigger.pointers[names[i]],smaller.pointers[names[i]]);
+                        if(Object.keys(diff.pointers[names[i]]).length < 1){
+                            delete diff.pointers[names[i]];
+                        }
+                    } else {
+                        diff.pointers[names[i]] = bigger.pointers[names[i]];
+                    }
+                }
+            } else if(bigger.pointers){
+                diff.pointers = bigger.pointers;
+            }
+            if(Object.keys(diff.pointers).length < 1){
+                delete diff.pointers;
+            }
+            //aspects
+            if(smaller.aspects){
+                diff.aspects = {};
+                names = Object.keys(bigger.aspects);
+                for(i=0;i<names.length;i++){
+                    if(smaller.aspects[names[i]]){
+                        smaller.aspects[names[i]] = smaller.aspects[names[i]].sort();
+                        bigger.aspects[names[i]] = bigger.aspects[names[i]].sort();
+                        if(bigger.aspects[names[i]].length > smaller.aspects[names[i]].length){
+                            diff.aspects[names[i]] = bigger.aspects[names[i]].slice(smaller.aspects[names[i]].length);
+                        }
+                    } else {
+                        diff.aspects[names[i]] = bigger.aspects[names[i]];
+                    }
+                }
+            } else if(bigger.aspects){
+                diff.aspects = bigger.aspects;
             }
 
+            if(Object.keys(diff.aspects).length < 1){
+                delete diff.aspects;
+            }
             return diff;
-
         };
 
         core.getOwnJsonMeta = function(node){
@@ -7920,7 +8026,7 @@ define('core/metacore',[ "util/assert", "core/core", "core/tasync", "util/jjv" ]
                 baseMeta = base ? core.getJsonMeta(base) : {},
                 meta = core.getJsonMeta(node);
 
-            return getObjectDiff(meta,baseMeta);
+            return getMetaObjectDiff(meta,baseMeta);
         };
 
         core.clearMetaRules = function(node){
@@ -13394,13 +13500,13 @@ define('coreclient/serialization',['util/assert'],function(ASSERT){
                     for(j=0;j<tArray.length;j++){
                         //here comes the transformation itself
                         toDelete = [];
-                        for(k=0;k<jsonObject[keys[i]][tArray[j]].length;k++) {
-                            if (_pathToGuidMap[jsonObject[keys[i]][tArray[j]][k]]) {
-                                jsonObject[keys[i]][tArray[j]][k] = _pathToGuidMap[jsonObject[keys[i]][tArray[j]][k]];
-                            } else if (baseGuid(jsonObject[keys[i]][tArray[j]][k])) {
-                                jsonObject[keys[i]][tArray[j]][k] = baseGuid(jsonObject[keys[i]][tArray[j]][k]);
+                        for(k=0;k<jsonObject.aspects[tArray[j]].length;k++) {
+                            if (_pathToGuidMap[jsonObject.aspects[tArray[j]][k]]) {
+                                jsonObject.aspects[tArray[j]][k] = _pathToGuidMap[jsonObject.aspects[tArray[j]][k]];
+                            } else if (baseGuid(jsonObject.aspects[tArray[j]][k])) {
+                                jsonObject.aspects[tArray[j]][k] = baseGuid(jsonObject.aspects[tArray[j]][k]);
                             } else {
-                                toDelete.push(j);
+                                toDelete.push(k);
                             }
                         }
 
@@ -13408,9 +13514,11 @@ define('coreclient/serialization',['util/assert'],function(ASSERT){
                             toDelete = toDelete.sort();
                             toDelete = toDelete.reverse();
                             for (k = 0; k < toDelete.length; k++) {
-                                jsonObject.items.splice(jsonObject[keys[i]][tArray[j]][k], 1);
+                                jsonObject.aspects[tArray[j]].splice(toDelete[k], 1);
                             }
                         }
+
+                        jsonObject.aspects[tArray[j]] = jsonObject.aspects[tArray[j]].sort();
 
                     }
                 } else {
@@ -13621,12 +13729,12 @@ define('coreclient/serialization',['util/assert'],function(ASSERT){
                 //we should go among containment hierarchy
                 updateNodes(_import.root.guid,null,_import.containment);
 
-                //now we can add or modify the relations of the nodes - we go along the hierarchy chain
-                updateRelations(_import.root.guid,_import.containment);
-
                 //now update inheritance chain
                 //we assume that our inheritance chain comes from the FCO and that it is identical everywhere
                 updateInheritance();
+
+                //now we can add or modify the relations of the nodes - we go along the hierarchy chain
+                updateRelations();
 
                 //finally we need to update the meta rules of each node - again along the containment hierarchy
                 updateMetaRules(_import.root.guid,_import.containment);
@@ -13716,14 +13824,31 @@ define('coreclient/serialization',['util/assert'],function(ASSERT){
         updateRegistry(guid);
     }
 
-    function updateRelations(guid,containmentTreeObject){
-        var keys,i;
-        updateNodeRelations(guid);
-        keys = Object.keys(containmentTreeObject);
-        for(i=0;i<keys.length;i++){
-            updateRelations(keys[i],containmentTreeObject[keys[i]]);
+    function getInheritanceBasedGuidOrder(){
+        var inheritanceOrdered = Object.keys(_import.nodes).sort(),i= 0,baseGuid,baseIndex;
+        while(i<inheritanceOrdered.length){
+            baseGuid = _import.nodes[inheritanceOrdered[i]].base;
+            if(baseGuid){
+                baseIndex = inheritanceOrdered.indexOf(baseGuid);
+                if(baseIndex > i){
+                    inheritanceOrdered.splice(baseIndex,1);
+                    inheritanceOrdered.splice(i,0,baseGuid);
+                } else {
+                    ++i;
+                }
+            } else {
+                ++i;
+            }
+        }
+        return inheritanceOrdered;
+    }
+    function updateRelations(){
+        var guids = getInheritanceBasedGuidOrder(),i;
+        for(i=0;i<guids.length;i++){
+            updateNodeRelations(guids[i]);
         }
     }
+
     function updateNodeRelations(guid){
         //although it is possible that we set the base pointer at this point we should go through inheritance just to be sure
         var node = _nodes[guid],
@@ -17167,7 +17292,7 @@ define('blob/BlobMetadata',['blob/BlobConfig'], function(BlobConfig){
  * Author: Zsolt Lattmann
  */
 
-define('blob/Artifact',['blob/BlobMetadata', 'blob/BlobConfig'], function (BlobMetadata, BlobConfig) {
+define('blob/Artifact',['blob/BlobMetadata', 'blob/BlobConfig', 'core/tasync'], function (BlobMetadata, BlobConfig, tasync) {
 
     /**
      * Creates a new instance of artifact, i.e. complex object, in memory. This object can be saved in the storage.
@@ -17179,6 +17304,8 @@ define('blob/Artifact',['blob/BlobMetadata', 'blob/BlobConfig'], function (BlobM
     var Artifact = function (name, blobClient, descriptor) {
         this.name = name;
         this.blobClient = blobClient;
+        this.blobClientPutFile = tasync.unwrap(tasync.throttle(tasync.wrap(blobClient.putFile), 5));
+        this.blobClientGetMetadata = tasync.unwrap(tasync.throttle(tasync.wrap(blobClient.getMetadata), 5));
         // TODO: use BlobMetadata class here
         this.descriptor = descriptor || {
             name: name + '.zip',
@@ -17199,7 +17326,7 @@ define('blob/Artifact',['blob/BlobMetadata', 'blob/BlobConfig'], function (BlobM
         var self = this;
         var filename = name.substring(name.lastIndexOf('/') + 1);
 
-        self.blobClient.putFile(filename, content, function (err, hash) {
+        self.blobClientPutFile.call(self.blobClient, filename, content, function (err, hash) {
             if (err) {
                 callback(err);
                 return;
@@ -17207,7 +17334,7 @@ define('blob/Artifact',['blob/BlobMetadata', 'blob/BlobConfig'], function (BlobM
 
             self.addObjectHash(name, hash, function (err, hash) {
                 callback(err, hash);
-            })
+            });
         });
     };
 
@@ -17215,16 +17342,17 @@ define('blob/Artifact',['blob/BlobMetadata', 'blob/BlobConfig'], function (BlobM
         var self = this;
         var filename = name.substring(name.lastIndexOf('/') + 1);
 
-        self.blobClient.putFile(filename, content, function (err, hash) {
-            if (err) {
-                callback(err);
-                return;
-            }
+        self.blobClientPutFile.call(self.blobClient, filename, content,
+            function (err, hash) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
 
-            self.addMetadataHash(name, hash, function (err, hash) {
-                callback(err, hash);
-            })
-        });
+                self.addMetadataHash(name, hash, function (err, hash) {
+                    callback(err, hash);
+                });
+            });
     };
 
     /**
@@ -17305,7 +17433,7 @@ define('blob/Artifact',['blob/BlobMetadata', 'blob/BlobConfig'], function (BlobM
     Artifact.prototype.addObjectHash = function (name, hash, callback) {
         var self = this;
 
-        self.blobClient.getMetadata(hash, function (err, metadata) {
+        self.blobClientGetMetadata.call(self.blobClient, hash, function (err, metadata) {
             if (err) {
                 callback(err);
                 return;
@@ -17367,7 +17495,7 @@ define('blob/Artifact',['blob/BlobMetadata', 'blob/BlobConfig'], function (BlobM
             callback("Blob hash is invalid");
             return;
         }
-        self.blobClient.getMetadata(hash, function (err, metadata) {
+        self.blobClientGetMetadata.call(self.blobClient, hash, function (err, metadata) {
             if (err) {
                 callback(err);
                 return;
@@ -17430,8 +17558,9 @@ define('blob/Artifact',['blob/BlobMetadata', 'blob/BlobConfig'], function (BlobM
         this.blobClient.putMetadata(this.descriptor, callback);
     };
 
-    return Artifact
+    return Artifact;
 });
+
 ;(function(){
 
 /**
