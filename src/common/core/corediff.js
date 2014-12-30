@@ -336,8 +336,8 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
     }
 
     function meta_diff(source, target) {
-      var sMeta = _core.getOwnMetaInJson(source),
-      tMeta = _core.getOwnMetaInJson(target);
+      var sMeta = _core.getOwnJsonMeta(source),
+      tMeta = _core.getOwnJsonMeta(target);
       if (CANON.stringify(sMeta) !== CANON.stringify(tMeta)) {
         return {source: sMeta, target: tMeta};
       }

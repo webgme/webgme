@@ -191,16 +191,16 @@ define([ "util/assert"], function (ASSERT) {
             }
             return [];
         };
-    setcore.getMemberOwnAttributeNames = function (node, setName, memberPath) {
-      ASSERT(typeof setName === 'string');
-      var memberRelId = getMemberRelId(node, setName, memberPath);
-      if (memberRelId) {
-        var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node, SETS_ID), setName), memberRelId);
-        return innerCore.getOwnAttributeNames(memberNode);
-      }
-      return [];
-    };
-    setcore.getMemberAttribute = function (node, setName, memberPath, attrName) {
+        setcore.getMemberOwnAttributeNames = function (node, setName, memberPath) {
+            ASSERT(typeof setName === 'string');
+            var memberRelId = getMemberRelId(node, setName, memberPath);
+            if (memberRelId) {
+                var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node, SETS_ID), setName), memberRelId);
+                return innerCore.getOwnAttributeNames(memberNode);
+            }
+            return [];
+        };
+        setcore.getMemberAttribute = function(node,setName,memberPath,attrName){
             ASSERT(typeof setName === 'string' && typeof attrName === 'string');
             harmonizeMemberData(node,setName);
             var memberRelId = getMemberRelId(node,setName,memberPath);
@@ -240,16 +240,16 @@ define([ "util/assert"], function (ASSERT) {
             }
             return [];
         };
-    setcore.getMemberOwnRegistryNames = function (node, setName, memberPath) {
-      ASSERT(typeof setName === 'string');
-      var memberRelId = getMemberRelId(node, setName, memberPath);
-      if (memberRelId) {
-        var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node, SETS_ID), setName), memberRelId);
-        return innerCore.getOwnRegistryNames(memberNode);
-      }
-      return [];
-    };
-    setcore.getMemberRegistry = function (node, setName, memberPath, regName) {
+        setcore.getMemberOwnRegistryNames = function (node, setName, memberPath) {
+            ASSERT(typeof setName === 'string');
+            var memberRelId = getMemberRelId(node, setName, memberPath);
+            if (memberRelId) {
+                var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node, SETS_ID), setName), memberRelId);
+                return innerCore.getOwnRegistryNames(memberNode);
+            }
+            return [];
+        };
+        setcore.getMemberRegistry = function(node,setName,memberPath,regName){
             ASSERT(typeof setName === 'string' && typeof regName === 'string');
             harmonizeMemberData(node,setName);
             var memberRelId = getMemberRelId(node,setName,memberPath);

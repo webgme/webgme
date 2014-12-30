@@ -25,7 +25,7 @@ define([
         options = options || {};
         options.usetype = options.usertype || 'nodejs';
 
-        var corecon = new CoreDiff(new TreeLoader(new MetaCore(new Constraint(new Descriptor(new Guid(new Set(new NullPtr(new Type(new NullPtr(new CoreRel(new CoreTree(storage, options))))))))))));
+        var corecon = new TreeLoader(new CoreDiff(new MetaCore(new Constraint(new Descriptor(new Guid(new Set(new NullPtr(new Type(new NullPtr(new CoreRel(new CoreTree(storage, options))))))))))));
 
         if(options.usertype === 'tasync'){
             return corecon;
