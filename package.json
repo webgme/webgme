@@ -42,11 +42,12 @@
   "devDependencies": {
     "gulp": "=3.8.6",
     "gulp-jshint": "=1.8.0",
-    "jshint-stylish": "=0.4.0"
+    "jshint-stylish": "=0.4.0",
+    "mocha": "^2.1.0"
   },
   "main": "webgme",
   "scripts": {
     "start": "node src/bin/start_server.js",
     "test": "node node_modules/mocha/bin/mocha --recursive test"
-   }
+  }
 }
