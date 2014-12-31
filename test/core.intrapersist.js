@@ -1,6 +1,7 @@
 /**
  * Created by tkecskes on 12/18/2014.
  */
+  global.COVERAGE = true;
 //these checks intended to check what changes should be visible between persists
 var WebGME = require('../webgme'),
   FS = require('fs'),
