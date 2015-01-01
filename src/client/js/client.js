@@ -164,6 +164,7 @@ define([
         _selfCommits = {},
         AllPlugins, AllDecorators;
 
+
       if (!_configuration.host) {
         if (window) {
           _configuration.host = window.location.protocol + "//" + window.location.host;

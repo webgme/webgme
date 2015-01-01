@@ -45,7 +45,7 @@ define(['logManager',
 
     function StandAloneServer(CONFIG){
         // if the config is not set we use the global
-        CONFIG = CONFIG || webGMEGlobal.getConfig();
+        CONFIG = CONFIG || WebGMEGlobal.getConfig();
         //public functions
         function start(){
             if(CONFIG.httpsecure){
@@ -347,7 +347,7 @@ define(['logManager',
             __canCheckToken = true,
             __httpServer = null,
             __logoutUrl = CONFIG.logoutUrl || '/',
-            __baseDir = webGMEGlobal.baseDir,
+            __baseDir = WebGMEGlobal.baseDir,
             __clientBaseDir = CONFIG.clientAppDir || __baseDir+'/client',
             __requestCounter = 0,
             __reportedRequestCounter = 0,

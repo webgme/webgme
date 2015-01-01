@@ -4,7 +4,7 @@ define(['logManager'],function(logManager){
         logger = logManager.create('exampleRExtraST'); //how to define your own logger which will use the global settings
     var exampleRExtraST = function(req,res,next){
         //global config is accessible via webGMEGlobal.getConfig()
-        var config = webGMEGlobal.getConfig();
+        var config = WebGMEGlobal.getConfig();
         counter++;
         if(counter%10){
             logger.info(JSON.stringify(config,null,2));

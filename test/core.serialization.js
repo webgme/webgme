@@ -121,6 +121,7 @@ describe('Core#Serialization',function(){
     });
   });
   it('exports the very same',function(done){
+    this.timeout(5000);
     iData = jsonData;
     eData = {};
     WebGME.serializer.export(core,root,function(err,exp){
@@ -282,6 +283,14 @@ describe('Core#Serialization',function(){
     for(i in guids){
       checkMembers(guids[i]);
     }
+  });
+  it('should close the project',function(done){
+    project.closeProject(function(err){
+      if(err){
+        return done(err);
+      }
+      done();
+    });
   });
   it('should remove the test project',function(done){
     storage.getProjectNames(function(err,names){

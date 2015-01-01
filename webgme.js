@@ -37,7 +37,7 @@ requirejs.config({
 });
 
 var __CONFIG = requirejs('baseConfig' ),
-    webGMEGlobal;
+    WebGMEGlobal;
 
 var getConfig = function(){
     return JSON.parse(JSON.stringify(__CONFIG));
@@ -72,7 +72,7 @@ var setConfig = function(configObject){
             return names;
         },
         addPluginPathsToRequirejs = function(basepaths){
-            var requirejsBase = webGMEGlobal.baseDir,
+            var requirejsBase = WebGMEGlobal.baseDir,
                 pluginNames = getPluginNames(basepaths),
                 i,j;
 
@@ -104,7 +104,7 @@ var setConfig = function(configObject){
         });
         },
         addAddOnPathsToRequirejs = function(basepaths){
-            var requirejsBase = webGMEGlobal.baseDir,
+            var requirejsBase = WebGMEGlobal.baseDir,
                 pluginNames,
                 i,j;
 
@@ -147,7 +147,7 @@ var setConfig = function(configObject){
                 return;
             }
 
-            var requirejsBase = webGMEGlobal.baseDir,
+            var requirejsBase = WebGMEGlobal.baseDir,
                 configPaths = {};
 
             var keys = Object.keys(requireJSPaths);
@@ -215,14 +215,14 @@ var setConfig = function(configObject){
         for(i=0;i<keys.length;i++){
             __CONFIG.rextrast = __CONFIG.rextrast || {};
             if(!__CONFIG.rextrast[keys[i]]){
-                __CONFIG.rextrast[keys[i]] = PATH.relative(webGMEGlobal.baseDir,PATH.resolve(configObject.rextrast[keys[i]]));
+                __CONFIG.rextrast[keys[i]] = PATH.relative(WebGMEGlobal.baseDir,PATH.resolve(configObject.rextrast[keys[i]]));
             }
         }
     }
 };
 
 //creating a global variable
-webGMEGlobal = {
+WebGMEGlobal = {
     baseDir : PATH.resolve(baseDir),
     getConfig : getConfig,
     setConfig : setConfig,
@@ -231,7 +231,7 @@ webGMEGlobal = {
 
 //setting the default array elements
 //TODO this should be done already in getconfig !!!
-webGMEGlobal.setConfig({
+WebGMEGlobal.setConfig({
     decoratorpaths : [PATH.join(PATH.join(baseDir,'/client'),"/decorators")],
     pluginBasePaths : [PATH.join(baseDir,"/plugin/coreplugins")],
     visualizerDescriptors : [PATH.join(baseDir,"/client/js/Visualizers.json")]/*,
@@ -240,7 +240,7 @@ webGMEGlobal.setConfig({
     }*/
 });
 
-global.webGMEGlobal = webGMEGlobal;
+global.WebGMEGlobal = WebGMEGlobal;
 
 
 module.exports = {
