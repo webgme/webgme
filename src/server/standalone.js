@@ -571,7 +571,7 @@ define(['logManager',
             expressFileSending(res,Path.join(__clientBaseDir,req.path));
         });
 
-        __app.get(/^\/.*\.(js|html|gif|png|bmp|svg|json|map)$/,ensureAuthenticated,function(req,res){
+        __app.get(/^\/.*\.(js|_js|html|gif|png|bmp|svg|json|map)$/,ensureAuthenticated,function(req,res){
             //package.json
             if(req.path === '/package.json') {
                 expressFileSending(res,Path.join(__baseDir, '..', req.path));
