@@ -39,6 +39,7 @@ requirejs.config({
 var __CONFIG = requirejs('baseConfig' ),
     WebGMEGlobal;
 
+
 var getConfig = function(){
     return JSON.parse(JSON.stringify(__CONFIG));
 };
@@ -228,6 +229,7 @@ WebGMEGlobal = {
     setConfig : setConfig,
     requirejs : requirejs
 };
+WebGMEGlobal.TESTING = global.TESTING;
 
 //setting the default array elements
 //TODO this should be done already in getconfig !!!

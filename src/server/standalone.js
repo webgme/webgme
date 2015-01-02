@@ -90,7 +90,11 @@ define(['logManager',
         }
         function stop(){
             __storage.close();
-            __httpServer.close();
+            try {
+                __httpServer.close();
+            } catch(e){
+                //ignore errors
+            }
         }
         //internal functions
         function globalAuthorization(sessionId,projectName,type,callback){
