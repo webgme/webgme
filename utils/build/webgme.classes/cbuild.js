@@ -18,6 +18,7 @@
     'js/Dialogs/PluginConfig/PluginConfigDialog': './utils/build/empty/empty'
   },
   optimize: "none",
+  generateSourceMaps: true,
   insertRequire: ["webgme.classes"],
   include: ['./node_modules/requirejs/require'],
   wrap: {
