@@ -1,7 +1,6 @@
 /**
  * Created by tkecskes on 12/17/2014.
  */
-global.COVERAGE = true;
 var WebGME = require('../webgme'),
   FS = require('fs'),
   storage = new WebGME.serverUserStorage({host:'127.0.0.1',port:27017,database:'multi'});

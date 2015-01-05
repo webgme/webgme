@@ -2,11 +2,8 @@
  * Created by tamas on 12/31/14.
  */
 //these test intended to test the functions of the client layer
-global.COVERAGE = true;
-global.TESTING = true;
 var WebGME = require('../webgme'),
   FS = require('fs'),
-  storage = new WebGME.serverUserStorage({host:'127.0.0.1',port:27017,database:'multi'}),
   requirejs = require('requirejs');
 requirejs.config({
   nodeRequire: require,
@@ -200,6 +197,30 @@ CLIENT = requirejs('client/js/client');
  testMethod: testMethod
  */
 var SRV,CLNT,FCOID,commitHash,projectName = "test_client_basic_"+new Date().getTime(),TERR;
+var testTerritory = function(level,cb){
+ var next = function(events){
+    cb(events);
+   },
+   event = function(events) {
+    //TODO maybe some checking can be done here as well
+    next(events);
+   },
+   guid = CLNT.addUI(this,event);
+ function finish(){
+  CLNT.removeUI(guid);
+ }
+ function setNext(fn){
+  next = fn;
+ }
+ setTimeout(function(){
+  CLNT.updateTerritory(guid,{'':{children:level}});
+ },1);
+
+ return {
+  setNext: setNext,
+  finish: finish
+ }
+};
 describe('Client#Basic#Pre',function(){
  it('starts a webgme-server to handle queries of the client',function(done){
   this.timeout(3000);
@@ -417,6 +438,94 @@ describe('Client#Basic#Territory',function(done){
    done();
   });
   CLNT.updateTerritory(TERR,{'':{children:1}});
+ });
+ it('creates a new child under the root ascendant of FCO and check the events',function(done){
+  var myTerritory = testTerritory(1,function(events){
+   //we are loaded the initial territory
+     myTerritory.setNext(stepOne);
+   CLNT.createChild({baseId:'/1', parentId:'', relid:'2'},'creating first new children');
+  }),
+    stepOne = function(events){
+     //check if the new child is created
+     var i,correct = false,node,ids;
+     for(i=0;i<events.length;i++){
+      if(events[i].eid === '/2' && events[i].etype === 'load'){
+       correct = true;
+      }
+     }
+     myTerritory.finish();
+     if(!correct){
+      return done(new Error('new object has not been created'));
+     }
+     node = CLNT.getNode('/2');
+
+     if(node.getAttribute('name') !== 'FCO'){
+      return done(new Error('new child has wrong name'));
+     }
+     if(node.getRegistry('position').x !== 100 || node.getRegistry('position').y !== 100){
+      return done(new Error('new node has wrong position'));
+     }
+     if(node.getParentId() !== ''){
+      return done(new Error('new node has insufficient parent'));
+     }
+     if(node.getBaseId() !== '/1'){
+      return done(new Error('new node has insufficient ancestor'));
+     }
+
+     node = CLNT.getNode('');
+     ids = node.getChildrenIds();
+     if(!(ids.length == 2 && ((ids[0] === '/1' && ids[1] === '/2') || (ids[0] === '/2' && ids[1] === '/1')))){
+      return done(new Error('new node not visible in parents children list'));
+     }
+     done();
+    };
+ });
+ it('creates multiple children and removes some and checks the events',function(done){
+  var myTerritory = testTerritory(1,function(events){
+     //we are loaded the initial territory
+     myTerritory.setNext(stepCreate);
+     CLNT.createChild({baseId:'/1', parentId:'', relid:'3'},'creating first new children');
+     CLNT.createChild({baseId:'/1', parentId:'', relid:'4'},'creating second new children');
+    }),creates = 2,
+    stepCreate = function(events){
+     //check if the new child is created
+     var node;
+     if(--creates === 0){
+      node = CLNT.getNode('/3');
+      if(!node){
+       myTerritory.finish();
+       return done(new Error('new node \'/3\' is missing'));
+      }
+      node = CLNT.getNode('/4');
+      if(!node){
+       myTerritory.finish();
+       return done(new Error('new node \'/4\' is missing'));
+      }
+
+      myTerritory.setNext(stepRemove);
+      CLNT.delMoreNodes(['/4'],'removing the second node');
+     }
+    },
+    stepRemove = function(events){
+     myTerritory.finish();
+     var node,correct=false,i;
+     for(i=0;i<events.length;i++){
+      if(events[i].eid === '/4' && events[i].etype === 'unload'){
+       correct = true;
+      }
+     }
+
+     if(!correct){
+      return done(new Error('unload event is missing'));
+     }
+
+     node = CLNT.getNode('/4');
+     if(node !== null){
+      return done(new Error('removed node should not be available'));
+     }
+
+     done();
+    };
  });
 });
 describe('Client#Basic#Commits',function(){

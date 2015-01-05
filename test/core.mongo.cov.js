@@ -2,7 +2,6 @@
  * Created by tamas on 12/31/14.
  */
 //these test intended to increase the test coverage on mongo module
-global.COVERAGE = true;
 var WebGME = require('../webgme'),
   FS = require('fs'),
   storage = new WebGME.serverUserStorage({host:'127.0.0.1',port:27017,database:'multi'}),
