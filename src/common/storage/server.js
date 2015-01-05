@@ -28,9 +28,11 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
             _objects = {},
             _projects = {},
         /*_references = {},*/
+            _databaseOpenCallbacks = [],
             _databaseOpened = false,
             ERROR_DEAD_GUID = 'the given object does not exists',
             _workerManager = null,
+            _connectedWorkers = {},
             _eventHistory = [],
             _events = {},
             _waitingEventCallbacks = [],
@@ -51,18 +53,27 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
             if(_databaseOpened){
                 callback();
             } else {
-                _databaseOpened = true;
-                _database.openDatabase(function(err){
-                    if(err){
-                        _databaseOpened = false;
-                        //this error has to be put to console as well
-                        console.log('Error in mongoDB connection initiation!!! - ', err);
-                        options.log.error(err);
-                        callback(err);
-                    } else {
-                        callback(null);
-                    }
-                });
+                if (_databaseOpenCallbacks.length === 0) {
+                    _databaseOpenCallbacks = [callback];
+                    _database.openDatabase(function (err) {
+                        if (err) {
+                            _databaseOpened = false;
+                            //this error has to be put to console as well
+                            console.log('Error in mongoDB connection initiation!!! - ', err);
+                            options.log.error(err);
+                            while (_databaseOpenCallbacks.length) {
+                                _databaseOpenCallbacks.pop()(err);
+                            }
+                        } else {
+                            _databaseOpened = true;
+                            while (_databaseOpenCallbacks.length) {
+                                _databaseOpenCallbacks.pop()(null);
+                            }
+                        }
+                    });
+                } else {
+                    _databaseOpenCallbacks.push(callback);
+                }
             }
         }
 
@@ -122,7 +133,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
             _events[guid] = parameters;
             _eventHistory.unshift(guid);
             if(_eventHistory.length > 1000){
-                _eventHistory.pop();
+                delete _events[_eventHistory.pop()];
             }
 
             for(i=0;i<callbacks.length;i++){
@@ -533,10 +544,16 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                     if(socket.handshake){
                         parameters.webGMESessionId = getSessionID(socket) || null;
                     }
-                    _workerManager.request(parameters,callback);
+                    _workerManager.request(parameters,function(err,id){
+                        if(!err && id){
+                            registerConnectedWorker(socket.id,id);
+                        }
+                        callback(err,id);
+                    });
                 });
 
                 socket.on('simpleResult',function(resultId,callback){
+                    deregisterConnectedWorker(socket.id,resultId);
                     getWorkerResult(resultId,callback);
                 });
 
@@ -556,6 +573,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
 
                 socket.on('disconnect',function(){
                     //TODO temporary the disconnect function has been removed
+                    stopConnectedWorkers(socket.id);
                 });
             });
 
@@ -584,24 +602,63 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 _socket = null;
             }
 
-            if(_databaseOpened){
-                //close projects
-                for(var i in _projects){
-                    _projects[i].closeProject(null);
-                }
+            var cleanup = function () {
+                _objects = {};
+                _projects = {};
+                //_references = {};
+                _databaseOpened = false;
+            };
+            if (_databaseOpened || _databaseOpenCallbacks.length) {
+                checkDatabase(function (err) {
+                    //close projects
+                    for (var i in _projects) {
+                        _projects[i].closeProject(null);
+                    }
 
-                //close database
-                _database.closeDatabase(null);
+                    //close database
+                    _database.closeDatabase(null);
+                    cleanup();
+                });
+            } else {
+                cleanup();
             }
-
-            _objects = {};
-            _projects = {};
-            //_references = {};
-            _databaseOpened = false;
         }
 
         function getWorkerResult(resultId,callback){
             _workerManager.result(resultId,callback);
+        }
+
+        //connected worker handlings for cleanup
+        function registerConnectedWorker(socketId,workerId){
+            var index;
+            _connectedWorkers[socketId] = _connectedWorkers[socketId] || [];
+            index = _connectedWorkers[socketId].indexOf(workerId);
+            if(index === -1){
+                _connectedWorkers[socketId].push(workerId);
+            }
+        }
+        function deregisterConnectedWorker(socketId,workerId){
+            var index;
+            _connectedWorkers[socketId] = _connectedWorkers[socketId] || [];
+            index = _connectedWorkers[socketId].indexOf(workerId);
+            if(index !== -1){
+                _connectedWorkers[socketId].splice(index,1);
+            }
+        }
+        function stopConnectedWorkers(socketId){
+            var i;
+            if(_workerManager){
+                _connectedWorkers[socketId] = _connectedWorkers[socketId] || [];
+                for(i=0;i<_connectedWorkers[socketId].length;i++){
+                    //TODO probably we would need some kind of result handling
+                    _workerManager.result(_connectedWorkers[socketId][i],function(err){
+                        if(err){
+                            options.log.error("unable to stop connected worker ["+_connectedWorkers[socketId][i]+"] of socket "+socketId);
+                        }
+                    });
+                }
+                delete _connectedWorkers[socketId];
+            }
         }
 
         return {

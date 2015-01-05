@@ -59,6 +59,8 @@ define([ "util/assert", "core/tasync" ], function(ASSERT, TASYNC) {
 		core.loadPointer = TASYNC.unwrap(oldcore.loadPointer);
 		core.loadCollection = TASYNC.unwrap(oldcore.loadCollection);
 
+		core.loadSubTree = TASYNC.unwrap(oldcore.loadSubTree);
+		core.loadTree = TASYNC.unwrap(oldcore.loadTree);
 		return core;
 	};
 

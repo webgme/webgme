@@ -45,7 +45,7 @@ define(['logManager',
 
     function StandAloneServer(CONFIG){
         // if the config is not set we use the global
-        CONFIG = CONFIG || webGMEGlobal.getConfig();
+        CONFIG = CONFIG || WebGMEGlobal.getConfig();
         //public functions
         function start(){
             if(CONFIG.httpsecure){
@@ -78,6 +78,7 @@ define(['logManager',
 
             __storageOptions.intoutdir = CONFIG.intoutdir;
             __storageOptions.pluginBasePaths = CONFIG.pluginBasePaths;
+            __storageOptions.cache = CONFIG.cacheSize;
 
             __storageOptions.webServerPort = CONFIG.port;
 
@@ -89,7 +90,11 @@ define(['logManager',
         }
         function stop(){
             __storage.close();
-            __httpServer.close();
+            try {
+                __httpServer.close();
+            } catch(e){
+                //ignore errors
+            }
         }
         //internal functions
         function globalAuthorization(sessionId,projectName,type,callback){
@@ -346,7 +351,7 @@ define(['logManager',
             __canCheckToken = true,
             __httpServer = null,
             __logoutUrl = CONFIG.logoutUrl || '/',
-            __baseDir = webGMEGlobal.baseDir,
+            __baseDir = WebGMEGlobal.baseDir,
             __clientBaseDir = CONFIG.clientAppDir || __baseDir+'/client',
             __requestCounter = 0,
             __reportedRequestCounter = 0,
@@ -570,7 +575,7 @@ define(['logManager',
             expressFileSending(res,Path.join(__clientBaseDir,req.path));
         });
 
-        __app.get(/^\/.*\.(js|html|gif|png|bmp|svg|json|map)$/,ensureAuthenticated,function(req,res){
+        __app.get(/^\/.*\.(js|_js|html|gif|png|bmp|svg|json|map)$/,ensureAuthenticated,function(req,res){
             //package.json
             if(req.path === '/package.json') {
                 expressFileSending(res,Path.join(__baseDir, '..', req.path));
@@ -621,20 +626,26 @@ define(['logManager',
                     res.send(500);
                 } else {
                     __REST.doRESTCommand(__REST.request.GET,req.params.command,req.headers.webGMEToken,req.query,function(httpStatus,object){
+
                         res.header("Access-Control-Allow-Origin", "*");
                         res.header("Access-Control-Allow-Headers", "X-Requested-With");
                         if(req.params.command === __REST.command.etf){
-                            var filename = 'exportedNode.json';
-                            if(req.query.output){
-                                filename = req.query.output;
+                            if(httpStatus === _HTTPError.ok){
+                                var filename = 'exportedNode.json';
+                                if(req.query.output){
+                                    filename = req.query.output;
+                                }
+                                if(filename.indexOf('.') === -1){
+                                    filename += '.json';
+                                }
+                                res.header("Content-Type", "application/json");
+                                res.header("Content-Disposition", "attachment;filename=\""+filename+"\"");
+                                res.status(httpStatus);
+                                res.end(/*CANON*/JSON.stringify(object,null,2));
+                            } else {
+                                console.log(httpStatus,JSON.stringify(object,null,2));
+                                res.status(httpStatus).send(object);
                             }
-                            if(filename.indexOf('.') === -1){
-                                filename += '.json';
-                            }
-                            res.header("Content-Type", "application/json");
-                            res.header("Content-Disposition", "attachment;filename=\""+filename+"\"");
-                            res.status(httpStatus);
-                            res.end(/*CANON*/JSON.stringify(object,null,2));
                         } else {
                             res.json(httpStatus, object || null);
                         }
@@ -689,7 +700,8 @@ define(['logManager',
             }
             res.status(200);
             res.setHeader('Content-type', 'application/json');
-            res.end("define([],function(){ return "+JSON.stringify(names)+";});");
+            //res.end("define([],function(){ return "+JSON.stringify(names)+";});");
+            res.end("(function(){ WebGMEGlobal.allDecorators = "+JSON.stringify(names)+";}());");
         });
         __app.get('/listAllPlugins',ensureAuthenticated,function(req,res){
             var names = []; //we add only the "*.js" files from the directories
@@ -707,7 +719,8 @@ define(['logManager',
             }
             res.status(200);
             res.setHeader('Content-type', 'application/json');
-            res.end("define([],function(){ return "+JSON.stringify(names)+";});");
+            //res.end("define([],function(){ return "+JSON.stringify(names)+";});");
+            res.end("(function(){ WebGMEGlobal.allPlugins = "+JSON.stringify(names)+";}());");
         });
         __app.get('/listAllVisualizerDescriptors',ensureAuthenticated,function(req,res){
             var allVisualizerDescriptors = getVisualizersDescriptor();

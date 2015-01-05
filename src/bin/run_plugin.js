@@ -4,7 +4,7 @@ var webGme = require('../../webgme'),
     configFilename,
     resolvedFilename,
     commandLineConfig,
-    CONFIG = webGMEGlobal.getConfig(),
+    CONFIG = WebGMEGlobal.getConfig(),
     projectName,
     branch,
     pluginName,
@@ -46,7 +46,7 @@ if (configFilename) {
     resolvedFilename = PATH.resolve(configFilename);
     commandLineConfig = require(resolvedFilename);
 
-    webGMEGlobal.setConfig(commandLineConfig);
+    WebGMEGlobal.setConfig(commandLineConfig);
     // TODO: check if command line config valid or not
     // TODO: probably we should not overwrite the dictionary and array options
     for (var key in commandLineConfig) {

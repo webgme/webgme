@@ -1,5 +1,5 @@
-define(['util/assert','child_process','worker/constants','util/guid'],
-function(ASSERT,Child,CONSTANTS){
+define(['util/assert','child_process', 'process', 'worker/constants','util/guid'],
+function(ASSERT,Child, process, CONSTANTS){
     'use strict';
     function ServerWorkerManager(_parameters){
         var _workers = [],
@@ -19,7 +19,8 @@ function(ASSERT,Child,CONSTANTS){
 
         function reserveWorker(){
             if(_workerCount < _parameters.maxworkers){
-                var worker = Child.fork(getBaseDir()+'/server/worker/simpleworker.js');
+                var worker = Child.fork(getBaseDir()+'/server/worker/simpleworker.js', [],
+                    { execArgv: process.execArgv.filter(function (arg) { return arg.indexOf('--debug-brk') !== 0 }) });
                 _myWorkers[worker.pid] = {worker:worker,state:CONSTANTS.workerStates.initializing,type:null,cb:null};
                 worker.on('message', messageHandling);
                 _workerCount++;
@@ -110,9 +111,9 @@ function(ASSERT,Child,CONSTANTS){
                             port:_parameters.mongoport,
                             db:_parameters.mongodb,
                             serverPort:_parameters.serverPort,
-                            paths: webGMEGlobal.getConfig().paths,
+                            paths: WebGMEGlobal.getConfig().paths,
                             auth: _parameters.auth,
-                            globConf : webGMEGlobal.getConfig()
+                            globConf : WebGMEGlobal.getConfig()
                         });
                         break;
                     case CONSTANTS.msgTypes.initialized:

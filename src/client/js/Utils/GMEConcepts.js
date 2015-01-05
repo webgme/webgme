@@ -9,7 +9,7 @@ define(['jquery',
         './METAAspectHelper',
         'js/Panels/MetaEditor/MetaEditorConstants',
         'clientUtil',
-        'text!./metaConstraint.js'
+        'text!./metaConstraint._js'
     ], function (
     _jquery,
     generateGuid,
