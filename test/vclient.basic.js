@@ -230,7 +230,7 @@ describe('Client#Basic#Pre',function(){
   setTimeout(done,2000);
  });
  it('creates a client instance with proper configuration',function(done){
-  CLNT = new CLIENT({host:" ",port:80});
+  CLNT = new CLIENT({host:" ",port:WebGMEGlobal.getConfig().port});
   done();
  });
  it('initializes and starts the client',function(done){
