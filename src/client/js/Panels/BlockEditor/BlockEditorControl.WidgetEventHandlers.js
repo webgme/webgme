@@ -18,7 +18,7 @@ define(['logManager',
                                          REGISTRY_KEYS,
                                          GMEConcepts,
                                          ExportManager,
-                                         SNAP_CONSTANTS,
+                                         BLOCK_CONSTANTS,
                                          DragHelper) {
     "use strict";
 
@@ -514,7 +514,7 @@ define(['logManager',
 
     BlockEditorControlWidgetEventHandlers.prototype._addSiblingDependents = function (items) {
         //add sibling dependents to items using BFS
-        var ptrs = SNAP_CONSTANTS.SIBLING_PTRS,
+        var ptrs = BLOCK_CONSTANTS.SIBLING_PTRS,
             j = -1,
             node,
             tgt,
@@ -621,7 +621,7 @@ define(['logManager',
 
         //If the ptr is not PTR_NEXT, we should move all dragged items into the receiver
         //in terms of hierarchy
-        if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1 || receiverParentId !== droppedParentId){
+        if (BLOCK_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1 || receiverParentId !== droppedParentId){
             var items2Move,
                 ptrs2Create = {},
                 gmeId,
@@ -633,10 +633,10 @@ define(['logManager',
                 p;
 
             //Set items2Move
-            if (splicing || role === SNAP_CONSTANTS.CONN_PASSING){//Move the draggedItems
+            if (splicing || role === BLOCK_CONSTANTS.CONN_OUTGOING){//Move the draggedItems
                 items2Move = droppedItems;
 
-                if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1){
+                if (BLOCK_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1){
                     params = { "parentId": receiverId };
                 } else {
                     params = { "parentId": receiverParentId };
@@ -645,7 +645,7 @@ define(['logManager',
             } else {//Move the receiving items
                 items2Move = this._addSiblingDependents([receiverId]);
 
-                if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1){
+                if (BLOCK_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1){
                     params = { "parentId": firstId };
                 } else {
                     params = { "parentId": droppedParentId };
@@ -701,7 +701,7 @@ define(['logManager',
                 spliceToId = this._ComponentID2GmeID[spliceToItem.id],
                 otherPtr = ptr;
 
-            if (role === SNAP_CONSTANTS.CONN_ACCEPTING){
+            if (role === BLOCK_CONSTANTS.CONN_INCOMING){
                 otherPtr = spliceToItem.getPtrFromItem(receiverItem.id);
             }
 
@@ -709,43 +709,9 @@ define(['logManager',
             prevGmeId = newIds[prevGmeId] || prevGmeId;
             spliceToId = newIds[spliceToId] || spliceToId;
 
-            if (role === SNAP_CONSTANTS.CONN_ACCEPTING){
-                //If it isn't a sibling otherPtr, move the correct item...
-                //if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(otherPtr) === -1){
-                    ////move the recipient of the otherPtr to the child of the other
-                    //moveItems = this._addSiblingDependents([prevGmeId]);
-                    //params = { parentId: spliceToId };
-                    //i = moveItems.length;
-
-                    //while (i--){
-                        //params[moveItems[i]] = {};
-                    //}
-
-                    //newIds = this._client.moveMoreNodes(params);
-
-                    ////update the pointer names
-                    //prevGmeId = newIds[prevGmeId];
-                //}
-
+            if (role === BLOCK_CONSTANTS.CONN_INCOMING){
                 this._client.makePointer(spliceToId, otherPtr, prevGmeId);
             } else {
-                //If it isn't a sibling otherPtr, move the correct item...
-                //if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(otherPtr) === -1){
-                    ////move the recipient of the otherPtr to the child of the other
-                    //moveItems = this._addSiblingDependents([spliceToId]);
-                    //params = { parentId: prevGmeId };
-                    //i = moveItems.length;
-
-                    //while (i--){
-                        //params[moveItems[i]] = {};
-                    //}
-
-                    //newIds = this._client.moveMoreNodes(params);
-
-                    ////update the pointer names
-                    //spliceToId = newIds[spliceToId];
-                //}
-
                 this._client.makePointer(prevGmeId, otherPtr, spliceToId);
             }
             firstId = newIds[firstId] || firstId;
@@ -753,7 +719,7 @@ define(['logManager',
         }
 
         //Set the first pointer
-        if (role === SNAP_CONSTANTS.CONN_ACCEPTING){
+        if (role === BLOCK_CONSTANTS.CONN_INCOMING){
             this._client.makePointer(firstId, ptr, receiverId);
 
             if (!splicing){
