@@ -9721,7 +9721,7 @@ define('storage/cache',[ "util/assert" ], function (ASSERT) {
 			}
 
 			function maybeFreeze(o) {
-				if (o !== null && typeof ob === "object") {
+				if (o !== null && typeof o === "object") {
 					deepFreeze(o);
 				}
 			}
