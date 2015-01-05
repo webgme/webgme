@@ -9,17 +9,17 @@ define([], function () {
 
     "use strict";
 
-    var SnapEditorWidgetOperatingModes;
+    var BlockEditorWidgetOperatingModes;
 
-    SnapEditorWidgetOperatingModes = function () {
+    BlockEditorWidgetOperatingModes = function () {
     };
 
-    SnapEditorWidgetOperatingModes.prototype.OPERATING_MODES = {
+    BlockEditorWidgetOperatingModes.prototype.OPERATING_MODES = {
         READ_ONLY: 0,
         DESIGN: 1,
         HIGHLIGHT: 2
     };
 
 
-    return SnapEditorWidgetOperatingModes;
+    return BlockEditorWidgetOperatingModes;
 });

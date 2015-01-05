@@ -7,7 +7,7 @@
  */
 
 define(['logManager',
-        './SnapEditorWidget.Constants',
+        './BlockEditorWidget.Constants',
         './ItemBase'], function (logManager,
                                  SNAP_CONSTANTS,
                                  ItemBase) {
@@ -23,7 +23,7 @@ define(['logManager',
      *
      * @constructor
      * @param {String} objId
-     * @param {SnapWidget} canvas
+     * @param {BlockWidget} canvas
      * @return {undefined}
      */
     LinkableItem = function(objId, canvas){

@@ -20,10 +20,10 @@ define(['logManager',
     SelectionManager = function (options) {
         this.logger = (options && options.logger) || logManager.create(((options && options.loggerName) || "SelectionManager"));
 
-        this._snapEditor = options ? options.snapEditor : null;
+        this._blockEditor = options ? options.blockEditor : null;
 
-        if (this._snapEditor === undefined || this._snapEditor === null) {
-            this.logger.error("Trying to initialize a SelectionManager without a snapEditor...");
+        if (this._blockEditor === undefined || this._blockEditor === null) {
+            this.logger.error("Trying to initialize a SelectionManager without a blockEditor...");
             throw ("SelectionManager can not be created");
         }
 
@@ -46,26 +46,26 @@ define(['logManager',
         //enable SelectionManager specific DOM event listeners
         var self = this;
 
-        this._snapEditor.onItemMouseDown = function (itemId, eventDetails) {
-            if (self._snapEditor.mode === self._snapEditor.OPERATING_MODES.READ_ONLY ||
-                self._snapEditor.mode === self._snapEditor.OPERATING_MODES.DESIGN) {
+        this._blockEditor.onItemMouseDown = function (itemId, eventDetails) {
+            if (self._blockEditor.mode === self._blockEditor.OPERATING_MODES.READ_ONLY ||
+                self._blockEditor.mode === self._blockEditor.OPERATING_MODES.DESIGN) {
                 self._setSelection(itemId, false);
                 //self._setSelection([itemId], self._isMultiSelectionModifierKeyPressed(eventDetails));
             }
         };
 
-        this._snapEditor.onBackgroundMouseDown = function (eventDetails) {
-            if (self._snapEditor.mode === self._snapEditor.OPERATING_MODES.READ_ONLY ||
-                self._snapEditor.mode === self._snapEditor.OPERATING_MODES.DESIGN) {
+        this._blockEditor.onBackgroundMouseDown = function (eventDetails) {
+            if (self._blockEditor.mode === self._blockEditor.OPERATING_MODES.READ_ONLY ||
+                self._blockEditor.mode === self._blockEditor.OPERATING_MODES.DESIGN) {
                 self._onBackgroundMouseDown(eventDetails);
             }
         };
     };
 
     SelectionManager.prototype._deactivateMouseListeners = function () {
-        this._snapEditor.onItemMouseDown = undefined;
-        this._snapEditor.onConnectionMouseDown = undefined;
-        this._snapEditor.onBackgroundMouseDown = undefined;
+        this._blockEditor.onItemMouseDown = undefined;
+        this._blockEditor.onConnectionMouseDown = undefined;
+        this._blockEditor.onBackgroundMouseDown = undefined;
     };
 
     SelectionManager.prototype.initialize = function (el) {
@@ -73,7 +73,7 @@ define(['logManager',
 
         this.$el = el;
 
-        this._snapEditor.addEventListener(this._snapEditor.events.ON_COMPONENT_DELETE, function (snapEditor, componentId) {
+        this._blockEditor.addEventListener(this._blockEditor.events.ON_COMPONENT_DELETE, function (blockEditor, componentId) {
             self._onComponentDelete(componentId);
         });
     };
@@ -153,7 +153,7 @@ define(['logManager',
 
     /*********************** CLEAR SELECTION *********************************/
     SelectionManager.prototype._clearSelection = function () {
-        var items = this._snapEditor.items,
+        var items = this._blockEditor.items,
             item,
             changed = false;
 
@@ -183,7 +183,7 @@ define(['logManager',
     /*********************** SET SELECTION *********************************/
     SelectionManager.prototype._setSelection = function (id) {
         var item,
-            items = this._snapEditor.items,
+            items = this._blockEditor.items,
             changed = false;
 
         this.logger.debug("setSelection: " + id);
@@ -232,8 +232,8 @@ define(['logManager',
     });
     SelectionManager.prototype.showSelectionOutline = function () {
         var bBox = this._getSelectionBoundingBox(),
-            cW = this._snapEditor._actualSize.w,
-            cH = this._snapEditor._actualSize.h;
+            cW = this._blockEditor._actualSize.w,
+            cH = this._blockEditor._actualSize.h;
 
         if (bBox && bBox.hasOwnProperty("x")) {
 
@@ -266,15 +266,15 @@ define(['logManager',
                 bBox.w = bBox.x2 - bBox.x;
             }
 
-            if (this._snapEditor.skinParts.$selectionOutline) {
-                this._snapEditor.skinParts.$selectionOutline.empty();
+            if (this._blockEditor.skinParts.$selectionOutline) {
+                this._blockEditor.skinParts.$selectionOutline.empty();
             } else {
-                this._snapEditor.skinParts.$selectionOutline = SELECTION_OUTLINE_BASE.clone();
+                this._blockEditor.skinParts.$selectionOutline = SELECTION_OUTLINE_BASE.clone();
 
-                this._snapEditor.skinParts.$itemsContainer.append(this._snapEditor.skinParts.$selectionOutline);
+                this._blockEditor.skinParts.$itemsContainer.append(this._blockEditor.skinParts.$selectionOutline);
             }
 
-            this._snapEditor.skinParts.$selectionOutline.css({ "left": bBox.x,
+            this._blockEditor.skinParts.$selectionOutline.css({ "left": bBox.x,
                 "top": bBox.y,
                 "width": bBox.w,
                 "height": bBox.h });
@@ -289,10 +289,10 @@ define(['logManager',
 
     /*********************** HIDE SELECTION OUTLINE *********************************/
     SelectionManager.prototype.hideSelectionOutline = function () {
-        if (this._snapEditor.skinParts.$selectionOutline) {
-            this._snapEditor.skinParts.$selectionOutline.empty();
-            this._snapEditor.skinParts.$selectionOutline.remove();
-            this._snapEditor.skinParts.$selectionOutline = null;
+        if (this._blockEditor.skinParts.$selectionOutline) {
+            this._blockEditor.skinParts.$selectionOutline.empty();
+            this._blockEditor.skinParts.$selectionOutline.remove();
+            this._blockEditor.skinParts.$selectionOutline = null;
         }
     };
     /*********************** END OF --- HIDE SELECTION OUTLINE *********************************/
@@ -304,7 +304,7 @@ define(['logManager',
             id,
             child,
             childBBox,
-            items = this._snapEditor.items;
+            items = this._blockEditor.items;
 
         if (this._selectedElement) {
             id = this._selectedElement;
@@ -312,8 +312,8 @@ define(['logManager',
             if (items[id]) {
 
                 if (!bBox) {
-                    bBox = { "x": this._snapEditor._actualSize.w,
-                        "y": this._snapEditor._actualSize.h,
+                    bBox = { "x": this._blockEditor._actualSize.w,
+                        "y": this._blockEditor._actualSize.h,
                         "x2": 0,
                         "y2": 0};
                 }
@@ -358,14 +358,14 @@ define(['logManager',
         var deleteBtn,
             self = this;
 
-        if (this._snapEditor.getIsReadOnlyMode() !== true) {
+        if (this._blockEditor.getIsReadOnlyMode() !== true) {
             deleteBtn = DELETE_BUTTON_BASE.clone();
-            this._snapEditor.skinParts.$selectionOutline.append(deleteBtn);
+            this._blockEditor.skinParts.$selectionOutline.append(deleteBtn);
         }
 
         //detach mousedown handler on selection outline
-        this._snapEditor.skinParts.$selectionOutline.off("mousedown").off("click", ".s-btn");
-        this._snapEditor.skinParts.$selectionOutline.on("mousedown", function (event) {
+        this._blockEditor.skinParts.$selectionOutline.off("mousedown").off("click", ".s-btn");
+        this._blockEditor.skinParts.$selectionOutline.on("mousedown", function (event) {
             event.stopPropagation();
         }).on("click", ".s-btn", function (event) {
             var command = $(this).attr("command");

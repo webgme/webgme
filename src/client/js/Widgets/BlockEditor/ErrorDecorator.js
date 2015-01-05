@@ -2,13 +2,13 @@
 /*
  * @author brollb / https://github/brollb
  */
-define(['js/Widgets/SnapEditor/SnapEditorWidget.DecoratorBase'], function (SnapEditorWidgetDecoratorBase) {
+define(['js/Widgets/BlockEditor/BlockEditorWidget.DecoratorBase'], function (BlockEditorWidgetDecoratorBase) {
 
     "use strict";
 
     var ErrorDecorator,
-        __parent__ = SnapEditorWidgetDecoratorBase,
-        __parent_proto__ = SnapEditorWidgetDecoratorBase.prototype,
+        __parent__ = BlockEditorWidgetDecoratorBase,
+        __parent_proto__ = BlockEditorWidgetDecoratorBase.prototype,
         DECORATOR_ID = "ErrorDecorator";
 
     ErrorDecorator = function (options) {

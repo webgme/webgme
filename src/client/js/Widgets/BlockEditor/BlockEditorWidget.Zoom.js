@@ -6,18 +6,18 @@ define(['jquery-csszoom'], function () {
 
     "use strict";
 
-    var SnapEditorWidgetZoom,
+    var BlockEditorWidgetZoom,
         DEFAULT_ZOOM_VALUES = [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5, 10];
 
-    SnapEditorWidgetZoom = function () {
+    BlockEditorWidgetZoom = function () {
     };
 
-    SnapEditorWidgetZoom.prototype._initZoom = function (params) {
+    BlockEditorWidgetZoom.prototype._initZoom = function (params) {
         var self = this,
             zoomValues = params.zoomValues || DEFAULT_ZOOM_VALUES;
 
         //zoom
-        this._zoomSlider = $('<div/>', { 'class': 'snap-editor-zoom' });
+        this._zoomSlider = $('<div/>', { 'class': 'block-editor-zoom' });
         this.$el.parent().append(this._zoomSlider);
 
         this._zoomSlider.csszoom({
@@ -32,7 +32,7 @@ define(['jquery-csszoom'], function () {
         this._addZoomMouseHandler(this.$el);
     };
 
-    SnapEditorWidgetZoom.prototype._addZoomMouseHandler = function (el) {
+    BlockEditorWidgetZoom.prototype._addZoomMouseHandler = function (el) {
         var self = this;
 
         //IE, Chrome, etc
@@ -71,5 +71,5 @@ define(['jquery-csszoom'], function () {
     };
 
 
-    return SnapEditorWidgetZoom;
+    return BlockEditorWidgetZoom;
 });

@@ -3,11 +3,11 @@
  * @author rkereskenyi / https://github/rkereskenyi
  */
 define(['js/Decorators/DecoratorBase',
-    './SnapEditor/SVGDecorator.SnapEditorWidget',
+    './BlockEditor/SVGDecorator.BlockEditorWidget',
     './DiagramDesigner/SVGDecorator.DiagramDesignerWidget',
     './PartBrowser/SVGDecorator.PartBrowserWidget'], function (
                                                            DecoratorBase,
-                                                           SVGDecoratorSnapEditorWidget,
+                                                           SVGDecoratorBlockEditorWidget,
                                                            SVGDecoratorDiagramDesignerWidget,
                                                            SVGDecoratorPartBrowserWidget) {
 
@@ -34,7 +34,7 @@ define(['js/Decorators/DecoratorBase',
         this.supportedWidgetMap = {
             'DiagramDesigner': SVGDecoratorDiagramDesignerWidget,
             'PartBrowser': SVGDecoratorPartBrowserWidget,
-            'SnapEditor': SVGDecoratorSnapEditorWidget};
+            'BlockEditor': SVGDecoratorBlockEditorWidget};
 
     };
 

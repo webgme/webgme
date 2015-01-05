@@ -3,15 +3,15 @@
  * @author brollb / https://github/brollb
  */
 define(['js/Decorators/WidgetDecoratorBase',
-        './SnapEditorWidget.Constants'], function (WidgetDecoratorBase,
-                                                   SnapEditorWidgetConstants) {
+        './BlockEditorWidget.Constants'], function (WidgetDecoratorBase,
+                                                   BlockEditorWidgetConstants) {
 
     "use strict";
 
-    var SnapEditorWidgetDecoratorBase,
-        DECORATOR_ID = "SnapEditorWidgetDecoratorBase";
+    var BlockEditorWidgetDecoratorBase,
+        DECORATOR_ID = "BlockEditorWidgetDecoratorBase";
 
-    SnapEditorWidgetDecoratorBase = function (params) {
+    BlockEditorWidgetDecoratorBase = function (params) {
         WidgetDecoratorBase.call(this, params);
 
         this.hostDesignerItem = params.host;
@@ -23,34 +23,34 @@ define(['js/Decorators/WidgetDecoratorBase',
         this.logger.debug("Created");
     };
 
-    _.extend(SnapEditorWidgetDecoratorBase.prototype, WidgetDecoratorBase.prototype);
+    _.extend(BlockEditorWidgetDecoratorBase.prototype, WidgetDecoratorBase.prototype);
 
-    SnapEditorWidgetDecoratorBase.prototype.DECORATORID = DECORATOR_ID;
+    BlockEditorWidgetDecoratorBase.prototype.DECORATORID = DECORATOR_ID;
 
-    SnapEditorWidgetDecoratorBase.prototype.setControl = function (control) {
+    BlockEditorWidgetDecoratorBase.prototype.setControl = function (control) {
         this._control = control;
     };
 
-    SnapEditorWidgetDecoratorBase.prototype.getControl = function () {
+    BlockEditorWidgetDecoratorBase.prototype.getControl = function () {
         return this._control;
     };
 
-    SnapEditorWidgetDecoratorBase.prototype.setMetaInfo = function (params) {
+    BlockEditorWidgetDecoratorBase.prototype.setMetaInfo = function (params) {
         this._metaInfo = params;
     };
 
-    SnapEditorWidgetDecoratorBase.prototype.getMetaInfo = function () {
+    BlockEditorWidgetDecoratorBase.prototype.getMetaInfo = function () {
         return this._metaInfo;
     };
 
     //NOTE - CAN BE OVERRIDDEN TO SPECIFY CUSTOM TEMPLATE FOR THE DECORATOR
-    SnapEditorWidgetDecoratorBase.prototype.$DOMBase = $("");
+    BlockEditorWidgetDecoratorBase.prototype.$DOMBase = $("");
 
     //initialization code for the decorator
     //this.$el will be created as the top-level container for the decorator's DOM
     //this.$el will be used later in the DesignerItem's code, it must exist
     //NOTE - SHOULD NOT BE OVERRIDDEN
-    SnapEditorWidgetDecoratorBase.prototype._initialize = function () {
+    BlockEditorWidgetDecoratorBase.prototype._initialize = function () {
         this.$el = this.$DOMBase.clone();
 
         //extra default initializations
@@ -65,7 +65,7 @@ define(['js/Decorators/WidgetDecoratorBase',
     //NOTE - DO NOT ACCESS ANY LAYOUT OR DIMENSION INFORMATION FOR PERFORMANCE REASONS
     //NOTE - ALL LAYOUT INFORMATION SHOULD BE QUERIED IN onRenderGetLayoutInfo
     //NOTE - SHALL BE OVERRIDDEN WHEN NEEDED
-    SnapEditorWidgetDecoratorBase.prototype.on_addTo = function () {
+    BlockEditorWidgetDecoratorBase.prototype.on_addTo = function () {
     };
 
     //All DOM queries that causes reflow (position / width / height / etc) should be done here
@@ -74,7 +74,7 @@ define(['js/Decorators/WidgetDecoratorBase',
     //NOTE - DO NOT TOUCH THE DOM FOR WRITE
     //NOTE - CAN BE OVERRIDDEN WHEN NEEDED
     //NOTE - More info on this: http://www.phpied.com/rendering-repaint-reflowrelayout-restyle/
-    SnapEditorWidgetDecoratorBase.prototype.onRenderGetLayoutInfo = function () {
+    BlockEditorWidgetDecoratorBase.prototype.onRenderGetLayoutInfo = function () {
         this.calculateDimension();
 
         this.renderLayoutInfo = {};
@@ -84,7 +84,7 @@ define(['js/Decorators/WidgetDecoratorBase',
     //Use values stored in helper object 'this.renderLayoutInfo'
     //NOTE - But DO NOT READ ANY SUCH INFORMATION, DO NOT TOUCH THE DOM FOR READ
     //NOTE - CAN BE OVERRIDDEN WHEN NEEDED
-    SnapEditorWidgetDecoratorBase.prototype.onRenderSetLayoutInfo = function () {
+    BlockEditorWidgetDecoratorBase.prototype.onRenderSetLayoutInfo = function () {
         delete this.renderLayoutInfo;
     };
 
@@ -94,14 +94,14 @@ define(['js/Decorators/WidgetDecoratorBase',
     //The dimension information is used for many different reasons in the canvas (line routing, etc...),
     //Please set it correctly
     //NOTE - SHALL BE OVERRIDDEN
-    SnapEditorWidgetDecoratorBase.prototype.calculateDimension = function () {
+    BlockEditorWidgetDecoratorBase.prototype.calculateDimension = function () {
         if (this.hostDesignerItem) {
             this.hostDesignerItem.setSize(this.$el.outerWidth(true), this.$el.outerHeight(true));
         }
     };
 
     //NOTE - SHALL BE OVERRIDDEN WHEN NEEDED
-    SnapEditorWidgetDecoratorBase.prototype.getLinkableAreas = function (id) {
+    BlockEditorWidgetDecoratorBase.prototype.getLinkableAreas = function (id) {
         var result = [];
 
         //by default return the center point of the item
@@ -120,8 +120,8 @@ define(['js/Decorators/WidgetDecoratorBase',
     //There is no need to touch the DOM, it will be taken care of in the DesignerItem's code
     //Remove any additional business logic, free up resources, territory, etc...
     //NOTE - CAN BE OVERRIDDEN WHEN NEEDED
-    SnapEditorWidgetDecoratorBase.prototype.destroy = function () {
-        this.logger.debug("SnapEditorWidgetDecoratorBase.destroyed");
+    BlockEditorWidgetDecoratorBase.prototype.destroy = function () {
+        this.logger.debug("BlockEditorWidgetDecoratorBase.destroyed");
     };
 
     /******************** EVENT HANDLERS ************************/
@@ -129,49 +129,49 @@ define(['js/Decorators/WidgetDecoratorBase',
     //called when the mouse enters the DesignerItem's main container
     //return TRUE if decorator code handled the event
     //when returned FALSE, DesignerItem's event handler will be executed
-    SnapEditorWidgetDecoratorBase.prototype.onMouseEnter = function (event) {
+    BlockEditorWidgetDecoratorBase.prototype.onMouseEnter = function (event) {
         return false;
     };
 
     //called when the mouse leaves the DesignerItem's main container
     //return TRUE if decorator code handled the event
     //when returned FALSE, DesignerItem's event handler will be executed
-    SnapEditorWidgetDecoratorBase.prototype.onMouseLeave = function (event) {
+    BlockEditorWidgetDecoratorBase.prototype.onMouseLeave = function (event) {
         return false;
     };
 
     //called when the mouse leaves the DesignerItem's receives mousedown
     //return TRUE if decorator code handled the event
     //when returned FALSE, DesignerItem's event handler will be executed
-    SnapEditorWidgetDecoratorBase.prototype.onMouseDown = function (event) {
+    BlockEditorWidgetDecoratorBase.prototype.onMouseDown = function (event) {
         return false;
     };
 
     //called when the mouse leaves the DesignerItem's receives mouseup
     //return TRUE if decorator code handled the event
     //when returned FALSE, DesignerItem's event handler will be executed
-    SnapEditorWidgetDecoratorBase.prototype.onMouseUp = function (event) {
+    BlockEditorWidgetDecoratorBase.prototype.onMouseUp = function (event) {
         return false;
     };
 
     //called when the designer items becomes selected
     //return TRUE if decorator code handled the event
     //when returned FALSE, DesignerItem's event handler will be executed
-    SnapEditorWidgetDecoratorBase.prototype.onSelect = function () {
+    BlockEditorWidgetDecoratorBase.prototype.onSelect = function () {
         return false;
     };
 
     //called when the designer items becomes deselected
     //return TRUE if decorator code handled the event
     //when returned FALSE, DesignerItem's event handler will be executed
-    SnapEditorWidgetDecoratorBase.prototype.onDeselect = function () {
+    BlockEditorWidgetDecoratorBase.prototype.onDeselect = function () {
         return false;
     };
 
     //called when double click happens on the DesignerItem
     //return TRUE if decorator code handled the event
     //when returned FALSE, DesignerItem's event handler will be executed
-    SnapEditorWidgetDecoratorBase.prototype.onDoubleClick = function (event) {
+    BlockEditorWidgetDecoratorBase.prototype.onDoubleClick = function (event) {
         return false;
     };
 
@@ -181,64 +181,64 @@ define(['js/Decorators/WidgetDecoratorBase',
 
     /************* ADDITIONAL METHODS ***************************/
     //called when the designer item should be updated
-    SnapEditorWidgetDecoratorBase.prototype.update = function () {
+    BlockEditorWidgetDecoratorBase.prototype.update = function () {
     };
 
     //called when the designer item's subcomponent should be updated
-    SnapEditorWidgetDecoratorBase.prototype.updateSubcomponent = function (subComponentId) {
+    BlockEditorWidgetDecoratorBase.prototype.updateSubcomponent = function (subComponentId) {
     };
 
-    SnapEditorWidgetDecoratorBase.prototype.readOnlyMode = function (readOnlyMode) {
+    BlockEditorWidgetDecoratorBase.prototype.readOnlyMode = function (readOnlyMode) {
     };
 
-    //Search support for SnapEditorWidget
+    //Search support for BlockEditorWidget
     //return true if this item matches the search criteria described in searchDesc
     //otherwise return false
-    SnapEditorWidgetDecoratorBase.prototype.doSearch = function (searchDesc) {
+    BlockEditorWidgetDecoratorBase.prototype.doSearch = function (searchDesc) {
         return false;
     };
 
     //called by the controller and the decorator can specify the territory rule for itself
     //must return an object of id - rule pairs, like
     //{'id': {'children': 0, ...}}
-    SnapEditorWidgetDecoratorBase.prototype.getTerritoryQuery = function () {
+    BlockEditorWidgetDecoratorBase.prototype.getTerritoryQuery = function () {
         return undefined;
     };
 
     //called by the controller when an event arrives about registered component ID
-    SnapEditorWidgetDecoratorBase.prototype.notifyComponentEvent = function (componentList) {
+    BlockEditorWidgetDecoratorBase.prototype.notifyComponentEvent = function (componentList) {
         this.logger.warning('notifyComponentEvent not overridden in decorator' + JSON.stringify(componentList));
     };
 
     //                            Input Fields
     
-    SnapEditorWidgetDecoratorBase.prototype.getInputFieldUpdates = function () {
+    BlockEditorWidgetDecoratorBase.prototype.getInputFieldUpdates = function () {
         this.logger.warning('getInputFieldUpdates not overridden in decorator');
         return {};
     };
 
-    SnapEditorWidgetDecoratorBase.prototype.updateInputFields = function () {
+    BlockEditorWidgetDecoratorBase.prototype.updateInputFields = function () {
         this.logger.warning('updateInputFields not overridden in decorator');
     };
 
     //                            Attribute Info
-    SnapEditorWidgetDecoratorBase.prototype.updateAttributeContent = function () {
+    BlockEditorWidgetDecoratorBase.prototype.updateAttributeContent = function () {
         this.logger.warning('updateAttributeContent not overridden in decorator');
     };
 
-    SnapEditorWidgetDecoratorBase.prototype.updateAttributeText = function () {
+    BlockEditorWidgetDecoratorBase.prototype.updateAttributeText = function () {
         this.logger.warning('updateAttributeText not overridden in decorator');
     };
 
     //                            Stretching/Shifting
-    SnapEditorWidgetDecoratorBase.prototype.stretchTo = function () {
+    BlockEditorWidgetDecoratorBase.prototype.stretchTo = function () {
         this.logger.warning('stretchTo not overridden in decorator');
     };
 
-    SnapEditorWidgetDecoratorBase.prototype.updateShifts = function () {
+    BlockEditorWidgetDecoratorBase.prototype.updateShifts = function () {
         this.logger.warning('updateShifts not overridden in decorator');
     };
 
 
-    return SnapEditorWidgetDecoratorBase;
+    return BlockEditorWidgetDecoratorBase;
 });

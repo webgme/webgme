@@ -6,26 +6,26 @@
  */
 
 define(['js/DragDrop/DropTarget',
-        './SnapEditorWidget.Constants'], function (dropTarget,
-                                                   SnapEditorWidgetConstants) {
+        './BlockEditorWidget.Constants'], function (dropTarget,
+                                                   BlockEditorWidgetConstants) {
 
     "use strict";
 
-    var SnapEditorWidgetDroppable,
+    var BlockEditorWidgetDroppable,
         DROP_REGION_MARGIN = 0,
         ITEM_TAG = "current_droppable_item";
 
-    SnapEditorWidgetDroppable = function () {
+    BlockEditorWidgetDroppable = function () {
     };
 
 
-    SnapEditorWidgetDroppable.prototype._initDroppable = function () {
+    BlockEditorWidgetDroppable.prototype._initDroppable = function () {
         var self = this;
-        this.dropFocus = SnapEditorWidgetConstants.BACKGROUND;
+        this.dropFocus = BlockEditorWidgetConstants.BACKGROUND;
 
         this._acceptDroppable = false;
 
-        this.skinParts.$dropRegion = $('<div/>', { "class" : SnapEditorWidgetConstants.DROP_REGION_CLASS });
+        this.skinParts.$dropRegion = $('<div/>', { "class" : BlockEditorWidgetConstants.DROP_REGION_CLASS });
 
         this.skinParts.$dropRegion.insertBefore(this.skinParts.$itemsContainer);
 
@@ -37,7 +37,7 @@ define(['js/DragDrop/DropTarget',
                 self._onDroppableOut(/*event, dragInfo*/);
             },
             'drop': function( event, dragInfo ) {
-                if (self.dropFocus === SnapEditorWidgetConstants.BACKGROUND){
+                if (self.dropFocus === BlockEditorWidgetConstants.BACKGROUND){
                     self._onBackgroundDrop(event, dragInfo);
                 }
             },
@@ -51,7 +51,7 @@ define(['js/DragDrop/DropTarget',
     };
 
 
-    SnapEditorWidgetDroppable.prototype._onDroppableActivate = function (/*event, dragInfo*/) {
+    BlockEditorWidgetDroppable.prototype._onDroppableActivate = function (/*event, dragInfo*/) {
         if (this.mode === this.OPERATING_MODES.DESIGN) {
             this.skinParts.$dropRegion.css({"width": this._containerSize.w - 2 * DROP_REGION_MARGIN,
                 "height": this._containerSize.h - 2 * DROP_REGION_MARGIN,
@@ -61,7 +61,7 @@ define(['js/DragDrop/DropTarget',
     };
 
 
-    SnapEditorWidgetDroppable.prototype._onDroppableDeactivate = function (/*event, dragInfo*/) {
+    BlockEditorWidgetDroppable.prototype._onDroppableDeactivate = function (/*event, dragInfo*/) {
         this.skinParts.$dropRegion.css({"width": "0px",
             "height": "0px",
             "top": "0px",
@@ -69,7 +69,7 @@ define(['js/DragDrop/DropTarget',
     };
 
 
-    SnapEditorWidgetDroppable.prototype._onDroppableOver = function (event, dragInfo) {
+    BlockEditorWidgetDroppable.prototype._onDroppableOver = function (event, dragInfo) {
         this.logger.debug('_onDroppableOver: ' + JSON.stringify(dragInfo));
 
         //this.selectionManager.clear();
@@ -82,12 +82,12 @@ define(['js/DragDrop/DropTarget',
     };
 
 
-    SnapEditorWidgetDroppable.prototype._onDroppableOut = function (/*event, dragInfo*/) {
+    BlockEditorWidgetDroppable.prototype._onDroppableOut = function (/*event, dragInfo*/) {
         this._doAcceptDroppable(false, false);
     };
 
 
-    SnapEditorWidgetDroppable.prototype._onBackgroundDrop = function (event, dragInfo) {
+    BlockEditorWidgetDroppable.prototype._onBackgroundDrop = function (event, dragInfo) {
         var mPos = this.getAdjustedMousePos(event),
             posX = mPos.mX,
             posY = mPos.mY;
@@ -102,36 +102,36 @@ define(['js/DragDrop/DropTarget',
     };
 
 
-    SnapEditorWidgetDroppable.prototype._doAcceptDroppable = function (accept, uiFeedback) {
-        this.skinParts.$dropRegion.removeClass(SnapEditorWidgetConstants.DROP_REGION_ACCEPT_DROPPABLE_CLASS);
-        this.skinParts.$dropRegion.removeClass(SnapEditorWidgetConstants.DROP_REGION_REJECT_DROPPABLE_CLASS);
+    BlockEditorWidgetDroppable.prototype._doAcceptDroppable = function (accept, uiFeedback) {
+        this.skinParts.$dropRegion.removeClass(BlockEditorWidgetConstants.DROP_REGION_ACCEPT_DROPPABLE_CLASS);
+        this.skinParts.$dropRegion.removeClass(BlockEditorWidgetConstants.DROP_REGION_REJECT_DROPPABLE_CLASS);
 
         if (accept === true) {
             this._acceptDroppable = true;
             if (uiFeedback) {
-                this.skinParts.$dropRegion.addClass(SnapEditorWidgetConstants.DROP_REGION_ACCEPT_DROPPABLE_CLASS);
+                this.skinParts.$dropRegion.addClass(BlockEditorWidgetConstants.DROP_REGION_ACCEPT_DROPPABLE_CLASS);
             }
         } else {
             this._acceptDroppable = false;
             if (uiFeedback) {
-                this.skinParts.$dropRegion.addClass(SnapEditorWidgetConstants.DROP_REGION_REJECT_DROPPABLE_CLASS);
+                this.skinParts.$dropRegion.addClass(BlockEditorWidgetConstants.DROP_REGION_REJECT_DROPPABLE_CLASS);
             }
         }
     };
 
 
-    SnapEditorWidgetDroppable.prototype.onBackgroundDroppableAccept = function (event, dragInfo) {
-        this.logger.warning("SnapEditorWidget.prototype.onBackgroundDroppableAccept(event, dragInfo) not overridden in controller!!! dragInfo:" + JSON.stringify(dragInfo));
+    BlockEditorWidgetDroppable.prototype.onBackgroundDroppableAccept = function (event, dragInfo) {
+        this.logger.warning("BlockEditorWidget.prototype.onBackgroundDroppableAccept(event, dragInfo) not overridden in controller!!! dragInfo:" + JSON.stringify(dragInfo));
         return false;
     };
 
 
-    SnapEditorWidgetDroppable.prototype.onBackgroundDrop = function (event, dragInfo, position) {
-        this.logger.warning("SnapEditorWidget.prototype.onBackgroundDrop(event, dragInfo) not overridden in controller!!! dragInfo:" + JSON.stringify(dragInfo) + " , position: '" + JSON.stringify(position) + "'");
+    BlockEditorWidgetDroppable.prototype.onBackgroundDrop = function (event, dragInfo, position) {
+        this.logger.warning("BlockEditorWidget.prototype.onBackgroundDrop(event, dragInfo) not overridden in controller!!! dragInfo:" + JSON.stringify(dragInfo) + " , position: '" + JSON.stringify(position) + "'");
     };
 
 
-    SnapEditorWidgetDroppable.prototype._enableDroppable = function (enabled) {
+    BlockEditorWidgetDroppable.prototype._enableDroppable = function (enabled) {
         if (this.skinParts.$dropRegion) {
             if (enabled === true) {
                 dropTarget.enableDroppable(this.skinParts.$dropRegion, true);
@@ -149,7 +149,7 @@ define(['js/DragDrop/DropTarget',
 
     /* * * * * * * * * * * * * Dropping on Linkable Item* * * * * * * * * * * * */
 
-    SnapEditorWidgetDroppable.prototype.setLinkable = function (item) {
+    BlockEditorWidgetDroppable.prototype.setLinkable = function (item) {
         var self = this;
         //Set the item to droppable
         //item.$el.addClass(CLICKABLE_CLASS);
@@ -175,7 +175,7 @@ define(['js/DragDrop/DropTarget',
                 self.unregisterUnderItem(item);
             },
             drop: function(event, ui) {
-                if (self.dropFocus === SnapEditorWidgetConstants.ITEM && ui.helper.data(ITEM_TAG) === item.id){
+                if (self.dropFocus === BlockEditorWidgetConstants.ITEM && ui.helper.data(ITEM_TAG) === item.id){
                     self._onItemDrop(item, event, ui);
                     self.unregisterDraggingItem();
                 }
@@ -183,7 +183,7 @@ define(['js/DragDrop/DropTarget',
         });
     };
 
-    SnapEditorWidgetDroppable.prototype._onItemDrop = function (item, event, ui) {
+    BlockEditorWidgetDroppable.prototype._onItemDrop = function (item, event, ui) {
         //connect the items (with the controller)
         if (item.activeConnectionArea){
             var i = ui.helper.children().length,
@@ -198,8 +198,8 @@ define(['js/DragDrop/DropTarget',
                     shortestDistance,
                     connArea,
                     draggedItem = this.items[draggedId],
-                    role = item.activeConnectionArea.role === SnapEditorWidgetConstants.CONN_INCOMING ?
-                        SnapEditorWidgetConstants.CONN_OUTGOING : SnapEditorWidgetConstants.CONN_INCOMING;
+                    role = item.activeConnectionArea.role === BlockEditorWidgetConstants.CONN_INCOMING ?
+                        BlockEditorWidgetConstants.CONN_OUTGOING : BlockEditorWidgetConstants.CONN_INCOMING;
 
                 i = ptrs.length;
 
@@ -228,12 +228,12 @@ define(['js/DragDrop/DropTarget',
         }
 
         this.selectionManager.clear();
-        this.dropFocus = SnapEditorWidgetConstants.BACKGROUND;
+        this.dropFocus = BlockEditorWidgetConstants.BACKGROUND;
     };
 
-    SnapEditorWidgetDroppable.prototype.onItemDrop = function (droppedItems, receiver) {
-        this.logger.warning("SnapEditorWidget.prototype.onItemDrop(event, droppedItems) not overridden in controller!!! droppedItems:" + JSON.stringify(droppedItems) + " , position: '" + JSON.stringify(receiver) + "'");
+    BlockEditorWidgetDroppable.prototype.onItemDrop = function (droppedItems, receiver) {
+        this.logger.warning("BlockEditorWidget.prototype.onItemDrop(event, droppedItems) not overridden in controller!!! droppedItems:" + JSON.stringify(droppedItems) + " , position: '" + JSON.stringify(receiver) + "'");
     };
 
-    return SnapEditorWidgetDroppable;
+    return BlockEditorWidgetDroppable;
 });

@@ -6,47 +6,47 @@
 
 define(['js/Constants',
         'util/assert',
-        'js/Widgets/SnapEditor/SnapEditorWidget.DecoratorBase',
-        'js/Widgets/SnapEditor/SnapEditorWidget.DecoratorBase.ConnectionAreas',
-        'js/Widgets/SnapEditor/SnapEditorWidget.DecoratorBase.Stretch',
-        'js/Widgets/SnapEditor/SnapEditorWidget.Constants',
+        'js/Widgets/BlockEditor/BlockEditorWidget.DecoratorBase',
+        'js/Widgets/BlockEditor/BlockEditorWidget.DecoratorBase.ConnectionAreas',
+        'js/Widgets/BlockEditor/BlockEditorWidget.DecoratorBase.Stretch',
+        'js/Widgets/BlockEditor/BlockEditorWidget.Constants',
         'text!../Core/SVGDecorator.html',
         './SVGDecorator.Core',
         'js/Utils/DisplayFormat',
-        'css!./SVGDecorator.SnapEditorWidget'], function (CONSTANTS,
+        'css!./SVGDecorator.BlockEditorWidget'], function (CONSTANTS,
                                                           assert,
-                                                          SnapEditorWidgetDecoratorBase,
-                                                          SnapEditorWidgetDecoratorBaseConnectionAreas,
-                                                          SnapEditorWidgetDecoratorBaseStretch,
-                                                          SNAP_CONSTANTS,
+                                                          BlockEditorWidgetDecoratorBase,
+                                                          BlockEditorWidgetDecoratorBaseConnectionAreas,
+                                                          BlockEditorWidgetDecoratorBaseStretch,
+                                                          BLOCK_CONSTANTS,
                                                           SVGDecoratorTemplate,
                                                           SVGDecoratorCore,
                                                           DisplayFormat) {
 
     "use strict";
 
-    var SVGDecoratorSnapEditorWidget,
-        DECORATOR_ID = "SVGDecoratorSnapEditorWidget",
+    var SVGDecoratorBlockEditorWidget,
+        DECORATOR_ID = "SVGDecoratorBlockEditorWidget",
         SVG_COLOR_ID = "colors",
         EMPTY_STRING = "_",//svg text elements need a value to getBBox
         EMPTY_STYLE = "opacity:0;",//svg text elements need a value to getBBox
         EDIT_TEXT = { VERTICAL_PADDING: 2, HORIZONTAL_PADDING: 5, MIN_WIDTH: 30};
 
     /**
-     * SVGDecoratorSnapEditorWidget
+     * SVGDecoratorBlockEditorWidget
      *
      * @constructor
      * @param {Object} options
      * @return {undefined}
      */
-    SVGDecoratorSnapEditorWidget = function (options) {
+    SVGDecoratorBlockEditorWidget = function (options) {
         var opts = _.extend( {}, options);
 
-        SnapEditorWidgetDecoratorBase.apply(this, [opts]);
+        BlockEditorWidgetDecoratorBase.apply(this, [opts]);
         SVGDecoratorCore.apply(this, [opts]);
 
-        this._initializeVariables({ data: [SNAP_CONSTANTS.CONNECTION_HIGHLIGHT, 
-            SNAP_CONSTANTS.INITIAL_MEASURE, SNAP_CONSTANTS.INPUT_FIELDS], connectors: false});
+        this._initializeVariables({ data: [BLOCK_CONSTANTS.CONNECTION_HIGHLIGHT, 
+            BLOCK_CONSTANTS.INITIAL_MEASURE, BLOCK_CONSTANTS.INPUT_FIELDS], connectors: false});
 
         this._selfPatterns = {};
 
@@ -57,32 +57,32 @@ define(['js/Constants',
         this._attributes = {};//Only if they have a text field for it
         this._textFieldStyles = {};//initial styles of editable text fields
 
-        this.logger.debug("SVGDecoratorSnapEditorWidget ctor");
+        this.logger.debug("SVGDecoratorBlockEditorWidget ctor");
     };
 
     /************************ INHERITANCE *********************/
-    _.extend(SVGDecoratorSnapEditorWidget.prototype, SnapEditorWidgetDecoratorBase.prototype);
-    _.extend(SVGDecoratorSnapEditorWidget.prototype, SnapEditorWidgetDecoratorBaseConnectionAreas.prototype);
-    _.extend(SVGDecoratorSnapEditorWidget.prototype, SVGDecoratorCore.prototype);
-    _.extend(SVGDecoratorSnapEditorWidget.prototype, SnapEditorWidgetDecoratorBaseStretch.prototype);
+    _.extend(SVGDecoratorBlockEditorWidget.prototype, BlockEditorWidgetDecoratorBase.prototype);
+    _.extend(SVGDecoratorBlockEditorWidget.prototype, BlockEditorWidgetDecoratorBaseConnectionAreas.prototype);
+    _.extend(SVGDecoratorBlockEditorWidget.prototype, SVGDecoratorCore.prototype);
+    _.extend(SVGDecoratorBlockEditorWidget.prototype, BlockEditorWidgetDecoratorBaseStretch.prototype);
 
     /**************** OVERRIDE INHERITED / EXTEND ****************/
 
-    /**** Override from SnapEditorWidgetDecoratorBase ****/
-    SVGDecoratorSnapEditorWidget.prototype.DECORATORID = DECORATOR_ID;
+    /**** Override from BlockEditorWidgetDecoratorBase ****/
+    SVGDecoratorBlockEditorWidget.prototype.DECORATORID = DECORATOR_ID;
 
 
-    /**** Override from SnapEditorWidgetDecoratorBase ****/
-    SVGDecoratorSnapEditorWidget.prototype.$DOMBase = $(SVGDecoratorTemplate);
+    /**** Override from BlockEditorWidgetDecoratorBase ****/
+    SVGDecoratorBlockEditorWidget.prototype.$DOMBase = $(SVGDecoratorTemplate);
 
-    /**** Override from SnapEditorWidgetDecoratorBase ****/
+    /**** Override from BlockEditorWidgetDecoratorBase ****/
     /**
      * This is called before the item is added to the canvas DOM. The item must create it's
      * DOM representation.
      *
      * @return {undefined}
      */
-    SVGDecoratorSnapEditorWidget.prototype.on_addTo = function () {
+    SVGDecoratorBlockEditorWidget.prototype.on_addTo = function () {
         var self = this;
 
         this._renderContent();
@@ -129,12 +129,12 @@ define(['js/Constants',
     /**
      * Save changes to any node attributes made through clicking on the node.
      *
-     * @this {SVGDecoratorSnapEditorWidget}
+     * @this {SVGDecoratorBlockEditorWidget}
      * @param {String} attributeName
      * @param {String} value
      * @return {undefined} 
      */
-    SVGDecoratorSnapEditorWidget.prototype._saveAttributeChange = function(attributeName, value){
+    SVGDecoratorBlockEditorWidget.prototype._saveAttributeChange = function(attributeName, value){
         var client = this._control._client;
 
         client.setAttributes(this._metaInfo[CONSTANTS.GME_ID], attributeName, value);
@@ -142,7 +142,7 @@ define(['js/Constants',
 
 
     /**** Attributes ****/
-    SVGDecoratorSnapEditorWidget.prototype.removeAttributeText = function (attr) {
+    SVGDecoratorBlockEditorWidget.prototype.removeAttributeText = function (attr) {
         var fields;
 
         if (this._attributes.hasOwnProperty( attr )){
@@ -152,13 +152,13 @@ define(['js/Constants',
         }
     };
 
-    SVGDecoratorSnapEditorWidget.prototype.updateAttributeContent = function (attr, value) {
+    SVGDecoratorBlockEditorWidget.prototype.updateAttributeContent = function (attr, value) {
         if (this._attributes.hasOwnProperty(attr)){
             this._attributes[attr].value = value;
         }
     };
 
-    SVGDecoratorSnapEditorWidget.prototype.setAttributeEnabled = function (attr, enabled) {
+    SVGDecoratorBlockEditorWidget.prototype.setAttributeEnabled = function (attr, enabled) {
         if (this._attributes.hasOwnProperty(attr)){
             this._attributes[attr].enabled = enabled;
         }
@@ -171,7 +171,7 @@ define(['js/Constants',
      * @param {String} attribute (optional)
      * @return {undefined}
      */
-    SVGDecoratorSnapEditorWidget.prototype.updateAttributeText = function (attribute) {
+    SVGDecoratorBlockEditorWidget.prototype.updateAttributeText = function (attribute) {
         var attributes,
             textFields = this.$el.find('text'),
             attr,
@@ -214,7 +214,7 @@ define(['js/Constants',
      * @private
      * @return {undefined}
      */
-    SVGDecoratorSnapEditorWidget.prototype.updateInputFields = function () {
+    SVGDecoratorBlockEditorWidget.prototype.updateInputFields = function () {
         //WRITE
         var fields = Object.keys(this._inputFields2Update),
             container,
@@ -237,10 +237,10 @@ define(['js/Constants',
                     }
 
                     //Update field
-                    if (this.inputFields[field].type === SNAP_CONSTANTS.TEXT_FIELD.NAME){
+                    if (this.inputFields[field].type === BLOCK_CONSTANTS.TEXT_FIELD.NAME){
                         //Create a text field
                         input = $('<input>', { id: field, type: "text", text: this.inputFields[field].content });
-                    } else if (this.inputFields[field].type === SNAP_CONSTANTS.DROPDOWN.NAME){
+                    } else if (this.inputFields[field].type === BLOCK_CONSTANTS.DROPDOWN.NAME){
                         input = $('<select>', { id: field, class: "input-small" });
                         if (this.inputFields[field].options){//If it has options
 
@@ -270,8 +270,8 @@ define(['js/Constants',
         this.$el.append(this.$inputFields);
     };
 
-    /**** Override from SnapEditorWidgetCore ****/
-    SVGDecoratorSnapEditorWidget.prototype._renderContent = function () {
+    /**** Override from BlockEditorWidgetCore ****/
+    SVGDecoratorBlockEditorWidget.prototype._renderContent = function () {
         var client = this._control._client;
 
         this.$el.attr({"data-id": this._metaInfo[CONSTANTS.GME_ID]});
@@ -282,7 +282,7 @@ define(['js/Constants',
 
         /* BUILD UI*/
         //find placeholders
-        this.$name = this.$el.find("." + SNAP_CONSTANTS.NAME);
+        this.$name = this.$el.find("." + BLOCK_CONSTANTS.NAME);
         this.$svgContent = this.$el.find(".svg-content");
 
         this._updateSVGFile();
@@ -299,7 +299,7 @@ define(['js/Constants',
         //This allows for the svg to fall back to a separate name div if
         //no spot for it in the svg
         this.$name.remove();
-        var name = this.$svgContent.find("#" + SNAP_CONSTANTS.NAME);
+        var name = this.$svgContent.find("#" + BLOCK_CONSTANTS.NAME);
         if(name[0] !== undefined && name[0].tagName === "text"){
             this.$name = name;
         }
@@ -384,10 +384,10 @@ define(['js/Constants',
     /**
      *Get the information that this decorator will need to update its input fields
      *
-     *@this {SVGDecoratorSnapEditorWidget}
+     *@this {SVGDecoratorBlockEditorWidget}
      *@return {Object|null}  Dictionary of input content indexed by target pointer name
      */
-    SVGDecoratorSnapEditorWidget.prototype.getInputFieldUpdates = function(){
+    SVGDecoratorBlockEditorWidget.prototype.getInputFieldUpdates = function(){
         if (this.inputFieldUpdates){
             return _.extend({}, this.inputFieldUpdates);
         }
@@ -397,13 +397,13 @@ define(['js/Constants',
     /**
      * Update the input field information
      *
-     * @this {SVGDecoratorSnapEditorWidget}
+     * @this {SVGDecoratorBlockEditorWidget}
      * @param {String} id
      * @param {String} content
      * @param {Array} [options] Only required for dropdown menus
      * @return {Boolean} return true if changed
      */
-    SVGDecoratorSnapEditorWidget.prototype.updateInputField = function(id, content, options){
+    SVGDecoratorBlockEditorWidget.prototype.updateInputField = function(id, content, options){
         var changed = false;
 
         if (this.inputFields[id].content !== content){
@@ -411,7 +411,7 @@ define(['js/Constants',
             changed = this._inputFields2Update[id] = true;
         }
 
-            if (options && this.inputFields[id].type === SNAP_CONSTANTS.DROPDOWN.NAME){
+            if (options && this.inputFields[id].type === BLOCK_CONSTANTS.DROPDOWN.NAME){
                 assert(options.indexOf(content) !== -1, "Selected option must be one of the available dropdown options");
                 if (this.inputFields[id].options !== options){
                     this.inputFields[id].options = options;
@@ -425,12 +425,12 @@ define(['js/Constants',
     /**
      * Show or hide the given input field visibility
      *
-     * @this {SVGDecoratorSnapEditorWidget}
+     * @this {SVGDecoratorBlockEditorWidget}
      * @param {String} id
      * @param {Boolean} visible
      * @return {undefined}
      */
-    SVGDecoratorSnapEditorWidget.prototype.setInputFieldVisibility = function(id, visible){
+    SVGDecoratorBlockEditorWidget.prototype.setInputFieldVisibility = function(id, visible){
         this.inputFields[id].visible = visible;
     };
 
@@ -440,7 +440,7 @@ define(['js/Constants',
      * @param {String} newId
      * @return {undefined}
      */
-    SVGDecoratorSnapEditorWidget.prototype.setGmeId = function (newId) {
+    SVGDecoratorBlockEditorWidget.prototype.setGmeId = function (newId) {
         this._metaInfo[CONSTANTS.GME_ID] = newId;
         this.$el.attr("data-id", newId);
 
@@ -456,13 +456,13 @@ define(['js/Constants',
      * @private
      * @return {undefined}
      */
-    SVGDecoratorSnapEditorWidget.prototype.initializeColors = function () {
+    SVGDecoratorBlockEditorWidget.prototype.initializeColors = function () {
         var colorGroup = this.$svgElement.find("#" + SVG_COLOR_ID);
 
         this._colorInfo = {};
         
         //Primary or secondary
-        this._colorInfo.currentColor = SNAP_CONSTANTS.COLOR_PRIMARY;
+        this._colorInfo.currentColor = BLOCK_CONSTANTS.COLOR_PRIMARY;
         this._colorInfo.supportsMultiColors = false;
         this._colorInfo.needsUpdate = false;
 
@@ -471,11 +471,11 @@ define(['js/Constants',
             if (colorGroup[0].hasAttribute("style")){
 
                 this._colorInfo.colors = {};
-                this._colorInfo.colors[SNAP_CONSTANTS.COLOR_PRIMARY] = colorGroup[0].getAttribute("style");
+                this._colorInfo.colors[BLOCK_CONSTANTS.COLOR_PRIMARY] = colorGroup[0].getAttribute("style");
 
-                if (colorGroup[0].hasAttribute("data-" + SNAP_CONSTANTS.COLOR_SECONDARY)){
+                if (colorGroup[0].hasAttribute("data-" + BLOCK_CONSTANTS.COLOR_SECONDARY)){
                     this._colorInfo.supportsMultiColors = true;
-                    this._colorInfo.colors[SNAP_CONSTANTS.COLOR_SECONDARY] = colorGroup[0].getAttribute("data-" + SNAP_CONSTANTS.COLOR_SECONDARY);
+                    this._colorInfo.colors[BLOCK_CONSTANTS.COLOR_SECONDARY] = colorGroup[0].getAttribute("data-" + BLOCK_CONSTANTS.COLOR_SECONDARY);
 
                     this._colorInfo.$el = colorGroup[0];
                 }
@@ -483,7 +483,7 @@ define(['js/Constants',
         }
     };
 
-    SVGDecoratorSnapEditorWidget.prototype._updateColor = function () {
+    SVGDecoratorBlockEditorWidget.prototype._updateColor = function () {
         var newColor = this._colorInfo.colors[this._colorInfo.currentColor];
 
         if (this._colorInfo.supportsMultiColors){//Change the color
@@ -496,10 +496,10 @@ define(['js/Constants',
     /**
      * Set the color of the current item to it's primary or secondary coloring depending upon the item it is attached to.
      *
-     * @param {SVGDecoratorSnapEditorWidget} otherDecorator
+     * @param {SVGDecoratorBlockEditorWidget} otherDecorator
      * @return {String} returns the item's color (primary/secondary)
      */
-    SVGDecoratorSnapEditorWidget.prototype.setColor = function (otherColor) {
+    SVGDecoratorBlockEditorWidget.prototype.setColor = function (otherColor) {
         var changed = false,
             currentColor,
             newColorType;
@@ -508,10 +508,10 @@ define(['js/Constants',
             currentColor = this.getColor();
 
             if (otherColor === currentColor){
-                newColorType = SNAP_CONSTANTS.COLOR_PRIMARY;
+                newColorType = BLOCK_CONSTANTS.COLOR_PRIMARY;
 
-                if (this._colorInfo.currentColor === SNAP_CONSTANTS.COLOR_PRIMARY){
-                    newColorType = SNAP_CONSTANTS.COLOR_SECONDARY;
+                if (this._colorInfo.currentColor === BLOCK_CONSTANTS.COLOR_PRIMARY){
+                    newColorType = BLOCK_CONSTANTS.COLOR_SECONDARY;
                 }
 
                 this._colorInfo.currentColor = newColorType;
@@ -525,7 +525,7 @@ define(['js/Constants',
         return changed;
     };
     
-    SVGDecoratorSnapEditorWidget.prototype.getColor = function () {
+    SVGDecoratorBlockEditorWidget.prototype.getColor = function () {
         if (this._colorInfo.colors){
             return this._colorInfo.colors[this._colorInfo.currentColor];
         }
@@ -537,13 +537,13 @@ define(['js/Constants',
 
     /* * * * * END of Manipulating the SVG * * * * * */
 
-    /**** Override from SnapEditorWidgetDecoratorBase ****/
+    /**** Override from BlockEditorWidgetDecoratorBase ****/
     /**
      * Get layout info. All DOM reading must be done here.
      *
      * @return {undefined}
      */
-    SVGDecoratorSnapEditorWidget.prototype.onRenderGetLayoutInfo = function () {
+    SVGDecoratorBlockEditorWidget.prototype.onRenderGetLayoutInfo = function () {
         this.svgContainerWidth = this.$svgContent.outerWidth(true);
         this.svgWidth = this.$svgContent.find('svg').outerWidth(true);
         this.svgHeight = this.$svgContent.find('svg').outerHeight(true);
@@ -551,7 +551,7 @@ define(['js/Constants',
 
         this.onRenderGetStretchInfo();
 
-        SnapEditorWidgetDecoratorBase.prototype.onRenderGetLayoutInfo.call(this);
+        BlockEditorWidgetDecoratorBase.prototype.onRenderGetLayoutInfo.call(this);
     };
 
     /**
@@ -559,9 +559,9 @@ define(['js/Constants',
      *
      * @return {undefined}
      */
-    SVGDecoratorSnapEditorWidget.prototype.onRenderSetLayoutInfo = function () {
+    SVGDecoratorBlockEditorWidget.prototype.onRenderSetLayoutInfo = function () {
         var xShift = Math.ceil((this.svgContainerWidth - this.svgWidth) / 2 + this.svgBorderWidth),
-            connectors = this.$el.find('> .' + SNAP_CONSTANTS.CONNECTOR_CLASS);
+            connectors = this.$el.find('> .' + BLOCK_CONSTANTS.CONNECTOR_CLASS);
 
         connectors.css('transform', 'translateX(' + xShift + 'px)');
         
@@ -575,11 +575,11 @@ define(['js/Constants',
             this._updateColor();
         }
 
-        SnapEditorWidgetDecoratorBase.prototype.onRenderSetLayoutInfo.call(this);
+        BlockEditorWidgetDecoratorBase.prototype.onRenderSetLayoutInfo.call(this);
     };
 
-    /**** Override from SnapEditorWidgetDecoratorBase ****/
-    SVGDecoratorSnapEditorWidget.prototype.getConnectionAreas = function () {
+    /**** Override from BlockEditorWidgetDecoratorBase ****/
+    SVGDecoratorBlockEditorWidget.prototype.getConnectionAreas = function () {
         var result = [],
             edge = 10,
             xShift = (this.svgContainerWidth - this.svgWidth) / 2;
@@ -589,7 +589,7 @@ define(['js/Constants',
             result = $.extend(true, [], this._customConnectionAreas);
             var i = result.length;
             while (i--) {
-                if(result[i].role === SNAP_CONSTANTS.CONN_INCOMING){
+                if(result[i].role === BLOCK_CONSTANTS.CONN_INCOMING){
                     //Accepting areas can have multiple possibilities for roles
                     result[i].ptr = result[i].ptr.split(' ');
                 }
@@ -606,7 +606,7 @@ define(['js/Constants',
                 "y1": 0,
                 "x2": this.svgWidth - edge + xShift,
                 "y2": 0,
-                "role": SNAP_CONSTANTS.CONN_INCOMING} );
+                "role": BLOCK_CONSTANTS.CONN_INCOMING} );
 
             //South side
             result.push( {"id": "S",
@@ -614,8 +614,8 @@ define(['js/Constants',
                 "y1": this.svgHeight,
                 "x2": this.svgWidth - edge + xShift,
                 "y2": this.svgHeight,
-                "role": SNAP_CONSTANTS.CONN_OUTGOING,
-                "ptr": SNAP_CONSTANTS.PTR_NEXT} );
+                "role": BLOCK_CONSTANTS.CONN_OUTGOING,
+                "ptr": BLOCK_CONSTANTS.PTR_NEXT} );
         }
 
         return result;
@@ -626,11 +626,11 @@ define(['js/Constants',
      *
      * @param {Array} ptrs
      */
-    SVGDecoratorSnapEditorWidget.prototype.cleanConnections = function (ptrs) {
+    SVGDecoratorBlockEditorWidget.prototype.cleanConnections = function (ptrs) {
         if (this._customConnectionAreas){
             var i = this._customConnectionAreas.length;
             while (i--){
-                if (this._customConnectionAreas[i].role === SNAP_CONSTANTS.CONN_OUTGOING && ptrs.indexOf(this._customConnectionAreas[i].ptr) === -1){
+                if (this._customConnectionAreas[i].role === BLOCK_CONSTANTS.CONN_OUTGOING && ptrs.indexOf(this._customConnectionAreas[i].ptr) === -1){
                         this._customConnectionAreas.splice(i, 1);
                     }
             }
@@ -643,7 +643,7 @@ define(['js/Constants',
      * @param {Object} params
      * @return {Object|null} Connection Area
      */
-    SVGDecoratorSnapEditorWidget.prototype._getConnectionArea = function (params) {
+    SVGDecoratorBlockEditorWidget.prototype._getConnectionArea = function (params) {
         return this._filterConnectionAreas(this._customConnectionAreas, params);
     };
 
@@ -653,11 +653,11 @@ define(['js/Constants',
      * @param {Object} params
      * @return {Object|null} Connection Area
      */
-    SVGDecoratorSnapEditorWidget.prototype.getConnectionArea = function (params) {
+    SVGDecoratorBlockEditorWidget.prototype.getConnectionArea = function (params) {
         return this._filterConnectionAreas(this.getConnectionAreas(), params);
     };
 
-    SVGDecoratorSnapEditorWidget.prototype._filterConnectionAreas = function (areas, params) {
+    SVGDecoratorBlockEditorWidget.prototype._filterConnectionAreas = function (areas, params) {
         //Returns the first (and should be only) connection area matching params
         var attributes = Object.keys(params),
             criteria,
@@ -691,41 +691,41 @@ define(['js/Constants',
     };
 
 
-    /**** Override from SnapEditorWidgetDecoratorBase ****/
+    /**** Override from BlockEditorWidgetDecoratorBase ****/
     //Shows the 'connectors' - appends them to the DOM
-    SVGDecoratorSnapEditorWidget.prototype.showSourceConnectors = function (/*params*/) {
+    SVGDecoratorBlockEditorWidget.prototype.showSourceConnectors = function (/*params*/) {
     };
 
-    /**** Override from SnapEditorWidgetDecoratorBase ****/
+    /**** Override from BlockEditorWidgetDecoratorBase ****/
     //Hides the 'connectors' - detaches them from the DOM
-    SVGDecoratorSnapEditorWidget.prototype.hideSourceConnectors = function () {
+    SVGDecoratorBlockEditorWidget.prototype.hideSourceConnectors = function () {
     };
 
 
-    /**** Override from SnapEditorWidgetDecoratorBase ****/
+    /**** Override from BlockEditorWidgetDecoratorBase ****/
     //should highlight the connectors for the given elements
-    SVGDecoratorSnapEditorWidget.prototype.showEndConnectors = function (params) {
+    SVGDecoratorBlockEditorWidget.prototype.showEndConnectors = function (params) {
        this.showSourceConnectors(params);
     };
 
 
-    /**** Override from SnapEditorWidgetDecoratorBase ****/
+    /**** Override from BlockEditorWidgetDecoratorBase ****/
     //Hides the 'connectors' - detaches them from the DOM
-    SVGDecoratorSnapEditorWidget.prototype.hideEndConnectors = function () {
+    SVGDecoratorBlockEditorWidget.prototype.hideEndConnectors = function () {
         this.hideSourceConnectors();
     };
 
 
-    /**** Override from SnapEditorWidgetDecoratorBase ****/
-    SVGDecoratorSnapEditorWidget.prototype.notifyComponentEvent = function (componentList) {
+    /**** Override from BlockEditorWidgetDecoratorBase ****/
+    SVGDecoratorBlockEditorWidget.prototype.notifyComponentEvent = function (componentList) {
         var len = componentList.length;
         while (len--) {
             this._updatePort(componentList[len].id);
         }
     };
 
-    /**** Override from SnapEditorWidgetDecoratorBase ****/
-    SVGDecoratorSnapEditorWidget.prototype.calculateDimension = function () {
+    /**** Override from BlockEditorWidgetDecoratorBase ****/
+    SVGDecoratorBlockEditorWidget.prototype.calculateDimension = function () {
         var width,
             height;
 
@@ -743,7 +743,7 @@ define(['js/Constants',
         }
     };
 
-    /**** Override from SnapEditorWidgetDecoratorBase ****/
+    /**** Override from BlockEditorWidgetDecoratorBase ****/
 
-    return SVGDecoratorSnapEditorWidget;
+    return SVGDecoratorBlockEditorWidget;
 });

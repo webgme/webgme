@@ -10,7 +10,7 @@ define(['logManager',
     'js/RegistryKeys',
     'js/Utils/GMEConcepts',
     'js/Utils/ExportManager',
-    'js/Widgets/SnapEditor/SnapEditorWidget.Constants',
+    'js/Widgets/BlockEditor/BlockEditorWidget.Constants',
     'js/DragDrop/DragHelper'], function (logManager,
                                          util,
                                          CONSTANTS,
@@ -22,14 +22,14 @@ define(['logManager',
                                          DragHelper) {
     "use strict";
 
-    var SnapEditorControlWidgetEventHandlers,
+    var BlockEditorControlWidgetEventHandlers,
         ATTRIBUTES_STRING = "attributes",
         REGISTRY_STRING = "registry";
 
-    SnapEditorControlWidgetEventHandlers = function(){
+    BlockEditorControlWidgetEventHandlers = function(){
     };
 
-    SnapEditorControlWidgetEventHandlers.prototype.attachSnapEditorEventHandlers = function () {
+    BlockEditorControlWidgetEventHandlers.prototype.attachBlockEditorEventHandlers = function () {
         var self = this;
 
         this.snapCanvas.onSelectionDelete = function (idList) {
@@ -124,11 +124,11 @@ define(['logManager',
             return self._getValidPointerTypes(srcItem, dstItem);
         };
 
-        this.logger.debug("attachSnapEditorWidgetEventHandlers finished");
+        this.logger.debug("attachBlockEditorWidgetEventHandlers finished");
  
     };
 
-    SnapEditorControlWidgetEventHandlers.prototype._onDesignerItemsMove = function (repositionDesc) {
+    BlockEditorControlWidgetEventHandlers.prototype._onDesignerItemsMove = function (repositionDesc) {
         var id;
 
         this._client.startTransaction();
@@ -140,7 +140,7 @@ define(['logManager',
         this._client.completeTransaction();
     };
 
-    SnapEditorControlWidgetEventHandlers.prototype._onDesignerItemsCopy = function (copyDesc) {
+    BlockEditorControlWidgetEventHandlers.prototype._onDesignerItemsCopy = function (copyDesc) {
         var copyOpts = { "parentId": this.currentNodeInfo.id },
             id,
             desc,
@@ -184,7 +184,7 @@ define(['logManager',
     };
 
 
-    SnapEditorControlWidgetEventHandlers.prototype._onSelectionDelete = function (idList) {
+    BlockEditorControlWidgetEventHandlers.prototype._onSelectionDelete = function (idList) {
         var objIdList = [],
             i = idList.length,
             objID;
@@ -207,7 +207,7 @@ define(['logManager',
 
     /*
      * Uncomment this for hierarchy
-    SnapEditorControlWidgetEventHandlers.prototype._onDesignerItemDoubleClick = function (id, event) {
+    BlockEditorControlWidgetEventHandlers.prototype._onDesignerItemDoubleClick = function (id, event) {
         var gmeID = this._ComponentID2GmeID[id];
 
         if (gmeID) {
@@ -217,30 +217,30 @@ define(['logManager',
     };
     */
 
-    SnapEditorControlWidgetEventHandlers.prototype._onRegisterSubcomponent = function (objID, sCompID, metaInfo) {
+    BlockEditorControlWidgetEventHandlers.prototype._onRegisterSubcomponent = function (objID, sCompID, metaInfo) {
         //store that a subcomponent with a given ID has been added to object with objID
         this._GMEID2Subcomponent[metaInfo[CONSTANTS.GME_ID]] = this._GMEID2Subcomponent[metaInfo[CONSTANTS.GME_ID]] || {};
         this._GMEID2Subcomponent[metaInfo[CONSTANTS.GME_ID]][objID] = sCompID;
 
         this._Subcomponent2GMEID[objID] = this._Subcomponent2GMEID[objID] || {};
         this._Subcomponent2GMEID[objID][sCompID] = metaInfo[CONSTANTS.GME_ID];
-        //FIXME Change this to Snap! logic
+        //FIXME Change this to Block! logic
         //TODO: add event handling here that a subcomponent appeared
     };
 
-    SnapEditorControlWidgetEventHandlers.prototype._onUnregisterSubcomponent = function (objID, sCompID) {
+    BlockEditorControlWidgetEventHandlers.prototype._onUnregisterSubcomponent = function (objID, sCompID) {
         var gmeID = this._Subcomponent2GMEID[objID][sCompID];
 
         delete this._Subcomponent2GMEID[objID][sCompID];
         if (this._GMEID2Subcomponent[gmeID]) {
             delete this._GMEID2Subcomponent[gmeID][objID];
         }
-        //FIXME Change this to Snap! logic
+        //FIXME Change this to Block! logic
         //TODO: add event handling here that a subcomponent disappeared
     };
 
 
-    SnapEditorControlWidgetEventHandlers.prototype._getPossibleDropActions = function (dragInfo) {
+    BlockEditorControlWidgetEventHandlers.prototype._getPossibleDropActions = function (dragInfo) {
         var items = DragHelper.getDragItems(dragInfo),
             dragEffects = DragHelper.getDragEffects(dragInfo),
             dragParams = DragHelper.getDragParams(dragInfo),
@@ -316,7 +316,7 @@ define(['logManager',
         return possibleDropActions;
     };
 
-    SnapEditorControlWidgetEventHandlers.prototype.__pointerSortCriteria = function (a,b) {
+    BlockEditorControlWidgetEventHandlers.prototype.__pointerSortCriteria = function (a,b) {
         var baseAName = a.name.toLowerCase(),
             baseBName = b.name.toLowerCase(),
             ptrAName = a.pointer.toLowerCase(),
@@ -336,7 +336,7 @@ define(['logManager',
         }
     };
 
-    SnapEditorControlWidgetEventHandlers.prototype._onBackgroundDroppableAccept = function (event, dragInfo) {
+    BlockEditorControlWidgetEventHandlers.prototype._onBackgroundDroppableAccept = function (event, dragInfo) {
         var accept;
 
         accept = this._getPossibleDropActions(dragInfo).length > 0;
@@ -344,7 +344,7 @@ define(['logManager',
         return accept;
     };
 
-    SnapEditorControlWidgetEventHandlers.prototype._onBackgroundDrop = function (event, dragInfo, position) {
+    BlockEditorControlWidgetEventHandlers.prototype._onBackgroundDrop = function (event, dragInfo, position) {
         var possibleDropActions = this._getPossibleDropActions(dragInfo),
             len = possibleDropActions.length,
             i,
@@ -396,7 +396,7 @@ define(['logManager',
         }
     };
 
-    SnapEditorControlWidgetEventHandlers.prototype._handleDropAction = function (dropAction, dragInfo, position) {
+    BlockEditorControlWidgetEventHandlers.prototype._handleDropAction = function (dropAction, dragInfo, position) {
         var dragEffect = dropAction.dragEffect,
             items = DragHelper.getDragItems(dragInfo),
             dragParams = DragHelper.getDragParams(dragInfo),
@@ -512,7 +512,7 @@ define(['logManager',
         }
     };
 
-    SnapEditorControlWidgetEventHandlers.prototype._addSiblingDependents = function (items) {
+    BlockEditorControlWidgetEventHandlers.prototype._addSiblingDependents = function (items) {
         //add sibling dependents to items using BFS
         var ptrs = SNAP_CONSTANTS.SIBLING_PTRS,
             j = -1,
@@ -534,7 +534,7 @@ define(['logManager',
         return items;
     };
 
-    SnapEditorControlWidgetEventHandlers.prototype._updateGmeAndComponentIds = function (ids, idMap) {
+    BlockEditorControlWidgetEventHandlers.prototype._updateGmeAndComponentIds = function (ids, idMap) {
         //Update the id's of the node
         var i = ids.length,
             componentId,
@@ -559,7 +559,7 @@ define(['logManager',
         }
     };
 
-    SnapEditorControlWidgetEventHandlers.prototype._onItemDrop = function (droppedItem, receiver, ptr, role) {
+    BlockEditorControlWidgetEventHandlers.prototype._onItemDrop = function (droppedItem, receiver, ptr, role) {
         //ptr, role are relative to the receiver
         //receiver has an activeConnectionArea
         var receiverId = this._ComponentID2GmeID[receiver],
@@ -778,7 +778,7 @@ define(['logManager',
         this._client.completeTransaction();
     };
 
-    SnapEditorControlWidgetEventHandlers.prototype._areContainedInAnother = function (items) {
+    BlockEditorControlWidgetEventHandlers.prototype._areContainedInAnother = function (items) {
         //This should tell us if the items are contained in another item rather than
         //just the parentId
         var i = items.length,
@@ -792,7 +792,7 @@ define(['logManager',
         return false;
     };
 
-    SnapEditorControlWidgetEventHandlers.prototype._removeExtraPointers = function (items) {
+    BlockEditorControlWidgetEventHandlers.prototype._removeExtraPointers = function (items) {
         //Consider the set of items in 'items' and not in 'items'. This method will remove
         //pointers from NOT 'items' into 'items'
         var ptrs2Remove,
@@ -822,7 +822,7 @@ define(['logManager',
         //this._client.completeTransaction();
     };
 
-    SnapEditorControlWidgetEventHandlers.prototype._repositionItems = function (items, dragPositions, dropPosition) {
+    BlockEditorControlWidgetEventHandlers.prototype._repositionItems = function (items, dragPositions, dropPosition) {
         var i = items.length,
             oldPos,
             componentID,
@@ -858,7 +858,7 @@ define(['logManager',
         }
     };
 
-    SnapEditorControlWidgetEventHandlers.prototype._saveReposition = function (items, dragPositions, dropPosition) {
+    BlockEditorControlWidgetEventHandlers.prototype._saveReposition = function (items, dragPositions, dropPosition) {
         var gmeID,
             oldPos,
             i,
@@ -886,7 +886,7 @@ define(['logManager',
         client.completeTransaction();
     };
 
-    SnapEditorControlWidgetEventHandlers.prototype._onSelectionChanged = function (selectedId) {
+    BlockEditorControlWidgetEventHandlers.prototype._onSelectionChanged = function (selectedId) {
         var gmeID = null,
             id = this._ComponentID2GmeID[selectedId];
 
@@ -907,7 +907,7 @@ define(['logManager',
     };
 
 
-    SnapEditorControlWidgetEventHandlers.prototype._onClipboardCopy = function (selectedIds) {
+    BlockEditorControlWidgetEventHandlers.prototype._onClipboardCopy = function (selectedIds) {
         var gmeIDs = [],
             len = selectedIds.length,
             id;
@@ -924,13 +924,13 @@ define(['logManager',
         }
     };
 
-    SnapEditorControlWidgetEventHandlers.prototype._onClipboardPaste = function () {
+    BlockEditorControlWidgetEventHandlers.prototype._onClipboardPaste = function () {
         if (this.currentNodeInfo.id) {
             this._client.pasteNodes(this.currentNodeInfo.id);
         }
     };
 
-    SnapEditorControlWidgetEventHandlers.prototype._onDragStartDesignerItemDraggable = function (itemID) {
+    BlockEditorControlWidgetEventHandlers.prototype._onDragStartDesignerItemDraggable = function (itemID) {
         var nodeObj = this._client.getNode(this._ComponentID2GmeID[itemID]),
             result = true;
 
@@ -941,7 +941,7 @@ define(['logManager',
         return result;
     };
 
-    SnapEditorControlWidgetEventHandlers.prototype._onDragStartDesignerItemCopyable = function (itemID) {
+    BlockEditorControlWidgetEventHandlers.prototype._onDragStartDesignerItemCopyable = function (itemID) {
         var nodeObj = this._client.getNode(this._ComponentID2GmeID[itemID]),
             result = true;
 
@@ -953,7 +953,7 @@ define(['logManager',
     };
 
 
-    SnapEditorControlWidgetEventHandlers.prototype._onCopy = function () {
+    BlockEditorControlWidgetEventHandlers.prototype._onCopy = function () {
         var res = [],
             selectedIDs = this.snapCanvas.selectionManager.getSelectedElements(),
             i = selectedIDs.length,
@@ -984,7 +984,7 @@ define(['logManager',
     };
 
 
-    SnapEditorControlWidgetEventHandlers.prototype._onPaste = function (data) {
+    BlockEditorControlWidgetEventHandlers.prototype._onPaste = function (data) {
         var len,
             objDesc,
             parentID = this.currentNodeInfo.id,
@@ -1033,7 +1033,7 @@ define(['logManager',
     };
 
 
-    SnapEditorControlWidgetEventHandlers.prototype._getDragItems = function (selectedElements) {
+    BlockEditorControlWidgetEventHandlers.prototype._getDragItems = function (selectedElements) {
         var res = [],
             i = selectedElements.length;
 
@@ -1044,7 +1044,7 @@ define(['logManager',
         return res;
     };
 
-    SnapEditorControlWidgetEventHandlers.prototype._getDragParams = function (selectedElements, event) {
+    BlockEditorControlWidgetEventHandlers.prototype._getDragParams = function (selectedElements, event) {
         var oParams = this._oGetDragParams.call(this.snapCanvas, selectedElements, event),
             params = { 'positions': {},
                        'parentID': this.currentNodeInfo.id },
@@ -1059,7 +1059,7 @@ define(['logManager',
         return params;
     };
 
-    SnapEditorControlWidgetEventHandlers.prototype._onSelectionContextMenu = function (selectedIds, mousePos) {
+    BlockEditorControlWidgetEventHandlers.prototype._onSelectionContextMenu = function (selectedIds, mousePos) {
         var menuItems = {},
             MENU_EXPORT = 'export',
             MENU_EXINTCONF = 'exintconf', //kecso
@@ -1086,7 +1086,7 @@ define(['logManager',
         );
     };
 
-    SnapEditorControlWidgetEventHandlers.prototype._exportItems = function (selectedIds) {
+    BlockEditorControlWidgetEventHandlers.prototype._exportItems = function (selectedIds) {
         var i = selectedIds.length,
             gmeIDs = [];
 
@@ -1098,7 +1098,7 @@ define(['logManager',
     };
 
     //kecso
-    SnapEditorControlWidgetEventHandlers.prototype._exIntConf = function (selectedIds) {
+    BlockEditorControlWidgetEventHandlers.prototype._exIntConf = function (selectedIds) {
         var i = selectedIds.length,
             gmeIDs = [];
 
@@ -1109,19 +1109,19 @@ define(['logManager',
         ExportManager.exIntConf(gmeIDs);
     };
 
-    SnapEditorControlWidgetEventHandlers.prototype._onSelectionFillColorChanged = function (selectedElements, color) {
+    BlockEditorControlWidgetEventHandlers.prototype._onSelectionFillColorChanged = function (selectedElements, color) {
         this._onSelectionSetColor(selectedElements, color, REGISTRY_KEYS.COLOR);
     };
 
-    SnapEditorControlWidgetEventHandlers.prototype._onSelectionBorderColorChanged = function (selectedElements, color) {
+    BlockEditorControlWidgetEventHandlers.prototype._onSelectionBorderColorChanged = function (selectedElements, color) {
         this._onSelectionSetColor(selectedElements, color, REGISTRY_KEYS.BORDER_COLOR);
     };
 
-    SnapEditorControlWidgetEventHandlers.prototype._onSelectionTextColorChanged = function (selectedElements, color) {
+    BlockEditorControlWidgetEventHandlers.prototype._onSelectionTextColorChanged = function (selectedElements, color) {
         this._onSelectionSetColor(selectedElements, color, REGISTRY_KEYS.TEXT_COLOR);
     };
 
-    SnapEditorControlWidgetEventHandlers.prototype._onSelectionSetColor = function (selectedIds, color, regKey) {
+    BlockEditorControlWidgetEventHandlers.prototype._onSelectionSetColor = function (selectedIds, color, regKey) {
         var i = selectedIds.length,
             gmeID;
 
@@ -1139,7 +1139,7 @@ define(['logManager',
     };
 
 
-    SnapEditorControlWidgetEventHandlers.prototype._onSelectedTabChanged = function (tabID) {
+    BlockEditorControlWidgetEventHandlers.prototype._onSelectedTabChanged = function (tabID) {
         if (this._aspects[tabID] && this._selectedAspect !== this._aspects[tabID]) {
             this._selectedAspect = this._aspects[tabID];
 
@@ -1150,5 +1150,5 @@ define(['logManager',
     };
 
 
-    return SnapEditorControlWidgetEventHandlers;
+    return BlockEditorControlWidgetEventHandlers;
 });

@@ -5,12 +5,12 @@
 
 define(['logManager',
     'js/Constants',
-    'js/Widgets/SnapEditor/SnapEditorWidget.Constants',
+    'js/Widgets/BlockEditor/BlockEditorWidget.Constants',
     'js/NodePropertyNames',
     'js/RegistryKeys',
     'js/Utils/PreferencesHelper',
     'js/Utils/DisplayFormat',
-    './SnapEditorControl.WidgetEventHandlers',
+    './BlockEditorControl.WidgetEventHandlers',
     'js/Utils/GMEConcepts'], function (logManager,
                                         CONSTANTS,
                                         SNAP_CONSTANTS,
@@ -18,7 +18,7 @@ define(['logManager',
                                         REGISTRY_KEYS,
                                         PreferencesHelper,
                                         DisplayFormat,
-                                        SnapEditorEventHandlers,
+                                        BlockEditorEventHandlers,
                                         GMEConcepts){
 
     "use strict";
@@ -26,11 +26,11 @@ define(['logManager',
     var BACKGROUND_TEXT_COLOR = '#DEDEDE',
         BACKGROUND_TEXT_SIZE = 30,
         DEFAULT_DECORATOR = "ModelDecorator",
-        WIDGET_NAME = 'SnapEditor';
+        WIDGET_NAME = 'BlockEditor';
 
-    var SnapEditorControl = function(params){
+    var BlockEditorControl = function(params){
         this._client = params.client;
-        this.logger = params.logger || logManager.create(params.loggerName || "SnapEditorControl");
+        this.logger = params.logger || logManager.create(params.loggerName || "BlockEditorControl");
 
         this.snapCanvas = params.widget;
         this._attachClientEventListeners();
@@ -40,28 +40,28 @@ define(['logManager',
 
         this.eventQueue = [];
 
-        //attach all the event handlers for event's coming from SnapCanvas
-        this.attachSnapEditorEventHandlers();
+        //attach all the event handlers for event's coming from BlockCanvas
+        this.attachBlockEditorEventHandlers();
 
         //Set up toolbar 
         this._addToolbarItems();
     };
 
     //Attach listeners
-    SnapEditorControl.prototype._attachClientEventListeners = function () {
+    BlockEditorControl.prototype._attachClientEventListeners = function () {
         this._detachClientEventListeners();
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged, this);
     };
 
-    SnapEditorControl.prototype._stateActiveObjectChanged = function (model, activeObjectId) {
+    BlockEditorControl.prototype._stateActiveObjectChanged = function (model, activeObjectId) {
         this.selectedObjectChanged(activeObjectId);
     };
 
-    SnapEditorControl.prototype._detachClientEventListeners = function () {
+    BlockEditorControl.prototype._detachClientEventListeners = function () {
         WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged);
     };
 
-    SnapEditorControl.prototype.selectedObjectChanged = function(nodeId){
+    BlockEditorControl.prototype.selectedObjectChanged = function(nodeId){
         var desc,
             nodeName,
             depth = nodeId === CONSTANTS.PROJECT_ROOT_ID ? 1 : 1000000,
@@ -148,7 +148,7 @@ console.log("Object changed to " + nodeId);
         }
     }; 
 
-    SnapEditorControl.prototype._getObjectDescriptorBase = function (nodeId) {
+    BlockEditorControl.prototype._getObjectDescriptorBase = function (nodeId) {
         var node = this._client.getNode(nodeId),
             objDescriptor,
             pos,
@@ -203,7 +203,7 @@ console.log("Object changed to " + nodeId);
         return objDescriptor;
     };
 
-    SnapEditorControl.prototype._getDefaultValueForNumber = function (cValue, defaultValue) {
+    BlockEditorControl.prototype._getDefaultValueForNumber = function (cValue, defaultValue) {
         if (_.isNumber(cValue)) {
             if (_.isNaN(cValue)) {
                 return defaultValue;
@@ -218,7 +218,7 @@ console.log("Object changed to " + nodeId);
 
 
     // PUBLIC METHODS
-    SnapEditorControl.prototype._eventCallback = function (events) {
+    BlockEditorControl.prototype._eventCallback = function (events) {
         var i = events ? events.length : 0;
 
         this.logger.debug("_eventCallback '" + i + "' items");
@@ -231,7 +231,7 @@ console.log("Object changed to " + nodeId);
         this.logger.debug("_eventCallback '" + events.length + "' items - DONE");
     };
 
-    SnapEditorControl.prototype.processNextInQueue = function () {
+    BlockEditorControl.prototype.processNextInQueue = function () {
         var nextBatchInQueue,
             len = this.eventQueue.length,
             decoratorsToDownload = [DEFAULT_DECORATOR],
@@ -263,7 +263,7 @@ console.log("Object changed to " + nodeId);
         }
     };
 
-    SnapEditorControl.prototype._dispatchEvents = function (events) {
+    BlockEditorControl.prototype._dispatchEvents = function (events) {
         var i = events.length,
             territoryChanged = false,
             loadEvents = [],
@@ -358,7 +358,7 @@ console.log("Object changed to " + nodeId);
     };
 
     // PUBLIC METHODS
-    SnapEditorControl.prototype._onLoad = function (events) {
+    BlockEditorControl.prototype._onLoad = function (events) {
         //Here we will load all the items and find which are dependent on others
         var independents = {},
             objDesc = {},
@@ -508,7 +508,7 @@ console.log("Object changed to " + nodeId);
         
     };
 
-    SnapEditorControl.prototype._onSingleLoad = function (gmeID, objD) {
+    BlockEditorControl.prototype._onSingleLoad = function (gmeID, objD) {
         var uiComponent,
             decClass,
             objDesc,
@@ -585,7 +585,7 @@ console.log("Object changed to " + nodeId);
 
     };
 
-    SnapEditorControl.prototype._onUnload = function (gmeID) {
+    BlockEditorControl.prototype._onUnload = function (gmeID) {
         var componentID,
             len,
             getDecoratorTerritoryQueries,
@@ -634,7 +634,7 @@ console.log("Object changed to " + nodeId);
         return territoryChanged;
     };
 
-    SnapEditorControl.prototype._onUpdate = function (gmeID, objDesc) {
+    BlockEditorControl.prototype._onUpdate = function (gmeID, objDesc) {
         var componentID,
             decClass,
             objId,
@@ -676,7 +676,7 @@ console.log("Object changed to " + nodeId);
      * @param {Object} node
      * @return {Object} objDesc
      */
-    SnapEditorControl.prototype._extendObjectDescriptor = function (objDesc, node) {
+    BlockEditorControl.prototype._extendObjectDescriptor = function (objDesc, node) {
         var attrs,
             attributeSchema,
             decClass = this._getItemDecorator(objDesc.decorator),
@@ -719,7 +719,7 @@ console.log("Object changed to " + nodeId);
         return objDesc;
     };
 
-    SnapEditorControl.prototype._getItemDecorator = function (decorator) {
+    BlockEditorControl.prototype._getItemDecorator = function (decorator) {
         var result;
 
         result = this._client.decoratorManager.getDecoratorForWidget(decorator, WIDGET_NAME);
@@ -731,13 +731,13 @@ console.log("Object changed to " + nodeId);
         return result;
     };
 
-    SnapEditorControl.prototype._updateSheetName = function (name) {
+    BlockEditorControl.prototype._updateSheetName = function (name) {
         this.snapCanvas.setTitle(name);
         this.snapCanvas.setBackgroundText(name.toUpperCase(), {'font-size': BACKGROUND_TEXT_SIZE,
             'color': BACKGROUND_TEXT_COLOR });
     };
 
-    SnapEditorControl.prototype._updateAspects = function () {
+    BlockEditorControl.prototype._updateAspects = function () {
         var objId = this.currentNodeInfo.id,
             aspects,
             tabID,
@@ -809,7 +809,7 @@ console.log("Object changed to " + nodeId);
         }
     };
 
-    SnapEditorControl.prototype._handleDecoratorNotification = function () {
+    BlockEditorControl.prototype._handleDecoratorNotification = function () {
         var gmeID,
             i,
             itemID;
@@ -827,7 +827,7 @@ console.log("Object changed to " + nodeId);
         }
     };
 
-    SnapEditorControl.prototype.registerComponentIDForPartID = function(){
+    BlockEditorControl.prototype.registerComponentIDForPartID = function(){
         //This method should probably be in a base class that can be overridden
         //as needed. 
         //
@@ -836,16 +836,16 @@ console.log("Object changed to " + nodeId);
         //FIXME
     };
 
-    SnapEditorControl.prototype.onActivate = function(){
+    BlockEditorControl.prototype.onActivate = function(){
         //When you have the split view and only one is active
         this._attachClientEventListeners();
     }; 
 
-    SnapEditorControl.prototype.onDeactivate = function(){
+    BlockEditorControl.prototype.onDeactivate = function(){
         this._detachClientEventListeners();
     }; 
 
-    SnapEditorControl.prototype.destroy = function(){
+    BlockEditorControl.prototype.destroy = function(){
         //When you changing to meta view or something
         this._detachClientEventListeners();
         this._removeToolbarItems();
@@ -853,7 +853,7 @@ console.log("Object changed to " + nodeId);
     }; 
 
         /* * * * * * * * * * TOOLBAR * * * * * * * * * * */
-    SnapEditorControl.prototype._addToolbarItems = function(){
+    BlockEditorControl.prototype._addToolbarItems = function(){
         var self = this,
             toolBar = WebGMEGlobal.Toolbar;
 
@@ -862,7 +862,7 @@ console.log("Object changed to " + nodeId);
         //Add items here using toolBar.addButton 
     };
 
-    SnapEditorControl.prototype._removeToolbarItems = function(){
+    BlockEditorControl.prototype._removeToolbarItems = function(){
         //Remove any toolbar items
         if (this._toolbarItems){
             while (this._toolbarItems.length){
@@ -872,7 +872,7 @@ console.log("Object changed to " + nodeId);
     };
 
 
-    SnapEditorControl.prototype._constraintCheck = function(){
+    BlockEditorControl.prototype._constraintCheck = function(){
         var self = this;
 
         self._client.validateProjectAsync(function(err,result){
@@ -883,7 +883,7 @@ console.log("Object changed to " + nodeId);
 
         /* * * * * * * * * * END TOOLBAR * * * * * * * * * * */
 
-    SnapEditorControl.prototype._getValidPointerTypes = function(srcItem, dstItem) {
+    BlockEditorControl.prototype._getValidPointerTypes = function(srcItem, dstItem) {
         // Call GMEConcepts
         var dstGmeId = this._ComponentID2GmeID[dstItem.id],
             srcGmeId = this._ComponentID2GmeID[srcItem.id];
@@ -892,7 +892,7 @@ console.log("Object changed to " + nodeId);
     };
 
 
-    _.extend(SnapEditorControl.prototype, SnapEditorEventHandlers.prototype);
+    _.extend(BlockEditorControl.prototype, BlockEditorEventHandlers.prototype);
 
-   return SnapEditorControl;
+   return BlockEditorControl;
 });

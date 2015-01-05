@@ -9,9 +9,9 @@
  * 
  */
 
-define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants',
+define(['js/Widgets/BlockEditor/BlockEditorWidget.Constants',
         '../Core/SVGDecorator.Core',
-        '../Core/SVGDecorator.Connections'], function (SNAP_CONSTANTS,
+        '../Core/SVGDecorator.Connections'], function (BLOCK_CONSTANTS,
                                                        SVGDecoratorCore,
                                                        SVGDecoratorConnections) {
 
@@ -30,7 +30,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants',
         SVGDecoratorCore.apply(this, [opts]);
 
         this.setConnectionAreaDefaults({
-            role: SNAP_CONSTANTS.CONN_RECEIVING,
+            role: BLOCK_CONSTANTS.CONN_RECEIVING,
             shift: undefined,
             ptr: '' });
         
@@ -48,24 +48,24 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants',
         var customDataElement;
 
         //Clean the line highlight data...
-        var i = this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT].length,
+        var i = this[BLOCK_CONSTANTS.CONNECTION_HIGHLIGHT].length,
             line;
 
         while (i--){
-            if (this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].tagName === 'line'){//Only support lines for now
+            if (this[BLOCK_CONSTANTS.CONNECTION_HIGHLIGHT][i].tagName === 'line'){//Only support lines for now
                 line = {};
-                line.ptr = this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].getAttribute('data-ptr');
-                line.role = this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].getAttribute('data-role');
+                line.ptr = this[BLOCK_CONSTANTS.CONNECTION_HIGHLIGHT][i].getAttribute('data-ptr');
+                line.role = this[BLOCK_CONSTANTS.CONNECTION_HIGHLIGHT][i].getAttribute('data-role');
 
-                line.x1 = this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].x1.baseVal.value;
-                line.x2 = this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].x2.baseVal.value;
-                line.y1 = this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].y1.baseVal.value;
-                line.y2 = this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].y2.baseVal.value;
-                line.class = this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i].getAttribute('class');
+                line.x1 = this[BLOCK_CONSTANTS.CONNECTION_HIGHLIGHT][i].x1.baseVal.value;
+                line.x2 = this[BLOCK_CONSTANTS.CONNECTION_HIGHLIGHT][i].x2.baseVal.value;
+                line.y1 = this[BLOCK_CONSTANTS.CONNECTION_HIGHLIGHT][i].y1.baseVal.value;
+                line.y2 = this[BLOCK_CONSTANTS.CONNECTION_HIGHLIGHT][i].y2.baseVal.value;
+                line.class = this[BLOCK_CONSTANTS.CONNECTION_HIGHLIGHT][i].getAttribute('class');
 
-                this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT][i] = line;
+                this[BLOCK_CONSTANTS.CONNECTION_HIGHLIGHT][i] = line;
             } else {
-                this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT].splice(i,1);
+                this[BLOCK_CONSTANTS.CONNECTION_HIGHLIGHT].splice(i,1);
             }
         }
         
@@ -75,26 +75,26 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants',
             w = 0,
             h = 0;
 
-        i = this[SNAP_CONSTANTS.INITIAL_MEASURE].length;
+        i = this[BLOCK_CONSTANTS.INITIAL_MEASURE].length;
         while (i--){
-            ptr = this[SNAP_CONSTANTS.INITIAL_MEASURE][i].getAttribute('data-ptr');
-            type = this[SNAP_CONSTANTS.INITIAL_MEASURE][i].getAttribute('data-type') || 
-                SNAP_CONSTANTS.STRETCH_TYPE.SVG;
+            ptr = this[BLOCK_CONSTANTS.INITIAL_MEASURE][i].getAttribute('data-ptr');
+            type = this[BLOCK_CONSTANTS.INITIAL_MEASURE][i].getAttribute('data-type') || 
+                BLOCK_CONSTANTS.STRETCH_TYPE.SVG;
 
-            if (this[SNAP_CONSTANTS.INITIAL_MEASURE][i].tagName === 'line'){
+            if (this[BLOCK_CONSTANTS.INITIAL_MEASURE][i].tagName === 'line'){
                 //get line values
                 line = {};
-                line.x1 = this[SNAP_CONSTANTS.INITIAL_MEASURE][i].x1.baseVal.value;
-                line.x2 = this[SNAP_CONSTANTS.INITIAL_MEASURE][i].x2.baseVal.value;
-                line.y1 = this[SNAP_CONSTANTS.INITIAL_MEASURE][i].y1.baseVal.value;
-                line.y2 = this[SNAP_CONSTANTS.INITIAL_MEASURE][i].y2.baseVal.value;
+                line.x1 = this[BLOCK_CONSTANTS.INITIAL_MEASURE][i].x1.baseVal.value;
+                line.x2 = this[BLOCK_CONSTANTS.INITIAL_MEASURE][i].x2.baseVal.value;
+                line.y1 = this[BLOCK_CONSTANTS.INITIAL_MEASURE][i].y1.baseVal.value;
+                line.y2 = this[BLOCK_CONSTANTS.INITIAL_MEASURE][i].y2.baseVal.value;
 
                 //Record the measurements
                 w = line.x2 - line.x1;
                 h = line.y2 - line.y1;
-            } else if (this[SNAP_CONSTANTS.INITIAL_MEASURE][i].tagName === 'rect'){
-                w = this[SNAP_CONSTANTS.INITIAL_MEASURE][i].width.baseVal.value;
-                h = this[SNAP_CONSTANTS.INITIAL_MEASURE][i].height.baseVal.value;
+            } else if (this[BLOCK_CONSTANTS.INITIAL_MEASURE][i].tagName === 'rect'){
+                w = this[BLOCK_CONSTANTS.INITIAL_MEASURE][i].width.baseVal.value;
+                h = this[BLOCK_CONSTANTS.INITIAL_MEASURE][i].height.baseVal.value;
             }
 
             if (!this.pointerInitialStretch[ptr]){
@@ -123,8 +123,8 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants',
         this.inputFields = {};
         this._inputFields2Update = {};
 
-        for (i = this[SNAP_CONSTANTS.INPUT_FIELDS].length-1; i >=0; i--){
-            customDataElement = this[SNAP_CONSTANTS.INPUT_FIELDS][i];
+        for (i = this[BLOCK_CONSTANTS.INPUT_FIELDS].length-1; i >=0; i--){
+            customDataElement = this[BLOCK_CONSTANTS.INPUT_FIELDS][i];
             //Populate input fields
             type = customDataElement.getAttribute('data-type');
             attribute = customDataElement.getAttribute('data-attribute');
@@ -137,12 +137,12 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants',
  
             //Get the content
             switch (type) {
-                case SNAP_CONSTANTS.TEXT_FIELD.NAME:
+                case BLOCK_CONSTANTS.TEXT_FIELD.NAME:
                     input = $('<input type="text"/>');
-                    content = SNAP_CONSTANTS.TEXT_FIELD.CONTENT.TEXT;
+                    content = BLOCK_CONSTANTS.TEXT_FIELD.CONTENT.TEXT;
                     break;
 
-                case SNAP_CONSTANTS.DROPDOWN.NAME:
+                case BLOCK_CONSTANTS.DROPDOWN.NAME:
                     input = $('<select/>');
                     content = customDataElement.getAttribute('data-content');
                     target = customDataElement.getAttribute('data-target');

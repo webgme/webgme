@@ -9,14 +9,14 @@ define(['js/KeyboardManager/IKeyTarget'], function (IKeyTarget) {
 
     "use strict";
 
-    var SnapEditorWidgetKeyboard;
+    var BlockEditorWidgetKeyboard;
 
-    SnapEditorWidgetKeyboard = function () {
+    BlockEditorWidgetKeyboard = function () {
     };
 
-    _.extend(SnapEditorWidgetKeyboard.prototype, IKeyTarget.prototype);
+    _.extend(BlockEditorWidgetKeyboard.prototype, IKeyTarget.prototype);
 
-    SnapEditorWidgetKeyboard.prototype.onKeyDown = function (eventArgs) {
+    BlockEditorWidgetKeyboard.prototype.onKeyDown = function (eventArgs) {
         var ret = true;
 
         switch (eventArgs.combo) {
@@ -73,7 +73,7 @@ define(['js/KeyboardManager/IKeyTarget'], function (IKeyTarget) {
         return ret;
     };
 
-    SnapEditorWidgetKeyboard.prototype.onKeyUp = function (eventArgs) {
+    BlockEditorWidgetKeyboard.prototype.onKeyUp = function (eventArgs) {
         var ret = true;
 
         switch (eventArgs.combo) {
@@ -98,7 +98,7 @@ define(['js/KeyboardManager/IKeyTarget'], function (IKeyTarget) {
         return ret;
     };
 
-    SnapEditorWidgetKeyboard.prototype._moveSelection = function (dX, dY) {
+    BlockEditorWidgetKeyboard.prototype._moveSelection = function (dX, dY) {
         /*if (!this._keyMoveDelta) {
             this._keyMoveDelta = {"x": 0, "y": 0};
             this.dragManager._initDrag(0, 0);
@@ -111,12 +111,12 @@ define(['js/KeyboardManager/IKeyTarget'], function (IKeyTarget) {
         this.dragManager._updateDraggedItemPositions(this._keyMoveDelta.x, this._keyMoveDelta.y);*/
     };
 
-    SnapEditorWidgetKeyboard.prototype._endMoveSelection = function () {
+    BlockEditorWidgetKeyboard.prototype._endMoveSelection = function () {
         /*if (this._keyMoveDelta) {
             this._keyMoveDelta = undefined;
             this.dragManager._endDragAction();
         }*/
     };
 
-    return SnapEditorWidgetKeyboard;
+    return BlockEditorWidgetKeyboard;
 });

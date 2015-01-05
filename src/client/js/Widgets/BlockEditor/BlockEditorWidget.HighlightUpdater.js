@@ -4,14 +4,14 @@
  */
 //This is the connection highlight updater
 define([
-    './SnapEditorWidget.Constants.js'
+    './BlockEditorWidget.Constants.js'
 ], function (
     SNAP_CONSTANTS
 ) {
 
     "use strict";
 
-    var SnapEditorWidgetHighlightUpdater,
+    var BlockEditorWidgetHighlightUpdater,
         ROOT = 'root',
         LEAVES = 'leaves',
         ITEM_TAG = "current_droppable_item";
@@ -54,10 +54,10 @@ define([
         return connArea;
     };
 
-    SnapEditorWidgetHighlightUpdater = function () {
+    BlockEditorWidgetHighlightUpdater = function () {
     };
 
-    SnapEditorWidgetHighlightUpdater.prototype.registerDraggingItem = function (ui) {
+    BlockEditorWidgetHighlightUpdater.prototype.registerDraggingItem = function (ui) {
         var i;
 
         this._ui = ui;
@@ -113,14 +113,14 @@ define([
 
     };
 
-    SnapEditorWidgetHighlightUpdater.prototype.unregisterDraggingItem = function () {
+    BlockEditorWidgetHighlightUpdater.prototype.unregisterDraggingItem = function () {
         this._ui = null;
         this._underItems = null;
         this._draggedIds = null;
         this._draggedTree = null;
     };
 
-    SnapEditorWidgetHighlightUpdater.prototype.registerUnderItem = function (underItem) {
+    BlockEditorWidgetHighlightUpdater.prototype.registerUnderItem = function (underItem) {
         var connAreas = [],
             i,
             j,
@@ -183,7 +183,7 @@ define([
         }
     };
 
-    SnapEditorWidgetHighlightUpdater.prototype.unregisterUnderItem = function (item) {
+    BlockEditorWidgetHighlightUpdater.prototype.unregisterUnderItem = function (item) {
 
         if (this._underItems && this._underItems[item.id]){
             this._underItemCount--;
@@ -198,7 +198,7 @@ define([
         }
     };
 
-    SnapEditorWidgetHighlightUpdater.prototype._updateHighlights = function (self) { 
+    BlockEditorWidgetHighlightUpdater.prototype._updateHighlights = function (self) { 
         var underConnAreas,
             draggedConnAreas,
             pos,
@@ -260,5 +260,5 @@ define([
         }
     };
 
-    return SnapEditorWidgetHighlightUpdater;
+    return BlockEditorWidgetHighlightUpdater;
 });
