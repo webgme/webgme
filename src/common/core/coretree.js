@@ -645,6 +645,13 @@ define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon
 
 		// ------- persistence
 
+		var generateRandom160bitHex = function () {
+			function r8() {
+				return (0x100000000 + Math.floor(Math.random() * (0x100000000-1))).toString(16).substring(1);
+			}
+			return r8() + r8() + r8() + r8() + r8();
+		};
+
 		var getHash = function (node) {
 			if (node === null) {
 				return null;
@@ -710,7 +717,7 @@ define([ "util/assert", "util/zssha1", "core/future", "core/tasync", 'util/canon
 				ASSERT(hash === "" || typeof hash === "undefined");
 
 				if (hash === "") {
-					hash = "#" + SHA.getHash(CANON.stringify(data));
+					hash = "#" + generateRandom160bitHex();
 					data[ID_NAME] = hash;
 
 					done = FUTURE.join(done, storage.insertObject(data));

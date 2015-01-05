@@ -4195,6 +4195,13 @@ define('core/coretree',[ "util/assert", "util/zssha1", "core/future", "core/tasy
 
 		// ------- persistence
 
+		var generateRandom160bitHex = function () {
+			function r8() {
+				return (0x100000000 + Math.floor(Math.random() * (0x100000000-1))).toString(16).substring(1);
+			}
+			return r8() + r8() + r8() + r8() + r8();
+		};
+
 		var getHash = function (node) {
 			if (node === null) {
 				return null;
@@ -4260,7 +4267,7 @@ define('core/coretree',[ "util/assert", "util/zssha1", "core/future", "core/tasy
 				ASSERT(hash === "" || typeof hash === "undefined");
 
 				if (hash === "") {
-					hash = "#" + SHA.getHash(CANON.stringify(data));
+					hash = "#" + generateRandom160bitHex();
 					data[ID_NAME] = hash;
 
 					done = FUTURE.join(done, storage.insertObject(data));
@@ -9567,61 +9574,6 @@ define('storage/failsafe',[ "util/assert", "util/guid" ], function (ASSERT, GUID
 
 /*
  * Copyright (C) 2012-2013 Vanderbilt University, All rights reserved.
- *
- * Author: Tamas Kecskes
- */
-
-define('storage/hashcheck',[ "util/assert", "util/zssha1", "util/canon" ], function (ASSERT,SHA1,CANON) {
-    
-
-    var zsSHA = new SHA1();
-
-    function Database (_innerDb, options) {
-        ASSERT(typeof options === "object" && typeof _innerDb === "object");
-        var database = {};
-        for(var i in _innerDb){
-            database[i] = _innerDb[i];
-        }
-
-        //we have to modify the openProject function
-        database.openProject = function(projectName, callback){
-            _innerDb.openProject(projectName,function(err,innerProject){
-                if(!err && innerProject){
-                    var project = {};
-                    for(var i in innerProject){
-                        project[i] = innerProject[i];
-                    }
-
-                    //we add the hash check to insertObject
-                    project.insertObject = function(object, cb){
-                        var inHash = object[project.ID_NAME];
-                        object[project.ID_NAME] = "";
-                        var checkHash = "#" + zsSHA.getHash(CANON.stringify(object));
-                        object[project.ID_NAME] = inHash;
-
-                        if(inHash !== checkHash){
-                            cb("wrong hash: expeced - "+checkHash+", received - "+inHash);
-                        } else {
-                            innerProject.insertObject(object,cb);
-                        }
-                    };
-
-                    callback(null,project);
-
-                } else {
-                    callback(err);
-                }
-            });
-        };
-
-        return database;
-    }
-
-    return Database;
-});
-
-/*
- * Copyright (C) 2012-2013 Vanderbilt University, All rights reserved.
  * 
  * Author: Miklos Maroti
  */
@@ -10263,7 +10215,7 @@ define('storage/log',[ "util/assert" ], function (ASSERT) {
  * Author: Tamas Kecskes
  */
 
-define('storage/clientstorage',['storage/client', 'storage/failsafe', 'storage/hashcheck', 'storage/cache', 'storage/commit', 'storage/log'], function (Client,Failsafe,Hashcheck,Cache,Commit,Log) {
+define('storage/clientstorage',['storage/client', 'storage/failsafe', 'storage/cache', 'storage/commit', 'storage/log'], function (Client,Failsafe,Cache,Commit,Log) {
     
     function client(options){
         //return  new Log(new Commit(new Cache(new Failsafe(new Client(options),options),options),options),options);
@@ -20668,3 +20620,4 @@ define('webgme.classes',
 
 require(["webgme.classes"]);
 }());
+//# sourceMappingURL=webgme.classes.build.js.map
