@@ -116,6 +116,7 @@ define([
     BlockEditorWidgetHighlightUpdater.prototype.unregisterDraggingItem = function () {
         this._ui = null;
         this._underItems = null;
+        this._underItemCount = 0;
         this._draggedIds = null;
         this._draggedTree = null;
     };
