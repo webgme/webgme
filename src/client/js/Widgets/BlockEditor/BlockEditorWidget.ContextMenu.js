@@ -4,18 +4,18 @@ define(['js/Controls/ContextMenu'], function (ContextMenu) {
 
     "use strict";
 
-    var SnapEditorWidgetContextMenu;
+    var BlockEditorWidgetContextMenu;
 
-    SnapEditorWidgetContextMenu = function () {
+    BlockEditorWidgetContextMenu = function () {
     };
 
-    SnapEditorWidgetContextMenu.prototype.createMenu = function (menuItems, fnCallback, position) {
+    BlockEditorWidgetContextMenu.prototype.createMenu = function (menuItems, fnCallback, position) {
         var logger = this.logger,
             menu;
 
         menu = new ContextMenu({'items': menuItems,
                                     'callback': function (key) {
-                                        logger.debug('SnapEditorWidgetContextMenu_clicked: ' + key);
+                                        logger.debug('BlockEditorWidgetContextMenu_clicked: ' + key);
                                         if (fnCallback) {
                                             fnCallback(key);
                                         }
@@ -25,5 +25,5 @@ define(['js/Controls/ContextMenu'], function (ContextMenu) {
         menu.show(position);
     };
 
-    return SnapEditorWidgetContextMenu;
+    return BlockEditorWidgetContextMenu;
 });

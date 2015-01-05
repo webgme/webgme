@@ -6,12 +6,12 @@ define(['eventDispatcher'], function (EventDispatcher) {
 
     "use strict";
 
-    var SnapEditorWidgetEventDispatcher;
+    var BlockEditorWidgetEventDispatcher;
 
-    SnapEditorWidgetEventDispatcher = function () {
+    BlockEditorWidgetEventDispatcher = function () {
     };
 
-    SnapEditorWidgetEventDispatcher.prototype._addEventDispatcherExtensions = function () {
+    BlockEditorWidgetEventDispatcher.prototype._addEventDispatcherExtensions = function () {
         //event functions to relay information between users
         $.extend(this, new EventDispatcher());
 
@@ -26,5 +26,5 @@ define(['eventDispatcher'], function (EventDispatcher) {
         };
     };
 
-    return SnapEditorWidgetEventDispatcher;
+    return BlockEditorWidgetEventDispatcher;
 });

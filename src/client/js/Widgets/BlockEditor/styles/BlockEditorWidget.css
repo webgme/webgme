@@ -1,11 +1,11 @@
 /*error decorator properties*/
-.snap-editor {
+.block-editor {
   outline: none; }
-  .snap-editor .items {
+  .block-editor .items {
     position: absolute; }
-    .snap-editor .items .linkable-item {
+    .block-editor .items .linkable-item {
       cursor: pointer; }
-    .snap-editor .items .selection-outline {
+    .block-editor .items .selection-outline {
       background: rgba(255, 255, 0, 0.05);
       border: rgba(0, 0, 0, 0.5) dashed 1px;
       position: absolute;
@@ -14,7 +14,7 @@
       -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075) 0 0 4px rgba(0, 0, 0, 0.3);
       -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 4px rgba(0, 0, 0, 0.3);
       box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 4px rgba(0, 0, 0, 0.3); }
-      .snap-editor .items .selection-outline .s-btn {
+      .block-editor .items .selection-outline .s-btn {
         position: absolute;
         background-color: white;
         border: none;
@@ -28,65 +28,65 @@
         box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 4px rgba(0, 0, 0, 0.3);
         background-color: #000;
         color: #fff; }
-        .snap-editor .items .selection-outline .s-btn.delete {
+        .block-editor .items .selection-outline .s-btn.delete {
           top: -13px;
           right: -13px; }
-        .snap-editor .items .selection-outline .s-btn.rotate.bottom {
+        .block-editor .items .selection-outline .s-btn.rotate.bottom {
           left: 50%;
           margin-left: -13px;
           bottom: -13px; }
-        .snap-editor .items .selection-outline .s-btn.contextmenu {
+        .block-editor .items .selection-outline .s-btn.contextmenu {
           bottom: -13px;
           right: -13px; }
-        .snap-editor .items .selection-outline .s-btn.move {
+        .block-editor .items .selection-outline .s-btn.move {
           top: -13px;
           left: 50%;
           margin-left: -13px; }
-        .snap-editor .items .selection-outline .s-btn:hover {
+        .block-editor .items .selection-outline .s-btn:hover {
           background-color: #428bca; }
-    .snap-editor .items .error-decorator {
+    .block-editor .items .error-decorator {
       background-color: #f2dede;
       padding: 3px;
       text-align: center;
       border: 2px solid #000000; }
-    .snap-editor .items div.c-t {
+    .block-editor .items div.c-t {
       position: absolute;
       top: 0;
       left: 0;
       width: 0;
       height: 0; }
-      .snap-editor .items div.c-t div.c-text {
+      .block-editor .items div.c-t div.c-text {
         position: absolute;
         font-size: 10px;
         white-space: nowrap; }
-        .snap-editor .items div.c-t div.c-text .c-name {
+        .block-editor .items div.c-t div.c-text .c-name {
           position: relative;
           left: -50%;
           cursor: default; }
-          .snap-editor .items div.c-t div.c-text .c-name.v {
+          .block-editor .items div.c-t div.c-text .c-name.v {
             left: 1px; }
-        .snap-editor .items div.c-t div.c-text input {
+        .block-editor .items div.c-t div.c-text input {
           height: 20px !important;
           min-width: 50px; }
-    .snap-editor .items.highlight-mode .linkable-item,
-    .snap-editor .items.highlight-mode .linkable-item.highlighted {
+    .block-editor .items.highlight-mode .linkable-item,
+    .block-editor .items.highlight-mode .linkable-item.highlighted {
       opacity: 0.1;
       cursor: pointer; }
-  .snap-editor .drop-region {
+  .block-editor .drop-region {
     width: 0;
     height: 0;
     position: absolute;
     top: 0;
     left: 0; }
-    .snap-editor .drop-region.accept-droppable {
+    .block-editor .drop-region.accept-droppable {
       background-color: rgba(0, 255, 0, 0.1); }
-    .snap-editor .drop-region.reject-droppable {
+    .block-editor .drop-region.reject-droppable {
       background-color: rgba(255, 0, 0, 0.1); }
 
-div.css-zoom.snap-editor-zoom {
+div.css-zoom.block-editor-zoom {
   position: absolute;
   top: 30px;
   left: 10px; }
 
-div.snap-editor-drag-outline {
+div.block-editor-drag-outline {
   white-space: nowrap; }

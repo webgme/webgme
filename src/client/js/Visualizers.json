@@ -6,7 +6,7 @@
 
     {"id": "Constraint Editor",
         "title": "Constraint Editor",
-        "panel": "js/Panels/SnapEditor/SnapEditorPanel",
+        "panel": "js/Panels/BlockEditor/BlockEditorPanel",
         "DEBUG_ONLY": false},
 
     {"id": "METAAspect",

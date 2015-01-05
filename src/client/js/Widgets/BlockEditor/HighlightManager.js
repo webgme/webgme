@@ -6,8 +6,8 @@
  */
 
 define(['logManager',
-    'js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function (logManager,
-                                                                   SnapEditorWidgetConstants) {
+    'js/Widgets/BlockEditor/BlockEditorWidget.Constants'], function (logManager,
+                                                                   BlockEditorWidgetConstants) {
 
     "use strict";
 
@@ -39,13 +39,13 @@ define(['logManager',
     };
 
     HighlightManager.prototype.activate = function () {
-        this.$el.addClass(SnapEditorWidgetConstants.HIGHLIGHT_MODE_CLASS);
+        this.$el.addClass(BlockEditorWidgetConstants.HIGHLIGHT_MODE_CLASS);
         this._activateMouseListeners();
     };
 
     HighlightManager.prototype.deactivate = function () {
         this._deactivateMouseListeners();
-        this.$el.removeClass(SnapEditorWidgetConstants.HIGHLIGHT_MODE_CLASS);
+        this.$el.removeClass(BlockEditorWidgetConstants.HIGHLIGHT_MODE_CLASS);
         this._clear();
     };
 

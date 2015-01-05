@@ -8,21 +8,21 @@
 
 define(['js/PanelBase/PanelBaseWithHeader',
         'js/PanelManager/IActivePanel',
-        'js/Widgets/SnapEditor/SnapEditorWidget',//FIXME 
-        './SnapEditorControl'
+        'js/Widgets/BlockEditor/BlockEditorWidget',//FIXME 
+        './BlockEditorControl'
                                 ], function (PanelBaseWithHeader,
                                     IActivePanel,
-                                    SnapEditorWidget,
-                                    SnapEditorControl) {
+                                    BlockEditorWidget,
+                                    BlockEditorControl) {
 
     "use strict";
 
-    var SnapEditorPanel;
+    var BlockEditorPanel;
 
-    SnapEditorPanel = function (layoutManager, params) {
+    BlockEditorPanel = function (layoutManager, params) {
         var options = {};
         //set properties from options
-        options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = "SnapEditorPanel";
+        options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = "BlockEditorPanel";
         options[PanelBaseWithHeader.OPTIONS.FLOATING_TITLE] = true;
 
         //call parent's constructor
@@ -33,17 +33,17 @@ define(['js/PanelBase/PanelBaseWithHeader',
         //initialize UI
         this._initialize();
 
-        this.logger.debug("SnapEditorPanel ctor finished");
+        this.logger.debug("BlockEditorPanel ctor finished");
     };
 
     //inherit from PanelBaseWithHeader
-    _.extend(SnapEditorPanel.prototype, PanelBaseWithHeader.prototype);
-    _.extend(SnapEditorPanel.prototype, IActivePanel.prototype);
+    _.extend(BlockEditorPanel.prototype, PanelBaseWithHeader.prototype);
+    _.extend(BlockEditorPanel.prototype, IActivePanel.prototype);
 
-    SnapEditorPanel.prototype._initialize = function () {
+    BlockEditorPanel.prototype._initialize = function () {
         var self = this;
 
-        this.widget = new SnapEditorWidget(this.$el, {'toolBar': this.toolBar});
+        this.widget = new BlockEditorWidget(this.$el, {'toolBar': this.toolBar});
 
         this.widget.setTitle = function (title) {
             self.setTitle(title);
@@ -54,7 +54,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
             WebGMEGlobal.KeyboardManager.setListener(self.widget);
         };
 
-        this.control = new SnapEditorControl({"client": this._client,
+        this.control = new BlockEditorControl({"client": this._client,
             "widget": this.widget});
 
         this.onActivate();
@@ -62,19 +62,19 @@ define(['js/PanelBase/PanelBaseWithHeader',
 
     /* OVERRIDE FROM WIDGET-WITH-HEADER */
     /* METHOD CALLED WHEN THE WIDGET'S READ-ONLY PROPERTY CHANGES */
-    SnapEditorPanel.prototype.onReadOnlyChanged = function (isReadOnly) {
+    BlockEditorPanel.prototype.onReadOnlyChanged = function (isReadOnly) {
         //apply parent's onReadOnlyChanged
         PanelBaseWithHeader.prototype.onReadOnlyChanged.call(this, isReadOnly);
 
         this.widget.setReadOnly(isReadOnly);
     };
 
-    SnapEditorPanel.prototype.onResize = function (width, height) {
+    BlockEditorPanel.prototype.onResize = function (width, height) {
         this.logger.debug('onResize --> width: ' + width + ', height: ' + height);
         this.widget.setSize(width, height);
     };
 
-    SnapEditorPanel.prototype.destroy = function () {
+    BlockEditorPanel.prototype.destroy = function () {
         this.control.destroy();
         this.widget.destroy();
 
@@ -84,23 +84,23 @@ define(['js/PanelBase/PanelBaseWithHeader',
     };
 
     /* override IActivePanel.prototype.onActivate */
-    SnapEditorPanel.prototype.onActivate = function () {
+    BlockEditorPanel.prototype.onActivate = function () {
         this.control.onActivate();
         WebGMEGlobal.KeyboardManager.setListener(this.widget);
         WebGMEGlobal.Toolbar.refresh();
     };
 
     /* override IActivePanel.prototype.onDeactivate */
-    SnapEditorPanel.prototype.onDeactivate = function () {
+    BlockEditorPanel.prototype.onDeactivate = function () {
         this.widget.onDeactivate();
         this.control.onDeactivate();
         WebGMEGlobal.KeyboardManager.setListener(undefined);
         WebGMEGlobal.Toolbar.refresh();
     };
 
-    SnapEditorPanel.prototype.getNodeID = function () {
+    BlockEditorPanel.prototype.getNodeID = function () {
         return this.control.getNodeID();
     };
 
-    return SnapEditorPanel;
+    return BlockEditorPanel;
 });

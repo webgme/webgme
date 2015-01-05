@@ -7,35 +7,35 @@
 
 define(['logManager',
         'raphaeljs',
-        './SnapEditorWidget.Zoom',
-        './SnapEditorWidget.Mouse',
-        './SnapEditorWidget.LinkableItem',
-        'js/Widgets/SnapEditor/SnapEditorWidget.EventDispatcher',
-        './SnapEditorWidget.OperatingModes',
-        './SnapEditorWidget.Keyboard',
-        './SnapEditorWidget.Draggable',
-        './SnapEditorWidget.Droppable',
-        './SnapEditorWidget.HighlightUpdater',
-        './SnapEditorWidget.ContextMenu',
+        './BlockEditorWidget.Zoom',
+        './BlockEditorWidget.Mouse',
+        './BlockEditorWidget.LinkableItem',
+        'js/Widgets/BlockEditor/BlockEditorWidget.EventDispatcher',
+        './BlockEditorWidget.OperatingModes',
+        './BlockEditorWidget.Keyboard',
+        './BlockEditorWidget.Draggable',
+        './BlockEditorWidget.Droppable',
+        './BlockEditorWidget.HighlightUpdater',
+        './BlockEditorWidget.ContextMenu',
         './SearchManager',
         './SelectionManager',
         './HighlightManager',
         'util/assert',
         'loaderCircles',
-        'css!./styles/SnapEditorWidget.css',
-        'css!./styles/SnapEditorWidget.DecoratorBase.ConnectionArea.css'
+        'css!./styles/BlockEditorWidget.css',
+        'css!./styles/BlockEditorWidget.DecoratorBase.ConnectionArea.css'
 ], function (logManager,
              raphaeljs,
-             SnapEditorWidgetZoom,
-             SnapEditorWidgetMouse,
-             SnapEditorWidgetLinkableItem,
-             SnapEditorWidgetEventDispatcher,
-             SnapEditorWidgetOperatingModes,
-             SnapEditorWidgetKeyboard,
-             SnapEditorWidgetDraggable,
-             SnapEditorWidgetDroppable,
-             SnapEditorWidgetHighlightUpdater,
-             SnapEditorWidgetContextMenu,
+             BlockEditorWidgetZoom,
+             BlockEditorWidgetMouse,
+             BlockEditorWidgetLinkableItem,
+             BlockEditorWidgetEventDispatcher,
+             BlockEditorWidgetOperatingModes,
+             BlockEditorWidgetKeyboard,
+             BlockEditorWidgetDraggable,
+             BlockEditorWidgetDroppable,
+             BlockEditorWidgetHighlightUpdater,
+             BlockEditorWidgetContextMenu,
              SearchManager,
              SelectionManager,
              HighlightManager,
@@ -44,22 +44,22 @@ define(['logManager',
 
     "use strict";
 
-    var SnapEditorWidget,
+    var BlockEditorWidget,
         CANVAS_EDGE = 100,
         GUID_DIGITS = 6,
-        WIDGET_CLASS = 'snap-editor',  
+        WIDGET_CLASS = 'block-editor',  
         BACKGROUND_TEXT_COLOR = '#DEDEDE',  
         BACKGROUND_TEXT_SIZE = 30;
 
-    var defaultParams = {'loggerName': 'SnapEditorWidget',
+    var defaultParams = {'loggerName': 'BlockEditorWidget',
                          'gridSize': 10,
                          'droppable': true,
                          'zoomValues': [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5, 10],
                          'zoomUIControls': true };
 
-    SnapEditorWidget = function (container, params) {
+    BlockEditorWidget = function (container, params) {
         params = params || {};
-        params.loggerName = "SnapEditorWidget";
+        params.loggerName = "BlockEditorWidget";
 
         //merge default values with the given parameters
         _.extend(params, defaultParams);
@@ -85,7 +85,7 @@ define(['logManager',
         this._itemIDCounter = 0;
         this._documentFragment = document.createDocumentFragment();
 
-        this._backgroundText = "Snap Editor";
+        this._backgroundText = "Block Editor";
         this._zoomRatio = 1;
 
         //if the widget has to support drop feature at all
@@ -116,7 +116,7 @@ define(['logManager',
         };
 
         //initiate Selection Manager (if needed)
-        this.selectionManager = params.selectionManager || new SelectionManager({"snapEditor": this});
+        this.selectionManager = params.selectionManager || new SelectionManager({"blockEditor": this});
         this.selectionManager.initialize(this.skinParts.$itemsContainer);
         this.selectionManager.onSelectionCommandClicked = function (command, selectedIds, event) {
             self._onSelectionCommandClicked(command, selectedIds, event);
@@ -130,23 +130,23 @@ define(['logManager',
         this.searchManager = new SearchManager({"widget": this});
         this.searchManager.initialize(this.skinParts.$itemsContainer);
 
-        this.setOperatingMode(SnapEditorWidgetOperatingModes.prototype.OPERATING_MODES.DESIGN);
+        this.setOperatingMode(BlockEditorWidgetOperatingModes.prototype.OPERATING_MODES.DESIGN);
         this._activateMouseListeners();
 
-        this.logger.debug("SnapEditorWidget ctor");
+        this.logger.debug("BlockEditorWidget ctor");
     };
 
-    SnapEditorWidget.prototype._init = function (container, params){//Container is the div element
+    BlockEditorWidget.prototype._init = function (container, params){//Container is the div element
                                                                     //Params is the extra stuff (ie, the toolbar)
         this.$el = container; //Everything goes inside this.$el
 
         this._initializeUI();
     };
 
-    SnapEditorWidget.prototype._initializeUI = function(){
+    BlockEditorWidget.prototype._initializeUI = function(){
         var self = this;
 
-        this.logger.debug("SnapWidget._initializeUI");
+        this.logger.debug("BlockWidget._initializeUI");
 
         //clear content
         this.$el.empty();
@@ -159,13 +159,13 @@ define(['logManager',
         //DESIGNER CANVAS HEADER
         this.skinParts = {};
 
-        this.skinParts.$snapWidgetBody = this.$el;
+        this.skinParts.$blockWidgetBody = this.$el;
 
         //CHILDREN container
         this.skinParts.$itemsContainer = $('<div/>', {
             "class" : "items"
         });
-        this.skinParts.$snapWidgetBody.append(this.skinParts.$itemsContainer);
+        this.skinParts.$blockWidgetBody.append(this.skinParts.$itemsContainer);
 
         //initialize Raphael paper from children container and set it to be full size of the HTML container
         this.skinParts.SVGPaper = Raphael(this.skinParts.$itemsContainer[0]);
@@ -187,7 +187,7 @@ define(['logManager',
         }
     };
 
-    SnapEditorWidget.prototype._resizeItemContainer = function () {
+    BlockEditorWidget.prototype._resizeItemContainer = function () {
         var zoomedWidth = this._containerSize.w / this._zoomRatio,
             zoomedHeight = this._containerSize.h / this._zoomRatio,
             offset,
@@ -212,10 +212,10 @@ define(['logManager',
 
         this._centerBackgroundText();
 
-        offset = this.skinParts.$snapWidgetBody.offset();
+        offset = this.skinParts.$blockWidgetBody.offset();
 
-        paddingTop = parseInt( this.skinParts.$snapWidgetBody.css('padding-top').replace("px", "") );
-        paddingLeft = parseInt( this.skinParts.$snapWidgetBody.css('padding-left').replace("px", "") );
+        paddingTop = parseInt( this.skinParts.$blockWidgetBody.css('padding-top').replace("px", "") );
+        paddingLeft = parseInt( this.skinParts.$blockWidgetBody.css('padding-left').replace("px", "") );
 
         offset.left += paddingLeft;
         offset.top += paddingTop;
@@ -223,7 +223,7 @@ define(['logManager',
         this._offset = offset;
     };
 
-    SnapEditorWidget.prototype._attachScrollHandler = function (el) {
+    BlockEditorWidget.prototype._attachScrollHandler = function (el) {
         var self = this;
 
         el.on('scroll', function (event) {
@@ -233,21 +233,21 @@ define(['logManager',
     };
 
     /************** WAITPROGRESS *********************/
-    SnapEditorWidget.prototype.showProgressbar = function (){
+    BlockEditorWidget.prototype.showProgressbar = function (){
         this.__loader.start();
     };
 
-    SnapEditorWidget.prototype.hideProgressbar = function (){
+    BlockEditorWidget.prototype.hideProgressbar = function (){
         this.__loader.stop();
     };
 
     /************** END WAITPROGRESS *********************/
 
-    SnapEditorWidget.prototype.onActivate = function (){
+    BlockEditorWidget.prototype.onActivate = function (){
         // This function is required
     };
 
-    SnapEditorWidget.prototype.onDeactivate = function (){
+    BlockEditorWidget.prototype.onDeactivate = function (){
         this.__loader.destroy();
         //this._hideToolbarItems();
     };
@@ -255,19 +255,19 @@ define(['logManager',
 
     /* OVERRIDE FROM WIDGET-WITH-HEADER */
     /* METHOD CALLED WHEN THE WIDGET'S READ-ONLY PROPERTY CHANGES */
-    SnapEditorWidget.prototype.setReadOnly = function (isReadOnly) {
+    BlockEditorWidget.prototype.setReadOnly = function (isReadOnly) {
         this._setReadOnlyMode(isReadOnly);
         if (this.toolbarItems && this.toolbarItems.radioButtonGroupOperatingMode) {
             this.toolbarItems.radioButtonGroupOperatingMode.enabled(!isReadOnly);
         }
     };
 
-    SnapEditorWidget.prototype.getIsReadOnlyMode = function () {
+    BlockEditorWidget.prototype.getIsReadOnlyMode = function () {
         //return this.mode === this.OPERATING_MODES.READ_ONLY;
         return this.mode !== this.OPERATING_MODES.DESIGN;
     };
 
-    SnapEditorWidget.prototype._setReadOnlyMode = function (readOnly) {
+    BlockEditorWidget.prototype._setReadOnlyMode = function (readOnly) {
         if (readOnly === true && this.mode !== this.OPERATING_MODES.READ_ONLY) {
             //enter READ-ONLY mode
             this.setOperatingMode(this.OPERATING_MODES.READ_ONLY);
@@ -281,7 +281,7 @@ define(['logManager',
     /****************** PUBLIC FUNCTIONS ***********************************/
 
     //Called when the widget's container size changed
-    SnapEditorWidget.prototype.setSize = function (width, height) {
+    BlockEditorWidget.prototype.setSize = function (width, height) {
         this._containerSize.w = width;
         this._containerSize.h = height;
 
@@ -291,12 +291,12 @@ define(['logManager',
         //this._refreshTabTabsScrollOnResize();
     };
 
-    SnapEditorWidget.prototype.destroy = function () {
+    BlockEditorWidget.prototype.destroy = function () {
         this.__loader.destroy();
         //this._removeToolbarItems();
     };
 
-    SnapEditorWidget.prototype.getAdjustedMousePos = function (e) {
+    BlockEditorWidget.prototype.getAdjustedMousePos = function (e) {
         var childrenContainerOffset = this._offset,
             childrenContainerScroll = this._scrollPos,
             pX = e.pageX - childrenContainerOffset.left + childrenContainerScroll.left,
@@ -309,12 +309,12 @@ define(['logManager',
             "mY": pY > 0 ? pY : 0 };
     };
 
-    SnapEditorWidget.prototype._triggerUIActivity = function () {
+    BlockEditorWidget.prototype._triggerUIActivity = function () {
         this.logger.info("MOUSE CLICK DETECTED");
         this.onUIActivity();
     };
 
-    SnapEditorWidget.prototype._getGuid = function () {
+    BlockEditorWidget.prototype._getGuid = function () {
         var guid = this._itemIDCounter.toString();
 
         this._itemIDCounter++;
@@ -322,29 +322,29 @@ define(['logManager',
         while(guid.length < GUID_DIGITS){
             guid = "0" + guid;
         }
-        guid = "S_" + guid; //S => Snapping Object
+        guid = "S_" + guid; //S => Blockping Object
 
         return guid;
     };
     /* * * * * * * * * * * * * * SELECTION API * * * * * * * * * * * * * */
 
-    SnapEditorWidget.prototype.selectAll = function () {
+    BlockEditorWidget.prototype.selectAll = function () {
         this.selectionManager.clear();
         this.selectionManager.setSelection(this.itemIds.concat(this.connectionIds), false);
     };
 
-    SnapEditorWidget.prototype.selectNone = function () {
+    BlockEditorWidget.prototype.selectNone = function () {
         this.selectionManager.clear();
     };
 
-    SnapEditorWidget.prototype.select = function (selectionList) {
+    BlockEditorWidget.prototype.select = function (selectionList) {
         this.selectionManager.clear();
         this.selectionManager.setSelection(selectionList, false);
     };
 
     /* * * * * * * * * * * * * * END SELECTION API * * * * * * * * * * * * * */
 
-    SnapEditorWidget.prototype._checkPositionOverlap = function (itemId, objDescriptor) {
+    BlockEditorWidget.prototype._checkPositionOverlap = function (itemId, objDescriptor) {
         var i,
             posChanged = true,
             itemID,
@@ -375,7 +375,7 @@ define(['logManager',
 
     /************************** SELECTION DELETE CLICK HANDLER ****************************/
 
-    SnapEditorWidget.prototype._onSelectionCommandClicked = function (command, id, event) {
+    BlockEditorWidget.prototype._onSelectionCommandClicked = function (command, id, event) {
         var idList;
 
         //Get the list of siblings of the item
@@ -394,24 +394,24 @@ define(['logManager',
         }
     };
 
-    SnapEditorWidget.prototype.onSelectionDelete = function (selectedIds) {
-        this.logger.warning("SnapEditorWidget.onSelectionDelete IS NOT OVERRIDDEN IN A CONTROLLER. ID: '" + selectedIds + "'");
+    BlockEditorWidget.prototype.onSelectionDelete = function (selectedIds) {
+        this.logger.warning("BlockEditorWidget.onSelectionDelete IS NOT OVERRIDDEN IN A CONTROLLER. ID: '" + selectedIds + "'");
     };
 
-    SnapEditorWidget.prototype.onSelectionContextMenu = function (selectedIds, mousePos) {
-        this.logger.warning("SnapEditorWidget.onSelectionContextMenu IS NOT OVERRIDDEN IN A CONTROLLER. ID: '" + selectedIds + "', mousePos: " + JSON.stringify(mousePos));
+    BlockEditorWidget.prototype.onSelectionContextMenu = function (selectedIds, mousePos) {
+        this.logger.warning("BlockEditorWidget.onSelectionContextMenu IS NOT OVERRIDDEN IN A CONTROLLER. ID: '" + selectedIds + "', mousePos: " + JSON.stringify(mousePos));
     };
 
     /************************** SELECTION DELETE CLICK HANDLER ****************************/
 
     /************************** SELECTION CHANGED HANDLER ****************************/
 
-    SnapEditorWidget.prototype._onSelectionChanged = function (selectedIds) {
+    BlockEditorWidget.prototype._onSelectionChanged = function (selectedIds) {
         this.onSelectionChanged(selectedIds);
     };
 
-    SnapEditorWidget.prototype.onSelectionChanged = function (selectedIds) {
-        this.logger.debug("SnapEditorWidget.onSelectionChanged IS NOT OVERRIDDEN IN A CONTROLLER...");
+    BlockEditorWidget.prototype.onSelectionChanged = function (selectedIds) {
+        this.logger.debug("BlockEditorWidget.onSelectionChanged IS NOT OVERRIDDEN IN A CONTROLLER...");
     };
 
 
@@ -419,39 +419,39 @@ define(['logManager',
 
 
     /* * * * * * * * * * * * * * COPY PASTE API * * * * * * * * * * * * * */
-    SnapEditorWidget.prototype.onClipboardCopy = function (selectedIds) {
-        this.logger.warning("SnapEditorWidget.prototype.onClipboardCopy not overridden in controller!!! selectedIds: '" + selectedIds + "'");
+    BlockEditorWidget.prototype.onClipboardCopy = function (selectedIds) {
+        this.logger.warning("BlockEditorWidget.prototype.onClipboardCopy not overridden in controller!!! selectedIds: '" + selectedIds + "'");
     };
 
-    SnapEditorWidget.prototype.onClipboardPaste = function () {
-        this.logger.warning("SnapEditorWidget.prototype.onClipboardPaste not overridden in controller!!!");
+    BlockEditorWidget.prototype.onClipboardPaste = function () {
+        this.logger.warning("BlockEditorWidget.prototype.onClipboardPaste not overridden in controller!!!");
     };
     /* * * * * * * * * * * * * * END COPY PASTE API * * * * * * * * * * * * * */
 
     /************************* DESIGNER ITEM DRAGGABLE & COPYABLE CHECK ON DRAG START ************************/
-    SnapEditorWidget.prototype.onDragStartLinkableItemDraggable = function (itemID) {
-        this.logger.warning("SnapEditorWidget.prototype.onLinkableItemDraggable not overridden in controller. itemID: " + itemID);
+    BlockEditorWidget.prototype.onDragStartLinkableItemDraggable = function (itemID) {
+        this.logger.warning("BlockEditorWidget.prototype.onLinkableItemDraggable not overridden in controller. itemID: " + itemID);
 
         return true;
     };
 
 
-    SnapEditorWidget.prototype.onDragStartLinkableItemCopyable = function (itemID) {
-        this.logger.warning("SnapEditorWidget.prototype.onDragStartLinkableItemCopyable not overridden in controller. itemID: " + itemID);
+    BlockEditorWidget.prototype.onDragStartLinkableItemCopyable = function (itemID) {
+        this.logger.warning("BlockEditorWidget.prototype.onDragStartLinkableItemCopyable not overridden in controller. itemID: " + itemID);
 
         return true;
     };
 
 
-    SnapEditorWidget.prototype.onDragStartDesignerConnectionCopyable = function (connectionID) {
-        this.logger.warning("SnapEditorWidget.prototype.onDragStartDesignerConnectionCopyable not overridden in controller. connectionID: " + connectionID);
+    BlockEditorWidget.prototype.onDragStartDesignerConnectionCopyable = function (connectionID) {
+        this.logger.warning("BlockEditorWidget.prototype.onDragStartDesignerConnectionCopyable not overridden in controller. connectionID: " + connectionID);
 
         return true;
     };
     /************************* END OF --- DESIGNER ITEM DRAGGABLE & COPYABLE CHECK ON DRAG START ************************/
 
     /************************** DRAG ITEM ***************************/
-    SnapEditorWidget.prototype.onLinkableItemDragStart = function (draggedItemId, allDraggedItemIDs) {
+    BlockEditorWidget.prototype.onLinkableItemDragStart = function (draggedItemId, allDraggedItemIDs) {
         this.selectionManager.hideSelectionOutline();
 
         this._preDragActualSize = {"w": this._actualSize.w,
@@ -463,7 +463,7 @@ define(['logManager',
         }
     };
 
-    SnapEditorWidget.prototype.onLinkableItemDrag = function (draggedItemId, allDraggedItemIDs) {
+    BlockEditorWidget.prototype.onLinkableItemDrag = function (draggedItemId, allDraggedItemIDs) {
         var i = allDraggedItemIDs.length,
             connectionIDsToUpdate,
             redrawnConnectionIDs,
@@ -496,7 +496,7 @@ define(['logManager',
         i = redrawnConnectionIDs.len;
     };
 
-    SnapEditorWidget.prototype.onLinkableItemDragStop = function (draggedItemId, allDraggedItemIDs) {
+    BlockEditorWidget.prototype.onLinkableItemDragStop = function (draggedItemId, allDraggedItemIDs) {
         this.selectionManager.showSelectionOutline();
 
         delete this._preDragActualSize;
@@ -507,7 +507,7 @@ define(['logManager',
 
 
     /* * * * * * * * * * * * * * BACKGROUND TEXT * * * * * * * * * * * * * */
-    SnapEditorWidget.prototype.setBackgroundText = function (text, params) {
+    BlockEditorWidget.prototype.setBackgroundText = function (text, params) {
         var svgParams = {},
             setSvgAttrFromParams;
 
@@ -548,7 +548,7 @@ define(['logManager',
     };
 
 
-    SnapEditorWidget.prototype._centerBackgroundText = function () {
+    BlockEditorWidget.prototype._centerBackgroundText = function () {
         if (this._backGroundText) {
             this._backGroundText.attr({"x" : this._svgPaperSize.w / 2,
                                        "y" : this._svgPaperSize.h / 2});
@@ -558,7 +558,7 @@ define(['logManager',
 
     /* * * * * * * * * * * * * * UPDATE VIEW * * * * * * * * * * * * * */
 
-    SnapEditorWidget.prototype.beginUpdate = function () {
+    BlockEditorWidget.prototype.beginUpdate = function () {
         this.logger.debug("beginUpdate");
 
         this._updating = true;
@@ -572,14 +572,14 @@ define(['logManager',
         this._linkableItems2Update = {};
     };
 
-    SnapEditorWidget.prototype.endUpdate = function () {
+    BlockEditorWidget.prototype.endUpdate = function () {
         this.logger.debug("endUpdate");
 
         this._updating = false;
         this._tryRefreshScreen();
     };
 
-    SnapEditorWidget.prototype._tryRefreshScreen = function () {
+    BlockEditorWidget.prototype._tryRefreshScreen = function () {
         var insertedLen = 0,
             updatedLen = 0,
             deletedLen = 0,
@@ -605,7 +605,7 @@ define(['logManager',
         }
     };
 
-    SnapEditorWidget.prototype._refreshScreen = function () {
+    BlockEditorWidget.prototype._refreshScreen = function () {
         var i,
             maxWidth = 0,
             maxHeight = 0,
@@ -746,7 +746,7 @@ define(['logManager',
      *
      * @return {undefined}
      */
-    SnapEditorWidget.prototype._updateLinkableItems = function () {
+    BlockEditorWidget.prototype._updateLinkableItems = function () {
         //First, finding the highest node in the dependency tree that could
         //affected by the change
         
@@ -848,7 +848,7 @@ define(['logManager',
 
         this._linkableItems2Update = {};
     };
-    SnapEditorWidget.prototype.clear = function () {
+    BlockEditorWidget.prototype.clear = function () {
 
         this.setTitle('');
 
@@ -875,7 +875,7 @@ define(['logManager',
         //this.dispatchEvent(this.events.ON_CLEAR);
     };
 
-    SnapEditorWidget.prototype._initializeCollections = function() {
+    BlockEditorWidget.prototype._initializeCollections = function() {
         this._itemIDCounter = 0;
         this.updating = false;
 
@@ -887,7 +887,7 @@ define(['logManager',
     };
     
 
-    SnapEditorWidget.prototype.deleteComponent = function (componentId) {
+    BlockEditorWidget.prototype.deleteComponent = function (componentId) {
         //let the selection manager / drag-manager / connection drawing manager / etc know about the deletion
         this.dispatchEvent(this.events.ON_COMPONENT_DELETE, componentId);
 
@@ -898,25 +898,25 @@ define(['logManager',
     /* * * * * * * * * * * * * * END UPDATE VIEW * * * * * * * * * * * * * */
 
     /* * * * * * * * * * * * * * OPERATING MODES * * * * * * * * * * * * * */
-    SnapEditorWidget.prototype.setOperatingMode = function (mode) {
+    BlockEditorWidget.prototype.setOperatingMode = function (mode) {
         if (this.mode !== mode) {
             this.highlightManager.deactivate();
             this.selectionManager.deactivate();
             this.searchManager.deactivate();
             this._setComponentsReadOnly(true);
             switch (mode) {
-                case SnapEditorWidgetOperatingModes.prototype.OPERATING_MODES.READ_ONLY:
+                case BlockEditorWidgetOperatingModes.prototype.OPERATING_MODES.READ_ONLY:
                     this.mode = this.OPERATING_MODES.READ_ONLY;
                     this.selectionManager.activate();
                     this.searchManager.activate();
                     break;
-                case SnapEditorWidgetOperatingModes.prototype.OPERATING_MODES.DESIGN:
+                case BlockEditorWidgetOperatingModes.prototype.OPERATING_MODES.DESIGN:
                     this.mode = this.OPERATING_MODES.DESIGN;
                     this.selectionManager.activate();
                     this.searchManager.activate();
                     this._setComponentsReadOnly(false);
                     break;
-                case SnapEditorWidgetOperatingModes.prototype.OPERATING_MODES.HIGHLIGHT:
+                case BlockEditorWidgetOperatingModes.prototype.OPERATING_MODES.HIGHLIGHT:
                     this.mode = this.OPERATING_MODES.HIGHLIGHT;
                     this.highlightManager.activate();
                     break;
@@ -929,7 +929,7 @@ define(['logManager',
         }
     };
 
-    SnapEditorWidget.prototype._setComponentsReadOnly = function (readOnly) {
+    BlockEditorWidget.prototype._setComponentsReadOnly = function (readOnly) {
         var i = this.itemIds.length;
         while (i--) {
             this.items[this.itemIds[i]].readOnlyMode(readOnly);
@@ -950,27 +950,27 @@ define(['logManager',
     /* * * * * * * * * * * * * * END OPERATING MODES * * * * * * * * * * * * * */
 
     /************************* HIGHLIGHTED / UNHIGHLIGHTED EVENT *****************************/
-    SnapEditorWidget.prototype.onHighlight = function (idList) {
-        this.logger.warning("SnapEditorWidget.prototype.onHighlight not overridden in controller. idList: " + idList);
+    BlockEditorWidget.prototype.onHighlight = function (idList) {
+        this.logger.warning("BlockEditorWidget.prototype.onHighlight not overridden in controller. idList: " + idList);
     };
 
-    SnapEditorWidget.prototype.onUnhighlight = function (idList) {
-        this.logger.warning("SnapEditorWidget.prototype.onUnhighlight not overridden in controller. idList: " + idList);
+    BlockEditorWidget.prototype.onUnhighlight = function (idList) {
+        this.logger.warning("BlockEditorWidget.prototype.onUnhighlight not overridden in controller. idList: " + idList);
     };
     /************************* HIGHLIGHTED / UNHIGHLIGHTED EVENT *****************************/
 
 
     /* * * * * * * * * * * * * * Additional Functionality * * * * * * * * * * * * * */
-    _.extend(SnapEditorWidget.prototype, SnapEditorWidgetZoom.prototype);
-    _.extend(SnapEditorWidget.prototype, SnapEditorWidgetMouse.prototype);
-    _.extend(SnapEditorWidget.prototype, SnapEditorWidgetKeyboard.prototype);
-    _.extend(SnapEditorWidget.prototype, SnapEditorWidgetOperatingModes.prototype);
-    _.extend(SnapEditorWidget.prototype, SnapEditorWidgetLinkableItem.prototype);
-    _.extend(SnapEditorWidget.prototype, SnapEditorWidgetEventDispatcher.prototype);
-    _.extend(SnapEditorWidget.prototype, SnapEditorWidgetDraggable.prototype);
-    _.extend(SnapEditorWidget.prototype, SnapEditorWidgetDroppable.prototype);
-    _.extend(SnapEditorWidget.prototype, SnapEditorWidgetHighlightUpdater.prototype);
-    _.extend(SnapEditorWidget.prototype, SnapEditorWidgetContextMenu.prototype);
+    _.extend(BlockEditorWidget.prototype, BlockEditorWidgetZoom.prototype);
+    _.extend(BlockEditorWidget.prototype, BlockEditorWidgetMouse.prototype);
+    _.extend(BlockEditorWidget.prototype, BlockEditorWidgetKeyboard.prototype);
+    _.extend(BlockEditorWidget.prototype, BlockEditorWidgetOperatingModes.prototype);
+    _.extend(BlockEditorWidget.prototype, BlockEditorWidgetLinkableItem.prototype);
+    _.extend(BlockEditorWidget.prototype, BlockEditorWidgetEventDispatcher.prototype);
+    _.extend(BlockEditorWidget.prototype, BlockEditorWidgetDraggable.prototype);
+    _.extend(BlockEditorWidget.prototype, BlockEditorWidgetDroppable.prototype);
+    _.extend(BlockEditorWidget.prototype, BlockEditorWidgetHighlightUpdater.prototype);
+    _.extend(BlockEditorWidget.prototype, BlockEditorWidgetContextMenu.prototype);
 
-    return SnapEditorWidget;
+    return BlockEditorWidget;
 });

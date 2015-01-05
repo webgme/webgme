@@ -6,8 +6,8 @@
  */
 
 define(['logManager',
-    'js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function (logManager,
-                                                                             SnapEditorWidgetConstants) {
+    'js/Widgets/BlockEditor/BlockEditorWidget.Constants'], function (logManager,
+                                                                             BlockEditorWidgetConstants) {
 
     "use strict";
 
@@ -56,10 +56,10 @@ define(['logManager',
 
     SearchManager.prototype.filterItems = function (searchDesc) {
         if (searchDesc && searchDesc !== '') {
-            this.$el.addClass(SnapEditorWidgetConstants.HIGHLIGHT_MODE_CLASS);
+            this.$el.addClass(BlockEditorWidgetConstants.HIGHLIGHT_MODE_CLASS);
             this._doSearch(searchDesc);
         } else {
-            this.$el.removeClass(SnapEditorWidgetConstants.HIGHLIGHT_MODE_CLASS);
+            this.$el.removeClass(BlockEditorWidgetConstants.HIGHLIGHT_MODE_CLASS);
             this._clear();
         }
     };

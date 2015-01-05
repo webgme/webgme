@@ -7,7 +7,7 @@
  * Adding decorator support for showing connection areas
  */
 
-define(['./SnapEditorWidget.Constants'], function (SNAP_CONSTANTS){
+define(['./BlockEditorWidget.Constants'], function (SNAP_CONSTANTS){
     
     "use strict";
 
@@ -17,11 +17,11 @@ define(['./SnapEditorWidget.Constants'], function (SNAP_CONSTANTS){
         CONN_AREA = "conn-area",
         DATA_CONN_AREA_ID = "connection-id";
 
-    var SnapEditorWidgetDecoratorBaseConnectionAreas = function(){
+    var BlockEditorWidgetDecoratorBaseConnectionAreas = function(){
     };
 
     //For debugging
-    SnapEditorWidgetDecoratorBaseConnectionAreas.prototype.displayAllConnectionAreas = function (options) {
+    BlockEditorWidgetDecoratorBaseConnectionAreas.prototype.displayAllConnectionAreas = function (options) {
         //Display all connections areas with the given colors
         var areas = this.getConnectionAreas(),
             i = areas.length,
@@ -36,12 +36,12 @@ define(['./SnapEditorWidget.Constants'], function (SNAP_CONSTANTS){
     };
 
     //Displaying Connection Area
-    SnapEditorWidgetDecoratorBaseConnectionAreas.prototype.displayConnectionArea = function (id) {
+    BlockEditorWidgetDecoratorBaseConnectionAreas.prototype.displayConnectionArea = function (id) {
         this.hideConnectionAreas();
         this._displayConnectionArea(id);
     };
 
-    SnapEditorWidgetDecoratorBaseConnectionAreas.prototype._displayConnectionArea = function (id) {
+    BlockEditorWidgetDecoratorBaseConnectionAreas.prototype._displayConnectionArea = function (id) {
         var w = this.$el.outerWidth(true),
             h = this.$el.outerHeight(true),
             shiftVal = CONN_AREA_SIZE/2,
@@ -93,7 +93,7 @@ define(['./SnapEditorWidget.Constants'], function (SNAP_CONSTANTS){
         }
     };
 
-    SnapEditorWidgetDecoratorBaseConnectionAreas.prototype._getConnectionHighlight = function (ptr, role) {
+    BlockEditorWidgetDecoratorBaseConnectionAreas.prototype._getConnectionHighlight = function (ptr, role) {
         var highlights = this.getSVGCustomData(SNAP_CONSTANTS.CONNECTION_HIGHLIGHT),
             i;
 
@@ -121,7 +121,7 @@ define(['./SnapEditorWidget.Constants'], function (SNAP_CONSTANTS){
         return null;
     };
 
-    SnapEditorWidgetDecoratorBaseConnectionAreas.prototype._getConnectionAreaById = function (id) {
+    BlockEditorWidgetDecoratorBaseConnectionAreas.prototype._getConnectionAreaById = function (id) {
         var areas = this.getConnectionAreas(),
             i = areas.length;
 
@@ -134,11 +134,11 @@ define(['./SnapEditorWidget.Constants'], function (SNAP_CONSTANTS){
         return null;
     };
 
-    SnapEditorWidgetDecoratorBaseConnectionAreas.prototype.hideConnectionAreas = function () {
+    BlockEditorWidgetDecoratorBaseConnectionAreas.prototype.hideConnectionAreas = function () {
         if(this._connHighlight){
             this._connHighlight.empty();
         }
     };
 
-    return SnapEditorWidgetDecoratorBaseConnectionAreas;
+    return BlockEditorWidgetDecoratorBaseConnectionAreas;
 });

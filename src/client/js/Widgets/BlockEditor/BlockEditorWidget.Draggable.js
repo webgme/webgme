@@ -8,25 +8,25 @@
 define(['js/DragDrop/DragSource',
         'js/DragDrop/DragHelper',
         'util/assert',
-        './SnapEditorWidget.Constants'], function (dragSource,
+        './BlockEditorWidget.Constants'], function (dragSource,
                                                    dragHelper,
                                                    assert,
-                                                   SnapEditorWidgetConstants) {
+                                                   BlockEditorWidgetConstants) {
 
     "use strict";
 
-    var SnapEditorWidgetDraggable,
-        DRAG_HELPER_CLASS = 'snap-editor-drag-outline',
+    var BlockEditorWidgetDraggable,
+        DRAG_HELPER_CLASS = 'block-editor-drag-outline',
         DRAG_HELPER_EL_BASE = $('<div/>', {'class': DRAG_HELPER_CLASS}),
         DRAG_HELPER_ICON_MOVE = $('<i class="icon-move"></i>'),
         DRAG_HELPER_ICON_COPY = $('<i class="icon-plus"></i>'),
         DRAG_HELPER_BUFFER = 15;
 
-    SnapEditorWidgetDraggable = function () {
+    BlockEditorWidgetDraggable = function () {
     };
 
 
-    SnapEditorWidgetDraggable.prototype._makeDraggable = function (item) {
+    BlockEditorWidgetDraggable.prototype._makeDraggable = function (item) {
         var self = this;
 
         dragSource.makeDraggable(item.$el, {
@@ -48,7 +48,7 @@ define(['js/DragDrop/DragSource',
             },
             'start': function (event, ui) {
                 //Set the drop focus
-                self.dropFocus = SnapEditorWidgetConstants.BACKGROUND;
+                self.dropFocus = BlockEditorWidgetConstants.BACKGROUND;
 
                 //Start the connection highlight updater
                 self.registerDraggingItem(ui.helper);
@@ -63,12 +63,12 @@ define(['js/DragDrop/DragSource',
                     if (event.originalEvent.target instanceof SVGElement) {
                         var classDef = event.originalEvent.target.getAttribute("class");
                         if (classDef) {
-                            ret = classDef.split(' ').indexOf(SnapEditorWidgetConstants.CONNECTOR_CLASS) === -1;
+                            ret = classDef.split(' ').indexOf(BlockEditorWidgetConstants.CONNECTOR_CLASS) === -1;
                         } else {
                             ret = true;
                         }
                     } else {
-                        ret = !$(event.originalEvent.target).hasClass(SnapEditorWidgetConstants.CONNECTOR_CLASS);
+                        ret = !$(event.originalEvent.target).hasClass(BlockEditorWidgetConstants.CONNECTOR_CLASS);
                     }
                 }
                 return ret;
@@ -76,12 +76,12 @@ define(['js/DragDrop/DragSource',
         });
     };
 
-    SnapEditorWidgetDraggable.prototype._destroyDraggable = function (item) {
+    BlockEditorWidgetDraggable.prototype._destroyDraggable = function (item) {
         dragSource.destroyDraggable(item.$el);
     };
 
     /* OVERWRITE DragSource.prototype.dragHelper */
-    SnapEditorWidgetDraggable.prototype._dragHelper = function (item, event, dragInfo) {
+    BlockEditorWidgetDraggable.prototype._dragHelper = function (item, event, dragInfo) {
         var firstItem = null,
             items = {},
             i,
@@ -164,7 +164,7 @@ define(['js/DragDrop/DragSource',
         return dragElement;
     };
 
-    SnapEditorWidgetDraggable.prototype.getCursorLocation = function (event, itemId) {
+    BlockEditorWidgetDraggable.prototype.getCursorLocation = function (event, itemId) {
         //Get the correct cursor location relative to the div
         var location = {},
             item = this.items[itemId],
@@ -181,12 +181,12 @@ define(['js/DragDrop/DragSource',
         return location;
     };
 
-    SnapEditorWidgetDraggable.prototype.getDragItems = function (selectedElements) {
-        this.logger.warning("SnapEditorWidgetDraggable.getDragItems is not overridden in the controller!!! selectedElements: " + selectedElements);
+    BlockEditorWidgetDraggable.prototype.getDragItems = function (selectedElements) {
+        this.logger.warning("BlockEditorWidgetDraggable.getDragItems is not overridden in the controller!!! selectedElements: " + selectedElements);
         return [];
     };
 
-    SnapEditorWidgetDraggable.prototype.getDragEffects = function (selectedElements, event) {
+    BlockEditorWidgetDraggable.prototype.getDragEffects = function (selectedElements, event) {
         var ctrlKey = event.ctrlKey || event.metaKey,
             effects = [dragSource.DRAG_EFFECTS.DRAG_MOVE];
 
@@ -200,7 +200,7 @@ define(['js/DragDrop/DragSource',
         return effects;
     };
 
-    SnapEditorWidgetDraggable.prototype.getDragParams = function (selectedElements, event) {
+    BlockEditorWidgetDraggable.prototype.getDragParams = function (selectedElements, event) {
         var params = { 'positions': {}},
             i = selectedElements.length,
             itemID,
@@ -218,9 +218,9 @@ define(['js/DragDrop/DragSource',
         return params;
     };
 
-    SnapEditorWidgetDraggable.prototype.DRAG_EFFECTS = dragSource.DRAG_EFFECTS;
+    BlockEditorWidgetDraggable.prototype.DRAG_EFFECTS = dragSource.DRAG_EFFECTS;
 
 
 
-    return SnapEditorWidgetDraggable;
+    return BlockEditorWidgetDraggable;
 });

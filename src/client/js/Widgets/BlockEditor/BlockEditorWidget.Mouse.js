@@ -5,27 +5,27 @@
  * @author brollb / https://github/brollb
  */
 
-define(['./SnapEditorWidget.Constants'], function (SnapEditorWidgetConstants) {
+define(['./BlockEditorWidget.Constants'], function (BlockEditorWidgetConstants) {
 
     "use strict";
 
-    var EVENT_POSTFIX = 'SnapEditorWidget';
+    var EVENT_POSTFIX = 'BlockEditorWidget';
 
-    var SnapEditorWidgetMouse = function () {
+    var BlockEditorWidgetMouse = function () {
     };
 
-    SnapEditorWidgetMouse.prototype.initialize = function(el) {
+    BlockEditorWidgetMouse.prototype.initialize = function(el) {
         this.$el = el;
         
         this._activateMouseListeners();
     };
     
-    SnapEditorWidgetMouse.prototype._activateMouseListeners = function () {
+    BlockEditorWidgetMouse.prototype._activateMouseListeners = function () {
         var self = this,
             logger = this.logger;
 
         //handle click on linkable-items
-        this.$el.on('mousedown.' + EVENT_POSTFIX, 'div.' + SnapEditorWidgetConstants.DESIGNER_ITEM_CLASS,  function (event) {
+        this.$el.on('mousedown.' + EVENT_POSTFIX, 'div.' + BlockEditorWidgetConstants.DESIGNER_ITEM_CLASS,  function (event) {
             var itemId = $(this).attr("id"),
                 eventDetails = self._processMouseEvent(event, true, false, true, true);
 
@@ -72,7 +72,7 @@ define(['./SnapEditorWidget.Constants'], function (SnapEditorWidgetConstants) {
         });
     };
 
-    SnapEditorWidgetMouse.prototype._processMouseEvent = function (event, triggerUIActivity, preventDefault, stopPropagation, stopImmediatePropagation) {
+    BlockEditorWidgetMouse.prototype._processMouseEvent = function (event, triggerUIActivity, preventDefault, stopPropagation, stopImmediatePropagation) {
         //trigger that the user switched to this widget
         if (triggerUIActivity === true) {
             this._triggerUIActivity();
@@ -93,7 +93,7 @@ define(['./SnapEditorWidget.Constants'], function (SnapEditorWidgetConstants) {
         return this._getMouseEventDetails(event);
     };
 
-    SnapEditorWidgetMouse.prototype._getMouseEventDetails = function (event) {
+    BlockEditorWidgetMouse.prototype._getMouseEventDetails = function (event) {
         var mousePos = this.getAdjustedMousePos(event),
             eventDetails = { 'rightClick': event.which === 3,
                              'ctrlKey': event.ctrlKey,
@@ -106,7 +106,7 @@ define(['./SnapEditorWidget.Constants'], function (SnapEditorWidgetConstants) {
         return eventDetails;
     };
 
-    SnapEditorWidgetMouse.prototype.trackMouseMoveMouseUp = function (fnMouseMove, fnMouseUp) {
+    BlockEditorWidgetMouse.prototype.trackMouseMoveMouseUp = function (fnMouseMove, fnMouseUp) {
         var self = this;
 
         $(document).on('mousemove.' + EVENT_POSTFIX, function (event) {
@@ -130,5 +130,5 @@ define(['./SnapEditorWidget.Constants'], function (SnapEditorWidgetConstants) {
     };
 
 
-    return SnapEditorWidgetMouse;
+    return BlockEditorWidgetMouse;
 });

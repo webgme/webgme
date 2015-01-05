@@ -2,13 +2,13 @@
 /*
  * @author brollb / https://github/brollb
  *
- * Stretching functionality for Snap SVG Decorator
+ * Stretching functionality for Block SVG Decorator
  */
 
-define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONSTANTS){
+define(['js/Widgets/BlockEditor/BlockEditorWidget.Constants'], function(SNAP_CONSTANTS){
 
     /*
-     * This SVG was created with Snap! (byob) in mind.
+     * This SVG was created with Block! (byob) in mind.
      *
      * This SVG is dynamic and has the following features:
      *      - contains it's name in the svg itself
@@ -42,7 +42,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
         AXIS = { X:'x', Y:'y' },
         SPLITTER = '-';
 
-    var SVGDecoratorSnapEditorWidgetStretch = function(){
+    var SVGDecoratorBlockEditorWidgetStretch = function(){
     };
 
     /**
@@ -51,7 +51,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      * @private
      * @return {undefined}
      */
-    SVGDecoratorSnapEditorWidgetStretch.prototype.initializeStretchability = function (stretchers) {
+    SVGDecoratorBlockEditorWidgetStretch.prototype.initializeStretchability = function (stretchers) {
         //Stretching stuff
         this._transforms = {};//The current abs stretch of any svg element in the SVG
         //this._updatedSVGElements = {};//The elements that have been updated since last render
@@ -103,7 +103,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      *
      * @return {undefined}
      */
-    SVGDecoratorSnapEditorWidgetStretch.prototype._initializeSVGElements = function () {
+    SVGDecoratorBlockEditorWidgetStretch.prototype._initializeSVGElements = function () {
         var self = this,
             svgId,
             width,
@@ -315,11 +315,11 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      * @private
      * @return {String} id
      */
-    SVGDecoratorSnapEditorWidgetStretch.prototype._genSVGId = function () {
+    SVGDecoratorBlockEditorWidgetStretch.prototype._genSVGId = function () {
         return this._genUniqueId('SVG');
     };
 
-    SVGDecoratorSnapEditorWidgetStretch.prototype._genUniqueId = function (baseId) {
+    SVGDecoratorBlockEditorWidgetStretch.prototype._genUniqueId = function (baseId) {
         var MAX_ID = 10000000,
             id = baseId + Math.floor(Math.random()*MAX_ID);
 
@@ -335,7 +335,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      *
      * @return {undefined}
      */
-    SVGDecoratorSnapEditorWidgetStretch.prototype._buildConnectionAreaShiftTree = function () {
+    SVGDecoratorBlockEditorWidgetStretch.prototype._buildConnectionAreaShiftTree = function () {
         var axis,
             connectionAreas = this._customConnectionAreas,
             data,
@@ -415,7 +415,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
         }
     };
 
-    SVGDecoratorSnapEditorWidgetStretch.prototype.onRenderGetStretchInfo = function(){
+    SVGDecoratorBlockEditorWidgetStretch.prototype.onRenderGetStretchInfo = function(){
         this._fixNullDimensions();
         this.updateSize();//Updates the boundary box
     };
@@ -425,7 +425,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      *
      * @return {undefined}
      */
-    SVGDecoratorSnapEditorWidgetStretch.prototype.updateShifts = function(){
+    SVGDecoratorBlockEditorWidgetStretch.prototype.updateShifts = function(){
         var ids = Object.keys(this.stretchedElements),
             id,
             stretch;
@@ -443,7 +443,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
         this._shiftConnectionAreas();
     };
 
-    SVGDecoratorSnapEditorWidgetStretch.prototype._clearShifts = function(){
+    SVGDecoratorBlockEditorWidgetStretch.prototype._clearShifts = function(){
         var area,
             ids = Object.keys(this._transforms),
             id,
@@ -486,7 +486,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      * @param {Number} shift
      * @return {Object} extreme edges of the elements
      */
-    SVGDecoratorSnapEditorWidgetStretch.prototype._shiftDependentElements = function (id, axis, originalShift) {
+    SVGDecoratorBlockEditorWidgetStretch.prototype._shiftDependentElements = function (id, axis, originalShift) {
         var shiftElements = {},
             dim,
             shift = originalShift,
@@ -518,7 +518,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      * @param {String} axis
      * @param {Number} shift
      */
-    SVGDecoratorSnapEditorWidgetStretch.prototype._shiftConnectionAreas = function () {
+    SVGDecoratorBlockEditorWidgetStretch.prototype._shiftConnectionAreas = function () {
         var areas,
             svgId,
             originalShift,
@@ -564,7 +564,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      * @param {String} id
      * @param {Object} shift
      */
-    SVGDecoratorSnapEditorWidgetStretch.prototype._shiftCustomConnectionHighlightAreas = function (ptr, role, axis, shift) {
+    SVGDecoratorBlockEditorWidgetStretch.prototype._shiftCustomConnectionHighlightAreas = function (ptr, role, axis, shift) {
         if (this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT]){
 
             var i = this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT].length;
@@ -588,7 +588,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      * @param {Number} stretch
      * @return {undefined}
      */
-    SVGDecoratorSnapEditorWidgetStretch.prototype._stretchCustomConnectionHighlightAreas = function (stretchClass, stretch) {
+    SVGDecoratorBlockEditorWidgetStretch.prototype._stretchCustomConnectionHighlightAreas = function (stretchClass, stretch) {
         if (this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT]){
 
             var i = this[SNAP_CONSTANTS.CONNECTION_HIGHLIGHT].length;
@@ -608,7 +608,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      *
      * @return {undefined}
      */
-    SVGDecoratorSnapEditorWidgetStretch.prototype._applyTransforms = function () {
+    SVGDecoratorBlockEditorWidgetStretch.prototype._applyTransforms = function () {
         //WRITE ONLY
         var elements = Object.keys(this._transforms),
             element,
@@ -644,7 +644,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      * @param id
      * @return {undefined}
      */
-    SVGDecoratorSnapEditorWidgetStretch.prototype._updateSVGTransforms = function (svg) {
+    SVGDecoratorBlockEditorWidgetStretch.prototype._updateSVGTransforms = function (svg) {
         //WRITE ONLY
         var id = svg.id,
             width = this._transforms[id].original.width + this._transforms[id].stretch.width,
@@ -679,7 +679,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      * @param {String} stretchId
      * @return {Boolean} return true if size has changed
      */
-    SVGDecoratorSnapEditorWidgetStretch.prototype._setTextAndStretch = function (element, newText, stretchId, extra) {
+    SVGDecoratorBlockEditorWidgetStretch.prototype._setTextAndStretch = function (element, newText, stretchId, extra) {
         //READ-ONLY wrt the DOM
         var oldText = element.text(),
             oldWidth = element.width(),
@@ -723,7 +723,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      * @param {enum} type optional
      * @return {Boolean} true if the svg has changed in size
      */
-    SVGDecoratorSnapEditorWidgetStretch.prototype.stretchTo = function (id, size, type) {
+    SVGDecoratorBlockEditorWidgetStretch.prototype.stretchTo = function (id, size, type) {
         //Doesn't READ or WRITE to DOM
         //Stretch according to the x,y values where x,y are
         //dimensions of the items pointed to by "id"
@@ -777,7 +777,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
      * @param {enum} type ("svg"|"text")
      * @return {undefined}
      */
-    SVGDecoratorSnapEditorWidgetStretch.prototype.stretch = function (id, axis, delta, type) {
+    SVGDecoratorBlockEditorWidgetStretch.prototype.stretch = function (id, axis, delta, type) {
         //Doesn't READ or WRITE to DOM
         var stretchElements = [],
             dim = axis === AXIS.X ? "width" : "height",
@@ -853,7 +853,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
     //Some svg elements have unknown dimensions until the svg is actually rendered 
     //on the screen. I have stored "null" for those elements and we will calculate 
     //them on render (using the following function)
-    SVGDecoratorSnapEditorWidgetStretch.prototype._fixNullDimensions = function(){//fixes null dimensions
+    SVGDecoratorBlockEditorWidgetStretch.prototype._fixNullDimensions = function(){//fixes null dimensions
         //READ-ONLY wrt DOM
         var ids = Object.keys(this._transforms),
             element,
@@ -882,7 +882,7 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
 
     };
 
-    SVGDecoratorSnapEditorWidgetStretch.prototype.updateSize = function(){
+    SVGDecoratorBlockEditorWidgetStretch.prototype.updateSize = function(){
         var ids = Object.keys(this._transforms),
             edge,
             axis,
@@ -916,5 +916,5 @@ define(['js/Widgets/SnapEditor/SnapEditorWidget.Constants'], function(SNAP_CONST
     };
 
 
-    return SVGDecoratorSnapEditorWidgetStretch;
+    return SVGDecoratorBlockEditorWidgetStretch;
 });
