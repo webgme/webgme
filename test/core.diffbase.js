@@ -1,6 +1,7 @@
 /**
  * Created by tamas on 12/29/14.
  */
+  require('./_globals.js');
 var WebGME = require('../webgme'),
   FS = require('fs'),
   storage = new WebGME.serverUserStorage({host:'127.0.0.1',port:27017,database:'multi'});
@@ -145,7 +146,7 @@ describe('Core#Diff#CommonBase',function(){
         return done(err);
       }
       if(c !== commitChain[7]){
-        done(new Error('expected: '+commitChain[7]+', got: '+c));
+        return done(new Error('expected: '+commitChain[7]+', got: '+c));
       }
       done();
     });
