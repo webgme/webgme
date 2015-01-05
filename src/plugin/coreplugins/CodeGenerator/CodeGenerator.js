@@ -93,7 +93,7 @@ define(['plugin/PluginConfig',
                     //Save the constraint changes
                     self.save(saveMessage, function(err){
                         //Download code files
-                        self._saveOutput(function(err){
+                        self.onFinish(self.code, function(err){
                             if(err){ 
                                 self.result.success = false;
                                 callback(err,self.result);
@@ -142,7 +142,7 @@ define(['plugin/PluginConfig',
         this._setNodeEndCode();
 
         currentNode = this.core.getPointerPath(currentNode, 'next');
-        this.generatedCode += this._generateCode(currentNode) + "\n";
+        this.generatedCode += this._generateBlockCode(currentNode) + "\n";
 
         this._mergeCodeSegments();
 
@@ -374,12 +374,12 @@ define(['plugin/PluginConfig',
         return this._nodeCache[nodePath];
     };
 
-    CodeGenerator.prototype._generateCode = function(nodeId){
+    CodeGenerator.prototype._generateBlockCode = function(nodeId){
         //Map stuff to code and return the code snippet
         var node = this.getNode(nodeId),
             base = this.core.getBase(node),
             typeName = this.core.getAttribute(base, 'name'),
-            snippet = this.langSpec.codeMap[typeName],//Get the code for the given node...
+            snippet = this.langSpec.codeMap[typeName],  // Get the code for the given node...
             ptrs = this.core.getPointerNames(node),
             attributes = this.core.getAttributeNames(node),
             attribute,
@@ -448,7 +448,7 @@ define(['plugin/PluginConfig',
                 }
 
                 attribute = this.core.getAttribute(node, attributes[i]);
-                if (attributes[i] === "name"){
+                if (attributes[i] === "name"){  // Assuming variable block
                     // Retrieve language satisfactory variable name from USR namespace
                     snippetTagContent[attributes[i]] = this.variables[namespace.USR][attribute] || attribute;
                 } else {
@@ -466,7 +466,7 @@ define(['plugin/PluginConfig',
 
                 if(this.core.getPointerPath(node, ptrs[i])){
                     targetNode = this.core.getPointerPath(node, ptrs[i]);
-                    snippetTagContent[ptrs[i]] = this._generateCode(targetNode);
+                    snippetTagContent[ptrs[i]] = this._generateBlockCode(targetNode);
                 } 
                 if (!snippetTagContent[ptrs[i]]){
                     if (this.langSpec.optionalPlaceholders.indexOf(ptrs[i]) !== -1){
@@ -606,6 +606,10 @@ define(['plugin/PluginConfig',
         code = code.replace(placeholder, funcDefs);
 
         this.generatedCode = code;
+    };
+
+    CodeGenerator.prototype.onFinish = function(code, callback){
+        this._saveOutput(callback);
     };
 
     CodeGenerator.prototype._errorMessages = function(message){
