@@ -2,6 +2,7 @@
  * Created by tamas on 12/31/14.
  */
 //these test intended to test the functions of the client layer
+require('./_globals.js');
 var WebGME = require('../webgme'),
   FS = require('fs'),
   requirejs = require('requirejs');
@@ -229,7 +230,7 @@ describe('Client#Basic#Pre',function(){
   setTimeout(done,2000);
  });
  it('creates a client instance with proper configuration',function(done){
-  CLNT = new CLIENT({host:" ",port:8080});
+  CLNT = new CLIENT({host:" ",port:80});
   done();
  });
  it('initializes and starts the client',function(done){
