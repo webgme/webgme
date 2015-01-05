@@ -9710,23 +9710,30 @@ define('storage/cache',[ "util/assert" ], function (ASSERT) {
 			var cache = {};
 			var cacheSize = 0;
 
+			function tryFreeze(o) {
+				try{
+					Object.freeze(o);
+				}
+				catch(e){
+					//TODO find the proper answer why this can occur
+					return;
+				}
+			}
+
+			function maybeFreeze(o) {
+				if (o !== null && typeof ob === "object") {
+					deepFreeze(o);
+				}
+			}
+
 			function deepFreeze (obj) {
 				ASSERT(typeof obj === "object");
 
-
-                try{
-				    Object.freeze(obj);
-                }
-                catch(e){
-                    //TODO find the proper answer why this can occur
-                    return;
-                }
+				tryFreeze(obj);
 
 				var key;
 				for (key in obj) {
-					if (obj[key] !== null && typeof obj[key] === "object") {
-						deepFreeze(obj[key]);
-					}
+					maybeFreeze(obj[key]);
 				}
 			}
 
@@ -14157,6 +14164,7 @@ define('client',[
         _selfCommits = {},
         AllPlugins, AllDecorators;
 
+
       if (!_configuration.host) {
         if (window) {
           _configuration.host = window.location.protocol + "//" + window.location.host;
@@ -14236,7 +14244,16 @@ define('client',[
       }
 
       function newDatabase() {
-        return Storage({log: LogManager.create('client-storage'), user: getUserId(), host: _configuration.host});
+        var storageOptions ={log: LogManager.create('client-storage'), host: _configuration.host};
+        if(WebGMEGlobal.TESTING === true){
+          storageOptions.type = 'node';
+          storageOptions.host = 'http://localhost';
+          storageOptions.port = _configuration.port;
+          storageOptions.user = "TEST";
+        } else {
+          storageOptions.user = getUserId();
+        }
+        return Storage(storageOptions);
       }
 
       function changeBranchState(newstate) {
