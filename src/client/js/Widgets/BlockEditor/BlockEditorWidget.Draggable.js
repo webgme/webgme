@@ -32,8 +32,9 @@ define(['js/DragDrop/DragSource',
         dragSource.makeDraggable(item.$el, {
             'helper': function (event, dragInfo) {
                 //Set the cursorAt value
-                $(this).draggable("option", "cursorAt", self.getCursorLocation(event, item.id));
-                return self._dragHelper(item, event, dragInfo);
+                var element = self._dragHelper(item, event, dragInfo);
+                $(this).draggable("option", "cursorAt", self.getCursorLocation(element, event, item.id));
+                return element;
             },
             'drag': function(event, ui){
             },
@@ -159,24 +160,48 @@ define(['js/DragDrop/DragSource',
         dragElement.height(maxY);
 
         //DEBUGGING
-        dragElement.css("background-color", "grey");
+        //dragElement.css("background-color", "grey");
         
         return dragElement;
     };
 
-    BlockEditorWidgetDraggable.prototype.getCursorLocation = function (event, itemId) {
+    /**
+     * Calculated the cursor's position on the dragged item.
+     *
+     * @param {HTML} element
+     * @param {Object} event
+     * @param {String} itemId
+     * @return {Location} Location of the cursor
+     */
+    BlockEditorWidgetDraggable.prototype.getCursorLocation = function (element, event, itemId) {
         //Get the correct cursor location relative to the div
         var location = {},
+            width = element.width()-2*DRAG_HELPER_BUFFER,
+            height = element.height()-2*DRAG_HELPER_BUFFER,
             item = this.items[itemId],
             zoom = this._zoomRatio,
+            scaledWidth = width*zoom,
+            scaledHeight = height*zoom,
+            p1,
+            p2,
+            p3,
             mouseX,
             mouseY;
 
         mouseX = (event.pageX - item.$el.parent().offset().left)/zoom;
         mouseY = (event.pageY - item.$el.parent().offset().top)/zoom;
 
-        location.left = mouseX - item.positionX + DRAG_HELPER_BUFFER;
-        location.top = mouseY - item.positionY + DRAG_HELPER_BUFFER;
+        // p1 is the relative cursor location with respect to the clicked on item
+        p1 = [mouseX - item.positionX, mouseY - item.positionY];
+
+        // p2 is the adjusted p1 wrt zoom
+        p2 = [scaledWidth * (p1[0]/width), scaledHeight * (p1[1]/height)];
+
+        // p3 is the adjusted p1 given the top left of the scaled image as the origin
+        p3 = [(scaledWidth-width)/2 + p1[0], (scaledHeight-height)/2 + p1[1]];
+
+        location.left = p1[0] - (p3[0]-p2[0]) + DRAG_HELPER_BUFFER;
+        location.top = p1[1] - (p3[1]-p2[1]) + DRAG_HELPER_BUFFER;
 
         return location;
     };
