@@ -15344,10 +15344,14 @@ define('client',[
           _configuration.host = "";
         }
       }
-      require([_configuration.host + '/listAllDecorators', _configuration.host + '/listAllPlugins'], function (d, p) {
-        AllDecorators = WebGMEGlobal.allDecorators;
-        AllPlugins = WebGMEGlobal.allPlugins;
-      });
+      if(typeof WebGMEGlobal !== 'undefined') {
+        require([_configuration.host + '/listAllDecorators', _configuration.host + '/listAllPlugins'], function (d, p) {
+          AllDecorators = WebGMEGlobal.allDecorators;
+          AllPlugins = WebGMEGlobal.allPlugins;
+        });
+      } else {
+        console.warn('WebGMEGlobal not defined - cannot get plugins.');
+      }
 
       function print_nodes(pretext) {
         if (pretext) {
@@ -15417,7 +15421,7 @@ define('client',[
 
       function newDatabase() {
         var storageOptions ={log: LogManager.create('client-storage'), host: _configuration.host};
-        if(WebGMEGlobal.TESTING === true){
+        if(typeof WebGMEGlobal !== 'undefined' && WebGMEGlobal.TESTING === true){
           storageOptions.type = 'node';
           storageOptions.host = 'http://localhost';
           storageOptions.port = _configuration.port;
@@ -15700,7 +15704,9 @@ define('client',[
         refreshToken();
 
         //TODO check if this is okay to set it here
-        WebGMEGlobal.getToken = getToken;
+        if(typeof WebGMEGlobal !== 'undefined') {
+           WebGMEGlobal.getToken = getToken;
+        }
         return {
           getToken: getToken
         };
