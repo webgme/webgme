@@ -426,8 +426,10 @@ describe('Client#Basic#Territory',function(done){
   TERR = CLNT.addUI({},function(events){
    var ids = [],allLoad = true,i;
    for(i=0;i<events.length;i++){
-    ids.push(events[i].eid);
-    if(events[i].etype !== 'load'){
+    if(events[i].eid !== null){
+     ids.push(events[i].eid);
+    }
+    if(events[i].etype !== 'load' && events[i].etype !== 'complete' && events[i].etype !== 'incomplete'){
      allLoad = false;
     }
    }

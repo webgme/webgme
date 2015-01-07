@@ -2,12 +2,12 @@
  * Created by tkecskes on 1/6/2015.
  */
 define([
-  './asmcrypto',
   './sha1',
   './zssha1',
   './assert',
-  './canon'
-],function(ASM,SHA1,ZS,ASSERT,CANON){
+  './canon',
+  './asmcryptosha1' //->asmCrypto
+],function(SHA1,ZS,ASSERT,CANON){
 
   var keyType = null;
   var ZSSHA = new ZS();
@@ -25,7 +25,7 @@ define([
     if(keyType === null){
       //TODO setting the type of the key
       //keyType = 'plainSHA1';
-      keyType = 'ZSSHA';
+      keyType = 'asmSHA1';
     }
 
     ASSERT(typeof keyType === 'string');
@@ -35,7 +35,7 @@ define([
         return rand320Bits();
         break;
       case 'asmSHA1':
-        return ASM.SHA1.hex(CANON.stringify(object));
+        return asmCrypto.SHA1.hex(CANON.stringify(object));
         break;
       case 'ZSSHA':
         return ZSSHA.getHash(CANON.stringify(object));
