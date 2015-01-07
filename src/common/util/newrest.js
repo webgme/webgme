@@ -42,6 +42,7 @@ define([
             _HTTPError = {
                 'badRequest':400,
                 'forbidden':403,
+                'notFound': 404,
                 'internalServerError':500,
                 'notImplemented':501,
                 'serviceUnavailable':503,
@@ -221,8 +222,11 @@ define([
                 project = null,
                 needRootHash = function(cHash){
                     project.loadObject(cHash,function(err,commit){
-                        if(err || !commit){
-                            return callback(err || new Error('no such commit'));
+                        if(err){
+                            return callback(_HTTPError.internalServerError,err);
+                        }
+                        if(!commit) {
+                            return callback(_HTTPError.notFound,new Error('no such commit ' + cHash));
                         }
 
                         rootHash = commit.root;
@@ -232,7 +236,7 @@ define([
                 initialized = function(){
                 core.loadRoot(rootHash,function(err,root){
                     if(err){
-                        return callback(err);
+                        return callback(_HTTPError.internalServerError,err);
                     }
                     Serialization.export(core,root,function(err,dump){
                         if(err){
@@ -243,26 +247,38 @@ define([
                     });
                 });
             };
-            _storage.openProject(name,function(err,pr){
+            _storage.getProjectNames(function(err,names){
                 if(err){
-                    return callback(err);
+                    return callback(_HTTPError.internalServerError,err);
                 }
 
-                project = pr;
-                core = new Core(project);
-
-                if(rootHash){
-                    initialized();
-                } else if(branch){
-                    project.getBranchHash(branch,"#hack",function(err,cHash){
-                        if(err){
-                            return callback(err);
-                        }
-                        needRootHash(cHash);
-                    });
-                } else {
-                    needRootHash(commitHash);
+                names = names || [];
+                if(names.indexOf(name) === -1){
+                    return callback(_HTTPError.notFound,"unknown project " + name);
                 }
+
+                _storage.openProject(name,function(err,pr){
+                    if(err){
+                        return callback(_HTTPError.internalServerError,err);
+                    }
+
+                    project = pr;
+                    core = new Core(project);
+
+                    if(rootHash){
+                        initialized();
+                    } else if(branch){
+                        project.getBranchHash(branch,"#hack",function(err,cHash){
+                            if(err){
+                                return callback(_HTTPError.internalServerError,err);
+                            }
+                            needRootHash(cHash);
+                        });
+                    } else {
+                        needRootHash(commitHash);
+                    }
+                });
+
             });
         }
 

@@ -7,7 +7,11 @@
 define([ 'storage/mongo', 'storage/server', 'storage/cache', 'storage/log', 'storage/broadcaster'], function (Mongo,Server,Cache,Log,Broadcaster) {
     "use strict";
     function server(options){
-        return new Server(new Log(new Cache/*(new Broadcaster*/(new Mongo(options)/*,options)*/,options),options),options);
+        var server = /*new Broadcaster(*/new Mongo(options)/*,options)*/;
+        if (options.cache !== 0) {
+            server = new Cache(server, options);
+        }
+        return new Server(new Log(server, options), options);
     }
 
 

@@ -1,3 +1,4 @@
+/*global __dirname, webGMEGlobal */
 var requirejs = require("requirejs"),
     BASEPATH = __dirname + "/../..",
     WEBGME = require(BASEPATH + '/../webgme');
@@ -59,7 +60,7 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
         if(initialized !== true){
             initialized = true;
 
-            webGMEGlobal.setConfig(parameters.globConf);
+            WebGMEGlobal.setConfig(parameters.globConf);
             _CONFIG = parameters.globConf;
             if(_CONFIG.authorization === true){
                 AUTH = GMEAUTH(parameters.auth);

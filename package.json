@@ -32,6 +32,7 @@
     "connect": "=2.10.0",
     "passport": "=0.1.10",
     "passport-google": "=0.3.0",
+    "process": "^0.10.0",
     "socket.io-client": "=0.9.10",
     "jszip": "=2.2.0",
     "commander": "=2.1.0",
@@ -39,9 +40,15 @@
     "superagent": "=0.18.2"
   },
   "devDependencies": {
-      "gulp": "=3.8.6",
-      "gulp-jshint": "=1.8.0",
-      "jshint-stylish": "=0.4.0"
+    "gulp": "=3.8.6",
+    "gulp-jshint": "=1.8.0",
+    "jshint-stylish": "=0.4.0",
+    "mocha": "^2.1.0",
+    "jscoverage":"^0.5.9"
   },
-  "main": "webgme"
+  "main": "webgme",
+  "scripts": {
+    "start": "node src/bin/start_server.js",
+    "test": "node node_modules/mocha/bin/mocha --recursive test"
+  }
 }

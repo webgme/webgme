@@ -132,25 +132,7 @@ define([ "util/assert", "core/coretree", "core/tasync", "util/canon" ], function
 				ASSERT(array.indexOf(source) < 0);
 
 				array = array.slice(0);
-				// Since we are starting with a sorted array, we can do `array.push(source); array.sort();` much more efficiently as follows:
-				var insert = function (element, array) {
-					array.splice(locationOf(element, array) + 1, 0, element);
-					return array;
-				}
-				var locationOf = function (element, array, start, end) {
-					start = start || 0;
-					end = end || array.length;
-					var pivot = parseInt(start + (end - start) / 2, 10);
-					if (array[pivot] === element) return pivot;
-					if (end - start <= 1)
-						return array[pivot] > element ? pivot - 1 : pivot;
-					if (array[pivot] < element) {
-						return locationOf(element, array, pivot, end);
-					} else {
-						return locationOf(element, array, start, pivot);
-					}
-				}
-				insert(source, array);
+				array.push(source);
 			} else {
 				array = [ source ];
 			}

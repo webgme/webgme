@@ -164,6 +164,7 @@ define([
         _selfCommits = {},
         AllPlugins, AllDecorators;
 
+
       if (!_configuration.host) {
         if (window) {
           _configuration.host = window.location.protocol + "//" + window.location.host;
@@ -243,7 +244,16 @@ define([
       }
 
       function newDatabase() {
-        return Storage({log: LogManager.create('client-storage'), user: getUserId(), host: _configuration.host});
+        var storageOptions ={log: LogManager.create('client-storage'), host: _configuration.host};
+        if(WebGMEGlobal.TESTING === true){
+          storageOptions.type = 'node';
+          storageOptions.host = 'http://localhost';
+          storageOptions.port = _configuration.port;
+          storageOptions.user = "TEST";
+        } else {
+          storageOptions.user = getUserId();
+        }
+        return Storage(storageOptions);
       }
 
       function changeBranchState(newstate) {
@@ -528,7 +538,10 @@ define([
         ASSERT(_project);
         callback = callback || function () {
         };
-        var myCallback = null;
+        var myCallback = function(err){
+          myCallback = function(){};
+          callback(err);
+        };
         var redoerNeedsClean = true;
         var branchHashUpdated = function (err, newhash, forked) {
           var doUpdate = false;
@@ -574,12 +587,12 @@ define([
                 if(doUpdate){
                   _project.loadObject(newhash, function (err, commitObj) {
                     if (!err && commitObj) {
-                      loading(commitObj.root);
+                      loading(commitObj.root,myCallback);
                     } else {
                       setTimeout(function () {
                         _project.loadObject(newhash, function (err, commitObj) {
                           if (!err && commitObj) {
-                            loading(commitObj.root);
+                            loading(commitObj.root,myCallback);
                           } else {
                             console.log("second load try failed on commit!!!", err);
                           }
@@ -587,12 +600,6 @@ define([
                       }, 1000);
                     }
                   });
-                }
-
-                if (callback) {
-                  myCallback = callback;
-                  callback = null;
-                  myCallback();
                 }
 
                 //branch status update
@@ -671,19 +678,11 @@ define([
                 return _project.getBranchHash(branch, _recentCommits[0], branchHashUpdated);*/
               }
             } else {
-              if (callback) {
-                myCallback = callback;
-                callback = null;
-                myCallback();
-              }
+              myCallback(null);
               return _project.getBranchHash(branch, _recentCommits[0], branchHashUpdated);
             }
           } else {
-            if (callback) {
-              myCallback = callback;
-              callback = null;
-              myCallback();
-            }
+            myCallback(null);
           }
         };
 
@@ -2743,25 +2742,11 @@ define([
         //});
         switch (testnumber) {
           case 1:
-            getFullProjectsInfoAsync(function(err,info){
-              console.log('TESTMETHOD - list',err,info);
-            });
             break;
           case 2:
-            setProjectInfoAsync(getActiveProject(),{
-              visibleName:"TESTMETHOD_"+getActiveProject(),
-              description:"changed by TESTMETHOD",
-              tags:{
-              "1":"sample",
-                "2":"other"
-              }},function(err){
-              console.log('TESTMETHOD - set',err);
-            });
+
             break;
           case 3:
-            getAllInfoTagsAsync(function(err,tags){
-              console.log('tags',err,tags);
-            });
             break;
         }
 

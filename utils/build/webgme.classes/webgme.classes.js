@@ -4,7 +4,7 @@ define('webgme.classes',
     'blob/BlobClient',
     'js/Utils/InterpreterManager'
   ], function (Client, BlobClient, InterpreterManager) {
-    WebGMEGlobal.classes.Client = Client;
-    WebGMEGlobal.classes.BlobClient = BlobClient;
-    WebGMEGlobal.classes.InterpreterManager = InterpreterManager;
+    GME.classes.Client = Client;
+    GME.classes.BlobClient = BlobClient;
+    GME.classes.InterpreterManager = InterpreterManager;
   });

@@ -88,23 +88,30 @@ define([ "util/assert" ], function (ASSERT) {
 			var cache = {};
 			var cacheSize = 0;
 
+			function tryFreeze(o) {
+				try{
+					Object.freeze(o);
+				}
+				catch(e){
+					//TODO find the proper answer why this can occur
+					return;
+				}
+			}
+
+			function maybeFreeze(o) {
+				if (o !== null && typeof o === "object") {
+					deepFreeze(o);
+				}
+			}
+
 			function deepFreeze (obj) {
 				ASSERT(typeof obj === "object");
 
-
-                try{
-				    Object.freeze(obj);
-                }
-                catch(e){
-                    //TODO find the proper answer why this can occur
-                    return;
-                }
+				tryFreeze(obj);
 
 				var key;
 				for (key in obj) {
-					if (obj[key] !== null && typeof obj[key] === "object") {
-						deepFreeze(obj[key]);
-					}
+					maybeFreeze(obj[key]);
 				}
 			}
 

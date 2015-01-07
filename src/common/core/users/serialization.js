@@ -31,7 +31,6 @@ define(['util/assert'],function(ASSERT){
 
         //loading all library element
         gatherNodesSlowly(libraryRoot,function(err){
-
             if(err){
                 return callback(err);
             }
@@ -177,33 +176,19 @@ define(['util/assert'],function(ASSERT){
         };
     }
     function gatherNodesSlowly(node,callback){
-        //this function collects all the containment sub-tree of the given node
-        var children,
-            guid = _core.getGuid(node),
-            loadNextChildsubTree = function(index){
-                if(index<children.length){
-                    gatherNodesSlowly(children[index],function(err){
-                        if(err){
-                            return callback(err);
-                        }
-
-                        loadNextChildsubTree(index+1);
-                    });
-                } else {
-                    callback(null);
+        _core.loadSubTree(node,function(err,nodes){
+            var guid,i;
+            if(!err && nodes){
+                for(i=0;i<nodes.length;i++){
+                    guid = _core.getGuid(nodes[i]);
+                    _nodes[guid] = nodes[i];
+                    _guidKeys.push(guid);
+                    _pathToGuidMap[_core.getPath(nodes[i])] = guid;
                 }
-            };
-
-        _nodes[guid] = node;
-        _guidKeys.push(guid);
-        _pathToGuidMap[_core.getPath(node)] = guid;
-        _core.loadChildren(node,function(err,c){
-            if(err){
-                return callback(err);
+                callback(null);
+            } else {
+                callback(err);
             }
-
-            children = c;
-            loadNextChildsubTree(0);
         });
     }
     function gatherAncestors(){
@@ -354,13 +339,13 @@ define(['util/assert'],function(ASSERT){
                     for(j=0;j<tArray.length;j++){
                         //here comes the transformation itself
                         toDelete = [];
-                        for(k=0;k<jsonObject[keys[i]][tArray[j]].length;k++) {
-                            if (_pathToGuidMap[jsonObject[keys[i]][tArray[j]][k]]) {
-                                jsonObject[keys[i]][tArray[j]][k] = _pathToGuidMap[jsonObject[keys[i]][tArray[j]][k]];
-                            } else if (baseGuid(jsonObject[keys[i]][tArray[j]][k])) {
-                                jsonObject[keys[i]][tArray[j]][k] = baseGuid(jsonObject[keys[i]][tArray[j]][k]);
+                        for(k=0;k<jsonObject.aspects[tArray[j]].length;k++) {
+                            if (_pathToGuidMap[jsonObject.aspects[tArray[j]][k]]) {
+                                jsonObject.aspects[tArray[j]][k] = _pathToGuidMap[jsonObject.aspects[tArray[j]][k]];
+                            } else if (baseGuid(jsonObject.aspects[tArray[j]][k])) {
+                                jsonObject.aspects[tArray[j]][k] = baseGuid(jsonObject.aspects[tArray[j]][k]);
                             } else {
-                                toDelete.push(j);
+                                toDelete.push(k);
                             }
                         }
 
@@ -368,9 +353,11 @@ define(['util/assert'],function(ASSERT){
                             toDelete = toDelete.sort();
                             toDelete = toDelete.reverse();
                             for (k = 0; k < toDelete.length; k++) {
-                                jsonObject.items.splice(jsonObject[keys[i]][tArray[j]][k], 1);
+                                jsonObject.aspects[tArray[j]].splice(toDelete[k], 1);
                             }
                         }
+
+                        jsonObject.aspects[tArray[j]] = jsonObject.aspects[tArray[j]].sort();
 
                     }
                 } else {
@@ -581,12 +568,12 @@ define(['util/assert'],function(ASSERT){
                 //we should go among containment hierarchy
                 updateNodes(_import.root.guid,null,_import.containment);
 
-                //now we can add or modify the relations of the nodes - we go along the hierarchy chain
-                updateRelations(_import.root.guid,_import.containment);
-
                 //now update inheritance chain
                 //we assume that our inheritance chain comes from the FCO and that it is identical everywhere
                 updateInheritance();
+
+                //now we can add or modify the relations of the nodes - we go along the hierarchy chain
+                updateRelations();
 
                 //finally we need to update the meta rules of each node - again along the containment hierarchy
                 updateMetaRules(_import.root.guid,_import.containment);
@@ -676,14 +663,31 @@ define(['util/assert'],function(ASSERT){
         updateRegistry(guid);
     }
 
-    function updateRelations(guid,containmentTreeObject){
-        var keys,i;
-        updateNodeRelations(guid);
-        keys = Object.keys(containmentTreeObject);
-        for(i=0;i<keys.length;i++){
-            updateRelations(keys[i],containmentTreeObject[keys[i]]);
+    function getInheritanceBasedGuidOrder(){
+        var inheritanceOrdered = Object.keys(_import.nodes).sort(),i= 0,baseGuid,baseIndex;
+        while(i<inheritanceOrdered.length){
+            baseGuid = _import.nodes[inheritanceOrdered[i]].base;
+            if(baseGuid){
+                baseIndex = inheritanceOrdered.indexOf(baseGuid);
+                if(baseIndex > i){
+                    inheritanceOrdered.splice(baseIndex,1);
+                    inheritanceOrdered.splice(i,0,baseGuid);
+                } else {
+                    ++i;
+                }
+            } else {
+                ++i;
+            }
+        }
+        return inheritanceOrdered;
+    }
+    function updateRelations(){
+        var guids = getInheritanceBasedGuidOrder(),i;
+        for(i=0;i<guids.length;i++){
+            updateNodeRelations(guids[i]);
         }
     }
+
     function updateNodeRelations(guid){
         //although it is possible that we set the base pointer at this point we should go through inheritance just to be sure
         var node = _nodes[guid],
