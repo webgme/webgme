@@ -39,6 +39,7 @@ define(['js/Widgets/BlockEditor/BlockEditorWidget.Constants'], function(SNAP_CON
     "use strict";
 
     var DEBUG = false,
+        ID_NUMBER = 0,
         AXIS = { X:'x', Y:'y' },
         SPLITTER = '-';
 
@@ -320,14 +321,7 @@ define(['js/Widgets/BlockEditor/BlockEditorWidget.Constants'], function(SNAP_CON
     };
 
     SVGDecoratorBlockEditorWidgetStretch.prototype._genUniqueId = function (baseId) {
-        var MAX_ID = 10000000,
-            id = baseId + Math.floor(Math.random()*MAX_ID);
-
-        while(this._transforms[id]){
-            id = baseId + Math.floor(Math.random()*MAX_ID);
-        }
-
-        return id;
+        return baseId + (++ID_NUMBER);
     };
 
     /**
