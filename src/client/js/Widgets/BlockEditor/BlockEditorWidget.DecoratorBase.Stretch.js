@@ -624,11 +624,13 @@ define(['js/Widgets/BlockEditor/BlockEditorWidget.Constants'], function(SNAP_CON
         }
 
         //Set the height/width as needed
-
         for (var dim in this._svgSize){
             if (this._svgSize.hasOwnProperty(dim)){
                 this.$svgElement[0].setAttribute(dim, this._svgSize[dim]);
             }
+
+            // Set the height of the container
+            this.$el.css(dim, this._svgSize[dim]);
         }
 
         if (DEBUG){

@@ -15,11 +15,13 @@ define(['js/DragDrop/DragSource',
 
     "use strict";
 
-    var BlockEditorWidgetDraggable,
+    var DEBUG = false,
+        BlockEditorWidgetDraggable,
         DRAG_HELPER_CLASS = 'block-editor-drag-outline',
         DRAG_HELPER_EL_BASE = $('<div/>', {'class': DRAG_HELPER_CLASS}),
         DRAG_HELPER_ICON_MOVE = $('<i class="icon-move"></i>'),
         DRAG_HELPER_ICON_COPY = $('<i class="icon-plus"></i>'),
+        DRAG_HELPER_ITEM_ID = 'dragged-items',
         DRAG_HELPER_BUFFER = 15;
 
     BlockEditorWidgetDraggable = function () {
@@ -86,20 +88,13 @@ define(['js/DragDrop/DragSource',
         var firstItem = null,
             items = {},
             i,
-            dragElement = $('<div/>', {'id': item.id });
+            draggedItems = $('<div/>', {id: DRAG_HELPER_ITEM_ID}),
+            draggedElement = $('<div/>', {id: item.id});
 
+        assert(!item.items, 'Can\'t select multiple items to drag');
 
-        if(!item.items){
-            firstItem = item.id;
-            items[item.id] = { item: item, z: 100000 };
-
-        }else{//set of items are selected
-            assert(false, "Can't select multiple items to drag");
-            i = item.items.length;
-            while(i--){
-                items[item.items[i].getId()] = { item: item.items[i], z: 100000 };
-            }
-        }
+        firstItem = item.id;
+        items[item.id] = { item: item, z: 100000 };
 
         //Add all the dependent items
         var keys = Object.keys(items),
@@ -123,8 +118,8 @@ define(['js/DragDrop/DragSource',
         //Create a element containing all these
         var itemId,
             itemElement,
-            shiftX = item.positionX - DRAG_HELPER_BUFFER,
-            shiftY = item.positionY - DRAG_HELPER_BUFFER,
+            shiftX = item.positionX,
+            shiftY = item.positionY,
             box,
             maxX = 0,
             maxY = 0;
@@ -145,24 +140,43 @@ define(['js/DragDrop/DragSource',
                              "left": items[itemId].item.positionX - shiftX + "px",
                              "top": items[itemId].item.positionY - shiftY + "px"});
 
-            dragElement.append(itemElement);
+            draggedItems.append(itemElement);
         }
 
         // Handle zoom! FIXME
-        var zoom = this._zoomRatio;
-        dragElement.css('transform', 'scale(' + zoom + ',' + zoom + ')');
+        // The zoom is currently affecting the sensitivity for drag-n-drop...
+        var zoom = this._zoomRatio,
+            itemsX,  // relative x,y location of draggedItems
+            itemsY,
+            width,
+            height;
+
+        draggedItems.css('transform', 'scale(' + zoom + ',' + zoom + ')');
 
         //Set height, width of the helper
-        maxX += DRAG_HELPER_BUFFER - shiftX;
-        maxY += DRAG_HELPER_BUFFER - shiftY;
+        width = (maxX - item.positionX);
+        height = (maxY - item.positionY);
 
-        dragElement.width(maxX);
-        dragElement.height(maxY);
+        draggedElement.append(draggedItems);
+
+        draggedItems.css({'left': (width*(zoom-1))/2 + DRAG_HELPER_BUFFER,
+                          'top': (height*(zoom-1))/2 + DRAG_HELPER_BUFFER,
+                          'position': 'relative',
+                          'width': width,
+                          'height': height});
+
+        draggedElement.css({width: (zoom*width) + 2*DRAG_HELPER_BUFFER,
+                            height: (zoom*height) + 2*DRAG_HELPER_BUFFER});
 
         //DEBUGGING
-        //dragElement.css("background-color", "grey");
+        if (DEBUG) {
+            draggedItems.css('background-color', 'blue');
+            draggedItems.css('opacity', '.5');
+            draggedElement.css('background-color', 'red');
+            draggedElement.css('opacity', '.5');
+        }
         
-        return dragElement;
+        return draggedElement;
     };
 
     /**
@@ -184,7 +198,6 @@ define(['js/DragDrop/DragSource',
             scaledHeight = height*zoom,
             p1,
             p2,
-            p3,
             mouseX,
             mouseY;
 
@@ -197,11 +210,8 @@ define(['js/DragDrop/DragSource',
         // p2 is the adjusted p1 wrt zoom
         p2 = [scaledWidth * (p1[0]/width), scaledHeight * (p1[1]/height)];
 
-        // p3 is the adjusted p1 given the top left of the scaled image as the origin
-        p3 = [(scaledWidth-width)/2 + p1[0], (scaledHeight-height)/2 + p1[1]];
-
-        location.left = p1[0] - (p3[0]-p2[0]) + DRAG_HELPER_BUFFER;
-        location.top = p1[1] - (p3[1]-p2[1]) + DRAG_HELPER_BUFFER;
+        location.left = p2[0] + DRAG_HELPER_BUFFER;
+        location.top = p2[1] + DRAG_HELPER_BUFFER;
 
         return location;
     };

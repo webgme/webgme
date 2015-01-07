@@ -192,30 +192,6 @@ define(['js/DragDrop/DropTarget',
                 ptr = item.activeConnectionArea.ptr,
                 connId;
 
-            //If multiple ptrs, select the closest compatible
-            if(ptr instanceof Array){//Find the closest compatible area
-                var ptrs = ptr,
-                    shortestDistance,
-                    connArea,
-                    draggedItem = this.items[draggedId],
-                    role = item.activeConnectionArea.role === BlockEditorWidgetConstants.CONN_INCOMING ?
-                        BlockEditorWidgetConstants.CONN_OUTGOING : BlockEditorWidgetConstants.CONN_INCOMING;
-
-                i = ptrs.length;
-
-                while (i--){
-                    connArea = draggedItem.getConnectionArea(ptrs[i], role);
-
-                    if (connArea && (!shortestDistance || draggedItem.__getDistanceBetweenConnections(connArea, 
-                                    item.activeConnectionArea) < shortestDistance)){
-                                        shortestDistance = draggedItem.__getDistanceBetweenConnections(connArea, 
-                                                item.activeConnectionArea);
-                                        ptr = ptrs[i];
-                                    }
-                }
-
-            }
-
             //Make sure they aren't already connected
             if (!item.getItemAtConnId(item.activeConnectionArea.id) || 
                 draggedId !== item.getItemAtConnId(item.activeConnectionArea.id).id){

@@ -55,7 +55,8 @@ define(['logManager',
         this._color = SNAP_CONSTANTS.COLOR_PRIMARY;
 
         //Size info
-        this._calculatedSize = {};
+        this._actualWidth = null;
+        this._actualHeight = null;
     };
 
     _.extend(LinkableItem.prototype, ItemBase.prototype);
@@ -696,6 +697,57 @@ define(['logManager',
         return box;
     };
 
+    
+    /**
+     * Update the size of the item. 
+     *
+     * Includes fix for the jquery zoom bug caused by incorrect 
+     * handling of "transform: scale" css in jquery
+     *
+     * @return {undefined}
+     *
+     */
+    LinkableItem.prototype.setSize = function (w, h) {
+        var changed = false;
+
+        if (_.isNumber(w) && _.isNumber(h)) {
+            if (this._width !== w) {
+                this._width = w;
+                changed = true;
+            }
+
+            if (this._height !== h) {
+                this._height = h;
+                changed = true;
+            }
+
+            if (changed === true) {
+                this.canvas.dispatchEvent(this.canvas.events.ITEM_SIZE_ChANGED, {"ID": this.id,
+                    "w": this._width,
+                    "h": this._height});
+            }
+        }
+
+        this.updateZoom(this.canvas._zoomRatio);
+    };
+
+    /**
+     * Update the size of the container wrt the zoom.
+     *
+     * @param {Number} zoom
+     * @return {boolean} changed
+     */
+    LinkableItem.prototype.updateZoom = function(zoom) {
+        var oldWidth = this._actualWidth,
+            oldHeight = this._actualHeight;
+
+        this._actualWidth = this._width*zoom;
+        this._actualHeight = this._height*zoom;
+
+        return oldWidth !== this._actualWidth || oldHeight !== this._actualHeight;  // true if it changed
+    };
+
+
     /******************** ALTER SVG  *********************/
     /**
      * Update size based on all 'out' pointers 
@@ -1181,6 +1233,23 @@ define(['logManager',
         }
     };
 
+
+    // Override
+    LinkableItem.prototype.renderSetLayoutInfo = function () {
+        // Set the width, height of $el to account for zoom
+        this.applySizeContainerInfo();
+        this._callDecoratorMethod("onRenderSetLayoutInfo");
+    };
+
+    /**
+     * Apply the recorded size info to the DOM container css.
+     *
+     * @return {undefined}
+     */
+    LinkableItem.prototype.applySizeContainerInfo = function () {
+        this.$el.css('width', this._actualWidth);
+        this.$el.css('height', this._actualHeight);
+    };
 
     //OVERRIDE
     /**

@@ -221,6 +221,15 @@ define(['logManager',
         offset.top += paddingTop;
 
         this._offset = offset;
+
+        // jQuery does not take into account the css "transform" 
+        // property correctly. Therefore, we will 
+        // adjust each item's container width/height to allow droppable
+        for (var i = this.itemIds.length-1; i >= 0; i--) {
+            if (this.items[this.itemIds[i]].updateZoom(this._zoomRatio)) {
+                this.items[this.itemIds[i]].applySizeContainerInfo();
+            }
+        }
     };
 
     BlockEditorWidget.prototype._attachScrollHandler = function (el) {
