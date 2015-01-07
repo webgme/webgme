@@ -22,7 +22,7 @@
   insertRequire: ["webgme.classes"],
   include: ['./node_modules/requirejs/require'],
   wrap: {
-    start: "var WebGMEGlobal = WebGMEGlobal || {}; WebGMEGlobal.classes = WebGMEGlobal.classes || {};(function(){",
+    start: "var GME = GME || {}; GME.classes = GME.classes || {};(function(){",
     end: "}());"
   }
 })

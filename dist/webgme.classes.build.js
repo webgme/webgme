@@ -1,4 +1,4 @@
-var WebGMEGlobal = WebGMEGlobal || {}; WebGMEGlobal.classes = WebGMEGlobal.classes || {};(function(){/** vim: et:ts=4:sw=4:sts=4
+var GME = GME || {}; GME.classes = GME.classes || {};(function(){/** vim: et:ts=4:sw=4:sts=4
  * @license RequireJS 2.1.11 Copyright (c) 2010-2014, The Dojo Foundation All Rights Reserved.
  * Available via the MIT or new BSD license.
  * see: http://github.com/jrburke/requirejs for details
@@ -21774,9 +21774,9 @@ define('webgme.classes',
     'blob/BlobClient',
     'js/Utils/InterpreterManager'
   ], function (Client, BlobClient, InterpreterManager) {
-    WebGMEGlobal.classes.Client = Client;
-    WebGMEGlobal.classes.BlobClient = BlobClient;
-    WebGMEGlobal.classes.InterpreterManager = InterpreterManager;
+    GME.classes.Client = Client;
+    GME.classes.BlobClient = BlobClient;
+    GME.classes.InterpreterManager = InterpreterManager;
   });
 
 
