@@ -23,9 +23,13 @@ define([
   }
   return function KeyGenerator(object){
     if(keyType === null){
-      //TODO setting the type of the key
-      //keyType = 'plainSHA1';
-      keyType = 'asmSHA1';
+      if(WebGMEGlobal && WebGMEGlobal.config && typeof WebGMEGlobal.config.keyType === 'string'){
+        keyType = WebGMEGlobal.config.keyType;
+      } else if(WebGMEGlobal && typeof WebGMEGlobal.getConfig === 'function'){
+        keyType = WebGMEGlobal.getConfig().storageKeyType || "plainSHA1";
+      } else {
+        keyType = "plainSHA1";
+      }
     }
 
     ASSERT(typeof keyType === 'string');
