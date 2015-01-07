@@ -58,7 +58,8 @@ define([
     };
 
     BlockEditorWidgetHighlightUpdater.prototype.registerDraggingItem = function (ui) {
-        var i;
+        var i,
+            draggedItemContainer = ui.children()[0];
 
         this._ui = ui;
         this._underItems = {};
@@ -67,9 +68,8 @@ define([
         this._draggedTree = {};
         this._draggedTree[LEAVES] = [];
 
-        i = this._ui.children().length;
-        while (i--){
-            this._draggedIds[ this._ui.children()[i].id ] = true;
+        for (i = draggedItemContainer.children.length-1; i >= 0; i--){
+            this._draggedIds[ draggedItemContainer.children[i].id ] = true;
         }
 
         // BFS from the root taking all sibling ptr paths
