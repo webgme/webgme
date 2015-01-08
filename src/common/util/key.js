@@ -11,7 +11,7 @@ define([
 
   var keyType = null;
   var ZSSHA = new ZS();
-  function rand320Bits(){
+  function rand160Bits(){
     //#4ca8ccec576284f66055d9f6c1a571d48a70902c
     var result = "", i,code;
     for (i = 0; i < 40; i++) {
@@ -35,8 +35,8 @@ define([
     ASSERT(typeof keyType === 'string');
 
     switch (keyType){
-      case 'rand320Bits':
-        return rand320Bits();
+      case 'rand160Bits':
+        return rand160Bits();
         break;
       case 'asmSHA1':
         return asmCrypto.SHA1.hex(CANON.stringify(object));
