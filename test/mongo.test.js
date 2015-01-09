@@ -36,7 +36,6 @@ describe('MONGO',function(){
       }
     };
   before(function(done){
-    console.warn
     MONGO.MongoClient.connect("mongodb://127.0.0.1/mongotest",{
       'w':1,
       'native-parser':true,
@@ -68,6 +67,16 @@ describe('MONGO',function(){
   });
   it('insert some objects and in a parallel insertion uses fsync and checks if really everything is in place',function(done){
     var i,filler="",normalItemCount = 100,error=null,
+      addObject = function(index){
+        console.warn('object insertion started ',index);
+        collection.insert({data:filler},function(err){
+          console.warn('object insertion returned ',index);
+          error = error ||err;
+          if(--normalItemCount === 0){
+            finishedAll();
+          }
+        });
+      },
       finishedAll = function(){
         done(error);
       }
@@ -77,12 +86,7 @@ describe('MONGO',function(){
     }
 
     for(i=0;i<99;i++){
-      collection.insert({data:filler},function(err){
-        error = error ||err;
-        if(--normalItemCount === 0){
-          finishedAll();
-        }
-      });
+      addObject(i);
     }
     fsyncDatabase(function(err){
       error = error || err;

@@ -542,20 +542,11 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                         ++saveBucketSize;
                         saveBucket.push({object:object,cb:callback});
                         saveBucketTimer = setTimeout(function(){
-                            var myBucket = saveBucket;
-                            saveBucket = [];
-                            saveBucketTimer = null;
-                            saveBucketSize = 0;
-                            insertObjects(myBucket);
+                           flushSaveBucket();
                         },10);
                     } else if (saveBucketSize === 99){
                         saveBucket.push({object:object,cb:callback});
-                        var myBucket = saveBucket;
-                        saveBucket = [];
-                        clearTimeout(saveBucketTimer);
-                        saveBucketTimer = null;
-                        saveBucketSize = 0;
-                        insertObjects(myBucket);
+                        flushSaveBucket();
                     } else {
                         ++saveBucketSize;
                         saveBucket.push({object:object,cb:callback});
@@ -568,6 +559,22 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
             var saveBucket = [],
                 saveBucketSize = 0,
                 saveBucketTimer;
+
+            function flushSaveBucket(){
+                var myBucket = saveBucket;
+                saveBucket = [];
+                try{
+                    clearTimeout(saveBucketTimer);
+                } catch(e){
+                    //TODO there is no task to do here
+                }
+                saveBucketTimer = null;
+                saveBucketSize = 0;
+                if(myBucket.length > 0){
+                    insertObjects(myBucket);
+                }
+            }
+            
             function insertObjects (objects) {
                 var storeObjects = [],i;
                 for(i=0;i<objects.length;i++){
@@ -734,6 +741,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                         cb: callback,
                         to: setTimeout(callbackTimeout, options.timeout, guid)
                     };
+                    flushSaveBucket();
                     socket.emit('setBranchHash', project, branch, oldhash, newhash, function (err) {
                         if (callbacks[guid]) {
                             clearTimeout(callbacks[guid].to);
