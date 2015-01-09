@@ -360,57 +360,55 @@ define(["mongodb", "util/assert", "util/canon"], function (MONGODB, ASSERT, CANO
           ongoingUpdate[_branch] = true;
         }
 
-        fsyncDatabase(function () {
-          if (oldhash === newhash) {
-            collection.findOne({
-              _id: branch
-            }, function (err, obj) {
-              if (!err && oldhash !== ((obj && obj.hash) || "")) {
-                err = new Error("branch hash mismatch");
-              }
-              callback(err);
-              ongoingUpdate[_branch] = false;
-              checkQueue(_branch);
-            });
-          } else if (newhash === "") {
-            collection.remove({
-              _id: branch,
-              hash: oldhash
-            }, function (err, num) {
-              if (!err && num !== 1) {
-                err = new Error("branch hash mismatch");
-              }
-              callback(err);
-              ongoingUpdate[_branch] = false;
-              checkQueue(_branch);
-            });
-          } else if (oldhash === "") {
-            collection.insert({
-              _id: branch,
+        if (oldhash === newhash) {
+          collection.findOne({
+            _id: branch
+          }, function (err, obj) {
+            if (!err && oldhash !== ((obj && obj.hash) || "")) {
+              err = new Error("branch hash mismatch");
+            }
+            callback(err);
+            ongoingUpdate[_branch] = false;
+            checkQueue(_branch);
+          });
+        } else if (newhash === "") {
+          collection.remove({
+            _id: branch,
+            hash: oldhash
+          }, function (err, num) {
+            if (!err && num !== 1) {
+              err = new Error("branch hash mismatch");
+            }
+            callback(err);
+            ongoingUpdate[_branch] = false;
+            checkQueue(_branch);
+          });
+        } else if (oldhash === "") {
+          collection.insert({
+            _id: branch,
+            hash: newhash
+          }, function (err) {
+            callback(err);
+            ongoingUpdate[_branch] = false;
+            checkQueue(_branch);
+          });
+        } else {
+          collection.update({
+            _id: branch,
+            hash: oldhash
+          }, {
+            $set: {
               hash: newhash
-            }, function (err) {
-              callback(err);
-              ongoingUpdate[_branch] = false;
-              checkQueue(_branch);
-            });
-          } else {
-            collection.update({
-              _id: branch,
-              hash: oldhash
-            }, {
-              $set: {
-                hash: newhash
-              }
-            }, function (err, num) {
-              if (!err && num !== 1) {
-                err = new Error("branch hash mismatch");
-              }
-              callback(err);
-              ongoingUpdate[_branch] = false;
-              checkQueue(_branch);
-            });
-          }
-        });
+            }
+          }, function (err, num) {
+            if (!err && num !== 1) {
+              err = new Error("branch hash mismatch");
+            }
+            callback(err);
+            ongoingUpdate[_branch] = false;
+            checkQueue(_branch);
+          });
+        }
       }
 
       function getCommits(before, number, callback) {

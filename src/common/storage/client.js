@@ -390,7 +390,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                                 clearTimeout(callbacks[guid].to);
                                 delete callbacks[guid];
                                 projects[project] = {
-                                    fsyncDatabase: fsyncDatabase,
+                                    fsyncDatabase: fsync,
                                     getDatabaseStatus: getDatabaseStatus,
                                     closeProject: closeProject,
                                     loadObject: loadObject,
@@ -418,8 +418,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
             }
 
             //functions
-
-            function fsyncDatabase (callback) {
+            function fsync(callback){
                 ASSERT(typeof callback === 'function');
                 if (socketConnected) {
                     var guid = GUID();
@@ -427,8 +426,9 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                         cb: callback,
                         to: setTimeout(callbackTimeout, options.timeout, guid)
                     };
+                    flushSaveBucket();
                     socket.emit('fsyncDatabase', function (err) {
-                        if (callbacks[guid]) {
+                        if(callbacks[guid]){
                             clearTimeout(callbacks[guid].to);
                             delete callbacks[guid];
                             callback(err);
