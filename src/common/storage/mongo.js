@@ -87,19 +87,15 @@ define(["mongodb", "util/assert", "util/canon"], function (MONGODB, ASSERT, CANO
       var error = null;
       var synced = 0;
 
-      function fsyncConnection(conn) {
-        mongo.lastError({
-          fsync: true
-        }, {
-          connection: conn
-        }, function (err, res) {
-          // ignoring the last error, just forcing all commands through
-          error = error || err;
-
-          if (++synced === conns.length) {
-            callback(error);
-          }
-        });
+      function fsyncConnection (conn) {
+        mongo.command({ getLastError: 1 },{connection:conn},
+          function(err,result){
+            //TODO we ignore the result right now
+            error = error || err;
+            if (++synced === conns.length) {
+              callback(error);
+            }
+          });
       }
 
       var conns = mongo.serverConfig.allRawConnections();

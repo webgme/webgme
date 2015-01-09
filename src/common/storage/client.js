@@ -574,7 +574,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                     insertObjects(myBucket);
                 }
             }
-            
+
             function insertObjects (objects) {
                 var storeObjects = [],i;
                 for(i=0;i<objects.length;i++){

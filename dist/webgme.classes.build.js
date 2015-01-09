@@ -3482,7 +3482,7 @@ define('util/key',[
 
   var keyType = null;
   var ZSSHA = new ZS();
-  function rand320Bits(){
+  function rand160Bits(){
     //#4ca8ccec576284f66055d9f6c1a571d48a70902c
     var result = "", i,code;
     for (i = 0; i < 40; i++) {
@@ -3506,8 +3506,8 @@ define('util/key',[
     ASSERT(typeof keyType === 'string');
 
     switch (keyType){
-      case 'rand320Bits':
-        return rand320Bits();
+      case 'rand160Bits':
+        return rand160Bits();
         break;
       case 'asmSHA1':
         return asmCrypto.SHA1.hex(CANON.stringify(object));
@@ -9878,20 +9878,11 @@ define('storage/client',[ "util/assert", "util/guid" ], function (ASSERT, GUID) 
                         ++saveBucketSize;
                         saveBucket.push({object:object,cb:callback});
                         saveBucketTimer = setTimeout(function(){
-                            var myBucket = saveBucket;
-                            saveBucket = [];
-                            saveBucketTimer = null;
-                            saveBucketSize = 0;
-                            insertObjects(myBucket);
+                           flushSaveBucket();
                         },10);
                     } else if (saveBucketSize === 99){
                         saveBucket.push({object:object,cb:callback});
-                        var myBucket = saveBucket;
-                        saveBucket = [];
-                        clearTimeout(saveBucketTimer);
-                        saveBucketTimer = null;
-                        saveBucketSize = 0;
-                        insertObjects(myBucket);
+                        flushSaveBucket();
                     } else {
                         ++saveBucketSize;
                         saveBucket.push({object:object,cb:callback});
@@ -9904,6 +9895,22 @@ define('storage/client',[ "util/assert", "util/guid" ], function (ASSERT, GUID) 
             var saveBucket = [],
                 saveBucketSize = 0,
                 saveBucketTimer;
+
+            function flushSaveBucket(){
+                var myBucket = saveBucket;
+                saveBucket = [];
+                try{
+                    clearTimeout(saveBucketTimer);
+                } catch(e){
+                    //TODO there is no task to do here
+                }
+                saveBucketTimer = null;
+                saveBucketSize = 0;
+                if(myBucket.length > 0){
+                    insertObjects(myBucket);
+                }
+            }
+
             function insertObjects (objects) {
                 var storeObjects = [],i;
                 for(i=0;i<objects.length;i++){
@@ -10070,6 +10077,7 @@ define('storage/client',[ "util/assert", "util/guid" ], function (ASSERT, GUID) 
                         cb: callback,
                         to: setTimeout(callbackTimeout, options.timeout, guid)
                     };
+                    flushSaveBucket();
                     socket.emit('setBranchHash', project, branch, oldhash, newhash, function (err) {
                         if (callbacks[guid]) {
                             clearTimeout(callbacks[guid].to);
@@ -20317,6 +20325,12 @@ define('blob/BlobClient',['./Artifact', 'blob/BlobMetadata', 'superagent'], func
         // on node-webkit, we use XMLHttpRequest, but xhr.send thinks a Buffer is a string and encodes it in utf-8. Send an ArrayBuffer instead
         if (typeof window !== 'undefined' && typeof Buffer !== 'undefined' && data instanceof Buffer) {
             data = toArrayBuffer(data); // FIXME will this have performance problems
+        }
+        // on node, empty Buffers will cause a crash in superagent
+        if (typeof window === 'undefined' && typeof Buffer !== 'undefined' && data instanceof Buffer) {
+            if (data.length === 0) {
+                data = '';
+            }
         }
         superagent.post(this.getCreateURL(name))
             .set('Content-Type', 'application/octet-stream')
