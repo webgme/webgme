@@ -88,7 +88,7 @@ define(["mongodb", "util/assert", "util/canon"], function (MONGODB, ASSERT, CANO
       var synced = 0;
 
       function fsyncConnection (conn) {
-        mongo.command({ getLastError: 1 },{connection:conn},
+        mongo.command({ getLastError: 1, fsync: true },{connection:conn},
           function(err,result){
             //TODO we ignore the result right now
             error = error || err;
@@ -169,9 +169,7 @@ define(["mongodb", "util/assert", "util/canon"], function (MONGODB, ASSERT, CANO
       ASSERT(mongo !== null && typeof callback === "function");
       ASSERT(typeof name === "string" && PROJECT_REGEXP.test(name));
 
-      var collection = null,
-        branchUpdateQueue = {},
-        ongoingUpdate = {};
+      var collection = null;
 
       mongo.collection(name, function (err, result) {
         if (err) {
@@ -331,20 +329,6 @@ define(["mongodb", "util/assert", "util/canon"], function (MONGODB, ASSERT, CANO
         });
       }
 
-      function checkQueue(branch) {
-        var temp;
-        branchUpdateQueue[branch] = branchUpdateQueue[branch] || [];
-        if (branchUpdateQueue[branch].length > 0) {
-          temp = branchUpdateQueue[branch].shift();
-          setBranchHash(branch, temp.old, temp.new, temp.cb);
-        }
-      }
-
-      function addToQueue(branch, oldhash, newhash, callback) {
-        branchUpdateQueue[branch] = branchUpdateQueue[branch] || [];
-        branchUpdateQueue[branch].push({old: oldhash, new: newhash, cb: callback});
-      }
-
       function setBranchHash(branch, oldhash, newhash, callback) {
         var _branch = branch;
         branch = '*' + branch;
@@ -353,62 +337,52 @@ define(["mongodb", "util/assert", "util/canon"], function (MONGODB, ASSERT, CANO
         ASSERT(typeof newhash === "string" && (newhash === "" || HASH_REGEXP.test(newhash)));
         ASSERT(typeof callback === "function");
 
-        if (ongoingUpdate[_branch] === true) {
-          addToQueue(_branch, oldhash, newhash, callback);
-          return;
-        } else {
-          ongoingUpdate[_branch] = true;
-        }
-
-        if (oldhash === newhash) {
-          collection.findOne({
-            _id: branch
-          }, function (err, obj) {
-            if (!err && oldhash !== ((obj && obj.hash) || "")) {
-              err = new Error("branch hash mismatch");
-            }
-            callback(err);
-            ongoingUpdate[_branch] = false;
-            checkQueue(_branch);
-          });
-        } else if (newhash === "") {
-          collection.remove({
-            _id: branch,
-            hash: oldhash
-          }, function (err, num) {
-            if (!err && num !== 1) {
-              err = new Error("branch hash mismatch");
-            }
-            callback(err);
-            ongoingUpdate[_branch] = false;
-            checkQueue(_branch);
-          });
-        } else if (oldhash === "") {
-          collection.insert({
-            _id: branch,
-            hash: newhash
-          }, function (err) {
-            callback(err);
-            ongoingUpdate[_branch] = false;
-            checkQueue(_branch);
-          });
-        } else {
-          collection.update({
-            _id: branch,
-            hash: oldhash
-          }, {
-            $set: {
+        fsyncDatabase(function(err){
+          if(err){
+            return callback(err);
+          }
+          if (oldhash === newhash) {
+            collection.findOne({
+              _id: branch
+            }, function (err, obj) {
+              if (!err && oldhash !== ((obj && obj.hash) || "")) {
+                err = new Error("branch hash mismatch");
+              }
+              callback(err);
+            });
+          } else if (newhash === "") {
+            collection.remove({
+              _id: branch,
+              hash: oldhash
+            }, function (err, num) {
+              if (!err && num !== 1) {
+                err = new Error("branch hash mismatch");
+              }
+              callback(err);
+            });
+          } else if (oldhash === "") {
+            collection.insert({
+              _id: branch,
               hash: newhash
-            }
-          }, function (err, num) {
-            if (!err && num !== 1) {
-              err = new Error("branch hash mismatch");
-            }
-            callback(err);
-            ongoingUpdate[_branch] = false;
-            checkQueue(_branch);
-          });
-        }
+            }, function (err) {
+              callback(err);
+            });
+          } else {
+            collection.update({
+              _id: branch,
+              hash: oldhash
+            }, {
+              $set: {
+                hash: newhash
+              }
+            }, function (err, num) {
+              if (!err && num !== 1) {
+                err = new Error("branch hash mismatch");
+              }
+              callback(err);
+            });
+          }
+        });
       }
 
       function getCommits(before, number, callback) {
