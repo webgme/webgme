@@ -239,7 +239,7 @@ describe('Client#Basic#Pre',function(){
   CLNT.connectToDatabaseAsync({},done);
  });
  it('creates an empty project',function(done){
-  CLNT.createProjectAsync(projectName,done);
+  CLNT.createProjectAsync(projectName,{},done);
  });
  it('selects the empty project',function(done){
   CLNT.selectProjectAsync(projectName,done);
