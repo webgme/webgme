@@ -1,6 +1,6 @@
 /*globals define,_,WebGMEGlobal,alert*/
 /*
- * @author brollb / https://github/brollb
+ * @author brollb / https:// github/brollb
  */
 
 define(['logManager',
@@ -11,6 +11,7 @@ define(['logManager',
     'js/Utils/GMEConcepts',
     'js/Utils/ExportManager',
     'js/Widgets/BlockEditor/BlockEditorWidget.Constants',
+    'js/Widgets/BlockEditor/BlockEditorWidget.Utils',
     'js/DragDrop/DragHelper'], function (logManager,
                                          util,
                                          CONSTANTS,
@@ -19,6 +20,7 @@ define(['logManager',
                                          GMEConcepts,
                                          ExportManager,
                                          BLOCK_CONSTANTS,
+                                         Utils,
                                          DragHelper) {
     "use strict";
 
@@ -26,7 +28,7 @@ define(['logManager',
         ATTRIBUTES_STRING = "attributes",
         REGISTRY_STRING = "registry";
 
-    BlockEditorControlWidgetEventHandlers = function(){
+    BlockEditorControlWidgetEventHandlers = function() {
     };
 
     BlockEditorControlWidgetEventHandlers.prototype.attachBlockEditorEventHandlers = function () {
@@ -59,8 +61,8 @@ define(['logManager',
             self._onBackgroundDrop(event, dragInfo, position);
         };
 
-        this.snapCanvas.onItemDrop = function (dragged, receiver, ptr, role) {
-            self._onItemDrop(dragged, receiver, ptr, role);
+        this.snapCanvas.onItemDrop = function (params) {
+            self._onItemDrop(params);
         };
 
         this.snapCanvas.onSelectionChanged = function (selectedIds) {
@@ -159,8 +161,8 @@ define(['logManager',
 
                 copyOpts[gmeID][REGISTRY_STRING][REGISTRY_KEYS.POSITION] = { "x": desc.posX, "y": desc.posY };
 
-                //remove the component from UI
-                //it will be recreated when the GME client calls back with the result
+                // remove the component from UI
+                // it will be recreated when the GME client calls back with the result
                 this.snapCanvas.deleteComponent(id);
             }
         }
@@ -172,8 +174,8 @@ define(['logManager',
 
                 copyOpts[gmeID] = {};
 
-                //remove the component from UI
-                //it will be recreated when the GME client calls back with the result
+                // remove the component from UI
+                // it will be recreated when the GME client calls back with the result
                 this.snapCanvas.deleteComponent(id);
             }
         }
@@ -191,7 +193,7 @@ define(['logManager',
 
         while(i--) {
             objID = this._ComponentID2GmeID[idList[i]];
-            //temporary fix to not allow deleting ROOT AND FCO
+            // temporary fix to not allow deleting ROOT AND FCO
             if (GMEConcepts.canDeleteNode(objID)) {
                 objIdList.pushUnique(objID);
             } else {
@@ -218,14 +220,14 @@ define(['logManager',
     */
 
     BlockEditorControlWidgetEventHandlers.prototype._onRegisterSubcomponent = function (objID, sCompID, metaInfo) {
-        //store that a subcomponent with a given ID has been added to object with objID
+        // store that a subcomponent with a given ID has been added to object with objID
         this._GMEID2Subcomponent[metaInfo[CONSTANTS.GME_ID]] = this._GMEID2Subcomponent[metaInfo[CONSTANTS.GME_ID]] || {};
         this._GMEID2Subcomponent[metaInfo[CONSTANTS.GME_ID]][objID] = sCompID;
 
         this._Subcomponent2GMEID[objID] = this._Subcomponent2GMEID[objID] || {};
         this._Subcomponent2GMEID[objID][sCompID] = metaInfo[CONSTANTS.GME_ID];
-        //FIXME Change this to Block! logic
-        //TODO: add event handling here that a subcomponent appeared
+        // FIXME Change this to Block! logic
+        // TODO: add event handling here that a subcomponent appeared
     };
 
     BlockEditorControlWidgetEventHandlers.prototype._onUnregisterSubcomponent = function (objID, sCompID) {
@@ -235,8 +237,8 @@ define(['logManager',
         if (this._GMEID2Subcomponent[gmeID]) {
             delete this._GMEID2Subcomponent[gmeID][objID];
         }
-        //FIXME Change this to Block! logic
-        //TODO: add event handling here that a subcomponent disappeared
+        // FIXME Change this to Block! logic
+        // TODO: add event handling here that a subcomponent disappeared
     };
 
 
@@ -254,14 +256,14 @@ define(['logManager',
             dragAction,
             aspect = this._selectedAspect;
 
-        //check to see what DROP actions are possible
+        // check to see what DROP actions are possible
         if (items.length > 0) {
             i = dragEffects.length;
             while (i--) {
                 switch(dragEffects[i]) {
                     case DragHelper.DRAG_EFFECTS.DRAG_MOVE:
-                        //check to see if dragParams.parentID and this.parentID are the same
-                        //if so, it's not a real move, it is a reposition
+                        // check to see if dragParams.parentID and this.parentID are the same
+                        // if so, it's not a real move, it is a reposition
                         if ((dragParams && dragParams.parentID === parentID) ||
                             GMEConcepts.canCreateChildrenInAspect(parentID, items, aspect)) {
                             dragAction = {'dragEffect': dragEffects[i]};
@@ -285,7 +287,7 @@ define(['logManager',
                             validPointerTypes = GMEConcepts.getValidPointerTypes(parentID, items[0]);
                             if (validPointerTypes.length > 0) {
                                 j = validPointerTypes.length;
-                                //each valid pointer type is an object {'baseId': objId, 'pointer': pointerName}
+                                // each valid pointer type is an object {'baseId': objId, 'pointer': pointerName}
                                 while (j--) {
                                     baseTypeID = validPointerTypes[j].baseId;
                                     baseTypeNode = this._client.getNode(baseTypeID);
@@ -327,7 +329,7 @@ define(['logManager',
         } else if (ptrAName > ptrBName) {
             return 1;
         } else {
-            //ptrAName = ptrBName
+            // ptrAName = ptrBName
             if (baseAName < baseBName) {
                 return -1;
             } else {
@@ -391,7 +393,7 @@ define(['logManager',
                     selectedAction = possibleDropActions[parseInt(key, 10)];
                     self._handleDropAction(selectedAction, dragInfo, position);
                 }, position
-                //this.snapCanvas.posToPageXY(position.x, position.y)
+                // this.snapCanvas.posToPageXY(position.x, position.y)
             );
         }
     };
@@ -429,22 +431,22 @@ define(['logManager',
                 this._client.completeTransaction();
                 break;
             case DragHelper.DRAG_EFFECTS.DRAG_MOVE:
-                //check to see if dragParams.parentID and this.parentID are the same
-                //if so, it's not a real move, it is a reposition
+                // check to see if dragParams.parentID and this.parentID are the same
+                // if so, it's not a real move, it is a reposition
                 
-                //We will remove pointers into the items
+                // We will remove pointers into the items
                 var isHierarchicalMove = dragParams && dragParams.parentID !== parentID;
 
-                //Is a hierarchical move if 
+                // Is a hierarchical move if 
                 isHierarchicalMove = this._areContainedInAnother(items) || isHierarchicalMove;
 
-                this._removeExtraPointers(items);
+                this._removeIncomingPointers(items);
                 if (!isHierarchicalMove) {
-                    //it is a reposition
+                    // it is a reposition
                     this._repositionItems(items, dragParams.positions, position);
                 } else {
-                    //it is a real hierarchical move
-                    //This should move all nodes pointed to by any sibling_ptr also
+                    // it is a real hierarchical move
+                    // This should move all nodes pointed to by any sibling_ptr also
                     items = this._addSiblingDependents(items);
 
                     params = { "parentId": parentID };
@@ -461,17 +463,17 @@ define(['logManager',
 
                     this._client.startTransaction();
                     this._client.moveMoreNodes(params);
-                    //Update the Gme ids and component ids
+                    // Update the Gme ids and component ids
                     this._client.completeTransaction();
                 }
                 break;
             case DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE:
                 params = { "parentId": parentID };
                 i = items.length;
-                while(i--){
+                while(i--) {
                     oldPos = dragParams && dragParams.positions[items[i]] || {'x': 0, 'y': 0};
                     params[items[i]] = { registry: { position:{ x: position.x + oldPos.x, y: position.y + oldPos.y }}};
-                    //old position is not in drag-params
+                    // old position is not in drag-params
                     if (!(dragParams && dragParams.positions[items[i]])) {
                         position.x += POS_INC;
                         position.y += POS_INC;
@@ -489,16 +491,16 @@ define(['logManager',
                 gmeID = this._client.createChild(params);
 
                 if (gmeID) {
-                    //check if old position is in drag-params
+                    // check if old position is in drag-params
                     oldPos = dragParams && dragParams.positions[items[0]] || {'x':0, 'y': 0};
-                    //store new position
+                    // store new position
                     this._client.setRegistry(gmeID, REGISTRY_KEYS.POSITION, {'x': position.x + oldPos.x,
                         'y': position.y + oldPos.y});
 
-                    //set reference
+                    // set reference
                     this._client.makePointer(gmeID, dropAction.pointer, items[0]);
 
-                    //try to set name
+                    // try to set name
                     var origNode = this._client.getNode(items[0]);
                     if (origNode) {
                         var ptrName = origNode.getAttribute(nodePropertyNames.Attributes.name) + "-" + dropAction.pointer;
@@ -513,19 +515,19 @@ define(['logManager',
     };
 
     BlockEditorControlWidgetEventHandlers.prototype._addSiblingDependents = function (items) {
-        //add sibling dependents to items using BFS
+        // add sibling dependents to items using BFS
         var ptrs = BLOCK_CONSTANTS.SIBLING_PTRS,
             j = -1,
             node,
             tgt,
             i;
 
-        while (++j < items.length){
+        while (++j < items.length) {
             i = ptrs.length;
-            while (i--){
+            while (i--) {
                 node = this._client.getNode(items[j]);
                 tgt = node.getPointer(ptrs[i]).to;
-                if (tgt && items.indexOf(tgt) === -1){
+                if (tgt && items.indexOf(tgt) === -1) {
                     items.push(tgt);
                 }
             }
@@ -535,36 +537,40 @@ define(['logManager',
     };
 
     BlockEditorControlWidgetEventHandlers.prototype._updateGmeAndComponentIds = function (ids, idMap) {
-        //Update the id's of the node
+        // Update the id's of the node
         var i = ids.length,
             componentId,
             newGmeId,
             oldGmeId;
 
-        while (i--){
-            if (this._ComponentID2GmeID[ids[i]]){//ids[i] is a component id
+        while (i--) {
+            if (this._ComponentID2GmeID[ids[i]]) {// ids[i] is a component id
                 componentId = ids[i];
                 oldGmeId = this._ComponentID2GmeID[ids[i]];
-            } else {//ids[i] is a Gme id
+            } else {// ids[i] is a Gme id
                 oldGmeId = ids[i];
                 componentId = this._GmeID2ComponentID[ids[i]];
             }
 
             newGmeId = idMap[oldGmeId];
 
-            //Update the dictionaries
+            // Update the dictionaries
             delete this._GmeID2ComponentID[oldGmeId];
             this._GmeID2ComponentID[newGmeId] = componentId;
             this._ComponentID2GmeID[componentId] = newGmeId;
         }
     };
 
-    BlockEditorControlWidgetEventHandlers.prototype._onItemDrop = function (droppedItem, receiver, ptr, role) {
-        //ptr, role are relative to the receiver
-        //receiver has an activeConnectionArea
-        var receiverId = this._ComponentID2GmeID[receiver],
+    BlockEditorControlWidgetEventHandlers.prototype._onItemDrop = function (params) {
+        // ptr, role are relative to the receiver
+        // receiver has an activeConnectionArea
+        var droppedItem = params.firstItem,
+            activeItem = this._ComponentID2GmeID[params.activeItem.id],
+            receiver = params.receiver,
+            ptr = params.ptr,
+            role = params.role,
+            receiverId = this._ComponentID2GmeID[receiver],
             receiverItem = this.snapCanvas.items[receiver],
-            receiverConnId = receiverItem.activeConnectionArea.id,
 
             node = this._client.getNode(receiverId),
             receiverParentId = node.getParentId(),
@@ -573,159 +579,56 @@ define(['logManager',
             droppedParentId,
             firstId = this._ComponentID2GmeID[droppedItem],
             newIds = {},
-            params,
             moveItems,
 
-            tryToSplice = receiverItem.isOccupied(receiverConnId),
-            splicing = false,//check to see if we should splice 
+            splicing = false,// check to see if we should splice 
             prevItem,
+            isSiblingPtr = BLOCK_CONSTANTS.SIBLING_PTRS.indexOf(ptr) > -1,
             nextItem = this.snapCanvas.items[droppedItem],
             conn = receiverItem.activeConnectionArea,
             i;
 
-        node = this._client.getNode(this._ComponentID2GmeID[droppedItem]);
+        node = this._client.getNode(firstId);
         droppedParentId = node.getParentId();
 
         this._client.startTransaction();
 
-        this._removeExtraPointers([this._ComponentID2GmeID[droppedItem]]);
+        // Remove incoming pointers to the dragged item
+        this._removeIncomingPointers([this._ComponentID2GmeID[droppedItem]]);
 
-        //Determine if we will be splicing or not
-        if (tryToSplice){
-            //I will get the next item and try to create a pointer btwn
-            //the dropping item and the nextItem
-
-            //Can we make a connection between them?
-            //Follow the connection from the dropping item
-            //if the connection doesn't exist -> don't splice
-            //if there isn't a 'nextItem' to go to -> splice on the open connection
-
-            while (nextItem && conn){
-                conn = nextItem.getConnectionArea(ptr, role);
-                if (conn){
-                    prevItem = nextItem;
-                    nextItem = nextItem.getItemAtConnId(conn.id);
-                    if (nextItem){
-                        gmeId = this._ComponentID2GmeID[nextItem.id];
-
-                        //Make sure the item is one of the dragged items
-                        if (droppedItems.indexOf(gmeId) === -1){
-                            nextItem = null;
-                        }
-                    }
-                }
-            }
-
-            splicing = conn && !nextItem; //can splice if there is a connection without an item
-        }
-
-        //If the ptr is not PTR_NEXT, we should move all dragged items into the receiver
-        //in terms of hierarchy
-        if (BLOCK_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1 || receiverParentId !== droppedParentId){
-            var items2Move,
-                ptrs2Create = {},
-                gmeId,
-                newId,
-                oldId,
-                ptrs,
-                ptrInfo,
-                id,
-                p;
-
-            //Set items2Move
-            if (splicing || role === BLOCK_CONSTANTS.CONN_OUTGOING){//Move the draggedItems
-                items2Move = droppedItems;
-
-                if (BLOCK_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1){
-                    params = { "parentId": receiverId };
-                } else {
-                    params = { "parentId": receiverParentId };
-                }
-
-            } else {//Move the receiving items
-                items2Move = this._addSiblingDependents([receiverId]);
-
-                if (BLOCK_CONSTANTS.SIBLING_PTRS.indexOf(ptr) === -1){
-                    params = { "parentId": firstId };
-                } else {
-                    params = { "parentId": droppedParentId };
-                }
-
-            }
-
-            i = items2Move.length;
-            while (i--) {
-                gmeId = items2Move[i];
-                params[gmeId] = {};
-
-                //Record pointers to create
-                node = this._client.getNode(gmeId);
-                ptrs = node.getPointerNames();
-                id = node.getId();
-                ptrs2Create[id] = [];
-
-                while (ptrs.length){
-                    p = ptrs.pop();
-                    ptrs2Create[id].push({ ptr: p, to: node.getPointer(p).to });
-                }
-            }
-
-            newIds = this._client.moveMoreNodes(params);
-
-            //For each of the droppedItems, I will need to update the ptrs
-            var keys = Object.keys(ptrs2Create);
-
-            while (keys.length){
-                id = keys.pop();
-                ptrs = ptrs2Create[id];
-
-                while (ptrs.length){
-                    ptrInfo = ptrs.pop();
-                    oldId = ptrInfo.to;
-                    newId = newIds[oldId];
-
-                    if (newId){
-                        this._client.makePointer(newIds[id], ptrInfo.ptr, newId);
-                    }
-                }
-            }
-            //Update receiverId/firstId as needed
-            firstId = newIds[firstId] || firstId;
-            receiverId = newIds[receiverId] || receiverId;
-        }
-
-        if (splicing){
-            //Make a connection between them
-            var prevGmeId = this._ComponentID2GmeID[prevItem.id],
-                spliceToItem = receiverItem.getItemAtConnId(receiverConnId),
-                spliceToId = this._ComponentID2GmeID[spliceToItem.id],
-                otherPtr = ptr;
-
-            if (role === BLOCK_CONSTANTS.CONN_INCOMING){
-                otherPtr = spliceToItem.getPtrFromItem(receiverItem.id);
-            }
-
-            //Look up new ids if either have been moved
-            prevGmeId = newIds[prevGmeId] || prevGmeId;
-            spliceToId = newIds[spliceToId] || spliceToId;
-
-            if (role === BLOCK_CONSTANTS.CONN_INCOMING){
-                this._client.makePointer(spliceToId, otherPtr, prevGmeId);
+        // Check if we should perform hierarchical move
+        if (!isSiblingPtr || receiverParentId !== droppedParentId) {
+            var options = {items: droppedItems};
+            if (isSiblingPtr) {
+                options.parentId = receiverParentId;
             } else {
-                this._client.makePointer(prevGmeId, otherPtr, spliceToId);
+                options.parentId = receiverId;
             }
+            newIds = this._moveNodesAndUpdate(options);
+            // Update receiverId/firstId as needed
             firstId = newIds[firstId] || firstId;
+            activeItem = newIds[activeItem] || activeItem;
             receiverId = newIds[receiverId] || receiverId;
         }
 
-        //Set the first pointer
-        if (role === BLOCK_CONSTANTS.CONN_INCOMING){
-            this._client.makePointer(firstId, ptr, receiverId);
+        // SPLICING
+        splicing = this._tryToSpliceItems({item: params.activeItem,
+                                           rootId: droppedItem,
+                                           receiverItem: receiverItem,
+                                           ids: newIds,
+                                           ptr: ptr,
+                                           offset: params.offset,
+                                           role: role});
 
-            if (!splicing){
-                //Move firstId to the correct location
-                var options = { src: this._GmeID2ComponentID[firstId], 
-                    dst: this._GmeID2ComponentID[receiverId], ptr: ptr },
+        // Set the first pointer
+        if (role === BLOCK_CONSTANTS.CONN_INCOMING) {
+            this._client.makePointer(activeItem, ptr, receiverId);
+
+            if (!splicing) {
+                // Move firstId to the correct location
+                var options = {src: activeItem.id, 
+                               dst: this._GmeID2ComponentID[receiverId], 
+                               ptr: ptr},
                     distance = this.snapCanvas.getConnectionDistance(options),
                     position;
 
@@ -744,48 +647,348 @@ define(['logManager',
         this._client.completeTransaction();
     };
 
+    BlockEditorControlWidgetEventHandlers.prototype._moveNodesAndUpdate = function (options) {
+        var items = options.items,
+            gmeId,
+            node,
+            ids,
+            oldId,
+            id,
+            ptrs2Create = {},
+            ptrInfo,
+            ptrs,
+            newIds,
+            newId,
+            i,
+            params = {parentId: options.parentId};
+
+        for (i = items.length-1; i >= 0; i--) {
+            gmeId = items[i];
+            params[gmeId] = {};
+
+            // Record pointers to update after the move
+            node = this._client.getNode(gmeId);
+            ptrs = node.getPointerNames();
+            id = node.getId();
+            ptrs2Create[id] = [];
+
+            for (var j = ptrs.length-1; j >= 0; j--) {
+                ptrs2Create[id].push({ ptr: ptrs[j], to: node.getPointer(ptrs[j]).to });
+            }
+        }
+
+        newIds = this._client.moveMoreNodes(params);
+
+        // For each of the items, update the ptrs
+        ids = Object.keys(ptrs2Create);
+
+        for (i = ids.length-1; i >= 0; i--) {
+            while (ptrs2Create[ids[i]].length) {
+                ptrInfo = ptrs2Create[ids[i]].pop();
+                oldId = ptrInfo.to;
+                newId = newIds[oldId];
+
+                if (newId) {
+                    this._client.makePointer(newIds[ids[i]], ptrInfo.ptr, newId);
+                }
+            }
+        }
+
+        return newIds;
+    };
+
+    BlockEditorControlWidgetEventHandlers.prototype._tryToSpliceItems = function (params) {
+        var end,
+            offset = params.offset || [0,0],
+            ptr = params.ptr,
+            role = params.role,
+            ids = params.ids,
+            rootId = params.rootId || params.item.id,
+            splicing,
+            receiverItem = params.receiverItem,
+            receiverConnId = receiverItem.activeConnectionArea.id,
+            prevItemId,
+            prevGmeId,
+            spliceToItem,
+            spliceToId,
+            otherPtr;
+
+        spliceToItem = receiverItem.conn2Item[receiverConnId];
+
+        if (!spliceToItem) {  // check if there is an item to splice btwn
+            return false;
+        }
+
+        spliceToId = this._ComponentID2GmeID[spliceToItem.id];
+        spliceToId = ids[spliceToId] || spliceToId;  // Look up new ids if either have been moved
+
+        // Remove ptr to/from spliceToItem
+        if (role === BLOCK_CONSTANTS.CONN_INCOMING) {
+            this._client.makePointer(spliceToId, ptr, null);
+        } else {
+            var receiverGmeId = this._ComponentID2GmeID[receiverItem.id];
+
+            // In case it has been moved:
+            receiverGmeId = ids[receiverGmeId] || receiverGmeId;
+
+            this._client.makePointer(receiverGmeId, ptr, null);
+        }
+
+
+        // Need to see if we can connect 'spliceToItem' to a 'spliceFromItem' with either 
+        // ptr or a sibling pointer
+
+        // We will first get all possible spliceFromItems
+        var spliceFromItems,
+            spliceInfo;
+
+        if (role === BLOCK_CONSTANTS.CONN_INCOMING) {
+            var prevItem = params.item;
+            while (prevItem.parent && prevItem.id !== rootId) {
+                prevItem = prevItem.parent;
+            }
+            spliceFromItems = [prevItem];
+            
+        } else if (role === BLOCK_CONSTANTS.CONN_OUTGOING) {
+            // Get all the sibling leaves of the tree
+
+            spliceFromItems = this._getAllSiblingLeaves(params.item);
+        }
+
+        // For each of the spliceFromItems, get the closest valid sibling connection
+        spliceInfo = this._getBestItemAndConnection({items: spliceFromItems,
+                                                     receiver: spliceToItem,
+                                                     ids: ids,
+                                                     dx: offset[0],
+                                                     dy: offset[1],
+                                                     role: role});
+        
+        if (spliceInfo.item) {
+
+            prevItemId = spliceInfo.item.id;
+            prevGmeId = this._ComponentID2GmeID[prevItemId];
+            prevGmeId = ids[prevGmeId] || prevGmeId;
+            ptr = spliceInfo.ptr;
+
+            if (role === BLOCK_CONSTANTS.CONN_INCOMING) {
+                this._client.makePointer(spliceToId, ptr, prevGmeId);
+            } else {
+                this._client.makePointer(prevGmeId, ptr, spliceToId);
+            }
+
+            return true;
+        }
+
+        return false;
+    };
+
+    BlockEditorControlWidgetEventHandlers.prototype._getAllSiblingLeaves = function (item) {
+        var current = [item],
+            next = [],
+            leaves = [],
+            isLeaf,
+            ptr;
+
+        while (current.length) {
+            // Check each of the pointers for an item
+            for (var i = current.length-1; i >= 0; i--) {
+                isLeaf = true;
+                for (var p = BLOCK_CONSTANTS.SIBLING_PTRS.length-1; p >= 0; p--) {
+                    ptr = BLOCK_CONSTANTS.SIBLING_PTRS[p];
+                    if (current[i].ptrs[ptr]) {
+                        next.push(current[i].ptrs[ptr]);
+                        isLeaf = false;
+                    }
+                }
+
+                if (isLeaf) {
+                    leaves.push(current[i]);
+                }
+            }
+            current = next;
+            next = [];
+        }
+    
+        return leaves;
+    };
+
+    /**
+     * Get the item and ptr type of the closest valid sibling connection.
+     *
+     * @param {Object} params
+     * @return {Object} {itemId, ptr}
+     */
+    BlockEditorControlWidgetEventHandlers.prototype._getBestItemAndConnection = function(params) {
+        var items = params.items,
+            receiver = params.receiver,
+            receiverId = params.receiverId,
+            receiverAreas = receiver.getConnectionAreas(),
+            rAreas,
+            dx = params.dx,
+            dy = params.dy,
+            key,
+            index,
+            ptrs,
+            ptrOptions,
+            filterOptions = {},
+            receiverOptions = {areas: receiverAreas},
+            otherKey,
+            connInfo,
+            incomingArea,
+            closest = {distance: Infinity},
+            areas = [],
+            self = this,
+            getGmeId = function(componentId) {
+                var id = self._ComponentID2GmeID[componentId];
+                return params.ids[id] || id;
+            };
+
+        if (params.role === BLOCK_CONSTANTS.CONN_INCOMING) {  // relative to 'items'
+            key = 'from';
+            otherKey = 'to';
+            index = 1;
+            ptrOptions = [getGmeId(receiver.id), null];
+        } else if (params.role === BLOCK_CONSTANTS.CONN_OUTGOING) {
+            key = 'to';
+            otherKey = 'from';
+            index = 0;
+            ptrOptions = [null, getGmeId(receiver.id)];
+        }
+
+        for (var i = items.length-1; i >= 0; i--) {
+            // Get the valid ptrs wrt the item
+            ptrOptions[index] = getGmeId(items[i].id);
+            ptrs = GMEConcepts.getValidPointerTypesFromSourceToTarget
+                              .apply(GMEConcepts, ptrOptions);
+
+            // Remove any non-sibling pointers
+            for (var j = ptrs.length-1; j >= 0; j--) {
+                if (BLOCK_CONSTANTS.SIBLING_PTRS.indexOf(ptrs[j]) === -1) {
+                    ptrs.splice(j,1);
+                }
+            }
+
+            // Get connection areas of a given item
+            areas = items[i].getRelativeFreeConnectionAreas();
+
+            // Add incoming connection area
+            incomingArea = items[i].getConnectionArea({role: BLOCK_CONSTANTS.CONN_INCOMING});
+            if (areas.indexOf(incomingArea) === -1) {
+                areas.push(incomingArea);
+            }
+
+            // Shift the connection areas to correct locations
+            areas = Utils.shiftConnAreas({areas: areas, dx: dx, dy: dy});
+
+            // Filter the areas
+            filterOptions.areas = areas;
+            filterOptions[key] = ptrs;
+            areas = Utils.filterAreasByPtrs(filterOptions);
+
+            receiverOptions[otherKey] = ptrs;
+            rAreas = Utils.filterAreasByPtrs(receiverOptions);
+
+            // Get the closest connection area
+            connInfo = Utils.getClosestCompatibleConn(rAreas, areas);
+
+            if (connInfo.distance < closest.distance) {
+                closest = connInfo;
+            }
+        }
+
+        if (closest.distance !== Infinity) {
+            var item = this.snapCanvas.items[closest.area.parentId];
+            return {ptr: closest.ptr, item: item};
+        }
+
+        return {item: null};
+    };
+
+    /**
+     * Follow the given pointer from the given node as far as possible.
+     *
+     * @param {Object} params
+     * @return {Object} {item, connection}
+     */
+    BlockEditorControlWidgetEventHandlers.prototype._followPtrToEnd = function (params) {
+        var nextItem = params.item, 
+            items = params.items,
+            role = params.role || BLOCK_CONSTANTS.CONN_OUTGOING,
+            ptr = params.ptr,
+            getNextConnArea = function(item) {
+                var area;
+                if (role === BLOCK_CONSTANTS.CONN_INCOMING) {
+                    if (item.parent && item.parent.item2Conn[item.id].ptr === ptr) {
+                        area = item.getConnectionArea({role: role});
+                    } else {
+                        area = null;
+                    }
+                } else {
+                    area = item.getConnectionArea({ptr: ptr, role: role});
+                }
+                return area;
+            },
+            conn = getNextConnArea(nextItem),
+            prevItem,
+            gmeId;
+
+        while (nextItem && conn) {
+            conn = getNextConnArea(nextItem);
+            if (conn) {
+                prevItem = nextItem;
+                nextItem = nextItem.getItemAtConnId(conn.id);
+                if (nextItem) {
+                    gmeId = this._ComponentID2GmeID[nextItem.id];
+
+                    // Make sure the item is one of the dragged items
+                    if (items && items.indexOf(gmeId) === -1) {
+                        nextItem = null;
+                    }
+                }
+            }
+        }
+
+        return {item: nextItem, connection: conn};
+    };
+
     BlockEditorControlWidgetEventHandlers.prototype._areContainedInAnother = function (items) {
-        //This should tell us if the items are contained in another item rather than
-        //just the parentId
+        // This should tell us if the items are contained in another item rather than
+        // just the parentId
         var i = items.length,
             currentDepth = this.currentNodeInfo.id.split("/").length + 1;
 
-        while (i--){
-            if (items[i].split("/").length > currentDepth){
+        while (i--) {
+            if (items[i].split("/").length > currentDepth) {
                 return true;
             }
         }
         return false;
     };
 
-    BlockEditorControlWidgetEventHandlers.prototype._removeExtraPointers = function (items) {
-        //Consider the set of items in 'items' and not in 'items'. This method will remove
-        //pointers from NOT 'items' into 'items'
-        var ptrs2Remove,
+    BlockEditorControlWidgetEventHandlers.prototype._removeIncomingPointers = function (items) {
+        // Consider the set of items in 'items' and not in 'items'. This method will remove
+        // pointers from NOT 'items' into 'items'
+        var parentInfo,
             i = items.length,
-            ptrs,
             gmeId,
             id,
             ptr;
 
-        //this._client.startTransaction();
-        while (i--){
+        // this._client.startTransaction();
+        while (i--) {
             id = this._GmeID2ComponentID[items[i]];
-            ptrs2Remove = this.snapCanvas.getItemsPointingTo(id);
-            ptrs = Object.keys(ptrs2Remove);
 
-            //Update the database
-            while (ptrs.length){
-                ptr = ptrs.pop();
-                gmeId = this._ComponentID2GmeID[ptrs2Remove[ptr].id];
+            // Update the database
+            parentInfo = this.snapCanvas.getParentInfo(id);
+            if (parentInfo) {
+                ptr = parentInfo.ptr;
+                gmeId = this._ComponentID2GmeID[parentInfo.id];
 
-                if (items.indexOf(gmeId) === -1){//Remove the ptr
+                if (items.indexOf(gmeId) === -1) {// Remove the ptr
                     this._client.makePointer(gmeId, ptr, null);
                 }
             }
         }
-
-        //this._client.completeTransaction();
     };
 
     BlockEditorControlWidgetEventHandlers.prototype._repositionItems = function (items, dragPositions, dropPosition) {
@@ -797,7 +1000,7 @@ define(['logManager',
             self = this;
 
         if (dragPositions && !_.isEmpty(dragPositions)) {
-            //update UI
+            // update UI
             this.snapCanvas.beginUpdate();
 
             while (i--) {
@@ -817,7 +1020,7 @@ define(['logManager',
             this.snapCanvas.endUpdate();
             this.snapCanvas.select(selectedIDs);
 
-            //update object internals
+            // update object internals
             setTimeout(function () {
                 self._saveReposition(items, dragPositions, dropPosition);
             }, 10);
@@ -840,7 +1043,7 @@ define(['logManager',
             if (!oldPos) {
                 oldPos = {'x': 0, 'y': 0};
             }
-            //aspect specific coordinate
+            // aspect specific coordinate
             if (selectedAspect === CONSTANTS.ASPECT_ALL) {
                 client.setRegistry(gmeID, REGISTRY_KEYS.POSITION, { "x": dropPosition.x + oldPos.x, "y": dropPosition.y + oldPos.y });
             } else {
@@ -861,8 +1064,8 @@ define(['logManager',
 
         }
 
-        //nobody is selected on the canvas
-        //set the active selection to the opened guy
+        // nobody is selected on the canvas
+        // set the active selection to the opened guy
         if (!gmeID && (this.currentNodeInfo.id || this.currentNodeInfo.id === CONSTANTS.PROJECT_ROOT_ID)) {
             gmeID = this.currentNodeInfo.id;
         }
@@ -1028,7 +1231,7 @@ define(['logManager',
     BlockEditorControlWidgetEventHandlers.prototype._onSelectionContextMenu = function (selectedIds, mousePos) {
         var menuItems = {},
             MENU_EXPORT = 'export',
-            MENU_EXINTCONF = 'exintconf', //kecso
+            MENU_EXINTCONF = 'exintconf', // kecso
             self = this;
 
         menuItems[MENU_EXPORT] = {
@@ -1043,7 +1246,7 @@ define(['logManager',
         this.snapCanvas.createMenu(menuItems, function (key) {
                 if (key === MENU_EXPORT) {
                     self._exportItems(selectedIds);
-                } else if (key === MENU_EXINTCONF){
+                } else if (key === MENU_EXINTCONF) {
                     self._exIntConf(selectedIds);
                 }
             },
@@ -1063,7 +1266,7 @@ define(['logManager',
         ExportManager.exportMultiple(gmeIDs);
     };
 
-    //kecso
+    // kecso
     BlockEditorControlWidgetEventHandlers.prototype._exIntConf = function (selectedIds) {
         var i = selectedIds.length,
             gmeIDs = [];

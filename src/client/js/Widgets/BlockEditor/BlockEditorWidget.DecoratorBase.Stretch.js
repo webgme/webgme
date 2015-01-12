@@ -89,7 +89,6 @@ define(['js/Widgets/BlockEditor/BlockEditorWidget.Constants'], function(SNAP_CON
             this._classTransforms[stretchers[i]] = {};
             this._classTransforms[stretchers[i]][SNAP_CONSTANTS.STRETCH_TYPE.TEXT] = { x: 0, y: 0 };
             this._classTransforms[stretchers[i]][SNAP_CONSTANTS.STRETCH_TYPE.SVG] = { x: 0, y: 0 };
-            //this._classTransforms[stretchers[i]] = _.extend({}, this.pointerInitialStretch[stretchers[i]]);//Clone object
 
             this.stretchElementsByPointer[stretchers[i]] = {};
             this.stretchElementsByPointer[stretchers[i]][SNAP_CONSTANTS.STRETCH_TYPE.TEXT] = { x: [], y: [] };

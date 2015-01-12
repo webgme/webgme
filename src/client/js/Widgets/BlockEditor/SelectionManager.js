@@ -319,7 +319,7 @@ define(['logManager',
                 }
 
                 child = items[id];
-                while(child){//Create the box from box and all 'next' pointers
+                while (child) {  // Create the box from box and all sibling pointers
                     childBBox = child.getBoundingBox();
 
                     if (childBBox.x < bBox.x) {
@@ -335,7 +335,7 @@ define(['logManager',
                         bBox.y2 = childBBox.y2;
                     }
 
-                    child = child.getNextItem();
+                    child = child.ptrs['next']; 
                 }
             }
         }

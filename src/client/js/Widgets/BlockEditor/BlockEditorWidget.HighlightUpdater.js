@@ -4,9 +4,11 @@
  */
 //This is the connection highlight updater
 define([
-    './BlockEditorWidget.Constants.js'
+    './BlockEditorWidget.Constants.js',
+    './BlockEditorWidget.Utils.js'
 ], function (
-    SNAP_CONSTANTS
+    BLOCK_CONSTANTS,
+    Utils
 ) {
 
     "use strict";
@@ -14,45 +16,7 @@ define([
     var BlockEditorWidgetHighlightUpdater,
         ROOT = 'root',
         LEAVES = 'leaves',
-        ITEM_TAG = "current_droppable_item";
-
-    /* Helper functions for finding best connection area */
-    var getCenter = function(connArea) {
-        return [(connArea.x1+connArea.x2)/2, (connArea.y1+connArea.y2)/2];
-    };
-
-    var getDistance = function(src, dst) {
-        var c1 = getCenter(src),
-            c2 = getCenter(dst);
-
-        return Math.sqrt(Math.pow(c1[0]-c2[0],2)+Math.pow(c1[1]-c2[1],2));
-    };
-
-    /**
-     * Calculate the closest connection area from destination
-     * set given the sources set.
-     *
-     * @param {Array[ConnectionAreas]} srcs
-     * @param {Array[ConnectionAreas]} dsts
-     * @return {ConnectionArea} closest connection area from set dsts
-     */
-    var getClosestDestinations = function(srcs, dsts) {
-        var minDistance = getDistance(srcs[0], dsts[0]),
-            connArea = dsts[0],
-            distance;
-
-        for(var i = srcs.length-1; i >= 0; i--) {
-            for(var j = dsts.length-1; j >= 0; j--) {
-                distance = getDistance(srcs[i], dsts[j]);
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    connArea = dsts[j];
-                }
-            }
-        }
-
-        return connArea;
-    };
+        ITEM_TAG = 'current_droppable_item';
 
     BlockEditorWidgetHighlightUpdater = function () {
     };
@@ -78,10 +42,17 @@ define([
             isLeaf,
             areas,
             ptr,
+            incomingRootArea = root.getConnectionArea({role: BLOCK_CONSTANTS.CONN_INCOMING}),
             next = [];
 
         // Set up the valid connection areas
-        this._draggedConnAreas = root.getRelativeConnectionAreas();
+        this._draggedConnAreas = root.getRelativeFreeConnectionAreas();
+
+        // Add incoming connection area of root (as it will be disconnected on any move)
+        if (this._draggedConnAreas.indexOf(incomingRootArea) === -1) {
+            this._draggedConnAreas.push(incomingRootArea);
+        }
+        
         this._draggedTree[ROOT] = root;
         current = [root];
 
@@ -89,12 +60,12 @@ define([
         while (current.length) {
             for (i = current.length-1; i >= 0; i--) {
                 isLeaf = false;
-                areas = current[i].getRelativeConnectionAreas();
+                areas = current[i].getRelativeFreeConnectionAreas();
                 for (var j = areas.length-1; j >= 0; j--) {
                     ptr = areas[j].ptr;
-                    if (SNAP_CONSTANTS.SIBLING_PTRS.indexOf(ptr) !== -1) {
-                        if (current[i].ptrs[SNAP_CONSTANTS.CONN_OUTGOING][ptr]) {
-                            next.push(current[i].ptrs[SNAP_CONSTANTS.CONN_OUTGOING][ptr]);
+                    if (BLOCK_CONSTANTS.SIBLING_PTRS.indexOf(ptr) !== -1) {
+                        if (current[i].ptrs[ptr]) {
+                            next.push(current[i].ptrs[ptr]);
                         } else {
                             this._draggedConnAreas.push(areas[j]);
                             isLeaf = true;
@@ -135,43 +106,19 @@ define([
             connAreas = underItem.getConnectionAreas();
 
             // Get valid pointer types
-            validPtrsToDragged = {};
-            ptrs = this.getValidPointerTypes(underItem, this._draggedTree[ROOT]);
-            for (i = ptrs.length-1; i>=0; i--) {
-                validPtrsToDragged[ptrs[i]] = true;
-            }
-
-            validPtrsFromDragged = {};
+            validPtrsToDragged = this.getValidPointerTypes({src: underItem, 
+                                              dst: this._draggedTree[ROOT]});
+            validPtrsFromDragged = [];
             for (i = this._draggedTree[LEAVES].length-1; i >= 0; i--){
-                ptrs = this.getValidPointerTypes(this._draggedTree[LEAVES][i], underItem);
-                for (j = ptrs.length-1; j>=0; j--) {
-                    validPtrsFromDragged[ptrs[j]] = true;
-                }
+                ptrs = this.getValidPointerTypes({src: this._draggedTree[LEAVES][i], 
+                                                  dst: underItem});
+
+                validPtrsFromDragged = validPtrsFromDragged.concat(ptrs);
             }
 
-            for (i = connAreas.length-1; i >= 0; i--) {
-                switch (connAreas[i].role) {
-                    case SNAP_CONSTANTS.CONN_INCOMING:
-                        // Check to make sure validPtrsFromDragged contains a sibling ptr
-                        // Also check for containment if not sibling ptr TODO
-                        hasSiblingPtr = false;
-                        j = SNAP_CONSTANTS.SIBLING_PTRS.length;
-                        while (j-- && !hasSiblingPtr) {
-                            hasSiblingPtr = validPtrsFromDragged[SNAP_CONSTANTS.SIBLING_PTRS[j]] !== undefined;
-                        }
-
-                        if (!hasSiblingPtr) {
-                          connAreas.splice(i,1);
-                        }
-                        break;
-                    
-                    case SNAP_CONSTANTS.CONN_OUTGOING:
-                        if (!validPtrsToDragged[connAreas[i].ptr]) {
-                          connAreas.splice(i,1);
-                        }
-                        break;
-                }
-            }
+            connAreas = Utils.filterAreasByPtrs({areas: connAreas, 
+                                                 to: validPtrsToDragged, 
+                                                 from: validPtrsFromDragged});
         }
 
         if (connAreas.length) {
@@ -191,10 +138,11 @@ define([
             delete this._underItems[item.id];
             if (this._ui.data(ITEM_TAG) === item.id){
                 item.deactivateConnectionAreas();
-                this.dropFocus = SNAP_CONSTANTS.BACKGROUND;
+                this.dropFocus = BLOCK_CONSTANTS.BACKGROUND;
 
                 //Remove data from dragged ui
                 this._ui.removeData(ITEM_TAG);
+                this._ui.removeData(BLOCK_CONSTANTS.DRAGGED_PTR_TAG);
             }
         }
     };
@@ -207,42 +155,42 @@ define([
             ids,
             closestItem,
             otherItemId,
-            closestArea,
+            closest,
             i;
 
         if (self._underItemCount){
 
             // Get connection areas under dragged stuff
-            underConnAreas = [];
+            var underConnAreas = [];
             ids = Object.keys(self._underItems);
             for (i = ids.length-1; i >= 0; i--) {
                 underConnAreas = underConnAreas.concat(self._underItems[ids[i]]);
             }
 
+            // Duplicate and shift all dragged connection areas 
             selector = '#' + self._ui.attr('id') + '.' + self._ui.attr('class');
             pos = $(selector).position();
             pos.left -= self._draggedTree[ROOT].$el.parent().offset().left;
             pos.top -= self._draggedTree[ROOT].$el.parent().offset().top;
 
-            // Duplicate and shift all dragged connection areas 
+            // Shift the position...
+            // TODO
+
             draggedConnAreas = [];
 
             var connArea;
             for (i = self._draggedConnAreas.length-1; i >= 0; i--) {
                 connArea = _.extend({}, self._draggedConnAreas[i]);
-                connArea.x1 += pos.left;
-                connArea.x2 += pos.left;
-                connArea.y1 += pos.top;
-                connArea.y2 += pos.top;
+                connArea = Utils.shiftConnArea({area: connArea, dx: pos.left, dy: pos.top});
 
                 draggedConnAreas.push(connArea);
             }
 
-            closestArea = getClosestDestinations(draggedConnAreas, underConnAreas);
+            closest = Utils.getClosestCompatibleConn(draggedConnAreas, underConnAreas);
 
             // Update the highlight
-            if (closestArea){
-                closestItem = self.items[closestArea.parentId];
+            if (closest.area){
+                closestItem = self.items[closest.area.parentId];
                 // Deactivate the previous connection area
                 if (self._ui.data(ITEM_TAG)){
                     otherItemId = self._ui.data(ITEM_TAG);
@@ -250,11 +198,14 @@ define([
                 }
 
                 // highlight the new conn area
-                closestItem.setActiveConnectionArea(closestArea);
-                self.dropFocus = SNAP_CONSTANTS.ITEM;
+                closestItem.setActiveConnectionArea(closest.area);
+                self.dropFocus = BLOCK_CONSTANTS.ITEM;
 
                 // Store the data in the dragged object
                 self._ui.data(ITEM_TAG, closestItem.id);
+                self._ui.data(BLOCK_CONSTANTS.DRAGGED_PTR_TAG, closest.ptr);
+                self._ui.data(BLOCK_CONSTANTS.DRAGGED_ACTIVE_ITEM_TAG, closest.activeItem);
+                self._ui.data(BLOCK_CONSTANTS.DRAGGED_POSITION_TAG, [pos.left, pos.top]);
             }
 
             setTimeout(self._updateHighlights, 100, self);

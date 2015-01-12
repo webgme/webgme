@@ -879,10 +879,10 @@ define(['logManager',
 
         /* * * * * * * * * * END TOOLBAR * * * * * * * * * * */
 
-    BlockEditorControl.prototype._getValidPointerTypes = function(srcItem, dstItem) {
+    BlockEditorControl.prototype._getValidPointerTypes = function(params) {
         // Call GMEConcepts
-        var dstGmeId = this._ComponentID2GmeID[dstItem.id],
-            srcGmeId = this._ComponentID2GmeID[srcItem.id];
+        var dstGmeId = this._ComponentID2GmeID[params.dst.id],
+            srcGmeId = this._ComponentID2GmeID[params.src.id];
 
         return GMEConcepts.getValidPointerTypesFromSourceToTarget(srcGmeId, dstGmeId);
     };

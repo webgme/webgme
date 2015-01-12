@@ -25,6 +25,11 @@ define([], function () {
         DROP_REGION_CLASS: 'drop-region',
         DROP_REGION_ACCEPT_DROPPABLE_CLASS: 'accept-droppable',
         DROP_REGION_REJECT_DROPPABLE_CLASS: 'reject-droppable',
+        //
+        // Drag-n-drop helpers
+        DRAGGED_PTR_TAG: 'active-ptr',
+        DRAGGED_ACTIVE_ITEM_TAG: 'dragged-active-item',
+        DRAGGED_POSITION_TAG: 'dragged-position-offset',
 
         /*
          * Linkable constants

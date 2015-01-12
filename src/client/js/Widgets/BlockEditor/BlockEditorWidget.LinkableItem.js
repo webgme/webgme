@@ -152,24 +152,24 @@ define(['./LinkableItem',
         }
     };
 
-    BlockEditorWidgetLinkableItems.prototype.connect = function (id1, id2) {
-        //This connects connArea1 and connArea2 on the screen as being connected. That is
-        //it positions the parents of connArea1 and connArea2 such that connArea1 and connArea2
-        //are overlapping and centered on each other.
-        //
-        //Note: This is done by moving connArea2 to connArea1.
-        var item1 = this.items[id1],
-            item2 = this.items[id2];
+    //BlockEditorWidgetLinkableItems.prototype.connect = function (id1, id2) {
+        ////This connects connArea1 and connArea2 on the screen as being connected. That is
+        ////it positions the parents of connArea1 and connArea2 such that connArea1 and connArea2
+        ////are overlapping and centered on each other.
+        ////
+        ////Note: This is done by moving connArea2 to connArea1.
+        //var item1 = this.items[id1],
+            //item2 = this.items[id2];
 
-        item1.connectToActive(item2);
-    };
+        //item1.connectToActive(item2);
+    //};
 
     BlockEditorWidgetLinkableItems.prototype.setToConnect = function (id1, id2, ptrName) {
         //This sets the pointers for the relevant ids and sizes them but does not move them
         var item1 = this.items[id1],
             item2 = this.items[id2];
 
-        item2.setPtr(ptrName, CONSTANTS.CONN_INCOMING, item1);
+        item1.setPtr(ptrName, item2);
     };
 
     BlockEditorWidgetLinkableItems.prototype.updateItemDependents = function (id1) {
@@ -191,10 +191,16 @@ define(['./LinkableItem',
         return this.items[id1].hasPtr(ptrName);
     };
 
-    BlockEditorWidgetLinkableItems.prototype.getItemsPointingTo = function (id) {
-        var item = this.items[id];
+    BlockEditorWidgetLinkableItems.prototype.getParentInfo = function (id) {
+        var item = this.items[id].parent,
+            conn;
 
-        return _.extend({}, item.ptrs[CONSTANTS.CONN_INCOMING]);
+        if (!item) {
+            return null;
+        }
+
+        conn = item.getConnectionArea({id:item.item2Conn[id]});
+        return {ptr: conn.ptr, id: item.id};
     };
 
     BlockEditorWidgetLinkableItems.prototype.removePtr = function (itemId, ptr, role) {

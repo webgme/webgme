@@ -7,7 +7,7 @@
 
 define(['js/DragDrop/DropTarget',
         './BlockEditorWidget.Constants'], function (dropTarget,
-                                                   BlockEditorWidgetConstants) {
+                                                   BLOCK_CONSTANTS) {
 
     "use strict";
 
@@ -21,11 +21,11 @@ define(['js/DragDrop/DropTarget',
 
     BlockEditorWidgetDroppable.prototype._initDroppable = function () {
         var self = this;
-        this.dropFocus = BlockEditorWidgetConstants.BACKGROUND;
+        this.dropFocus = BLOCK_CONSTANTS.BACKGROUND;
 
         this._acceptDroppable = false;
 
-        this.skinParts.$dropRegion = $('<div/>', { "class" : BlockEditorWidgetConstants.DROP_REGION_CLASS });
+        this.skinParts.$dropRegion = $('<div/>', { "class" : BLOCK_CONSTANTS.DROP_REGION_CLASS });
 
         this.skinParts.$dropRegion.insertBefore(this.skinParts.$itemsContainer);
 
@@ -37,7 +37,7 @@ define(['js/DragDrop/DropTarget',
                 self._onDroppableOut(/*event, dragInfo*/);
             },
             'drop': function( event, dragInfo ) {
-                if (self.dropFocus === BlockEditorWidgetConstants.BACKGROUND){
+                if (self.dropFocus === BLOCK_CONSTANTS.BACKGROUND){
                     self._onBackgroundDrop(event, dragInfo);
                 }
             },
@@ -103,18 +103,18 @@ define(['js/DragDrop/DropTarget',
 
 
     BlockEditorWidgetDroppable.prototype._doAcceptDroppable = function (accept, uiFeedback) {
-        this.skinParts.$dropRegion.removeClass(BlockEditorWidgetConstants.DROP_REGION_ACCEPT_DROPPABLE_CLASS);
-        this.skinParts.$dropRegion.removeClass(BlockEditorWidgetConstants.DROP_REGION_REJECT_DROPPABLE_CLASS);
+        this.skinParts.$dropRegion.removeClass(BLOCK_CONSTANTS.DROP_REGION_ACCEPT_DROPPABLE_CLASS);
+        this.skinParts.$dropRegion.removeClass(BLOCK_CONSTANTS.DROP_REGION_REJECT_DROPPABLE_CLASS);
 
         if (accept === true) {
             this._acceptDroppable = true;
             if (uiFeedback) {
-                this.skinParts.$dropRegion.addClass(BlockEditorWidgetConstants.DROP_REGION_ACCEPT_DROPPABLE_CLASS);
+                this.skinParts.$dropRegion.addClass(BLOCK_CONSTANTS.DROP_REGION_ACCEPT_DROPPABLE_CLASS);
             }
         } else {
             this._acceptDroppable = false;
             if (uiFeedback) {
-                this.skinParts.$dropRegion.addClass(BlockEditorWidgetConstants.DROP_REGION_REJECT_DROPPABLE_CLASS);
+                this.skinParts.$dropRegion.addClass(BLOCK_CONSTANTS.DROP_REGION_REJECT_DROPPABLE_CLASS);
             }
         }
     };
@@ -175,7 +175,7 @@ define(['js/DragDrop/DropTarget',
                 self.unregisterUnderItem(item);
             },
             drop: function(event, ui) {
-                if (self.dropFocus === BlockEditorWidgetConstants.ITEM && ui.helper.data(ITEM_TAG) === item.id){
+                if (self.dropFocus === BLOCK_CONSTANTS.ITEM && ui.helper.data(ITEM_TAG) === item.id){
                     self._onItemDrop(item, event, ui);
                     self.unregisterDraggingItem();
                 }
@@ -184,18 +184,25 @@ define(['js/DragDrop/DropTarget',
     };
 
     BlockEditorWidgetDroppable.prototype._onItemDrop = function (item, event, ui) {
-        //connect the items (with the controller)
         if (item.activeConnectionArea){
             var i = ui.helper.children().length,
                 draggedId = ui.helper[0].id,
                 itemId = item.id,
-                ptr = item.activeConnectionArea.ptr,
+                role = item.activeConnectionArea.role,
+                ptr = ui.helper.data(BLOCK_CONSTANTS.DRAGGED_PTR_TAG),
+                activeItem = ui.helper.data(BLOCK_CONSTANTS.DRAGGED_ACTIVE_ITEM_TAG),
+                position = ui.helper.data(BLOCK_CONSTANTS.DRAGGED_POSITION_TAG),
                 connId;
 
             //Make sure they aren't already connected
             if (!item.getItemAtConnId(item.activeConnectionArea.id) || 
                 draggedId !== item.getItemAtConnId(item.activeConnectionArea.id).id){
-                this.onItemDrop(draggedId, itemId, ptr, item.activeConnectionArea.role);
+                this.onItemDrop({firstItem: draggedId, 
+                                 receiver: itemId, 
+                                 activeItem: this.items[activeItem],
+                                 ptr: ptr, 
+                                 offset: position,
+                                 role: item.activeConnectionArea.role});
             }
 
             //hide the conn areas
@@ -204,7 +211,7 @@ define(['js/DragDrop/DropTarget',
         }
 
         this.selectionManager.clear();
-        this.dropFocus = BlockEditorWidgetConstants.BACKGROUND;
+        this.dropFocus = BLOCK_CONSTANTS.BACKGROUND;
     };
 
     BlockEditorWidgetDroppable.prototype.onItemDrop = function (droppedItems, receiver) {

@@ -769,8 +769,8 @@ define(['logManager',
             item = items[i];
 
             //get the "highest" item possibly affected
-            while (this.items[item].getParent() !== null){
-                item = this.items[item].getParent().id;
+            while (this.items[item].parent !== null){
+                item = this.items[item].parent.id;
             }
 
             //Add item if not already there
@@ -813,7 +813,7 @@ define(['logManager',
                         //add the child to the depList
                         depList.unshift(child.id);
                         visited[child.id] = true;
-                        child = child.getParent();
+                        child = child.parent;
                     }
 
                     //Add depList to sorted as appropriate
