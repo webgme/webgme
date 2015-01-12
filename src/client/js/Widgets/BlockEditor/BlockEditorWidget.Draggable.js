@@ -15,7 +15,7 @@ define(['js/DragDrop/DragSource',
 
     "use strict";
 
-    var DEBUG = true,
+    var DEBUG = BLOCK_CONSTANTS.DEBUG,
         BlockEditorWidgetDraggable,
         DRAG_HELPER_CLASS = 'block-editor-drag-outline',
         DRAG_HELPER_EL_BASE = $('<div/>', {'class': DRAG_HELPER_CLASS}),

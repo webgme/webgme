@@ -69,6 +69,7 @@ define([], function () {
         INITIAL_MEASURE: 'initial-measure',
         STRETCH_TYPE: { SVG: 'svg', TEXT: 'text' },
 
+        DEBUG : false,
         /*INPUT FIELDS*/
         INPUT_FIELDS: 'input-field',
         TEXT_FIELD: { NAME: 'text',
