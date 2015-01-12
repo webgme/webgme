@@ -151,7 +151,6 @@ define([
         var underConnAreas,
             draggedConnAreas,
             pos,
-            selector,
             ids,
             closestItem,
             otherItemId,
@@ -168,14 +167,13 @@ define([
             }
 
             // Duplicate and shift all dragged connection areas 
-            selector = '#' + self._ui.attr('id') + '.' + self._ui.attr('class');
-            pos = $(selector).position();
-            pos.left -= self._draggedTree[ROOT].$el.parent().offset().left;
-            pos.top -= self._draggedTree[ROOT].$el.parent().offset().top;
+            pos = self._ui.position();
+            pos.left += BLOCK_CONSTANTS.DRAG_HELPER_BUFFER - 
+                            self._draggedTree[ROOT].$el.parent().offset().left;
+            pos.top += BLOCK_CONSTANTS.DRAG_HELPER_BUFFER - 
+                            self._draggedTree[ROOT].$el.parent().offset().top;
 
             // Shift the position...
-            // TODO
-
             draggedConnAreas = [];
 
             var connArea;

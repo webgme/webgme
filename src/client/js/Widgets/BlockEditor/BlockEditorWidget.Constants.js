@@ -30,6 +30,7 @@ define([], function () {
         DRAGGED_PTR_TAG: 'active-ptr',
         DRAGGED_ACTIVE_ITEM_TAG: 'dragged-active-item',
         DRAGGED_POSITION_TAG: 'dragged-position-offset',
+        DRAG_HELPER_BUFFER: 15,
 
         /*
          * Linkable constants

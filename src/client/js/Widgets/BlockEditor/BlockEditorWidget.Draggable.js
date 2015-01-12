@@ -11,18 +11,18 @@ define(['js/DragDrop/DragSource',
         './BlockEditorWidget.Constants'], function (dragSource,
                                                    dragHelper,
                                                    assert,
-                                                   BlockEditorWidgetConstants) {
+                                                   BLOCK_CONSTANTS) {
 
     "use strict";
 
-    var DEBUG = false,
+    var DEBUG = true,
         BlockEditorWidgetDraggable,
         DRAG_HELPER_CLASS = 'block-editor-drag-outline',
         DRAG_HELPER_EL_BASE = $('<div/>', {'class': DRAG_HELPER_CLASS}),
         DRAG_HELPER_ICON_MOVE = $('<i class="icon-move"></i>'),
         DRAG_HELPER_ICON_COPY = $('<i class="icon-plus"></i>'),
         DRAG_HELPER_ITEM_ID = 'dragged-items',
-        DRAG_HELPER_BUFFER = 15;
+        DRAG_HELPER_BUFFER = BLOCK_CONSTANTS.DRAG_HELPER_BUFFER;
 
     BlockEditorWidgetDraggable = function () {
     };
@@ -51,7 +51,7 @@ define(['js/DragDrop/DragSource',
             },
             'start': function (event, ui) {
                 //Set the drop focus
-                self.dropFocus = BlockEditorWidgetConstants.BACKGROUND;
+                self.dropFocus = BLOCK_CONSTANTS.BACKGROUND;
 
                 //Start the connection highlight updater
                 self.registerDraggingItem(ui.helper);
@@ -66,12 +66,12 @@ define(['js/DragDrop/DragSource',
                     if (event.originalEvent.target instanceof SVGElement) {
                         var classDef = event.originalEvent.target.getAttribute("class");
                         if (classDef) {
-                            ret = classDef.split(' ').indexOf(BlockEditorWidgetConstants.CONNECTOR_CLASS) === -1;
+                            ret = classDef.split(' ').indexOf(BLOCK_CONSTANTS.CONNECTOR_CLASS) === -1;
                         } else {
                             ret = true;
                         }
                     } else {
-                        ret = !$(event.originalEvent.target).hasClass(BlockEditorWidgetConstants.CONNECTOR_CLASS);
+                        ret = !$(event.originalEvent.target).hasClass(BLOCK_CONSTANTS.CONNECTOR_CLASS);
                     }
                 }
                 return ret;
@@ -143,8 +143,7 @@ define(['js/DragDrop/DragSource',
             draggedItems.append(itemElement);
         }
 
-        // Handle zoom! FIXME
-        // The zoom is currently affecting the sensitivity for drag-n-drop...
+        // Handle the zoom
         var zoom = this._zoomRatio,
             itemsX,  // relative x,y location of draggedItems
             itemsY,
