@@ -303,6 +303,9 @@ define(['logManager',
         var bBox,
             id,
             child,
+            current,
+            next = [],
+            ptrs,
             childBBox,
             items = this._blockEditor.items;
 
@@ -318,24 +321,34 @@ define(['logManager',
                         "y2": 0};
                 }
 
-                child = items[id];
-                while (child) {  // Create the box from box and all sibling pointers
-                    childBBox = child.getBoundingBox();
+                current = [items[id]];
+                while (current.length) {  // Create the box from box and all sibling pointers
+                    for (var c = current.length-1; c >= 0; c--) {  // Create the box from box and all sibling pointers
+                        childBBox = current[c].getBoundingBox();
 
-                    if (childBBox.x < bBox.x) {
-                        bBox.x = childBBox.x;
-                    }
-                    if (childBBox.y < bBox.y) {
-                        bBox.y = childBBox.y;
-                    }
-                    if (childBBox.x2 > bBox.x2) {
-                        bBox.x2 = childBBox.x2;
-                    }
-                    if (childBBox.y2 > bBox.y2) {
-                        bBox.y2 = childBBox.y2;
-                    }
+                        if (childBBox.x < bBox.x) {
+                            bBox.x = childBBox.x;
+                        }
+                        if (childBBox.y < bBox.y) {
+                            bBox.y = childBBox.y;
+                        }
+                        if (childBBox.x2 > bBox.x2) {
+                            bBox.x2 = childBBox.x2;
+                        }
+                        if (childBBox.y2 > bBox.y2) {
+                            bBox.y2 = childBBox.y2;
+                        }
 
-                    child = child.ptrs['next']; 
+                        ptrs = Object.keys(current[c].ptrs);
+                        for (var i = ptrs.length-1; i >= 0; i--) {
+                            child = current[c].ptrs[ptrs[i]]; 
+                            if (child) {
+                                next.push(child);
+                            }
+                        }
+                    }
+                    current = next;
+                    next = [];
                 }
             }
         }
