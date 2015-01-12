@@ -16,6 +16,8 @@ tmp
 .project
 .settings
 
+coverage.html
+
 src/bin/config.js
 src/bin/server.log
 src/bin/stderr.log
