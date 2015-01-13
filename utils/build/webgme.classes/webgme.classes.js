@@ -5,8 +5,10 @@ define('webgme.classes',
         'client',
         'blob/BlobClient',
         'executor/ExecutorClient',
-        'js/Utils/InterpreterManager'
-    ], function (Client, BlobClient, ExecutorClient, InterpreterManager) {
+        'js/Utils/InterpreterManager',
+        'core/core',
+        'storage/clientstorage'
+  ], function (Client, BlobClient, ExecutorClient, InterpreterManager, Core, Storage) {
 
         // Setting global classes
 
@@ -14,6 +16,8 @@ define('webgme.classes',
         GME.classes.BlobClient = BlobClient;
         GME.classes.ExecutorClient = ExecutorClient;
         GME.classes.InterpreterManager = InterpreterManager;
+        GME.classes.Core = Core;
+        GME.classes.Storage = Storage;
 
         // Pure JavaScript equivalent to jQuery's $.ready() from https://github.com/jfriend00/docReady
 
