@@ -46,7 +46,7 @@ define([
             next = [];
 
         // Set up the valid connection areas
-        this._draggedConnAreas = root.getRelativeFreeConnectionAreas();
+        this._draggedConnAreas = root.getFreeConnectionAreas();
 
         // Add incoming connection area of root (as it will be disconnected on any move)
         if (this._draggedConnAreas.indexOf(incomingRootArea) === -1) {
@@ -148,42 +148,28 @@ define([
     };
 
     BlockEditorWidgetHighlightUpdater.prototype._updateHighlights = function (self) { 
-        var underConnAreas,
+        var shift,
+            underConnAreas,
             draggedConnAreas,
-            pos,
             ids,
             closestItem,
             otherItemId,
+            underConnAreas,
             closest,
             i;
 
         if (self._underItemCount){
+            shift = self._getShiftFromDragged(),
 
             // Get connection areas under dragged stuff
-            var underConnAreas = [];
+            underConnAreas = [];
             ids = Object.keys(self._underItems);
             for (i = ids.length-1; i >= 0; i--) {
                 underConnAreas = underConnAreas.concat(self._underItems[ids[i]]);
             }
 
             // Duplicate and shift all dragged connection areas 
-            pos = self._ui.position();
-            pos.left += BLOCK_CONSTANTS.DRAG_HELPER_BUFFER - 
-                            self._draggedTree[ROOT].$el.parent().offset().left;
-            pos.top += BLOCK_CONSTANTS.DRAG_HELPER_BUFFER - 
-                            self._draggedTree[ROOT].$el.parent().offset().top;
-
-            // Shift the position...
-            draggedConnAreas = [];
-
-            var connArea;
-            for (i = self._draggedConnAreas.length-1; i >= 0; i--) {
-                connArea = _.extend({}, self._draggedConnAreas[i]);
-                connArea = Utils.shiftConnArea({area: connArea, dx: pos.left, dy: pos.top});
-
-                draggedConnAreas.push(connArea);
-            }
-
+            draggedConnAreas = self._getAdjustedDraggedAreas(shift);
             closest = Utils.getClosestCompatibleConn(draggedConnAreas, underConnAreas);
 
             // Update the highlight
@@ -203,11 +189,52 @@ define([
                 self._ui.data(ITEM_TAG, closestItem.id);
                 self._ui.data(BLOCK_CONSTANTS.DRAGGED_PTR_TAG, closest.ptr);
                 self._ui.data(BLOCK_CONSTANTS.DRAGGED_ACTIVE_ITEM_TAG, closest.activeItem);
-                self._ui.data(BLOCK_CONSTANTS.DRAGGED_POSITION_TAG, [pos.left, pos.top]);
+                self._ui.data(BLOCK_CONSTANTS.DRAGGED_POSITION_TAG, [shift.dx, shift.dy]);
             }
 
             setTimeout(self._updateHighlights, 100, self);
         }
+    };
+
+    BlockEditorWidgetHighlightUpdater.prototype._getAdjustedDraggedAreas = function (shift) { 
+        var draggedConnAreas = [],
+            connArea;
+
+        // Shift the position...
+
+        for (var i = this._draggedConnAreas.length-1; i >= 0; i--) {
+            connArea = _.extend({}, this._draggedConnAreas[i]);
+            connArea = Utils.shiftConnArea({area: connArea, dx: shift.dx, dy: shift.dy});
+
+            draggedConnAreas.push(connArea);
+        }
+
+        return draggedConnAreas;
+
+    };
+
+    BlockEditorWidgetHighlightUpdater.prototype._getShiftFromDragged = function () { 
+        var selectedItem,
+            itemContainer,
+            relativePos,
+            position;
+
+        selectedItem = this.items[this._ui[0].id];
+        position = this._ui.position();
+        position.left -= this._draggedTree[ROOT].$el.parent().offset().left;
+        position.top -= this._draggedTree[ROOT].$el.parent().offset().top;
+
+        // Account for relative location within dragged element
+        itemContainer = this._ui.find('#' + BLOCK_CONSTANTS.DRAG_HELPER_ITEM_ID);
+        relativePos = itemContainer.position();
+        position.top += relativePos.top;
+        position.left += relativePos.left;
+
+        // Convert to relative
+        return {
+            dx: position.left - selectedItem.positionX,
+            dy: position.top - selectedItem.positionY
+        };
     };
 
     return BlockEditorWidgetHighlightUpdater;

@@ -19,7 +19,7 @@ define(['logManager',
     ItemBase = function(){
     };
 
-    ItemBase.prototype._super = function (name, objId, canvas) {
+    ItemBase.prototype.initialize = function (name, objId, canvas) {
         EVENT_POSTFIX = "LinkableItem";
         ITEM_CLASS = name;
 

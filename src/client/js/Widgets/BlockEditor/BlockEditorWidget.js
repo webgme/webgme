@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
- * @author brollb / https://github/brollb
+ * @author brollb / https:// github/brollb
  */
 
 define(['logManager',
@@ -61,7 +61,7 @@ define(['logManager',
         params = params || {};
         params.loggerName = "BlockEditorWidget";
 
-        //merge default values with the given parameters
+        // merge default values with the given parameters
         _.extend(params, defaultParams);
 
         this._addEventDispatcherExtensions();
@@ -79,7 +79,7 @@ define(['logManager',
  
         /* * * * * * * * * * UI Components * * * * * * * * * */
 
-        //Default Size values
+        // Default Size values
         this._actualSize = { "w": 0, "h": 0 };
         this._containerSize = { "w": 0, "h": 0 };
         this._itemIDCounter = 0;
@@ -88,22 +88,22 @@ define(['logManager',
         this._backgroundText = "Block Editor";
         this._zoomRatio = 1;
 
-        //if the widget has to support drop feature at all
+        // if the widget has to support drop feature at all
         this.logger = logManager.create(params.loggerName);
         this._droppable = params.droppable;
 
         this._init(container, params);
 
-        //init zoom related UI and handlers
+        // init zoom related UI and handlers
         this._initZoom(params);
 
-        //Scroll and view info
+        // Scroll and view info
         this._offset = { "left": 0, "top": 0 };
         this._scrollPos = { "left": 0, "top": 0 };
 
         this.gridSize = params.gridSize;
 
-       //initiate Highlight Manager
+       // initiate Highlight Manager
         var self = this;
         this.highlightManager = new HighlightManager({"widget": this});
         this.highlightManager.initialize(this.skinParts.$itemsContainer);
@@ -115,7 +115,7 @@ define(['logManager',
             self.onUnhighlight(idList);
         };
 
-        //initiate Selection Manager (if needed)
+        // initiate Selection Manager (if needed)
         this.selectionManager = params.selectionManager || new SelectionManager({"blockEditor": this});
         this.selectionManager.initialize(this.skinParts.$itemsContainer);
         this.selectionManager.onSelectionCommandClicked = function (command, selectedIds, event) {
@@ -126,7 +126,7 @@ define(['logManager',
             self._onSelectionChanged(selectedIds);
         };
 
-        //initiate Search Manager
+        // initiate Search Manager
         this.searchManager = new SearchManager({"widget": this});
         this.searchManager.initialize(this.skinParts.$itemsContainer);
 
@@ -136,9 +136,9 @@ define(['logManager',
         this.logger.debug("BlockEditorWidget ctor");
     };
 
-    BlockEditorWidget.prototype._init = function (container, params){//Container is the div element
-                                                                    //Params is the extra stuff (ie, the toolbar)
-        this.$el = container; //Everything goes inside this.$el
+    BlockEditorWidget.prototype._init = function (container, params){// Container is the div element
+                                                                    // Params is the extra stuff (ie, the toolbar)
+        this.$el = container; // Everything goes inside this.$el
 
         this._initializeUI();
     };
@@ -148,30 +148,30 @@ define(['logManager',
 
         this.logger.debug("BlockWidget._initializeUI");
 
-        //clear content
+        // clear content
         this.$el.empty();
 
-        //add own class
+        // add own class
         this.$el.addClass(WIDGET_CLASS);
 
         this._attachScrollHandler(this.$el);
 
-        //DESIGNER CANVAS HEADER
+        // DESIGNER CANVAS HEADER
         this.skinParts = {};
 
         this.skinParts.$blockWidgetBody = this.$el;
 
-        //CHILDREN container
+        // CHILDREN container
         this.skinParts.$itemsContainer = $('<div/>', {
             "class" : "items"
         });
         this.skinParts.$blockWidgetBody.append(this.skinParts.$itemsContainer);
 
-        //initialize Raphael paper from children container and set it to be full size of the HTML container
+        // initialize Raphael paper from children container and set it to be full size of the HTML container
         this.skinParts.SVGPaper = Raphael(this.skinParts.$itemsContainer[0]);
         this.skinParts.SVGPaper.canvas.style.pointerEvents = "visiblePainted";
 
-        //finally resize the whole content according to available space
+        // finally resize the whole content according to available space
         this._containerSize.w = this.$el.width();
         this._containerSize.h = this.$el.height();
         this._resizeItemContainer();
@@ -258,7 +258,7 @@ define(['logManager',
 
     BlockEditorWidget.prototype.onDeactivate = function (){
         this.__loader.destroy();
-        //this._hideToolbarItems();
+        // this._hideToolbarItems();
     };
     /**************************** READ-ONLY MODE HANDLERS ************************/
 
@@ -272,16 +272,16 @@ define(['logManager',
     };
 
     BlockEditorWidget.prototype.getIsReadOnlyMode = function () {
-        //return this.mode === this.OPERATING_MODES.READ_ONLY;
+        // return this.mode === this.OPERATING_MODES.READ_ONLY;
         return this.mode !== this.OPERATING_MODES.DESIGN;
     };
 
     BlockEditorWidget.prototype._setReadOnlyMode = function (readOnly) {
         if (readOnly === true && this.mode !== this.OPERATING_MODES.READ_ONLY) {
-            //enter READ-ONLY mode
+            // enter READ-ONLY mode
             this.setOperatingMode(this.OPERATING_MODES.READ_ONLY);
         } else if (readOnly === false && this.mode === this.OPERATING_MODES.READ_ONLY) {
-            //enter normal mode from read-only
+            // enter normal mode from read-only
             this.setOperatingMode(this.OPERATING_MODES.DESIGN);
         }
     };
@@ -289,20 +289,20 @@ define(['logManager',
 
     /****************** PUBLIC FUNCTIONS ***********************************/
 
-    //Called when the widget's container size changed
+    // Called when the widget's container size changed
     BlockEditorWidget.prototype.setSize = function (width, height) {
         this._containerSize.w = width;
         this._containerSize.h = height;
 
-        //call our own resize handler
+        // call our own resize handler
         this._resizeItemContainer();
 
-        //this._refreshTabTabsScrollOnResize();
+        // this._refreshTabTabsScrollOnResize();
     };
 
     BlockEditorWidget.prototype.destroy = function () {
         this.__loader.destroy();
-        //this._removeToolbarItems();
+        // this._removeToolbarItems();
     };
 
     BlockEditorWidget.prototype.getAdjustedMousePos = function (e) {
@@ -331,7 +331,7 @@ define(['logManager',
         while(guid.length < GUID_DIGITS){
             guid = "0" + guid;
         }
-        guid = "S_" + guid; //S => Blockping Object
+        guid = "S_" + guid; // S => Blockping Object
 
         return guid;
     };
@@ -359,7 +359,7 @@ define(['logManager',
             itemID,
             item;
 
-        //check if position has to be adjusted to not to put it on some other model
+        // check if position has to be adjusted to not to put it on some other model
         while (posChanged === true) {
             posChanged = false;
             i = this.itemIds.length;
@@ -387,7 +387,7 @@ define(['logManager',
     BlockEditorWidget.prototype._onSelectionCommandClicked = function (command, id, event) {
         var idList;
 
-        //Get the list of siblings of the item
+        // Get the list of siblings of the item
         idList = this.items[id].getDependentsByType().siblings;
         idList.push(id);
 
@@ -481,7 +481,7 @@ define(['logManager',
             itemBBox,
             items = this.items;
 
-        //get the position and size of all dragged guy and temporarily resize canvas to fit them
+        // get the position and size of all dragged guy and temporarily resize canvas to fit them
         while (i--) {
             itemBBox =  items[allDraggedItemIDs[i]].getBoundingBox();
             maxWidth = Math.max(maxWidth, itemBBox.x2);
@@ -493,7 +493,7 @@ define(['logManager',
 
         this._resizeItemContainer();
 
-        //refresh only the connections that are really needed
+        // refresh only the connections that are really needed
         connectionIDsToUpdate = this._getAssociatedConnectionsForItems(allDraggedItemIDs).sort();
         
         this.logger.debug('Redraw connection request: ' + connectionIDsToUpdate.length + '/' + this.connectionIds.length);
@@ -594,7 +594,7 @@ define(['logManager',
             deletedLen = 0,
             msg = "";
 
-        //check whether controller update finished or not
+        // check whether controller update finished or not
         if (this._updating !== true) {
 
             insertedLen += this._insertedLinkableItemIDs.length;
@@ -630,13 +630,13 @@ define(['logManager',
         this.logger.debug("_refreshScreen START");
 
         /***************** FIRST HANDLE THE DESIGNER ITEMS *****************/
-        //add all the inserted items, they are still on a document Fragment
+        // add all the inserted items, they are still on a document Fragment
         this.skinParts.$itemsContainer[0].appendChild(this._documentFragment);
         this._documentFragment = document.createDocumentFragment();
 
-        //STEP 1: call the inserted and updated items' getRenderLayout
-        //I need to get the widths, heights, etc, so I can calculate the new sizes
-        //after the transforms...
+        // STEP 1: call the inserted and updated items' getRenderLayout
+        // I need to get the widths, heights, etc, so I can calculate the new sizes
+        // after the transforms...
         doRenderGetLayout = function (itemIDList) {
             var i = itemIDList.length,
                 itemBBox,
@@ -654,7 +654,7 @@ define(['logManager',
         doRenderGetLayout(this._insertedLinkableItemIDs);
         doRenderGetLayout(this._updatedLinkableItemIDs);
 
-        //Update the text fields of all linkable items
+        // Update the text fields of all linkable items
         doRenderSetText = function (itemIDList) {
             for (var i = itemIDList.length-1; i >= 0; i--){
                 items[itemIDList[i]].renderSetTextInfo();
@@ -663,10 +663,10 @@ define(['logManager',
         doRenderSetText(this._insertedLinkableItemIDs);
         doRenderSetText(this._updatedLinkableItemIDs);
         
-        //Update all linkable items that need updating
+        // Update all linkable items that need updating
         this._updateLinkableItems();
 
-        //STEP 2: call the inserted and updated items' setRenderLayout
+        // STEP 2: call the inserted and updated items' setRenderLayout
         doRenderSetLayout = function (itemIDList) {
             var i = itemIDList.length,
                 cItem;
@@ -695,8 +695,8 @@ define(['logManager',
 
         affectedItems = this._insertedLinkableItemIDs.concat(this._updatedLinkableItemIDs, this._deletedLinkableItemIDs);
 
-        //adjust the canvas size to the new 'grown' are that the inserted / updated require
-        //TODO: canvas size decrease not handled yet
+        // adjust the canvas size to the new 'grown' are that the inserted / updated require
+        // TODO: canvas size decrease not handled yet
         this._actualSize.w = Math.max(this._actualSize.w, maxWidth + CANVAS_EDGE);
         this._actualSize.h = Math.max(this._actualSize.h, maxHeight + CANVAS_EDGE);
         this._resizeItemContainer();
@@ -756,8 +756,8 @@ define(['logManager',
      * @return {undefined}
      */
     BlockEditorWidget.prototype._updateLinkableItems = function () {
-        //First, finding the highest node in the dependency tree that could
-        //affected by the change
+        // First, finding the highest node in the dependency tree that could
+        // affected by the change
         
         var items = Object.keys(this._linkableItems2Update),
             item,
@@ -768,16 +768,16 @@ define(['logManager',
             delete this._linkableItems2Update[items[i]];
             item = items[i];
 
-            //get the "highest" item possibly affected
+            // get the "highest" item possibly affected
             while (this.items[item].parent !== null){
                 item = this.items[item].parent.id;
             }
 
-            //Add item if not already there
+            // Add item if not already there
             this._linkableItems2Update[item] = true;
         }
 
-        //For each of the items left:
+        // For each of the items left:
         //    + resize children dependents
         //    + resize sibling dependents
         //    + resize self
@@ -787,8 +787,8 @@ define(['logManager',
             visited = {},
             self = this,
             sortByDependency = function(children){
-                //Sort the children by dependency on one another
-                //Make sure that this works if we start on a child that is halfway through the list
+                // Sort the children by dependency on one another
+                // Make sure that this works if we start on a child that is halfway through the list
                 var childMap = {},
                     visited = {},
                     sorted = [],
@@ -797,7 +797,7 @@ define(['logManager',
                     index,
                     i;
 
-                //Create a map of children from array
+                // Create a map of children from array
                 for (i = children.length -1; i >= 0; i--){
                     childMap[children[i]] = true;
                 }
@@ -808,15 +808,15 @@ define(['logManager',
                     depList = [];
                     child = self.items[children[i]];
                     
-                    //While we haven't visited child and it is in our set
+                    // While we haven't visited child and it is in our set
                     while(!visited[child.id] && childMap[child.id]){
-                        //add the child to the depList
+                        // add the child to the depList
                         depList.unshift(child.id);
                         visited[child.id] = true;
                         child = child.parent;
                     }
 
-                    //Add depList to sorted as appropriate
+                    // Add depList to sorted as appropriate
                     if (visited[child.id]){
                         sorted = sorted.concat(depList);
                     } else {
@@ -833,30 +833,30 @@ define(['logManager',
             };
 
         items = Object.keys(this._linkableItems2Update);
-        params = { propogate: false, resize: false };
-        while(items.length){
+        params = {propogate: false, resize: false};
+        while (items.length) {
             item = items.pop();
 
             resizeQueue = [item];
             while(resizeQueue.length){
                 dependents = this.items[resizeQueue[0]].getDependentsByType();
-                //Try to follow children
+                // Try to follow children
                 while(dependents.children && !visited[resizeQueue[0]]){
                     visited[resizeQueue[0]] = true;
-                    //Sort children by dependency
+                    // Sort children by dependency
                     dependents.children = sortByDependency(dependents.children);
                     resizeQueue = dependents.children.concat(dependents.siblings, resizeQueue);
                     dependents = this.items[resizeQueue[0]].getDependentsByType();
                 }
-                //Else follow 'next' ptrs
                 moveQueue.push(resizeQueue.splice(0,1).pop());
                 this.items[moveQueue[moveQueue.length-1]].updateSize();
-                this.items[moveQueue[moveQueue.length-1]].updateDependents(params);//positions all dependents
+                this.items[moveQueue[moveQueue.length-1]].updateDependents(params);  // positions all dependents
             }
         }
 
         this._linkableItems2Update = {};
     };
+
     BlockEditorWidget.prototype.clear = function () {
 
         this.setTitle('');
@@ -872,16 +872,16 @@ define(['logManager',
             delete this.items[key];
         }
 
-        assert( Object.keys(this.items).length === 0, "Items have not been fully removed from previous screen");
+        assert(Object.keys(this.items).length === 0, "Items have not been fully removed from previous screen");
 
-        //initialize all the required collections with empty value
+        // initialize all the required collections with empty value
         this._initializeCollections();
 
         this._actualSize = { "w": 0, "h": 0 };
 
         this._resizeItemContainer();
 
-        //this.dispatchEvent(this.events.ON_CLEAR);
+        // this.dispatchEvent(this.events.ON_CLEAR);
     };
 
     BlockEditorWidget.prototype._initializeCollections = function() {
@@ -897,7 +897,7 @@ define(['logManager',
     
 
     BlockEditorWidget.prototype.deleteComponent = function (componentId) {
-        //let the selection manager / drag-manager / connection drawing manager / etc know about the deletion
+        // let the selection manager / drag-manager / connection drawing manager / etc know about the deletion
         this.dispatchEvent(this.events.ON_COMPONENT_DELETE, componentId);
 
         this.deleteLinkableItem(componentId);

@@ -21,7 +21,7 @@ define(['js/DragDrop/DragSource',
         DRAG_HELPER_EL_BASE = $('<div/>', {'class': DRAG_HELPER_CLASS}),
         DRAG_HELPER_ICON_MOVE = $('<i class="icon-move"></i>'),
         DRAG_HELPER_ICON_COPY = $('<i class="icon-plus"></i>'),
-        DRAG_HELPER_ITEM_ID = 'dragged-items',
+        DRAG_HELPER_ITEM_ID = BLOCK_CONSTANTS.DRAG_HELPER_ITEM_ID,
         DRAG_HELPER_BUFFER = BLOCK_CONSTANTS.DRAG_HELPER_BUFFER;
 
     BlockEditorWidgetDraggable = function () {

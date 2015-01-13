@@ -51,7 +51,8 @@ define(['./LinkableItem',
         newComponent.addToDocFragment(this._documentFragment);
 
         //Set Pointers/Connections
-        newComponent.updatePtrs(objDescriptor.ptrInfo);
+        var ptrInfo = this._createPtrInfoObject(objDescriptor.ptrInfo);
+        newComponent.updatePtrs(ptrInfo);
         newComponent.updateInputFields();
         newComponent.updateDisplayedAttributeText();
 
@@ -100,7 +101,8 @@ define(['./LinkableItem',
 
             //Update pointers
             if (objDescriptor.hasOwnProperty("ptrInfo")){
-                addToUpdateList = item.updatePtrs(objDescriptor.ptrInfo) || addToUpdateList;
+                var ptrInfo = this._createPtrInfoObject(objDescriptor.ptrInfo);
+                addToUpdateList = item.updatePtrs(ptrInfo) || addToUpdateList;
                 addToUpdateList = item.updateAttributes(objDescriptor.attrInfo) || addToUpdateList;
             }
 
@@ -123,6 +125,17 @@ define(['./LinkableItem',
                 this._linkableItems2Update[componentId] = addToUpdateList;
             }
         }
+    };
+
+    BlockEditorWidgetLinkableItems.prototype._createPtrInfoObject = function(ptrInfo) {
+        // Replace ids with items
+        var ids = Object.keys(ptrInfo);
+
+        for (var i = ids.length-1; i >= 0; i--) {
+            ptrInfo[ids[i]] = this.items[ptrInfo[ids[i]]] || ptrInfo[ids[i]];
+        }
+
+        return ptrInfo;
     };
 
     BlockEditorWidgetLinkableItems.prototype.deleteLinkableItem  = function (id) {

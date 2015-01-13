@@ -25,7 +25,7 @@ define(['logManager',
      * @return {undefined}
      */
     LinkableItem = function(objId, canvas){
-        this._super(NAME, objId, canvas);
+        ItemBase.prototype.initialize.call(this, NAME, objId, canvas);
 
         //Logger
         this.logger = logManager.create("LinkableItem_" + this.id);
@@ -179,16 +179,14 @@ define(['logManager',
             if (ptrInfo[ptr]){//If pointer is set
                 if (k === -1){//didn't have the pointer
                     //Add pointer
-                    otherItem = this.canvas.items[ptrInfo[ptr]];
-                    this.setPtr(ptr, otherItem);
+                    this.setPtr(ptr, ptrInfo[ptr]);
                     changed = "added ptr";
                 } else {
                     //Check that the pointer is correct
-                    if (this.ptrs[ptr].id !== ptrInfo[ptr]){
+                    if (this.ptrs[ptr].id !== ptrInfo[ptr].id){
                         this.removePtr(ptr);
 
-                        otherItem = this.canvas.items[ptrInfo[ptr]];
-                        this.setPtr(ptr, otherItem);
+                        this.setPtr(ptr, ptrInfo[ptr]);
                         changed = "changed ptr";
                     }
                     oldPtrs.splice(k, 1);
@@ -308,23 +306,44 @@ define(['logManager',
         //Update decorator to show attributes with given name
         this._decoratorInstance.setAttributeEnabled(ptr, true);
         
+        delete this.ptrs[ptr];
+
         //free the connections
-        this._removePtr(ptr);
+        if (!this._freeConnRecord(ptr)) {
+            if (item.parent === this) {
+                item.parent = null;
+            }
+        }
     };
 
-    LinkableItem.prototype._removePtr = function (ptr) {
-        var item = this.ptrs[ptr],
-            connId = this.item2Conn[item.id];
+    /**
+     * Free the record of the connection area-item association.
+     *
+     * @param {LinkableItem} item
+     * @param {String} ptr
+     * @return {Boolean} True if the item is still connected to "this"
+     */
+    LinkableItem.prototype._freeConnRecord = function (ptr) {
+        var connId = this.getConnectionArea({ptr: ptr, 
+                                             role: BLOCK_CONSTANTS.CONN_OUTGOING}).id,
+            item = this.conn2Item[connId],
+            stillConnected = connId !== this.item2Conn[item.id];
 
-        this.item2Conn[item.id] = undefined;
         this.conn2Item[connId] = undefined;
 
-        connId = item.item2Conn[this.id];
-        item.item2Conn[this.id] = undefined;
-        item.conn2Item[connId] = undefined;
+        if (!stillConnected) {                    // Ignore if the item has simply moved
+            this.item2Conn[item.id] = undefined;  // to another connection of the item
+            item.item2Conn[this.id] = undefined;
 
-        delete this.ptrs[ptr];
-        item.parent = null;
+            connId = item.item2Conn[this.id];
+
+            if (item.conn2Item[connId] === this) {
+                item.conn2Item[connId] = undefined;
+            }
+        }
+
+        return stillConnected;
+
     };
 
     LinkableItem.prototype.getPtrFromItem = function (itemId) {
@@ -881,24 +900,20 @@ define(['logManager',
      * @return {Object} Connection Areas
      */
     LinkableItem.prototype.getConnectionAreas = function () {
-        var result = [],
-            areas = this.getRelativeConnectionAreas(),
-            cArea;
+        var areas = this.getRelativeConnectionAreas();
+        return this._makeConnAreasAbsolute(areas);
+    };
 
-        for (var i = areas.length-1; i >= 0; i--) {
-            cArea = this._makeConnAreaAbsolute(areas[i]);
-            result.push(cArea);
-        }
-
-        return result;
+    LinkableItem.prototype.getFreeConnectionAreas = function () {
+        var areas = this.getRelativeFreeConnectionAreas();
+        return this._makeConnAreasAbsolute(areas);
     };
 
     //Convenience method
     /**
      * Get the connection area for the given role, pointer
      *
-     * @param {String} ptr
-     * @param {String} role
+     * @param {Object} params to match in connection area
      * @return {Object}
      */
     LinkableItem.prototype.getConnectionArea = function (params) {
@@ -935,6 +950,14 @@ define(['logManager',
         }
 
         return area;
+    };
+
+    // Convenience method
+    LinkableItem.prototype._makeConnAreasAbsolute = function (areas) {
+        for (var i = areas.length-1; i >= 0; i--) {
+            areas[i] = this._makeConnAreaAbsolute(areas[i]);
+        }
+        return areas;
     };
 
     /**
