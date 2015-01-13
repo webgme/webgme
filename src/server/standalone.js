@@ -424,6 +424,7 @@ define(['logManager',
                 next();
             });
 
+            __app.use(Express.compress());
             __app.use(Express.cookieParser());
             __app.use(Express.bodyParser());
             __app.use(Express.methodOverride());
