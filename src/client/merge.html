@@ -1,11 +1,38 @@
 <!DOCTYPE html>
-<html>
+<html ng-app="mergeApp">
 <head lang="en">
     <meta charset="UTF-8">
     <title>WebGME Merge Page</title>
+    <script src="js/merge/angular.min.js"></script>
     <script src="dist/webgme.classes.build.js"></script>
+    <script src="js/Merge/merge.js"></script>
+    <script>
+        <!-- function to start execution of scripts at load time -->
+        function initializeMerge(){
+            var params = window.location.toString().substr(window.location.toString().indexOf('?')+1),
+                    i,config,timer = setInterval(function(){
+                        console.warn('ecce...');
+                        if(GME.classes.Storage && GME.classes.Core){
+                            clearInterval(timer);
+                            GME.merge.initialize(config);
+                        }
+                    },10);
+            params = params.split('&');
+            for(i=0;i<params.length;i++){
+                params[i] = params[i].split('=');
+            }
+            config = {};
+            //adding default parameters
+            config.host = window.location.origin;
+            for(i=0;i<params.length;i++){
+                if(params[i].length === 2){
+                    config[params[i][0]] = params[i][1];
+                }
+            }
+        }
+    </script>
 </head>
-<body>
-
+<body onload="initializeMerge()" ng-controller="mergeController">
+hehh!
 </body>
 </html>

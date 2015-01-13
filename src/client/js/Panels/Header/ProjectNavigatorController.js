@@ -959,7 +959,7 @@ define( [
       };
   };
 
-  ProjectNavigatorController.prototype.mergeBranch = function(projectId, whatBranchId, whereBranchId){
+  ProjectNavigatorController.prototype._mergeBranch = function(projectId, whatBranchId, whereBranchId){
     var self = this,
       finalCall = function(err){
         self.$simpleDialog.open({
@@ -1092,6 +1092,12 @@ define( [
         });
       });
     });
+  };
+
+  ProjectNavigatorController.prototype.mergeBranch = function(projectId, whatBranchId, whereBranchId) {
+    var url = window.location.origin+"/merge.html?project="+projectId+"&mine="+this.projects[projectId].branches[whatBranchId].properties.hashTag+"&theirs="+this.projects[projectId].branches[whereBranchId].properties.hashTag;
+    //TODO probably window.location setting type redirection should be used as that way we could keep the authentication credentials...
+    window.open(url);
   };
 
   ProjectNavigatorController.prototype.dummyProjectsGenerator = function ( name, maxCount ) {

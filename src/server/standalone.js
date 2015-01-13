@@ -589,7 +589,6 @@ define(['logManager',
 
         //allow ditribution files to be queried
         __app.get(/^\/dist\/.*\.js(\..*$|)/,ensureAuthenticated,function(req,res){
-            console.warn(Path.join(Path.join(__baseDir,'../'),req.path));
             expressFileSending(res,Path.join(Path.join(__baseDir,'../'),req.path));
         });
         //TODO remove this part as this is only temporary!!!
