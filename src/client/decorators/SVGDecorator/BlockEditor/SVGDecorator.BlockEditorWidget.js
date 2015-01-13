@@ -590,8 +590,8 @@ define(['js/Constants',
             var i = result.length;
             while (i--) {
                 if(result[i].role === BLOCK_CONSTANTS.CONN_INCOMING){
-                    //Accepting areas can have multiple possibilities for roles
-                    result[i].ptr = result[i].ptr.split(' ');
+                    //Incoming connection areas don't specify ptr
+                    result[i].ptr = null;
                 }
 
                 result[i].x1 += xShift;
