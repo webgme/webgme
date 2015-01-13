@@ -34,7 +34,7 @@ define( ['logManager',
 
     AutoRouterPath.prototype.Delete = function (){
         this.deleteAll();
-        this.setOwner(null);
+        this.owner = null;
     };
 
     //----Points
@@ -76,16 +76,8 @@ define( ['logManager',
         return this.points.getLength();
     };
 
-    AutoRouterPath.prototype.getOwner = function(){
-        return this.owner;
-    };
-
     AutoRouterPath.prototype.hasOwner = function(){
         return this.owner !== null;
-    };
-
-    AutoRouterPath.prototype.setOwner = function(newOwner){
-        this.owner = newOwner;
     };
 
     AutoRouterPath.prototype.setStartPorts = function(newPorts){
@@ -119,14 +111,6 @@ define( ['logManager',
         return this.endport || this.endports[0];
     };
 
-    AutoRouterPath.prototype.getStartPorts = function(){
-        return this.startports;
-    };
-
-    AutoRouterPath.prototype.getEndPorts = function(){
-        return this.endports;
-    };
-
     AutoRouterPath.prototype.calculateStartEndPorts = function(){
         return {'src': this.calculateStartPorts(), 'dst': this.calculateEndPorts() };
     };
@@ -146,7 +130,7 @@ define( ['logManager',
 
         //Get available ports
         while(i--){
-            assert(this.startports[i].getOwner(), "ARPath.calculateStartEndPorts: this.startport has invalid this.owner!");
+            assert(this.startports[i].owner, "ARPath.calculateStartEndPorts: this.startport has invalid this.owner!");
             if(this.startports[i].isAvailable()){
                 srcPorts.push(this.startports[i]);
             }
@@ -177,7 +161,7 @@ define( ['logManager',
 
             i = this.endports.length;
             while(i--){
-                pt = this.endports[i].getRect().getCenter();
+                pt = this.endports[i].rect.getCenter();
                 x += pt.x;
                 y += pt.y;
             }
@@ -220,7 +204,7 @@ define( ['logManager',
 
         //Get available ports
         while(i--){
-            assert(this.endports[i].getOwner(), "ARPath.calculateStartEndPorts: this.endport has invalid this.owner!");
+            assert(this.endports[i].owner, "ARPath.calculateStartEndPorts: this.endport has invalid this.owner!");
             if(this.endports[i].isAvailable()){
                 dstPorts.push(this.endports[i]);
             }
@@ -251,7 +235,7 @@ define( ['logManager',
 
             i = this.startports.length;
             while(i--){
-                pt = this.startports[i].getRect().getCenter();
+                pt = this.startports[i].rect.getCenter();
                 x += pt.x;
                 y += pt.y;
             }
@@ -305,31 +289,14 @@ define( ['logManager',
         return this.points.getLength();
     };
 
-    AutoRouterPath.prototype.getStartPoint = function(){
-        //assert( this.points.getLength() >= 2, "ARPath.getStartPoint: this.points.getLength() >= 2 FAILED");
-        if(this.points.getLength()){
-            assert(this.startpoint === this.points.get(0)[0], "ARPath.getEndPoint: this.startpoint === this.points.get(0)[0] FAILED");
-        }
-
-        return this.startpoint;
-    };
-
-    AutoRouterPath.prototype.getEndPoint = function(){
-        if(this.points.getLength()){
-            assert(this.endpoint === this.points.get(this.points.getLength() - 1)[0], "ARPath.getEndPoint: this.endpoint === this.points.get(this.points.getLength() - 1)[0] FAILED");
-        }
-
-        return this.endpoint;
-    };
-
     AutoRouterPath.prototype.getStartBox = function(){
-        var startbox = this.startport.getOwner();
-        return startbox.getRect();
+        var startbox = this.startport.owner;
+        return startbox.rect;
     };
 
     AutoRouterPath.prototype.getEndBox = function(){
-        var endbox = this.endport.getOwner();
-        return endbox.getRect();
+        var endbox = this.endport.owner;
+        return endbox.rect;
     };
 
     AutoRouterPath.prototype.getOutOfBoxStartPoint = function(hintDir){
@@ -521,14 +488,6 @@ define( ['logManager',
         return false;
     };
 
-    AutoRouterPath.prototype.setAttributes = function(attr){
-        this.attributes = attr;
-    };
-
-    AutoRouterPath.prototype.getAttributes = function(){
-        return this.attributes;
-    };
-
     AutoRouterPath.prototype.isFixed = function(){
         return ((this.attributes & CONSTANTS.ARPATH_Fixed) !== 0);
     };
@@ -663,8 +622,8 @@ define( ['logManager',
                             // Check if the edge displacement at the end of the path
                             // is still within the boundary limits of the start or the end box
                             if (currEdgeIndex === 0 || currEdgeIndex === numEdges - 1) {
-                                startRect = this.startport.getRect();
-                                    endRect = this.endport.getRect();
+                                startRect = this.startport.rect;
+                                    endRect = this.endport.rect;
                                     minLimit = (currEdgeIndex === 0 ?
                                             ((this.customPathData[ii]).IsHorizontalOrVertical() ? startRect.ceil : startRect.left) :
                                             ((this.customPathData[ii]).IsHorizontalOrVertical() ? endRect.ceil : endRect.left));
@@ -790,10 +749,9 @@ define( ['logManager',
 
     AutoRouterPath.prototype.destroy = function(){
         if( this.isConnected() ){
-            this.getStartPort().removePoint(this.getStartPoint());
-            this.getEndPort().removePoint(this.getEndPoint());
+            this.startport.removePoint(this.startpoint);
+            this.endport.removePoint(this.endpoint);
         }
-
     };
 
     AutoRouterPath.prototype.assertValid = function(){

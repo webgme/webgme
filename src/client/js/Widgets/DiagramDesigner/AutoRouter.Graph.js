@@ -32,24 +32,21 @@ define(['logManager',
         this.vertical = new AutoRouterEdgeList(false);
         this.boxes = {}; 
         this.paths = []; 
-        this.selfPoints = [];
         this.bufferBoxes = [];
         this.box2bufferBox = {}; //maps boxId to corresponding bufferbox object
 
-        this.horizontal.setOwner(this);
-        this.vertical.setOwner(this);
+        this.horizontal.owner = this;
+        this.vertical.owner = this;
 
         //Initializing selfPoints
-        this.selfPoints.push(new ArPoint(CONSTANTS.ED_MINCOORD, CONSTANTS.ED_MINCOORD));
-        this.selfPoints.push(new ArPoint(CONSTANTS.ED_MAXCOORD, CONSTANTS.ED_MINCOORD));
-        this.selfPoints.push(new ArPoint(CONSTANTS.ED_MAXCOORD, CONSTANTS.ED_MAXCOORD));
-        this.selfPoints.push(new ArPoint(CONSTANTS.ED_MINCOORD, CONSTANTS.ED_MAXCOORD));
+        this.selfPoints = [
+            new ArPoint(CONSTANTS.ED_MINCOORD, CONSTANTS.ED_MINCOORD),
+            new ArPoint(CONSTANTS.ED_MAXCOORD, CONSTANTS.ED_MINCOORD),
+            new ArPoint(CONSTANTS.ED_MAXCOORD, CONSTANTS.ED_MAXCOORD),
+            new ArPoint(CONSTANTS.ED_MINCOORD, CONSTANTS.ED_MAXCOORD)
+        ];
 
         this._addSelfEdges();
-    };
-
-    AutoRouterGraph.prototype.getSelfPoints = function(){
-        return this.selfPoints;
     };
 
     //Functions
@@ -69,11 +66,11 @@ define(['logManager',
                startPort = path.getStartPort();
 
                assert(startPort !== null, "ARGraph.remove: startPort !== null FAILED");
-               var startbox = startPort.getOwner(),
+               var startbox = startPort.owner,
                endPort = path.getEndPort();
 
                assert(endPort !== null, "ARGraph.remove: endPort !== null FAILED");
-               var endbox = endPort.getOwner();
+               var endbox = endPort.owner;
 
                if( (startbox === box || endbox === box) )
                {
@@ -81,7 +78,7 @@ define(['logManager',
             if (path.hasOwner())
             {
             deleteEdges(path);
-            path.setOwner(null);
+            path.owner = null;
 
             paths.splice(iter, 1);
             iteratorChanged = true;
@@ -95,17 +92,17 @@ define(['logManager',
             }
              */
 
-            box.setOwner(null);
+            box.owner = null;
 
-            assert( this.boxes[box.getID()] !== undefined, "ARGraph.remove: Box does not exist");
+            assert( this.boxes[box.id] !== undefined, "ARGraph.remove: Box does not exist");
 
-            delete this.boxes[box.getID()];
+            delete this.boxes[box.id];
 
         }else if(box instanceof AutoRouterPath){ //ARPath
             var path = box;
             this.deleteEdges(path);
 
-            path.setOwner(null);
+            path.owner = null;
 
             var iter = this.paths.indexOf(path);
             assert( iter > -1, "ARGraph.remove: Path does not exist");
@@ -156,14 +153,14 @@ define(['logManager',
 
     AutoRouterGraph.prototype._setPortAttr = function (port, attr){
         this._disconnectPathsFrom(port);
-        port.setAttributes(attr);
+        port.attributes = attr;
     };
 
     AutoRouterGraph.prototype._isRectClipBoxes = function (rect){
         var boxRect;
         for(var box in this.boxes){
             if(this.boxes.hasOwnProperty(box)){
-                boxRect = this.boxes[box].getRect();
+                boxRect = this.boxes[box].rect;
                 if( UTILS.isRectClip(rect, boxRect) ){
                     return true;
                 }
@@ -227,7 +224,7 @@ define(['logManager',
         assert( path !== null, "ARGraph.add: path !== null FAILED" );
         assert(!path.hasOwner(), "ARGraph.add: !path.hasOwner() FAILED");
 
-        path.setOwner(this);
+        path.owner = this;
 
         this.paths.push(path);
 
@@ -245,7 +242,7 @@ define(['logManager',
         while(++i < this.paths.length){
             //deleteEdges(*i);	// no need: there's a deleteAllEdges in deleteAll
 
-            this.paths[i].setOwner(null);
+            this.paths[i].owner = null;
             this.paths[i].destroy();
             this.paths[i] = null;
         }
@@ -280,7 +277,7 @@ define(['logManager',
 
         for(var box in this.boxes){
             if(this.boxes.hasOwnProperty(box)){
-                rect.unionAssign(this.boxes[box].getRect());
+                rect.unionAssign(this.boxes[box].rect);
             }
         }
 
@@ -293,13 +290,13 @@ define(['logManager',
     };
 
     AutoRouterGraph.prototype._getOutOfBox = function (details){
-        var bufferObject = this.box2bufferBox[details.box.getID()],
+        var bufferObject = this.box2bufferBox[details.box.id],
             children = bufferObject.children,
             i = bufferObject.children.length,
             parentBox = bufferObject.box,
             point = details.point,
             dir = details.dir,
-            boxRect = new ArRect( details.box.getRect() ),
+            boxRect = new ArRect( details.box.rect ),
             dir2;
 
         boxRect.inflateRect( CONSTANTS.BUFFER ); //Create a copy of the buffer box
@@ -490,7 +487,7 @@ define(['logManager',
 
             for(box in this.boxes){
                 if(this.boxes.hasOwnProperty(box)){
-                    rect = this.boxes[box].getRect();
+                    rect = this.boxes[box].rect;
 
                     if(start.x < rect.right && rect.left <= end.x)
                     {
@@ -517,7 +514,7 @@ define(['logManager',
 
             for(box in this.boxes){
                 if(this.boxes.hasOwnProperty(box)){
-                    rect = this.boxes[box].getRect();
+                    rect = this.boxes[box].rect;
 
                     if(start.y < rect.floor && rect.ceil <= end.y)
                     {
@@ -545,8 +542,8 @@ define(['logManager',
         var ports = path.calculateStartEndPorts(),
             startport = ports.src,
             endport = ports.dst,
-            startpoint = path.getStartPoint(),
-            endpoint = path.getEndPoint();
+            startpoint = path.startpoint,
+            endpoint = path.endpoint;
 
         assert(startport.hasPoint(startpoint), "ARGraph.connect: startport.hasPoint(startpoint) FAILED");
         assert(endport.hasPoint(endpoint), "ARGraph.connect: endport.hasPoint(endpoint) FAILED");
@@ -555,12 +552,12 @@ define(['logManager',
             UTILS.stepOneInDir (startpoint, UTILS.nextClockwiseDir (startdir));
         }
 
-        var startId = startport.getOwner().getID(),
-            endId = endport.getOwner().getID(),
+        var startId = startport.owner.id,
+            endId = endport.owner.id,
             startdir = startport.port_OnWhichEdge(startpoint),
             enddir = endport.port_OnWhichEdge(endpoint);
 
-        if(path.isAutoRouted() && this.box2bufferBox[startId] === this.box2bufferBox[endId] && startdir === UTILS.reverseDir (enddir) && startport.getOwner() !== endport.getOwner()){
+        if(path.isAutoRouted() && this.box2bufferBox[startId] === this.box2bufferBox[endId] && startdir === UTILS.reverseDir (enddir) && startport.owner !== endport.owner){
 
             return this._connectPointsSharingParentBox(path, startpoint, endpoint, startdir);
         }else{
@@ -572,7 +569,7 @@ define(['logManager',
 
     AutoRouterGraph.prototype._connectPathWithPoints = function (path, startpoint, endpoint){
         assert(startpoint instanceof ArPoint, "ARGraph.connect: startpoint instanceof ArPoint FAILED");
-        assert( path !== null && path.getOwner() === this, "ARGraph.connect: path !== null && path.getOwner() === self FAILED");
+        assert( path !== null && path.owner === this, "ARGraph.connect: path !== null && path.owner === self FAILED");
         assert( !path.isConnected(), "ARGraph.connect: !path.isConnected() FAILED");
         assert( !startpoint.equals(endpoint), "ARGraph.connect: !startpoint.equals(endpoint) FAILED");
 
@@ -587,21 +584,21 @@ define(['logManager',
         assert( UTILS.isRightAngle (startdir) && UTILS.isRightAngle (enddir), "ARGraph.connect: UTILS.isRightAngle (startdir) && UTILS.isRightAngle (enddir) FAILED" );
 
         //Find the bufferbox containing startpoint, endpoint
-        var startBox = this.box2bufferBox[startPort.getOwner().getID()].box,
-            endBox = this.box2bufferBox[endPort.getOwner().getID()].box;
+        var startBox = this.box2bufferBox[startPort.owner.id].box,
+            endBox = this.box2bufferBox[endPort.owner.id].box;
 
         var start = new ArPoint(startpoint);
         this._getOutOfBox({ "point": start, 
                 "dir": startdir, 
                 "end": endpoint, 
-                "box": startPort.getOwner() } );
+                "box": startPort.owner } );
         assert( !start.equals(startpoint), "ARGraph.connect: !start.equals(startpoint) FAILED" );
 
         var end = new ArPoint(endpoint);
         this._getOutOfBox({ "point": end, 
                 "dir": enddir, 
                 "end": start, 
-                "box": endPort.getOwner() } ) ;
+                "box": endPort.owner } ) ;
         assert( !end.equals(endpoint), "ARGraph.connect: !end.equals(endpoint) FAILED" );
 
         assert( path.isEmpty(),  "ARGraph.connect: path.isEmpty() FAILED" );
@@ -751,7 +748,7 @@ define(['logManager',
             if( start.equals(old) )
             {
                 assert( box !== null, "ARGraph.connectPoints: box !== null FAILED");
-                rect = box instanceof ArRect ? box : box.getRect(); 
+                rect = box instanceof ArRect ? box : box.rect; 
 
                 if( dir2 === CONSTANTS.Dir_None ){
                     dir2 = UTILS.nextClockwiseDir (dir1);
@@ -956,8 +953,8 @@ define(['logManager',
     AutoRouterGraph.prototype.disconnect = function (path){
         if( path.isConnected() ){
             this.deleteEdges(path);
-            path.getStartPort().removePoint(path.getStartPoint());//Removing points from ports
-            path.getEndPort().removePoint(path.getEndPoint());
+            path.getStartPort().removePoint(path.startpoint);//Removing points from ports
+            path.getEndPort().removePoint(path.endpoint);
         }
 
         path.deleteAll();
@@ -990,12 +987,12 @@ define(['logManager',
                 startport = path.getStartPort();
 
                 assert(startport !== null, "ARGraph.disconnectPathsFrom: startport !== null FAILED");
-                startbox = startport.getOwner();
+                startbox = startport.owner;
                 assert(startbox !== null, "ARGraph.disconnectPathsFrom: startbox !== null FAILED");
 
                 endport = path.getEndPort();
                 assert(endport !== null, "ARGraph.disconnectPathsFrom: endport !== null FAILED");
-                endbox = endport.getOwner();
+                endbox = endport.owner;
                 assert(endbox !== null, "ARGraph.disconnectPathsFrom: endbox !== null FAILED");
 
                 if( (startbox === box || endbox === box) ){
@@ -1041,20 +1038,18 @@ define(['logManager',
     };
 
     AutoRouterGraph.prototype._addAllEdges = function (){
-        assert( this.horizontal.isEmpty() && this.vertical.isEmpty(), "ARGraph.addAllEdges: horizontal.isEmpty() && vertical.isEmpty() FAILED"  );
-        var i;
+        assert(this.horizontal.isEmpty() && this.vertical.isEmpty(), 
+               "ARGraph.addAllEdges: horizontal.isEmpty() && vertical.isEmpty() FAILED");
 
-        for(var box in this.boxes){
-            if(this.boxes.hasOwnProperty(box)){
-                this._addBoxAndPortEdges(this.boxes[box]);
-            }
+        var ids = Object.keys(this.boxes),
+            i;
 
-            i = -1;
+        for (i = ids.length-1; i >= 0; i--) {
+            this._addBoxAndPortEdges(this.boxes[ids[i]]);
+        }
 
-            while (++i < this.paths.length)
-            {
-                this._addEdges(this.paths[i]);
-            }
+        for (i = this.paths.length-1; i >= 0; i--) {
+            this._addEdges(this.paths[i]);
         }
     };
 
@@ -1064,16 +1059,12 @@ define(['logManager',
     };
 
     AutoRouterGraph.prototype._addBoxAndPortEdges = function (box){
-        assert( box !== null, "ARGraph.addBoxAndPortEdges: box !== null FAILED" );
+        assert(box !== null, "ARGraph.addBoxAndPortEdges: box !== null FAILED" );
 
         this._addEdges(box);
 
-        var pl = box.getPortList(),
-            ii = 0;
-
-        while( ii < pl.length){
-            this._addEdges(pl[ii]);
-            ++ii;
+        for (var i = box.ports.length-1; i >= 0; i--) {
+            this._addEdges(box.ports[i]);
         }
 
         //Add to bufferboxes
@@ -1085,11 +1076,10 @@ define(['logManager',
 
         this.deleteEdges(box);
 
-        var pl = box.getPortList(),
-            i = 0;
-        while( i < pl.length){
-            this.deleteEdges(pl[i++]);
+        for (var i = box.ports.lengtg-1; i >= 0; i--) {
+            this.deleteEdges(box.ports[i]);
         }
+
 
         this._removeFromBufferBoxes(box);
     };
@@ -1100,7 +1090,7 @@ define(['logManager',
 
     AutoRouterGraph.prototype._candeleteTwoEdgesAt = function (path, points, pos){
         if(CONSTANTS.DEBUG){
-            assert( path.getOwner() === this, "ARGraph.candeleteTwoEdgesAt: path.getOwner() === this FAILED");
+            assert( path.owner === this, "ARGraph.candeleteTwoEdgesAt: path.owner === this FAILED");
             path.assertValid();
             assert( path.isConnected(), "ARGraph.candeleteTwoEdgesAt: path.isConnected() FAILED");
             points.AssertValidPos(pos);
@@ -1123,7 +1113,7 @@ define(['logManager',
         var ppoint = points.get(pos--)[0],
             pppointpos = pos; 
 
-        if( npoint.equals(point)) {
+        if (npoint.equals(point)) {
             return false; // direction of zero-length edges can't be determined, so don't delete them
         }
 
@@ -1137,20 +1127,20 @@ define(['logManager',
 
         var newpoint = new ArPoint();
 
-        if(ishorizontal){
+        if (ishorizontal) {
             newpoint.x = UTILS.getPointCoord (npoint, ishorizontal);
             newpoint.y = UTILS.getPointCoord (ppoint, !ishorizontal);
-        }else{
+        } else {
             newpoint.y = UTILS.getPointCoord (npoint, ishorizontal);
             newpoint.x = UTILS.getPointCoord (ppoint, !ishorizontal);
         }
 
         assert( UTILS.getDir (newpoint.minus(ppoint)) === dir, "ARGraph.candeleteTwoEdgesAt: UTILS.getDir (newpoint.minus(ppoint)) === dir FAILED" );
 
-        if( this._isLineClipBoxes(newpoint, npoint) ) {
+        if (this._isLineClipBoxes(newpoint, npoint)) {
             return false;
         }
-        if( this._isLineClipBoxes(newpoint, ppoint) ) {
+        if(this._isLineClipBoxes(newpoint, ppoint)) {
             return false;
         }
 
@@ -1158,8 +1148,8 @@ define(['logManager',
     };
 
     AutoRouterGraph.prototype._deleteTwoEdgesAt = function (path, points, pos){
-        if(CONSTANTS.DEBUG){
-            assert( path.getOwner() === this, "ARGraph.deleteTwoEdgesAt: path.getOwner() === this FAILED");
+        if (CONSTANTS.DEBUG) {
+            assert( path.owner === this, "ARGraph.deleteTwoEdgesAt: path.owner === this FAILED");
             path.assertValid();
             assert( path.isConnected(), "ARGraph.deleteTwoEdgesAt: path.isConnected() FAILED" );
             points.AssertValidPos(pos);
@@ -1211,7 +1201,8 @@ define(['logManager',
             nedge = hlist.getEdgeByPointer(point),
             nnedge = vlist.getEdgeByPointer(npoint[0]);
 
-        assert( ppedge !== null && pedge !== null && nedge !== null && nnedge !== null, "ARGraph.deleteTwoEdgesAt:  ppedge !== null && pedge !== null && nedge !== null && nnedge !== null FAILED");
+        assert( ppedge !== null && pedge !== null && nedge !== null && nnedge !== null, 
+               "ARGraph.deleteTwoEdgesAt:  ppedge !== null && pedge !== null && nedge !== null && nnedge !== null FAILED");
 
         vlist.Delete(pedge);
         hlist.Delete(nedge);
@@ -1226,8 +1217,10 @@ define(['logManager',
         if( nnnpointpos < points.getLength())
         {
             var nnnedge = hlist.getEdgeByPointer(nnpoint, (nnnpointpos)); 
-            assert( nnnedge !== null, "ARGraph.deleteTwoEdgesAt: nnnedge !== null FAILED");
-            assert( nnnedge.getStartPointPrev().equals(npoint[0]) && nnnedge.getStartPointPtr()[0].equals(nnpoint), "ARGraph.deleteTwoEdgesAt: nnnedge.getStartPointPrev().equals(npoint[0]) && nnnedge.getStartPoint().equals(nnpoint) FAILED" );
+            assert( nnnedge !== null, 
+                   "ARGraph.deleteTwoEdgesAt: nnnedge !== null FAILED");
+            assert( nnnedge.startpointPrev[0].equals(npoint[0]) && nnnedge.startpoint[0].equals(nnpoint), 
+                   "ARGraph.deleteTwoEdgesAt: nnnedge.startpointPrev[0].equals(npoint[0]) && nnnedge.startpoint.equals(nnpoint) FAILED" );
             nnnedge.setStartPointPrev(ppoint);
         }
 
@@ -1238,8 +1231,8 @@ define(['logManager',
     };
 
     AutoRouterGraph.prototype._deleteSamePointsAt = function (path, points, pos){
-        if(CONSTANTS.DEBUG){
-            assert( path.getOwner() === this, "ARGraph.deleteSamePointsAt: path.getOwner() === this FAILED" );
+        if (CONSTANTS.DEBUG) {
+            assert( path.owner === this, "ARGraph.deleteSamePointsAt: path.owner === this FAILED" );
             path.assertValid();
             assert( path.isConnected(), "ARGraph.deleteSamePointsAt: path.isConnected() FAILED");
             points.AssertValidPos(pos);
@@ -1261,9 +1254,11 @@ define(['logManager',
             pppointpos = pos,
             pppoint = pos === points.getLength() ? null : points.get(pos--);
 
-        assert( ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength(), "ARGraph.deleteSamePointsAt: ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength() FAILED");
-        assert( ppoint !== null && point !== null && npoint !== null && nnpoint !== null, "ARGraph.deleteSamePointsAt: ppoint !== null && point !== null && npoint !== null && nnpoint !== null FAILED");
-        assert( point.equals(npoint) && !point.equals(ppoint), "ARGraph.deleteSamePointsAt: point.equals(npoint) && !point.equals(ppoint) FAILED");
+        assert(ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength());
+        assert(ppoint !== null && point !== null && npoint !== null && nnpoint !== null, 
+               "ARGraph.deleteSamePointsAt: ppoint !== null && point !== null && npoint !== null && nnpoint !== null FAILED");
+        assert(point.equals(npoint) && !point.equals(ppoint), 
+               "ARGraph.deleteSamePointsAt: point.equals(npoint) && !point.equals(ppoint) FAILED");
 
         var dir = UTILS.getDir (point.minus(ppoint));
         assert( UTILS.isRightAngle (dir), "ARGraph.deleteSamePointsAt: UTILS.isRightAngle (dir) FAILED" );
@@ -1286,18 +1281,18 @@ define(['logManager',
         if( pppointpos < points.getLength())
         {
             var ppedge = vlist.getEdgeByPointer(pppoint, ppoint);
-            assert( ppedge !== null && ppedge.getEndPoint().equals(ppoint) && ppedge.getEndPointNext().equals(point), "ARGraph.deleteSamePointsAt: ppedge !== null && ppedge.getEndPoint().equals(ppoint) && ppedge.getEndPointNext().equals(point) FAILED");
+            assert( ppedge !== null && ppedge.endpoint.equals(ppoint) && ppedge.endpointNext[0].equals(point), "ARGraph.deleteSamePointsAt: ppedge !== null && ppedge.endpoint.equals(ppoint) && ppedge.endpointNext[0].equals(point) FAILED");
             ppedge.setEndPointNext(nnpoint);
         }
 
-        assert( nnedge.getStartPoint().equals(npoint) && nnedge.getStartPointPrev().equals(point), "ARGraph.deleteSamePointsAt: nnedge.getStartPoint().equals(npoint) && nnedge.getStartPointPrev().equals(point) FAILED"); 
+        assert( nnedge.startpoint.equals(npoint) && nnedge.startpointPrev[0].equals(point), "ARGraph.deleteSamePointsAt: nnedge.startpoint.equals(npoint) && nnedge.startpointPrev[0].equals(point) FAILED"); 
         nnedge.setStartPoint(ppoint);
         nnedge.setStartPointPrev(pppoint);
 
         if( nnnpointpos < points.getLength())
         {
             var nnnedge = vlist.getEdgeByPointer(nnpoint, (nnnpointpos)); //&*
-            assert( nnnedge !== null && nnnedge.getStartPointPrev().equals(npoint) && nnnedge.getStartPoint().equals(nnpoint), "ARGraph.deleteSamePointsAt: nnnedge !== null && nnnedge.getStartPointPrev().equals(npoint) && nnnedge.getStartPoint().equals(nnpoint) FAILED");
+            assert( nnnedge !== null && nnnedge.startpointPrev[0].equals(npoint) && nnnedge.startpoint.equals(nnpoint), "ARGraph.deleteSamePointsAt: nnnedge !== null && nnnedge.startpointPrev[0].equals(npoint) && nnnedge.startpoint.equals(nnpoint) FAILED");
             nnnedge.setStartPointPrev(ppoint);
         }
 
@@ -1493,8 +1488,8 @@ define(['logManager',
             if( startDir === UTILS.reverseDir (endDir) ){
                 var newStart = new ArPoint(startpoint),
                     newEnd = new ArPoint(endpoint),
-                    startRect = startPort.getRect(),
-                    endRect = endPort.getRect(),
+                    startRect = startPort.rect,
+                    endRect = endPort.rect,
                     minOverlap,
                     maxOverlap;
 
@@ -1506,8 +1501,8 @@ define(['logManager',
                     newStart.y = newY;
                     newEnd.y = newY;
 
-                    tstStart = new ArPoint(UTILS.getRectOuterCoord (startPort.getOwner().getRect(), startDir), newStart.y);
-                    tstEnd = new ArPoint(UTILS.getRectOuterCoord (endPort.getOwner().getRect(), endDir), newEnd.y);
+                    tstStart = new ArPoint(UTILS.getRectOuterCoord (startPort.owner.rect, startDir), newStart.y);
+                    tstEnd = new ArPoint(UTILS.getRectOuterCoord (endPort.owner.rect, endDir), newEnd.y);
 
                 }else{
                     minOverlap = Math.min(startRect.right, endRect.right);
@@ -1517,8 +1512,8 @@ define(['logManager',
                     newStart.x = newX;
                     newEnd.x = newX;
 
-                    tstStart = new ArPoint(newStart.x, UTILS.getRectOuterCoord (startPort.getOwner().getRect(), startDir));
-                    tstEnd = new ArPoint(newEnd.x, UTILS.getRectOuterCoord (endPort.getOwner().getRect(), endDir));
+                    tstStart = new ArPoint(newStart.x, UTILS.getRectOuterCoord (startPort.owner.rect, startDir));
+                    tstEnd = new ArPoint(newEnd.x, UTILS.getRectOuterCoord (endPort.owner.rect, endDir));
                 }
 
                 if( startRect.ptInRect(newStart) && endRect.ptInRect(newEnd) && !this._isLineClipBoxes(tstStart, tstEnd) ){
@@ -1542,7 +1537,7 @@ define(['logManager',
                     edge.setStartPointPrev(null);
                     edge.setEndPointNext(null);
 
-                    edge.setPositionY(UTILS.getPointCoord(newStart, UTILS.nextClockwiseDir (startDir) ));
+                    edge.positionY = UTILS.getPointCoord(newStart, UTILS.nextClockwiseDir (startDir) );
                     hlist.insert(edge);
 
                     points.splice(1, 2);
@@ -1709,12 +1704,12 @@ define(['logManager',
 
     AutoRouterGraph.prototype._addToBufferBoxes = function (inputBox){
         var i = this.bufferBoxes.length,
-            box = { 'rect': new ArRect(inputBox.getRect()), 'id': inputBox.getID() },
+            box = { 'rect': new ArRect(inputBox.rect), 'id': inputBox.id },
             overlapBoxesIndices = [],
             bufferBox,
             children = [],
             parentBox,
-            ids = [inputBox.getID()],
+            ids = [inputBox.id],
             child,
             j;
 
@@ -1761,7 +1756,7 @@ define(['logManager',
             parentBox = box.rect;
         }
 
-        box.rect.id = inputBox.getID();
+        box.rect.id = inputBox.id;
         children.push(box.rect);
 
         this.bufferBoxes.push( { "box": parentBox, "children": children });
@@ -1775,7 +1770,7 @@ define(['logManager',
     AutoRouterGraph.prototype._removeFromBufferBoxes = function (box){
         //Get the children of the parentBox (not including the box to remove)
         //Create bufferboxes from these children
-        var bufferBox = this.box2bufferBox[box.getID()],
+        var bufferBox = this.box2bufferBox[box.id],
             i = this.bufferBoxes.indexOf(bufferBox),
             children = bufferBox.children,
             groups = [],
@@ -1801,7 +1796,7 @@ define(['logManager',
 
             this.boxes[child.id].resetPortAvailability();//Reset box's ports availableAreas
 
-            if(child.id === box.getID()){
+            if(child.id === box.id){
                 continue;
             }
 
@@ -1851,10 +1846,6 @@ define(['logManager',
         CONSTANTS.BUFFER = newBuffer;
     };
 
-    AutoRouterGraph.prototype.getPathList = function(){
-        return this.paths;
-    };
-
     AutoRouterGraph.prototype.calculateSelfPoints = function(){
         this.selfPoints = [];
         this.selfPoints.push(new ArPoint(CONSTANTS.ED_MINCOORD, CONSTANTS.ED_MINCOORD));
@@ -1877,24 +1868,24 @@ define(['logManager',
             return;
         }
 
-        var rect = box.getRect();
+        var rect = box.rect;
 
         this._disconnectPathsClipping(rect);
 
-        box.setOwner(this);
+        box.owner = this;
         var boxId = this._getBoxCount().toString();
         while( boxId.length < 6 ){
             boxId = "0" + boxId;
         }
         boxId = "BOX_" + boxId;
-        box.setID(boxId);
+        box.id = boxId;
 
         this.boxes[boxId] = box;
 
         this._addBoxAndPortEdges(box);
 
         //add children of the box
-        var children = box.getChildren(),
+        var children = box.childBoxes,
             i = children.length;
         while(i--){
             this.addBox(children[i]);
@@ -1909,13 +1900,13 @@ define(['logManager',
 
         if( box.hasOwner() )
         {
-            var mother = box.getParent(),
-                children = box.getChildren(),
+            var parent = box.parent,
+                children = box.childBoxes,
                 i = children.length;
 
-            //notify the mother of the deletion
-            if(mother){
-                mother.removeChild(box);
+            //notify the parent of the deletion
+            if(parent){
+                parent.removeChild(box);
             }
 
             //remove children
@@ -1935,8 +1926,8 @@ define(['logManager',
             return;
         }
 
-        var rect = this.box2bufferBox[box.getID()].box,
-            children = box.getChildren(),
+        var rect = this.box2bufferBox[box.id].box,
+            children = box.childBoxes,
             i = children.length;
 
         this._disconnectPathsClipping(rect); //redraw all paths clipping parent box.
@@ -1946,7 +1937,7 @@ define(['logManager',
         box.shiftBy(offset);
         this._addBoxAndPortEdges(box);
 
-        rect = box.getRect();
+        rect = box.rect;
         this._disconnectPathsClipping(rect);
         this._disconnectPathsFrom(box);
 
@@ -2153,7 +2144,7 @@ define(['logManager',
 
                     for(var box in this.boxes){
                         if(this.boxes.hasOwnProperty(box)){
-                            boxRect = this.boxes[box].getRect();
+                            boxRect = this.boxes[box].rect;
                             isStartOrEndRect = (!startBoxRect.isRectEmpty() && UTILS.isRectIn(startBoxRect, boxRect) ||
                                     !endBoxRect.isRectEmpty() && UTILS.isRectIn(endBoxRect, boxRect));
 
@@ -2180,7 +2171,7 @@ define(['logManager',
         }
 
         if( path.hasOwner() ){
-            assert( path.getOwner() === this, "ARGraph.deletePath: path.getOwner() === this FAILED");
+            assert( path.owner === this, "ARGraph.deletePath: path.owner === this FAILED");
 
             this._remove(path);
         }
@@ -2195,24 +2186,6 @@ define(['logManager',
         if (addBackSelfEdges){
             this._addSelfEdges();
         }
-    };
-
-    AutoRouterGraph.prototype.getPathAt = function(point, nearness){
-        var iter = 0,
-            path;
-
-        while (iter < this.paths.length)
-        {
-            path = this.paths[iter];
-
-            if( path.isPathAt(point, nearness) ){
-                return path;
-            }
-
-            ++iter;
-        }
-
-        return null;
     };
 
     AutoRouterGraph.prototype.addPath = function(isAutoRouted, startports, endports){
@@ -2268,14 +2241,14 @@ define(['logManager',
 
     AutoRouterGraph.prototype.assertValidBox = function(box){
         box.assertValid();
-        assert( box.getOwner().equals(this), "ARGraph.assertValidBox: box.getOwner().equals(this) FAILED");
+        assert( box.owner.equals(this), "ARGraph.assertValidBox: box.owner.equals(this) FAILED");
 
-        assert (this.boxes[box.getID()] !== undefined, "ARGraph.assertValidBox: this.boxes[box.getID()] !== undefined FAILED");
+        assert (this.boxes[box.id] !== undefined, "ARGraph.assertValidBox: this.boxes[box.id] !== undefined FAILED");
     };
 
     AutoRouterGraph.prototype._assertValidPath = function(path){
         path.assertValid();
-        assert( path.getOwner().equals(this), "ARGraph.assertValidPath: path.getOwner().equals(this) FAILED");
+        assert( path.owner.equals(this), "ARGraph.assertValidPath: path.owner.equals(this) FAILED");
 
         var iter = this.paths.indexOf(path);
         assert (iter !== -1, "ARGraph.assertValidPath: iter !== -1 FAILED");
@@ -2285,8 +2258,8 @@ define(['logManager',
 
         assert(startPort !== null, "ARGraph.assertValidPath: startPort !== null FAILED");
         startPort.assertValid();
-        var ownerBox = startPort.getOwner(),
-            boxOwnerGraph = ownerBox.getOwner();
+        var ownerBox = startPort.owner,
+            boxOwnerGraph = ownerBox.owner;
         assert( boxOwnerGraph.equals(this), "ARGraph.assertValidPath: boxOwnerGraph.equals(this) FAILED");
         ownerBox.assertValidPort(startPort);
 
@@ -2297,8 +2270,8 @@ define(['logManager',
         var endPort = path.getEndPort();
         assert(endPort !== null, "ARGraph.assertValidPath: endPort !== null FAILED");
         endPort.assertValid();
-        var ownerBox2 = endPort.getOwner();
-        assert( ownerBox2.getOwner().equals(this), "ARGraph.assertValidPath: ownerBox2.getOwner().equals(this) FAILED");
+        var ownerBox2 = endPort.owner;
+        assert( ownerBox2.owner.equals(this), "ARGraph.assertValidPath: ownerBox2.owner.equals(this) FAILED");
         ownerBox2.assertValidPort(endPort);
 
         if( path.isConnected() )
