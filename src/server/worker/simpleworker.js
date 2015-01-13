@@ -297,18 +297,40 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
             },
             getProjectInfo = function(name,cb){
                 storage.openProject(name,function(err,project){
+                    var needed = 2,
+                      info = {info:null,branches:{}},
+                      error = null;
+
                     if(err){
                         return cb(err);
                     }
 
                     project.getBranchNames(function(err,branches){
-                        return cb(err,name,branches);
+                        error = error || err;
+                        if(!err && branches){
+                            info.branches = branches;
+                        }
+
+                        if(--needed === 0){
+                            return cb(error,name,info);
+                        }
                     });
+                    project.getInfo(function(err,i){
+                        error = error || err;
+
+                        if(!err && i){
+                            info.info = i;
+                        }
+
+                        if(--needed === 0){
+                            return cb(error,name,info);
+                        }
+                    })
                 });
             },
-            projectInfoReceived = function(err,name,branches){
+            projectInfoReceived = function(err,name,info){
                 if(!err){
-                    completeInfo[name] = {branches:branches};
+                    completeInfo[name] = {info:info.info,branches:info.branches};
                     addUserAuthInfo(name);
                 }
 
@@ -347,7 +369,104 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
         }
 
     };
+    var setProjectInfo = function(sessionId,projectId,info,callback){
+        if(storage){
+            if(initialized){
+                storage.getProjectNames(function(err,projectlist){
+                    if(err){
+                        return callback(err);
+                    }
 
+                    if(projectlist.indexOf(projectId) === -1){
+                        return callback(new Error('no such project'));
+                    }
+                    getProject(projectId,sessionId,function(err,project){
+                        if(err){
+                            return callback(err);
+                        }
+
+                        project.setInfo(info,callback);
+                    });
+                });
+            } else {
+                callback(new Error('worker not yet initialized'));
+            }
+        } else {
+            callback(new Error('no active data connection'));
+        }
+    };
+    var getProjectInfo = function(sessionId,projectId,callback){
+        if(storage){
+            if(initialized){
+                storage.getProjectNames(function(err,projectlist){
+                    if(err){
+                        return callback(err);
+                    }
+
+                    if(projectlist.indexOf(projectId) === -1){
+                        return callback(new Error('no such project'));
+                    }
+                    getProject(projectId,sessionId,function(err,project){
+                        if(err){
+                            return callback(err);
+                        }
+
+                        project.getInfo(callback);
+                    });
+                });
+            } else {
+                callback(new Error('worker not yet initialized'));
+            }
+        } else {
+            callback(new Error('no active data connection'));
+        }
+    };
+
+    var getAllInfoTags = function(sessionId,callback){
+        var i, tags = {},
+          needed,
+          projectLoaded = function(err,project){
+              if(!err && project){
+                project.getInfo(infoArrived);
+              } else {
+                  if(--needed === 0){
+                      callback(null,tags);
+                  }
+              }
+          },
+          infoArrived = function(err,info){
+              //TODO now this function wires the info.tags structure...
+              var keys,i;
+              if(!err && info){
+                  keys = Object.keys(info.tags || {});
+                  for(i=0;i<keys.length;i++){
+                      tags[keys[i]] = info.tags[keys[i]];
+                  }
+              }
+
+              if(--needed === 0){
+                  callback(null,tags);
+              }
+          };
+        if(storage){
+            if(initialized){
+                storage.getProjectNames(function(err,projectlist){
+                    if(err){
+                        return callback(err);
+                    }
+
+                    needed = projectlist.length;
+                    for(i=0;i<projectlist.length;i++){
+                        getProject(projectlist[i],sessionId,projectLoaded);
+                    }
+                });
+            } else {
+                callback(new Error('worker not yet initialized'));
+            }
+        } else {
+            callback(new Error('no active data connection'));
+        }
+    };
     var setBranch = function(sessionId,projectName,branchName,oldHash,newHash,callback){
         if(storage){
             if(initialized){
@@ -531,6 +650,48 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
                         resultReady = true;
                         error = err;
                         result = r;
+                    }
+                });
+                break;
+            case CONSTANT.workerCommands.setProjectInfo:
+                resultId = GUID();
+                process.send({pid:process.pid,type:CONSTANT.msgTypes.request,error:null,resid:resultId});
+                setProjectInfo(parameters.webGMESessionId,parameters.projectId,parameters.info || {},function(err){
+                    if(resultRequested === true){
+                        initResult();
+                        process.send({pid:process.pid,type:CONSTANT.msgTypes.result,error:err,result:null});
+                    } else {
+                        resultReady = true;
+                        error = err;
+                        result = r;
+                    }
+                });
+                break;
+            case CONSTANT.workerCommands.getProjectInfo:
+                resultId = GUID();
+                process.send({pid:process.pid,type:CONSTANT.msgTypes.request,error:null,resid:resultId});
+                getProjectInfo(parameters.webGMESessionId,parameters.projectId,function(err,res){
+                    if(resultRequested === true){
+                        initResult();
+                        process.send({pid:process.pid,type:CONSTANT.msgTypes.result,error:err,result:res});
+                    } else {
+                        resultReady = true;
+                        error = err;
+                        result = res;
+                    }
+                });
+                break;
+            case CONSTANT.workerCommands.getAllInfoTags:
+                resultId = GUID();
+                process.send({pid:process.pid,type:CONSTANT.msgTypes.request,error:null,resid:resultId});
+                getAllInfoTags(parameters.webGMESessionId,function(err,res){
+                    if(resultRequested === true){
+                        initResult();
+                        process.send({pid:process.pid,type:CONSTANT.msgTypes.result,error:err,result:res});
+                    } else {
+                        resultReady = true;
+                        error = err;
+                        result = res;
                     }
                 });
                 break;

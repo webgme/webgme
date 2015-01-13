@@ -70,6 +70,12 @@ define(['./Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, Bl
         if (typeof window !== 'undefined' && typeof Buffer !== 'undefined' && data instanceof Buffer) {
             data = toArrayBuffer(data); // FIXME will this have performance problems
         }
+        // on node, empty Buffers will cause a crash in superagent
+        if (typeof window === 'undefined' && typeof Buffer !== 'undefined' && data instanceof Buffer) {
+            if (data.length === 0) {
+                data = '';
+            }
+        }
         superagent.post(this.getCreateURL(name))
             .set('Content-Type', 'application/octet-stream')
             .set('Content-Length', data.length)

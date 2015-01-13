@@ -172,10 +172,14 @@ define([
           _configuration.host = "";
         }
       }
-      require([_configuration.host + '/listAllDecorators', _configuration.host + '/listAllPlugins'], function (d, p) {
-        AllDecorators = WebGMEGlobal.allDecorators;
-        AllPlugins = WebGMEGlobal.allPlugins;
-      });
+      if(typeof WebGMEGlobal !== 'undefined') {
+        require([_configuration.host + '/listAllDecorators', _configuration.host + '/listAllPlugins'], function (d, p) {
+          AllDecorators = WebGMEGlobal.allDecorators;
+          AllPlugins = WebGMEGlobal.allPlugins;
+        });
+      } else {
+        console.warn('WebGMEGlobal not defined - cannot get plugins.');
+      }
 
       function print_nodes(pretext) {
         if (pretext) {
@@ -245,7 +249,7 @@ define([
 
       function newDatabase() {
         var storageOptions ={log: LogManager.create('client-storage'), host: _configuration.host};
-        if(WebGMEGlobal.TESTING === true){
+        if(typeof WebGMEGlobal !== 'undefined' && WebGMEGlobal.TESTING === true){
           storageOptions.type = 'node';
           storageOptions.host = 'http://localhost';
           storageOptions.port = _configuration.port;
@@ -528,7 +532,9 @@ define([
         refreshToken();
 
         //TODO check if this is okay to set it here
-        WebGMEGlobal.getToken = getToken;
+        if(typeof WebGMEGlobal !== 'undefined') {
+           WebGMEGlobal.getToken = getToken;
+        }
         return {
           getToken: getToken
         };
@@ -1549,7 +1555,7 @@ define([
         }
       }
 
-      function createProjectAsync(projectname, callback) {
+      function createProjectAsync(projectname, projectInfo, callback) {
         if (_database) {
           getAvailableProjectsAsync(function (err, names) {
             if (!err && names) {
@@ -1558,7 +1564,14 @@ define([
                   if (!err && p) {
                     createEmptyProject(p, function (err, commit) {
                       if (!err && commit) {
-                        callback(null);
+                        //TODO currently this is just a hack
+                        p.setInfo(projectInfo || {
+                          visibleName:projectname,
+                          description:"project in webGME",
+                          tags:{}
+                        },function(err){
+                          callback(err);
+                        });
                       } else {
                         callback(err);
                       }
@@ -2735,23 +2748,11 @@ define([
         //});
         switch (testnumber) {
           case 1:
-            /*queryAddOn("HistoryAddOn", {}, function (err, result) {
-              console.log("addon result", err, result);
-            });*/
-            _core.loadTree(_rootHash,function(err,nodes){
-              console.log(err,nodes);
-            });
             break;
           case 2:
-            /*queryAddOn("ConstraintAddOn", {querytype: 'checkProject'}, function (err, result) {
-              console.log("addon result", err, result);
-            });*/
-            Serialization.export(_core,_root,function(err,json){
-              console.log('ready to export',err,json);
-            });
+
             break;
           case 3:
-            console.log(_core.getBaseType(_nodes[WebGMEGlobal.State.getActiveObject()].node));
             break;
         }
 
@@ -2886,7 +2887,8 @@ define([
 
       function createProjectFromFileAsync(projectname, jProject, callback) {
         //if called on an existing project, it will ruin it!!! - although the old commits will be untouched
-        createProjectAsync(projectname, function (err) {
+        //TODO somehow the export / import should contain the INFO field so the tags and description could come from it
+        createProjectAsync(projectname, {}, function (err) {
           selectProjectAsync(projectname, function (err) {
             Serialization.import(_core, _root, jProject, function (err) {
               if (err) {
@@ -2978,6 +2980,33 @@ define([
           }
           _database.simpleResult(id, callback);
         });
+      }
+
+      function setProjectInfoAsync(projectId,info,callback){
+        _database.simpleRequest({command:'setProjectInfo',projectId:projectId,info:info},function(err,rId){
+          if(err){
+            return callback(err);
+          }
+          _database.simpleResult(rId,callback);
+        })
+      }
+
+      function getProjectInfoAsync(projectId,callback){
+        _database.simpleRequest({command:'getProjectInfo',projectId:projectId},function(err,rId){
+          if(err){
+            return callback(err);
+          }
+          _database.simpleResult(rId,callback);
+        })
+      }
+
+      function getAllInfoTagsAsync(callback){
+        _database.simpleRequest({command:'getAllInfoTags'},function(err,rId){
+          if(err){
+            return callback(err);
+          }
+          _database.simpleResult(rId,callback);
+        })
       }
 
       function createGenericBranchAsync(project, branch, commit, callback) {
@@ -3184,6 +3213,9 @@ define([
         getFullProjectsInfoAsync: getFullProjectsInfoAsync,
         createGenericBranchAsync: createGenericBranchAsync,
         deleteGenericBranchAsync: deleteGenericBranchAsync,
+        setProjectInfoAsync: setProjectInfoAsync,
+        getProjectInfoAsync: getProjectInfoAsync,
+        getAllInfoTagsAsync: getAllInfoTagsAsync,
 
         //constraint
         setConstraint: setConstraint,

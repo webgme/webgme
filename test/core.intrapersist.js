@@ -2,12 +2,13 @@
  * Created by tkecskes on 12/18/2014.
  */
 //these checks intended to check what changes should be visible between persists
+require('./_globals.js');
+
 var WebGME = require('../webgme'),
   FS = require('fs'),
   storage = new WebGME.serverUserStorage({host:'127.0.0.1',port:27017,database:'multi'}),
   requirejs = require('requirejs');
   CANON = requirejs('../src/common/util/canon');
-
 function saveProject(txt,ancestors,next){
   core.persist(root, function (err) {
     if (err) {

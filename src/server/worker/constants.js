@@ -32,7 +32,10 @@ function(){
             'setBranch': 'setBranch',
             'connectedWorkerStart': 'connectedWorkerStart',
             'connectedWorkerQuery': 'connectedWorkerQuery',
-            'connectedWorkerStop': 'connectedworkerStop'
+            'connectedWorkerStop': 'connectedworkerStop',
+            'getProjectInfo': 'getProjectInfo',
+            'setProjectInfo': 'setProjectInfo',
+            'getAllInfoTags': 'getAllInfoTags'
         }
     };
 });

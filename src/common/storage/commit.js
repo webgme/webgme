@@ -4,10 +4,9 @@
  * Author: Tamas Kecskes
  */
 
-define([ "util/assert", "util/zssha1", "util/canon" ], function (ASSERT, SHA1, CANON) {
+define([ "util/assert", "util/key", "util/canon" ], function (ASSERT, GENKEY, CANON) {
 	"use strict";
 	var HASH_REGEXP = new RegExp("^#[0-9a-zA-Z_]*$");
-    var zsSHA = new SHA1();
 
 	function Database (_database,_options) {
         _options = _options || {};
@@ -24,6 +23,8 @@ define([ "util/assert", "util/zssha1", "util/canon" ], function (ASSERT, SHA1, C
 						closeProject: _project.closeProject,
 						loadObject: _project.loadObject,
 						insertObject: _project.insertObject,
+						getInfo: _project.getInfo,
+						setInfo: _project.setInfo,
 						findHash: _project.findHash,
 						dumpObjects: _project.dumpObjects,
 						getBranchNames: _project.getBranchNames,
@@ -55,7 +56,7 @@ define([ "util/assert", "util/zssha1", "util/canon" ], function (ASSERT, SHA1, C
 					type: "commit"
 				};
 
-				var id = '#' + zsSHA.getHash(CANON.stringify(commitObj));
+				var id = '#' + GENKEY(commitObj);
 				commitObj[_project.ID_NAME] = id;
 
 				_project.insertObject(commitObj, function (err) {

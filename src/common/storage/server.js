@@ -464,6 +464,31 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                     });
                 });
 
+                socket.on('getInfo', function(projectName,callback){
+                    checkProject(getSessionID(socket),projectName,function(err,project){
+                        if(err){
+                            callback(err);
+                        } else {
+                            project.getInfo(callback);
+                        }
+                    });
+                });
+                socket.on('setInfo', function(projectName,info,callback){
+                    checkProject(getSessionID(socket),projectName,function(err,project){
+                        if(err){
+                            callback(err);
+                        } else {
+                            options.authorization(getSessionID(socket),projectName,'write',function(err,cando) {
+                                if(!err && cando === true){
+                                    project.setInfo(info, callback);
+                                } else {
+                                    callback(err || "insufficient authorization for operation");
+                                }
+                            });
+                        }
+                    });
+                });
+
                 socket.on('findHash', function(projectName,beginning,callback){
                     checkProject(getSessionID(socket),projectName,function(err,project){
                         if(err){
