@@ -48,24 +48,8 @@ define(['logManager',
         this.resetAvailableArea();
     };
 
-    AutoRouterPort.prototype.destroy = function (){
-        this.setOwner(null);
-    };
-
-    AutoRouterPort.prototype.getOwner = function (){
-        return this.owner;
-    };
-
     AutoRouterPort.prototype.hasOwner = function (){
         return this.owner !== null;
-    };
-
-    AutoRouterPort.prototype.setOwner = function (box){
-        this.owner = box;
-    };
-
-    AutoRouterPort.prototype.getRect = function (){
-        return this.rect;
     };
 
     AutoRouterPort.prototype.isRectEmpty = function (){
@@ -92,18 +76,6 @@ define(['logManager',
         this.calculateSelfPoints();
     };
 
-    AutoRouterPort.prototype.getSelfPoints = function (){
-        return this.selfPoints;
-    };
-
-    AutoRouterPort.prototype.getAttributes = function (){
-        return this.attributes;
-    };
-
-    AutoRouterPort.prototype.setAttributes = function (attr){
-        this.attributes = attr;
-    };
-
     AutoRouterPort.prototype.isConnectToCenter = function (){
         return (this.attributes & CONSTANTS.ARPORT_ConnectToCenter) !== 0;
     };
@@ -114,18 +86,6 @@ define(['logManager',
 
     AutoRouterPort.prototype.setLimitedDirs = function (ltd){
         this.limitedDirections = ltd;
-    };
-
-    AutoRouterPort.prototype.isPortAt = function (point, nearness){
-        return UTILS.isPointIn(point, this.rect, nearness);
-    };
-
-    AutoRouterPort.prototype.isPortClip = function (otherRect){
-        return UTILS.isRectClip (this.rect, otherRect);
-    };
-
-    AutoRouterPort.prototype.isPortIn = function (otherRect){
-        return UTILS.isRectIn(this.rect, otherRect);
     };
 
     AutoRouterPort.prototype.port_OnWhichEdge = function (point){
@@ -271,7 +231,8 @@ define(['logManager',
     AutoRouterPort.prototype.roundToHalfGrid = function (left, right){
         // I added a checking condition to make sure that the rounding will not yield a value outside of the left, right values
         var btwn = (left + right)/2;//btwn < Math.max(left, right) && btwn > Math.min(left, right) ? btwn : (left + right)/2;
-        assert(btwn < Math.max(left, right) && btwn > Math.min(left, right), "roundToHalfGrid: btwn variable not between left, right values. Perhaps box/connectionArea is too small?");
+        assert(btwn < Math.max(left, right) && btwn > Math.min(left, right), 
+               "roundToHalfGrid: btwn variable not between left, right values. Perhaps box/connectionArea is too small?");
         return btwn;
     };
 
@@ -412,7 +373,7 @@ end;
             k = this.points[i].indexOf(pt);
 
             if( k > -1){ //If the point is on this side of the port
-                this.points[i].splice( k, 1);
+                this.points[i].splice(k, 1);
                 removed = true;
             }
             i++;

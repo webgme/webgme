@@ -13,23 +13,23 @@ define(['logManager',
 
     "use strict"; 
 
-    var ArPathMap = function(i, p, s, d){
+    var ArPathMap = function(id, path, srcPorts, dstPorts){
         //Stores a path with ports used
         //This allows for paths with dynamic src/dst's 
-        this.id = i;
-        this.path = p;
+        this.id = id;
+        this.path = path;
 
-        this.srcPorts = s;
-        this.dstPorts = d;
-        this.srcBox = this.calcBoxId(s);
-        this.dstBox = this.calcBoxId(d);
+        this.srcPorts = srcPorts;
+        this.dstPorts = dstPorts;
+        this.srcBox = this.calcBoxId(srcPorts);
+        this.dstBox = this.calcBoxId(dstPorts);
     };
 
 
     ArPathMap.prototype.calcBoxId = function (ports){
         for(var i in ports){
-            if(ports.hasOwnProperty(i) && ports[i].getOwner()){
-                return ports[i].getOwner().getID();
+            if(ports.hasOwnProperty(i) && ports[i].owner){
+                return ports[i].owner.id;
             }
         }
     };

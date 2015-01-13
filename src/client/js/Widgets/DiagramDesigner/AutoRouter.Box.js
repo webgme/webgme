@@ -22,7 +22,7 @@ define(['logManager',
         this.selfPoints = [];
         this.ports = [];
         this.childBoxes = [];//dependent boxes
-        this.mother = null;
+        this.parent = null;
         this.id = null;
 
         this.calculateSelfPoints(); //Part of initialization
@@ -39,7 +39,7 @@ define(['logManager',
 
     AutoRouterBox.prototype.deleteAllPorts = function (){
         for(var i = 0; i < this.ports.length; i++){
-            this.ports[i].setOwner(null);
+            this.ports[i].owner = null;
             this.ports[i] = null;
         }
 
@@ -48,24 +48,8 @@ define(['logManager',
         this.atomic = false;
     };
 
-    AutoRouterBox.prototype.setID = function (_id){
-        this.id = _id;
-    };
-
-    AutoRouterBox.prototype.getID = function (){
-        return this.id;
-    };
-
-    AutoRouterBox.prototype.getOwner = function (){
-        return this.owner;
-    };
-
     AutoRouterBox.prototype.hasOwner = function (){
         return this.owner !== null;
-    };
-
-    AutoRouterBox.prototype.setOwner = function (graph){
-        this.owner = graph;
     };
 
     AutoRouterBox.prototype.createPort = function (){
@@ -79,10 +63,6 @@ define(['logManager',
         return this.ports.length === 0;
     };
 
-    AutoRouterBox.prototype.getPortCount = function (){
-        return this.ports.length;
-    };
-
     AutoRouterBox.prototype.isAtomic = function (){
         return this.atomic;
     };
@@ -94,7 +74,7 @@ define(['logManager',
             return;
         }
 
-        port.setOwner(this);
+        port.owner = this;
         this.ports.push(port);
 
         if(this.owner){//Not pointing to the ARGraph
@@ -115,21 +95,10 @@ define(['logManager',
         assert(index !== -1, "ARBox.deletePort: index !== -1 FAILED");
 
         graph.deleteEdges(port);
-        delPort = this.ports.splice(index, 1)[0];
-        delPort.destroy();
-        delPort = null;
+        this.ports.splice(index, 1);
 
         this.atomic = false;
 
-    };
-
-    AutoRouterBox.prototype.getPortList = function (){
-        return this.ports;
-    };
-
-    AutoRouterBox.prototype.getRect = function (){
-        return this.rect;
-        //return new ArRect(this.rect);
     };
 
     AutoRouterBox.prototype.isRectEmpty = function (){
@@ -152,10 +121,6 @@ define(['logManager',
             assert(this.ports.length === 1, "ARBox.setRect: this.ports.length === 1 FAILED!");
             this.ports[0].setRect(r);
         }
-    };
-
-    AutoRouterBox.prototype.setRectByPoint = function (point){
-        this.shiftBy(point);
     };
 
     AutoRouterBox.prototype.shiftBy = function (offset){
@@ -188,43 +153,20 @@ define(['logManager',
         }
     };
 
-    AutoRouterBox.prototype.getParent = function (){
-        return this.mother;
-    };
-
-    AutoRouterBox.prototype.setParent = function (box){
-        this.mother = box;
-    };
-
     AutoRouterBox.prototype.addChild = function (box){
         assert(this.childBoxes.indexOf(box) === -1, "ARBox.addChild: box already is child of " + this.getID());
         this.childBoxes.push(box);
-        box.setParent(this);
+        box.parent = this;
     };
 
     AutoRouterBox.prototype.removeChild = function (box){
         var i = this.childBoxes.indexOf(box);
         assert(i !== -1, "ARBox.removeChild: box isn't child of " + this.getID());
-        this.childBoxes.splice(i,1)[0].setParent(null);
-    };
-
-    AutoRouterBox.prototype.clearChildren = function (){
-        var i = this.childBoxes.length;
-        while(i--){
-            this.removeChild(this.childBoxes[i]);
-        }
-    };
-
-    AutoRouterBox.prototype.getChildren = function (){
-        return this.childBoxes;
-    };
-
-    AutoRouterBox.prototype.getSelfPoints = function (){
-        return this.selfPoints;
+        this.childBoxes.splice(i,1);
     };
 
     AutoRouterBox.prototype.isBoxAt = function (point, nearness){
-        return UTILS.UTILS.isPointIn(point, this.rect, nearness);
+        return UTILS.isPointIn(point, this.rect, nearness);
     };
 
     AutoRouterBox.prototype.isBoxClip = function (r){
@@ -238,13 +180,13 @@ define(['logManager',
     AutoRouterBox.prototype.destroy = function (){
         var i = this.childBoxes.length;
 
-        //notify this.mother of destruction
-        //if there is a this.mother, of course
-        if(this.mother){
-            this.mother.removeChild(this);
+        //notify this.parent of destruction
+        //if there is a this.parent, of course
+        if(this.parent){
+            this.parent.removeChild(this);
         }
 
-        this.setOwner(null);
+        this.owner = null;
         this.deleteAllPorts();
 
         while(i--){

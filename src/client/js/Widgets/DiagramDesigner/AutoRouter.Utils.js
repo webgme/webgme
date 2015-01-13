@@ -29,7 +29,7 @@ define(['./AutoRouter.Constants',
 
         //Get the center points of the src,dst ports
         for(i = 0; i < ports.length; i++){
-            sPoint = ports[i].getRect().getCenter();
+            sPoint = ports[i].rect.getCenter();
             srcC.x += sPoint.x;
             srcC.y += sPoint.y;
 
@@ -50,8 +50,8 @@ define(['./AutoRouter.Constants',
         //Create priority function
         function createPriority(port, center){
             var priority = 0,
-                //point = [  center.x - port.getRect().getCenter().x, center.y - port.getRect().getCenter().y],
-                point = [ port.getRect().getCenter().x - center.x, port.getRect().getCenter().y - center.y],
+                //point = [  center.x - port.rect.getCenter().x, center.y - port.rect.getCenter().y],
+                point = [ port.rect.getCenter().x - center.x, port.rect.getCenter().y - center.y],
                 lineCount = (port.getPointCount() || 1),
                 density = (port.getTotalAvailableArea()/lineCount)/maxArea || 1, //If there is a problem with maxArea, just ignore density
                 major = Math.abs(vector[0]) > Math.abs(vector[1]) ? 0 : 1,
@@ -83,7 +83,7 @@ define(['./AutoRouter.Constants',
             }
         }
 
-        assert(port.getOwner(), "ARGraph.getOptimalPorts: port have invalid owner");
+        assert(port.owner, "ARGraph.getOptimalPorts: port have invalid owner");
 
         return port;
     };
@@ -99,12 +99,6 @@ define(['./AutoRouter.Constants',
     var _inflatedRect = function (rect, a){
         var r = rect;
         r.inflateRect(a, a); 
-        return r; 
-    };
-
-    var _deflatedRect = function (rect, a){ 
-        var r = rect; 
-        r.deflateRect(a,a); 
         return r; 
     };
 
@@ -129,20 +123,6 @@ define(['./AutoRouter.Constants',
         return rect.intersectAssign(r1, r2) === true;
     };
 
-    var _isPointNearHLine = function (p, x1, x2, y, nearness){
-        assert( x1 <= x2, "ArHelper.isPointNearHLine: x1 <= x2 FAILED");
-
-        return x1 - nearness <= p.x && p.x <= x2 + nearness &&
-            y - nearness <= p.y && p.y <= y + nearness;
-    };
-
-    var _isPointNearVLine = function (p, y1, y2, x, nearness){
-        assert( y1 <= y2, "ArHelper.isPointNearHLine: y1 <= y2 FAILED" );
-
-        return y1 - nearness <= p.y && p.y <= y2 + nearness &&
-            x - nearness <= p.x && p.x <= x + nearness;
-    };
-
     var _distanceFromHLine = function (p, x1, x2, y){
         assert( x1 <= x2, "ArHelper.distanceFromHLine: x1 <= x2 FAILED");
 
@@ -163,17 +143,6 @@ define(['./AutoRouter.Constants',
         }else{
             return _distanceFromHLine(pt, start.x, end.x, start.y);
         }
-    };
-
-    var _distanceSquareFromLine = function (start, end, pt){
-        //     |det(end-start start-pt)|
-        // d = -------------------------
-        //            |end-start|
-        //
-        var nom = Math.abs((end.x - start.x) * (start.y - pt.y) - (start.x - pt.x) * (end.y - start.y)),
-            denom_square = ((end.x - start.x) * (end.x - start.x) + (end.y - start.y) * (end.y - start.y)),
-            d_square = nom * nom / denom_square;
-        return d_square;
     };
 
     var _isOnEdge = function (start, end, pt){
@@ -447,7 +416,7 @@ define(['./AutoRouter.Constants',
         assert( _isRightAngle(inDir), "getChildRectOuterCoordFrom: _isRightAngle(inDir) FAILED"); 
         //The next assert fails if the point is in the opposite direction of the rectangle that it is checking.
         // e.g. The point is checking when it will hit the box from the right but the point is on the left
-        assert( !_isPointInDirFrom(point, bufferObject.box, inDir), "getChildRectOuterCoordFrom: !isPointInDirFrom(point, bufferObject.box.getRect(), (inDir)) FAILED"); 
+        assert( !_isPointInDirFrom(point, bufferObject.box, inDir), "getChildRectOuterCoordFrom: !isPointInDirFrom(point, bufferObject.box.rect, (inDir)) FAILED"); 
 
         while( ++i < children.length ){
 
@@ -732,7 +701,7 @@ define(['./AutoRouter.Constants',
         assert( _isRightAngle(dir), "isPointInDirFromChildren: _isRightAngle(dir) FAILED"); 
 
         while( i < children.length ){
-            if( _isPointInDirFrom( point, children[i].getRect(), dir )){
+            if( _isPointInDirFrom( point, children[i].rect, dir )){
                 return true;
             }
             ++i;
@@ -930,20 +899,12 @@ define(['./AutoRouter.Constants',
              getLineClipRectIntersect:  _getLineClipRectIntersect,
              isLineClipRect : _isLineClipRect, 
              isLineClipRects : _isLineClipRects, 
-             //isLineMeetVLine : _isLineMeetVLine, 
-             //isLineMeetHLine : _isLineMeetHLine, 
              isPointNearLine : _isPointNearLine, 
              isOnEdge : _isOnEdge, 
-             //distanceSquareFromLine : _distanceSquareFromLine, 
              distanceFromLine : _distanceFromLine, 
-             //distanceFromVLine : _distanceFromVLine, 
-             //distanceFromHLine : _distanceFromHLine, 
-             //isPointNearVLine : _isPointNearVLine, 
-             //isPointNearHLine : _isPointNearHLine, 
              isRectClip : _isRectClip, 
              isRectIn: _isRectIn,
              inflatedRect : _inflatedRect, 
-             //deflatedRect : _deflatedRect, 
              getPointCoord : _getPointCoord, 
              getOptimalPorts: _getOptimalPorts,
              ArFindNearestLine: ArFindNearestLine
