@@ -1,9 +1,8 @@
 /*globals define,_,WebGMEGlobal*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
-  * @author brollb / https://github/brollb
-  */
+ * @author brollb / https://github/brollb
+ */
 
 
 define(['js/PanelBase/PanelBaseWithHeader',

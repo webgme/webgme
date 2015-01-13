@@ -425,10 +425,12 @@ define(['logManager',
             item = items[j];
 
             prevItem = item;
-            nextItem = objDesc[prevItem].next;
+            nextItem = objDesc[prevItem].next;  // TODO update this to BFS
 
-            if(!this._GmeID2ComponentID[prevItem]){//Load the item if needed
+            if (!this._GmeID2ComponentID[prevItem]) {//Load the item if needed
                 territoryChanged = this._onSingleLoad(prevItem, objDesc[prevItem]) || territoryChanged;
+            } else {
+                territoryChanged = this._onUpdate(prevItem, objDesc[prevItem]) || territoryChanged;
             }
 
             //Load all the dependent items 

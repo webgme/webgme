@@ -536,28 +536,18 @@ define(['logManager',
         return items;
     };
 
-    BlockEditorControlWidgetEventHandlers.prototype._updateGmeAndComponentIds = function (ids, idMap) {
-        // Update the id's of the node
-        var i = ids.length,
-            componentId,
-            newGmeId,
-            oldGmeId;
+    BlockEditorControlWidgetEventHandlers.prototype._updateGmeAndComponentIds = function (ids) {
+        var oldIds = Object.keys(ids),
+            newId,
+            componentId;
 
-        while (i--) {
-            if (this._ComponentID2GmeID[ids[i]]) {// ids[i] is a component id
-                componentId = ids[i];
-                oldGmeId = this._ComponentID2GmeID[ids[i]];
-            } else {// ids[i] is a Gme id
-                oldGmeId = ids[i];
-                componentId = this._GmeID2ComponentID[ids[i]];
-            }
+        for (var i = oldIds.length-1; i >= 0; i--) {
+            newId = ids[oldIds[i]];
+            componentId = this._GmeID2ComponentID[oldIds[i]];
 
-            newGmeId = idMap[oldGmeId];
-
-            // Update the dictionaries
-            delete this._GmeID2ComponentID[oldGmeId];
-            this._GmeID2ComponentID[newGmeId] = componentId;
-            this._ComponentID2GmeID[componentId] = newGmeId;
+            delete this._GmeID2ComponentID[oldIds[i]];
+            this._GmeID2ComponentID[newId] = componentId;
+            this._ComponentID2GmeID[componentId] = newId;
         }
     };
 
@@ -644,6 +634,8 @@ define(['logManager',
             this._client.makePointer(receiverId, ptr, firstId);
         }
 
+        this._updateGmeAndComponentIds(newIds);
+
         this._client.completeTransaction();
     };
 
@@ -704,6 +696,7 @@ define(['logManager',
             role = params.role,
             ids = params.ids,
             rootId = params.rootId || params.item.id,
+            isSiblingPtr = false,
             splicing,
             receiverItem = params.receiverItem,
             receiverConnId = receiverItem.activeConnectionArea.id,
@@ -717,6 +710,13 @@ define(['logManager',
 
         if (!spliceToItem) {  // check if there is an item to splice btwn
             return false;
+        }
+
+        // Set isSiblingPtr
+        for (var i = BLOCK_CONSTANTS.SIBLING_PTRS.length-1; i >= 0; i--) {
+            if (BLOCK_CONSTANTS.SIBLING_PTRS[i] === ptr) {
+                isSiblingPtr = true;
+            }
         }
 
         spliceToId = this._ComponentID2GmeID[spliceToItem.id];
@@ -758,6 +758,7 @@ define(['logManager',
         // For each of the spliceFromItems, get the closest valid sibling connection
         spliceInfo = this._getBestItemAndConnection({items: spliceFromItems,
                                                      receiver: spliceToItem,
+                                                     allowsChildrenPtrs: isSiblingPtr,
                                                      ids: ids,
                                                      dx: offset[0],
                                                      dy: offset[1],
@@ -822,10 +823,11 @@ define(['logManager',
         var items = params.items,
             receiver = params.receiver,
             receiverId = params.receiverId,
+            allowsChildrenPtrs = params.allowsChildrenPtrs || false,
             receiverAreas = receiver.getConnectionAreas(),
             rAreas,
-            dx = params.dx,
-            dy = params.dy,
+            dx = params.dx || 0,
+            dy = params.dy || 0,
             key,
             index,
             ptrs,
@@ -862,14 +864,16 @@ define(['logManager',
                               .apply(GMEConcepts, ptrOptions);
 
             // Remove any non-sibling pointers
-            for (var j = ptrs.length-1; j >= 0; j--) {
-                if (BLOCK_CONSTANTS.SIBLING_PTRS.indexOf(ptrs[j]) === -1) {
-                    ptrs.splice(j,1);
+            if (!allowsChildrenPtrs) {
+                for (var j = ptrs.length-1; j >= 0; j--) {
+                    if (BLOCK_CONSTANTS.SIBLING_PTRS.indexOf(ptrs[j]) === -1) {
+                        ptrs.splice(j,1);
+                    }
                 }
             }
 
             // Get connection areas of a given item
-            areas = items[i].getRelativeFreeConnectionAreas();
+            areas = items[i].getFreeConnectionAreas();
 
             // Add incoming connection area
             incomingArea = items[i].getConnectionArea({role: BLOCK_CONSTANTS.CONN_INCOMING});
