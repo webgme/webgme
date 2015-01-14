@@ -1,7 +1,5 @@
 /*globals define*/
 /*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- *
  * @author brollb / https://github/brollb
  */
 
@@ -13,10 +11,10 @@ define(['logManager',
 
     var ArPoint = function (x, y){
         //Multiple Constructors
-        if(x === undefined){ //No arguments were passed to constructor
+        if(x === undefined){
             x = 0;
             y = 0;
-        }else if(y === undefined){ //One argument passed to constructor
+        }else if(y === undefined){
             y = x.y;
             x = x.x;
         }
@@ -76,11 +74,7 @@ define(['logManager',
             objectCopy.x += this.x;
             objectCopy.y += this.y;
 
-        }//else if(otherObject instanceof ArRect){
-            //objectCopy = new ArRect(otherObject);
-            //objectCopy.add(this);
-        //}
-
+        }
         return objectCopy || undefined;
     };
 
@@ -96,12 +90,7 @@ define(['logManager',
             objectCopy.cx = this.x - otherObject.x;
             objectCopy.cy = this.y - otherObject.y;
 
-        }//else if(otherObject instanceof ArRect){
-          //  objectCopy = new ArRect(otherObject);
-           // objectCopy.subtract(this);
-
-        //}
-
+        }
         return objectCopy;
     };
 

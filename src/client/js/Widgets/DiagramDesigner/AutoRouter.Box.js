@@ -154,14 +154,15 @@ define(['logManager',
     };
 
     AutoRouterBox.prototype.addChild = function (box){
-        assert(this.childBoxes.indexOf(box) === -1, "ARBox.addChild: box already is child of " + this.getID());
+        assert(this.childBoxes.indexOf(box) === -1, 
+               "ARBox.addChild: box already is child of " + this.id);
         this.childBoxes.push(box);
         box.parent = this;
     };
 
     AutoRouterBox.prototype.removeChild = function (box){
         var i = this.childBoxes.indexOf(box);
-        assert(i !== -1, "ARBox.removeChild: box isn't child of " + this.getID());
+        assert(i !== -1, "ARBox.removeChild: box isn't child of " + this.id);
         this.childBoxes.splice(i,1);
     };
 

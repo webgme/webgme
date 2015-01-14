@@ -164,9 +164,10 @@ define(['logManager',
     };
 
     AutoRouterEdge.prototype.isStartPointPrevNull = function () {
-        return this.startpointPrev === null;
+        return !this.startpointPrev;
     };
 
+    // REMOVE
     AutoRouterEdge.prototype.setStartPointPrev = function (point){
         this.startpointPrev = point || null;
     };
@@ -258,7 +259,7 @@ define(['logManager',
     };
 
     AutoRouterEdge.prototype.isEndPointNextNull = function(){
-        return this.endpointNext === null;
+        return !this.endpointNext;
     };
 
     AutoRouterEdge.prototype.getSectionNext = function(arg){
