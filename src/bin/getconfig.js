@@ -55,6 +55,8 @@ if (typeof define !== "function" && typeof require === "function" && typeof proc
       mongoip: "127.0.0.1",
       mongoport: 27017,
       mongodatabase: "multi",
+      //mongouser: TODO by default we do not expect mongodb to use authentication
+      //mongopwd: TODO by default we do not expect mongodb to use authentication
       authentication: false,
       httpsecure: false,
       guest: false,

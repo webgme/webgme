@@ -73,6 +73,8 @@ define(['logManager',
             __storageOptions.host = CONFIG.mongoip;
             __storageOptions.port = CONFIG.mongoport;
             __storageOptions.database = CONFIG.mongodatabase;
+            __storageOptions.user = CONFIG.mongouser;
+            __storageOptions.pwd = CONFIG.mongopwd;
             __storageOptions.log = LogManager.create('StandAloneWebGMEServer-storage');
             __storageOptions.getToken = __gmeAuth.getToken;
 

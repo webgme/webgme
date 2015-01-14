@@ -33,6 +33,8 @@ define([
                 "host": CONFIG.mongoip,
                 "port": CONFIG.mongoport,
                 "database": CONFIG.mongodatabase,
+                "user": CONFIG.mongouser,
+                "pwd": CONFIG.mongopwd,
                 "project": projectName,
                 "token": "",
                 "activeNode": activeNode,
@@ -51,7 +53,7 @@ define([
             logger.info(JSON.stringify(config, null, 2));
             logger.info(JSON.stringify(CONFIG.pluginBasePaths, null, 2));
 
-            storage = new Storage({'host': config.host, 'port': config.port, 'database': config.database});
+            storage = new Storage({'host': config.host, 'port': config.port, 'database': config.database, 'user': config.user, 'pwd': config.pwd});
 
             plugins[pluginName] = Plugin;
 

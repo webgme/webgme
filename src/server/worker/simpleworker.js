@@ -65,7 +65,7 @@ function(CONSTANT,Core,Storage,GUID,DUMP,logManager,FS,PATH,BlobServerClient,Plu
             if(_CONFIG.authorization === true){
                 AUTH = GMEAUTH(parameters.auth);
             }
-            storage = new Storage({'host':_CONFIG.mongoip,'port':_CONFIG.mongoport,'database':_CONFIG.mongodatabase,'log':logManager.create('SERVER-WORKER-'+process.pid)});
+            storage = new Storage({'host':_CONFIG.mongoip,'port':_CONFIG.mongoport,'database':_CONFIG.mongodatabase,'user':_CONFIG.mongouser,'pwd':_CONFIG.mongopwd,'log':logManager.create('SERVER-WORKER-'+process.pid)});
             storage.openDatabase(function(err){
                 if(err){
                     initialized = false;
