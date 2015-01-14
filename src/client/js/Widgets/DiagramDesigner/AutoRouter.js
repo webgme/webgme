@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
- * @author brollb / https://github/brollb
+ * @author brollb / https:// github/brollb
  */
 
 define(['logManager',
@@ -28,15 +28,15 @@ define(['logManager',
 
     var AutoRouter = function(graphDetails){
        this.paths = {};
-       this.pCount = 0;//A not decrementing count of paths for unique path id's
+       this.pCount = 0;// A not decrementing count of paths for unique path id's
        this.boxId2Path = {};
-       this.portCount = 0;//A not decrementing count of ports for unique path id's
+       this.portCount = 0;// A not decrementing count of ports for unique path id's
 
        this.router = new AutoRouterGraph();
     };
 
     var ArBoxObject = function(b, p){
-        //Stores a box with ports used to connect to the box
+        // Stores a box with ports used to connect to the box
         this.box = b;
         this.ports = p;
     };
@@ -54,7 +54,7 @@ define(['logManager',
     };
 
     AutoRouter.prototype.addBox = function(size){
-        //Need to make sure it has all the required size details...
+        // Need to make sure it has all the required size details...
         if(!((size.x1 !== undefined && size.x2 !== undefined ) || (size.width !== undefined && (size.x1 !== undefined || size.x2 !== undefined))) ||
                 !((size.y1 !== undefined && size.y2 !== undefined) || (size.height !== undefined && (size.y1 !== undefined || size.y2 !== undefined)))){
             throw "AutoRouter:addBox missing required size details to determine x1,x2,y1,y2 ("  + x1 + "," + x2 + "," + y1 + "," + y2 + ")";
@@ -73,20 +73,19 @@ define(['logManager',
 
         box.setRect(rect);
 
-        //Adding connection port
-        console.log('connInfo is ' + connInfo);
+        // Adding connection port
         p = this.addPort(box, connInfo);
 
         this.router.addBox(box);
-        //this.boxes[box.id] = box;
+        // this.boxes[box.id] = box;
         this.boxId2Path[ box.id ] = { 'in': [], 'out': [] };
 
         return new ArBoxObject(box, p);
     };
 
     AutoRouter.prototype.addPort = function(box, connAreas){
-        //Adding a port to an already existing box (also called in addBox method)
-        //Default is no connection ports (more relevant when creating a box)
+        // Adding a port to an already existing box (also called in addBox method)
+        // Default is no connection ports (more relevant when creating a box)
         box = box instanceof ArBoxObject ? box.box : box;
         var port,
             r,
@@ -98,7 +97,7 @@ define(['logManager',
 
         if(connAreas === undefined){
             return p;
-        }else if(connAreas === "all"){//If "all" designated, I will add a 'virtual' port that allows connections on
+        }else if(connAreas === "all"){// If "all" designated, I will add a 'virtual' port that allows connections on
             port = box.createPort(); // all sides
             r = new ArRect(x1 + 1, y1 + 1, x2 - 1, y2 - 1);
             port.setLimitedDirs(false);
@@ -109,7 +108,7 @@ define(['logManager',
 
             p['0'] = port;
         }else{
-            //A connection area is specified
+            // A connection area is specified
             /* There are a couple possibilities here:
              *  1) Single connection specified
              *
@@ -132,7 +131,6 @@ define(['logManager',
              *
              */
 
-            console.log('connAreas: ' + JSON.stringify(connAreas));
             if(!(connAreas instanceof Array)){
                 connAreas = [connAreas];
             }
@@ -143,19 +141,19 @@ define(['logManager',
             }
         }
 
-        //Returning the list of ports added to the box
+        // Returning the list of ports added to the box
         return p;
     };
 
     AutoRouter.prototype._processConnArea = function (connData, x1, y1, x2, y2, box, p) {
         var id = connData.id,
-            angles = connData.angles, //Incoming angles. If defined, it will set attr at the end
-            attr = 0, //Set by angles. Defaults to guessing by location if angles undefined
-            type = "any", //Specify start, end, or any --Not fully implemented
+            angles = connData.angles || [], // Incoming angles. If defined, it will set attr at the end
+            attr = 0, // Set by angles. Defaults to guessing by location if angles undefined
+            type = "any", // Specify start, end, or any --Not fully implemented
             j = 0,
             port = box.createPort(),
             connArea = connData.area instanceof Array ?
-                [ connData.area ] : //Line
+                [ connData.area ] : // Line
                 [ connData.any, connData.in || connData.incoming, connData.out || connData.outgoing ];
 
         var isStart = 17,
@@ -178,8 +176,8 @@ define(['logManager',
 
         var r;
 
-        var a1, //min angle
-            a2, //max angle
+        var a1, // min angle
+            a2, // max angle
             rightAngle = 0,
             bottomAngle = 90,
             leftAngle = 180,
@@ -191,13 +189,13 @@ define(['logManager',
             if(connArea[j] instanceof Array){
                 isStart = 17;
 
-                //This gives us a coefficient to multiply our attributes by to govern incoming
-                //or outgoing connection. Now, the port needs only to determine the direction
+                // This gives us a coefficient to multiply our attributes by to govern incoming
+                // or outgoing connection. Now, the port needs only to determine the direction
                 if(type !== "any"){
                     isStart -= (type === "start" ? 1 : 16);
                 }
 
-                if(connArea[j].length === 1 ){//using points to designate the connection RECTANGLE [ [x1, y1, x2, y2] ]
+                if(connArea[j].length === 1 ){// using points to designate the connection RECTANGLE [ [x1, y1, x2, y2] ]
                     arx1 = connArea[j][0][0] + 1;
                     arx2 = connArea[j][0][1] - 1;
                     ary1 = connArea[j][0][2] + 1;
@@ -209,15 +207,15 @@ define(['logManager',
                         (ary2 + 1 === y2 ? CONSTANTS.ARPORT_EndOnBottom * isStart : 0);
 
                 }else if(connArea[j].length === 2 && connArea[j][0][0] !== connArea[j][1][0] && connArea[j][0][1] !== connArea[j][1][1]) {
-                    //connection RECTANGLE
+                    // connection RECTANGLE
                     //[ [x1, y1], [x2, y2] ]
                     arx1 = Math.min( connArea[j][0][0], connArea[j][1][0]) + 1;
                     arx2 = Math.max( connArea[j][0][0], connArea[j][1][0]) - 1;
                     ary1 = Math.min( connArea[j][0][1], connArea[j][1][1]) + 1;
                     ary2 = Math.max( connArea[j][0][1], connArea[j][1][1]) - 1;
 
-                    arx1 = ( arx1 + arx2 )/2 - 2; //For now, we are simply creating a
-                    arx2 = arx1 + 4; //connection point in the center of the rectangle
+                    arx1 = ( arx1 + arx2 )/2 - 2; // For now, we are simply creating a
+                    arx2 = arx1 + 4; // connection point in the center of the rectangle
                     ary1 = ( ary1 + ary2 )/2 - 2;
                     ary2 = ary1 + 4;
 
@@ -246,19 +244,19 @@ define(['logManager',
                             break;
                     }
 
-                    //attr = (arx1  - 1 === x1 ? CONSTANTS.ARPORT_EndOnLeft * isStart : 0) +
+                    // attr = (arx1  - 1 === x1 ? CONSTANTS.ARPORT_EndOnLeft * isStart : 0) +
                     //   (arx2 + 1 === x2 ? CONSTANTS.ARPORT_EndOnRight * isStart : 0) +
                     //  (ary1 - 1 === y1 ? CONSTANTS.ARPORT_EndOnTop * isStart : 0) +
                     // (ary2 + 1 === y2 ? CONSTANTS.ARPORT_EndOnBottom * isStart : 0);
 
-                }else{//using points to designate the connection area: [ [x1, y1], [x2, y2] ]
+                }else{// using points to designate the connection area: [ [x1, y1], [x2, y2] ]
                     _x1 = Math.min( connArea[j][0][0], connArea[j][1][0]);
                     _x2 = Math.max( connArea[j][0][0], connArea[j][1][0]);
                     _y1 = Math.min( connArea[j][0][1], connArea[j][1][1]);
                     _y2 = Math.max( connArea[j][0][1], connArea[j][1][1]);
                     horizontal = _y1 === _y2;
 
-                    //If it is a single point of connection, we will expand it to a rect
+                    // If it is a single point of connection, we will expand it to a rect
                     // We will determine that it is horizontal by if it is closer to a horizontal edges
                     // or the vertical edges
                     if(_y1 === _y2 && _x1 === _x2){
@@ -284,11 +282,11 @@ define(['logManager',
                     ary2 = _y2;
 
                     if(horizontal){
-                        if(Math.abs(_y1 - y1) < Math.abs(_y1 - y2)){ //Closer to the top (horizontal)
+                        if(Math.abs(_y1 - y1) < Math.abs(_y1 - y2)){ // Closer to the top (horizontal)
                             ary1 = _y1 + 1;
                             ary2 = _y1 + 5;
                             attr = CONSTANTS.ARPORT_StartOnTop + CONSTANTS.ARPORT_EndOnTop;
-                        }else{ //Closer to the top (horizontal)
+                        }else{ // Closer to the top (horizontal)
                             ary1 = _y1 - 5;
                             ary2 = _y1 - 1;
                             attr = CONSTANTS.ARPORT_StartOnBottom + CONSTANTS.ARPORT_EndOnBottom;
@@ -296,11 +294,11 @@ define(['logManager',
 
 
                     }else{
-                        if(Math.abs(_x1 - x1) < Math.abs(_x1 - x2)){//Closer to the left (vertical)
+                        if(Math.abs(_x1 - x1) < Math.abs(_x1 - x2)){// Closer to the left (vertical)
                             arx1 += 1;
                             arx2 += 5;
                             attr = CONSTANTS.ARPORT_StartOnLeft + CONSTANTS.ARPORT_EndOnLeft;
-                        }else {//Closer to the right (vertical)
+                        }else {// Closer to the right (vertical)
                             arx1 -= 5;
                             arx2 -= 1;
                             attr = CONSTANTS.ARPORT_StartOnRight + CONSTANTS.ARPORT_EndOnRight;
@@ -310,12 +308,12 @@ define(['logManager',
                     }
 
                 }
-                //Check to make sure the width/height is at least 3 -> otherwise assert will fail in ARPort.setRect
+                // Check to make sure the width/height is at least 3 -> otherwise assert will fail in ARPort.setRect
                 if(arx2 - arx1 < 3){
                     arx1 -= 2;
                     arx2 += 2;
                 }
-                //Check to make sure the width/height is at least 3 -> otherwise assert will fail in ARPort.setRect
+                // Check to make sure the width/height is at least 3 -> otherwise assert will fail in ARPort.setRect
                 if(ary2 - ary1 < 3){
                     ary1 -= 2;
                     ary2 += 2;
@@ -324,12 +322,12 @@ define(['logManager',
                 assert(x1 < arx1 && y1 < ary1 && x2 > arx2 && y2 > ary2, "AutoRouter.addBox Cannot add port outside of the box");
                 r = new ArRect(arx1, ary1, arx2, ary2);
 
-                //If 'angles' is defined, I will use it to set attr
+                // If 'angles' is defined, I will use it to set attr
                 if(angles[0] !== undefined && angles[1] !== undefined){
-                    a1 = angles[0]; //min angle
-                    a2 = angles[1]; //max angle
+                    a1 = angles[0]; // min angle
+                    a2 = angles[1]; // max angle
 
-                    attr = 0; //Throw away our guess of attr
+                    attr = 0; // Throw away our guess of attr
 
                     if( rightAngle >= a1 && rightAngle <= a2 ){
                         attr += CONSTANTS.ARPORT_StartOnRight + CONSTANTS.ARPORT_EndOnRight;
@@ -348,25 +346,6 @@ define(['logManager',
                     }
                 }
 
-            }else if(typeof connArea[j] === "string") //Using words to designate connection area
-            {
-                r = new ArRect(x1 + 1, y1 + 1, x2 - 1, y2 - 1);
-                //connArea[j] = connArea[j].toLowerCase();
-                attr = (connArea[j].indexOf("top") !== -1 ?
-                        //Connection area is on top
-                        (( j % 2 === 0 ? CONSTANTS.ARPORT_StartOnTop : 0) + (j < 2 ? CONSTANTS.ARPORT_EndOnTop : 0)) : 0) +
-                    //Connection area is on bottom
-                    (connArea[j].indexOf("bottom") !== -1 ?
-                     (( j % 2 === 0 ? CONSTANTS.ARPORT_StartOnBottom : 0) + (j < 2 ? CONSTANTS.ARPORT_EndOnBottom : 0)) : 0) +
-                    //Connection area is on left
-                    (connArea[j].indexOf("left") !== -1 ?
-                     (( j % 2 === 0 ? CONSTANTS.ARPORT_StartOnLeft : 0) + (j < 2 ? CONSTANTS.ARPORT_EndOnLeft : 0)) : 0) +
-                    //Connection area is on right
-                    (connArea[j].indexOf("right") !== -1 ?
-                     (( j % 2 === 0 ? CONSTANTS.ARPORT_StartOnRight : 0) + (j < 2 ? CONSTANTS.ARPORT_EndOnRight : 0)) : 0) ||
-                    (connArea[j].indexOf("all") !== -1 ? CONSTANTS.ARPORT_ConnectOnAll : 0) ;
-
-                //Unfortunately, all will not specify in or outgoing connections
             }
 
             if(connArea[j])
@@ -375,8 +354,8 @@ define(['logManager',
                 port.attributes = attr;
                 port.setRect(r);
                 box.addPort(port);
-                console.log('number of box ports: ' + box.ports.length);
-                //p.push(port);
+                // console.log('number of box ports: ' + box.ports.length);
+                // p.push(port);
                 p[id] = port;
             }
 
@@ -384,14 +363,14 @@ define(['logManager',
     };
 
     AutoRouter.prototype.addPath = function(a){
-        //Assign a pathId to the path (return this id).
-        //If there is only one possible path connection, create the path.
-        //if not, store the path info in the pathsToResolve array
+        // Assign a pathId to the path (return this id).
+        // If there is only one possible path connection, create the path.
+        // if not, store the path info in the pathsToResolve array
         var src = a.src, 
             dst = a.dst, 
             pathId = (this.pCount++).toString();
 
-        //Generate pathId
+        // Generate pathId
         while( pathId.length < 6 ){
             pathId = "0" + pathId;
         }
@@ -454,9 +433,9 @@ define(['logManager',
         var pathData = new ArPathMap(id, path, a.src, a.dst);
         this.paths[id] = pathData;
 
-        //Register the path under box id
-        this.boxId2Path[src[0].owner.id].out.push(pathData);//Assuming all ports belong to the same box
-        this.boxId2Path[dst[0].owner.id].in.push(pathData);//so the specific port to check is trivial
+        // Register the path under box id
+        this.boxId2Path[src[0].owner.id].out.push(pathData);// Assuming all ports belong to the same box
+        this.boxId2Path[dst[0].owner.id].in.push(pathData);// so the specific port to check is trivial
         return pathData;
     };
 
@@ -494,17 +473,17 @@ define(['logManager',
             pathDst,
             ports;
 
-        //Remove and Add Ports
+        // Remove and Add Ports
         box.deleteAllPorts();
         boxObject.ports = [];
         this.router.setBoxRect(box, rect);
         this.setConnectionInfo(boxObject, connInfo);
-        ports = boxObject.ports; //get the new ports
+        ports = boxObject.ports; // get the new ports
 
-        //Reconnect paths to ports
+        // Reconnect paths to ports
         while( i-- ){
             pathSrc = paths.in[i].path.getStartPorts();
-            //paths.in[i].path.setEndPorts( ports );
+            // paths.in[i].path.setEndPorts( ports );
             paths.in[i].setDstPorts(ports);
             paths.in[i].updateDstPorts();
             this.router.disconnect( paths.in[i].path );
@@ -513,7 +492,7 @@ define(['logManager',
         i = paths.out.length;
         while( i-- ){
             pathDst = paths.out[i].path.getEndPorts();
-            //paths.out[i].path.setStartPorts( ports );
+            // paths.out[i].path.setStartPorts( ports );
             paths.out[i].setSrcPorts(ports);
             paths.out[i].updateSrcPorts();
             this.router.disconnect( paths.out[i].path );
@@ -531,11 +510,11 @@ define(['logManager',
             dstPorts,
             ports;
 
-        ports = this.addPort(box, connArea);//Get new ports
+        ports = this.addPort(box, connArea);// Get new ports
 
-        while(i--){//Update the paths with deleted ports
+        while(i--){// Update the paths with deleted ports
             hasSrc = false;
-            srcPorts = pathObjects.out[i].getSrcPorts();//Used to see if the path should be removed
+            srcPorts = pathObjects.out[i].getSrcPorts();// Used to see if the path should be removed
 
             for(var srcPort in srcPorts){
                 if(srcPorts.hasOwnProperty(srcPort)){
@@ -547,7 +526,7 @@ define(['logManager',
                     }
                 }
             }
-            if(hasSrc){//Adjust path if applicable
+            if(hasSrc){// Adjust path if applicable
                 this.router.disconnect(pathObjects.out[i].path);
                 pathObjects.out[i].updateSrcPorts();
             }
@@ -569,13 +548,13 @@ define(['logManager',
                 }
             }
 
-            if(hasDst){//Adjust path if applicable
+            if(hasDst){// Adjust path if applicable
                 this.router.disconnect(pathObjects.in[i].path);
                 pathObjects.in[i].updateDstPorts();
             }
         }
 
-        for(var oldPort in oldPorts){//Remove old ports
+        for(var oldPort in oldPorts){// Remove old ports
             if(oldPorts.hasOwnProperty(oldPort)){
                 box.deletePort(oldPorts[oldPort]);
             }
@@ -603,7 +582,7 @@ define(['logManager',
                     i;
 
                 if(srcBoxId){
-                    i = this.boxId2Path[srcBoxId].out.indexOf(pathData);//Remove from boxId2Path dictionary
+                    i = this.boxId2Path[srcBoxId].out.indexOf(pathData);// Remove from boxId2Path dictionary
                     this.boxId2Path[srcBoxId].out.splice(i, 1);
                 }
 
@@ -614,7 +593,7 @@ define(['logManager',
 
                 this.router.deletePath(path); 
             }
-            delete this.paths[item]; //Remove dictionary entry
+            delete this.paths[item]; // Remove dictionary entry
 
         }else{
             throw "AutoRouter:remove Unrecognized item type. Must be an AutoRouterBox or an AutoRouterPath ID";
@@ -622,7 +601,7 @@ define(['logManager',
     };
 
     AutoRouter.prototype.move = function( box, details ){
-        //Make sure details are in terms of dx, dy
+        // Make sure details are in terms of dx, dy
         box = box instanceof AutoRouterBox ? box : box.box;
         var dx = details.dx !== undefined ? details.dx : Math.round( details.x - box.rect.left ),
             dy = details.dy !== undefined ? details.dy : Math.round( details.y - box.rect.ceil );
@@ -643,7 +622,7 @@ define(['logManager',
         mother.addChild(child);
     };
 
-    AutoRouter.prototype.setPathCustomPoints = function( args ){ //args.points = [ [x, y], [x2, y2], ... ]
+    AutoRouter.prototype.setPathCustomPoints = function( args ){ // args.points = [ [x, y], [x2, y2], ... ]
         var path = this.paths[args.path].path,
             points = [],
             i = 0;
@@ -657,7 +636,7 @@ define(['logManager',
             path.setAutoRouting( true );
         }
 
-        //Convert args.points to array of [ArPoint] 's
+        // Convert args.points to array of [ArPoint] 's
         while ( i < args.points.length ){
             points.push(new CustomPathData(args.points[i][0], args.points[i][1]));
             ++i;
