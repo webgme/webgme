@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html ng-app="mergeApp">
+<html>
 <head lang="en">
     <meta charset="UTF-8">
     <title>WebGME Merge Page</title>
-    <script src="js/merge/angular.min.js"></script>
+    <!--<script src="js/merge/angular.min.js"></script>-->
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.26/angular.min.js"></script>
     <script src="dist/webgme.classes.build.js"></script>
     <script src="js/Merge/merge.js"></script>
     <script>
@@ -31,8 +33,35 @@
             }
         }
     </script>
+    <script type="text/ng-template"  id="tree_item_renderer.html">
+        {{data.name}}
+        <ul>
+            <li ng-repeat="data in data.nodes" ng-include="'tree_item_renderer.html'"></li>
+        </ul>
+    </script>
 </head>
 <body onload="initializeMerge()" ng-controller="mergeController">
-hehh!
+<div class = "btn-group btn-group-xs text-center" role="group">
+    <button class={{getButtonClass(item.id,selectedItem)}} ng-click="selectItem(item.id)" ng-repeat="item in items">{{getButtonText(item.selected)}}</button>
+</div>
+<div class="row">
+    <button class="col-xs-2 col-xs-offset-4">mine</button>
+    <button class="col-xs-2">theirs</button>
+</div>
+<div class="row">
+    <!-- TREE - MODEL - Separator - MODEL - TREE -->
+    <div class="col-xs-2">
+        <ul>
+            <li ng-repeat="data in tree.mine" ng-include="'tree_item_renderer.html'"></li>
+        </ul>
+    </div>
+    <div class="col-xs-4">MY VIEW</div>
+    <div class="col-xs-4">THEIR VIEW</div>
+    <div class="col-xs-2">
+        <ul>
+            <li ng-repeat="data in tree.theirs" ng-include="'tree_item_renderer.html'"></li>
+        </ul>
+    </div>
+</div>
 </body>
 </html>
