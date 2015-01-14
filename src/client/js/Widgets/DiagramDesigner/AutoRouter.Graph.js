@@ -1894,12 +1894,8 @@ define(['logManager',
 
     AutoRouterGraph.prototype.deleteBox = function(box){
         assert(box !== null, "ARGraph.deleteBox: box !== null FAILED");
-        if (box === null){
-            return;
-        }
 
-        if( box.hasOwner() )
-        {
+        if (box.hasOwner()) {
             var parent = box.parent,
                 children = box.childBoxes,
                 i = children.length;
@@ -2166,13 +2162,9 @@ define(['logManager',
 
     AutoRouterGraph.prototype.deletePath = function(path){
         assert(path !== null, "ARGraph.deletePath: path !== null FAILED");
-        if (path === null){
-            return;
-        }
 
-        if( path.hasOwner() ){
+        if (path.hasOwner()) {
             assert( path.owner === this, "ARGraph.deletePath: path.owner === this FAILED");
-
             this._remove(path);
         }
 
