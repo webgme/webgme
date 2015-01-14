@@ -18,6 +18,17 @@ var AutoRouter = requirejs('client/js/Widgets/DiagramDesigner/AutoRouter'),
     assert = requirejs('util/assert'),
     router;
 
+// Set up helpers
+var connectAll = function(boxes) {
+    for (var i = boxes.length; i--;) {
+        for (var j = boxes.length; j--;) {
+            router.addPath({src: boxes[i].ports, dst: boxes[j].ports});
+        }
+    }
+
+    router.autoroute();
+};
+
 var addBox = function(options) {
     var x = options.x,
         y = options.y,
@@ -52,6 +63,19 @@ var getBoxCount = function() {
     return Object.keys(router.router.boxes).length;
 };
 
+// Validation Helpers
+var evaluateEdges = function(edges, fn) {
+      var edge = edges.order_first;
+      var result = false;
+      while (edge && !result) {
+          result = fn(edge);
+          edge = edge.order_next || edge.orderNext;
+      }
+   
+    return result;
+};
+
+
 // Test example
 describe('AutoRouter Tests',function(){
 
@@ -82,29 +106,47 @@ describe('AutoRouter Tests',function(){
       assert(boxCount === 0);
   });
 
+  it('should detect bracket opening',function(){
+      router = new AutoRouter();
+
+      var box1 = addBox({x: 100, y: 100});
+      var box2 = box1;
+      connectAll([box1, box2]);
+      
+      // Check that the graph contains an edge that is bracket closing or opening
+      var hasBracketOpeningOrClosing = false;
+      var testFn = function(edge) {
+          return edge.bracketOpening || edge.bracketOpening || edge.bracket_closing || edge.bracket_opening;
+      };
+      hasBracketOpeningOrClosing = evaluateEdges(router.router.horizontal, testFn) ||
+                                   evaluateEdges(router.router.vertical, testFn);
+
+      assert(hasBracketOpeningOrClosing, 'Did not detect bracket opening/closing');
+  });
+
+  it('should remove port from box',function(){
+      router = new AutoRouter();
+      throw new Error('Need to make this test');
+  });
+
   it('should connect two boxes',function(){
       router = new AutoRouter();
 
       var box1 = addBox({x: 100, y: 100});
       var box2 = addBox({x: 500, y: 800});
-      router.addPath({src: box1.ports, dst: box2.ports});
+      connectAll([box1, box2]);
   });
 
-  it('should connect multiple boxes',function(){
+  it.only('should connect multiple boxes',function(){
       router = new AutoRouter();
       var locations = [[100,100],
-                       [500,800],
                        [500,300],
                        [300,300]],
           boxes = addBoxes(locations),
           i,
           j;
 
-      for (i = boxes.length; i--;) {
-          for (j = boxes.length; j--;) {
-              router.addPath({src: boxes[i].ports, dst: boxes[j].ports});
-          }
-      }
+      connectAll(boxes);
   });
 
   it('should move connected boxes',function(){
@@ -146,23 +188,39 @@ describe('AutoRouter Tests',function(){
 
   it('should connect contained boxes',function(){
       router = new AutoRouter();
-      var locations = [[100,100],
-                       [110,110],
-                       [120,120],
-                       [130,130]],
-          boxes = addBoxes(locations),
+      var width = 900,
+          height = 900,
+          locations = [[100,100], 
+                       [200, 200], 
+                       [400, 400],
+                       [4100, 4100],
+                       [4200, 4200],
+                       [4400, 4400]],
+          boxes = [],
           i,
           j;
 
-      for (i = boxes.length; i--;) {
-          for (j = boxes.length; j--;) {
-              router.addPath({src: boxes[i].ports, dst: boxes[j].ports});
-          }
+      // Create big boxes
+      for (i = locations.length; i--;) {
+          boxes.push(addBox({x: locations[i][0],
+                             y: locations[i][1],
+                             width: width,
+                             height: height}));
+        
       }
 
+      assert(boxes[0].box.rect.getWidth() === 900);
+
+      // Create normal sized boxes
+      for (i = locations.length; i--;) {
+          boxes.push(addBox({x: locations[i][0],
+                             y: locations[i][1]}));
+      }
+
+      connectAll(boxes);
   });
 
-    it('should remove path from graph',function(){
+  it('should remove path from graph',function(){
       router = new AutoRouter();
 
       var box1 = addBox({x: 100, y: 100});
@@ -172,8 +230,51 @@ describe('AutoRouter Tests',function(){
       assert(router.router.paths.length === 0);
   });
 
+  it('should create ports outside the box',function(){
+      router = new AutoRouter();
+      var box = addBox({x: 100, y: 100});
+      var port = addBox({x: 110, y: 110, width: 30, height: 30});
+      router.setComponent(box, port);
+  });
+
+  it('should connect port to parent box',function(){
+      router = new AutoRouter();
+      var box = addBox({x: 100, y: 100});
+      var port = addBox({x: 110, y: 110, width: 30, height: 30});
+      router.setComponent(box, port);
+      connectAll([box, port]);
+  });
+
+  it('should connect box encircled by other boxes',function(){
+      router = new AutoRouter();
+      var locations = [],
+          change = 90,
+          min = 100,
+          max = 1000,
+          diff = 2000,
+          x = 400,
+          y = 400,
+          src = addBox({x: x, y: y}),
+          dst = addBox({x: x+diff, y: y+diff});
+
+      // Encircle the src box
+      for (y = min, x = min; y < max; y += change) {
+          addBox({x: x, y: y});
+          addBox({x: max, y: y});
+      }
+
+      for (y = min, x = min; x < max; x += change) {
+          addBox({x: x, y: y});
+          addBox({x: x, y: max});
+      }
+
+      connectAll([src, dst]);
+
+      // Encircle the dst box
+  });
+
   // TODO Add this feature
-  //it('should create ports outside the box',function(){
+  //it('should create connection areas outside the box',function(){
       //router = new AutoRouter();
 
       //var boxDef = {x1: 100,
@@ -191,8 +292,8 @@ describe('AutoRouter Tests',function(){
 });
 
 // Tests for the autorouter
-//  - basic overlapping
-//  - boxes are exactly double the buffer width apart
+//  - changing the size of boxes
+//  - changing the size of ports
 //  - encompassed circle
 //  - maze
 //  - port outside the box
