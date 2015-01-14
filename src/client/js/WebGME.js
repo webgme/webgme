@@ -6,6 +6,7 @@
  */
 var WebGMEGlobal = WebGMEGlobal || {};
 WebGMEGlobal.version = 'x';
+WebGMEGlobal.config = {};
 WebGMEGlobal['SUPPORTS_TOUCH'] = 'ontouchstart' in window || navigator.msMaxTouchPoints;
 
 
@@ -55,6 +56,7 @@ define(['logManager',
     var npmJSON = JSON.parse(packagejson);
     WebGMEGlobal.version = npmJSON.version;
 
+    WebGMEGlobal.config.keyType = CONFIG.storageKeyType;
     var _webGMEStart = function ( afterPanelsLoaded ) {
         var layoutManager,
             client,
@@ -181,7 +183,8 @@ define(['logManager',
                                             });
                                         } else {
                                             //we create the project
-                                            client.createProjectAsync(initialThingsToDo.projectToLoad,function(err){
+                                            //TODO probably some meaningful INFO is needed
+                                            client.createProjectAsync(initialThingsToDo.projectToLoad,null,function(err){
                                                 if(err){
                                                     logger.error(err);
                                                     openProjectLoadDialog();

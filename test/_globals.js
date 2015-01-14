@@ -4,7 +4,3 @@
 //this file is intended to set testing related global variables no actual tests
 global.COVERAGE = false;
 global.TESTING = true;
-describe('noActualTest',function(){
-  it('does really nothing',function(){
-  });
-});
