@@ -76,7 +76,7 @@ var evaluateEdges = function(edges, fn) {
 };
 
 
-// Test example
+// Tests
 describe('AutoRouter Tests',function(){
 
   it('should create boxes placed on graph',function(){
@@ -271,32 +271,54 @@ describe('AutoRouter Tests',function(){
       connectAll([src, dst]);
 
       // Encircle the dst box
+      min = diff;
+      for (y = min, x = min; y < max; y += change) {
+          addBox({x: x, y: y});
+          addBox({x: max, y: y});
+      }
+
+      for (y = min, x = min; x < max; x += change) {
+          addBox({x: x, y: y});
+          addBox({x: x, y: max});
+      }
+
+      router.autoroute();
   });
 
-  // TODO Add this feature
-  //it('should create connection areas outside the box',function(){
-      //router = new AutoRouter();
+  it('should create connection areas outside the box',function(){
+      router = new AutoRouter();
 
-      //var boxDef = {x1: 100,
-                    //x2: 200,
-                    //y1: 100,
-                    //y2: 200,
-                    //ConnectionInfo: [
-                       //{id: 'top', 
-                        //area: [ [10, 10], [80, 80] ]}
-                    //]};
+      var boxDef = {x1: 100,
+                    x2: 200,
+                    y1: 100,
+                    y2: 200,
+                    ConnectionInfo: [
+                       {id: 'top', 
+                        area: [ [10, 10], [80, 80] ]}
+                    ]};
 
-      //router.addBox(boxDef);
-  //});
+      router.addBox(boxDef);
+  });
+
+  it('should allows connections between immediately overlapping boxes',function(){
+      router = new AutoRouter();
+      var boxes = addBoxes([[100,100], [100,100]]);
+      connectAll(boxes);
+  });
 
 });
 
 // Tests for the autorouter
 //  - changing the size of boxes
 //  - changing the size of ports
-//  - encompassed circle
 //  - maze
-//  - port outside the box
-//  - box's connection area outside the box
-//  - box connected to itself
-//  - boxes directly on top of each other (connected to each other)
+//  - remove ports
+//
+//  - Boxes
+//    - move propogates to children
+//    - add/remove port
+//
+//  - Ports
+//    - port available area
+//      - adjust
+//      - clear
