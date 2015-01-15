@@ -576,7 +576,12 @@ define(['logManager',
         var edge = this.order_first;
         while(edge)
         {
+            console.log('storing y', edge.positionY);
+            console.log('\tstartpoint of edge was ', edge.startpoint);
+            console.log('\tendpoint of edge was ', edge.endpoint);
             this._position_SetRealY(edge, edge.positionY);
+            console.log('\tstartpoint of edge is now ', edge.startpoint);
+            console.log('\tendpoint of edge is now ', edge.endpoint);
 
             edge = edge.orderNext;
         }
@@ -814,6 +819,7 @@ define(['logManager',
 
         }
 
+        console.log('setting positionY from', edge.positionY, 'to', y);
         edge.positionY = y;
 
         return ret;
@@ -933,39 +939,34 @@ define(['logManager',
                    'AREdgeList.section_HasBlockedEdge: a1 <= a2 FAILED (' + a1 + ' <= ' + a2 + ')'+
                    '\nedge is ');
 
-               assert( b1 <= a2 &&  a1 <= b2,
-                      'AREdgeList.section_HasBlockedEdge: b1 <= a2 &&  a1 <= b2 FAILED');
+           assert( b1 <= a2 &&  a1 <= b2,
+                  'AREdgeList.section_HasBlockedEdge: b1 <= a2 &&  a1 <= b2 FAILED');
             // not case 1 or 6
-            if (a1 < b1 && b2 < a2)									// case 3
-            {
+            if (a1 < b1 && b2 < a2)	{								// case 3
                 this.section_ptr2blocked = current_edge.getSectionDownPtr();
-            }
-            else if (b1 <= a1 && a2 <= b2)								// case 4
-            {
-                if( e && e.startpoint !== null)
-                {
+
+            } else if (b1 <= a1 && a2 <= b2) {								// case 4
+
+                if(e && e.startpoint !== null) {
                     while( e.getSectionNext() && e.getSectionNext().startpoint !== null) {
                         e = e.getSectionNext();
                     }
 
                     e.setSectionNext(current_edge.getSectionNext());
                     this.section_ptr2blocked[0] = current_edge.getSectionDown();
-                }
-                else{
+                } else {
 
                     this.section_ptr2blocked[0] = (current_edge.getSectionNext()); 
 
                 }
-            }
-            else if (b1 <= a1 && b2 < a2)								// case 5
-            {
+            } else if (b1 <= a1 && b2 < a2)	{							// case 5
+
                 assert( a1 <= b2,
                        'AREdgeList.section_HasBlockedEdge: a1 <= b2 FAILED');
 
                 a1 = b2 + 1;
 
-                while((e && e.startpoint !== null) && e.sectionX1 <= a1)
-                {	
+                while((e && e.startpoint !== null) && e.sectionX1 <= a1) {	
                     assert( e.sectionX1 <= e.sectionX2,
                            'AREdgeList.section_HasBlockedEdge: e.sectionX1 <= e.sectionX2 FAILED');
 
@@ -977,8 +978,11 @@ define(['logManager',
                     e = e.getSectionNext();
                 }
 
-                if (o)
-                { //Insert current_edge to be section_next of the given edge in the list of section_down (basically, collapsing current_edge into the section_down list. The values in the list following current_edge will then be set to be section_down of the current_edge.)
+                if (o) {  
+                    // Insert current_edge to be section_next of the given edge in the list 
+                    // of section_down (basically, collapsing current_edge into the section_down 
+                    // list. The values in the list following current_edge will then be set to 
+                    // be section_down of the current_edge.)
                     this.section_ptr2blocked[0] = current_edge.getSectionDownPtr()[0];
                     o.setSectionNext(current_edge);
                     current_edge.setSectionDown(e);
@@ -994,15 +998,12 @@ define(['logManager',
                 assert(current_edge.sectionX1 < current_edge.sectionX2, 
                        'current_edge.sectionX1 < current_edge.sectionX2 ('+
                        current_edge.sectionX1 + ' < ' +current_edge.sectionX2+')' );
-            }
-            else														// case 2
-            {
+            } else {														// case 2
                 assert( a1 < b1 && b1 <= a2 && a2 <= b2,  "AREdgeList.section_HasBlockedEdge:  a1 < b1 && b1 <= a2 && a2 <= b2 FAILED");
 
                 this.section_ptr2blocked = current_edge.getSectionDownPtr();
 
-                while( e && e.startpoint !== null)
-                {
+                while( e && e.startpoint !== null) {
                     o = e;
                     e = e.getSectionNext();
 
@@ -1539,8 +1540,7 @@ blocked,
 
             this.section_BeginScan(blocker);
 
-            while(this.section_HasBlockedEdge() )
-            {
+            while(this.section_HasBlockedEdge()) {
                 if (this.section_IsImmediate())
                 {
                     blocked = this.section_GetBlockedEdge();
@@ -1550,7 +1550,11 @@ blocked,
 
                     if (blocked.getBlockNext() !== null)
                     {
+                        console.log('blocked has pos Y (prior): ', blocked.positionY);
+                        console.log('blocker has pos Y (prior): ', blocker.positionY);
                         modified = this.block_PushForward(blocked, blocker) || modified;
+                        console.log('blocked has pos Y: ', blocked.positionY);
+                        console.log('blocker has pos Y: ', blocker.positionY);
                     }
 
                     if (!blocker.getEdgeFixed())
@@ -1574,8 +1578,8 @@ blocked,
                     }
                 }
             }
-            this.dumpEdges('About to "bmin" stuff');
 
+            this.dumpEdges('About to "bmin" stuff ('+ bmin+ ')');
             if (bmin)
             {
                 if (smin)

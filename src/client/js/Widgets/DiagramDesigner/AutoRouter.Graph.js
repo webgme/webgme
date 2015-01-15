@@ -1025,8 +1025,13 @@ define(['logManager',
 
     AutoRouterGraph.prototype._addEdges = function (obj){
         assert(!(obj instanceof AutoRouterPath), 'No Paths should be here!');
-        this.horizontal.addEdges(obj);
-        this.vertical.addEdges(obj);
+        if (obj instanceof AutoRouterPort) {
+            this.horizontal.addPortEdges(obj);
+            this.vertical.addPortEdges(obj);
+        } else {
+            this.horizontal.addEdges(obj);
+            this.vertical.addEdges(obj);
+        }
     };
 
     AutoRouterGraph.prototype.deleteEdges = function (object){
@@ -1062,8 +1067,7 @@ define(['logManager',
         this._addEdges(box);
 
         for (var i = box.ports.length; i--;) {
-            this.horizontal.addPortEdges(box.ports[i]);
-            this.vertical.addPortEdges(box.ports[i]);
+            this._addEdges(box.ports[i]);
         }
 
         //Add to bufferboxes

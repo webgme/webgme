@@ -174,7 +174,7 @@ define(['logManager',
 
     AutoRouterEdge.prototype.getStartPoint = function (){
         return this.startpoint !== null ?
-            (this.startpoint instanceof Array ? new ArPoint(this.startpoint[0]) : new ArPoint(this.startpoint)) : CONSTANTS.EMPTY_POINT;//returning copy of this.startpoint
+            (this.startpoint instanceof Array ? new ArPoint(this.startpoint[0]) : new ArPoint(this.startpoint)) : CONSTANTS.EMPTY_POINT;  // returning copy of this.startpoint
     };
 
     AutoRouterEdge.prototype.isSameStartPoint = function(point){
@@ -206,7 +206,9 @@ define(['logManager',
     };
 
     AutoRouterEdge.prototype.setStartPointY = function(_y){
+        console.log('setting startpoint y to', _y);
         this.startpoint[0].y = _y;
+        console.log('startpoint is now', this.startpoint);
     };
 
     AutoRouterEdge.prototype.getEndPoint = function(){
