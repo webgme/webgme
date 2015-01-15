@@ -538,17 +538,15 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
             function insertObject (object, callback) {
                 ASSERT(typeof callback === 'function');
                 if (socketConnected) {
-                    if(saveBucketSize === 0){
-                        ++saveBucketSize;
+                    if(saveBucket.length === 0){
                         saveBucket.push({object:object,cb:callback});
                         saveBucketTimer = setTimeout(function(){
                            flushSaveBucket();
                         },10);
-                    } else if (saveBucketSize === 99){
+                    } else if (saveBucket.length === 99){
                         saveBucket.push({object:object,cb:callback});
                         flushSaveBucket();
                     } else {
-                        ++saveBucketSize;
                         saveBucket.push({object:object,cb:callback});
                     }
                 } else {
@@ -557,7 +555,6 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
             }
 
             var saveBucket = [],
-                saveBucketSize = 0,
                 saveBucketTimer;
 
             function flushSaveBucket(){
@@ -569,7 +566,6 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                     //TODO there is no task to do here
                 }
                 saveBucketTimer = null;
-                saveBucketSize = 0;
                 if(myBucket.length > 0){
                     insertObjects(myBucket);
                 }
