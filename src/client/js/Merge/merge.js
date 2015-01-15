@@ -52,21 +52,26 @@
     }
     return outpath;
   }
-  function generateTreeToPath(root,path,callback){
+  function generateTreeToPath(type,path,callback){
     var nodePath = getNodePath(path),
-      tree = [];
+      root = GME.merge.roots[type],
+      tree = [],i;
     GME.merge.core.loadByPath(root,nodePath,function(err,node){
       if(err || !node){
         return callback(err || new Error('unable to load given node'));
       }
 
       while(node){
-        tree = [{name:GME.merge.core.getAttribute(node,'name'),nodes:tree}];
+        tree.unshift({name:GME.merge.core.getAttribute(node,'name'),path:GME.merge.core.getPath(node),class:"col-xs-2"});
         node = GME.merge.core.getParent(node);
+      }
+      for(i=0;i<tree.length;i++){
+        tree[i].class = "btn btn-info btn-xs col-xs-2 col-xs-offset-"+(i+1);
       }
       callback(null,tree);
     });
   }
+
   GME = GME || {};
   GME.merge = {};
   GME.merge.initialize = function(config){
@@ -182,14 +187,14 @@
       console.warn('you selected',itemId);
       $scope.selectedItem = itemId;
 
-      generateTreeToPath(GME.merge.roots.mine,$scope.items[$scope.selectedItem].mine.path,function(err,tree){
+      generateTreeToPath('mine',$scope.items[$scope.selectedItem].mine.path,function(err,tree){
         if(err){
           errorBox(err);
         } else {
           $scope.tree.mine = tree;
         }
       });
-      generateTreeToPath(GME.merge.roots.theirs,$scope.items[$scope.selectedItem].theirs.path,function(err,tree){
+      generateTreeToPath('theirs',$scope.items[$scope.selectedItem].theirs.path,function(err,tree){
         if(err){
           errorBox(err);
         } else {

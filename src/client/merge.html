@@ -33,34 +33,29 @@
             }
         }
     </script>
-    <script type="text/ng-template"  id="tree_item_renderer.html">
-        {{data.name}}
-        <ul>
-            <li ng-repeat="data in data.nodes" ng-include="'tree_item_renderer.html'"></li>
-        </ul>
-    </script>
+
 </head>
 <body onload="initializeMerge()" ng-controller="mergeController">
 <div class = "btn-group btn-group-xs text-center" role="group">
     <button class={{getButtonClass(item.id,selectedItem)}} ng-click="selectItem(item.id)" ng-repeat="item in items">{{getButtonText(item.selected)}}</button>
 </div>
 <div class="row">
-    <button class="col-xs-2 col-xs-offset-4">mine</button>
-    <button class="col-xs-2">theirs</button>
+    <button class="btn btn-default btn-lg col-xs-2 col-xs-offset-3">mine</button>
+    <button class="btn btn-default btn-lg col-xs-2 col-xs-offset-2">theirs</button>
 </div>
 <div class="row">
     <!-- TREE - MODEL - Separator - MODEL - TREE -->
     <div class="col-xs-2">
-        <ul>
-            <li ng-repeat="data in tree.mine" ng-include="'tree_item_renderer.html'"></li>
-        </ul>
+        <div class="row" ng-repeat="item in tree.mine">
+            <label class={{item.class}}>{{item.name}}</label>
+        </div>
     </div>
     <div class="col-xs-4">MY VIEW</div>
     <div class="col-xs-4">THEIR VIEW</div>
     <div class="col-xs-2">
-        <ul>
-            <li ng-repeat="data in tree.theirs" ng-include="'tree_item_renderer.html'"></li>
-        </ul>
+        <div class="row" ng-repeat="item in tree.theirs">
+            <label class={{item.class}}>{{item.name}}</label>
+        </div>
     </div>
 </div>
 </body>
