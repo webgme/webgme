@@ -40,12 +40,15 @@
     <button class={{getButtonClass(item.id,selectedItem)}} ng-click="selectItem(item.id)" ng-repeat="item in items">{{getButtonText(item.selected)}}</button>
 </div>
 <div class="row">
-    <button class="btn btn-default btn-lg col-xs-2 col-xs-offset-3">mine</button>
-    <button class="btn btn-default btn-lg col-xs-2 col-xs-offset-2">theirs</button>
+    <button class={{getSelectButtonClass(items[selectedItem].selected,'mine')}} ng-click="selectSide(selectedItem,'mine')">choose mine</button>
+    <button class={{getSelectButtonClass(items[selectedItem].selected,'theirs')}} ng-click="selectSide(selectedItem,'theirs')">choose theirs</button>
 </div>
 <div class="row">
     <!-- TREE - MODEL - Separator - MODEL - TREE -->
     <div class="col-xs-2">
+        <div class="row">
+            <label class="col-xs-offset-1 btn btn-warning disabled">{{items[selectedItem].mine.guid}}</label>
+        </div>
         <div class="row" ng-repeat="item in tree.mine">
             <label class={{item.class}}>{{item.name}}</label>
         </div>
@@ -53,6 +56,9 @@
     <div class="col-xs-4">MY VIEW</div>
     <div class="col-xs-4">THEIR VIEW</div>
     <div class="col-xs-2">
+        <div class="row">
+            <label class="col-xs-offset-1 btn btn-warning disabled">{{items[selectedItem].theirs.guid}}</label>
+        </div>
         <div class="row" ng-repeat="item in tree.theirs">
             <label class={{item.class}}>{{item.name}}</label>
         </div>
