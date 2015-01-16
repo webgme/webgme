@@ -306,6 +306,70 @@ describe('AutoRouter Tests',function(){
       connectAll(boxes);
   });
 
+  it('should start paths on exposed/available regions of the ports',function(){
+      router = new AutoRouter();
+      var boxes = addBoxes([[100,100], [150,150], [1000, 1000]]),
+          src,
+          srcPort,
+          dst;
+
+      // Connect bottom port from first box to last box
+      for (var i = boxes.length; i--;) {
+          if (boxes[i].box.selfPoints[0].x === 100) {
+              src = boxes[i];
+              for (var j = src.ports.length; j--;) {
+                  if (src.ports[j].id === 'bottom') {
+                      srcPort = src.ports[j];
+                  }
+              }
+          } else if (boxes[i].box.selfPoints[0].x === 1000) {
+              dst = boxes[i];
+          }
+      }
+
+      assert (!!srcPort, 'Port not found!');
+      assert (!!dst, 'Destination box not found!');
+
+      router.addPath({src: srcPort, dst: dst.ports});
+      router.autoroute();
+  });
+
+  it('should be able to resize boxes', function() {
+      router = new AutoRouter();
+      var box = addBox({x: 100, y: 100});
+      var newBox = {x1: 50,
+                    y1: 50, 
+                    x2: 300,
+                    y2: 300,
+                    ConnectionInfo: [
+                     {id: 'top',
+                      area: [ [60, 60], [290, 60]]},
+                     {id: 'bottom',
+                      area: [ [60, 290], [290, 290]]}
+                  ]};
+      router.setBox(box, newBox);
+  });
+
+  it('should be able to resize routed boxes', function() {
+      router = new AutoRouter();
+      var boxes = addBoxes([[100,100], [300,300]]);
+      connectAll(boxes);
+
+      var newBox = {x1: 50,
+                    y1: 50, 
+                    x2: 300,
+                    y2: 300,
+                    ConnectionInfo: [
+                     {id: 'top',
+                      area: [ [60, 60], [290, 60]]},
+                     {id: 'bottom',
+                      area: [ [60, 290], [290, 290]]}
+                  ]};
+
+      router.setBox(boxes[0], newBox);
+      router.autoroute();
+  });
+
 });
 
 // Tests for the autorouter
