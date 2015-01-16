@@ -137,7 +137,7 @@ describe('AutoRouter Tests',function(){
       connectAll([box1, box2]);
   });
 
-  it.only('should connect multiple boxes',function(){
+  it('should connect multiple boxes',function(){
       router = new AutoRouter();
       var locations = [[100,100],
                        [500,300],
@@ -306,10 +306,15 @@ describe('AutoRouter Tests',function(){
       connectAll(boxes);
   });
 
+  it('should select correct port',function(){
+      assert(false, 'Need to make this test!');
+  });
+
 });
 
 // Tests for the autorouter
 //  - changing the size of boxes
+//  - should 
 //  - changing the size of ports
 //  - maze
 //  - remove ports
