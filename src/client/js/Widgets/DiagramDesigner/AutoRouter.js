@@ -381,36 +381,48 @@ define(['logManager',
         return pathId;
     };
 
-    AutoRouter.prototype._createPath = function(a) {
-        if(!a.src || !a.dst) {
-            throw "AutoRouter:_createPath missing source or destination";
+    /**
+     * Convert either a port or Hashmap of ports to an
+     * array of AutoRouterPorts
+     *
+     * @param port
+     * @return {Array} Array of AutoRouterPorts
+     */
+    var unpackPortInfo = function(port) {
+        var ports = [];
+
+        if (port instanceof AutoRouterPort) {
+            ports.push(port);
+        } else {
+            var ids = Object.keys(port);
+            for(var i = ids.length; i--;) {
+                assert(port[ids[i]] instanceof AutoRouterPort, 'Invalid port option: ' + port[i]);
+                ports.push(port[ids[i]]);
+            }
         }
 
-        var id = a.id,
-            autoroute = a.autoroute || true,
-            startDir = a.startDirection || a.start,
-            endDir = a.endDirection || a.end,
-            src = [], 
-            dst = [],
+        assert(ports.length > 0, 'Did not receive valid start or end ports');
+        return ports;
+    };
+
+    AutoRouter.prototype._createPath = function(params) {
+        if(!params.src || !params.dst) {
+            throw "AutoRouter:_createPath missing source or destination ports";
+        }
+
+        var id = params.id,
+            autoroute = params.autoroute || true,
+            startDir = params.startDirection || params.start,
+            endDir = params.endDirection || params.end,
+            srcPorts, 
+            dstPorts,
             path,
             i;
 
-        for(i in a.src) {
-            if(a.src.hasOwnProperty(i)) {
-                src.push(a.src[i]);
-            }
-        }
-        for(i in a.dst) {
-            if(a.dst.hasOwnProperty(i)) {
-                dst.push(a.dst[i]);
-            }
-        }
+        srcPorts = unpackPortInfo(params.src);
+        dstPorts = unpackPortInfo(params.dst);
 
-        assert(src instanceof AutoRouterPort || src instanceof Array || src.ports[0] instanceof AutoRouterPort, 
-               "AutoRouter:_createPath: src is not recognized as an AutoRouterPort");
-        assert(dst instanceof AutoRouterPort || dst instanceof Array || dst.ports[0] instanceof AutoRouterPort, 
-               "AutoRouter:_createPath: dst is not recognized as an AutoRouterPort");
-        path = this.router.addPath(autoroute, src, dst);
+        path = this.router.addPath(autoroute, srcPorts, dstPorts);
 
         if (startDir || endDir) { 
             var start = startDir !== undefined ? (startDir.indexOf("top") !== -1 ? CONSTANTS.ARPATH_StartOnTop : 0) +
@@ -431,12 +443,12 @@ define(['logManager',
             path.setEndDir(CONSTANTS.ARPATH_Default);
         }
 
-        var pathData = new ArPathMap(id, path, a.src, a.dst);
+        var pathData = new ArPathMap(id, path, params.src, params.dst);
         this.paths[id] = pathData;
 
         // Register the path under box id
-        this.boxId2Path[src[0].owner.id].out.push(pathData);  // Assuming all ports belong to the same box
-        this.boxId2Path[dst[0].owner.id].in.push(pathData);   // so the specific port to check is trivial
+        this.boxId2Path[srcPorts[0].owner.id].out.push(pathData);  // Assuming all ports belong to the same box
+        this.boxId2Path[dstPorts[0].owner.id].in.push(pathData);   // so the specific port to check is trivial
         return pathData;
     };
 
@@ -483,7 +495,7 @@ define(['logManager',
 
         // Reconnect paths to ports
         while( i-- ) {
-            pathSrc = paths.in[i].path.getStartPorts();
+            pathSrc = paths.in[i].path.startports;
             // paths.in[i].path.setEndPorts( ports );
             paths.in[i].setDstPorts(ports);
             paths.in[i].updateDstPorts();
@@ -492,7 +504,7 @@ define(['logManager',
 
         i = paths.out.length;
         while( i-- ) {
-            pathDst = paths.out[i].path.getEndPorts();
+            pathDst = paths.out[i].path.endports;
             // paths.out[i].path.setStartPorts( ports );
             paths.out[i].setSrcPorts(ports);
             paths.out[i].updateSrcPorts();

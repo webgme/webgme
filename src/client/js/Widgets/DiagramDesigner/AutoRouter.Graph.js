@@ -682,7 +682,7 @@ define(['logManager',
         path.setState(CONSTANTS.ARPATHST_Connected);
         path.applyCustomizationsAfterAutoConnectPointsAndStuff();
 
-        return this.addPathEdges(path);
+        return this.horizontal.addPathEdges(path) && this.vertical.addPathEdges(path);
 
     };
 

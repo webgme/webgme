@@ -576,20 +576,13 @@ define(['logManager',
         var edge = this.order_first;
         while(edge)
         {
-            console.log('storing y', edge.positionY);
-            console.log('\tstartpoint of edge was ', edge.startpoint);
-            console.log('\tendpoint of edge was ', edge.endpoint);
             this._position_SetRealY(edge, edge.positionY);
-            console.log('\tstartpoint of edge is now ', edge.startpoint);
-            console.log('\tendpoint of edge is now ', edge.endpoint);
-
             edge = edge.orderNext;
         }
 
     };
 
     AutoRouterEdgeList.prototype._positionAll_LoadX = function () {
-        this.dumpEdges('before load x');
         var edge = this.order_first,
             pts;
         while(edge) {
@@ -599,7 +592,6 @@ define(['logManager',
 
             edge = edge.orderNext;
         }
-        this.dumpEdges('after load x');
     };
 
     AutoRouterEdgeList.prototype._initOrder = function () {
@@ -819,7 +811,6 @@ define(['logManager',
 
         }
 
-        console.log('setting positionY from', edge.positionY, 'to', y);
         edge.positionY = y;
 
         return ret;
@@ -1008,9 +999,7 @@ define(['logManager',
                 assert(blockerX2 < a1,
                        'AREdgeList.section_HasBlockedEdge: blockerX2 < a1 FAILED');
                 //Shifting the front of the p2b so it no longer overlaps this.section_blocker
-                console.log('current_edge.sectionX1 was', current_edge.sectionX1);
                 current_edge.sectionX1 = a1;
-                console.log('current_edge.sectionX1 is now', current_edge.sectionX1);
 
                 assert(current_edge.sectionX1 < current_edge.sectionX2, 
                        'current_edge.sectionX1 < current_edge.sectionX2 ('+
@@ -1573,11 +1562,7 @@ blocked,
 
                     if (blocked.getBlockNext() !== null)
                     {
-                        console.log('blocked has pos Y (prior): ', blocked.positionY);
-                        console.log('blocker has pos Y (prior): ', blocker.positionY);
                         modified = this.block_PushForward(blocked, blocker) || modified;
-                        console.log('blocked has pos Y: ', blocked.positionY);
-                        console.log('blocker has pos Y: ', blocker.positionY);
                     }
 
                     if (!blocker.getEdgeFixed())
@@ -1602,7 +1587,6 @@ blocked,
                 }
             }
 
-            this.dumpEdges('About to "bmin" stuff ('+ bmin+ ')');
             if (bmin)
             {
                 if (smin)

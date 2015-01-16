@@ -206,9 +206,7 @@ define(['logManager',
     };
 
     AutoRouterEdge.prototype.setStartPointY = function(_y){
-        console.log('setting startpoint y to', _y);
         this.startpoint[0].y = _y;
-        console.log('startpoint is now', this.startpoint);
     };
 
     AutoRouterEdge.prototype.getEndPoint = function(){
