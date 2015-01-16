@@ -1549,9 +1549,13 @@ define(['logManager',
         }
     };
 
+    /**
+     * Remove unnecessary curves inserted into the path from the 
+     * tracing the edges of overlapping boxes. (hug children)
+     *
+     * @param {AutoRouterPath} path
+     */
     AutoRouterGraph.prototype._simplifyPathCurves = function (path){
-        //This method will remove unnecessary curves inserted into the path from 
-        //hugging children.
         //Incidently, this will also contain the functionality of simplifyTrivially
         var pointList = path.getPointList(),
             p1,
@@ -1578,6 +1582,25 @@ define(['logManager',
         }
     };
 
+    /* The following shape in a path
+     * _______
+     *       |       ___
+     *       |      |
+     *       |______|
+     *
+     * will be replaced with 
+     * _______
+     *       |______
+     *
+     * if possible.
+     */
+    /**
+     * Replace 5 points for 3 where possible. This will replace "u"-like shapes 
+     * with "z" like shapes.
+     *
+     * @param path
+     * @return {undefined}
+     */
     AutoRouterGraph.prototype._simplifyPathPoints = function (path){
         assert(path !== null, "ARGraph.simplifyPathPoints: path !== null FAILED");
         assert(!path.isConnected(), "ARGraph.simplifyPathPoints: !path.isConnected() FAILED");
