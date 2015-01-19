@@ -3494,11 +3494,11 @@ define('util/key',[
   }
   return function KeyGenerator(object){
     if(keyType === null){
-      if(WebGMEGlobal && WebGMEGlobal.config && typeof WebGMEGlobal.config.keyType === 'string'){
+      if(typeof WebGMEGlobal !== 'undefined' && WebGMEGlobal.config && typeof WebGMEGlobal.config.keyType === 'string'){
         keyType = WebGMEGlobal.config.keyType;
-      } else if(WebGMEGlobal && typeof WebGMEGlobal.getConfig === 'function') {
+      } else if( typeof WebGMEGlobal !== 'undefined' && typeof WebGMEGlobal.getConfig === 'function') {
         keyType = WebGMEGlobal.getConfig().storageKeyType || "plainSHA1";
-      } else if(GME && GME.config && typeof GME.config.keyType === 'string'){
+      } else if(typeof GME !== 'undefined' && GME.config && typeof GME.config.keyType === 'string'){
           keyType = GME.config.keyType;
       } else {
         keyType = "plainSHA1";
@@ -15204,7 +15204,8 @@ define('client',[
 
     function getNewCore(project) {
       //return new NullPointerCore(new DescriptorCore(new SetCore(new GuidCore(new Core(project)))));
-      return Core(project, {autopersist: true, usertype: 'nodejs'});
+      var options = {autopersist: true, usertype: 'nodejs'};
+      return Core(project, options);
     }
 
     function UndoRedo(_client) {
@@ -15339,20 +15340,6 @@ define('client',[
         console.warn('WebGMEGlobal not defined - cannot get plugins.');
       }
 
-      try{
-        if(WebGMEGlobal){
-          WebGMEGlobal.config = WebGMEGlobal.config || {};
-          WebGMEGlobal.config.keyType = _configuration.storageKeyType;
-        }
-        if(GME){
-          GME.config = GME.config || {};
-          GME.config.keyType = _configuration.storageKeyType;
-        }
-      } catch(e) {
-        //TODO should we do something, probably not
-      }
-
-
 
 
 
@@ -15380,6 +15367,15 @@ define('client',[
       _configuration.reconnamount = _configuration.reconnamount || 1000;
       _configuration.autostart = _configuration.autostart === null || _configuration.autostart === undefined ? false : _configuration.autostart;
 
+      if( typeof GME !== 'undefined'){
+        GME.config = GME.config || {};
+        GME.config.keyType = _configuration.storageKeyType;
+      }
+
+      if( typeof WebGMEGlobal !== 'undefined'){
+        WebGMEGlobal.config = WebGMEGlobal.config || {};
+        WebGMEGlobal.config.keyType = _configuration.storageKeyType;
+      }
 
       //TODO remove the usage of jquery
       //$.extend(_self, new EventDispatcher());

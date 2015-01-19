@@ -6,7 +6,6 @@
  */
 var WebGMEGlobal = WebGMEGlobal || {};
 WebGMEGlobal.version = 'x';
-WebGMEGlobal.config = {};
 WebGMEGlobal['SUPPORTS_TOUCH'] = 'ontouchstart' in window || navigator.msMaxTouchPoints;
 
 
