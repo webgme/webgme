@@ -3496,8 +3496,10 @@ define('util/key',[
     if(keyType === null){
       if(WebGMEGlobal && WebGMEGlobal.config && typeof WebGMEGlobal.config.keyType === 'string'){
         keyType = WebGMEGlobal.config.keyType;
-      } else if(WebGMEGlobal && typeof WebGMEGlobal.getConfig === 'function'){
+      } else if(WebGMEGlobal && typeof WebGMEGlobal.getConfig === 'function') {
         keyType = WebGMEGlobal.getConfig().storageKeyType || "plainSHA1";
+      } else if(GME && GME.config && typeof GME.config.keyType === 'string'){
+          keyType = GME.config.keyType;
       } else {
         keyType = "plainSHA1";
       }
@@ -15336,6 +15338,23 @@ define('client',[
       } else {
         console.warn('WebGMEGlobal not defined - cannot get plugins.');
       }
+
+      try{
+        if(WebGMEGlobal){
+          WebGMEGlobal.config = WebGMEGlobal.config || {};
+          WebGMEGlobal.config.keyType = _configuration.storageKeyType;
+        }
+        if(GME){
+          GME.config = GME.config || {};
+          GME.config.keyType = _configuration.storageKeyType;
+        }
+      } catch(e) {
+        //TODO should we do something, probably not
+      }
+
+
+
+
 
       function print_nodes(pretext) {
         if (pretext) {

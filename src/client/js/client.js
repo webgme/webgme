@@ -181,6 +181,23 @@ define([
         console.warn('WebGMEGlobal not defined - cannot get plugins.');
       }
 
+      try{
+        if(WebGMEGlobal){
+          WebGMEGlobal.config = WebGMEGlobal.config || {};
+          WebGMEGlobal.config.keyType = _configuration.storageKeyType;
+        }
+        if(GME){
+          GME.config = GME.config || {};
+          GME.config.keyType = _configuration.storageKeyType;
+        }
+      } catch(e) {
+        //TODO should we do something, probably not
+      }
+
+
+
+
+
       function print_nodes(pretext) {
         if (pretext) {
           console.log(pretext);

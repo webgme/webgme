@@ -56,7 +56,7 @@ define(['logManager',
     var npmJSON = JSON.parse(packagejson);
     WebGMEGlobal.version = npmJSON.version;
 
-    WebGMEGlobal.config.keyType = CONFIG.storageKeyType;
+
     var _webGMEStart = function ( afterPanelsLoaded ) {
         var layoutManager,
             client,
