@@ -16213,10 +16213,16 @@ define('client',[
       //loading functions
       function getStringHash(node) {
         //TODO there is a memory issue with the huge strings so we have to replace it with something
-        if (node.parent && node.parent.data && node.parent.data[node.relid]) {
-            return node.parent.data[node.relid];
-        }
         return _gHash++;
+        /*
+         var datas = _core.getDataForSingleHash(node),
+         i,hash="";
+         for(i=0;i<datas.length;i++){
+         hash+=datas[i];
+         }
+         return hash;
+         */
+
       }
 
       function getModifiedNodes(newerNodes) {
