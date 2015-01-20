@@ -106,13 +106,29 @@ describe('AutoRouter Tests',function(){
       assert(boxCount === 0, 'box count should be 0 but is ' + boxCount);
   });
 
+  it('should create basic paths',function(){
+      router = new AutoRouter();
+
+      var box1 = addBox({x: 100, y: 100}),
+          box2 = addBox({x: 900, y: 900}),
+          path;
+
+      router.addPath({src: box2.ports[0], dst: box1.ports[1]});
+      path = router.graph.paths[0];
+
+      router.routeSync();
+      assert(path.points.ArPointList.length > 2, 
+            'Path does not contain enough points to have been routed');
+
+  });
+
   it('should detect bracket opening',function(){
       router = new AutoRouter();
 
       var box1 = addBox({x: 100, y: 100});
-      var box2 = box1;
-      connectAll([box1, box2]);
-      
+      router.addPath({src: box1.ports[0], dst: box1.ports[1]});
+      router.routeSync();
+
       // Check that the graph contains an edge that is bracket closing or opening
       var hasBracketOpeningOrClosing = false;
       var testFn = function(edge) {
@@ -121,7 +137,8 @@ describe('AutoRouter Tests',function(){
       hasBracketOpeningOrClosing = evaluateEdges(router.graph.horizontal, testFn) ||
                                    evaluateEdges(router.graph.vertical, testFn);
 
-      assert(hasBracketOpeningOrClosing, 'Did not detect bracket opening/closing\n'+router.graph.dumpEdgeLists());
+      assert(hasBracketOpeningOrClosing, 
+      'Did not detect bracket opening/closing'+(router.graph.dumpEdgeLists()||''));
   });
 
   it('should remove port from box',function(){
@@ -142,9 +159,7 @@ describe('AutoRouter Tests',function(){
       var locations = [[100,100],
                        [500,300],
                        [300,300]],
-          boxes = addBoxes(locations),
-          i,
-          j;
+          boxes = addBoxes(locations);
 
       connectAll(boxes);
   });
@@ -309,11 +324,7 @@ describe('AutoRouter Tests',function(){
   });
 
 
-  it('should select correct port',function(){
-      assert(false, 'Need to make this test!');
-  });
-
-  it.only('should start paths on exposed/available regions of the ports',function(){
+  it('should start paths on exposed/available regions of the ports',function(){
       router = new AutoRouter();
       var boxes = addBoxes([[100,100], [150,150], [1000, 1000]]),
           src,
@@ -328,7 +339,7 @@ describe('AutoRouter Tests',function(){
               for (var j = src.ports.length; j--;) {
                   portId = src.ports[j].id;
                   if (portId.indexOf('bottom') !== -1) {
-                      srcPort = src.ports[portId];
+                      srcPort = src.ports[j];
                   }
               }
           } else if (boxes[i].box.selfPoints[0].x === 1000) {
@@ -343,7 +354,16 @@ describe('AutoRouter Tests',function(){
       router.routeSync();
 
       // Verify that the path is not in the overlapped region
-      // TODO
+      var area = srcPort.availableArea[0][1],
+          path = router.graph.paths[0],
+          startpoint = path.startpoint;
+
+      assert(area.x < 151, 
+            'Port available area should be less than 151 but is ' + area.x);
+
+      assert(startpoint.x < 151, 
+            'Startpoint should be in the available area of the port');
+
   });
 
   it('should be able to resize boxes', function() {
@@ -383,16 +403,27 @@ describe('AutoRouter Tests',function(){
 
   });
 
-  it('should be able to route asynchronously', function() {
-      // TODO
-      throw new Error('Need to make this test');
-  });
+  it('should be able to route asynchronously', function(done) {
+      router = new AutoRouter();
 
+      var box1 = addBox({x: 100, y: 100}),
+          box2 = addBox({x: 900, y: 900});
+
+      router.addPath({src: box2.ports[0], dst: box1.ports[1]});
+
+      router.routeAsync({
+          callback: function(paths) {
+              var path = paths[0];
+              assert(path.points.ArPointList.length > 2, 
+                    'Path does not contain enough points to have been routed');
+              done();
+          }
+      });
+  });
 });
 
 // Tests for the autorouter
 //  - changing the size of boxes
-//  - should 
 //  - changing the size of ports
 //  - maze
 //  - remove ports
