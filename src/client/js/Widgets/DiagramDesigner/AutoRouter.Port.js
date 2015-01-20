@@ -25,6 +25,7 @@ define(['logManager',
     var _logger = logManager.create("AutoRouterPort");
 
     var AutoRouterPort = function (){
+        this.id = null;
         this.owner = null;
         this.limitedDirections = true;
         this.rect = new ArRect();
@@ -35,8 +36,6 @@ define(['logManager',
 
         this.calculateSelfPoints();
     };
-
-
 
     AutoRouterPort.prototype.calculateSelfPoints = function (){
         this.selfPoints = [];
@@ -61,7 +60,8 @@ define(['logManager',
     };
 
     AutoRouterPort.prototype.setRect = function (r){
-        assert( r.getWidth() >= 3 && r.getHeight() >= 3, "ARPort.setRect: r.getWidth() >= 3 && r.getHeight() >= 3 FAILED!");
+        assert(r.getWidth() >= 3 && r.getHeight() >= 3, 
+               'ARPort.setRect: r.getWidth() >= 3 && r.getHeight() >= 3 FAILED!');
 
         this.rect.assign(r);
         this.calculateSelfPoints();

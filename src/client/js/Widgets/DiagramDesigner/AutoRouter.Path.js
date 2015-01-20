@@ -15,6 +15,7 @@ define( ['logManager',
 
     // AutoRouterPath
     var AutoRouterPath = function (){
+        this.id = 'None';
         this.owner = null;
         this.startpoint = null;
         this.endpoint = null;
@@ -279,6 +280,8 @@ define( ['logManager',
     AutoRouterPath.prototype.deleteAll = function(){
         this.points = new ArPointListPath();
         this.state = CONSTANTS.ARPATHST_Default;
+        this.startport = null;
+        this.endport = null;
     };
 
     AutoRouterPath.prototype.hasNoPoint = function(){
@@ -290,13 +293,13 @@ define( ['logManager',
     };
 
     AutoRouterPath.prototype.getStartBox = function(){
-        var startbox = this.startport.owner;
-        return startbox.rect;
+        var port = this.startport || this.startports[0];
+        return port.owner.getRootBox();
     };
 
     AutoRouterPath.prototype.getEndBox = function(){
-        var endbox = this.endport.owner;
-        return endbox.rect;
+        var port = this.endport || this.endports[0];
+        return port.owner.getRootBox();
     };
 
     AutoRouterPath.prototype.getOutOfBoxStartPoint = function(hintDir){
@@ -748,7 +751,7 @@ define( ['logManager',
     };
 
     AutoRouterPath.prototype.destroy = function(){
-        if( this.isConnected() ){
+        if(this.isConnected()){
             this.startport.removePoint(this.startpoint);
             this.endport.removePoint(this.endpoint);
         }

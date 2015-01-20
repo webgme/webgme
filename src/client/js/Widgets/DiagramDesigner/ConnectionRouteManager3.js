@@ -290,12 +290,12 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
             "y2": bBox.y2,
 
             //PORTS
-            "ConnectionInfo": []
+            "ports": []
         };
 
         while (j < areas.length) {
-            //Building up the ConnectionInfo object
-            boxdefinition.ConnectionInfo.push({ 'id': areas[j].id, 'area': [ [ areas[j].x1, areas[j].y1 ], [ areas[j].x2, areas[j].y2 ] ], 
+            //Building up the ports object
+            boxdefinition.ports.push({ 'id': areas[j].id, 'area': [ [ areas[j].x1, areas[j].y1 ], [ areas[j].x2, areas[j].y2 ] ], 
                     'angles': [ areas[j].angle1, areas[j].angle2 ] });
             j++;
         }
@@ -338,7 +338,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
                        'x2': newCoord.x2, 
                        'y1': newCoord.y, 
                        'y2': newCoord.y2,
-          'ConnectionInfo': [] },
+          'ports': [] },
             connAreas = designerItem.getConnectionAreas(objId, isEnd, connectionMetaInfo),
             i;
 
@@ -346,7 +346,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         i = connAreas.length;
         while (i--) {
             //Building up the ConnectionAreas obiect
-            newBox.ConnectionInfo.push({ 'id': connAreas[i].id, 'area': [ [ connAreas[i].x1, connAreas[i].y1 ], [ connAreas[i].x2, connAreas[i].y2 ] ],
+            newBox.ports.push({ 'id': connAreas[i].id, 'area': [ [ connAreas[i].x1, connAreas[i].y1 ], [ connAreas[i].x2, connAreas[i].y2 ] ],
                     'angles': [ connAreas[i].angle1, connAreas[i].angle2 ] });
         }
 
@@ -377,11 +377,11 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
                 j = areas.length;
 
             while (j--) {
-                //Building up the ConnectionInfo object
+                //Building up the ports object
                 connInfo.push({ 'id': areas[j].id, 'area': [ [ areas[j].x1, areas[j].y1 ], [ areas[j].x2, areas[j].y2 ] ],
                     'angles': [ areas[j].angle1, areas[j].angle2 ] });
             }
-            this._autorouterBoxes[objId] = this.autorouter.setConnectionInfo(this._autorouterBoxes[objId], connInfo);
+            this._autorouterBoxes[objId] = this.autorouter.setports(this._autorouterBoxes[objId], connInfo);
         }
      };
 
@@ -418,7 +418,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
                 'x2': null, 
                 'y1': null, 
                 'y2': null,
-                'ConnectionInfo': [] };
+                'ports': [] };
 
         while (j--) {
             var angles = [ areas[j].angle1, areas[j].angle2 ],
@@ -427,7 +427,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
                 y1 = Math.min(areas[j].y1, areas[j].y2),
                 y2 = Math.max(areas[j].y1, areas[j].y2);
 
-            newBox.ConnectionInfo.push({ 'id': areas[j].id, 'area': [ [ x1, y1 ], [ x2, y2 ] ],
+            newBox.ports.push({ 'id': areas[j].id, 'area': [ [ x1, y1 ], [ x2, y2 ] ],
                     'angles': angles });
 
             if(angles){

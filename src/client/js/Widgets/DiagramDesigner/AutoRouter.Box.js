@@ -40,7 +40,6 @@ define(['logManager',
     AutoRouterBox.prototype.deleteAllPorts = function (){
         for(var i = 0; i < this.ports.length; i++){
             this.ports[i].owner = null;
-            this.ports[i] = null;
         }
 
         this.ports = [];
@@ -68,16 +67,12 @@ define(['logManager',
     };
 
     AutoRouterBox.prototype.addPort = function (port){
-        assert(port !== null, "ARBox.addPort: port !== null FAILED");
-
-        if(port === null){
-            return;
-        }
+        assert(port !== null, 'ARBox.addPort: port !== null FAILED');
 
         port.owner = this;
         this.ports.push(port);
 
-        if(this.owner){//Not pointing to the ARGraph
+        if(this.owner) {  // Not pointing to the ARGraph
             this.owner._addEdges(port);
         }
     };
@@ -156,6 +151,8 @@ define(['logManager',
     AutoRouterBox.prototype.addChild = function (box){
         assert(this.childBoxes.indexOf(box) === -1, 
                "ARBox.addChild: box already is child of " + this.id);
+        assert(box instanceof AutoRouterBox, 
+              'Child box must be of type AutoRouterBox');
         this.childBoxes.push(box);
         box.parent = this;
     };
@@ -164,6 +161,15 @@ define(['logManager',
         var i = this.childBoxes.indexOf(box);
         assert(i !== -1, "ARBox.removeChild: box isn't child of " + this.id);
         this.childBoxes.splice(i,1);
+        box.parent = null;
+    };
+
+    AutoRouterBox.prototype.getRootBox = function (){
+        var box = this;
+        while (box.parent) {
+            box = box.parent;
+        }
+        return box;
     };
 
     AutoRouterBox.prototype.isBoxAt = function (point, nearness){
@@ -184,6 +190,7 @@ define(['logManager',
         //notify this.parent of destruction
         //if there is a this.parent, of course
         if(this.parent){
+            console.log('parent of '+this.id+' is '+this.parent.id);
             this.parent.removeChild(this);
         }
 
