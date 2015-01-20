@@ -1995,10 +1995,6 @@ define(['logManager',
 
         this._connectAllDisconnectedPaths();
 
-        var path = this.paths[1],
-            startpoint = path.startpoint,
-            startport = path.getStartPort();
-
         while (!state.finished) {
             state = this._optimize(state);
         }
