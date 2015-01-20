@@ -229,8 +229,7 @@ define(['logManager',
     };
 
     AutoRouterPort.prototype.roundToHalfGrid = function (left, right) {
-        // I added a checking condition to make sure that the rounding will not yield a value outside of the left, right values
-        var btwn = (left + right)/2;//btwn < Math.max(left, right) && btwn > Math.min(left, right) ? btwn : (left + right)/2;
+        var btwn = (left + right)/2;
         assert(btwn < Math.max(left, right) && btwn > Math.min(left, right), 
                "roundToHalfGrid: btwn variable not between left, right values. Perhaps box/connectionArea is too small?");
         return btwn;
@@ -408,7 +407,7 @@ end;
         var i = 0,
             count = 0;
 
-        while( i < 4 ) { //Check all sides for the point
+        while( i < 4 ) { // Check all sides for the point
             count += this.points[i++].length;
         }
 

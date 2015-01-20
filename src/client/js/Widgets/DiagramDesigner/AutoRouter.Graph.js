@@ -526,7 +526,7 @@ define(['logManager',
         assert(endport.hasPoint(endpoint), "ARGraph.connect: endport.hasPoint(endpoint) FAILED");
 
         if(startpoint.equals(endpoint)) {
-            UTILS.stepOneInDir (startpoint, UTILS.nextClockwiseDir (startdir));
+            UTILS.stepOneInDir(startpoint, UTILS.nextClockwiseDir(startdir));
         }
 
         var startRoot = startport.owner.getRootBox(),
@@ -539,11 +539,9 @@ define(['logManager',
         if(path.isAutoRouted() && this.box2bufferBox[startId] === this.box2bufferBox[endId] && 
             startdir === UTILS.reverseDir(enddir) && startRoot !== endRoot) {
 
-            console.log('sharing parent box:',this.box2bufferBox[startId]);
             return this._connectPointsSharingParentBox(path, startpoint, endpoint, startdir);
         }else{
 
-            console.log('NOT sharing parent box');
             return this._connectPathWithPoints(path, startpoint, endpoint);
         }
 
@@ -582,7 +580,6 @@ define(['logManager',
                             "end": start, 
                             "box": endPort.owner } ) ;
         assert(!end.equals(endpoint), "ARGraph.connect: !end.equals(endpoint) FAILED");
-
         assert(path.isEmpty(),  "ARGraph.connect: path.isEmpty() FAILED");
 
         var ret = new ArPointListPath(),
@@ -605,7 +602,6 @@ define(['logManager',
             }
         }
 
-        path.deleteAll();
         path.addTail(startpoint);
         pos = -1;
         while(++pos < ret.getLength())
@@ -1048,8 +1044,6 @@ define(['logManager',
 
         this._addEdges(box);
 
-        console.log('adding to bufferboxes', box.rect);
-        console.log('has', box.ports.length, 'ports');
         for (var i = box.ports.length; i--;) {
             this._addEdges(box.ports[i]);
         }
@@ -1456,32 +1450,36 @@ define(['logManager',
         }
     };
 
+    /**
+     * Make sure if a straight line is possible, create a 
+     * straight line for the path.
+     *
+     * @param {AutoRouterPath} path
+     */
     AutoRouterGraph.prototype._fixShortPaths = function (path) {
-        //Make sure if a straight line is possible, the path is a straight line
-        //Note, this may make it so the stems are no longer centered in the port.
 
-        var startPort = path.getStartPort(),
-            endPort = path.getEndPort(),
+        var startport = path.getStartPort(),
+            endport = path.getEndPort(),
             len = path.getPointList().getLength();
 
-        if(len === 4) {
+        if (len === 4) {
             var points = path.getPointList(),
                 startpoint = points.get(0)[0],
                 endpoint = points.get(len - 1)[0],
-                startDir = startPort.port_OnWhichEdge(startpoint),
-                endDir = endPort.port_OnWhichEdge(endpoint),
+                startDir = startport.port_OnWhichEdge(startpoint),
+                endDir = endport.port_OnWhichEdge(endpoint),
                 tstStart,
                 tstEnd;
 
-            if(startDir === UTILS.reverseDir (endDir)) {
+            if (startDir === UTILS.reverseDir(endDir)) {
                 var newStart = new ArPoint(startpoint),
                     newEnd = new ArPoint(endpoint),
-                    startRect = startPort.rect,
-                    endRect = endPort.rect,
+                    startRect = startport.rect,
+                    endRect = endport.rect,
                     minOverlap,
                     maxOverlap;
 
-                if(UTILS.isHorizontal (startDir)) {
+                if(UTILS.isHorizontal(startDir)) {
                     minOverlap = Math.min(startRect.floor, endRect.floor);
                     maxOverlap = Math.max(startRect.ceil, endRect.ceil);
 
@@ -1489,10 +1487,10 @@ define(['logManager',
                     newStart.y = newY;
                     newEnd.y = newY;
 
-                    tstStart = new ArPoint(UTILS.getRectOuterCoord (startPort.owner.rect, startDir), newStart.y);
-                    tstEnd = new ArPoint(UTILS.getRectOuterCoord (endPort.owner.rect, endDir), newEnd.y);
+                    tstStart = new ArPoint(UTILS.getRectOuterCoord (startport.owner.rect, startDir), newStart.y);
+                    tstEnd = new ArPoint(UTILS.getRectOuterCoord (endport.owner.rect, endDir), newEnd.y);
 
-                }else{
+                } else {
                     minOverlap = Math.min(startRect.right, endRect.right);
                     maxOverlap = Math.max(startRect.left, endRect.left);
 
@@ -1500,8 +1498,8 @@ define(['logManager',
                     newStart.x = newX;
                     newEnd.x = newX;
 
-                    tstStart = new ArPoint(newStart.x, UTILS.getRectOuterCoord (startPort.owner.rect, startDir));
-                    tstEnd = new ArPoint(newEnd.x, UTILS.getRectOuterCoord (endPort.owner.rect, endDir));
+                    tstStart = new ArPoint(newStart.x, UTILS.getRectOuterCoord(startport.owner.rect, startDir));
+                    tstEnd = new ArPoint(newEnd.x, UTILS.getRectOuterCoord(endport.owner.rect, endDir));
                 }
 
                 if(startRect.ptInRect(newStart) && endRect.ptInRect(newEnd) && !this._isLineClipBoxes(tstStart, tstEnd)) {
@@ -1900,7 +1898,6 @@ define(['logManager',
     };
 
     AutoRouterGraph.prototype.addBox = function(box) {
-        console.log('adding box to graph');
         assert(box !== null, 
                'ARGraph.addBox: box !== null FAILED');
         assert(box instanceof AutoRouterBox, 
@@ -1933,7 +1930,6 @@ define(['logManager',
     AutoRouterGraph.prototype.deleteBox = function(box) {
         assert(box !== null, "ARGraph.deleteBox: box !== null FAILED");
 
-        console.log('box '+box.id+' has ' + box.childBoxes.length + ' children:');
 
         if (box.hasOwner()) {
             var parent = box.parent,
@@ -1995,10 +1991,13 @@ define(['logManager',
     };
 
     AutoRouterGraph.prototype.routeSync = function() {
-        console.log('about to autoroute');
         var state = {finished: false};
 
         this._connectAllDisconnectedPaths();
+
+        var path = this.paths[1],
+            startpoint = path.startpoint,
+            startport = path.getStartPort();
 
         while (!state.finished) {
             state = this._optimize(state);
@@ -2056,8 +2055,7 @@ define(['logManager',
 
             maxOperations--;
             console.log('about to simplify paths');
-            if (this._simplifyPaths())
-            {
+            if (this._simplifyPaths()) {
                 last = 1;
             }
             console.log('done simplify paths');

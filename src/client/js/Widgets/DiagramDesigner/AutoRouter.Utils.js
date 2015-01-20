@@ -360,7 +360,7 @@ define(['./AutoRouter.Constants',
     };
 
     var _reverseDir = function (dir) {
-        if( _isRightAngle(dir) ) {
+        if(_isRightAngle(dir)) {
             return ((dir+2) % 4);
         }
 
@@ -435,7 +435,7 @@ define(['./AutoRouter.Constants',
     };
 
     var _getRectOuterCoord = function (rect, dir) {
-        assert( _isRightAngle(dir), "ArHelper.getRectOuterCoord: _isRightAngle(dir) FAILED" );
+        assert(_isRightAngle(dir), "Utils.getRectOuterCoord: isRightAngle(dir) FAILED" );
         var t = rect.ceil - 1,
             r = rect.right + 1,
             b = rect.floor + 1,
@@ -800,23 +800,23 @@ define(['./AutoRouter.Constants',
         return coord >= from;
     };
 
-    // This next method only supports deterministic (unambiguous) orientations. That is, the point
+    // This next method only supports unambiguous orientations. That is, the point
     // cannot be in a corner of the rectangle.
     // NOTE: the right and floor used to be - 1. 
     var _onWhichEdge = function (rect, point) {
-        if( point.y === rect.ceil && rect.left < point.x && point.x < rect.right ) {
+        if(point.y === rect.ceil && rect.left < point.x && point.x < rect.right) {
             return CONSTANTS.Dir_Top;
         }
 
-        if( point.y === rect.floor && rect.left < point.x && point.x < rect.right ) {
+        if(point.y === rect.floor && rect.left < point.x && point.x < rect.right) {
             return CONSTANTS.Dir_Bottom;
         }
 
-        if( point.x === rect.left && rect.ceil < point.y && point.y < rect.floor ) {
+        if(point.x === rect.left && rect.ceil < point.y && point.y < rect.floor) {
             return CONSTANTS.Dir_Left;
         }
 
-        if( point.x === rect.right && rect.ceil < point.y && point.y < rect.floor ) {
+        if(point.x === rect.right && rect.ceil < point.y && point.y < rect.floor) {
             return CONSTANTS.Dir_Right;
         }
 
