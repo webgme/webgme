@@ -430,8 +430,8 @@ define(['logManager',
         this.graph.routeSync();
     };
 
-    AutoRouter.prototype.routeAsync = function() { 
-        this.graph.routeAsync();
+    AutoRouter.prototype.routeAsync = function(options) { 
+        this.graph.routeAsync(options);
     };
 
     AutoRouter.prototype.getPathPoints = function(pathId) {

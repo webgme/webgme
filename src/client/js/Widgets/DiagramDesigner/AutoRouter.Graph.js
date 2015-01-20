@@ -529,16 +529,21 @@ define(['logManager',
             UTILS.stepOneInDir (startpoint, UTILS.nextClockwiseDir (startdir));
         }
 
-        var startId = startport.owner.id,
-            endId = endport.owner.id,
+        var startRoot = startport.owner.getRootBox(),
+            endRoot = endport.owner.getRootBox(),
+            startId = startRoot.id,
+            endId = endRoot.id,
             startdir = startport.port_OnWhichEdge(startpoint),
             enddir = endport.port_OnWhichEdge(endpoint);
 
-        if(path.isAutoRouted() && this.box2bufferBox[startId] === this.box2bufferBox[endId] && startdir === UTILS.reverseDir (enddir) && startport.owner !== endport.owner) {
+        if(path.isAutoRouted() && this.box2bufferBox[startId] === this.box2bufferBox[endId] && 
+            startdir === UTILS.reverseDir(enddir) && startRoot !== endRoot) {
 
+            console.log('sharing parent box:',this.box2bufferBox[startId]);
             return this._connectPointsSharingParentBox(path, startpoint, endpoint, startdir);
         }else{
 
+            console.log('NOT sharing parent box');
             return this._connectPathWithPoints(path, startpoint, endpoint);
         }
 
@@ -1002,6 +1007,7 @@ define(['logManager',
     AutoRouterGraph.prototype._addEdges = function (obj) {
         assert(!(obj instanceof AutoRouterPath), 'No Paths should be here!');
         if (obj instanceof AutoRouterPort) {
+            this._updateBoxPortAvailability(obj.owner);
             this.horizontal.addPortEdges(obj);
             this.vertical.addPortEdges(obj);
         } else {
@@ -1017,7 +1023,7 @@ define(['logManager',
 
     AutoRouterGraph.prototype._addAllEdges = function () {
         assert(this.horizontal.isEmpty() && this.vertical.isEmpty(), 
-               "ARGraph.addAllEdges: horizontal.isEmpty() && vertical.isEmpty() FAILED");
+               'ARGraph.addAllEdges: horizontal.isEmpty() && vertical.isEmpty() FAILED');
 
         var ids = Object.keys(this.boxes),
             i;
@@ -1038,20 +1044,23 @@ define(['logManager',
     };
 
     AutoRouterGraph.prototype._addBoxAndPortEdges = function (box) {
-        assert(box !== null, "ARGraph.addBoxAndPortEdges: box !== null FAILED" );
+        assert(box !== null, 'ARGraph.addBoxAndPortEdges: box !== null FAILED' );
 
         this._addEdges(box);
 
+        console.log('adding to bufferboxes', box.rect);
+        console.log('has', box.ports.length, 'ports');
         for (var i = box.ports.length; i--;) {
             this._addEdges(box.ports[i]);
         }
 
-        //Add to bufferboxes
+        // Add to bufferboxes
         this._addToBufferBoxes(box);
+        this._updateBoxPortAvailability(box);
     };
 
     AutoRouterGraph.prototype._deleteBoxAndPortEdges = function (box) {
-        assert(box !== null, "ARGraph.deleteBoxAndPortEdges: box !== null FAILED");
+        assert(box !== null, 'ARGraph.deleteBoxAndPortEdges: box !== null FAILED');
 
         this.deleteEdges(box);
 
@@ -1704,20 +1713,47 @@ define(['logManager',
         }
     };
 
+    AutoRouterGraph.prototype._updateBoxPortAvailability = function (inputBox) {
+        var bufferbox = this.box2bufferBox[inputBox.id],
+            siblings = bufferbox.children,
+            skipBoxes = {},
+            box,
+            id;
+
+        // Ignore overlap from ancestor boxes in the box trees
+        box = inputBox;
+        do {
+            skipBoxes[box.id] = true;
+            box = box.parent;
+        } while (box);
+
+        for (var i = siblings.length; i--;) {
+            id = siblings[i].id;
+            if (skipBoxes[id]) {  // Skip boxes on the box tree
+                continue;
+            }
+
+            if (inputBox.rect.touching(siblings[i])) {
+                inputBox.adjustPortAvailability(siblings[i]);
+                this.boxes[siblings[i].id].adjustPortAvailability(inputBox.rect);
+            }
+        }
+    };
+
     AutoRouterGraph.prototype._addToBufferBoxes = function (inputBox) {
-        var i = this.bufferBoxes.length,
-            box = { 'rect': new ArRect(inputBox.rect), 'id': inputBox.id },
+        var box = {rect: new ArRect(inputBox.rect), id: inputBox.id},
             overlapBoxesIndices = [],
             bufferBox,
             children = [],
             parentBox,
             ids = [inputBox.id],
             child,
+            i,
             j;
 
         box.rect.inflateRect(CONSTANTS.BUFFER);
 
-        while(i--) {
+        for (i = this.bufferBoxes.length; i--;) {
             if(!box.rect.touching(this.bufferBoxes[i].box)) {
                 continue;
             }
@@ -1979,11 +2015,11 @@ define(['logManager',
             time = options.time || 5,
             state = {finished: false},
             optimizeFn = function(state) {
+                updateFn(self.paths);
                 if (state.finished) {
                     return callbackFn(self.paths);
                 } else {
                     state = self._optimize(state);
-                    updateFn(self.paths);
                     return optimizeFn(state);
                 }
             };

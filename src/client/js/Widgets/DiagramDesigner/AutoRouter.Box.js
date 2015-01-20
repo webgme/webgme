@@ -153,6 +153,7 @@ define(['logManager',
                "ARBox.addChild: box already is child of " + this.id);
         assert(box instanceof AutoRouterBox, 
               'Child box must be of type AutoRouterBox');
+
         this.childBoxes.push(box);
         box.parent = this;
     };
