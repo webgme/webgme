@@ -9,7 +9,7 @@ var utils = require('./autorouter.common.js'),
     router;
 
 // Tests
-describe('AutoRouter Tests',function(){
+describe('AutoRouter Tests', function(){
 
   it('should create boxes placed on graph',function(){
       router = utils.getNewGraph();
@@ -49,7 +49,7 @@ describe('AutoRouter Tests',function(){
       path = router.graph.paths[0];
 
       router.routeSync();
-      assert(path.points.ArPointList.length > 2, 
+      assert(path.points.length > 2, 
             'Path does not contain enough points to have been routed');
 
   });
@@ -133,7 +133,7 @@ describe('AutoRouter Tests',function(){
 
   });
 
-  it('should connect contained boxes',function(){
+  it.only('should connect contained boxes',function(){
       router = utils.getNewGraph();
       var width = 900,
           height = 900,

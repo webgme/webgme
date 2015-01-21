@@ -604,9 +604,9 @@ define(['logManager',
 
         path.addTail(startpoint);
         pos = -1;
-        while(++pos < ret.getLength())
+        while(++pos < ret.length)
         {
-            path.addTail(ret.get(pos)[0]);
+            path.addTail(ret[pos][0]);
         }
         path.addTail(endpoint);
 
@@ -664,10 +664,10 @@ define(['logManager',
     };
 
     AutoRouterGraph.prototype._connectPoints = function (ret, start, end, hintstartdir, hintenddir, flipped) {
-        assert(ret.getLength() === 0, "ArGraph.connectPoints: ret.getLength() === 0 FAILED");
+        assert(ret.length === 0, "ArGraph.connectPoints: ret.length === 0 FAILED");
 
         var thestart = new ArPoint(start), 
-            retend = ret.getLength(),
+            retend = ret.length,
             bufferObject,
             self = this,
             box,
@@ -698,19 +698,19 @@ define(['logManager',
             assert(dir1 === UTILS.getMajorDir(end.minus(start)), "ARGraph.connectPoints: dir1 === UTILS.getMajorDir(end.minus(start)) FAILED");
             assert(dir2 === CONSTANTS.Dir_None || dir2 === UTILS.getMinorDir(end.minus(start)), "ARGraph.connectPoints: dir2 === CONSTANTS.Dir_None || dir2 === UTILS.getMinorDir(end.minus(start)) FAILED");
 
-            if(retend === ret.getLength() && dir2 === hintstartdir && dir2 !== CONSTANTS.Dir_None)
+            if(retend === ret.length && dir2 === hintstartdir && dir2 !== CONSTANTS.Dir_None)
             {
                 // i.e. std::swap(dir1, dir2);
                 dir2 = dir1;
                 dir1 = hintstartdir;
             }
 
-            if (retend === ret.getLength() ) {
+            if (retend === ret.length ) {
                 ret.push([new ArPoint(start)]);
-                retend = ret.getLength() - 1; //This should give the index of the newly inserted value
+                retend = ret.length - 1; //This should give the index of the newly inserted value
             }else{
                 retend++;
-                if(retend === ret.getLength()) {
+                if(retend === ret.length) {
                     ret.push([new ArPoint(start)]);
                     retend--;
                 }else{
@@ -747,10 +747,10 @@ define(['logManager',
                         ret2 = new ArPointListPath();
 
                         this._connectPoints(ret2, end, start, hintenddir, dir1, true);
-                        i = ret2.getLength() - 1;
+                        i = ret2.length - 1;
 
                         while(i-- > 1) {
-                            ret.push(ret2.get(i));
+                            ret.push(ret2[i]);
                         }
 
                         assert(start.equals(end), "ArGraph.connectPoints: start.equals(end) FAILED");
@@ -762,7 +762,7 @@ define(['logManager',
                         pts = this._hugChildren(bufferObject, start, dir1, dir2, findExitToEndpoint);
                         if(pts !== null) {//There is a path from start -> end
                             if(pts.length) {//Add new points to the current list 
-                                ret.setArPointList(ret.concat(pts));
+                                ret = ret.concat(pts);
                                 retend += pts.length;
                                 ret.push([new ArPoint(start)]);
                             }
@@ -808,7 +808,7 @@ define(['logManager',
                         if(pts !== null) {
 
                             //Add new points to the current list 
-                            ret.setArPointList(ret.concat(pts));
+                            ret = ret.concat(pts);
                             retend += pts.length;
 
                         }else{ //Go through the blocking box
@@ -862,9 +862,9 @@ define(['logManager',
                         }
 
                         assert(!start.equals(old), "ARGraph.connectPoints: !start.equals(old) FAILED");
-                        assert(retend !== ret.getLength(), "ARGraph.connectPoints: retend !== ret.getLength() FAILED");
+                        assert(retend !== ret.length, "ARGraph.connectPoints: retend !== ret.length FAILED");
                         retend++;
-                        if(retend === ret.getLength()) {
+                        if(retend === ret.length) {
                             ret.push([new ArPoint(start)]);
                             retend--;
                         }else{
@@ -892,7 +892,8 @@ define(['logManager',
                         if(pts !== null) {
 
                             //Add new points to the current list 
-                            ret.setArPointList(ret.concat(pts));
+                            console.log('pts', pts);
+                            ret = ret.concat(pts);
                             retend += pts.length;
 
                         }else{ //Go through the blocking box
@@ -1078,33 +1079,34 @@ define(['logManager',
             points.AssertValidPos(pos);
         }
 
-        if(pos + 2 >= points.getLength() || pos < 1) {
+        if(pos + 2 >= points.length || pos < 1) {
             return false;
         }
 
+        console.log('can delete 2 edges?', points);
         var pointpos = pos,
-            point = points.get(pos++)[0], 
+            point = points[pos++][0], 
             npointpos = pos,
-            npoint = points.get(pos++)[0],
+            npoint = points[pos++][0],
             nnpointpos = pos;
 
         pos = pointpos;
         pos--;
         var ppointpos = pos; 
 
-        var ppoint = points.get(pos--)[0],
+        var ppoint = points[pos--][0],
             pppointpos = pos; 
 
         if (npoint.equals(point)) {
             return false; // direction of zero-length edges can't be determined, so don't delete them
         }
 
-        assert(pppointpos < points.getLength() && ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength(), 
-                "ARGraph.candeleteTwoEdgesAt: pppointpos < points.getLength() && ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength() FAILED");
+        assert(pppointpos < points.length && ppointpos < points.length && pointpos < points.length && npointpos < points.length && nnpointpos < points.length, 
+                "ARGraph.candeleteTwoEdgesAt: pppointpos < points.length && ppointpos < points.length && pointpos < points.length && npointpos < points.length && nnpointpos < points.length FAILED");
 
-        var dir = UTILS.getDir (npoint.minus(point));
+        var dir = UTILS.getDir(npoint.minus(point));
 
-        assert(UTILS.isRightAngle (dir), "ARGraph.candeleteTwoEdgesAt: UTILS.isRightAngle (dir) FAILED");
+        assert(UTILS.isRightAngle(dir), "ARGraph.candeleteTwoEdgesAt: UTILS.isRightAngle (dir) FAILED");
         var ishorizontal = UTILS.isHorizontal (dir);
 
         var newpoint = new ArPoint();
@@ -1138,22 +1140,22 @@ define(['logManager',
         }
 
         var pointpos = pos, //Getting the next, and next-next, points
-            point = points.get(pos++)[0],
+            point = points[pos++][0],
             npointpos = pos,
-            npoint = points.get(pos++),
+            npoint = points[pos++],
             nnpointpos = pos,
-            nnpoint = points.get(pos++)[0],
+            nnpoint = points[pos++][0],
             nnnpointpos = pos;
 
         pos = pointpos;
         pos--;
 
         var ppointpos = pos, //Getting the prev, prev-prev points
-            ppoint = points.get(pos--)[0],
+            ppoint = points[pos--][0],
             pppointpos = pos,
-            pppoint = points.get(pos--)[0];
+            pppoint = points[pos--][0];
 
-        assert(pppointpos < points.getLength() && ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength(), "ARGraph.deleteTwoEdgesAt: pppointpos < points.getLength() && ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength() FAILED");
+        assert(pppointpos < points.length && ppointpos < points.length && pointpos < points.length && npointpos < points.length && nnpointpos < points.length, "ARGraph.deleteTwoEdgesAt: pppointpos < points.length && ppointpos < points.length && pointpos < points.length && npointpos < points.length && nnpointpos < points.length FAILED");
         assert(pppoint !== null && ppoint !== null && point !== null && npoint !== null && nnpoint !== null, "ARGraph.deleteTwoEdgesAt: pppoint !== null && ppoint !== null && point !== null && npoint !== null && nnpoint !== null FAILED");
 
         var dir = UTILS.getDir (npoint[0].minus(point));
@@ -1196,7 +1198,7 @@ define(['logManager',
         nnedge.startpoint = newpoint;
         nnedge.startpointPrev = pppoint;
 
-        if(nnnpointpos < points.getLength())
+        if(nnnpointpos < points.length)
         {
             var nnnedge = hlist.getEdgeByPointer(nnpoint, (nnnpointpos)); 
             assert( nnnedge !== null, 
@@ -1221,22 +1223,22 @@ define(['logManager',
         }
 
         var pointpos = pos,
-            point = points.get(pos++), 
+            point = points[pos++], 
             npointpos = pos,
-            npoint = points.get(pos++),
+            npoint = points[pos++],
             nnpointpos = pos,
-            nnpoint = points.get(pos++),
+            nnpoint = points[pos++],
             nnnpointpos = pos;
 
         pos = pointpos;
         pos--;
 
         var ppointpos = pos,
-            ppoint = points.get(pos--),
+            ppoint = points[pos--],
             pppointpos = pos,
-            pppoint = pos === points.getLength() ? null : points.get(pos--);
+            pppoint = pos === points.length ? null : points[pos--];
 
-        assert(ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength());
+        assert(ppointpos < points.length && pointpos < points.length && npointpos < points.length && nnpointpos < points.length);
         assert(ppoint !== null && point !== null && npoint !== null && nnpoint !== null, 
                "ARGraph.deleteSamePointsAt: ppoint !== null && point !== null && npoint !== null && nnpoint !== null FAILED");
         assert(point.equals(npoint) && !point.equals(ppoint), 
@@ -1260,7 +1262,7 @@ define(['logManager',
 
         points.splice(pointpos, 2);
 
-        if(pppointpos < points.getLength())
+        if(pppointpos < points.length)
         {
             var ppedge = vlist.getEdgeByPointer(pppoint, ppoint);
             assert(ppedge !== null && ppedge.endpoint.equals(ppoint) && ppedge.endpointNext[0].equals(point), "ARGraph.deleteSamePointsAt: ppedge !== null && ppedge.endpoint.equals(ppoint) && ppedge.endpointNext[0].equals(point) FAILED");
@@ -1271,7 +1273,7 @@ define(['logManager',
         nnedge.setStartPoint(ppoint);
         nnedge.setStartPointPrev(pppoint);
 
-        if(nnnpointpos < points.getLength())
+        if(nnnpointpos < points.length)
         {
             var nnnedge = vlist.getEdgeByPointer(nnpoint, (nnnpointpos)); //&*
             assert(nnnedge !== null && nnnedge.startpointPrev[0].equals(npoint) && nnnedge.startpoint.equals(nnpoint), "ARGraph.deleteSamePointsAt: nnnedge !== null && nnnedge.startpointPrev[0].equals(npoint) && nnnedge.startpoint.equals(nnpoint) FAILED");
@@ -1300,8 +1302,9 @@ define(['logManager',
 
                 this._fixShortPaths(path);
 
-                while(pointpos < pointList.getLength())
+                while(pointpos < pointList.length)
                 {
+                    console.log('can delete 2 edges? (',pointpos, '):\n',  pointList);
                     if(this._candeleteTwoEdgesAt(path, pointList, pointpos))
                     {
                         this._deleteTwoEdgesAt(path, pointList, pointpos);
@@ -1321,7 +1324,7 @@ define(['logManager',
         assert(!path.isConnected(), "ARGraph.centerStairsInPathPoints: !path.isConnected() FAILED");
 
         var pointList = path.getPointList();
-        assert(pointList.getLength() >= 2, "ARGraph.centerStairsInPathPoints: pointList.getLength() >= 2 FAILED");
+        assert(pointList.length >= 2, "ARGraph.centerStairsInPathPoints: pointList.length >= 2 FAILED");
 
         if(CONSTANTS.DEBUG) {
             path.assertValidPoints();
@@ -1332,10 +1335,10 @@ define(['logManager',
             p3,
             p4,
 
-            p1p = pointList.getLength(),
-            p2p = pointList.getLength(),
-            p3p = pointList.getLength(),
-            p4p = pointList.getLength(),
+            p1p = pointList.length,
+            p2p = pointList.length,
+            p3p = pointList.length,
+            p4p = pointList.length,
 
             d12 = CONSTANTS.Dir_None,
             d23 = CONSTANTS.Dir_None,
@@ -1345,10 +1348,10 @@ define(['logManager',
             outOfBoxEndPoint = path.getOutOfBoxEndPoint(hintenddir),
 
             pos = 0;
-        assert(pos < pointList.getLength(), "ARGraph.centerStairsInPathPoints pos < pointList.getLength() FAILED");
+        assert(pos < pointList.length, "ARGraph.centerStairsInPathPoints pos < pointList.length FAILED");
 
         p1p = pos;
-        p1 = (pointList.get(pos++)[0]);
+        p1 = (pointList[pos++][0]);
 
 		var np2,
 			np3,
@@ -1361,7 +1364,7 @@ define(['logManager',
 			m;
 
 
-        while(pos < pointList.getLength())
+        while(pos < pointList.length)
         {
             p4p = p3p;
             p3p = p2p;
@@ -1371,12 +1374,12 @@ define(['logManager',
             p4 = p3;
             p3 = p2;
             p2 = p1;
-            p1 = (pointList.get(pos++)[0]);
+            p1 = (pointList[pos++][0]);
 
             d34 = d23;
             d23 = d12;
 
-            if(p2p < pointList.getLength())
+            if(p2p < pointList.length)
             {
                 d12 = UTILS.getDir (p2.minus(p1));
                 if(CONSTANTS.DEBUG) {
@@ -1387,9 +1390,9 @@ define(['logManager',
                 }
             }
 
-            if(p4p < pointList.getLength() && d12 === d34)
+            if(p4p < pointList.length && d12 === d34)
             {
-                assert(p1p < pointList.getLength() && p2p < pointList.getLength() && p3p < pointList.getLength() && p4p < pointList.getLength(), "ARGraph.centerStairsInPathPoints: p1p < pointList.getLength() && p2p < pointList.getLength() && p3p < pointList.getLength() && p4p < pointList.getLength() FAILED");
+                assert(p1p < pointList.length && p2p < pointList.length && p3p < pointList.length && p4p < pointList.length, "ARGraph.centerStairsInPathPoints: p1p < pointList.length && p2p < pointList.length && p3p < pointList.length && p4p < pointList.length FAILED");
 
                 np2 = new ArPoint(p2);
                 np3 = new ArPoint(p3);
@@ -1433,7 +1436,7 @@ define(['logManager',
                     }
 
                     if(!this._isLineClipBoxes(np2, np3) &&
-                            !this._isLineClipBoxes(p1p === pointList.getLength() ? outOfBoxEndPoint : p1, np2) &&
+                            !this._isLineClipBoxes(p1p === pointList.length ? outOfBoxEndPoint : p1, np2) &&
                             !this._isLineClipBoxes(p4p === 0 ? outOfBoxStartPoint : p4, np3) )
                     {
                         p2 = np2;
@@ -1460,12 +1463,12 @@ define(['logManager',
 
         var startport = path.getStartPort(),
             endport = path.getEndPort(),
-            len = path.getPointList().getLength();
+            len = path.getPointList().length;
 
         if (len === 4) {
             var points = path.getPointList(),
-                startpoint = points.get(0)[0],
-                endpoint = points.get(len - 1)[0],
+                startpoint = points[0][0],
+                endpoint = points[len - 1][0],
                 startDir = startport.port_OnWhichEdge(startpoint),
                 endDir = endport.port_OnWhichEdge(endpoint),
                 tstStart,
@@ -1509,8 +1512,8 @@ define(['logManager',
                         hlist = this._getEdgeList(ishorizontal),
                         vlist = this._getEdgeList(!ishorizontal),
                         edge = hlist.getEdgeByPointer(startpoint),
-                        edge2 = vlist.getEdgeByPointer(points.get(1)[0]),
-                        edge3 = hlist.getEdgeByPointer(points.get(2)[0]);
+                        edge2 = vlist.getEdgeByPointer(points[1][0]),
+                        edge3 = hlist.getEdgeByPointer(points[2][0]);
 
                     vlist.Delete(edge2);
                     hlist.Delete(edge3);
@@ -1550,13 +1553,14 @@ define(['logManager',
         //that does not UTILS.intersect  any other boxes on the graph from the test point to the other point.
         //The 'other point' will be the end of the path iterating back til the two points before the 
         //current.
-        while(i < pointList.getLength() - 3) {
-            p1 = pointList.get(i)[0];
-            j = pointList.getLength();
+        while(i < pointList.length - 3) {
+            p1 = pointList[i][0];
+            j = pointList.length;
 
             while(j-- > 0) {
-                p2 = pointList.get(j)[0];
-                if(UTILS.isRightAngle (UTILS.getDir (p1.minus(p2))) && !this._isLineClipBoxes(p1, p2)) {
+                p2 = pointList[j][0];
+                console.log('p2 is', p2);
+                if(UTILS.isRightAngle(UTILS.getDir(p1.minus(p2))) && !this._isLineClipBoxes(p1, p2)) {
                     pointList.splice(i+1, j-i-1); //Remove all points between i, j
                     break;
                 }
@@ -1589,7 +1593,7 @@ define(['logManager',
         assert(!path.isConnected(), "ARGraph.simplifyPathPoints: !path.isConnected() FAILED");
 
         var pointList = path.getPointList();
-        assert(pointList.getLength() >= 2, "ARGraph.simplifyPathPoints: pointList.length >= 2 FAILED");
+        assert(pointList.length >= 2, "ARGraph.simplifyPathPoints: pointList.length >= 2 FAILED");
 
         if(CONSTANTS.DEBUG) {
             path.assertValidPoints();
@@ -1601,11 +1605,11 @@ define(['logManager',
             p4,
             p5,
 
-            p1p = pointList.getLength(),
-            p2p = pointList.getLength(),
-            p3p = pointList.getLength(),
-            p4p = pointList.getLength(),
-            p5p = pointList.getLength(),
+            p1p = pointList.length,
+            p2p = pointList.length,
+            p3p = pointList.length,
+            p4p = pointList.length,
+            p5p = pointList.length,
 
             pos = 0,
 
@@ -1613,12 +1617,12 @@ define(['logManager',
             d,
             h;
 
-        assert(pos < pointList.getLength(), "ARGraph.simplifyPathPoints: pos < pointList.getLength() FAILED");
+        assert(pos < pointList.length, "ARGraph.simplifyPathPoints: pos < pointList.length FAILED");
 
         p1p = pos;
-        p1 = pointList.get(pos++)[0];
+        p1 = pointList[pos++][0];
 
-        while(pos < pointList.getLength())
+        while(pos < pointList.length)
         {
             p5p = p4p;
             p4p = p3p;
@@ -1630,11 +1634,11 @@ define(['logManager',
             p4 = p3;
             p3 = p2;
             p2 = p1;
-            p1 = pointList.get(pos++)[0];
+            p1 = pointList[pos++][0];
 
-            if(p5p < pointList.getLength())
+            if(p5p < pointList.length)
             {
-                assert(p1p < pointList.getLength() && p2p < pointList.getLength() && p3p < pointList.getLength() && p4p < pointList.getLength() && p5p < pointList.getLength(), "ARGraph.simplifyPathPoints: p1p < pointList.getLength() && p2p < pointList.getLength() && p3p < pointList.getLength() && p4p < pointList.getLength() && p5p < pointList.getLength() FAILED");
+                assert(p1p < pointList.length && p2p < pointList.length && p3p < pointList.length && p4p < pointList.length && p5p < pointList.length, "ARGraph.simplifyPathPoints: p1p < pointList.length && p2p < pointList.length && p3p < pointList.length && p4p < pointList.length && p5p < pointList.length FAILED");
                 assert(!p1.equals(p2) && !p2.equals(p3) && !p3.equals(p4) && !p4.equals(p5), "ARGraph.simplifyPathPoints: !p1.equals(p2) && !p2.equals(p3) && !p3.equals(p4) && !p4.equals(p5) FAILED");
 
                 d = UTILS.getDir (p2.minus(p1));
@@ -1660,10 +1664,10 @@ define(['logManager',
                         pointList.splice(p4p, 0, [np3]);
                     }
 
-                    p1p = pointList.getLength();
-                    p2p = pointList.getLength();
-                    p3p = pointList.getLength();
-                    p4p = pointList.getLength();
+                    p1p = pointList.length;
+                    p2p = pointList.length;
+                    p3p = pointList.length;
+                    p4p = pointList.length;
 
                     pos = 0;
                 }

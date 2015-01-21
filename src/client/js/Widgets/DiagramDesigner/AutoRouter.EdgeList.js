@@ -95,7 +95,7 @@ define(['logManager',
         startpoint = ptrsObject.start;
         endpoint = ptrsObject.end;
 
-        while (pointList.getLength() && pos >= 0) {
+        while (pointList.length && pos >= 0) {
 
             dir = UTILS.getDir(endpoint[0].minus(startpoint[0]));
 

@@ -442,8 +442,8 @@ define(['logManager',
             res = [],
             pt;
 
-        while(++i < points.getLength()) {
-            pt = [points.get(i)[0].x, points.get(i)[0].y];
+        while(++i < points.length) {
+            pt = [points[i][0].x, points[i][0].y];
             res.push(pt);
         }
 
