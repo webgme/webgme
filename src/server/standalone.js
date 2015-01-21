@@ -91,8 +91,8 @@ define(['logManager',
             __storage.open();
         }
         function stop(){
-            __storage.close();
             try {
+                __storage.close();
                 __httpServer.close();
             } catch(e){
                 //ignore errors

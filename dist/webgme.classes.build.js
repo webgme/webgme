@@ -16637,9 +16637,6 @@ define('client',[
               callback(err);
             });
             //loading(newRootHash);
-          } else {
-            _core.persist(_nodes[ROOT_PATH].node, function (err) {
-            });
           }
         } else {
           _msg = "";
