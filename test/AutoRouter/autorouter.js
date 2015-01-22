@@ -133,7 +133,7 @@ describe('AutoRouter Tests', function(){
 
   });
 
-  it.only('should connect contained boxes',function(){
+  it('should connect contained boxes',function(){
       router = utils.getNewGraph();
       var width = 900,
           height = 900,
@@ -303,7 +303,7 @@ describe('AutoRouter Tests', function(){
       router.routeAsync({
           callback: function(paths) {
               var path = paths[0];
-              assert(path.points.ArPointList.length > 2, 
+              assert(path.points.length > 2, 
                     'Path does not contain enough points to have been routed');
               done();
           }
