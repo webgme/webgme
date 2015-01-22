@@ -270,7 +270,7 @@ define( ['logManager',
     };
 
     AutoRouterPath.prototype.addTail = function(pt){
-        assert( !this.isConnected(), "ARPath.addTail: !this.isConnected() FAILED");
+        assert(!this.isConnected(), "ARPath.addTail: !this.isConnected() FAILED");
         if(!(pt instanceof Array)){
             pt = [pt];
         }

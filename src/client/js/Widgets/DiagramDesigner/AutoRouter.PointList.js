@@ -20,24 +20,31 @@ define(['logManager',
 
     var array = [];
     var ArPointListPath = function (){
-        //I will be using a wrapper to give this object array functionality
-        //Ideally, I would inherit but this avoids some of the issues with
-        //inheriting from arrays in js (currently anyway)
     };
 
     ArPointListPath.prototype = array;
 
     //Wrapper Functions
-    ArPointListPath.prototype.set = function(list){
-        console.log('setting ArPointList to ', list);
-        this.splice(0, this.length);
-        for (var i = 0; i < list.length; i++) {
-            assert(list[i][0] instanceof ArPoint, 'Tried to add invalid item to PointList: ' + JSON.stringify(list[i]));
-            this.push(list[i]);
+    ArPointListPath.prototype.concat = function(list){
+        var newPoints = new ArPointListPath(),
+            i;
+
+        for (i = 0; i < this.length; i++) {
+            newPoints.push(this[i]);
         }
+
+        for (i = 0; i < list.length; i++) {
+            newPoints.push(list[i]);
+        }
+        return newPoints;
     };
 
     //Functions
+
+    ArPointListPath.prototype.end = function(){
+        return this[this.length-1];
+    };
+
     ArPointListPath.prototype.getHeadEdge = function(start, end){
 
         var pos = this.length;
@@ -275,23 +282,21 @@ define(['logManager',
         return pos;
     };
 
-    ArPointListPath.prototype.assertValid = function(){
+    ArPointListPath.prototype.assertValid = function(msg){
         //Check to make sure each point makes a horizontal/vertical line with it's neighbors
-        var i = this.length - 1;
-        while(i--){
-            if(!UTILS.isRightAngle(UTILS.getDir(this[i+1][0].minus(this[i][0])))){
-                throw "ArPointListPath contains skew edge";
-            }
+        for (var i = this.length-1; i > 0; i--) {
+            assert(UTILS.isRightAngle(UTILS.getDir(this[i-1][0].minus(this[i][0]))), 
+                "ArPointListPath contains skew edge:\n"+JSON.stringify(this)+'\n'+msg);
         }
     };
 
     ArPointListPath.prototype.assertValidPos = function(pos){
-        assert( pos < this.length, "ArPointListPath.assertValidPos: pos < this.length FAILED" );
+        assert(pos < this.length, "ArPointListPath.assertValidPos: pos < this.length FAILED" );
 
         var p = 0;
         for(;;)
         {
-            assert( pos < this.length, "ArPointListPath.assertValidPos: pos < this.length FAILED" );
+            assert(pos < this.length, "ArPointListPath.assertValidPos: pos < this.length FAILED" );
             if( p === pos ){
                 return;
             }
