@@ -3494,10 +3494,12 @@ define('util/key',[
   }
   return function KeyGenerator(object){
     if(keyType === null){
-      if(WebGMEGlobal && WebGMEGlobal.config && typeof WebGMEGlobal.config.keyType === 'string'){
+      if(typeof WebGMEGlobal !== 'undefined' && WebGMEGlobal.config && typeof WebGMEGlobal.config.keyType === 'string'){
         keyType = WebGMEGlobal.config.keyType;
-      } else if(WebGMEGlobal && typeof WebGMEGlobal.getConfig === 'function'){
+      } else if( typeof WebGMEGlobal !== 'undefined' && typeof WebGMEGlobal.getConfig === 'function') {
         keyType = WebGMEGlobal.getConfig().storageKeyType || "plainSHA1";
+      } else if(typeof GME !== 'undefined' && GME.config && typeof GME.config.keyType === 'string'){
+          keyType = GME.config.keyType;
       } else {
         keyType = "plainSHA1";
       }
@@ -9874,17 +9876,15 @@ define('storage/client',[ "util/assert", "util/guid" ], function (ASSERT, GUID) 
             function insertObject (object, callback) {
                 ASSERT(typeof callback === 'function');
                 if (socketConnected) {
-                    if(saveBucketSize === 0){
-                        ++saveBucketSize;
+                    if(saveBucket.length === 0){
                         saveBucket.push({object:object,cb:callback});
                         saveBucketTimer = setTimeout(function(){
                            flushSaveBucket();
                         },10);
-                    } else if (saveBucketSize === 99){
+                    } else if (saveBucket.length === 99){
                         saveBucket.push({object:object,cb:callback});
                         flushSaveBucket();
                     } else {
-                        ++saveBucketSize;
                         saveBucket.push({object:object,cb:callback});
                     }
                 } else {
@@ -9893,7 +9893,6 @@ define('storage/client',[ "util/assert", "util/guid" ], function (ASSERT, GUID) 
             }
 
             var saveBucket = [],
-                saveBucketSize = 0,
                 saveBucketTimer;
 
             function flushSaveBucket(){
@@ -9905,7 +9904,6 @@ define('storage/client',[ "util/assert", "util/guid" ], function (ASSERT, GUID) 
                     //TODO there is no task to do here
                 }
                 saveBucketTimer = null;
-                saveBucketSize = 0;
                 if(myBucket.length > 0){
                     insertObjects(myBucket);
                 }
@@ -10868,7 +10866,7 @@ define('storage/cache',[ "util/assert" ], function (ASSERT) {
 				}
 			}
 
-			function deepFreeze (obj) {
+			var deepFreeze = function (obj) {
 				ASSERT(typeof obj === "object");
 
 				tryFreeze(obj);
@@ -10877,6 +10875,9 @@ define('storage/cache',[ "util/assert" ], function (ASSERT) {
 				for (key in obj) {
 					maybeFreeze(obj[key]);
 				}
+			};
+			if (typeof WebGMEGlobal !== 'undefined' && typeof WebGMEGlobal.getConfig !== 'undefined' && !WebGMEGlobal.getConfig().debug) {
+				deepFreeze = function () { };
 			}
 
 			function cacheInsert (key, obj) {
@@ -15203,7 +15204,8 @@ define('client',[
 
     function getNewCore(project) {
       //return new NullPointerCore(new DescriptorCore(new SetCore(new GuidCore(new Core(project)))));
-      return Core(project, {autopersist: true, usertype: 'nodejs'});
+      var options = {autopersist: true, usertype: 'nodejs'};
+      return Core(project, options);
     }
 
     function UndoRedo(_client) {
@@ -15338,6 +15340,9 @@ define('client',[
         console.warn('WebGMEGlobal not defined - cannot get plugins.');
       }
 
+
+
+
       function print_nodes(pretext) {
         if (pretext) {
           console.log(pretext);
@@ -15362,6 +15367,15 @@ define('client',[
       _configuration.reconnamount = _configuration.reconnamount || 1000;
       _configuration.autostart = _configuration.autostart === null || _configuration.autostart === undefined ? false : _configuration.autostart;
 
+      if( typeof GME !== 'undefined'){
+        GME.config = GME.config || {};
+        GME.config.keyType = _configuration.storageKeyType;
+      }
+
+      if( typeof WebGMEGlobal !== 'undefined'){
+        WebGMEGlobal.config = WebGMEGlobal.config || {};
+        WebGMEGlobal.config.keyType = _configuration.storageKeyType;
+      }
 
       //TODO remove the usage of jquery
       //$.extend(_self, new EventDispatcher());
@@ -16623,9 +16637,6 @@ define('client',[
               callback(err);
             });
             //loading(newRootHash);
-          } else {
-            _core.persist(_nodes[ROOT_PATH].node, function (err) {
-            });
           }
         } else {
           _msg = "";

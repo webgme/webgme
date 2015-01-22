@@ -49,7 +49,11 @@ define(["mongodb", "util/assert", "util/canon"], function (MONGODB, ASSERT, CANO
        }
        });*/
 
-      MONGODB.MongoClient.connect("mongodb://" + options.host + ":" + options.port + "/" + options.database, {
+      var userString = "";
+      if(options.user && options.pwd){
+        userString = options.user+":"+options.pwd+"@";
+      }
+      MONGODB.MongoClient.connect("mongodb://" + userString + options.host + ":" + options.port + "/" + options.database, {
         'w': 1,
         'native-parser': true,
         'auto_reconnect': true,

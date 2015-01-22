@@ -46,7 +46,8 @@ define([
 
     function getNewCore(project) {
       //return new NullPointerCore(new DescriptorCore(new SetCore(new GuidCore(new Core(project)))));
-      return Core(project, {autopersist: true, usertype: 'nodejs'});
+      var options = {autopersist: true, usertype: 'nodejs'};
+      return Core(project, options);
     }
 
     function UndoRedo(_client) {
@@ -181,6 +182,9 @@ define([
         console.warn('WebGMEGlobal not defined - cannot get plugins.');
       }
 
+
+
+
       function print_nodes(pretext) {
         if (pretext) {
           console.log(pretext);
@@ -205,6 +209,15 @@ define([
       _configuration.reconnamount = _configuration.reconnamount || 1000;
       _configuration.autostart = _configuration.autostart === null || _configuration.autostart === undefined ? false : _configuration.autostart;
 
+      if( typeof GME !== 'undefined'){
+        GME.config = GME.config || {};
+        GME.config.keyType = _configuration.storageKeyType;
+      }
+
+      if( typeof WebGMEGlobal !== 'undefined'){
+        WebGMEGlobal.config = WebGMEGlobal.config || {};
+        WebGMEGlobal.config.keyType = _configuration.storageKeyType;
+      }
 
       //TODO remove the usage of jquery
       //$.extend(_self, new EventDispatcher());
@@ -1466,9 +1479,6 @@ define([
               callback(err);
             });
             //loading(newRootHash);
-          } else {
-            _core.persist(_nodes[ROOT_PATH].node, function (err) {
-            });
           }
         } else {
           _msg = "";

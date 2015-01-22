@@ -23,10 +23,12 @@ define([
   }
   return function KeyGenerator(object){
     if(keyType === null){
-      if(WebGMEGlobal && WebGMEGlobal.config && typeof WebGMEGlobal.config.keyType === 'string'){
+      if(typeof WebGMEGlobal !== 'undefined' && WebGMEGlobal.config && typeof WebGMEGlobal.config.keyType === 'string'){
         keyType = WebGMEGlobal.config.keyType;
-      } else if(WebGMEGlobal && typeof WebGMEGlobal.getConfig === 'function'){
+      } else if( typeof WebGMEGlobal !== 'undefined' && typeof WebGMEGlobal.getConfig === 'function') {
         keyType = WebGMEGlobal.getConfig().storageKeyType || "plainSHA1";
+      } else if(typeof GME !== 'undefined' && GME.config && typeof GME.config.keyType === 'string'){
+          keyType = GME.config.keyType;
       } else {
         keyType = "plainSHA1";
       }
