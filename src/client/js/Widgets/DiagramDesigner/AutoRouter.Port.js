@@ -30,7 +30,7 @@ define(['logManager',
         this.limitedDirections = true;
         this.rect = new ArRect();
         this.attributes = CONSTANTS.ARPORT_Default;
-        this.points = [ [], [], [], [] ];//For this.points on CONSTANTS.Dir_Top, CONSTANTS.Dir_Left, CONSTANTS.Dir_Right, etc
+        this.points = [ [], [], [], [] ];  // For this.points on CONSTANTS.Dir_Top, CONSTANTS.Dir_Left, CONSTANTS.Dir_Right, etc
         this.selfPoints = [];
         this.availableArea = [];//availableAreas keeps track of visible (not overlapped) portions of the port
 
@@ -69,11 +69,13 @@ define(['logManager',
     };
 
     AutoRouterPort.prototype.shiftBy = function (offset) {
-        assert( !this.rect.isRectEmpty(), "ARPort.shiftBy: !this.rect.isRectEmpty() FAILED!");
+        assert(!this.rect.isRectEmpty(), "ARPort.shiftBy: !this.rect.isRectEmpty() FAILED!");
 
         this.rect.add(offset);
 
         this.calculateSelfPoints();
+        // Shift points
+        this.shiftPoints(offset);
     };
 
     AutoRouterPort.prototype.isConnectToCenter = function () {
@@ -113,7 +115,7 @@ define(['logManager',
     AutoRouterPort.prototype.getStartEndDirTo = function (point, isStart, notthis) {
         assert( !this.rect.isRectEmpty(), "ARPort.getStartEndDirTo: !this.rect.isRectEmpty() FAILED!");
 
-        notthis = notthis ? notthis : CONSTANTS.Dir_None; //if notthis is undefined, set it to CONSTANTS.Dir_None (-1)
+        notthis = notthis ? notthis : CONSTANTS.Dir_None; // if notthis is undefined, set it to CONSTANTS.Dir_None (-1)
 
         var offset = point.minus(this.rect.getCenterPoint()),
             canHave = false,
@@ -165,7 +167,7 @@ define(['logManager',
     };
 
     AutoRouterPort.prototype.createStartEndPointAt = function (pt, isStart) {
-        assert( !this.rect.isRectEmpty(), "ARPort.createStartEndPointAt: !this.rect.isRectEmpty() FAILED!");
+        assert(!this.rect.isRectEmpty(), "ARPort.createStartEndPointAt: !this.rect.isRectEmpty() FAILED!");
 
         var point = new ArPoint(pt),
             dir = CONSTANTS.Dir_None,
@@ -358,7 +360,7 @@ end;
 
         this.points[dir].splice(k, 0, resultPoint);
 
-        assert( UTILS.isRightAngle ( this.port_OnWhichEdge(resultPoint) ), "AutoRouterPort.createStartEndPointTo: UTILS.isRightAngle ( this.port_OnWhichEdge(resultPoint) FAILED");
+        assert(UTILS.isRightAngle(this.port_OnWhichEdge(resultPoint)), "AutoRouterPort.createStartEndPointTo: UTILS.isRightAngle ( this.port_OnWhichEdge(resultPoint) FAILED");
 
         return resultPoint;
     };
@@ -368,17 +370,17 @@ end;
             removed = false,
             k;
 
-        while( i < 4 && !removed ) { //Check all sides for the point
+        while (i < 4 && !removed) { //Check all sides for the point
             k = this.points[i].indexOf(pt);
 
-            if( k > -1) { //If the point is on this side of the port
+            if (k > -1) { //If the point is on this side of the port
                 this.points[i].splice(k, 1);
                 removed = true;
             }
             i++;
         }
 
-        if( !removed ) {
+        if (!removed) {
             _logger.warning("point (" + pt.x + ", " + pt.y + ") was not removed from port");
         }
     };
@@ -387,16 +389,25 @@ end;
         var i = 0,
             k;
 
-        while( i < 4 ) { //Check all sides for the point
+        while (i < 4) { //Check all sides for the point
             k = this.points[i].indexOf(pt);
 
-            if( k > -1) { //If the point is on this side of the port
+            if (k > -1) { //If the point is on this side of the port
                 return true;
             }
             i++;
         }
 
         return false;
+    };
+
+    AutoRouterPort.prototype.shiftPoints = function (shift) {
+        for (var s = this.points.length; s--;) {
+            for (var i = this.points[s].length; i--;) {
+                // Shift this point
+                this.points[s][i].add(shift);
+            }
+        }
     };
 
     AutoRouterPort.prototype.getPoints = function () {
@@ -442,12 +453,6 @@ end;
             return;
         }
 
-        if (this.id.indexOf('bottom') !== -1 &&
-                this.rect.left < 150) {
-
-            console.log('adjusting available area wrt', r);
-        }
-
         var i = this.availableArea.length,
             intersection,
             line;
@@ -483,6 +488,19 @@ end;
 
     AutoRouterPort.prototype.isAvailable = function () {
         return this.availableArea.length > 0;
+    };
+
+    AutoRouterPort.prototype.assertValid = function () {
+        // Check that all points are on a side of the port
+        var point;
+
+        for (var s = this.points.length; s--;) {
+            for (var i = this.points[s].length; i--;) {
+                point = this.points[s][i];
+                assert(UTILS.isRightAngle(this.port_OnWhichEdge(point)), 
+                      'AutoRouterPort.createStartEndPointTo: UTILS.isRightAngle ( this.port_OnWhichEdge(resultPoint) FAILED');
+            }
+        }
     };
 
     return AutoRouterPort;

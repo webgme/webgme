@@ -104,12 +104,19 @@ define( ['logManager',
 
     AutoRouterPath.prototype.getStartPort = function(){
         assert(this.startports.length, "ARPort.getStartPort: Can't retrieve start port.");
-        return this.startport || this.startports[0];
+
+        if (!this.startport) {
+            this.calculateStartPorts();
+        }
+        return this.startport;
     };
 
     AutoRouterPath.prototype.getEndPort = function(){
         assert(this.endports.length, "ARPort.getEndPort: Can't retrieve end port.");
-        return this.endport || this.endports[0];
+        if (!this.endport) {
+            this.calculateEndPorts();
+        }
+        return this.endport;
     };
 
     AutoRouterPath.prototype.calculateStartEndPorts = function(){

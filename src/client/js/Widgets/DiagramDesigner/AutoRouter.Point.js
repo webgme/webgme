@@ -39,6 +39,13 @@ define(['logManager',
         this.add(x);
     };
 
+    ArPoint.prototype.shift = function (otherObject){ //equivalent to +=
+        this.x += otherObject.dx;
+        this.y += otherObject.dy;
+
+        return this;
+    };
+
     ArPoint.prototype.add = function (otherObject){ //equivalent to +=
         if(otherObject instanceof ArSize){
             this.x += otherObject.cx;

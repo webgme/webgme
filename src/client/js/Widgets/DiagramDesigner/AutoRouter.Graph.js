@@ -586,10 +586,6 @@ define(['logManager',
             isAutoRouted = path.isAutoRouted(),
             pos = -1;
         if (isAutoRouted) {
-            // REMOVE
-            if (this.paths.indexOf(path) === 78) {
-                debugger;
-            }
             ret = this._connectPoints(start, end, startdir, enddir);
             ret.assertValid('path index: ' + this.paths.indexOf(path));
         }
@@ -950,30 +946,30 @@ define(['logManager',
             var box = obj,
                 startbox,
                 endbox;
-            while(iter--)
-            {
+            while (iter--) {
                 path = this.paths[iter];
-                startport = path.getStartPort();
 
-                assert(startport !== null, "ARGraph.disconnectPathsFrom: startport !== null FAILED");
-                startbox = startport.owner;
-                assert(startbox !== null, "ARGraph.disconnectPathsFrom: startbox !== null FAILED");
+                assert(path.startports !== null, 'ARGraph.disconnectPathsFrom: startport !== null FAILED');
+                assert(path.startports.length > 0, 'ARGraph.disconnectPathsFrom: Path has no startports');
+                assert(path.endports !== null, 'ARGraph.disconnectPathsFrom: endport !== null FAILED');
+                assert(path.endports.length > 0, 'ARGraph.disconnectPathsFrom: Path has no endports');
 
-                endport = path.getEndPort();
-                assert(endport !== null, "ARGraph.disconnectPathsFrom: endport !== null FAILED");
-                endbox = endport.owner;
-                assert(endbox !== null, "ARGraph.disconnectPathsFrom: endbox !== null FAILED");
+                // Can simply select any start/end port to check the owner
+                startbox = path.startports[0].owner;
+                endbox = path.endports[0].owner;
+
+                assert(startbox !== null, 'ARGraph.disconnectPathsFrom: startbox !== null FAILED');
+                assert(endbox !== null, 'ARGraph.disconnectPathsFrom: endbox !== null FAILED');
 
                 if((startbox === box || endbox === box)) {
                     this.disconnect(path);
                 }
 
             }
-        } else {//Assuming "box" is a port
+        } else {  // Assuming "box" is a port
 
             var port = obj;
-            while(iter--)
-            {
+            while(iter--) {
                 path = this.paths[iter];
                 startport = path.getStartPort();
                 endport = path.getEndPort();
@@ -1950,10 +1946,11 @@ define(['logManager',
         }
 
         var rect = this.box2bufferBox[box.id].box,
-            children = box.childBoxes,
-            i = children.length;
+            children = box.childBoxes;
 
-        this._disconnectPathsClipping(rect); //redraw all paths clipping parent box.
+        this._disconnectPathsClipping(rect); // redraw all paths clipping parent box.
+        box.assertValid();
+        this._disconnectPathsFrom(box);
 
         this._deleteBoxAndPortEdges(box);
 
@@ -1962,9 +1959,8 @@ define(['logManager',
 
         rect = box.rect;
         this._disconnectPathsClipping(rect);
-        this._disconnectPathsFrom(box);
 
-        while(i--) {
+        for (var i = children.length; i--;) {
             this.shiftBoxBy(children[i], offset);
         }
     };
@@ -2042,11 +2038,9 @@ define(['logManager',
             }
 
             maxOperations--;
-            console.log('about to simplify paths');
             if (this._simplifyPaths()) {
                 last = 1;
             }
-            console.log('done simplify paths');
         }
 
         if (maxOperations > 0)
@@ -2056,7 +2050,6 @@ define(['logManager',
             }
 
             maxOperations--;
-            console.log('about to scan backward');
             if (this.horizontal.block_ScanBackward()) {
 
                 do {
@@ -2072,7 +2065,6 @@ define(['logManager',
                 last = 2;
             }
         }
-        console.log('done scan backward');
 
         if (maxOperations > 0) {
             if (last === 3) {
@@ -2080,7 +2072,6 @@ define(['logManager',
             }
 
             maxOperations--;
-            console.log('about to scan forward');
             if (this.horizontal.block_ScanForward()) {
 
                 do {
@@ -2096,7 +2087,6 @@ define(['logManager',
                 last = 3;
             }
         }
-        console.log('done scan forward');
 
         if (maxOperations > 0)
         {
@@ -2105,7 +2095,6 @@ define(['logManager',
             }
 
             maxOperations--;
-            console.log('about to scan backward (v)');
             if (this.vertical.block_ScanBackward())
             {
                 do {
@@ -2121,7 +2110,6 @@ define(['logManager',
                 last = 4;
             }
         }
-        console.log('done scan backward (v)');
 
         if (maxOperations > 0)
         {
@@ -2130,7 +2118,6 @@ define(['logManager',
             }
 
             maxOperations--;
-            console.log('about to scan forward (v)');
             if (this.vertical.block_ScanForward())
             {
 
@@ -2147,7 +2134,6 @@ define(['logManager',
                 last = 5;
             }
         }
-        console.log('done scan forward (v)');
 
         if (maxOperations > 0)
         {
@@ -2156,13 +2142,11 @@ define(['logManager',
             }
 
             maxOperations--;
-            console.log('about to switch wrongs ');
             if (this.horizontal.block_SwitchWrongs())
             {
                 last = 6;
             }
         }
-            console.log('done switch wrongs ');
 
         if (maxOperations > 0)
         {
@@ -2171,12 +2155,10 @@ define(['logManager',
             }
 
             maxOperations--;
-            console.log('about to switch wrongs (v)');
             if (this.vertical.block_SwitchWrongs()) {
                 last = 7;
             }
         }
-            console.log('done switch wrongs (v)');
 
         if (last === 0) {
             return getState(true);

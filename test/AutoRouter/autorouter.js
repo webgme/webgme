@@ -11,34 +11,7 @@ var utils = require('./autorouter.common.js'),
 // Tests
 describe('AutoRouter Tests', function(){
 
-  it('should create boxes placed on graph',function(){
-      router = utils.getNewGraph();
-      var ports = utils.addBox({x: 100,
-                          y: 100});
-
-      var boxCount = Object.keys(router.graph.boxes).length;
-      assert(boxCount === 3, 'box count should be 3 but is '+boxCount);
-  });
-
-  it('should move box on graph',function(){
-      router = utils.getNewGraph();
-      var box = utils.addBox({x: 100,
-                        y: 100});
-
-      router.move(box, {x: 300, y: 300});
-  });
-
-  it('should remove box from graph',function(){
-      router = utils.getNewGraph();
-      var box = utils.addBox({x: 100,
-                        y: 100});
-
-      router.remove(box);
-      var boxCount = Object.keys(router.graph.boxes).length;
-      assert(boxCount === 0, 'box count should be 0 but is ' + boxCount);
-  });
-
-  it('should create basic paths',function(){
+it('should create basic paths',function(){
       router = utils.getNewGraph();
 
       var box1 = utils.addBox({x: 100, y: 100}),
@@ -73,12 +46,7 @@ describe('AutoRouter Tests', function(){
       'Did not detect bracket opening/closing'+(router.graph.dumpEdgeLists()||''));
   });
 
-  it('should remove port from box',function(){
-      router = utils.getNewGraph();
-      throw new Error('Need to make this test');
-  });
-
-  it('should connect two boxes',function(){
+ it('should connect two boxes',function(){
       router = utils.getNewGraph();
 
       var box1 = utils.addBox({x: 100, y: 100});
@@ -177,13 +145,6 @@ describe('AutoRouter Tests', function(){
       assert(router.graph.paths.length === 0);
   });
 
-  it('should create ports outside the box',function(){
-      router = utils.getNewGraph();
-      var box = utils.addBox({x: 100, y: 100});
-      var port = utils.addBox({x: 110, y: 110, width: 30, height: 30});
-      router.setComponent(box, port);
-  });
-
   it('should connect port to parent box',function(){
       router = utils.getNewGraph();
       var box = utils.addBox({x: 100, y: 100});
@@ -232,43 +193,10 @@ describe('AutoRouter Tests', function(){
       router.routeSync();
   });
 
-  it('should create connection areas outside the box',function(){
-      router = utils.getNewGraph();
-
-      var boxDef = {x1: 100,
-                    x2: 200,
-                    y1: 100,
-                    y2: 200,
-                    ports: [
-                       {id: 'top', 
-                        area: [ [10, 800], [80, 800] ]}
-                    ]};
-
-      var src = router.addBox(boxDef),
-          dst = utils.addBox({x: 600, y: 800});
-      utils.connectAll([src, dst]);
-  });
-
   it('should allows connections between immediately overlapping boxes',function(){
       router = utils.getNewGraph();
       var boxes = utils.addBoxes([[100,100], [100,100]]);
       utils.connectAll(boxes);
-  });
-
-  it('should be able to resize boxes', function() {
-      router = utils.getNewGraph();
-      var box = utils.addBox({x: 100, y: 100});
-      var newBox = {x1: 50,
-                    y1: 50, 
-                    x2: 300,
-                    y2: 300,
-                    ports: [
-                     {id: 'top',
-                      area: [ [60, 60], [290, 60]]},
-                     {id: 'bottom',
-                      area: [ [60, 290], [290, 290]]}
-                  ]};
-      router.setBoxRect(box, newBox);
   });
 
   it('should be able to resize routed boxes', function() {
@@ -308,6 +236,11 @@ describe('AutoRouter Tests', function(){
               done();
           }
       });
+
+      // Check that there is a temp path
+      var path = router.graph.paths[0];
+      assert(path, 'Missing path');
+      assert(path.points.length >= 2, 'Path missing temporary points');
   });
 });
 

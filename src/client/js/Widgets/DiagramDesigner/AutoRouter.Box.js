@@ -191,7 +191,6 @@ define(['logManager',
         //notify this.parent of destruction
         //if there is a this.parent, of course
         if(this.parent){
-            console.log('parent of '+this.id+' is '+this.parent.id);
             this.parent.removeChild(this);
         }
 
@@ -203,6 +202,11 @@ define(['logManager',
         }
     };
 
+    AutoRouterBox.prototype.assertValid = function (){
+        for (var p = this.ports.length; p--;) {
+            this.ports[p].assertValid();
+        }
+    };
 
     return AutoRouterBox;
 

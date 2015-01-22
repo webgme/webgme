@@ -39,6 +39,7 @@ define(['logManager',
        this.ports = {};
        this.pCount = 0;  // A not decrementing count of paths for unique path id's
        this.portId2Path = {};
+       this.portId2Box = {};
 
        this.graph = new AutoRouterGraph();
     };
@@ -81,12 +82,10 @@ define(['logManager',
 
         // Adding each port
         var portIds = Object.keys(portsInfo);
-        console.log('Found ' + portIds.length + ' ports');
         for (var i = portIds.length; i--;) {
             this.addPort(boxObject, portsInfo[portIds[i]]);
         }
 
-        console.log('Done adding ports ');
         this.portId2Path[box.id] = {in: [], out: []};
 
         return boxObject;
@@ -125,10 +124,15 @@ define(['logManager',
         container.box.addPort(port);
 
         boxObject.ports.push(port);
+
+        // Record the port2box mapping
+        this.portId2Box[port.id] = boxObject;
         return port;
     };
 
     AutoRouter.prototype._getUniquePortId = function(id) {
+        // Make this more deterministic...
+        // FIXME
         var uniqueId = id,
             count = Math.floor(Math.random()*1000);
 
@@ -290,6 +294,13 @@ define(['logManager',
         return port;
     };
 
+    /**
+     * Convenience method to modify port in paths (as both start and end port)
+     *
+     * @param port
+     * @param action
+     * @return {undefined}
+     */
     AutoRouter.prototype._runActionOnPortInPath = function(port, action) {
         var id = port.id,
             paths = this.portId2Path[id].in,
@@ -326,7 +337,18 @@ define(['logManager',
             ports.splice(index, 1);
         });
 
+        // remove port from ArBoxObject
+        var boxObject = this.portId2Box[port.id],
+            index = boxObject.ports.indexOf(port);
+
+        if (index > -1) {
+            boxObject.ports.splice(index,1);
+        }
+
+        // Clean up the port records
         this.ports[id] = undefined;
+        this.portId2Path[id] = undefined;
+        this.portId2Box[id] = undefined;
     };
 
     AutoRouter.prototype.addPath = function(a) {
@@ -472,10 +494,14 @@ define(['logManager',
         this.ports[newId].id = newId;
     };
 
+    /**
+     * Updates the port with the given id to 
+     * match the parameters in portInfo
+     *
+     * @param {Object} portInfo
+     * @return {undefined}
+     */
     AutoRouter.prototype.updatePort = function(portInfo) {
-        // Remove port from box object
-        // TODO
-
         // Remove owner box from graph
         var portId = portInfo.id,
             oldPort = this.ports[portId],
@@ -488,34 +514,40 @@ define(['logManager',
         this.removePort(oldPort);
 
         // For all paths using this port, replace the port with the new port
-        this._runActionOnPortInPath(path, port, function(ports, index) {
+        this._runActionOnPortInPath(oldPort, function(path, ports, index) {
             ports[index] = newPort;
             this.graph.disconnect(path);
+            path.clearPorts();  // Force a recalculation of start/end port
         });
 
-        boxObject.ports = [];
+        // update the boxObject
+        var boxObject = this.portId2Box[portId],
+            index = boxObject.ports.indexOf(oldPort);
 
-        this.setConnectionInfo(boxObject, connInfo);
-        // TODO update!
-        ports = boxObject.ports; // get the new ports
+        boxObject.ports.splice(index,1,newPort);
 
-        // Reconnect paths to ports
-        while(i--) {
-            pathSrc = paths.in[i].path.startports;
-            // paths.in[i].path.setEndPorts(ports);
-            paths.in[i].setDstPorts(ports);
-            paths.in[i].updateDstPorts();
-            this.graph.disconnect(paths.in[i].path);
-        }
+        //this.setConnectionInfo(boxObject, connInfo);
+        //// TODO update!
+        //ports = boxObject.ports; // get the new ports
 
-        i = paths.out.length;
-        while(i--) {
-            pathDst = paths.out[i].path.endports;
-            // paths.out[i].path.setStartPorts(ports);
-            paths.out[i].setSrcPorts(ports);
-            paths.out[i].updateSrcPorts();
-            this.graph.disconnect(paths.out[i].path);
-        }
+        //// Reconnect paths to ports
+        //while(i--) {
+            //pathSrc = paths.in[i].path.startports;
+            //// paths.in[i].path.setEndPorts(ports);
+            //paths.in[i].setDstPorts(ports);
+            //paths.in[i].updateDstPorts();
+            //this.graph.disconnect(paths.in[i].path);
+        //}
+
+        //i = paths.out.length;
+        //while(i--) {
+            //pathDst = paths.out[i].path.endports;
+            //// paths.out[i].path.setStartPorts(ports);
+            //paths.out[i].setSrcPorts(ports);
+            //paths.out[i].updateSrcPorts();
+            //this.graph.disconnect(paths.out[i].path);
+        //}
+        return newPort;
     };
 
     AutoRouter.prototype.setConnectionInfo = function(boxObject, connArea) {
