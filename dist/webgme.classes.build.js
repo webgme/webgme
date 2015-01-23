@@ -15172,7 +15172,8 @@ define('client',[
     'coreclient/dumpmore',
     'coreclient/import',
     'coreclient/copyimport',
-    'coreclient/serialization'
+    'coreclient/serialization',
+    'core/tasync'
   ],
   function (
     ASSERT,
@@ -15188,7 +15189,8 @@ define('client',[
     DumpMore,
     MergeImport,
     Import,
-    Serialization) {
+    Serialization,
+    TASYNC) {
 
     
 
@@ -16475,21 +16477,11 @@ define('client',[
       }
 
       function loadRoot(newRootHash, callback) {
-        //with the newer approach we try to optimize a bit the mechanizm of the loading and try to get rid of the paralellism behind it
+        //with the newer approach we try to optimize a bit the mechanism of the loading and try to get rid of the paralellism behind it
         var patterns = {},
           orderedPatternIds = [],
           error = null,
-          i, j, keysi, keysj,
-          loadNextPattern = function (index) {
-            if (index < orderedPatternIds.length) {
-              loadPattern(_core, orderedPatternIds[index], patterns[orderedPatternIds[index]], _loadNodes, function (err) {
-                error = error || err;
-                loadNextPattern(index + 1);
-              });
-            } else {
-              callback(error);
-            }
-          };
+          i, j, keysi, keysj;
         _loadNodes = {};
         _loadError = 0;
 
@@ -16528,7 +16520,12 @@ define('client',[
               callback(null);
               reLaunchUsers();
             } else {
-              loadNextPattern(0);
+                var _loadPattern = TASYNC.throttle(TASYNC.wrap(loadPattern), 1);
+                var fut = TASYNC.lift(
+                    orderedPatternIds.map(function (pattern, index) {
+                        return TASYNC.apply(_loadPattern, [_core, pattern, patterns[pattern], _loadNodes], this);
+                    }));
+                TASYNC.unwrap(function() { return fut; })(callback);
             }
           } else {
             callback(err);
@@ -18415,6 +18412,7 @@ define('client',[
 
     return Client;
   });
+
 define('blob/BlobConfig',[], function(){
 
     var BlobConfig = {
