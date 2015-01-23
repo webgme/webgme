@@ -25,7 +25,7 @@
   "dependencies": {
     "mongodb": "~1.4.0",
     "socket.io": "=0.9.14",
-    "requirejs": "=2.1.11",
+    "requirejs": "=2.1.15",
     "express": "=3.4.0",
     "mime": "=1.2.11",
     "multiparty": "=3.2.4",
