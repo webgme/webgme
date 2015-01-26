@@ -21,7 +21,7 @@ requirejs.config({
     "worker": "server/worker",
     "coreclient": "common/core/users",
     "blob": "middleware/blob",
-    "eventDispatcher": "common/eventDispatcher",
+    "eventDispatcher": "common/EventDispatcher",
     " /listAllDecorators": "../test/asset/empty",
     " /listAllPlugins": "../test/asset/empty",
     " /socket.io/socket.io.js": "socketio-client"

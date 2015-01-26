@@ -12,7 +12,7 @@ CANON = requirejs('../src/common/util/canon');
 describe('Core#Mongo#Coverage',function(){
   it('fails to connect to database',function(done){
     this.timeout(20000);
-    storage = new WebGME.serverUserStorage({host:'127.0.0.1',port:110011,database:'multi'});
+    storage = new WebGME.serverUserStorage({host:'127.0.0.1',port:65535,database:'multi'});
     storage.openDatabase(function(err){
       if(!err){
         done(new Error('connection should have been failed'));
