@@ -400,141 +400,301 @@ define(['util/assert','util/canon'],function(ASSERT,CANON){
   function importLibrary(core,originLibraryRoot,updatedJsonLibrary,callback){
 
     
-    var nodes = {},createdGuids = [],updatedGuids = [],removedGuids = [], logTxt = "",
+    var logTxt = "", guidCache = {},originalJsonLibrary = {},
+      myTick,taskList, i,keys, notInComputation,
+      root = core.getRoot(originLibraryRoot),
+      libraryRootPath = core.getPath(originLibraryRoot),
       synchronizeRoots = function(oldRoot,newGuid){
       core.setGuid(oldRoot,newGuid);
       },
-      loadImportBases = function(guids,root,next){
-      var needed,
-        error = null,
-        stillToGo = 0,
-        i,
-        guidList = Object.keys(guids),
-        loadBase = function(guid,path,cb){
-          core.loadByPath(root,path,function(err,node){
-            if(err){
-              return cb(err);
+      calculateGuidCache = function(){
+        var keys, i,
+          addElement = function(guid,path){
+            if(!guidCache[guid]){
+              guidCache[guid] = path;
             }
-            if(core.getGuid(node) !== guid){
-              return cb("GUID mismatch");
+          };
+        guidCache = {};
+
+        //first we go with the original library
+        //adding external bases
+        keys = Object.keys(originalJsonLibrary.bases);
+        for(i=0;i<keys.length;i++){
+          addElement(keys[i],originalJsonLibrary.bases[keys[i]]);
+        }
+        //then simple nodes
+        keys = Object.keys(originalJsonLibrary.nodes);
+        for(i=0;i<keys.length;i++){
+          addElement(keys[i],libraryRootPath+getRelativePathByGuid(keys[i],originalJsonLibrary));
+        }
+        //then the updated one
+        //adding external bases
+        keys = Object.keys(updatedJsonLibrary.bases);
+        for(i=0;i<keys.length;i++){
+          addElement(keys[i],updatedJsonLibrary.bases[keys[i]]);
+        }
+        //then simple nodes
+        keys = Object.keys(updatedJsonLibrary.nodes);
+        for(i=0;i<keys.length;i++){
+          addElement(keys[i],libraryRootPath+getRelativePathByGuid(keys[i],updatedJsonLibrary));
+        }
+      },
+      insertEmptyNode = function(guid,next){
+        log("node "+logId(guid,updatedJsonLibrary)+" will be added as an empty object");
+        //first we collect all creation related data
+        var relid = updatedJsonLibrary.relids[guid],
+          parentPath = guidCache[updatedJsonLibrary.nodes[guid].parent],
+          basePath = guidCache[updatedJsonLibrary.nodes[guid].base],
+          needed = 2,parent=null,base=null,error=null,
+          create = function(){
+            if(error){
+              return next(error);
             }
-          
-            nodes[guid] = node;
-            cb(null);
-          });
-        };
-      needed = guidList.length;  
-    
-        
-      for(i=0;i<guidList.length;i++){
-        loadBase(guidList[i],guids[guidList[i]],function(err){
+            core.createNode({base:base,parent:parent,relid:relid,guid:giud});
+            next(null);
+          };
+        //then we load the base and the parent of the node
+        core.loadByPath(root,parentPath,function(err,n){
           error = error || err;
+          parent = n;
           if(--needed === 0){
-            next(error);
+            create();
           }
         });
-      }
-    
-      if(needed.length > 0){
-        stillToGo = needed.length;
-        for(i=0;i<needed.length;i++){
-          loadBase(needed[i],guids[needed[i]],function(err){
-            error = error || err;
-            if(--stillToGo === 0){
-              callback(error);
-            }
-          });
-        }
-      } else {
-        return callback(null);
-      }
-    
-    
+        core.loadByPath(root,basePath,function(err,n){
+          error = error || err;
+          base = n;
+          if(--needed === 0){
+            create();
+          }
+        });
       },
-      logId = function(nodes,id){
-      var txtId = id+"";
-      if(nodes[id] && nodes[id].attributes && nodes[id].attributes.name){
-        txtId = nodes[id].attributes.name+"("+id+")";
-      }
+      moveNode = function(guid,next){
+        //we need the node itself and the new parent
+        log("node "+logId(guid,updatedJsonLibrary)+" will be moved within the library from"+getRelativePathByGuid(guid,originalJsonLibrary)+" to "+getRelativePathByGuid(guid,updatedJsonLibrary));
+        var node,parent,needed = 2, error = null,
+          move = function(){
+            if(error){
+              return next(error);
+            }
+            core.moveNode(node,parent);
+            guidCache[guid] = core.getPath(node);
+            next(null);
+          };
 
+        core.loadByPath(root,guidCache[guid],function(err,n){
+          error = error || err;
+          node = n;
+          if(--needed === 0){
+            move();
+          }
+        });
+        core.loadByPath(root,guidCache[updatedJsonLibrary.nodes[guid].parent],function(err,n){
+          error = error || err;
+          parent = n;
+          if(--needed === 0){
+            move();
+          }
+        });
+      },
+      updateNode = function(guid,next){
+        //TODO implement
+        log("node "+logId(guid,updatedJsonLibrary)+" will be updated");
+        next(null);
+      },
+      removeNode = function(guid,next){
+        log("node "+logId(guid,originalJsonLibrary)+" will be removed - which will cause also the removal of all of its descendant and children");
+        core.loadByPath(root,guidCache[guid],function(err,node){
+          if(err){
+            return next(err);
+          }
+          core.deleteNode(node);
+          next(null);
+        });
+      },
+      postProcessing = function(){
+        //TODO collect what task we should do as a post processing task - like perist?
+        callback(null);
+      },
+      getRelativePathByGuid = function(guid,library){
+        var path = "";
+        while(guid !== library.root.guid){
+          path = "/"+library.relids[guid]+path;
+          guid = library.nodes[guid].parent;
+        }
+        return path;
+      },
+      prepareForAddingNodes = function(){
+        //we fill up some global variables and fill out the task list
+        var oldGuids = Object.keys(originalJsonLibrary.nodes),
+          newGuids = Object.keys(updatedJsonLibrary.nodes),
+          i,index,guid;
+        taskList = [];
+        for(i=0;i<newGuids.length;i++){
+          if(oldGuids.indexOf(newGuids[i]) === -1){
+            taskList.push(newGuids[i]);
+          }
+        }
+
+        //if some base or parent of a new node comes after it in our list we have to bring those before this node
+        i=0;
+        while(i<taskList.length){
+          index = taskList.indexOf(updatedJsonLibrary.nodes[taskList[i]].parent);
+          if(index !== -1 && index > i){
+            guid = taskList[index];
+            taskList.splice(index,1);
+            taskList.splice(i,0,guid);
+          } else {
+            index = taskList.indexOf(updatedJsonLibrary.nodes[taskList[i]].base);
+            if(index !== -1 && index > i){
+              guid = taskList[index];
+              taskList.splice(index,1);
+              taskList.splice(i,0,guid);
+            } else {
+              //no obstacle before the node so we can go on
+              i++;
+            }
+          }
+        }
+      },
+      prepareForMoveNodes = function(){
+        //we fill up some global variables and fill out the task list
+        var oldGuids = Object.keys(originalJsonLibrary.nodes),
+          newGuids = Object.keys(updatedJsonLibrary.nodes),
+          i;
+
+        taskList = [];
+        for(i=0;i<newGuids.length;i++){
+          if(oldGuids.indexOf(newGuids[i]) !== -1){
+            taskList.push(newGuids[i]);
+          }
+        }
+        i=taskList.length-1;
+        while(i>=0){
+          if(getRelativePathByGuid(taskList[i],originalJsonLibrary) === getRelativePathByGuid(taskList[i],updatedJsonLibrary)){
+            taskList.splice(i,1);
+          }
+          i--;
+        }
+      },
+      prepareForUpdateNodes = function(){
+        //we fill up some global variables and fill out the task list
+        //here we simply add the root to the tasklist as each update will insert the actual node's children
+        taskList = [updatedJsonLibrary.root.guid];
+      },
+      prepareForDeleteNodes = function(){
+        //we fill up some global variables and fill out the task list
+        var oldGuids = Object.keys(originalJsonLibrary.nodes),
+          newGuids = Object.keys(updatedJsonLibrary.nodes),
+          i,index;
+        taskList = [];
+        for(i=0;i<oldGuids.length;i++){
+          if(newGuids.indexOf(oldGuids[i]) === -1){
+            taskList.push(oldGuids[i]);
+          }
+        }
+
+        //if some of the nodes has its parent or base before itself we remove it from the tasklist
+        i=taskList.length-1;
+        while(i>=0){
+          index = taskList.indexOf(originalJsonLibrary.nodes[taskList[i]].parent);
+          if(index !== -1 && index < i){
+            taskList.splice(i,1);
+          } else {
+            index = taskList.indexOf(originalJsonLibrary.nodes[taskList[i]].base);
+            if(index !== -1 && index < i){
+              taskList.splice(i,1);
+            }
+          }
+          i--;
+        }
+      },
+      logId = function(guid,library){
+      var txtId = guid+"";
+      if(library.nodes[guid] && library.nodes[guid].attributes && library.nodes[guid].attributes.name){
+        txtId = library.nodes[guid].attributes.name+"("+id+")";
+      }
       return txtId;
-      },log = function(txt){
+      },
+      log = function(txt){
         logTxt += txt+"\n";
-      };
+      },
+      phase = 'addnodes';
     
     synchronizeRoots(originLibraryRoot,updatedJsonLibrary.root.guid);
     exportLibrary(core,originLibraryRoot,function(err,jsonLibrary){
-      //we do not need the returned json object as that is stored in our global jsonLibrary variable
       if(err){
         return callback(err);
       }
-      
-      //now we will search for the bases of the import and load them
-      loadImportBases(updatedJsonLibrary.bases,core.getRoot(originLibraryRoot),function(err){
-        if(err){
-          return callback(err);
-        }
-        
-        //now we fill the insert/update/remove lists of GUIDs
-        var oldkeys = Object.keys(jsonLibrary.nodes),
-          newkeys = Object.keys(updatedJsonLibrary.nodes),
-          i;
-        
-        //TODO now we make three rounds although one would be sufficient on ordered lists
-        for(i=0;i<oldkeys.length;i++){
-          if(newkeys.indexOf(oldkeys[i]) === -1){
-            log("node "+logId(jsonLibrary.nodes,oldkeys[i])+", all of its sub-types and its children will be removed");
-            removedGuids.push(oldkeys[i]);
+
+
+      //here starts the actual processing
+      originalJsonLibrary = jsonLibrary;
+      calculateGuidCache();
+      prepareForAddingNodes();
+
+      //first we add the new nodes
+      myTick = setInterval(function(){
+        if(notInComputation){
+          switch (phase){
+            case 'addnodes':
+              if(taskList.length > 0){
+                notInComputation = false;
+                insertEmptyNode(taskList.shift(),function(err){
+                  if(err){
+                    console.log(err);
+                  }
+                  notInComputation = true;
+                });
+              } else {
+                prepareForMoveNodes();
+                phase = 'movenodes';
+              }
+              break;
+            case 'movenodes':
+              if(taskList.length > 0){
+                notInComputation = false;
+                moveNode(taskList.shift(),function(err){
+                  if(err){
+                    console.log(err);
+                  }
+                  notInComputation = true;
+                });
+              } else {
+                prepareForUpdateNodes();
+                phase = 'updatednodes';
+              }
+              break;
+            case 'updatenodes':
+              if(taskList.length > 0){
+                notInComputation = false;
+                updateNode(taskList.shift(),function(err){
+                  if(err){
+                    console.log(err);
+                  }
+                  notInComputation = true;
+                });
+              } else {
+                prepareForDeleteNodes();
+                phase = 'removenodes';
+              }
+              break;
+            default:
+              if(taskList.length > 0){
+                notInComputation = false;
+                removeNode(taskList.shift(),function(err){
+                  if(err){
+                    console.log(err);
+                  }
+                  notInComputation = true;
+                });
+              } else {
+                clearInterval(myTick);
+                postProcessing();
+              }
           }
         }
-        
-        for(i=0;i<oldkeys.length;i++){
-          if(newkeys.indexOf(oldkeys[i]) !== -1){
-            log("node "+logId(jsonLibrary.nodes,oldkeys[i])+" will be updated")
-            updatedGuids.push(oldkeys[i]);
-          }
-        }
-        
-        for(i=0;i<newkeys.length;i++){
-          if(oldkeys.indexOf(newkeys[i]) === -1){
-            log("node "+logId(updatedJsonLibrary.nodes,newkeys[i])+" will be added")
-            createdGuids.push(newkeys[i]);
-          }
-        }
-        
-        //Now we normalize the removedGUIDs by containment and remove them
-        var toDelete = [],
-          parent;
-        for(i=0;i<removedGuids.length;i++){
-          parent = core.getParent(nodes[removedGuids[i]]);
-          if(parent && removedGuids.indexOf(core.getGuid(parent)) === -1){
-            toDelete.push(removedGuids[i]);
-          }
-        }
-        //and as a final step we remove all that is needed
-        for(i=0;i<toDelete.length;i++){
-          core.deleteNode(nodes[toDelete[i]]);
-        }
-        
-        //as a second step we should deal with the updated nodes
-        //we should go among containment hierarchy
-        updateNodes(updatedJsonLibrary.root.guid,null,updatedJsonLibrary.containment);
-        
-        //now update inheritance chain
-        //we assume that our inheritance chain comes from the FCO and that it is identical everywhere
-        updateInheritance();
-        
-        //now we can add or modify the relations of the nodes - we go along the hierarchy chain
-        updateRelations();
-        
-        //finally we need to update the meta rules of each node - again along the containment hierarchy
-        updateMetaRules(updatedJsonLibrary.root.guid,updatedJsonLibrary.containment);
-        
-        //after everything is done we try to synchronize the metaSheet info
-        importMetaSheetInfo(core.getRoot(originLibraryRoot));
-        
-        callback(null,_log);
-      });
+      },10);
     });
   }
 
