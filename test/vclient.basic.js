@@ -5,7 +5,11 @@
 require('./_globals.js');
 var WebGME = require('../webgme'),
   FS = require('fs'),
-  requirejs = require('requirejs');
+  requirejs = require('requirejs'),
+  config = WebGMEGlobal.getConfig();
+config.port = 45013;
+WebGMEGlobal.setConfig(config);
+
 requirejs.config({
   nodeRequire: require,
   paths:{
