@@ -450,7 +450,7 @@ define(['util/assert','util/canon'],function(ASSERT,CANON){
             if(error){
               return next(error);
             }
-            core.createNode({base:base,parent:parent,relid:relid,guid:giud});
+            core.createNode({base:base,parent:parent,relid:relid,guid:guid});
             next(null);
           };
         //then we load the base and the parent of the node
@@ -461,13 +461,20 @@ define(['util/assert','util/canon'],function(ASSERT,CANON){
             create();
           }
         });
-        core.loadByPath(root,basePath,function(err,n){
-          error = error || err;
-          base = n;
+        if(typeof basePath === 'string'){
+          core.loadByPath(root,basePath,function(err,n){
+            error = error || err;
+            base = n;
+            if(--needed === 0){
+              create();
+            }
+          });
+        } else {
           if(--needed === 0){
             create();
           }
-        });
+        }
+
       },
       moveNode = function(guid,next){
         //we need the node itself and the new parent
@@ -514,7 +521,7 @@ define(['util/assert','util/canon'],function(ASSERT,CANON){
       },
       postProcessing = function(){
         //TODO collect what task we should do as a post processing task - like perist?
-        callback(null);
+        callback(null,logTxt);
       },
       getRelativePathByGuid = function(guid,library){
         var path = "";
@@ -612,12 +619,13 @@ define(['util/assert','util/canon'],function(ASSERT,CANON){
       logId = function(guid,library){
       var txtId = guid+"";
       if(library.nodes[guid] && library.nodes[guid].attributes && library.nodes[guid].attributes.name){
-        txtId = library.nodes[guid].attributes.name+"("+id+")";
+        txtId = library.nodes[guid].attributes.name+"("+guid+")";
       }
       return txtId;
       },
       log = function(txt){
         logTxt += txt+"\n";
+        console.warn(txt);
       },
       phase = 'addnodes';
     
@@ -632,6 +640,7 @@ define(['util/assert','util/canon'],function(ASSERT,CANON){
       originalJsonLibrary = jsonLibrary;
       calculateGuidCache();
       prepareForAddingNodes();
+      notInComputation = true;
 
       //first we add the new nodes
       myTick = setInterval(function(){
