@@ -506,8 +506,95 @@ define(['util/assert','util/canon'],function(ASSERT,CANON){
       },
       updateNode = function(guid,next){
         //TODO implement
-        log("node "+logId(guid,updatedJsonLibrary)+" will be updated");
-        next(null);
+        var updateAttributes = function(){
+            var oAttributes = originalJsonNode.attributes || {},
+              uAttributes = updatedJsonNode.attributes || {},
+              keys,
+              i;
+            keys = Object.keys(oAttributes);
+            //removing attributes
+            for(i=0;i<keys.length;i++){
+              if(!uAttributes[keys[i]]){
+                log("node "+logId(guid,updatedJsonLibrary)+" will lose it\'s attribute ["+keys[i]+"]");
+                core.delAttribute(node,keys[i]);
+              }
+            }
+            //adding or updating attributes
+            keys = Object.keys(uAttributes);
+            for(i=0;i<keys.length;i++){
+              if(!oAttributes[keys[i]]){
+                log("node "+logId(guid,updatedJsonLibrary)+" will get a new attribute ["+keys[i]+"]");
+                core.setAttribute(node,keys[i],uAttributes[keys[i]]);
+              } else if(CANON.stringify(oAttributes[keys[i]] !== CANON.stringify(uAttributes[keys[i]]))){
+                log("node "+logId(guid,updatedJsonLibrary)+" will update the value of attribute ["+keys[i]+"]");
+                core.setAttribute(node,keys[i],uAttributes[keys[i]]);
+              }
+            }
+          },
+          updateRegistry = function(){
+            var oRegistry = originalJsonNode.registry || {},
+              uREgistry = updatedJsonNode.registry || {},
+              keys,
+              i;
+            keys = Object.keys(oRegistry);
+            //removing registry entries
+            for(i=0;i<keys.length;i++){
+              if(!uREgistry[keys[i]]){
+                log("node "+logId(guid,updatedJsonLibrary)+" will lose it\'s registry item ["+keys[i]+"]");
+                core.delRegistry(node,keys[i]);
+              }
+            }
+            //adding or updating attributes
+            keys = Object.keys(uREgistry);
+            for(i=0;i<keys.length;i++){
+              if(!oRegistry[keys[i]]){
+                log("node "+logId(guid,updatedJsonLibrary)+" will get a new registry item ["+keys[i]+"]");
+                core.setRegistry(node,keys[i],uREgistry[keys[i]]);
+              } else if(CANON.stringify(oRegistry[keys[i]] !== CANON.stringify(uREgistry[keys[i]]))){
+                log("node "+logId(guid,updatedJsonLibrary)+" will update the value of registry item ["+keys[i]+"]");
+                core.setRegistry(node,keys[i],uREgistry[keys[i]]);
+              }
+            }
+          },
+          updatePointers = function(){
+
+          },
+          updateSets = function(){
+
+          },
+          updateMeta = function(){
+
+          },
+          loadNode = function(){
+            core.loadByPath(root,guidCache[guid],function(err,n){
+              if(err){
+                return next(err);
+              }
+              node = n;
+
+              //now we will do the immediate changes, then the ones which probably needs loading
+              updateAttributes();
+              updateRegistry();
+              next(null);
+            });
+          },originalJsonNode,
+          updatedJsonNode = updatedJsonLibrary.nodes[guid],
+          node;
+
+        if(originalJsonLibrary.nodes[guid] && CANON.stringify(originalJsonLibrary.nodes[guid]) !== CANON.stringify(updatedJsonNode)){
+          //there is some change
+          originalJsonNode = originalJsonLibrary.nodes[guid];
+          log("node "+logId(guid,updatedJsonLibrary)+" will be updated");
+          loadNode();
+        } else if(!originalJsonLibrary.nodes[guid]){
+          //new node
+          originalJsonNode = {base:null,parent:null,meta:{},attributes:{},registry:{},pointers:{},sets:{}};
+          log("node "+logId(guid,updatedJsonLibrary)+" will be filled with data");
+          loadNode();
+        } else {
+          //no need for update
+          next(null);
+        }
       },
       removeNode = function(guid,next){
         log("node "+logId(guid,originalJsonLibrary)+" will be removed - which will cause also the removal of all of its descendant and children");
@@ -587,7 +674,16 @@ define(['util/assert','util/canon'],function(ASSERT,CANON){
       prepareForUpdateNodes = function(){
         //we fill up some global variables and fill out the task list
         //here we simply add the root to the tasklist as each update will insert the actual node's children
+        var addChildren = function(containment){
+          var children = Object.keys(containment),
+            i;
+          for(i=0;i<children.length;i++){
+            taskList.push(children[i]);
+            addChildren(containment[children[i]]);
+          }
+        };
         taskList = [updatedJsonLibrary.root.guid];
+        addChildren(updatedJsonLibrary.containment);
       },
       prepareForDeleteNodes = function(){
         //we fill up some global variables and fill out the task list
@@ -671,7 +767,7 @@ define(['util/assert','util/canon'],function(ASSERT,CANON){
                 });
               } else {
                 prepareForUpdateNodes();
-                phase = 'updatednodes';
+                phase = 'updatenodes';
               }
               break;
             case 'updatenodes':
