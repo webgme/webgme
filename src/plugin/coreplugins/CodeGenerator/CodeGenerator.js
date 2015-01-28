@@ -533,7 +533,7 @@ define(['plugin/PluginConfig',
      * @return {String} formatted value
      */
     CodeGenerator.prototype._getFormattedAttribute = function(value){  // FIXME add specification in codemap
-        var number = new RegExp(/^[\d]*.[\d]*$/),
+        var number = new RegExp(/^[\d]*\.[\d]*$/),
             specialValues = new RegExp(/^(null|undefined)$/);
 
         if (!number.test(value) && !specialValues.test(value)){
