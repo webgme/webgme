@@ -556,14 +556,62 @@ define(['util/assert','util/canon'],function(ASSERT,CANON){
               }
             }
           },
-          updatePointers = function(){
+          updatePointers = function(pNext){
+            var updatePointer = function(name,cb){
+                core.loadByPath(root,guidCache[updatedJsonNode.pointers[name]],function(err,target){
+                  if(err){
+                    return cb(err);
+                  }
+                  core.setPointer(node,name,target);
+                  cb(null);
+                });
+              },updating = false,setList = [],error=null,
+              tick,oPointers = Object.keys(originalJsonNode.pointers || {}),
+              uPointers = Object.keys(updatedJsonNode.pointers || {});
 
+            //first removing pointers
+            for(i=0;i<oPointers.length;i++){
+              if(uPointers.indexOf(oPointers[i]) === -1){
+                log("node "+logId(guid,updatedJsonLibrary)+" will lose it\'s pointer ["+oPointers[i]+"]");
+                core.delPointer(node,oPointers[i]);
+              }
+            }
+
+            //creating list for inserting or updating pointers
+            for(i=0;i<uPointers.length;i++){
+              if(oPointers.indexOf(uPointers[i]) === -1){
+                log("node "+logId(guid,updatedJsonLibrary)+" will have a new pointer ["+uPointers[i]+"]");
+                setList.push(uPointers[i]);
+              } else if(originalJsonNode.pointers[uPointers[i]] !== updatedJsonNode.pointers[uPointers[i]]){
+                log("node "+logId(guid,updatedJsonLibrary)+" will have a new target for pointer ["+uPointers[i]+"]");
+                setList.push(uPointers[i]);
+              }
+            }
+
+            //start the ticking if needed
+            if(setList.length === 0){
+              return pNext(null);
+            }
+            tick = setInterval(function(){
+              if(setList.length > 0){
+                if(!updating){
+                  updating = true;
+                  updatePointer(setList.shift(),function(err){
+                    error = error || err;
+                    updating = false;
+                  });
+                }
+              } else {
+                clearInterval(tick);
+                pNext(error);
+              }
+            },10);
           },
-          updateSets = function(){
-
+          updateSets = function(sNext){
+            sNext(null);
           },
-          updateMeta = function(){
-
+          updateMeta = function(mNext){
+            mNext(null);
           },
           loadNode = function(){
             core.loadByPath(root,guidCache[guid],function(err,n){
@@ -575,7 +623,17 @@ define(['util/assert','util/canon'],function(ASSERT,CANON){
               //now we will do the immediate changes, then the ones which probably needs loading
               updateAttributes();
               updateRegistry();
-              next(null);
+              updatePointers(function(err){
+                if(err){
+                  return next(err)
+                }
+                updateSets(function(err){
+                  if(err){
+                    return next(err)
+                  }
+                  updateMeta(next);
+                });
+              });
             });
           },originalJsonNode,
           updatedJsonNode = updatedJsonLibrary.nodes[guid],
