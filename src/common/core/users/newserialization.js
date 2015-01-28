@@ -558,6 +558,10 @@ define(['util/assert','util/canon'],function(ASSERT,CANON){
           },
           updatePointers = function(pNext){
             var updatePointer = function(name,cb){
+                if(updatedJsonNode.pointers[name] == null){
+                  core.setPointer(node,name,null);
+                  return cb(null);
+                }
                 core.loadByPath(root,guidCache[updatedJsonNode.pointers[name]],function(err,target){
                   if(err){
                     return cb(err);
@@ -593,22 +597,157 @@ define(['util/assert','util/canon'],function(ASSERT,CANON){
               return pNext(null);
             }
             tick = setInterval(function(){
-              if(setList.length > 0){
-                if(!updating){
+              if(!updating){
+                if(setList.length > 0){
                   updating = true;
                   updatePointer(setList.shift(),function(err){
                     error = error || err;
                     updating = false;
                   });
+                } else {
+                  clearInterval(tick);
+                  pNext(error);
                 }
-              } else {
-                clearInterval(tick);
-                pNext(error);
               }
             },10);
           },
           updateSets = function(sNext){
-            sNext(null);
+            var updateSet = function(name,finished){
+                var oMembers = Object.keys(originalJsonNode.sets[name] || {}),
+                  uMembers = Object.keys(updatedJsonNode.sets[name] || {}),
+                  toCreate = [],error=null, i,tick,creating=false;
+
+                //removing members
+                for(i=0;i<oMembers.length;i++){
+                  if(uMembers.indexOf(oMembers[i]) === -1){
+                    log("node "+logId(guid,updatedJsonLibrary)+" will clear member ["+oMembers[i]+"] from set ["+name+"]");
+                    core.delMember(node,name,guidCache[oMembers[i]]);
+                  }
+                }
+
+                //updating members and filling create list
+                for(i=0;i<uMembers.length;i++){
+                  if(oMembers.indexOf(uMembers[i]) === -1){
+                    toCreate.push(uMembers[i]);
+                    log("node "+logId(guid,updatedJsonLibrary)+" will add member ["+uMembers[i]+"] to it\'s set ["+name+"]");
+                  } else if(CANON.stringify(originalJsonNode.sets[name][uMembers[i]]) !== CANON.stringify(updatedJsonNode.sets[name][uMembers[i]])){
+                    log("node "+logId(guid,updatedJsonLibrary)+" will update member ["+uMembers[i]+"] in set ["+name+"]");
+                    updateMember(name,uMembers[i]);
+                  }
+                }
+
+                //check if we have to start ticking
+                if(toCreate.length === 0){
+                  return finished(null);
+                }
+
+                tick = setInterval(function(){
+                  if(!creating){
+                    if(toCreate.length > 0){
+                      creating = true;
+                      addMember(name,toCreate.shift(),function(err){
+                        error = error || err;
+                        creating = false;
+                      });
+                    } else {
+                      clearInterval(tick);
+                      return finished(error);
+                    }
+                  }
+                },10);
+              },
+              addMember = function(setName,guid,mNext){
+                core.loadByPath(root,guidCache[guid],function(err,member){
+                  var keys,i;
+                  if(err){
+                    return mNext(err);
+                  }
+                  core.addMember(node,setName,member);
+                  keys = Object.keys(updatedJsonNode.sets[setName][guid].attributes|| {});
+                  for(i=0;i<keys.length;i++){
+                    core.setMemberAttribute(node,setName,guidCache[guid],keys[i],updatedJsonNode.sets[setName][guid].attributes[keys[i]]);
+                  }
+                  keys = Object.keys(updatedJsonNode.sets[setName][guid].registry|| {});
+                  for(i=0;i<keys.length;i++){
+                    core.setMemberRegistry(node,setName,guidCache[guid],keys[i],updatedJsonNode.sets[setName][guid].registry[keys[i]]);
+                  }
+                  return mNext(null);
+                });
+              },
+              updateMember = function(setName,guid){
+                var oMember = originalJsonNode.sets[setName][guid] || {},
+                  uMember = updatedJsonNode.sets[setName][guid] || {},
+                  keys,i;
+
+                //attributes
+                //deleting
+                keys = Object.keys(oMember.attributes || {});
+                for(i=0;i<keys.length;i++){
+                  if(!uMember.attributes || uMember.attributes[keys[i]] === undefined){
+                    core.delMemberAttribute(node,setName,guidCache[guid],keys[i]);
+                  }
+                }
+                //adding + updating
+                keys = Object.keys(uMember.attributes || {});
+                for(i=0;i<keys.length;i++){
+                  if(!oMember.attributes || oMember.attributes[keys[i]] === undefined || CANON.stringify(oMember.attributes[keys[i]]) !== CANON.stringify(uMember.attributes[keys[i]])){
+                    core.setMemberAttribute(node,setName,guidCache[guid],uMember.attributes[keys[i]]);
+                  }
+                }
+
+                //registry
+                //deleting
+                keys = Object.keys(oMember.registry || {});
+                for(i=0;i<keys.length;i++){
+                  if(!uMember.registry || uMember.registry[keys[i]] === undefined){
+                    core.delMemberRegistry(node,setName,guidCache[guid],keys[i]);
+                  }
+                }
+                //adding + updating
+                keys = Object.keys(uMember.registry || {});
+                for(i=0;i<keys.length;i++){
+                  if(!oMember.registry || oMember.registry[keys[i]] === undefined || CANON.stringify(oMember.registry[keys[i]]) !== CANON.stringify(uMember.registry[keys[i]])){
+                    core.setMemberRegistry(node,setName,guidCache[guid],uMember.registry[keys[i]]);
+                  }
+                }
+              },oSets = Object.keys(originalJsonNode.sets || {}),
+              uSets = Object.keys(updatedJsonNode.sets || {}),
+              i,tick,updating=false,toUpdate=[],error=null;
+            //first we simply remove the whole set if we have to
+            for(i=0;i<oSets.length;i++){
+              if(uSets.indexOf(oSets[i]) === -1){
+                log("node "+logId(guid,updatedJsonLibrary)+" will lose it\'s set ["+oSets[i]+"]");
+                core.deleteSet(node,oSets[i]);
+              }
+            }
+            //collecting sets that needs to be updated or created
+            for(i=0;i<uSets.length;i++){
+              if(oSets.indexOf(uSets[i]) === -1){
+                toUpdate.push(uSets[i]);
+              } else if(CANON.stringify(originalJsonNode.sets[uSets[i]]) !== CANON.stringify(updatedJsonNode.sets[uSets[i]])){
+                toUpdate.push(uSets[i]);
+              }
+            }
+
+            if(toUpdate.length === 0){
+              return sNext(null);
+            }
+
+            //start ticking
+            tick = setInterval(function(){
+              if(!updating){
+                if(toUpdate.length > 0){
+                  updating = true;
+                  updateSet(toUpdate.shift(),function(err){
+                    error = error || err;
+                    updating = false;
+                  });
+                } else {
+                  clearInterval(tick);
+                  sNext(error);
+                }
+              }
+            },10);
           },
           updateMeta = function(mNext){
             mNext(null);
@@ -779,7 +918,6 @@ define(['util/assert','util/canon'],function(ASSERT,CANON){
       },
       log = function(txt){
         logTxt += txt+"\n";
-        console.warn(txt);
       },
       phase = 'addnodes';
     
