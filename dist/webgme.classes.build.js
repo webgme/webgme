@@ -10546,7 +10546,9 @@ define('storage/failsafe',["util/assert", "util/guid"], function (ASSERT, GUID) 
                 if (err) {
                   callback(err, newhash, forkedhash);
                 } else {
-                  if (newhash && branchObj.local.indexOf(newhash) !== -1) {
+                  var index = branchObj.unackedSentHashes.indexOf(newhash);
+                  if (newhash && index !== -1) {
+                    branchObj.unackedSentHashes.splice(index+1, branchObj.unackedSentHashes.length);
                     callback(err, newhash, forkedhash);
                   } else {
                     //we forked!!!
@@ -10635,6 +10637,7 @@ define('storage/failsafe',["util/assert", "util/guid"], function (ASSERT, GUID) 
             ASSERT(branchObj.local.length === 0);
             branchObj.state = BRANCH_STATES.AHEAD;
             branchObj.local = [newhash, oldhash];
+            branchObj.unackedSentHashes = [newhash, oldhash];
             project.setBranchHash(branch, oldhash, newhash, returnFunction);
             callback(null);
             return;
@@ -10642,6 +10645,7 @@ define('storage/failsafe',["util/assert", "util/guid"], function (ASSERT, GUID) 
             ASSERT(branchObj.local.length > 0);
             if (oldhash === branchObj.local[0]) {
               branchObj.local.unshift(newhash);
+              branchObj.unackedSentHashes.unshift(newhash);
               project.setBranchHash(branch, oldhash, newhash, returnFunction);
               callback(null);
             } else {
