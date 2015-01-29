@@ -750,9 +750,115 @@ define(['util/assert','util/canon'],function(ASSERT,CANON){
             },10);
           },
           updateMeta = function(mNext){
-            mNext(null);
+            //TODO check if some real delta kind of solutions is possible for meta rule definition
+            var meta = updatedJsonNode.meta || {},
+              addGuidTarget = function(guid,finish){
+                var keys, i,index;
+                core.loadByPath(root,guidCache[guid],function(err,target){
+                  if(err){
+                    return finish(err);
+                  }
+                  //search it among children
+                  if(meta.children && meta.children.items && meta.children.items.length){
+                    i = meta.children.items.indexOf(guid);
+                    if(i !== -1){
+                      core.setChildMeta(node,target,meta.children.minItems[i] || -1,meta.children.maxItems[i] || -1);
+                    }
+                  }
+
+                  //now a similar search for every pointer
+                  keys = Object.keys(meta.pointers || {});
+                  for(i=0;i<keys.length;i++){
+                    if(meta.pointers[keys[i]] && meta.pointers[keys[i]].items && meta.pointers[keys[i]].items.length){
+                      index = meta.pointers[keys[i]].items.indexOf(guid);
+                      if(index !== -1){
+                        core.setPointerMetaTarget(node,keys[i],target,meta.pointers[keys[i]].minItems[index] || -1, meta.pointers[keys[i]].maxItems[index] || -1);
+                      }
+                    }
+                  }
+
+                  //finally some check for aspects
+                  keys = Object.keys(meta.aspects || {});
+                  for(i=0;i<keys.length;i++){
+                    if(meta.aspects[keys[i]].length){
+                      if(meta.aspects[keys[i]].indexOf(guid) !== -1){
+                        core.setAspectMetaTarget(node,keys[i],target);
+                      }
+                    }
+                  }
+                  finish(null);
+                });
+              },
+              addGuid = function(guid){
+                if(targetToAdd.indexOf(guid) === -1){
+                  targetToAdd.push(guid);
+                }
+              },
+              i, j,keys,tick,updating=false,error = null,targetToAdd=[];
+            core.clearMetaRules(node);
+
+            //attributes
+            keys = Object.keys(meta.attributes || {});
+            for(i=0;i<keys.length;i++){
+              core.setAttributeMeta(node,keys[i],meta.attributes[keys[i]]);
+            }
+
+            //collecting all targets
+            if(meta.children && meta.children.items && meta.children.items.length){
+              for(i=0;i<meta.children.items.length;i++){
+                addGuid(meta.children.items[i]);
+              }
+            }
+            keys = Object.keys(meta.pointers || {});
+            for(i=0;i<keys.length;i++){
+              if(meta.pointers[keys[i]].items && meta.pointers[keys[i]].items.length){
+                for(j=0;j<meta.pointers[keys[i]].items.length;j++){
+                  addGuid(meta.pointers[keys[i]].items[j]);
+                }
+              }
+            }
+            keys = Object.keys(meta.aspects || {});
+            for(i=0;i<keys.length;i++){
+              if(meta.aspects[keys[i]] && meta.aspects[keys[i]].length){
+                for(j=0;j<meta.aspects[keys[i]].length;j++){
+                  addGuid(meta.aspects[keys[i]][j]);
+                }
+              }
+            }
+            //setting global maximums and minimums
+            if(meta.children && (meta.children.max || meta.children.min)){
+              core.setChildrenMetaLimits(node,meta.children.min || -1,meta.children.max || -1);
+            }
+            keys = Object.keys(meta.pointers || {});
+            for(i=0;i<keys.length;i++){
+              if(meta.pointers[keys[i]].min || meta.pointers[keys[i]].max){
+                core.setPointerMetaLimits(node,keys[i],meta.pointers[keys[i]].min || -1, meta.pointers[keys[i]].max || -1);
+              }
+            }
+
+            if(targetToAdd.length === 0){
+              return mNext(error);
+            }
+
+            //start ticking
+            tick = setInterval(function(){
+              if(!updating){
+                if(targetToAdd.length > 0){
+                  updating = true;
+                  addGuidTarget(targetToAdd.shift(),function(err){
+                    error = error || err;
+                    updating = false;
+                  });
+                } else {
+                  clearInterval(tick);
+                  mNext(error);
+                }
+              }
+            },10);
           },
           loadNode = function(){
+            var needed = 3,
+              error = null;
             core.loadByPath(root,guidCache[guid],function(err,n){
               if(err){
                 return next(err);
@@ -762,17 +868,42 @@ define(['util/assert','util/canon'],function(ASSERT,CANON){
               //now we will do the immediate changes, then the ones which probably needs loading
               updateAttributes();
               updateRegistry();
-              updatePointers(function(err){
-                if(err){
-                  return next(err)
-                }
-                updateSets(function(err){
-                  if(err){
-                    return next(err)
+              console.warn('needed1',needed);
+              if(CANON.stringify(originalJsonNode.pointers) !== CANON.stringify(updatedJsonNode.pointers)){
+                updatePointers(function(err){
+                  console.warn('pfinished',needed);
+                  error = error || err;
+                  if(--needed === 0){
+                    return next(error);
                   }
-                  updateMeta(next);
                 });
-              });
+              } else if(--needed === 0){
+                return next(error);
+              }
+              console.warn('needed2',needed);
+              if(CANON.stringify(originalJsonNode.sets) !== CANON.stringify(updatedJsonNode.sets)){
+                updateSets(function(err){
+                  console.warn('sfinished',needed);
+                  error = error || err;
+                  if(--needed === 0){
+                    return next(error);
+                  }
+                });
+              } else if(--needed === 0){
+                return next(error);
+              }
+              console.warn('needed3',needed);
+              if(CANON.stringify(originalJsonNode.meta) !== CANON.stringify(updatedJsonNode.meta)){
+                updateMeta(function(err){
+                  console.warn('mfinished',needed);
+                  error = error || err;
+                  if(--needed === 0){
+                    return next(error);
+                  }
+                });
+              } else if(--needed === 0){
+                return next(error);
+              }
             });
           },originalJsonNode,
           updatedJsonNode = updatedJsonLibrary.nodes[guid],
