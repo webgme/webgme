@@ -76,19 +76,24 @@ describe('AutoRouter Box Tests', function(){
              'Deleting base box did not remove dependent boxes');
   });
 
-  it('should remove port from box',function(){
+  it.only('should remove port from box',function(){
       router = utils.getNewGraph();
-      var ports = utils.addBox({x: 100,
+      var box = utils.addBox({x: 100,
                                 y: 100});
 
 
       var boxCount = utils.getBoxCount(),
-          portCount = ports.ports.length;
+          portIds = Object.keys(box.ports),
+          portId = portIds[0],
+          portCount = portIds.length,
+          boxId = box.box.id;
 
-      router.removePort(ports.ports[0]);
+      router.removePort(box.ports[portId]);
+
       assert(utils.getBoxCount() === boxCount-1, 'Didn\'t remove the port container');
-      assert(ports.ports.length === portCount-1, 'Didn\'t remove the port from the box. '+
-            'Expected ' + (portCount-1) + ' but got ' + ports.ports.length);
+      assert(Object.keys(box.ports).length === portCount-1, 'Didn\'t remove the port from the box. '+
+            'Expected ' + (portCount-1) + ' but got ' + Object.keys(box.ports).length);
+      assert(router.graph.boxes[boxId], 'Removing the port also removed the box!');
   });
 
    it('should create boxes placed on graph',function(){

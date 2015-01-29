@@ -11,6 +11,7 @@ describe('AutoRouter Port Tests', function() {
           boxes = utils.addBoxes([[100,100], [150,150], [1000, 1000]]),
           src,
           srcPort,
+          portIds,
           portId,
           dst;
 
@@ -18,10 +19,12 @@ describe('AutoRouter Port Tests', function() {
       for (var i = boxes.length; i--;) {
           if (boxes[i].box.selfPoints[0].x === 100) {
               src = boxes[i];
-              for (var j = src.ports.length; j--;) {
-                  portId = src.ports[j].id;
+              portIds = Object.keys(src.ports);
+              console.log('ports:', portIds);
+              for (var j = portIds.length; j--;) {
+                  portId = portIds[j];
                   if (portId.indexOf('bottom') !== -1) {
-                      srcPort = src.ports[j];
+                      srcPort = src.ports[portId];
                   }
               }
           } else if (boxes[i].box.selfPoints[0].x === 1000) {
@@ -50,5 +53,65 @@ describe('AutoRouter Port Tests', function() {
   it('should reset available port region', function(){
       assert(false, 'Need to write this test!');
   });
+
+  it('should record portId2Path', function(){
+      var router = utils.getNewGraph();
+
+      var box1 = utils.addBox({x: 100, y: 100}),
+          box2 = utils.addBox({x: 900, y: 900}),
+          srcId = Object.keys(box1.ports)[0],
+          dstId = Object.keys(box2.ports)[0],
+          path;
+
+      router.addPath({src: box1.ports[srcId], dst: box2.ports[dstId]});
+      path = router.graph.paths[0];
+
+      router.routeSync();
+      assert(path.points.length > 2, 
+            'Path does not contain enough points to have been routed');
+
+      assert(router.portId2Path[srcId].out.length > 0, 
+            'Path did not record the portId2Path');
+
+      assert(router.portId2Path[dstId].in.length > 0, 
+            'Path did not record the portId2Path');
+  });
+
+  it.only('should update port', function(){
+      var router = utils.getNewGraph();
+
+      var box1 = utils.addBox({x: 100, y: 100}),
+          box2 = utils.addBox({x: 900, y: 900}),
+          srcId = Object.keys(box1.ports)[0],
+          dstId = Object.keys(box2.ports)[0],
+          path;
+
+      router.addPath({src: box1.ports[srcId], dst: box2.ports[dstId]});
+      path = router.graph.paths[0];
+
+      router.routeSync();
+      assert(path.points.length > 2, 
+            'Path does not contain enough points to have been routed');
+
+      assert(router.portId2Path[srcId].out.length > 0, 
+            'Path did not record the portId2Path');
+      // Update a port and verify the path uses the updated port
+      var newPortDef = {id: srcId, 
+                        area: [ [100, 110], [100, 190]]},
+          newPort;
+
+      newPort = router.updatePort(box1, newPortDef);
+
+      // Check the path
+      console.log('Startports ids:');
+      for (var i = path.startports.length; i--;) {
+          console.log(path.startports[i].id,':\n', path.startports[i]);
+      }
+
+      console.log('checking for', newPort.id, ':\n', newPort);
+      assert(path.startports.indexOf(newPort) !== -1, 
+             'Path did not update to use new port');
+  });
+
 
 });

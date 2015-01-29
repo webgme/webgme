@@ -75,6 +75,49 @@ var evaluateEdges = function(edges, fn) {
     return result;
 };
 
+// WebGME misc test helpers
+var webgme_helpers = (function() {
+    var addPorts = function(box) {
+        box.ports = [
+            {id: 'W',
+             angles: [180, 180],
+             area: [[box.x1, box.y1+10], [box.x1, box.y2-10]]},
+            {id: 'S',
+             angles: [90, 90],
+             area: [[box.x1+10, box.y2], [box.x2-10, box.y2]]},
+            {id: 'N',
+             angles: [270, 270],
+             area: [[box.x1+10, box.y1], [box.x2-10, box.y1]]},
+            {id: 'E',
+             angles: [0, 0],
+             area: [[box.x2, box.y1+10], [box.x2, box.y1+30]]}
+        ];
+
+        return box;
+    };
+    var makeBoxDef = function(location) {
+        var x1 = location[0],
+        y1 = location[1],
+        x2 = x1+129,
+        y2 = y1+40;
+
+        return addPorts({x1: x1,
+                        x2: x2,
+                        y1: y1,
+                        y2: y2});
+
+    };
+    var makeBox = function(location) {
+        return router.addBox(makeBoxDef(location));
+    };
+
+    return {
+        makeBox: makeBox,
+        makeBoxDef: makeBoxDef
+    };
+
+})();
+
 module.exports = {
     getNewGraph: getNewGraph,
     addBox: addBox,
@@ -82,5 +125,6 @@ module.exports = {
     addBoxes: addBoxes,
     getBoxCount: getBoxCount,
     evaluateEdges: evaluateEdges,
-    assert: assert
+    assert: assert,
+    webgme: webgme_helpers
 };

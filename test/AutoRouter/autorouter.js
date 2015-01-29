@@ -11,14 +11,16 @@ var utils = require('./autorouter.common.js'),
 // Tests
 describe('AutoRouter Tests', function(){
 
-it('should create basic paths',function(){
+  it('should create basic paths',function(){
       router = utils.getNewGraph();
 
       var box1 = utils.addBox({x: 100, y: 100}),
           box2 = utils.addBox({x: 900, y: 900}),
+          srcId = Object.keys(box1.ports)[0],
+          dstId = Object.keys(box2.ports)[0],
           path;
 
-      router.addPath({src: box2.ports[0], dst: box1.ports[1]});
+      router.addPath({src: box1.ports[srcId], dst: box2.ports[dstId]});
       path = router.graph.paths[0];
 
       router.routeSync();
@@ -30,8 +32,12 @@ it('should create basic paths',function(){
   it('should detect bracket opening',function(){
       router = utils.getNewGraph();
 
-      var box1 = utils.addBox({x: 100, y: 100});
-      router.addPath({src: box1.ports[0], dst: box1.ports[1]});
+      var box1 = utils.addBox({x: 100, y: 100}),
+          portIds = Object.keys(box1.ports),
+          srcId = portIds[0],
+          dstId = portIds[1];
+
+      router.addPath({src: box1.ports[srcId], dst: box1.ports[dstId]});
       router.routeSync();
 
       // Check that the graph contains an edge that is bracket closing or opening
@@ -224,9 +230,11 @@ it('should create basic paths',function(){
       router = utils.getNewGraph();
 
       var box1 = utils.addBox({x: 100, y: 100}),
-          box2 = utils.addBox({x: 900, y: 900});
+          box2 = utils.addBox({x: 900, y: 900}),
+          srcId = Object.keys(box1.ports)[0],
+          dstId = Object.keys(box2.ports)[0];
 
-      router.addPath({src: box2.ports[0], dst: box1.ports[1]});
+      router.addPath({src: box1.ports[srcId], dst: box2.ports[dstId]});
 
       router.routeAsync({
           callback: function(paths) {
