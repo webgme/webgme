@@ -77,7 +77,7 @@ describe('AutoRouter Port Tests', function() {
             'Path did not record the portId2Path');
   });
 
-  it.only('should update port', function(){
+  it('should update port', function(){
       var router = utils.getNewGraph();
 
       var box1 = utils.addBox({x: 100, y: 100}),
@@ -113,5 +113,41 @@ describe('AutoRouter Port Tests', function() {
              'Path did not update to use new port');
   });
 
+  it.only('should be able to remove point', function(){
+      var router = utils.getNewGraph();
 
+      var box1 = utils.addBox({x: 100, y: 100}),
+          box2 = utils.addBox({x: 900, y: 900}),
+          srcId = Object.keys(box1.ports)[0],
+          dstId = Object.keys(box2.ports)[0],
+          port,
+          path;
+
+      router.addPath({src: box1.ports[srcId], dst: box2.ports[dstId]});
+      path = router.graph.paths[0];
+      router.routeSync();
+      port = path.startport;
+      assert(port.getPointCount() === 1, 'Port does not have correct number of ports. Has '+
+             port.getPointCount()+' expected 1.');
+
+      // Get the point
+      var points = port.getPoints(),
+          point;
+
+      for (var s = points.length; s--;) {
+          for (var p = points[s].length; p--;) {
+              point = points[s][p];
+          }
+      }
+
+      port.removePoint(point);
+      assert(port.getPointCount() === 0, 'Port does not have correct number of ports. Has '+
+             port.getPointCount()+' expected 0.');
+
+      assert(path.startports.indexOf(port) === -1, 
+            'Port was not removed from path startports ('+path.startports+')');
+      assert(!path.isConnected(), 'Path should be disconnected after removing startpoint');
+  });
+
+ 
 });
