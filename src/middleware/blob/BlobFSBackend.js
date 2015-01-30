@@ -95,22 +95,21 @@ define(['./BlobBackendBase',
         var filename = path.join(this.blobDir, bucket, this._getObjectRelativeLocation(hash)),
             readStream;
 
-        if (fs.lstatSync(filename).isFile()) {
+        fs.lstat(filename, function (err, stat) {
+            if ((err && err.code === 'ENOENT') || !stat.isFile()) {
+                return callback('Requested object does not exist: ' + hash); // FIXME: make the request have status 404
+            } else if (err) {
+                return callback('getObject error: ' + err.code || 'unknown');
+            }
             readStream = fs.createReadStream(filename);
-        } else {
-            callback('Requested object does not exist: ' + hash);
-            return;
-        }
 
-        writeStream.on('finish', function () {
-            // FIXME: any error handling here?
-            fs.stat(filename, function(err, stat) {
+            writeStream.on('finish', function () {
                 // FIXME: any error handling here?
                 callback(null, {lastModified: stat.mtime.toISOString()});
             });
-        });
 
-        readStream.pipe(writeStream);
+            readStream.pipe(writeStream);
+        });
     };
 
     BlobFSBackend.prototype.listObjects = function (bucket, callback) {
