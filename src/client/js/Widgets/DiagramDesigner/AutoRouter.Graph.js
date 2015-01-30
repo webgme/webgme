@@ -25,7 +25,8 @@ define(['logManager',
 
     "use strict"; 
 
-	var _logger = logManager.create("AutoRouterGraph");
+	var _logger = logManager.create("AutoRouterGraph"),
+        COUNTER = 1;  // Used for unique ids
 
     var AutoRouterGraph = function () {
         this.horizontal = new AutoRouterEdgeList(true);
@@ -119,10 +120,6 @@ define(['logManager',
             }
         }
         this.bufferBoxes = [];
-    };
-
-    AutoRouterGraph.prototype._getBoxCount = function () {
-        return Object.keys(this.boxes).length;
     };
 
     AutoRouterGraph.prototype._getBoxAt = function (point, nearness) {
@@ -1737,7 +1734,11 @@ define(['logManager',
             j;
 
         box.rect.inflateRect(CONSTANTS.BUFFER);
+        assert(!this.box2bufferBox[inputBox.id], 'Can\'t add box to 2 bufferboxes');
 
+        // For every buffer box touching the input box
+        // Record the buffer boxes with children touching 
+        // the input box
         for (i = this.bufferBoxes.length; i--;) {
             if(!box.rect.touching(this.bufferBoxes[i].box)) {
                 continue;
@@ -1758,41 +1759,40 @@ define(['logManager',
             }
         }
 
+        parentBox = new ArRect(box.rect);
+        // If overlapped other boxes, create the new bufferbox parent rect
         if(overlapBoxesIndices.length !== 0) {
-            //Now overlapBoxes contains all the boxes overlapping with the box to be added
-            i = -1;
-            parentBox = new ArRect(box.rect);
 
-            while(++i < overlapBoxesIndices.length) {
-                assert(overlapBoxesIndices[i] < this.bufferBoxes.length, "ArGraph.addToBufferBoxes: overlapBoxes index out of bounds.");
+            for(i = 0; i < overlapBoxesIndices.length; i++) {
+                assert(overlapBoxesIndices[i] < this.bufferBoxes.length, 
+                      'ArGraph.addToBufferBoxes: overlapBoxes index out of bounds. ('+
+                      overlapBoxesIndices[i] + ' < ' + this.bufferBoxes.length+')');
+
                 bufferBox = this.bufferBoxes.splice(overlapBoxesIndices[i], 1)[0];
-                j = bufferBox.children.length;
-
-                while(j--) {
+                
+                for(j = bufferBox.children.length; j--;) {
                     children.push(bufferBox.children[j]);
-                    ids.push(bufferBox.children[j].id);//Store the ids of the children that need to be adjusted
+                    ids.push(bufferBox.children[j].id);  // Store the ids of the children that need to be adjusted
                 }
 
                 parentBox.unionAssign(bufferBox.box);
             }
-        } else {
-            parentBox = box.rect;
         }
 
         box.rect.id = inputBox.id;
         children.push(box.rect);
 
         this.bufferBoxes.push({box: parentBox, children: children});
-        i = ids.length;
-        while(i--) {
+
+        for(i = ids.length; i--;) {
             this.box2bufferBox[ids[i]] = this.bufferBoxes[this.bufferBoxes.length-1];
         }
 
     };
 
     AutoRouterGraph.prototype._removeFromBufferBoxes = function (box) {
-        //Get the children of the parentBox (not including the box to remove)
-        //Create bufferboxes from these children
+        // Get the children of the parentBox (not including the box to remove)
+        // Create bufferboxes from these children
         var bufferBox = this.box2bufferBox[box.id],
             i = this.bufferBoxes.indexOf(bufferBox),
             children = bufferBox.children,
@@ -1807,7 +1807,9 @@ define(['logManager',
 
         assert(i !== -1, "ARGraph.removeFromBufferBoxes: Can't find the correct bufferbox.");
 
-        this.bufferBoxes.splice(i, 1);//Remove the bufferBox from this.bufferBoxes
+        // Remove record of removed box
+        this.bufferBoxes.splice(i, 1);
+        this.box2bufferBox[box.id] = undefined;
 
         //Create groups of overlap from children
         i = children.length;
@@ -1817,7 +1819,7 @@ define(['logManager',
             group = [child];
             add = false;
 
-            this.boxes[child.id].resetPortAvailability();//Reset box's ports availableAreas
+            this.boxes[child.id].resetPortAvailability();  // Reset box's ports availableAreas
 
             if(child.id === box.id) {
                 continue;
@@ -1835,11 +1837,11 @@ define(['logManager',
                 }
 
                 if(add) {
-                    group = group.concat(groups.splice(g, 1)[0]);//group will accumulate all things overlapping the child
+                    group = group.concat(groups.splice(g, 1)[0]);  // group will accumulate all things overlapping the child
                 }
             }
 
-            groups.push(group); //Add group to groups
+            groups.push(group);  // Add group to groups
         }
 
         i = groups.length;
@@ -1895,7 +1897,7 @@ define(['logManager',
         this._disconnectPathsClipping(rect);
 
         box.owner = this;
-        var boxId = this._getBoxCount().toString();
+        var boxId = (COUNTER++).toString();
         while(boxId.length < 6) {
             boxId = "0" + boxId;
         }

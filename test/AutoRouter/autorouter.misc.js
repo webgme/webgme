@@ -7,13 +7,16 @@
 var common = require('./autorouter.common.js'),
     assert = common.assert,
     utils = common.webgme,
+    ARBugPlayer = require('./autorouter.replay.js'),
+    bugPlayer = new ARBugPlayer(),
     router;
 
+utils.getNewGraph = common.getNewGraph;
 // Tests
 describe('AutoRouter Misc Tests', function(){
 
   it('Cannot read property of adjustPortAvailability of undefined BUG',function(){
-      router = common.getNewGraph();
+      router = utils.getNewGraph();
 
       var updatePorts = function(box) {
           var rect = box.box.rect,
@@ -52,4 +55,11 @@ describe('AutoRouter Misc Tests', function(){
 
   });
 
+  it('basic model with ports',function(){
+      bugPlayer.test('./testCases/test.js');
+  });
+
+  it('needs a name',function(){
+      bugPlayer.test('./testCases/AR_bug_report1422640675165.js');
+  });
 });

@@ -143,6 +143,8 @@ define(['logManager',
             boxObjectId = boxObject.box.id,
             uniqueId = boxObjectId + SPLITTER + id;
 
+        assert(id.toString, 'Invalid Port Id! (' + id +')');
+        id = id.toString();
         if (id.indexOf(boxObjectId+SPLITTER) !== -1) {  // Assume id is already absolute id
             return id;
         }
@@ -440,6 +442,7 @@ define(['logManager',
         // Register the path under box id
         // Id the ports and register the paths with each port...
         for (i = srcPorts.length; i--;) {
+            console.log('id is', srcPorts[i].id);
             this.portId2Path[srcPorts[i].id].out.push(path);  // Assuming all ports belong to the same box
         }
         for (i = dstPorts.length; i--;) {
@@ -457,7 +460,8 @@ define(['logManager',
     };
 
     AutoRouter.prototype.getPathPoints = function(pathId) {
-        assert(this.paths[pathId] !== undefined, "AutoRouter:getPath requested path does not match any current paths");
+        assert(this.paths[pathId] !== undefined, 
+               'AutoRouter:getPath requested path does not match any current paths');
         var path = this.paths[pathId].path,
             points = path.getPointList(),
             i = -1,
@@ -509,7 +513,6 @@ define(['logManager',
     AutoRouter.prototype.updatePort = function(boxObject, portInfo) {
         // Remove owner box from graph
         var portId = this.getPortId(portInfo.id, boxObject),
-            // boxObject = this.portId2Box[portId],
             oldPort = this.ports[portId],
             tmpId = '##TEMP_ID##',
             incomingPaths = this.portId2Path[portId].in,

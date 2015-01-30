@@ -95,7 +95,7 @@ var webgme_helpers = (function() {
 
         return box;
     };
-    var makeBoxDef = function(location) {
+    var makeBoxDef = function(location, width, height) {
         var x1 = location[0],
         y1 = location[1],
         x2 = x1+129,
@@ -107,13 +107,41 @@ var webgme_helpers = (function() {
                         y2: y2});
 
     };
+
     var makeBox = function(location) {
         return router.addBox(makeBoxDef(location));
     };
 
+    var makeGMEPort = function(location, orientation) {
+        var x1 = location[0],
+            y1 = location[1],
+            x2 = x1+7,
+            y2 = y1+12,
+            ports = [],
+            boxDef = {
+                x1: x1,
+                x2: x2,
+                y1: y1,
+                y2: y2
+            };
+
+        switch (orientation) {
+            case 'left':
+                ports = [{angles: [180,180], area: [[x1+1,y1+y2/2], [x1+1,y1+y2/2]]}];
+                break;
+
+            case 'right':
+                ports = [{angles: [0,0], area: [[x2-1,y1+y2/2], [x2-1,y1+y2/2]]}];
+                break;
+        }
+
+        return router.addBox(boxDef);
+    };
+
     return {
         makeBox: makeBox,
-        makeBoxDef: makeBoxDef
+        makeBoxDef: makeBoxDef,
+        makeGMEPort: makeGMEPort 
     };
 
 })();
