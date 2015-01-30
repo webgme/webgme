@@ -11578,25 +11578,26 @@ define('logManager',[], function () {
 	};
 
 	Logger = function (componentName) {
-		this.debug = function (msg) {
-			logMessage("DEBUG", componentName, msg);
-		};
+        function _getLog(level) {
+            if (isComponentAllowedToLog(componentName) === true && logLevels[level] <= currentLogLevel) {
+                return function log(msg) {
+                    logMessage(level, componentName, msg);
+                };
+            } else {
+                return function log_noop(msg) {
+                };
+            }
+        }
 
-		this.info = function (msg) {
-			logMessage("INFO", componentName, msg);
-		};
+		this.debug = _getLog("DEBUG");
 
-		this.warning = function (msg) {
-			logMessage("WARNING", componentName, msg);
-		};
+		this.info = _getLog("INFO");
 
-		this.warn = function (msg) {
-			logMessage("WARNING", componentName, msg);
-		};
+		this.warning = _getLog("WARNING");
 
-		this.error = function (msg) {
-			logMessage("ERROR", componentName, msg);
-		};
+		this.warn = _getLog("WARNING");
+
+		this.error = _getLog("ERROR");
 	};
 
     var _setLogLevel = function (level) {
