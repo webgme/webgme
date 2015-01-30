@@ -286,7 +286,7 @@ define(['logManager',
         //Check to make sure each point makes a horizontal/vertical line with it's neighbors
         for (var i = this.length-1; i > 0; i--) {
             assert(UTILS.isRightAngle(UTILS.getDir(this[i-1][0].minus(this[i][0]))), 
-                "ArPointListPath contains skew edge:\n"+JSON.stringify(this)+'\n'+msg);
+                msg+"\n\tArPointListPath contains skew edge:\n"+JSON.stringify(this));
         }
     };
 

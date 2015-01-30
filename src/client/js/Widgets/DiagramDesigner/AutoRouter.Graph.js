@@ -584,7 +584,6 @@ define(['logManager',
             pos = -1;
         if (isAutoRouted) {
             ret = this._connectPoints(start, end, startdir, enddir);
-            ret.assertValid('path index: ' + this.paths.indexOf(path));
         }
 
         if (!isAutoRouted)
@@ -663,7 +662,6 @@ define(['logManager',
     AutoRouterGraph.prototype._connectPoints = function (start, end, hintstartdir, hintenddir, flipped) {
         var ret = new ArPointListPath(),
             thestart = new ArPoint(start), 
-            retend = ret.length,
             bufferObject,
             box,
             rect,
@@ -693,7 +691,7 @@ define(['logManager',
             assert(dir1 === Utils.getMajorDir(end.minus(start)), "ARGraph.connectPoints: dir1 === Utils.getMajorDir(end.minus(start)) FAILED");
             assert(dir2 === CONSTANTS.Dir_None || dir2 === Utils.getMinorDir(end.minus(start)), "ARGraph.connectPoints: dir2 === CONSTANTS.Dir_None || dir2 === Utils.getMinorDir(end.minus(start)) FAILED");
 
-            if(retend === ret.length && dir2 === hintstartdir && dir2 !== CONSTANTS.Dir_None) {
+            if(dir2 === hintstartdir && dir2 !== CONSTANTS.Dir_None) {
                 // i.e. std::swap(dir1, dir2);
                 dir2 = dir1;
                 dir1 = hintstartdir;
@@ -717,16 +715,16 @@ define(['logManager',
                 }
 
                 assert(dir1 !== dir2 && dir1 !== CONSTANTS.Dir_None && dir2 !== CONSTANTS.Dir_None, "ARGraph.connectPoints: dir1 !== dir2 && dir1 !== CONSTANTS.Dir_None && dir2 !== CONSTANTS.Dir_None FAILED");
-                if(bufferObject.box.ptInRect(end ) && !bufferObject.box.ptInRect( start ) && flipped) {
+                if (bufferObject.box.ptInRect(end) && !bufferObject.box.ptInRect(start) && flipped) {
                     //Unfortunately, if parentboxes are a pixel apart, start/end can get stuck and not cross the border
-                    //separating them.... This is a simple hack to get them to cross it.
+                    //separating them.... This is a nudge to get them to cross it.
                     if(Utils.isHorizontal(dir1)) {
                         start.x = end.x;
                     } else {
                         start.y = end.y;
                     }
-                }else if(bufferObject.box.ptInRect(end)) {
-                    if(!flipped) {
+                } else if (bufferObject.box.ptInRect(end)) {
+                    if (!flipped) {
                         oldEnd = new ArPoint(end);
 
                         ret2 = this._connectPoints(end, start, hintenddir, dir1, true);
@@ -746,7 +744,6 @@ define(['logManager',
                         if(pts !== null) {//There is a path from start -> end
                             if(pts.length) {  //Add new points to the current list 
                                 ret = ret.concat(pts);
-                                retend += pts.length;
                                 ret.push([new ArPoint(start)]);
                             }
                             start.assign(end);
@@ -792,7 +789,6 @@ define(['logManager',
 
                             //Add new points to the current list 
                             ret = ret.concat(pts);
-                            retend += pts.length;
 
                         } else { //Go through the blocking box
                             assert(Utils.isRightAngle (dir1), "ARGraph.getOutOfBox: Utils.isRightAngle (dir1) FAILED");
@@ -804,9 +800,7 @@ define(['logManager',
                             }
                         }
                     }
-                }
-                else
-                {
+                } else {
                     assert(Utils.isPointBetweenSides(end, rect, dir1), "ARGraph.connectPoints: Utils.isPointBetweenSides(end, rect, dir1) FAILED");
                     assert(!Utils.isPointIn(end, rect), "ARGraph.connectPoints: !Utils.isPointIn(end, rect) FAILED");
 
@@ -835,38 +829,24 @@ define(['logManager',
 
                     //If the box in the way has one child
                     if(bufferObject.children.length === 1) {
-                        if(Utils.isHorizontal(dir2))
-                        {
+                        if(Utils.isHorizontal(dir2)) {
                             start.x = Utils.getRectOuterCoord (rect, dir2);
-                        }
-                        else
-                        {
+                        } else {
                             start.y = Utils.getRectOuterCoord (rect, dir2);
                         }
 
                         assert(!start.equals(old), "ARGraph.connectPoints: !start.equals(old) FAILED");
-                        assert(retend !== ret.length, "ARGraph.connectPoints: retend !== ret.length FAILED");
-                        retend++;
-                        if(retend === ret.length) {
-                            ret.push([new ArPoint(start)]);
-                            retend--;
-                        } else {
-                            ret.splice(retend + 1, 0, [new ArPoint(start)]); 
-                        }
+                        ret.push([new ArPoint(start)]);
                         old.assign(start);
 
-                        if(Utils.isHorizontal(dir1))
-                        {
+                        if(Utils.isHorizontal(dir1)) {
                             start.x = Utils.getRectOuterCoord (rect, dir1);
-                        }
-                        else
-                        {
+                        } else {
                             start.y = Utils.getRectOuterCoord (rect, dir1);
                         }
 
                         assert(Utils.isPointInDirFrom(end, start, dir1), "ARGraph.connectPoints: Utils.isPointInDirFrom(end, start, dir1) FAILED");
-                        if(Utils.getPointCoord (start, dir1) !== Utils.getPointCoord (end, dir1))
-                        {
+                        if(Utils.getPointCoord (start, dir1) !== Utils.getPointCoord (end, dir1)) {
                             this._goToNextBufferBox({ "point": start, "dir": dir1, "end": end });
                         }
 
@@ -1540,7 +1520,8 @@ define(['logManager',
 
             while(j-- > 0) {
                 p2 = pointList[j][0];
-                if(Utils.isRightAngle(Utils.getDir(p1.minus(p2))) && !this._isLineClipBoxes(p1, p2)) {
+                if(Utils.isRightAngle(Utils.getDir(p1.minus(p2))) && !this._isLineClipBoxes(p1, p2) ||
+                    p1.equals(p2)) {
                     pointList.splice(i+1, j-i-1); //Remove all points between i, j
                     break;
                 }

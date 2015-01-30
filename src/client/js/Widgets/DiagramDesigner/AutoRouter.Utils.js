@@ -77,9 +77,7 @@ define(['./AutoRouter.Constants',
         var priority;
         for(i = 0; i < ports.length; i++) {
             priority = createPriority(ports[i], srcC) || 0;
-            console.log('priority is', priority);
             if(priority >= maxP) {
-                console.log('selecting port', i);
                 port = ports[i];
                 maxP = priority;
             }
