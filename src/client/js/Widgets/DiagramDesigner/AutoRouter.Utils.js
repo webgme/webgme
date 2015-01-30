@@ -864,36 +864,55 @@ define(['./AutoRouter.Constants',
         return this.dist1 < CONSTANTS.INT_MAX && this.dist2 < CONSTANTS.INT_MAX;
     };
 
+    // Convenience Functions
+    var removeFromArrays = function(value) {
+        var index,
+            removed = false,
+            array;
+
+        for (var i = arguments.length-1; i > 0; i--) {
+            array = arguments[i];
+            index = array.indexOf(value);
+            if (index !== -1) {
+                array.splice(index, 1);
+                removed = true;
+            }
+        }
+
+        return removed;
+    };
+
+    var stringify = function(value) {
+        return JSON.stringify(value, function(key, value) {
+            if (key === 'owner') {
+                return value.id || typeof value;
+            }
+            return value;
+        });
+    };
 
 
     return { onWhichEdge: _onWhichEdge,
              isCoordInDirFrom : _isCoordInDirFrom,           
-             //pointOnSide: _pointOnSide,
              isPointBetweenSides: _isPointBetweenSides,
              isPointInDirFrom : _isPointInDirFrom, 
              isPointInDirFromChildren : _isPointInDirFromChildren, 
              isPointIn : _isPointIn, 
              isPointNear: _isPointNear,
-             //getSkewDir : _getSkewDir, 
              getDir : _getDir, 
              exGetMinorDir : _exGetMinorDir, 
              exGetMajorDir: _exGetMajorDir,
              exGetDirTableIndex : _exGetDirTableIndex, 
              getMinorDir : _getMinorDir, 
              getMajorDir : _getMajorDir, 
-             //getDirTableIndex : _getDirTableIndex, 
              getRectOuterCoord : _getRectOuterCoord, 
              getChildRectOuterCoordFrom : _getChildRectOuterCoordFrom, 
-             //getRectCoord : _getRectCoord, 
              stepOneInDir : _stepOneInDir, 
              reverseDir : _reverseDir, 
              prevClockwiseDir : _prevClockwiseDir, 
              nextClockwiseDir : _nextClockwiseDir, 
              areInRightAngle : _areInRightAngle, 
-             //isBottomRight : _isBottomRight, 
-             //isTopLeft : _isTopLeft, 
              isRightAngle : _isRightAngle, 
-             //isVertical : _isVertical, 
              isHorizontal : _isHorizontal, 
              intersect : _intersect, 
              getLineClipRectIntersect:  _getLineClipRectIntersect,
@@ -907,7 +926,10 @@ define(['./AutoRouter.Constants',
              inflatedRect : _inflatedRect, 
              getPointCoord : _getPointCoord, 
              getOptimalPorts: _getOptimalPorts,
-             ArFindNearestLine: ArFindNearestLine
+             ArFindNearestLine: ArFindNearestLine,
+
+             removeFromArrays: removeFromArrays,
+             stringify: stringify
         };
 
 });

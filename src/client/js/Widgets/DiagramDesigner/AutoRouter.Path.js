@@ -14,7 +14,7 @@ define( ['logManager',
     "use strict"; 
 
     // AutoRouterPath
-    var AutoRouterPath = function (){
+    var AutoRouterPath = function () {
         this.id = 'None';
         this.owner = null;
         this.startpoint = null;
@@ -33,7 +33,7 @@ define( ['logManager',
     };
 
 
-    AutoRouterPath.prototype.Delete = function (){
+    AutoRouterPath.prototype.Delete = function () {
         this.deleteAll();
         this.owner = null;
     };
@@ -77,7 +77,7 @@ define( ['logManager',
         return this.points.length;
     };
 
-    AutoRouterPath.prototype.hasOwner = function(){
+    AutoRouterPath.prototype.hasOwner = function() {
         return this.owner !== null;
     };
 
@@ -97,12 +97,12 @@ define( ['logManager',
         }
     };
 
-    AutoRouterPath.prototype.clearPorts = function(){
+    AutoRouterPath.prototype.clearPorts = function() {
         this.startport = null;
         this.endport = null;
     };
 
-    AutoRouterPath.prototype.getStartPort = function(){
+    AutoRouterPath.prototype.getStartPort = function() {
         assert(this.startports.length, "ARPort.getStartPort: Can't retrieve start port.");
 
         if (!this.startport) {
@@ -111,7 +111,7 @@ define( ['logManager',
         return this.startport;
     };
 
-    AutoRouterPath.prototype.getEndPort = function(){
+    AutoRouterPath.prototype.getEndPort = function() {
         assert(this.endports.length, "ARPort.getEndPort: Can't retrieve end port.");
         if (!this.endport) {
             this.calculateEndPorts();
@@ -119,14 +119,26 @@ define( ['logManager',
         return this.endport;
     };
 
-    AutoRouterPath.prototype.calculateStartEndPorts = function(){
+    /**
+     * Remove port from start/end port lists.
+     *
+     * @param port
+     * @return {undefined}
+     */
+    AutoRouterPath.prototype.removePort = function(port) {
+        var removed = UTILS.removeFromArrays(port, this.startports, this.endports);
+        assert(removed, 'Port was not removed from path start/end ports');
+        this.state = CONSTANTS.ARPATHST_Default;
+    };
+
+    AutoRouterPath.prototype.calculateStartEndPorts = function() {
         return {'src': this.calculateStartPorts(), 'dst': this.calculateEndPorts() };
     };
 
-    AutoRouterPath.prototype.calculateStartPorts = function(){
+    AutoRouterPath.prototype.calculateStartPorts = function() {
         var srcPorts = [],
             tgt,
-            i = this.startports.length,
+            i,
             result = null;
 
         assert(this.startports.length > 0, "ArPath.calculateStartEndPorts: this.startports cannot be empty!");
@@ -137,7 +149,10 @@ define( ['logManager',
         }
 
         //Get available ports
-        while(i--){
+        for (i = this.startports.length; i--;){
+            if (!this.startports[i].owner) {
+                console.log('id of ownerless port:', this.startports[i].owner);
+            }
             assert(this.startports[i].owner, "ARPath.calculateStartEndPorts: this.startport has invalid this.owner!");
             if(this.startports[i].isAvailable()){
                 srcPorts.push(this.startports[i]);
@@ -194,10 +209,11 @@ define( ['logManager',
         }
 
         this.startpoint = this.startport.createStartEndPointTo(tgt, startdir);
+        this.startpoint.owner = this;
         return this.startport;
     };
 
-    AutoRouterPath.prototype.calculateEndPorts = function(){
+    AutoRouterPath.prototype.calculateEndPorts = function() {
         var dstPorts = [],
             tgt,
             i = this.endports.length,
@@ -269,10 +285,11 @@ define( ['logManager',
         }
 
         this.endpoint = this.endport.createStartEndPointTo(tgt, enddir);
+        this.endpoint.owner = this;
         return this.endport;
     };
 
-    AutoRouterPath.prototype.isConnected = function(){
+    AutoRouterPath.prototype.isConnected = function() {
         return (this.state & CONSTANTS.ARPATHST_Connected) !== 0;
     };
 
@@ -284,27 +301,27 @@ define( ['logManager',
         this.points.push(pt);
     };
 
-    AutoRouterPath.prototype.deleteAll = function(){
+    AutoRouterPath.prototype.deleteAll = function() {
         this.points = new ArPointListPath();
         this.state = CONSTANTS.ARPATHST_Default;
         this.startport = null;
         this.endport = null;
     };
 
-    AutoRouterPath.prototype.hasNoPoint = function(){
+    AutoRouterPath.prototype.hasNoPoint = function() {
         return this.points.length === 0;
     };
 
-    AutoRouterPath.prototype.getPointCount = function(){
+    AutoRouterPath.prototype.getPointCount = function() {
         return this.points.length;
     };
 
-    AutoRouterPath.prototype.getStartBox = function(){
+    AutoRouterPath.prototype.getStartBox = function() {
         var port = this.startport || this.startports[0];
         return port.owner.getRootBox();
     };
 
-    AutoRouterPath.prototype.getEndBox = function(){
+    AutoRouterPath.prototype.getEndBox = function() {
         var port = this.endport || this.endports[0];
         return port.owner.getRootBox();
     };
@@ -361,7 +378,7 @@ define( ['logManager',
         return p;
     };
 
-    AutoRouterPath.prototype.simplifyTrivially = function(){
+    AutoRouterPath.prototype.simplifyTrivially = function() {
         assert( !this.isConnected(), "ARPath.simplifyTrivially: !isConnected() FAILED" );
 
         if( this.points.length <= 2 ){
@@ -420,7 +437,7 @@ define( ['logManager',
         }
     };
 
-    AutoRouterPath.prototype.getPointList = function(){
+    AutoRouterPath.prototype.getPointList = function() {
         return this.points;
     };
 
@@ -433,7 +450,7 @@ define( ['logManager',
         }
     };
 
-    AutoRouterPath.prototype.getSurroundRect = function(){
+    AutoRouterPath.prototype.getSurroundRect = function() {
         var rect = new ArRect(CONSTANTS.INT_MAX,CONSTANTS.INT_MAX,CONSTANTS.INT_MIN,CONSTANTS.INT_MIN),
             pos = 0,
             point;
@@ -457,7 +474,7 @@ define( ['logManager',
         return rect;
     };
 
-    AutoRouterPath.prototype.isEmpty = function(){
+    AutoRouterPath.prototype.isEmpty = function() {
         return this.points.length === 0;
     };
 
@@ -498,19 +515,19 @@ define( ['logManager',
         return false;
     };
 
-    AutoRouterPath.prototype.isFixed = function(){
+    AutoRouterPath.prototype.isFixed = function() {
         return ((this.attributes & CONSTANTS.ARPATH_Fixed) !== 0);
     };
 
-    AutoRouterPath.prototype.isMoveable = function(){
+    AutoRouterPath.prototype.isMoveable = function() {
         return ((this.attributes & CONSTANTS.ARPATH_Fixed) === 0);
     };
 
-    AutoRouterPath.prototype.isHighLighted = function(){
+    AutoRouterPath.prototype.isHighLighted = function() {
         return ((this.attributes & CONSTANTS.ARPATH_HighLighted) !== 0);
     };
 
-    AutoRouterPath.prototype.getState = function(){
+    AutoRouterPath.prototype.getState = function() {
         return this.state;
     };
 
@@ -523,7 +540,7 @@ define( ['logManager',
         }
     };
 
-    AutoRouterPath.prototype.getEndDir = function(){
+    AutoRouterPath.prototype.getEndDir = function() {
         var a = this.attributes & CONSTANTS.ARPATH_EndMask;
         return	a & CONSTANTS.ARPATH_EndOnTop ? CONSTANTS.Dir_Top :
             a & CONSTANTS.ARPATH_EndOnRight ? CONSTANTS.Dir_Right :
@@ -531,7 +548,7 @@ define( ['logManager',
             a & CONSTANTS.ARPATH_EndOnLeft ? CONSTANTS.Dir_Left : CONSTANTS.Dir_None;
     };
 
-    AutoRouterPath.prototype.getStartDir = function(){
+    AutoRouterPath.prototype.getStartDir = function() {
         var a = this.attributes & CONSTANTS.ARPATH_StartMask;
         return	a & CONSTANTS.ARPATH_StartOnTop ? CONSTANTS.Dir_Top :
             a & CONSTANTS.ARPATH_StartOnRight ? CONSTANTS.Dir_Right :
@@ -554,7 +571,7 @@ define( ['logManager',
         this.owner.disconnect(this);
     };
 
-    AutoRouterPath.prototype.applyCustomizationsBeforeAutoConnectPoints = function(){
+    AutoRouterPath.prototype.applyCustomizationsBeforeAutoConnectPoints = function() {
         var plist = [];
 
         if (this.customPathData.length === 0){
@@ -578,7 +595,7 @@ define( ['logManager',
         return plist;
     };
 
-    AutoRouterPath.prototype.applyCustomizationsAfterAutoConnectPointsAndStuff = function(){
+    AutoRouterPath.prototype.applyCustomizationsAfterAutoConnectPointsAndStuff = function() {
         //This sets customizations of the type "CONSTANTS.SimpleEdgeDisplacement"
         if (this.customPathData.length === 0){
             return;
@@ -678,7 +695,7 @@ define( ['logManager',
         }
     };
 
-    AutoRouterPath.prototype.removePathCustomizations = function(){
+    AutoRouterPath.prototype.removePathCustomizations = function() {
         var ii = 0;
         while(ii < this.customPathData.length){
             this.pathDataToDelete.push(this.customPathData[ii++]);
@@ -717,11 +734,11 @@ define( ['logManager',
         }
     };
 
-    AutoRouterPath.prototype.areTherePathCustomizations = function(){
+    AutoRouterPath.prototype.areTherePathCustomizations = function() {
         return this.customPathData.length !== 0;
     };
 
-    AutoRouterPath.prototype.areThereDeletedPathCustomizations = function(){
+    AutoRouterPath.prototype.areThereDeletedPathCustomizations = function() {
         return this.pathDataToDelete.length !== 0;
     };
 
@@ -749,7 +766,7 @@ define( ['logManager',
         }
     };
 
-    AutoRouterPath.prototype.isAutoRouted = function(){
+    AutoRouterPath.prototype.isAutoRouted = function() {
         return this.isAutoRoutingOn;
     };
 
@@ -757,31 +774,34 @@ define( ['logManager',
         this.isAutoRoutingOn = arState;
     };
 
-    AutoRouterPath.prototype.destroy = function(){
+    AutoRouterPath.prototype.destroy = function() {
         if(this.isConnected()){
             this.startport.removePoint(this.startpoint);
             this.endport.removePoint(this.endpoint);
         }
     };
 
-    AutoRouterPath.prototype.assertValid = function(){
-        if( this.startport !== null ){
-            this.startport.assertValid();
+    AutoRouterPath.prototype.assertValid = function() {
+        console.log('path is asserting validity');
+        var i;
+        for (i = this.startports.length; i--;) {
+            this.startports[i].assertValid();
         }
 
-        if (this.endport !== null) {
-            this.endport.assertValid();
+        for (i = this.endports.length; i--;) {
+            this.endports[i].assertValid();
         }
 
         if (this.isConnected()) {
-            assert( this.points.length !== 0, "ARPath.assertValid: this.points.length !== 0 FAILED" );
-            var i = 0,
+            assert(this.points.length !== 0, "ARPath.assertValid: this.points.length !== 0 FAILED");
+            var points = this.getPointList(),
                 point,
                 ppoint;
 
-            while(i++ < this.getPointCount()){
-                point = this.getPointList()[i][0];
-                ppoint = this.getPointList()[i-1][0];
+            console.log('points are', points);
+            for (i = points.length-1; i > 1; i--){
+                point = points[i][0];
+                ppoint = points[i-1][0];
 
                 if(point.x !== ppoint.x && point.y !== ppoint.y){
                     assert(false, "Path.assertValid: Path is not valid");
@@ -789,11 +809,11 @@ define( ['logManager',
             }
 
         }else{
-            assert( this.points.length === 0, "ARPath.assertValid: this.points.length === 0 FAILED");
+            assert(this.points.length === 0, "ARPath.assertValid: this.points.length === 0 FAILED");
         }
     };
 
-    AutoRouterPath.prototype.assertValidPoints = function(){
+    AutoRouterPath.prototype.assertValidPoints = function() {
     };
 
     return AutoRouterPath;
