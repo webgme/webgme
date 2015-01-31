@@ -372,11 +372,6 @@ define(['logManager',
 
         removed = Utils.removeFromArrays.apply(null, [pt].concat(this.points));
 
-        // Update the path
-        path = pt.owner;
-        assert(path, 'start/end point does not have an owner!');
-        path.removePort(this);
-
         if (!removed) {
             _logger.warning("point (" + pt.x + ", " + pt.y + ") was not removed from port");
         }
@@ -405,10 +400,6 @@ define(['logManager',
                 this.points[s][i].add(shift);
             }
         }
-    };
-
-    AutoRouterPort.prototype.getPoints = function () {
-        return this.points;
     };
 
     AutoRouterPort.prototype.getPointCount = function () {
@@ -499,6 +490,28 @@ define(['logManager',
                       'AutoRouterPort.createStartEndPointTo: Utils.isRightAngle ( this.port_OnWhichEdge(resultPoint) FAILED');
             }
         }
+    };
+
+    AutoRouterPort.prototype.destroy = function () {
+        // Remove all points
+        console.log('removing all ports');
+        this.owner = null;
+
+        // Remove all points and self from all paths
+        var point,
+            path;
+
+        for (var i = this.points.length; i--;) {
+            for (var j = this.points[i].length; j--;) {
+                point = this.points[i][j];
+                path = point.owner;
+                assert(path, 'start/end point does not have an owner!');
+                path.removePort(this);
+            }
+        }
+
+        this.points = [[],[],[],[]];
+
     };
 
     return AutoRouterPort;

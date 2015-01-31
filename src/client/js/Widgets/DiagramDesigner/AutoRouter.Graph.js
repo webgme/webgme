@@ -99,7 +99,7 @@ define(['logManager',
 
             delete this.boxes[box.id];
 
-        }else if(box instanceof AutoRouterPath) { //ARPath
+        } else if(box instanceof AutoRouterPath) { //ARPath
             var path = box;
             this.deleteEdges(path);
 
@@ -1022,7 +1022,7 @@ define(['logManager',
 
         this.deleteEdges(box);
 
-        for (var i = box.ports.lengtg-1; i >= 0; i--) {
+        for (var i = box.ports.length-1; i >= 0; i--) {
             this.deleteEdges(box.ports[i]);
         }
 
@@ -2234,7 +2234,7 @@ define(['logManager',
             point2 = pointList[i][0];
             dir = Utils.getDir(point1.minus(point2));
             assert(Utils.isRightAngle(dir), 'path '+index+' contains invalid points! ('+
-                   JSON.stringify(point1)+', '+JSON.stringify(point2)+')\n'+JSON.stringify(pointList));
+                   Utils.stringify(point1)+', '+Utils.stringify(point2)+')\n'+Utils.stringify(pointList));
         }
     };
 

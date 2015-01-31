@@ -29,9 +29,7 @@ define(['logManager',
         this.logger.debug("ConnectionRouteManager3 ctor finished");
         this._portSeparator = DESIGNERITEM_SUBCOMPONENT_SEPARATOR;
 
-        if (DEBUG) {
-            this._recordActions = true;
-        }
+        this._recordActions = DEBUG;
         ActionApplier.prototype.init.call(this);
     };
 
@@ -51,19 +49,19 @@ define(['logManager',
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_UPDATE, this._onComponentUpdate);
 
         this._onComponentCreate = function(_canvas, ID) {
-            if(self.diagramDesigner.itemIds.indexOf( ID ) !== -1 && self._autorouterBoxes[ID] === undefined) {
-                self.insertBox( ID );
-            } else if( self.diagramDesigner.connectionIds.indexOf( ID ) !== -1 ) {
-                self.insertConnection( ID );
+            if (self.diagramDesigner.itemIds.indexOf(ID) !== -1 && self._autorouterBoxes[ID] === undefined) {
+                self.insertBox(ID);
+            } else if(self.diagramDesigner.connectionIds.indexOf(ID) !== -1) {
+                self.insertConnection(ID);
             }
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_CREATE, this._onComponentCreate);
 
         this._onComponentResize = function(_canvas, ID) {
             if(self._autorouterBoxes[ID.ID]) {
-                self._resizeItem( ID.ID );
+                self._resizeItem(ID.ID);
             } else {
-                self.insertBox( ID.ID );
+                self.insertBox(ID.ID);
             }
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ITEM_SIZE_CHANGED, this._onComponentResize);
@@ -99,7 +97,6 @@ define(['logManager',
     };
 
     ConnectionRouteManager3.prototype.destroy = function () {
-        //removeEventListener(eventName, handler);
         this.diagramDesigner.removeEventListener(this.diagramDesigner.events.ON_COMPONENT_CREATE, this._onComponentCreate);
         this.diagramDesigner.removeEventListener(this.diagramDesigner.events.ON_COMPONENT_UPDATE, this._onComponentUpdate);
         this.diagramDesigner.removeEventListener(this.diagramDesigner.events.ITEM_SIZE_CHANGED, this._onComponentResize);

@@ -76,7 +76,7 @@ describe('AutoRouter Box Tests', function(){
              'Deleting base box did not remove dependent boxes');
   });
 
-  it.only('should remove port from box',function(){
+  it('should remove port from box',function(){
       router = utils.getNewGraph();
       var box = utils.addBox({x: 100,
                                 y: 100});

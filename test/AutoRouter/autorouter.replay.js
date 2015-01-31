@@ -11,7 +11,8 @@ requirejs.config({
 
 var ActionApplier = requirejs('client/js/Widgets/DiagramDesigner/ConnectionRouteManager3.ActionApplier'),
     _ = requirejs('underscore'),
-    fs = require('fs');
+    fs = require('fs'),
+    HEADER = 'AUTOROUTER REPLAYER:\t';
 
 
 var AutoRouterBugPlayer = function() {
@@ -20,19 +21,36 @@ var AutoRouterBugPlayer = function() {
     this.logger = {error: console.log};
 };
 
+AutoRouterBugPlayer.prototype.log = function() {
+    'use strict';
+    var msg = [HEADER];
+    for (var i = 0; i < arguments.length; i++) {
+        msg.push(arguments[i]);
+    }
+    console.log.apply(null, msg);
+};
+
 AutoRouterBugPlayer.prototype._loadActions = function(filename) {
     'use strict';
     return require(filename);
 };
 
-AutoRouterBugPlayer.prototype.test = function(filename) {
+AutoRouterBugPlayer.prototype.test = function(filename, options) {
     'use strict';
+    var actions = this._loadActions(filename),
+        validate,
+        last;
 
-    var actions = this._loadActions(filename);
+    options = options || {};
+    validate = options.validate || function(){};
+    last = options.actionCount || actions.length;
 
-    for (var i = 0; i < actions.length; i++) {
-        console.log('Calling', actions[i].action, 'with', actions[i].args);
+    for (var i = 0; i < last; i++) {
+        this.log('Calling Action #'+i+':', actions[i].action, 'with', actions[i].args);
         this._invokeAutoRouterMethodUnsafe(actions[i].action, actions[i].args);
+
+        console.log('validate is', validate);
+        validate(this);
     }
 };
 

@@ -353,13 +353,11 @@ define(['logManager',
         this.portId2Box[id] = undefined;
     };
 
-    AutoRouter.prototype.addPath = function(a) {
+    AutoRouter.prototype.addPath = function(params) {
         // Assign a pathId to the path (return this id).
         // If there is only one possible path connection, create the path.
         // if not, store the path info in the pathsToResolve array
-        var src = a.src, 
-            dst = a.dst, 
-            pathId = (this.pCount++).toString();
+        var pathId = (this.pCount++).toString();
 
         // Generate pathId
         while(pathId.length < 6) {
@@ -367,8 +365,8 @@ define(['logManager',
         }
         pathId = "PATH_" + pathId;
 
-        a.id = pathId;
-        this._createPath(a);
+        params.id = pathId;
+        this._createPath(params);
 
         return pathId;
     };
@@ -520,8 +518,6 @@ define(['logManager',
             newPort;
 
         this._changePortId(portId, tmpId);
-
-        this.removePort(oldPort);
         newPort = this.addPort(boxObject, portInfo);
 
         // For all paths using this port, add the new port
@@ -542,6 +538,8 @@ define(['logManager',
             path.clearPorts();  // Force a recalculation of start/end port
         }
 
+        this.removePort(oldPort);
+
         // update the boxObject
         boxObject.ports[portId] = newPort;
 
@@ -553,6 +551,8 @@ define(['logManager',
         item = item.box || item;
 
         if(item instanceof AutoRouterBox) {
+            console.log('removing box', item.id);
+            console.log('path is', this.portId2Path[item.id]);
             this.portId2Path[item.id] = undefined;
             this.graph.deleteBox(item);
 

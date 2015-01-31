@@ -113,7 +113,7 @@ describe('AutoRouter Port Tests', function() {
              'Path did not update to use new port');
   });
 
-  it.only('should be able to remove point', function(){
+  it('should be able to remove point', function(){
       var router = utils.getNewGraph();
 
       var box1 = utils.addBox({x: 100, y: 100}),
@@ -123,7 +123,7 @@ describe('AutoRouter Port Tests', function() {
           port,
           path;
 
-      router.addPath({src: box1.ports[srcId], dst: box2.ports[dstId]});
+      router.addPath({src: box1.ports, dst: box2.ports[dstId]});
       path = router.graph.paths[0];
       router.routeSync();
       port = path.startport;
@@ -131,7 +131,7 @@ describe('AutoRouter Port Tests', function() {
              port.getPointCount()+' expected 1.');
 
       // Get the point
-      var points = port.getPoints(),
+      var points = port.points,
           point;
 
       for (var s = points.length; s--;) {
@@ -140,7 +140,9 @@ describe('AutoRouter Port Tests', function() {
           }
       }
 
-      port.removePoint(point);
+      // destroy removes all points, etc
+      // in practice, it shouldn't be called this way
+      port.destroy();
       assert(port.getPointCount() === 0, 'Port does not have correct number of ports. Has '+
              port.getPointCount()+' expected 0.');
 

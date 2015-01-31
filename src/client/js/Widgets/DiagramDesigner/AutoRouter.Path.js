@@ -128,7 +128,10 @@ define( ['logManager',
     AutoRouterPath.prototype.removePort = function(port) {
         var removed = UTILS.removeFromArrays(port, this.startports, this.endports);
         assert(removed, 'Port was not removed from path start/end ports');
-        this.state = CONSTANTS.ARPATHST_Default;
+
+        // If no more start/end ports, remove the path
+        assert(this.startports.length && this.endports.length, 'Removed all start/endports of path ' + this.id);
+        this.owner.disconnect(this);
     };
 
     AutoRouterPath.prototype.calculateStartEndPorts = function() {
@@ -567,7 +570,7 @@ define( ['logManager',
     AutoRouterPath.prototype.setCustomPathData = function(pDat){
         this.customPathData = pDat;
 
-        //Disconnect path
+        // Disconnect path
         this.owner.disconnect(this);
     };
 

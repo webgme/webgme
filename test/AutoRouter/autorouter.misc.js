@@ -9,7 +9,17 @@ var common = require('./autorouter.common.js'),
     utils = common.webgme,
     ARBugPlayer = require('./autorouter.replay.js'),
     bugPlayer = new ARBugPlayer(),
-    router;
+    router,
+    options = 
+      {
+          validate: function(player) {
+                // Call assertValid on every path
+                for (var j = player.autorouter.graph.paths.length; j--;) {
+                    player.autorouter.graph.paths[j].assertValid();
+                }
+            }
+      };
+
 
 utils.getNewGraph = common.getNewGraph;
 // Tests
@@ -59,7 +69,16 @@ describe('AutoRouter Misc Tests', function(){
       bugPlayer.test('./testCases/test.js');
   });
 
-  it('needs a name',function(){
+  it('bug report 1422640675165',function(){
       bugPlayer.test('./testCases/AR_bug_report1422640675165.js');
   });
+
+  it('bug report 1422644247555',function(){
+      bugPlayer.test('./testCases/AR_bug_report1422644247555.js', options);
+  });
+
+  it.only('bug report 1422652852583',function(){
+      bugPlayer.test('./testCases/AR_bug_report1422652852583.js', options);
+  });
+
 });
