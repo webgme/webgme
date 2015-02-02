@@ -10416,7 +10416,10 @@ define('storage/failsafe',["util/assert", "util/guid"], function (ASSERT, GUID) 
         var branchObj = pendingStorage[projectName][BRANCH_OBJ_ID][branchname];
         project.getBranchHash(branchname, branchObj.local[0], function (err, newhash, forked) {
           if (!err && newhash) {
-            if (branchObj.local.indexOf(newhash) !== -1) {
+            var index = branchObj.unackedSentHashes.indexOf(newhash);
+            if (index !== -1) {
+              // the server will catch up eventually...
+            } else if (branchObj.local.indexOf(newhash) !== -1) {
               project.setBranchHash(branchname, newhash, branchObj.local[0], callback);
             } else {
               //we forked
