@@ -247,12 +247,28 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                     }
                 });
 
-                socket.on('fsyncDatabase', function(callback){
+                socket.on('fsyncDatabase', function (projectName, callback){
+                    if (typeof projectName === 'function') {
+                        // old API
+                        callback = projectName;
+                        projectName = undefined;
+                    }
                     checkDatabase(function(err){
                         if(err){
                             callback(err);
                         } else {
-                            _database.fsyncDatabase(callback);
+                            if (projectName) {
+                                checkProject(getSessionID(socket), projectName, function (err, project) {
+                                    if (err) {
+                                        callback(err);
+                                    } else {
+                                        project.fsyncDatabase(callback);
+                                    }
+                                });
+                            } else {
+                                // old API
+                                _database.fsyncDatabase(callback);
+                            }
                         }
                     });
                 });

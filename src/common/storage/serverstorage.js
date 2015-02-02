@@ -4,17 +4,22 @@
  * Author: Tamas Kecskes
  */
 
-define([ 'storage/mongo', 'storage/server', 'storage/cache', 'storage/log', 'storage/broadcaster'], function (Mongo,Server,Cache,Log,Broadcaster) {
+define([ 'storage/mongo', 'storage/server', 'storage/cache', 'storage/log', 'storage/broadcaster', 'storage/fsync'], function (Mongo,Server,Cache,Log,Broadcaster,Fsync) {
     "use strict";
     function server(options){
-        var server = /*new Broadcaster(*/new Mongo(options)/*,options)*/;
+        var storages = [];
+        // storages.push(Broadcaster);
+        storages.push(Fsync);
         if (options.cache !== 0) {
-            server = new Cache(server, options);
+            storages.push(Cache);
         }
-        return new Server(new Log(server, options), options);
+        storages.push(Log);
+        storages.push(Server);
+
+        return storages.reduce(function (inner, class_) {
+            return new class_(inner, options);
+        }, new Mongo(options));
     }
-
-
 
     return server;
 });
