@@ -27,6 +27,7 @@
     "socket.io": "=0.9.14",
     "requirejs": "=2.1.15",
     "express": "=3.4.0",
+    "heap": "^0.2.5",
     "mime": "=1.2.11",
     "multiparty": "=3.2.4",
     "connect": "=2.10.0",
