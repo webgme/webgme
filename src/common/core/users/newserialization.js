@@ -75,6 +75,7 @@ define(['util/assert','util/canon'],function(ASSERT,CANON){
     }
     function getPointersOfNode(node){
       //this version only puts paths to target so they need to be either removed or replaced by guid targets
+
       var names = core.getOwnPointerNames(node).sort(),
         i,
         result = {};
@@ -295,7 +296,7 @@ define(['util/assert','util/canon'],function(ASSERT,CANON){
       for(i=0;i<names.length;i++){
         if(pathCache[jsonNodeObject.pointers[names[i]]]){
           jsonNodeObject.pointers[names[i]] = pathCache[jsonNodeObject.pointers[names[i]]];
-        } else {
+        } else if(jsonNodeObject.pointers[names[i]] !== null){
           delete jsonNodeObject.pointers[names[i]];
         }
       }
@@ -868,10 +869,8 @@ define(['util/assert','util/canon'],function(ASSERT,CANON){
               //now we will do the immediate changes, then the ones which probably needs loading
               updateAttributes();
               updateRegistry();
-              console.warn('needed1',needed);
               if(CANON.stringify(originalJsonNode.pointers) !== CANON.stringify(updatedJsonNode.pointers)){
                 updatePointers(function(err){
-                  console.warn('pfinished',needed);
                   error = error || err;
                   if(--needed === 0){
                     return next(error);
@@ -880,10 +879,8 @@ define(['util/assert','util/canon'],function(ASSERT,CANON){
               } else if(--needed === 0){
                 return next(error);
               }
-              console.warn('needed2',needed);
               if(CANON.stringify(originalJsonNode.sets) !== CANON.stringify(updatedJsonNode.sets)){
                 updateSets(function(err){
-                  console.warn('sfinished',needed);
                   error = error || err;
                   if(--needed === 0){
                     return next(error);
@@ -892,10 +889,8 @@ define(['util/assert','util/canon'],function(ASSERT,CANON){
               } else if(--needed === 0){
                 return next(error);
               }
-              console.warn('needed3',needed);
               if(CANON.stringify(originalJsonNode.meta) !== CANON.stringify(updatedJsonNode.meta)){
                 updateMeta(function(err){
-                  console.warn('mfinished',needed);
                   error = error || err;
                   if(--needed === 0){
                     return next(error);
