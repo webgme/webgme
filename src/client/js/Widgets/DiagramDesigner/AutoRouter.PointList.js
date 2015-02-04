@@ -12,7 +12,7 @@ define(['logManager',
         './AutoRouter.Point'], function (logManager,
                                          assert,
                                          CONSTANTS,
-                                         UTILS,
+                                         Utils,
                                          ArPoint) {
 
 
@@ -285,8 +285,8 @@ define(['logManager',
     ArPointListPath.prototype.assertValid = function(msg){
         //Check to make sure each point makes a horizontal/vertical line with it's neighbors
         for (var i = this.length-1; i > 0; i--) {
-            assert(UTILS.isRightAngle(UTILS.getDir(this[i-1][0].minus(this[i][0]))), 
-                msg+"\n\tArPointListPath contains skew edge:\n"+JSON.stringify(this));
+            assert(Utils.isRightAngle(Utils.getDir(this[i-1][0].minus(this[i][0]))), 
+                msg+"\n\tArPointListPath contains skew edge:\n"+Utils.stringify(this));
         }
     };
 

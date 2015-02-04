@@ -38,9 +38,7 @@ define(['logManager',
     };
 
     AutoRouterBox.prototype.deleteAllPorts = function (){
-        console.log('deleting all ports!');
         for(var i = 0; i < this.ports.length; i++){
-            console.log('this.ports[i].id', this.ports[i].id);
             this.ports[i].destroy();
         }
 

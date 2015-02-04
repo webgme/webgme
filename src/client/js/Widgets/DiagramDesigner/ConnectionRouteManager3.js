@@ -40,9 +40,9 @@ define(['logManager',
         var self = this;
 
         this._onComponentUpdate = function(_canvas, ID) {
-            if( self.diagramDesigner.itemIds.indexOf( ID ) !== -1 ) {
-                if( self.diagramDesigner.items[ID].rotation !== self._autorouterBoxRotation[ID] ) { //Item has been rotated
-                    self._resizeItem( ID );
+            if(self.diagramDesigner.itemIds.indexOf(ID) !== -1) {
+                if(self.diagramDesigner.items[ID].rotation !== self._autorouterBoxRotation[ID]) { //Item has been rotated
+                    self._resizeItem(ID);
                 }
             }
        };
@@ -66,8 +66,8 @@ define(['logManager',
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ITEM_SIZE_CHANGED, this._onComponentResize);
 
-        this._onComponentDelete = function(_canvas, ID) {//Boxes and lines
-            self.deleteItem( ID );
+        this._onComponentDelete = function(_canvas, ID) {  // Boxes and lines
+            self.deleteItem(ID);
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_DELETE, this._onComponentDelete);
         //ON_UNREGISTER_SUBCOMPONENT
@@ -108,7 +108,7 @@ define(['logManager',
 
     ConnectionRouteManager3.prototype.redrawConnections = function (idList) {
 
-        if( !this._initialized ) {
+        if(!this._initialized) {
             this._initializeGraph();
         }else{
             this._refreshConnData(idList);
@@ -147,7 +147,7 @@ define(['logManager',
     };
 
     ConnectionRouteManager3.prototype._refreshConnData = function (idList) {
-        //Clear connection data and paths then re-add them
+        // Clear connection data and paths then re-add them
         var i = idList.length;
 
         while(i--) {
@@ -284,25 +284,30 @@ define(['logManager',
             connectionMetaInfo,
             designerItem = canvas.items[objId],
             newCoord = designerItem.getBoundingBox(),
-            newBox = { 'x1': newCoord.x, 
-                       'x2': newCoord.x2, 
-                       'y1': newCoord.y, 
-                       'y2': newCoord.y2,
-          'ports': [] },
+            newBox = {x1: newCoord.x, 
+                      x2: newCoord.x2, 
+                      y1: newCoord.y, 
+                      y2: newCoord.y2},
+            ports = [],
             connAreas = designerItem.getConnectionAreas(objId, isEnd, connectionMetaInfo),
             i;
 
-        //Create the new box connection areas
+        // Create the new box connection areas
         i = connAreas.length;
         while (i--) {
-            //Building up the ConnectionAreas obiect
-            newBox.ports.push({'id': connAreas[i].id, 
-                               'area': [ [ connAreas[i].x1, connAreas[i].y1 ], [ connAreas[i].x2, connAreas[i].y2 ] ],
-                               'angles': [connAreas[i].angle1, connAreas[i].angle2]});
+            // Building up the ConnectionAreas object
+            ports.push({id: connAreas[i].id, 
+                        area: [ [ connAreas[i].x1, connAreas[i].y1 ], [ connAreas[i].x2, connAreas[i].y2 ] ],
+                        angles: [connAreas[i].angle1, connAreas[i].angle2]});
         }
 
-        //Update Box 
+        // Update Box 
         this._invokeAutoRouterMethod('setBoxRect',[objId, newBox]);
+
+        // Update box ports
+        for (i = ports.length; i--;) {
+            this._invokeAutoRouterMethod('updatePort',[objId, ports[i]]);
+        }
 
     };
 

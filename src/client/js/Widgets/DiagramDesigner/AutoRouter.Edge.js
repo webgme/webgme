@@ -20,6 +20,8 @@ define(['logManager',
          */
 
         /*
+         * TODO Update this comment
+         *
            Every CAutoRouterEdge belongs to an edge of a CAutoRouterPath, CAutoRouterBox or CAutoRouterPort. This edge is
            Represented by a CAutoRouterPoint with its next point. The variable 'point' will refer
            to this CAutoRouterPoint.
@@ -156,7 +158,7 @@ define(['logManager',
     };
 
     AutoRouterEdge.prototype.equals = function(otherEdge){
-        return this === otherEdge; //This checks if they reference the same object
+        return this === otherEdge; // This checks if they reference the same object
     };
 
     AutoRouterEdge.prototype.getStartPointPrev = function (){
@@ -275,13 +277,6 @@ define(['logManager',
     };
 
     AutoRouterEdge.prototype.setSectionNext = function(nextSection){
-        /*
-           if(nextSection instanceof Array){
-           this.section_next = nextSection;  //Don't want to actually change the pointer
-           }else {
-           this.section_next = [nextSection];
-           }
-         */
         nextSection = nextSection instanceof Array ? nextSection[0] : nextSection;
         if(this.section_next instanceof Array){
             this.section_next[0] = nextSection;

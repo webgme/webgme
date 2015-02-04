@@ -243,9 +243,6 @@ define(['./AutoRouter',
                 var boxId = args[0];
 
                 id = args[1].id;
-                //for (i = this._autorouterPorts[boxId].length; i--;) {
-                    //// if (this._autorouterPorts[boxId][i].id
-                //}
                 break;
         }
     };

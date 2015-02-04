@@ -124,13 +124,13 @@ define(['./AutoRouter.Constants',
     };
 
     var _distanceFromHLine = function (p, x1, x2, y) {
-        assert( x1 <= x2, "ArHelper.distanceFromHLine: x1 <= x2 FAILED");
+        assert(x1 <= x2, "ArHelper.distanceFromHLine: x1 <= x2 FAILED");
 
         return Math.max(Math.abs(p.y - y), Math.max(x1 - p.x, p.x - x2));
     };
 
     var _distanceFromVLine = function (p, y1, y2, x) {
-        assert( y1 <= y2, "ArHelper.distanceFromVLine: y1 <= y2 FAILED" );
+        assert(y1 <= y2, "ArHelper.distanceFromVLine: y1 <= y2 FAILED");
 
         return Math.max(Math.abs(p.x - x), Math.max(y1 - p.y, p.y - y2));
     };
@@ -138,22 +138,19 @@ define(['./AutoRouter.Constants',
     var _distanceFromLine = function (pt, start, end) {
         var dir = _getDir(end.minus(start));
 
-        if(_isHorizontal(dir)) {
+        if (_isHorizontal(dir)) {
             return _distanceFromVLine(pt, start.y, end.y, start.x);
-        }else{
+        } else {
             return _distanceFromHLine(pt, start.x, end.x, start.y);
         }
     };
 
     var _isOnEdge = function (start, end, pt) {
-        if (start.x === end.x)			// vertical edge, horizontal move
-        {
+        if (start.x === end.x) {			// vertical edge, horizontal move
             if (end.x === pt.x && pt.y <= Math.max(end.y, start.y) && pt.y >= Math.min(end.y, start.y)) {
                 return true;
             }
-        }
-        else if (start.y === end.y)	// horizontal line, vertical move
-        {
+        } else if (start.y === end.y) {	// horizontal line, vertical move
             if (start.y === pt.y && pt.x <= Math.max(end.x, start.x) && pt.x >= Math.min(end.x, start.x)) {
                 return true;
             }
@@ -163,7 +160,7 @@ define(['./AutoRouter.Constants',
     };
 
     var _isPointNearLine = function (point, start, end, nearness) {
-        assert( 0 <= nearness, "ArHelper.isPointNearLine: 0 <= nearness FAILED");
+        assert(0 <= nearness, "ArHelper.isPointNearLine: 0 <= nearness FAILED");
 
         // begin Zolmol
         // the routing may create edges that have start==end
@@ -884,7 +881,7 @@ define(['./AutoRouter.Constants',
 
     var stringify = function(value) {
         return JSON.stringify(value, function(key, value) {
-            if (key === 'owner') {
+            if (key === 'owner' && value) {
                 return value.id || typeof value;
             }
             return value;

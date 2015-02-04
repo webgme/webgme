@@ -15,7 +15,7 @@ define(['logManager',
        './AutoRouter.Edge'], function (logManager, 
                                        assert,
                                        CONSTANTS,
-                                       UTILS,
+                                       Utils,
                                        AutoRouterPath,
                                        AutoRouterPort,
                                        AutoRouterBox,
@@ -38,14 +38,31 @@ define(['logManager',
         //--Section
         this.section_first = null;
         this.section_blocker = null;
-        this.section_ptr2blocked = []; //This is an array to emulate the pointer to a pointer functionality in CPP. 
-        // this.section_ptr2blocked[0] = this.section_ptr2blocked*
+        this.section_ptr2blocked = []; // This is an array to emulate the pointer to a pointer functionality in CPP. 
+                                       // That is, this.section_ptr2blocked[0] = this.section_ptr2blocked*
 
         this._initOrder();
         this._initSection();
     };
 
-    //Public Functions
+    // Public Functions
+    AutoRouterEdgeList.prototype.contains = function(start, end) {
+        var currentEdge = this.order_first,
+            startpoint,
+            endpoint;
+
+        while (currentEdge) {
+            startpoint = currentEdge.startpoint[0];
+            endpoint = currentEdge.endpoint[0];
+            if (start.equals(startpoint) && end.equals(endpoint)) {
+               return true;
+            }
+            currentEdge = currentEdge.orderNext;
+        }
+
+        return false;
+    };
+
     AutoRouterEdgeList.prototype.destroy = function() {
         this.checkOrder();
         this.checkSection();
@@ -97,15 +114,15 @@ define(['logManager',
 
         while (pointList.length && pos >= 0) {
 
-            dir = UTILS.getDir(endpoint[0].minus(startpoint[0]));
+            dir = Utils.getDir(endpoint[0].minus(startpoint[0]));
 
             skipEdge = dir === CONSTANTS.Dir_None ? true : false;
             isMoveable = path.isMoveable();
 
             if (!isMoveable && dir !== CONSTANTS.Dir_Skew) {
-                goodAngle = UTILS.isRightAngle(dir);
+                goodAngle = Utils.isRightAngle(dir);
                 assert(goodAngle,
-                    'AREdgeList.addEdges: UTILS.isRightAngle (dir) FAILED!');
+                    'AREdgeList.addEdges: Utils.isRightAngle (dir) FAILED!');
 
                     if (!goodAngle) {
                         skipEdge = true;
@@ -114,7 +131,7 @@ define(['logManager',
             }
 
             if (!skipEdge && 
-                (UTILS.isRightAngle (dir) && UTILS.isHorizontal (dir) === this.ishorizontal)) {
+                (Utils.isRightAngle (dir) && Utils.isHorizontal (dir) === this.ishorizontal)) {
                     edge = new AutoRouterEdge();
                     edge.owner = path;
 
@@ -205,13 +222,13 @@ define(['logManager',
             startpoint = selfPoints[i];
             endpoint = selfPoints[(i + 1) % 4];
             endpoint_next = selfPoints[(i + 2) % 4];
-            dir = UTILS.getDir (endpoint.minus(startpoint));
+            dir = Utils.getDir(endpoint.minus(startpoint));
 
-            assert( UTILS.isRightAngle (dir),
-            'AREdgeList.addEdges: UTILS.isRightAngle (dir) FAILED!');
+            assert(Utils.isRightAngle(dir),
+                'AREdgeList.addEdges: Utils.isRightAngle (dir) FAILED!');
 
             canHaveStartEndPointHorizontal = port.canHaveStartEndPointHorizontal(this.ishorizontal);
-            if (UTILS.isHorizontal (dir) === this.ishorizontal && canHaveStartEndPointHorizontal) {
+            if (Utils.isHorizontal(dir) === this.ishorizontal && canHaveStartEndPointHorizontal) {
                 edge = new AutoRouterEdge();
 
                 edge.owner = port;
@@ -257,12 +274,12 @@ define(['logManager',
                 startpoint = selfPoints[i];
                 endpoint = selfPoints[(i + 1) % 4];
                 endpoint_next = selfPoints[(i + 2) % 4];
-                dir = UTILS.getDir (endpoint.minus(startpoint));
+                dir = Utils.getDir (endpoint.minus(startpoint));
 
-                assert( UTILS.isRightAngle (dir),
-                       'AREdgeList.addEdges: UTILS.isRightAngle (dir) FAILED!');
+                assert( Utils.isRightAngle (dir),
+                       'AREdgeList.addEdges: Utils.isRightAngle (dir) FAILED!');
 
-                if (UTILS.isHorizontal (dir) === this.ishorizontal) {
+                if (Utils.isHorizontal (dir) === this.ishorizontal) {
                     edge = new AutoRouterEdge();
 
                     edge.owner = box;
@@ -295,12 +312,12 @@ define(['logManager',
                 startpoint = selfPoints[i];
                 endpoint = selfPoints[(i + 1) % 4];
                 endpoint_next = selfPoints[(i + 2) % 4];
-                dir = UTILS.getDir(endpoint.minus(startpoint));
+                dir = Utils.getDir(endpoint.minus(startpoint));
 
-                assert( UTILS.isRightAngle (dir),
-                       'AREdgeList.addEdges: UTILS.isRightAngle (dir) FAILED!');
+                assert( Utils.isRightAngle (dir),
+                       'AREdgeList.addEdges: Utils.isRightAngle (dir) FAILED!');
 
-                if (UTILS.isHorizontal (dir) === this.ishorizontal) {
+                if (Utils.isHorizontal (dir) === this.ishorizontal) {
                     edge = new AutoRouterEdge();
 
                     edge.owner = graph;
@@ -321,11 +338,11 @@ define(['logManager',
     AutoRouterEdgeList.prototype.deleteEdges = function (object) {
         var edge = this.order_first,
             next;
-        while( edge !== null) {
 
+        while( edge !== null) {
             if(edge.owner === object) {
                 next = edge.orderNext;
-                this.Delete(edge);
+                this.remove(edge);
                 edge = next;
             } else {
                 edge = edge.orderNext;
@@ -336,7 +353,7 @@ define(['logManager',
 
     AutoRouterEdgeList.prototype.deleteAllEdges = function() {
         while(this.order_first) {
-            this.Delete(this.order_first);
+            this.remove(this.order_first);
         }
     };
 
@@ -396,7 +413,7 @@ define(['logManager',
         var edge = this.order_first;
         while(edge) {
 
-            if(UTILS.isPointNearLine(point, edge.startpoint, edge.endpoint, nearness)) {
+            if(Utils.isPointNearLine(point, edge.startpoint, edge.endpoint, nearness)) {
                 return edge;
             }
 
@@ -729,12 +746,6 @@ define(['logManager',
         edge.orderPrev = null;
     };
 
-    AutoRouterEdgeList.prototype.Delete = function(edge) {
-        assert(edge !== null, "AREdgeList.Delete: edge !== null FAILED");
-
-        this.remove(edge);
-    };
-
     //-- Private
 
     AutoRouterEdgeList.prototype._slideButNotPassEdges = function (edge, y) {
@@ -769,7 +780,7 @@ define(['logManager',
                 }
 
                 //If you can't pass the edge (but want to) and the lines will overlap x values...
-                if (!insert.getEdgeCanpassed() && UTILS.intersect (x1, x2, insert.positionX1, insert.positionX2 ))
+                if (!insert.getEdgeCanpassed() && Utils.intersect (x1, x2, insert.positionX1, insert.positionX2 ))
                 {
                     ret = insert;
                     y = insert.positionY;
@@ -777,16 +788,13 @@ define(['logManager',
                 }
             }
 
-            if (edge !== insert && insert.orderPrev !== edge)
-            {
+            if (edge !== insert && insert.orderPrev !== edge) {
                 this.remove(edge); 
                 this.insertBefore(edge, insert);
             }
-        }
-        else //If we are trying to slide up
-        {
-            while(insert.orderPrev)
-            {
+
+        } else { // If we are trying to slide up
+            while (insert.orderPrev) {
                 insert = insert.orderPrev;
 
                 if (y > insert.positionY)
@@ -795,7 +803,7 @@ define(['logManager',
                 }
 
                 //If insert cannot be passed and it is in the way of the edge (if the edge were to slide up).
-                if (!insert.getEdgeCanpassed() && UTILS.intersect (x1, x2, insert.positionX1, insert.positionX2 ))
+                if (!insert.getEdgeCanpassed() && Utils.intersect(x1, x2, insert.positionX1, insert.positionX2))
                 {
                     ret = insert;
                     y = insert.positionY;
@@ -803,8 +811,7 @@ define(['logManager',
                 }
             }
 
-            if (edge !== insert && insert.orderNext !== edge)
-            {
+            if (edge !== insert && insert.orderNext !== edge) {
                 this.remove(edge);//This is where I believe the error could lie!
                 this.insertAfter(edge, insert);
             }
@@ -818,7 +825,7 @@ define(['logManager',
 
     //------Section
 
-    //private
+    // private
 
     AutoRouterEdgeList.prototype._initSection = function () {
         this.section_first = null;
@@ -827,8 +834,8 @@ define(['logManager',
     };
 
     AutoRouterEdgeList.prototype.checkSection = function () {
-        if( !(this.section_blocker === null && this.section_ptr2blocked === null)) {
-            //This used to be contained in an assert. Generally this fails when the router does not have a clean exit then is asked to reroute.
+        if (!(this.section_blocker === null && this.section_ptr2blocked === null)) {
+            // This used to be contained in an assert. Generally this fails when the router does not have a clean exit then is asked to reroute.
             this._logger.warning("section_blocker and this.section_ptr2blocked are not null. Assuming last run did not exit cleanly. Fixing...");
             this.section_blocker = null;
             this.section_ptr2blocked = null;

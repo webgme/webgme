@@ -10,7 +10,7 @@ define(['logManager',
     "use strict";
 
     var ArPoint = function (x, y){
-        //Multiple Constructors
+        // Multiple Constructors
         if(x === undefined){
             x = 0;
             y = 0;
@@ -23,20 +23,14 @@ define(['logManager',
         this.y = Math.round(y);
     };
 
+    /**
+     * Check if the points have the same coordinates.
+     *
+     * @param {ArPoint} otherPoint
+     * @return {Boolean}
+     */
     ArPoint.prototype.equals = function (otherPoint){
-        if( this.x === otherPoint.x && this.y === otherPoint.y){
-            return true;
-        }
-
-        return false;
-    };
-
-    ArPoint.prototype.offset = function (x, y){
-        if(y !== undefined){ //two arguments are sent to function
-            x = new ArSize(x, y);
-        }
-
-        this.add(x);
+        return this.x === otherPoint.x && this.y === otherPoint.y;
     };
 
     ArPoint.prototype.shift = function (otherObject){ //equivalent to +=
@@ -72,15 +66,14 @@ define(['logManager',
     ArPoint.prototype.plus = function (otherObject){ //equivalent to +
         var objectCopy = null;
 
-        if(otherObject instanceof ArSize){
+        if (otherObject instanceof ArSize) {
             objectCopy = new ArPoint(this);
             objectCopy.add(otherObject);
 
-        }else if(otherObject instanceof ArPoint){
+        } else if(otherObject instanceof ArPoint) {
             objectCopy = new ArPoint(otherObject);
             objectCopy.x += this.x;
             objectCopy.y += this.y;
-
         }
         return objectCopy || undefined;
     };
@@ -106,6 +99,10 @@ define(['logManager',
         this.y = otherPoint.y;
 
         return this;
+    };
+
+    ArPoint.prototype.toString = function (){
+        return '('+this.x+', '+this.y+')';
     };
 
     return ArPoint;

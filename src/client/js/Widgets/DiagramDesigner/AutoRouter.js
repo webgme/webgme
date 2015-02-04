@@ -20,7 +20,7 @@ define(['logManager',
        function (logManager, 
                  assert, 
                  CONSTANTS, 
-                 UTILS, 
+                 Utils, 
                  ArPoint, 
                  ArRect, 
                  AutoRouterGraph, 
@@ -207,7 +207,7 @@ define(['logManager',
             // If it is a single point of connection, we will expand it to a rect
             // We will determine that it is horizontal by if it is closer to a horizontal edges
             // or the vertical edges
-            if(_y1 === _y2 && _x1 === _x2) {
+            if (_y1 === _y2 && _x1 === _x2) {
                 horizontal =  Math.min(Math.abs(rect.ceil - _y1), Math.abs(rect.floor - _y2)) <
                     Math.min(Math.abs(rect.left - _x1), Math.abs(rect.right - _x2)) ;
                 if(horizontal) {
@@ -227,7 +227,7 @@ define(['logManager',
             ary1 = _y1;
             ary2 = _y2;
 
-            if(horizontal) {
+            if (horizontal) {
                 if(Math.abs(_y1 - rect.ceil) < Math.abs(_y1 - rect.floor)) { // Closer to the top (horizontal)
                     ary1 = _y1 + 1;
                     ary2 = _y1 + 5;
@@ -248,18 +248,16 @@ define(['logManager',
                     arx2 -= 1;
                     attr = CONSTANTS.ARPORT_StartOnRight + CONSTANTS.ARPORT_EndOnRight;
                 }
-
-
             }
 
         }
         // Check to make sure the width/height is at least 3 -> otherwise assert will fail in ARPort.setRect
-        if(arx2 - arx1 < 3) {
+        if (arx2 - arx1 < 3) {
             arx1 -= 2;
             arx2 += 2;
         }
         // Check to make sure the width/height is at least 3 -> otherwise assert will fail in ARPort.setRect
-        if(ary2 - ary1 < 3) {
+        if (ary2 - ary1 < 3) {
             ary1 -= 2;
             ary2 += 2;
         }
@@ -267,13 +265,13 @@ define(['logManager',
         r = new ArRect(arx1, ary1, arx2, ary2);
 
         // If 'angles' is defined, I will use it to set attr
-        if(angles[0] !== undefined && angles[1] !== undefined) {
+        if (angles[0] !== undefined && angles[1] !== undefined) {
             a1 = angles[0]; // min angle
             a2 = angles[1]; // max angle
 
             attr = 0; // Throw away our guess of attr
 
-            if(rightAngle >= a1 && rightAngle <= a2) {
+            if (rightAngle >= a1 && rightAngle <= a2) {
                 attr += CONSTANTS.ARPORT_StartOnRight + CONSTANTS.ARPORT_EndOnRight;
             }
 
@@ -304,28 +302,35 @@ define(['logManager',
      * @param action
      * @return {undefined}
      */
-    AutoRouter.prototype._runActionOnPortInPath = function(port, action) {
+    AutoRouter.prototype._removePortsMatching = function(port) {
         var id = port.id,
-            paths = this.portId2Path[id].out,
-            i,
-            j;
+            startPaths = this.portId2Path[id].out,
+            endPaths = this.portId2Path[id].in,
+            removed,
+            i;
 
-        for (i = paths.length; i--;) {
-            for (j = paths[i].startports.length; j--;) {
-                if (paths[i].startports[j] === port) {
-                    action(paths[i], paths[i].startports, j);
-                }
-            }
+        var paths = '';
+        for (i = startPaths.length; i--;) {
+            assert(Utils.removeFromArrays(port, startPaths[i].startports),
+                   'Port '+port.id+' not removed from startports');
+            paths += startPaths[i].id + ', ';
         }
 
-        paths = this.portId2Path[id].in;
-        for (i = paths.length; i--;) {
-            for (j = paths[i].endports.length; j--;) {
-                if (paths[i].endports[j] === port) {
-                    action(paths[i], paths[i].startports, j);
-                }
-            }
+        paths = '';
+        for (i = endPaths.length; i--;) {
+            assert(Utils.removeFromArrays(port, endPaths[i].endports),
+                   'Port '+port.id+' not removed from endports');
+            paths += endPaths[i].id + ', ';
         }
+
+        // Check every path to see that it has no port with tmpId
+        for (i = this.graph.paths.length; i--;) {
+            assert(this.graph.paths[i].startports.indexOf(port) === -1, 
+                   'port not removed from path startports! ('+this.graph.paths[i].id+')');
+            assert(this.graph.paths[i].endports.indexOf(port) === -1, 
+                   'port not removed from path endports!');
+        }
+
     };
 
     AutoRouter.prototype.removePort = function(port) {
@@ -337,9 +342,7 @@ define(['logManager',
         this.graph.deleteBox(container);
 
         // update the paths
-        this._runActionOnPortInPath(port, function(path, ports, index) {
-            ports.splice(index, 1);
-        });
+        this._removePortsMatching(port);
 
         // remove port from ArBoxObject
         var boxObject = this.portId2Box[id];
@@ -351,6 +354,7 @@ define(['logManager',
         this.ports[id] = undefined;
         this.portId2Path[id] = undefined;
         this.portId2Box[id] = undefined;
+
     };
 
     AutoRouter.prototype.addPath = function(params) {
@@ -440,11 +444,10 @@ define(['logManager',
         // Register the path under box id
         // Id the ports and register the paths with each port...
         for (i = srcPorts.length; i--;) {
-            console.log('id is', srcPorts[i].id);
-            this.portId2Path[srcPorts[i].id].out.push(path);  // Assuming all ports belong to the same box
+            this.portId2Path[srcPorts[i].id].out.push(path);
         }
         for (i = dstPorts.length; i--;) {
-            this.portId2Path[dstPorts[i].id].in.push(path);   // so the specific port to check is trivial
+            this.portId2Path[dstPorts[i].id].in.push(path);
         }
         return pathData;
     };
@@ -481,13 +484,11 @@ define(['logManager',
             y1 = size.y1 !== undefined ? size.y1 : (size.y2 - size.height),
             y2 = size.y2 !== undefined ? size.y2 : (size.y1 + size.height),
             rect = new ArRect(x1, y1, x2, y2),
-            paths = {in: this.portId2Path[box.id].in, out: this.portId2Path[box.id].out},
-            i = paths.in.length,
-            pathSrc,
-            pathDst,
-            ports;
+            oldPorts = box.ports || [],
+            ports = size.ports;
 
         this.graph.setBoxRect(box, rect);
+
     };
 
     AutoRouter.prototype._changePortId = function(oldId, newId) {
@@ -529,6 +530,7 @@ define(['logManager',
             path.startports.push(newPort);
             this.graph.disconnect(path);
             path.clearPorts();  // Force a recalculation of start/end port
+            this.portId2Path[portId].out.push(path);
         }
 
         for (i = incomingPaths.length; i--;) {
@@ -536,6 +538,7 @@ define(['logManager',
             path.endports.push(newPort);
             this.graph.disconnect(path);
             path.clearPorts();  // Force a recalculation of start/end port
+            this.portId2Path[portId].in.push(path);
         }
 
         this.removePort(oldPort);
@@ -551,8 +554,6 @@ define(['logManager',
         item = item.box || item;
 
         if(item instanceof AutoRouterBox) {
-            console.log('removing box', item.id);
-            console.log('path is', this.portId2Path[item.id]);
             this.portId2Path[item.id] = undefined;
             this.graph.deleteBox(item);
 
@@ -627,6 +628,31 @@ define(['logManager',
 
         path.setCustomPathData(points);
 
+    };
+
+    /**
+     * Check that each path is registered under portId2Path for each start/end port.
+     *
+     * @return {undefined}
+     */
+    AutoRouter.prototype._assertPortId2PathIsValid = function() {
+        var id,
+            path,
+            j;
+        for (var i = this.graph.paths.length; i--;) {
+            path = this.graph.paths[i];
+            for (j = path.startports.length; j--;) {
+                id = path.startports[j].id;
+                assert(this.portId2Path[id].out.indexOf(path) !== -1,
+                    'Port '+id+' is missing registered startport for ' + path.id);
+            }
+
+            for (j = path.endports.length; j--;) {
+                id = path.endports[j].id;
+                assert(this.portId2Path[id].in.indexOf(path) !== -1,
+                    'Port '+id+' is missing registered endport for ' + path.id);
+            }
+        }
     };
 
     return AutoRouter;

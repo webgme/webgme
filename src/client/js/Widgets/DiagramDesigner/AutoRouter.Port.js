@@ -162,99 +162,11 @@ define(['logManager',
         return CONSTANTS.Dir_Top;
     };
 
-    AutoRouterPort.prototype.canCreateStartEndPointAt = function (point, isStart, nearness) {
-        return this.canHaveStartEndPoint(isStart) && Utils.isPointIn(point, this.rect, nearness);
-    };
-
-    AutoRouterPort.prototype.createStartEndPointAt = function (pt, isStart) {
-        assert(!this.rect.isRectEmpty(), "ARPort.createStartEndPointAt: !this.rect.isRectEmpty() FAILED!");
-
-        var point = new ArPoint(pt),
-            dir = CONSTANTS.Dir_None,
-            nearest = new Utils.ArFindNearestLine(point),
-            canHave = false;
-
-        if(this.canHaveStartEndPointOn(CONSTANTS.Dir_Top, isStart) && nearest.HLine(this.rect.left, this.rect.right, this.rect.ceil)) {
-            dir = CONSTANTS.Dir_Top;
-        }
-
-        if(this.canHaveStartEndPointOn(CONSTANTS.Dir_Right, isStart) && nearest.VLine(this.rect.ceil, this.rect.floor, this.rect.right)) {
-            dir = CONSTANTS.Dir_Right;
-        }
-
-        if(this.canHaveStartEndPointOn(CONSTANTS.Dir_Bottom, isStart) && nearest.HLine(this.rect.left, this.rect.right, this.rect.floor)) {
-            dir = CONSTANTS.Dir_Bottom;
-        }
-
-        if(this.canHaveStartEndPointOn(CONSTANTS.Dir_Left, isStart) && nearest.VLine(this.rect.ceil, this.rect.floor, this.rect.left )) {
-            dir = CONSTANTS.Dir_Left;
-        }
-
-        assert(Utils.isRightAngle (dir), "ArPort.createStartEndPointAt: Utils.isRightAngle (dir) FAILED!");
-
-        if(this.isConnectToCenter()) {
-            return this.createStartEndPointOn(dir);
-        }
-
-        if( point.x < this.rect.left ) {
-            point.x = this.rect.left;
-        } else if(this.rect.right <= point.x) {
-            point.x = this.rect.right;
-        }
-
-        if( point.y < this.rect.ceil ) {
-            point.y = this.rect.ceil;
-        } else if( this.rect.floor <= point.y) {
-            point.y = this.rect.bottom - 1;
-        }
-
-        switch(dir) {
-
-            case CONSTANTS.Dir_Top:
-                point.y = this.rect.ceil;
-                break;
-
-            case CONSTANTS.Dir_Right:
-                point.x = this.rect.right;
-                break;
-
-            case CONSTANTS.Dir_Bottom:
-                point.y = this.rect.floor;
-                break;
-
-            case CONSTANTS.Dir_Left:
-                point.x = this.rect.left;
-                break;
-        }
-
-        return point;
-    };
-
     AutoRouterPort.prototype.roundToHalfGrid = function (left, right) {
         var btwn = (left + right)/2;
         assert(btwn < Math.max(left, right) && btwn > Math.min(left, right), 
                "roundToHalfGrid: btwn variable not between left, right values. Perhaps box/connectionArea is too small?");
         return btwn;
-    };
-
-    AutoRouterPort.prototype.createStartEndPointOn = function (dir) {
-        // I will add the next point in the appropriate order based on the current pointAngles
-        assert( !this.rect.isRectEmpty(), "ARPort.createStartEndPointOn: !this.rect.isRectEmpty() FAILED!");
-        assert( Utils.isRightAngle (dir) , "ARPort.createStartEndPointOn: Utils.isRightAngle (dir) FAILED!");
-
-        switch(dir) {
-
-            case CONSTANTS.Dir_Top:
-                return new ArPoint(this.roundToHalfGrid(this.rect.left, this.rect.right), this.rect.ceil);
-
-            case CONSTANTS.Dir_Bottom:
-                return new ArPoint(this.roundToHalfGrid(this.rect.left, this.rect.right), this.rect.floor);
-
-            case CONSTANTS.Dir_Left:
-                return new ArPoint(this.rect.left, this.roundToHalfGrid(this.rect.ceil, this.rect.floor));
-        }
-
-        return new ArPoint(this.rect.right, this.roundToHalfGrid(this.rect.ceil, this.rect.floor));
     };
 
     AutoRouterPort.prototype.createStartEndPointTo = function (point, dir) {
@@ -299,18 +211,18 @@ define(['logManager',
             pathAngle += 2*Math.PI;
         }
 
-        pathAngle *= 180/Math.PI;//Using degrees for easier debugging
+        pathAngle *= 180/Math.PI;  // Using degrees for easier debugging
 
-        //Finding this.points ordering
+        // Finding this.points ordering
         while (k < this.points[dir].length && pathAngle > this.points[dir][k].pathAngle) {
             k++;
         }
 
-        if( this.points[dir].length ) {
-            if ( k === 0 ) {
+        if (this.points[dir].length) {
+            if (k === 0) {
                 largerPt = new ArPoint(this.points[dir][k]);
 
-            }else if ( k !== this.points[dir].length ) {
+            }else if (k !== this.points[dir].length) {
                 smallerPt = new ArPoint(this.points[dir][k-1]);
                 largerPt = new ArPoint(this.points[dir][k]);
 
@@ -323,35 +235,36 @@ define(['logManager',
         resultPoint = new ArPoint((largerPt.x + smallerPt.x)/2, (largerPt.y + smallerPt.y)/2);
         resultPoint.pathAngle = pathAngle;
 
-        //Move the point over to an 'this.availableArea' if appropriate
+        // Move the point over to an 'this.availableArea' if appropriate
         var i = this.availableArea.length,
             closestArea = 0,
             distance = Infinity,
             start,
             end;
 
-        //Find distance from each this.availableArea and store closest index
+        // Find distance from each this.availableArea and store closest index
         while(i--) {
             start = this.availableArea[i][0];
             end = this.availableArea[i][1];
 
-            if(Utils.isOnEdge (start, end, resultPoint)) {
+            if (Utils.isOnEdge (start, end, resultPoint)) {
                 closestArea = -1;
                 break;
-            }else if(Utils.distanceFromLine (resultPoint, start, end) < distance) {
+            } else if (Utils.distanceFromLine (resultPoint, start, end) < distance) {
                 closestArea = i;
                 distance = Utils.distanceFromLine (resultPoint, start, end);
             }
         }
 
-        if(closestArea !== -1 && this.isAvailable()) { //resultPoint needs to be moved to the closest available area
+        if (closestArea !== -1 && this.isAvailable()) { // resultPoint needs to be moved to the closest available area
             var dir2 = Utils.getDir (this.availableArea[closestArea][0].minus(resultPoint));
 
-            assert(Utils.isRightAngle (dir2), "AutoRouterPort.createStartEndPointTo: Utils.isRightAngle (dir2) FAILED");
+            assert(Utils.isRightAngle (dir2), 
+                'AutoRouterPort.createStartEndPointTo: Utils.isRightAngle(dir2) FAILED');
 
-            if(dir2 === CONSTANTS.Dir_Left || dir2 === CONSTANTS.Dir_Top) { //Then resultPoint must be moved up
+            if (dir2 === CONSTANTS.Dir_Left || dir2 === CONSTANTS.Dir_Top) { //Then resultPoint must be moved up
                 largerPt = this.availableArea[closestArea][1];
-            }else{ //Then resultPoint must be moved down
+            } else { // Then resultPoint must be moved down
                 smallerPt = this.availableArea[closestArea][0];
             }
 
@@ -482,19 +395,18 @@ define(['logManager',
         // Check that all points are on a side of the port
         var point;
 
-        assert(this.owner, 'Port does not have valid owner!');
+        assert(this.owner, 'Port '+this.id+' does not have valid owner!');
         for (var s = this.points.length; s--;) {
             for (var i = this.points[s].length; i--;) {
                 point = this.points[s][i];
                 assert(Utils.isRightAngle(this.port_OnWhichEdge(point)), 
-                      'AutoRouterPort.createStartEndPointTo: Utils.isRightAngle ( this.port_OnWhichEdge(resultPoint) FAILED');
+                      'AutoRouterPort.createStartEndPointTo: Utils.isRightAngle(this.port_OnWhichEdge(resultPoint)) FAILED');
             }
         }
     };
 
     AutoRouterPort.prototype.destroy = function () {
         // Remove all points
-        console.log('removing all ports');
         this.owner = null;
 
         // Remove all points and self from all paths
