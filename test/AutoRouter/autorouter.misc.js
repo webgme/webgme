@@ -12,11 +12,12 @@ var common = require('./autorouter.common.js'),
     router,
     options = 
       {
-          validate: function(player) {
+          after: function(router) {
                 // Call assertValid on every path
-                for (var j = player.autorouter.graph.paths.length; j--;) {
-                    player.autorouter.graph.paths[j].assertValid();
+                for (var j = router.graph.paths.length; j--;) {
+                    router.graph.paths[j].assertValid();
                 }
+                router.graph.assertValid();
             }
       };
 
@@ -66,19 +67,36 @@ describe('AutoRouter Misc Tests', function(){
   });
 
   it('basic model with ports',function(){
-      bugPlayer.test('./testCases/test.js');
+      bugPlayer.test('./testCases/basic.js');
   });
 
-  it('bug report 1422640675165',function(){
+  it('bug report 1',function(){
       bugPlayer.test('./testCases/AR_bug_report1422640675165.js');
   });
 
-  it('bug report 1422644247555',function(){
-      bugPlayer.test('./testCases/AR_bug_report1422644247555.js', options);
+  // Changed CR3
+  it('bug report 2',function(){
+    var debug = {
+          before: function(router) {
+                router._assertPortId2PathIsValid();
+          },
+          after: function(router) {
+                // Call assertValid on every path
+                router._assertPortId2PathIsValid();
+                options.after(router);
+            }
+      };
+      bugPlayer.test('./testCases/AR_bug_report_2.js');
+
   });
 
-  it.only('bug report 1422652852583',function(){
-      bugPlayer.test('./testCases/AR_bug_report1422652852583.js', options);
+  it('bug report 3',function(){
+      var debug = {
+          before: function(router) {
+          },
+          after: options.after
+      };
+      bugPlayer.test('./testCases/AR_bug_report1422974690643.js');
   });
 
 });

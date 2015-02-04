@@ -54,6 +54,50 @@ describe('AutoRouter Port Tests', function() {
       assert(false, 'Need to write this test!');
   });
 
+  //it.only('should record the port edges on the graph', function(){
+      //var router = utils.getNewGraph();
+      //var bigBoxDef = {x1: 1000,
+                       //x2: 2000,
+                       //y1: 1000,
+                       //y2: 2000,
+                       //ports: [
+                           //{id: 'top',
+                            //area: [[1010, 1010], [1020, 1010]]},
+                       //]};
+      //var box2 = router.addBox(bigBoxDef),
+          //dstId = Object.keys(box2.ports)[0];
+
+      //assert(router.graph._containsRectEdges(box2.ports[dstId].rect));
+  //});
+
+  it.only('should record the port edges on the graph after route', function(){
+      var router = utils.getNewGraph();
+      var bigBoxDef = {x1: 1000,
+                       x2: 2000,
+                       y1: 1000,
+                       y2: 2000,
+                       ports: [
+                           {id: 'left',
+                            area: [ [1000, 1010], [1000, 1020]]},
+                       ]};
+      var box1 = utils.addBox({x: 100, y: 100}),
+          box2 = router.addBox(bigBoxDef),
+          srcId = Object.keys(box1.ports)[0],
+          dstId = Object.keys(box2.ports)[0],
+          path;
+
+      router.addPath({src: box1.ports[srcId], dst: box2.ports[dstId]});
+      path = router.graph.paths[0];
+
+      router.routeSync();
+
+      // Check that the startpoint is still in the startport
+
+      box2.ports[dstId].assertValid();
+      box1.ports[srcId].assertValid();
+      router.graph.assertValid();
+  });
+
   it('should record portId2Path', function(){
       var router = utils.getNewGraph();
 

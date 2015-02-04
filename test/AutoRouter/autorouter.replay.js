@@ -12,6 +12,7 @@ requirejs.config({
 var ActionApplier = requirejs('client/js/Widgets/DiagramDesigner/ConnectionRouteManager3.ActionApplier'),
     _ = requirejs('underscore'),
     fs = require('fs'),
+    quiet = true,
     HEADER = 'AUTOROUTER REPLAYER:\t';
 
 
@@ -23,11 +24,13 @@ var AutoRouterBugPlayer = function() {
 
 AutoRouterBugPlayer.prototype.log = function() {
     'use strict';
-    var msg = [HEADER];
-    for (var i = 0; i < arguments.length; i++) {
-        msg.push(arguments[i]);
+    if (!quiet) {
+        var msg = [HEADER];
+        for (var i = 0; i < arguments.length; i++) {
+            msg.push(arguments[i]);
+        }
+        console.log.apply(null, msg);
     }
-    console.log.apply(null, msg);
 };
 
 AutoRouterBugPlayer.prototype._loadActions = function(filename) {
@@ -38,19 +41,20 @@ AutoRouterBugPlayer.prototype._loadActions = function(filename) {
 AutoRouterBugPlayer.prototype.test = function(filename, options) {
     'use strict';
     var actions = this._loadActions(filename),
-        validate,
+        before,
+        after,
         last;
 
     options = options || {};
-    validate = options.validate || function(){};
+    before = options.before || function(){};
+    after = options.after || function(){};
     last = options.actionCount || actions.length;
 
     for (var i = 0; i < last; i++) {
         this.log('Calling Action #'+i+':', actions[i].action, 'with', actions[i].args);
+        before(this.autorouter);
         this._invokeAutoRouterMethodUnsafe(actions[i].action, actions[i].args);
-
-        console.log('validate is', validate);
-        validate(this);
+        after(this.autorouter);
     }
 };
 
