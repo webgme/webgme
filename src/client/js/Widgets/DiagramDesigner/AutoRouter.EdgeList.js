@@ -32,8 +32,8 @@ define(['logManager',
         this.ishorizontal = b;
 
         //--Order
-        this.order_first = null;
-        this.order_last = null;
+        this.orderFirst = null;
+        this.orderLast = null;
 
         //--Section
         this.section_first = null;
@@ -47,7 +47,7 @@ define(['logManager',
 
     // Public Functions
     AutoRouterEdgeList.prototype.contains = function(start, end) {
-        var currentEdge = this.order_first,
+        var currentEdge = this.orderFirst,
             startpoint,
             endpoint;
 
@@ -336,7 +336,7 @@ define(['logManager',
     };
 
     AutoRouterEdgeList.prototype.deleteEdges = function (object) {
-        var edge = this.order_first,
+        var edge = this.orderFirst,
             next;
 
         while( edge !== null) {
@@ -352,17 +352,17 @@ define(['logManager',
     };
 
     AutoRouterEdgeList.prototype.deleteAllEdges = function() {
-        while(this.order_first) {
-            this.remove(this.order_first);
+        while(this.orderFirst) {
+            this.remove(this.orderFirst);
         }
     };
 
     AutoRouterEdgeList.prototype.isEmpty = function() {
-        return this.order_first === null;
+        return this.orderFirst === null;
     }; 
 
     AutoRouterEdgeList.prototype.getEdge = function(path, startpoint, endpoint) {
-        var edge = this.order_first;
+        var edge = this.orderFirst;
         while(edge !== null) {
 
             if( edge.isSameStartPoint(startpoint)) {
@@ -378,7 +378,7 @@ define(['logManager',
     };
 
     AutoRouterEdgeList.prototype.getEdgeByPointer = function(startpoint) {
-        var edge = this.order_first;
+        var edge = this.orderFirst;
         while(edge !== null) {
             if(edge.isSameStartPoint(startpoint)) {
                 break;
@@ -410,7 +410,7 @@ define(['logManager',
     };
 
     AutoRouterEdgeList.prototype.getEdgeAt = function(point, nearness) {
-        var edge = this.order_first;
+        var edge = this.orderFirst;
         while(edge) {
 
             if(Utils.isPointNearLine(point, edge.startpoint, edge.endpoint, nearness)) {
@@ -424,7 +424,7 @@ define(['logManager',
     };        
 
     AutoRouterEdgeList.prototype.dumpEdges = function(msg) {
-        var edge = this.order_first,
+        var edge = this.orderFirst,
             total = 1;
         console.log(msg);
 
@@ -438,7 +438,7 @@ define(['logManager',
     };
 
     AutoRouterEdgeList.prototype.getEdgeCount = function() {
-        var edge = this.order_first,
+        var edge = this.orderFirst,
             total = 1;
         while(edge !== null) {
             edge = edge.orderNext;
@@ -484,18 +484,15 @@ define(['logManager',
             edge = edge[0];
         }
 
-        assert( edge !== null && !edge.isStartPointNull() && !edge.isEndPointNull(),
+        assert(edge !== null && !edge.isStartPointNull() && !edge.isEndPointNull(),
                'AREdgeList.position_SetRealY: edge != null && !edge.isStartPointNull() && !edge.isEndPointNull() FAILED');
 
-        if (this.ishorizontal)
-        {
+        if (this.ishorizontal) {
             assert( edge.startpoint[0].y === edge.endpoint[0].y,
                    'AREdgeList.position_SetRealY: edge.startpoint[0].y === edge.endpoint[0].y FAILED');
             edge.setStartPointY(y);
             edge.setEndPointY(y);
-        }
-        else
-        {
+        } else {
             assert( edge.startpoint[0].x === edge.endpoint[0].x,
                    'AREdgeList.position_SetRealY: edge.startpoint[0].x === edge.endpoint[0].x FAILED');
             edge.setStartPointX(y);
@@ -507,29 +504,29 @@ define(['logManager',
      * Normalize the edge endpoints so x1 < x2
      */
     AutoRouterEdgeList.prototype._position_GetRealX = function (edge) {
-        assert( edge !== null && !edge.isStartPointNull() && !edge.isEndPointNull(),"AREdgeList.position_GetRealX: edge !== null && !edge.isStartPointNull() && !edge.isEndPointNull() FAILED");
+        assert(edge !== null && !edge.isStartPointNull() && !edge.isEndPointNull(),"AREdgeList.position_GetRealX: edge !== null && !edge.isStartPointNull() && !edge.isEndPointNull() FAILED");
         var x1, x2;
 
         if (this.ishorizontal) {
-            assert( edge.startpoint[0].y === edge.endpoint[0].y,
+            assert(edge.startpoint[0].y === edge.endpoint[0].y,
                    'AREdgeList.position_GetRealX: edge.startpoint[0].y === edge.endpoint[0].y FAILED');
-            if( edge.startpoint[0].x < edge.endpoint[0].x) {
+            if (edge.startpoint[0].x < edge.endpoint[0].x) {
 
                 x1 = edge.startpoint[0].x;
                 x2 = edge.endpoint[0].x;
-            }else{
+            } else {
 
                 x1 = edge.endpoint[0].x;
                 x2 = edge.startpoint[0].x;
             }
-        }else{
+        } else {
             assert( edge.startpoint[0].x === edge.endpoint[0].x,
                    'AREdgeList.position_GetRealX: edge.startpoint[0].x === edge.endpoint[0].x FAILED');
-            if(edge.startpoint[0].y < edge.endpoint[0].y) {
+            if (edge.startpoint[0].y < edge.endpoint[0].y) {
 
                 x1 = edge.startpoint[0].y;
                 x2 = edge.endpoint[0].y;
-            }else{
+            } else {
 
                 x1 = edge.endpoint[0].y;
                 x2 = edge.startpoint[0].y;
@@ -590,7 +587,7 @@ define(['logManager',
     };
 
     AutoRouterEdgeList.prototype._positionAll_StoreY = function () {
-        var edge = this.order_first;
+        var edge = this.orderFirst;
         while(edge)
         {
             this._position_SetRealY(edge, edge.positionY);
@@ -600,7 +597,7 @@ define(['logManager',
     };
 
     AutoRouterEdgeList.prototype._positionAll_LoadX = function () {
-        var edge = this.order_first,
+        var edge = this.orderFirst,
             pts;
         while(edge) {
             pts = this._position_GetRealX(edge);
@@ -612,13 +609,13 @@ define(['logManager',
     };
 
     AutoRouterEdgeList.prototype._initOrder = function () {
-        this.order_first = null;
-        this.order_last = null;
+        this.orderFirst = null;
+        this.orderLast = null;
     };
 
     AutoRouterEdgeList.prototype._checkOrder = function () {
-        assert( this.order_first === null && this.order_last === null,
-               'AREdgeList.checkOrder: this.order_first === null && this.order_last === null FAILED');
+        assert( this.orderFirst === null && this.orderLast === null,
+               'AREdgeList.checkOrder: this.orderFirst === null && this.orderLast === null FAILED');
     };
 
     //---Order
@@ -636,13 +633,13 @@ define(['logManager',
             assert(before.orderPrev.orderNext === before, "AREdgeList.insertBefore: before.orderPrev.orderNext === before FAILED\nbefore.orderPrev.orderNext is " + before.orderPrev.orderNext + " and before is " + before);
             before.orderPrev.orderNext = edge;
 
-            assert( this.order_first !== before,
-                   'AREdgeList.insertBefore: this.order_first !== before FAILED');
+            assert( this.orderFirst !== before,
+                   'AREdgeList.insertBefore: this.orderFirst !== before FAILED');
         }else{
 
-            assert( this.order_first === before,
-                   'AREdgeList.insertBefore: this.order_first === before FAILED');
-            this.order_first = edge;
+            assert( this.orderFirst === before,
+                   'AREdgeList.insertBefore: this.orderFirst === before FAILED');
+            this.orderFirst = edge;
         }
 
         before.orderPrev = edge;
@@ -663,53 +660,54 @@ define(['logManager',
                    'AREdgeList.insertAfter:  after.orderNext.orderPrev.equals(after) FAILED');
             after.orderNext.orderPrev = edge;
 
-            assert(!this.order_last.equals(after), "AREdgeList.insertAfter: !order_last.equals(after) FAILED");
+            assert(!this.orderLast.equals(after), "AREdgeList.insertAfter: !orderLast.equals(after) FAILED");
         }
         else
         {
-            assert(this.order_last.equals(after), "AREdgeList.insertAfter: this.order_last.equals(after) FAILED");
-            this.order_last = edge;
+            assert(this.orderLast.equals(after), "AREdgeList.insertAfter: this.orderLast.equals(after) FAILED");
+            this.orderLast = edge;
         }
 
         after.orderNext = edge;
     };
 
     AutoRouterEdgeList.prototype.insertLast = function(edge) {
-        assert(edge !== null, "AREdgeList.insertLast: edge !== null FAILED");
-        assert( edge.orderPrev === null && edge.orderNext === null,
-               'AREdgeList.insertLast: edge.orderPrev === null && edge.orderNext === null FAILED');
+        assert(edge !== null, 
+            'AREdgeList.insertLast: edge !== null FAILED');
+        assert(edge.orderPrev === null && edge.orderNext === null,
+            'AREdgeList.insertLast: edge.orderPrev === null && edge.orderNext === null FAILED');
 
-        edge.orderPrev = this.order_last;
+        edge.orderPrev = this.orderLast;
 
-        if (this.order_last)
-        {
-            assert( this.order_last.orderNext === null,
-                   'AREdgeList.insertLast: this.order_last.orderNext === null FAILED');
-                   assert(this.order_first !== null, "AREdgeList.insertLast: this.order_first != null FAILED");
+        if (this.orderLast) {
+            assert(this.orderLast.orderNext === null,
+                'AREdgeList.insertLast: this.orderLast.orderNext === null FAILED');
+            assert(this.orderFirst !== null, 
+                'AREdgeList.insertLast: this.orderFirst != null FAILED');
 
-            this.order_last.orderNext = edge;
-            this.order_last = edge;
-        }
-        else
-        {
-            assert( this.order_first === null,
-                   'AREdgeList.insertLast:  this.order_first === null FAILED');
+            this.orderLast.orderNext = edge;
+            this.orderLast = edge;
+        } else {
+            assert(this.orderFirst === null,
+                'AREdgeList.insertLast:  this.orderFirst === null FAILED');
 
-            this.order_first = edge;
-            this.order_last = edge;
+            this.orderFirst = edge;
+            this.orderLast = edge;
         }
     };
 
     AutoRouterEdgeList.prototype.insert = function(edge) {
-        assert( edge !== null,
-               'AREdgeList.insert:  edge !== null FAILED');
-               assert(edge.orderPrev === null && edge.orderNext === null, "AREdgeList.insert: edge.orderPrev === null && edge.orderNext === null FAILED");
+        assert(edge !== null,
+            'AREdgeList.insert:  edge !== null FAILED');
+        assert(edge.orderPrev === null && edge.orderNext === null, 
+            'AREdgeList.insert: edge.orderPrev === null && edge.orderNext === null FAILED');
 
         var y = edge.positionY;
 
-        assert(CONSTANTS.ED_MINCOORD <= y && y <= CONSTANTS.ED_MAXCOORD,  "AREdgeList.insert: CONSTANTS.ED_MINCOORD <= y && y <= CONSTANTS.ED_MAXCOORD FAILED (y is " + y + ")");
+        assert(CONSTANTS.ED_MINCOORD <= y && y <= CONSTANTS.ED_MAXCOORD,
+            'AREdgeList.insert: CONSTANTS.ED_MINCOORD <= y && y <= CONSTANTS.ED_MAXCOORD FAILED (y is ' + y + ')');
 
-        var insert = this.order_first;
+        var insert = this.orderFirst;
 
         while (insert && insert.positionY < y) {
             insert = insert.orderNext;
@@ -723,19 +721,19 @@ define(['logManager',
     };
 
     AutoRouterEdgeList.prototype.remove = function(edge) {
-        assert( edge !== null,
+        assert(edge !== null,
                'AREdgeList.remove:  edge !== null FAILED');
 
-        if (this.order_first === edge) {
-            this.order_first = edge.orderNext;
+        if (this.orderFirst === edge) {
+            this.orderFirst = edge.orderNext;
         }
 
         if (edge.orderNext) {
             edge.orderNext.orderPrev = edge.orderPrev;
         }
 
-        if (this.order_last === edge) {
-            this.order_last = edge.orderPrev;
+        if (this.orderLast === edge) {
+            this.orderLast = edge.orderPrev;
         }
 
         if (edge.orderPrev) {
@@ -1458,7 +1456,7 @@ define(['logManager',
 
         this.sectionReset();
 
-        var blocker = this.order_first,
+        var blocker = this.orderFirst,
 blocked,
             bmin,
             smin,
@@ -1544,7 +1542,7 @@ blocked,
         var modified = false;
 
         this.sectionReset();
-        var blocker = this.order_last,
+        var blocker = this.orderLast,
             blocked,
             bmin,
             smin,
@@ -1629,7 +1627,7 @@ blocked,
         var was = false;
 
         this._positionAll_LoadX(); 
-        var second = this.order_first,
+        var second = this.orderFirst,
             edge,
             next,
             ey,
@@ -1721,6 +1719,14 @@ blocked,
         }
 
         return was;
+    };
+
+    AutoRouterEdgeList.prototype.assertValid = function() {
+        // Check that all edges have start/end points
+        var edge = this.orderFirst;
+        //while (edge) {
+            //assert(edge.startpoint 
+        //}
     };
 
     return AutoRouterEdgeList;
