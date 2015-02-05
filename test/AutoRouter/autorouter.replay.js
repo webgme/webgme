@@ -12,7 +12,7 @@ requirejs.config({
 var ActionApplier = requirejs('client/js/Widgets/DiagramDesigner/ConnectionRouteManager3.ActionApplier'),
     _ = requirejs('underscore'),
     fs = require('fs'),
-    quiet = true,
+    verbose,
     HEADER = 'AUTOROUTER REPLAYER:\t';
 
 
@@ -24,7 +24,7 @@ var AutoRouterBugPlayer = function() {
 
 AutoRouterBugPlayer.prototype.log = function() {
     'use strict';
-    if (!quiet) {
+    if (verbose) {
         var msg = [HEADER];
         for (var i = 0; i < arguments.length; i++) {
             msg.push(arguments[i]);
@@ -45,11 +45,14 @@ AutoRouterBugPlayer.prototype.test = function(filename, options) {
         after,
         last;
 
+    // Unpack the options
     options = options || {};
+    verbose = options.verbose || false;
     before = options.before || function(){};
     after = options.after || function(){};
     last = options.actionCount || actions.length;
 
+    // Run the tests
     for (var i = 0; i < last; i++) {
         this.log('Calling Action #'+i+':', actions[i].action, 'with', actions[i].args);
         before(this.autorouter);
