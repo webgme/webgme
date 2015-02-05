@@ -29,9 +29,13 @@ var DEFAULT_CONFIG = "/*globals define*/\n" +
 "        guest: false,\n" +
 "        sessioncookieid: 'webgmeSid',\n" +
 "        sessioncookiesecret: 'meWebGMEez',\n" +
-
-"        paths: {},\n" +
-"        pluginBasePaths: [],\n" +
+"\n" +
+"        paths: {\n" +
+"               //executor: './src/middleware/executor'\n" +
+"            },\n" +
+"        pluginBasePaths: [\n" +
+"               //'./src/plugin/coreplugins'\n" +
+"            ],\n" +
 "        decoratorpaths: [],\n" +
 "        visualizerDescriptors: [],\n" +
 "        addonBasePaths: ['./addon/core'],\n" +
