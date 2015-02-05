@@ -470,7 +470,7 @@ define(['logManager',
             pt;
 
         while(++i < points.length) {
-            pt = [points[i][0].x, points[i][0].y];
+            pt = [points[i].x, points[i].y];
             res.push(pt);
         }
 
@@ -529,7 +529,6 @@ define(['logManager',
             path = outgoingPaths[i];
             path.startports.push(newPort);
             this.graph.disconnect(path);
-            path.clearPorts();  // Force a recalculation of start/end port
             this.portId2Path[portId].out.push(path);
         }
 
@@ -537,7 +536,6 @@ define(['logManager',
             path = incomingPaths[i];
             path.endports.push(newPort);
             this.graph.disconnect(path);
-            path.clearPorts();  // Force a recalculation of start/end port
             this.portId2Path[portId].in.push(path);
         }
 
@@ -622,7 +620,7 @@ define(['logManager',
 
         // Convert args.points to array of [ArPoint] 's
         while (i < args.points.length) {
-            points.push(new CustomPathData(args.points[i][0], args.points[i][1]));
+            points.push(new CustomPathData(args.points[i], args.points[i]));
             ++i;
         }
 

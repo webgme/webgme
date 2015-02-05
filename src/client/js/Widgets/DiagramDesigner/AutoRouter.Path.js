@@ -33,21 +33,15 @@ define( ['logManager',
     };
 
 
-    AutoRouterPath.prototype.Delete = function () {
-        this.deleteAll();
-        this.owner = null;
-    };
-
     //----Points
 
     AutoRouterPath.prototype.getPointPosAt = function (point, nearness){
         var pos = 0,
             oldpos;
 
-        while( pos < this.points.length )
-        {
+        while ( pos < this.points.length ) {
             oldpos = pos;
-            if( Utils.isPointNear(this.points[pos++], point, nearness) ){
+            if ( Utils.isPointNear(this.points[pos++], point, nearness) ){
                 return oldpos;
             }
         }
@@ -61,9 +55,8 @@ define( ['logManager',
             b = tmp.end,
             pos = tmp.pos;
 
-        while( pos < this.points.length)
-        {
-            if( Utils.isPointNearLine(point, a, b, nearness) ){
+        while ( pos < this.points.length) {
+            if ( Utils.isPointNearLine(point, a, b, nearness) ){
                 return pos;
             }
 
@@ -84,7 +77,7 @@ define( ['logManager',
     AutoRouterPath.prototype.setStartPorts = function(newPorts){
         this.startports = newPorts;
 
-        if(this.startport){
+        if (this.startport){
             this.calculateStartPorts();
         }
     };
@@ -92,7 +85,7 @@ define( ['logManager',
     AutoRouterPath.prototype.setEndPorts = function(newPorts){
         this.endports = newPorts;
 
-        if(this.endport){
+        if (this.endport){
             this.calculateEndPorts();
         }
     };
@@ -156,7 +149,7 @@ define( ['logManager',
         assert(this.startports.length > 0, "ArPath.calculateStartEndPorts: this.startports cannot be empty!");
 
         //Remove this.startpoint
-        if(this.startport && this.startport.hasPoint(this.startpoint)){
+        if (this.startport && this.startport.hasPoint(this.startpoint)){
             this.startport.removePoint(this.startpoint);
         }
 
@@ -164,20 +157,20 @@ define( ['logManager',
         for (i = this.startports.length; i--;){
             assert(this.startports[i].owner, 
                 'ARPath.calculateStartEndPorts: port '+this.startports[i].id+' has invalid this.owner!');
-            if(this.startports[i].isAvailable()){
+            if (this.startports[i].isAvailable()){
                 srcPorts.push(this.startports[i]);
             }
         }
 
-        if(srcPorts.length === 0){
+        if (srcPorts.length === 0){
             srcPorts = this.startports;
         }
 
         //Preventing same start/this.endport
-        if(this.endport && srcPorts.length > 1){
+        if (this.endport && srcPorts.length > 1){
             i = srcPorts.length;
-            while(i--){
-                if(srcPorts[i] === this.endport){
+            while (i--){
+                if (srcPorts[i] === this.endport){
                     srcPorts.splice(i, 1);
                 }
             }
@@ -186,14 +179,14 @@ define( ['logManager',
 
         //Getting target
         var pt;
-        if(this.customPathData.length){
+        if (this.customPathData.length){
             tgt = new ArPoint(this.customPathData[0].getX(), this.customPathData[0].getY());
         } else {
             var x = 0,
                 y = 0;
 
             i = this.endports.length;
-            while(i--){
+            while (i--){
                 pt = this.endports[i].rect.getCenter();
                 x += pt.x;
                 y += pt.y;
@@ -213,7 +206,7 @@ define( ['logManager',
             startportHasLimited = this.startport.hasLimitedDirs();
             startportCanHave = this.startport.canHaveStartEndPointOn(startdir, true);
         }
-        if( startdir === CONSTANTS.Dir_None ||							// recalc startdir if empty
+        if ( startdir === CONSTANTS.Dir_None ||							// recalc startdir if empty
                 startportHasLimited && !startportCanHave){		// or is limited and userpref is invalid
             startdir = this.startport.getStartEndDirTo(tgt, true);
         }
@@ -232,27 +225,27 @@ define( ['logManager',
         assert(this.endports.length > 0, "ArPath.calculateStartEndPorts: this.endports cannot be empty!");
 
         //Remove old this.endpoint
-        if(this.endport && this.endport.hasPoint(this.endpoint)){
+        if (this.endport && this.endport.hasPoint(this.endpoint)){
             this.endport.removePoint(this.endpoint);
         }
 
         //Get available ports
-        while(i--){
+        while (i--){
             assert(this.endports[i].owner, "ARPath.calculateStartEndPorts: this.endport has invalid this.owner!");
-            if(this.endports[i].isAvailable()){
+            if (this.endports[i].isAvailable()){
                 dstPorts.push(this.endports[i]);
             }
         }
 
-        if(dstPorts.length === 0){
+        if (dstPorts.length === 0){
             dstPorts = this.endports;
         }
 
         //Preventing same start/this.endport
-        if(this.startport && dstPorts.length > 1){
+        if (this.startport && dstPorts.length > 1){
             i = dstPorts.length;
-            while(i--){
-                if(dstPorts[i] === this.startport){
+            while (i--){
+                if (dstPorts[i] === this.startport){
                     dstPorts.splice(i, 1);
                 }
             }
@@ -260,7 +253,7 @@ define( ['logManager',
 
         //Getting target
         var pt;
-        if(this.customPathData.length){
+        if (this.customPathData.length){
             i = this.customPathData.length - 1;
             tgt = new ArPoint(this.customPathData[i].getX(), this.customPathData[i].getY());
         }else{
@@ -268,7 +261,7 @@ define( ['logManager',
                 y = 0;
 
             i = this.startports.length;
-            while(i--){
+            while (i--){
                 pt = this.startports[i].rect.getCenter();
                 x += pt.x;
                 y += pt.y;
@@ -289,7 +282,7 @@ define( ['logManager',
             endportHasLimited = this.endport.hasLimitedDirs();
             endportCanHave = this.endport.canHaveStartEndPointOn(enddir, false);
         }
-        if( enddir === CONSTANTS.Dir_None ||							// like above
+        if ( enddir === CONSTANTS.Dir_None ||							// like above
                 endportHasLimited && !endportCanHave){
             enddir = this.endport.getStartEndDirTo(tgt, false, this.startport === this.endport ? startdir : CONSTANTS.Dir_None );
         }
@@ -306,16 +299,13 @@ define( ['logManager',
     AutoRouterPath.prototype.addTail = function(pt){
         assert(!this.isConnected(), 
             'ARPath.addTail: !this.isConnected() FAILED');
-        if(!(pt instanceof Array)){
-            pt = [pt];
-        }
         this.points.push(pt);
     };
 
     AutoRouterPath.prototype.deleteAll = function() {
         this.points = new ArPointListPath();
         this.state = CONSTANTS.ARPATHST_Default;
-        this.clearPorts()
+        this.clearPorts();
     };
 
     AutoRouterPath.prototype.hasNoPoint = function() {
@@ -339,25 +329,25 @@ define( ['logManager',
     AutoRouterPath.prototype.getOutOfBoxStartPoint = function(hintDir){
         var startBoxRect = this.getStartBox();
 
-        assert( hintDir !== CONSTANTS.Dir_Skew, "ARPath.getOutOfBoxStartPoint: hintDir !== CONSTANTS.Dir_Skew FAILED"  );
-        assert( this.points.length >= 2, "ARPath.getOutOfBoxStartPoint: this.points.length >= 2 FAILED" );
+        assert(hintDir !== CONSTANTS.Dir_Skew, "ARPath.getOutOfBoxStartPoint: hintDir !== CONSTANTS.Dir_Skew FAILED"  );
+        assert(this.points.length >= 2, "ARPath.getOutOfBoxStartPoint: this.points.length >= 2 FAILED" );
 
         var pos = 0,
-            p = new ArPoint(this.points[pos++][0]),
-            d = Utils.getDir (this.points[pos][0].minus(p));
+            p = new ArPoint(this.points[pos++]),
+            d = Utils.getDir (this.points[pos].minus(p));
 
         if (d === CONSTANTS.Dir_Skew){
             d = hintDir;
         }
-        assert( Utils.isRightAngle (d), "ARPath.getOutOfBoxStartPoint: Utils.isRightAngle (d) FAILED");
+        assert(Utils.isRightAngle (d), "ARPath.getOutOfBoxStartPoint: Utils.isRightAngle (d) FAILED");
 
-        if(Utils.isHorizontal (d)){
+        if (Utils.isHorizontal (d)){
             p.x = Utils.getRectOuterCoord(startBoxRect, d);
         } else {
             p.y = Utils.getRectOuterCoord(startBoxRect, d);
         }
 
-        //assert( Utils.getDir (this.points[pos][0].minus(p)) === Utils.reverseDir ( d ) || Utils.getDir (this.points[pos][0].minus(p)) === d, "Utils.getDir (this.points[pos][0].minus(p)) === Utils.reverseDir ( d ) || Utils.getDir (this.points[pos][0].minus(p)) === d FAILED");
+        //assert(Utils.getDir (this.points[pos].minus(p)) === Utils.reverseDir ( d ) || Utils.getDir (this.points[pos].minus(p)) === d, "Utils.getDir (this.points[pos].minus(p)) === Utils.reverseDir ( d ) || Utils.getDir (this.points[pos].minus(p)) === d FAILED");
 
         return p;
     };
@@ -365,71 +355,67 @@ define( ['logManager',
     AutoRouterPath.prototype.getOutOfBoxEndPoint = function(hintDir){
         var endBoxRect = this.getEndBox();
 
-        assert( hintDir !== CONSTANTS.Dir_Skew, "ARPath.getOutOfBoxEndPoint: hintDir !== CONSTANTS.Dir_Skew FAILED" );
-        assert( this.points.length >= 2, "ARPath.getOutOfBoxEndPoint: this.points.length >= 2 FAILED");
+        assert(hintDir !== CONSTANTS.Dir_Skew, "ARPath.getOutOfBoxEndPoint: hintDir !== CONSTANTS.Dir_Skew FAILED" );
+        assert(this.points.length >= 2, "ARPath.getOutOfBoxEndPoint: this.points.length >= 2 FAILED");
 
         var pos = this.points.length - 1,
-            p = new ArPoint(this.points[pos--][0]),
-            d = Utils.getDir (this.points[pos][0].minus(p));
+            p = new ArPoint(this.points[pos--]),
+            d = Utils.getDir (this.points[pos].minus(p));
 
         if (d === CONSTANTS.Dir_Skew){
             d = hintDir;
         }
-        assert( Utils.isRightAngle (d), "ARPath.getOutOfBoxEndPoint: Utils.isRightAngle (d) FAILED");
+        assert(Utils.isRightAngle (d), "ARPath.getOutOfBoxEndPoint: Utils.isRightAngle (d) FAILED");
 
-        if(Utils.isHorizontal (d)){
+        if (Utils.isHorizontal (d)){
             p.x = Utils.getRectOuterCoord(endBoxRect, d);
         } else {
             p.y = Utils.getRectOuterCoord(endBoxRect, d);
         }
 
-        //assert( Utils.getDir (this.points[pos][0].minus(p)) === Utils.reverseDir ( d ) || Utils.getDir (this.points[pos][0].minus(p)) === d, "ARPath.getOutOfBoxEndPoint: Utils.getDir (this.points[pos][0].minus(p)) === d || Utils.getDir (this.points[pos][0].minus(p)) === d FAILED");
+        //assert(Utils.getDir (this.points[pos].minus(p)) === Utils.reverseDir ( d ) || Utils.getDir (this.points[pos].minus(p)) === d, "ARPath.getOutOfBoxEndPoint: Utils.getDir (this.points[pos].minus(p)) === d || Utils.getDir (this.points[pos].minus(p)) === d FAILED");
 
         return p;
     };
 
     AutoRouterPath.prototype.simplifyTrivially = function() {
-        assert( !this.isConnected(), "ARPath.simplifyTrivially: !isConnected() FAILED" );
+        assert(!this.isConnected(), "ARPath.simplifyTrivially: !isConnected() FAILED" );
 
-        if( this.points.length <= 2 ){
+        if (this.points.length <= 2) {
             return;
         }
 
         var pos = 0,
             pos1 = pos;
 
-        assert( pos1 !== this.points.length, "ARPath.simplifyTrivially: pos1 !== this.points.length FAILED");
-        var p1 = this.points[pos++][0],
+        assert(pos1 !== this.points.length, "ARPath.simplifyTrivially: pos1 !== this.points.length FAILED");
+        var p1 = this.points[pos++],
             pos2 = pos;
 
-        assert( pos2 !== this.points.length, "ARPath.simplifyTrivially: pos2 !== this.points.length FAILED" );
-        var p2 = this.points[pos++][0],
-            dir12 = Utils.getDir (p2.minus(p1)),
+        assert(pos2 !== this.points.length, "ARPath.simplifyTrivially: pos2 !== this.points.length FAILED" );
+        var p2 = this.points[pos++],
+            dir12 = Utils.getDir(p2.minus(p1)),
             pos3 = pos;
 
-        assert( pos3 !== this.points.length, "ARPath.simplifyTrivially: pos3 !== this.points.length FAILED");
-        var p3 = this.points[pos++][0],
-            dir23 = Utils.getDir (p3.minus(p2));
+        assert(pos3 !== this.points.length, "ARPath.simplifyTrivially: pos3 !== this.points.length FAILED");
+        var p3 = this.points[pos++],
+            dir23 = Utils.getDir(p3.minus(p2));
 
-        for(;;)
-        {
-            if( dir12 === CONSTANTS.Dir_None || dir23 === CONSTANTS.Dir_None ||
+        for (;;) {
+            if (dir12 === CONSTANTS.Dir_None || dir23 === CONSTANTS.Dir_None ||
                     (dir12 !== CONSTANTS.Dir_Skew && dir23 !== CONSTANTS.Dir_Skew &&
-                     (dir12 === dir23 || dir12 === Utils.reverseDir (dir23)) ) )
-            {
+                     (dir12 === dir23 || dir12 === Utils.reverseDir (dir23)) )) {
                 this.points.splice(pos2, 1);
                 pos--;
                 pos3--;
-                dir12 = Utils.getDir (p3.minus(p1));
-            }
-            else
-            {
+                dir12 = Utils.getDir(p3.minus(p1));
+            } else {
                 pos1 = pos2;
                 p1 = p2;
                 dir12 = dir23;
             }
 
-            if( pos === this.points.length ){
+            if (pos === this.points.length){
                 return;
             }
 
@@ -437,12 +423,12 @@ define( ['logManager',
             p2 = p3;
 
             pos3 = pos;
-            p3 = this.points[pos++][0];
+            p3 = this.points[pos++];
 
-            dir23 = Utils.getDir (p3.minus(p2));
+            dir23 = Utils.getDir(p3.minus(p2));
         }
 
-        if(CONSTANTS.DEBUG){
+        if (CONSTANTS.DEBUG){
             this.assertValidPoints();
         }
     };
@@ -455,7 +441,7 @@ define( ['logManager',
         this.points = new ArPointListPath();
         var pos = 0;
 
-        while(pos < npoints.length){
+        while (pos < npoints.length){
             this.points.push(npoints.pos);
         }
     };
@@ -465,8 +451,7 @@ define( ['logManager',
             pos = 0,
             point;
 
-        while( pos < this.points.length)
-        {
+        while ( pos < this.points.length) {
             point = this.points[pos++];
 
             rect.left = Math.min(rect.left, point.x);
@@ -475,9 +460,8 @@ define( ['logManager',
             rect.floor = Math.max(rect.floor, point.y);
         }
 
-        if( rect.left === CONSTANTS.INT_MAX || rect.top === CONSTANTS.INT_MAX ||
-                rect.right === CONSTANTS.INT_MIN || rect.bottom === CONSTANTS.INT_MIN )
-        {
+        if ( rect.left === CONSTANTS.INT_MAX || rect.top === CONSTANTS.INT_MAX ||
+                rect.right === CONSTANTS.INT_MIN || rect.bottom === CONSTANTS.INT_MIN ) {
             rect.setRectEmpty();
         }
 
@@ -500,18 +484,14 @@ define( ['logManager',
             i = 0,
             numEdges = this.points.length - 1;
 
-        while( pos >= 0)
-        {
-            if( isStartOrEndRect && ( i === 0 || i === numEdges - 1 ) )
-            {
+        while ( pos >= 0) {
+            if ( isStartOrEndRect && ( i === 0 || i === numEdges - 1 ) ) {
                 if (Utils.isPointIn(a, r, 1) &&
-                        Utils.isPointIn(b, r, 1))
-                {
+                        Utils.isPointIn(b, r, 1)) {
                     return true;
                 }
             }
-            else if( Utils.isLineClipRect (a, b, r) )
-            {
+            else if ( Utils.isLineClipRect (a, b, r) ) {
                 return true;
             }
 
@@ -542,10 +522,10 @@ define( ['logManager',
     };
 
     AutoRouterPath.prototype.setState = function(s){
-        assert( this.owner !== null, "ARPath.setState: this.owner !== null FAILED");
+        assert(this.owner !== null, "ARPath.setState: this.owner !== null FAILED");
 
         this.state = s;
-        if(CONSTANTS.DEBUG){
+        if (CONSTANTS.DEBUG) {
             this.assertValid();
         }
     };
@@ -591,8 +571,8 @@ define( ['logManager',
         var i = 0,
             pt;
 
-        while( i < this.customPathData.length ){
-            if( this.customPathData[i].getType() === CONSTANTS.CustomPointCustomization ){
+        while ( i < this.customPathData.length ){
+            if ( this.customPathData[i].getType() === CONSTANTS.CustomPointCustomization ){
                 pt = new ArPoint();
                 pt.x = this.customPathData[i].getX();
                 pt.y = this.customPathData[i].getY();
@@ -617,8 +597,7 @@ define( ['logManager',
             ii = 0;
             while (ii < this.customPathData.length){
                 if ((this.customPathData[ii]).getEdgeCount() !== numEdges &&
-                        (this.customPathData[ii]).getType() === CONSTANTS.SimpleEdgeDisplacement)
-                {
+                        (this.customPathData[ii]).getType() === CONSTANTS.SimpleEdgeDisplacement) {
                     this.pathDataToDelete.push(this.customPathData[ii]);
                     this.customPathData.splice(ii, 1);
                 } else {
@@ -707,7 +686,7 @@ define( ['logManager',
 
     AutoRouterPath.prototype.removePathCustomizations = function() {
         var ii = 0;
-        while(ii < this.customPathData.length){
+        while (ii < this.customPathData.length){
             this.pathDataToDelete.push(this.customPathData[ii++]);
         }
         this.customPathData = [];
@@ -732,8 +711,7 @@ define( ['logManager',
         while (ii < this.customPathData.length) {
             if ((this.customPathData[ii]).getAspect() === asp) {
                 if ((this.customPathData[ii]).getEdgeCount() !== numEdges &&
-                        (this.customPathData[ii]).getType() === CONSTANTS.SimpleEdgeDisplacement)
-                {
+                        (this.customPathData[ii]).getType() === CONSTANTS.SimpleEdgeDisplacement) {
                     this.customPathData.splice(ii, 1);
                 } else {
                     ++ii;
@@ -754,7 +732,7 @@ define( ['logManager',
 
     AutoRouterPath.prototype.getDeletedCustomPathData = function(cpd){
         var ii = 0;
-        while(ii < this.pathDataToDelete.length){
+        while (ii < this.pathDataToDelete.length){
             cpd.push(this.pathDataToDelete[ii++]);
         }
     };
@@ -764,11 +742,9 @@ define( ['logManager',
         var ii = 0,
             edgeIndex;
 
-        while(ii < this.customPathData.length)
-        {
+        while (ii < this.customPathData.length) {
             if (this.isAutoRouted() && (this.customPathData[ii]).getType() === CONSTANTS.SimpleEdgeDisplacement ||
-                    !this.isAutoRouted() && (this.customPathData[ii]).getType() !== CONSTANTS.SimpleEdgeDisplacement)
-            {
+                    !this.isAutoRouted() && (this.customPathData[ii]).getType() !== CONSTANTS.SimpleEdgeDisplacement) {
                 edgeIndex = (this.customPathData[ii]).getEdgeIndex();
                 indexes.push(edgeIndex);
             }
@@ -785,7 +761,7 @@ define( ['logManager',
     };
 
     AutoRouterPath.prototype.destroy = function() {
-        if(this.isConnected()){
+        if (this.isConnected()){
             this.startport.removePoint(this.startpoint);
             this.endport.removePoint(this.endpoint);
         }
@@ -804,19 +780,8 @@ define( ['logManager',
         if (this.isConnected()) {
             assert(this.points.length !== 0, 
                 'ARPath.assertValid: this.points.length !== 0 FAILED');
-            var points = this.getPointList(),
-                point,
-                ppoint;
-
-            for (i = points.length-1; i > 1; i--){
-                point = points[i][0];
-                ppoint = points[i-1][0];
-
-                if(point.x !== ppoint.x && point.y !== ppoint.y){
-                    assert(false, 
-                        'Path.assertValid: Path is not valid');
-                }
-            }
+            var points = this.getPointList();
+            points.assertValid();
 
         }else{
             assert(this.points.length === 0, 

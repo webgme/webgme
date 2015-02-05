@@ -34,7 +34,7 @@ define(['./AutoRouter.Constants',
             srcC.y += sPoint.y;
 
             //adjust maxArea
-            if(maxArea < ports[i].getTotalAvailableArea()) {
+            if (maxArea < ports[i].getTotalAvailableArea()) {
                 maxArea = ports[i].getTotalAvailableArea();
             }
 
@@ -57,12 +57,12 @@ define(['./AutoRouter.Constants',
                 major = Math.abs(vector[0]) > Math.abs(vector[1]) ? 0 : 1,
                 minor = (major+1)%2;
 
-            if(point[major] > 0 === vector[major] > 0 && (point[major] === 0) === (vector[major] === 0)) {//handling the === 0 error
+            if (point[major] > 0 === vector[major] > 0 && (point[major] === 0) === (vector[major] === 0)) {//handling the === 0 error
                 //If they have the same parity, assign the priority to maximize that is > 1
                 priority = (Math.abs(vector[major])/Math.abs(vector[major] - point[major])) * 25 ; 
             }
 
-            if(point[minor] > 0 === vector[minor] > 0 && (point[minor] === 0) === (vector[minor] === 0)) {//handling the === 0 error
+            if (point[minor] > 0 === vector[minor] > 0 && (point[minor] === 0) === (vector[minor] === 0)) {//handling the === 0 error
                 //If they have the same parity, assign the priority to maximize that is < 1
                 priority += vector[minor] !== point[minor] ? (Math.abs(vector[minor])/Math.abs(vector[minor] - point[minor]))*1 : 0; 
             }
@@ -77,7 +77,7 @@ define(['./AutoRouter.Constants',
         var priority;
         for(i = 0; i < ports.length; i++) {
             priority = createPriority(ports[i], srcC) || 0;
-            if(priority >= maxP) {
+            if (priority >= maxP) {
                 port = ports[i];
                 maxP = priority;
             }
@@ -89,7 +89,7 @@ define(['./AutoRouter.Constants',
     };
 
     var _getPointCoord = function (point, horDir) {
-        if(horDir === true || _isHorizontal(horDir)) {
+        if (horDir === true || _isHorizontal(horDir)) {
             return point.x;
         } else  {
             return point.y;
@@ -165,7 +165,7 @@ define(['./AutoRouter.Constants',
         // begin Zolmol
         // the routing may create edges that have start==end
         // thus confusing this algorithm
-        if( end.x === start.x && end.y === start.y) {
+        if ( end.x === start.x && end.y === start.y) {
             return false;
         }
         // end Zolmol
@@ -184,7 +184,7 @@ define(['./AutoRouter.Constants',
             xuyv = x * u + y * v,
             x2y2 = x * x + y * y;
 
-        if(xuyv < 0 || xuyv > x2y2) {
+        if (xuyv < 0 || xuyv > x2y2) {
             return false;
         }
 
@@ -197,14 +197,14 @@ define(['./AutoRouter.Constants',
 
     var _isLineMeetHLine = function (start, end, x1, x2, y) {
         assert( x1 <= x2, "ArHelper.isLineMeetHLine: x1 <= x2 FAILED");
-        if(start instanceof Array) {//Converting from 'pointer'
+        if (start instanceof Array) {//Converting from 'pointer'
             start = start[0];
         }
-        if(end instanceof Array) {
+        if (end instanceof Array) {
             end = end[0];
         }
 
-        if( !((start.y <= y && y <= end.y) || (end.y <= y && y <= start.y )) ) {
+        if ( !((start.y <= y && y <= end.y) || (end.y <= y && y <= start.y )) ) {
             return false;
         }
 
@@ -214,7 +214,7 @@ define(['./AutoRouter.Constants',
         x2 -= start.x;
         y -= start.y;
 
-        if( end2.y === 0 ) {
+        if ( end2.y === 0 ) {
             return y === 0 && (( x1 <= 0 && 0 <= x2 ) || (x1 <= end2.x && end2.x <= x2));
         }
 
@@ -224,14 +224,14 @@ define(['./AutoRouter.Constants',
 
     var _isLineMeetVLine = function (start, end, y1, y2, x) {
         assert( y1 <= y2, "ArHelper.isLineMeetVLine: y1 <= y2  FAILED");
-        if(start instanceof Array) {//Converting from 'pointer'
+        if (start instanceof Array) {//Converting from 'pointer'
             start = start[0];
         }
-        if(end instanceof Array) {
+        if (end instanceof Array) {
             end = end[0];
         }
 
-        if( !((start.x <= x && x <= end.x) || (end.x <= x && x <= start.x )) ) {
+        if ( !((start.x <= x && x <= end.x) || (end.x <= x && x <= start.x )) ) {
             return false;
         }
 
@@ -241,7 +241,7 @@ define(['./AutoRouter.Constants',
         y2 -= start.y;
         x -= start.x;
 
-        if( end2.x === 0 ) {
+        if ( end2.x === 0 ) {
             return x === 0 && (( y1 <= 0 && 0 <= y2 ) || (y1 <= end2.y && end2.y <= y2));
         }
 
@@ -252,7 +252,7 @@ define(['./AutoRouter.Constants',
     var _isLineClipRects = function (start, end, rects) {
         var i = rects.length;
         while(i--) {
-            if(_isLineClipRect(start, end, rects[i])) {
+            if (_isLineClipRect(start, end, rects[i])) {
                 return true;
             }
         }
@@ -260,7 +260,7 @@ define(['./AutoRouter.Constants',
     };
 
     var _isLineClipRect = function (start, end, rect) {
-        if( rect.ptInRect(start) || rect.ptInRect(end) ) {
+        if ( rect.ptInRect(start) || rect.ptInRect(end) ) {
             return true;
         }
 
@@ -275,27 +275,27 @@ define(['./AutoRouter.Constants',
         var dir = _getDir(end.minus(start)),
             endpoints = [ new ArPoint(start), new ArPoint(end) ];
 
-        if(!_isLineClipRect(start, end, rect)) {
+        if (!_isLineClipRect(start, end, rect)) {
             return null;
         }
 
         assert(_isRightAngle(dir), "ArHelper.getLineClipRectIntersect: _isRightAngle(dir) FAILED");
 
         //Make sure we are working left to right or top down
-        if(dir === CONSTANTS.Dir_Left || dir === CONSTANTS.Dir_Top) {
+        if (dir === CONSTANTS.Dir_Left || dir === CONSTANTS.Dir_Top) {
             dir = _reverseDir(dir);
             endpoints.push(endpoints.splice(0,1)[0]); //Swap point 0 and point 1
         }
 
-        if(_isPointInDirFrom(endpoints[0], rect.getTopLeft(), _reverseDir(dir))) {
+        if (_isPointInDirFrom(endpoints[0], rect.getTopLeft(), _reverseDir(dir))) {
             endpoints[0].assign( rect.getTopLeft() );
         }
 
-        if(_isPointInDirFrom(endpoints[1], rect.getBottomRight(), dir)) {
+        if (_isPointInDirFrom(endpoints[1], rect.getBottomRight(), dir)) {
             endpoints[1].assign( rect.getBottomRight() );
         }
 
-        if(_isHorizontal(dir)) {
+        if (_isHorizontal(dir)) {
             endpoints[0].y = start.y;
             endpoints[1].y = end.y;
         }else{
@@ -339,7 +339,7 @@ define(['./AutoRouter.Constants',
     };
 
     var _nextClockwiseDir = function (dir) {
-        if( _isRightAngle(dir) ) {
+        if ( _isRightAngle(dir) ) {
             return ((dir+1) % 4);
         }
 
@@ -347,7 +347,7 @@ define(['./AutoRouter.Constants',
     };
 
     var _prevClockwiseDir = function (dir) {
-        if( _isRightAngle(dir) ) {
+        if ( _isRightAngle(dir) ) {
             return ((dir+3) % 4);
         }
 
@@ -355,7 +355,7 @@ define(['./AutoRouter.Constants',
     };
 
     var _reverseDir = function (dir) {
-        if(_isRightAngle(dir)) {
+        if (_isRightAngle(dir)) {
             return ((dir+2) % 4);
         }
 
@@ -417,7 +417,7 @@ define(['./AutoRouter.Constants',
 
         while( ++i < children.length ) {
 
-            if( _isPointInDirFrom( point, children[i], _reverseDir(inDir) ) && 
+            if ( _isPointInDirFrom( point, children[i], _reverseDir(inDir) ) && 
                     _isPointBetweenSides(point, children[i], inDir) &&
                     _isCoordInDirFrom(res, _getRectOuterCoord( children[i], _reverseDir(inDir) ), (inDir)) ) {
 
@@ -639,22 +639,20 @@ define(['./AutoRouter.Constants',
     };
 
     var _getDir = function (offset, nodir) {
-        if( offset.cx === 0 )
-        {
-            if( offset.cy === 0 ) {
+        if (offset.cx === 0) {
+            if (offset.cy === 0) {
                 return nodir;
             }
 
-            if( offset.cy < 0 ) {
+            if (offset.cy < 0) {
                 return CONSTANTS.Dir_Top;
             }
 
             return CONSTANTS.Dir_Bottom;
         }
 
-        if( offset.cy === 0 )
-        {
-            if( offset.cx > 0 ) {
+        if (offset.cy === 0) {
+            if ( offset.cx > 0 ) {
                 return CONSTANTS.Dir_Right;
             }
 
@@ -698,7 +696,7 @@ define(['./AutoRouter.Constants',
         assert( _isRightAngle(dir), "isPointInDirFromChildren: _isRightAngle(dir) FAILED"); 
 
         while( i < children.length ) {
-            if( _isPointInDirFrom( point, children[i].rect, dir )) {
+            if ( _isPointInDirFrom( point, children[i].rect, dir )) {
                 return true;
             }
             ++i;
@@ -708,7 +706,7 @@ define(['./AutoRouter.Constants',
     };
 
     var _isPointInDirFrom = function (point, from, dir) {
-        if(from instanceof ArRect) {
+        if (from instanceof ArRect) {
             var rect = from;
             assert( _isRightAngle(dir), "ArHelper.isPointInDirFrom: _isRightAngle(dir) FAILED" );
 
@@ -753,7 +751,7 @@ define(['./AutoRouter.Constants',
     };
 
     var _isPointBetweenSides = function (point, rect, ishorizontal) {
-        if( ishorizontal === true || _isHorizontal(ishorizontal) ) {
+        if ( ishorizontal === true || _isHorizontal(ishorizontal) ) {
             return rect.ceil <= point.y && point.y < rect.floor;
         }
 
@@ -784,11 +782,11 @@ define(['./AutoRouter.Constants',
 
     var _isCoordInDirFrom = function (coord, from, dir) {
         assert( _isRightAngle(dir), "ArHelper.isCoordInDirFrom: _isRightAngle(dir) FAILED" );
-        if( from instanceof ArPoint) {
+        if ( from instanceof ArPoint) {
             from = _getPointCoord(from, dir);
         }
 
-        if( dir === CONSTANTS.Dir_Top || dir === CONSTANTS.Dir_Left ) {
+        if ( dir === CONSTANTS.Dir_Top || dir === CONSTANTS.Dir_Left ) {
             return coord <= from;
         }
 
@@ -799,19 +797,19 @@ define(['./AutoRouter.Constants',
     // cannot be in a corner of the rectangle.
     // NOTE: the right and floor used to be - 1. 
     var _onWhichEdge = function (rect, point) {
-        if(point.y === rect.ceil && rect.left < point.x && point.x < rect.right) {
+        if (point.y === rect.ceil && rect.left < point.x && point.x < rect.right) {
             return CONSTANTS.Dir_Top;
         }
 
-        if(point.y === rect.floor && rect.left < point.x && point.x < rect.right) {
+        if (point.y === rect.floor && rect.left < point.x && point.x < rect.right) {
             return CONSTANTS.Dir_Bottom;
         }
 
-        if(point.x === rect.left && rect.ceil < point.y && point.y < rect.floor) {
+        if (point.x === rect.left && rect.ceil < point.y && point.y < rect.floor) {
             return CONSTANTS.Dir_Left;
         }
 
-        if(point.x === rect.right && rect.ceil < point.y && point.y < rect.floor) {
+        if (point.x === rect.right && rect.ceil < point.y && point.y < rect.floor) {
             return CONSTANTS.Dir_Right;
         }
 
@@ -831,7 +829,7 @@ define(['./AutoRouter.Constants',
         var d1 = _distanceFromHLine(this.point, x1, x2, y),
             d2 = Math.abs(this.point.y - y);
 
-        if( d1 < this.dist1 || (d1 === this.dist1 && d2 < this.dist2) )
+        if ( d1 < this.dist1 || (d1 === this.dist1 && d2 < this.dist2) )
         {
             this.dist1 = d1;
             this.dist2 = d2;
@@ -847,8 +845,7 @@ define(['./AutoRouter.Constants',
         var d1 = _distanceFromVLine(this.point, y1, y2, x),
             d2 = Math.abs(this.point.x - x);
 
-        if( d1 < this.dist1 || (d1 === this.dist1 && d2 < this.dist2) )
-        {
+        if (d1 < this.dist1 || (d1 === this.dist1 && d2 < this.dist2)) {
             this.dist1 = d1;
             this.dist2 = d2;
             return true;

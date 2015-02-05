@@ -79,13 +79,12 @@ define(['logManager',
     };
 
     ArPoint.prototype.minus = function (otherObject){
-        var objectCopy;
+        var objectCopy = new ArPoint(otherObject);
 
-        if(otherObject instanceof ArSize){
-            objectCopy = new ArPoint(otherObject);
+        if(otherObject.cx || otherObject.cy){
             objectCopy.subtract(this);
 
-        }else if(otherObject instanceof ArPoint){
+        }else if(otherObject.x || otherObject.y){
             objectCopy = new ArSize();
             objectCopy.cx = this.x - otherObject.x;
             objectCopy.cy = this.y - otherObject.y;

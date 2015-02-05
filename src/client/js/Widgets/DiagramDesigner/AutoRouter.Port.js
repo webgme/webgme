@@ -283,10 +283,13 @@ define(['logManager',
         var removed,
             path;
 
+        console.log('about to remove point: '+Utils.stringify(pt));
+        console.log('points stored in port: ' + Utils.stringify(this.points));
         removed = Utils.removeFromArrays.apply(null, [pt].concat(this.points));
 
+        assert(removed, "point (" + pt.x + ", " + pt.y + ") was not removed from port");
         if (!removed) {
-            _logger.warning("point (" + pt.x + ", " + pt.y + ") was not removed from port");
+            //_logger.warning("point (" + pt.x + ", " + pt.y + ") was not removed from port");
         }
     };
 

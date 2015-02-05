@@ -9,7 +9,7 @@ define(['logManager',
            'util/assert',
            './AutoRouter.Constants',
            './AutoRouter.Utils',
-           './AutoRouter.Point'], function ( logManager, assert, CONSTANTS, UTILS, ArPoint ) {
+           './AutoRouter.Point'], function ( logManager, assert, CONSTANTS, Utils, ArPoint ) {
 
     "use strict"; 
 
@@ -30,10 +30,10 @@ define(['logManager',
            of the left/right point, and y is the common y-coordinate of the points.
 
            The edges are ordered according to their y-coordinates. The first edge has
-           the least y-coordinate (topmost), and its pointer is in 'order_first'.
+           the least y-coordinate (topmost), and its pointer is in 'orderFirst'.
            We use the 'order' prefix in the variable names to refer to this order.
 
-           We will walk from top to bottom (from the 'order_first' along the 'this.orderNext').
+           We will walk from top to bottom (from the 'orderFirst' along the 'this.orderNext').
            We keep track a "section" of some edges. If we have an infinite horizontal line,
            then the section consists of those edges that are above the line and not blocked
            by another edge which is closer to the line. Each edge in the section has
@@ -162,7 +162,7 @@ define(['logManager',
     };
 
     AutoRouterEdge.prototype.getStartPointPrev = function (){
-        return this.startpointPrev !== null ? this.startpointPrev[0] || this.startpointPrev : null;
+        return this.startpointPrev !== null ? this.startpointPrev || this.startpointPrev : null;
     };
 
     AutoRouterEdge.prototype.isStartPointPrevNull = function () {
@@ -176,11 +176,11 @@ define(['logManager',
 
     AutoRouterEdge.prototype.getStartPoint = function (){
         return this.startpoint !== null ?
-            (this.startpoint instanceof Array ? new ArPoint(this.startpoint[0]) : new ArPoint(this.startpoint)) : CONSTANTS.EMPTY_POINT;  // returning copy of this.startpoint
+            (this.startpoint instanceof Array ? new ArPoint(this.startpoint) : new ArPoint(this.startpoint)) : CONSTANTS.EMPTY_POINT;  // returning copy of this.startpoint
     };
 
     AutoRouterEdge.prototype.isSameStartPoint = function(point){
-        return this.startpoint[0] === point;
+        return this.startpoint === point;
     };
 
     AutoRouterEdge.prototype.isStartPointNull = function (){
@@ -188,15 +188,7 @@ define(['logManager',
     };
 
     AutoRouterEdge.prototype.setStartPoint = function (point, b){
-        if(point instanceof Array){
-            this.startpoint = point;
-
-        }else if ( !this.startpoint ){
-            this.startpoint = [ point ];
-
-        }else{
-            this.startpoint[0] = point;
-        }
+        this.startpoint = point;
 
         if(b !== false){
             this.recalculateDirection();
@@ -204,17 +196,17 @@ define(['logManager',
     };
 
     AutoRouterEdge.prototype.setStartPointX = function(_x){
-        this.startpoint[0].x = _x;
+        this.startpoint.x = _x;
     };
 
     AutoRouterEdge.prototype.setStartPointY = function(_y){
-        this.startpoint[0].y = _y;
+        this.startpoint.y = _y;
     };
 
     AutoRouterEdge.prototype.getEndPoint = function(){
         return this.endpoint !== null ? 
             (this.endpoint instanceof Array ? 
-             new ArPoint(this.endpoint[0]) : 
+             new ArPoint(this.endpoint) : 
              new ArPoint(this.endpoint)): 
              CONSTANTS.EMPTY_POINT;
     };
@@ -224,15 +216,7 @@ define(['logManager',
     };
 
     AutoRouterEdge.prototype.setEndPoint = function(point, b){
-        if(point instanceof Array){
-            this.endpoint = point;
-
-        }else if ( !this.endpoint ){
-            this.endpoint = [ point ];
-
-        }else{
-            this.endpoint[0] = point;
-        }
+        this.endpoint = point;
 
         if(b !== false){
             this.recalculateDirection();
@@ -245,19 +229,11 @@ define(['logManager',
     };
 
     AutoRouterEdge.prototype.setEndPointX = function (_x){
-        if(!this.endpoint || this.endpoint instanceof Array){
-            this.endpoint[0].x = _x;
-        } else {
-            this.endpoint.x = _x;
-        }
+        this.endpoint.x = _x;
     };
 
     AutoRouterEdge.prototype.setEndPointY = function (_y){
-        if(!this.endpoint || this.endpoint instanceof Array){
-            this.endpoint[0].y = _y;
-        } else {
-            this.endpoint.y = _y;
-        }
+        this.endpoint.y = _y;
     };
 
     AutoRouterEdge.prototype.isEndPointNextNull = function(){
@@ -340,12 +316,9 @@ define(['logManager',
     };
 
     AutoRouterEdge.prototype.recalculateDirection = function(){
-        assert(this.startpoint !== null && this.endpoint !== null, "AREdge.recalculateDirection: this.startpoint !== null && this.endpoint !== null FAILED!");
-        if(this.endpoint instanceof Array) {
-            this.edge_direction = UTILS.getDir(this.endpoint[0].minus((this.startpoint instanceof Array ? this.startpoint[0] : this.startpoint)));
-        } else { 
-            this.edge_direction = UTILS.getDir(this.endpoint.minus((this.startpoint instanceof Array ? this.startpoint[0] : this.startpoint)));
-        }
+        assert(this.startpoint !== null && this.endpoint !== null, 
+            'AREdge.recalculateDirection: this.startpoint !== null && this.endpoint !== null FAILED!');
+        this.edge_direction = Utils.getDir(this.endpoint.minus(this.startpoint));
     };
 
     AutoRouterEdge.prototype.getBlockPrev = function(){
