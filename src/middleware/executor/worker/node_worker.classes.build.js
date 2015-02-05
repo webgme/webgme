@@ -3720,25 +3720,26 @@ define('logManager',[], function () {
 	};
 
 	Logger = function (componentName) {
-		this.debug = function (msg) {
-			logMessage("DEBUG", componentName, msg);
-		};
+        function _getLog(level) {
+            if (isComponentAllowedToLog(componentName) === true && logLevels[level] <= currentLogLevel) {
+                return function log(msg) {
+                    logMessage(level, componentName, msg);
+                };
+            } else {
+                return function log_noop(msg) {
+                };
+            }
+        }
 
-		this.info = function (msg) {
-			logMessage("INFO", componentName, msg);
-		};
+		this.debug = _getLog("DEBUG");
 
-		this.warning = function (msg) {
-			logMessage("WARNING", componentName, msg);
-		};
+		this.info = _getLog("INFO");
 
-		this.warn = function (msg) {
-			logMessage("WARNING", componentName, msg);
-		};
+		this.warning = _getLog("WARNING");
 
-		this.error = function (msg) {
-			logMessage("ERROR", componentName, msg);
-		};
+		this.warn = _getLog("WARNING");
+
+		this.error = _getLog("ERROR");
 	};
 
     var _setLogLevel = function (level) {
@@ -4427,7 +4428,7 @@ define('executor/ExecutorWorker',['logManager',
 
         var _queryWorkerAPI = function() {
 
-            this.clientRequest.availableProcesses = this.availableProcessesContainer.availableProcesses;
+            this.clientRequest.availableProcesses = Math.max(0, this.availableProcessesContainer.availableProcesses);
             var req = superagent.post(self.executorClient.executorUrl + 'worker');
             if (this.executorClient.executorNonce) {
                 req.set('x-executor-nonce', this.executorClient.executorNonce);
@@ -4451,8 +4452,8 @@ define('executor/ExecutorWorker',['logManager',
                         for (var i = 0; i < jobsToStart.length; i++) {
                             self.executorClient.getInfo(jobsToStart[i], function (err, info) {
                                 if (err) {
-                                    // TODO
-                                    this.availableProcessesContainer.availableProcesses += 1;
+                                    info.status = 'FAILED_SOURCE_COULD_NOT_BE_OBTAINED';
+                                    self.sendJobUpdate(info);
                                     return;
                                 }
                                 self.jobList[info.hash] = info;
@@ -4620,6 +4621,21 @@ if (typeof define !== 'undefined') {
 }
 
 if (nodeRequire.main === module) {
+    var fs = nodeRequire('fs'),
+        path = nodeRequire('path'),
+        cas = nodeRequire('ssl-root-cas/latest'),
+        superagent = nodeRequire('superagent'),
+        https = nodeRequire('https');
+
+    cas.inject();
+    fs.readdirSync(__dirname).forEach(function (file) {
+        var filename = path.resolve(__dirname, file);
+        if ((filename.indexOf('.pem') == filename.length - 4) || (filename.indexOf('.crt') == filename.length - 4)) {
+            console.log('Adding ' + file + ' to trusted CAs');
+            cas.addFile(filename);
+        }
+    });
+    superagent.Request.prototype._ca = (require('https').globalAgent.options.ca);
     var requirejs = require('./node_worker.classes.build').requirejs;
 
     [
@@ -4643,12 +4659,14 @@ if (nodeRequire.main === module) {
     } // server: config.server, serverPort: config.port, httpsecure: config.protocol==='https' }; } };
 
     var webGMEUrls = Object.create(null);
+    var maxConcurrentJobs = 1;
     var availableProcessesContainer = {
-        availableProcesses: 1
+        availableProcesses: maxConcurrentJobs
     }; // shared among all ExecutorWorkers
 
     requirejs(['node_worker'], function (addWebGMEConnection) {
         var fs = nodeRequire('fs');
+        var path = nodeRequire('path');
 
         function readConfig() {
             var config = {
@@ -4675,21 +4693,41 @@ if (nodeRequire.main === module) {
                     throw e;
                 }
             }
-            Object.getOwnPropertyNames(config).forEach(function (webGMEUrl) {
+            Object.getOwnPropertyNames(config).forEach(function (key) {
+                var webGMEUrl;
+                if (key.indexOf("http") === 0) {
+                    webGMEUrl = key;
                     if (Object.prototype.hasOwnProperty.call(webGMEUrls, webGMEUrl)) {
                     } else {
-                        webGMEUrls[webGMEUrl] = addWebGMEConnection(webGMEUrl, workingDirectory, config[webGMEUrl]);
+                        webGMEUrls[webGMEUrl] = addWebGMEConnection(webGMEUrl, path.join(workingDirectory, '' + workingDirectoryCount++), config[webGMEUrl]);
                     }
-                    // TODO: handle removing URL
+                } else if (key === "maxConcurrentJobs") {
+                    availableProcessesContainer.availableProcesses += config[maxConcurrentJobs] - maxConcurrentJobs;
+                    maxConcurrentJobs = config[maxConcurrentJobs];
+                } else {
+                    console.log("Unknown configuration key " + key);
+                }
+            });
+            // remove webGMEUrls no longer in config
+            Object.getOwnPropertyNames(webGMEUrls).forEach(function (webGMEUrl) {
+                if (Object.prototype.hasOwnProperty.call(config, webGMEUrl) === false) {
+                    console.log("Removing " + webGMEUrl);
+                    webGMEUrls[webGMEUrl]();
+                    delete webGMEUrls[webGMEUrl];
+                }
                 });
         }
 
+        var workingDirectoryCount = 0;
         var workingDirectory = 'executor-temp';
         var rimraf = nodeRequire('rimraf');
         rimraf(workingDirectory, function (err) {
             if (err) {
                 console.log('Could not delete working directory (' + workingDirectory + '), err: ' + err);
                 process.exit(2);
+            }
+            if (!fs.existsSync(workingDirectory)) {
+                fs.mkdirSync(workingDirectory);
             }
 
             readConfig();

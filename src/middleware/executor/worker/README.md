@@ -4,18 +4,16 @@ While the ability provided by WebGME to edit and easily share models is extremel
 
 WebGME supports "remote" execution of simulation "jobs" through the use of a Node-Webkit application. 
 
-The executor_worker application runs jobs posted to src/rest/executor. For example, some WebGME plugins create jobs. An executor_worker runs jobs by downloading a blob from the WebGME server, then running a command, then uploading some or all of the produced files to the blob store.
+The executor_worker application runs jobs posted to `src/middleware/executor`. For example, some WebGME plugins create jobs. An executor_worker runs jobs by downloading a blob from the WebGME server, then running a command, then uploading some or all of the produced files to the blob store.
 
 We can set up the "executor_worker" using node-webkit, and configure it to monitor our WebGME server's URL for jobs. The executor_worker may run on a different machine than the WebGME server, but in this example they run on the same machine.
 
 When a job is created on the server, the executor will download the job, run it, and then upload any results to the WebGME server. Here is how to set up the executor:
 
-1) Install the META toolchain, and go through the process of starting a WebGME server in "C:\Users\Public\Documents\META Documents\WebGME" using the ReadMe
+1) Download node-webkit (http://dl.node-webkit.org/v0.9.2/node-webkit-v0.9.2-win-ia32.zip) and unzip the package in "C:\Users\Public\Documents\META Documents\WebGME\node_modules\webgme-domain-tools\executor_worker"
 
-2) Download node-webkit (http://dl.node-webkit.org/v0.9.2/node-webkit-v0.9.2-win-ia32.zip) and unzip the package in "C:\Users\Public\Documents\META Documents\WebGME\node_modules\webgme-domain-tools\executor_worker"
+3) Edit "config_example.json" to point to the WebGME URL (e.g, http://localhost:8855/) and save it as "config.json"
 
-3) Edit "config_example.json" to point to the WebGME URL (http://localhost:8855/) and save it as "config.json"
+4) Run `npm_install.cmd`
 
-4) Run `npm install` from command line in "C:\Users\Public\Documents\META Documents\WebGME\node_modules\webgme-domain-tools\executor_worker"
-
-5) With the WebGME server running, double-click on `nw.exe` in "C:\Users\Public\Documents\META Documents\WebGME\node_modules\webgme-domain-tools\executor_worker"
+5) With the WebGME server running, double-click on `nw.exe`.
