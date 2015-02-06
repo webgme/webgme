@@ -17,15 +17,20 @@ var should = require('chai').should(),
         core: false
     };
 
-function isValidJs(testString) {
-    var isValid = true;
+function isValidJs(testString, logError) {
+    var err = null;
+
     try {
         esprima.parse(testString);
     }
     catch(e) {
-        isValid = false;
+        err = e;
+        if (logError) {
+            console.error(err.toString());
+            console.error(testString);
+        }
     }
-    return isValid;
+    return err;
 }
 
 function runPlugin (pluginName, configuration, callback) {
@@ -68,13 +73,13 @@ function runPlugin (pluginName, configuration, callback) {
     }
     newPlugin.logger = {
         info: function (msg) {
-            console.log(msg)
+            //console.log(msg)
         },
         debug: function (msg) {
-            console.log(msg)
+            //console.log(msg)
         },
         warning: function (msg) {
-            console.warn(msg)
+            //console.warn(msg)
         },
         error: function (msg) {
             console.error(msg)
@@ -95,6 +100,11 @@ function runPlugin (pluginName, configuration, callback) {
 
 describe('PluginGenerator', function () {
     'use strict';
+
+    it ('test esprima', function () {
+        should.equal(isValidJs('var a = {x: 1, y: 2};', true), null);
+        should.not.equal(isValidJs('var a = [{x: 1, x: 2};', false), null);
+    });
 
     it ('pluginConfig up to date', function () {
         var plugin = requirejs('plugin/coreplugins/PluginGenerator/PluginGenerator'),
@@ -122,9 +132,9 @@ describe('PluginGenerator', function () {
             for (i = 0; i < keys.length; i += 1) {
                 //console.log(files[keys[i]]);
                 if (keys[i] === 'src/plugins/null/I have a space/meta.js') {
-                    should.equal(isValidJs(files[keys[i]]), true);
+                    should.equal(isValidJs(files[keys[i]], true), null);
                 } else {
-                    should.equal(isValidJs(files[keys[i]]), false);
+                    should.not.equal(isValidJs(files[keys[i]]), null);
                 }
             }
             done();
@@ -141,7 +151,7 @@ describe('PluginGenerator', function () {
             should.equal(keys.length, 3);
             for (i = 0; i < keys.length; i += 1) {
                 //console.log(files[keys[i]]);
-                should.equal(isValidJs(files[keys[i]]), true);
+                should.equal(isValidJs(files[keys[i]], true), null);
             }
             done();
         })
@@ -159,7 +169,7 @@ describe('PluginGenerator', function () {
             should.equal(keys.length, 3);
             for (i = 0; i < keys.length; i += 1) {
                 //console.log(files[keys[i]]);
-                should.equal(isValidJs(files[keys[i]]), true);
+                should.equal(isValidJs(files[keys[i]], true), null);
             }
             done();
         })
@@ -177,7 +187,7 @@ describe('PluginGenerator', function () {
             should.equal(keys.length, 3);
             for (i = 0; i < keys.length; i += 1) {
                 //console.log(files[keys[i]]);
-                should.equal(isValidJs(files[keys[i]]), true);
+                should.equal(isValidJs(files[keys[i]], true), null);
             }
             done();
         })
@@ -196,7 +206,7 @@ describe('PluginGenerator', function () {
             should.equal(keys.length, 3);
             for (i = 0; i < keys.length; i += 1) {
                 //console.log(files[keys[i]]);
-                should.equal(isValidJs(files[keys[i]]), true);
+                should.equal(isValidJs(files[keys[i]], true), null);
             }
             done();
         })
@@ -214,7 +224,7 @@ describe('PluginGenerator', function () {
             should.equal(keys.length, 2);
             for (i = 0; i < keys.length; i += 1) {
                 //console.log(files[keys[i]]);
-                should.equal(isValidJs(files[keys[i]]), true);
+                should.equal(isValidJs(files[keys[i]], true), null);
             }
             done();
         })
@@ -233,9 +243,9 @@ describe('PluginGenerator', function () {
             for (i = 0; i < keys.length; i += 1) {
                 //console.log(files[keys[i]]);
                 if (keys[i] === 'src/plugins/null/NewPlugin/Templates/Python.py.ejs') {
-                    should.equal(isValidJs(files[keys[i]]), false);
+                    should.not.equal(isValidJs(files[keys[i]]), null);
                 } else {
-                    should.equal(isValidJs(files[keys[i]]), true);
+                    should.equal(isValidJs(files[keys[i]], null), null);
                 }
             }
             done();
@@ -256,9 +266,9 @@ describe('PluginGenerator', function () {
             for (i = 0; i < keys.length; i += 1) {
                 //console.log(files[keys[i]]);
                 if (keys[i] === 'src/plugins/null/NewPlugin/Templates/Python.py.ejs') {
-                    should.equal(isValidJs(files[keys[i]]), false);
+                    should.not.equal(isValidJs(files[keys[i]]), null);
                 } else {
-                    should.equal(isValidJs(files[keys[i]]), true);
+                    should.equal(isValidJs(files[keys[i]], true), null);
                 }
             }
             done();
