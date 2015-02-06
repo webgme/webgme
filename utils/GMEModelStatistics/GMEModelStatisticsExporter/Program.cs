@@ -1,4 +1,5 @@
 ﻿using GME.MGA;
+using GME.MGA.Meta;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -27,7 +28,8 @@ namespace GMEModelStatisticsExporter
             {
                 if (args[i].StartsWith("-"))
                 {
-                    switch (args[i].Substring(1)) {
+                    switch (args[i].Substring(1))
+                    {
                         case "p":
                         case "-prettyPrint":
                             formattedOutput = true;
@@ -97,7 +99,8 @@ namespace GMEModelStatisticsExporter
 
             MgaProject project = new MgaProject();
 
-            if (mgaIsGiven) {
+            if (mgaIsGiven)
+            {
                 Console.WriteLine("Copying MGA file to temp directory: {0}", tempMgaFile);
                 File.Copy(inputFilename, tempMgaFile, true);
 
@@ -132,18 +135,19 @@ namespace GMEModelStatisticsExporter
 
                 // import xme file
                 Console.WriteLine("Importing project");
-                
+
                 parser.ParseProject(project, tempXmeFile);
 
                 Console.WriteLine("Saving project as mga: {0}", tempMgaFile);
                 project.Save("MGA=" + tempMgaFile);
             }
 
-            if (project == null) {
+            if (project == null)
+            {
                 throw new Exception("Project is null.");
             }
 
-        
+
             // process the project
             var statistics = Process(project);
 
@@ -189,8 +193,50 @@ namespace GMEModelStatisticsExporter
             }
 
 
+            try
+            {
+                IMgaTerritory terr = project.BeginTransactionInNewTerr(transactiontype_enum.TRANSACTION_READ_ONLY);
+
+                stats.ParadigmName = project.RootMeta.Name;
+
+                foreach (MgaMetaFCO meta in project.RootMeta.RootFolder.DefinedFCOs)
+                {
+
+                }
+
+
+
+                VisitChildren(stats, project.RootFolder, stats.Model.ContainmentTree);
+            }
+            finally
+            {
+                project.AbortTransaction();
+            }
             return stats;
         }
+
+        private static void VisitChildren(Statistics.Statistics stats, IMgaObject mgaObject, object subtree)
+        {
+            var tree = (Dictionary<string, object>)subtree;
+
+            if (mgaObject.ObjType == GME.MGA.Meta.objtype_enum.OBJTYPE_FOLDER ||
+                mgaObject.ObjType == GME.MGA.Meta.objtype_enum.OBJTYPE_MODEL)
+            {
+                foreach (MgaObject child in mgaObject.ChildObjects)
+                {
+                    string id = child.GetGuidDisp();
+                    id = id.Substring(1, id.Length - 2);
+                    tree[id] = new Dictionary<string, object>();
+                    VisitChildren(stats, child, tree[id]);
+                }
+            }
+
+
+
+        }
+
+
+
 
         #region Dummy data generators
         private static void GenerateDummyData(Statistics.Statistics stats)
