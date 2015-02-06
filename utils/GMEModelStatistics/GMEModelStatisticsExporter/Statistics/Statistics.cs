@@ -16,6 +16,8 @@ namespace GMEModelStatisticsExporter.Statistics
             set { this._paradigmName = value; }
         }
 
+        public string ProjectName { get; set; }
+
         public long XmeSizeInBytes { get; set; }
         public long MgaSizeInBytes { get; set; }
 

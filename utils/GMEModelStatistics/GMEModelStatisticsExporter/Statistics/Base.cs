@@ -10,6 +10,7 @@ namespace GMEModelStatisticsExporter.Statistics
     {
         public int NumberOfFolders { get; set; }
         public int NumberOfModels { get; set; }
+        public int NumberOfAtoms { get; set; }
         public int NumberOfReferences { get; set; }
         public int NumberOfConnections { get; set; }
         public int NumberOfSets { get; set; }

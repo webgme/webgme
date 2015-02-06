@@ -101,8 +101,11 @@ namespace GMEModelStatisticsExporter
 
             if (mgaIsGiven)
             {
-                Console.WriteLine("Copying MGA file to temp directory: {0}", tempMgaFile);
-                File.Copy(inputFilename, tempMgaFile, true);
+                if (inputFilename != tempMgaFile)
+                {
+                    Console.WriteLine("Copying MGA file to temp directory: {0}", tempMgaFile);
+                    File.Copy(inputFilename, tempMgaFile, true);
+                }
 
                 Console.WriteLine("Opening project");
                 int mgaversion;
@@ -122,8 +125,11 @@ namespace GMEModelStatisticsExporter
             }
             else
             {
-                Console.WriteLine("Copying XME file to temp directory: {0}", tempXmeFile);
-                File.Copy(inputFilename, tempXmeFile, true);
+                if (inputFilename != tempXmeFile)
+                {
+                    Console.WriteLine("Copying XME file to temp directory: {0}", tempXmeFile);
+                    File.Copy(inputFilename, tempXmeFile, true);
+                }
 
                 GME.MGA.Parser.MgaParser parser = new GME.MGA.Parser.MgaParser();
                 string paradigmName;
@@ -197,14 +203,37 @@ namespace GMEModelStatisticsExporter
             {
                 IMgaTerritory terr = project.BeginTransactionInNewTerr(transactiontype_enum.TRANSACTION_READ_ONLY);
 
-                stats.ParadigmName = project.RootMeta.Name;
+                stats.ParadigmName = project.MetaName;
+                stats.ProjectName = project.Name;
 
                 foreach (MgaMetaFCO meta in project.RootMeta.RootFolder.DefinedFCOs)
                 {
-
+                    if (meta is MgaMetaModel)
+                    {
+                        stats.MetaModel.NumberOfModels += 1;
+                    }
+                    else if (meta is MgaMetaConnection)
+                    {
+                        stats.MetaModel.NumberOfConnections += 1;
+                    }
+                    else if (meta is MgaMetaSet)
+                    {
+                        stats.MetaModel.NumberOfSets += 1;
+                    }
+                    else if (meta is MgaMetaReference)
+                    {
+                        stats.MetaModel.NumberOfReferences += 1;
+                    }
+                    else if (meta is MgaMetaAtom)
+                    {
+                        stats.MetaModel.NumberOfAtoms += 1;
+                    }
                 }
 
-
+                foreach (MgaMetaFolder meta in project.RootMeta.RootFolder.DefinedFolders)
+                {
+                    stats.MetaModel.NumberOfFolders += 1;
+                }
 
                 VisitChildren(stats, project.RootFolder, stats.Model.ContainmentTree);
             }
@@ -222,13 +251,61 @@ namespace GMEModelStatisticsExporter
             if (mgaObject.ObjType == GME.MGA.Meta.objtype_enum.OBJTYPE_FOLDER ||
                 mgaObject.ObjType == GME.MGA.Meta.objtype_enum.OBJTYPE_MODEL)
             {
-                foreach (MgaObject child in mgaObject.ChildObjects)
+                MgaObjects children = mgaObject.ChildObjects;
+                int numChildren = children.Count;
+                int number = 0;
+                if (stats.Model.Children.TryGetValue(numChildren.ToString(), out number))
                 {
-                    string id = child.GetGuidDisp();
-                    id = id.Substring(1, id.Length - 2);
+                    stats.Model.Children[numChildren.ToString()] = number + 1;
+                }
+                else
+                {
+                    stats.Model.Children[numChildren.ToString()] = 1;
+                }
+
+                foreach (MgaObject child in children)
+                {
+                    string id = new Guid(child.GetGuidDisp()).ToString("D");
                     tree[id] = new Dictionary<string, object>();
                     VisitChildren(stats, child, tree[id]);
                 }
+            }
+            else
+            {
+                int number = 0;
+                if (stats.Model.Children.TryGetValue("0", out number))
+                {
+                    stats.Model.Children["0"] = number + 1;
+                }
+                else
+                {
+                    stats.Model.Children["0"] = 1;
+                }
+            }
+            
+            switch (mgaObject.ObjType)
+            {
+                case objtype_enum.OBJTYPE_ATOM:
+                    stats.Model.NumberOfAtoms++;
+                    break;
+                case objtype_enum.OBJTYPE_MODEL:
+                    stats.Model.NumberOfModels++;
+                    break;
+                case objtype_enum.OBJTYPE_FOLDER:
+                    stats.Model.NumberOfFolders++;
+                    break;
+                case objtype_enum.OBJTYPE_CONNECTION:
+                    stats.Model.NumberOfConnections++;
+                    break;
+                case objtype_enum.OBJTYPE_REFERENCE:
+                    stats.Model.NumberOfReferences++;
+                    break;
+                case objtype_enum.OBJTYPE_SET:
+                    stats.Model.NumberOfSets++;
+                    break;
+                default:
+                    // TODO: ...
+                    break;
             }
 
 
@@ -247,7 +324,7 @@ namespace GMEModelStatisticsExporter
             stats.XmeSizeInBytes = random.Next((int)stats.MgaSizeInBytes * 2, (int)stats.MgaSizeInBytes * 8);
 
             stats.ParadigmName = random.Next(0, 10) > 8 ? "MetaGME" : "MyParadigm_" + random.Next(0, 10);
-
+            stats.ProjectName = "MyProject_" + random.Next(50, 99);
 
             // meta model info
             stats.MetaModel.NumberOfFolders = random.Next(0, 10);
@@ -255,6 +332,7 @@ namespace GMEModelStatisticsExporter
             stats.MetaModel.NumberOfReferences = random.Next(0, 10);
             stats.MetaModel.NumberOfConnections = random.Next(0, 10);
             stats.MetaModel.NumberOfSets = random.Next(0, 10);
+            stats.MetaModel.NumberOfAtoms = random.Next(0, 10);
 
             stats.MetaModel.NumberOfBaseClasses = 0;
 
