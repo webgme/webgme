@@ -6,28 +6,30 @@
 
 if (typeof define !== "function" && typeof require === "function" && typeof process === "object") {
   var FS = require("fs");
+  var path = require("path");
 
   var name = __dirname;
   if (name.charAt(name.length - 1) !== '/') {
     name += '/';
   }
   name += "config.js";
+  var dispName = path.relative(process.cwd(), name);
 
   FS.stat(name, function (err, stat) {
     if (err && err.errno === 34) {
       var file = "// local configuration, please edit it by hand\n\ndefine([], function () {\n\t\"use strict\";\n\n\treturn {};\n});\n";
       FS.writeFile(name, file, function (err) {
         if (err) {
-          console.log("Error writing config.js");
+          console.log("Error writing " + dispName);
           console.log(err);
         } else {
-          console.log("Created config.js file, please edit it by hand");
+          console.log("Created " + dispName + " file, please edit it by hand");
         }
       });
     } else if (stat.isFile()) {
-      console.log("Config.js already exists, please modify or delete it by hand");
+      console.log(dispName + " already exists, please modify or delete it by hand");
     } else {
-      console.log("Unknown problem, please delete config.js and run again");
+      console.log("Unknown problem, please delete " + dispName + " and run again");
       console.log(err || stat);
     }
   });
@@ -55,6 +57,8 @@ if (typeof define !== "function" && typeof require === "function" && typeof proc
       mongoip: "127.0.0.1",
       mongoport: 27017,
       mongodatabase: "multi",
+      //mongouser: TODO by default we do not expect mongodb to use authentication
+      //mongopwd: TODO by default we do not expect mongodb to use authentication
       authentication: false,
       httpsecure: false,
       guest: false,

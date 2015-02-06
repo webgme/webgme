@@ -104,7 +104,7 @@ define([ "util/assert" ], function (ASSERT) {
 				}
 			}
 
-			function deepFreeze (obj) {
+			var deepFreeze = function (obj) {
 				ASSERT(typeof obj === "object");
 
 				tryFreeze(obj);
@@ -113,6 +113,9 @@ define([ "util/assert" ], function (ASSERT) {
 				for (key in obj) {
 					maybeFreeze(obj[key]);
 				}
+			};
+			if (typeof WebGMEGlobal !== 'undefined' && typeof WebGMEGlobal.getConfig !== 'undefined' && !WebGMEGlobal.getConfig().debug) {
+				deepFreeze = function () { };
 			}
 
 			function cacheInsert (key, obj) {

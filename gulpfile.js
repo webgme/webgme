@@ -2,6 +2,8 @@
 
 var gulp = require('gulp'),
     jshint = require('gulp-jshint'),
+    shell = require('gulp-shell'),
+    runSequence = require('run-sequence'),
     sourcePattern = 'src/client/js/**/*.js';
 
 gulp.task('lint', function () {
@@ -25,5 +27,16 @@ function build() {
 
     jsWatcher.on('change', changeNotification);
 }
+
+gulp.task('rjs-build', shell.task(['node ./node_modules/requirejs/bin/r.js -o ./utils/build/webgme.classes/cbuild.js']));
+
+gulp.task('register-watchers', [], function (cb) {
+    gulp.watch('src/**/*.js', ['rjs-build']);
+    return cb;
+});
+
+gulp.task('dev', function (cb) {
+    runSequence('rjs-build', 'register-watchers', cb);
+});
 
 gulp.task('default', [/*'js',*/ 'lint'], build);

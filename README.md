@@ -1,3 +1,7 @@
+Master branch build status
+
+[![Build Status](https://travis-ci.org/webgme/webgme.svg?branch=master)](https://travis-ci.org/webgme/webgme)
+
 # Installation
 
 Here are some options to deploy and try WebGME on your infrastructure:

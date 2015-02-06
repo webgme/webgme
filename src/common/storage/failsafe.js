@@ -177,7 +177,10 @@ define(["util/assert", "util/guid"], function (ASSERT, GUID) {
         var branchObj = pendingStorage[projectName][BRANCH_OBJ_ID][branchname];
         project.getBranchHash(branchname, branchObj.local[0], function (err, newhash, forked) {
           if (!err && newhash) {
-            if (branchObj.local.indexOf(newhash) !== -1) {
+            var index = branchObj.unackedSentHashes.indexOf(newhash);
+            if (index !== -1) {
+              // the server will catch up eventually...
+            } else if (branchObj.local.indexOf(newhash) !== -1) {
               project.setBranchHash(branchname, newhash, branchObj.local[0], callback);
             } else {
               //we forked
@@ -307,7 +310,8 @@ define(["util/assert", "util/guid"], function (ASSERT, GUID) {
                 if (err) {
                   callback(err, newhash, forkedhash);
                 } else {
-                  if (newhash && branchObj.local.indexOf(newhash) !== -1) {
+                  var index = branchObj.unackedSentHashes.indexOf(newhash);
+                  if (newhash && index !== -1) {
                     callback(err, newhash, forkedhash);
                   } else {
                     //we forked!!!
@@ -360,8 +364,14 @@ define(["util/assert", "util/guid"], function (ASSERT, GUID) {
         var returnFunction = function (err) {
           if (!err) {
             var index = branchObj.local.indexOf(newhash);
-            ASSERT(index !== -1);
-            branchObj.local.splice(index, branchObj.local.length - index);
+            ASSERT(index !== -1 || branchObj.state === BRANCH_STATES.SYNC);
+            if (index !== -1) {
+              branchObj.local.splice(index, branchObj.local.length - index);
+            }
+            index = branchObj.unackedSentHashes.indexOf(newhash);
+            if (index !== -1) {
+              branchObj.unackedSentHashes.splice(index + 1, branchObj.unackedSentHashes.length);
+            }
             if (branchObj.local.length === 0) {
               branchObj.state = BRANCH_STATES.SYNC;
             }
@@ -396,6 +406,7 @@ define(["util/assert", "util/guid"], function (ASSERT, GUID) {
             ASSERT(branchObj.local.length === 0);
             branchObj.state = BRANCH_STATES.AHEAD;
             branchObj.local = [newhash, oldhash];
+            branchObj.unackedSentHashes = [newhash, oldhash];
             project.setBranchHash(branch, oldhash, newhash, returnFunction);
             callback(null);
             return;
@@ -403,6 +414,7 @@ define(["util/assert", "util/guid"], function (ASSERT, GUID) {
             ASSERT(branchObj.local.length > 0);
             if (oldhash === branchObj.local[0]) {
               branchObj.local.unshift(newhash);
+              branchObj.unackedSentHashes.unshift(newhash);
               project.setBranchHash(branch, oldhash, newhash, returnFunction);
               callback(null);
             } else {

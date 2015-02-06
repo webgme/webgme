@@ -49,7 +49,11 @@ define(["mongodb", "util/assert", "util/canon"], function (MONGODB, ASSERT, CANO
        }
        });*/
 
-      MONGODB.MongoClient.connect("mongodb://" + options.host + ":" + options.port + "/" + options.database, {
+      var userString = "";
+      if(options.user && options.pwd){
+        userString = options.user+":"+options.pwd+"@";
+      }
+      MONGODB.MongoClient.connect("mongodb://" + userString + options.host + ":" + options.port + "/" + options.database, {
         'w': 1,
         'native-parser': true,
         'auto_reconnect': true,
@@ -337,10 +341,6 @@ define(["mongodb", "util/assert", "util/canon"], function (MONGODB, ASSERT, CANO
         ASSERT(typeof newhash === "string" && (newhash === "" || HASH_REGEXP.test(newhash)));
         ASSERT(typeof callback === "function");
 
-        fsyncDatabase(function(err){
-          if(err){
-            return callback(err);
-          }
           if (oldhash === newhash) {
             collection.findOne({
               _id: branch
@@ -376,13 +376,13 @@ define(["mongodb", "util/assert", "util/canon"], function (MONGODB, ASSERT, CANO
                 hash: newhash
               }
             }, function (err, num) {
+
               if (!err && num !== 1) {
                 err = new Error("branch hash mismatch");
               }
               callback(err);
             });
           }
-        });
       }
 
       function getCommits(before, number, callback) {

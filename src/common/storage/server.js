@@ -209,6 +209,28 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
             _socket.on('connection',function(socket){
                 //first we connect our socket id to the session
 
+                if (process.env['LOG_WEBGME_TIMING']) {
+                    var oldon = socket.on;
+                    socket.on = function (msg, cb) {
+                        oldon.apply(socket, [msg, function () {
+                            var args = [];
+                            for (var i = 0; i < arguments.length; i++) {
+                                args[i] = arguments[i];
+                            }
+                            if (msg === 'insertObjects') {
+                                msg = msg + ' ' + Object.keys(args[1]).length;
+                            }
+                            var time1 = process.hrtime();
+                            var callback2 = args[args.length - 1];
+                            args[args.length - 1] = function () {
+                                var time2 = process.hrtime();
+                                console.log(msg + " " + (((time2[0] - time1[0]) * 1000) + ((time2[1] - time1[1]) / 1000 / 1000 | 0)));
+                                callback2.apply(this, arguments);
+                            }
+                            cb.apply(this, args);
+                        }]);
+                    };
+                }
                 socket.on('openDatabase', function(callback){
                     checkDatabase(callback);
                 });
@@ -225,12 +247,28 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                     }
                 });
 
-                socket.on('fsyncDatabase', function(callback){
+                socket.on('fsyncDatabase', function (projectName, callback){
+                    if (typeof projectName === 'function') {
+                        // old API
+                        callback = projectName;
+                        projectName = undefined;
+                    }
                     checkDatabase(function(err){
                         if(err){
                             callback(err);
                         } else {
-                            _database.fsyncDatabase(callback);
+                            if (projectName) {
+                                checkProject(getSessionID(socket), projectName, function (err, project) {
+                                    if (err) {
+                                        callback(err);
+                                    } else {
+                                        project.fsyncDatabase(callback);
+                                    }
+                                });
+                            } else {
+                                // old API
+                                _database.fsyncDatabase(callback);
+                            }
                         }
                     });
                 });
