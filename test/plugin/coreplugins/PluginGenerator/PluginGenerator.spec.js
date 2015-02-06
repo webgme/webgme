@@ -64,7 +64,8 @@ function runPlugin (pluginName, configuration, callback) {
     };
 
     newPlugin.META = {
-        FCO: '/1'
+        FCO: '/1',
+        FCO_instance: '/2'
     };
     newPlugin.core = {
         getPath: function (node) {
@@ -104,6 +105,13 @@ describe('PluginGenerator', function () {
     it ('test esprima', function () {
         should.equal(isValidJs('var a = {x: 1, y: 2};', true), null);
         should.not.equal(isValidJs('var a = [{x: 1, x: 2};', false), null);
+    });
+
+    it ('test getName and version', function () {
+        var plugin = requirejs('plugin/coreplugins/PluginGenerator/PluginGenerator'),
+            newPlugin = new plugin();
+        should.equal(newPlugin.getName(), 'Plugin Generator');
+        should.equal(newPlugin.getVersion (), '0.1.1');
     });
 
     it ('pluginConfig up to date', function () {
@@ -269,6 +277,50 @@ describe('PluginGenerator', function () {
                     should.not.equal(isValidJs(files[keys[i]]), null);
                 } else {
                     should.equal(isValidJs(files[keys[i]], true), null);
+                }
+            }
+            done();
+        })
+    });
+
+    it('templateType = JavaScript should generate four valid js files', function (done){
+        var config = Object.create(pluginConfig);
+        config.templateType = 'JavaScript';
+        runPlugin('PluginGenerator', config, function (err, result) {
+            var files = result.artifact.addedFiles,
+                keys = Object.keys(files),
+                i;
+
+            should.equal(err, null);
+            should.equal(keys.length, 5);
+            for (i = 0; i < keys.length; i += 1) {
+                //console.log(files[keys[i]]);
+                if (keys[i] === 'src/plugins/null/NewPlugin/Templates/JavaScript.js.ejs') {
+                    should.not.equal(isValidJs(files[keys[i]]), null);
+                } else {
+                    should.equal(isValidJs(files[keys[i]], null), null);
+                }
+            }
+            done();
+        })
+    });
+
+    it('templateType = CSharp should generate four valid js files', function (done){
+        var config = Object.create(pluginConfig);
+        config.templateType = 'CSharp';
+        runPlugin('PluginGenerator', config, function (err, result) {
+            var files = result.artifact.addedFiles,
+                keys = Object.keys(files),
+                i;
+
+            should.equal(err, null);
+            should.equal(keys.length, 5);
+            for (i = 0; i < keys.length; i += 1) {
+                //console.log(files[keys[i]]);
+                if (keys[i] === 'src/plugins/null/NewPlugin/Templates/CSharp.cs.ejs') {
+                    should.not.equal(isValidJs(files[keys[i]]), null);
+                } else {
+                    should.equal(isValidJs(files[keys[i]], null), null);
                 }
             }
             done();
