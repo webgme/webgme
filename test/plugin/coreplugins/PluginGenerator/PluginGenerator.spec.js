@@ -220,19 +220,46 @@ describe('PluginGenerator', function () {
         })
     });
 
-    it('templateType = false should generate two valid js files', function (done){
+    it('templateType = Python should generate four valid js files', function (done){
         var config = Object.create(pluginConfig);
-        config.test = false;
+        config.templateType = 'Python';
         runPlugin('PluginGenerator', config, function (err, result) {
             var files = result.artifact.addedFiles,
                 keys = Object.keys(files),
                 i;
 
             should.equal(err, null);
-            should.equal(keys.length, 2);
+            should.equal(keys.length, 5);
             for (i = 0; i < keys.length; i += 1) {
                 //console.log(files[keys[i]]);
-                should.equal(isValidJs(files[keys[i]]), true);
+                if (keys[i] === 'src/plugins/null/NewPlugin/Templates/Python.py.ejs') {
+                    should.equal(isValidJs(files[keys[i]]), false);
+                } else {
+                    should.equal(isValidJs(files[keys[i]]), true);
+                }
+            }
+            done();
+        })
+    });
+
+    it('templateType = Python and core = true should generate four valid js files', function (done){
+        var config = Object.create(pluginConfig);
+        config.templateType = 'Python';
+        config.core = true;
+        runPlugin('PluginGenerator', config, function (err, result) {
+            var files = result.artifact.addedFiles,
+                keys = Object.keys(files),
+                i;
+
+            should.equal(err, null);
+            should.equal(keys.length, 5);
+            for (i = 0; i < keys.length; i += 1) {
+                //console.log(files[keys[i]]);
+                if (keys[i] === 'src/plugins/null/NewPlugin/Templates/Python.py.ejs') {
+                    should.equal(isValidJs(files[keys[i]]), false);
+                } else {
+                    should.equal(isValidJs(files[keys[i]]), true);
+                }
             }
             done();
         })
