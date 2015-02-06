@@ -52,7 +52,8 @@
     "chai": "^1.9.0",
     "jscoverage": "^0.5.9",
     "gulp-shell": "^0.2.11",
-    "run-sequence": "^1.0.2"
+    "run-sequence": "^1.0.2",
+    "chance": ">=0.7.3"
   },
   "main": "webgme",
   "scripts": {
