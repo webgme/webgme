@@ -89,8 +89,8 @@ define(['logManager',
         this.positionY = 0;
         this.positionX1 = 0;
         this.positionX2 = 0;
-        this.bracketClosing = 0;
-        this.bracketOpening = 0;
+        this.bracketClosing = false;
+        this.bracketOpening = false;
 
         this.orderPrev = null;
         this.orderNext = null;

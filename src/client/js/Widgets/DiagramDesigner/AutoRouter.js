@@ -60,23 +60,29 @@ define(['logManager',
         this.graph = null;
     };
 
-    AutoRouter.prototype.addBox = function(size) {
+    AutoRouter.prototype._createBox = function(size) {
         var x1 = size.x1 !== undefined ? size.x1 : (size.x2 - size.width),
             x2 = size.x2 !== undefined ? size.x2 : (size.x1 + size.width),
             y1 = size.y1 !== undefined ? size.y1 : (size.y2 - size.height),
             y2 = size.y2 !== undefined ? size.y2 : (size.y1 + size.height),
-            portsInfo = size.ports || {},
             box = this.graph.createBox(),
-            rect = new ArRect(x1, y1, x2, y2),
+            rect = new ArRect(x1, y1, x2, y2);
+
+        assert(x1 !== undefined && x2 !== undefined && y1 !== undefined && y2 !== undefined,
+            'Missing size info for box');
+
+        box.setRect(rect);
+        return box;
+    };
+
+    AutoRouter.prototype.addBox = function(size) {
+        var box = this._createBox(size),
+            portsInfo = size.ports || {},
             boxObject,
             port;
 
-        assert(x1 !== undefined && x2 !== undefined && y1 !== undefined && y2 !== undefined,
-              'Missing size info for box');
-
-        box.setRect(rect);
-        this.graph.addBox(box);
         boxObject = new ArBoxObject(box);
+        this.graph.addBox(box);
 
         // Adding each port
         var portIds = Object.keys(portsInfo);
@@ -118,19 +124,20 @@ define(['logManager',
         // Create child box
         rect = new ArRect(port.rect);
         rect.inflateRect(3);
-        container = this.addBox({x1: rect.left,
-                                 x2: rect.right,
-                                 y1: rect.ceil,
-                                 y2: rect.floor});
-        box.addChild(container.box);
+        container = this._createBox({x1: rect.left,
+                                     x2: rect.right,
+                                     y1: rect.ceil,
+                                     y2: rect.floor});
+        box.addChild(container);
 
         // add port to child box
-        container.box.addPort(port);
+        container.addPort(port);
 
         boxObject.ports[port.id] = port;
 
         // Record the port2box mapping
         this.portId2Box[port.id] = boxObject;
+        this.graph.addBox(container);
 
         return port;
     };
@@ -546,28 +553,28 @@ define(['logManager',
 
     AutoRouter.prototype.remove = function(item) {
         assert(item !== undefined, "AutoRouter:remove Cannot remove undefined object");
-        item = item.box || item;
+        var i;
 
-        if(item instanceof AutoRouterBox) {
-            this.portId2Path[item.id] = undefined;
+        if(item.box instanceof AutoRouterBox) {
+            item = item.box || item;
+            var ports = item.ports;
+            for (i = ports.length; i--;) {
+                this.portId2Path[ports[i].id] = undefined;
+            }
+
             this.graph.deleteBox(item);
 
         }else if(this.paths[item] !== undefined) {
             if(this.paths[item] instanceof AutoRouterPath) {
                 var path = this.paths[item],
-                    srcBoxId = path.startports[0].owner.id,
-                    dstBoxId = path.endports[0].owner.id,
-                    i;
+                    srcId = path.startports[0].id,
+                    dstId = path.endports[0].id;
 
-                if(srcBoxId) {
-                    i = this.portId2Path[srcBoxId].out.indexOf(path);// Remove from portId2Path dictionary
-                    this.portId2Path[srcBoxId].out.splice(i, 1);
-                }
+                i = this.portId2Path[srcId].out.indexOf(path);// Remove from portId2Path dictionary
+                this.portId2Path[srcId].out.splice(i, 1);
 
-                if(dstBoxId) {
-                    i = this.portId2Path[dstBoxId].in.indexOf(path);
-                    this.portId2Path[dstBoxId].in.splice(i, 1);
-                }
+                i = this.portId2Path[dstId].in.indexOf(path);
+                this.portId2Path[dstId].in.splice(i, 1);
 
                 this.graph.deletePath(path); 
             }

@@ -52,81 +52,20 @@ define(['logManager',
     };
 
     //Functions
-    AutoRouterGraph.prototype._remove = function (box) {
-        if (box instanceof AutoRouterBox) {
-            this._deleteBoxAndPortEdges(box);
-
-            //For the WebGME, the removal of the paths connected to boxes is handled outside the AutoRouter.
-            //For removal of paths with the removal of boxes, uncomment the following code:
-
-            /*
-               var iter = 0;
-
-               while (iter < paths.length) {
-               var iteratorChanged = false,
-               path = paths[iter],
-               startPort = path.getStartPort();
-
-               assert(startPort !== null, "ARGraph.remove: startPort !== null FAILED");
-               var startbox = startPort.owner,
-               endPort = path.getEndPort();
-
-               assert(endPort !== null, "ARGraph.remove: endPort !== null FAILED");
-               var endbox = endPort.owner;
-
-               if ((startbox === box || endbox === box)) {
-            //DeletePath:
-            if (path.hasOwner()) {
-                deleteEdges(path);
-                path.owner = null;
-
-                paths.splice(iter, 1);
-                iteratorChanged = true;
-            }
-
-            path.destroy();	// ??
-            }
-
-            if (!iteratorChanged)
-            ++iter;
-            }
-             */
-
-            box.owner = null;
-
-            assert(this.boxes[box.id] !== undefined, "ARGraph.remove: Box does not exist");
-
-            delete this.boxes[box.id];
-
-        } else if (box instanceof AutoRouterPath) { //ARPath
-            var path = box;
-            this.deleteEdges(path);
-
-            path.owner = null;
-
-            var iter = this.paths.indexOf(path);
-            assert(iter > -1, "ARGraph.remove: Path does not exist");
-
-            this.paths.splice(iter, 1);
-        }
-    };
-
     AutoRouterGraph.prototype._deleteAllBoxes = function () {
-        for (var box in this.boxes) {
-            if (this.boxes.hasOwnProperty(box)) {
-                this.boxes[box].destroy(); 
-                delete this.boxes[box];
-            }
+        var ids = Object.keys(this.boxes);
+        for (var i = ids.length; i--;) {
+            this.boxes[ids[i]].destroy(); 
+            delete this.boxes[ids[i]];
         }
         this.bufferBoxes = [];
     };
 
     AutoRouterGraph.prototype._getBoxAt = function (point, nearness) {
-        for (var box in this.boxes) {
-            if (this.boxes.hasOwnProperty(box)) {
-                if (this.boxes[box].isBoxAt(point, nearness)) {
-                    return this.boxes[box];
-                }
+        var ids = Object.keys(this.boxes);
+        for (var i = ids.length; i--;) {
+            if (this.boxes[ids[i]].isBoxAt(point, nearness)) {
+                return this.boxes[ids[i]];
             }
         }
 
@@ -140,12 +79,11 @@ define(['logManager',
 
     AutoRouterGraph.prototype._isRectClipBoxes = function (rect) {
         var boxRect;
-        for (var box in this.boxes) {
-            if (this.boxes.hasOwnProperty(box)) {
-                boxRect = this.boxes[box].rect;
-                if (Utils.isRectClip(rect, boxRect)) {
-                    return true;
-                }
+        var ids = Object.keys(this.boxes);
+        for (var i = ids.length; i--;) {
+            boxRect = this.boxes[ids[i]].rect;
+            if (Utils.isRectClip(rect, boxRect)) {
+                return true;
             }
         }
         return false;
@@ -246,15 +184,15 @@ define(['logManager',
     };
 
     AutoRouterGraph.prototype._getSurroundRect = function () {
-        var rect = new ArRect(0,0,0,0);
+        var rect = new ArRect(0,0,0,0),
+            i;
 
-        for (var box in this.boxes) {
-            if (this.boxes.hasOwnProperty(box)) {
-                rect.unionAssign(this.boxes[box].rect);
-            }
+        var ids = Object.keys(this.boxes);
+        for (i = ids.length; i--;) {
+            rect.unionAssign(this.boxes[ids[i]].rect);
         }
 
-        for (var i = 0; i < this.paths.length; i++) {
+        for (i = this.paths.length; i--;) {
             rect.unionAssign(this.paths[i].getSurroundRect());
         }
 
@@ -444,7 +382,8 @@ define(['logManager',
         var t,
             start = (new ArPoint(startPt)),
             end = (new ArPoint(endPt)),
-            box,
+            ids = Object.keys(this.boxes),
+            i,
             rect;
 
         if (start.y === end.y) {
@@ -454,23 +393,19 @@ define(['logManager',
                 end.x = t;
             }
 
-            for (box in this.boxes) {
-                if (this.boxes.hasOwnProperty(box)) {
-                    rect = this.boxes[box].rect;
+            for (i = ids.length; i--;) {
+                rect = this.boxes[ids[i]].rect;
 
-                    if (start.x < rect.right && rect.left <= end.x) {
-                        if (rect.floor <= start.y && rect.floor > min) {
-                            min = rect.floor;
-                        }
-                        if (rect.ceil > start.y && rect.ceil < max) {
-                            max = rect.ceil;
-                        }
+                if (start.x < rect.right && rect.left <= end.x) {
+                    if (rect.floor <= start.y && rect.floor > min) {
+                        min = rect.floor;
+                    }
+                    if (rect.ceil > start.y && rect.ceil < max) {
+                        max = rect.ceil;
                     }
                 }
             }
-        }
-        else
-        {
+        } else {
             assert(start.x === end.x, "ARGraph.this.getLimitsOfEdge: start.x === end.x FAILED");
 
             if (start.y > end.y) {
@@ -479,17 +414,15 @@ define(['logManager',
                 end.y = t;
             }
 
-            for (box in this.boxes) {
-                if (this.boxes.hasOwnProperty(box)) {
-                    rect = this.boxes[box].rect;
+            for (i = ids.length; i--;) {
+                rect = this.boxes[ids[i]].rect;
 
-                    if (start.y < rect.floor && rect.ceil <= end.y) {
-                        if (rect.right <= start.x && rect.right > min) {
-                            min = rect.right;
-                        }
-                        if (rect.left > start.x && rect.left < max) {
-                            max = rect.left;
-                        }
+                if (start.y < rect.floor && rect.ceil <= end.y) {
+                    if (rect.right <= start.x && rect.right > min) {
+                        min = rect.right;
+                    }
+                    if (rect.left > start.x && rect.left < max) {
+                        max = rect.left;
                     }
                 }
             }
@@ -505,9 +438,8 @@ define(['logManager',
     };
 
     AutoRouterGraph.prototype._connect = function (path) {
-        var ports = path.calculateStartEndPorts(),
-            startport = ports.src,
-            endport = ports.dst,
+        var startport = path.getStartPort(),
+            endport = path.getEndPort(),
             startpoint = path.startpoint,
             endpoint = path.endpoint;
 
@@ -569,31 +501,21 @@ define(['logManager',
                             "end": start, 
                             "box": endPort.owner } ) ;
         assert(!end.equals(endpoint), "ARGraph.connect: !end.equals(endpoint) FAILED");
-        assert(path.isEmpty(),  "ARGraph.connect: path.isEmpty() FAILED");
 
-        var ret = new ArPointListPath(),
+        var points,
             isAutoRouted = path.isAutoRouted(),
             pos = -1;
         if (isAutoRouted) {
-            ret = this._connectPoints(start, end, startdir, enddir);
+            points = this._connectPoints(start, end, startdir, enddir);
         }
 
         if (!isAutoRouted) {
-            var ret2 = path.applyCustomizationsBeforeAutoConnectPoints();
-
-            if (ret2.length > 0) {
-                while (++pos < ret2.length) {
-                    ret.push(ret2[pos]);
-                }
-            }
+            points = path.applyCustomizationsBeforeAutoConnectPoints();
         }
 
-        path.addTail(startpoint);
-        pos = -1;
-        while (++pos < ret.length) {
-            path.addTail(ret[pos]);
-        }
-        path.addTail(endpoint);
+        path.points = points;
+        path.points.unshift(startpoint);
+        path.points.push(endpoint);
 
         if (isAutoRouted) {
             this._simplifyPathCurves(path);
@@ -963,11 +885,11 @@ define(['logManager',
         var ids = Object.keys(this.boxes),
             i;
 
-        for (i = ids.length-1; i >= 0; i--) {
+        for (i = ids.length; i--;) {
             this._addBoxAndPortEdges(this.boxes[ids[i]]);
         }
 
-        for (i = this.paths.length-1; i >= 0; i--) {
+        for (i = this.paths.length; i--;) {
             this.horizontal.addPathEdges(this.paths[i]);
             this.vertical.addPathEdges(this.paths[i]);
         }
@@ -1450,7 +1372,7 @@ define(['logManager',
                     edge.startpointPrev = null;
                     edge.endpointNext = null;
 
-                    edge.positionY = Utils.getPointCoord(newStart, Utils.nextClockwiseDir (startDir) );
+                    edge.positionY = Utils.getPointCoord(newStart, Utils.nextClockwiseDir (startDir));
                     hlist.insert(edge);
 
                     points.splice(1, 2);
@@ -1664,8 +1586,8 @@ define(['logManager',
             }
 
             if (inputBox.rect.touching(siblings[i])) {
-                inputBox.adjustPortAvailability(siblings[i]);
-                this.boxes[siblings[i].id].adjustPortAvailability(inputBox.rect);
+                inputBox.adjustPortAvailability(this.boxes[siblings[i].id]);
+                this.boxes[siblings[i].id].adjustPortAvailability(inputBox);
             }
         }
     };
@@ -1682,7 +1604,8 @@ define(['logManager',
             j;
 
         box.rect.inflateRect(CONSTANTS.BUFFER);
-        assert(!this.box2bufferBox[inputBox.id], 'Can\'t add box to 2 bufferboxes');
+        assert(!this.box2bufferBox[inputBox.id], 
+            'Can\'t add box to 2 bufferboxes');
 
         // For every buffer box touching the input box
         // Record the buffer boxes with children touching 
@@ -1696,8 +1619,8 @@ define(['logManager',
             while (j--) {
                 child = this.bufferBoxes[i].children[j];
                 if (box.rect.touching(child)) {
-                    inputBox.adjustPortAvailability(child);
-                    this.boxes[child.id].adjustPortAvailability(box.rect);
+                    inputBox.adjustPortAvailability(this.boxes[child.id]);
+                    this.boxes[child.id].adjustPortAvailability(inputBox);
 
                     if (overlapBoxesIndices.indexOf(i) === -1) {
                         overlapBoxesIndices.push(i);
@@ -1735,7 +1658,6 @@ define(['logManager',
         for (i = ids.length; i--;) {
             this.box2bufferBox[ids[i]] = this.bufferBoxes[this.bufferBoxes.length-1];
         }
-
     };
 
     AutoRouterGraph.prototype._removeFromBufferBoxes = function (box) {
@@ -1750,6 +1672,7 @@ define(['logManager',
             child,
             group,
             ids,
+            id,
             j,
             g;
 
@@ -1778,8 +1701,9 @@ define(['logManager',
 
                 while (j--) {
                     if (groups[g][j].touching(child)) {
-                        this.boxes[child.id].adjustPortAvailability(groups[g][j]);
-                        this.boxes[groups[g][j].id].adjustPortAvailability(child);
+                        id = groups[g][j].id;
+                        this.boxes[child.id].adjustPortAvailability(this.boxes[id]);
+                        this.boxes[id].adjustPortAvailability(this.boxes[child.id]);
                         add = true;
                     }
                 }
@@ -1881,7 +1805,12 @@ define(['logManager',
             while (i--) {
                 this.deleteBox(children[i]);
             }
-            this._remove(box);
+
+            this._deleteBoxAndPortEdges(box);
+            box.owner = null;
+            assert(this.boxes[box.id] !== undefined, "ARGraph.remove: Box does not exist");
+
+            delete this.boxes[box.id];
         }
 
         box.destroy();
@@ -1937,14 +1866,12 @@ define(['logManager',
     };
 
     AutoRouterGraph.prototype.routeAsync = function(options) {
-        this._connectAllDisconnectedPaths();
-
         var self = this,
             updateFn = options.update || function() {},
             callbackFn = options.callback || function() {},
             time = options.time || 5,
-            state = {finished: false},
             optimizeFn = function(state) {
+
                 updateFn(self.paths);
                 if (state.finished) {
                     return callbackFn(self.paths);
@@ -1952,9 +1879,27 @@ define(['logManager',
                     state = self._optimize(state);
                     return setTimeout(optimizeFn, time, state);
                 }
+            },
+            startRouting = function() {
+                var state = {finished: false};
+                self._connectAllDisconnectedPaths();
+
+                // Start the optimization
+                setTimeout(optimizeFn, time, state);
             };
 
-        setTimeout(optimizeFn, time, state);
+        // Connect all disconnected paths with a straight line
+        var path;
+        for (var i = this.paths.length; i--;) {
+            path = this.paths[i];
+            if (!path.isConnected()) {
+                path.calculateStartEndPorts();
+                path.points.push(path.startpoint);
+                path.points.push(path.endpoint);
+            }
+        }
+
+        setTimeout(startRouting, time);
     };
 
     /**
@@ -2111,7 +2056,13 @@ define(['logManager',
 
         if (path.hasOwner()) {
             assert(path.owner === this, "ARGraph.deletePath: path.owner === this FAILED");
-            this._remove(path);
+
+            this.deleteEdges(path);
+            path.owner = null;
+            var index = this.paths.indexOf(path);
+
+            assert(index > -1, "ARGraph.remove: Path does not exist");
+            this.paths.splice(index, 1);
         }
 
         path.destroy();
@@ -2160,13 +2111,14 @@ define(['logManager',
     };
 
     AutoRouterGraph.prototype.assertValid = function() {
-        for (var box in this.boxes) {
-            if (this.boxes.hasOwnProperty(box)) {
-                this.assertValidBox(this.boxes[box]);
-            }
+        var ids = Object.keys(this.boxes),
+            i;
+
+        for (i = this.boxes.length; i--;) {
+            this.assertValidBox(this.boxes[ids[i]]);
         }
 
-        for (var i = this.paths.length; i--;) {
+        for (i = this.paths.length; i--;) {
             this._assertValidPath(this.paths[i]);
         }
 

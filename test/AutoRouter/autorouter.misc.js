@@ -1,4 +1,4 @@
-/*globals describe,it*/
+/*globals describe,beforeEach,it*/
 /*
  * brollb
  */
@@ -25,11 +25,12 @@ var common = require('./autorouter.common.js'),
 utils.getNewGraph = common.getNewGraph;
 // Tests
 describe('AutoRouter Misc Tests', function(){
-  this.timeout(20000);
+
+  beforeEach(function() {
+      router = utils.getNewGraph();
+  });
 
   it('Cannot read property of adjustPortAvailability of undefined BUG',function(){
-      router = utils.getNewGraph();
-
       var updatePorts = function(box) {
           var rect = box.box.rect,
               boxLocation = [rect.left, rect.ceil],
@@ -60,64 +61,21 @@ describe('AutoRouter Misc Tests', function(){
       // Update ports ports for boxes... don't actually change anything
       updatePorts(boxes[0]);
       updatePorts(boxes[6]);
-
-      for (i = 0; i < boxes.length; i++) {
-          console.log(i + ' box id', boxes[i].box.id);
-      }
-
   });
 
-  it('basic model with ports',function() {
-      bugPlayer.test('./testCases/basic.js');
-  });
-
-  it('bug report 1',function() {
-      bugPlayer.test('./testCases/AR_bug_report1422640675165.js');
-  });
-
-  // Changed CR3
-  it('bug report 2',function() {
-    var debug = {
-          before: function(router) {
-                router._assertPortId2PathIsValid();
+  it('candeleteTwoEdgesAt: Utils.isRightAngle(dir) BUG', function(done){
+      var boxes = common.addBoxes([[100, 100], [200, 200], [300,300]]),
+          path;
+      
+      common.connectAll(boxes);
+      router.routeAsync({
+          update: function() {
           },
-          after: function(router) {
-                // Call assertValid on every path
-                router._assertPortId2PathIsValid();
-                options.after(router);
-            }
-      };
-      bugPlayer.test('./testCases/AR_bug_report_2.js');
+          callback: function(paths) {
+              done();
+          }
+      });
 
-  });
-
-  it('bug report 3',function() {
-      var debug = {
-          before: function(router) {
-          },
-          after: options.after
-      };
-      bugPlayer.test('./testCases/AR_bug_report1422974690643.js');
-  });
-
-  it('bug report 4',function() {
-      var debug = {
-          verbose: true,
-          before: function(router) {
-          },
-          after: options.after
-      };
-      bugPlayer.test('./testCases/AR_bug_report1423074120283.js');
-  });
-
-  it('bug report 5',function() {
-      var debug = {
-          verbose: true,
-          before: function(router) {
-          },
-          after: options.after
-      };
-      bugPlayer.test('./testCases/AR_bug_report1423077073008.js');
-  });
-
+      path = router.graph.paths[0];
+   });
 });

@@ -1,4 +1,4 @@
-/*globals describe,it*/
+/*globals describe,beforeEach,it*/
 /*
  * brollb
  */
@@ -10,10 +10,13 @@ var utils = require('./autorouter.common.js'),
 
 // Tests
 describe('AutoRouter Tests', function(){
+  this.timeout(20000);
+
+  beforeEach(function() {
+      router = utils.getNewGraph();
+  });
 
   it('should create basic paths',function(){
-      router = utils.getNewGraph();
-
       var box1 = utils.addBox({x: 100, y: 100}),
           box2 = utils.addBox({x: 900, y: 900}),
           srcId = Object.keys(box1.ports)[0],
@@ -30,8 +33,6 @@ describe('AutoRouter Tests', function(){
   });
 
   it('should detect bracket opening',function(){
-      router = utils.getNewGraph();
-
       var box1 = utils.addBox({x: 100, y: 100}),
           portIds = Object.keys(box1.ports),
           srcId = portIds[0],
@@ -43,25 +44,24 @@ describe('AutoRouter Tests', function(){
       // Check that the graph contains an edge that is bracket closing or opening
       var hasBracketOpeningOrClosing = false;
       var testFn = function(edge) {
-          return edge.bracketOpening || edge.bracketOpening || edge.bracket_closing || edge.bracket_opening;
+          return edge.bracketOpening || edge.bracketOpening;
       };
       hasBracketOpeningOrClosing = utils.evaluateEdges(router.graph.horizontal, testFn) ||
                                    utils.evaluateEdges(router.graph.vertical, testFn);
 
-      assert(hasBracketOpeningOrClosing, 
-      'Did not detect bracket opening/closing'+(router.graph.dumpEdgeLists()||''));
+      if (!hasBracketOpeningOrClosing) {
+         router.graph.dumpEdgeLists();
+         throw new Error('Did not detect bracket opening/closing');
+      }
   });
 
  it('should connect two boxes',function(){
-      router = utils.getNewGraph();
-
       var box1 = utils.addBox({x: 100, y: 100});
       var box2 = utils.addBox({x: 500, y: 800});
       utils.connectAll([box1, box2]);
   });
 
   it('should connect multiple boxes',function(){
-      router = utils.getNewGraph();
       var locations = [[100,100],
                        [500,300],
                        [300,300]],
@@ -71,7 +71,6 @@ describe('AutoRouter Tests', function(){
   });
 
   it('should move connected boxes',function(){
-      router = utils.getNewGraph();
       var locations = [[100,100],
                        [500,800],
                        [500,300],
@@ -90,7 +89,6 @@ describe('AutoRouter Tests', function(){
   });
 
   it('should connect overlapping boxes',function(){
-      router = utils.getNewGraph();
       var locations = [[100,100],
                        [110,110],
                        [120,120],
@@ -108,7 +106,6 @@ describe('AutoRouter Tests', function(){
   });
 
   it('should connect contained boxes',function(){
-      router = utils.getNewGraph();
       var width = 900,
           height = 900,
           locations = [[100,100], 
@@ -142,8 +139,6 @@ describe('AutoRouter Tests', function(){
   });
 
   it('should remove path from graph',function(){
-      router = utils.getNewGraph();
-
       var box1 = utils.addBox({x: 100, y: 100});
       var box2 = utils.addBox({x: 500, y: 800});
       var path = router.addPath({src: box1.ports, dst: box2.ports});
@@ -152,7 +147,6 @@ describe('AutoRouter Tests', function(){
   });
 
   it('should connect port to parent box',function(){
-      router = utils.getNewGraph();
       var box = utils.addBox({x: 100, y: 100});
       var port = utils.addBox({x: 110, y: 110, width: 30, height: 30});
       router.setComponent(box, port);
@@ -160,7 +154,6 @@ describe('AutoRouter Tests', function(){
   });
 
   it('should connect box encircled by other boxes',function(){
-      router = utils.getNewGraph();
       var locations = [],
           change = 90,
           min = 100,
@@ -200,13 +193,11 @@ describe('AutoRouter Tests', function(){
   });
 
   it('should allows connections between immediately overlapping boxes',function(){
-      router = utils.getNewGraph();
       var boxes = utils.addBoxes([[100,100], [100,100]]);
       utils.connectAll(boxes);
   });
 
   it('should be able to resize routed boxes', function() {
-      router = utils.getNewGraph();
       var boxes = utils.addBoxes([[100,100], [300,300]]);
       utils.connectAll(boxes);
 
@@ -227,8 +218,6 @@ describe('AutoRouter Tests', function(){
   });
 
   it('should be able to route asynchronously', function(done) {
-      router = utils.getNewGraph();
-
       var box1 = utils.addBox({x: 100, y: 100}),
           box2 = utils.addBox({x: 900, y: 900}),
           srcId = Object.keys(box1.ports)[0],
@@ -250,20 +239,23 @@ describe('AutoRouter Tests', function(){
       assert(path, 'Missing path');
       assert(path.points.length >= 2, 'Path missing temporary points');
   });
-});
 
-// Tests for the autorouter
-//  - changing the size of boxes
-//  - changing the size of ports
-//  - maze
-//  - remove ports
-//  - removing path should remove start/end points from ports
-//
-//  - Boxes
-//    - move propogates to children
-//    - add/remove port
-//
-//  - Ports
-//    - port available area
-//      - adjust
-//      - clear
+  it('routeAsync should stop optimizing if path is disconnected', function(done) {
+      var boxes = utils.addBoxes([[100, 100], [200, 200], [300,300]]),
+          path;
+      
+      utils.connectAll(boxes);
+      router.routeAsync({
+          update: function() {
+              path = router.graph.paths[0];
+              router.graph.disconnect(path);
+          },
+          callback: function(paths) {
+              assert(false, 'Callback called for routeAsync');
+          }
+      });
+
+      setTimeout(done, 1000);
+  });
+
+});

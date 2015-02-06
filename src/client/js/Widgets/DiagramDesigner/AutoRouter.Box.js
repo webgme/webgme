@@ -137,14 +137,18 @@ define(['logManager',
     };
 
     AutoRouterBox.prototype.resetPortAvailability = function (){
-        for(var i = 0; i < this.ports.length; i++){
+        for(var i = this.ports.length; i--;){
             this.ports[i].resetAvailableArea();
         }
     };
 
-    AutoRouterBox.prototype.adjustPortAvailability = function (r){
-        for(var i = 0; i < this.ports.length; i++){
-            this.ports[i].adjustAvailableArea(r);
+    AutoRouterBox.prototype.adjustPortAvailability = function (box){
+        if (!box.hasAncestorWithId(this.id) &&   // Boxes are not dependent on one another
+            !this.hasAncestorWithId(box.id)) {
+
+            for(var i = this.ports.length; i--;){
+                this.ports[i].adjustAvailableArea(box.rect);
+            }
         }
     };
 
@@ -163,6 +167,17 @@ define(['logManager',
         assert(i !== -1, "ARBox.removeChild: box isn't child of " + this.id);
         this.childBoxes.splice(i,1);
         box.parent = null;
+    };
+
+    AutoRouterBox.prototype.hasAncestorWithId = function (id){
+        var box = this;
+        while (box) {
+            if (box.id === id) {
+                return true;
+            }
+            box = box.parent;
+        }
+        return false;
     };
 
     AutoRouterBox.prototype.getRootBox = function (){

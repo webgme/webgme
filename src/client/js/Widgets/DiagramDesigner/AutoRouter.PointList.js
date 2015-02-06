@@ -282,12 +282,13 @@ define(['logManager',
 
     ArPointListPath.prototype.assertValid = function(msg) {
         // Check to make sure each point makes a horizontal/vertical line with it's neighbors
+        msg = msg || '';
         for (var i = this.length-1; i > 0; i--) {
             assert(!!this[i].minus, 'Bad value at position '+i+' ('+Utils.stringify(this[i])+')');
             assert(!!this[i-1].minus, 'Bad value at position '+(i-1)+' ('+Utils.stringify(this[i-1])+')');
 
             assert(Utils.isRightAngle(Utils.getDir(this[i-1].minus(this[i]))), 
-                msg+"\n\tArPointListPath contains skew edge:\n"+Utils.stringify(this[i-1]));
+                msg+"\n\tArPointListPath contains skew edge:\n"+Utils.stringify(this));
         }
     };
 

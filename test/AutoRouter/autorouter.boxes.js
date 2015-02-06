@@ -1,4 +1,4 @@
-/*globals describe,it*/
+/*globals describe,beforeEach,it*/
 /*
  * brollb
  */
@@ -11,9 +11,11 @@ var utils = require('./autorouter.common.js'),
 // Tests
 describe('AutoRouter Box Tests', function(){
 
-  it('should create connection areas outside the box',function(){
+  beforeEach(function() {
       router = utils.getNewGraph();
+  });
 
+  it('should create connection areas outside the box',function(){
       var boxDef = {x1: 100,
                     x2: 200,
                     y1: 100,
@@ -29,7 +31,6 @@ describe('AutoRouter Box Tests', function(){
   });
 
   it('should create ports outside the box',function(){
-      router = utils.getNewGraph();
       var boxDef = {x1: 100,
                     x2: 200,
                     y1: 100,
@@ -45,14 +46,12 @@ describe('AutoRouter Box Tests', function(){
   });
 
   it('should add new ports to boxes',function(){
-      router = utils.getNewGraph();
       var base = utils.addBox({x: 100, y: 100});
       router.addPort(base, {id: 'newPort',
                             area: [[110, 120], [110, 130]]});
   });
 
   it('should create subcomponents of a box',function(){
-      router = utils.getNewGraph();
       var base = utils.addBox({x: 100, y: 100});
       var child = utils.addBox({x: 110, y: 110, width: 30, height: 30});
       router.setComponent(base, child);
@@ -77,7 +76,6 @@ describe('AutoRouter Box Tests', function(){
   });
 
   it('should remove port from box',function(){
-      router = utils.getNewGraph();
       var box = utils.addBox({x: 100,
                                 y: 100});
 
@@ -97,7 +95,6 @@ describe('AutoRouter Box Tests', function(){
   });
 
    it('should create boxes placed on graph',function(){
-      router = utils.getNewGraph();
       var ports = utils.addBox({x: 100,
                                 y: 100});
 
@@ -106,7 +103,6 @@ describe('AutoRouter Box Tests', function(){
   });
 
    it('should move box on graph',function(){
-      router = utils.getNewGraph();
       var box = utils.addBox({x: 100,
                         y: 100});
 
@@ -114,9 +110,7 @@ describe('AutoRouter Box Tests', function(){
   });
 
   it('should remove box from graph',function(){
-      router = utils.getNewGraph();
-      var box = utils.addBox({x: 100,
-                        y: 100});
+      var box = utils.addBox({x: 100, y: 100});
 
       router.remove(box);
       var boxCount = Object.keys(router.graph.boxes).length;
@@ -124,7 +118,6 @@ describe('AutoRouter Box Tests', function(){
   });
 
    it('should be able to resize boxes', function() {
-      router = utils.getNewGraph();
       var box = utils.addBox({x: 100, y: 100});
       var newBox = {x1: 50,
                     y1: 50, 

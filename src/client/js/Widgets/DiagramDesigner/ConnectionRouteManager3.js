@@ -14,7 +14,7 @@ define(['logManager',
 
     var ConnectionRouteManager3,
         DESIGNERITEM_SUBCOMPONENT_SEPARATOR = '_x_',
-        ASYNC = false,
+        ASYNC = true,
         DEBUG = true;
 
     ConnectionRouteManager3 = function (options) {
@@ -115,22 +115,33 @@ define(['logManager',
             this._refreshConnData(idList);
         }
 
-        //no matter what, we want the id's of all the connections
-        //not just the ones that explicitly needs rerouting
-        idList = this.diagramDesigner.connectionIds.slice(0);
-
         //1 - autoroute
         if (ASYNC) {
-            this._invokeAutoRouterMethod('routeAsync', []);
+            // Create callback function
+            var self = this;
+            var callback = function(){
+                self.renderConnections();
+            };
+            this._invokeAutoRouterMethod('routeAsync', [{callback: callback}]);
+            return this.renderConnections(idList);
         } else {
             this._invokeAutoRouterMethod('routeSync', []);
+            return this.renderConnections();
         }
 
+    };
+
+    ConnectionRouteManager3.prototype.renderConnections = function (ids) {
         //2 - Get the path points and redraw
-        var pathPoints,
+        //no matter what, we want the id's of all the connections
+        //not just the ones that explicitly needs rerouting
+        //need to return the IDs of the connections that was really
+        //redrawn or any other visual property changed (width, etc)
+        var idList = ids || this.diagramDesigner.connectionIds.slice(0),
+            pathPoints,
             realPathPoints;
 
-        for (var i = 0; i < idList.length; i ++) {
+        for (var i = idList.length; i--;) {
             if(this._autorouterPaths[idList[i]]) {
                 pathPoints = this._invokeAutoRouterMethod('getPathPoints', [idList[i]]);
             } else {
@@ -145,11 +156,9 @@ define(['logManager',
             this.diagramDesigner.items[idList[i]].setConnectionRenderData(realPathPoints);
         }
 
-        //need to return the IDs of the connections that was really
-        //redrawn or any other visual property changed (width, etc)
-
         return idList;
     };
+
 
     ConnectionRouteManager3.prototype._refreshConnData = function (idList) {
         // Clear connection data and paths then re-add them

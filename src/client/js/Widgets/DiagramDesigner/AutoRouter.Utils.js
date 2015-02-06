@@ -885,7 +885,6 @@ define(['./AutoRouter.Constants',
         });
     };
 
-
     return { onWhichEdge: _onWhichEdge,
              isCoordInDirFrom : _isCoordInDirFrom,           
              isPointBetweenSides: _isPointBetweenSides,

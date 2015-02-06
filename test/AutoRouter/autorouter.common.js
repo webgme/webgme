@@ -3,7 +3,7 @@
 var requirejs = require('requirejs');
 
 requirejs.config({
-  baseUrl: '../../src/',
+  baseUrl: 'src/',
   paths:{
     "logManager": "common/LogManager",
     "util/assert": "common/util/assert"
@@ -65,11 +65,11 @@ var getBoxCount = function() {
 
 // Validation Helpers
 var evaluateEdges = function(edges, fn) {
-      var edge = edges.order_first;
+      var edge = edges.orderFirst;
       var result = false;
       while (edge && !result) {
           result = fn(edge);
-          edge = edge.order_next || edge.orderNext;
+          edge = edge.orderNext;
       }
    
     return result;
