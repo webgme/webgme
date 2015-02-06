@@ -13,16 +13,21 @@ define(['./AutoRouter',
         this.autorouter = new AutoRouter();
         this.debugActionSequence = '[';
         this._clearRecords();
+        this.readyToDownload = false;
 
         // Thanks to stack overflow for this next function
         //
         // If we are recording actions, allow the user to download
         // the action sequence
         if (this._recordActions) {
-            (function(console){
+            var self = this;
+            (function(console) {
 
-                console.save = function(data, filename){
+                console.save = function(data, filename) {
 
+                    if (!self.readyToDownload) {
+                        return;
+                    }
                     if (!data) {
                         console.error('Console.save: No data');
                         return;
@@ -32,7 +37,7 @@ define(['./AutoRouter',
                         filename = 'console.json';
                     }
 
-                    if (typeof data === "object"){
+                    if (typeof data === "object") {
                         data = JSON.stringify(data, undefined, 4);
                     }
 
@@ -45,6 +50,7 @@ define(['./AutoRouter',
                     a.dataset.downloadurl =  ['text/json', a.download, a.href].join(':');
                     e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
                     a.dispatchEvent(e);
+                    self.readyToDownload = false;
                 };
             })(console);
         }

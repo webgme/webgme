@@ -437,9 +437,8 @@ define(['logManager',
             path.setEndDir(CONSTANTS.ARPATH_Default);
         }
 
-        var pathData = new ArPathMap(id, path, params.src, params.dst);
         path.id = id;
-        this.paths[id] = pathData;
+        this.paths[id] = path;
 
         // Register the path under box id
         // Id the ports and register the paths with each port...
@@ -449,7 +448,7 @@ define(['logManager',
         for (i = dstPorts.length; i--;) {
             this.portId2Path[dstPorts[i].id].in.push(path);
         }
-        return pathData;
+        return path;
     };
 
     AutoRouter.prototype.routeSync = function() { 
@@ -463,7 +462,7 @@ define(['logManager',
     AutoRouter.prototype.getPathPoints = function(pathId) {
         assert(this.paths[pathId] !== undefined, 
                'AutoRouter:getPath requested path does not match any current paths');
-        var path = this.paths[pathId].path,
+        var path = this.paths[pathId],
             points = path.getPointList(),
             i = -1,
             res = [],
@@ -556,20 +555,19 @@ define(['logManager',
             this.graph.deleteBox(item);
 
         }else if(this.paths[item] !== undefined) {
-            if(this.paths[item].path instanceof AutoRouterPath) {
-                var pathData = this.paths[item],
-                    path = pathData.path,
-                    srcBoxId = pathData.getSrcBoxId(),
-                    dstBoxId = pathData.getDstBoxId(),
+            if(this.paths[item] instanceof AutoRouterPath) {
+                var path = this.paths[item],
+                    srcBoxId = path.startports[0].owner.id,
+                    dstBoxId = path.endports[0].owner.id,
                     i;
 
                 if(srcBoxId) {
-                    i = this.portId2Path[srcBoxId].out.indexOf(pathData);// Remove from portId2Path dictionary
+                    i = this.portId2Path[srcBoxId].out.indexOf(path);// Remove from portId2Path dictionary
                     this.portId2Path[srcBoxId].out.splice(i, 1);
                 }
 
                 if(dstBoxId) {
-                    i = this.portId2Path[dstBoxId].in.indexOf(pathData);
+                    i = this.portId2Path[dstBoxId].in.indexOf(path);
                     this.portId2Path[dstBoxId].in.splice(i, 1);
                 }
 
@@ -605,7 +603,7 @@ define(['logManager',
     };
 
     AutoRouter.prototype.setPathCustomPoints = function(args) { // args.points = [ [x, y], [x2, y2], ... ]
-        var path = this.paths[args.path].path,
+        var path = this.paths[args.path],
             points = [],
             i = 0;
         if(path === undefined) {

@@ -29,12 +29,13 @@ define(['logManager',
         COUNTER = 1;  // Used for unique ids
 
     var AutoRouterGraph = function () {
+        this.completelyConnected = true;  // true if all paths are connected
         this.horizontal = new AutoRouterEdgeList(true);
         this.vertical = new AutoRouterEdgeList(false);
         this.boxes = {}; 
         this.paths = []; 
         this.bufferBoxes = [];
-        this.box2bufferBox = {}; //maps boxId to corresponding bufferbox object
+        this.box2bufferBox = {}; // maps boxId to corresponding bufferbox object
 
         this.horizontal.owner = this;
         this.vertical.owner = this;
@@ -877,6 +878,7 @@ define(['logManager',
         }
 
         path.deleteAll();
+        this.completelyConnected = false;
     };
 
     AutoRouterGraph.prototype._disconnectPathsClipping = function (rect) {
@@ -1605,16 +1607,17 @@ define(['logManager',
     };
 
     AutoRouterGraph.prototype._connectAllDisconnectedPaths = function () {
-        var iter,
+        var i,
+            len = this.paths.length,
             success = false,
             giveup = false,
             path;
 
         while (!success && !giveup) {
             success = true;
-            iter = 0;
-            while (iter < this.paths.length && success) {
-                path = this.paths[iter];
+            i = len;
+            while (i-- && success) {
+                path = this.paths[i];
 
                 if (!path.isConnected()) {
                     success = this._connect(path);
@@ -1629,13 +1632,12 @@ define(['logManager',
                         }
                     }
                 }
-
-                ++iter;
             }
             if (!success && !giveup) {
                 this._disconnectAll();	// There was an error, delete halfway results to be able to start a new pass
             }
         }
+        this.completelyConnected = true;
     };
 
     AutoRouterGraph.prototype._updateBoxPortAvailability = function (inputBox) {
@@ -1865,7 +1867,6 @@ define(['logManager',
     AutoRouterGraph.prototype.deleteBox = function(box) {
         assert(box !== null, "ARGraph.deleteBox: box !== null FAILED");
 
-
         if (box.hasOwner()) {
             var parent = box.parent,
                 children = box.childBoxes,
@@ -1947,9 +1948,9 @@ define(['logManager',
                 updateFn(self.paths);
                 if (state.finished) {
                     return callbackFn(self.paths);
-                } else {
+                } else if (self.completelyConnected) {
                     state = self._optimize(state);
-                    return optimizeFn(state);
+                    return setTimeout(optimizeFn, time, state);
                 }
             };
 

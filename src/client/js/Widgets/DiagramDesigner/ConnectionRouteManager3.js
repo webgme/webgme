@@ -14,6 +14,7 @@ define(['logManager',
 
     var ConnectionRouteManager3,
         DESIGNERITEM_SUBCOMPONENT_SEPARATOR = '_x_',
+        ASYNC = false,
         DEBUG = true;
 
     ConnectionRouteManager3 = function (options) {
@@ -119,7 +120,11 @@ define(['logManager',
         idList = this.diagramDesigner.connectionIds.slice(0);
 
         //1 - autoroute
-        this._invokeAutoRouterMethod('routeSync', []);
+        if (ASYNC) {
+            this._invokeAutoRouterMethod('routeAsync', []);
+        } else {
+            this._invokeAutoRouterMethod('routeSync', []);
+        }
 
         //2 - Get the path points and redraw
         var pathPoints,
@@ -163,6 +168,7 @@ define(['logManager',
         this._clearRecords();
         this.endpointConnectionAreaInfo = {};
         this.initialized = false;
+        this.readyToDownload = true;
     };
 
     ConnectionRouteManager3.prototype._initializeGraph = function () {

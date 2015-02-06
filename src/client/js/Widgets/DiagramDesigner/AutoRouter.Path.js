@@ -132,7 +132,7 @@ define( ['logManager',
         assert(removed, 'Port was not removed from path start/end ports');
 
         // If no more start/end ports, remove the path
-        assert(this.startports.length && this.endports.length, 'Removed all start/endports of path ' + this.id);
+        // assert(this.startports.length && this.endports.length, 'Removed all start/endports of path ' + this.id);
         this.owner.disconnect(this);
     };
 
