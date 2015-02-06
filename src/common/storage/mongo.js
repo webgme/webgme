@@ -341,10 +341,6 @@ define(["mongodb", "util/assert", "util/canon"], function (MONGODB, ASSERT, CANO
         ASSERT(typeof newhash === "string" && (newhash === "" || HASH_REGEXP.test(newhash)));
         ASSERT(typeof callback === "function");
 
-        fsyncDatabase(function(err){
-          if(err){
-            return callback(err);
-          }
           if (oldhash === newhash) {
             collection.findOne({
               _id: branch
@@ -380,13 +376,13 @@ define(["mongodb", "util/assert", "util/canon"], function (MONGODB, ASSERT, CANO
                 hash: newhash
               }
             }, function (err, num) {
+
               if (!err && num !== 1) {
                 err = new Error("branch hash mismatch");
               }
               callback(err);
             });
           }
-        });
       }
 
       function getCommits(before, number, callback) {

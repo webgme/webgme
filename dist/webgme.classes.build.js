@@ -1,5 +1,5 @@
 var GME = GME || {}; GME.classes = GME.classes || {};(function(){/** vim: et:ts=4:sw=4:sts=4
- * @license RequireJS 2.1.11 Copyright (c) 2010-2014, The Dojo Foundation All Rights Reserved.
+ * @license RequireJS 2.1.15 Copyright (c) 2010-2014, The Dojo Foundation All Rights Reserved.
  * Available via the MIT or new BSD license.
  * see: http://github.com/jrburke/requirejs for details
  */
@@ -12,7 +12,7 @@ var requirejs, require, define;
 (function (global) {
     var req, s, head, baseElement, dataMain, src,
         interactiveScript, currentlyAddingScript, mainScript, subPath,
-        version = '2.1.11',
+        version = '2.1.15',
         commentRegExp = /(\/\*([\s\S]*?)\*\/|([^:]|^)\/\/(.*)$)/mg,
         cjsRequireRegExp = /[^.]\s*require\s*\(\s*["']([^'"\s]+)["']\s*\)/g,
         jsSuffixRegExp = /\.js$/,
@@ -180,7 +180,7 @@ var requirejs, require, define;
 
     if (typeof requirejs !== 'undefined') {
         if (isFunction(requirejs)) {
-            //Do not overwrite and existing requirejs instance.
+            //Do not overwrite an existing requirejs instance.
             return;
         }
         cfg = requirejs;
@@ -232,21 +232,20 @@ var requirejs, require, define;
          * @param {Array} ary the array of path segments.
          */
         function trimDots(ary) {
-            var i, part, length = ary.length;
-            for (i = 0; i < length; i++) {
+            var i, part;
+            for (i = 0; i < ary.length; i++) {
                 part = ary[i];
                 if (part === '.') {
                     ary.splice(i, 1);
                     i -= 1;
                 } else if (part === '..') {
-                    if (i === 1 && (ary[2] === '..' || ary[0] === '..')) {
-                        //End of the line. Keep at least one non-dot
-                        //path segment at the front so it can be mapped
-                        //correctly to disk. Otherwise, there is likely
-                        //no path mapping for a path starting with '..'.
-                        //This can still fail, but catches the most reasonable
-                        //uses of ..
-                        break;
+                    // If at the start, or previous value is still ..,
+                    // keep them so that when converted to a path it may
+                    // still work when converted to a path, even though
+                    // as an ID it is less than ideal. In larger point
+                    // releases, may be better to just kick out an error.
+                    if (i === 0 || (i == 1 && ary[2] === '..') || ary[i - 1] === '..') {
+                        continue;
                     } else if (i > 0) {
                         ary.splice(i - 1, 2);
                         i -= 2;
@@ -267,43 +266,37 @@ var requirejs, require, define;
          */
         function normalize(name, baseName, applyMap) {
             var pkgMain, mapValue, nameParts, i, j, nameSegment, lastIndex,
-                foundMap, foundI, foundStarMap, starI,
-                baseParts = baseName && baseName.split('/'),
-                normalizedBaseParts = baseParts,
+                foundMap, foundI, foundStarMap, starI, normalizedBaseParts,
+                baseParts = (baseName && baseName.split('/')),
                 map = config.map,
                 starMap = map && map['*'];
 
             //Adjust any relative paths.
-            if (name && name.charAt(0) === '.') {
-                //If have a base name, try to normalize against it,
-                //otherwise, assume it is a top-level require that will
-                //be relative to baseUrl in the end.
-                if (baseName) {
+            if (name) {
+                name = name.split('/');
+                lastIndex = name.length - 1;
+
+                // If wanting node ID compatibility, strip .js from end
+                // of IDs. Have to do this here, and not in nameToUrl
+                // because node allows either .js or non .js to map
+                // to same file.
+                if (config.nodeIdCompat && jsSuffixRegExp.test(name[lastIndex])) {
+                    name[lastIndex] = name[lastIndex].replace(jsSuffixRegExp, '');
+                }
+
+                // Starts with a '.' so need the baseName
+                if (name[0].charAt(0) === '.' && baseParts) {
                     //Convert baseName to array, and lop off the last part,
                     //so that . matches that 'directory' and not name of the baseName's
                     //module. For instance, baseName of 'one/two/three', maps to
                     //'one/two/three.js', but we want the directory, 'one/two' for
                     //this normalization.
                     normalizedBaseParts = baseParts.slice(0, baseParts.length - 1);
-                    name = name.split('/');
-                    lastIndex = name.length - 1;
-
-                    // If wanting node ID compatibility, strip .js from end
-                    // of IDs. Have to do this here, and not in nameToUrl
-                    // because node allows either .js or non .js to map
-                    // to same file.
-                    if (config.nodeIdCompat && jsSuffixRegExp.test(name[lastIndex])) {
-                        name[lastIndex] = name[lastIndex].replace(jsSuffixRegExp, '');
-                    }
-
                     name = normalizedBaseParts.concat(name);
-                    trimDots(name);
-                    name = name.join('/');
-                } else if (name.indexOf('./') === 0) {
-                    // No baseName, so this is ID is resolved relative
-                    // to baseUrl, pull off the leading dot.
-                    name = name.substring(2);
                 }
+
+                trimDots(name);
+                name = name.join('/');
             }
 
             //Apply map config if available.
@@ -379,7 +372,13 @@ var requirejs, require, define;
                 //retry
                 pathConfig.shift();
                 context.require.undef(id);
-                context.require([id]);
+
+                //Custom require that does not do map translation, since
+                //ID is "absolute", already mapped/resolved.
+                context.makeRequire(null, {
+                    skipMap: true
+                })([id]);
+
                 return true;
             }
         }
@@ -445,7 +444,16 @@ var requirejs, require, define;
                             return normalize(name, parentName, applyMap);
                         });
                     } else {
-                        normalizedName = normalize(name, parentName, applyMap);
+                        // If nested plugin references, then do not try to
+                        // normalize, as it will not normalize correctly. This
+                        // places a restriction on resourceIds, and the longer
+                        // term solution is not to normalize until plugins are
+                        // loaded and all normalizations to allow for async
+                        // loading of a loader plugin. But for now, fixes the
+                        // common uses. Details in #1131
+                        normalizedName = name.indexOf('!') === -1 ?
+                                         normalize(name, parentName, applyMap) :
+                                         name;
                     }
                 } else {
                     //A regular module.
@@ -9560,7 +9568,7 @@ define('storage/client',[ "util/assert", "util/guid" ], function (ASSERT, GUID) 
             }
         }
 
-        function fsyncDatabase (callback) {
+        function fsyncDatabase (callback, projectName) {
             ASSERT(typeof callback === 'function');
             if (socketConnected) {
                 var guid = GUID();
@@ -9568,7 +9576,7 @@ define('storage/client',[ "util/assert", "util/guid" ], function (ASSERT, GUID) 
                     cb: callback,
                     to: setTimeout(callbackTimeout, options.timeout, guid)
                 };
-                socket.emit('fsyncDatabase', function (err) {
+                socket.emit('fsyncDatabase', projectName, function (err) {
                     if(callbacks[guid]){
                         clearTimeout(callbacks[guid].to);
                         delete callbacks[guid];
@@ -9765,7 +9773,7 @@ define('storage/client',[ "util/assert", "util/guid" ], function (ASSERT, GUID) 
                         to: setTimeout(callbackTimeout, options.timeout, guid)
                     };
                     flushSaveBucket();
-                    socket.emit('fsyncDatabase', function (err) {
+                    socket.emit('fsyncDatabase', project, function (err) {
                         if(callbacks[guid]){
                             clearTimeout(callbacks[guid].to);
                             delete callbacks[guid];
@@ -10408,7 +10416,10 @@ define('storage/failsafe',["util/assert", "util/guid"], function (ASSERT, GUID) 
         var branchObj = pendingStorage[projectName][BRANCH_OBJ_ID][branchname];
         project.getBranchHash(branchname, branchObj.local[0], function (err, newhash, forked) {
           if (!err && newhash) {
-            if (branchObj.local.indexOf(newhash) !== -1) {
+            var index = branchObj.unackedSentHashes.indexOf(newhash);
+            if (index !== -1) {
+              // the server will catch up eventually...
+            } else if (branchObj.local.indexOf(newhash) !== -1) {
               project.setBranchHash(branchname, newhash, branchObj.local[0], callback);
             } else {
               //we forked
@@ -10538,7 +10549,8 @@ define('storage/failsafe',["util/assert", "util/guid"], function (ASSERT, GUID) 
                 if (err) {
                   callback(err, newhash, forkedhash);
                 } else {
-                  if (newhash && branchObj.local.indexOf(newhash) !== -1) {
+                  var index = branchObj.unackedSentHashes.indexOf(newhash);
+                  if (newhash && index !== -1) {
                     callback(err, newhash, forkedhash);
                   } else {
                     //we forked!!!
@@ -10591,8 +10603,14 @@ define('storage/failsafe',["util/assert", "util/guid"], function (ASSERT, GUID) 
         var returnFunction = function (err) {
           if (!err) {
             var index = branchObj.local.indexOf(newhash);
-            ASSERT(index !== -1);
-            branchObj.local.splice(index, branchObj.local.length - index);
+            ASSERT(index !== -1 || branchObj.state === BRANCH_STATES.SYNC);
+            if (index !== -1) {
+              branchObj.local.splice(index, branchObj.local.length - index);
+            }
+            index = branchObj.unackedSentHashes.indexOf(newhash);
+            if (index !== -1) {
+              branchObj.unackedSentHashes.splice(index + 1, branchObj.unackedSentHashes.length);
+            }
             if (branchObj.local.length === 0) {
               branchObj.state = BRANCH_STATES.SYNC;
             }
@@ -10627,6 +10645,7 @@ define('storage/failsafe',["util/assert", "util/guid"], function (ASSERT, GUID) 
             ASSERT(branchObj.local.length === 0);
             branchObj.state = BRANCH_STATES.AHEAD;
             branchObj.local = [newhash, oldhash];
+            branchObj.unackedSentHashes = [newhash, oldhash];
             project.setBranchHash(branch, oldhash, newhash, returnFunction);
             callback(null);
             return;
@@ -10634,6 +10653,7 @@ define('storage/failsafe',["util/assert", "util/guid"], function (ASSERT, GUID) 
             ASSERT(branchObj.local.length > 0);
             if (oldhash === branchObj.local[0]) {
               branchObj.local.unshift(newhash);
+              branchObj.unackedSentHashes.unshift(newhash);
               project.setBranchHash(branch, oldhash, newhash, returnFunction);
               callback(null);
             } else {
@@ -11566,25 +11586,26 @@ define('logManager',[], function () {
 	};
 
 	Logger = function (componentName) {
-		this.debug = function (msg) {
-			logMessage("DEBUG", componentName, msg);
-		};
+        function _getLog(level) {
+            if (isComponentAllowedToLog(componentName) === true && logLevels[level] <= currentLogLevel) {
+                return function log(msg) {
+                    logMessage(level, componentName, msg);
+                };
+            } else {
+                return function log_noop(msg) {
+                };
+            }
+        }
 
-		this.info = function (msg) {
-			logMessage("INFO", componentName, msg);
-		};
+		this.debug = _getLog("DEBUG");
 
-		this.warning = function (msg) {
-			logMessage("WARNING", componentName, msg);
-		};
+		this.info = _getLog("INFO");
 
-		this.warn = function (msg) {
-			logMessage("WARNING", componentName, msg);
-		};
+		this.warning = _getLog("WARNING");
 
-		this.error = function (msg) {
-			logMessage("ERROR", componentName, msg);
-		};
+		this.warn = _getLog("WARNING");
+
+		this.error = _getLog("ERROR");
 	};
 
     var _setLogLevel = function (level) {
@@ -15172,7 +15193,8 @@ define('client',[
     'coreclient/dumpmore',
     'coreclient/import',
     'coreclient/copyimport',
-    'coreclient/serialization'
+    'coreclient/serialization',
+    'core/tasync'
   ],
   function (
     ASSERT,
@@ -15188,7 +15210,8 @@ define('client',[
     DumpMore,
     MergeImport,
     Import,
-    Serialization) {
+    Serialization,
+    TASYNC) {
 
     
 
@@ -16475,21 +16498,11 @@ define('client',[
       }
 
       function loadRoot(newRootHash, callback) {
-        //with the newer approach we try to optimize a bit the mechanizm of the loading and try to get rid of the paralellism behind it
+        //with the newer approach we try to optimize a bit the mechanism of the loading and try to get rid of the paralellism behind it
         var patterns = {},
           orderedPatternIds = [],
           error = null,
-          i, j, keysi, keysj,
-          loadNextPattern = function (index) {
-            if (index < orderedPatternIds.length) {
-              loadPattern(_core, orderedPatternIds[index], patterns[orderedPatternIds[index]], _loadNodes, function (err) {
-                error = error || err;
-                loadNextPattern(index + 1);
-              });
-            } else {
-              callback(error);
-            }
-          };
+          i, j, keysi, keysj;
         _loadNodes = {};
         _loadError = 0;
 
@@ -16528,7 +16541,12 @@ define('client',[
               callback(null);
               reLaunchUsers();
             } else {
-              loadNextPattern(0);
+                var _loadPattern = TASYNC.throttle(TASYNC.wrap(loadPattern), 1);
+                var fut = TASYNC.lift(
+                    orderedPatternIds.map(function (pattern, index) {
+                        return TASYNC.apply(_loadPattern, [_core, pattern, patterns[pattern], _loadNodes], this);
+                    }));
+                TASYNC.unwrap(function() { return fut; })(callback);
             }
           } else {
             callback(err);
@@ -18415,6 +18433,7 @@ define('client',[
 
     return Client;
   });
+
 define('blob/BlobConfig',[], function(){
 
     var BlobConfig = {

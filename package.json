@@ -25,8 +25,9 @@
   "dependencies": {
     "mongodb": "~1.4.0",
     "socket.io": "=0.9.14",
-    "requirejs": "=2.1.11",
+    "requirejs": "=2.1.15",
     "express": "=3.4.0",
+    "heap": "^0.2.5",
     "mime": "=1.2.11",
     "multiparty": "=3.2.4",
     "connect": "=2.10.0",
@@ -37,13 +38,18 @@
     "jszip": "=2.2.0",
     "commander": "=2.1.0",
     "aws-sdk": "=1.18.0",
-    "superagent": "=0.18.2"
+    "superagent": "=0.18.2",
+    "buffer-equal-constant-time": "^1.0.1",
+    "nedb": "=0.10.5",
+    "unzip": "=0.1.8",
+    "minimatch": "=0.3.0"
   },
   "devDependencies": {
     "gulp": "=3.8.6",
     "gulp-jshint": "=1.8.0",
     "jshint-stylish": "=0.4.0",
     "mocha": "^2.1.0",
+    "chai": "^1.9.0",
     "jscoverage": "^0.5.9",
     "gulp-shell": "^0.2.11",
     "run-sequence": "^1.0.2"
