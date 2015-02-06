@@ -15,7 +15,6 @@ define(['logManager',
            './AutoRouter.Box',
            './AutoRouter.Port',
            './AutoRouter.Path',
-           './AutoRouter.PathMap',
            './AutoRouter.CustomPathData'],
        function (logManager, 
                  assert, 
@@ -27,7 +26,6 @@ define(['logManager',
                  AutoRouterBox, 
                  AutoRouterPort,
                  AutoRouterPath,
-                 ArPathMap,
                  CustomPathData) {
 
     "use strict"; 
