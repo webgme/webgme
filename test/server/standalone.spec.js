@@ -9,7 +9,7 @@ var should = require('chai').should(),
     requirejs = require('requirejs'),
     config = WebGMEGlobal.getConfig(),
 
-    http = require('http'),
+    superagent = require('superagent'),
     server,
     serverBaseUrl;
 
@@ -34,41 +34,54 @@ describe('webgme http server', function () {
     });
 
     describe('/', function () {
+        var agent = superagent.agent();
+
+        //it('should start with sign in', loginUser(agent));
+        //it('should sign the user out', function(done) {
+        //});
+
         it('should return 200 /', function (done) {
-            http.get(serverBaseUrl + '/', function (res) {
-                should.equal(200, res.statusCode);
+            agent.get(serverBaseUrl + '/').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                should.equal(res.status, 200);
                 done();
-            }).on('error', function (err) {
-                done(err);
             });
         });
 
         it('should return 404 /doesnotexist', function (done) {
-            http.get(serverBaseUrl + '/doesnotexist', function (res) {
-                should.equal(404, res.statusCode);
+            agent.get(serverBaseUrl + '/doesnotexist').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                should.equal(res.status, 404);
                 done();
-            }).on('error', function (err) {
-                done(err);
             });
         });
 
         it('should return 404 /asdf', function (done) {
-            http.get(serverBaseUrl + '/asdf', function (res) {
-                should.equal(404, res.statusCode);
+            agent.get(serverBaseUrl + '/asdf').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                should.equal(res.status, 404);
                 done();
-            }).on('error', function (err) {
-                done(err);
             });
         });
 
         it('should return 404 /doesnotexist.js', function (done) {
-            http.get(serverBaseUrl + '/doesnotexist.js', function (res) {
-                should.equal(404, res.statusCode);
+            agent.get(serverBaseUrl + '/doesnotexist.js').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                should.equal(res.status, 404);
                 done();
-            }).on('error', function (err) {
-                done(err);
             });
         });
     });
-
 });
