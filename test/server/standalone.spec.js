@@ -14,6 +14,7 @@ var should = require('chai').should(),
     serverBaseUrl;
 
 config.port = 9001;
+config.debug = true;
 WebGMEGlobal.setConfig(config);
 
 describe('webgme http server', function () {
@@ -40,6 +41,8 @@ describe('webgme http server', function () {
             http.get(serverBaseUrl + '/', function (res) {
                 should.equal(200, res.statusCode);
                 done();
+            }).on('error', function (err) {
+                done(err);
             });
         });
 
@@ -47,6 +50,8 @@ describe('webgme http server', function () {
             http.get(serverBaseUrl + '/doesnotexist', function (res) {
                 should.equal(404, res.statusCode);
                 done();
+            }).on('error', function (err) {
+                done(err);
             });
         });
 
@@ -54,6 +59,8 @@ describe('webgme http server', function () {
             http.get(serverBaseUrl + '/asdf', function (res) {
                 should.equal(404, res.statusCode);
                 done();
+            }).on('error', function (err) {
+                done(err);
             });
         });
 
@@ -61,6 +68,8 @@ describe('webgme http server', function () {
             http.get(serverBaseUrl + '/doesnotexist.js', function (res) {
                 should.equal(404, res.statusCode);
                 done();
+            }).on('error', function (err) {
+                done(err);
             });
         });
     });
