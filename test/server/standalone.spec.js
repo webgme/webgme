@@ -20,13 +20,15 @@ describe('webgme http server', function () {
     'use strict';
 
     before(function (done) {
+        this.timeout(3000);
+
         server = WebGME.standaloneServer();
         server.start();
 
         // TODO: would be nice to get this dynamically from server
         serverBaseUrl = 'http://127.0.0.1:' + config.port;
 
-        setTimeout(done, 1000);
+        setTimeout(done, 2000);
     });
 
     after(function () {
