@@ -13,18 +13,20 @@ var should = require('chai').should(),
     server,
     serverBaseUrl;
 
-config.port = 8001;
+config.port = 9001;
 WebGMEGlobal.setConfig(config);
 
 describe('webgme http server', function () {
     'use strict';
 
-    before(function () {
+    before(function (done) {
         server = WebGME.standaloneServer();
         server.start();
 
         // TODO: would be nice to get this dynamically from server
         serverBaseUrl = 'http://127.0.0.1:' + config.port;
+
+        setTimeout(done, 1000);
     });
 
     after(function () {
