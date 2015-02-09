@@ -29,8 +29,8 @@ describe('webgme http server', function () {
         serverBaseUrl = 'http://127.0.0.1:' + config.port;
     });
 
-    after(function () {
-        server.stop();
+    after(function (done) {
+        server.stop(done);
     });
 
     describe('/', function () {
@@ -82,6 +82,22 @@ describe('webgme http server', function () {
                 should.equal(res.status, 404);
                 done();
             });
+        });
+    });
+});
+
+
+describe('server', function () {
+    it('start and stop and start and stop', function (done) {
+        // we have to set the config here
+        config.port = 9001;
+        WebGMEGlobal.setConfig(config);
+
+        server = WebGME.standaloneServer();
+        server.start();
+        server.stop(function () {
+            server.start();
+            server.stop(done);
         });
     });
 });

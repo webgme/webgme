@@ -121,7 +121,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                 } else {
                     //we should try to reconnect
                     callback(null);
-                    socket.socket.reconnect();
+                    //socket.socket.reconnect();
                 }
             } else {
                 var guid = GUID(), firstConnection = true;
@@ -135,7 +135,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                         'connect timeout': 10,
                         'reconnection delay': 1,
                         'force new connection': true,
-                        'reconnect': false,
+                        'reconnect': false, // FIXME: should we set it to true?
                         'query':"webGMESessionId="+options.webGMESessionId,
                         'transports': ['websocket']
                     });
