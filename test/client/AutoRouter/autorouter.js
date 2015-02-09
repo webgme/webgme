@@ -242,6 +242,11 @@ describe('AutoRouter Tests', function(){
 
   it('routeAsync should stop optimizing if path is disconnected', function(done) {
       var boxes = utils.addBoxes([[100, 100], [200, 200], [300,300]]),
+          called = false,
+          testFn = function() {
+              assert(called, 'Callback (redrawing connections) was not called!');
+              done();
+          },
           path;
       
       utils.connectAll(boxes);
@@ -251,11 +256,11 @@ describe('AutoRouter Tests', function(){
               router.graph.disconnect(path);
           },
           callback: function(paths) {
-              assert(false, 'Callback called for routeAsync');
+              called = true;
           }
       });
 
-      setTimeout(done, 1000);
+      setTimeout(testFn, 100);
   });
 
 });

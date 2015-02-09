@@ -14,7 +14,7 @@ define(['logManager',
 
     var ConnectionRouteManager3,
         DESIGNERITEM_SUBCOMPONENT_SEPARATOR = '_x_',
-        ASYNC = true,
+        ASYNC = false,
         DEBUG = true;
 
     ConnectionRouteManager3 = function (options) {
