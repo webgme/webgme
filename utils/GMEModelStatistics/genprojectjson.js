@@ -43,7 +43,7 @@ function NodeObj(guid, base, parent) {
         this.sets = {};
     }
 
-function generateProject (statModel) {
+function generateProject (statModel, options) {
     var project = {
         bases: {},
         root: {
@@ -56,33 +56,19 @@ function generateProject (statModel) {
         metaSheets: {}
     },
         fcoNode,
+        opts = options || {},
+        nbrOfPointerTypes = opts.nbrOfPointerTypes || 10,
+        pathToNode = {},
+        nbrOfPointers = statModel.NumberOfReferences + statModel.NumberOfConnections * 2,
         relIdCnt = 2;
 
     project.root.guid = chance.guid();
     project.containment = statModel.ContainmentTree;
 
     fcoNode = createRootNodeAndFCO(project.root.guid);
-    traverseTree(project.containment, project.root.guid);
+    traverseTree(project.containment, project.root.guid, '');
     project.containment[fcoNode._guid] = {};
-
-    function traverseTree(root, rootId) {
-        var id;
-        for (id in root) {
-            if (root.hasOwnProperty(id)) {
-                addNode(id, rootId);
-                traverseTree(root[id], id);
-            }
-        }
-    }
-
-    function addNode(guid, parentGuid) {
-        var node;
-        // TODO: Add inheritance (all inherit from fcoNode now).
-        node = new NodeObj(guid, fcoNode, project.nodes[parentGuid]);
-        project.nodes[guid] = node;
-        project.relids[guid] = relIdCnt.toString();
-        relIdCnt += 1;
-    };
+    createPointers();
 
     function createRootNodeAndFCO(rootGuid) {
         var rootNode = new NodeObj(rootGuid),
@@ -146,6 +132,76 @@ function generateProject (statModel) {
 
         return fcoNode;
     };
+
+    function traverseTree(root, rootguid, rootPath) {
+        var id,
+            path;
+        for (id in root) {
+            if (root.hasOwnProperty(id)) {
+                path = addNode(id, rootguid, rootPath);
+                traverseTree(root[id], id, path);
+            }
+        }
+    }
+
+    function addNode(guid, parentGuid, parentPath) {
+        var node,
+            relId,
+            path;
+        // TODO: Add inheritance (all inherit from fcoNode now).
+        node = new NodeObj(guid, fcoNode, project.nodes[parentGuid]);
+        project.nodes[guid] = node;
+        relId = relIdCnt.toString();
+        project.relids[guid] = relId;
+        path = parentPath + '/' + relId;
+        pathToNode[path] = node;
+        relIdCnt += 1;
+        return path;
+    };
+
+    function createPointers() {
+        var pointerTypes = [],
+            paths = Object.keys(pathToNode),
+            index,
+            typeIndex,
+            targetPath,
+            collision,
+            whileCnt,
+            i;
+        for (i = 0; i < nbrOfPointerTypes; i += 1) {
+            pointerTypes.push(chance.first());
+        }
+        console.log('Generated pointerTypes ', pointerTypes);
+        for (i = 0; i < nbrOfPointers; i += 1) {
+            index = i % paths.length;
+            targetPath = paths[chance.integer({min:0, max: paths.length-1})];
+            whileCnt = 0;
+            do {
+                whileCnt += 1;
+                typeIndex = chance.integer({min:0, max: nbrOfPointerTypes-1});
+                collision = setPointer(pathToNode[paths[index]], pointerTypes[typeIndex], targetPath);
+                if (collision && whileCnt > 2 * nbrOfPointerTypes) {
+                    console.error('Too many collisions, skipping pointer..');
+                }
+            }
+            while (collision)
+        }
+    };
+
+    function setPointer(node, name, targetPath) {
+        var targetNode = pathToNode[targetPath];
+
+        if (node.pointers[name]) {
+            console.log('Collision of pointer', node._guid, name, targetPath);
+            return true;
+        }
+        node.pointers[name] = targetNode._guid;
+
+        targetNode.collection = targetNode.collection || {};
+        targetNode.collection[name] = targetNode.collection[name] || [];
+        targetNode.collection[name].push(node._guid);
+        return false;
+    }
 
     return project;
 };
