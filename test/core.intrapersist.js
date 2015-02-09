@@ -4,9 +4,8 @@
 //these checks intended to check what changes should be visible between persists
 require('./_globals.js');
 
-var WebGME = require('../webgme'),
-  FS = require('fs'),
-  storage = new WebGME.serverUserStorage({host:'127.0.0.1',port:27017,database:'multi'}),
+var FS = require('fs'),
+  storage = new global.Storage(),
   requirejs = require('requirejs');
   CANON = requirejs('../src/common/util/canon');
 function saveProject(txt,ancestors,next){
@@ -49,11 +48,11 @@ function importProject(projectJson,next) {
         return next(err || new Error('unable to get quasi project'));
       }
 
-      core = new WebGME.core(p);
+      core = new global.WebGME.core(p);
       project = p;
       root = core.createNode();
 
-      WebGME.serializer.import(core, root, projectJson, function (err, log) {
+      global.WebGME.serializer.import(core, root, projectJson, function (err, log) {
         if (err) {
           return next(err);
         }

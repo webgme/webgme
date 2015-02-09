@@ -10,21 +10,6 @@ describe('MONGO',function(){
 
       var error = null;
       var synced = 0;
-
-      /*function fsyncConnection (conn) {
-        db.lastError({
-          fsync: true
-        }, {
-          connection: conn
-        }, function (err, res) {
-          // ignoring the last error, just forcing all commands through
-          error = error || err;
-
-          if (++synced === conns.length) {
-            callback(error);
-          }
-        });
-      }*/
       function fsyncConnection (conn) {
         db.command({ getLastError: 1 },{connection:conn},
           function(err,result){

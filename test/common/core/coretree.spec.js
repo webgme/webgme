@@ -5,7 +5,6 @@
 
 require('../../_globals.js');
 var should = require('chai').should(),
-    WebGME = require('../../../webgme'),
     requirejs = require('requirejs'),
     config = WebGMEGlobal.getConfig(),
 
@@ -13,7 +12,7 @@ var should = require('chai').should(),
 
     // TODO: replace with in memory storage
 
-    storage = new WebGME.serverUserStorage({host: '127.0.0.1', port: 27017, database: 'multi'});
+    storage = new global.Storage({});
 
 
 describe('CoreTree', function () {
