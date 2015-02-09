@@ -52,12 +52,16 @@
     "chai": "^1.9.0",
     "jscoverage": "^0.5.9",
     "gulp-shell": "^0.2.11",
-    "run-sequence": "^1.0.2"
+    "run-sequence": "^1.0.2",
+    "esprima": "=2.0.0",
+    "istanbul": ">=0.3.5"
   },
   "main": "webgme",
   "scripts": {
     "start": "node src/bin/start_server.js",
     "test": "node node_modules/mocha/bin/mocha --recursive test",
+    "test_cover_win": "node_modules\\.bin\\istanbul.cmd --hook-run-in-context cover node_modules\\mocha\\bin\\_mocha -- -R spec --recursive test",
+    "test_cover": "node node_modules/istanbul/lib/cli.js --hook-run-in-context cover node_modules/mocha/bin/_mocha -- -R spec --recursive test",
     "prepublish": "gulp compile-all"
   }
 }
