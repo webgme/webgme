@@ -1114,7 +1114,6 @@ define(['logManager',
 
         }
 
-
         this.designerCanvas.createMenu(menuItems, function (key) {
                 if (key === MENU_EXINTCONF){
                     self._exIntConf(selectedIds);
