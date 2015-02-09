@@ -136,7 +136,8 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                         'reconnection delay': 1,
                         'force new connection': true,
                         'reconnect': false,
-                        'query':"webGMESessionId="+options.webGMESessionId
+                        'query':"webGMESessionId="+options.webGMESessionId,
+                        'transports': ['websocket']
                     });
 
                     socket.on('connect', function () {
@@ -186,13 +187,11 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                 };
 
                 if (options.type === 'browser') {
-                    require([ _hostAddress + "/socket.io/socket.io.js" ], function () {
+                    require([ _hostAddress + "/socket.io/socket.io.js" ], function (io) {
                         IO = io;
                         IOReady();
                     });
                 } else {
-                    /*IO = require("socket.io-client");
-                     IOReady();*/
                     require([ 'socket.io-client' ], function (io) {
                         IO = io;
                         IOReady();
