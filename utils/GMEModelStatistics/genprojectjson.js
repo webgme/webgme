@@ -1,14 +1,18 @@
 /*globals require*/
 
 /**
+ * node genprojectjson.js stat.json [projectNameInDataBase]
+ *
+ * With optional projectNameInDataBase argument the script will import the project into the database.
+ *
  * This takes a report file of a desktop GME instance model and creates a webgme project file.
  * @author pmeijer / https://github.com/pmeijer
  */
-var requirejs = require('requirejs'),
-    Chance = require('chance'),
+var Chance = require('chance'),
     chance = new Chance(),
     fs = require('fs'),
-    FILE_NAME = 'MSD_PET_stat.json';
+    importProject = require('../../src/bin/import_project'),
+    path = require('path');
 
 
 function NodeObj(guid, base, parent) {
@@ -206,12 +210,31 @@ function generateProject (statModel, options) {
     return project;
 };
 
-var proj = generateProject(JSON.parse(fs.readFileSync(FILE_NAME, 'utf8')).Model);
+if (require.main === module) {
+    var inputFile = process.argv[2],
+        baseName = path.basename(inputFile, '.json'),
+        outName = path.join(process.cwd(), baseName + '_out.json'),
+        projectName = process.argv[3];
 
-fs.writeFile('_out_' + FILE_NAME, JSON.stringify(proj, function (key, value) {
-    if (key === '_guid') {
-        return undefined;
+    var proj = generateProject(JSON.parse(fs.readFileSync(inputFile, 'utf8')).Model);
+    if (projectName) {
+        importProject.importProject(projectName, proj, null, function (err) {
+            if (err) {
+                console.error('Could not import project to database!, err', err);
+            } else {
+                console.log('Project successfully imported to ' + projectName);
+            }
+        })
+    } else {
+        console.log('Will write to', outName);
+        fs.writeFile(outName, JSON.stringify(proj, function (key, value) {
+            if (key === '_guid') {
+                return undefined;
+            }
+            return value;
+        }));
     }
-    return value;
-}));
+}
+
+module.exports.generateProject = generateProject;
 
