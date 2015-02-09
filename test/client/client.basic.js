@@ -225,94 +225,109 @@ var testTerritory = function(level,cb){
  }
 };
 
+function createTestProject(callback) {
+
+ CLNT.connectToDatabaseAsync({},function (err) {
+   if (err) {
+    callback(err);
+    return;
+   }
+
+   CLNT.createProjectAsync(projectName,{},function (err) {
+    if (err) {
+     callback(err);
+     return;
+    }
+
+    CLNT.selectProjectAsync(projectName,function (err) {
+     if (err) {
+      callback(err);
+      return;
+     }
+
+     //TODO it would be best to use the actual constant values
+     CLNT.startTransaction();
+     CLNT.setRegistry("", 'validPlugins', "");
+     CLNT.setRegistry("", 'usedAddOns', "ConstraintAddOn");
+     FCOID = CLNT.createChild({parentId:'',guid:'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045',relid:'1'});
+     CLNT.setMeta('',{
+      children:{
+       items:[{$ref: FCOID}],
+       minItems:[-1],
+       maxItems:[-1]
+      },
+      attributes:{
+       name:{type:'string'}
+      },
+      pointers:{}
+     });
+     CLNT.setMeta(FCOID,{
+      children:{},
+      attributes:{
+       name:{type:'string'}
+      },
+      pointers:{}
+     });
+
+     //TODO constraint
+
+     CLNT.setAttributes('','name','ROOT');
+     CLNT.setRegistry('','ProjectRegistry',{FCO_ID:FCOID});
+
+     CLNT.setAttributes(FCOID,'name','FCO');
+     CLNT.setRegistry(FCOID,"decorator","");
+     CLNT.setRegistry(FCOID,"isPort",false);
+     CLNT.setRegistry(FCOID,"isAbstract",false);
+     CLNT.setRegistry(FCOID,"SVGIcon","");
+     CLNT.setRegistry(FCOID,"SVGIcon","");
+     CLNT.setRegistry(FCOID,"PortSVGIcon","");
+     CLNT.setRegistry(FCOID,"DisplayFormat","$name");
+
+     CLNT.createSet('','MetaAspectSet');
+     CLNT.addMember('',FCOID,'MetaAspectSet');
+
+     CLNT.createSet('','MetaAspectSet_000');
+     CLNT.setRegistry('','MetaSheets',[{SetID:'MetaAspectSet_000',order:0,title:'META'}]);
+     CLNT.addMember('',FCOID,'MetaAspectSet_000');
+     CLNT.setMemberRegistry('',FCOID,'MetaAspectSet_000','position',{x:100,y:100});
+
+     CLNT.completeTransaction('basic project seed',function(err){
+      if(err){
+       callback(err);
+       return;
+      }
+
+      commitHash = CLNT.getActualCommit();
+      callback();
+     });
+    });
+   });
+ });
+
+}
+
 describe('Client tests', function () {
 
- before(function() {
+ before(function(done) {
   config.port = 45013;
   WebGMEGlobal.setConfig(config);
 
   SRV = new global.WebGME.standaloneServer();
   SRV.start();
+
+  CLNT = new CLIENT({host:" ",port:WebGMEGlobal.getConfig().port});
+
+  createTestProject(done);
  });
 
  after(function(done) {
-  SRV.stop(done);
+   CLNT.deleteProjectAsync(projectName, function (err) {
+    SRV.stop(function (serverError) {
+     done(err || serverError);
+    });
+   });
  });
 
- describe('Client#Basic#Pre',function(){
-
-  it('creates a client instance with proper configuration',function(done){
-   CLNT = new CLIENT({host:" ",port:WebGMEGlobal.getConfig().port});
-   done();
-  });
-  it('initializes and starts the client',function(done){
-   //we need to mock the document global variable
-   //this.timeout(10000);
-   CLNT.connectToDatabaseAsync({},done);
-  });
-  it('creates an empty project',function(done){
-   CLNT.createProjectAsync(projectName,{},done);
-  });
-  it('selects the empty project',function(done){
-   CLNT.selectProjectAsync(projectName,done);
-  });
-  it('builds the default empty project',function(done){
-
-   //TODO it would be best to use the actual constant values
-   CLNT.startTransaction();
-   CLNT.setRegistry("", 'validPlugins', "");
-   CLNT.setRegistry("", 'usedAddOns', "ConstraintAddOn");
-   FCOID = CLNT.createChild({parentId:'',guid:'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045',relid:'1'});
-   CLNT.setMeta('',{
-    children:{
-     items:[{$ref: FCOID}],
-     minItems:[-1],
-     maxItems:[-1]
-    },
-    attributes:{
-     name:{type:'string'}
-    },
-    pointers:{}
-   });
-   CLNT.setMeta(FCOID,{
-    children:{},
-    attributes:{
-     name:{type:'string'}
-    },
-    pointers:{}
-   });
-
-   //TODO constraint
-
-   CLNT.setAttributes('','name','ROOT');
-   CLNT.setRegistry('','ProjectRegistry',{FCO_ID:FCOID});
-
-   CLNT.setAttributes(FCOID,'name','FCO');
-   CLNT.setRegistry(FCOID,"decorator","");
-   CLNT.setRegistry(FCOID,"isPort",false);
-   CLNT.setRegistry(FCOID,"isAbstract",false);
-   CLNT.setRegistry(FCOID,"SVGIcon","");
-   CLNT.setRegistry(FCOID,"SVGIcon","");
-   CLNT.setRegistry(FCOID,"PortSVGIcon","");
-   CLNT.setRegistry(FCOID,"DisplayFormat","$name");
-
-   CLNT.createSet('','MetaAspectSet');
-   CLNT.addMember('',FCOID,'MetaAspectSet');
-
-   CLNT.createSet('','MetaAspectSet_000');
-   CLNT.setRegistry('','MetaSheets',[{SetID:'MetaAspectSet_000',order:0,title:'META'}]);
-   CLNT.addMember('',FCOID,'MetaAspectSet_000');
-   CLNT.setMemberRegistry('',FCOID,'MetaAspectSet_000','position',{x:100,y:100});
-
-   CLNT.completeTransaction('basic project seed',function(err){
-    if(err){
-     return done(err);
-    }
-    commitHash = CLNT.getActualCommit();
-    done();
-   });
-  });
- });
  describe('Client#Basic#Project&Branch',function(){
   /*
    //projects, branch, etc.
@@ -433,8 +448,9 @@ describe('Client tests', function () {
    });
   });
  });
- describe('Client#Basic#Territory',function(done){
-  it('creating a territory and receiving events',function(done){
+
+ describe('Client#Basic#Territory',function(){
+ it('creating a territory and receiving events',function(done){
    TERR = CLNT.addUI({},function(events){
     var ids = [],allLoad = true,i;
     for(i=0;i<events.length;i++){
@@ -453,8 +469,8 @@ describe('Client tests', function () {
     done();
    });
    CLNT.updateTerritory(TERR,{'':{children:1}});
-  });
-  it('creates a new child under the root ascendant of FCO and check the events',function(done){
+ });
+ it('creates a new child under the root ascendant of FCO and check the events',function(done){
    var myTerritory = testTerritory(1,function(events){
         //we are loaded the initial territory
         myTerritory.setNext(stepOne);
@@ -494,8 +510,8 @@ describe('Client tests', function () {
         }
         done();
        };
-  });
-  it('creates multiple children and removes some and checks the events',function(done){
+ });
+ it('creates multiple children and removes some and checks the events',function(done){
    var myTerritory = testTerritory(1,function(events){
         //we are loaded the initial territory
         myTerritory.setNext(stepCreate);
@@ -541,12 +557,6 @@ describe('Client tests', function () {
 
         done();
        };
-  });
  });
- describe('Client#Basic#Post',function(){
-  it('deletes the test project',function(done){
-   CLNT.deleteProjectAsync(projectName,done);
-  });
  });
-
 });
