@@ -42,5 +42,5 @@
     {"id": "GraphViz",
         "title": "Graph view",
         "panel": "js/Panels/GraphViz/GraphVizPanel",
-        "DEBUG_ONLY": true}
+        "DEBUG_ONLY": false}
 ]
