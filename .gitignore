@@ -14,6 +14,7 @@ output.json
 .idea
 .sass-cache
 .DS_Store
+tmp
 
 .project
 .settings
@@ -30,3 +31,5 @@ src/bin/*.xme
 blob-local-storage
 
 *.swp
+
+webgme-*.tgz
