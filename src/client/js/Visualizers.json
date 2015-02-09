@@ -4,10 +4,10 @@
         "panel": "js/Panels/ModelEditor/ModelEditorPanel",
         "DEBUG_ONLY": false},
 
-    {"id": "Constraint Editor",
-        "title": "Constraint Editor",
+    {"id": "Block Editor",
+        "title": "Block Editor",
         "panel": "js/Panels/BlockEditor/BlockEditorPanel",
-        "DEBUG_ONLY": false},
+        "DEBUG_ONLY": true},
 
     {"id": "METAAspect",
         "title": "Meta",
