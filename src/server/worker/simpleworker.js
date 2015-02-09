@@ -752,5 +752,10 @@ requirejs(['worker/constants',
       }
     });
 
-    process.send({pid: process.pid, type: CONSTANT.msgTypes.initialize});
+    try {
+      process.send({pid: process.pid, type: CONSTANT.msgTypes.initialize});
+    } catch(e){
+      //TODO check the real cause of the error, probably some just created child process have not been properly killed before exiting from workermanager
+      process.exit(0);
+    }
   });
