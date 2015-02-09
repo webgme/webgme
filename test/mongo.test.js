@@ -41,9 +41,6 @@ describe('MONGO',function(){
       if(!err && d){
         db = d;
 
-        for(var i in db){
-          console.warn('DB - ',i);
-        }
         db.collection(collName, function (err, result) {
           if (err) {
             done(err);
@@ -66,9 +63,7 @@ describe('MONGO',function(){
   it('insert some objects and in a parallel insertion uses fsync and checks if really everything is in place',function(done){
     var i,filler="",normalItemCount = 100,error=null,
       addObject = function(index){
-        console.warn('object insertion started ',index);
         collection.insert({data:filler},function(err){
-          console.warn('object insertion returned ',index);
           error = error ||err;
           if(--normalItemCount === 0){
             finishedAll();
