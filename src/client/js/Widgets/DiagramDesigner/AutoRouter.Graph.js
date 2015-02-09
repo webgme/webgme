@@ -1873,9 +1873,9 @@ define(['logManager',
             optimizeFn = function(state) {
 
                 updateFn(self.paths);
-                if (state.finished) {
+                if (state.finished || self.completelyConnected) {
                     return callbackFn(self.paths);
-                } else if (self.completelyConnected) {
+                } else {
                     state = self._optimize(state);
                     return setTimeout(optimizeFn, time, state);
                 }
