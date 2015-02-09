@@ -94,7 +94,7 @@ FS.stat(configName, function (err, stat) {
 
 FS.stat(appName, function (err, stat) {
     if (err && err.errno === 34) {
-        var file = DEFAULT_CONFIG;
+        var file = APP_JS;
         FS.writeFile(appName, file, function (err) {
             if (err) {
                 console.log("Error writing " + appName);
