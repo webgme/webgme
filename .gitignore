@@ -5,6 +5,8 @@ bin
 */.idea
 *.class
 
+input.json
+output.json
 
 /node_modules
 
