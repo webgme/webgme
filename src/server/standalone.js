@@ -90,12 +90,13 @@ define(['logManager',
             //end of storage creation
             __storage.open();
         }
-        function stop(){
+        function stop(callback){
             try {
                 __storage.close();
-                __httpServer.close();
+                __httpServer.close(callback);
             } catch(e){
                 //ignore errors
+                callback(e);
             }
         }
         //internal functions

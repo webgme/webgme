@@ -655,10 +655,9 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
             //disconnect clients
             if(_socket){
                 //_socket.sockets.emit('disconnect');
-                _socket.sockets.clients().forEach(function (socket){
+                _socket.sockets.sockets.forEach(function (socket){
                     socket.disconnect();
                 });
-                _socket.server.close();
                 _socket = null;
             }
 

@@ -1,10 +1,9 @@
 /**
  * Created by tkecskes on 12/17/2014.
  */
-require('./_globals.js');
-var WebGME = require('../webgme'),
-  FS = require('fs'),
-  storage = new WebGME.serverUserStorage({host:'127.0.0.1',port:27017,database:'multi'});
+require('./../_globals.js');
+var FS = require('fs'),
+  storage = new global.Storage();
 
 //global helping functions and globally used variables
 var baseCommit = null,
@@ -57,11 +56,11 @@ function importProject(projectJson,next) {
         return next(err || new Error('unable to get quasi project'));
       }
 
-      core = new WebGME.core(p);
+      core = new global.WebGME.core(p);
       project = p;
       root = core.createNode();
 
-      WebGME.serializer.import(core, root, projectJson, function (err, log) {
+      global.WebGME.serializer.import(core, root, projectJson, function (err, log) {
         if (err) {
           return next(err);
         }
@@ -113,7 +112,7 @@ describe('issue110 testing',function(){
     storage.openDatabase(done);
   });
   it('import the problematic project',function(done){
-    loadJsonData('./test/asset/issue110.json');
+    loadJsonData('./test/issue/110/input.json');
     if(jsonData === null){
       return done(new Error('unable to load project file'));
     }
