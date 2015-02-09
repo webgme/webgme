@@ -19,12 +19,17 @@ var common = require('./autorouter.common.js'),
                 }
                 router.graph.assertValid();
             }
+      },
+      debug = {
+          verbose: true,
+          before: function(router) {
+          }
       };
 
 
 utils.getNewGraph = common.getNewGraph;
 // Tests
-describe('AutoRouter Misc Tests', function(){
+describe('AutoRouter Test Cases', function(){
   this.timeout(20000);
 
   it('basic model with ports',function() {
@@ -71,22 +76,12 @@ describe('AutoRouter Misc Tests', function(){
   });
 
   it('bug report 5',function() {
-      var debug = {
-          verbose: true,
-          before: function(router) {
-          },
-          after: options.after
-      };
       bugPlayer.test('./testCases/AR_bug_report1423077073008.js');
   });
 
   it('bug report 6',function() {
-      var debug = {
-          verbose: true,
-          before: function(router) {
-          }
-      };
       bugPlayer.test('./testCases/AR_bug_report1423157583206.js');
   });
 
 });
+
