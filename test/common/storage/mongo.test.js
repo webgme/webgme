@@ -2,7 +2,7 @@
  * Created by tamas on 1/9/15.
  */
 //these tests intended to ensure that every used feature of mongodb and its used client is work as expected
-
+require('../../_globals.js');
 describe('MONGO',function(){
   var MONGO = require('mongodb'),
     db,collection,collName = 'mongotest___test',

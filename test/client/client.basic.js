@@ -534,11 +534,6 @@ describe('Client#Basic#Territory',function(done){
     };
  });
 });
-describe('Client#Basic#Commits',function(){
- it('modifies the projects',function(done){
-  done();
- });
-});
 describe('Client#Basic#Post',function(){
  it('deletes the test project',function(done){
   CLNT.deleteProjectAsync(projectName,done);

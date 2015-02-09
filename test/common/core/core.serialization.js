@@ -1,6 +1,7 @@
 /**
  * Created by tamas on 12/22/14.
  */
+require('../../_globals.js');
 var FS = require('fs'),
     PATH = require('path'),
     storage = new global.Storage(),

@@ -24,6 +24,7 @@ src/bin/decorators.js
 src/bin/*.xme
 
 /src-cov
+/coverage
 # ignore file system blob storage files
 blob-local-storage
 
