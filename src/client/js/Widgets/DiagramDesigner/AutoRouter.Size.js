@@ -42,16 +42,6 @@ define(['logManager'], function (logManager) {
         }
     };
 
-    ArSize.prototype.subtract = function(otherSize){
-        this.cx -= otherSize.cx;
-        this.cy -= otherSize.cy;
-    };
-
-    ArSize.prototype.assign = function(otherSize){
-        this.cx = otherSize.cx;
-        this.cy = otherSize.cy;
-    };
-
     ArSize.prototype.getArray = function(){
         var res = [];
         res.push(this.cx);
