@@ -1,6 +1,5 @@
 /*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
-
 define(['logManager'], function (logManager) {
 
     "use strict";

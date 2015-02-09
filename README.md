@@ -58,7 +58,7 @@ Please use JSHint. Consult .jshintrc for details.
 
 Always declare your globals at the top of the source.
 
-Use [JDDoc](http://en.wikipedia.org/wiki/JSDoc) syntax to annotate source code with documentation, eg. specify authors as:
+Use [JSDoc](http://en.wikipedia.org/wiki/JSDoc) syntax to annotate source code with documentation, eg. specify authors as:
 ```
 /**
  * @author brollb / https://github.com/brollb
