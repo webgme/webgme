@@ -112,36 +112,4 @@ describe('MONGO',function(){
       });
     });
   });
-  it('insert some object paralelly then checks if the order really gets mixed',function(done){
-    var i,filler="",normalItemCount = 101,error=null,
-      addObject = function(index){
-        console.warn('object insertion started ',index);
-        collection.insert({data:filler},function(err){
-          console.warn('object insertion returned ',index);
-          error = error ||err;
-          if(--normalItemCount === 0){
-            finishedAll();
-          }
-        });
-      },
-      finishedAll = function(){
-        done(error);
-      };
-    for(i=0;i<1000;i++){
-      filler+=String.fromCharCode(Math.floor(Math.random()*255));
-    }
-
-    for(i=0;i<100;i++){
-      addObject(i);
-    }
-    console.warn('special start');
-    collection.insert({data:filler,extra:'should get a mixed order'},function(err){
-      console.warn('special finished');
-      error = error || err;
-      if(--normalItemCount === 0){
-        error = new Error('insertions do not get mixed'+normalItemCount);
-        finishedAll();
-      }
-    });
-  });
 });
