@@ -4,6 +4,7 @@
 require('./_globals.js');
 var WebGME = require('../webgme'),
   FS = require('fs'),
+  PATH = require('path'),
   storage = new WebGME.serverUserStorage({host:'127.0.0.1',port:27017,database:'multi'}),
   requirejs = require('requirejs');
 CANON = requirejs('../src/common/util/canon');
@@ -129,8 +130,8 @@ describe('Core#Serialization',function(){
         return done(err);
       }
       eData = exp;
-      FS.writeFileSync('input.json',JSON.stringify(iData,null,2));
-      FS.writeFileSync('output.json',JSON.stringify(eData,null,2));
+      FS.writeFileSync(PATH.join('test-tmp', 'input.json'),JSON.stringify(iData,null,2));
+      FS.writeFileSync(PATH.join('test-tmp', 'output.json'),JSON.stringify(eData,null,2));
       if(JSON.stringify(iData) !== JSON.stringify(eData)){
         return done(new Error('the two object differs'));
       }
