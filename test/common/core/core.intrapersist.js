@@ -2,7 +2,6 @@
  * Created by tkecskes on 12/18/2014.
  */
 //these checks intended to check what changes should be visible between persists
-require('./_globals.js');
 
 var FS = require('fs'),
   storage = new global.Storage(),

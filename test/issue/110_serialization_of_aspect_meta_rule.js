@@ -1,7 +1,7 @@
 /**
  * Created by tkecskes on 12/17/2014.
  */
-require('./_globals.js');
+require('./../_globals.js');
 var FS = require('fs'),
   storage = new global.Storage();
 
@@ -112,7 +112,7 @@ describe('issue110 testing',function(){
     storage.openDatabase(done);
   });
   it('import the problematic project',function(done){
-    loadJsonData('./test/asset/issue110.json');
+    loadJsonData('./test/issue/110/input.json');
     if(jsonData === null){
       return done(new Error('unable to load project file'));
     }

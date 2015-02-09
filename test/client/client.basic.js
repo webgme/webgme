@@ -2,9 +2,8 @@
  * Created by tamas on 12/31/14.
  */
 //these test intended to test the functions of the client layer
-require('./_globals.js');
-var WebGME = require('../webgme'),
-  FS = require('fs'),
+require('../_globals');
+var FS = require('fs'),
   requirejs = require('requirejs'),
   config = WebGMEGlobal.getConfig();
 config.port = 45013;
@@ -229,7 +228,7 @@ var testTerritory = function(level,cb){
 describe('Client#Basic#Pre',function(){
  it('starts a webgme-server to handle queries of the client',function(done){
   this.timeout(3000);
-  SRV = new WebGME.standaloneServer();
+  SRV = new global.WebGME.standaloneServer();
   SRV.start();
   setTimeout(done,2000);
  });

@@ -2,7 +2,7 @@
  * Created by tamas on 12/31/14.
  */
 //these test intended to increase the test coverage on mongo module
-require('./_globals.js');
+
 var FS = require('fs'),
   storage = new global.WebGME.serverUserStorage({host:'127.0.0.1',port:27017,database:'multi',log:global.Log.create('mongoLog')}),
   requirejs = require('requirejs');
