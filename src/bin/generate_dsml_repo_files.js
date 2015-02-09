@@ -1,5 +1,10 @@
 /**
- * Script for generating configuration and server start point for a DSML repository.
+ * Script for generating configuration and server starting point for a DSML repository.
+ * Run this script from the root of the DSML repository.
+ *
+ * With mongodo running at mongoip:mongoport, `node app.js` will start the webgme server.
+ * Visit localhost:port from a browser.
+ *
  * @author pmeijer / https://github.com/pmeijer
  */
 var FS = require("fs"),
