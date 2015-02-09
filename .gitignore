@@ -5,6 +5,8 @@ bin
 */.idea
 *.class
 
+input.json
+output.json
 
 /node_modules
 
@@ -12,6 +14,7 @@ bin
 .idea
 .sass-cache
 .DS_Store
+tmp
 
 .project
 .settings
@@ -28,3 +31,5 @@ src/bin/*.xme
 blob-local-storage
 
 *.swp
+
+webgme-*.tgz

@@ -39,4 +39,6 @@ gulp.task('dev', function (cb) {
     runSequence('rjs-build', 'register-watchers', cb);
 });
 
+gulp.task('compile-all', ['rjs-build'], function () {});
+
 gulp.task('default', [/*'js',*/ 'lint'], build);
