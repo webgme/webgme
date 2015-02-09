@@ -50,6 +50,18 @@ using requirejs (see the scripts in the src/bin directory).
     server.start()
 ```
 
+# Setting up a DSML repository with webgme as dependency
+Have node/npm and mongodb installed. Set up an empty npm package with webgme as dependency.
+## Starting webgme
+* From the root of the repository run `node node_modules\webgme\src\bin\generate_dsml_repo_files.js`.
+* With an open mongo-session, matching the setting in `config.js`, run `node app.js`.
+* Visit localhost:port, where port is set in `config.js` and create a new project.
+
+## Plugins
+* Add `node_modules/webgme/src/plugin/coreplugins` to pluginBasePaths (run `node app.js`).
+* In an open project, select the rootNode and add `PluginGenerator` to `validPlugins` in the Property Editor.
+* Run `PluginGenerator` (using the play-button) and download the files and follow the instructions from the results.
+
 # Developer guidelines
 
 ## Coding style
