@@ -207,15 +207,30 @@ namespace GMEModelStatisticsExporter
             {
                 IMgaTerritory terr = project.BeginTransactionInNewTerr(transactiontype_enum.TRANSACTION_READ_ONLY);
 
+                // process meta model
+
                 stats.ParadigmName = project.MetaName;
-                stats.ProjectName = project.Name;
-                
-                VisitChildren(stats, project.RootFolder, stats.Model.ContainmentTree);
+                stats.ProjectName = project.Name;                               
 
                 stats.MetaModel.RootGUID = GetGUIDFromInt(project.RootMeta.RootFolder.MetaRef);
 
                 var rfTree = new Dictionary<string, object>();
                 stats.Model.ContainmentTree[stats.MetaModel.RootGUID] = rfTree;
+
+                foreach (MgaMetaAttribute attr in project.RootMeta.RootFolder.DefinedAttributes)
+                {
+                    string attrType = attr.ValueType.ToString();
+                    int num = 0;
+
+                    if (stats.MetaModel.Attributes.TryGetValue(attrType, out num))
+                    {
+                        stats.MetaModel.Attributes[attrType] = num + 1;
+                    }
+                    else
+                    {
+                        stats.MetaModel.Attributes[attrType] = 1;
+                    }
+                }
 
                 foreach (MgaMetaFCO meta in project.RootMeta.RootFolder.DefinedFCOs)
                 {
@@ -247,7 +262,11 @@ namespace GMEModelStatisticsExporter
                 {
                     rfTree[GetGUIDFromInt(meta.MetaRef)] = new Dictionary<string, object>();
                     stats.MetaModel.NumberOfFolders += 1;
-                }              
+                }
+
+
+                // process domain model
+                VisitChildren(stats, project.RootFolder, stats.Model.ContainmentTree);
 
             }
             finally
@@ -274,6 +293,20 @@ namespace GMEModelStatisticsExporter
             else
             {
                 stats.Model.InheritanceTree[(new Guid(mgaObject.GetGuidDisp())).ToString("D")] = GetGUIDFromInt(mgaObject.MetaBase.MetaRef);
+            }
+
+            if (mgaObject is MgaFCO)
+            {
+                var numAttr = (mgaObject as MgaFCO).Attributes.Count.ToString();
+                int num = 0;
+                if (stats.Model.Attributes.TryGetValue(numAttr, out num))
+                {
+                    stats.Model.Attributes[numAttr] = num + 1;
+                }
+                else
+                {
+                    stats.Model.Attributes[numAttr] = 1;
+                }
             }
 
             if (mgaObject.ObjType == GME.MGA.Meta.objtype_enum.OBJTYPE_FOLDER ||
@@ -376,15 +409,15 @@ namespace GMEModelStatisticsExporter
                 stats.Model.Children[i.ToString()] = random.Next(0, 100);
             }
 
-            for (int i = 0; i < random.Next(2, 15); i++)
-            {
-                stats.Model.Levels[i.ToString()] = random.Next(1, 10);
-            }
+            //for (int i = 0; i < random.Next(2, 15); i++)
+            //{
+            //    stats.Model.Levels[i.ToString()] = random.Next(1, 10);
+            //}
 
-            for (int i = 0; i < random.Next(2, 10); i++)
-            {
-                stats.Model.BaseClasses[i.ToString()] = random.Next(0, 10);
-            }
+            //for (int i = 0; i < random.Next(2, 10); i++)
+            //{
+            //    stats.Model.BaseClasses[i.ToString()] = random.Next(0, 10);
+            //}
 
             var rootId = Guid.NewGuid().ToString("D");
             stats.Model.ContainmentTree[rootId] = new Dictionary<string, object>();
