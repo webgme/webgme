@@ -449,7 +449,8 @@ define(['js/Constants',
             //TODO: this is still questionable if we should hack the jQeuryUI 's draggable&droppable and use half of it only
             this.__onBackgroundDrop($.ui.ddmanager.current.helper);
             this.__onDragOver = false;
-            this.hostDesignerItem.canvas._enableDroppable(false);
+            // This sometimes brings up the dropdown menu for the canvas-drop (typically near the border of the ref).
+            this.hostDesignerItem.canvas._enableDroppable(true);
         }
     };
 
