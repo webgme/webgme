@@ -26,6 +26,8 @@ function generateProject (stat, options) {
         nodes: {},
         metaSheets: {}
     },
+        META_ASPECT_SET = 'MetaAspectSet_' + chance.guid(),
+        metaSheetCounter = 1,
         fcoNode,
         statModel = stat.Model,
         opts = options || {},
@@ -120,7 +122,7 @@ function generateProject (stat, options) {
         rootNode.meta.children = metaChildren;
         rootNode.registry = {
             MetaSheets: [{
-                SetID: 'MetaAspectSet_4451988f-ba3d-de2e-3f00-4f20d115aaca',
+                SetID: META_ASPECT_SET,
                 order: 0,
                 title: 'META'
             }],
@@ -131,9 +133,9 @@ function generateProject (stat, options) {
             validPlugins: '',
         };
         rootNode.sets = {
-            MetaAspectSet: [metaAspectSet],
-            'MetaAspectSet_4451988f-ba3d-de2e-3f00-4f20d115aaca': [metaAspectSet]
+            MetaAspectSet: [metaAspectSet]
         }
+        rootNode.sets[META_ASPECT_SET] = [metaAspectSet];
         // Build the fco node
         fcoNode.attributes.name = 'FCO';
         fcoNode.meta.children = metaChildren;
@@ -195,6 +197,7 @@ function generateProject (stat, options) {
         project.relids[guid] = relId;
         if (isMeta) {
             guidToMetaNode[guid] = node;
+            addToMetaAspectSet(guid);
         } else {
             path = parentPath + '/' + relId;
             pathToModelNode[path] = node;
@@ -203,6 +206,33 @@ function generateProject (stat, options) {
         return path;
     };
 
+    function addToMetaAspectSet(guid) {
+        var rootNode = project.nodes[project.root.guid],
+            metaAspectSet = {
+                attributes: {},
+                guid: guid,
+                registry: {
+                    position: {
+                        x: chance.integer({ min: 0, max: 1000 }),
+                        y: chance.integer({ min: 0, max: 1000 })
+                    }
+                }
+            };
+
+        rootNode.sets.MetaAspectSet.push(metaAspectSet);
+        rootNode.sets[META_ASPECT_SET].push(metaAspectSet);
+
+        metaSheetCounter += 1;
+        if (metaSheetCounter % 30 == 0) {
+            META_ASPECT_SET = 'MetaAspectSet_' + chance.guid();
+            rootNode.registry.MetaSheets.push({
+                SetID: META_ASPECT_SET,
+                order: metaSheetCounter/30,
+                title: chance.first()
+            });
+            rootNode.sets[META_ASPECT_SET] = [];
+        }
+    }
     function createPointers() {
         var pointerTypes = [],
             paths = Object.keys(pathToModelNode),
@@ -241,9 +271,9 @@ function generateProject (stat, options) {
         }
         node.pointers[name] = targetNode._guid;
 
-        targetNode.collection = targetNode.collection || {};
-        targetNode.collection[name] = targetNode.collection[name] || [];
-        targetNode.collection[name].push(node._guid);
+        //targetNode.collection = targetNode.collection || {};
+        //targetNode.collection[name] = targetNode.collection[name] || [];
+        //targetNode.collection[name].push(node._guid);
         return false;
     }
 
