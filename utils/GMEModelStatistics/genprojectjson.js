@@ -14,16 +14,59 @@ var Chance = require('chance'),
     importProject = require('../../src/bin/import_project'),
     path = require('path');
 
+function generateProject (stat, options) {
+    var project = {
+        bases: {},
+        root: {
+            path: '',
+            guid: null
+        },
+        relids: {},
+        containment: {},
+        nodes: {},
+        metaSheets: {}
+    },
+        fcoNode,
+        statModel = stat.Model,
+        opts = options || {},
+        nbrOfPointerTypes = opts.nbrOfPointerTypes || 10,
+        pathToModelNode = {},
+        guidToMetaNode = {},
+        nbrOfPointers = statModel.NumberOfReferences + statModel.NumberOfConnections * 2,
+        relIdCnt = 2;
 
-function NodeObj(guid, base, parent) {
+    project.root.guid = chance.guid();
+    project.containment = statModel.ContainmentTree;
+
+    fcoNode = createRootNodeAndFCO(project.root.guid);
+    addNode(stat.MetaModel.RootGUID, project.root.guid);
+    guidToMetaNode[stat.MetaModel.RootGUID].attributes.name = 'META_' + stat.ParadigmName;
+    traverseMetaTree(project.containment[stat.MetaModel.RootGUID], stat.MetaModel.RootGUID);
+    traverseTree(project.containment, project.root.guid, '');
+    project.containment[fcoNode._guid] = {};
+    createPointers();
+
+    function NodeObj(guid, baseGuid, parent) {
+        var cnt = 0;
         this._guid = guid;
         this.attributes = {
             name: chance.last()
         }
-        if (base) {
-            this.base = base._guid;
+        if (baseGuid) {
+            this.base = baseGuid;
             this.meta = {};
-            this.meta.attributes = JSON.parse(JSON.stringify(base.meta.attributes));
+            do {
+                cnt += 1;
+                if (guidToMetaNode[baseGuid]) {
+                    this.meta.attributes = JSON.parse(JSON.stringify(guidToMetaNode[baseGuid].meta.attributes));
+                    break;
+                }
+                baseGuid = stat.Model.InheritanceTree[baseGuid];
+                if (cnt > 1000) {
+                    console.error('Caught in a loop!');
+                    break;
+                }
+            } while (true);
         } else {
             this.base = null;
             this.meta = {
@@ -46,33 +89,6 @@ function NodeObj(guid, base, parent) {
         }
         this.sets = {};
     }
-
-function generateProject (statModel, options) {
-    var project = {
-        bases: {},
-        root: {
-            path: '',
-            guid: null
-        },
-        relids: {},
-        containment: {},
-        nodes: {},
-        metaSheets: {}
-    },
-        fcoNode,
-        opts = options || {},
-        nbrOfPointerTypes = opts.nbrOfPointerTypes || 10,
-        pathToNode = {},
-        nbrOfPointers = statModel.NumberOfReferences + statModel.NumberOfConnections * 2,
-        relIdCnt = 2;
-
-    project.root.guid = chance.guid();
-    project.containment = statModel.ContainmentTree;
-
-    fcoNode = createRootNodeAndFCO(project.root.guid);
-    traverseTree(project.containment, project.root.guid, '');
-    project.containment[fcoNode._guid] = {};
-    createPointers();
 
     function createRootNodeAndFCO(rootGuid) {
         var rootNode = new NodeObj(rootGuid),
@@ -133,15 +149,26 @@ function generateProject (statModel, options) {
         project.nodes[fcoGuid] = fcoNode;
         project.relids[rootGuid] = null;
         project.relids[fcoGuid] = '1';
-
+        guidToMetaNode[fcoGuid] = fcoNode;
         return fcoNode;
     };
+
+    function traverseMetaTree(root, rootguid) {
+        var id,
+            path;
+        for (id in root) {
+            if (root.hasOwnProperty(id)) {
+                path = addNode(id, rootguid);
+                traverseMetaTree(root[id], id);
+            }
+        }
+    }
 
     function traverseTree(root, rootguid, rootPath) {
         var id,
             path;
         for (id in root) {
-            if (root.hasOwnProperty(id)) {
+            if (root.hasOwnProperty(id) && guidToMetaNode.hasOwnProperty(id) === false) {
                 path = addNode(id, rootguid, rootPath);
                 traverseTree(root[id], id, path);
             }
@@ -151,21 +178,34 @@ function generateProject (statModel, options) {
     function addNode(guid, parentGuid, parentPath) {
         var node,
             relId,
-            path;
-        // TODO: Add inheritance (all inherit from fcoNode now).
-        node = new NodeObj(guid, fcoNode, project.nodes[parentGuid]);
+            path,
+            isMeta,
+            base;
+        if (statModel.InheritanceTree[guid]) {
+            isMeta = false;
+            base = statModel.InheritanceTree[guid];
+        } else {
+            isMeta = true;
+            base = fcoNode._guid;
+        }
+
+        node = new NodeObj(guid, base, project.nodes[parentGuid]);
         project.nodes[guid] = node;
         relId = relIdCnt.toString();
         project.relids[guid] = relId;
-        path = parentPath + '/' + relId;
-        pathToNode[path] = node;
+        if (isMeta) {
+            guidToMetaNode[guid] = node;
+        } else {
+            path = parentPath + '/' + relId;
+            pathToModelNode[path] = node;
+        }
         relIdCnt += 1;
         return path;
     };
 
     function createPointers() {
         var pointerTypes = [],
-            paths = Object.keys(pathToNode),
+            paths = Object.keys(pathToModelNode),
             index,
             typeIndex,
             targetPath,
@@ -183,7 +223,7 @@ function generateProject (statModel, options) {
             do {
                 whileCnt += 1;
                 typeIndex = chance.integer({min:0, max: nbrOfPointerTypes-1});
-                collision = setPointer(pathToNode[paths[index]], pointerTypes[typeIndex], targetPath);
+                collision = setPointer(pathToModelNode[paths[index]], pointerTypes[typeIndex], targetPath);
                 if (collision && whileCnt > 2 * nbrOfPointerTypes) {
                     console.error('Too many collisions, skipping pointer..');
                 }
@@ -193,7 +233,7 @@ function generateProject (statModel, options) {
     };
 
     function setPointer(node, name, targetPath) {
-        var targetNode = pathToNode[targetPath];
+        var targetNode = pathToModelNode[targetPath];
 
         if (node.pointers[name]) {
             console.log('Collision of pointer', node._guid, name, targetPath);
@@ -216,7 +256,7 @@ if (require.main === module) {
         outName = path.join(process.cwd(), baseName + '_out.json'),
         projectName = process.argv[3];
 
-    var proj = generateProject(JSON.parse(fs.readFileSync(inputFile, 'utf8')).Model);
+    var proj = generateProject(JSON.parse(fs.readFileSync(inputFile, 'utf8')));
     if (projectName) {
         importProject.importProject(projectName, proj, null, function (err) {
             if (err) {
