@@ -32,4 +32,13 @@ OR
 
 `GMEModelStatisticsExporter.exe input.mga`
 
-2) TODO: how to use `genprojectjson.js` ...
+2) To create a webgme model run `genprojectjson.js`, it will generate a file called `[inputStatFile]_out.json`
+
+`genprojectjson.js stat.json` 
+
+OR
+
+`genprojectjson.js stat.json projectName [mongoip] [mongoport] [mongodb]`
+
+which will import the project to the default mongodb or (as set in optional argvars). N.B. any existing project named projectName will be lost
+
