@@ -1,7 +1,7 @@
 /*globals require*/
 
 /**
- * node genprojectjson.js stat.json [projectNameInDataBase]
+ * node genprojectjson.js stat.json [projectNameInDataBase] [mongoip] [mongoport] [mongodb]
  *
  * With optional projectNameInDataBase argument the script will import the project into the database.
  *
@@ -283,12 +283,17 @@ function generateProject (stat, options) {
 if (require.main === module) {
     var inputFile = process.argv[2],
         baseName = path.basename(inputFile, '.json'),
-        outName = path.join(process.cwd(), baseName + '_out.json'),
-        projectName = process.argv[3];
+        outName = path.join(path.dirname(inputFile), baseName + '_out.json'),
+        projectName = process.argv[3],
+        mongoOpts = {
+            mongoip: process.argv[4] || '127.0.0.1',
+            mongoport: process.argv[5] || 27017,
+            mongodb: process.argv[6] || 'multi'
+        };
 
     var proj = generateProject(JSON.parse(fs.readFileSync(inputFile, 'utf8')));
     if (projectName) {
-        importProject.importProject(projectName, proj, null, function (err) {
+        importProject.importProject(projectName, proj, mongoOpts, function (err) {
             if (err) {
                 console.error('Could not import project to database!, err', err);
             } else {
