@@ -14,6 +14,6 @@ namespace GMEModelStatisticsExporter.Statistics
         public int NumberOfReferences { get; set; }
         public int NumberOfConnections { get; set; }
         public int NumberOfSets { get; set; }
-        public int NumberOfBaseClasses { get; set; }
+        //public int NumberOfBaseClasses { get; set; }
     }
 }

@@ -88,6 +88,10 @@ namespace GMEModelStatisticsExporter
             if (errorInUsage)
             {
                 Console.WriteLine("Usage: {0} [arguments] inputfilename.[mga|xme]", Path.GetFileName(System.Reflection.Assembly.GetExecutingAssembly().Location));
+                Console.WriteLine("");
+                Console.WriteLine("Arguments:");
+                Console.WriteLine("  -p --prettyPrint   Indents the output json file.");
+                Console.WriteLine("  -t --template      Generates a sample json file with random numbers.");
                 return 1;
             }
 
@@ -205,9 +209,18 @@ namespace GMEModelStatisticsExporter
 
                 stats.ParadigmName = project.MetaName;
                 stats.ProjectName = project.Name;
+                
+                VisitChildren(stats, project.RootFolder, stats.Model.ContainmentTree);
+
+                stats.MetaModel.RootGUID = GetGUIDFromInt(project.RootMeta.RootFolder.MetaRef);
+
+                var rfTree = new Dictionary<string, object>();
+                stats.Model.ContainmentTree[stats.MetaModel.RootGUID] = rfTree;
 
                 foreach (MgaMetaFCO meta in project.RootMeta.RootFolder.DefinedFCOs)
                 {
+                    rfTree[GetGUIDFromInt(meta.MetaRef)] = new Dictionary<string, object>();
+
                     if (meta is MgaMetaModel)
                     {
                         stats.MetaModel.NumberOfModels += 1;
@@ -232,10 +245,10 @@ namespace GMEModelStatisticsExporter
 
                 foreach (MgaMetaFolder meta in project.RootMeta.RootFolder.DefinedFolders)
                 {
+                    rfTree[GetGUIDFromInt(meta.MetaRef)] = new Dictionary<string, object>();
                     stats.MetaModel.NumberOfFolders += 1;
-                }
+                }              
 
-                VisitChildren(stats, project.RootFolder, stats.Model.ContainmentTree);
             }
             finally
             {
@@ -244,9 +257,24 @@ namespace GMEModelStatisticsExporter
             return stats;
         }
 
+        private static string GetGUIDFromInt(int metaRef)
+        {
+            return (new Guid(metaRef, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)).ToString("D");
+        }
+
         private static void VisitChildren(Statistics.Statistics stats, IMgaObject mgaObject, object subtree)
         {
             var tree = (Dictionary<string, object>)subtree;
+
+            if (mgaObject is MgaFCO && (mgaObject as MgaFCO).ArcheType != null)
+            {
+                stats.Model.InheritanceTree[(new Guid(mgaObject.GetGuidDisp())).ToString("D")] =
+                    (new Guid((mgaObject as MgaFCO).ArcheType.GetGuidDisp())).ToString("D");
+            }
+            else
+            {
+                stats.Model.InheritanceTree[(new Guid(mgaObject.GetGuidDisp())).ToString("D")] = GetGUIDFromInt(mgaObject.MetaBase.MetaRef);
+            }
 
             if (mgaObject.ObjType == GME.MGA.Meta.objtype_enum.OBJTYPE_FOLDER ||
                 mgaObject.ObjType == GME.MGA.Meta.objtype_enum.OBJTYPE_MODEL)
@@ -334,8 +362,6 @@ namespace GMEModelStatisticsExporter
             stats.MetaModel.NumberOfSets = random.Next(0, 10);
             stats.MetaModel.NumberOfAtoms = random.Next(0, 10);
 
-            stats.MetaModel.NumberOfBaseClasses = 0;
-
             // model info
 
 
@@ -344,8 +370,6 @@ namespace GMEModelStatisticsExporter
             stats.Model.NumberOfReferences = random.Next(0, 100);
             stats.Model.NumberOfConnections = random.Next(0, 100);
             stats.Model.NumberOfSets = random.Next(0, 100);
-
-            stats.Model.NumberOfBaseClasses = 0;
 
             for (int i = 0; i < random.Next(2, 100); i++)
             {

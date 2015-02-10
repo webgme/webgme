@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 namespace GMEModelStatisticsExporter.Statistics
 {
     class MetaModel : Base
-    {       
+    {
 
-
+        public string RootGUID { get; set; }
     }
 }

@@ -8,24 +8,23 @@ namespace GMEModelStatisticsExporter.Statistics
 {
     class Model : Base
     {
-        public int MaxChildren { get; set; }
-        public int MaxLevels { get; set; }
-        public int MaxInheritance { get; set; }
-
-
-        public Dictionary<string, int> Children { get; set; }
+        public Dictionary<string, int> Attributes { get; set; }
+        public Dictionary<string, int> Children { get; set; }        
         public Dictionary<string, int> Levels { get; set; }
         public Dictionary<string, int> BaseClasses { get; set; }
 
         public Dictionary<string, object> ContainmentTree { get; set; }
+        public Dictionary<string, string> InheritanceTree { get; set; }
 
         public Model()
         {
+            this.Attributes = new Dictionary<string, int>();
             this.Children = new Dictionary<string, int>();
             this.Levels = new Dictionary<string, int>();
             this.BaseClasses = new Dictionary<string, int>();
 
             this.ContainmentTree = new Dictionary<string, object>();
+            this.InheritanceTree = new Dictionary<string, string>();
         }
 
         public void UpdateMaxValues()
