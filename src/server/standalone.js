@@ -90,12 +90,13 @@ define(['logManager',
             //end of storage creation
             __storage.open();
         }
-        function stop(){
+        function stop(callback){
             try {
                 __storage.close();
-                __httpServer.close();
+                __httpServer.close(callback);
             } catch(e){
                 //ignore errors
+                callback(e);
             }
         }
         //internal functions
@@ -733,9 +734,9 @@ define(['logManager',
         });
 
 
-        __logger.info("creating all other request rule - error 400 -");
+        __logger.info("creating all other request rule - error 404 -");
         __app.get('*',function(req,res){
-            res.send(400);
+            res.send(404);
         });
 
         if(CONFIG.debug === true){

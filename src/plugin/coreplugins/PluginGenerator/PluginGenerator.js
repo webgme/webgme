@@ -158,11 +158,12 @@ define(['plugin/PluginConfig',
                                 return;
                             }
                             self.result.addArtifact(hashes[0]);
+                            self.createMessage(null, 'Extract the pluginFiles.zip in your repository.');
                             self.createMessage(null, 'Append "' + './src/plugins/' + self.projectName +
-                                '" to "pluginBasePaths" in config.json.');
+                                '" to "pluginBasePaths" in config.js.');
                             self.createMessage(self.rootNode, 'Select the root-node and add ' +
                                 self.currentConfig.pluginID + ' to the validPlugins attribute (separate with space).');
-                            self.createMessage(null, 'For more information goto https://github.com/webgme/' +
+                            self.createMessage(null, 'For more information go to https://github.com/webgme/' +
                                 'webgme-domain-tools/wiki/DeveloperQA');
                             self.logger.info('Artifacts are saved here: ' + hashes.toString());
                             self.result.setSuccess(true);

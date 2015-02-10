@@ -159,9 +159,6 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                     'websocket'
                 ]
             });
-            if(options.logger){
-                _socket.set('logger',options.logger);
-            }
 
             _socket.set('authorization',function(data,accept){
                 //either the html header contains some webgme signed cookie with the sessionID
@@ -200,7 +197,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
             });
 
             //TODO check if this really helps
-            _socket.server.on('error',function(err){
+            _socket.on('error',function(err){
                 console.log("Error have been raised on socket.io level!!! - ",err);
                 options.logger.error('error raised: ' + err);
             });
@@ -658,10 +655,9 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
             //disconnect clients
             if(_socket){
                 //_socket.sockets.emit('disconnect');
-                _socket.sockets.clients().forEach(function (socket){
+                _socket.sockets.sockets.forEach(function (socket){
                     socket.disconnect();
                 });
-                _socket.server.close();
                 _socket = null;
             }
 

@@ -5,13 +5,13 @@ bin
 */.idea
 *.class
 
-
 /node_modules
 
 *.log
 .idea
 .sass-cache
 .DS_Store
+tmp
 
 .project
 .settings
@@ -24,7 +24,10 @@ src/bin/decorators.js
 src/bin/*.xme
 
 /src-cov
+/coverage
 # ignore file system blob storage files
 blob-local-storage
 
 *.swp
+
+webgme-*.tgz

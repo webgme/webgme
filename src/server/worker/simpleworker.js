@@ -76,13 +76,13 @@ requirejs(['worker/constants',
         storage.openDatabase(function (err) {
           if (err) {
             initialized = false;
-            process.send({
+            safeSend({
               pid: process.pid,
               type: CONSTANT.msgTypes.info,
               info: 'worker initialization failed, try again'
             });
           } else {
-            process.send({pid: process.pid, type: CONSTANT.msgTypes.initialized});
+            safeSend({pid: process.pid, type: CONSTANT.msgTypes.initialized});
           }
         });
       }
@@ -559,6 +559,17 @@ requirejs(['worker/constants',
       }
     };
 
+    var safeSend = function(msg){
+      try {
+        process.send(msg);
+      } catch(e) {
+        //TODO check if we should separate some case
+        process.exit(0);
+      }
+    };
+
+
+
     //main message processing loop
     process.on('message', function (parameters) {
       parameters = parameters || {};
@@ -571,11 +582,11 @@ requirejs(['worker/constants',
         case CONSTANT.workerCommands.dumpMoreNodes:
           if (typeof parameters.name === 'string' && typeof parameters.hash === 'string' && parameters.nodes && parameters.nodes.length) {
             resultId = GUID();
-            process.send({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
+            safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
             dumpMoreNodes(parameters.name, parameters.hash, parameters.nodes, function (err, r) {
               if (resultRequested === true) {
                 initResult();
-                process.send({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: r});
+                safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: r});
               } else {
                 resultReady = true;
                 error = err;
@@ -584,15 +595,15 @@ requirejs(['worker/constants',
             });
           } else {
             initResult();
-            process.send({pid: process.pid, type: CONSTANT.msgTypes.request, error: 'invalid parameters'});
+            safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: 'invalid parameters'});
           }
           break;
         case CONSTANT.workerCommands.generateJsonURL:
           resultId = GUID();
-          process.send({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
+          safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
           if (resultRequested === true) {
             initResult();
-            process.send({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: parameters.object});
+            safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: parameters.object});
           } else {
             resultReady = true;
             error = null;
@@ -605,7 +616,7 @@ requirejs(['worker/constants',
               r = result;
 
             initResult();
-            process.send({pid: process.pid, type: CONSTANT.msgTypes.result, error: e, result: r});
+            safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: e, result: r});
           } else {
             resultRequested = true;
           }
@@ -613,21 +624,21 @@ requirejs(['worker/constants',
         case CONSTANT.workerCommands.executePlugin:
           if (typeof parameters.name === 'string' && typeof parameters.context === 'object') {
             executePlugin(parameters.user, parameters.name, parameters.webGMESessionId, parameters.context, function (err, result) {
-              process.send({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: result});
+              safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: result});
             });
           } else {
             initResult();
-            process.send({pid: process.pid, type: CONSTANT.msgTypes.result, error: 'invalid parameters', result: {}});
+            safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: 'invalid parameters', result: {}});
           }
           break;
         case CONSTANT.workerCommands.exportLibrary:
           if (typeof parameters.name === 'string' && typeof parameters.hash === 'string' && typeof parameters.path === 'string') {
             resultId = GUID();
-            process.send({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
+            safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
             exportLibrary(parameters.name, parameters.hash, parameters.path, function (err, r) {
               if (resultRequested === true) {
                 initResult();
-                process.send({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: r});
+                safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: r});
               } else {
                 resultReady = true;
                 error = err;
@@ -636,17 +647,17 @@ requirejs(['worker/constants',
             });
           } else {
             initResult();
-            process.send({pid: process.pid, type: CONSTANT.msgTypes.request, error: 'invalid parameters'});
+            safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: 'invalid parameters'});
           }
           break;
         case CONSTANT.workerCommands.createProjectFromFile:
           if (typeof parameters.name === 'string' && typeof parameters.json === 'object') {
             resultId = GUID();
-            process.send({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
+            safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
             createProject(parameters.webGMESessionId, parameters.name, parameters.json, function (err) {
               if (resultRequested === true) {
                 initResult();
-                process.send({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: null});
+                safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: null});
               } else {
                 resultReady = true;
                 error = err;
@@ -655,16 +666,16 @@ requirejs(['worker/constants',
             });
           } else {
             initResult();
-            process.send({pid: process.pid, type: CONSTANT.msgTypes.request, error: 'invalid parameters'});
+            safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: 'invalid parameters'});
           }
           break;
         case CONSTANT.workerCommands.getAllProjectsInfo:
           resultId = GUID();
-          process.send({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
+          safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
           getAllProjectsInfo(parameters.user, function (err, r) {
             if (resultRequested === true) {
               initResult();
-              process.send({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: r});
+              safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: r});
             } else {
               resultReady = true;
               error = err;
@@ -674,11 +685,11 @@ requirejs(['worker/constants',
           break;
         case CONSTANT.workerCommands.setProjectInfo:
           resultId = GUID();
-          process.send({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
+          safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
           setProjectInfo(parameters.webGMESessionId, parameters.projectId, parameters.info || {}, function (err) {
             if (resultRequested === true) {
               initResult();
-              process.send({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: null});
+              safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: null});
             } else {
               resultReady = true;
               error = err;
@@ -688,11 +699,11 @@ requirejs(['worker/constants',
           break;
         case CONSTANT.workerCommands.getProjectInfo:
           resultId = GUID();
-          process.send({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
+          safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
           getProjectInfo(parameters.webGMESessionId, parameters.projectId, function (err, res) {
             if (resultRequested === true) {
               initResult();
-              process.send({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: res});
+              safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: res});
             } else {
               resultReady = true;
               error = err;
@@ -702,11 +713,11 @@ requirejs(['worker/constants',
           break;
         case CONSTANT.workerCommands.getAllInfoTags:
           resultId = GUID();
-          process.send({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
+          safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
           getAllInfoTags(parameters.webGMESessionId, function (err, res) {
             if (resultRequested === true) {
               initResult();
-              process.send({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: res});
+              safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: res});
             } else {
               resultReady = true;
               error = err;
@@ -716,11 +727,11 @@ requirejs(['worker/constants',
           break;
         case CONSTANT.workerCommands.setBranch:
           resultId = GUID();
-          process.send({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
+          safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
           setBranch(parameters.webGMESessionId, parameters.project, parameters.branch, parameters.old, parameters.new, function (err, r) {
             if (resultRequested === true) {
               initResult();
-              process.send({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: r});
+              safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: r});
             } else {
               resultReady = true;
               error = err;
@@ -731,26 +742,27 @@ requirejs(['worker/constants',
         case CONSTANT.workerCommands.connectedWorkerStart:
           initConnectedWorker(parameters.workerName, parameters.sessionId, parameters.project, parameters.branch, function (err) {
             if (err) {
-              process.send({pid: process.pid, type: CONSTANT.msgTypes.request, error: err, resid: null});
+              safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: err, resid: null});
             } else {
-              process.send({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: process.pid});
+              safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: process.pid});
             }
           });
           break;
         case CONSTANT.workerCommands.connectedWorkerQuery:
           connectedWorkerQuery(parameters, function (err, result) {
-            process.send({pid: process.pid, type: CONSTANT.msgTypes.query, error: err, result: result});
+            safeSend({pid: process.pid, type: CONSTANT.msgTypes.query, error: err, result: result});
           });
           break;
         case CONSTANT.workerCommands.connectedWorkerStop:
           connectedworkerStop(function (err) {
-            process.send({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: null});
+            safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: null});
           });
           break;
         default:
-          process.send({error: 'unknown command'});
+          safeSend({error: 'unknown command'});
       }
     });
 
-    process.send({pid: process.pid, type: CONSTANT.msgTypes.initialize});
+    safeSend({pid: process.pid, type: CONSTANT.msgTypes.initialize});
+
   });

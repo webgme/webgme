@@ -4,6 +4,11 @@
         "panel": "js/Panels/ModelEditor/ModelEditorPanel",
         "DEBUG_ONLY": false},
 
+    {"id": "Block Editor",
+        "title": "Block Editor",
+        "panel": "js/Panels/BlockEditor/BlockEditorPanel",
+        "DEBUG_ONLY": true},
+
     {"id": "METAAspect",
         "title": "Meta",
         "panel": "js/Panels/MetaEditor/MetaEditorPanel",

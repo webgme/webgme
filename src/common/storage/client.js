@@ -121,7 +121,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                 } else {
                     //we should try to reconnect
                     callback(null);
-                    socket.socket.reconnect();
+                    //socket.socket.reconnect();
                 }
             } else {
                 var guid = GUID(), firstConnection = true;
@@ -135,8 +135,9 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                         'connect timeout': 10,
                         'reconnection delay': 1,
                         'force new connection': true,
-                        'reconnect': false,
-                        'query':"webGMESessionId="+options.webGMESessionId
+                        'reconnect': false, // FIXME: should we set it to true?
+                        'query':"webGMESessionId="+options.webGMESessionId,
+                        'transports': ['websocket']
                     });
 
                     socket.on('connect', function () {
@@ -186,13 +187,11 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                 };
 
                 if (options.type === 'browser') {
-                    require([ _hostAddress + "/socket.io/socket.io.js" ], function () {
+                    require([ _hostAddress + "/socket.io/socket.io.js" ], function (io) {
                         IO = io;
                         IOReady();
                     });
                 } else {
-                    /*IO = require("socket.io-client");
-                     IOReady();*/
                     require([ 'socket.io-client' ], function (io) {
                         IO = io;
                         IOReady();

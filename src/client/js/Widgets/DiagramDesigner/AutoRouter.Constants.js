@@ -6,7 +6,6 @@
  */
 
 define(['./AutoRouter.Point'], function (ArPoint){
-//define([], function (){
 
     "use strict"; 
 
@@ -66,7 +65,7 @@ define(['./AutoRouter.Point'], function (ArPoint){
 
         "ARPORT_Default": 0x00FF,
 
-        //RoutingDirection vars 
+        // RoutingDirection vars 
         "Dir_None": -1,
         "Dir_Top": 0,
         "Dir_Right": 1,
@@ -74,8 +73,8 @@ define(['./AutoRouter.Point'], function (ArPoint){
         "Dir_Left": 3,
         "Dir_Skew": 4,
         
-        //INT_MIN/MAX in js that can be shifted
-        //http://stackoverflow.com/questions/307179/what-is-javascripts-max-int-whats-the-highest-integer-value-a-number-can-go-t
+        // INT_MIN/MAX in js that can be shifted
+        // http://stackoverflow.com/questions/307179/what-is-javascripts-max-int-whats-the-highest-integer-value-a-number-can-go-t
         "INT_MIN": -4503599627370496,
         "INT_MAX": 4503599627370496,
 
