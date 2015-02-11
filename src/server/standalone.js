@@ -47,11 +47,14 @@ define(['logManager',
         // if the config is not set we use the global
         CONFIG = CONFIG || WebGMEGlobal.getConfig();
         //public functions
-        function start(){
+        function start(callback){
+            if (typeof callback !== 'function') {
+                callback = function () {};
+            }
             if(CONFIG.httpsecure){
-                __httpServer = Https.createServer({key:__secureSiteInfo.key,cert:__secureSiteInfo.certificate}, __app).listen(CONFIG.port);
+                __httpServer = Https.createServer({key:__secureSiteInfo.key,cert:__secureSiteInfo.certificate}, __app).listen(CONFIG.port, callback);
             } else {
-                __httpServer = Http.createServer(__app).listen(CONFIG.port);
+                __httpServer = Http.createServer(__app).listen(CONFIG.port, callback);
             }
             //creating the proper storage for the standalone server
             __storageOptions = {combined:__httpServer,logger:LogManager.create("StandAloneWebGMEServer-socket.io"),session:false,cookieID:CONFIG.sessioncookieid};

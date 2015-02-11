@@ -227,7 +227,7 @@ var testTerritory = function(level,cb){
 
 function createTestProject(callback) {
 
- CLNT.connectToDatabaseAsync({},function (err) {
+    CLNT.connectToDatabaseAsync({},function (err) {
    if (err) {
     callback(err);
     return;
@@ -308,17 +308,17 @@ function createTestProject(callback) {
 
 describe('Client tests', function () {
 
- before(function(done) {
-  config.port = 45013;
-  WebGMEGlobal.setConfig(config);
+    before(function(done) {
+        config.port = 45013;
+        WebGMEGlobal.setConfig(config);
 
-  SRV = new global.WebGME.standaloneServer();
-  SRV.start();
+        SRV = new global.WebGME.standaloneServer();
+        SRV.start(function() {
+            CLNT = new CLIENT({host: " ", port: WebGMEGlobal.getConfig().port});
 
-  CLNT = new CLIENT({host:" ",port:WebGMEGlobal.getConfig().port});
-
-  createTestProject(done);
- });
+            createTestProject(done);
+        });
+    });
 
  after(function(done) {
    CLNT.deleteProjectAsync(projectName, function (err) {
