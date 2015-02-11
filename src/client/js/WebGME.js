@@ -272,6 +272,8 @@ define(['logManager',
                 if (err) {
                     logger.error(err);
                     openProjectLoadDialog();
+                } else {
+                    selectObject();
                 }
             });
         };
