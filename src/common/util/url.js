@@ -20,6 +20,7 @@ define(function(){
     }
     function removeSpecialChars(text){
         text = text.replace(/%23/g,'#');
+        text = text.replace(/%26/g,'&');
         text = text.replace(/%2f/g,'/');text = text.replace(/%2F/g,'/');
         return text;
     }
@@ -28,6 +29,7 @@ define(function(){
             return text;
         }
         text = text.replace(/#/g,'%23');
+        text = text.replace(/&/g,'%26');
         text = text.replace(/\//g,'%2F');
         return text;
     }
