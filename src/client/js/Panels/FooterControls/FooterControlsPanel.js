@@ -54,7 +54,7 @@ define([
 
         //add ISIS link
         var pullLeft = $('<div class="pull-left inline"></div>');
-        pullLeft.append($('<div class="navbar-text"><div class="webgme-copyright">© 2014 <a href="http://www.isis.vanderbilt.edu/" title="Vanderbilt University" target="_blank">Vanderbilt University</a></div></div>'));
+        pullLeft.append($('<div class="navbar-text"><div class="webgme-copyright">© 2015 <a href="http://www.isis.vanderbilt.edu/" title="Vanderbilt University" target="_blank">Vanderbilt University</a></div></div>'));
         navBarInner.append(pullLeft);
 
         //add version UI piece
