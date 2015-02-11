@@ -51,7 +51,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
             }
 
             //we try to dig it from the signed cookie
-            if(options.cookieID && options.secret) {
+            if(options.cookieID && options.secret && handshakeData && handshakeData.headers && handshakeData.headers.cookie) {
                 return require('connect').utils.parseSignedCookie(URL.parseCookie(handshakeData.headers.cookie)[options.cookieID],options.secret);
             }
             return undefined;
@@ -208,13 +208,18 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
 
             //TODO check if this really helps
             _socket.on('error',function(err){
-                console.log("Error have been raised on socket.io level!!! - ",err);
-                options.logger.error('error raised: ' + err);
+                console.log("Error have been raised on global socket.io level!!! - ",err);
+                options.logger.error('error raised by socket server: ' + err);
             });
 
 
             _socket.on('connection',function(socket){
                 //first we connect our socket id to the session
+
+                socket.on('error',function(err){
+                    console.log("Error have been raised on socket.io level!!! - ",err);
+                    options.logger.error('error raised by socket: ' + err);
+                });
 
                 if (process.env['LOG_WEBGME_TIMING']) {
                     var oldon = socket.on;
