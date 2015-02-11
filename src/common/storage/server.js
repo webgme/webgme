@@ -4,7 +4,7 @@
  * Author: Tamas Kecskes
  */
 
-define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkermanager" ], function(ASSERT,GUID,URL,IO,SWM){
+define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkermanager","cookie-parser" ], function(ASSERT,GUID,URL,IO,SWM,COOKIE){
 
     var server = function(_database,options){
         ASSERT(typeof _database === 'object');
@@ -45,8 +45,16 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 BRANCH_UPDATED : "BRANCH_UPDATED"
             };
 
-        function getSessionID(socket){
-            return socket.handshake.webGMESessionId;
+        function getSessionID(handshakeData){
+            if(handshakeData && handshakeData.query && handshakeData.query.webGMESessionId && handshakeData.query.webGMESessionId !== 'undefined'){
+                return handshakeData.query.webGMESessionId;
+            }
+
+            //we try to dig it from the signed cookie
+            if(options.cookieID && options.secret && handshakeData && handshakeData.headers && handshakeData.headers.cookie) {
+                return COOKIE.signedCookie(URL.parseCookie(handshakeData.headers.cookie)[options.cookieID],options.secret);
+            }
+            return undefined;
         }
 
         function checkDatabase(callback){
@@ -165,8 +173,8 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 // or the data has a webGMESession member which should also contain the sessionID - currently the same as the cookie
                 if (options.session === true){
                     var sessionID;
-                    if(data.webGMESessionId === undefined){
-                        if(data.query.webGMESessionId && data.query.webGMESessionId !== 'undefined'){
+                    /*if(data.webGMESessionId === undefined){
+                        if(data.query && data.query.webGMESessionId && data.query.webGMESessionId !== 'undefined'){
                             sessionID = data.query.webGMESessionId;
                         }
                     }
@@ -175,6 +183,8 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                             var cookie = URL.parseCookie(data.headers.cookie);
                             if(cookie[options.cookieID] !== undefined || cookie[options.cookieID] !== null){
                                 sessionID = require('connect').utils.parseSignedCookie(cookie[options.cookieID],options.secret);
+                                data.query = data.query || {};
+                                data.query.webGMESessionId = sessionID;
                                 data.webGMESessionId = sessionID;
                             }
                         } else {
@@ -182,10 +192,10 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                             console.log('DEBUG HANDSHAKE INFO', JSON.stringify(data.query));
                             return accept(null,false);
                         }
-                    }
+                    }*/
+                    sessionID = getSessionID(data);
                     options.sessioncheck(sessionID,function(err,isOk){
                         if(!err && isOk === true){
-                            data.webGMESessionId = sessionID;
                             return accept(null,true);
                         } else {
                             return accept(err,false);
@@ -198,13 +208,18 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
 
             //TODO check if this really helps
             _socket.on('error',function(err){
-                console.log("Error have been raised on socket.io level!!! - ",err);
-                options.logger.error('error raised: ' + err);
+                console.log("Error have been raised on global socket.io level!!! - ",err);
+                options.logger.error('error raised by socket server: ' + err);
             });
 
 
             _socket.on('connection',function(socket){
                 //first we connect our socket id to the session
+
+                socket.on('error',function(err){
+                    console.log("Error have been raised on socket.io level!!! - ",err);
+                    options.logger.error('error raised by socket: ' + err);
+                });
 
                 if (process.env['LOG_WEBGME_TIMING']) {
                     var oldon = socket.on;
@@ -255,7 +270,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                             callback(err);
                         } else {
                             if (projectName) {
-                                checkProject(getSessionID(socket), projectName, function (err, project) {
+                                checkProject(getSessionID(socket.handshake), projectName, function (err, project) {
                                     if (err) {
                                         callback(err);
                                     } else {
@@ -300,7 +315,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                                     var allowedNames = [];
                                     var answerNeeded = names.length;
                                     var isProjectReadable = function(name,callback){
-                                        options.authInfo(getSessionID(socket),name,function(err,authObj){
+                                        options.authInfo(getSessionID(socket.handshake),name,function(err,authObj){
                                             if(!err){
                                                 if(authObj && authObj.read === true){
                                                     allowedNames.push(name);
@@ -333,13 +348,13 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                         if(err){
                             callback(err);
                         } else {
-                            options.authInfo(getSessionID(socket),name,callback);
+                            options.authInfo(getSessionID(socket.handshake),name,callback);
                         }
                     });
                 });
 
                 socket.on('deleteProject', function(projectName,callback){
-                    options.authorization(getSessionID(socket),projectName,'delete',function(err,cando){
+                    options.authorization(getSessionID(socket.handshake),projectName,'delete',function(err,cando){
                         if(err || !cando){
                             callback(err);
                         } else {
@@ -364,7 +379,8 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                             _database.getProjectNames(function(err,names){
                                 if(names.indexOf(projectName) === -1){
                                     //project creation
-                                    createProject(getSessionID(socket),projectName,function(err,project){
+                                    console.warn(getSessionID(socket.handshake));
+                                    createProject(getSessionID(socket.handshake),projectName,function(err,project){
                                         if(!err){
                                             fireEvent({type:SERVER_EVENT.PROJECT_CREATED,project:projectName});
                                         }
@@ -372,7 +388,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                                     });
 
                                 } else {
-                                    checkProject(getSessionID(socket),projectName,callback);
+                                    checkProject(getSessionID(socket.handshake),projectName,callback);
                                 }
                             });
                         }
@@ -381,7 +397,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
 
                 socket.on('closeProject', function(projectName,callback){
                     callback = callback || function() {};
-                    checkProject(getSessionID(socket),projectName,function(err,project){
+                    checkProject(getSessionID(socket.handshake),projectName,function(err,project){
                         if(err) {
                             callback(err);
                         } else {
@@ -400,7 +416,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 });
 
                 socket.on('loadObject', function(projectName,hash,callback){
-                    checkProject(getSessionID(socket),projectName,function(err,project){
+                    checkProject(getSessionID(socket.handshake),projectName,function(err,project){
                         if(err){
                             callback(err);
                         } else {
@@ -429,7 +445,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                             }
                         };
 
-                    checkProject(getSessionID(socket),projectName,function(err,p){
+                    checkProject(getSessionID(socket.handshake),projectName,function(err,p){
                         if(err){
                             callback(err);
                         } else {
@@ -446,11 +462,11 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 });
 
                 socket.on('insertObject', function(projectName,object,callback){
-                    checkProject(getSessionID(socket),projectName,function(err,project){
+                    checkProject(getSessionID(socket.handshake),projectName,function(err,project){
                         if(err){
                             callback(err);
                         } else {
-                            options.authorization(getSessionID(socket),projectName,'write',function(err,cando){
+                            options.authorization(getSessionID(socket.handshake),projectName,'write',function(err,cando){
                                 if(!err && cando === true){
                                     project.insertObject(object,callback);
                                 } else {
@@ -475,12 +491,12 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                             }
                         };
 
-                    checkProject(getSessionID(socket),projectName,function(err,p){
+                    checkProject(getSessionID(socket.handshake),projectName,function(err,p){
                         if(err){
                             callback(err);
                         } else {
                             project = p;
-                            options.authorization(getSessionID(socket),projectName,'write',function(err,cando){
+                            options.authorization(getSessionID(socket.handshake),projectName,'write',function(err,cando){
                                 if(!err && cando === true){
                                     if(needed > 0){
                                         for(i=0;i<keys.length;i++){
@@ -500,7 +516,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 });
 
                 socket.on('getInfo', function(projectName,callback){
-                    checkProject(getSessionID(socket),projectName,function(err,project){
+                    checkProject(getSessionID(socket.handshake),projectName,function(err,project){
                         if(err){
                             callback(err);
                         } else {
@@ -509,11 +525,11 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                     });
                 });
                 socket.on('setInfo', function(projectName,info,callback){
-                    checkProject(getSessionID(socket),projectName,function(err,project){
+                    checkProject(getSessionID(socket.handshake),projectName,function(err,project){
                         if(err){
                             callback(err);
                         } else {
-                            options.authorization(getSessionID(socket),projectName,'write',function(err,cando) {
+                            options.authorization(getSessionID(socket.handshake),projectName,'write',function(err,cando) {
                                 if(!err && cando === true){
                                     project.setInfo(info, callback);
                                 } else {
@@ -525,7 +541,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 });
 
                 socket.on('findHash', function(projectName,beginning,callback){
-                    checkProject(getSessionID(socket),projectName,function(err,project){
+                    checkProject(getSessionID(socket.handshake),projectName,function(err,project){
                         if(err){
                             callback(err);
                         } else {
@@ -535,7 +551,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 });
 
                 socket.on('dumpObjects', function(projectName,callback){
-                    checkProject(getSessionID(socket),projectName,function(err,project){
+                    checkProject(getSessionID(socket.handshake),projectName,function(err,project){
                         if(err){
                             callback(err);
                         } else {
@@ -544,7 +560,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                     });
                 });
                 socket.on('getBranchNames', function(projectName,callback){
-                    checkProject(getSessionID(socket),projectName,function(err,project){
+                    checkProject(getSessionID(socket.handshake),projectName,function(err,project){
                         if(err){
                             callback(err);
                         } else {
@@ -553,7 +569,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                     });
                 });
                 socket.on('getBranchHash', function(projectName,branch,oldhash,callback){
-                    checkProject(getSessionID(socket),projectName,function(err,project){
+                    checkProject(getSessionID(socket.handshake),projectName,function(err,project){
                         if(err){
                             callback(err);
                         } else {
@@ -562,11 +578,11 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                     });
                 });
                 socket.on('setBranchHash', function(projectName,branch,oldhash,newhash,callback){
-                    checkProject(getSessionID(socket),projectName,function(err,project){
+                    checkProject(getSessionID(socket.handshake),projectName,function(err,project){
                         if(err){
                             callback(err);
                         } else {
-                            options.authorization(getSessionID(socket),projectName,'write',function(err,cando){
+                            options.authorization(getSessionID(socket.handshake),projectName,'write',function(err,cando){
                                 if(!err && cando === true){
                                     project.setBranchHash(branch,oldhash,newhash,function(err){
                                         if(!err){
@@ -589,7 +605,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                     });
                 });
                 socket.on('getCommits',function(projectName,before,number,callback){
-                    checkProject(getSessionID(socket),projectName,function(err,project){
+                    checkProject(getSessionID(socket.handshake),projectName,function(err,project){
                         if(err){
                             callback(err);
                         } else {
@@ -602,7 +618,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 //worker commands
                 socket.on('simpleRequest',function(parameters,callback){
                     if(socket.handshake){
-                        parameters.webGMESessionId = getSessionID(socket) || null;
+                        parameters.webGMESessionId = getSessionID(socket.handshake) || null;
                     }
                     _workerManager.request(parameters,function(err,id){
                         if(!err && id){
@@ -628,7 +644,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
 
                 //token for REST
                 socket.on('getToken',function(callback){
-                    options.getToken(getSessionID(socket),callback);
+                    options.getToken(getSessionID(socket.handshake),callback);
                 });
 
                 socket.on('disconnect',function(){
