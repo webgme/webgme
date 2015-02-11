@@ -4,7 +4,7 @@
  * Author: Tamas Kecskes
  */
 
-define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkermanager" ], function(ASSERT,GUID,URL,IO,SWM){
+define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkermanager","cookie-parser" ], function(ASSERT,GUID,URL,IO,SWM,COOKIE){
 
     var server = function(_database,options){
         ASSERT(typeof _database === 'object');
@@ -52,7 +52,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
 
             //we try to dig it from the signed cookie
             if(options.cookieID && options.secret && handshakeData && handshakeData.headers && handshakeData.headers.cookie) {
-                return require('connect').utils.parseSignedCookie(URL.parseCookie(handshakeData.headers.cookie)[options.cookieID],options.secret);
+                return COOKIE.signedCookie(URL.parseCookie(handshakeData.headers.cookie)[options.cookieID],options.secret);
             }
             return undefined;
         }
