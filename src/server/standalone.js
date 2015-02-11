@@ -747,17 +747,18 @@ define(['logManager',
             console.log(CONFIG);
         }
         var networkIfs = OS.networkInterfaces();
+        var addresses = 'Valid addresses of webgme server: ';
         for(var dev in networkIfs){
             networkIfs[dev].forEach(function(netIf){
                 if(netIf.family === 'IPv4'){
                     var address = CONFIG.httpsecure ? 'https' : 'http' + '://' + netIf.address + ':' + CONFIG.port;
-                    __logger.info(address);
-                    if(CONFIG.debug === true){
-                        console.log('valid address of webgme server: '+address);
-                    }
+                    addresses = addresses + '  ' + address;
                 }
             });
         }
+
+        __logger.info(addresses);
+        console.log(addresses);
 
         __logger.info("standalone server initialization completed");
 
