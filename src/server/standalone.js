@@ -378,7 +378,7 @@ define(['logManager',
         __sessionStore = new SSTORE()
 
         __logger.info("initializing authentication modules");
-        __gmeAuth = new GMEAUTH({session:__sessionStore,host:CONFIG.mongoip,port:CONFIG.mongoport,database:CONFIG.mongodatabase,guest:CONFIG.guest});
+        __gmeAuth = new GMEAUTH({session:__sessionStore,host:CONFIG.mongoip,port:CONFIG.mongoport,database:CONFIG.mongodatabase,guest:CONFIG.guest,collection:CONFIG.usercollection});
         __forgeAuth = new VFAUTH({session:__sessionStore});
 
         __logger.info("initializing passport module for user management");

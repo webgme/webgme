@@ -136,7 +136,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                         'reconnection delay': 1,
                         'force new connection': true,
                         'reconnect': false, // FIXME: should we set it to true?
-                        'query':"webGMESessionId="+options.webGMESessionId,
+                        'query':"webGMESessionId="+options.webGMESessionId, //this option is only used when some user initiated server function connects to the webgme server
                         'transports': ['websocket']
                     });
 

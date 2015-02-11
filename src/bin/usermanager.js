@@ -9,7 +9,12 @@ if (typeof define !== "function") {
 
     requirejs.config({
         nodeRequire: require,
-        baseUrl: __dirname + "/.."
+        baseUrl: __dirname + "/..",
+        paths:{
+            'util':'common/util',
+            'core':'common/core',
+            'storage':'common/storage'
+        }
     });
 
     requirejs([ "util/common", "util/assert", "core/tasync", 'util/guid' ], function(COMMON, ASSERT, TASYNC,GUID) {
