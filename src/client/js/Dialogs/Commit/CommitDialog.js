@@ -66,13 +66,16 @@ define([
             this._branchAlertLabel.text(actualBranchName);
         }
 
-        this._txtMessage.on('keydown', function () {
+        self._controlGroupMessage.addClass('has-error');
+        self._btnCommit.disable(true);
+
+        this._txtMessage.on('keyup', function () {
             var val = self._txtMessage.val();
-            if (val === "") {
-                self._controlGroupMessage.addClass("error");
+            if (val === '') {
+                self._controlGroupMessage.addClass('has-error');
                 self._btnCommit.disable(true);
             } else {
-                self._controlGroupMessage.removeClass("error");
+                self._controlGroupMessage.removeClass('has-error');
                 self._btnCommit.disable(false);
             }
         });

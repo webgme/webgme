@@ -7,7 +7,6 @@ require('../_globals.js');
 var should = require('chai').should(),
     WebGME = require('../../webgme'),
     requirejs = require('requirejs'),
-    config = WebGMEGlobal.getConfig(),
 
     superagent = require('superagent'),
     agent = superagent.agent(),
@@ -20,8 +19,9 @@ describe('standalone server', function () {
 
     it('should start and stop and start and stop', function (done) {
         // we have to set the config here
-        config = WebGMEGlobal.getConfig();
+        var config = WebGMEGlobal.getConfig();
         config.port = 9001;
+        config.authentication = false;
 
         server = WebGME.standaloneServer(config);
         server.start(function () {
@@ -37,7 +37,7 @@ describe('standalone server', function () {
 
         before(function (done) {
             // we have to set the config here
-            config = WebGMEGlobal.getConfig();
+            var config = WebGMEGlobal.getConfig();
             config.port = 9001;
             config.authentication = false;
 
@@ -142,7 +142,7 @@ describe('standalone server', function () {
 
         before(function (done) {
             // we have to set the config here
-            config = WebGMEGlobal.getConfig();
+            var config = WebGMEGlobal.getConfig();
             config.port = 9001;
             config.authentication = true;
 
