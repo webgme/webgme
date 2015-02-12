@@ -544,21 +544,8 @@ define( [
       };
 
       createBranch = function ( data ) {
-
-        console.log('create branch');
-
-        // TODO: get available branch name for project
-        var newBranchName = data.branchId + '_copy';
-
-        self.gmeClient.createGenericBranchAsync( data.projectId, newBranchName, data.branchInfo, function ( err ) {
-          if ( err ) {
-            console.error( err );
-            return;
-          }
-
-          //self.selectProject({projectId: data.projectId, branchId: data.branchId + '_copy'});
-        } );
-
+        var   prd = new ProjectRepositoryDialog( self.gmeClient );
+          prd.show();
       };
 
       deleteBranch = function ( data ) {
