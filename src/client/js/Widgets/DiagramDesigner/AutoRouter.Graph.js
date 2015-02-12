@@ -1,4 +1,4 @@
-/*globals define*/
+/*globals console,setTimeout,define*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
@@ -23,9 +23,9 @@ define(['logManager',
                                                AutoRouterEdge,
                                                AutoRouterEdgeList) {
 
-    "use strict"; 
+    'use strict'; 
 
-	var _logger = logManager.create("AutoRouterGraph"),
+	var _logger = logManager.create('AutoRouterGraph'),
         COUNTER = 1;  // Used for unique ids
 
     var AutoRouterGraph = function () {
@@ -109,7 +109,7 @@ define(['logManager',
     AutoRouterGraph.prototype._isLineClipBufferBoxes = function (p1, p2) {
         var rect = new ArRect(p1, p2);
         rect.normalizeRect();
-        assert(rect.left === rect.right || rect.ceil === rect.floor, "ARGraph.this._isLineClipBoxes: rect.left === rect.right || rect.ceil === rect.floor FAILED");
+        assert(rect.left === rect.right || rect.ceil === rect.floor, 'ARGraph.this._isLineClipBoxes: rect.left === rect.right || rect.ceil === rect.floor FAILED');
 
         if (rect.left === rect.right) {
             rect.right++;
@@ -124,7 +124,7 @@ define(['logManager',
     AutoRouterGraph.prototype._isLineClipBoxes = function (p1, p2) {
         var rect = new ArRect(p1, p2);
         rect.normalizeRect();
-        assert(rect.left === rect.right || rect.ceil === rect.floor, "ARGraph.isLineClipBoxes: rect.left === rect.right || rect.ceil === rect.floor FAILED");
+        assert(rect.left === rect.right || rect.ceil === rect.floor, 'ARGraph.isLineClipBoxes: rect.left === rect.right || rect.ceil === rect.floor FAILED');
 
         if (rect.left === rect.right) {
             rect.right++;
@@ -141,8 +141,8 @@ define(['logManager',
     };
 
     AutoRouterGraph.prototype._add = function (path) {
-        assert(path !== null, "ARGraph.add: path !== null FAILED");
-        assert(!path.hasOwner(), "ARGraph.add: !path.hasOwner() FAILED");
+        assert(path !== null, 'ARGraph.add: path !== null FAILED');
+        assert(!path.hasOwner(), 'ARGraph.add: !path.hasOwner() FAILED');
 
         path.owner = this;
 
@@ -203,15 +203,13 @@ define(['logManager',
         var bufferObject = this.box2bufferBox[details.box.id],
             children = bufferObject.children,
             i = bufferObject.children.length,
-            parentBox = bufferObject.box,
             point = details.point,
             dir = details.dir,
-            boxRect = new ArRect(details.box.rect),
-            dir2;
+            boxRect = new ArRect(details.box.rect);
 
         boxRect.inflateRect(CONSTANTS.BUFFER); //Create a copy of the buffer box
 
-        assert(Utils.isRightAngle (dir), "ARGraph.getOutOfBox: Utils.isRightAngle (dir) FAILED");
+        assert(Utils.isRightAngle (dir), 'ARGraph.getOutOfBox: Utils.isRightAngle (dir) FAILED');
 
         while (boxRect.ptInRect(point )) {
             if (Utils.isHorizontal(dir)) {
@@ -229,7 +227,7 @@ define(['logManager',
             i = bufferObject.children.length;
         }
 
-        assert(!boxRect.ptInRect(point ), "ARGraph.getOutOfBox: !boxRect.ptInRect( point) FAILED");
+        assert(!boxRect.ptInRect(point ), 'ARGraph.getOutOfBox: !boxRect.ptInRect( point) FAILED');
     };
 
     AutoRouterGraph.prototype._goToNextBufferBox = function (args) {
@@ -249,8 +247,8 @@ define(['logManager',
             stophere = Utils.getPointCoord (stophere, dir);
         }
 
-        assert(Utils.isRightAngle (dir), "ArGraph.goToNextBufferBox: Utils.isRightAngle (dir) FAILED");
-        assert(Utils.getPointCoord (point, dir) !== stophere, "ArGraph.goToNextBufferBox: Utils.getPointCoord (point, dir) !== stophere FAILED");
+        assert(Utils.isRightAngle (dir), 'ArGraph.goToNextBufferBox: Utils.isRightAngle (dir) FAILED');
+        assert(Utils.getPointCoord (point, dir) !== stophere, 'ArGraph.goToNextBufferBox: Utils.getPointCoord (point, dir) !== stophere FAILED');
 
         var boxby = null,
             i = -1,
@@ -277,9 +275,9 @@ define(['logManager',
     };
 
     AutoRouterGraph.prototype._hugChildren = function (bufferObject, point, dir1, dir2, exitCondition) { 
-        // This method creates a path that enters the parent box and "hugs" the children boxes (remains within one pixel of them) 
+        // This method creates a path that enters the parent box and 'hugs' the children boxes (remains within one pixel of them) 
         // and follows them out.
-        assert((dir1 + dir2) % 2 === 1, "ARGraph.hugChildren: One and only one direction must be horizontal");
+        assert((dir1 + dir2) % 2 === 1, 'ARGraph.hugChildren: One and only one direction must be horizontal');
         var children = bufferObject.children,
             parentBox = bufferObject.box,
             initPoint = new ArPoint(point),
@@ -292,7 +290,7 @@ define(['logManager',
             nextChild,
             old;
 
-        assert(child !== null, "ARGraph.hugChildren: child !== null FAILED");
+        assert(child !== null, 'ARGraph.hugChildren: child !== null FAILED');
         exitCondition = exitCondition === undefined ? function(pt) { return !parentBox.ptInRect(pt); } : exitCondition;
 
         while (hasExit && !exitCondition(point, bufferObject)) {
@@ -350,8 +348,8 @@ define(['logManager',
             stophere = Utils.getPointCoord (stophere, dir);
         }
 
-        assert(Utils.isRightAngle (dir), "ArGraph.goToNextBox: Utils.isRightAngle (dir) FAILED");
-        assert(Utils.getPointCoord (point, dir) !== stophere, "ArGraph.goToNextBox: Utils.getPointCoord (point, dir) !== stophere FAILED");
+        assert(Utils.isRightAngle (dir), 'ArGraph.goToNextBox: Utils.isRightAngle (dir) FAILED');
+        assert(Utils.getPointCoord (point, dir) !== stophere, 'ArGraph.goToNextBox: Utils.getPointCoord (point, dir) !== stophere FAILED');
 
         var boxby = null,
             iter = boxList.length,
@@ -406,7 +404,7 @@ define(['logManager',
                 }
             }
         } else {
-            assert(start.x === end.x, "ARGraph.this.getLimitsOfEdge: start.x === end.x FAILED");
+            assert(start.x === end.x, 'ARGraph.this.getLimitsOfEdge: start.x === end.x FAILED');
 
             if (start.y > end.y) {
                 t = start.y;
@@ -430,7 +428,7 @@ define(['logManager',
 
         max--;
 
-        return { "min": min, "max": max };
+        return { min: min, max: max };
     };
 
     AutoRouterGraph.prototype._isPointInBox = function (point) {
@@ -443,12 +441,8 @@ define(['logManager',
             startpoint = path.startpoint,
             endpoint = path.endpoint;
 
-        assert(startport.hasPoint(startpoint), "ARGraph.connect: startport.hasPoint(startpoint) FAILED");
-        assert(endport.hasPoint(endpoint), "ARGraph.connect: endport.hasPoint(endpoint) FAILED");
-
-        if (startpoint.equals(endpoint)) {
-            Utils.stepOneInDir(startpoint, Utils.nextClockwiseDir(startdir));
-        }
+        assert(startport.hasPoint(startpoint), 'ARGraph.connect: startport.hasPoint(startpoint) FAILED');
+        assert(endport.hasPoint(endpoint), 'ARGraph.connect: endport.hasPoint(endpoint) FAILED');
 
         var startRoot = startport.owner.getRootBox(),
             endRoot = endport.owner.getRootBox(),
@@ -456,6 +450,10 @@ define(['logManager',
             endId = endRoot.id,
             startdir = startport.port_OnWhichEdge(startpoint),
             enddir = endport.port_OnWhichEdge(endpoint);
+
+        if (startpoint.equals(endpoint)) {
+            Utils.stepOneInDir(startpoint, Utils.nextClockwiseDir(startdir));
+        }
 
         if (path.isAutoRouted() && this.box2bufferBox[startId] === this.box2bufferBox[endId] && 
             startdir === Utils.reverseDir(enddir) && startRoot !== endRoot) {
@@ -469,42 +467,38 @@ define(['logManager',
     };
 
     AutoRouterGraph.prototype._connectPathWithPoints = function (path, startpoint, endpoint) {
-        assert(startpoint instanceof ArPoint, "ARGraph.connect: startpoint instanceof ArPoint FAILED");
-        assert(path !== null && path.owner === this, "ARGraph.connect: path !== null && path.owner === self FAILED");
-        assert(!path.isConnected(), "ARGraph.connect: !path.isConnected() FAILED");
-        assert(!startpoint.equals(endpoint), "ARGraph.connect: !startpoint.equals(endpoint) FAILED");
+        assert(startpoint instanceof ArPoint, 'ARGraph.connect: startpoint instanceof ArPoint FAILED');
+        assert(path !== null && path.owner === this, 'ARGraph.connect: path !== null && path.owner === self FAILED');
+        assert(!path.isConnected(), 'ARGraph.connect: !path.isConnected() FAILED');
+        assert(!startpoint.equals(endpoint), 'ARGraph.connect: !startpoint.equals(endpoint) FAILED');
 
         var startPort = path.getStartPort();
-        assert(startPort !== null, "ARGraph.connect: startPort !== null FAILED");
+        assert(startPort !== null, 'ARGraph.connect: startPort !== null FAILED');
 
         var startdir = startPort.port_OnWhichEdge(startpoint),
             endPort = path.getEndPort();
 
-        assert(endPort !== null, "ARGraph.connect: endPort !== null FAILED");
+        assert(endPort !== null, 'ARGraph.connect: endPort !== null FAILED');
         var enddir = endPort.port_OnWhichEdge(endpoint);
-        assert(Utils.isRightAngle (startdir) && Utils.isRightAngle (enddir), "ARGraph.connect: Utils.isRightAngle (startdir) && Utils.isRightAngle (enddir) FAILED");
+        assert(Utils.isRightAngle (startdir) && Utils.isRightAngle (enddir), 'ARGraph.connect: Utils.isRightAngle (startdir) && Utils.isRightAngle (enddir) FAILED');
 
         //Find the bufferbox containing startpoint, endpoint
-        var startBox = this.box2bufferBox[startPort.owner.id].box,
-            endBox = this.box2bufferBox[endPort.owner.id].box;
-
         var start = new ArPoint(startpoint);
-        this._getOutOfBox({ "point": start, 
-                            "dir": startdir, 
-                            "end": endpoint, 
-                            "box": startPort.owner } );
-        assert(!start.equals(startpoint), "ARGraph.connect: !start.equals(startpoint) FAILED");
+        this._getOutOfBox({ point: start, 
+                            dir: startdir, 
+                            end: endpoint, 
+                            box: startPort.owner } );
+        assert(!start.equals(startpoint), 'ARGraph.connect: !start.equals(startpoint) FAILED');
 
         var end = new ArPoint(endpoint);
-        this._getOutOfBox({ "point": end, 
-                            "dir": enddir, 
-                            "end": start, 
-                            "box": endPort.owner } ) ;
-        assert(!end.equals(endpoint), "ARGraph.connect: !end.equals(endpoint) FAILED");
+        this._getOutOfBox({ point: end, 
+                            dir: enddir, 
+                            end: start, 
+                            box: endPort.owner } ) ;
+        assert(!end.equals(endpoint), 'ARGraph.connect: !end.equals(endpoint) FAILED');
 
         var points,
-            isAutoRouted = path.isAutoRouted(),
-            pos = -1;
+            isAutoRouted = path.isAutoRouted();
         if (isAutoRouted) {
             points = this._connectPoints(start, end, startdir, enddir);
         }
@@ -595,9 +589,9 @@ define(['logManager',
             dir1 = Utils.exGetMajorDir(end.minus(start));
             dir2 = Utils.exGetMinorDir(end.minus(start));
 
-            assert(dir1 !== CONSTANTS.Dir_None, "ARGraph.connectPoints: dir1 !== CONSTANTS.Dir_None FAILED");
-            assert(dir1 === Utils.getMajorDir(end.minus(start)), "ARGraph.connectPoints: dir1 === Utils.getMajorDir(end.minus(start)) FAILED");
-            assert(dir2 === CONSTANTS.Dir_None || dir2 === Utils.getMinorDir(end.minus(start)), "ARGraph.connectPoints: dir2 === CONSTANTS.Dir_None || dir2 === Utils.getMinorDir(end.minus(start)) FAILED");
+            assert(dir1 !== CONSTANTS.Dir_None, 'ARGraph.connectPoints: dir1 !== CONSTANTS.Dir_None FAILED');
+            assert(dir1 === Utils.getMajorDir(end.minus(start)), 'ARGraph.connectPoints: dir1 === Utils.getMajorDir(end.minus(start)) FAILED');
+            assert(dir2 === CONSTANTS.Dir_None || dir2 === Utils.getMinorDir(end.minus(start)), 'ARGraph.connectPoints: dir2 === CONSTANTS.Dir_None || dir2 === Utils.getMinorDir(end.minus(start)) FAILED');
 
             if (dir2 === hintstartdir && dir2 !== CONSTANTS.Dir_None) {
                 // i.e. std::swap(dir1, dir2);
@@ -609,20 +603,23 @@ define(['logManager',
 
             old = new ArPoint(start);
 
-            bufferObject = this._goToNextBufferBox({ "point": start, "dir": dir1, "dir2": dir2, "end": end });//Modified goToNextBox (that allows entering parent buffer boxes here
+            bufferObject = this._goToNextBufferBox({ point: start, 
+                                                     dir: dir1, 
+                                                     dir2: dir2, 
+                                                     end: end });  // Modified goToNextBox (that allows entering parent buffer boxes here
             box = bufferObject === null ? null : bufferObject.box;
 
             //If goToNextBox does not modify start
             if (start.equals(old)) {
 
-                assert(box !== null, "ARGraph.connectPoints: box !== null FAILED");
+                assert(box !== null, 'ARGraph.connectPoints: box !== null FAILED');
                 rect = box instanceof ArRect ? box : box.rect; 
 
                 if (dir2 === CONSTANTS.Dir_None) {
                     dir2 = Utils.nextClockwiseDir (dir1);
                 }
 
-                assert(dir1 !== dir2 && dir1 !== CONSTANTS.Dir_None && dir2 !== CONSTANTS.Dir_None, "ARGraph.connectPoints: dir1 !== dir2 && dir1 !== CONSTANTS.Dir_None && dir2 !== CONSTANTS.Dir_None FAILED");
+                assert(dir1 !== dir2 && dir1 !== CONSTANTS.Dir_None && dir2 !== CONSTANTS.Dir_None, 'ARGraph.connectPoints: dir1 !== dir2 && dir1 !== CONSTANTS.Dir_None && dir2 !== CONSTANTS.Dir_None FAILED');
                 if (bufferObject.box.ptInRect(end) && !bufferObject.box.ptInRect(start) && flipped) {
                     //Unfortunately, if parentboxes are a pixel apart, start/end can get stuck and not cross the border
                     //separating them.... This is a nudge to get them to cross it.
@@ -642,7 +639,7 @@ define(['logManager',
                             ret.push(ret2[i]);
                         }
 
-                        assert(start.equals(end), "ArGraph.connectPoints: start.equals(end) FAILED");
+                        assert(start.equals(end), 'ArGraph.connectPoints: start.equals(end) FAILED');
                         old = CONSTANTS.EMPTY_POINT;
                         start = end = oldEnd;
                     } else { //If we have flipped and both points are in the same bufferbox
@@ -657,7 +654,7 @@ define(['logManager',
                             start.assign(end);
 
                         } else { //Force to the endpoint
-                            assert(Utils.isRightAngle (dir1), "ARGraph.connectPoints: Utils.isRightAngle (dir1) FAILED");
+                            assert(Utils.isRightAngle (dir1), 'ARGraph.connectPoints: Utils.isRightAngle (dir1) FAILED');
 
                             if (Utils.isHorizontal(dir1)) {
                                 start.x = end.x;
@@ -682,11 +679,14 @@ define(['logManager',
                     }
                 } else if (Utils.isPointInDirFrom(end, rect, dir2)) {
 
-                    assert(!Utils.isPointInDirFrom(start, rect, dir2), "ARGraph.connectPoints: !Utils.isPointInDirFrom(start, rect, dir2) FAILED");
-                    box = this._goToNextBufferBox({ "point": start, "dir": dir2, "dir2": dir1, "end": end });
+                    assert(!Utils.isPointInDirFrom(start, rect, dir2), 'ARGraph.connectPoints: !Utils.isPointInDirFrom(start, rect, dir2) FAILED');
+                    box = this._goToNextBufferBox({ point: start, 
+                                                    dir: dir2, 
+                                                    dir2: dir1, 
+                                                    end: end });
 
                     // this assert fails if two boxes are adjacent, and a connection wants to go between
-                    //assert(Utils.isPointInDirFrom(start, rect, dir2), "ARGraph.connectPoints: Utils.isPointInDirFrom(start, rect, dir2) FAILED");//This is not the best check with parent boxes
+                    //assert(Utils.isPointInDirFrom(start, rect, dir2), 'ARGraph.connectPoints: Utils.isPointInDirFrom(start, rect, dir2) FAILED');//This is not the best check with parent boxes
                     if (start.equals(old )) { //Then we are in a corner
                         if (box.children.length > 1) {
                             pts = this._hugChildren(box, start, dir2, dir1, getToDir1Side);
@@ -699,7 +699,7 @@ define(['logManager',
                             ret = ret.concat(pts);
 
                         } else { //Go through the blocking box
-                            assert(Utils.isRightAngle (dir1), "ARGraph.getOutOfBox: Utils.isRightAngle (dir1) FAILED");
+                            assert(Utils.isRightAngle (dir1), 'ARGraph.getOutOfBox: Utils.isRightAngle (dir1) FAILED');
 
                             if (Utils.isHorizontal(dir1)) {
                                 start.x = Utils.getRectOuterCoord (bufferObject.box, dir1);
@@ -709,8 +709,8 @@ define(['logManager',
                         }
                     }
                 } else {
-                    assert(Utils.isPointBetweenSides(end, rect, dir1), "ARGraph.connectPoints: Utils.isPointBetweenSides(end, rect, dir1) FAILED");
-                    assert(!Utils.isPointIn(end, rect), "ARGraph.connectPoints: !Utils.isPointIn(end, rect) FAILED");
+                    assert(Utils.isPointBetweenSides(end, rect, dir1), 'ARGraph.connectPoints: Utils.isPointBetweenSides(end, rect, dir1) FAILED');
+                    assert(!Utils.isPointIn(end, rect), 'ARGraph.connectPoints: !Utils.isPointIn(end, rect) FAILED');
 
                     rev = 0;
 
@@ -740,7 +740,7 @@ define(['logManager',
                             start.y = Utils.getRectOuterCoord (rect, dir2);
                         }
 
-                        assert(!start.equals(old), "ARGraph.connectPoints: !start.equals(old) FAILED");
+                        assert(!start.equals(old), 'ARGraph.connectPoints: !start.equals(old) FAILED');
                         ret.push(new ArPoint(start));
                         old.assign(start);
 
@@ -750,9 +750,11 @@ define(['logManager',
                             start.y = Utils.getRectOuterCoord (rect, dir1);
                         }
 
-                        assert(Utils.isPointInDirFrom(end, start, dir1), "ARGraph.connectPoints: Utils.isPointInDirFrom(end, start, dir1) FAILED");
+                        assert(Utils.isPointInDirFrom(end, start, dir1), 'ARGraph.connectPoints: Utils.isPointInDirFrom(end, start, dir1) FAILED');
                         if (Utils.getPointCoord (start, dir1) !== Utils.getPointCoord (end, dir1)) {
-                            this._goToNextBufferBox({ "point": start, "dir": dir1, "end": end });
+                            this._goToNextBufferBox({ point: start, 
+                                                      dir: dir1, 
+                                                      end: end });
                         }
 
                     } else { //If the box has multiple children
@@ -763,7 +765,7 @@ define(['logManager',
                             ret = ret.concat(pts);
 
                         } else { //Go through the blocking box
-                            assert(Utils.isRightAngle (dir1), "ARGraph.getOutOfBox: Utils.isRightAngle (dir1) FAILED");
+                            assert(Utils.isRightAngle (dir1), 'ARGraph.getOutOfBox: Utils.isRightAngle (dir1) FAILED');
 
                             if (Utils.isHorizontal(dir1)) {
                                 start.x = Utils.getRectOuterCoord (bufferObject.box, dir1);
@@ -774,7 +776,7 @@ define(['logManager',
                     }
                 }
 
-                assert(!start.equals(old), "ARGraph.connectPoints: !start.equals(old) FAILED");
+                assert(!start.equals(old), 'ARGraph.connectPoints: !start.equals(old) FAILED');
             }
 
         }
@@ -841,7 +843,7 @@ define(['logManager',
                 }
 
             }
-        } else {  // Assuming "box" is a port
+        } else {  // Assuming 'box' is a port
 
             var port = obj;
             while (iter--) {
@@ -932,9 +934,9 @@ define(['logManager',
 
     AutoRouterGraph.prototype._candeleteTwoEdgesAt = function (path, points, pos) {
         if (CONSTANTS.DEBUG) {
-            assert(path.owner === this, "ARGraph.candeleteTwoEdgesAt: path.owner === this FAILED");
+            assert(path.owner === this, 'ARGraph.candeleteTwoEdgesAt: path.owner === this FAILED');
             path.assertValid();
-            assert(path.isConnected(), "ARGraph.candeleteTwoEdgesAt: path.isConnected() FAILED");
+            assert(path.isConnected(), 'ARGraph.candeleteTwoEdgesAt: path.isConnected() FAILED');
             points.AssertValidPos(pos);
         }
 
@@ -960,11 +962,11 @@ define(['logManager',
         }
 
         assert(pppointpos < points.length && ppointpos < points.length && pointpos < points.length && npointpos < points.length && nnpointpos < points.length, 
-                "ARGraph.candeleteTwoEdgesAt: pppointpos < points.length && ppointpos < points.length && pointpos < points.length && npointpos < points.length && nnpointpos < points.length FAILED");
+                'ARGraph.candeleteTwoEdgesAt: pppointpos < points.length && ppointpos < points.length && pointpos < points.length && npointpos < points.length && nnpointpos < points.length FAILED');
 
         var dir = Utils.getDir(npoint.minus(point));
 
-        assert(Utils.isRightAngle(dir), "ARGraph.candeleteTwoEdgesAt: Utils.isRightAngle (dir) FAILED");
+        assert(Utils.isRightAngle(dir), 'ARGraph.candeleteTwoEdgesAt: Utils.isRightAngle (dir) FAILED');
         var ishorizontal = Utils.isHorizontal (dir);
 
         var newpoint = new ArPoint();
@@ -977,7 +979,7 @@ define(['logManager',
             newpoint.x = Utils.getPointCoord (ppoint, !ishorizontal);
         }
 
-        assert(Utils.getDir (newpoint.minus(ppoint)) === dir, "ARGraph.candeleteTwoEdgesAt: Utils.getDir (newpoint.minus(ppoint)) === dir FAILED");
+        assert(Utils.getDir (newpoint.minus(ppoint)) === dir, 'ARGraph.candeleteTwoEdgesAt: Utils.getDir (newpoint.minus(ppoint)) === dir FAILED');
 
         if (this._isLineClipBoxes(newpoint, npoint)) {
             return false;
@@ -991,9 +993,9 @@ define(['logManager',
 
     AutoRouterGraph.prototype._deleteTwoEdgesAt = function (path, points, pos) {
         if (CONSTANTS.DEBUG) {
-            assert(path.owner === this, "ARGraph.deleteTwoEdgesAt: path.owner === this FAILED");
+            assert(path.owner === this, 'ARGraph.deleteTwoEdgesAt: path.owner === this FAILED');
             path.assertValid();
-            assert(path.isConnected(), "ARGraph.deleteTwoEdgesAt: path.isConnected() FAILED");
+            assert(path.isConnected(), 'ARGraph.deleteTwoEdgesAt: path.isConnected() FAILED');
             points.AssertValidPos(pos);
         }
 
@@ -1013,12 +1015,12 @@ define(['logManager',
             pppointpos = pos,
             pppoint = points[pos--];
 
-        assert(pppointpos < points.length && ppointpos < points.length && pointpos < points.length && npointpos < points.length && nnpointpos < points.length, "ARGraph.deleteTwoEdgesAt: pppointpos < points.length && ppointpos < points.length && pointpos < points.length && npointpos < points.length && nnpointpos < points.length FAILED");
-        assert(pppoint !== null && ppoint !== null && point !== null && npoint !== null && nnpoint !== null, "ARGraph.deleteTwoEdgesAt: pppoint !== null && ppoint !== null && point !== null && npoint !== null && nnpoint !== null FAILED");
+        assert(pppointpos < points.length && ppointpos < points.length && pointpos < points.length && npointpos < points.length && nnpointpos < points.length, 'ARGraph.deleteTwoEdgesAt: pppointpos < points.length && ppointpos < points.length && pointpos < points.length && npointpos < points.length && nnpointpos < points.length FAILED');
+        assert(pppoint !== null && ppoint !== null && point !== null && npoint !== null && nnpoint !== null, 'ARGraph.deleteTwoEdgesAt: pppoint !== null && ppoint !== null && point !== null && npoint !== null && nnpoint !== null FAILED');
 
         var dir = Utils.getDir (npoint.minus(point));
 
-        assert(Utils.isRightAngle (dir), "ARGraph.deleteTwoEdgesAt: Utils.isRightAngle (dir) FAILED");
+        assert(Utils.isRightAngle (dir), 'ARGraph.deleteTwoEdgesAt: Utils.isRightAngle (dir) FAILED');
         var ishorizontal = Utils.isHorizontal (dir);
 
         var newpoint = new ArPoint();
@@ -1030,10 +1032,10 @@ define(['logManager',
             newpoint.y = Utils.getPointCoord(npoint, ishorizontal);
         }
 
-        assert(Utils.getDir(newpoint.minus(ppoint)) === dir, "ARGraph.deleteTwoEdgesAt: Utils.getDir (newpoint.minus(ppoint)) === dir FAILED");
+        assert(Utils.getDir(newpoint.minus(ppoint)) === dir, 'ARGraph.deleteTwoEdgesAt: Utils.getDir (newpoint.minus(ppoint)) === dir FAILED');
 
-        assert(!this._isLineClipBoxes(newpoint, npoint), "ARGraph.deleteTwoEdgesAt: !isLineClipBoxes(newpoint, npoint) FAILED");
-        assert(!this._isLineClipBoxes(newpoint, ppoint), "ARGraph.deleteTwoEdgesAt: !isLineClipBoxes(newpoint, ppoint) FAILED");
+        assert(!this._isLineClipBoxes(newpoint, npoint), 'ARGraph.deleteTwoEdgesAt: !isLineClipBoxes(newpoint, npoint) FAILED');
+        assert(!this._isLineClipBoxes(newpoint, ppoint), 'ARGraph.deleteTwoEdgesAt: !isLineClipBoxes(newpoint, ppoint) FAILED');
 
         var hlist = this._getEdgeList(ishorizontal),
             vlist = this._getEdgeList(!ishorizontal);
@@ -1044,7 +1046,7 @@ define(['logManager',
             nnedge = vlist.getEdgeByPointer(npoint);
 
         assert( ppedge !== null && pedge !== null && nedge !== null && nnedge !== null, 
-               "ARGraph.deleteTwoEdgesAt:  ppedge !== null && pedge !== null && nedge !== null && nnedge !== null FAILED");
+               'ARGraph.deleteTwoEdgesAt:  ppedge !== null && pedge !== null && nedge !== null && nnedge !== null FAILED');
 
         vlist.remove(pedge);
         hlist.remove(nedge);
@@ -1059,9 +1061,9 @@ define(['logManager',
         if (nnnpointpos < points.length) {
             var nnnedge = hlist.getEdgeByPointer(nnpoint, (nnnpointpos)); 
             assert( nnnedge !== null, 
-                   "ARGraph.deleteTwoEdgesAt: nnnedge !== null FAILED");
+                   'ARGraph.deleteTwoEdgesAt: nnnedge !== null FAILED');
             assert(nnnedge.startpointPrev.equals(npoint) && nnnedge.startpoint.equals(nnpoint), 
-                   "ARGraph.deleteTwoEdgesAt: nnnedge.startpointPrev.equals(npoint) && nnnedge.startpoint.equals(nnpoint) FAILED" );
+                   'ARGraph.deleteTwoEdgesAt: nnnedge.startpointPrev.equals(npoint) && nnnedge.startpoint.equals(nnpoint) FAILED' );
             nnnedge.setStartPointPrev(ppoint);
         }
 
@@ -1073,9 +1075,9 @@ define(['logManager',
 
     AutoRouterGraph.prototype._deleteSamePointsAt = function (path, points, pos) {
         if (CONSTANTS.DEBUG) {
-            assert(path.owner === this, "ARGraph.deleteSamePointsAt: path.owner === this FAILED");
+            assert(path.owner === this, 'ARGraph.deleteSamePointsAt: path.owner === this FAILED');
             path.assertValid();
-            assert(path.isConnected(), "ARGraph.deleteSamePointsAt: path.isConnected() FAILED");
+            assert(path.isConnected(), 'ARGraph.deleteSamePointsAt: path.isConnected() FAILED');
             points.AssertValidPos(pos);
         }
 
@@ -1097,12 +1099,12 @@ define(['logManager',
 
         assert(ppointpos < points.length && pointpos < points.length && npointpos < points.length && nnpointpos < points.length);
         assert(ppoint !== null && point !== null && npoint !== null && nnpoint !== null, 
-               "ARGraph.deleteSamePointsAt: ppoint !== null && point !== null && npoint !== null && nnpoint !== null FAILED");
+               'ARGraph.deleteSamePointsAt: ppoint !== null && point !== null && npoint !== null && nnpoint !== null FAILED');
         assert(point.equals(npoint) && !point.equals(ppoint), 
-               "ARGraph.deleteSamePointsAt: point.equals(npoint) && !point.equals(ppoint) FAILED");
+               'ARGraph.deleteSamePointsAt: point.equals(npoint) && !point.equals(ppoint) FAILED');
 
         var dir = Utils.getDir (point.minus(ppoint));
-        assert(Utils.isRightAngle (dir), "ARGraph.deleteSamePointsAt: Utils.isRightAngle (dir) FAILED");
+        assert(Utils.isRightAngle (dir), 'ARGraph.deleteSamePointsAt: Utils.isRightAngle (dir) FAILED');
 
         var ishorizontal = Utils.isHorizontal (dir),
             hlist = this._getEdgeList(ishorizontal),
@@ -1112,7 +1114,7 @@ define(['logManager',
             nedge = vlist.getEdgeByPointer(point, npoint),
             nnedge = hlist.getEdgeByPointer(npoint, nnpoint);
 
-        assert(pedge !== null && nedge !== null && nnedge !== null, "ARGraph.deleteSamePointsAt: pedge !== null && nedge !== null && nnedge !== null FAILED");
+        assert(pedge !== null && nedge !== null && nnedge !== null, 'ARGraph.deleteSamePointsAt: pedge !== null && nedge !== null && nnedge !== null FAILED');
 
         vlist.remove(pedge);
         hlist.remove(nedge);
@@ -1121,17 +1123,17 @@ define(['logManager',
 
         if (pppointpos < points.length) {
             var ppedge = vlist.getEdgeByPointer(pppoint, ppoint);
-            assert(ppedge !== null && ppedge.endpoint.equals(ppoint) && ppedge.endpointNext.equals(point), "ARGraph.deleteSamePointsAt: ppedge !== null && ppedge.endpoint.equals(ppoint) && ppedge.endpointNext.equals(point) FAILED");
+            assert(ppedge !== null && ppedge.endpoint.equals(ppoint) && ppedge.endpointNext.equals(point), 'ARGraph.deleteSamePointsAt: ppedge !== null && ppedge.endpoint.equals(ppoint) && ppedge.endpointNext.equals(point) FAILED');
             ppedge.endpointNext = nnpoint;
         }
 
-        assert(nnedge.startpoint.equals(npoint) && nnedge.startpointPrev.equals(point), "ARGraph.deleteSamePointsAt: nnedge.startpoint.equals(npoint) && nnedge.startpointPrev.equals(point) FAILED"); 
+        assert(nnedge.startpoint.equals(npoint) && nnedge.startpointPrev.equals(point), 'ARGraph.deleteSamePointsAt: nnedge.startpoint.equals(npoint) && nnedge.startpointPrev.equals(point) FAILED'); 
         nnedge.setStartPoint(ppoint);
         nnedge.setStartPointPrev(pppoint);
 
         if (nnnpointpos < points.length) {
             var nnnedge = vlist.getEdgeByPointer(nnpoint, (nnnpointpos)); //&*
-            assert(nnnedge !== null && nnnedge.startpointPrev.equals(npoint) && nnnedge.startpoint.equals(nnpoint), "ARGraph.deleteSamePointsAt: nnnedge !== null && nnnedge.startpointPrev.equals(npoint) && nnnedge.startpoint.equals(nnpoint) FAILED");
+            assert(nnnedge !== null && nnnedge.startpointPrev.equals(npoint) && nnnedge.startpoint.equals(nnpoint), 'ARGraph.deleteSamePointsAt: nnnedge !== null && nnnedge.startpointPrev.equals(npoint) && nnnedge.startpoint.equals(nnpoint) FAILED');
             nnnedge.setStartPointPrev(ppoint);
         }
 
@@ -1170,11 +1172,11 @@ define(['logManager',
     };
 
     AutoRouterGraph.prototype._centerStairsInPathPoints = function (path, hintstartdir, hintenddir) {
-        assert(path !== null, "ARGraph.centerStairsInPathPoints: path !== null FAILED");
-        assert(!path.isConnected(), "ARGraph.centerStairsInPathPoints: !path.isConnected() FAILED");
+        assert(path !== null, 'ARGraph.centerStairsInPathPoints: path !== null FAILED');
+        assert(!path.isConnected(), 'ARGraph.centerStairsInPathPoints: !path.isConnected() FAILED');
 
         var pointList = path.getPointList();
-        assert(pointList.length >= 2, "ARGraph.centerStairsInPathPoints: pointList.length >= 2 FAILED");
+        assert(pointList.length >= 2, 'ARGraph.centerStairsInPathPoints: pointList.length >= 2 FAILED');
 
         if (CONSTANTS.DEBUG) {
             path.assertValidPoints();
@@ -1198,7 +1200,7 @@ define(['logManager',
             outOfBoxEndPoint = path.getOutOfBoxEndPoint(hintenddir),
 
             pos = 0;
-        assert(pos < pointList.length, "ARGraph.centerStairsInPathPoints pos < pointList.length FAILED");
+        assert(pos < pointList.length, 'ARGraph.centerStairsInPathPoints pos < pointList.length FAILED');
 
         p1p = pos;
         p1 = (pointList[pos++]);
@@ -1231,15 +1233,15 @@ define(['logManager',
             if (p2p < pointList.length) {
                 d12 = Utils.getDir (p2.minus(p1));
                 if (CONSTANTS.DEBUG) {
-                    assert(Utils.isRightAngle (d12), "ARGraph.centerStairsInPathPoints: Utils.isRightAngle (d12) FAILED");
+                    assert(Utils.isRightAngle (d12), 'ARGraph.centerStairsInPathPoints: Utils.isRightAngle (d12) FAILED');
                     if (p3p !== pointList.end()) {
-                        assert(Utils.areInRightAngle (d12, d23), "ARGraph.centerStairsInPathPoints: Utils.areInRightAngle (d12, d23) FAILED");
+                        assert(Utils.areInRightAngle (d12, d23), 'ARGraph.centerStairsInPathPoints: Utils.areInRightAngle (d12, d23) FAILED');
                     }
                 }
             }
 
             if (p4p < pointList.length && d12 === d34) {
-                assert(p1p < pointList.length && p2p < pointList.length && p3p < pointList.length && p4p < pointList.length, "ARGraph.centerStairsInPathPoints: p1p < pointList.length && p2p < pointList.length && p3p < pointList.length && p4p < pointList.length FAILED");
+                assert(p1p < pointList.length && p2p < pointList.length && p3p < pointList.length && p4p < pointList.length, 'ARGraph.centerStairsInPathPoints: p1p < pointList.length && p2p < pointList.length && p3p < pointList.length && p4p < pointList.length FAILED');
 
                 np2 = new ArPoint(p2);
                 np3 = new ArPoint(p3);
@@ -1431,18 +1433,18 @@ define(['logManager',
      * if possible.
      */
     /**
-     * Replace 5 points for 3 where possible. This will replace "u"-like shapes 
-     * with "z" like shapes.
+     * Replace 5 points for 3 where possible. This will replace 'u'-like shapes 
+     * with 'z' like shapes.
      *
      * @param path
      * @return {undefined}
      */
     AutoRouterGraph.prototype._simplifyPathPoints = function (path) {
-        assert(path !== null, "ARGraph.simplifyPathPoints: path !== null FAILED");
-        assert(!path.isConnected(), "ARGraph.simplifyPathPoints: !path.isConnected() FAILED");
+        assert(path !== null, 'ARGraph.simplifyPathPoints: path !== null FAILED');
+        assert(!path.isConnected(), 'ARGraph.simplifyPathPoints: !path.isConnected() FAILED');
 
         var pointList = path.getPointList();
-        assert(pointList.length >= 2, "ARGraph.simplifyPathPoints: pointList.length >= 2 FAILED");
+        assert(pointList.length >= 2, 'ARGraph.simplifyPathPoints: pointList.length >= 2 FAILED');
 
         if (CONSTANTS.DEBUG) {
             path.assertValidPoints();
@@ -1466,7 +1468,7 @@ define(['logManager',
             d,
             h;
 
-        assert(pos < pointList.length, "ARGraph.simplifyPathPoints: pos < pointList.length FAILED");
+        assert(pos < pointList.length, 'ARGraph.simplifyPathPoints: pos < pointList.length FAILED');
 
         p1p = pos;
         p1 = pointList[pos++];
@@ -1492,7 +1494,7 @@ define(['logManager',
                     'ARGraph.simplifyPathPoints: !p1.equals(p2) && !p2.equals(p3) && !p3.equals(p4) && !p4.equals(p5) FAILED');
 
                 d = Utils.getDir(p2.minus(p1));
-                assert(Utils.isRightAngle (d), "ARGraph.simplifyPathPoints: Utils.isRightAngle (d) FAILED");
+                assert(Utils.isRightAngle (d), 'ARGraph.simplifyPathPoints: Utils.isRightAngle (d) FAILED');
                 h = Utils.isHorizontal (d);
 
                 np3 = new ArPoint();
@@ -1676,7 +1678,7 @@ define(['logManager',
             j,
             g;
 
-        assert(i !== -1, "ARGraph.removeFromBufferBoxes: Can't find the correct bufferbox.");
+        assert(i !== -1, 'ARGraph.removeFromBufferBoxes: Can\'t find the correct bufferbox.');
 
         // Remove record of removed box
         this.bufferBoxes.splice(i, 1);
@@ -1727,7 +1729,7 @@ define(['logManager',
                 ids.push(groups[i][j].id);
             }
 
-            this.bufferBoxes.push({ "box": parentBox, "children": groups[i] });
+            this.bufferBoxes.push({ 'box': parentBox, 'children': groups[i] });
 
             j = ids.length;
             while (j--) {
@@ -1753,7 +1755,7 @@ define(['logManager',
 
     AutoRouterGraph.prototype.createBox = function() {
         var box = new AutoRouterBox();
-        assert(box !== null, "ARGraph.createBox: box !== null FAILED");
+        assert(box !== null, 'ARGraph.createBox: box !== null FAILED');
 
         return box;
     };
@@ -1771,9 +1773,9 @@ define(['logManager',
         box.owner = this;
         var boxId = (COUNTER++).toString();
         while (boxId.length < 6) {
-            boxId = "0" + boxId;
+            boxId = '0' + boxId;
         }
-        boxId = "BOX_" + boxId;
+        boxId = 'BOX_' + boxId;
         box.id = boxId;
 
         this.boxes[boxId] = box;
@@ -1789,7 +1791,7 @@ define(['logManager',
     };
 
     AutoRouterGraph.prototype.deleteBox = function(box) {
-        assert(box !== null, "ARGraph.deleteBox: box !== null FAILED");
+        assert(box !== null, 'ARGraph.deleteBox: box !== null FAILED');
 
         if (box.hasOwner()) {
             var parent = box.parent,
@@ -1808,7 +1810,7 @@ define(['logManager',
 
             this._deleteBoxAndPortEdges(box);
             box.owner = null;
-            assert(this.boxes[box.id] !== undefined, "ARGraph.remove: Box does not exist");
+            assert(this.boxes[box.id] !== undefined, 'ARGraph.remove: Box does not exist');
 
             delete this.boxes[box.id];
         }
@@ -1818,7 +1820,7 @@ define(['logManager',
     };
 
     AutoRouterGraph.prototype.shiftBoxBy = function(box, offset) {
-        assert(box !== null, "ARGraph.shiftBoxBy: box !== null FAILED");
+        assert(box !== null, 'ARGraph.shiftBoxBy: box !== null FAILED');
         if (box === null) {
             return;
         }
@@ -1916,7 +1918,7 @@ define(['logManager',
             dm = options.dm || 10,		// max # of distribution op
             d = options.d || 0,
             getState = function(finished) {
-                return {finished: finished || !!maxOperations,
+                return {finished: finished || !maxOperations,
                         maxOperations: maxOperations,
                         last: last,
                         dm: dm,
@@ -2052,16 +2054,16 @@ define(['logManager',
     };
 
     AutoRouterGraph.prototype.deletePath = function(path) {
-        assert(path !== null, "ARGraph.deletePath: path !== null FAILED");
+        assert(path !== null, 'ARGraph.deletePath: path !== null FAILED');
 
         if (path.hasOwner()) {
-            assert(path.owner === this, "ARGraph.deletePath: path.owner === this FAILED");
+            assert(path.owner === this, 'ARGraph.deletePath: path.owner === this FAILED');
 
             this.deleteEdges(path);
             path.owner = null;
             var index = this.paths.indexOf(path);
 
-            assert(index > -1, "ARGraph.remove: Path does not exist");
+            assert(index > -1, 'ARGraph.remove: Path does not exist');
             this.paths.splice(index, 1);
         }
 
@@ -2099,7 +2101,7 @@ define(['logManager',
             return edge.getEdgeFixed() && !edge.getEdgeCustomFixed();
         }
 
-        assert(false, "ARGraph.isEdgeFixed: FAILED");
+        assert(false, 'ARGraph.isEdgeFixed: FAILED');
         return true;
     };
 
@@ -2172,8 +2174,7 @@ define(['logManager',
      * @return {undefined}
      */
     AutoRouterGraph.prototype._containsEdge = function(start, end) {
-        var dir,
-            isHorizontal;
+        var dir;
 
         dir = Utils.getDir(start.minus(end));
         assert(Utils.isRightAngle(dir), 
@@ -2193,18 +2194,18 @@ define(['logManager',
     };
 
     AutoRouterGraph.prototype.dumpPaths = function(pos, c) {
-        console.log("Paths dump pos " + pos + ", c " + c);
+        console.log('Paths dump pos ' + pos + ', c ' + c);
 
         for (var i = 0; i < this.paths.length; i++) {
-            console.log(i + ". Path: ");
-            this.paths[i].getPointList().dumpPoints("DumpPaths");
+            console.log(i + '. Path: ');
+            this.paths[i].getPointList().dumpPoints('DumpPaths');
         }
 
     };
 
     AutoRouterGraph.prototype.dumpEdgeLists = function() {
-        this.horizontal.dumpEdges("Horizontal edges:");
-        this.vertical.dumpEdges("Vertical edges:");
+        this.horizontal.dumpEdges('Horizontal edges:');
+        this.vertical.dumpEdges('Vertical edges:');
     };
 
     return AutoRouterGraph;
