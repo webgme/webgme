@@ -1,4 +1,4 @@
-/*globals define, document, console, window, GME*/
+/*globals define, document, console, eval, GME*/
 
 define('webgme.classes',
     [
@@ -13,7 +13,7 @@ define('webgme.classes',
         GME.classes.InterpreterManager = InterpreterManager;
 
         if (document.body.getAttribute("on-gme-init")) {
-            window[document.body.getAttribute("on-gme-init")](GME);
+            eval(document.body.getAttribute("on-gme-init"));
         } else {
             console.warn('To use GME, define a javascript function and set the body element\'s on-gme-init property.');
         }
