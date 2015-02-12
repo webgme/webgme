@@ -446,7 +446,7 @@ define(['logManager',
             res.location('/login');
             expressFileSending(res,__clientBaseDir+'/login.html');
         });
-        __app.get('/login/gme',__gmeAuth.authenticate,function(req,res){
+        __app.post('/login',__gmeAuth.authenticate,function(req,res){
             res.cookie('webgme',req.session.udmId);
             redirectUrl(req,res);
         });

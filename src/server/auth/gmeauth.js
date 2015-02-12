@@ -291,8 +291,8 @@ define(["storage/mongo", "storage/commit", "core/core", "util/guid"],function(Mo
         }
 
         function authenticate(req,res,next){
-            var userId = req.query[_userField],
-                password = req.query[_passwordField],
+            var userId = req.body[_userField],
+                password = req.body[_passwordField],
                 gmail = false,
                 returnUrl = req.__gmeAuthFailUrl__ || "/";
             delete req.__gmeAuthFailUrl__;
