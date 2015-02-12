@@ -11,6 +11,7 @@
     storage: "./src/common/storage",
     logManager: "./src/common/LogManager",
     blob: "./src/middleware/blob",
+    executor: "./src/middleware/executor",
     superagent: "./node_modules/superagent/superagent",
     client: "./src/client/js/client",
     plugin: "./src/plugin",
@@ -22,7 +23,7 @@
   insertRequire: ["webgme.classes"],
   include: ['./node_modules/requirejs/require'],
   wrap: {
-    start: "var GME = GME || {}; GME.classes = GME.classes || {};(function(){",
-    end: "}());"
+    startFile: 'start.frag',
+    endFile: 'end.frag'
   }
 })
