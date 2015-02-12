@@ -7,6 +7,7 @@ require('../_globals');
 var FS = require('fs'),
   requirejs = require('requirejs'),
   config = WebGMEGlobal.getConfig();
+config.port = 9002;
 config.authentication = false; //we have to make sure that our current config doesn't affect the tests
 
 requirejs.config({
@@ -310,12 +311,10 @@ function createTestProject(callback) {
 describe('Client tests', function () {
 
     before(function(done) {
-        config.port = 45013;
-        WebGMEGlobal.setConfig(config);
 
-        SRV = new global.WebGME.standaloneServer();
+        SRV = new global.WebGME.standaloneServer(config);
         SRV.start(function() {
-            CLNT = new CLIENT({host: " ", port: WebGMEGlobal.getConfig().port});
+            CLNT = new CLIENT({host: " ", port: config.port});
 
             createTestProject(done);
         });
