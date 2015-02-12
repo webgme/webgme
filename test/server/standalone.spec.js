@@ -13,13 +13,14 @@ var should = require('chai').should(),
     server,
     serverBaseUrl;
 
+config.authentication = false; //we have to make sure that our current config doesn't affect the tests
+config.port = 9001;
 
 describe('webgme http server', function () {
     'use strict';
 
     before(function () {
         // we have to set the config here
-        config.port = 9001;
         WebGMEGlobal.setConfig(config);
 
         server = WebGME.standaloneServer();
@@ -90,7 +91,6 @@ describe('webgme http server', function () {
 describe('server', function () {
     it('start and stop and start and stop', function (done) {
         // we have to set the config here
-        config.port = 9001;
         WebGMEGlobal.setConfig(config);
 
         server = WebGME.standaloneServer();

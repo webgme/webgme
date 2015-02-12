@@ -18,8 +18,7 @@ define(['logManager',
     'blob/BlobFSBackend',
     'blob/BlobS3Backend',
     'blob/BlobServer',
-    'util/guid',
-    'util/url'
+    'util/guid'
     ],function(
         LogManager,
         Storage,
@@ -41,8 +40,7 @@ define(['logManager',
         BlobFSBackend,
         BlobS3Backend,
         BlobServer,
-        GUID,
-        URL
+        GUID
     ){
     'use strict';
     function StandAloneServer(CONFIG){
@@ -122,11 +120,13 @@ define(['logManager',
             });
         }
         function getRedirectUrlParameter(req){
-            return '?redirect=' + URL.addSpecialChars(req.url);
+            //return '?redirect=' + URL.addSpecialChars(req.url);
+            return '?redirect=' + encodeURIComponent(req.url);
         }
         function redirectUrl(req,res){
             if(req.query.redirect){
-                res.redirect(URL.removeSpecialChars(req.query.redirect));
+                //res.redirect(URL.removeSpecialChars(req.query.redirect));
+                res.redirect(decodeURIComponent(req.query.redirect));
             } else {
                 res.redirect('/');
             }
