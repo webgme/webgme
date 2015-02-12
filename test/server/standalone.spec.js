@@ -7,7 +7,6 @@ require('../_globals.js');
 var should = require('chai').should(),
     WebGME = require('../../webgme'),
     requirejs = require('requirejs'),
-    config = WebGMEGlobal.getConfig(),
 
     superagent = require('superagent'),
     agent = superagent.agent(),
@@ -15,14 +14,14 @@ var should = require('chai').should(),
     server,
     serverBaseUrl;
 
-config.authentication = false; //we have to make sure that our current config doesn't affect the tests
-config.port = 9001;
 describe('standalone server', function () {
     'use strict';
 
     it('should start and stop and start and stop', function (done) {
         // we have to set the config here
-        config = WebGMEGlobal.getConfig();
+        var config = WebGMEGlobal.getConfig();
+        config.port = 9001;
+        config.authentication = false;
 
         server = WebGME.standaloneServer(config);
         server.start(function () {
@@ -38,7 +37,7 @@ describe('standalone server', function () {
 
         before(function (done) {
             // we have to set the config here
-            config = WebGMEGlobal.getConfig();
+            var config = WebGMEGlobal.getConfig();
             config.port = 9001;
             config.authentication = false;
 
@@ -143,7 +142,8 @@ describe('standalone server', function () {
 
         before(function (done) {
             // we have to set the config here
-            config = WebGMEGlobal.getConfig();
+            var config = WebGMEGlobal.getConfig();
+            config.port = 9001;
             config.authentication = true;
 
             // TODO: would be nice to get this dynamically from server
