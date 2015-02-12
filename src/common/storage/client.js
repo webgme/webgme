@@ -188,7 +188,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
 
                 if (options.type === 'browser') {
                     require([ _hostAddress + "/socket.io/socket.io.js" ], function (io) {
-                        IO = io;
+                        IO = io || window.io;
                         IOReady();
                     });
                 } else {
