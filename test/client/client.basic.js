@@ -7,6 +7,7 @@ require('../_globals');
 var FS = require('fs'),
   requirejs = require('requirejs'),
   config = WebGMEGlobal.getConfig();
+config.authentication = false; //we have to make sure that our current config doesn't affect the tests
 
 requirejs.config({
   nodeRequire: require,
@@ -222,7 +223,7 @@ var testTerritory = function(level,cb){
  return {
   setNext: setNext,
   finish: finish
- }
+ };
 };
 
 function createTestProject(callback) {
