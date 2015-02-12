@@ -212,6 +212,13 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 options.logger.error('error raised by socket server: ' + err);
             });
 
+            // try to connect to mongodb immediately when the server starts (faster than waiting for a user connection)
+            checkDatabase(function (err) {
+                if (err) {
+                    console.error("Error: could not connect to mongo: " + err);
+                    options.logger.error("Error: could not connect to mongo: " + err);
+                }
+            });
 
             _socket.on('connection',function(socket){
                 //first we connect our socket id to the session
