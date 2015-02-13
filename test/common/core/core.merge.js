@@ -1,7 +1,7 @@
 /**
  * Created by tamas on 12/13/14.
  */
-var WebGME = require('../webgme'),
+var WebGME = require('../../../webgme'),
   FS = require('fs'),
   storage = new WebGME.serverUserStorage({host:'127.0.0.1',port:27017,database:'multi'});
 

@@ -1,10 +1,10 @@
 /**
  * Created by tamas on 12/29/14.
  */
-  require('./_globals.js');
-var WebGME = require('../webgme'),
-  FS = require('fs'),
-  storage = new WebGME.serverUserStorage({host:'127.0.0.1',port:27017,database:'multi'});
+  require('../../_globals.js');
+var WebGME = require('../../../webgme'),
+  FS = require('fs'),mocha
+  storage = new global.Storage();
 
 //global helping functions and globally used variables
 var baseCommit = null,
