@@ -382,7 +382,7 @@ define(['logManager',
         }
 
         __logger.info("initializing session storage");
-        __sessionStore = new SSTORE()
+        __sessionStore = new SSTORE();
 
         __logger.info("initializing authentication modules");
         __gmeAuth = new GMEAUTH({
