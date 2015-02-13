@@ -4,7 +4,8 @@
 
 require('../../_globals.js');
 var WebGME = require('../../../webgme'),
-    storage = new global.Storage();
+    storage = new global.Storage(),
+    should = require('chai').should;
 
 describe('corediff',function(){
     describe('commitAncestor',function(){
@@ -36,6 +37,7 @@ describe('corediff',function(){
                             commitChain.push(project.makeCommit(ancestors,'#roothash','_'+i+'_',finalCheck));
                             ancestors = [commitChain[commitChain.length-1]];
                         }
+                        done();
                     });
                 });
             });
@@ -51,48 +53,43 @@ describe('corediff',function(){
             it('single chain 0 vs 1',function(done){
                 project.getCommonAncestorCommit(commitChain[0],commitChain[1],function(err,c){
                     if(err){
-                        return done(new Error(err));
+                        done(new Error(err));
+                        return;
                     }
-
-                    if(c !== commitChain[0]){
-                        done(new Error('expected: '+commitChain[0]+', got: '+c));
-                    }
+                    c.should.be.equal(commitChain[0]);
                     done();
                 });
             });
             it('single chain 1 vs 0',function(done){
                 project.getCommonAncestorCommit(commitChain[1],commitChain[0],function(err,c){
                     if(err){
-                        return done(new Error(err));
+                        done(new Error(err));
+                        return;
                     }
 
-                    if(c !== commitChain[0]){
-                        done(new Error('expected: '+commitChain[0]+', got: '+c));
-                    }
+                    c.should.be.equal(commitChain[0]);
                     done();
                 });
             });
             it('single chain 1 vs 1',function(done){
                 project.getCommonAncestorCommit(commitChain[1],commitChain[1],function(err,c){
                     if(err){
-                        return done(new Error(err));
+                        done(new Error(err));
+                        return;
                     }
 
-                    if(c !== commitChain[1]){
-                        done(new Error('expected: '+commitChain[1]+', got: '+c));
-                    }
+                    c.should.be.equal(commitChain[1]);
                     done();
                 });
             });
             it('single chain 0 vs 999',function(done){
                 project.getCommonAncestorCommit(commitChain[0],commitChain[999],function(err,c){
                     if(err){
-                        return done(new Error(err));
+                        done(new Error(err));
+                        return;
                     }
 
-                    if(c !== commitChain[0]){
-                        done(new Error('expected: '+commitChain[0]+', got: '+c));
-                    }
+                    c.should.be.equal(commitChain[0]);
                     done();
                 });
             });
@@ -159,55 +156,50 @@ describe('corediff',function(){
             it('12 vs 6 -> 2',function(done){
                 project.getCommonAncestorCommit(commitChain[12],commitChain[6],function(err,c){
                     if(err){
-                        return done(err);
+                        done(err);
+                        return;
                     }
-                    if(c !== commitChain[2]){
-                        done(new Error('expected: '+commitChain[2]+', got: '+c));
-                    }
+                    c.should.be.equal(commitChain[2]);
                     done();
                 });
             });
             it('9 vs 11 -> 7',function(done){
                 project.getCommonAncestorCommit(commitChain[9],commitChain[11],function(err,c){
                     if(err){
-                        return done(err);
+                        done(err);
+                        return;
                     }
-                    if(c !== commitChain[7]){
-                        return done(new Error('expected: '+commitChain[7]+', got: '+c));
-                    }
+                    c.should.be.equal(commitChain[7]);
                     done();
                 });
             });
             it('10 vs 4 -> 2',function(done){
                 project.getCommonAncestorCommit(commitChain[10],commitChain[4],function(err,c){
                     if(err){
-                        return done(err);
+                        done(err);
+                        return;
                     }
-                    if(c !== commitChain[2]){
-                        done(new Error('expected: '+commitChain[2]+', got: '+c));
-                    }
+                    c.should.be.equal(commitChain[2]);
                     done();
                 });
             });
             it('12 vs 8 -> 8',function(done){
                 project.getCommonAncestorCommit(commitChain[12],commitChain[8],function(err,c){
                     if(err){
-                        return done(err);
+                        done(err);
+                        return;
                     }
-                    if(c !== commitChain[8]){
-                        done(new Error('expected: '+commitChain[8]+', got: '+c));
-                    }
+                    c.should.be.equal(commitChain[8]);
                     done();
                 });
             });
             it('9 vs 5 -> 2',function(done){
                 project.getCommonAncestorCommit(commitChain[9],commitChain[5],function(err,c){
                     if(err){
-                        return done(err);
+                        done(err);
+                        return;
                     }
-                    if(c !== commitChain[2]){
-                        done(new Error('expected: '+commitChain[2]+', got: '+c));
-                    }
+                    c.should.be.equal(commitChain[2]);
                     done();
                 });
             });
