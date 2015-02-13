@@ -36,8 +36,11 @@ if (typeof define !== "function" && typeof require === "function" && typeof proc
 } else {
   define("ifexists", {
     load: function (name, require, onload) {
-      require([name], onload, function () {
-        onload(null);
+      require([name], onload, function (err) {
+          if (!err.originalError || err.originalError.code !== 'MODULE_NOT_FOUND') {
+              console.error('Error loading ' + name + ': ' + err.message);
+          }
+          onload(null);
       });
     }
   });
