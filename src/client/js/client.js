@@ -1448,8 +1448,8 @@ define([
                             return callback(error);
                         }
                         _core.generateLightTreeDiff(sRoot,tRoot,function(err,diff){
-                            console.log('genDiffTree',new Date().getTime()-start);
-              console.log('diffTree',JSON.stringify(diff,null,2));
+              //console.log('genDiffTree',new Date().getTime()-start);
+              //console.log('diffTree',JSON.stringify(diff,null,2));
                             callback(err,diff);
                         });
                     },

@@ -1,9 +1,11 @@
 /**
  * Created by tamas on 12/13/14.
  */
+require('../../_globals.js');
 var WebGME = require('../../../webgme'),
   FS = require('fs'),
-  storage = new WebGME.serverUserStorage({host:'127.0.0.1',port:27017,database:'multi'});
+    should = require('chai').should,
+  storage = new global.Storage();
 
 //global helping functions and globally used variables
 var baseCommit = null,
@@ -107,1955 +109,818 @@ function loadNodes(paths,next){
   }
 }
 
+describe('corediff',function(){
+    describe('merge',function(){
+        var project,core,root,commit,baseCommitHash,baseRootHash,
+            applyChange= function(changeObject,next){
+                core.applyTreeDiff(root,changeObject.diff,function(err){
+                    if(err){
+                        next(err);
+                        return;
+                    }
+                    core.persist(root,function(err){
+                        if(err){
+                            next(err);
+                            return;
+                        }
+                        changeObject.rootHash = core.getHash(root);
+                        changeObject.root = root;
+                        changeObject.commitHash = project.makeCommit([baseCommitHash],changeObject.rootHash,'apply change fininshed '+new Date().getTime(),function(err){
+                            //we ignore this
+                        });
+                        //we restore the root object
+                        core.loadRoot(baseRootHash,function(err,r){
+                            if(err){
+                                next(err);
+                                return;
+                            }
+                            root = r;
+                            next();
+                        });
+                    });
+                });
+            };
+        before(function(done) {
+            //creating the base project
+            storage.openDatabase(function (err) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                storage.openProject('corediffMergeTesting', function(err, p){
+                    var jsonProject;
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+                    project = p;
+                    try {
+                        jsonProject = JSON.parse(FS.readFileSync('./test/asset/sm_basic_basic.json', 'utf8'));
+                    } catch (err) {
+                        done(err);
+                        return;
+                    }
 
+                    core = new WebGME.core(project);
+                    root = core.createNode();
 
-describe('Core#Merge#Pre',function() {
-  it('should open the database connection', function (done) {
-    storage.openDatabase(done);
-  });
-  it('should import an initial state machine project', function (done) {
-    console.log(commit,rootHash);
-    if(!loadJsonData('./test/asset/sm_basic_basic.json')){
-      return done(new Error('unable to load project file'));
-    }
-    importProject(jsonData,
-      function (err, c){
-        if (err) {
-          return done(err);
-        }
-        baseCommit = c;
-        commit = c;
-        rootHash = core.getHash(root);
-        done();
-      });
-  });
+                    WebGME.serializer.import(core, root, jsonProject, function (err, log) {
+                        if (err) {
+                            done(err);
+                            return;
+                        }
+
+                        core.persist(root, function (err) {
+                            if (err) {
+                                return next(err);
+                            }
+
+                            commit = project.makeCommit([], core.getHash(root), 'initial project import', function (err) {
+                                //ignore it
+                            });
+                            if (err) {
+                                done(err);
+                                return;
+                            }
+                            baseCommitHash = commit;
+                            baseRootHash = core.getHash(root);
+                            done();
+                        });
+                    });
+                });
+            });
+        });
+        after(function(done){
+            storage.deleteProject('corediffMergeTesting',function(err){
+                if(err){
+                    done(err);
+                    return;
+                }
+                storage.closeDatabase(done);
+            });
+        });
+        beforeEach(function(done){
+            //load the base state and sets the
+            core.loadRoot(baseRootHash,function(err,r){
+                if(err){
+                    done(err);
+                    return;
+                }
+                root = r;
+                done();
+            });
+        });
+        describe('attribute',function(){
+            it('initial value check',function(done){
+                core.loadByPath(root,'/579542227/651215756',function(err,a){
+                    if(err){
+                        done(err);
+                        return;
+                    }
+                    core.getAttribute(a,'priority').should.be.equal(100);
+                    core.loadByPath(root,'/579542227/2088994530',function(err,a) {
+                        if(err){
+                            done(err);
+                            return;
+                        }
+                        core.getAttribute(a,'priority').should.be.equal(100);
+                        done();
+                    });
+                });
+            });
+
+            it('changing separate attributes',function(done){
+                var changeA={},changeB={};
+                changeA.diff = {
+                    '579542227':{
+                        '651215756':{
+                            'attr':{
+                                'priority':2
+                            },
+                            'guid': 'ed1a1ef7-7eb3-af75-11a8-7994220003e6'
+                        },
+                        'guid': '3637e2ee-0d4b-15b1-52c6-4d1248e67ea3'
+                    },
+                    'guid': 'e687d284-a04a-7cbc-93ed-ea941752d57a'
+                };
+                changeB.diff = {
+                    '579542227': {
+                        '2088994530': {
+                            'attr': {
+                                'priority': 2
+                            },
+                            'guid': '32e4adfc-deac-43ae-2504-3563b9d58b97'
+                        },
+                        'guid': '3637e2ee-0d4b-15b1-52c6-4d1248e67ea3'
+                    },
+                    'guid': 'e687d284-a04a-7cbc-93ed-ea941752d57a'
+                };
+                applyChange(changeA,function(err){
+                    if(err){
+                        done(err);
+                        return;
+                    }
+                    applyChange(changeB,function(err){
+                        if(err){
+                            done(err);
+                            return;
+                        }
+                        project.getCommonAncestorCommit(changeA.commitHash,changeB.commitHash,function(err,hash){
+                            if(err){
+                                done(err);
+                                return;
+                            }
+                            hash.should.be.equal(baseCommitHash);
+
+                            //generate diffs
+                            core.generateTreeDiff(root,changeA.root,function(err,diff){
+                                if(err){
+                                    done(err);
+                                    return;
+                                }
+                                diff[579542227][651215756].attr.priority.should.be.equal(2);
+                                changeA.computedDiff = diff;
+                                core.generateTreeDiff(root,changeB.root,function(err,diff){
+                                    if(err){
+                                        done(err);
+                                        return;
+                                    }
+                                    diff[579542227][2088994530].attr.priority.should.be.equal(2);
+                                    changeB.computedDiff = diff;
+                                    var conflict = core.tryToConcatChanges(changeA.computedDiff,changeB.computedDiff);
+                                    conflict.items.should.be.empty();
+
+                                    //apply merged diff to base
+                                    var merged = {diff:conflict.merge};
+                                    applyChange(merged,function(err){
+                                        if(err){
+                                            done(err);
+                                            return;
+                                        }
+
+                                        //check values
+                                        core.loadByPath(merged.root,'/579542227/651215756',function(err,a){
+                                            core.getAttribute(a,'priority').should.be.equal(2);
+                                            core.loadByPath(merged.root,'/579542227/2088994530',function(err,a){
+                                                core.getAttribute(a,'priority').should.be.equal(2);
+                                                done();
+                                            });
+                                        });
+                                    });
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+            it('changing to the same value',function(done){
+                var changeA={},changeB={};
+                changeA.diff = {
+                    '579542227':{
+                        '651215756':{
+                            'attr':{
+                                'priority':2
+                            },
+                            'guid': 'ed1a1ef7-7eb3-af75-11a8-7994220003e6'
+                        },
+                        'guid': '3637e2ee-0d4b-15b1-52c6-4d1248e67ea3'
+                    },
+                    'guid': 'e687d284-a04a-7cbc-93ed-ea941752d57a'
+                };
+                changeB.diff = {
+                    '579542227':{
+                        '651215756':{
+                            'attr':{
+                                'priority':2
+                            },
+                            'guid': 'ed1a1ef7-7eb3-af75-11a8-7994220003e6'
+                        },
+                        'guid': '3637e2ee-0d4b-15b1-52c6-4d1248e67ea3'
+                    },
+                    'guid': 'e687d284-a04a-7cbc-93ed-ea941752d57a'
+                };
+                applyChange(changeA,function(err){
+                    if(err){
+                        done(err);
+                        return;
+                    }
+                    applyChange(changeB,function(err){
+                        if(err){
+                            done(err);
+                            return;
+                        }
+                        project.getCommonAncestorCommit(changeA.commitHash,changeB.commitHash,function(err,hash){
+                            if(err){
+                                done(err);
+                                return;
+                            }
+                            hash.should.be.equal(baseCommitHash);
+
+                            //generate diffs
+                            core.generateTreeDiff(root,changeA.root,function(err,diff){
+                                if(err){
+                                    done(err);
+                                    return;
+                                }
+                                diff[579542227][651215756].attr.priority.should.be.equal(2);
+                                changeA.computedDiff = diff;
+                                core.generateTreeDiff(root,changeB.root,function(err,diff){
+                                    if(err){
+                                        done(err);
+                                        return;
+                                    }
+                                    diff[579542227][651215756].attr.priority.should.be.equal(2);
+                                    changeB.computedDiff = diff;
+                                    var conflict = core.tryToConcatChanges(changeA.computedDiff,changeB.computedDiff);
+                                    conflict.items.should.be.empty();
+
+                                    //apply merged diff to base
+                                    var merged = {diff:conflict.merge};
+                                    applyChange(merged,function(err){
+                                        if(err){
+                                            done(err);
+                                            return;
+                                        }
+
+                                        //check values
+                                        core.loadByPath(merged.root,'/579542227/651215756',function(err,a){
+                                            core.getAttribute(a,'priority').should.be.equal(2);
+                                            done();
+                                        });
+                                    });
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+            it('changing to different values',function(done){
+                var changeA={},changeB={};
+                changeA.diff = {
+                    '579542227':{
+                        '651215756':{
+                            'attr':{
+                                'priority':2
+                            },
+                            'guid': 'ed1a1ef7-7eb3-af75-11a8-7994220003e6'
+                        },
+                        'guid': '3637e2ee-0d4b-15b1-52c6-4d1248e67ea3'
+                    },
+                    'guid': 'e687d284-a04a-7cbc-93ed-ea941752d57a'
+                };
+                changeB.diff = {
+                    '579542227':{
+                        '651215756':{
+                            'attr':{
+                                'priority':3
+                            },
+                            'guid': 'ed1a1ef7-7eb3-af75-11a8-7994220003e6'
+                        },
+                        'guid': '3637e2ee-0d4b-15b1-52c6-4d1248e67ea3'
+                    },
+                    'guid': 'e687d284-a04a-7cbc-93ed-ea941752d57a'
+                };
+                applyChange(changeA,function(err){
+                    if(err){
+                        done(err);
+                        return;
+                    }
+                    applyChange(changeB,function(err){
+                        if(err){
+                            done(err);
+                            return;
+                        }
+                        project.getCommonAncestorCommit(changeA.commitHash,changeB.commitHash,function(err,hash){
+                            if(err){
+                                done(err);
+                                return;
+                            }
+                            hash.should.be.equal(baseCommitHash);
+
+                            //generate diffs
+                            core.generateTreeDiff(root,changeA.root,function(err,diff){
+                                if(err){
+                                    done(err);
+                                    return;
+                                }
+                                diff[579542227][651215756].attr.priority.should.be.equal(2);
+                                changeA.computedDiff = diff;
+                                core.generateTreeDiff(root,changeB.root,function(err,diff){
+                                    if(err){
+                                        done(err);
+                                        return;
+                                    }
+                                    diff[579542227][651215756].attr.priority.should.be.equal(3);
+                                    changeB.computedDiff = diff;
+                                    var conflict = core.tryToConcatChanges(changeA.computedDiff,changeB.computedDiff);
+                                    conflict.items.should.have.length(1);
+
+                                    //get final apply
+                                    conflict.items[0].selected = 'theirs';
+                                    var merged = {diff:core.applyResolution(conflict)};
+                                    applyChange(merged,function(err){
+                                        if(err){
+                                            done(err);
+                                            return;
+                                        }
+
+                                        //check values
+                                        core.loadByPath(merged.root,'/579542227/651215756',function(err,a){
+                                            core.getAttribute(a,'priority').should.be.equal(3);
+                                            done();
+                                        });
+                                    });
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+            it('changing and moving the node parallel',function(done){
+                var changeA={},changeB={};
+                changeA.diff = {
+                    '579542227':{
+                        '651215756':{
+                            'attr':{
+                                'priority':2
+                            },
+                            'guid': 'ed1a1ef7-7eb3-af75-11a8-7994220003e6'
+                        },
+                        'guid': '3637e2ee-0d4b-15b1-52c6-4d1248e67ea3'
+                    },
+                    'guid': 'e687d284-a04a-7cbc-93ed-ea941752d57a'
+                };
+                changeB.diff = {
+                    '1786679144':{
+                        '651215756':{
+                            'movedFrom':'/579542227/651215756',
+                            'guid': 'ed1a1ef7-7eb3-af75-11a8-7994220003e6'
+                        },
+                        guid:'8b636e17-3e94-e0c6-2678-1a24ee5e6ae7',
+                    },
+                    'guid': 'e687d284-a04a-7cbc-93ed-ea941752d57a'
+                };
+                applyChange(changeA,function(err){
+                    if(err){
+                        done(err);
+                        return;
+                    }
+                    applyChange(changeB,function(err){
+                        if(err){
+                            done(err);
+                            return;
+                        }
+                        project.getCommonAncestorCommit(changeA.commitHash,changeB.commitHash,function(err,hash){
+                            if(err){
+                                done(err);
+                                return;
+                            }
+                            hash.should.be.equal(baseCommitHash);
+
+                            //generate diffs
+                            core.generateTreeDiff(root,changeA.root,function(err,diff){
+                                if(err){
+                                    done(err);
+                                    return;
+                                }
+                                diff[579542227][651215756].attr.priority.should.be.equal(2);
+                                changeA.computedDiff = diff;
+                                core.generateTreeDiff(root,changeB.root,function(err,diff){
+                                    if(err){
+                                        done(err);
+                                        return;
+                                    }
+                                    diff[1786679144][651215756].movedFrom.should.be.exist();
+                                    changeB.computedDiff = diff;
+                                    var conflict = core.tryToConcatChanges(changeA.computedDiff,changeB.computedDiff);
+                                    conflict.items.should.be.empty();
+
+                                    //apply merged diff to base
+                                    var merged = {diff:conflict.merge};
+                                    applyChange(merged,function(err){
+                                        if(err){
+                                            done(err);
+                                            return;
+                                        }
+
+                                        //check values
+                                        core.loadByPath(merged.root,'/1786679144/651215756',function(err,a){
+                                            core.getAttribute(a,'priority').should.be.equal(2);
+                                            done();
+                                        });
+                                    });
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+        });
+        describe('registry',function(){
+            it('initial value check',function(done){
+                core.loadByPath(root,'/579542227/651215756',function(err,a){
+                    if(err){
+                        done(err);
+                        return;
+                    }
+                    core.getRegistry(a,'position').x.should.be.equal(69);
+                    core.getRegistry(a,'position').y.should.be.equal(276);
+
+                    core.loadByPath(root,'/579542227/2088994530',function(err,a){
+                        if(err){
+                            done(err);
+                            return;
+                        }
+                        core.getRegistry(a,'position').x.should.be.equal(243);
+                        core.getRegistry(a,'position').y.should.be.equal(184);
+                        done();
+                    });
+                });
+            });
+            it('changing separate nodes',function(done){
+                var changeA={},changeB={};
+                changeA.diff = {
+                    '579542227':{
+                        '651215756':{
+                            'reg':{
+                                'position':{'x':200,'y':200}
+                            },
+                            'guid': 'ed1a1ef7-7eb3-af75-11a8-7994220003e6'
+                        },
+                        'guid': '3637e2ee-0d4b-15b1-52c6-4d1248e67ea3'
+                    },
+                    'guid': 'e687d284-a04a-7cbc-93ed-ea941752d57a'
+                };
+                changeB.diff = {
+                    '579542227': {
+                        '2088994530': {
+                            'reg':{
+                                'position':{'x':300,'y':300}
+                            },
+                            'guid': '32e4adfc-deac-43ae-2504-3563b9d58b97'
+                        },
+                        'guid': '3637e2ee-0d4b-15b1-52c6-4d1248e67ea3'
+                    },
+                    'guid': 'e687d284-a04a-7cbc-93ed-ea941752d57a'
+                };
+                applyChange(changeA,function(err){
+                    if(err){
+                        done(err);
+                        return;
+                    }
+                    applyChange(changeB,function(err){
+                        if(err){
+                            done(err);
+                            return;
+                        }
+                        project.getCommonAncestorCommit(changeA.commitHash,changeB.commitHash,function(err,hash){
+                            if(err){
+                                done(err);
+                                return;
+                            }
+                            hash.should.be.equal(baseCommitHash);
+
+                            //generate diffs
+                            core.generateTreeDiff(root,changeA.root,function(err,diff){
+                                if(err){
+                                    done(err);
+                                    return;
+                                }
+                                diff[579542227][651215756].reg.position.x.should.be.equal(200);
+                                diff[579542227][651215756].reg.position.y.should.be.equal(200);
+                                changeA.computedDiff = diff;
+                                core.generateTreeDiff(root,changeB.root,function(err,diff){
+                                    if(err){
+                                        done(err);
+                                        return;
+                                    }
+                                    diff[579542227][2088994530].reg.position.x.should.be.equal(300);
+                                    diff[579542227][2088994530].reg.position.y.should.be.equal(300);
+                                    changeB.computedDiff = diff;
+                                    var conflict = core.tryToConcatChanges(changeA.computedDiff,changeB.computedDiff);
+                                    conflict.items.should.be.empty();
+
+                                    //apply merged diff to base
+                                    var merged = {diff:conflict.merge};
+                                    applyChange(merged,function(err){
+                                        if(err){
+                                            done(err);
+                                            return;
+                                        }
+
+                                        //check values
+                                        core.loadByPath(merged.root,'/579542227/651215756',function(err,a){
+                                            core.getRegistry(a,'position').x.should.be.equal(200);
+                                            core.getRegistry(a,'position').y.should.be.equal(200);
+                                            core.loadByPath(merged.root,'/579542227/2088994530',function(err,a){
+                                                core.getRegistry(a,'position').x.should.be.equal(300);
+                                                core.getRegistry(a,'position').y.should.be.equal(300);
+                                                done();
+                                            });
+                                        });
+                                    });
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+            it('changing to the same value',function(done){
+                var changeA={},changeB={};
+                changeA.diff = {
+                    '579542227':{
+                        '651215756':{
+                            'reg':{
+                                'position':{'x':200,'y':200}
+                            },
+                            'guid': 'ed1a1ef7-7eb3-af75-11a8-7994220003e6'
+                        },
+                        'guid': '3637e2ee-0d4b-15b1-52c6-4d1248e67ea3'
+                    },
+                    'guid': 'e687d284-a04a-7cbc-93ed-ea941752d57a'
+                };
+                changeB.diff = {
+                    '579542227':{
+                        '651215756':{
+                            'reg':{
+                                'position':{'x':200,'y':200}
+                            },
+                            'guid': 'ed1a1ef7-7eb3-af75-11a8-7994220003e6'
+                        },
+                        'guid': '3637e2ee-0d4b-15b1-52c6-4d1248e67ea3'
+                    },
+                    'guid': 'e687d284-a04a-7cbc-93ed-ea941752d57a'
+                };
+                applyChange(changeA,function(err){
+                    if(err){
+                        done(err);
+                        return;
+                    }
+                    applyChange(changeB,function(err){
+                        if(err){
+                            done(err);
+                            return;
+                        }
+                        project.getCommonAncestorCommit(changeA.commitHash,changeB.commitHash,function(err,hash){
+                            if(err){
+                                done(err);
+                                return;
+                            }
+                            hash.should.be.equal(baseCommitHash);
+
+                            //generate diffs
+                            core.generateTreeDiff(root,changeA.root,function(err,diff){
+                                if(err){
+                                    done(err);
+                                    return;
+                                }
+                                diff[579542227][651215756].reg.position.x.should.be.equal(200);
+                                diff[579542227][651215756].reg.position.y.should.be.equal(200);
+                                changeA.computedDiff = diff;
+                                core.generateTreeDiff(root,changeB.root,function(err,diff){
+                                    if(err){
+                                        done(err);
+                                        return;
+                                    }
+                                    diff[579542227][651215756].reg.position.x.should.be.equal(200);
+                                    diff[579542227][651215756].reg.position.y.should.be.equal(200);
+                                    changeB.computedDiff = diff;
+                                    var conflict = core.tryToConcatChanges(changeA.computedDiff,changeB.computedDiff);
+                                    conflict.items.should.be.empty();
+
+                                    //apply merged diff to base
+                                    var merged = {diff:conflict.merge};
+                                    applyChange(merged,function(err){
+                                        if(err){
+                                            done(err);
+                                            return;
+                                        }
+
+                                        //check values
+                                        core.loadByPath(merged.root,'/579542227/651215756',function(err,a){
+                                            core.getRegistry(a,'position').x.should.be.equal(200);
+                                            core.getRegistry(a,'position').y.should.be.equal(200);
+                                            done();
+                                        });
+                                    });
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+            it('changing to different values',function(done){
+                var changeA={},changeB={};
+                changeA.diff = {
+                    '579542227':{
+                        '651215756':{
+                            'reg':{
+                                'position':{'x':200,'y':200}
+                            },
+                            'guid': 'ed1a1ef7-7eb3-af75-11a8-7994220003e6'
+                        },
+                        'guid': '3637e2ee-0d4b-15b1-52c6-4d1248e67ea3'
+                    },
+                    'guid': 'e687d284-a04a-7cbc-93ed-ea941752d57a'
+                };
+                changeB.diff = {
+                    '579542227':{
+                        '651215756':{
+                            'reg':{
+                                'position':{'x':300,'y':300}
+                            },
+                            'guid': 'ed1a1ef7-7eb3-af75-11a8-7994220003e6'
+                        },
+                        'guid': '3637e2ee-0d4b-15b1-52c6-4d1248e67ea3'
+                    },
+                    'guid': 'e687d284-a04a-7cbc-93ed-ea941752d57a'
+                };
+                applyChange(changeA,function(err){
+                    if(err){
+                        done(err);
+                        return;
+                    }
+                    applyChange(changeB,function(err){
+                        if(err){
+                            done(err);
+                            return;
+                        }
+                        project.getCommonAncestorCommit(changeA.commitHash,changeB.commitHash,function(err,hash){
+                            if(err){
+                                done(err);
+                                return;
+                            }
+                            hash.should.be.equal(baseCommitHash);
+
+                            //generate diffs
+                            core.generateTreeDiff(root,changeA.root,function(err,diff){
+                                if(err){
+                                    done(err);
+                                    return;
+                                }
+                                diff[579542227][651215756].reg.position.x.should.be.equal(200);
+                                diff[579542227][651215756].reg.position.y.should.be.equal(200);
+                                changeA.computedDiff = diff;
+                                core.generateTreeDiff(root,changeB.root,function(err,diff){
+                                    if(err){
+                                        done(err);
+                                        return;
+                                    }
+                                    diff[579542227][651215756].reg.position.x.should.be.equal(300);
+                                    diff[579542227][651215756].reg.position.y.should.be.equal(300);
+                                    changeB.computedDiff = diff;
+                                    var conflict = core.tryToConcatChanges(changeA.computedDiff,changeB.computedDiff);
+                                    conflict.items.should.have.length(1);
+
+                                    //apply merged diff to base
+                                    conflict.items[0].selected = 'theirs';
+                                    var merged = {diff:core.applyResolution(conflict)};
+                                    applyChange(merged,function(err){
+                                        if(err){
+                                            done(err);
+                                            return;
+                                        }
+
+                                        //check values
+                                        core.loadByPath(merged.root,'/579542227/651215756',function(err,a){
+                                            core.getRegistry(a,'position').x.should.be.equal(300);
+                                            core.getRegistry(a,'position').y.should.be.equal(300);
+                                            done();
+                                        });
+                                    });
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+            it('changing and moving the node parallel',function(done){
+                var changeA={},changeB={};
+                changeA.diff = {
+                    '579542227':{
+                        '651215756':{
+                            'reg':{
+                                'position':{'x':200,'y':200}
+                            },
+                            'guid': 'ed1a1ef7-7eb3-af75-11a8-7994220003e6'
+                        },
+                        'guid': '3637e2ee-0d4b-15b1-52c6-4d1248e67ea3'
+                    },
+                    'guid': 'e687d284-a04a-7cbc-93ed-ea941752d57a'
+                };
+                changeB.diff = {
+                    '1786679144':{
+                        '651215756':{
+                            'movedFrom':'/579542227/651215756',
+                            'guid': 'ed1a1ef7-7eb3-af75-11a8-7994220003e6'
+                        },
+                        guid:'8b636e17-3e94-e0c6-2678-1a24ee5e6ae7',
+                    },
+                    'guid': 'e687d284-a04a-7cbc-93ed-ea941752d57a'
+                };
+                applyChange(changeA,function(err){
+                    if(err){
+                        done(err);
+                        return;
+                    }
+                    applyChange(changeB,function(err){
+                        if(err){
+                            done(err);
+                            return;
+                        }
+                        project.getCommonAncestorCommit(changeA.commitHash,changeB.commitHash,function(err,hash){
+                            if(err){
+                                done(err);
+                                return;
+                            }
+                            hash.should.be.equal(baseCommitHash);
+
+                            //generate diffs
+                            core.generateTreeDiff(root,changeA.root,function(err,diff){
+                                if(err){
+                                    done(err);
+                                    return;
+                                }
+                                diff[579542227][651215756].reg.position.x.should.be.equal(200);
+                                diff[579542227][651215756].reg.position.y.should.be.equal(200);
+                                changeA.computedDiff = diff;
+                                core.generateTreeDiff(root,changeB.root,function(err,diff){
+                                    if(err){
+                                        done(err);
+                                        return;
+                                    }
+                                    diff[1786679144][651215756].movedFrom.should.be.exist();
+                                    changeB.computedDiff = diff;
+                                    var conflict = core.tryToConcatChanges(changeA.computedDiff,changeB.computedDiff);
+                                    conflict.items.should.be.empty();
+
+                                    //apply merged diff to base
+                                    var merged = {diff:conflict.merge};
+                                    applyChange(merged,function(err){
+                                        if(err){
+                                            done(err);
+                                            return;
+                                        }
+
+                                        //check values
+                                        core.loadByPath(merged.root,'/1786679144/651215756',function(err,a){
+                                            core.getRegistry(a,'position').x.should.be.equal(200);
+                                            core.getRegistry(a,'position').y.should.be.equal(200);
+                                            done();
+                                        });
+                                    });
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+        });
+    });
 });
-describe('Core#Merge#Attribute',function(){
-  var baseRootHash,aRootHash,bRootHash,
-    commitA,commitB,diffA,diffB,mergedDiff,mergedCommit,mergedRootHash,conflict;
-  //before
-  it('[a1] check original attribute values',function(done){
-    baseRootHash = rootHash;
-    core.loadRoot(baseRootHash,function(err,r){
-      var needed = 2,error = null;
-      if(err){
-        return done(err);
-      }
-      root = r;
-      core.loadByPath(r,'/579542227/651215756',function(err,a){
-        error = error || err;
-        if(!err && core.getAttribute(a,'priority')!==100){
-          error = error || new Error('value of modificationA is wrong');
-        }
-        if(--needed === 0){
-          done(error);
-        }
-      });
-      core.loadByPath(r,'/579542227/2088994530',function(err,a){
-        error = error || err;
-        if(!err && core.getAttribute(a,'priority')!==100){
-          error = error || new Error('value of modificationB is wrong');
-        }
-        if(--needed === 0){
-          done(error);
-        }
-      });
-    });
-  });
-  //changing attributes of different nodes
-  it('[a2] node \'one\' priority => 2',function(done){
-    core.loadRoot(baseRootHash,function(err,r){
-      if(err){
-        return done(err);
-      }
-      commit = baseCommit;
-      root = r;
-      applyDiff({
-        "579542227":{
-          "651215756":{
-            "attr":{
-              "priority":2
-            },
-            "guid": "ed1a1ef7-7eb3-af75-11a8-7994220003e6",
-            "oGuids":{
-              "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
-              "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
-              "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true,
-              "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
-              "ed1a1ef7-7eb3-af75-11a8-7994220003e6": true,
-              "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true
-            }
-          },
-          "guid": "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3",
-          "oGuids":{
-            "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
-            "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
-            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true,
-            "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
-            "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true
-          }
-        },
-        "guid": "e687d284-a04a-7cbc-93ed-ea941752d57a",
-        "oGuids":{
-          "e687d284-a04a-7cbc-93ed-ea941752d57a": true
-        }
-      },function(err){
-        if(err){
-          return done(err);
-        }
+//TODO pointer tests should be reintroduced
+/*
 
-        saveProject('modificationsA',[baseCommit],function(err,c){
-          aRootHash = core.getHash(root);
-          commitA = c;
-          done(err);
-        });
-      });
-    });
-  });
-  it('[a2] node \'two\' priority => 2',function(done){
-    core.loadRoot(baseRootHash,function(err,r){
-      if(err){
-        return done(err);
-      }
-      commit = baseCommit;
-      root = r;
-      applyDiff({
-        "579542227": {
-          "2088994530": {
-            "attr": {
-              "priority": 2
-            },
-            "guid": "32e4adfc-deac-43ae-2504-3563b9d58b97",
-            "oGuids": {
-              "32e4adfc-deac-43ae-2504-3563b9d58b97": true,
-              "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
-              "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
-              "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true,
-              "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
-              "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
-            }
-          },
-          "guid": "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3",
-          "oGuids": {
-            "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
-            "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
-            "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true,
-            "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
-            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
-          }
-        },
-        "guid": "e687d284-a04a-7cbc-93ed-ea941752d57a",
-        "oGuids": {
-          "e687d284-a04a-7cbc-93ed-ea941752d57a": true
-        }
-      },function(err){
-        if(err){
-          return done(err);
-        }
-        saveProject('modificationsB',[baseCommit],function(err,c){
-          bRootHash = core.getHash(root);
-          commitB = c;
-          done(err);
-        });
-      });
-    });
-  });
-  it('[a2] common ancestor',function(done){
-    project.getCommonAncestorCommit(commitA,commitB,function(err,bc){
-      if(err){
-        return done(new Error(err));
-      }
-      if(bc !== baseCommit){
-        console.log(bc,'!=',baseCommit);
-        return done(new Error('common ancestor commit mismatch'));
-      }
-      done();
-    });
-  });
-  it('[a2] diff of modificationsA',function(done){
-    core.loadRoot(baseRootHash,function(err,b){
-      if(err){
-        return done(err);
-      }
-      core.loadRoot(aRootHash,function(err,a){
-        if(err){
-          return done(err);
-        }
-        core.generateTreeDiff(b,a,function(err,d){
-          if(err){
-            return done(err);
-          }
-          diffA = d;
-          done();
-        });
-      });
-    });
-  });
-  it('[a2] diff of modificationsB',function(done){
-    core.loadRoot(baseRootHash,function(err,b){
-      if(err){
-        return done(err);
-      }
-      core.loadRoot(bRootHash,function(err,a){
-        if(err){
-          return done(err);
-        }
-        core.generateTreeDiff(b,a,function(err,d){
-          if(err){
-            return done(err);
-          }
-          diffB = d;
-          done();
-        });
-      });
-    });
-  });
-  it('[a2] get conflict (0)',function(){
-    conflict = core.tryToConcatChanges(diffA,diffB);
-    if(conflict && conflict.items && conflict.items.length > 0){
-      throw new Error('there are conflicts');
-    }
-    mergedDiff = conflict.merge;
-  });
-  it('[a2] apply merged changes',function(done){
-    core.loadRoot(baseRootHash,function(err,r){
-      if(err){
-        return done(err);
-      }
-      root = r;
-      applyDiff(mergedDiff,function(err){
-        if(err){
-          return done(err);
-        }
-        saveProject('merged modifications',[commitA,commitB],function(err,c){
-          if(err){
-            return done(err);
-          }
-          mergedCommit = c;
-          mergedRootHash = core.getHash(root);
-          done();
-        });
-      });
-    });
-  });
-  it('[a2] check changes',function(done){
-    core.loadRoot(mergedRootHash,function(err,r){
-      var needed = 2,error = null;
-      if(err){
-        return done(err);
-      }
-      root = r;
-      core.loadByPath(r,'/579542227/651215756',function(err,a){
-        error = error || err;
-        if(!err && core.getAttribute(a,'priority')!==2){
-          error = error || new Error('value of modificationA is wrong');
-        }
-        if(--needed === 0){
-          done(error);
-        }
-      });
-      core.loadByPath(r,'/579542227/2088994530',function(err,a){
-        error = error || err;
-        if(!err && core.getAttribute(a,'priority')!==2){
-          error = error || new Error('value of modificationB is wrong');
-        }
-        if(--needed === 0){
-          done(error);
-        }
-      });
-    });
-  });
-  //changing attribute to same value
-  it('[a3] node \'one\' priority => 2',function(done){
-    core.loadRoot(baseRootHash,function(err,r){
-      if(err){
-        return done(err);
-      }
-      commit = baseCommit;
-      root = r;
-      applyDiff({
-        "579542227":{
-          "651215756":{
-            "attr":{
-              "priority":2
-            },
-            "guid": "ed1a1ef7-7eb3-af75-11a8-7994220003e6",
-            "oGuids":{
-              "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
-              "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
-              "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true,
-              "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
-              "ed1a1ef7-7eb3-af75-11a8-7994220003e6": true,
-              "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true
-            }
-          },
-          "guid": "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3",
-          "oGuids":{
-            "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
-            "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
-            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true,
-            "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
-            "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true
-          }
-        },
-        "guid": "e687d284-a04a-7cbc-93ed-ea941752d57a",
-        "oGuids":{
-          "e687d284-a04a-7cbc-93ed-ea941752d57a": true
-        }
-      },function(err){
-        if(err){
-          return done(err);
-        }
-
-        saveProject('modificationsA',[baseCommit],function(err,c){
-          aRootHash = core.getHash(root);
-          commitA = c;
-          done(err);
-        });
-      });
-    });
-  });
-  it('[a3] node \'one\' priority => 2',function(done){
-    core.loadRoot(baseRootHash,function(err,r){
-      if(err){
-        return done(err);
-      }
-      commit = baseCommit;
-      root = r;
-      applyDiff({
-        "579542227":{
-          "651215756":{
-            "attr":{
-              "priority":2
-            },
-            "guid": "ed1a1ef7-7eb3-af75-11a8-7994220003e6",
-            "oGuids":{
-              "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
-              "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
-              "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true,
-              "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
-              "ed1a1ef7-7eb3-af75-11a8-7994220003e6": true,
-              "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true
-            }
-          },
-          "guid": "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3",
-          "oGuids":{
-            "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
-            "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
-            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true,
-            "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
-            "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true
-          }
-        },
-        "guid": "e687d284-a04a-7cbc-93ed-ea941752d57a",
-        "oGuids":{
-          "e687d284-a04a-7cbc-93ed-ea941752d57a": true
-        }
-      },function(err){
-        if(err){
-          return done(err);
-        }
-        saveProject('modificationsB',[baseCommit],function(err,c){
-          bRootHash = core.getHash(root);
-          commitB = c;
-          done(err);
-        });
-      });
-    });
-  });
-  it('[a3] common ancestor',function(done){
-    project.getCommonAncestorCommit(commitA,commitB,function(err,bc){
-      if(err){
-        return done(new Error(err));
-      }
-      if(bc !== baseCommit){
-        console.warn(bc,'!=',baseCommit);
-        return done(new Error('common ancestor commit mismatch'));
-      }
-      done();
-    });
-  });
-  it('[a3] diff of modificationsA',function(done){
-    core.loadRoot(baseRootHash,function(err,b){
-      if(err){
-        return done(err);
-      }
-      core.loadRoot(aRootHash,function(err,a){
-        if(err){
-          return done(err);
-        }
-        core.generateTreeDiff(b,a,function(err,d){
-          if(err){
-            return done(err);
-          }
-          diffA = d;
-          done();
-        });
-      });
-    });
-  });
-  it('[a3] diff of modificationsB',function(done){
-    core.loadRoot(baseRootHash,function(err,b){
-      if(err){
-        return done(err);
-      }
-      core.loadRoot(bRootHash,function(err,a){
-        if(err){
-          return done(err);
-        }
-        core.generateTreeDiff(b,a,function(err,d){
-          if(err){
-            return done(err);
-          }
-          diffB = d;
-          done();
-        });
-      });
-    });
-  });
-  it('[a3] get conflict (0)',function(){
-    conflict = core.tryToConcatChanges(diffA,diffB);
-    if(conflict && conflict.items && conflict.items.length > 0){
-      throw new Error('there are conflicts');
-    }
-    mergedDiff = conflict.merge;
-  });
-  it('[a3] apply merged changes',function(done){
-    core.loadRoot(baseRootHash,function(err,r){
-      if(err){
-        return done(err);
-      }
-      root = r;
-      applyDiff(mergedDiff,function(err){
-        if(err){
-          return done(err);
-        }
-        saveProject('merged modifications',[commitA,commitB],function(err,c){
-          if(err){
-            return done(err);
-          }
-          mergedCommit = c;
-          mergedRootHash = core.getHash(root);
-          done();
-        });
-      });
-    });
-  });
-  it('[a3] check changes',function(done){
-    core.loadRoot(mergedRootHash,function(err,r){
-      var needed = 1,error = null;
-      if(err){
-        return done(err);
-      }
-      root = r;
-      core.loadByPath(r,'/579542227/651215756',function(err,a){
-        error = error || err;
-        if(!err && core.getAttribute(a,'priority')!==2){
-          error = error || new Error('value of modificationA is wrong');
-        }
-        if(--needed === 0){
-          done(error);
-        }
-      });
-    });
-  });
-  //changing attribute to different values
-  it('[a4] node \'one\' priority => 2',function(done){
-    core.loadRoot(baseRootHash,function(err,r){
-      if(err){
-        return done(err);
-      }
-      commit = baseCommit;
-      root = r;
-      applyDiff({
-        "579542227":{
-          "651215756":{
-            "attr":{
-              "priority":2
-            },
-            "guid": "ed1a1ef7-7eb3-af75-11a8-7994220003e6",
-            "oGuids":{
-              "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
-              "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
-              "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true,
-              "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
-              "ed1a1ef7-7eb3-af75-11a8-7994220003e6": true,
-              "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true
-            }
-          },
-          "guid": "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3",
-          "oGuids":{
-            "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
-            "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
-            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true,
-            "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
-            "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true
-          }
-        },
-        "guid": "e687d284-a04a-7cbc-93ed-ea941752d57a",
-        "oGuids":{
-          "e687d284-a04a-7cbc-93ed-ea941752d57a": true
-        }
-      },function(err){
-        if(err){
-          return done(err);
-        }
-
-        saveProject('modificationsA',[baseCommit],function(err,c){
-          aRootHash = core.getHash(root);
-          commitA = c;
-          done(err);
-        });
-      });
-    });
-  });
-  it('[a4] node \'one\' priority => 3',function(done){
-    core.loadRoot(baseRootHash,function(err,r){
-      if(err){
-        return done(err);
-      }
-      commit = baseCommit;
-      root = r;
-      applyDiff({
-        "579542227":{
-          "651215756":{
-            "attr":{
-              "priority":3
-            },
-            "guid": "ed1a1ef7-7eb3-af75-11a8-7994220003e6",
-            "oGuids":{
-              "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
-              "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
-              "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true,
-              "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
-              "ed1a1ef7-7eb3-af75-11a8-7994220003e6": true,
-              "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true
-            }
-          },
-          "guid": "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3",
-          "oGuids":{
-            "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
-            "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
-            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true,
-            "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
-            "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true
-          }
-        },
-        "guid": "e687d284-a04a-7cbc-93ed-ea941752d57a",
-        "oGuids":{
-          "e687d284-a04a-7cbc-93ed-ea941752d57a": true
-        }
-      },function(err){
-        if(err){
-          return done(err);
-        }
-        saveProject('modificationsB',[baseCommit],function(err,c){
-          bRootHash = core.getHash(root);
-          commitB = c;
-          done(err);
-        });
-      });
-    });
-  });
-  it('[a4] common ancestor',function(done){
-    project.getCommonAncestorCommit(commitA,commitB,function(err,bc){
-      if(err){
-        return done(new Error(err));
-      }
-      if(bc !== baseCommit){
-        console.warn(bc,'!=',baseCommit);
-        return done(new Error('common ancestor commit mismatch'));
-      }
-      done();
-    });
-  });
-  it('[a4] diff of modificationsA',function(done){
-    core.loadRoot(baseRootHash,function(err,b){
-      if(err){
-        return done(err);
-      }
-      core.loadRoot(aRootHash,function(err,a){
-        if(err){
-          return done(err);
-        }
-        core.generateTreeDiff(b,a,function(err,d){
-          if(err){
-            return done(err);
-          }
-          diffA = d;
-          done();
-        });
-      });
-    });
-  });
-  it('[a4] diff of modificationsB',function(done){
-    core.loadRoot(baseRootHash,function(err,b){
-      if(err){
-        return done(err);
-      }
-      core.loadRoot(bRootHash,function(err,a){
-        if(err){
-          return done(err);
-        }
-        core.generateTreeDiff(b,a,function(err,d){
-          if(err){
-            return done(err);
-          }
-          diffB = d;
-          done();
-        });
-      });
-    });
-  });
-  it('[a4] get conflict (1)',function(){
-    conflict = core.tryToConcatChanges(diffA,diffB);
-    if(conflict && conflict.items && conflict.items.length !== 1){
-      throw new Error('insufficient amount of conflicts');
-    }
-  });
-  it('[a4] crate final merged diff',function(){
-    conflict.items[0].selected = 'theirs';
-    mergedDiff = core.applyResolution(conflict);
-  });
-  it('[a4] apply merged changes',function(done){
-    core.loadRoot(baseRootHash,function(err,r){
-      if(err){
-        return done(err);
-      }
-      root = r;
-      applyDiff(mergedDiff,function(err){
-        if(err){
-          return done(err);
-        }
-        saveProject('merged modifications',[commitA,commitB],function(err,c){
-          if(err){
-            return done(err);
-          }
-          mergedCommit = c;
-          mergedRootHash = core.getHash(root);
-          done();
-        });
-      });
-    });
-  });
-  it('[a4] check changes',function(done){
-    core.loadRoot(mergedRootHash,function(err,r){
-      var needed = 1,error = null;
-      if(err){
-        return done(err);
-      }
-      root = r;
-      core.loadByPath(r,'/579542227/651215756',function(err,a){
-        error = error || err;
-        if(!err && core.getAttribute(a,'priority')!==3){
-          error = error || new Error('value of modificationA is wrong');
-        }
-        if(--needed === 0){
-          done(error);
-        }
-      });
-    });
-  });
-  //change attribute and move node
-  it('[a5] node \'one\' priority => 2',function(done){
-    core.loadRoot(baseRootHash,function(err,r) {
-      if (err) {
-        return done(err);
-      }
-      commit = baseCommit;
-      root = r;
-      core.loadByPath(root,'/579542227/651215756',function(err,node){
-        if(err){
-          return done(err);
-        }
-        core.setAttribute(node,'priority',2);
-        saveProject('priority -> 2',[commit],function(err,c) {
-          aRootHash = core.getHash(root);
-          commitA = c;
-          done(err);
-        });
-      });
-    });
-  });
-  it('[a5] move node \'one\'',function(done){
-    core.loadRoot(baseRootHash,function(err,r) {
-      if (err) {
-        return done(err);
-      }
-      commit = baseCommit;
-      root = r;
-      core.loadByPath(root,'/1786679144',function(err,parent){
-        if(err){
-          return done(err);
-        }
-        core.loadByPath(root,'/579542227/651215756',function(err,node){
-          if(err){
-            return done(err);
-          }
-          core.moveNode(node,parent);
-          saveProject('node moved',[commit],function(err,c) {
-            bRootHash = core.getHash(root);
-            commitB = c;
-            done(err);
-          });
-        });
-      });
-    });
-  });
-  it('[a5] common ancestor',function(done){
-    project.getCommonAncestorCommit(commitA,commitB,function(err,bc){
-      if(err){
-        return done(new Error(err));
-      }
-      if(bc !== baseCommit){
-        console.warn(bc,'!=',baseCommit);
-        return done(new Error('common ancestor commit mismatch'));
-      }
-      done();
-    });
-  });
-  it('[a5] diff of modificationsA',function(done){
-    core.loadRoot(baseRootHash,function(err,b){
-      if(err){
-        return done(err);
-      }
-      core.loadRoot(aRootHash,function(err,a){
-        if(err){
-          return done(err);
-        }
-        core.generateTreeDiff(b,a,function(err,d){
-          if(err){
-            return done(err);
-          }
-          diffA = d;
-          done();
-        });
-      });
-    });
-  });
-  it('[a5] diff of modificationsB',function(done){
-    core.loadRoot(baseRootHash,function(err,b){
-      if(err){
-        return done(err);
-      }
-      core.loadRoot(bRootHash,function(err,a){
-        if(err){
-          return done(err);
-        }
-        core.generateTreeDiff(b,a,function(err,d){
-          if(err){
-            return done(err);
-          }
-          diffB = d;
-          done();
-        });
-      });
-    });
-  });
-  it('[a5] get conflict (0)',function(){
-    conflict = core.tryToConcatChanges(diffA,diffB);
-    if(conflict && conflict.items && conflict.items.length > 0 ){
-      throw new Error('there are conflicts');
-    }
-    mergedDiff = conflict.merge;
-  });
-  it('[a5] apply merged changes',function(done){
-    core.loadRoot(baseRootHash,function(err,r){
-      if(err){
-        return done(err);
-      }
-      root = r;
-      applyDiff(mergedDiff,function(err){
-        if(err){
-          return done(err);
-        }
-        saveProject('merged modifications',[commitA,commitB],function(err,c){
-          if(err){
-            return done(err);
-          }
-          mergedCommit = c;
-          mergedRootHash = core.getHash(root);
-          done();
-        });
-      });
-    });
-  });
-  it('[a5] check changes',function(done){
-    core.loadRoot(mergedRootHash,function(err,r){
-      var needed = 1,error = null;
-      if(err){
-        return done(err);
-      }
-      root = r;
-      core.loadByPath(r,'/1786679144/651215756',function(err,a){
-        error = error || err;
-        if(!err && core.getAttribute(a,'priority')!==2){
-          error = error || new Error('value of modification is wrong');
-        }
-        if(--needed === 0){
-          done(error);
-        }
-      });
-    });
-  });
-  //remove attributes of different nodes
-  it('[a6] node \'one\' and \'two\' priority => 2',function(done){
-    core.loadRoot(baseRootHash,function(err,r){
-      if(err){
-        return done(err);
-      }
-      var needed = 2,error = null,
-        finish = function(){
-          if(error){
-            return done(error);
-          }
-          saveProject('basic modifications before the test',[commit],function(err,c){
-            if(err){
-              return done(err);
-            }
-            baseRootHash = core.getHash(root);
-            commit = c;
-            baseCommit = c;
-            done();
-          });
-        };
-      root = r;
-      core.loadByPath(root,'/579542227/651215756',function(err,a){
-        error = error || err;
-        if(!error && a){
-          core.setAttribute(a,'priority',2);
-        }
-        if(--needed === 0){
-          finish();
-        }
-      });
-      core.loadByPath(root,'/579542227/2088994530',function(err,a){
-        error = error || err;
-        if(!error && a){
-          core.setAttribute(a,'priority',2);
-        }
-        if(--needed === 0){
-          finish();
-        }
-      });
-    });
-  });
-  it('[a6] removes priority from node \'one\'',function(done){
-    core.loadRoot(baseRootHash,function(err,r){
-      if(err){
-        return done(err);
-      }
-      root = r;
-      core.loadByPath(root,'/579542227/651215756',function(err,node){
-        if(err){
-          return done(err);
-        }
-        core.delAttribute(node,'priority');
-        saveProject('priority removed from node',[baseCommit],function(err,c){
-          if(err){
-            return done(err);
-          }
-          commitA = c;
-          aRootHash = core.getHash(root);
-          done();
-        });
-      });
-    });
-  });
-  it('[a6] removes priority from node \'two\'',function(done){
-    core.loadRoot(baseRootHash,function(err,r){
-      if(err){
-        return done(err);
-      }
-      root = r;
-      core.loadByPath(root,'/579542227/2088994530',function(err,node){
-        if(err){
-          return done(err);
-        }
-        core.delAttribute(node,'priority');
-        saveProject('priority removed from node',[baseCommit],function(err,c){
-          if(err){
-            return done(err);
-          }
-          commitB = c;
-          bRootHash = core.getHash(root);
-          done();
-        });
-      });
-    });
-  });
-  it('[a6] common ancestor',function(done){
-    project.getCommonAncestorCommit(commitA,commitB,function(err,bc){
-      if(err){
-        return done(new Error(err));
-      }
-      if(bc !== baseCommit){
-        console.warn(bc,'!=',baseCommit);
-        return done(new Error('common ancestor commit mismatch'));
-      }
-      done();
-    });
-  });
-  it('[a6] diff of modificationsA',function(done){
-    core.loadRoot(baseRootHash,function(err,b){
-      if(err){
-        return done(err);
-      }
-      core.loadRoot(aRootHash,function(err,a){
-        if(err){
-          return done(err);
-        }
-        core.generateTreeDiff(b,a,function(err,d){
-          if(err){
-            return done(err);
-          }
-          diffA = d;
-          done();
-        });
-      });
-    });
-  });
-  it('[a6] diff of modificationsB',function(done){
-    core.loadRoot(baseRootHash,function(err,b){
-      if(err){
-        return done(err);
-      }
-      core.loadRoot(bRootHash,function(err,a){
-        if(err){
-          return done(err);
-        }
-        core.generateTreeDiff(b,a,function(err,d){
-          if(err){
-            return done(err);
-          }
-          diffB = d;
-          done();
-        });
-      });
-    });
-  });
-  it('[a6] get conflict (0)',function(){
-    conflict = core.tryToConcatChanges(diffA,diffB);
-    if(conflict && conflict.items && conflict.items.length > 0 ){
-      throw new Error('there are conflicts');
-    }
-    mergedDiff = conflict.merge;
-  });
-  it('[a6] apply merged changes',function(done){
-    core.loadRoot(baseRootHash,function(err,r){
-      if(err){
-        return done(err);
-      }
-      root = r;
-      applyDiff(mergedDiff,function(err){
-        if(err){
-          return done(err);
-        }
-        saveProject('merged modifications',[commitA,commitB],function(err,c){
-          if(err){
-            return done(err);
-          }
-          mergedCommit = c;
-          mergedRootHash = core.getHash(root);
-          done();
-        });
-      });
-    });
-  });
-  it('[a6] check changes',function(done){
-    core.loadRoot(mergedRootHash,function(err,r){
-      var needed = 2,error = null;
-      if(err){
-        return done(err);
-      }
-      root = r;
-      core.loadByPath(r,'/579542227/651215756',function(err,a){
-        error = error || err;
-        if(!err && core.getAttribute(a,'priority')!==100){
-          error = error || new Error('value of modificationA is wrong');
-        }
-        if(--needed === 0){
-          done(error);
-        }
-      });
-      core.loadByPath(r,'/579542227/2088994530',function(err,a){
-        error = error || err;
-        if(!err && core.getAttribute(a,'priority')!==100){
-          error = error || new Error('value of modificationB is wrong');
-        }
-        if(--needed === 0){
-          done(error);
-        }
-      });
-    });
-  });
-});
-describe('Core#Merge#Registry',function(){
-  var baseRootHash,aRootHash,bRootHash,
-    commitA,commitB,diffA,diffB,mergedDiff,mergedCommit,mergedRootHash,conflict;
-  //before
-  it('[r1] check original registry values',function(done){
-    baseRootHash = rootHash;
-    core.loadRoot(baseRootHash,function(err,r){
-      var needed = 2,error = null,position;
-      if(err){
-        return done(err);
-      }
-      root = r;
-      core.loadByPath(r,'/579542227/651215756',function(err,a){
-        error = error || err;
-        if(!err ){
-          position = core.getRegistry(a,'position');
-          if(position.x !== 69 || position.y !== 276)
-          error = error || new Error('values of node \'one\' are wrong');
-        }
-        if(--needed === 0){
-          done(error);
-        }
-      });
-      core.loadByPath(r,'/579542227/2088994530',function(err,a){
-        error = error || err;
-        if(!err ){
-          position = core.getRegistry(a,'position');
-          if(position.x !== 243 || position.y !== 184)
-            error = error || new Error('values of node \'one\' are wrong');
-        }
-        if(--needed === 0){
-          done(error);
-        }
-      });
-    });
-  });
-  //changing registry of different nodes
-  it('[r2] node \'one\' position => 200,200',function(done){
-    core.loadRoot(baseRootHash,function(err,r){
-      if(err){
-        return done(err);
-      }
-      commit = baseCommit;
-      root = r;
-      applyDiff({
-        "579542227":{
-          "651215756":{
-            "reg":{
-              "position":{"x":200,"y":200}
-            },
-            "guid": "ed1a1ef7-7eb3-af75-11a8-7994220003e6",
-            "oGuids":{
-              "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
-              "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
-              "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true,
-              "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
-              "ed1a1ef7-7eb3-af75-11a8-7994220003e6": true,
-              "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true
-            }
-          },
-          "guid": "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3",
-          "oGuids":{
-            "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
-            "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
-            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true,
-            "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
-            "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true
-          }
-        },
-        "guid": "e687d284-a04a-7cbc-93ed-ea941752d57a",
-        "oGuids":{
-          "e687d284-a04a-7cbc-93ed-ea941752d57a": true
-        }
-      },function(err){
-        if(err){
-          return done(err);
-        }
-
-        saveProject('modificationsA',[baseCommit],function(err,c){
-          aRootHash = core.getHash(root);
-          commitA = c;
-          done(err);
-        });
-      });
-    });
-  });
-  it('[r2] node \'two\' position => 300,300',function(done){
-    core.loadRoot(baseRootHash,function(err,r){
-      if(err){
-        return done(err);
-      }
-      commit = baseCommit;
-      root = r;
-      applyDiff({
-        "579542227": {
-          "2088994530": {
-            "reg": {
-              "position":{"x":300,"y":300}
-            },
-            "guid": "32e4adfc-deac-43ae-2504-3563b9d58b97",
-            "oGuids": {
-              "32e4adfc-deac-43ae-2504-3563b9d58b97": true,
-              "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
-              "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
-              "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true,
-              "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
-              "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
-            }
-          },
-          "guid": "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3",
-          "oGuids": {
-            "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
-            "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
-            "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true,
-            "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
-            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
-          }
-        },
-        "guid": "e687d284-a04a-7cbc-93ed-ea941752d57a",
-        "oGuids": {
-          "e687d284-a04a-7cbc-93ed-ea941752d57a": true
-        }
-      },function(err){
-        if(err){
-          return done(err);
-        }
-        saveProject('modificationsB',[baseCommit],function(err,c){
-          bRootHash = core.getHash(root);
-          commitB = c;
-          done(err);
-        });
-      });
-    });
-  });
-  it('[r2] common ancestor',function(done){
-    project.getCommonAncestorCommit(commitA,commitB,function(err,bc){
-      if(err){
-        return done(new Error(err));
-      }
-      if(bc !== baseCommit){
-        console.log(bc,'!=',baseCommit);
-        return done(new Error('common ancestor commit mismatch'));
-      }
-      done();
-    });
-  });
-  it('[r2] diff of modificationsA',function(done){
-    core.loadRoot(baseRootHash,function(err,b){
-      if(err){
-        return done(err);
-      }
-      core.loadRoot(aRootHash,function(err,a){
-        if(err){
-          return done(err);
-        }
-        core.generateTreeDiff(b,a,function(err,d){
-          if(err){
-            return done(err);
-          }
-          diffA = d;
-          done();
-        });
-      });
-    });
-  });
-  it('[r2] diff of modificationsB',function(done){
-    core.loadRoot(baseRootHash,function(err,b){
-      if(err){
-        return done(err);
-      }
-      core.loadRoot(bRootHash,function(err,a){
-        if(err){
-          return done(err);
-        }
-        core.generateTreeDiff(b,a,function(err,d){
-          if(err){
-            return done(err);
-          }
-          diffB = d;
-          done();
-        });
-      });
-    });
-  });
-  it('[r2] get conflict (0)',function(){
-    conflict = core.tryToConcatChanges(diffA,diffB);
-    if(conflict && conflict.items && conflict.items.length > 0){
-      throw new Error('there are conflicts');
-    }
-    mergedDiff = conflict.merge;
-  });
-  it('[r2] apply merged changes',function(done){
-    core.loadRoot(baseRootHash,function(err,r){
-      if(err){
-        return done(err);
-      }
-      root = r;
-      applyDiff(mergedDiff,function(err){
-        if(err){
-          return done(err);
-        }
-        saveProject('merged modifications',[commitA,commitB],function(err,c){
-          if(err){
-            return done(err);
-          }
-          mergedCommit = c;
-          mergedRootHash = core.getHash(root);
-          done();
-        });
-      });
-    });
-  });
-  it('[r2] check changes',function(done){
-    core.loadRoot(mergedRootHash,function(err,r){
-      var needed = 2,error = null,position;
-      if(err){
-        return done(err);
-      }
-      root = r;
-      core.loadByPath(r,'/579542227/651215756',function(err,a){
-        error = error || err;
-        if(!err ){
-          position = core.getRegistry(a,'position');
-          if(position.x !== 200 || position.y !== 200)
-            error = error || new Error('values of node \'one\' are wrong');
-        }
-        if(--needed === 0){
-          done(error);
-        }
-      });
-      core.loadByPath(r,'/579542227/2088994530',function(err,a){
-        error = error || err;
-        if(!err ){
-          position = core.getRegistry(a,'position');
-          if(position.x !== 300 || position.y !== 300)
-            error = error || new Error('values of node \'one\' are wrong');
-        }
-        if(--needed === 0){
-          done(error);
-        }
-      });
-    });
-  });
-  //changing attribute to same value
-  it('[r3] node \'one\' position => 200,200',function(done){
-    core.loadRoot(baseRootHash,function(err,r){
-      if(err){
-        return done(err);
-      }
-      commit = baseCommit;
-      root = r;
-      applyDiff({
-        "579542227":{
-          "651215756":{
-            "reg":{
-              "position":{"x":200,"y":200}
-            },
-            "guid": "ed1a1ef7-7eb3-af75-11a8-7994220003e6",
-            "oGuids":{
-              "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
-              "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
-              "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true,
-              "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
-              "ed1a1ef7-7eb3-af75-11a8-7994220003e6": true,
-              "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true
-            }
-          },
-          "guid": "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3",
-          "oGuids":{
-            "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
-            "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
-            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true,
-            "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
-            "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true
-          }
-        },
-        "guid": "e687d284-a04a-7cbc-93ed-ea941752d57a",
-        "oGuids":{
-          "e687d284-a04a-7cbc-93ed-ea941752d57a": true
-        }
-      },function(err){
-        if(err){
-          return done(err);
-        }
-
-        saveProject('modificationsA',[baseCommit],function(err,c){
-          aRootHash = core.getHash(root);
-          commitA = c;
-          done(err);
-        });
-      });
-    });
-  });
-  it('[r3] node \'one\' position => 200,200',function(done){
-    core.loadRoot(baseRootHash,function(err,r){
-      if(err){
-        return done(err);
-      }
-      commit = baseCommit;
-      root = r;
-      applyDiff({
-        "579542227":{
-          "651215756":{
-            "reg":{
-              "position":{"x":200,"y":200}
-            },
-            "guid": "ed1a1ef7-7eb3-af75-11a8-7994220003e6",
-            "oGuids":{
-              "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
-              "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
-              "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true,
-              "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
-              "ed1a1ef7-7eb3-af75-11a8-7994220003e6": true,
-              "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true
-            }
-          },
-          "guid": "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3",
-          "oGuids":{
-            "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
-            "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
-            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true,
-            "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
-            "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true
-          }
-        },
-        "guid": "e687d284-a04a-7cbc-93ed-ea941752d57a",
-        "oGuids":{
-          "e687d284-a04a-7cbc-93ed-ea941752d57a": true
-        }
-      },function(err){
-        if(err){
-          return done(err);
-        }
-        saveProject('modificationsB',[baseCommit],function(err,c){
-          bRootHash = core.getHash(root);
-          commitB = c;
-          done(err);
-        });
-      });
-    });
-  });
-  it('[r3] common ancestor',function(done){
-    project.getCommonAncestorCommit(commitA,commitB,function(err,bc){
-      if(err){
-        return done(new Error(err));
-      }
-      if(bc !== baseCommit){
-        console.warn(bc,'!=',baseCommit);
-        return done(new Error('common ancestor commit mismatch'));
-      }
-      done();
-    });
-  });
-  it('[r3] diff of modificationsA',function(done){
-    core.loadRoot(baseRootHash,function(err,b){
-      if(err){
-        return done(err);
-      }
-      core.loadRoot(aRootHash,function(err,a){
-        if(err){
-          return done(err);
-        }
-        core.generateTreeDiff(b,a,function(err,d){
-          if(err){
-            return done(err);
-          }
-          diffA = d;
-          done();
-        });
-      });
-    });
-  });
-  it('[r3] diff of modificationsB',function(done){
-    core.loadRoot(baseRootHash,function(err,b){
-      if(err){
-        return done(err);
-      }
-      core.loadRoot(bRootHash,function(err,a){
-        if(err){
-          return done(err);
-        }
-        core.generateTreeDiff(b,a,function(err,d){
-          if(err){
-            return done(err);
-          }
-          diffB = d;
-          done();
-        });
-      });
-    });
-  });
-  it('[r3] get conflict (0)',function(){
-    conflict = core.tryToConcatChanges(diffA,diffB);
-    if(conflict && conflict.items && conflict.items.length > 0){
-      throw new Error('there are conflicts');
-    }
-    mergedDiff = conflict.merge;
-  });
-  it('[r3] apply merged changes',function(done){
-    core.loadRoot(baseRootHash,function(err,r){
-      if(err){
-        return done(err);
-      }
-      root = r;
-      applyDiff(mergedDiff,function(err){
-        if(err){
-          return done(err);
-        }
-        saveProject('merged modifications',[commitA,commitB],function(err,c){
-          if(err){
-            return done(err);
-          }
-          mergedCommit = c;
-          mergedRootHash = core.getHash(root);
-          done();
-        });
-      });
-    });
-  });
-  it('[r3] check changes',function(done){
-    core.loadRoot(mergedRootHash,function(err,r){
-      var needed = 1,error = null,position;
-      if(err){
-        return done(err);
-      }
-      root = r;
-      core.loadByPath(r,'/579542227/651215756',function(err,a){
-        error = error || err;
-        if(!err ){
-          position = core.getRegistry(a,'position');
-          if(position.x !== 200 || position.y !== 200)
-            error = error || new Error('values of node \'one\' are wrong');
-        }
-        if(--needed === 0){
-          done(error);
-        }
-      });
-    });
-  });
-  //changing attribute to different values
-  it('[r4] node \'one\' position => 200,200',function(done){
-    core.loadRoot(baseRootHash,function(err,r){
-      if(err){
-        return done(err);
-      }
-      commit = baseCommit;
-      root = r;
-      applyDiff({
-        "579542227":{
-          "651215756":{
-            "reg":{
-              "position":{"x":200,"y":200}
-            },
-            "guid": "ed1a1ef7-7eb3-af75-11a8-7994220003e6",
-            "oGuids":{
-              "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
-              "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
-              "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true,
-              "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
-              "ed1a1ef7-7eb3-af75-11a8-7994220003e6": true,
-              "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true
-            }
-          },
-          "guid": "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3",
-          "oGuids":{
-            "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
-            "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
-            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true,
-            "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
-            "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true
-          }
-        },
-        "guid": "e687d284-a04a-7cbc-93ed-ea941752d57a",
-        "oGuids":{
-          "e687d284-a04a-7cbc-93ed-ea941752d57a": true
-        }
-      },function(err){
-        if(err){
-          return done(err);
-        }
-
-        saveProject('modificationsA',[baseCommit],function(err,c){
-          aRootHash = core.getHash(root);
-          commitA = c;
-          done(err);
-        });
-      });
-    });
-  });
-  it('[r4] node \'one\' position => 300,300',function(done){
-    core.loadRoot(baseRootHash,function(err,r){
-      if(err){
-        return done(err);
-      }
-      commit = baseCommit;
-      root = r;
-      applyDiff({
-        "579542227":{
-          "651215756":{
-            "reg":{
-              "position":{"x":300,"y":300}
-            },
-            "guid": "ed1a1ef7-7eb3-af75-11a8-7994220003e6",
-            "oGuids":{
-              "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
-              "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
-              "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true,
-              "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
-              "ed1a1ef7-7eb3-af75-11a8-7994220003e6": true,
-              "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true
-            }
-          },
-          "guid": "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3",
-          "oGuids":{
-            "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
-            "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
-            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true,
-            "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
-            "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true
-          }
-        },
-        "guid": "e687d284-a04a-7cbc-93ed-ea941752d57a",
-        "oGuids":{
-          "e687d284-a04a-7cbc-93ed-ea941752d57a": true
-        }
-      },function(err){
-        if(err){
-          return done(err);
-        }
-        saveProject('modificationsB',[baseCommit],function(err,c){
-          bRootHash = core.getHash(root);
-          commitB = c;
-          done(err);
-        });
-      });
-    });
-  });
-  it('[r4] common ancestor',function(done){
-    project.getCommonAncestorCommit(commitA,commitB,function(err,bc){
-      if(err){
-        return done(new Error(err));
-      }
-      if(bc !== baseCommit){
-        console.warn(bc,'!=',baseCommit);
-        return done(new Error('common ancestor commit mismatch'));
-      }
-      done();
-    });
-  });
-  it('[r4] diff of modificationsA',function(done){
-    core.loadRoot(baseRootHash,function(err,b){
-      if(err){
-        return done(err);
-      }
-      core.loadRoot(aRootHash,function(err,a){
-        if(err){
-          return done(err);
-        }
-        core.generateTreeDiff(b,a,function(err,d){
-          if(err){
-            return done(err);
-          }
-          diffA = d;
-          done();
-        });
-      });
-    });
-  });
-  it('[r4] diff of modificationsB',function(done){
-    core.loadRoot(baseRootHash,function(err,b){
-      if(err){
-        return done(err);
-      }
-      core.loadRoot(bRootHash,function(err,a){
-        if(err){
-          return done(err);
-        }
-        core.generateTreeDiff(b,a,function(err,d){
-          if(err){
-            return done(err);
-          }
-          diffB = d;
-          done();
-        });
-      });
-    });
-  });
-  it('[r4] get conflict (1)',function(){
-    conflict = core.tryToConcatChanges(diffA,diffB);
-    if(conflict && conflict.items && conflict.items.length !== 1){
-      throw new Error('insufficient amount of conflicts');
-    }
-  });
-  it('[r4] crate final merged diff',function(){
-    conflict.items[0].selected = 'theirs';
-    mergedDiff = core.applyResolution(conflict);
-  });
-  it('[r4] apply merged changes',function(done){
-    core.loadRoot(baseRootHash,function(err,r){
-      if(err){
-        return done(err);
-      }
-      root = r;
-      applyDiff(mergedDiff,function(err){
-        if(err){
-          return done(err);
-        }
-        saveProject('merged modifications',[commitA,commitB],function(err,c){
-          if(err){
-            return done(err);
-          }
-          mergedCommit = c;
-          mergedRootHash = core.getHash(root);
-          done();
-        });
-      });
-    });
-  });
-  it('[r4] check changes',function(done){
-    core.loadRoot(mergedRootHash,function(err,r){
-      var needed = 1,error = null,position;
-      if(err){
-        return done(err);
-      }
-      root = r;
-      core.loadByPath(r,'/579542227/651215756',function(err,a){
-        error = error || err;
-        if(!err ){
-          position = core.getRegistry(a,'position');
-          if(position.x !== 300 || position.y !== 300)
-            error = error || new Error('values of node \'one\' are wrong');
-        }
-        if(--needed === 0){
-          done(error);
-        }
-      });
-    });
-  });
-  //change attribute and move node
-  it('[r5] node \'one\' position => 200,200',function(done){
-    core.loadRoot(baseRootHash,function(err,r){
-      if(err){
-        return done(err);
-      }
-      commit = baseCommit;
-      root = r;
-      applyDiff({
-        "579542227":{
-          "651215756":{
-            "reg":{
-              "position":{"x":200,"y":200}
-            },
-            "guid": "ed1a1ef7-7eb3-af75-11a8-7994220003e6",
-            "oGuids":{
-              "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
-              "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
-              "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true,
-              "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
-              "ed1a1ef7-7eb3-af75-11a8-7994220003e6": true,
-              "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true
-            }
-          },
-          "guid": "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3",
-          "oGuids":{
-            "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
-            "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
-            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true,
-            "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
-            "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true
-          }
-        },
-        "guid": "e687d284-a04a-7cbc-93ed-ea941752d57a",
-        "oGuids":{
-          "e687d284-a04a-7cbc-93ed-ea941752d57a": true
-        }
-      },function(err){
-        if(err){
-          return done(err);
-        }
-
-        saveProject('modificationsA',[baseCommit],function(err,c){
-          aRootHash = core.getHash(root);
-          commitA = c;
-          done(err);
-        });
-      });
-    });
-  });
-  it('[r5] move node \'one\'',function(done){
-    core.loadRoot(baseRootHash,function(err,r) {
-      if (err) {
-        return done(err);
-      }
-      commit = baseCommit;
-      root = r;
-      core.loadByPath(root,'/1786679144',function(err,parent){
-        if(err){
-          return done(err);
-        }
-        core.loadByPath(root,'/579542227/651215756',function(err,node){
-          if(err){
-            return done(err);
-          }
-          core.moveNode(node,parent);
-          saveProject('node moved',[commit],function(err,c) {
-            bRootHash = core.getHash(root);
-            commitB = c;
-            done(err);
-          });
-        });
-      });
-    });
-  });
-  it('[r5] common ancestor',function(done){
-    project.getCommonAncestorCommit(commitA,commitB,function(err,bc){
-      if(err){
-        return done(new Error(err));
-      }
-      if(bc !== baseCommit){
-        console.warn(bc,'!=',baseCommit);
-        return done(new Error('common ancestor commit mismatch'));
-      }
-      done();
-    });
-  });
-  it('[r5] diff of modificationsA',function(done){
-    core.loadRoot(baseRootHash,function(err,b){
-      if(err){
-        return done(err);
-      }
-      core.loadRoot(aRootHash,function(err,a){
-        if(err){
-          return done(err);
-        }
-        core.generateTreeDiff(b,a,function(err,d){
-          if(err){
-            return done(err);
-          }
-          diffA = d;
-          done();
-        });
-      });
-    });
-  });
-  it('[r5] diff of modificationsB',function(done){
-    core.loadRoot(baseRootHash,function(err,b){
-      if(err){
-        return done(err);
-      }
-      core.loadRoot(bRootHash,function(err,a){
-        if(err){
-          return done(err);
-        }
-        core.generateTreeDiff(b,a,function(err,d){
-          if(err){
-            return done(err);
-          }
-          diffB = d;
-          done();
-        });
-      });
-    });
-  });
-  it('[r5] get conflict (0)',function(){
-    conflict = core.tryToConcatChanges(diffA,diffB);
-    if(conflict && conflict.items && conflict.items.length > 0 ){
-      throw new Error('there are conflicts');
-    }
-    mergedDiff = conflict.merge;
-  });
-  it('[r5] apply merged changes',function(done){
-    core.loadRoot(baseRootHash,function(err,r){
-      if(err){
-        return done(err);
-      }
-      root = r;
-      applyDiff(mergedDiff,function(err){
-        if(err){
-          return done(err);
-        }
-        saveProject('merged modifications',[commitA,commitB],function(err,c){
-          if(err){
-            return done(err);
-          }
-          mergedCommit = c;
-          mergedRootHash = core.getHash(root);
-          done();
-        });
-      });
-    });
-  });
-  it('[r5] check changes',function(done){
-    core.loadRoot(mergedRootHash,function(err,r){
-      var needed = 1,error = null,position;
-      if(err){
-        return done(err);
-      }
-      root = r;
-      core.loadByPath(r,'/1786679144/651215756',function(err,a){
-        error = error || err;
-        if(!err ){
-          position = core.getRegistry(a,'position');
-          if(position.x !== 200 || position.y !== 200)
-            error = error || new Error('values of node \'one\' are wrong');
-        }
-        if(--needed === 0){
-          done(error);
-        }
-      });
-    });
-  });
-  //remove attributes of different nodes
-  it('[r6] removes position from node \'one\'',function(done){
-    core.loadRoot(baseRootHash,function(err,r){
-      if(err){
-        return done(err);
-      }
-      root = r;
-      core.loadByPath(root,'/579542227/651215756',function(err,node){
-        if(err){
-          return done(err);
-        }
-        core.delRegistry(node,'position');
-        saveProject('position removed from node',[baseCommit],function(err,c){
-          if(err){
-            return done(err);
-          }
-          commitA = c;
-          aRootHash = core.getHash(root);
-          done();
-        });
-      });
-    });
-  });
-  it('[r6] removes position from node \'two\'',function(done){
-    core.loadRoot(baseRootHash,function(err,r){
-      if(err){
-        return done(err);
-      }
-      root = r;
-      core.loadByPath(root,'/579542227/2088994530',function(err,node){
-        if(err){
-          return done(err);
-        }
-        core.delRegistry(node,'position');
-        saveProject('position removed from node',[baseCommit],function(err,c){
-          if(err){
-            return done(err);
-          }
-          commitB = c;
-          bRootHash = core.getHash(root);
-          done();
-        });
-      });
-    });
-  });
-  it('[r6] common ancestor',function(done){
-    project.getCommonAncestorCommit(commitA,commitB,function(err,bc){
-      if(err){
-        return done(new Error(err));
-      }
-      if(bc !== baseCommit){
-        console.warn(bc,'!=',baseCommit);
-        return done(new Error('common ancestor commit mismatch'));
-      }
-      done();
-    });
-  });
-  it('[r6] diff of modificationsA',function(done){
-    core.loadRoot(baseRootHash,function(err,b){
-      if(err){
-        return done(err);
-      }
-      core.loadRoot(aRootHash,function(err,a){
-        if(err){
-          return done(err);
-        }
-        core.generateTreeDiff(b,a,function(err,d){
-          if(err){
-            return done(err);
-          }
-          diffA = d;
-          done();
-        });
-      });
-    });
-  });
-  it('[r6] diff of modificationsB',function(done){
-    core.loadRoot(baseRootHash,function(err,b){
-      if(err){
-        return done(err);
-      }
-      core.loadRoot(bRootHash,function(err,a){
-        if(err){
-          return done(err);
-        }
-        core.generateTreeDiff(b,a,function(err,d){
-          if(err){
-            return done(err);
-          }
-          diffB = d;
-          done();
-        });
-      });
-    });
-  });
-  it('[r6] get conflict (0)',function(){
-    conflict = core.tryToConcatChanges(diffA,diffB);
-    if(conflict && conflict.items && conflict.items.length > 0 ){
-      throw new Error('there are conflicts');
-    }
-    mergedDiff = conflict.merge;
-  });
-  it('[r6] apply merged changes',function(done){
-    core.loadRoot(baseRootHash,function(err,r){
-      if(err){
-        return done(err);
-      }
-      root = r;
-      applyDiff(mergedDiff,function(err){
-        if(err){
-          return done(err);
-        }
-        saveProject('merged modifications',[commitA,commitB],function(err,c){
-          if(err){
-            return done(err);
-          }
-          mergedCommit = c;
-          mergedRootHash = core.getHash(root);
-          done();
-        });
-      });
-    });
-  });
-  it('[r6] check changes',function(done){
-    core.loadRoot(mergedRootHash,function(err,r){
-      var needed = 2,error = null,position;
-      if(err){
-        return done(err);
-      }
-      root = r;
-      core.loadByPath(r,'/579542227/651215756',function(err,a){
-        error = error || err;
-        if(!err ){
-          position = core.getRegistry(a,'position');
-          if(position.x !== 329 || position.y !== 140)
-            error = error || new Error('values of node \'one\' are wrong');
-        }
-        if(--needed === 0){
-          done(error);
-        }
-      });
-      core.loadByPath(r,'/579542227/2088994530',function(err,a){
-        error = error || err;
-        if(!err ){
-          position = core.getRegistry(a,'position');
-          if(position.x !== 329 || position.y !== 140)
-            error = error || new Error('values of node \'one\' are wrong');
-        }
-        if(--needed === 0){
-          done(error);
-        }
-      });
-    });
-  });
-});
 describe('Core#Merge#Pointer',function() {
   var baseRootHash, aRootHash, bRootHash,
     commitA, commitB, diffA, diffB, mergedDiff, mergedCommit, mergedRootHash, conflict;
@@ -2097,8 +962,8 @@ describe('Core#Merge#Pointer',function() {
       }
       root = r;
       loadNodes([
-        '/579542227/275896267'/*connection*/,
-        '/579542227/1532094116' /*new dst and src 3*/], function (err, nodes) {
+        '/579542227/275896267',
+        '/579542227/1532094116' ], function (err, nodes) {
         if (err) {
           return done(err);
         }
@@ -2122,8 +987,8 @@ describe('Core#Merge#Pointer',function() {
       }
       root = r;
       loadNodes([
-        '/579542227/684921282'/*connection*/,
-        '/579542227/651215756' /*new dst and src 1*/], function (err, nodes) {
+        '/579542227/684921282',
+        '/579542227/651215756'], function (err, nodes) {
         if (err) {
           return done(err);
         }
@@ -2246,8 +1111,8 @@ describe('Core#Merge#Pointer',function() {
       }
       root = r;
       loadNodes([
-        '/579542227/275896267'/*connection*/,
-        '/579542227/1532094116' /*new dst and src 3*/], function (err, nodes) {
+        '/579542227/275896267',
+        '/579542227/1532094116' ], function (err, nodes) {
         if (err) {
           return done(err);
         }
@@ -2271,8 +1136,8 @@ describe('Core#Merge#Pointer',function() {
       }
       root = r;
       loadNodes([
-        '/579542227/275896267'/*connection*/,
-        '/579542227/1532094116' /*new dst and src 3*/], function (err, nodes) {
+        '/579542227/275896267',
+        '/579542227/1532094116' ], function (err, nodes) {
         if (err) {
           return done(err);
         }
@@ -2393,8 +1258,8 @@ describe('Core#Merge#Pointer',function() {
       }
       root = r;
       loadNodes([
-        '/579542227/275896267'/*connection*/,
-        '/579542227/1532094116' /*new dst and src 3*/], function (err, nodes) {
+        '/579542227/275896267',
+        '/579542227/1532094116' ], function (err, nodes) {
         if (err) {
           return done(err);
         }
@@ -2418,9 +1283,9 @@ describe('Core#Merge#Pointer',function() {
       }
       root = r;
       loadNodes([
-        '/579542227/275896267'/*connection*/,
-        '/579542227/651215756' /*new dst 1*/,
-        '/579542227/2088994530' /*new src 2*/], function (err, nodes) {
+        '/579542227/275896267',
+        '/579542227/651215756',
+        '/579542227/2088994530'], function (err, nodes) {
         if (err) {
           return done(err);
         }
@@ -2556,8 +1421,8 @@ describe('Core#Merge#Pointer',function() {
       }
       root = r;
       loadNodes([
-        '/579542227/275896267'/*connection*/,
-        '/579542227/1532094116' /*new dst and src 3*/], function (err, nodes) {
+        '/579542227/275896267',
+        '/579542227/1532094116' ], function (err, nodes) {
         if (err) {
           return done(err);
         }
@@ -2700,8 +1565,8 @@ describe('Core#Merge#Pointer',function() {
       }
       root = r;
       loadNodes([
-        '/579542227/275896267'/*connection*/,
-        '/579542227/1532094116' /*new dst and src 3*/], function (err, nodes) {
+        '/579542227/275896267',
+        '/579542227/1532094116' ], function (err, nodes) {
         if (err) {
           return done(err);
         }
@@ -2844,7 +1709,7 @@ describe('Core#Merge#Pointer',function() {
       }
       root = r;
       loadNodes([
-        '/579542227/275896267'/*connection*/], function (err, nodes) {
+        '/579542227/275896267'], function (err, nodes) {
         if (err) {
           return done(err);
         }
@@ -2980,11 +1845,4 @@ describe('Core#Merge#Pointer',function() {
     });
   });
 });
-describe('Core#Merge#Post',function(){
-  it('should remove the test project',function(done){
-    deleteProject(done);
-  });
-  it('should close the database connection',function(done){
-    storage.closeDatabase(done);
-  });
-});
+*/
