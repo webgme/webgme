@@ -16,7 +16,7 @@ $loader-container-circle-border-color: rgba(82, 168, 236, 0.9);
 $loader-container-circle-shadow-color: rgba(82, 168, 236, 1.0);
 
 $loader-container-size: $loader-container-circle-o-size + $loader-container-circle-o-shadow-size;
-$loader-container-circle-i-top: 0 - $loader-container-circle-o-shadow-size/3 - $loader-container-circle-o-size/2 - $loader-container-circle-i-size/2 - 2 * $loader-container-circle-border-size;
+$loader-container-circle-i-top: 0 - $loader-container-circle-o-shadow-size/3 - $loader-container-circle-o-size/2 - $loader-container-circle-i-size/2;
 
 .loader-bg {
   position: absolute;
