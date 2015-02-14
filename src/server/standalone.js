@@ -767,7 +767,7 @@ define(['logManager',
         for (var dev in networkIfs) {
             networkIfs[dev].forEach(function (netIf) {
                 if (netIf.family === 'IPv4') {
-                    var address = CONFIG.httpsecure ? 'https' : 'http' + '://' + netIf.address + ':' + CONFIG.port;
+                    var address = (CONFIG.httpsecure ? 'https' : 'http') + '://' + netIf.address + ':' + CONFIG.port;
                     addresses = addresses + '  ' + address;
                 }
             });
