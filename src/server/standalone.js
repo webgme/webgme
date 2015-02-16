@@ -97,6 +97,7 @@ define(['logManager',
 
             __storageOptions.sessionToUser = __sessionStore.getSessionUser;
 
+            __storageOptions.globConf = CONFIG;
             __storage = Storage(__storageOptions);
             //end of storage creation
             __storage.open();

@@ -669,7 +669,8 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 pluginBasePaths:options.pluginBasePaths,
                 serverPort:options.webServerPort,
                 sessionToUser:options.sessionToUser,
-                auth:options.auth
+                auth:options.auth,
+                globConf:options.globConf
             });
         }
 
