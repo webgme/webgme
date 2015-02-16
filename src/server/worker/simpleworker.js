@@ -166,7 +166,7 @@ requirejs(['worker/constants',
     var getConnectedStorage = function (sessionId, callback) {
       var connStorage = new ConnectedStorage({
         type: 'node',
-        host: '127.0.0.1',
+        host: (_CONFIG.httpsecure === true ? 'https' : 'http') + '://127.0.0.1',
         port: _CONFIG.port,
         log: logManager.create('SERVER-WORKER-PLUGIN-' + process.pid),
         webGMESessionId: sessionId
