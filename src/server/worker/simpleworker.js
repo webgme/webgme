@@ -207,7 +207,12 @@ requirejs(['worker/constants',
             var plugins = {};
             plugins[name] = interpreter;
             var manager = new PluginManagerBase(project, Core, plugins);
-            context.managerConfig.blobClient = new BlobServerClient({serverPort: _CONFIG.port, sessionId: sessionId});
+
+            context.managerConfig.blobClient = new BlobServerClient({
+              serverPort: _CONFIG.port,
+              httpsecure: _CONFIG.httpsecure,
+              sessionId: sessionId
+            });
 
             manager.initialize(null, function (pluginConfigs, configSaveCallback) {
               if (configSaveCallback) {
