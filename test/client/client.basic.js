@@ -559,4 +559,39 @@ describe('Client tests', function () {
        };
  });
  });
+
+ describe('Run plugins', function (done) {
+  it('should run plugin on server side', function (done) {
+   var context,
+       name = 'PluginGenerator',
+       config = {
+        project: projectName,
+        token: "",
+        activeNode: null, // active object in the editor
+        activeSelection: [],
+        commit: null, //"#668b3babcdf2ddcd7ba38b51acb62d63da859d90",
+        branchName: 'master' // this has priority over the commit if not null
+       };
+
+
+   requirejs(['plugin/' + name + '/' + name + '/' + name],
+       function (PluginClass) {
+        var plugin = new PluginClass();
+        context = {
+         managerConfig: config,
+         pluginConfigs: plugin.getDefaultConfig()
+        };
+        CLNT.runServerPlugin('PluginGenerator', context, function (err, result) {
+         //console.log(result);
+         done(err);
+        });
+       },
+       function (err) {
+        done(err);
+       }
+   );
+
+
+  });
+ });
 });
