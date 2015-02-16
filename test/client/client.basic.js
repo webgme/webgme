@@ -560,7 +560,7 @@ describe('Client tests', function () {
  });
  });
 
- describe('Run plugins', function (done) {
+ describe('Run plugins', function () {
   it('should run plugin on server side', function (done) {
    var context,
        name = 'PluginGenerator',
@@ -572,7 +572,6 @@ describe('Client tests', function () {
         commit: null, //"#668b3babcdf2ddcd7ba38b51acb62d63da859d90",
         branchName: 'master' // this has priority over the commit if not null
        };
-
 
    requirejs(['plugin/' + name + '/' + name + '/' + name],
        function (PluginClass) {
