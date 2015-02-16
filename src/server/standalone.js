@@ -97,6 +97,7 @@ define(['logManager',
 
             __storageOptions.sessionToUser = __sessionStore.getSessionUser;
 
+            __storageOptions.globConf = CONFIG;
             __storage = Storage(__storageOptions);
             //end of storage creation
             __storage.open();
@@ -377,8 +378,8 @@ define(['logManager',
         __logger.info("starting standalone server initialization");
         //initializing https extra infos
         if (CONFIG.httpsecure === true) { //TODO we should make it also configurable
-            __secureSiteInfo.key = FS.readFileSync("proba-key.pem");
-            __secureSiteInfo.certificate = FS.readFileSync("proba-cert.pem");
+            __secureSiteInfo.key = FS.readFileSync("./src/bin/proba-key.pem");
+            __secureSiteInfo.certificate = FS.readFileSync("./src/bin/proba-cert.pem");
         }
 
         __logger.info("initializing session storage");

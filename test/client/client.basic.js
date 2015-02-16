@@ -4,7 +4,8 @@
  */
 //these test intended to test the functions of the client layer
 require('../_globals');
-var FS = require('fs'),
+var should = require('chai').should(),
+    FS = require('fs'),
   requirejs = require('requirejs'),
   config = WebGMEGlobal.getConfig();
 config.port = 9002;
@@ -558,5 +559,65 @@ describe('Client tests', function () {
         done();
        };
  });
+ });
+
+ describe('Run plugins', function () {
+  var runPluginOnServer = function (pluginName, config, pluginConfig, callback) {
+   requirejs(['plugin/' + pluginName + '/' + pluginName + '/' + pluginName],
+       function (PluginClass) {
+        var plugin = new PluginClass(),
+            pluginConfigParam,
+            context = {
+             managerConfig: config,
+             pluginConfigs: plugin.getDefaultConfig()
+            };
+
+        pluginConfig = pluginConfig || {};
+
+        for (pluginConfigParam in pluginConfig) {
+          if (pluginConfig.hasOwnProperty(pluginConfigParam)) {
+           context.pluginConfigs[pluginConfigParam] = pluginConfig[pluginConfigParam];
+          }
+        }
+
+        CLNT.runServerPlugin(pluginName, context, function (err, result) {
+         callback(err, result);
+        });
+       },
+       function (err) {
+        callback(err);
+       }
+   );
+  };
+
+
+  it('should run PluginGenerator on server side', function (done) {
+   var config = {
+        project: projectName,
+        token: "",
+        activeNode: null, // active object in the editor
+        activeSelection: [],
+        commit: null, //"#668b3babcdf2ddcd7ba38b51acb62d63da859d90",
+        branchName: 'master' // this has priority over the commit if not null
+       },
+       pluginConfig = {};
+
+   runPluginOnServer('PluginGenerator', config, pluginConfig, function (err, result) {
+     if (err) {
+      done(err);
+      return;
+     }
+
+     // TODO: check/assert on result as needed
+     //console.log(result);
+
+     should.equal(result.success, true);
+     should.equal(result.error, null);
+     should.equal(result.artifacts.length, 1, 'should generate one artifact');
+
+     done();
+   });
+
+  });
  });
 });
