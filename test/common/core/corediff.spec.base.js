@@ -169,6 +169,7 @@ describe('corediff',function(){
                         done(err);
                         return;
                     }
+                    console.warn(commitChain,c);
                     c.should.be.equal(commitChain[7]);
                     done();
                 });
