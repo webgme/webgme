@@ -118,7 +118,8 @@ describe('corediff',function(){
                         // o -- o -- o -- o -- o -- o 1,2,3,4,5,6
 
                         var error = null,needed = 12,addCommit = function(ancestors){
-                            commitChain.push(project.makeCommit(ancestors,'#roothash','_commit_',finalCheck));
+                            var rootHash = '#'+Math.round((Math.random()*100000000));
+                            commitChain.push(project.makeCommit(ancestors,rootHash,'_commit_',finalCheck));
                             },
                             finalCheck = function(err){
                                 error = error || err;
@@ -169,7 +170,6 @@ describe('corediff',function(){
                         done(err);
                         return;
                     }
-                    console.warn(commitChain,c);
                     c.should.be.equal(commitChain[7]);
                     done();
                 });
