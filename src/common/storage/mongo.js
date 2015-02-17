@@ -53,7 +53,8 @@ define(["mongodb", "util/assert", "util/canon"], function (MONGODB, ASSERT, CANO
       if(options.user && options.pwd){
         userString = options.user+":"+options.pwd+"@";
       }
-      MONGODB.MongoClient.connect("mongodb://" + userString + options.host + ":" + options.port + "/" + options.database, {
+      options.uri = options.uri || "mongodb://" + userString + options.host + ":" + options.port + "/" + options.database;
+      MONGODB.MongoClient.connect(options.uri, {
         'w': 1,
         'native-parser': true,
         'auto_reconnect': true,
