@@ -139,7 +139,6 @@ database.openDatabase(function(err){
                 },done);
             },source);
         TASYNC.call(function(cHash){
-            console.log('whaaaat',cHash);
             if(cHash){
                 if(BRANCH_REGEXP.test(program.source)){
                     //we should update or at least try to update branch
