@@ -101,48 +101,49 @@ var generateDiff = function(mongoUri,projectId,sourceBranchOrCommit,targetBranch
 
 module.exports.generateDiff = generateDiff;
 
-
-program
-    .version('0.1.0')
-    .option('-m, --mongo-database-uri [url]', 'URI to connect to mongoDB where the project is stored')
-    .option('-p, --project-identifier [value]', 'project identifier')
-    .option('-s, --source [branch/commit]', 'the source or base of the diff to be created')
-    .option('-t, --target [branch/commit]', 'the target or end of the diff to be created')
-    .option('-o, --out [path]', 'the output path of the diff [by default it is printed to the console]')
-    .parse(process.argv);
+if(require.main === module){
+    program
+        .version('0.1.0')
+        .option('-m, --mongo-database-uri [url]', 'URI to connect to mongoDB where the project is stored')
+        .option('-p, --project-identifier [value]', 'project identifier')
+        .option('-s, --source [branch/commit]', 'the source or base of the diff to be created')
+        .option('-t, --target [branch/commit]', 'the target or end of the diff to be created')
+        .option('-o, --out [path]', 'the output path of the diff [by default it is printed to the console]')
+        .parse(process.argv);
 
 //check necessary arguments
-if(!program.mongoDatabaseUri){
-    console.warn('mongoDB URL is a mandatory parameter!');
-    process.exit(0);
-}
-if(!program.projectIdentifier){
-    console.warn('project identifier is a mandatory parameter!');
-    process.exit(0);
-}
-if(!program.source){
-    console.warn('source is a mandatory parameter!');
-    process.exit(0);
-}
-if(!program.target){
-    console.warn('target is a mandatory parameter!');
-    process.exit(0);
-}
-
-generateDiff(program.mongoDatabaseUri,program.projectIdentifier,program.source,program.target,function(err,diff){
-    if(err){
-        console.warn('diff generation finished with error: ',err);
+    if(!program.mongoDatabaseUri){
+        console.warn('mongoDB URL is a mandatory parameter!');
         process.exit(0);
     }
-    if(program.out){
-        try{
-            FS.writeFileSync(program.out,JSON.stringify(diff,null,2));
-        } catch(err){
-            console.warn('unable to create output file:',err);
-        }
-    } else {
-        console.log('generated diff:');
-        console.log(JSON.stringify(diff,null,2));
+    if(!program.projectIdentifier){
+        console.warn('project identifier is a mandatory parameter!');
+        process.exit(0);
     }
-    process.exit(0);
-});
+    if(!program.source){
+        console.warn('source is a mandatory parameter!');
+        process.exit(0);
+    }
+    if(!program.target){
+        console.warn('target is a mandatory parameter!');
+        process.exit(0);
+    }
+
+    generateDiff(program.mongoDatabaseUri,program.projectIdentifier,program.source,program.target,function(err,diff){
+        if(err){
+            console.warn('diff generation finished with error: ',err);
+            process.exit(0);
+        }
+        if(program.out){
+            try{
+                FS.writeFileSync(program.out,JSON.stringify(diff,null,2));
+            } catch(err){
+                console.warn('unable to create output file:',err);
+            }
+        } else {
+            console.log('generated diff:');
+            console.log(JSON.stringify(diff,null,2));
+        }
+        process.exit(0);
+    });
+}
