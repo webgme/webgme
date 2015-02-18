@@ -8,8 +8,7 @@ var program = require('commander'),
     requirejs = require('requirejs'),
     FS = require('fs'),
     Core,
-    Storage,
-    TASYNC;
+    Storage;
 requirejs.config({
     paths:{
         'core': './../../src/common/core',
@@ -19,7 +18,6 @@ requirejs.config({
 });
 Core = requirejs('core/core');
 Storage = requirejs('storage/serveruserstorage');
-TASYNC = requirejs('core/tasync');
 
 var generateDiff = function(mongoUri,projectId,sourceBranchOrCommit,targetBranchOrCommit,callback){
     var database = new Storage({uri:mongoUri,log:{debug:function(msg){},error:function(msg){}}}), //we do not want debugging
