@@ -20,6 +20,88 @@ requirejs.config({
 Core = requirejs('core/core');
 Storage = requirejs('storage/serveruserstorage');
 TASYNC = requirejs('core/tasync');
+
+var generateDiff = function(mongoUri,projectId,sourceBranchOrCommit,targetBranchOrCommit,callback){
+    var database = new Storage({uri:mongoUri,log:{debug:function(msg){},error:function(msg){}}}), //we do not want debugging
+        project,
+        core,
+        close = function(error,data){
+            try{
+                project.closeProject(function(){
+                    database.closeDatabase(function(){
+                        callback(error,data);
+                    });
+                });
+            } catch(err){
+                database.closeDatabase(function(){
+                    callback(error,data);
+                });
+            }
+        },
+        getRoot = function(branchOrCommit,next){
+            var getFromCommitHash = function(cHash){
+                project.loadObject(cHash,function(err,cObj){
+                    if(err){
+                        return next(err);
+                    }
+                    core.loadRoot(cObj.root,next);
+                });
+            };
+            if(HASH_REGEXP.test(branchOrCommit)){
+                getFromCommitHash(branchOrCommit);
+            } else if(BRANCH_REGEXP.test(branchOrCommit)){
+                project.getBranchHash(branchOrCommit,'#hack',function(err,commitHash){
+                    if(err){
+                        return next(err);
+                    }
+                    getFromCommitHash(commitHash);
+                });
+            } else {
+                next(new Error('nor commit nor branch input'));
+            }
+        };
+
+    database.openDatabase(function(err){
+        if(err){
+            return callback(err);
+        }
+        database.openProject(projectId,function(err,p) {
+            if (err) {
+                return close(err, null);
+            }
+            project = p;
+            core = new Core(project);
+
+            var needed = 2,
+                error = null,
+                sRoot, tRoot,
+                rootsAreReady = function () {
+                    if (error) {
+                        return close(error, null);
+                    }
+                    core.generateTreeDiff(sRoot, tRoot, close);
+                };
+            getRoot(sourceBranchOrCommit, function (err, root) {
+                error = error || err;
+                sRoot = root;
+                if (--needed === 0) {
+                    rootsAreReady();
+                }
+            });
+            getRoot(targetBranchOrCommit, function (err, root) {
+                error = error || err;
+                tRoot = root;
+                if (--needed === 0) {
+                    rootsAreReady();
+                }
+            });
+        });
+    });
+};
+
+module.exports.generateDiff = generateDiff;
+
+
 program
     .version('0.1.0')
     .option('-m, --mongo-database-uri [url]', 'URI to connect to mongoDB where the project is stored')
@@ -47,90 +129,20 @@ if(!program.target){
     process.exit(0);
 }
 
-//helper functions
-var getBranchHash; //wrapped variant of storage's getBranchHash
-var getRoot = function(branchOrCommit){
-    var openWithCommitHash = function(cHash){
-        return TASYNC.call(function(cObj){
-            if(!cObj){
-                console.warn('unknown commit id');
-                process.exit(0);
-            }
-            if(cObj && cObj.root){
-                return core.loadRoot(cObj.root);
-            } else {
-                return null;
-            }
-        },project.loadObject(cHash));
-    };
-    if(HASH_REGEXP.test(branchOrCommit)){
-        return openWithCommitHash(branchOrCommit);
-    } else if(BRANCH_REGEXP.test(branchOrCommit)){
-        return TASYNC.call(function(commitHash){
-            if(!commitHash){
-                console.warn('unknown branch name');
-                process.exit(0);
-            }
-            return openWithCommitHash(commitHash);
-        },getBranchHash(branchOrCommit,'#hack'));
-    } else {
-        return null;
-    }
-};
-
-//connecting to mongoDB and opening project
-var database = new Storage({uri:program.mongoDatabaseUri,log:{debug:function(msg){},error:function(msg){}}}), //we do not want debugging
-    project,core;
-database.openDatabase(function(err){
+generateDiff(program.mongoDatabaseUri,program.projectIdentifier,program.source,program.target,function(err,diff){
     if(err){
-        console.warn(err);
+        console.warn('diff generation finished with error: ',err);
         process.exit(0);
     }
-    database.openProject(program.projectIdentifier,function(err,p){
-        if(err){
-            console.warn(err);
-            process.exit(0);
+    if(program.out){
+        try{
+            FS.writeFileSync(program.out,JSON.stringify(diff,null,2));
+        } catch(err){
+            console.warn('unable to create output file:',err);
         }
-        project = p;
-        getBranchHash = TASYNC.wrap(project.getBranchHash);
-        core = new Core(project,{usertype:'tasync'});
-
-        //so now we have to get our two root objects...
-        //check for the source root
-        var source = getRoot(program.source),
-            target = getRoot(program.target),
-            diff = TASYNC.call(function(sRoot,tRoot){
-                if(sRoot === null || tRoot === null){
-                    return null;
-                }
-                return core.generateTreeDiff(sRoot,tRoot);
-            },source,target);
-        TASYNC.call(function(diff){
-            if(diff){
-                if(program.out){
-                    try{
-                        FS.writeFileSync(program.out,JSON.stringify(diff,null,2));
-                    } catch(err){
-                        console.warn(err);
-                    }
-                } else {
-                    console.log(JSON.stringify(diff,null,2));
-                }
-            } else {
-                console.warn('diff creation stopped with error');
-            }
-            project.closeProject(function(err){
-                if(err){
-                    console.warn(err);
-                    process.exit(0);
-                }
-                database.closeDatabase(function(err){
-                    if(err){
-                        console.warn(err);
-                    }
-                    process.exit(0);
-                });
-            });
-        },diff);
-    });
+    } else {
+        console.log('generated diff:');
+        console.log(JSON.stringify(diff,null,2));
+    }
+    process.exit(0);
 });
