@@ -21,13 +21,13 @@ Core = requirejs('core/core');
 Storage = requirejs('storage/serveruserstorage');
 TASYNC = requirejs('core/tasync');
 program
-.version('0.1.0')
-.option('-m, --mongo-database-uri [url]', 'URI to connect to mongoDB where the project is stored')
-.option('-p, --project-identifier [value]', 'project identifier')
-.option('-s, --source [branch/commit]', 'the source or base of the diff to be created')
-.option('-t, --target [branch/commit]', 'the target or end of the diff to be created')
-.option('-o, --out [path]', 'the output path of the diff [by default it is printed to the console]')
-.parse(process.argv);
+    .version('0.1.0')
+    .option('-m, --mongo-database-uri [url]', 'URI to connect to mongoDB where the project is stored')
+    .option('-p, --project-identifier [value]', 'project identifier')
+    .option('-s, --source [branch/commit]', 'the source or base of the diff to be created')
+    .option('-t, --target [branch/commit]', 'the target or end of the diff to be created')
+    .option('-o, --out [path]', 'the output path of the diff [by default it is printed to the console]')
+    .parse(process.argv);
 
 //check necessary arguments
 if(!program.mongoDatabaseUri){
