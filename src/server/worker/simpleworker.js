@@ -1,4 +1,4 @@
-/*global __dirname, webGMEGlobal */
+/*global __dirname, webGMEGlobal, require, process */
 var requirejs = require("requirejs"),
   BASEPATH = __dirname + "/../..",
   WEBGME = require(BASEPATH + '/../webgme');

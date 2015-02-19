@@ -245,7 +245,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                                 var time2 = process.hrtime();
                                 console.log(msg + " " + (((time2[0] - time1[0]) * 1000) + ((time2[1] - time1[1]) / 1000 / 1000 | 0)));
                                 callback2.apply(this, arguments);
-                            }
+                            };
                             cb.apply(this, args);
                         }]);
                     };
