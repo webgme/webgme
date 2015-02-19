@@ -9,7 +9,7 @@ var program = require('commander'),
     FS = require('fs'),
     Core,
     Storage,
-    TASYNC;
+    patchJson;
 requirejs.config({
     paths:{
         'core': './../../src/common/core',
@@ -19,147 +19,143 @@ requirejs.config({
 });
 Core = requirejs('core/core');
 Storage = requirejs('storage/serveruserstorage');
-TASYNC = requirejs('core/tasync');
 
-program
-    .version('0.1.0')
-    .usage('<patch-file> [options]')
-    .option('-m, --mongo-database-uri [url]', 'URI to connect to mongoDB where the project is stored')
-    .option('-p, --project-identifier [value]', 'project identifier')
-    .option('-s, --source [branch/commit]', 'the source or base of the diff to be created')
-    .parse(process.argv);
-//check necessary arguments
-if(program.args.length !== 1){
-    console.warn('wrong parameters');
-}
-
-if(!program.mongoDatabaseUri){
-    console.warn('mongoDB URL is a mandatory parameter!');
-    process.exit(0);
-}
-if(!program.projectIdentifier){
-    console.warn('project identifier is a mandatory parameter!');
-    process.exit(0);
-}
-if(!program.source){
-    console.warn('source is a mandatory parameter!');
-    process.exit(0);
-}
-
-//helper functions
-var getBranchHash; //wrapped variant of storage's getBranchHash
-var makeCommit; //wrapped variant of storage's makeCommit
-var getRoot = function(branchOrCommit){
-    var openWithCommitHash = function(cHash){
-        baseCommitHash = cHash;
-        return TASYNC.call(function(cObj){
-            if(!cObj){
-                console.warn('unknown commit id');
-                process.exit(0);
-            }
-            if(cObj && cObj.root){
-                return core.loadRoot(cObj.root);
-            } else {
-                return null;
-            }
-        },project.loadObject(cHash));
-    };
-    if(HASH_REGEXP.test(branchOrCommit)){
-        return openWithCommitHash(branchOrCommit);
-    } else if(BRANCH_REGEXP.test(branchOrCommit)){
-        return TASYNC.call(function(commitHash){
-            if(!commitHash){
-                console.warn('unknown branch name');
-                process.exit(0);
-            }
-            return openWithCommitHash(commitHash);
-        },getBranchHash(branchOrCommit,'#hack'));
-    } else {
-        return null;
-    }
-};
-
-//loading the patch and checking if it is a correct json object
-var patch;
-try{
-    patch = FS.readFileSync(program.args[0],'utf-8');
-    patch = JSON.parse(patch);
-} catch (err){
-    console.warn('error in opening the patch file:',err);
-    process.exit(0);
-}
-
-//connecting to mongoDB and opening project
-var database = new Storage({uri:program.mongoDatabaseUri,log:{debug:function(msg){},error:function(msg){}}}), //we do not want debugging
-    project,core,baseCommitHash;
-database.openDatabase(function(err){
-    if(err){
-        console.warn(err);
-        process.exit(0);
-    }
-    database.openProject(program.projectIdentifier,function(err,p){
-        if(err){
-            console.warn(err);
-            process.exit(0);
-        }
-        project = p;
-        getBranchHash = TASYNC.wrap(project.getBranchHash);
-        makeCommit = TASYNC.wrap(project.makeCommit);
-        core = new Core(project,{usertype:'tasync'});
-
-        //so now we have to get our two root objects...
-        //check for the source root
-        var source = getRoot(program.source),
-            finishProperly = function(){
-                project.closeProject(function(err){
-                    if(err){
-                        console.warn(err);
-                        process.exit(0);
-                    }
-                    database.closeDatabase(function(err){
-                        if(err){
-                            console.warn(err);
-                        }
-                        process.exit(0);
+var applyPatch = function(mongoUri,projectId,branchOrCommit,patch,noUpdate,callback){
+    var database = new Storage({uri:mongoUri,log:{debug:function(msg){},error:function(msg){}}}), //we do not want debugging
+        project,
+        core,
+        root,
+        baseCommitHash,
+        commit,
+        close = function(error,data){
+            try{
+                project.closeProject(function(){
+                    database.closeDatabase(function(){
+                        callback(error,data);
                     });
                 });
-            },
-            newCommitHash = TASYNC.call(function(sRoot){
-                var done;
-                if(!sRoot){
-                    console.warn('unknown source root');
-                    process.exit(0);
-                }
-
-                done = core.applyTreeDiff(sRoot,patch);
-                return TASYNC.call(function(){
-                    core.persist(sRoot);
-                    var cHash = makeCommit([baseCommitHash],core.getHash(sRoot),JSON.stringify(patch,null,2));
-                    return cHash;
-                },done);
-            },source);
-        TASYNC.call(function(cHash){
-            if(cHash){
-                if(BRANCH_REGEXP.test(program.source)){
-                    //we should update or at least try to update branch
-                    project.setBranchHash(program.source,baseCommitHash,cHash,function(err){
-                        if(err){
-                            console.warn('branch update failed:',err);
-                            console.warn('patch result is at commit:',cHash);
-
-                        } else {
-                            console.warn('branch '+program.source+' has been updated to commit '+cHash+' successfully');
-                        }
-                        finishProperly();
-                    });
-                } else {
-                    console.warn('final commit of the patch:',cHash);
-                    finishProperly();
-                }
-            } else {
-                console.warn('diff creation stopped with error');
-                finishProperly();
+            } catch(err){
+                database.closeDatabase(function(){
+                    callback(error,data);
+                });
             }
-        },newCommitHash);
+        },
+        getRoot = function(next){
+            var getFromCommitHash = function(cHash){
+                baseCommitHash = cHash;
+                project.loadObject(cHash,function(err,cObj){
+                    if(err){
+                        return next(err);
+                    }
+                    core.loadRoot(cObj.root,next);
+                });
+            };
+            if(HASH_REGEXP.test(branchOrCommit)){
+                return getFromCommitHash(branchOrCommit);
+            } else if(BRANCH_REGEXP.test(branchOrCommit)){
+                project.getBranchNames(function(err,names){
+                    if(err){
+                        return next(err);
+                    }
+                    if(!names[branchOrCommit]){
+                        return next(new Error('unknown branch'));
+                    }
+                    return getFromCommitHash(names[branchOrCommit]);
+                });
+            } else {
+                return next(new Error('nor commit nor branch input'));
+            }
+        };
+    database.openDatabase(function(err){
+        if(err){
+            return callback(err);
+        }
+        database.getProjectNames(function(err,names){
+            if(err){
+                return close(err);
+            }
+            if(names.indexOf(projectId) === -1){
+                return close(new Error('unknown project'));
+            }
+            database.openProject(projectId,function(err,p){
+                if(err){
+                    return close(err);
+                }
+                project = p;
+                core = new Core(project);
+
+                getRoot(function(err,r){
+                    if(err){
+                        return close(err);
+                    }
+                    root = r;
+                    core.applyTreeDiff(root,patch,function(err){
+                        if(err){
+                            return close(err);
+                        }
+                        core.persist(root,function(){});
+                        commit = project.makeCommit([baseCommitHash],core.getHash(root),JSON.stringify(patch,null,2),function(){}); //TODO meaningful commit text
+                        if(noUpdate || !HASH_REGEXP.test(branchOrCommit)){
+                            return close(null,commit);
+                        }
+
+                        project.setBranchHash(branchOrCommit,baseCommitHash,commit,function(err){
+                            if(err){
+                                return close(err,commit);
+                            }
+                            return close(null,commit);
+                        });
+                    });
+                });
+            });
+        });
     });
-});
+};
+
+module.exports.applyPatch = applyPatch;
+
+if(require.main === module){
+
+    program
+        .version('0.1.0')
+        .usage('<patch-file> [options]')
+        .option('-m, --mongo-database-uri [url]', 'URI to connect to mongoDB where the project is stored')
+        .option('-p, --project-identifier [value]', 'project identifier')
+        .option('-t, --target [branch/commit]', 'the target where we should apply the patch')
+        .option('-n, --no-update', 'show if we should not update the branch')
+        .parse(process.argv);
+//check necessary arguments
+    if(program.args.length !== 1){
+        console.warn('wrong parameters');
+    }
+
+    if(!program.mongoDatabaseUri){
+        console.warn('mongoDB URL is a mandatory parameter!');
+        process.exit(0);
+    }
+    if(!program.projectIdentifier){
+        console.warn('project identifier is a mandatory parameter!');
+        process.exit(0);
+    }
+    if(!program.target){
+        console.warn('target is a mandatory parameter!');
+        process.exit(0);
+    }
+
+    //load path file
+    try{
+        patchJson = JSON.parse(FS.readFileSync(program.args[0],'utf-8'));
+    } catch(err) {
+        console.warn('unable to load patch file: ',err);
+        process.exit(0);
+    }
+
+    applyPatch(program.mongoDatabaseUri,program.projectIdentifier,program.target,patchJson,program.noUpdate,function(err){
+        if(err){
+            console.warn('there was an error during the application of the patch: ',err);
+        } else {
+            console.warn('patch applied successfully to project \''+program.projectIdentifier+'\'');
+        }
+        process.exit(0);
+    });
+}
