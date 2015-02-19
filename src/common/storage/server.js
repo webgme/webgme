@@ -731,14 +731,17 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
         function stopConnectedWorkers(socketId){
             var i;
             if(_workerManager){
+                var stop = function (worker) {
+                    _workerManager.result(_connectedWorkers[socketId][i], function (err) {
+                        if (err) {
+                            options.log.error("unable to stop connected worker [" + worker + "] of socket " + socketId);
+                        }
+                    });
+                };
                 _connectedWorkers[socketId] = _connectedWorkers[socketId] || [];
                 for(i=0;i<_connectedWorkers[socketId].length;i++){
                     //TODO probably we would need some kind of result handling
-                    _workerManager.result(_connectedWorkers[socketId][i],function(err){
-                        if(err){
-                            options.log.error("unable to stop connected worker ["+_connectedWorkers[socketId][i]+"] of socket "+socketId);
-                        }
-                    });
+                    stop(_connectedWorkers[socketId][i]);
                 }
                 delete _connectedWorkers[socketId];
             }
