@@ -463,9 +463,9 @@ define(['logManager',
     };
 
     ProjectRepositoryWidget.prototype._trDOMBase = $(
-        '<tr><td></td><td></td><td></td><td><div class="' + MESSAGE_DIV_CLASS + '"></div></td><td></td><td></td></tr>'
+        '<tr><td></td><td class="actions"></td><td></td><td><div class="' + MESSAGE_DIV_CLASS + '"></div></td><td></td><td></td></tr>'
     );
-    ProjectRepositoryWidget.prototype._createBranhcBtnDOMBase = $(
+    ProjectRepositoryWidget.prototype._createBranchBtnDOMBase = $(
         '<button class="btn btn-default btn-xs btnCreateBranchFromCommit" href="#" title="Create new branch from here"><i class="glyphicon glyphglyphicon glyphicon-edit"></i></button>'
     );
     ProjectRepositoryWidget.prototype._loadCommitBtnDOMBase = $('' +
@@ -524,7 +524,7 @@ define(['logManager',
         );
 
         //generate 'Create branch from here' button
-        btn = this._createBranhcBtnDOMBase.clone();
+        btn = this._createBranchBtnDOMBase.clone();
         btn.data(COMMIT_IT, params.id);
         tr[0].cells[this._tableCellActionsIndex].appendChild(btn[0]);
 

@@ -5,8 +5,8 @@
     position: absolute;
     width: 1px;
     height: 1px;
-    top: 48.5px;
-    left: 15px;
+    top: 53.5px;
+    left: 30px;
     /*DISABLE OUTER BORDER WHEN FOCUSED*/ }
     .project-repository-widget .commits:focus {
       outline: none; }
@@ -34,41 +34,42 @@
       text-decoration: none; }
   .project-repository-widget table tr {
     height: 25px; }
-  .project-repository-widget table th,
-  .project-repository-widget table td {
-    padding: 0px;
-    padding-right: 5px;
-    line-height: 12px;
-    font-size: 12px;
-    white-space: nowrap;
-    vertical-align: middle; }
-    .project-repository-widget table th div.commit-message,
-    .project-repository-widget table td div.commit-message {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      display: inline-block;
-      max-width: 600px; }
-    .project-repository-widget table th .branch-label,
-    .project-repository-widget table td .branch-label {
-      margin-right: 2px; }
-      .project-repository-widget table th .branch-label [class*="icon-"],
-      .project-repository-widget table td .branch-label [class*="icon-"] {
-        margin-left: 2px; }
-      .project-repository-widget table th .branch-label [class*="icon-white"]:hover,
-      .project-repository-widget table td .branch-label [class*="icon-white"]:hover {
-        cursor: pointer; }
-      .project-repository-widget table th .branch-label.label,
-      .project-repository-widget table td .branch-label.label {
-        font-size: 11px;
-        font-weight: normal;
-        height: 15px; }
-    .project-repository-widget table th > .btn,
-    .project-repository-widget table td > .btn {
-      margin-left: 2px;
-      margin-right: 2px; }
-    .project-repository-widget table th .control-group,
-    .project-repository-widget table td .control-group {
-      margin-bottom: 0px; }
+    .project-repository-widget table tr th,
+    .project-repository-widget table tr td {
+      padding: 0 5px 0 0;
+      white-space: nowrap;
+      vertical-align: middle;
+      text-align: center; }
+      .project-repository-widget table tr th.actions,
+      .project-repository-widget table tr td.actions {
+        text-align: left; }
+      .project-repository-widget table tr th div.commit-message,
+      .project-repository-widget table tr td div.commit-message {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-align: left;
+        max-width: 600px; }
+      .project-repository-widget table tr th .branch-label,
+      .project-repository-widget table tr td .branch-label {
+        margin-right: 2px; }
+        .project-repository-widget table tr th .branch-label [class*="icon-"],
+        .project-repository-widget table tr td .branch-label [class*="icon-"] {
+          margin-left: 2px; }
+        .project-repository-widget table tr th .branch-label [class*="icon-white"]:hover,
+        .project-repository-widget table tr td .branch-label [class*="icon-white"]:hover {
+          cursor: pointer; }
+        .project-repository-widget table tr th .branch-label.label,
+        .project-repository-widget table tr td .branch-label.label {
+          font-size: 11px;
+          font-weight: normal;
+          height: 15px; }
+      .project-repository-widget table tr th > .btn,
+      .project-repository-widget table tr td > .btn {
+        margin-left: 2px;
+        margin-right: 2px; }
+      .project-repository-widget table tr th .control-group,
+      .project-repository-widget table tr td .control-group {
+        margin-bottom: 0px; }
   .project-repository-widget table td:first-child {
     border-top: 1px solid transparent; }
   .project-repository-widget table.table-hover tbody tr:hover > td, .project-repository-widget table.table-hover tbody tr:hover > th {
