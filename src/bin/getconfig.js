@@ -63,6 +63,7 @@ if (typeof define !== "function" && typeof require === "function" && typeof proc
       //mongouser: TODO by default we do not expect mongodb to use authentication
       //mongopwd: TODO by default we do not expect mongodb to use authentication
       authentication: false,
+      secureREST: false,
       httpsecure: false,
       guest: false,
       sessioncookieid: 'webgmeSid',
