@@ -1,11 +1,12 @@
 /**
  * Created by tamas on 2/18/15.
  */
+/* globals require, describe, before, it */
 require('../_globals');
 var diffCLI = require('../../src/bin/diff'),
     importCLI = require('../../src/bin/import'),
     FS=require('fs'),
-    should = require('chai').should,
+    should = require('chai').should(),
     getJsonProject = function(path){
         return JSON.parse(FS.readFileSync(path,'utf-8'));
     };
