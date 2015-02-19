@@ -1,11 +1,11 @@
 /**
  * Created by tamas on 12/13/14.
  */
+/* globals require, WebGME, describe, it, before, after */
 require('../../_globals.js');
-var WebGME = require('../../../webgme'),
-  FS = require('fs'),
-    should = require('chai').should,
-  storage = new global.Storage();
+var FS = require('fs'),
+    should = require('chai').should(),
+    storage = new global.Storage();
 
 //global helping functions and globally used variables
 var baseCommit = null,

@@ -1,11 +1,11 @@
 /**
  * Created by tamas on 12/29/14.
  */
-
+/* globals require, be, it, describe, before, after */
 require('../../_globals.js');
 var WebGME = require('../../../webgme'),
     storage = new global.Storage(),
-    should = require('chai').should;
+    should = require('chai').should();
 
 describe('corediff',function(){
     describe('commitAncestor',function(){
