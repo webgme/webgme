@@ -65,10 +65,6 @@
             }
 
         </style>
-        <script>
-            var form = document.getElementById("loginForm");
-            form.setAttribute("action",location.origin+'/login'+window.location.search);
-        </script>
     </head>
 
     <body>
@@ -103,4 +99,8 @@
             </form>
         </div>
     </body>
+    <script>
+        var form = document.getElementById("loginForm");
+        form.setAttribute("action",location.origin+'/login'+window.location.search);
+    </script>
 </html>
