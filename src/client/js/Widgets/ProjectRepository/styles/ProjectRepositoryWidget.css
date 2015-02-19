@@ -43,6 +43,16 @@
       .project-repository-widget table tr th.actions,
       .project-repository-widget table tr td.actions {
         text-align: left; }
+        .project-repository-widget table tr th.actions > div.input-group,
+        .project-repository-widget table tr td.actions > div.input-group {
+          margin-bottom: 0; }
+          .project-repository-widget table tr th.actions > div.input-group > input,
+          .project-repository-widget table tr td.actions > div.input-group > input {
+            height: 100%;
+            padding: 3px 5px; }
+      .project-repository-widget table tr th.commit-hash,
+      .project-repository-widget table tr td.commit-hash {
+        font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace; }
       .project-repository-widget table tr th div.commit-message,
       .project-repository-widget table tr td div.commit-message {
         overflow: hidden;

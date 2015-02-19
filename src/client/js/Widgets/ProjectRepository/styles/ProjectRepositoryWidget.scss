@@ -70,6 +70,18 @@ $table-row-height: 25px; //equals Widgets/ProjectRepository/ProjectRepositoryWid
 
         &.actions {
           text-align: left;
+
+          > div.input-group {
+            margin-bottom: 0;
+            > input {
+              height: 100%;
+              padding: 3px 5px;
+            }
+          }
+        }
+
+        &.commit-hash {
+          font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
         }
 
         div.commit-message {

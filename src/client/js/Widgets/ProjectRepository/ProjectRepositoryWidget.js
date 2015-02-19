@@ -463,7 +463,7 @@ define(['logManager',
     };
 
     ProjectRepositoryWidget.prototype._trDOMBase = $(
-        '<tr><td></td><td class="actions"></td><td></td><td><div class="' + MESSAGE_DIV_CLASS + '"></div></td><td></td><td></td></tr>'
+        '<tr><td></td><td class="actions"></td><td class="commit-hash"></td><td><div class="' + MESSAGE_DIV_CLASS + '"></div></td><td></td><td></td></tr>'
     );
     ProjectRepositoryWidget.prototype._createBranchBtnDOMBase = $(
         '<button class="btn btn-default btn-xs btnCreateBranchFromCommit" href="#" title="Create new branch from here"><i class="glyphicon glyphglyphicon glyphicon-edit"></i></button>'
@@ -711,8 +711,8 @@ define(['logManager',
 
     ProjectRepositoryWidget.prototype._onCreateBranchFromCommitButtonClick = function (btn) {
         var td = btn.parent(),
-            createBranchHTML = $('<div class="input-append control-group"></div>'),
-            txtInput = $('<input class="span2 input-mini" type="text">'),
+            createBranchHTML = $('<div class="input-group form-group"></div>'),
+            txtInput = $('<input class="form-control span2 input-mini" type="text">'),
             btnSave = $('<button class="btn btn-default btn-xs" type="button" title="Create branch"><i class="glyphicon glyphicon-ok"></i></button>'),
             btnCancel = $('<button class="btn btn-default btn-xs" type="button" title="Cancel"><i class="glyphicon glyphicon-remove"></i></button>'),
             self = this;
@@ -744,10 +744,10 @@ define(['logManager',
             var textVal = txtInput.val();
 
             if (textVal === "" || self._branchNames.indexOf(textVal) !== -1 || !BRANCH_REGEXP.test(textVal)) {
-                createBranchHTML.addClass("error");
+                createBranchHTML.addClass("has-error");
                 btnSave.disable(true);
             } else {
-                createBranchHTML.removeClass("error");
+                createBranchHTML.removeClass("has-error");
                 btnSave.disable(false);
             }
 
