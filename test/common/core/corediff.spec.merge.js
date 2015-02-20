@@ -1,7 +1,7 @@
 /**
  * Created by tamas on 12/13/14.
  */
-/* globals require, WebGME, describe, it, before, after */
+/* globals global, require, WebGME, describe, it, before, after */
 require('../../_globals.js');
 var FS = require('fs'),
     should = require('chai').should(),

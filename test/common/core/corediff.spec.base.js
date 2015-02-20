@@ -37,7 +37,6 @@ describe('corediff',function(){
                             commitChain.push(project.makeCommit(ancestors,'#roothash','_'+i+'_',finalCheck));
                             ancestors = [commitChain[commitChain.length-1]];
                         }
-                        done();
                     });
                 });
             });
