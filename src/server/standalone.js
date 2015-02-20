@@ -77,8 +77,10 @@ define(['logManager',
                 __storageOptions.session = true;
                 __storageOptions.sessioncheck = __sessionStore.check;
                 __storageOptions.secret = CONFIG.sessioncookiesecret;
+                __storageOptions.authentication = CONFIG.authentication;
                 __storageOptions.authorization = globalAuthorization;
-                __storageOptions.authInfo = __gmeAuth.getAuthorizationInfo;
+                __storageOptions.auth_deleteProject = __gmeAuth.deleteProject;
+                __storageOptions.getAuthorizationInfo = __gmeAuth.getAuthorizationInfo;
             }
 
             __storageOptions.host = CONFIG.mongoip;
@@ -220,6 +222,12 @@ define(['logManager',
                                 res.send(400); //no use for redirecting in this case
                             }
                         });
+                    } else if (CONFIG.guest) {
+                        req.session.authenticated = true;
+                        req.session.udmId = 'anonymous';
+                        req.session.userType = 'GME';
+                        res.cookie('webgme', req.session.udmId);
+                        return next();
                     } else {
                         res.redirect('/login'+getRedirectUrlParameter(req));
                     }
@@ -471,7 +479,7 @@ define(['logManager',
             res.clearCookie('isisforge'); //todo is this really needed
             req.logout();
             req.session.authenticated = false;
-            req.session.userType = 'unknown';
+            req.session.userType = 'loggedout';
             res.redirect(__logoutUrl);
         });
         __app.get('/login',function(req,res){

@@ -62,7 +62,7 @@ requirejs(['worker/constants',
 
         WebGMEGlobal.setConfig(parameters.globConf);
         _CONFIG = parameters.globConf;
-        if (_CONFIG.authorization === true) {
+        if (_CONFIG.authentication === true) {
           AUTH = GMEAUTH(parameters.auth);
         }
         storage = new Storage({
@@ -277,6 +277,7 @@ requirejs(['worker/constants',
     };
 
     var getAllProjectsInfo = function (userId, callback) {
+      // TODO: if authentication is turned on, just query the users database for the list of projects for which the user is authorized
       var projectNames,
         userAuthInfo = null,
         completeInfo = {},
@@ -307,7 +308,7 @@ requirejs(['worker/constants',
               cb(null);
             });
           } else {
-            projectNames = []; //we have authentication yet doesn't get valid user name...
+              projectNames = []; //we have authentication yet doesn't get valid user name...
             return cb(new Error('invalid user'));
 
           }
@@ -628,7 +629,7 @@ requirejs(['worker/constants',
           break;
         case CONSTANT.workerCommands.executePlugin:
           if (typeof parameters.name === 'string' && typeof parameters.context === 'object') {
-            executePlugin(parameters.user, parameters.name, parameters.webGMESessionId, parameters.context, function (err, result) {
+            executePlugin(parameters.userId, parameters.name, parameters.webGMESessionId, parameters.context, function (err, result) {
               safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: result});
             });
           } else {
@@ -677,7 +678,7 @@ requirejs(['worker/constants',
         case CONSTANT.workerCommands.getAllProjectsInfo:
           resultId = GUID();
           safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
-          getAllProjectsInfo(parameters.user, function (err, r) {
+          getAllProjectsInfo(parameters.userId, function (err, r) {
             if (resultRequested === true) {
               initResult();
               safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: r});

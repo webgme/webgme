@@ -9,10 +9,14 @@ var should = require('chai').should(),
     requirejs = require('requirejs'),
 
     superagent = require('superagent'),
+    mongodb = require('mongodb'),
+    Q = require('q'),
     agent = superagent.agent(),
 
     server,
     serverBaseUrl;
+
+
 
 describe('standalone server', function () {
     'use strict';
@@ -695,6 +699,10 @@ describe('standalone server', function () {
         var shouldAccessWithoutAuth,
             shouldRedirectToLogin;
 
+        beforeEach(function () {
+            agent = superagent.agent();
+        });
+
         shouldAccessWithoutAuth = function (location, done) {
             agent.get(serverBaseUrl + location).end(function (err, res) {
                 if (err) {
@@ -732,20 +740,67 @@ describe('standalone server', function () {
             });
         };
 
+        var db;
+        var collection;
+        var gmeauth;
         before(function (done) {
             // we have to set the config here
             var config = WebGMEGlobal.getConfig();
             config.port = 9001;
             config.authentication = true;
+            config.guest = false;
+            config.mongodatabase = 'webgme_tests';
 
+            var dbConn = Q.ninvoke(mongodb.MongoClient, 'connect', 'mongodb://127.0.0.1/' + config.mongodatabase, {
+                    'w': 1,
+                    'native-parser': true,
+                    'auto_reconnect': true,
+                    'poolSize': 20,
+                    socketOptions: {keepAlive: 1}
+                })
+                .then(function (db_) {
+                    db = db_;
+                    return Q.ninvoke(db, 'collection', '_users');
+                })
+                .then(function (collection_) {
+                    collection = collection_;
+                    return Q.ninvoke(collection, 'remove');
+                });
+
+            gmeauth = Q.defer();
+            requirejs(['auth/gmeauth'], function (gmeauth_) {
+                gmeauth.resolve(gmeauth_({host: '127.0.0.1',
+                    port: 27017,
+                    database: config.mongodatabase
+                }));
+            }, function (err) {
+                gmeauth.reject(err);
+            });
+
+            var userReady = gmeauth.promise.then(function (gmeauth) {
+                return dbConn.then(function () {
+                    return gmeauth.addUser('user', 'user@example.com', 'plaintext', true, {overwrite: true});
+                }).then(function () {
+                    return gmeauth.authorizeByUserId('user', 'project', 'create', {read: true, write: true, delete: true});
+                }).then(function () {
+                    return gmeauth.authorizeByUserId('user', 'unauthorized_project', 'create', {read: false, write: false, delete: false});
+                });
+            });
+
+            var serverReady = Q.defer();
             // TODO: would be nice to get this dynamically from server
             serverBaseUrl = 'http://127.0.0.1:' + config.port;
 
             server = WebGME.standaloneServer(config);
-            server.start(done);
+            server.start(serverReady.makeNodeResolver());
+
+            Q.all([serverReady, dbConn, userReady])
+                .nodeify(done);
         });
 
         after(function (done) {
+            db.close();
+            gmeauth.promise.invoke('unload');
             server.stop(done);
         });
 
@@ -838,6 +893,56 @@ describe('standalone server', function () {
 
         it('should redirect to login for /listAllVisualizerDescriptors', function (done) {
             shouldRedirectToLogin('/listAllVisualizerDescriptors', done);
+        });
+
+        it('should log in', function (done) {
+            agent.post(serverBaseUrl + '/login?redirect=%2F')
+                .type('form')
+                .send({ username: 'user'})
+                .send({ password: 'plaintext'})
+                .end(function (err, res) {
+                if (err) {
+                    return done(err);
+                }
+                should.equal(res.status, 200);
+                res.redirects.should.deep.equal([ serverBaseUrl + '/' ]);
+
+                agent.get(serverBaseUrl + '/gettoken')
+                    .end(function (err, res) {
+                        should.equal(res.status, 410);
+                        done();
+                    });
+            });
+        });
+
+        it('should not log in with incorrect password', function (done) {
+            agent.post(serverBaseUrl + '/login?redirect=%2F')
+                .type('form')
+                .send({ username: 'user'})
+                .send({ password: 'thisiswrong'})
+                .end(function (err, res) {
+                    if (err) {
+                        return done(err);
+                    }
+                    should.equal(res.status, 200);
+                    res.redirects.should.deep.equal([
+                        "http://127.0.0.1:9001/",
+                        "http://127.0.0.1:9001/login?redirect=%2F%3Fredirect%3D%252F" // FIXME: this is not a desirable redirect
+                    ]);
+                    done();
+                });
+        });
+
+        it('should auth with a new token', function (done) {
+            gmeauth.promise.then(function (gmeauth) {
+                return [gmeauth, gmeauth.generateTokenForUserId('user')];
+            }).spread(function (gmeauth, tokenId) {
+                return Q.all([gmeauth.tokenAuthorization(tokenId, 'project'),
+                    gmeauth.tokenAuthorization(tokenId, 'unauthorized_project'),
+                    gmeauth.tokenAuthorization(tokenId, 'doesnt_exist_project')]);
+            }).then(function (authorized) {
+                authorized.should.deep.equal([true, false, false]);
+            }).nodeify(done);
         });
     });
 });
