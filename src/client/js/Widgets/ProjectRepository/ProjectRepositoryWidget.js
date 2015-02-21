@@ -30,7 +30,7 @@ define(['logManager',
         COMMIT_DATA = 'commitData',
         COMMIT_CLASS = 'commit',
         ACTUAL_COMMIT_CLASS = 'actual',
-        X_DELTA = 20,
+        X_DELTA = 15,
         Y_DELTA = 25,   //Widgets/ProjectRepository/ProjectRepositoryWidget.scss - $table-row-height
         CONTENT_WIDTH = 1,
         CONTENT_HEIGHT = 1,
