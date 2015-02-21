@@ -168,7 +168,7 @@ define(['logManager',
         this._el.addClass(REPOSITORY_LOG_VIEW_CLASS);
 
         /*table layout*/
-        this._table = $('<table/>', {"class": "table table-hover user-select-on"});
+        this._table = $('<table/>', {"class": "table table-hover user-select-on commit-list"});
         this._tHead = $('<thead/>');
         this._tHead.append($('<tr><th>Graph</th><th>Actions</th><th>Commit</th><th>Message</th><th>User</th><th>Time</th></tr>'));
         this._tBody = $('<tbody/>');
@@ -463,7 +463,7 @@ define(['logManager',
     };
 
     ProjectRepositoryWidget.prototype._trDOMBase = $(
-        '<tr><td></td><td class="actions"></td><td class="commit-hash"></td><td><div class="' + MESSAGE_DIV_CLASS + '"></div></td><td></td><td></td></tr>'
+        '<tr><td></td><td class="actions"></td><td class="commit-hash"></td><td class="message-column"><div class="' + MESSAGE_DIV_CLASS + '"></div></td><td></td><td></td></tr>'
     );
     ProjectRepositoryWidget.prototype._createBranchBtnDOMBase = $(
         '<button class="btn btn-default btn-xs btnCreateBranchFromCommit" href="#" title="Create new branch from here"><i class="glyphicon glyphglyphicon glyphicon-edit"></i></button>'

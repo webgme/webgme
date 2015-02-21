@@ -11,6 +11,15 @@ $show-more-panel-border: 1px solid #3a87ad;
 $table-row-height: 25px; //equals Widgets/ProjectRepository/ProjectRepositoryWidget.js Y_DELTA!!!
 
 .project-repository-widget {
+
+  table.table.commit-list {
+    width: auto;
+  }
+
+  .commit-column {
+    width: 100%;
+  }
+
   .commits {
     position: absolute;
     width: 1px;
@@ -75,6 +84,7 @@ $table-row-height: 25px; //equals Widgets/ProjectRepository/ProjectRepositoryWid
             margin-bottom: 0;
             > input {
               height: 100%;
+              width: 150px;
               padding: 3px 5px;
             }
           }
@@ -91,6 +101,7 @@ $table-row-height: 25px; //equals Widgets/ProjectRepository/ProjectRepositoryWid
           //display: inline-block;
           max-width: 600px;
         }
+
 
         .branch-label {
           margin-right: 2px;
