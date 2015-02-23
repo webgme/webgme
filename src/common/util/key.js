@@ -13,7 +13,6 @@ define([
         ZSSHA = new ZS();
 
     function rand160Bits() {
-        //#4ca8ccec576284f66055d9f6c1a571d48a70902c
         var result = '', i, code;
         for (i = 0; i < 40; i++) {
             code = Math.floor(Math.random() * 16);
