@@ -74,7 +74,7 @@ if (typeof define !== "function" && typeof require === "function" && typeof proc
       decoratorpaths: [],
       visualizerDescriptors: [],
       addonBasePaths: ['./addon/core'],
-      storageKeyType: "asmSHA1" // right now the available choices are: rand160Bits, asmSHA1, ZSSHA, plainSHA1 (default)
+      storageKeyType: 'plainSHA1' // right now the available choices are: rand160Bits, ZSSHA, plainSHA1 (default)
     };
 
 
