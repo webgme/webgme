@@ -6,7 +6,7 @@ var applyCLI = require('../../src/bin/apply'),
     importCLI = require('../../src/bin/import'),
     exportCLI = require('../../src/bin/export'),
     FS=require('fs'),
-    should = require('chai').should,
+    should = require('chai').should(),
     getJsonProject = function(path){
         return JSON.parse(FS.readFileSync(path,'utf-8'));
     },
@@ -61,7 +61,7 @@ describe('apply CLI tests',function(){
             });
         });
         //TODO fix this issue now tests has been removed
-        /*it('multiple attribute change',function(done){
+        it('multiple attribute change',function(done){
             applyCLI.applyPatch('mongodb://127.0.0.1:27017/multi','applyCliTest','base',{attr:{name:'ROOTy'},1:{attr:{name:'FCOy'}}},false,function(err,commit){
                 if(err){
                     return done(err);
@@ -75,7 +75,7 @@ describe('apply CLI tests',function(){
                     done();
                 });
             });
-        });*/
+        });
         /*it('simple registry change',function(done){
             applyCLI.applyPatch('mongodb://127.0.0.1:27017/multi','applyCliTest','base',{1:{reg:{position:{x:200,y:200}}}},false,function(err,commit){
                 if(err){
