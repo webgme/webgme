@@ -503,7 +503,7 @@ define(['logManager',
         __logger.info("creating decorator specific routing rules");
         __app.get('/bin/getconfig.js', ensureAuthenticated, function (req, res) {
             res.status(200);
-            res.setHeader('Content-type', 'application/json');
+            res.setHeader('Content-type', 'application/javascript');
             res.end("define([],function(){ return " + JSON.stringify(CONFIG) + ";});");
         });
         __logger.info("creating decorator specific routing rules");
@@ -581,7 +581,7 @@ define(['logManager',
 
         //TODO remove this part as this is only temporary!!!
         __app.get('/docs/*', function (req, res) {
-            expressFileSending(res, Path.join(__baseDir, req.path));
+            expressFileSending(res, Path.join(__baseDir, '..', req.path));
         });
 
 
@@ -655,7 +655,7 @@ define(['logManager',
                         res.header("Access-Control-Allow-Origin", "*");
                         res.header("Access-Control-Allow-Headers", "X-Requested-With");
                         if (req.params.command === __REST.command.etf) {
-                            if (httpStatus === _HTTPError.ok) {
+                            if (httpStatus === 200) {
                                 var filename = 'exportedNode.json';
                                 if (req.query.output) {
                                     filename = req.query.output;
@@ -723,7 +723,7 @@ define(['logManager',
                 }
             }
             res.status(200);
-            res.setHeader('Content-type', 'application/json');
+            res.setHeader('Content-type', 'application/javascript');
             //res.end("define([],function(){ return "+JSON.stringify(names)+";});");
             res.end("(function(){ WebGMEGlobal.allDecorators = " + JSON.stringify(names) + ";}());");
         });
@@ -742,14 +742,14 @@ define(['logManager',
                 }
             }
             res.status(200);
-            res.setHeader('Content-type', 'application/json');
+            res.setHeader('Content-type', 'application/javascript');
             //res.end("define([],function(){ return "+JSON.stringify(names)+";});");
             res.end("(function(){ WebGMEGlobal.allPlugins = " + JSON.stringify(names) + ";}());");
         });
         __app.get('/listAllVisualizerDescriptors', ensureAuthenticated, function (req, res) {
             var allVisualizerDescriptors = getVisualizersDescriptor();
             res.status(200);
-            res.setHeader('Content-type', 'application/json');
+            res.setHeader('Content-type', 'application/javascript');
             res.end("define([],function(){ return " + JSON.stringify(allVisualizerDescriptors) + ";});");
         });
 

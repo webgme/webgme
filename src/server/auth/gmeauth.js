@@ -317,6 +317,10 @@ define(["storage/mongo", "storage/commit", "core/core", "util/guid"], function (
                 userId = req.query['openid.ext1.value.email'];
                 password = null;
                 gmail = true;
+                if (userId === null || userId === undefined) {
+                    res.redirect(returnUrl);
+                    return;
+                }
             }
             var haveUser = function (err, node) {
                 if (!err) {
