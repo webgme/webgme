@@ -1,4 +1,4 @@
-/*globals require, describe, it, before, after, WebGMEGlobal*/
+/*globals require, describe, it, before, after, WebGMEGlobal, process*/
 /**
  * @author lattmann / https://github.com/lattmann
  */
@@ -29,6 +29,76 @@ describe('standalone server', function () {
                 server.start(function () {
                     server.stop(done);
                 });
+            });
+        });
+    });
+
+    describe('https server without authentication', function () {
+
+        var NODE_TLS_REJECT_UNAUTHORIZED = process.env.NODE_TLS_REJECT_UNAUTHORIZED;
+
+        before(function (done) {
+            // we have to set the config here
+            var config = WebGMEGlobal.getConfig();
+            config.port = 9001;
+            config.authentication = false;
+            config.httpsecure = true;
+
+            // TODO: would be nice to get this dynamically from server
+            serverBaseUrl = 'https://127.0.0.1:' + config.port;
+
+            process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
+            server = WebGME.standaloneServer(config);
+            server.start(done);
+        });
+
+        after(function (done) {
+            process.env.NODE_TLS_REJECT_UNAUTHORIZED = NODE_TLS_REJECT_UNAUTHORIZED;
+
+            server.stop(done);
+        });
+
+        it('should return 200 /', function (done) {
+            agent.get(serverBaseUrl + '/').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                should.equal(res.status, 200);
+                done();
+            });
+        });
+    });
+
+    describe('http server without decorators', function () {
+
+        before(function (done) {
+            // we have to set the config here
+            var config = WebGMEGlobal.getConfig();
+            config.port = 9001;
+            config.authentication = false;
+            config.decoratorpaths  = [];
+
+            // TODO: would be nice to get this dynamically from server
+            serverBaseUrl = 'http://127.0.0.1:' + config.port;
+
+            server = WebGME.standaloneServer(config);
+            server.start(done);
+        });
+
+        after(function (done) {
+            server.stop(done);
+        });
+
+        it('should return 404 /decorators/DefaultDecorator/DefaultDecorator.js', function (done) {
+            agent.get(serverBaseUrl + '/decorators/DefaultDecorator/DefaultDecorator.js').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                should.equal(res.status, 404);
+                done();
             });
         });
     });
@@ -96,6 +166,34 @@ describe('standalone server', function () {
                 done();
             });
         });
+
+        // TOKEN TESTS BEGIN
+        it('should return 410 /gettoken', function (done) {
+            agent.get(serverBaseUrl + '/gettoken').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 410);
+                done();
+            });
+        });
+
+        it('should return 410 /checktoken/doesnotexist', function (done) {
+            agent.get(serverBaseUrl + '/checktoken/doesnotexist').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 410);
+                done();
+            });
+        });
+
+        // TOKEN TESTS END
+
 
         // LOGIN PAGES BEGINS
         // TODO: add POST test
@@ -286,6 +384,18 @@ describe('standalone server', function () {
             });
         });
 
+        it('should return 404 /plugin', function (done) {
+            agent.get(serverBaseUrl + '/plugin').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 404);
+                done();
+            });
+        });
+
         it('should return 404 /plugin/doesnotexist', function (done) {
             agent.get(serverBaseUrl + '/plugin/doesnotexist').end(function (err, res) {
                 if (err) {
@@ -297,6 +407,7 @@ describe('standalone server', function () {
                 done();
             });
         });
+
 
         it('should return 200 /plugin/PluginBase.js', function (done) {
             agent.get(serverBaseUrl + '/plugin/PluginBase.js').end(function (err, res) {
@@ -493,8 +604,20 @@ describe('standalone server', function () {
             });
         });
 
-        it('should return 200 (unknown command) /rest/help', function (done) {
+        it('should return 200 (help command) /rest/help', function (done) {
             agent.get(serverBaseUrl + '/rest/help').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 200);
+                done();
+            });
+        });
+
+        it('should return 200 (etf command) /rest/etf', function (done) {
+            agent.get(serverBaseUrl + '/rest/etf').end(function (err, res) {
                 if (err) {
                     done(err);
                     return;
@@ -517,7 +640,7 @@ describe('standalone server', function () {
                 done();
             });
         });
-
+        
         it('should return with 500 (bad parameter) /worker/simpleResult/bad_parameter', function (done) {
             agent.get(serverBaseUrl + '/worker/simpleResult/bad_parameter').end(function (err, res) {
                 if (err) {
@@ -629,6 +752,18 @@ describe('standalone server', function () {
         //it('should start with sign in', loginUser(agent));
         //it('should sign the user out', function(done) {
         //});
+
+        it('should return 200 POST /login', function (done) {
+            agent.post(serverBaseUrl + '/login').send({username: "test"}).end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 200);
+                done();
+            });
+        });
 
         // SHOULD ALL ACCESS TO
         it('should allow access to /lib/require/require.min.js', function (done) {

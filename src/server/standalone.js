@@ -655,7 +655,7 @@ define(['logManager',
                         res.header("Access-Control-Allow-Origin", "*");
                         res.header("Access-Control-Allow-Headers", "X-Requested-With");
                         if (req.params.command === __REST.command.etf) {
-                            if (httpStatus === _HTTPError.ok) {
+                            if (httpStatus === 200) {
                                 var filename = 'exportedNode.json';
                                 if (req.query.output) {
                                     filename = req.query.output;
