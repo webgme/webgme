@@ -96,6 +96,461 @@ describe('standalone server', function () {
                 done();
             });
         });
+
+        // LOGIN PAGES BEGINS
+        // TODO: add POST test
+        it('should return 200 /login', function (done) {
+            agent.get(serverBaseUrl + '/login').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 200);
+                done();
+            });
+        });
+
+        it('should return 200 /login/client', function (done) {
+            agent.get(serverBaseUrl + '/login/client').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 200);
+                done();
+            });
+        });
+
+        it('should return 401 /login/client/fail', function (done) {
+            agent.get(serverBaseUrl + '/login/client/fail').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 401);
+                done();
+            });
+        });
+
+        it('should return 200 /login/google', function (done) {
+            agent.get(serverBaseUrl + '/login/google').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 200);
+                done();
+            });
+        });
+
+        it('should return 200 /login/google/return', function (done) {
+            agent.get(serverBaseUrl + '/login/google/return').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 200);
+                done();
+            });
+        });
+
+        it('should return 200 /login/forge', function (done) {
+            agent.get(serverBaseUrl + '/login/forge').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 200);
+                done();
+            });
+        });
+
+        it('should return 200 /logout', function (done) {
+            agent.get(serverBaseUrl + '/logout').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 200);
+                done();
+            });
+        });
+
+        // LOGIN PAGES ENDS
+
+        // STATIC RESOURCES TESTS BEGIN
+        it('should return 200 /bin/getconfig.js', function (done) {
+            agent.get(serverBaseUrl + '/bin/getconfig.js').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 200);
+                done();
+            });
+        });
+
+        it('should return 200 /package.json', function (done) {
+            agent.get(serverBaseUrl + '/package.json').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 200);
+                done();
+            });
+        });
+
+        it('should return 200 /index.html', function (done) {
+            agent.get(serverBaseUrl + '/index.html').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 200);
+                done();
+            });
+        });
+
+        it('should return 404 /index2.html', function (done) {
+            agent.get(serverBaseUrl + '/index2.html').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 404);
+                done();
+            });
+        });
+
+        it('should return 404 /docs/', function (done) {
+            agent.get(serverBaseUrl + '/docs/').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 404);
+                done();
+            });
+        });
+
+        it('should return 200 /docs/tutorial.html', function (done) {
+            agent.get(serverBaseUrl + '/docs/tutorial.html').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 200);
+                done();
+            });
+        });
+
+        // TODO: WE NEED A TEST THAT SUCCEEDS
+        it('should return 404 /extlib/doesnotexist', function (done) {
+            agent.get(serverBaseUrl + '/extlib/doesnotexist').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 404);
+                done();
+            });
+        });
+
+        // TODO: WHAT IS THIS RULE?
+        it('should return 404 /pluginoutput/doesnotexist', function (done) {
+            agent.get(serverBaseUrl + '/pluginoutput/doesnotexist').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 404);
+                done();
+            });
+        });
+
+        it('should return 404 /plugin/doesnotexist', function (done) {
+            agent.get(serverBaseUrl + '/plugin/doesnotexist').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 404);
+                done();
+            });
+        });
+
+        it('should return 200 /plugin/PluginBase.js', function (done) {
+            agent.get(serverBaseUrl + '/plugin/PluginBase.js').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 200);
+                done();
+            });
+        });
+
+        it('should return 404 /plugin/', function (done) {
+            agent.get(serverBaseUrl + '/plugin/').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 404);
+                done();
+            });
+        });
+
+        it('should return 404 /plugin/PluginGenerator', function (done) {
+            agent.get(serverBaseUrl + '/plugin/PluginGenerator').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 404);
+                done();
+            });
+        });
+
+        it('should return 404 /plugin/PluginGenerator/PluginGenerator', function (done) {
+            agent.get(serverBaseUrl + '/plugin/PluginGenerator/PluginGenerator').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 404);
+                done();
+            });
+        });
+
+        it('should return 200 /plugin/PluginGenerator/PluginGenerator/PluginGenerator', function (done) {
+            agent.get(serverBaseUrl + '/plugin/PluginGenerator/PluginGenerator/PluginGenerator').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 200);
+                done();
+            });
+        });
+
+        it('should return 200 /plugin/PluginGenerator/PluginGenerator/PluginGenerator.js', function (done) {
+            agent.get(serverBaseUrl + '/plugin/PluginGenerator/PluginGenerator/PluginGenerator.js').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 200);
+                done();
+            });
+        });
+
+        it('should return 200 /plugin/PluginGenerator/PluginGenerator/Templates/plugin.js.ejs', function (done) {
+            agent.get(serverBaseUrl + '/plugin/PluginGenerator/PluginGenerator/Templates/plugin.js.ejs').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 200);
+                done();
+            });
+        });
+
+
+        it('should return 404 /decorators/', function (done) {
+            agent.get(serverBaseUrl + '/decorators/').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 404);
+                done();
+            });
+        });
+
+        it('should return 404 /decorators/DefaultDecorator', function (done) {
+            agent.get(serverBaseUrl + '/decorators/DefaultDecorator').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 404);
+                done();
+            });
+        });
+
+        it('should return 200 /decorators/DefaultDecorator/DefaultDecorator.js', function (done) {
+            agent.get(serverBaseUrl + '/decorators/DefaultDecorator/DefaultDecorator.js').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 200);
+                done();
+            });
+        });
+
+        it('should return 200 /decorators/DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesignerWidget.css', function (done) {
+            agent.get(serverBaseUrl + '/decorators/DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesignerWidget.css').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 200);
+                done();
+            });
+        });
+
+        it('should return 200 /decorators/DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesignerWidget.html', function (done) {
+            agent.get(serverBaseUrl + '/decorators/DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesignerWidget.html').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 200);
+                done();
+            });
+        });
+
+        it('should return 200 /decorators/DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesignerWidget.js', function (done) {
+            agent.get(serverBaseUrl + '/decorators/DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesignerWidget.js').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 200);
+                done();
+            });
+        });
+
+        it('should return 404 /decorators/DefaultDecorator/doesnotexist', function (done) {
+            agent.get(serverBaseUrl + '/decorators/DefaultDecorator/doesnotexist').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 404);
+                done();
+            });
+        });
+        // STATIC RESOURCES TESTS END
+
+        // REST TESTS BEGIN
+        it('should return 404 /rest', function (done) {
+            agent.get(serverBaseUrl + '/rest').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 404);
+                done();
+            });
+        });
+
+        it('should return 200 (unknown command) /rest/unknown', function (done) {
+            agent.get(serverBaseUrl + ' /rest/unknown').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 200);
+                done();
+            });
+        });
+        // REST TESTS END
+
+        // WORKER TESTS BEGIN
+        it('should return with 404 (not enough parameters) /worker/simpleResult', function (done) {
+            agent.get(serverBaseUrl + '/worker/simpleResult').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                should.equal(res.status, 404);
+                done();
+            });
+        });
+
+        it('should return with 500 (bad parameter) /worker/simpleResult/bad_parameter', function (done) {
+            agent.get(serverBaseUrl + '/worker/simpleResult/bad_parameter').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                should.equal(res.status, 500);
+                done();
+            });
+        });
+        // WORKER TESTS END
+
+
+        // DYNAMIC RESOURCES START
+        it('should return with all decorators /listAllDecorators', function (done) {
+            agent.get(serverBaseUrl + '/listAllDecorators').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                should.equal(res.status, 200);
+                done();
+            });
+        });
+
+        it('should return with all plugins /listAllPlugins', function (done) {
+            agent.get(serverBaseUrl + '/listAllPlugins').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                should.equal(res.status, 200);
+                done();
+            });
+        });
+
+        it('should return with all visualizers /listAllVisualizerDescriptors', function (done) {
+            agent.get(serverBaseUrl + '/listAllVisualizerDescriptors').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                should.equal(res.status, 200);
+                done();
+            });
+        });
+        // DYNAMIC RESOURCES END
     });
 
 
