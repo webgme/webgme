@@ -616,14 +616,14 @@ describe('standalone server', function () {
             });
         });
 
-        it('should return 200 (etf command) /rest/etf', function (done) {
+        it('should return 404 (etf command) /rest/etf', function (done) {
             agent.get(serverBaseUrl + '/rest/etf').end(function (err, res) {
                 if (err) {
                     done(err);
                     return;
                 }
                 //console.log(res);
-                should.equal(res.status, 200);
+                should.equal(res.status, 404);
                 done();
             });
         });
