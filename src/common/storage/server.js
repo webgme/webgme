@@ -12,9 +12,11 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
         options.port = options.port || 80;
         options.secret = options.secret || 'this is WEBGME!!!';
         options.cookieID = options.cookieID || 'webgme';
+        options.authentication = options.authentication;
         options.authorization = options.authorization || function(sessionID,projectName,type,callback){callback(null,true);};
+        options.auth_deleteProject = options.auth_deleteProject || function() {};
         options.sessioncheck = options.sessioncheck || function(sessionID,callback){callback(null,true);};
-        options.authInfo = options.authInfo || function(sessionID,projectName,callback){callback(null,{'read':true,'write':true,'delete':true});};
+        options.getAuthorizationInfo = options.getAuthorizationInfo || function(sessionID,projectName,callback){callback(null,{'read':true,'write':true,'delete':true});};
         options.webServerPort = options.webServerPort || 80;
         options.log = options.log || {
             debug: function (msg) {
@@ -322,7 +324,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                                     var allowedNames = [];
                                     var answerNeeded = names.length;
                                     var isProjectReadable = function(name,callback){
-                                        options.authInfo(getSessionID(socket.handshake),name,function(err,authObj){
+                                        options.getAuthorizationInfo(getSessionID(socket.handshake),name,function(err,authObj){
                                             if(!err){
                                                 if(authObj && authObj.read === true){
                                                     allowedNames.push(name);
@@ -355,7 +357,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                         if(err){
                             callback(err);
                         } else {
-                            options.authInfo(getSessionID(socket.handshake),name,callback);
+                            options.getAuthorizationInfo(getSessionID(socket.handshake),name,callback);
                         }
                     });
                 });
@@ -369,6 +371,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                                 if(err){
                                     callback(err);
                                 } else {
+                                    options.auth_deleteProject(projectName);
                                     //TODO what to do with the object itself???
                                     fireEvent({type:SERVER_EVENT.PROJECT_DELETED,project:projectName});
                                     callback(null);
@@ -386,7 +389,6 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                             _database.getProjectNames(function(err,names){
                                 if(names.indexOf(projectName) === -1){
                                     //project creation
-                                    console.warn(getSessionID(socket.handshake));
                                     createProject(getSessionID(socket.handshake),projectName,function(err,project){
                                         if(!err){
                                             fireEvent({type:SERVER_EVENT.PROJECT_CREATED,project:projectName});
@@ -623,16 +625,28 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
 
 
                 //worker commands
-                socket.on('simpleRequest',function(parameters,callback){
-                    if(socket.handshake){
-                        parameters.webGMESessionId = getSessionID(socket.handshake) || null;
+                socket.on('simpleRequest',function(parameters,callback) {
+                    var request = function() {
+                        _workerManager.request(parameters, function (err, id) {
+                            if (!err && id) {
+                                registerConnectedWorker(socket.id, id);
+                            }
+                            callback(err, id);
+                        });
+                    };
+
+                    parameters.webGMESessionId = getSessionID(socket.handshake) || null;
+                    if (!options.authentication) {
+                        request();
+                    } else {
+                        options.sessionToUser(parameters.webGMESessionId, function (err, userId) {
+                            if (err || !userId) {
+                                return callback(err || 'unauthorized');
+                            }
+                            parameters.userId = userId;
+                            request();
+                        });
                     }
-                    _workerManager.request(parameters,function(err,id){
-                        if(!err && id){
-                            registerConnectedWorker(socket.id,id);
-                        }
-                        callback(err,id);
-                    });
                 });
 
                 socket.on('simpleResult',function(resultId,callback){
