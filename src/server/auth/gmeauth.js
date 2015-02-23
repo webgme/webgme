@@ -325,7 +325,6 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
             var data = {_id: userId, email: email, canCreate: canCreate, projects: {} };
             return Q.ninvoke(bcrypt, 'hash', password, 10 /* TODO: make this configurable */)
                 .then(function (hash) {
-                    console.error(password + ' ' + hash);
                     data.passwordHash = hash;
                     if (!options.overwrite) {
                         return collection.insert(data);
