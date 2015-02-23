@@ -160,12 +160,19 @@ define(['logManager',
 
     /******************* PRIVATE API *****************************/
 
+    ProjectRepositoryWidget.cMessageStyleStr = 'div.' + MESSAGE_DIV_CLASS + ' { max-width: __MW__px; }';
+
     ProjectRepositoryWidget.prototype._initializeUI = function () {
         var self = this;
 
         this._el.empty();
 
         this._el.addClass(REPOSITORY_LOG_VIEW_CLASS);
+
+        //initialize all containers
+        this._cMessageStyle = $('<style/>', {"type": "text/css"});
+        this._cMessageStyle.html(ProjectRepositoryWidget.cMessageStyleStr.replace('__MW__', '400'));
+        this._el.append(this._cMessageStyle);
 
         /*table layout*/
         this._table = $('<table/>', {"class": "table table-hover user-select-on commit-list"});
@@ -660,6 +667,12 @@ define(['logManager',
 
         //set the correct with for the 'Graph' column in the table to fit the drawn graph
         this._graphPlaceHolder.css("width", contentWidth);
+
+        //make it almost "full screen"
+        wW = wW - 2 * WINDOW_PADDING;
+        wH = wH - 2 * WINDOW_PADDING - DIALOG_HEADER_HEIGHT - DIALOG_FOOTER_HEIGHT;
+
+        this._cMessageStyle.html(ProjectRepositoryWidget.cMessageStyleStr.replace('__MW__', wW * 0.66));
 
         tWidth = this._table.width();
         this._showMoreContainer.css("width", tWidth);
