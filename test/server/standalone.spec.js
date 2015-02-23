@@ -111,14 +111,16 @@ describe('standalone server', function () {
             });
         });
 
-        it('should return 200 /login/client', function (done) {
+        // TODO: POST /login/client
+
+        it('should return 404 GET /login/client', function (done) {
             agent.get(serverBaseUrl + '/login/client').end(function (err, res) {
                 if (err) {
                     done(err);
                     return;
                 }
                 //console.log(res);
-                should.equal(res.status, 200);
+                should.equal(res.status, 404);
                 done();
             });
         });
@@ -480,7 +482,19 @@ describe('standalone server', function () {
         });
 
         it('should return 200 (unknown command) /rest/unknown', function (done) {
-            agent.get(serverBaseUrl + ' /rest/unknown').end(function (err, res) {
+            agent.get(serverBaseUrl + '/rest/unknown').end(function (err, res) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                //console.log(res);
+                should.equal(res.status, 200);
+                done();
+            });
+        });
+
+        it('should return 200 (unknown command) /rest/help', function (done) {
+            agent.get(serverBaseUrl + '/rest/help').end(function (err, res) {
                 if (err) {
                     done(err);
                     return;
