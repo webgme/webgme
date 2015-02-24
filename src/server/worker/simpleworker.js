@@ -746,7 +746,7 @@ requirejs(['worker/constants',
           });
           break;
         case CONSTANT.workerCommands.connectedWorkerStart:
-          initConnectedWorker(parameters.workerName, parameters.sessionId, parameters.project, parameters.branch, function (err) {
+          initConnectedWorker(parameters.workerName, parameters.webGMESessionId, parameters.project, parameters.branch, function (err) {
             if (err) {
               safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: err, resid: null});
             } else {
