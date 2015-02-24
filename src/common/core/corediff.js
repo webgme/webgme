@@ -1016,7 +1016,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       var node;
       node = _core.loadByPath(root, path);
 
-      TASYNC.call(function (n) {
+      return TASYNC.call(function (n) {
         var done,
           relids = getDiffChildrenRelids(nodeDiff),
           i;
@@ -1033,15 +1033,31 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
           done = TASYNC.call(applyMetaChanges,n, nodeDiff.meta,done);
         }
         for (i = 0; i < relids.length; i++) {
-          done = TASYNC.call(function (d, d2) {
+          /*done = TASYNC.call(function () {
             return null;
-          }, applyNodeChange(root, path + '/' + relids[i], nodeDiff[relids[i]]), done);
+          }, applyNodeChange(root, path + '/' + relids[i], nodeDiff[relids[i]]), done);*/
+          done = TASYNC.join(done,applyNodeChange(root, path + '/' + relids[i], nodeDiff[relids[i]]));
         }
-        TASYNC.call(function (d) {
+        /*TASYNC.call(function (d) {
           return done;
-        }, done);
+        }, done);*/
+          return done;
       }, node);
     }
+
+      /*function applyNodeChange(root,path,diff){
+          return TASYNC.call(function(node){
+              console.warn(_core.getPath(node));
+            var relids = getDiffChildrenRelids(diff),
+                i,done=null;
+              applyAttributeChanges(node, diff.attr || {});
+              applyRegistryChanges(node, diff.reg || {});
+              for(i=0;i<relids.length;i++){
+                  done = TASYNC.join(done,applyNodeChange(root,path+'/'+relids[i],diff[relids[i]]));
+              }
+              return done;
+          },_core.loadByPath(root,path));
+      }*/
 
     function applyAttributeChanges(node, attrDiff) {
       var i, keys;
@@ -1329,10 +1345,11 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       fromTo = {};
       getMoveSources(diff, '', toFrom, fromTo);
 
-      done = makeInitialContainmentChanges(root,diff);
+      /*done = makeInitialContainmentChanges(root,diff);
       return TASYNC.call(function (d) {
         return applyNodeChange(root, '', diff);
-      }, done);
+      }, done);*/
+        return applyNodeChange(root,'', diff);
     };
 
 

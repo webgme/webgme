@@ -41,13 +41,16 @@ describe('corediff',function(){
                             if (err) {
                                 return done(err);
                             }
-                            project.setBranchHash('base','',commit,done);
-                            project.closeProject(function(err){
+                            project.setBranchHash('base','',commit,function(err){
                                 if(err){
                                     return done(err);
                                 }
-                                console.warn('close000');
-                                database.closeDatabase(done);
+                                project.closeProject(function(err){
+                                    if(err){
+                                        return done(err);
+                                    }
+                                    database.closeDatabase(done);
+                                });
                             });
                         });
                     });
@@ -56,11 +59,6 @@ describe('corediff',function(){
         });
     });
     after(function(done){
-        var newdone = done;
-        done = function(err){
-            console.warn('called-after');
-            newdone(err);
-        };
         database.openDatabase(function(err){
             if(err){
                 return done(err);
@@ -76,48 +74,31 @@ describe('corediff',function(){
     });
     describe('apply',function(){
         before(function(done){
-            var newdone = done;
-            done = function(err){
-                console.warn('called');
-                newdone(err);
-            };
             database.openDatabase(function(err){
-                console.warn('kecso001');
                 if(err){
-                    console.warn('kecso001-1');
                     return done(err);
                 }
                 database.openProject(projectName,function(err,p){
-                    console.warn('kecso002');
                     if(err){
-                        console.warn('kecso002-1');
                         return done(err);
                     }
                     project = p;
                     core = new global.WebGME.core(project);
                     project.getBranchNames(function(err,names){
-                        console.warn('kecso003');
                         if(err){
-                            console.warn('kecso003-1');
                             return done(err);
                         }
                         if(!names['base']){
-                            console.warn('kecso003-2');
                             return done(new Error('missing branch'));
                         }
                         project.loadObject(names['base'],function(err,c){
-                            console.warn('kecso004',c);
                             if(err){
-                                console.warn('kecso004-1');
                                 return done(err);
                             }
                             core.loadRoot(c.root,function(err,r){
-                                console.warn('kecso005');
                                 if(err){
-                                    console.warn('kecso005-1',err);
                                     return done(err);
                                 }
-                                console.warn('kecso006');
                                 root = r;
                                 done();
                             });
@@ -126,8 +107,29 @@ describe('corediff',function(){
                 });
             });
         });
+        after(function(done){
+            try{
+                database.closeDatabase(done);
+            } catch(e){
+                done();
+            }
+        });
         it('modifies several attributes',function(done){
-            /*core.applyTreeDiff(root,{attr:{name:'ROOTy'},1:{attr:{name:'FCOy'}}},function(err){
+            /*var needed = 10,i;
+            for(i=0;i<10;i++){
+                core.loadByPath(root,'/1',function(err,fco){
+                    if(err){
+                        return done(err);
+                    }
+                    console.warn('\''+core.getHash(fco)+'\'');
+                    console.warn('\''+core.getAttribute(fco,'name')+'\'');
+                    if(--needed === 0){
+                        done();
+                    }
+                });
+            }*/
+
+            core.applyTreeDiff(root,{attr:{name:'ROOTy'},1:{attr:{name:'FCOy'}}},function(err){
                 if(err){
                     return done(err);
                 }
@@ -143,9 +145,7 @@ describe('corediff',function(){
                         project.setBranchHash('base',oldCommit,commit,done);
                     });
                 });
-                done();
-            });*/
-            done();
+            });
         });
     });
 });
