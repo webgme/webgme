@@ -460,7 +460,16 @@ define(['logManager',
             __app.use(Passport.initialize());
             __app.use(Passport.session());
 
+            if (CONFIG.enableExecutor) {
+                var executorRest = requirejs('executor/Executor');
+                __app.use('/rest/executor', executorRest);
+                __logger.info('Executor listening at rest/executor');
+            } else {
+                __logger.info('Executor not enabled. Add "enableExecutor: true" to config.js for activation.');
+            }
+
             setupExternalRestModules();
+
         });
 
         __logger.info("creating login routing rules for the static server");
@@ -597,14 +606,6 @@ define(['logManager',
         var blobBackend = new BlobFSBackend();
         //var blobBackend = new BlobS3Backend();
         BlobServer.createExpressBlob(__app, blobBackend, ensureAuthenticated, __logger);
-
-        if (CONFIG.enableExecutor) {
-            var executorRest = requirejs('executor/Executor');
-            __app.use('/rest/executor/', executorRest);
-            __logger.info('Executor listening at rest/executor');
-        } else {
-            __logger.info('Executor not enabled. Add "enableExecutor: true" to config.js for activation.');
-        }
 
         //client contents - js/html/css
         //stuff that considered not protected 
