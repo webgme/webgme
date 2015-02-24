@@ -4,7 +4,8 @@
 /* globals require, global, describe, before, after */
 require('../../_globals.js');
 var database = new global.WebGME.serverUserStorage({host:'127.0.0.1',port:27017,database:'multi',log:global.Log.create('mongoLog')}),
-    FS = require('fs');
+    FS = require('fs'),
+    should = require('chai').should();
 describe('corediff',function(){
     'use strict';
     var projectName = 'coreDiffApply',
@@ -115,20 +116,6 @@ describe('corediff',function(){
             }
         });
         it('modifies several attributes',function(done){
-            /*var needed = 10,i;
-            for(i=0;i<10;i++){
-                core.loadByPath(root,'/1',function(err,fco){
-                    if(err){
-                        return done(err);
-                    }
-                    console.warn('\''+core.getHash(fco)+'\'');
-                    console.warn('\''+core.getAttribute(fco,'name')+'\'');
-                    if(--needed === 0){
-                        done();
-                    }
-                });
-            }*/
-
             core.applyTreeDiff(root,{attr:{name:'ROOTy'},1:{attr:{name:'FCOy'}}},function(err){
                 if(err){
                     return done(err);
@@ -142,7 +129,30 @@ describe('corediff',function(){
                         if (err) {
                             return done(err);
                         }
-                        project.setBranchHash('base',oldCommit,commit,done);
+                        project.setBranchHash('base',oldCommit,commit,function(err){
+                            if(err){
+                                return done(err);
+                            }
+                            //checking
+                            project.loadObject(commit,function(err,c){
+                                if(err){
+                                    return done(err);
+                                }
+                                core.loadRoot(c.root,function(err,r){
+                                    if(err){
+                                        return done(err);
+                                    }
+                                    core.getAttribute(r,'name').should.be.eql('ROOTy');
+                                    core.loadByPath(r,'/1',function(err,fco){
+                                        if(err){
+                                            return done(err);
+                                        }
+                                        core.getAttribute(fco,'name').should.be.eql('FCOy');
+                                        done();
+                                    });
+                                });
+                            });
+                        });
                     });
                 });
             });
