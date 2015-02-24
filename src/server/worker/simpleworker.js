@@ -542,7 +542,7 @@ requirejs(['worker/constants',
             _addOn.start({projectName: projectName, branchName: branchName, project: project}, callback);
           });
         } else {
-          callback('unable to connect user\'s storage');
+          callback('unable to connect user\'s storage: ' + err);
         }
       });
     };

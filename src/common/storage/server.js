@@ -170,7 +170,8 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 ]
             });
 
-            _socket.set('authorization',function(data,accept){
+            _socket.use(function(socket, next) {
+                var handshakeData = socket.handshake;
                 //either the html header contains some webgme signed cookie with the sessionID
                 // or the data has a webGMESession member which should also contain the sessionID - currently the same as the cookie
                 if (options.session === true){
@@ -195,16 +196,16 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                             return accept(null,false);
                         }
                     }*/
-                    sessionID = getSessionID(data);
+                    sessionID = getSessionID(handshakeData);
                     options.sessioncheck(sessionID,function(err,isOk){
                         if(!err && isOk === true){
-                            return accept(null,true);
+                            return next();
                         } else {
-                            return accept(err,false);
+                            return next(err || 'error');
                         }
                     });
                 } else {
-                    return accept(null,true);
+                    next();
                 }
             });
 
