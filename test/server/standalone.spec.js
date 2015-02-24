@@ -1,4 +1,4 @@
-/*globals require, describe, it, before, after, WebGMEGlobal, process*/
+/*globals require, describe, it, before, after, beforeEach, WebGMEGlobal, process*/
 /**
  * @author lattmann / https://github.com/lattmann
  */
@@ -809,7 +809,7 @@ describe('standalone server', function () {
         //});
 
         it('should return 200 POST /login', function (done) {
-            agent.post(serverBaseUrl + '/login').send({username: "test"}).end(function (err, res) {
+            agent.post(serverBaseUrl + '/login').send({username: 'test'}).end(function (err, res) {
                 if (err) {
                     done(err);
                     return;
@@ -926,8 +926,8 @@ describe('standalone server', function () {
                     }
                     should.equal(res.status, 200);
                     res.redirects.should.deep.equal([
-                        "http://127.0.0.1:9001/",
-                        "http://127.0.0.1:9001/login?redirect=%2F%3Fredirect%3D%252F" // FIXME: this is not a desirable redirect
+                        'http://127.0.0.1:9001/',
+                        'http://127.0.0.1:9001/login?redirect=%2F%3Fredirect%3D%252F' // FIXME: this is not a desirable redirect
                     ]);
                     done();
                 });

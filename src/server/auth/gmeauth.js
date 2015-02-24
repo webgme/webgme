@@ -1,4 +1,4 @@
-/* globals define, require */
+/* globals define, require, console */
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
@@ -58,9 +58,9 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
         };
 
         (function connect() {
-            var userString = "";
+            var userString = '';
             if(_options.user && _options.pwd){
-                userString = _options.user+":"+options.pwd+"@";
+                userString = _options.user + ':' + _options.pwd + '@';
             }
             Q.ninvoke(Mongodb.MongoClient, 'connect', 'mongodb://' + userString + _options.host + ':' + _options.port + '/' + _options.database, {
                 'w': 1,
@@ -93,7 +93,7 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
         function unload(callback) {
             return collection
                 .finally(function () {
-                    return Q.ninvoke(db, 'close')
+                    return Q.ninvoke(db, 'close');
                 })
                 .nodeify(callback);
         }
@@ -110,7 +110,7 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
             var userId = req.body[_userField],
                 password = req.body[_passwordField],
                 gmail = false,
-                returnUrl = req.__gmeAuthFailUrl__ || "/";
+                returnUrl = req.__gmeAuthFailUrl__ || '/';
             delete req.__gmeAuthFailUrl__;
             //gmail based authentication - no authentication just user search
             if (userId === null || userId === undefined) {
@@ -151,7 +151,7 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
                     }
                 })
                 .catch(function (err) {
-                    res.redirect(returnUrl)
+                    res.redirect(returnUrl);
                 });
         }
 
@@ -177,7 +177,7 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
                     .nodeify(callback);
             } else {
                 var projection = {};
-                projection["projects." + projectName] = 1;
+                projection['projects.' + projectName] = 1;
                 return collection.findOne({_id: userId}, projection)
                     .then(function (userData) {
                         if (!userData) {
@@ -202,7 +202,7 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
 
         function getAuthorizationInfoByUserId(userId, projectName, callback) {
             var projection = {};
-            projection["projects." + projectName] = 1;
+            projection['projects.' + projectName] = 1;
             return collection.findOne({_id: userId}, projection)
                 .then(function (userData) {
                     return userData.projects[projectName];
@@ -329,7 +329,7 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
                     if (!options.overwrite) {
                         return collection.insert(data);
                     } else {
-                        return collection.update({_id: userId}, data, {upsert: true})
+                        return collection.update({_id: userId}, data, {upsert: true});
                     }
                 })
                 .nodeify(callback);
