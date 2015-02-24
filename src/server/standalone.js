@@ -41,7 +41,6 @@ define(['logManager',
              BlobServer,
              GUID) {
     'use strict';
-    'use strict';
     function StandAloneServer(CONFIG) {
         // if the config is not set we use the global
         CONFIG = CONFIG || WebGMEGlobal.getConfig();
@@ -598,6 +597,14 @@ define(['logManager',
         var blobBackend = new BlobFSBackend();
         //var blobBackend = new BlobS3Backend();
         BlobServer.createExpressBlob(__app, blobBackend, ensureAuthenticated, __logger);
+
+        if (CONFIG.enableExecutor) {
+            var executorRest = requirejs('executor/Executor');
+            __app.use('/rest/executor/', executorRest);
+            __logger.info('Executor listening at rest/executor');
+        } else {
+            __logger.info('Executor not enabled. Add "enableExecutor: true" to config.js for activation.');
+        }
 
         //client contents - js/html/css
         //stuff that considered not protected 
