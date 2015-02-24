@@ -944,5 +944,18 @@ describe('standalone server', function () {
                 authorized.should.deep.equal([true, false, false]);
             }).nodeify(done);
         });
+
+        it('should be able to revoke permissions', function (done) {
+            gmeauth.promise.then(function (gmeauth) {
+                return gmeauth.authorizeByUserId('user', 'project', 'delete', {})
+                    .then(function () {
+                        return gmeauth.authorizeByUserId('user', 'project', 'read', {});
+                    }).then(function (authorized) {
+                        if (authorized) {
+                            return Q.reject('should have been de-authorized');
+                        }
+                    });
+            }).nodeify(done);
+        });
     });
 });

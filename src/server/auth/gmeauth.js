@@ -1,18 +1,17 @@
+/* globals define, require */
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
  * Author: Tamas Kecskes
  */
 
-define(["mongodb", "q", "util/guid"], function (Mongodb, Q, GUID) {
+define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcrypt) {
     function GMEAuth(_options) {
         var _collectionName = _options.collection || '_users',
             _session = _options.session,
-            _validity = _options.validity || 60000,
             _userField = _options.user || 'username',
             _passwordField = _options.password || 'password',
             _tokenExpiration = _options.tokenTime || 0,
-            _guest = _options.guest === true ? true : false,
             db,
             collectionDeferred = Q.defer(),
             collection = collectionDeferred.promise;
@@ -63,38 +62,31 @@ define(["mongodb", "q", "util/guid"], function (Mongodb, Q, GUID) {
             if(_options.user && _options.pwd){
                 userString = _options.user+":"+options.pwd+"@";
             }
-            Mongodb.MongoClient.connect("mongodb://" + userString + _options.host + ":" + _options.port + "/" + _options.database, {
+            Q.ninvoke(Mongodb.MongoClient, 'connect', 'mongodb://' + userString + _options.host + ':' + _options.port + '/' + _options.database, {
                 'w': 1,
                 'native-parser': true,
                 'auto_reconnect': true,
                 'poolSize': 20,
                 socketOptions: {keepAlive: 1}
-            }, function (err, db_) {
-                if (!err && db_) {
-                    db = db_;
-                    db.collection(_collectionName, function (err, result) {
-                        if (err) {
-                            // TODO better logging
-                            console.error(err);
-                            collectionDeferred.reject(err);
-                        } else {
-                            collectionDeferred.resolve(result);
-                            if (_options.guest) {
-                                collection.findOne({_id: 'anonymous'})
-                                    .then(function (userData) {
-                                        if (!userData) {
-                                            console.error('User "anonymous" not found. Create it with src/bin/usermanager.js or anonymous access will not work. ' +
-                                                'Disable anonymous access by setting config.guest = false');
-                                        }
-                                    });
+            }).then(function (db_) {
+                db = db_;
+                return Q.ninvoke(db, 'collection', _collectionName);
+            }).then(function (collection_) {
+                collectionDeferred.resolve(collection_);
+                if (_options.guest) {
+                    collection.findOne({_id: 'anonymous'})
+                        .then(function (userData) {
+                            if (!userData) {
+                                console.error('User "anonymous" not found. Create it with src/bin/usermanager.js or anonymous access will not work. ' +
+                                'Disable anonymous access by setting config.guest = false');
                             }
-                        }
-                    });
-                } else {
-                    // TODO better logging
-                    console.error(err);
-                    collectionDeferred.reject(err);
+                        });
                 }
+            })
+            .catch(function (err) {
+                // TODO better logging
+                console.error(err);
+                collectionDeferred.reject(err);
             });
         })();
 
@@ -145,14 +137,17 @@ define(["mongodb", "q", "util/guid"], function (Mongodb, Q, GUID) {
                         req.session.userType = 'GME';
                         next(null);
                     } else {
-                        if (password === userData.password) {
-                            req.session.udmId = userData._id;
-                            req.session.authenticated = true;
-                            req.session.userType = 'GME';
-                            next(null);
-                        } else {
-                            res.redirect(returnUrl);
-                        }
+                        return Q.ninvoke(bcrypt, 'compare', password, userData.passwordHash)
+                            .then(function(hash_res) {
+                                if (!hash_res) {
+                                    return Q.reject('incorrect password');
+                                } else {
+                                    req.session.udmId = userData._id;
+                                    req.session.authenticated = true;
+                                    req.session.userType = 'GME';
+                                    next(null);
+                                }
+                            });
                     }
                 })
                 .catch(function (err) {
@@ -327,14 +322,17 @@ define(["mongodb", "q", "util/guid"], function (Mongodb, Q, GUID) {
         }
 
         function addUser(userId, email, password, canCreate, options, callback) {
-            var data = {_id: userId, email: email, password: password, canCreate: canCreate, projects: {} };
-            if (!options.overwrite) {
-                return collection.insert(data)
-                    .nodeify(callback);
-            } else {
-                return collection.update({_id: userId}, data, { upsert: true })
-                    .nodeify(callback);
-            }
+            var data = {_id: userId, email: email, canCreate: canCreate, projects: {} };
+            return Q.ninvoke(bcrypt, 'hash', password, 10 /* TODO: make this configurable */)
+                .then(function (hash) {
+                    data.passwordHash = hash;
+                    if (!options.overwrite) {
+                        return collection.insert(data);
+                    } else {
+                        return collection.update({_id: userId}, data, {upsert: true})
+                    }
+                })
+                .nodeify(callback);
         }
 
         function _getProjectNames(callback) {
