@@ -1,64 +1,51 @@
-/*globals define, require, process, __dirname, console*/
+/*globals require, process, __dirname, console, module*/
 /**
+ * NOTE: Expected to be run only under nodejs.
+ *
  * @author kecso / https://github.com/kecso
  * @author ksmyth / https://github.com/ksmyth
  * @author lattmann / https://github.com/lattmann
  */
 
-if (typeof define !== 'function') {
-    var requirejs = require('requirejs'),
-        Q = require('q');
+var requirejs = require('requirejs'),
+    Q = require('q'),
+    MongoURI = require('mongo-uri'),
 
-    requirejs.config({
-        nodeRequire: require,
-        baseUrl: __dirname + '/..',
-        paths: {
-            'util': 'common/util',
-            'core': 'common/core',
-            'storage': 'common/storage',
-            'auth': 'server/auth',
-            'bin': 'bin'
-        }
-    });
+    GMEAuth,
+    config,
 
-    requirejs([ 'util/common', 'util/assert', 'auth/gmeauth', 'bin/getconfig'], function (COMMON, ASSERT, gmeauth, config) {
-        'use strict';
+    main;
 
-        var userId = null,
-            mongoConnectionInfo,
-            main;
+requirejs.config({
+    nodeRequire: require,
+    baseUrl: __dirname + '/..',
+    paths: {
+        'util': 'common/util',
+        'auth': 'server/auth',
+        'bin': 'bin'
+    }
+});
 
-        main = function () {
-            //var args = COMMON.getParameters(null);
-            //console.log(args);
+GMEAuth = requirejs('auth/gmeauth');
+config = requirejs('bin/getconfig');
 
-            var usage = function () {
-                console.log('Usage: node usermanager.js [options]');
-                console.log('');
-                console.log('Adds or authorizes a user. Possible options:');
-                console.log('');
-                console.log('  -mongo [database [host [port]]]\t\t\topens a mongo database');
-                console.log('  -user <username>\t\t\t\t\tthe user to manage');
-                console.log('  -adduser <write = true/false> [password email]\ttadd a user');
-                console.log('  -addproject <projectname> <mode = r|rw|rwd>\t\tadds a project to the user data');
-                console.log('  -removeproject <projectname>\t\t\t\tremoves a project from the user data');
-                console.log('  -token \t\t\t\t\tgenerates a token for the user');
-                console.log('  -removeuser \t\t\t\t\t\tremoves a user data');
-                console.log('  -info\t\t\t\t\t\t\tprints out the data of the user, or if no user is given then the data of all users');
-                console.log('  -help\t\t\t\t\t\t\tprints out this help message');
-                console.log('');
-                return Q(null);
-            };
-            if (COMMON.getParameters('help') !== null || process.argv.length === 2) {
-                return usage();
-            }
+main = function () {
+    'use strict';
 
-            mongoConnectionInfo = COMMON.getParameters('mongo');
-            if (mongoConnectionInfo) {
+    var program = require('commander'),
+        auth,
+        mainDeferred = Q.defer(),
+        setupGMEAuth = function (databaseConnectionString) {
+            var mongoConnectionInfo,
+                uri;
+            if (databaseConnectionString) {
+                // this line throws a TypeError for invalid databaseConnectionString
+                uri = MongoURI.parse(databaseConnectionString);
+
                 mongoConnectionInfo = {
-                    host: mongoConnectionInfo[1] || '127.0.0.1',
-                    port: mongoConnectionInfo[2] || 27017,
-                    database: mongoConnectionInfo[0] || 'multi'
+                    host: uri.hosts[0],
+                    port: uri.ports[0] || 27017,
+                    database: uri.database || 'multi'
                 };
             } else {
                 mongoConnectionInfo = {
@@ -67,118 +54,248 @@ if (typeof define !== 'function') {
                     database: config.mongodatabase
                 };
             }
-            gmeauth = gmeauth(mongoConnectionInfo);
-            userId = (COMMON.getParameters('user') || [])[0];
-            var checkUserId = function () {
-                if (!userId) {
-                    return Q.reject('must specifiy -user');
-                }
-                return undefined;
-            };
 
-            var projpars;
-            if (COMMON.getParameters('info')) {
-                return checkUserId() || infoPrint(userId).then(console.log);
-            } else if (COMMON.getParameters('token')) {
-                return checkUserId() || generateToken(userId);
-            } else if (COMMON.getParameters('addproject')){
-                projpars = COMMON.getParameters('addproject');
-                return checkUserId() || addProject(userId, projpars[0], projpars[1] || '')
-                    .then(function (success) {
-                        if (!success) {
-                            console.error('Unknown user ' + userId);
-                        }
-                    });
-            } else if (COMMON.getParameters('removeproject')) {
-                projpars = COMMON.getParameters('removeproject');
-                return checkUserId() || gmeauth.authorizeByUserId(userId, projpars[0], 'delete')
-                    .then(function (success) {
-                        if (!success) {
-                            console.error('Unknown user ' + userId);
-                        }
-                    });
-            } else if (COMMON.getParameters('adduser')) {
-                projpars = COMMON.getParameters('adduser');
-                return checkUserId() || gmeauth.addUser(userId, projpars[2] || null, projpars[1] || null, projpars[0] === 'true', { overwrite: true});
-            } else if (COMMON.getParameters('removeuser')) {
-                return checkUserId() || gmeauth.removeUserByUserId(userId);
-            } else {
-                console.log('Unrecognized operation');
-                return usage();
-            }
+            console.log(mongoConnectionInfo);
+
+            auth = new GMEAuth(mongoConnectionInfo);
         };
 
-        main()
-            .then(function () {
-                console.log('Done');
-            })
-            .catch(function (err) {
-                console.error('ERROR: ' + err);
-            })
-            .finally(gmeauth.unload);
+    program
+        .version('0.1.0')
+        .option('--db <database>', 'database connection string', 'mongodb://127.0.0.1:27017/multi');
 
-        function padString(str, length) {
-            while (str.length < length) {
-                str = ' ' + str;
-            }
-            return str;
-        }
+    program
+        .command('useradd <username> <email> <password>')
+        .description('adds a new user')
+        .option('-c, --canCreate', 'user can create a new project', false)
+        .action(function (username, email, password, options) {
+            setupGMEAuth(options.parent.db);
 
-        //commands
-        function infoPrint(userName) {
-            return gmeauth.getAllUserAuthInfo(userName)
-                .then(function printUser(userObject) {
-                    var outstring = '',
-                        userProjects = userObject.projects,
-                        i,
-                        mode,
-                        end;
+            // TODO: we may need to use a module like 'prompt' to get user password
+            auth.addUser(username, email, password, options.canCreate, { overwrite: true})
+                .then(mainDeferred.resolve)
+                .catch(mainDeferred.reject)
+                .finally(auth.unload);
+        })
+        .on('--help', function () {
+            console.log('  Examples:');
+            console.log();
+            console.log('    $ node usermanager.js useradd brubble brubble@example.com Password.123');
+            console.log('    $ node usermanager.js useradd --canCreate brubble brubble@example.com Password.123');
+            console.log();
+        });
 
-                    outstring += 'userName: ' + padString(userObject._id) + ' | ';
-                    outstring += 'canCreate: ' + userObject.canCreate + ' | ';
-                    outstring += 'projects: ';
+    program
+        .command('userlist [username]')
+        .description('lists all users or the specified user')
+        .action(function (username, options) {
+            setupGMEAuth(options.parent.db);
 
-                    for (i in userProjects) {
-                        mode = '';
-                        if(userProjects[i].read){
-                            mode+='r';
-                        } else {
-                            mode+='_';
-                        }
-                        if(userProjects[i].write){
-                            mode+='w';
-                        } else {
-                            mode+='_';
-                        }
-                        if(userProjects[i].delete){
-                            mode+='d';
-                        } else {
-                            mode+='_';
-                        }
-                        outstring += padString(i + '(' + mode + ')', 20) + ' ; ';
-                    }
+            return auth.getAllUserAuthInfo(username)
+                .then(function (userObject) {
+                    // TODO: pretty print users
+                    console.log(userObject);
+                    mainDeferred.resolve();
+                })
+                .catch(mainDeferred.reject)
+                .finally(auth.unload);
+        })
+        .on('--help', function () {
+            console.log('  Examples:');
+            console.log();
+            console.log('    $ node usermanager.js userlist');
+            console.log('    $ node usermanager.js userlist user23');
+            console.log();
+        });
 
-                    end = outstring.lastIndexOf(';');
-                    if(end !== -1){
-                        outstring = outstring.substring(0,end-1);
-                    }
-                    return outstring;
-                 });
-        }
+    program
+        .command('passwd <username> <password>')
+        .description('updates the user')
+        .action(function (username, password, options) {
+            setupGMEAuth(options.parent.db);
 
-        function generateToken() {
-            return gmeauth.generateTokenForUserId(userId)
-                .then(console.log);
-        }
+            // TODO: we may need to use a module like 'prompt' to get user password
+            return auth.getAllUserAuthInfo(username)
+                .then(function (userObject) {
+                    return auth.addUser(username, userObject.email, password, userObject.canCreate, { overwrite: true});
+                })
+                .then(mainDeferred.resolve)
+                .catch(mainDeferred.reject)
+                .finally(auth.unload);
 
-        function addProject(userId, projectName, rwd) {
+        })
+        .on('--help', function () {
+            console.log('  Examples:');
+            console.log();
+            console.log('    $ node usermanager.js passwd brubble NewPass.123');
+            console.log();
+        });
+
+    program
+        .command('userdel <username>')
+        .description('deletes a user')
+        .action(function (username, options) {
+            setupGMEAuth(options.parent.db);
+
+            return auth.removeUserByUserId(username)
+                .then(mainDeferred.resolve)
+                .catch(mainDeferred.reject)
+                .finally(auth.unload);
+        })
+        .on('--help', function () {
+            console.log('  Examples:');
+            console.log();
+            console.log('    $ node usermanager.js userdel brubble');
+            console.log();
+        });
+
+    program
+        .command('groupadd <groupname>')
+        .description('adds a new group')
+        .action(function (groupname, options) {
+            setupGMEAuth(options.parent.db);
+
+            console.log('TODO: add a new group ' + groupname);
+            mainDeferred.reject('not implemented yet.');
+            auth.unload();
+
+            //return auth.addGroup(groupname)
+            //    .then(mainDeferred.resolve)
+            //    .catch(mainDeferred.reject)
+            //    .finally(auth.unload);
+        })
+        .on('--help', function () {
+            console.log('  Examples:');
+            console.log();
+            console.log('    $ node usermanager.js groupadd newgroup');
+            console.log();
+        });
+
+    program
+        .command('groupdel <groupname>')
+        .description('deletes an existing group')
+        .action(function (groupname, options) {
+            setupGMEAuth(options.parent.db);
+
+            console.log('TODO: delete an existing group ' + groupname);
+            mainDeferred.reject('not implemented yet.');
+            auth.unload();
+
+            //return auth.delGroup(groupname)
+            //    .then(mainDeferred.resolve)
+            //    .catch(mainDeferred.reject)
+            //    .finally(auth.unload);
+        })
+        .on('--help', function () {
+            console.log('  Examples:');
+            console.log();
+            console.log('    $ node usermanager.js groupdel sample_group');
+            console.log();
+        });
+
+    program
+        .command('usermod_auth <username> <projectname>')
+        .description('deletes an existing group')
+        .option('-a, --authorize <mode>', 'mode is rwd, read, write, delete', 'rwd')
+        .option('-d, --deauthorize', 'deauthorizes user', false)
+        .action(function (username, projectname, options) {
             var rights = {
-                    read: rwd.indexOf('r') !== -1,
-                    write: rwd.indexOf('w') !== -1,
-                    delete: rwd.indexOf('d') !== -1
-                };
-            return gmeauth.authorizeByUserId(userId, projectName, 'create', rights);
-        }
+                read:   options.authorize.indexOf('r') !== -1,
+                write:  options.authorize.indexOf('w') !== -1,
+                delete: options.authorize.indexOf('d') !== -1
+            };
 
-    });
+            setupGMEAuth(options.parent.db);
+
+            if (options.deauthorize) {
+                // deauthorize
+                rights = {};
+            }
+
+            // authorize
+            return auth.authorizeByUserId(username, projectname, 'create', rights)
+                .then(mainDeferred.resolve)
+                .catch(mainDeferred.reject)
+                .finally(auth.unload);
+        })
+        .on('--help', function () {
+            console.log('  Examples:');
+            console.log();
+            console.log('    $ node usermanager.js usermod_auth user23 project42');
+            console.log('    $ node usermanager.js usermod_auth --authorize r user23 project42');
+            console.log('    $ node usermanager.js usermod_auth --authorize rw user23 project42');
+            console.log('    $ node usermanager.js usermod_auth -a rw user23 project42');
+            console.log('    $ node usermanager.js usermod_auth --deauthorize user23 project42');
+            console.log('    $ node usermanager.js usermod_auth -d user23 project42');
+            console.log();
+        });
+
+
+    // TODO: usermod_group
+    //node usermanager.js usermod_group --addgroup newgroup brubble
+    //node usermanager.js usermod_group --delgroup newgroup brubble
+
+    program.parse(process.argv);
+
+    return mainDeferred.promise;
+};
+
+if (require.main === module) {
+    
+    main()
+        .then(function () {
+            'use strict';
+            console.log('Done');
+        })
+        .catch(function (err) {
+            'use strict';
+            console.error('ERROR : ' + err);
+        });
+
+    //commands
+    //function infoPrint(userName) {
+    //    return gmeauth.getAllUserAuthInfo(userName)
+    //        .then(function printUser(userObject) {
+    //            var outstring = '',
+    //                userProjects = userObject.projects,
+    //                i,
+    //                mode,
+    //                end;
+    //
+    //            outstring += 'userName: ' + padString(userObject._id) + ' | ';
+    //            outstring += 'canCreate: ' + userObject.canCreate + ' | ';
+    //            outstring += 'projects: ';
+    //
+    //            for (i in userProjects) {
+    //                mode = '';
+    //                if (userProjects[i].read) {
+    //                    mode += 'r';
+    //                } else {
+    //                    mode += '_';
+    //                }
+    //                if (userProjects[i].write) {
+    //                    mode += 'w';
+    //                } else {
+    //                    mode += '_';
+    //                }
+    //                if (userProjects[i].delete) {
+    //                    mode += 'd';
+    //                } else {
+    //                    mode += '_';
+    //                }
+    //                outstring += padString(i + '(' + mode + ')', 20) + ' ; ';
+    //            }
+    //
+    //            end = outstring.lastIndexOf(';');
+    //            if (end !== -1) {
+    //                outstring = outstring.substring(0, end - 1);
+    //            }
+    //            return outstring;
+    //        });
+    //}
+    //
+    //function generateToken() {
+    //    return gmeauth.generateTokenForUserId(userId)
+    //        .then(console.log);
+    //}
 }
