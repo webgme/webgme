@@ -177,6 +177,10 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                         }
                     });
 
+                    socket.on('error', function (err) {
+                        callback(err);
+                    });
+
                     socket.on('disconnect', function () {
                         status = STATUS_NETWORK_DISCONNECTED;
                         socketConnected = false;
