@@ -230,10 +230,50 @@ main = function () {
             console.log();
         });
 
+    program
+        .command('usermod_group_add <username> <groupname>')
+        .description('adds a user to an existing group')
+        .action(function (username, groupname, options) {
+            setupGMEAuth(options.parent.db);
 
-    // TODO: usermod_group
-    //node usermanager.js usermod_group --addgroup newgroup brubble
-    //node usermanager.js usermod_group --delgroup newgroup brubble
+            console.log('add ' + username + ' to ' + groupname);
+            mainDeferred.reject('not implemented yet.');
+            auth.unload();
+
+            //return auth.addUserToGroup(username, groupname)
+            //    .then(mainDeferred.resolve)
+            //    .catch(mainDeferred.reject)
+            //    .finally(auth.unload);
+        })
+        .on('--help', function () {
+            console.log('  Examples:');
+            console.log();
+            console.log('    $ node usermanager.js usermod_group_add user23 group123');
+            console.log();
+        });
+
+    program
+        .command('usermod_group_del <username> <groupname>')
+        .description('removes a user from an existing group')
+        .action(function (username, groupname, options) {
+            setupGMEAuth(options.parent.db);
+
+            console.log('remove ' + username + ' from ' + groupname);
+            mainDeferred.reject('not implemented yet.');
+            auth.unload();
+
+            //return auth.removeUserFromGroup(username, groupname)
+            //    .then(mainDeferred.resolve)
+            //    .catch(mainDeferred.reject)
+            //    .finally(auth.unload);
+        })
+        .on('--help', function () {
+            console.log('  Examples:');
+            console.log();
+            console.log('    $ node usermanager.js usermod_group_del user23 group123');
+            console.log();
+        });
+
 
     program.parse(process.argv);
 
