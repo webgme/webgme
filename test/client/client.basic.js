@@ -440,6 +440,20 @@ describe('Client tests', function () {
     throw new Error('wrong branch is the actual one');
    }
   });
+  it('checks addon loading', function(done) {
+      // TODO: CLNT should provide a callback for this. Then we won't have to poll
+      var i = 0;
+      var interval = setInterval(function () {
+          if (i++ > 30) {
+              clearInterval(interval);
+              done('addon load timed out');
+          }
+          if (CLNT.getRunningAddOnNames().length == 1) {
+              clearInterval(interval);
+              done();
+          }
+      }, 50);
+  });
   it('removes the new branch',function(done){
    CLNT.selectBranchAsync('master',function(err){
     if(err){
