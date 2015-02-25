@@ -298,7 +298,7 @@ define(['./AutoRouter.Constants',
         if (_isHorizontal(dir)) {
             endpoints[0].y = start.y;
             endpoints[1].y = end.y;
-        }else{
+        } else {
             endpoints[0].x = start.x;
             endpoints[1].x = end.x;
         }
@@ -355,7 +355,7 @@ define(['./AutoRouter.Constants',
     };
 
     var _stepOneInDir = function (point, dir) {
-        assert( _isRightAngle(dir), 'ArHelper.stepOnInDir: _isRightAngle(dir) FAILED');
+        assert(_isRightAngle(dir), 'ArHelper.stepOnInDir: _isRightAngle(dir) FAILED');
 
         switch(dir)
         {
@@ -384,7 +384,7 @@ define(['./AutoRouter.Constants',
             box = null,
             res = _getRectOuterCoord(bufferObject.box, inDir);
 
-        assert( _isRightAngle(inDir), 'getChildRectOuterCoordFrom: _isRightAngle(inDir) FAILED'); 
+        assert(_isRightAngle(inDir), 'getChildRectOuterCoordFrom: _isRightAngle(inDir) FAILED'); 
         //The next assert fails if the point is in the opposite direction of the rectangle that it is checking.
         // e.g. The point is checking when it will hit the box from the right but the point is on the left
         assert( !_isPointInDirFrom(point, bufferObject.box, inDir), 'getChildRectOuterCoordFrom: !isPointInDirFrom(point, bufferObject.box.rect, (inDir)) FAILED'); 
@@ -640,10 +640,10 @@ define(['./AutoRouter.Constants',
         var children = fromParent.children,
             i = 0;
 
-        assert( _isRightAngle(dir), 'isPointInDirFromChildren: _isRightAngle(dir) FAILED'); 
+        assert(_isRightAngle(dir), 'isPointInDirFromChildren: _isRightAngle(dir) FAILED'); 
 
-        while( i < children.length ) {
-            if ( _isPointInDirFrom( point, children[i].rect, dir )) {
+        while (i < children.length) {
+            if (_isPointInDirFrom(point, children[i].rect, dir)) {
                 return true;
             }
             ++i;
@@ -655,10 +655,9 @@ define(['./AutoRouter.Constants',
     var _isPointInDirFrom = function (point, from, dir) {
         if (from instanceof ArRect) {
             var rect = from;
-            assert( _isRightAngle(dir), 'ArHelper.isPointInDirFrom: _isRightAngle(dir) FAILED' );
+            assert(_isRightAngle(dir), 'ArHelper.isPointInDirFrom: _isRightAngle(dir) FAILED');
 
-            switch( dir )
-            {
+            switch(dir) {
                 case CONSTANTS.DirTop:
                     return point.y < rect.ceil;
 
@@ -674,8 +673,8 @@ define(['./AutoRouter.Constants',
 
             return false;
 
-        }else{
-            assert( _isRightAngle(dir), 'ArHelper.isPointInDirFrom: _isRightAngle(dir) FAILED' );
+        } else {
+            assert(_isRightAngle(dir), 'ArHelper.isPointInDirFrom: _isRightAngle(dir) FAILED' );
 
             switch( dir )
             {
@@ -706,7 +705,7 @@ define(['./AutoRouter.Constants',
     };
 
     var _isCoordInDirFrom = function (coord, from, dir) {
-        assert( _isRightAngle(dir), 'ArHelper.isCoordInDirFrom: _isRightAngle(dir) FAILED' );
+        assert(_isRightAngle(dir), 'ArHelper.isCoordInDirFrom: _isRightAngle(dir) FAILED');
         if ( from instanceof ArPoint) {
             from = _getPointCoord(from, dir);
         }

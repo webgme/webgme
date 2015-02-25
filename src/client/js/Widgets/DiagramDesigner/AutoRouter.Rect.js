@@ -310,14 +310,24 @@ define(['logManager',
         return Math.max(rect.left, this.left) <= Math.min(rect.right, this.right) + 1 && Math.max(rect.ceil, this.ceil) <= Math.min(rect.floor, this.floor) + 1;
     };
 
+    /**
+     * Returns true if the given point is on one of the corners of the rectangle.
+     *
+     * @param point
+     * @return {undefined}
+     */
     ArRect.prototype.onCorner = function (point){
         var onHorizontalSide,
             onVerticalSide;
 
-        onHorizontalSide = point.x === this.left || this.right;
-        onVerticalSide = point.y === this.ceil || this.floor;
-        
+        onHorizontalSide = point.x === this.left || point.x === this.right;
+        onVerticalSide = point.y === this.ceil || point.y === this.floor;
+
         return onHorizontalSide && onVerticalSide;
+    };
+
+    ArRect.prototype.toString = function (){
+        return this.getTopLeft().toString() +' '+this.getBottomRight().toString();
     };
 
     return ArRect;
