@@ -1,4 +1,4 @@
-/*globals require, requirejs, describe, it, before, after, WebGMEGlobal, WebGME*/
+/*globals require, describe, it, before, after, WebGMEGlobal, WebGME*/
 
 /**
  * @author pmeijer / https://github.com/pmeijer
