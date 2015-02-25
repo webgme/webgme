@@ -25,6 +25,7 @@ define(['logManager',
 
     //----------------------AutoRouterEdgeList
 
+    var _logger = logManager.create('AutoRouterEdgeList');
     var AutoRouterEdgeList = function (b) {
         this.owner = null;
 
@@ -426,15 +427,16 @@ define(['logManager',
     AutoRouterEdgeList.prototype.dumpEdges = function(msg) {
         var edge = this.orderFirst,
             total = 1;
-        console.log(msg);
+
+        _logger.debug(msg);
 
         while(edge !== null) {
-            console.log('\t' + edge.startpoint.x + ', ' + edge.startpoint.y + '\t\t' + edge.endpoint.x + ', ' + edge.endpoint.y + '\t\t\t(' + (edge.getEdgeFixed() ? "FIXED" : "MOVEABLE" ) + ')\t\t' + (edge.bracketClosing ? "Bracket Closing" : (edge.bracketOpening ? "Bracket Opening" : "")));
+            _logger.debug('\t' + edge.startpoint.x + ', ' + edge.startpoint.y + '\t\t' + edge.endpoint.x + ', ' + edge.endpoint.y + '\t\t\t(' + (edge.getEdgeFixed() ? "FIXED" : "MOVEABLE" ) + ')\t\t' + (edge.bracketClosing ? "Bracket Closing" : (edge.bracketOpening ? "Bracket Opening" : "")));
             edge = edge.orderNext;
             total++;
         }
 
-        console.log("Total Edges: " + total);
+        _logger.debug("Total Edges: " + total);
     };
 
     AutoRouterEdgeList.prototype.getEdgeCount = function() {

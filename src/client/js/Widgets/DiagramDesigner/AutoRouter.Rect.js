@@ -13,6 +13,7 @@ define(['logManager',
 
     "use strict"; 
 
+    var _logger = logManager.create('AutoRouterRect');
     var ArRect = function(Left, Ceil, Right, Floor){
         if(Left === undefined){ //No arguments
             Left = 0;
@@ -122,7 +123,7 @@ define(['logManager',
             this.assign(nLeft);
 
         }else if(nRight === undefined || nFloor === undefined) { //invalid
-            console.log("Invalid args for [ArRect].setRect");
+            _logger.debug("Invalid args for [ArRect].setRect");
 
         }else{
             this.left = nLeft;
@@ -215,7 +216,7 @@ define(['logManager',
             dy = ArObject.cy;
 
         }else{
-            console.log("Invalid arg for [ArRect].add method");
+            _logger.debug("Invalid arg for [ArRect].add method");
         }
 
         this.left += dx;
@@ -238,7 +239,7 @@ define(['logManager',
             this.floor -= ArObject.floor;
 
         }else{
-            console.log("Invalid arg for [ArRect].subtract method");
+            _logger.debug("Invalid arg for [ArRect].subtract method");
         }
     };
 
