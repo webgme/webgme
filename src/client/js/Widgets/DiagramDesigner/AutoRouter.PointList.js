@@ -18,6 +18,7 @@ define(['logManager',
 
     "use strict"; 
 
+    var _logger = logManager.create('AutoRouterPointList');
     var array = [];
     var ArPointListPath = function () {
     };
@@ -297,16 +298,16 @@ define(['logManager',
     };
 
     ArPointListPath.prototype.dumpPoints = function(msg) {
-        console.log(msg + ", points dump begin:");
+        _logger.debug(msg + ", points dump begin:");
         var pos = 0,
             i = 0,
             p;
         while (pos < this.length) {
             p = this[pos++];
-            console.log(i + ".: (" + p.x + ", " + p.y + ")");
+            _logger.debug(i + ".: (" + p.x + ", " + p.y + ")");
             i++;
         }
-        console.log("points dump end.");
+        _logger.debug("points dump end.");
     };
 
     return ArPointListPath;

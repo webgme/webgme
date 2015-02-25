@@ -1,4 +1,4 @@
-/*globals console,setTimeout,define*/
+/*globals setTimeout,define*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
@@ -2194,10 +2194,10 @@ define(['logManager',
     };
 
     AutoRouterGraph.prototype.dumpPaths = function(pos, c) {
-        console.log('Paths dump pos ' + pos + ', c ' + c);
+        _logger.debug('Paths dump pos ' + pos + ', c ' + c);
 
         for (var i = 0; i < this.paths.length; i++) {
-            console.log(i + '. Path: ');
+            _logger.debug(i + '. Path: ');
             this.paths[i].getPointList().dumpPoints('DumpPaths');
         }
 
