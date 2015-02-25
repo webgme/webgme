@@ -916,10 +916,8 @@ define(['logManager',
 
         result = Math.min(min+1, (min+max)/2);
         if (result === max) {
-            //console.log('result is being fixed and set to '+min);
             result = min;
         }
-        //console.log('larger endpoint is: '+result);//+'\nmin: '+min+'\nmax: '+max);
         assert(result < max);
         return result;
     };
@@ -943,10 +941,8 @@ define(['logManager',
         // then we will simply use max value for the result
         result = Math.max(max-1, (min+max)/2);
         if (result === min) {
-            //console.log('result is being fixed and set to '+max);
             result = max;
         }
-        //console.log('smaller endpoint is: '+result);//+'\nmin: '+min+'\nmax: '+max);
 
         assert(result > min);
         return result;
