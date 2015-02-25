@@ -12,9 +12,11 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
         options.port = options.port || 80;
         options.secret = options.secret || 'this is WEBGME!!!';
         options.cookieID = options.cookieID || 'webgme';
+        options.authentication = options.authentication;
         options.authorization = options.authorization || function(sessionID,projectName,type,callback){callback(null,true);};
+        options.auth_deleteProject = options.auth_deleteProject || function() {};
         options.sessioncheck = options.sessioncheck || function(sessionID,callback){callback(null,true);};
-        options.authInfo = options.authInfo || function(sessionID,projectName,callback){callback(null,{'read':true,'write':true,'delete':true});};
+        options.getAuthorizationInfo = options.getAuthorizationInfo || function(sessionID,projectName,callback){callback(null,{'read':true,'write':true,'delete':true});};
         options.webServerPort = options.webServerPort || 80;
         options.log = options.log || {
             debug: function (msg) {
@@ -168,7 +170,8 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 ]
             });
 
-            _socket.set('authorization',function(data,accept){
+            _socket.use(function(socket, next) {
+                var handshakeData = socket.handshake;
                 //either the html header contains some webgme signed cookie with the sessionID
                 // or the data has a webGMESession member which should also contain the sessionID - currently the same as the cookie
                 if (options.session === true){
@@ -193,16 +196,16 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                             return accept(null,false);
                         }
                     }*/
-                    sessionID = getSessionID(data);
+                    sessionID = getSessionID(handshakeData);
                     options.sessioncheck(sessionID,function(err,isOk){
                         if(!err && isOk === true){
-                            return accept(null,true);
+                            return next();
                         } else {
-                            return accept(err,false);
+                            return next(err || 'error');
                         }
                     });
                 } else {
-                    return accept(null,true);
+                    next();
                 }
             });
 
@@ -245,7 +248,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                                 var time2 = process.hrtime();
                                 console.log(msg + " " + (((time2[0] - time1[0]) * 1000) + ((time2[1] - time1[1]) / 1000 / 1000 | 0)));
                                 callback2.apply(this, arguments);
-                            }
+                            };
                             cb.apply(this, args);
                         }]);
                     };
@@ -322,7 +325,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                                     var allowedNames = [];
                                     var answerNeeded = names.length;
                                     var isProjectReadable = function(name,callback){
-                                        options.authInfo(getSessionID(socket.handshake),name,function(err,authObj){
+                                        options.getAuthorizationInfo(getSessionID(socket.handshake),name,function(err,authObj){
                                             if(!err){
                                                 if(authObj && authObj.read === true){
                                                     allowedNames.push(name);
@@ -355,7 +358,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                         if(err){
                             callback(err);
                         } else {
-                            options.authInfo(getSessionID(socket.handshake),name,callback);
+                            options.getAuthorizationInfo(getSessionID(socket.handshake),name,callback);
                         }
                     });
                 });
@@ -369,6 +372,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                                 if(err){
                                     callback(err);
                                 } else {
+                                    options.auth_deleteProject(projectName);
                                     //TODO what to do with the object itself???
                                     fireEvent({type:SERVER_EVENT.PROJECT_DELETED,project:projectName});
                                     callback(null);
@@ -386,7 +390,6 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                             _database.getProjectNames(function(err,names){
                                 if(names.indexOf(projectName) === -1){
                                     //project creation
-                                    console.warn(getSessionID(socket.handshake));
                                     createProject(getSessionID(socket.handshake),projectName,function(err,project){
                                         if(!err){
                                             fireEvent({type:SERVER_EVENT.PROJECT_CREATED,project:projectName});
@@ -623,16 +626,28 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
 
 
                 //worker commands
-                socket.on('simpleRequest',function(parameters,callback){
-                    if(socket.handshake){
-                        parameters.webGMESessionId = getSessionID(socket.handshake) || null;
+                socket.on('simpleRequest',function(parameters,callback) {
+                    var request = function() {
+                        _workerManager.request(parameters, function (err, id) {
+                            if (!err && id) {
+                                registerConnectedWorker(socket.id, id);
+                            }
+                            callback(err, id);
+                        });
+                    };
+
+                    parameters.webGMESessionId = getSessionID(socket.handshake) || null;
+                    if (!options.authentication) {
+                        request();
+                    } else {
+                        options.sessionToUser(parameters.webGMESessionId, function (err, userId) {
+                            if (err || !userId) {
+                                return callback(err || 'unauthorized');
+                            }
+                            parameters.userId = userId;
+                            request();
+                        });
                     }
-                    _workerManager.request(parameters,function(err,id){
-                        if(!err && id){
-                            registerConnectedWorker(socket.id,id);
-                        }
-                        callback(err,id);
-                    });
                 });
 
                 socket.on('simpleResult',function(resultId,callback){
@@ -669,7 +684,8 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 pluginBasePaths:options.pluginBasePaths,
                 serverPort:options.webServerPort,
                 sessionToUser:options.sessionToUser,
-                auth:options.auth
+                auth:options.auth,
+                globConf:options.globConf
             });
         }
 
@@ -730,14 +746,17 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
         function stopConnectedWorkers(socketId){
             var i;
             if(_workerManager){
+                var stop = function (worker) {
+                    _workerManager.result(_connectedWorkers[socketId][i], function (err) {
+                        if (err) {
+                            options.log.error("unable to stop connected worker [" + worker + "] of socket " + socketId);
+                        }
+                    });
+                };
                 _connectedWorkers[socketId] = _connectedWorkers[socketId] || [];
                 for(i=0;i<_connectedWorkers[socketId].length;i++){
                     //TODO probably we would need some kind of result handling
-                    _workerManager.result(_connectedWorkers[socketId][i],function(err){
-                        if(err){
-                            options.log.error("unable to stop connected worker ["+_connectedWorkers[socketId][i]+"] of socket "+socketId);
-                        }
-                    });
+                    stop(_connectedWorkers[socketId][i]);
                 }
                 delete _connectedWorkers[socketId];
             }

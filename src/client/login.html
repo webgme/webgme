@@ -65,10 +65,6 @@
             }
 
         </style>
-        <script>
-            var form = document.getElementById("loginForm");
-            form.setAttribute("action",location.origin+'/login'+window.location.search);
-        </script>
     </head>
 
     <body>
@@ -77,7 +73,7 @@
                 <h2 class="form-signin-heading">WebGME sign in</h2>
                 <div class="row">
                     <div class="col-md-6">
-                        <input name="username" type="text" autocomplete="off" class="input-block-level" placeholder="Username">
+                        <input name="username" type="text" autocomplete="off" autofocus="autofocus" class="input-block-level" placeholder="Username">
                     </div>
                     <div class="col-md-6">
                         <input name="password" type="password" autocomplete="off" class="input-block-level" placeholder="Password">
@@ -103,4 +99,8 @@
             </form>
         </div>
     </body>
+    <script>
+        var form = document.getElementById("loginForm");
+        form.setAttribute("action",location.origin+'/login'+window.location.search);
+    </script>
 </html>

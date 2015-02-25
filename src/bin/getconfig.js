@@ -36,8 +36,11 @@ if (typeof define !== "function" && typeof require === "function" && typeof proc
 } else {
   define("ifexists", {
     load: function (name, require, onload) {
-      require([name], onload, function () {
-        onload(null);
+      require([name], onload, function (err) {
+          if (!err.originalError || err.originalError.code !== 'MODULE_NOT_FOUND') {
+              console.error('Error loading ' + name + ': ' + err.message);
+          }
+          onload(null);
       });
     }
   });
@@ -60,6 +63,7 @@ if (typeof define !== "function" && typeof require === "function" && typeof proc
       //mongouser: TODO by default we do not expect mongodb to use authentication
       //mongopwd: TODO by default we do not expect mongodb to use authentication
       authentication: false,
+      secureREST: false,
       httpsecure: false,
       guest: false,
       sessioncookieid: 'webgmeSid',
@@ -70,7 +74,7 @@ if (typeof define !== "function" && typeof require === "function" && typeof proc
       decoratorpaths: [],
       visualizerDescriptors: [],
       addonBasePaths: ['./addon/core'],
-      storageKeyType: "asmSHA1" // right now the available choices are: rand160Bits, asmSHA1, ZSSHA, plainSHA1 (default)
+      storageKeyType: 'plainSHA1' // right now the available choices are: rand160Bits, ZSSHA, plainSHA1 (default)
     };
 
 

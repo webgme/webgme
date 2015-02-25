@@ -1,4 +1,4 @@
-/*global __dirname, webGMEGlobal */
+/*global __dirname, webGMEGlobal, require, process, setImmediate */
 var requirejs = require("requirejs"),
   BASEPATH = __dirname + "/../..",
   WEBGME = require(BASEPATH + '/../webgme');
@@ -62,7 +62,7 @@ requirejs(['worker/constants',
 
         WebGMEGlobal.setConfig(parameters.globConf);
         _CONFIG = parameters.globConf;
-        if (_CONFIG.authorization === true) {
+        if (_CONFIG.authentication === true) {
           AUTH = GMEAUTH(parameters.auth);
         }
         storage = new Storage({
@@ -163,13 +163,13 @@ requirejs(['worker/constants',
     };
 
     //TODO the getContext should be refactored!!!
-    var getConnectedStorage = function (sessionId, callback) {
+    var getConnectedStorage = function (webGMESessionId, callback) {
       var connStorage = new ConnectedStorage({
         type: 'node',
-        host: '127.0.0.1',
+        host: (_CONFIG.httpsecure === true ? 'https' : 'http') + '://127.0.0.1',
         port: _CONFIG.port,
         log: logManager.create('SERVER-WORKER-PLUGIN-' + process.pid),
-        webGMESessionId: sessionId
+        webGMESessionId: webGMESessionId
       });
       connStorage.openDatabase(function (err) {
         callback(err, connStorage);
@@ -186,8 +186,8 @@ requirejs(['worker/constants',
         storage.openProject(projectName, callback);
       });
     };
-    var getProject = function (projectName, sessionId, callback) {
-      getConnectedStorage(sessionId, function (err, storage) {
+    var getProject = function (projectName, webGMESessionId, callback) {
+      getConnectedStorage(webGMESessionId, function (err, storage) {
         if (err) {
           return callback(err);
         }
@@ -198,16 +198,21 @@ requirejs(['worker/constants',
     var getPlugin = function (name) {
       return requirejs('plugin/' + name + '/' + name + '/' + name);
     };
-    var executePlugin = function (userId, name, sessionId, context, callback) {
+    var executePlugin = function (userId, name, webGMESessionId, context, callback) {
       var interpreter = getPlugin(name);
       if (interpreter) {
-        getProject(context.managerConfig.project, sessionId, function (err, project) {
+        getProject(context.managerConfig.project, webGMESessionId, function (err, project) {
           if (!err) {
             project.setUser(userId);
             var plugins = {};
             plugins[name] = interpreter;
             var manager = new PluginManagerBase(project, Core, plugins);
-            context.managerConfig.blobClient = new BlobServerClient({serverPort: _CONFIG.port, sessionId: sessionId});
+
+            context.managerConfig.blobClient = new BlobServerClient({
+              serverPort: _CONFIG.port,
+              httpsecure: _CONFIG.httpsecure,
+              sessionId: webGMESessionId
+            });
 
             manager.initialize(null, function (pluginConfigs, configSaveCallback) {
               if (configSaveCallback) {
@@ -235,8 +240,8 @@ requirejs(['worker/constants',
       }
     };
 
-    var createProject = function (sessionId, name, jsonProject, callback) {
-      getConnectedStorage(sessionId, function (err, storage) {
+    var createProject = function (webGMESessionId, name, jsonProject, callback) {
+      getConnectedStorage(webGMESessionId, function (err, storage) {
         if (err) {
           return callback("" + err);
         }
@@ -272,6 +277,7 @@ requirejs(['worker/constants',
     };
 
     var getAllProjectsInfo = function (userId, callback) {
+      // TODO: if authentication is turned on, just query the users database for the list of projects for which the user is authorized
       var projectNames,
         userAuthInfo = null,
         completeInfo = {},
@@ -302,7 +308,7 @@ requirejs(['worker/constants',
               cb(null);
             });
           } else {
-            projectNames = []; //we have authentication yet doesn't get valid user name...
+              projectNames = []; //we have authentication yet doesn't get valid user name...
             return cb(new Error('invalid user'));
 
           }
@@ -388,7 +394,7 @@ requirejs(['worker/constants',
       }
 
     };
-    var setProjectInfo = function (sessionId, projectId, info, callback) {
+    var setProjectInfo = function (webGMESessionId, projectId, info, callback) {
       if (storage) {
         if (initialized) {
           storage.getProjectNames(function (err, projectlist) {
@@ -399,7 +405,7 @@ requirejs(['worker/constants',
             if (projectlist.indexOf(projectId) === -1) {
               return callback(new Error('no such project'));
             }
-            getProject(projectId, sessionId, function (err, project) {
+            getProject(projectId, webGMESessionId, function (err, project) {
               if (err) {
                 return callback(err);
               }
@@ -414,7 +420,7 @@ requirejs(['worker/constants',
         callback(new Error('no active data connection'));
       }
     };
-    var getProjectInfo = function (sessionId, projectId, callback) {
+    var getProjectInfo = function (webGMESessionId, projectId, callback) {
       if (storage) {
         if (initialized) {
           storage.getProjectNames(function (err, projectlist) {
@@ -425,7 +431,7 @@ requirejs(['worker/constants',
             if (projectlist.indexOf(projectId) === -1) {
               return callback(new Error('no such project'));
             }
-            getProject(projectId, sessionId, function (err, project) {
+            getProject(projectId, webGMESessionId, function (err, project) {
               if (err) {
                 return callback(err);
               }
@@ -441,7 +447,7 @@ requirejs(['worker/constants',
       }
     };
 
-    var getAllInfoTags = function (sessionId, callback) {
+    var getAllInfoTags = function (webGMESessionId, callback) {
       var i, tags = {},
         needed,
         projectLoaded = function (err, project) {
@@ -476,7 +482,7 @@ requirejs(['worker/constants',
 
             needed = projectlist.length;
             for (i = 0; i < projectlist.length; i++) {
-              getProject(projectlist[i], sessionId, projectLoaded);
+              getProject(projectlist[i], webGMESessionId, projectLoaded);
             }
           });
         } else {
@@ -486,7 +492,7 @@ requirejs(['worker/constants',
         callback(new Error('no active data connection'));
       }
     };
-    var setBranch = function (sessionId, projectName, branchName, oldHash, newHash, callback) {
+    var setBranch = function (webGMESessionId, projectName, branchName, oldHash, newHash, callback) {
       if (storage) {
         if (initialized) {
           storage.getProjectNames(function (err, projectlist) {
@@ -497,7 +503,7 @@ requirejs(['worker/constants',
             if (projectlist.indexOf(projectName) === -1) {
               return callback(new Error('no such project'));
             }
-            getProject(projectName, sessionId, function (err, project) {
+            getProject(projectName, webGMESessionId, function (err, project) {
               if (err) {
                 return callback(err);
               }
@@ -517,11 +523,14 @@ requirejs(['worker/constants',
     var getAddOn = function (name) {
       return requirejs('addon/' + name + '/' + name + '/' + name);
     };
-    var initConnectedWorker = function (name, sessionId, projectName, branchName, callback) {
+    var initConnectedWorker = function (name, webGMESessionId, projectName, branchName, callback) {
+      if (!name || (AUTH && !webGMESessionId) || !projectName || !branchName) {
+          return setImmediate(callback, 'Required parameter was not provided');
+      }
       var addOnClass = getAddOn(name),
         connStorage = null;
       //for instance creation we need the Core class and the Storage object
-      getConnectedStorage(sessionId, function (err, cs) {
+      getConnectedStorage(webGMESessionId, function (err, cs) {
         if (!err && cs) {
           connStorage = cs;
           _addOn = new addOnClass(Core, connStorage);
@@ -533,7 +542,7 @@ requirejs(['worker/constants',
             _addOn.start({projectName: projectName, branchName: branchName, project: project}, callback);
           });
         } else {
-          callback('unable to connect user\'s storage');
+          callback('unable to connect user\'s storage: ' + err);
         }
       });
     };
@@ -623,7 +632,7 @@ requirejs(['worker/constants',
           break;
         case CONSTANT.workerCommands.executePlugin:
           if (typeof parameters.name === 'string' && typeof parameters.context === 'object') {
-            executePlugin(parameters.user, parameters.name, parameters.webGMESessionId, parameters.context, function (err, result) {
+            executePlugin(parameters.userId, parameters.name, parameters.webGMESessionId, parameters.context, function (err, result) {
               safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: result});
             });
           } else {
@@ -672,7 +681,7 @@ requirejs(['worker/constants',
         case CONSTANT.workerCommands.getAllProjectsInfo:
           resultId = GUID();
           safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: resultId});
-          getAllProjectsInfo(parameters.user, function (err, r) {
+          getAllProjectsInfo(parameters.userId, function (err, r) {
             if (resultRequested === true) {
               initResult();
               safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: r});
@@ -740,7 +749,7 @@ requirejs(['worker/constants',
           });
           break;
         case CONSTANT.workerCommands.connectedWorkerStart:
-          initConnectedWorker(parameters.workerName, parameters.sessionId, parameters.project, parameters.branch, function (err) {
+          initConnectedWorker(parameters.workerName, parameters.webGMESessionId, parameters.project, parameters.branch, function (err) {
             if (err) {
               safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: err, resid: null});
             } else {
