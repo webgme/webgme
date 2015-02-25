@@ -1345,11 +1345,7 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       fromTo = {};
       getMoveSources(diff, '', toFrom, fromTo);
 
-      /*done = makeInitialContainmentChanges(root,diff);
-      return TASYNC.call(function (d) {
-        return applyNodeChange(root, '', diff);
-      }, done);*/
-        return applyNodeChange(root,'', diff);
+        return TASYNC.join(makeInitialContainmentChanges(root,diff),applyNodeChange(root,'',diff));
     };
 
 

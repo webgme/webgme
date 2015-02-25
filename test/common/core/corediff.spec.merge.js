@@ -488,6 +488,9 @@ describe('corediff',function(){
                         },
                         'guid': '3637e2ee-0d4b-15b1-52c6-4d1248e67ea3'
                     },
+                    'attr':{
+                        'changeA':true
+                    },
                     'guid': 'e687d284-a04a-7cbc-93ed-ea941752d57a'
                 };
                 changeB.diff = {
@@ -498,6 +501,9 @@ describe('corediff',function(){
                         },
                         guid:'8b636e17-3e94-e0c6-2678-1a24ee5e6ae7',
                     },
+                    'attr':{
+                        'changeB':true
+                    },
                     'guid': 'e687d284-a04a-7cbc-93ed-ea941752d57a'
                 };
                 applyChange(changeA,function(err){
@@ -505,20 +511,30 @@ describe('corediff',function(){
                         done(err);
                         return;
                     }
+                    core.getAttribute(changeA.root,'changeA').should.be.true();
+                    (core.getAttribute(root,'changeA') === undefined).should.be.true();
+                    (core.getAttribute(root,'changeB') === undefined).should.be.true();
                     applyChange(changeB,function(err){
                         if(err){
                             done(err);
                             return;
                         }
+                        core.getAttribute(changeB.root,'changeB').should.be.true();
+                        (core.getAttribute(root,'changeA') === undefined).should.be.true();
+                        (core.getAttribute(root,'changeB') === undefined).should.be.true();
                         project.getCommonAncestorCommit(changeA.commitHash,changeB.commitHash,function(err,hash){
                             if(err){
                                 done(err);
                                 return;
                             }
+                            (core.getAttribute(root,'changeA') === undefined).should.be.true();
+                            (core.getAttribute(root,'changeB') === undefined).should.be.true();
                             hash.should.be.equal(baseCommitHash);
 
                             //generate diffs
                             core.generateTreeDiff(root,changeA.root,function(err,diff){
+                                (core.getAttribute(root,'changeA') === undefined).should.be.true();
+                                (core.getAttribute(root,'changeB') === undefined).should.be.true();
                                 if(err){
                                     done(err);
                                     return;

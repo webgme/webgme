@@ -18,7 +18,7 @@ describe('corediff',function(){
         },
         jsonProject;
     before(function(done){
-        jsonProject = getJsonProject('./test/bin/apply/base001.json');
+        jsonProject = getJsonProject('./test/common/core/corediff/base001.json');
         database.openDatabase(function(err){
             if(err){
                 return done(err);
