@@ -92,5 +92,9 @@ describe('AutoRouter Test Cases', function(){
       bugPlayer.test('./testCases/issue169.js');
   });
 
+  it('issue/186_cannot_read_property_id_of_undefined',function() {
+      bugPlayer.test('./testCases/issue186.js');
+  });
+
 });
 

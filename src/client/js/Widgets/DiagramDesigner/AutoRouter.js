@@ -556,29 +556,37 @@ define(['logManager',
         var i;
 
         if(item.box instanceof AutoRouterBox) {
-            item = item.box || item;
-            var ports = item.ports;
+            var ports = Object.keys(item.ports);
             for (i = ports.length; i--;) {
-                this.portId2Path[ports[i].id] = undefined;
+                this.portId2Path[ports[i]] = undefined;
             }
 
-            this.graph.deleteBox(item);
+            this.graph.deleteBox(item.box);
 
         }else if(this.paths[item] !== undefined) {
             if(this.paths[item] instanceof AutoRouterPath) {
-                var path = this.paths[item],
-                    srcId = path.startports[0].id,
-                    dstId = path.endports[0].id;
+                var path,
+                    srcId,
+                    dstId,
+                    index;
 
-                i = this.portId2Path[srcId].out.indexOf(path);// Remove from portId2Path dictionary
-                this.portId2Path[srcId].out.splice(i, 1);
+                // Remove path from all portId2Path entries
+                path = this.paths[item];
+                for (i = path.startports.length; i--;) {
+                    srcId = path.startports[i].id;
+                    index = this.portId2Path[srcId].out.indexOf(path);
+                    this.portId2Path[srcId].out.splice(index, 1);
+                }
 
-                i = this.portId2Path[dstId].in.indexOf(path);
-                this.portId2Path[dstId].in.splice(i, 1);
+                for (i = path.endports.length; i--;) {
+                    dstId = path.endports[i].id;
+                    index = this.portId2Path[dstId].in.indexOf(path);
+                    this.portId2Path[dstId].in.splice(index, 1);
+                }
 
                 this.graph.deletePath(path); 
             }
-            delete this.paths[item]; // Remove dictionary entry
+            delete this.paths[item];  // Remove dictionary entry
 
         }else{
             throw "AutoRouter:remove Unrecognized item type. Must be an AutoRouterBox or an AutoRouterPath ID";
