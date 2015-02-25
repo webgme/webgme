@@ -12,23 +12,16 @@ define( [
 
   'isis-ui-components/simpleDialog/simpleDialog',
 
-  'text!js/Dialogs/Projects/templates/DeleteDialogTemplate.html',
-
-  'text!js/Dialogs/Projects/templates/BeforeMergeTemplate.html',
-  'text!js/Dialogs/Projects/templates/AfterMergeTemplate.html',
-  'text!js/Dialogs/Projects/templates/ConflictDialogTemplate.html'
+  'text!js/Dialogs/Projects/templates/DeleteDialogTemplate.html'
 
 
 
-], function ( ng, ProjectsDialog, CommitDialog, ProjectRepositoryDialog, ConfirmDialog, DeleteDialogTemplate, BeforeMergeTemplate, AfterMergeTemplate, ConflictDialogTemplate ) {
+], function ( ng, ProjectsDialog, CommitDialog, ProjectRepositoryDialog, ConfirmDialog, DeleteDialogTemplate ) {
   "use strict";
 
 
   angular.module( 'gme.ui.ProjectNavigator', [] ).run( function ( $templateCache ) {
     $templateCache.put( 'DeleteDialogTemplate.html', DeleteDialogTemplate );
-    $templateCache.put( 'BeforeMergeTemplate.html', BeforeMergeTemplate );
-    $templateCache.put( 'AfterMergeTemplate.html', AfterMergeTemplate );
-    $templateCache.put( 'ConflictDialogTemplate.html', ConflictDialogTemplate );
   } );
 
 
@@ -957,141 +950,6 @@ define( [
           lastCommiter: 'petike',
           lastCommitTime: new Date()
       };
-  };
-
-  ProjectNavigatorController.prototype._mergeBranch = function(projectId, whatBranchId, whereBranchId){
-    var self = this,
-      finalCall = function(err){
-        self.$simpleDialog.open({
-          dialogTitle: 'Merge SuccessFul',
-          dialogContentTemplate: 'AfterMergeTemplate.html',
-          //onOk:function(){},
-          scope: self.$scope
-        });
-      },
-      baseCommit,
-      mineDiff,theirDiff,
-      conflict,fullDiff;
-    self.$scope.whatBranch = whatBranchId;
-    self.$scope.whereBranch = whereBranchId;
-    self.$scope.getButtonClass = function(asked,owned){
-      if(asked === owned){
-        return "col-md-6 bg-primary";
-      }
-      return "col-md-6";
-    };
-    self.$scope.pushButton = function(item,selection){
-      var i,
-        selectingTasks = [],
-        handleSelectingTask = function(path,isSelect){
-          var i,selections = {},deselections = {};
-          for(i=0;i<self.$scope.items.length;i++){
-            if(isSelect){
-              if(path === self.$scope.items[i].mine.path && self.$scope.items[i].selected !== "mine"){
-                self.$scope.items[i].selected = "mine";
-                if(self.$scope.items[i].theirs.path !== path){
-                  deselections[self.$scope.items[i].theirs.path] = true;
-                }
-              } else if(path === self.$scope.items[i].theirs.path && self.$scope.items[i].selected !== "theirs"){
-                self.$scope.items[i].selected = "theirs";
-                if(self.$scope.items[i].mine.path !== path){
-                  deselections[self.$scope.items[i].mine.path] = true;
-                }
-              }
-            } else {
-              if(path === self.$scope.items[i].mine.path && self.$scope.items[i].selected === "mine"){
-                self.$scope.items[i].selected = "theirs";
-                if(self.$scope.items[i].theirs.path !== path){
-                  selections[self.$scope.items[i].theirs.path] = true;
-                }
-              } else if(path === self.$scope.items[i].theirs.path && self.$scope.items[i].selected === "theirs"){
-                self.$scope.items[i].selected = "mine";
-                if(self.$scope.items[i].mine.path !== path){
-                  selections[self.$scope.items[i].mine.path] = true;
-                }
-              }
-            }
-          }
-          selections = Object.keys(selections);
-          for(i=0;i<selections.length;i++){
-            selectingTasks.push({path:selections[i],selection:true});
-          }
-          deselections = Object.keys(deselections);
-          for(i=0;i<deselections.length;i++){
-            selectingTasks.push({path:deselections[i],selection:false});
-          }
-        };
-      if(item.selected !== selection){
-        if(selection === "mine"){
-          selectingTasks.push({path:item.mine.path,selection:true});
-          if(item.theirs.path !== item.mine.path){
-            selectingTasks.push({path:item.theirs.path,selection:false});
-          }
-        } else {
-          if(item.theirs.path !== item.mine.path){
-            selectingTasks.push({path:item.mine.path,selection:false});
-          }
-          selectingTasks.push({path:item.theirs.path,selection:true});
-        }
-      }
-
-      while(selectingTasks.length > 0){
-        i = selectingTasks.shift();
-        handleSelectingTask(i.path, i.selection);
-      }
-    };
-
-    self.gmeClient.getBaseOfCommits(
-      self.projects[projectId].branches[whatBranchId].properties.hashTag,
-      self.projects[projectId].branches[whereBranchId].properties.hashTag,
-    function(err,c){
-      console.log('baseCommit',err,baseCommit);
-      //TODO check the no-merge and fast-forward cases
-      baseCommit = c;
-
-      //TODO the diff generation could be paralellized
-      self.gmeClient.getDiffTree(baseCommit,self.projects[projectId].branches[whatBranchId].properties.hashTag,function(err,diff){
-        //TODO error handling
-        console.log('their diff',err,diff);
-        theirDiff = diff;
-        self.gmeClient.getDiffTree(baseCommit,self.projects[projectId].branches[whereBranchId].properties.hashTag,function(err,diff){
-          //TODO error handling
-          console.log('mine diff',err,diff);
-          mineDiff = diff;
-
-          conflict = self.gmeClient.getConflictOfDiffs(mineDiff,theirDiff);
-          console.log('conflict',conflict);
-          self.$scope.items = conflict.items || [];
-          self.$simpleDialog.open({
-            dialogTitle: 'Conflict Handling',
-            dialogContentTemplate: 'ConflictDialogTemplate.html',
-            scope: self.$scope,
-            onOk: function(){
-              if(conflict.items.length === 0){
-                fullDiff = conflict.merge;
-              } else {
-                fullDiff = self.gmeClient.getResolve(conflict);
-              }
-              console.log('resolution',fullDiff);
-
-              self.gmeClient.applyDiff(
-                whereBranchId,
-                baseCommit,
-                self.projects[projectId].branches[whereBranchId].properties.hashTag,
-                [
-                  self.projects[projectId].branches[whatBranchId].properties.hashTag,
-                  self.projects[projectId].branches[whereBranchId].properties.hashTag
-                ],
-                fullDiff,
-                function(err){
-                  console.log('merged',err);
-                }
-              );
-            }
-          });
-        });
-      });
-    });
   };
 
   ProjectNavigatorController.prototype.mergeBranch = function(projectId, whatBranchId, whereBranchId) {
