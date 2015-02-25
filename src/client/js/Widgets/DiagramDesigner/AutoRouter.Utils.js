@@ -885,6 +885,25 @@ define(['./AutoRouter.Constants',
         });
     };
 
+    /**
+     * Round the number to the given decimal places. Truncate following digits.
+     *
+     * @param {Number} value
+     * @param {Number} places
+     * @return {Number} result
+     */
+    var roundTrunc = function(value, places) {
+        value = +value;
+        var scale = Math.pow(10, +places),
+            fn = 'floor';
+
+        if (value < 0) {
+            fn = 'ceil';
+        }
+
+        return Math[fn](value*scale)/scale;
+    };
+
     return { onWhichEdge: _onWhichEdge,
              isCoordInDirFrom : _isCoordInDirFrom,           
              isPointBetweenSides: _isPointBetweenSides,
@@ -922,7 +941,8 @@ define(['./AutoRouter.Constants',
              ArFindNearestLine: ArFindNearestLine,
 
              removeFromArrays: removeFromArrays,
-             stringify: stringify
+             stringify: stringify,
+             roundTrunc: roundTrunc
         };
 
 });

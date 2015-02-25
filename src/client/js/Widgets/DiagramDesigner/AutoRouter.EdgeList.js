@@ -902,20 +902,62 @@ define(['logManager',
 
     // The following methods are convenience methods for adjusting the "section" 
     // of an edge.
+    /**
+     * Get either min+1 or a value between min and max. Technically, 
+     * we are looking for [min, max).
+     *
+     * @param {Number} min
+     * @param {Number} max
+     * @return {Number} result
+     */
     var getLargerEndpoint = function(min, max) {
-        return Math.min(min+1, (min+max)/2);
+        var result;
+        assert(min < max);
+
+        result = Math.min(min+1, (min+max)/2);
+        if (result === max) {
+            //console.log('result is being fixed and set to '+min);
+            result = min;
+        }
+        //console.log('larger endpoint is: '+result);//+'\nmin: '+min+'\nmax: '+max);
+        assert(result < max);
+        return result;
     };
 
+    /**
+     * Get either max-1 or a value between min and max. Technically, 
+     * we are looking for (min, max].
+     *
+     * @param {Number} min
+     * @param {Number} max
+     * @return {Number} result
+     */
     var getSmallerEndpoint = function(min, max) {
-        return Math.max(max-1, (min+max)/2);
+        var result;
+        assert(min < max);
+
+        // If min is so small that 
+        // 
+        //      (min+max)/2 === min
+        //
+        // then we will simply use max value for the result
+        result = Math.max(max-1, (min+max)/2);
+        if (result === min) {
+            //console.log('result is being fixed and set to '+max);
+            result = max;
+        }
+        //console.log('smaller endpoint is: '+result);//+'\nmin: '+min+'\nmax: '+max);
+
+        assert(result > min);
+        return result;
     };
 
     AutoRouterEdgeList.prototype.section_HasBlockedEdge = function () {
         assert(this.section_blocker !== null,
                'AREdgeList.section_HasBlockedEdge: this.section_blocker != null FAILED');
 
-        var a1,
-            a2,
+        var newSectionX1,
+            newSectionX2,
             e,
             blockerX1 = this.section_blocker.sectionX1,
             blockerX2 = this.section_blocker.sectionX2;
@@ -937,20 +979,20 @@ define(['logManager',
             var o = null;
 
             e = current_edge.getSectionDownPtr()[0];
-            a1 = current_edge.sectionX1;  // 555.9995
-            a2 = current_edge.sectionX2;  // 555.0015
+            newSectionX1 = current_edge.sectionX1;
+            newSectionX2 = current_edge.sectionX2;
 
-            assert(a1 <= a2,
-                   'AREdgeList.section_HasBlockedEdge: a1 <= a2 FAILED (' + a1 + ' <= ' + a2 + ')'+
+            assert(newSectionX1 <= newSectionX2,
+                   'AREdgeList.section_HasBlockedEdge: newSectionX1 <= newSectionX2 FAILED (' + newSectionX1 + ' <= ' + newSectionX2 + ')'+
                    '\nedge is ');
 
-           assert(blockerX1 <= a2 &&  a1 <= blockerX2,
-                  'AREdgeList.section_HasBlockedEdge: blockerX1 <= a2 &&  a1 <= blockerX2 FAILED');
+           assert(blockerX1 <= newSectionX2 &&  newSectionX1 <= blockerX2,
+                  'AREdgeList.section_HasBlockedEdge: blockerX1 <= newSectionX2 &&  newSectionX1 <= blockerX2 FAILED');
             // not case 1 or 6
-            if (a1 < blockerX1 && blockerX2 < a2)	{								// case 3
+            if (newSectionX1 < blockerX1 && blockerX2 < newSectionX2)	{								// case 3
                 this.section_ptr2blocked = current_edge.getSectionDownPtr();
 
-            } else if (blockerX1 <= a1 && a2 <= blockerX2) {								// case 4
+            } else if (blockerX1 <= newSectionX1 && newSectionX2 <= blockerX2) {								// case 4
 
                 if (e && e.startpoint !== null) {
                     while( e.getSectionNext() && e.getSectionNext().startpoint !== null) {
@@ -964,20 +1006,20 @@ define(['logManager',
                     this.section_ptr2blocked[0] = (current_edge.getSectionNext()); 
 
                 }
-            } else if (blockerX1 <= a1 && blockerX2 < a2)	{							// case 5
+            } else if (blockerX1 <= newSectionX1 && blockerX2 < newSectionX2)	{							// case 5
 
-                assert(a1 <= blockerX2,
-                       'AREdgeList.section_HasBlockedEdge: a1 <= blockerX2 FAILED');
+                assert(newSectionX1 <= blockerX2,
+                       'AREdgeList.section_HasBlockedEdge: newSectionX1 <= blockerX2 FAILED');
 
-                // Move a1 such that blockerX2 < a1 < a2
-                a1 = getLargerEndpoint(blockerX2, a2);
+                // Move newSectionX1 such that blockerX2 < newSectionX1 < newSectionX2
+                newSectionX1 = getLargerEndpoint(blockerX2, newSectionX2);
 
-                while((e && e.startpoint !== null) && e.sectionX1 <= a1) {	
+                while ((e && e.startpoint !== null) && e.sectionX1 <= newSectionX1) {	
                     assert(e.sectionX1 <= e.sectionX2,
                            'AREdgeList.section_HasBlockedEdge: e.sectionX1 <= e.sectionX2 FAILED');
 
-                    if (a1 <= e.sectionX2) {
-                        a1 = getLargerEndpoint(e.sectionX2, a2);
+                    if (newSectionX1 <= e.sectionX2) {
+                        newSectionX1 = getLargerEndpoint(e.sectionX2, newSectionX2);
                     }
 
                     o = e;
@@ -994,16 +1036,19 @@ define(['logManager',
                     current_edge.setSectionDown(e);
                 }
 
-                assert(blockerX2 < a1,
-                       'AREdgeList.section_HasBlockedEdge: blockerX2 < a1 FAILED');
-                //Shifting the front of the p2b so it no longer overlaps this.section_blocker
-                current_edge.sectionX1 = a1;
+                assert(blockerX2 < newSectionX1,
+                    'AREdgeList.section_HasBlockedEdge: blockerX2 < newSectionX1 FAILED ('+
+                    blockerX2+' < '+newSectionX1+') '+
+                    current_edge.sectionX2 +' is '+newSectionX2+')');
+                // Shifting the front of the p2b so it no longer overlaps this.section_blocker
+
+                current_edge.sectionX1 = newSectionX1;
 
                 assert(current_edge.sectionX1 < current_edge.sectionX2, 
                        'current_edge.sectionX1 < current_edge.sectionX2 ('+
                        current_edge.sectionX1 + ' < ' +current_edge.sectionX2+')' );
             } else {														// case 2
-                assert(a1 < blockerX1 && blockerX1 <= a2 && a2 <= blockerX2,  "AREdgeList.section_HasBlockedEdge:  a1 < blockerX1 && blockerX1 <= a2 && a2 <= blockerX2 FAILED");
+                assert(newSectionX1 < blockerX1 && blockerX1 <= newSectionX2 && newSectionX2 <= blockerX2,  "AREdgeList.section_HasBlockedEdge:  newSectionX1 < blockerX1 && blockerX1 <= newSectionX2 && newSectionX2 <= blockerX2 FAILED");
 
                 this.section_ptr2blocked = current_edge.getSectionDownPtr();
 
@@ -1027,17 +1072,19 @@ define(['logManager',
                         larger = this.section_ptr2blocked[0].sectionX1;
                     }
 
-                    current_edge.sectionX2 = getSmallerEndpoint(a1, larger);
+                    current_edge.sectionX2 = getSmallerEndpoint(newSectionX1, larger);
 
                     current_edge.setSectionNext(this.section_ptr2blocked[0]);
                     this.section_ptr2blocked[0] = new AutoRouterEdge(); //This seems odd
                     this.section_ptr2blocked = null;
 
                 } else {
-                    current_edge.sectionX2 = Math.max(blockerX1 - 1, (blockerX1+a1)/2);
+                    current_edge.sectionX2 = getSmallerEndpoint(newSectionX1, blockerX1);
                 }
 
-                assert(current_edge.sectionX1 < current_edge.sectionX2);
+                assert(current_edge.sectionX1 < current_edge.sectionX2, 
+                    'Expected sectionX1 < sectionX2 but '+current_edge.sectionX1+
+                    ' is not < '+current_edge.sectionX2);
 
                 this.section_ptr2blocked = current_edge.getSectionNextPtr();
             }
@@ -1046,11 +1093,11 @@ define(['logManager',
         assert(this.section_ptr2blocked !== null,
                'AREdgeList.section_HasBlockedEdge: this.section_ptr2blocked != null FAILED');
         while (this.section_ptr2blocked[0] !== null && this.section_ptr2blocked[0].startpoint !== null) {
-            a1 = this.section_ptr2blocked[0].sectionX1;
-            a2 = this.section_ptr2blocked[0].sectionX2;
+            newSectionX1 = this.section_ptr2blocked[0].sectionX1;
+            newSectionX2 = this.section_ptr2blocked[0].sectionX2;
 
             //If this.section_ptr2blocked is completely to the left (or above) this.section_blocker
-            if (a2 < blockerX1)												// case 1
+            if (newSectionX2 < blockerX1)												// case 1
             {
                 this.section_ptr2blocked = this.section_ptr2blocked[0].getSectionNextPtr();
 
@@ -1059,11 +1106,11 @@ define(['logManager',
                 continue;
             }
             //If this.section_blocker is completely to the right (or below) this.section_ptr2blocked 
-            else if (blockerX2 < a1) {											// case 6
+            else if (blockerX2 < newSectionX1) {											// case 6
                 break;
             }
 
-            if (a1 < blockerX1 && blockerX2 < a2)									// case 3
+            if (newSectionX1 < blockerX1 && blockerX2 < newSectionX2)									// case 3
                 //If this.section_ptr2blocked starts before and ends after this.section_blocker
             {
                 var x = blockerX1;
@@ -1308,6 +1355,7 @@ define(['logManager',
                 trace = edge.getBlockTrace();
 
                 y += (edge.bracketOpening || trace.bracketClosing) ? g : f;
+                y = Utils.roundTrunc(y, 10);  // Fix any floating point errors
 
                 if (y + 0.001 < trace.positionY) {
                     modified = true;
