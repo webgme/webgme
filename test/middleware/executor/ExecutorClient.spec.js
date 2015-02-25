@@ -12,7 +12,7 @@ var requirejs = require('requirejs'),
     executorClient,
     server,
     serverBaseUrl;
-
+// TODO: How to specify the nedb paths for jobList and workerList?
 describe('ExecutorClient', function () {
     'use strict';
 
@@ -75,6 +75,27 @@ describe('ExecutorClient', function () {
                 should.equal(res.status, 'CREATED');
                 done();
             });
+        });
+    });
+
+    it('getInfo for non-existing hash should return 404', function (done) {
+        executorClient.getInfo('87704f10a36aa4214f5b0095ba8099e729a10f46', function (err, res) {
+            should.equal(err,404);
+            done();
+        });
+    });
+
+    it('getAllInfo should return 500', function (done) {
+        executorClient.getAllInfo(function(err) {
+            should.equal(err, 500);
+            done();
+        });
+    });
+
+    it('getInfoByStatus SUCCESS should succeed', function (done) {
+        executorClient.getInfoByStatus('SUCCESS', function(err, res) {
+            should.equal(err, null);
+            done();
         });
     });
 });
