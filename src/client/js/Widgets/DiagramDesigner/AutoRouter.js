@@ -28,11 +28,11 @@ define(['logManager',
                  AutoRouterPath,
                  CustomPathData) {
 
-    "use strict"; 
+    'use strict'; 
 
-    var _logger = logManager.create("AutoRouter");
+    var _logger = logManager.create('AutoRouter');
 
-    var AutoRouter = function(graphDetails) {
+    var AutoRouter = function() {
        this.paths = {};
        this.ports = {};
        this.pCount = 0;  // A not decrementing count of paths for unique path id's
@@ -78,8 +78,7 @@ define(['logManager',
     AutoRouter.prototype.addBox = function(size) {
         var box = this._createBox(size),
             portsInfo = size.ports || {},
-            boxObject,
-            port;
+            boxObject;
 
         boxObject = new ArBoxObject(box);
         this.graph.addBox(box);
@@ -158,10 +157,9 @@ define(['logManager',
     };
 
     AutoRouter.prototype._createPort = function (connData, box) {
-        var id = connData.id,
-            angles = connData.angles || [], // Incoming angles. If defined, it will set attr at the end
+        var angles = connData.angles || [], // Incoming angles. If defined, it will set attr at the end
             attr = 0, // Set by angles. Defaults to guessing by location if angles undefined
-            type = "any", // Specify start, end, or any
+            type = 'any', // Specify start, end, or any
             port = box.createPort(),
             rect = box.rect,
             connArea = connData.area;
@@ -171,12 +169,6 @@ define(['logManager',
             arx2,
             ary1,
             ary2;
-
-        var dceil,
-            dfloor,
-            dleft,
-            dright,
-            min;
 
         var _x1,
             _x2,
@@ -198,8 +190,8 @@ define(['logManager',
 
             // This gives us a coefficient to multiply our attributes by to govern incoming
             // or outgoing connection. Now, the port needs only to determine the direction
-            if(type !== "any") {
-                isStart -= (type === "start" ? 1 : 16);
+            if(type !== 'any') {
+                isStart -= (type === 'start' ? 1 : 16);
             }
 
             // using points to designate the connection area: [ [x1, y1], [x2, y2] ]
@@ -236,22 +228,22 @@ define(['logManager',
                 if(Math.abs(_y1 - rect.ceil) < Math.abs(_y1 - rect.floor)) { // Closer to the top (horizontal)
                     ary1 = _y1 + 1;
                     ary2 = _y1 + 5;
-                    attr = CONSTANTS.ARPORT_StartOnTop + CONSTANTS.ARPORT_EndOnTop;
+                    attr = CONSTANTS.PortStartOnTop + CONSTANTS.PortEndOnTop;
                 } else { // Closer to the top (horizontal)
                     ary1 = _y1 - 5;
                     ary2 = _y1 - 1;
-                    attr = CONSTANTS.ARPORT_StartOnBottom + CONSTANTS.ARPORT_EndOnBottom;
+                    attr = CONSTANTS.PortStartOnBottom + CONSTANTS.PortEndOnBottom;
                 }
 
             } else {
                 if(Math.abs(_x1 - rect.left) < Math.abs(_x1 - rect.right)) {// Closer to the left (vertical)
                     arx1 += 1;
                     arx2 += 5;
-                    attr = CONSTANTS.ARPORT_StartOnLeft + CONSTANTS.ARPORT_EndOnLeft;
+                    attr = CONSTANTS.PortStartOnLeft + CONSTANTS.PortEndOnLeft;
                 } else {// Closer to the right (vertical)
                     arx1 -= 5;
                     arx2 -= 1;
-                    attr = CONSTANTS.ARPORT_StartOnRight + CONSTANTS.ARPORT_EndOnRight;
+                    attr = CONSTANTS.PortStartOnRight + CONSTANTS.PortEndOnRight;
                 }
             }
 
@@ -277,19 +269,19 @@ define(['logManager',
             attr = 0; // Throw away our guess of attr
 
             if (rightAngle >= a1 && rightAngle <= a2) {
-                attr += CONSTANTS.ARPORT_StartOnRight + CONSTANTS.ARPORT_EndOnRight;
+                attr += CONSTANTS.PortStartOnRight + CONSTANTS.PortEndOnRight;
             }
 
             if(topAngle >= a1 && topAngle <= a2) {
-                attr += CONSTANTS.ARPORT_StartOnTop + CONSTANTS.ARPORT_EndOnTop;
+                attr += CONSTANTS.PortStartOnTop + CONSTANTS.PortEndOnTop;
             }
 
             if(leftAngle >= a1 && leftAngle <= a2) {
-                attr += CONSTANTS.ARPORT_StartOnLeft + CONSTANTS.ARPORT_EndOnLeft;
+                attr += CONSTANTS.PortStartOnLeft + CONSTANTS.PortEndOnLeft;
             }
 
             if(bottomAngle >= a1 && bottomAngle <= a2) {
-                attr += CONSTANTS.ARPORT_StartOnBottom + CONSTANTS.ARPORT_EndOnBottom;
+                attr += CONSTANTS.PortStartOnBottom + CONSTANTS.PortEndOnBottom;
             }
         }
 
@@ -311,7 +303,6 @@ define(['logManager',
         var id = port.id,
             startPaths = this.portId2Path[id].out,
             endPaths = this.portId2Path[id].in,
-            removed,
             i;
 
         var paths = '';
@@ -370,9 +361,9 @@ define(['logManager',
 
         // Generate pathId
         while(pathId.length < 6) {
-            pathId = "0" + pathId;
+            pathId = '0' + pathId;
         }
-        pathId = "PATH_" + pathId;
+        pathId = 'PATH_' + pathId;
 
         params.id = pathId;
         this._createPath(params);
@@ -406,7 +397,7 @@ define(['logManager',
 
     AutoRouter.prototype._createPath = function(params) {
         if(!params.src || !params.dst) {
-            throw "AutoRouter:_createPath missing source or destination ports";
+            throw 'AutoRouter:_createPath missing source or destination ports';
         }
 
         var id = params.id,
@@ -424,22 +415,22 @@ define(['logManager',
         path = this.graph.addPath(autoroute, srcPorts, dstPorts);
 
         if (startDir || endDir) { 
-            var start = startDir !== undefined ? (startDir.indexOf("top") !== -1 ? CONSTANTS.ARPATH_StartOnTop : 0) +
-                (startDir.indexOf("bottom") !== -1 ? CONSTANTS.ARPATH_StartOnBottom : 0) +
-                (startDir.indexOf("left") !== -1 ? CONSTANTS.ARPATH_StartOnLeft : 0) +
-                (startDir.indexOf("right") !== -1 ? CONSTANTS.ARPATH_StartOnRight : 0) ||
-                (startDir.indexOf("all") !== -1 ? CONSTANTS.ARPATH_Default : 0) : CONSTANTS.ARPATH_Default ;
-            var end = endDir !== undefined ? (endDir.indexOf("top") !== -1 ? CONSTANTS.ARPATH_EndOnTop : 0) +
-                (endDir.indexOf("bottom") !== -1 ? CONSTANTS.ARPATH_EndOnBottom : 0) +
-                (endDir.indexOf("left") !== -1 ? CONSTANTS.ARPATH_EndOnLeft : 0) +
-                (endDir.indexOf("right") !== -1 ? CONSTANTS.ARPATH_EndOnRight : 0) ||
-                (endDir.indexOf("all") !== -1 ? CONSTANTS.ARPATH_Default : 0) : CONSTANTS.ARPATH_Default;
+            var start = startDir !== undefined ? (startDir.indexOf('top') !== -1 ? CONSTANTS.PathStartOnTop : 0) +
+                (startDir.indexOf('bottom') !== -1 ? CONSTANTS.PathStartOnBottom : 0) +
+                (startDir.indexOf('left') !== -1 ? CONSTANTS.PathStartOnLeft : 0) +
+                (startDir.indexOf('right') !== -1 ? CONSTANTS.PathStartOnRight : 0) ||
+                (startDir.indexOf('all') !== -1 ? CONSTANTS.PathDefault : 0) : CONSTANTS.PathDefault ;
+            var end = endDir !== undefined ? (endDir.indexOf('top') !== -1 ? CONSTANTS.PathEndOnTop : 0) +
+                (endDir.indexOf('bottom') !== -1 ? CONSTANTS.PathEndOnBottom : 0) +
+                (endDir.indexOf('left') !== -1 ? CONSTANTS.PathEndOnLeft : 0) +
+                (endDir.indexOf('right') !== -1 ? CONSTANTS.PathEndOnRight : 0) ||
+                (endDir.indexOf('all') !== -1 ? CONSTANTS.PathDefault : 0) : CONSTANTS.PathDefault;
 
             path.setStartDir(start); 
             path.setEndDir(end);
         }else{
-            path.setStartDir(CONSTANTS.ARPATH_Default);
-            path.setEndDir(CONSTANTS.ARPATH_Default);
+            path.setStartDir(CONSTANTS.PathDefault);
+            path.setEndDir(CONSTANTS.PathDefault);
         }
 
         path.id = id;
@@ -487,9 +478,7 @@ define(['logManager',
             x2 = size.x2 !== undefined ? size.x2 : (size.x1 + size.width),
             y1 = size.y1 !== undefined ? size.y1 : (size.y2 - size.height),
             y2 = size.y2 !== undefined ? size.y2 : (size.y1 + size.height),
-            rect = new ArRect(x1, y1, x2, y2),
-            oldPorts = box.ports || [],
-            ports = size.ports;
+            rect = new ArRect(x1, y1, x2, y2);
 
         this.graph.setBoxRect(box, rect);
 
@@ -552,7 +541,7 @@ define(['logManager',
     };
 
     AutoRouter.prototype.remove = function(item) {
-        assert(item !== undefined, "AutoRouter:remove Cannot remove undefined object");
+        assert(item !== undefined, 'AutoRouter:remove Cannot remove undefined object');
         var i;
 
         if(item.box instanceof AutoRouterBox) {
@@ -589,7 +578,7 @@ define(['logManager',
             delete this.paths[item];  // Remove dictionary entry
 
         }else{
-            throw "AutoRouter:remove Unrecognized item type. Must be an AutoRouterBox or an AutoRouterPath ID";
+            throw 'AutoRouter:remove Unrecognized item type. Must be an AutoRouterBox or an AutoRouterPath ID';
         }
     };
 
@@ -599,9 +588,9 @@ define(['logManager',
         var dx = details.dx !== undefined ? details.dx : Math.round(details.x - box.rect.left),
             dy = details.dy !== undefined ? details.dy : Math.round(details.y - box.rect.ceil);
 
-        assert(box instanceof AutoRouterBox, "AutoRouter:move First argument must be an AutoRouterBox or ArBoxObject");
+        assert(box instanceof AutoRouterBox, 'AutoRouter:move First argument must be an AutoRouterBox or ArBoxObject');
 
-        this.graph.shiftBoxBy(box, { "cx": dx, "cy": dy });
+        this.graph.shiftBoxBy(box, { 'cx': dx, 'cy': dy });
     };
 
     AutoRouter.prototype.setMinimumGap = function(min) {
@@ -620,7 +609,7 @@ define(['logManager',
             points = [],
             i = 0;
         if(path === undefined) {
-            throw "AutoRouter: Need to have an AutoRouterPath type to set custom path points";
+            throw 'AutoRouter: Need to have an AutoRouterPath type to set custom path points';
         }
 
         if(args.points.length > 0) {

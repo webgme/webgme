@@ -11,7 +11,7 @@ define(['logManager',
                                             ArPoint,
                                             ArSize) {
 
-    "use strict"; 
+    'use strict'; 
 
     var _logger = logManager.create('AutoRouterRect');
     var ArRect = function(Left, Ceil, Right, Floor){
@@ -42,11 +42,11 @@ define(['logManager',
                 Ceil = Math.round(Left.y);
                 Left = Math.round(Left.x);
             }else{
-                throw new Error("Invalid ArRect Constructor");
+                throw new Error('Invalid ArRect Constructor');
             }
 
         }else if(Floor === undefined){ // Invalid
-            throw new Error("Invalid ArRect Constructor");
+            throw new Error('Invalid ArRect Constructor');
         }
 
         this.left = Math.round(Left);
@@ -123,7 +123,7 @@ define(['logManager',
             this.assign(nLeft);
 
         }else if(nRight === undefined || nFloor === undefined) { //invalid
-            _logger.debug("Invalid args for [ArRect].setRect");
+            _logger.debug('Invalid args for [ArRect].setRect');
 
         }else{
             this.left = nLeft;
@@ -216,7 +216,7 @@ define(['logManager',
             dy = ArObject.cy;
 
         }else{
-            _logger.debug("Invalid arg for [ArRect].add method");
+            _logger.debug('Invalid arg for [ArRect].add method');
         }
 
         this.left += dx;
@@ -239,7 +239,7 @@ define(['logManager',
             this.floor -= ArObject.floor;
 
         }else{
-            _logger.debug("Invalid arg for [ArRect].subtract method");
+            _logger.debug('Invalid arg for [ArRect].subtract method');
         }
     };
 

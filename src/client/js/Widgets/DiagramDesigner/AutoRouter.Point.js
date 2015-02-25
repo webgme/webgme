@@ -3,11 +3,9 @@
  * @author brollb / https://github/brollb
  */
 
-define(['logManager',
-        './AutoRouter.Size'], function (logManager,
-                                            ArSize) {
+define(['./AutoRouter.Size'], function (ArSize) {
 
-    "use strict";
+    'use strict';
 
     var ArPoint = function (x, y){
         // Multiple Constructors

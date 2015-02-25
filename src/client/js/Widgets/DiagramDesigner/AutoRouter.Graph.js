@@ -235,7 +235,7 @@ define(['logManager',
             end = args.end,
             dir = args.dir,
             dir2 = args.dir2 === undefined || !Utils.isRightAngle (args.dir2) ? (end instanceof ArPoint ? 
-                    Utils.exGetMajorDir(end.minus(point)) : CONSTANTS.Dir_None) : args.dir2,
+                    Utils.exGetMajorDir(end.minus(point)) : CONSTANTS.DirNone) : args.dir2,
             stophere = args.end !== undefined ? args.end : 
                 (dir === 1 || dir === 2 ? CONSTANTS.ED_MAXCOORD : CONSTANTS.ED_MINCOORD );
 
@@ -448,8 +448,8 @@ define(['logManager',
             endRoot = endport.owner.getRootBox(),
             startId = startRoot.id,
             endId = endRoot.id,
-            startdir = startport.port_OnWhichEdge(startpoint),
-            enddir = endport.port_OnWhichEdge(endpoint);
+            startdir = startport.portOnWhichEdge(startpoint),
+            enddir = endport.portOnWhichEdge(endpoint);
 
         if (startpoint.equals(endpoint)) {
             Utils.stepOneInDir(startpoint, Utils.nextClockwiseDir(startdir));
@@ -475,11 +475,11 @@ define(['logManager',
         var startPort = path.getStartPort();
         assert(startPort !== null, 'ARGraph.connect: startPort !== null FAILED');
 
-        var startdir = startPort.port_OnWhichEdge(startpoint),
+        var startdir = startPort.portOnWhichEdge(startpoint),
             endPort = path.getEndPort();
 
         assert(endPort !== null, 'ARGraph.connect: endPort !== null FAILED');
-        var enddir = endPort.port_OnWhichEdge(endpoint);
+        var enddir = endPort.portOnWhichEdge(endpoint);
         assert(Utils.isRightAngle (startdir) && Utils.isRightAngle (enddir), 'ARGraph.connect: Utils.isRightAngle (startdir) && Utils.isRightAngle (enddir) FAILED');
 
         //Find the bufferbox containing startpoint, endpoint
@@ -517,7 +517,7 @@ define(['logManager',
             this._simplifyPathPoints(path);
             this._centerStairsInPathPoints(path, startdir, enddir);
         }
-        path.setState(CONSTANTS.ARPATHST_Connected);
+        path.setState(CONSTANTS.PathStateConnected);
 
         // Apply custom edge modifications - step 1
         // (Step 1: Move the desired edges - see in AutoRouterGraph::Connect(AutoRouterPath* path, ArPoint& startpoint, ArPoint& endpoint)
@@ -554,7 +554,7 @@ define(['logManager',
         }
         path.addTail(endpoint);
 
-        path.setState(CONSTANTS.ARPATHST_Connected);
+        path.setState(CONSTANTS.PathStateConnected);
         path.applyCustomizationsAfterAutoConnectPointsAndStuff();
 
         return this.horizontal.addPathEdges(path) && this.vertical.addPathEdges(path);
@@ -589,11 +589,11 @@ define(['logManager',
             dir1 = Utils.exGetMajorDir(end.minus(start));
             dir2 = Utils.exGetMinorDir(end.minus(start));
 
-            assert(dir1 !== CONSTANTS.Dir_None, 'ARGraph.connectPoints: dir1 !== CONSTANTS.Dir_None FAILED');
+            assert(dir1 !== CONSTANTS.DirNone, 'ARGraph.connectPoints: dir1 !== CONSTANTS.DirNone FAILED');
             assert(dir1 === Utils.getMajorDir(end.minus(start)), 'ARGraph.connectPoints: dir1 === Utils.getMajorDir(end.minus(start)) FAILED');
-            assert(dir2 === CONSTANTS.Dir_None || dir2 === Utils.getMinorDir(end.minus(start)), 'ARGraph.connectPoints: dir2 === CONSTANTS.Dir_None || dir2 === Utils.getMinorDir(end.minus(start)) FAILED');
+            assert(dir2 === CONSTANTS.DirNone || dir2 === Utils.getMinorDir(end.minus(start)), 'ARGraph.connectPoints: dir2 === CONSTANTS.DirNone || dir2 === Utils.getMinorDir(end.minus(start)) FAILED');
 
-            if (dir2 === hintstartdir && dir2 !== CONSTANTS.Dir_None) {
+            if (dir2 === hintstartdir && dir2 !== CONSTANTS.DirNone) {
                 // i.e. std::swap(dir1, dir2);
                 dir2 = dir1;
                 dir1 = hintstartdir;
@@ -615,11 +615,11 @@ define(['logManager',
                 assert(box !== null, 'ARGraph.connectPoints: box !== null FAILED');
                 rect = box instanceof ArRect ? box : box.rect; 
 
-                if (dir2 === CONSTANTS.Dir_None) {
+                if (dir2 === CONSTANTS.DirNone) {
                     dir2 = Utils.nextClockwiseDir (dir1);
                 }
 
-                assert(dir1 !== dir2 && dir1 !== CONSTANTS.Dir_None && dir2 !== CONSTANTS.Dir_None, 'ARGraph.connectPoints: dir1 !== dir2 && dir1 !== CONSTANTS.Dir_None && dir2 !== CONSTANTS.Dir_None FAILED');
+                assert(dir1 !== dir2 && dir1 !== CONSTANTS.DirNone && dir2 !== CONSTANTS.DirNone, 'ARGraph.connectPoints: dir1 !== dir2 && dir1 !== CONSTANTS.DirNone && dir2 !== CONSTANTS.DirNone FAILED');
                 if (bufferObject.box.ptInRect(end) && !bufferObject.box.ptInRect(start) && flipped) {
                     //Unfortunately, if parentboxes are a pixel apart, start/end can get stuck and not cross the border
                     //separating them.... This is a nudge to get them to cross it.
@@ -1192,9 +1192,9 @@ define(['logManager',
             p3p = pointList.length,
             p4p = pointList.length,
 
-            d12 = CONSTANTS.Dir_None,
-            d23 = CONSTANTS.Dir_None,
-            d34 = CONSTANTS.Dir_None,
+            d12 = CONSTANTS.DirNone,
+            d23 = CONSTANTS.DirNone,
+            d34 = CONSTANTS.DirNone,
 
             outOfBoxStartPoint = path.getOutOfBoxStartPoint(hintstartdir),
             outOfBoxEndPoint = path.getOutOfBoxEndPoint(hintenddir),
@@ -1316,8 +1316,8 @@ define(['logManager',
             var points = path.getPointList(),
                 startpoint = points[0],
                 endpoint = points[len - 1],
-                startDir = startport.port_OnWhichEdge(startpoint),
-                endDir = endport.port_OnWhichEdge(endpoint),
+                startDir = startport.portOnWhichEdge(startpoint),
+                endDir = endport.portOnWhichEdge(endpoint),
                 tstStart,
                 tstEnd;
 
@@ -1943,11 +1943,11 @@ define(['logManager',
             }
 
             maxOperations--;
-            if (this.horizontal.block_ScanBackward()) {
+            if (this.horizontal.blockScanBackward()) {
 
                 do {
                     maxOperations--;
-                } while (maxOperations > 0 && this.horizontal.block_ScanBackward());
+                } while (maxOperations > 0 && this.horizontal.blockScanBackward());
 
                 if (last < 2 || last > 5) {
                     d = 0;
@@ -1965,11 +1965,11 @@ define(['logManager',
             }
 
             maxOperations--;
-            if (this.horizontal.block_ScanForward()) {
+            if (this.horizontal.blockScanForward()) {
 
                 do {
                     maxOperations--;
-                } while (maxOperations > 0 && this.horizontal.block_ScanForward());
+                } while (maxOperations > 0 && this.horizontal.blockScanForward());
 
                 if (last < 2 || last > 5) {
                     d = 0;
@@ -1987,10 +1987,10 @@ define(['logManager',
             }
 
             maxOperations--;
-            if (this.vertical.block_ScanBackward()) {
+            if (this.vertical.blockScanBackward()) {
                 do {
                     maxOperations--;
-                } while (maxOperations > 0 && this.vertical.block_ScanBackward()); 
+                } while (maxOperations > 0 && this.vertical.blockScanBackward()); 
 
                 if (last < 2 || last > 5) {
                     d = 0;
@@ -2008,11 +2008,11 @@ define(['logManager',
             }
 
             maxOperations--;
-            if (this.vertical.block_ScanForward()) {
+            if (this.vertical.blockScanForward()) {
 
                 do {
                     maxOperations--;
-                } while (maxOperations > 0 && this.vertical.block_ScanForward());
+                } while (maxOperations > 0 && this.vertical.blockScanForward());
 
                 if (last < 2 || last > 5) {
                     d = 0;
@@ -2030,7 +2030,7 @@ define(['logManager',
             }
 
             maxOperations--;
-            if (this.horizontal.block_SwitchWrongs()) {
+            if (this.horizontal.blockSwitchWrongs()) {
                 last = 6;
             }
         }
@@ -2041,7 +2041,7 @@ define(['logManager',
             }
 
             maxOperations--;
-            if (this.vertical.block_SwitchWrongs()) {
+            if (this.vertical.blockSwitchWrongs()) {
                 last = 7;
             }
         }
