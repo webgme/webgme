@@ -107,7 +107,7 @@ require.config({
             'jquery-WebGME',
             'css!/css/main.css',
             'css!/css/themes/dawn.css',
-            //'css!/fonts/font-awesome/css/font-awesome.min.css',
+            'css!/fonts/font-awesome/css/font-awesome.min.css',
             'css!/fonts/webgme-icons/style.css'
         ],
         'jquery-csszoom': ['jquery-ui'],
@@ -149,9 +149,12 @@ require(
                 DEBUG = CONFIG.debug;
             }
 
+            //#2 check URL
             var d = util.getURLParameterByName('debug').toLowerCase();
             if (d === 'true') {
                 DEBUG = true;
+            } else if (d === 'false') {
+                DEBUG = false;
             }
 
             if (CONFIG.paths) {

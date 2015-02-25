@@ -20,15 +20,15 @@ define(['logManager',
             Right = 0;
             Floor = 0;
 
-        }else if(Ceil === undefined && Left instanceof ArRect){ //One argument
-            //Left is an ArRect
+        }else if(Ceil === undefined && Left instanceof ArRect){ // One argument
+            // Left is an ArRect
             Ceil = Left.ceil;
             Right = Left.right;
             Floor = Left.floor;
             Left = Left.left;
 
-        } else if(Right === undefined && Left instanceof ArPoint){ //Two arguments
-            //Creating ArRect with ArPoint and either another ArPoint or ArSize
+        } else if(Right === undefined && Left instanceof ArPoint){ // Two arguments
+            // Creating ArRect with ArPoint and either another ArPoint or ArSize
             if(Ceil instanceof ArSize){
                 Right = Left.x + Ceil.cx;
                 Floor = Left.y + Ceil.cy;
@@ -41,17 +41,17 @@ define(['logManager',
                 Ceil = Math.round(Left.y);
                 Left = Math.round(Left.x);
             }else{
-                console.log("Invalid ArRect Constructor");
+                throw new Error("Invalid ArRect Constructor");
             }
 
-        }else if(Floor === undefined){ //Invalid
-            console.log("Invalid ArRect Constructor");
+        }else if(Floor === undefined){ // Invalid
+            throw new Error("Invalid ArRect Constructor");
         }
 
-        this.left = Math.round( Left );
-        this.ceil = Math.round( Ceil );
-        this.floor = Math.round( Floor );
-        this.right = Math.round( Right );
+        this.left = Math.round(Left);
+        this.ceil = Math.round(Ceil);
+        this.floor = Math.round(Floor);
+        this.right = Math.round(Right);
     };
 
     ArRect.prototype.getCenter = function(){
@@ -115,15 +115,6 @@ define(['logManager',
         }
 
         return false;
-    };
-
-    ArRect.prototype.rectInRect = function (rect){
-        if(rect === undefined){
-            return false;
-        }
-
-        return (rect.left >= this.left && rect.ceil >= this.ceil &&
-                rect.right <= this.right && rect.floor <= this.floor);
     };
 
     ArRect.prototype.setRect = function ( nLeft, nCeil, nRight, nFloor){
@@ -316,6 +307,16 @@ define(['logManager',
         //One pixel is added to the minimums so, if they are not deemed to be touching
         //there is guaranteed to be at lease a one pixel path between them
         return Math.max(rect.left, this.left) <= Math.min(rect.right, this.right) + 1 && Math.max(rect.ceil, this.ceil) <= Math.min(rect.floor, this.floor) + 1;
+    };
+
+    ArRect.prototype.onCorner = function (point){
+        var onHorizontalSide,
+            onVerticalSide;
+
+        onHorizontalSide = point.x === this.left || this.right;
+        onVerticalSide = point.y === this.ceil || this.floor;
+        
+        return onHorizontalSide && onVerticalSide;
     };
 
     return ArRect;

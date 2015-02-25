@@ -52,6 +52,12 @@
   .hierarchical-menu .menu-contents li .item-icon {
     margin-right: .3ex;
     font-size: 90%; }
+  .hierarchical-menu .menu-contents .disabled {
+    opacity: .65; }
+    .hierarchical-menu .menu-contents .disabled a {
+      cursor: not-allowed; }
+      .hierarchical-menu .menu-contents .disabled a:hover {
+        background-color: transparent; }
   .hierarchical-menu .menu-contents .dropdown-submenu {
     position: relative; }
   .hierarchical-menu .menu-contents .dropdown-submenu > .dropdown-menu {

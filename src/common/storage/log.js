@@ -69,6 +69,8 @@ define([ "util/assert" ], function (ASSERT) {
 						fsyncDatabase: fsyncDatabase,
 						closeProject: closeProject,
 						loadObject: loadObject,
+						getInfo: getInfo,
+						setInfo: setInfo,
 						insertObject: insertObject,
 						findHash: findHash,
 						dumpObjects: dumpObjects,
@@ -103,6 +105,16 @@ define([ "util/assert" ], function (ASSERT) {
 			function loadObject (hash, callback) {
 				logger.debug(projectName + '.loadObject(' + hash + ")");
 				project.loadObject(hash, callback);
+			}
+
+			function getInfo (callback){
+				logger.debug(projectName + '.getInfo()');
+				project.getInfo(callback);
+			}
+
+			function setInfo (info,callback){
+				logger.debug(projectName + '.setInfo('+JSON.stringify(info)+')');
+				project.setInfo(info,callback);
 			}
 
 			function findHash (beginning, callback) {
@@ -155,6 +167,10 @@ define([ "util/assert" ], function (ASSERT) {
             logger.debug('simpleResult('+resultId+')');
             _database.simpleResult(resultId,callback);
         }
+        function simpleQuery(workerId,parameters,callback){
+            logger.debug('simpleQuery('+workerId+','+parameters+')');
+            _database.simpleResult(resultId,callback);
+        }
         function getToken(callback){
             logger.debug('getToken()');
             _database.getToken(callback);
@@ -175,6 +191,7 @@ define([ "util/assert" ], function (ASSERT) {
 			deleteProject: deleteProject,
             simpleRequest: simpleRequest,
             simpleResult: simpleResult,
+            simpleQuery: simpleQuery,
             getNextServerEvent: getNextServerEvent,
             getToken: getToken
 		};

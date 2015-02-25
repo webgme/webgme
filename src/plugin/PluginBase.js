@@ -180,7 +180,7 @@ define(['plugin/PluginConfig',
         PluginBase.prototype.isMetaTypeOf = function (node, metaNode) {
             var self = this;
             while (node) {
-                if (node === metaNode) {
+                if (self.core.getGuid(node) === self.core.getGuid(metaNode)) {
                     return true;
                 }
                 node = self.core.getBase(node);
@@ -198,7 +198,7 @@ define(['plugin/PluginConfig',
                 name;
             while (node) {
                 name = self.core.getAttribute(node, 'name');
-                if (self.META.hasOwnProperty(name) && self.META[name] === node) {
+                if (self.META.hasOwnProperty(name) && self.core.getGuid(node) === self.core.getGuid(self.META[name])) {
                     break;
                 }
                 node = self.core.getBase(node);
@@ -220,7 +220,7 @@ define(['plugin/PluginConfig',
                 return true;
             }
             baseName = self.core.getAttribute(baseNode, 'name');
-            return self.META.hasOwnProperty(baseName) && self.META[baseName] === baseNode;
+            return self.META.hasOwnProperty(baseName) && self.core.getGuid(self.META[baseName]) === self.core.getGuid(baseNode);
         };
 
         /**
@@ -270,34 +270,21 @@ define(['plugin/PluginConfig',
 
             this.logger.debug('Saving project');
 
-            // Commit changes.
-            this.core.persist(this.rootNode, function (err) {
-                // TODO: any error here?
-                if (err) {
-                    self.logger.error(err);
-                }
-            });
+            this.core.persist(this.rootNode,function(err){if (err) {self.logger.error(err);}});
+            var newRootHash = self.core.getHash(self.rootNode);
 
-            var newRootHash = this.core.getHash(this.rootNode);
-
-            var commitMessage = '[Plugin] ' + this.getName() + ' (v' + this.getVersion() + ') updated the model.';
+            var commitMessage = '[Plugin] ' + self.getName() + ' (v' + self.getVersion() + ') updated the model.';
             if (message) {
                 commitMessage += ' - ' + message;
             }
+            self.currentHash = self.project.makeCommit([self.currentHash], newRootHash, commitMessage, function (err) {if (err) {self.logger.error(err);}});
 
-            this.currentHash = this.project.makeCommit([this.currentHash], newRootHash, commitMessage, function (err) {
-                // TODO: any error handling here?
-                if (err) {
-                    self.logger.error(err);
-                }
-            });
-
-            if (this.branchName) {
+            if (self.branchName) {
                 // try to fast forward branch if there was a branch name defined
 
                 // FIXME: what if master branch is already in a different state?
 
-                this.project.getBranchNames(function (err, branchNames) {
+                self.project.getBranchNames(function (err, branchNames) {
                     if (branchNames.hasOwnProperty(self.branchName)) {
                         var branchHash = branchNames[self.branchName];
                         if (branchHash === self.branchHash) {
@@ -335,9 +322,79 @@ define(['plugin/PluginConfig',
 
             } else {
                 // making commits, we have not started from a branch
-                this.logger.info('Project was saved to ' + this.currentHash + ' commit.');
+                self.logger.info('Project was saved to ' + self.currentHash + ' commit.');
                 callback(null);
             }
+
+            // Commit changes.
+/*            this.core.persist(this.rootNode, function (err) {
+                // TODO: any error here?
+                if (err) {
+                    self.logger.error(err);
+                }
+
+                var newRootHash = self.core.getHash(self.rootNode);
+
+                var commitMessage = '[Plugin] ' + self.getName() + ' (v' + self.getVersion() + ') updated the model.';
+                if (message) {
+                    commitMessage += ' - ' + message;
+                }
+
+                self.currentHash = self.project.makeCommit([self.currentHash], newRootHash, commitMessage, function (err) {
+                    // TODO: any error handling here?
+                    if (err) {
+                        self.logger.error(err);
+                    }
+
+                    if (self.branchName) {
+                        // try to fast forward branch if there was a branch name defined
+
+                        // FIXME: what if master branch is already in a different state?
+
+                        self.project.getBranchNames(function (err, branchNames) {
+                            if (branchNames.hasOwnProperty(self.branchName)) {
+                                var branchHash = branchNames[self.branchName];
+                                if (branchHash === self.branchHash) {
+                                    // the branch does not have any new commits
+                                    // try to fast forward branch to the current commit
+                                    self.project.setBranchHash(self.branchName, self.branchHash, self.currentHash, function (err) {
+                                        if (err) {
+                                            // fast forward failed
+                                            self.logger.error(err);
+                                            self.logger.info('"' + self.branchName + '" was NOT updated');
+                                            self.logger.info('Project was saved to ' + self.currentHash + ' commit.');
+                                        } else {
+                                            // successful fast forward of branch to the new commit
+                                            self.logger.info('"' + self.branchName + '" was updated to the new commit.');
+                                            // roll starting point on success
+                                            self.branchHash = self.currentHash;
+                                        }
+                                        callback(err);
+                                    });
+                                } else {
+                                    // branch has changes a merge is required
+                                    // TODO: try auto-merge, if fails ...
+                                    self.logger.warn('Cannot fast forward "' + self.branchName + '" branch. Merge is required but not supported yet.');
+                                    self.logger.info('Project was saved to ' + self.currentHash + ' commit.');
+                                    callback(null);
+                                }
+                            } else {
+                                // branch was deleted or not found, do nothing
+                                self.logger.info('Project was saved to ' + self.currentHash + ' commit.');
+                                callback(null);
+                            }
+                        });
+                        // FIXME: is this call async??
+                        // FIXME: we are not tracking all commits that we make
+
+                    } else {
+                        // making commits, we have not started from a branch
+                        self.logger.info('Project was saved to ' + self.currentHash + ' commit.');
+                        callback(null);
+                    }
+                });
+
+            });*/
         };
 
         //--------------------------------------------------------------------------------------------------------------

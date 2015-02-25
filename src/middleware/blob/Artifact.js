@@ -4,7 +4,7 @@
  * Author: Zsolt Lattmann
  */
 
-define(['blob/BlobMetadata'], function (BlobMetadata) {
+define(['blob/BlobMetadata', 'blob/BlobConfig', 'core/tasync'], function (BlobMetadata, BlobConfig, tasync) {
 
     /**
      * Creates a new instance of artifact, i.e. complex object, in memory. This object can be saved in the storage.
@@ -16,6 +16,8 @@ define(['blob/BlobMetadata'], function (BlobMetadata) {
     var Artifact = function (name, blobClient, descriptor) {
         this.name = name;
         this.blobClient = blobClient;
+        this.blobClientPutFile = tasync.unwrap(tasync.throttle(tasync.wrap(blobClient.putFile), 5));
+        this.blobClientGetMetadata = tasync.unwrap(tasync.throttle(tasync.wrap(blobClient.getMetadata), 5));
         // TODO: use BlobMetadata class here
         this.descriptor = descriptor || {
             name: name + '.zip',
@@ -36,7 +38,7 @@ define(['blob/BlobMetadata'], function (BlobMetadata) {
         var self = this;
         var filename = name.substring(name.lastIndexOf('/') + 1);
 
-        self.blobClient.putFile(filename, content, function (err, hash) {
+        self.blobClientPutFile.call(self.blobClient, filename, content, function (err, hash) {
             if (err) {
                 callback(err);
                 return;
@@ -44,7 +46,7 @@ define(['blob/BlobMetadata'], function (BlobMetadata) {
 
             self.addObjectHash(name, hash, function (err, hash) {
                 callback(err, hash);
-            })
+            });
         });
     };
 
@@ -52,16 +54,17 @@ define(['blob/BlobMetadata'], function (BlobMetadata) {
         var self = this;
         var filename = name.substring(name.lastIndexOf('/') + 1);
 
-        self.blobClient.putFile(filename, content, function (err, hash) {
-            if (err) {
-                callback(err);
-                return;
-            }
+        self.blobClientPutFile.call(self.blobClient, filename, content,
+            function (err, hash) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
 
-            self.addMetadataHash(name, hash, function (err, hash) {
-                callback(err, hash);
-            })
-        });
+                self.addMetadataHash(name, hash, function (err, hash) {
+                    callback(err, hash);
+                });
+            });
     };
 
     /**
@@ -142,7 +145,7 @@ define(['blob/BlobMetadata'], function (BlobMetadata) {
     Artifact.prototype.addObjectHash = function (name, hash, callback) {
         var self = this;
 
-        self.blobClient.getMetadata(hash, function (err, metadata) {
+        self.blobClientGetMetadata.call(self.blobClient, hash, function (err, metadata) {
             if (err) {
                 callback(err);
                 return;
@@ -200,7 +203,11 @@ define(['blob/BlobMetadata'], function (BlobMetadata) {
     Artifact.prototype.addMetadataHash = function (name, hash, callback) {
         var self = this;
 
-        self.blobClient.getMetadata(hash, function (err, metadata) {
+        if (BlobConfig.hashRegex.test(hash) === false) {
+            callback("Blob hash is invalid");
+            return;
+        }
+        self.blobClientGetMetadata.call(self.blobClient, hash, function (err, metadata) {
             if (err) {
                 callback(err);
                 return;
@@ -263,5 +270,5 @@ define(['blob/BlobMetadata'], function (BlobMetadata) {
         this.blobClient.putMetadata(this.descriptor, callback);
     };
 
-    return Artifact
+    return Artifact;
 });

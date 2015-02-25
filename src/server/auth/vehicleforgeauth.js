@@ -27,16 +27,20 @@ define(['https','http' ],function(HTTPS,HTTP){
 
         function authenticate(req,res,next){
             var VFID = req.cookies[_idCookie];
-            getUser(VFID,function(err,data){
-                if(!err && data){
-                    req.session.udmId = VFID;
-                    req.session.authenticated = true;
-                    req.session.userType = 'vehicleForge';
-                    next(null);
-                } else {
-                    res.redirect('/');
-                }
-            });
+            if (VFID) {
+                getUser(VFID, function (err, data) {
+                    if (!err && data) {
+                        req.session.udmId = VFID;
+                        req.session.authenticated = true;
+                        req.session.userType = 'vehicleForge';
+                        next(null);
+                    } else {
+                        res.redirect('/');
+                    }
+                });
+            } else {
+                res.redirect('/');
+            }
         }
         function authorize(sessionId,projectName,type,callback){
             _session.getSessionUser(sessionId,function(err,VFID){

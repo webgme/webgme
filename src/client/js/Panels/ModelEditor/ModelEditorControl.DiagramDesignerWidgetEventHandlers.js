@@ -1089,6 +1089,7 @@ define(['logManager',
             MENU_EXINTCONF = 'exintconf',
             MENU_EXPLIB = 'exportlib',
             MENU_UPDLIB = 'updatelib',
+            MENU_CON_NODE = 'connode',
             self = this;
 
         /*menuItems[MENU_EXINTCONF] = {
@@ -1104,8 +1105,14 @@ define(['logManager',
                 "name": 'Update library...',
                 "icon": 'glyphicon glyphicon-refresh'
             };
-        }
+            if(self._client.getRunningAddOnNames().indexOf("ConstraintAddOn") !== -1){
+                menuItems[MENU_CON_NODE] = {
+                    "name": 'Check Node Constraints...',
+                    "icon": 'glyphicon glyphicon-fire'
+                };
+            }
 
+        }
 
         this.designerCanvas.createMenu(menuItems, function (key) {
                 if (key === MENU_EXINTCONF){
@@ -1114,6 +1121,8 @@ define(['logManager',
                     self._expLib(selectedIds);
                 } else if(key === MENU_UPDLIB){
                     self._updLib(selectedIds);
+                } else if(key === MENU_CON_NODE){
+                    self._nodeConCheck(selectedIds);
                 }
             },
             this.designerCanvas.posToPageXY(mousePos.mX,
@@ -1156,6 +1165,22 @@ define(['logManager',
         id = gmeIDs[0] || null;
 
         ImportManager.importLibrary(id);
+    };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._nodeConCheck = function (selectedIds) {
+        var i = selectedIds.length,
+            gmeIDs = [],
+            id;
+
+        while(i--) {
+            gmeIDs.push(this._ComponentID2GmeID[selectedIds[i]]);
+        }
+
+        id = gmeIDs[0] || null;
+
+        if(id){
+            this._client.validateNodeAsync(id);
+        }
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionFillColorChanged = function (selectedElements, color) {

@@ -4,11 +4,10 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  * @author nabana / https://github.com/nabana
  */
+var WebGMEGlobal = WebGMEGlobal || {};
+WebGMEGlobal.version = 'x';
+WebGMEGlobal['SUPPORTS_TOUCH'] = 'ontouchstart' in window || navigator.msMaxTouchPoints;
 
-var WebGMEGlobal = {
-    'version': 'x',                                                             //will be set from Node's package.json
-    'SUPPORTS_TOUCH': 'ontouchstart' in window || navigator.msMaxTouchPoints    //touch device detection}
-};
 
 // let require load all the toplevel needed script and call us on domReady
 define(['logManager',
@@ -29,7 +28,6 @@ define(['logManager',
     './WebGME.History',
     'js/Utils/METAAspectHelper',
     'js/Utils/PreferencesHelper',
-    'js/ConstraintManager/ConstraintManager',
     'js/Dialogs/Projects/ProjectsDialog',
     'js/Utils/InterpreterManager'], function (logManager,
                                             CONFIG,
@@ -49,7 +47,6 @@ define(['logManager',
                                             WebGMEHistory,
                                             METAAspectHelper,
                                             PreferencesHelper,
-                                            ConstraintManager,
                                             ProjectsDialog,
                                             InterpreterManager) {
 
@@ -57,6 +54,7 @@ define(['logManager',
 
     var npmJSON = JSON.parse(packagejson);
     WebGMEGlobal.version = npmJSON.version;
+
 
     var _webGMEStart = function ( afterPanelsLoaded ) {
         var layoutManager,
@@ -79,8 +77,7 @@ define(['logManager',
                 i;
 
             client = new Client(CONFIG);
-
-            WebGMEGlobal.ConstraintManager = new ConstraintManager(client);
+            WebGMEGlobal.Client = client;
 
             WebGMEGlobal.InterpreterManager = new InterpreterManager(client);
 
@@ -101,6 +98,9 @@ define(['logManager',
 
             ExportManager.initialize(client);
             ImportManager.initialize(client);
+
+            WebGMEGlobal.ExportManager = ExportManager;
+            WebGMEGlobal.ImportManager = ImportManager;
 
             //hook up branch changed to set read-only mode on panels
             client.addEventListener(client.events.BRANCH_CHANGED, function (__project, branchName) {
@@ -182,7 +182,8 @@ define(['logManager',
                                             });
                                         } else {
                                             //we create the project
-                                            client.createProjectAsync(initialThingsToDo.projectToLoad,function(err){
+                                            //TODO probably some meaningful INFO is needed
+                                            client.createProjectAsync(initialThingsToDo.projectToLoad,null,function(err){
                                                 if(err){
                                                     logger.error(err);
                                                     openProjectLoadDialog();
@@ -271,6 +272,8 @@ define(['logManager',
                 if (err) {
                     logger.error(err);
                     openProjectLoadDialog();
+                } else {
+                    selectObject();
                 }
             });
         };

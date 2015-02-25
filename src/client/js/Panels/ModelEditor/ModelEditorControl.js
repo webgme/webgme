@@ -324,9 +324,10 @@ define(['logManager',
                     var dstGMEID = e.desc.target;
                     var srcConnIdx = -1;
                     var dstConnIdx = -1;
-                    var j = orderedConnectionEvents.length;
+                    var j = orderedConnectionEvents.length,
+                        ce;
                     while (j--) {
-                        var ce = orderedConnectionEvents[j];
+                        ce = orderedConnectionEvents[j];
                         if (ce.id === srcGMEID) {
                             srcConnIdx = j;
                         } else if (ce.id === dstGMEID) {
@@ -541,7 +542,7 @@ define(['logManager',
         //we are interested in the load of sub_components of the opened component
         if (this.currentNodeInfo.id !== gmeID) {
             if (objD) {
-                if (objD.parentId == this.currentNodeInfo.id) {
+                if (objD.parentId === this.currentNodeInfo.id) {
                     objDesc = _.extend({}, objD);
                     this._GmeID2ComponentID[gmeID] = [];
 
@@ -923,13 +924,6 @@ define(['logManager',
         }
     };
 
-    ModelEditorControl.prototype._constraintCheck = function () {
-        //Cconstraint Checking goes here...
-        if (this.currentNodeInfo.id) {
-            WebGMEGlobal.ConstraintManager.validate(this.currentNodeInfo.id);
-        }
-    };
-
     ModelEditorControl.prototype._stateActiveObjectChanged = function (model, activeObjectId) {
         this.selectedObjectChanged(activeObjectId);
     };
@@ -1011,16 +1005,6 @@ define(['logManager',
         this._toolbarItems.push(this.$btnModelHierarchyUp);
 
         this.$btnModelHierarchyUp.hide();
-
-
-        /************************ CONTSTRAINT VALIDATION ******************/
-        this.$btnConstraintValidate = toolBar.addButton({ "title": "Constraint check...",
-            "icon": "glyphicon glyphicon-fire",
-            "clickFn": function (/*data*/) {
-                self._constraintCheck();
-            }
-        });
-        this._toolbarItems.push(this.$btnConstraintValidate);
 
         /************** REMOVE CONNECTION SEGMENTPOINTS BUTTON ****************/
         this.$btnConnectionRemoveSegmentPoints = toolBar.addButton(
@@ -1122,11 +1106,10 @@ define(['logManager',
                     aspectRulesChanged = (_.difference(newAspectRules.items, this._selfPatterns[nodeId].items)).length > 0;
                 }
             } else {
-                if (!this._selfPatterns[nodeId].items && !newAspectRules.items) {
-                    //none of them has items, no change
-                } else {
+                if (this._selfPatterns[nodeId].items || newAspectRules.items) {
+                    //at least one has an item
                     aspectRulesChanged = true;
-                }
+                } 
             }
 
             if (aspectRulesChanged) {

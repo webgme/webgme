@@ -15,7 +15,8 @@ define(['logManager'], function (logManager) {
     Constraint = function (constDesc) {
         this.name = constDesc.name;
         this.script = constDesc.script;
-        this.priority = constDesc.priority;
+        //this.priority = constDesc.priority;
+        this.info = constDesc.info;
 
         this._render();
 
@@ -32,16 +33,18 @@ define(['logManager'], function (logManager) {
 
         this.$el = this._DOMConstraintBase.clone();
         this.$el.attr({"data-name": this.name,
-                      "title": this.name + ", priority: " + this.priority});
+                      "title": this.name + ", info: " + this.info});
 
-        this.$el.find(".n").text(this.name + ":");
-        this.$el.find(".t").text(this.priority);
+        this.$el.find(".n").text(this.name /*+ ":"*/);
+        //this.$el.find(".t").text(this.priority);
+        this.$el.find(".i").text(this.info);
     };
 
     Constraint.prototype.update = function (constDesc) {
         this.name = constDesc.name;
         this.script = constDesc.script;
-        this.priority = constDesc.priority;
+        //this.priority = constDesc.priority;
+        this.info = constDesc.info;
 
         this._render();
     };

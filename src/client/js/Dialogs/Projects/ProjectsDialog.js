@@ -441,7 +441,8 @@ define( [
       _dialog = this._dialog,
       _logger = this._logger;
 
-    _client.createProjectAsync( projectName, function ( err ) {
+    //TODO it should send some meaningful INFO
+    _client.createProjectAsync( projectName, {}, function ( err ) {
       if ( !err ) {
         _client.selectProjectAsync( projectName, function ( err ) {
           if ( !err ) {

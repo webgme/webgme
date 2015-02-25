@@ -88,24 +88,34 @@ define([ "util/assert" ], function (ASSERT) {
 			var cache = {};
 			var cacheSize = 0;
 
-			function deepFreeze (obj) {
+			function tryFreeze(o) {
+				try{
+					Object.freeze(o);
+				}
+				catch(e){
+					//TODO find the proper answer why this can occur
+					return;
+				}
+			}
+
+			function maybeFreeze(o) {
+				if (o !== null && typeof o === "object") {
+					deepFreeze(o);
+				}
+			}
+
+			var deepFreeze = function (obj) {
 				ASSERT(typeof obj === "object");
 
-
-                try{
-				    Object.freeze(obj);
-                }
-                catch(e){
-                    //TODO find the proper answer why this can occur
-                    return;
-                }
+				tryFreeze(obj);
 
 				var key;
 				for (key in obj) {
-					if (obj[key] !== null && typeof obj[key] === "object") {
-						deepFreeze(obj[key]);
-					}
+					maybeFreeze(obj[key]);
 				}
+			};
+			if (typeof WebGMEGlobal !== 'undefined' && typeof WebGMEGlobal.getConfig !== 'undefined' && !WebGMEGlobal.getConfig().debug) {
+				deepFreeze = function () { };
 			}
 
 			function cacheInsert (key, obj) {
@@ -298,11 +308,15 @@ define([ "util/assert" ], function (ASSERT) {
 					closeProject: closeProject,
 					loadObject: loadObject,
 					insertObject: insertObject,
+					getInfo: project.getInfo,
+					setInfo: project.setInfo,
 					findHash: project.findHash,
 					dumpObjects: project.dumpObjects,
 					getBranchNames: project.getBranchNames,
 					getBranchHash: getBranchHash,
 					setBranchHash: setBranchHash,
+          //getBranchHash: project.getBranchHash,
+          //setBranchHash: project.setBranchHash,
 					getCommits: project.getCommits,
 					makeCommit: project.makeCommit,
 					ID_NAME: project.ID_NAME
@@ -328,6 +342,7 @@ define([ "util/assert" ], function (ASSERT) {
 			deleteProject: deleteProject,
             simpleRequest: database.simpleRequest,
             simpleResult: database.simpleResult,
+            simpleQuery: database.simpleQuery,
             getNextServerEvent: database.getNextServerEvent,
             getToken: database.getToken
 		};
