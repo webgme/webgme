@@ -110,5 +110,9 @@ describe('AutoRouter Test Cases', function(){
           endpoint.y);
   });
 
+  it('issue/190_box_size_too_small',function() {
+      bugPlayer.test('./testCases/issue190.js');
+  });
+
 });
 
