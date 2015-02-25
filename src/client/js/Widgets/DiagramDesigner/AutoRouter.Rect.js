@@ -11,8 +11,9 @@ define(['logManager',
                                             ArPoint,
                                             ArSize) {
 
-    "use strict"; 
+    'use strict'; 
 
+    var _logger = logManager.create('AutoRouterRect');
     var ArRect = function(Left, Ceil, Right, Floor){
         if(Left === undefined){ //No arguments
             Left = 0;
@@ -41,11 +42,11 @@ define(['logManager',
                 Ceil = Math.round(Left.y);
                 Left = Math.round(Left.x);
             }else{
-                throw new Error("Invalid ArRect Constructor");
+                throw new Error('Invalid ArRect Constructor');
             }
 
         }else if(Floor === undefined){ // Invalid
-            throw new Error("Invalid ArRect Constructor");
+            throw new Error('Invalid ArRect Constructor');
         }
 
         this.left = Math.round(Left);
@@ -122,7 +123,7 @@ define(['logManager',
             this.assign(nLeft);
 
         }else if(nRight === undefined || nFloor === undefined) { //invalid
-            console.log("Invalid args for [ArRect].setRect");
+            _logger.debug('Invalid args for [ArRect].setRect');
 
         }else{
             this.left = nLeft;
@@ -215,7 +216,7 @@ define(['logManager',
             dy = ArObject.cy;
 
         }else{
-            console.log("Invalid arg for [ArRect].add method");
+            _logger.debug('Invalid arg for [ArRect].add method');
         }
 
         this.left += dx;
@@ -238,7 +239,7 @@ define(['logManager',
             this.floor -= ArObject.floor;
 
         }else{
-            console.log("Invalid arg for [ArRect].subtract method");
+            _logger.debug('Invalid arg for [ArRect].subtract method');
         }
     };
 
@@ -309,14 +310,24 @@ define(['logManager',
         return Math.max(rect.left, this.left) <= Math.min(rect.right, this.right) + 1 && Math.max(rect.ceil, this.ceil) <= Math.min(rect.floor, this.floor) + 1;
     };
 
+    /**
+     * Returns true if the given point is on one of the corners of the rectangle.
+     *
+     * @param point
+     * @return {undefined}
+     */
     ArRect.prototype.onCorner = function (point){
         var onHorizontalSide,
             onVerticalSide;
 
-        onHorizontalSide = point.x === this.left || this.right;
-        onVerticalSide = point.y === this.ceil || this.floor;
-        
+        onHorizontalSide = point.x === this.left || point.x === this.right;
+        onVerticalSide = point.y === this.ceil || point.y === this.floor;
+
         return onHorizontalSide && onVerticalSide;
+    };
+
+    ArRect.prototype.toString = function (){
+        return this.getTopLeft().toString() +' '+this.getBottomRight().toString();
     };
 
     return ArRect;

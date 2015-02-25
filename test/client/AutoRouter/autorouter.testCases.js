@@ -92,5 +92,23 @@ describe('AutoRouter Test Cases', function(){
       bugPlayer.test('./testCases/issue169.js');
   });
 
+  it('issue/186_cannot_read_property_id_of_undefined',function() {
+      bugPlayer.test('./testCases/issue186.js');
+  });
+
+  it('issue/187_short_path_should_be_a_straight_line',function() {
+      bugPlayer.test('./testCases/issue187.js');
+
+      // Check that the y values of the start/end point of the path are equal
+      var pathId = bugPlayer._autorouterPaths.C_000003,
+          path = bugPlayer.autorouter.paths[pathId],
+          startpoint = path.startpoint,
+          endpoint = path.endpoint;
+
+      assert(startpoint.y === endpoint.y,
+          'Start/end points\' y values should match but are '+startpoint.y+' and '+
+          endpoint.y);
+  });
+
 });
 
