@@ -2929,18 +2929,18 @@ define([
       }
 
             //testing
-            function testMethod(testnumber){
-                switch(testnumber){
+            function testMethod(testnumber) {
+                switch (testnumber) {
                     case 1:
-                      _core.loadRoot(_previousRootHash,function(err,root){
-                        if(!err && root){
-                          _core.applyTreeDiff(root,_changeTree,function(err){
-                            console.log('kecso finished',err);
-                          });
-                        } else {
-                          console.log('kecso HIBAAAAA');
-                        }
-                      });
+                        _core.loadRoot(_previousRootHash, function (err, root) {
+                            if (!err && root) {
+                                _core.applyTreeDiff(root, _changeTree, function (err) {
+                                    console.log('kecso finished', err);
+                                });
+                            } else {
+                                console.log('kecso HIBAAAAA');
+                            }
+                        });
                         break;
                     case 2:
                         //here we try to check every element in _nodes...
@@ -2952,12 +2952,12 @@ define([
                             oldroot,
                             updates = {},
                             index = 0,
-                            checkNextNode = function(path){
-                                if(index<keys.length){
-                                    _core.loadByPath(oldroot,path,function(err,node){
-                                        if(!err && node){
-                                            updates[path] = _core.nodeDiff(node,_nodes[path].node);
-                                            if(updates[path] === null){
+                            checkNextNode = function (path) {
+                                if (index < keys.length) {
+                                    _core.loadByPath(oldroot, path, function (err, node) {
+                                        if (!err && node) {
+                                            updates[path] = _core.nodeDiff(node, _nodes[path].node);
+                                            if (updates[path] === null) {
                                                 delete updates[path];
                                             }
                                         } else {
@@ -2969,14 +2969,14 @@ define([
                                     finished();
                                 }
                             },
-                            finished = function(){
+                            finished = function () {
                                 console.log(updates);
                                 end = new Date().getTime();
-                                sized = (end-start)/keys.length;
-                                console.log("allupdateend",end-start,sized);
+                                sized = (end - start) / keys.length;
+                                console.log("allupdateend", end - start, sized);
                             };
-                        _core.loadRoot(_previousRootHash,function(err,root){
-                            if(!err && root){
+                        _core.loadRoot(_previousRootHash, function (err, root) {
+                            if (!err && root) {
                                 oldroot = root;
                                 checkNextNode(keys[index]);
                             } else {
@@ -2988,16 +2988,16 @@ define([
                     case 3:
                         var start = new Date().getTime(),
                             end;
-                        _core.loadRoot(_previousRootHash,function(err,root){
-                            if(!err && root){
-                                _core.generateTreeDiff(root,_nodes[""].node,function(err,diff){
+                        _core.loadRoot(_previousRootHash, function (err, root) {
+                            if (!err && root) {
+                                _core.generateTreeDiff(root, _nodes[""].node, function (err, diff) {
                                     end = new Date().getTime();
-                                    console.log('treediff',end-start,err,diff);
+                                    console.log('treediff', end - start, err, diff);
                                 });
                             }
                         });
                 }
-
+            }
       function getExternalInterpreterConfigUrlAsync(selectedItemsPaths, filename, callback) {
         var config = {};
         config.host = window.location.protocol + "//" + window.location.host;
