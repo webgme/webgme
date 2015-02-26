@@ -8,11 +8,11 @@ define([ "util/assert", "util/key", "util/canon" ], function (ASSERT, GENKEY, CA
 	"use strict";
 	var HASH_REGEXP = new RegExp("^#[0-9a-zA-Z_]*$");
 
-  function Database(_database, _options) {
+	function Database (_database,_options) {
         _options = _options || {};
 		ASSERT(typeof _database === "object");
 
-    function openProject(projectName, callback) {
+		function openProject (projectName, callback) {
 
 			var _project = null;
 			_database.openProject(projectName, function (err, proj) {
@@ -41,7 +41,7 @@ define([ "util/assert", "util/key", "util/canon" ], function (ASSERT, GENKEY, CA
 				}
 			});
 
-      function makeCommit(parents, roothash, msg, callback) {
+			function makeCommit (parents, roothash, msg, callback) {
 				ASSERT(HASH_REGEXP.test(roothash));
 				ASSERT(typeof callback === 'function');
 
@@ -71,13 +71,12 @@ define([ "util/assert", "util/key", "util/canon" ], function (ASSERT, GENKEY, CA
 				return id;
 			}
 
-      function setUser(userId) {
-        if (typeof userId === 'string') {
+            function setUser (userId){
+                if(typeof userId === 'string'){
                     _options.user = userId;
+                };
             }
-        ;
 		}
-    }
 
 		return {
 			openDatabase: _database.openDatabase,
