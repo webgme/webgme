@@ -1227,47 +1227,18 @@ define([
         _users[userId].PATHS = newPaths;
 
 
-                        //this is how the events should go
-                if(events.length>0){
-                    if(_loadError > startErrorLevel){
-                        events.unshift({etype:'incomplete',eid:null});
-                    } else {
-                        events.unshift({etype:'complete',eid:null});
-                    }
-                } else {
-                    events.unshift({etype:'complete',eid:null});
-                }
-                _users[userId].FN(events);
+        //this is how the events should go
+        if (events.length > 0) {
+          if (_loadError > startErrorLevel) {
+            events.unshift({etype: 'incomplete', eid: null});
+          } else {
+            events.unshift({etype: 'complete', eid: null});
+          }
+        } else {
+          events.unshift({etype: 'complete', eid: null});
         }
-
-        function getDiffTree(oldRootHash,newRootHash,callback){
-            var error = null,
-                sRoot = null,
-                tRoot = null,
-                start = new Date().getTime(),
-                loadRoot = function(hash,root){
-                    _core.loadRoot(hash,function(err,r){
-                        error = error || err;
-                        hash === newRootHash ? tRoot = r : sRoot = r;
-                        if(--needed === 0){
-                            rootsLoaded();
-                        }
-                    });
-                },
-                rootsLoaded = function(){
-                    if(error){
-                        return callback(error);
-                    }
-                    _core.generateTreeDiff(sRoot,tRoot,function(err,diff){
-                        console.log('genDiffTree',new Date().getTime()-start);
-                        console.log('diffTree',diff);
-                        callback(err,diff);
-                    });
-                },
-                needed = 2;
-            loadRoot(oldRootHash,sRoot);
-            loadRoot(newRootHash,tRoot);
-        }
+        _users[userId].FN(events);
+      }
 
       function storeNode(node, basic) {
         //basic = basic || true;
@@ -2970,161 +2941,16 @@ define([
         });
       }
 
-            //testing
-            function testMethod(testnumber) {
-                switch (testnumber) {
-                    case 1:
-                      _core.loadRoot(_previousRootHash,function(err,root){
-                        if(!err && root){
-                          _core.applyTreeDiff(root,_changeTree,function(err){
-                            console.log('apply finished...');
-                            _core.persist(root,function(){});
-                            _core.generateTreeDiff(root,_nodes[''].node,function(err,diff){
-                              console.log('recheck apply',err,diff);
-                            });
-                          });
-                        } else {
-                          console.log('kecso HIBAAAAA');
-                        }
-                      });
-                        break;
-                    case 2:
-            /*getFullProjectsInfoAsync(function(err,info){
-              if(err){
-                console.log('hibaaa',err);
-                                        } else {
-                          //console.log(info);
-                          var myInfo = info[getActiveProject()];
-                          _project.getCommonAncestorCommit(myInfo.branches.master,myInfo.branches.masik,function(err,commit){
-                            console.log('common commit',err,commit);
-                                    });
-                                }
-            });*/
-            _core.loadRoot('#07e862295417e7140b46b3ad33c7985d37852ccd',function(err,sRoot){
-              _core.loadRoot('#8a188a9138afbd083965d7cb7a7952067221a5d3',function(err,tRoot){
-                _core.generateTreeDiff(sRoot,tRoot,function(err,diff){
-                  console.log(JSON.stringify(diff,null,2));
-                });
-              });
-            });
-          /*#ad2d5574108ff98d36d1a0a0ffbfa2bec88df7f0 - targetcommit - #8a188a9138afbd083965d7cb7a7952067221a5d3
-            #42034ab3144916d2ac9855afbbd65318575e78e4 - sourcecommit - #07e862295417e7140b46b3ad33c7985d37852ccd -rootCommit*/
-                        break;
-                    case 3:
-                      //we try our first merge
-                      var base,master,masik,
-                        baseToMaster,baseToMasik,mastHash,masiHash,
-                        getRootHashes = function(){
-                          var needed = 3;
-                          _project.loadObject(base,function(err,b){
-                            _core.loadRoot(b.root,function(err,r){
-                              base = r;
-                              if(--needed === 0){
-                                rootsLoaded();
-                              }
-                                });
-                          });
-                          _project.loadObject(master,function(err,b){
-                            _core.loadRoot(b.root,function(err,r){
-                              master = r;
-                              if(--needed === 0){
-                                rootsLoaded();
-                            }
-                        });
-                          });
-                          _project.loadObject(masik,function(err,b){
-                            _core.loadRoot(b.root,function(err,r){
-                              masik = r;
-                              if(--needed === 0){
-                                rootsLoaded();
-                }
-                            });
-                          });
-                        },
-                        rootsLoaded = function(){
-                          var needed = 2;
-                          _core.generateTreeDiff(base,master,function(err,diff){
-                            baseToMaster = diff;
-                            if(--needed===0){
-                              diffsGenerated();
-                            }
-                          });
-                          _core.generateTreeDiff(base,masik,function(err,diff){
-                            baseToMasik = diff;
-                            if(--needed===0){
-                              diffsGenerated();
-                            }
-                          });
-                        },
-                        diffsGenerated = function(){
-                          console.log('diffMaster',baseToMaster);
-                          console.log('diffMasik',baseToMasik);
-                          var fullDiffMaster = _core.concatTreeDiff(baseToMaster,baseToMasik),
-                            fullDiffMasik = _core.concatTreeDiff(baseToMasik,baseToMaster);
-                          console.log('fullMaster',fullDiffMaster);
-                          console.log('fullMasik',fullDiffMasik);
-                          if(_core.isEqualDifferences(fullDiffMaster,fullDiffMasik)){
-                            _core.applyTreeDiff(base,fullDiffMaster,function(err){
-                              _core.persist(base,function(err){
-                                var newHash = _project.makeCommit([mastHash,masiHash], _core.getHash(base), "merging", function(){
-                                  _project.setBranchHash('merged','',newHash,function(err){
-                                    console.log('merged branch created');
-                                  });
-                                });
-                              });
-                            });
-                          }
-                          /*_core.applyTreeDiff(masik,baseToMaster,function(err){
-                            _core.applyTreeDiff(master,baseToMasik,function(err){
-                              _core.persist(masik,function(err){});
-                              _core.persist(master,function(err){});
-                              _core.generateTreeDiff(base,master,function(err,diff){
-                                console.log('base->finalmaster',diff);
-                                _core.generateTreeDiff(base,masik,function(err,diff){
-                                  console.log('base->finalmasik',diff);
-                                });
-                              });
-                              _core.generateTreeDiff(master,masik,function(err,diff){
-                                if(Object.keys(diff) < 1){
-                                  _core.persist(master,function(){
-                                    var newHash = _project.makeCommit([mastHash,masiHash], _core.getHash(master), "merging", function(){
-                                      _project.setBranchHash('merged','',newHash,function(err){
-                                        console.log('merged branch created');
-                                      });
-                                    });
-                                  });
-                                } else {
-                                  console.log('there is a bit of a conflict',diff);
-                                }
-                              })
-                            });
-                          });*/
-                        };
-                      getFullProjectsInfoAsync(function(err,info){
-                          var myInfo = info[getActiveProject()];
-                        master = myInfo.branches.master;
-                        masik = myInfo.branches.masik;
-                        mastHash = master;
-                        masiHash = masik;
-                          _project.getCommonAncestorCommit(master,masik,function(err,commit){
-                            base = commit;
-                            getRootHashes();
-                          });
-                        });
-                        break;
-                }
 
-            }
-
-        function getExportItemsUrlAsync(paths, filename, callback) {
-            _database.simpleRequest({command: 'dumpMoreNodes', name: _projectName, hash: _rootHash || _core.getHash(_nodes[ROOT_PATH].node), nodes: paths}, function (err, resId) {
-                if (err) {
-                    callback(err);
-                } else {
-                    callback(null, window.location.protocol + '//' + window.location.host + '/worker/simpleResult/' + resId + '/' + filename);
-                }
-            });
-        }
+      function getExportItemsUrlAsync(paths, filename, callback) {
+        _database.simpleRequest({command: 'dumpMoreNodes', name: _projectName, hash: _rootHash || _core.getHash(_nodes[ROOT_PATH].node), nodes: paths}, function (err, resId) {
+          if (err) {
+            callback(err);
+          } else {
+            callback(null, window.location.protocol + '//' + window.location.host + '/worker/simpleResult/' + resId + '/' + filename);
+          }
+        });
+      }
 
       function getExternalInterpreterConfigUrlAsync(selectedItemsPaths, filename, callback) {
         var config = {};
