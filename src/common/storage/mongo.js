@@ -92,7 +92,7 @@ define(["mongodb", "util/assert", "util/canon"], function (MONGODB, ASSERT, CANO
       var error = null;
       var synced = 0;
 
-      function fsyncConnection(conn) {
+      function fsyncConnection (conn) {
         mongo.command({ getLastError: 1, fsync: true },{connection:conn},
           function(err,result){
             //TODO we ignore the result right now
