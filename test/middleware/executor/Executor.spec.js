@@ -8,6 +8,7 @@ require('../../_globals.js');
 
 var agent = require('superagent').agent(),
     should = require('chai').should(),
+    fs = require('fs'),
     server,
     serverBaseUrl;
 
@@ -16,6 +17,16 @@ describe('Executor', function () {
 
     afterEach(function (done) {
         server.stop(done);
+        try {
+            fs.unlinkSync('test-tmp/jobList.nedb');
+        } catch (err) {
+            //console.log(err);
+        }
+        try {
+            fs.unlinkSync('test-tmp/workerList.nedb');
+        } catch (err) {
+            //console.log(err);
+        }
     });
 
     it('should return 200 at rest/executor/worker/ with enableExecutor=true', function (done) {

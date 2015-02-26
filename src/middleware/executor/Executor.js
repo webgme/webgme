@@ -20,10 +20,11 @@ define(['logManager',
     ],
     function (logManager, fs, path, child_process, bufferEqual, DataStore, JobInfo, WorkerInfo) {
         'use strict';
-
+        var jobListDBFile = TESTING ? 'test-tmp/jobList.nedb' : 'jobList.nedb';
+        var workerListDBFile = TESTING ? 'test-tmp/workerList.nedb' : 'workerList.nedb';
         var logger = logManager.create('REST-Executor'); //how to define your own logger which will use the global settings
 
-        var jobList = new DataStore({filename: 'jobList.nedb', autoload: true});
+        var jobList = new DataStore({filename: jobListDBFile, autoload: true});
         jobList.ensureIndex({fieldName: 'hash', unique: true}, function (err) {
             if (err) {
                 console.error(err);
@@ -33,7 +34,7 @@ define(['logManager',
 
         var workerRefreshInterval = 5 * 1000;
         // worker = { clientId:, lastSeen: }
-        var workerList = new DataStore({filename: 'workerList.nedb', autoload: true});
+        var workerList = new DataStore({filename: workerListDBFile, autoload: true});
         var workerTimeout = function () {
             if (process.uptime() < workerRefreshInterval / 1000 * 5) {
                 return;

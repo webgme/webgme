@@ -7,12 +7,13 @@
 require('../../_globals.js');
 
 var requirejs = require('requirejs'),
+    fs = require('fs'),
     should = require('chai').should(),
     ExecutorClient = requirejs('executor/ExecutorClient'),
     executorClient,
     server,
     serverBaseUrl;
-// TODO: How to specify the nedb paths for jobList and workerList?
+
 describe('ExecutorClient', function () {
     'use strict';
 
@@ -37,6 +38,16 @@ describe('ExecutorClient', function () {
 
     after(function (done) {
         server.stop(done);
+        try {
+            fs.unlinkSync('test-tmp/jobList.nedb');
+        } catch (err) {
+            //console.log(err);
+        }
+        try {
+            fs.unlinkSync('test-tmp/workerList.nedb');
+        } catch (err) {
+            //console.log(err);
+        }
     });
 
     it('getWorkersInfo should return empty object', function (done) {
@@ -92,6 +103,38 @@ describe('ExecutorClient', function () {
         });
     });
 
+    it('updateJob with SUCCESS followed by getInfo should return SUCCESS in jobInfo', function (done) {
+        var jobInfo = {
+            hash: '88804f10a36aa4214f5b0095ba8099e729a10f46'
+        };
+        executorClient.createJob(jobInfo, function (err, res) {
+            var createTime;
+            if (err) {
+                done(err);
+                return;
+            }
+            should.equal(typeof res, 'object');
+            createTime = res.createTime;
+            should.equal(res.status, 'CREATED');
+            should.equal(typeof createTime, 'string');
+            jobInfo.status = 'SUCCESS';
+            executorClient.updateJob(jobInfo, function (err) {
+                if (err) {
+                    done(err);
+                }
+                executorClient.getInfo(jobInfo.hash, function (err, res) {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+                    should.equal(typeof res, 'object');
+                    should.equal(res.createTime, createTime);
+                    should.equal(res.status, 'SUCCESS');
+                    done();
+                });
+            });
+        });
+    });
     //it('getInfoByStatus SUCCESS should succeed', function (done) {
     //    executorClient.getInfoByStatus('SUCCESS', function(err, res) {
     //        should.equal(err, null);
