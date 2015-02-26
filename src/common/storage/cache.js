@@ -36,7 +36,7 @@ define([ "util/assert" ], function (ASSERT) {
 		var projects = {};
 		var dlock = new Lock();
 
-    function openProject(name, callback) {
+		function openProject (name, callback) {
 			ASSERT(typeof name === "string" && typeof callback === "function");
 
 			dlock.lock(function () {
@@ -58,7 +58,7 @@ define([ "util/assert" ], function (ASSERT) {
 			});
 		}
 
-    function closeDatabase(callback) {
+		function closeDatabase (callback) {
 			dlock.lock(function () {
 				var n;
 				for (n in projects) {
@@ -70,7 +70,7 @@ define([ "util/assert" ], function (ASSERT) {
 			});
 		}
 
-    function deleteProject(name, callback) {
+		function deleteProject (name, callback) {
 			if (typeof projects[name] !== "undefined") {
 				projects[name].deleteProject();
 			}
@@ -78,7 +78,7 @@ define([ "util/assert" ], function (ASSERT) {
 			database.deleteProject(name, callback);
 		}
 
-    function wrapProject(name, project) {
+		function wrapProject (name, project) {
 			var ID_NAME = project.ID_NAME;
 
 			var refcount = 0;
@@ -118,7 +118,7 @@ define([ "util/assert" ], function (ASSERT) {
 				deepFreeze = function () { };
 			}
 
-      function cacheInsert(key, obj) {
+			function cacheInsert (key, obj) {
 				ASSERT(typeof cache[key] === "undefined" && obj[ID_NAME] === key);
 
 				deepFreeze(obj);
@@ -131,7 +131,7 @@ define([ "util/assert" ], function (ASSERT) {
 				}
 			}
 
-      function loadObject(key, callback) {
+			function loadObject (key, callback) {
 				ASSERT(typeof key === "string" && typeof callback === "function");
 				ASSERT(project !== null);
 
@@ -173,7 +173,7 @@ define([ "util/assert" ], function (ASSERT) {
 				callback(null, obj);
 			}
 
-      function insertObject(obj, callback) {
+			function insertObject (obj, callback) {
 				ASSERT(typeof obj === "object" && obj !== null && typeof callback === "function");
 
 				var key = obj[ID_NAME];
@@ -205,7 +205,7 @@ define([ "util/assert" ], function (ASSERT) {
 				project.insertObject(obj, callback);
 			}
 
-      function abortProject(callback) {
+			function abortProject (callback) {
 				if (project !== null) {
 					var p = project;
 					project = null;
@@ -217,7 +217,7 @@ define([ "util/assert" ], function (ASSERT) {
 				}
 			}
 
-      function closeProject(callback) {
+			function closeProject (callback) {
 				ASSERT(refcount >= 1);
 
 				if (--refcount === 0) {
@@ -227,7 +227,7 @@ define([ "util/assert" ], function (ASSERT) {
 				}
 			}
 
-      function deleteProject() {
+			function deleteProject () {
 				var key, callbacks, cb, err = new Error("cache closed");
 				for (key in missing) {
 					callbacks = missing[key];
@@ -250,7 +250,7 @@ define([ "util/assert" ], function (ASSERT) {
 				cacheSize = 0;
 			}
 
-      function getBranchHash(name, oldhash, callback) {
+			function getBranchHash (name, oldhash, callback) {
 				ASSERT(typeof name === "string" && typeof callback === "function");
 				ASSERT(typeof oldhash === "string" || oldhash === null);
 
@@ -275,7 +275,7 @@ define([ "util/assert" ], function (ASSERT) {
 				}
 			}
 
-      function setBranchHash(name, oldhash, newhash, callback) {
+			function setBranchHash (name, oldhash, newhash, callback) {
 				ASSERT(typeof name === "string" && typeof oldhash === "string");
 				ASSERT(typeof newhash === "string" && typeof callback === "function");
 
@@ -298,7 +298,7 @@ define([ "util/assert" ], function (ASSERT) {
 				});
 			}
 
-      function reopenProject(callback) {
+			function reopenProject (callback) {
 				ASSERT(project !== null && refcount >= 0 && typeof callback === "function");
 
 				++refcount;
