@@ -764,19 +764,19 @@ define([ "util/assert", "util/key", "core/future", "core/tasync", 'util/canon' ]
 			}
 		};
 
-        var getChildHash = function(node,relid){
-            ASSERT(isValidNode(node));
+		var getChildHash = function(node,relid){
+			ASSERT(isValidNode(node));
 
-            node = getChild(node, relid);
+			node = getChild(node, relid);
 
-            if (isValidHash(node.data)) {
-                // TODO: this is a hack, we should avoid loading it multiple
-                // times
-                return node.data;
-            } else {
-                return typeof node.data === "object" && node.data !== null ? getHash(node) : null;
-            }
-        };
+			if (isValidHash(node.data)) {
+				// TODO: this is a hack, we should avoid loading it multiple
+				// times
+				return node.data;
+			} else {
+				return typeof node.data === "object" && node.data !== null ? getHash(node) : null;
+			}
+		};
 
 
 
@@ -938,7 +938,7 @@ define([ "util/assert", "util/key", "core/future", "core/tasync", 'util/canon' ]
 
 			isValidNode: isValidNode,
 
-            getChildHash: getChildHash
+			getChildHash: getChildHash
 		};
 	};
 });
