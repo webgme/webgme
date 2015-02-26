@@ -3115,6 +3115,17 @@ define([
                 }
 
             }
+
+        function getExportItemsUrlAsync(paths, filename, callback) {
+            _database.simpleRequest({command: 'dumpMoreNodes', name: _projectName, hash: _rootHash || _core.getHash(_nodes[ROOT_PATH].node), nodes: paths}, function (err, resId) {
+                if (err) {
+                    callback(err);
+                } else {
+                    callback(null, window.location.protocol + '//' + window.location.host + '/worker/simpleResult/' + resId + '/' + filename);
+                }
+            });
+        }
+
       function getExternalInterpreterConfigUrlAsync(selectedItemsPaths, filename, callback) {
         var config = {};
         config.host = window.location.protocol + "//" + window.location.host;
