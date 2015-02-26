@@ -1130,7 +1130,7 @@ define([
                       return true;
                   }
                 }
-            }
+            
 
             return false;
         }
@@ -1424,13 +1424,23 @@ define([
         }
         return ordered;
       }
-function getEventTree(oldRootHash,newRootHash,callback){
+      function getEventTree(oldRootHash,newRootHash,callback){
                 var error = null,
                     sRoot = null,
                     tRoot = null,
                     start = new Date().getTime(),
                     loadRoot = function(hash,root){
                         _core.loadRoot(hash,function(err,r){
+                            error = error || err;
+                            if(sRoot === null && hash === oldRootHash){
+                                sRoot = r;
+                            } else {
+                                tRoot = r;
+                            }
+                            if(--needed === 0){
+                                rootsLoaded();
+                            }
+                        });
 
                     },
                     rootsLoaded = function(){
@@ -1447,6 +1457,7 @@ function getEventTree(oldRootHash,newRootHash,callback){
                 loadRoot(oldRootHash,sRoot);
                 loadRoot(newRootHash,tRoot);
         }
+
         function loadRoot(newRootHash,callback){
             //with the newer approach we try to optimize a bit the mechanizm of the loading and try to get rid of the paralellism behind it
             var patterns = {},
