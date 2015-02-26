@@ -1,9 +1,11 @@
 /*globals define*/
+/*jshint node: true, browser: true*/
+
 /**
  * Simple plugin illustrating how to configure a configuration for the plugin and how to generate
  * and return artifacts from a plugin.
  *
- * @author pmeijer /
+ * @author pmeijer / https://github.com/pmeijer
  */
 
 define(['plugin/PluginConfig',
