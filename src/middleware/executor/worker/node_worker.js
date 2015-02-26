@@ -1,3 +1,4 @@
+/*jshint node:true*/
 var nodeRequire = require;
 
 if (typeof define !== 'undefined') {
@@ -58,7 +59,17 @@ if (nodeRequire.main === module) {
         path = nodeRequire('path'),
         cas = nodeRequire('ssl-root-cas/latest'),
         superagent = nodeRequire('superagent'),
+        configFileName = 'config.json',
+        workingDirectory = 'executor-temp',
         https = nodeRequire('https');
+
+    // This is used for tests
+    if (process.argv.length > 2) {
+        configFileName = process.argv[2];
+        if (process.argv.length > 3) {
+            workingDirectory = process.argv[3];
+        }
+    }
 
     cas.inject();
     fs.readdirSync(__dirname).forEach(function (file) {
@@ -103,10 +114,10 @@ if (nodeRequire.main === module) {
 
         function readConfig() {
             var config = {
-                "http://localhost:8888": {}
+                'http://127.0.0.1:8888': {}
             };
             try {
-                var configJSON = fs.readFileSync('config.json', {
+                var configJSON = fs.readFileSync(configFileName, {
                     encoding: 'utf8'
                 });
                 config = JSON.parse(configJSON);
@@ -152,7 +163,6 @@ if (nodeRequire.main === module) {
         }
 
         var workingDirectoryCount = 0;
-        var workingDirectory = 'executor-temp';
         var rimraf = nodeRequire('rimraf');
         rimraf(workingDirectory, function (err) {
             if (err) {
@@ -164,7 +174,7 @@ if (nodeRequire.main === module) {
             }
 
             readConfig();
-            fs.watch("config.json", function () {
+            fs.watch(configFileName, function () {
                 setTimeout(readConfig, 200);
             }); // setTimeout: likely handle O_TRUNC of config.json (though `move config.json.tmp config.json` is preferred)
         });

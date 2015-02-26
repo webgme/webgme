@@ -135,10 +135,5 @@ describe('ExecutorClient', function () {
             });
         });
     });
-    //it('getInfoByStatus SUCCESS should succeed', function (done) {
-    //    executorClient.getInfoByStatus('SUCCESS', function(err, res) {
-    //        should.equal(err, null);
-    //        done();
-    //    });
-    //});
+
 });
