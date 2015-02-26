@@ -10,7 +10,7 @@ We can set up the "executor_worker" using node-webkit, and configure it to monit
 
 When a job is created on the server, the executor will download the job, run it, and then upload any results to the WebGME server. Here is how to set up the executor:
 
-1) Download node-webkit (http://dl.node-webkit.org/v0.9.2/node-webkit-v0.9.2-win-ia32.zip) and unzip the package in "C:\Users\Public\Documents\META Documents\WebGME\node_modules\webgme-domain-tools\executor_worker"
+1) Download node-webkit (http://dl.nwjs.io/v0.9.2/node-webkit-v0.9.2-win-ia32.zip) and unzip the package in "C:\Users\Public\Documents\META Documents\WebGME\src\middleware\executor\worker"
 
 3) Edit "config_example.json" to point to the WebGME URL (e.g, http://localhost:8855/) and save it as "config.json"
 
