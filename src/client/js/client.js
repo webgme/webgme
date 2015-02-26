@@ -1566,7 +1566,7 @@ define([
         _previousRootHash = _rootHash;
                 _rootHash = newRootHash;
                 if(_previousRootHash){
-                    getDiffTree(_previousRootHash,_rootHash,function(err,diffTree){
+                    getEventTree(_previousRootHash,_rootHash,function(err,diffTree){
                         if(err){
                             _rootHash = null;
                             callback(err);
@@ -3677,11 +3677,7 @@ define([
         applyDiff: applyDiff,
         merge: merge,
         getResolve: getResolve,
-        resolve: resolve,
-
-        //testing
-        testMethod: testMethod
-
+        resolve: resolve
       };
     }
 
