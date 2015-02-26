@@ -41,7 +41,6 @@ define(['logManager',
              BlobServer,
              GUID) {
     'use strict';
-    'use strict';
     function StandAloneServer(CONFIG) {
         // if the config is not set we use the global
         CONFIG = CONFIG || WebGMEGlobal.getConfig();
@@ -461,7 +460,16 @@ define(['logManager',
             __app.use(Passport.initialize());
             __app.use(Passport.session());
 
+            if (CONFIG.enableExecutor) {
+                var executorRest = requirejs('executor/Executor');
+                __app.use('/rest/executor', executorRest);
+                __logger.info('Executor listening at rest/executor');
+            } else {
+                __logger.info('Executor not enabled. Add "enableExecutor: true" to config.js for activation.');
+            }
+
             setupExternalRestModules();
+
         });
 
         __logger.info("creating login routing rules for the static server");

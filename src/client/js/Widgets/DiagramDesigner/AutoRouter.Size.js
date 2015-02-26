@@ -5,9 +5,9 @@
  * @author brollb / https://github/brollb
  */
 
-define(['logManager'], function (logManager) {
+define([], function () {
                                             
-    "use strict"; 
+    'use strict'; 
 
     var ArSize = function (x, y){
         //Multiple Constructors

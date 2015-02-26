@@ -36,6 +36,8 @@ var DEFAULT_CONFIG = "/*globals define*/\n" +
 "        sessioncookieid: 'webgmeSid',\n" +
 "        sessioncookiesecret: 'meWebGMEez',\n" +
 "\n" +
+"        enableExecutor: false,\n" +
+"\n" +
 "        paths: {\n" +
 "               //executor: './node_modules/webgme/src/middleware/executor'\n" +
 "            },\n" +

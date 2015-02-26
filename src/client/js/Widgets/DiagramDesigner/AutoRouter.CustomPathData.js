@@ -11,7 +11,7 @@ define(['logManager',
            './AutoRouter.Constants'], function ( logManager, assert, UTILS,
                                                 CONSTANTS) {
 
-    "use strict"; 
+    'use strict'; 
 
     var AutoRouterCustomPathData = function (_x, _y){
         this.edgeIndex = 0;

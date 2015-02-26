@@ -70,7 +70,7 @@ describe('AutoRouter Test Cases', function(){
       bugPlayer.test('./testCases/AR_bug_report1423157583206.js');
   });
 
-  it('Issue #153 (Overlapping lines)',function() {
+  it('issue/153_overlapping_lines',function() {
       // Connection 4 and 6 are about stacked
       var pathIds = ['C_000006', 'C_000004'];
       bugPlayer.test('./testCases/issue153.js');
@@ -86,6 +86,28 @@ describe('AutoRouter Test Cases', function(){
 
       assert(startpoints[1].y - startpoints[0].y > 1, 'Paths are virtually overlapping:\n'+
           startpoints[1] + ' and '+startpoints[0]);
+  });
+
+  it('issue/169_autorouter_section_HasBlockedEdge_assert_failure',function() {
+      bugPlayer.test('./testCases/issue169.js');
+  });
+
+  it('issue/186_cannot_read_property_id_of_undefined',function() {
+      bugPlayer.test('./testCases/issue186.js');
+  });
+
+  it('issue/187_short_path_should_be_a_straight_line',function() {
+      bugPlayer.test('./testCases/issue187.js');
+
+      // Check that the y values of the start/end point of the path are equal
+      var pathId = bugPlayer._autorouterPaths.C_000003,
+          path = bugPlayer.autorouter.paths[pathId],
+          startpoint = path.startpoint,
+          endpoint = path.endpoint;
+
+      assert(startpoint.y === endpoint.y,
+          'Start/end points\' y values should match but are '+startpoint.y+' and '+
+          endpoint.y);
   });
 
 });

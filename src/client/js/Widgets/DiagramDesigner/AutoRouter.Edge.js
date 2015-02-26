@@ -11,7 +11,7 @@ define(['logManager',
            './AutoRouter.Utils',
            './AutoRouter.Point'], function ( logManager, assert, CONSTANTS, Utils, ArPoint ) {
 
-    "use strict"; 
+    'use strict'; 
 
     var AutoRouterEdge = function (){
         /*
@@ -34,29 +34,29 @@ define(['logManager',
            We use the 'order' prefix in the variable names to refer to this order.
 
            We will walk from top to bottom (from the 'orderFirst' along the 'this.orderNext').
-           We keep track a "section" of some edges. If we have an infinite horizontal line,
+           We keep track a 'section' of some edges. If we have an infinite horizontal line,
            then the section consists of those edges that are above the line and not blocked
            by another edge which is closer to the line. Each edge in the section has
            a viewable portion from the line (the not blocked portion). The coordinates
            of this portion are 'this.sectionX1' and 'this.sectionX2'. We have an order of the edges
            belonging to the current section. The 'section_first' refers to the leftmost
-           edge in the section, while the 'this.section_next' to the next from left to right.
+           edge in the section, while the 'this.sectionNext' to the next from left to right.
 
-           We say that the CAutoRouterEdge E1 "precede" the CAutoRouterEdge E2 if there is no other CAutoRouterEdge which
+           We say that the CAutoRouterEdge E1 'precede' the CAutoRouterEdge E2 if there is no other CAutoRouterEdge which
            totally	blocks S1 from S2. So a section consists of the preceding edges of an
-           infinite edge. We say that E1 is "adjacent" to E2, if E1 is the nearest edge
+           infinite edge. We say that E1 is 'adjacent' to E2, if E1 is the nearest edge
            to E2 which precede it. Clearly, every edge has at most one adjacent precedence.
 
            The edges of any CAutoRouterBox or CAutoRouterPort are fixed. We will continually fix the edges
            of the CAutoRouterPaths. But first we need some definition.
 
-           We call a set of edges as a "block" if the topmost (first) and bottommost (last)
+           We call a set of edges as a 'block' if the topmost (first) and bottommost (last)
            edges of it are fixed while the edges between them are not. Furthermore, every
            edge is adjacent to	the next one in the order. Every edge in the block has an
-           "index". The index of the first one (topmost) is 0, of the second is 1, and so on.
+           'index'. The index of the first one (topmost) is 0, of the second is 1, and so on.
            We call the index of the last edge (# of edges - 1) as the index of the entire box.
-           The "depth" of a block is the difference of the y-coordinates of the first and last
-           edges of it. The "goal gap" of the block is the quotient of the depth and index
+           The 'depth' of a block is the difference of the y-coordinates of the first and last
+           edges of it. The 'goal gap' of the block is the quotient of the depth and index
            of the block. If the difference of the y-coordinates of the adjacent edges in
            the block are all equal to the goal gap, then we say that the block is evenly
            distributed.
@@ -97,20 +97,20 @@ define(['logManager',
 
         this.sectionX1 = null;
         this.sectionX2 = null;
-        this.section_next = null;
-        this.section_down = null;
+        this.sectionNext = null;
+        this.sectionDown = null;
 
-        this.edge_fixed = false;
-        this.edge_customFixed = false;
-        this.edge_canpassed = false;
-        this.edge_direction = null;
+        this.edgeFixed = false;
+        this.edgeCustomFixed = false;
+        this.edgeCanPassed = false;
+        this.edgeDirection = null;
 
-        this.block_prev = null;
-        this.block_next = null;
-        this.block_trace = null;
+        this.blockPrev = null;
+        this.blockNext = null;
+        this.blockTrace = null;
 
-        this.closest_prev = null;
-        this.closest_next = null;
+        this.closestPrev = null;
+        this.closestNext = null;
 
     };
 
@@ -240,125 +240,125 @@ define(['logManager',
         return !this.endpointNext;
     };
 
-    AutoRouterEdge.prototype.getSectionNext = function(arg){
+    AutoRouterEdge.prototype.getSectionNext = function(){
 
-        return this.section_next !== undefined ? this.section_next[0] : null;
+        return this.sectionNext !== undefined ? this.sectionNext[0] : null;
     };
 
     AutoRouterEdge.prototype.getSectionNextPtr = function(){
-        if(!this.section_next || !this.section_next[0]){
-            this.section_next = [ new AutoRouterEdge() ];
+        if(!this.sectionNext || !this.sectionNext[0]){
+            this.sectionNext = [ new AutoRouterEdge() ];
         }
-        return this.section_next;
+        return this.sectionNext;
     };
 
     AutoRouterEdge.prototype.setSectionNext = function(nextSection){
         nextSection = nextSection instanceof Array ? nextSection[0] : nextSection;
-        if(this.section_next instanceof Array){
-            this.section_next[0] = nextSection;
+        if(this.sectionNext instanceof Array){
+            this.sectionNext[0] = nextSection;
         } else {
-            this.section_next = [nextSection];
+            this.sectionNext = [nextSection];
         }
     };
 
     AutoRouterEdge.prototype.getSectionDown = function(){ //Returns pointer - if not null
 
-        return this.section_down !== undefined ? this.section_down[0] : null;
+        return this.sectionDown !== undefined ? this.sectionDown[0] : null;
 
     };
 
     AutoRouterEdge.prototype.getSectionDownPtr = function(){
-        if(!this.section_down || !this.section_down[0]){
-            this.section_down = [ new AutoRouterEdge() ];
+        if(!this.sectionDown || !this.sectionDown[0]){
+            this.sectionDown = [ new AutoRouterEdge() ];
         }
-        return this.section_down;
+        return this.sectionDown;
     };
 
     AutoRouterEdge.prototype.setSectionDown = function(downSection){
         downSection = downSection instanceof Array ? downSection[0] : downSection;
-        if(this.section_down instanceof Array){
-            this.section_down[0] = downSection;
+        if(this.sectionDown instanceof Array){
+            this.sectionDown[0] = downSection;
         } else {
-            this.section_down = [downSection];
+            this.sectionDown = [downSection];
         }
     };
 
     AutoRouterEdge.prototype.getEdgeFixed = function(){
-        return this.edge_fixed;
+        return this.edgeFixed;
     };
 
     AutoRouterEdge.prototype.setEdgeFixed = function(ef){ //boolean
-        this.edge_fixed = ef;
+        this.edgeFixed = ef;
     };
 
     AutoRouterEdge.prototype.getEdgeCustomFixed = function(){
-        return this.edge_customFixed;
+        return this.edgeCustomFixed;
     };
 
     AutoRouterEdge.prototype.setEdgeCustomFixed = function(ecf){
-        this.edge_customFixed = ecf;
+        this.edgeCustomFixed = ecf;
     };
 
     AutoRouterEdge.prototype.getEdgeCanpassed =  function(){
-        return this.edge_canpassed;
+        return this.edgeCanPassed;
     };
 
     AutoRouterEdge.prototype.setEdgeCanpassed =  function(ecp){
-        this.edge_canpassed = ecp;
+        this.edgeCanPassed = ecp;
     };
 
     AutoRouterEdge.prototype.getDirection = function(){
-        return this.edge_direction;
+        return this.edgeDirection;
     };
 
     AutoRouterEdge.prototype.setDirection = function(dir){
-        this.edge_direction = dir;
+        this.edgeDirection = dir;
     };
 
     AutoRouterEdge.prototype.recalculateDirection = function(){
         assert(this.startpoint !== null && this.endpoint !== null, 
             'AREdge.recalculateDirection: this.startpoint !== null && this.endpoint !== null FAILED!');
-        this.edge_direction = Utils.getDir(this.endpoint.minus(this.startpoint));
+        this.edgeDirection = Utils.getDir(this.endpoint.minus(this.startpoint));
     };
 
     AutoRouterEdge.prototype.getBlockPrev = function(){
-        return this.block_prev;
+        return this.blockPrev;
     };
 
     AutoRouterEdge.prototype.setBlockPrev = function(prevBlock){
-        this.block_prev = prevBlock;
+        this.blockPrev = prevBlock;
     };
 
     AutoRouterEdge.prototype.getBlockNext = function(){
-        return this.block_next;
+        return this.blockNext;
     };
 
     AutoRouterEdge.prototype.setBlockNext = function(nextBlock){
-        this.block_next = nextBlock;
+        this.blockNext = nextBlock;
     };
 
     AutoRouterEdge.prototype.getBlockTrace = function(){
-        return this.block_trace;
+        return this.blockTrace;
     };
 
     AutoRouterEdge.prototype.setBlockTrace = function(traceBlock){
-        this.block_trace = traceBlock;
+        this.blockTrace = traceBlock;
     };
 
     AutoRouterEdge.prototype.getClosestPrev = function(){
-        return this.closest_prev;
+        return this.closestPrev;
     };
 
     AutoRouterEdge.prototype.setClosestPrev = function(cp){
-        this.closest_prev = cp;
+        this.closestPrev = cp;
     };
 
     AutoRouterEdge.prototype.getClosestNext = function(){
-        return this.closest_next;
+        return this.closestNext;
     };
 
     AutoRouterEdge.prototype.setClosestNext = function(cp){
-        this.closest_next = cp;
+        this.closestNext = cp;
     };
 
     return AutoRouterEdge;

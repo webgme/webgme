@@ -66,6 +66,7 @@ if (typeof define !== "function" && typeof require === "function" && typeof proc
       secureREST: false,
       httpsecure: false,
       guest: false,
+      enableExecutor: false,
       sessioncookieid: 'webgmeSid',
       sessioncookiesecret: 'meWebGMEez',
       debug: false,

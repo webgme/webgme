@@ -11,9 +11,15 @@ define(['logManager',
            './AutoRouter.Utils',
            './AutoRouter.Point',
            './AutoRouter.Rect',
-           './AutoRouter.Port'], function ( logManager, assert, CONSTANTS, UTILS, ArPoint, ArRect, AutoRouterPort) {
+           './AutoRouter.Port'], function (logManager, 
+                                           assert, 
+                                           CONSTANTS, 
+                                           Utils, 
+                                           ArPoint, 
+                                           ArRect, 
+                                           AutoRouterPort) {
 
-    "use strict"; 
+    'use strict'; 
 
     var AutoRouterBox = function (){
         this.owner = null;
@@ -53,7 +59,7 @@ define(['logManager',
 
     AutoRouterBox.prototype.createPort = function (){
         var port = new AutoRouterPort();
-        assert(port !== null, "ARBox.createPort: port !== null FAILED");
+        assert(port !== null, 'ARBox.createPort: port !== null FAILED');
 
         return port;
     };
@@ -78,16 +84,15 @@ define(['logManager',
     };
 
     AutoRouterBox.prototype.deletePort = function (port){
-        assert(port !== null, "ARBox.deletePort: port !== null FAILED");
+        assert(port !== null, 'ARBox.deletePort: port !== null FAILED');
         if(port === null){
             return;
         }
 
         var index = this.ports.indexOf(port),
-            delPort,
             graph = this.owner;
 
-        assert(index !== -1, "ARBox.deletePort: index !== -1 FAILED");
+        assert(index !== -1, 'ARBox.deletePort: index !== -1 FAILED');
 
         graph.deleteEdges(port);
         this.ports.splice(index, 1);
@@ -101,19 +106,22 @@ define(['logManager',
     };
 
     AutoRouterBox.prototype.setRect = function (r){
-        assert(r instanceof ArRect, "Invalthis.id arg in ARBox.setRect. Requires ArRect");
+        assert(r instanceof ArRect, 'Invalthis.id arg in ARBox.setRect. Requires ArRect');
 
-        assert( r.getWidth() >= 3 && r.getHeight() >= 3, "ARBox.setRect: r.getWidth() >= 3 && r.getHeight() >= 3 FAILED!");
-        assert( r.getTopLeft().x >= CONSTANTS.ED_MINCOORD && r.getTopLeft().y >= CONSTANTS.ED_MINCOORD, "ARBox.setRect: r.getTopLeft().x >= CONSTANTS.ED_MINCOORD && r.getTopLeft().y >= CONSTANTS.ED_MAXCOORD FAILED!");
-        assert( r.getBottomRight().x <= CONSTANTS.ED_MAXCOORD && r.getBottomRight().y <= CONSTANTS.ED_MAXCOORD, "ARBox.setRect:  r.getBottomRight().x <= CONSTANTS.ED_MAXCOORD && r.getBottomRight().y <= CONSTANTS.ED_MAXCOORD FAILED!");
-        assert( this.ports.length === 0 || this.atomic, "ARBox.setRect: this.ports.length === 0 || this.atomic FAILED!");
+        assert(r.getWidth() >= 3 && r.getHeight() >= 3, 
+            'ARBox.setRect: r.getWidth() >= 3 && r.getHeight() >= 3 FAILED!');
+        assert(r.getTopLeft().x >= CONSTANTS.ED_MINCOORD && r.getTopLeft().y >= CONSTANTS.ED_MINCOORD, 
+            'ARBox.setRect: r.getTopLeft().x >= CONSTANTS.ED_MINCOORD && r.getTopLeft().y >= CONSTANTS.ED_MAXCOORD FAILED!');
+        assert(r.getBottomRight().x <= CONSTANTS.ED_MAXCOORD && r.getBottomRight().y <= CONSTANTS.ED_MAXCOORD, 
+            'ARBox.setRect:  r.getBottomRight().x <= CONSTANTS.ED_MAXCOORD && r.getBottomRight().y <= CONSTANTS.ED_MAXCOORD FAILED!');
+        assert(this.ports.length === 0 || this.atomic, 
+            'ARBox.setRect: this.ports.length === 0 || this.atomic FAILED!');
 
         this.rect.assign(r);
-
         this.calculateSelfPoints();
 
         if(this.atomic){
-            assert(this.ports.length === 1, "ARBox.setRect: this.ports.length === 1 FAILED!");
+            assert(this.ports.length === 1, 'ARBox.setRect: this.ports.length === 1 FAILED!');
             this.ports[0].setRect(r);
         }
     };
@@ -154,7 +162,7 @@ define(['logManager',
 
     AutoRouterBox.prototype.addChild = function (box){
         assert(this.childBoxes.indexOf(box) === -1, 
-               "ARBox.addChild: box already is child of " + this.id);
+               'ARBox.addChild: box already is child of ' + this.id);
         assert(box instanceof AutoRouterBox, 
               'Child box must be of type AutoRouterBox');
 
@@ -164,7 +172,7 @@ define(['logManager',
 
     AutoRouterBox.prototype.removeChild = function (box){
         var i = this.childBoxes.indexOf(box);
-        assert(i !== -1, "ARBox.removeChild: box isn't child of " + this.id);
+        assert(i !== -1, 'ARBox.removeChild: box isn\'t child of ' + this.id);
         this.childBoxes.splice(i,1);
         box.parent = null;
     };
@@ -189,15 +197,15 @@ define(['logManager',
     };
 
     AutoRouterBox.prototype.isBoxAt = function (point, nearness){
-        return UTILS.isPointIn(point, this.rect, nearness);
+        return Utils.isPointIn(point, this.rect, nearness);
     };
 
     AutoRouterBox.prototype.isBoxClip = function (r){
-        return UTILS.isRectClip (this.rect, r);
+        return Utils.isRectClip (this.rect, r);
     };
 
     AutoRouterBox.prototype.isBoxIn = function (r){
-        return UTILS.isRectIn(this.rect, r);
+        return Utils.isRectIn(this.rect, r);
     };
 
     AutoRouterBox.prototype.destroy = function (){
