@@ -1,3 +1,4 @@
+/*globals require*/
 /*
  * Copyright (C) 2014 Vanderbilt University, All rights reserved.
  *
