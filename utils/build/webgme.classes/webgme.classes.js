@@ -26,7 +26,7 @@ define('webgme.classes',
             // The public function name defaults to window.docReady
             // but you can pass in your own object and own function name and those will be used
             // if you want to put them in a different namespace
-            funcName = funcName || 'docReady';
+            funcName = funcName || "docReady";
             baseObj = baseObj || window;
             var readyList = [];
             var readyFired = false;
@@ -53,7 +53,7 @@ define('webgme.classes',
             }
 
             function readyStateChange() {
-                if ( document.readyState === 'complete' ) {
+                if ( document.readyState === "complete" ) {
                     ready();
                 }
             }
@@ -73,31 +73,31 @@ define('webgme.classes',
                     readyList.push({fn: callback, ctx: context});
                 }
                 // if document already ready to go, schedule the ready function to run
-                if (document.readyState === 'complete') {
+                if (document.readyState === "complete") {
                     setTimeout(ready, 1);
                 } else if (!readyEventHandlersInstalled) {
                     // otherwise if we don't have event handlers installed, install them
                     if (document.addEventListener) {
                         // first choice is DOMContentLoaded event
-                        document.addEventListener('DOMContentLoaded', ready, false);
+                        document.addEventListener("DOMContentLoaded", ready, false);
                         // backup is window load event
-                        window.addEventListener('load', ready, false);
+                        window.addEventListener("load", ready, false);
                     } else {
                         // must be IE
-                        document.attachEvent('onreadystatechange', readyStateChange);
-                        window.attachEvent('onload', ready);
+                        document.attachEvent("onreadystatechange", readyStateChange);
+                        window.attachEvent("onload", ready);
                     }
                     readyEventHandlersInstalled = true;
                 }
-            };
-        })('docReady', window);
+            }
+        })("docReady", window);
 
         // See if there is handler attached to body tag when ready
 
         docReady(function() {
 
-            if (document.body.getAttribute('on-gme-init')) {
-                eval(document.body.getAttribute('on-gme-init'));
+            if (document.body.getAttribute("on-gme-init")) {
+                eval(document.body.getAttribute("on-gme-init"));
             } else {
                 console.warn('To use GME, define a javascript function and set the body element\'s on-gme-init property.');
             }
