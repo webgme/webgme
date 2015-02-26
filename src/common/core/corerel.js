@@ -240,28 +240,28 @@ define([ "util/assert", "core/coretree", "core/tasync", "util/canon" ], function
 			return node;
 		}
 
-        function getDataForSingleHash(node) {
-            ASSERT(isValidNode(node));
+		function getDataForSingleHash(node) {
+			ASSERT(isValidNode(node));
 
-            var data = {
-                attributes: coretree.getProperty(node, ATTRIBUTES),
-                registry: coretree.getProperty(node, REGISTRY),
-                children: coretree.getKeys(node)
-            };
-            var prefix = "";
+			var data = {
+				attributes: coretree.getProperty(node, ATTRIBUTES),
+				registry: coretree.getProperty(node, REGISTRY),
+				children: coretree.getKeys(node)
+			};
+			var prefix = "";
 
-            while (node) {
-                var overlays = coretree.getChild(node, OVERLAYS);
-                var rels = coretree.getProperty(overlays, prefix);
-                data[prefix] = rels;
+			while (node) {
+				var overlays = coretree.getChild(node, OVERLAYS);
+				var rels = coretree.getProperty(overlays, prefix);
+				data[prefix] = rels;
 
-                prefix = "/" + coretree.getRelid(node) + prefix;
-                node = coretree.getParent(node);
-            }
+				prefix = "/" + coretree.getRelid(node) + prefix;
+				node = coretree.getParent(node);
+			}
 
-            data = JSON.stringify(data);
-            return data;
-        }
+			data = JSON.stringify(data);
+			return data;
+		}
 
 		function deleteNode(node) {
 			ASSERT(isValidNode(node));
@@ -803,16 +803,16 @@ define([ "util/assert", "core/coretree", "core/tasync", "util/canon" ], function
 			}
 		}
 
-        function getChildrenHashes(node){
-            var keys = getChildrenRelids(node),
-                i,hashes = {};
+		function getChildrenHashes(node){
+			var keys = getChildrenRelids(node),
+				i,hashes = {};
 
-            for(i=0;i<keys.length;i++){
-                hashes[keys[i]] = coretree.getChildHash(node,keys[i]);
-            }
+			for(i=0;i<keys.length;i++){
+				hashes[keys[i]] = coretree.getChildHash(node,keys[i]);
+			}
 
-            return hashes;
-        }
+			return hashes;
+		}
 
 		// copy everything from coretree
 		var corerel = {};
@@ -860,9 +860,9 @@ define([ "util/assert", "core/coretree", "core/tasync", "util/canon" ], function
 			return coretree;
 		};
 
-        corerel.getChildrenHashes = getChildrenHashes;
+		corerel.getChildrenHashes = getChildrenHashes;
 
-    corerel.overlayInsert = overlayInsert;
+		corerel.overlayInsert = overlayInsert;
 
 		return corerel;
 	}
