@@ -1,10 +1,12 @@
+/*globals define, WebGMEGlobal, require*/
 /**
- * Created by Zsolt on 5/21/2014.
- *
+ * @author lattmann / https://github.com/lattmann
+ * @author ksmyth / https://github.com/ksmyth
  */
 
 
 define(['superagent'], function (superagent) {
+    'use strict';
 
     var ExecutorClient = function (parameters) {
         parameters = parameters || {};
@@ -31,7 +33,7 @@ define(['superagent'], function (superagent) {
             this.executorUrl = (this.httpsecure ? 'https://' : 'http://') + this.server + ':' + this.serverPort;
         }
         // TODO: TOKEN???
-        this.executorUrl = this.executorUrl + '/rest/external/executor/'; // TODO: any ways to ask for this or get it from the configuration?
+        this.executorUrl = this.executorUrl + '/rest/executor/'; // TODO: any ways to ask for this or get it from the configuration?
         if (parameters.executorNonce) {
             this.executorNonce = parameters.executorNonce;
         } else if (typeof WebGMEGlobal !== "undefined" && typeof WebGMEGlobal.getConfig !== "undefined") {

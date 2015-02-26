@@ -26,7 +26,8 @@ var PATH = require('path'),
         "plugin": "plugin",
         "worker": "server/worker",
         "coreclient": "common/core/users",
-        "blob": "middleware/blob"
+        "blob": "middleware/blob",
+        "executor": "middleware/executor",
     };
 baseDir += global.COVERAGE ? '/src-cov/': '/src/';
 //All other modules should only configure new path in respect with this base URL
