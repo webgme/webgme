@@ -1,15 +1,19 @@
 /*globals define*/
 /*jshint node:true, browser:true*/
 
-/**
+/** This plugin creates a job for the executor and writes back the results to the model.
+ * Requirements
+ * 1) The webgme server must run with enableExecutor: true
+ * 2) A worker must be attached, see src/middleware/executor/worker/README.txt
+ * 3) The worker must have 2.7 >= Python < 3 installed.
  *
  * @author pmeijer / https://github.com/pmeijer
  */
 
 define(['plugin/PluginConfig',
         'plugin/PluginBase',
-        'executor/ExecutorClient',
-        'ejs',
+        'middleware/executor/ExecutorClient',
+        'util/ejs',
         'plugin/ExecutorPlugin/ExecutorPlugin/Templates/Templates'],
     function (PluginConfig, PluginBase, ExecutorClient, ejs, TEMPLATES) {
         'use strict';
@@ -112,7 +116,9 @@ define(['plugin/PluginConfig',
                 config = self.getCurrentConfig(),
                 exitCode = config.success ? 0 : 1,
                 executorConfig = {
-                    cmd: config.pythonCmd + ' generate_name.py ', // This is the command that will be executed on the worker
+                    cmd: config.pythonCmd, // This is the command that will be executed on the worker
+                                           // Make sure no arguments are here, put them in args
+                    args: ['generate_name.py'],
                     resultArtifacts: [ // These are the results that will be returned
                         {
                             name: 'all',
@@ -137,9 +143,9 @@ define(['plugin/PluginConfig',
                     callback('No activeNode specified! Set update to false or invoke from a node.', self.result);
                     return;
                 }
-                executorConfig.cmd += self.core.getPath(self.activeNode);
+                executorConfig.args.push(self.core.getPath(self.activeNode));
             } else {
-                executorConfig.cmd += 'dummy';
+                executorConfig.args.push('dummy');
             }
 
             // The hash of the artifact with these files will define the job. N.B. executor_config.json must exist.
