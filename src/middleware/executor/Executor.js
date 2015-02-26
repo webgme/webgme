@@ -20,8 +20,8 @@ define(['logManager',
     ],
     function (logManager, fs, path, child_process, bufferEqual, DataStore, JobInfo, WorkerInfo) {
         'use strict';
-        var jobListDBFile = TESTING ? 'test-tmp/jobList.nedb' : 'jobList.nedb';
-        var workerListDBFile = TESTING ? 'test-tmp/workerList.nedb' : 'workerList.nedb';
+        var jobListDBFile = typeof TESTING !== 'undefined' ? 'test-tmp/jobList.nedb' : 'jobList.nedb';
+        var workerListDBFile = typeof TESTING !== 'undefined' ? 'test-tmp/workerList.nedb' : 'workerList.nedb';
         var logger = logManager.create('REST-Executor'); //how to define your own logger which will use the global settings
 
         var jobList = new DataStore({filename: jobListDBFile, autoload: true});
