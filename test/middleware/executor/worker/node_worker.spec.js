@@ -1,5 +1,5 @@
 /*globals require, describe, it, before, after, WebGMEGlobal, WebGME, setInterval, clearInterval*/
-
+/*jshint node:true*/
 /**
  * @author pmeijer / https://github.com/pmeijer
  */
@@ -16,7 +16,10 @@ var requirejs = require('requirejs'),
     executorClient,
     server,
     nodeWorkerProcess,
+    jobScriptName = process.platform.indexOf('win') > -1 ? 'script.cmd' : 'script.sh',
     serverBaseUrl;
+
+
 
 describe('NodeWorker', function () {
     'use strict';
@@ -94,16 +97,18 @@ describe('NodeWorker', function () {
         });
     });
 
-    it('createJob with cmd exit and args 0 should succeed', function (done) {
+    it('createJob with cmd node -h should succeed', function (done) {
         var executorConfig = {
-                cmd: 'exit',
-                args: ['0'],
+                cmd: 'node',
+                args: ['-h'],
                 resultArtifacts: [ { name: 'all', resultPatterns: [] } ]
             },
-            killCnt = 0,
-            artifact = blobClient.createArtifact('execFiles');
-
-        artifact.addFile('executor_config.json', JSON.stringify(executorConfig), function (err, hash) {
+            artifact = blobClient.createArtifact('execFiles'),
+            filesToAdd = {
+                'executor_config.json': JSON.stringify(executorConfig)
+            };
+        //filesToAdd[jobScriptName] = 'exit /b 0';
+        artifact.addFiles(filesToAdd, function (err, hashes) {
             if (err) {
                 done(err);
                 return;
@@ -120,17 +125,9 @@ describe('NodeWorker', function () {
                         return;
                     }
                     intervalId = setInterval(function(){
-                        executorClient.getWorkersInfo(function (err, res) {
-                            console.log(res);
-                        });
                         executorClient.getInfo(jobInfo.hash, function (err, res) {
                             if (err) {
                                 done(err);
-                                return;
-                            }
-                            killCnt += 1;
-                            if (killCnt > 15) {
-                                done('Job Never finished!');
                                 return;
                             }
 
@@ -138,13 +135,11 @@ describe('NodeWorker', function () {
                                 // The job is still running..
                                 return;
                             }
-
                             clearInterval(intervalId);
-                            should.equal(jobInfo, 'SUCCESS');
+                            should.equal(res.status, 'SUCCESS');
                             done();
                         });
                     }, 100);
-
                 });
             });
         });

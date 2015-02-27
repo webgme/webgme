@@ -32,7 +32,7 @@ define(['logManager',
             }
         });
 
-        var workerRefreshInterval = 5 * 1000;
+        var workerRefreshInterval = typeof TESTING !== 'undefined' ? 100 : 5 * 1000;
         // worker = { clientId:, lastSeen: }
         var workerList = new DataStore({filename: workerListDBFile, autoload: true});
         var workerTimeout = function () {
