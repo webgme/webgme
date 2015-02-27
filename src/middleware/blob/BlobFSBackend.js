@@ -1,3 +1,6 @@
+/*globals define*/
+/*jshint node:true*/
+
 /*
  * Copyright (C) 2014 Vanderbilt University, All rights reserved.
  *
@@ -12,10 +15,10 @@ define(['./BlobBackendBase',
     'util/guid',
     'util/ensureDir'],
     function (BlobBackendBase, fs, crypto, path, util, GUID, ensureDir) {
-
+    'use strict';
     var BlobFSBackend = function () {
         BlobBackendBase.call(this);
-        this.blobDir = path.join('./', 'blob-local-storage');
+        this.blobDir = typeof TESTING !== 'undefined' ? './test-tmp/blob-storage' : './blob-local-storage';
     };
 
     // Inherits from BlobManagerBase
