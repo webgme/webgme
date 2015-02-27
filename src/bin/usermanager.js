@@ -58,7 +58,12 @@ main = function () {
             console.log(mongoConnectionInfo);
 
             auth = new GMEAuth(mongoConnectionInfo);
-        };
+        },
+        args = Array.prototype.slice.call(process.argv);
+
+    if (args.length === 2) {
+        args.push('--help');
+    }
 
     program
         .version('0.1.0')
@@ -150,73 +155,69 @@ main = function () {
         });
 
     program
-        .command('groupadd <groupname>')
-        .description('adds a new group')
-        .action(function (groupname, options) {
+        .command('organizationadd <orgname>')
+        .description('adds a new organization')
+        .action(function (orgname, options) {
             setupGMEAuth(options.parent.db);
 
-            console.log('TODO: add a new group ' + groupname);
-            mainDeferred.reject('not implemented yet.');
-            auth.unload();
-
-            //return auth.addGroup(groupname)
-            //    .then(mainDeferred.resolve)
-            //    .catch(mainDeferred.reject)
-            //    .finally(auth.unload);
-        })
-        .on('--help', function () {
-            console.log('  Examples:');
-            console.log();
-            console.log('    $ node usermanager.js groupadd newgroup');
-            console.log();
-        });
-
-    program
-        .command('groupdel <groupname>')
-        .description('deletes an existing group')
-        .action(function (groupname, options) {
-            setupGMEAuth(options.parent.db);
-
-            console.log('TODO: delete an existing group ' + groupname);
-            mainDeferred.reject('not implemented yet.');
-            auth.unload();
-
-            //return auth.delGroup(groupname)
-            //    .then(mainDeferred.resolve)
-            //    .catch(mainDeferred.reject)
-            //    .finally(auth.unload);
-        })
-        .on('--help', function () {
-            console.log('  Examples:');
-            console.log();
-            console.log('    $ node usermanager.js groupdel sample_group');
-            console.log();
-        });
-
-    program
-        .command('usermod_auth <username> <projectname>')
-        .description('deletes an existing group')
-        .option('-a, --authorize <mode>', 'mode is rwd, read, write, delete', 'rwd')
-        .option('-d, --deauthorize', 'deauthorizes user', false)
-        .action(function (username, projectname, options) {
-            var rights = {
-                read:   options.authorize.indexOf('r') !== -1,
-                write:  options.authorize.indexOf('w') !== -1,
-                delete: options.authorize.indexOf('d') !== -1
-            };
-
-            setupGMEAuth(options.parent.db);
-
-            if (options.deauthorize) {
-                // deauthorize
-                rights = {};
-            }
-
-            // authorize
-            return auth.authorizeByUserId(username, projectname, 'create', rights)
+            return auth.addOrganization(orgname)
                 .then(mainDeferred.resolve)
                 .catch(mainDeferred.reject)
                 .finally(auth.unload);
+        })
+        .on('--help', function () {
+            console.log('  Examples:');
+            console.log();
+            console.log('    $ node usermanager.js organizationadd neworg');
+            console.log();
+        });
+
+    program
+        .command('organizationdel <organizationname>')
+        .description('deletes an existing organization')
+        .action(function (organizationname, options) {
+            setupGMEAuth(options.parent.db);
+
+            return auth.removeOrganizationByOrgId(organizationname)
+                .then(mainDeferred.resolve)
+                .catch(mainDeferred.reject)
+                .finally(auth.unload);
+        })
+        .on('--help', function () {
+            console.log('  Examples:');
+            console.log();
+            console.log('    $ node usermanager.js organizationdel sample_organization');
+            console.log();
+        });
+
+    var authUserOrGroup = function(id, projectname, options, fn) {
+        var rights = {
+            read:   options.authorize.indexOf('r') !== -1,
+            write:  options.authorize.indexOf('w') !== -1,
+            delete: options.authorize.indexOf('d') !== -1
+        };
+
+        setupGMEAuth(options.parent.db);
+
+        if (options.deauthorize) {
+            // deauthorize
+            rights = {};
+        }
+
+        // authorize
+        return auth[fn].call(this, id, projectname, 'create', rights)
+            .then(mainDeferred.resolve)
+            .catch(mainDeferred.reject)
+            .finally(auth.unload);
+    };
+
+    program
+        .command('usermod_auth <username> <projectname>')
+        .description('authorizes a user for a project')
+        .option('-a, --authorize <mode>', 'mode is rwd, read, write, delete', 'rwd')
+        .option('-d, --deauthorize', 'deauthorizes user', false)
+        .action(function (username, projectname, options) {
+            return authUserOrGroup(username, projectname, options, 'authorizeByUserId');
         })
         .on('--help', function () {
             console.log('  Examples:');
@@ -231,51 +232,55 @@ main = function () {
         });
 
     program
-        .command('usermod_group_add <username> <groupname>')
-        .description('adds a user to an existing group')
-        .action(function (username, groupname, options) {
+        .command('orgmod_auth <orgname> <projectname>')
+        .description('authorizes an organization for a project')
+        .option('-a, --authorize <mode>', 'mode is rwd, read, write, delete', 'rwd')
+        .option('-d, --deauthorize', 'deauthorizes user', false)
+        .action(function (username, projectname, options) {
+            return authUserOrGroup(username, projectname, options, 'authorizeOrganization');
+        })
+        .on('--help', function () {
+            console.log('    Organizations are authorized like users are authorized. See also: usermod_auth');
+        });
+
+    program
+        .command('usermod_organization_add <username> <organizationname>')
+        .description('adds a user to an existing organization')
+        .action(function (username, organizationname, options) {
             setupGMEAuth(options.parent.db);
 
-            console.log('add ' + username + ' to ' + groupname);
-            mainDeferred.reject('not implemented yet.');
-            auth.unload();
-
-            //return auth.addUserToGroup(username, groupname)
-            //    .then(mainDeferred.resolve)
-            //    .catch(mainDeferred.reject)
-            //    .finally(auth.unload);
+            return auth.addUserToOrganization(username, organizationname)
+                .then(mainDeferred.resolve)
+                .catch(mainDeferred.reject)
+                .finally(auth.unload);
         })
         .on('--help', function () {
             console.log('  Examples:');
             console.log();
-            console.log('    $ node usermanager.js usermod_group_add user23 group123');
+            console.log('    $ node usermanager.js usermod_organization_add user23 organization123');
             console.log();
         });
 
     program
-        .command('usermod_group_del <username> <groupname>')
-        .description('removes a user from an existing group')
-        .action(function (username, groupname, options) {
+        .command('usermod_organization_del <username> <organizationname>')
+        .description('removes a user from an existing organization')
+        .action(function (username, organizationname, options) {
             setupGMEAuth(options.parent.db);
 
-            console.log('remove ' + username + ' from ' + groupname);
-            mainDeferred.reject('not implemented yet.');
-            auth.unload();
-
-            //return auth.removeUserFromGroup(username, groupname)
-            //    .then(mainDeferred.resolve)
-            //    .catch(mainDeferred.reject)
-            //    .finally(auth.unload);
+            return auth.removeUserFromOrganization(username, organizationname)
+                .then(mainDeferred.resolve)
+                .catch(mainDeferred.reject)
+                .finally(auth.unload);
         })
         .on('--help', function () {
             console.log('  Examples:');
             console.log();
-            console.log('    $ node usermanager.js usermod_group_del user23 group123');
+            console.log('    $ node usermanager.js usermod_organization_del user23 organization123');
             console.log();
         });
 
 
-    program.parse(process.argv);
+    program.parse(args);
 
     return mainDeferred.promise;
 };
