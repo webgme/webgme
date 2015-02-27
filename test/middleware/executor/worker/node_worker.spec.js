@@ -1,4 +1,4 @@
-/*globals require, describe, it, before, after, WebGMEGlobal, WebGME*/
+/*globals require, describe, it, before, after, WebGMEGlobal, WebGME, setInterval, clearInterval*/
 
 /**
  * @author pmeijer / https://github.com/pmeijer
@@ -11,12 +11,14 @@ var requirejs = require('requirejs'),
     childProcess = require('child_process'),
     should = require('chai').should(),
     ExecutorClient = requirejs('executor/ExecutorClient'),
+    BlobServerClient = requirejs('blob/BlobServerClient'),
+    blobClient,
     executorClient,
     server,
     nodeWorkerProcess,
     serverBaseUrl;
 
-describe('ExecutorClient', function () {
+describe('NodeWorker', function () {
     'use strict';
 
     before(function (done) {
@@ -42,6 +44,7 @@ describe('ExecutorClient', function () {
 
                 server.start(function () {
                     executorClient = new ExecutorClient(param);
+                    blobClient = new BlobServerClient(param);
                     nodeWorkerProcess = childProcess.spawn('node',
                         ['node_worker.js', '../../../../test-tmp/worker_config.json', '../../../../test-tmp/executor-tmp'],
                         {cwd: 'src/middleware/executor/worker'});
@@ -77,41 +80,73 @@ describe('ExecutorClient', function () {
         }
     });
 
-    it('getWorkersInfo should return one worker with empty jobs', function (done) {
+    it('getWorkersInfo should return one worker', function (done) {
         executorClient.getWorkersInfo(function (err, res) {
             var keys = Object.keys(res);
             if (err) {
                 done(err);
                 return;
             }
-            should.equal(typeof res, 'object', 'getWorkersInfo did not work');
-            should.equal(keys.length, 1, 'No one worker attached!');
-            should.equal(res[keys[0]].jobs.length, 0, 'job list not empty');
+            should.equal(typeof res, 'object', 'getWorkersInfo return object');
+            should.equal(keys.length, 1, 'One worker attached');
+            should.equal(res[keys[0]].jobs.length, 0, 'job list empty');
             done();
         });
     });
 
-    //it('createJob followed by getInfo should return CREATED jobInfo', function (done) {
-    //    var jobInfo = {
-    //        hash: '77704f10a36aa4214f5b0095ba8099e729a10f46'
-    //    };
-    //    executorClient.createJob(jobInfo, function (err, res) {
-    //        var createTime;
-    //        if (err) {
-    //            done(err);
-    //            return;
-    //        }
-    //
-    //        executorClient.getInfo(jobInfo.hash, function (err, res) {
-    //            if (err) {
-    //                done(err);
-    //                return;
-    //            }
-    //            should.equal(typeof res, 'object');
-    //            should.equal(res.createTime, createTime);
-    //            should.equal(res.status, 'CREATED');
-    //            done();
-    //        });
-    //    });
-    //});
+    it('createJob with cmd exit and args 0 should succeed', function (done) {
+        var executorConfig = {
+                cmd: 'exit',
+                args: ['0'],
+                resultArtifacts: [ { name: 'all', resultPatterns: [] } ]
+            },
+            killCnt = 0,
+            artifact = blobClient.createArtifact('execFiles');
+
+        artifact.addFile('executor_config.json', JSON.stringify(executorConfig), function (err, hash) {
+            if (err) {
+                done(err);
+                return;
+            }
+            artifact.save(function(err, hash) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                executorClient.createJob({hash: hash}, function (err, jobInfo) {
+                    var intervalId;
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+                    intervalId = setInterval(function(){
+                        executorClient.getWorkersInfo(function (err, res) {
+                            console.log(res);
+                        });
+                        executorClient.getInfo(jobInfo.hash, function (err, res) {
+                            if (err) {
+                                done(err);
+                                return;
+                            }
+                            killCnt += 1;
+                            if (killCnt > 15) {
+                                done('Job Never finished!');
+                                return;
+                            }
+
+                            if (res.status === 'CREATED' || res.status === 'RUNNING') {
+                                // The job is still running..
+                                return;
+                            }
+
+                            clearInterval(intervalId);
+                            should.equal(jobInfo, 'SUCCESS');
+                            done();
+                        });
+                    }, 100);
+
+                });
+            });
+        });
+    });
 });

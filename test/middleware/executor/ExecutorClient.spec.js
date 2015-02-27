@@ -84,7 +84,13 @@ describe('ExecutorClient', function () {
                 should.equal(typeof res, 'object');
                 should.equal(res.createTime, createTime);
                 should.equal(res.status, 'CREATED');
-                done();
+                jobInfo.status = 'FAILED';
+                executorClient.updateJob(jobInfo, function (err) {
+                    if (err) {
+                        done(err);
+                    }
+                    done();
+                });
             });
         });
     });
