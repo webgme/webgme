@@ -31,3 +31,7 @@ blob-local-storage
 *.swp
 
 webgme-*.tgz
+
+src/middleware/executor/worker/node_modules
+jobList.nedb
+workerList.nedb
