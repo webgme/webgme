@@ -51,26 +51,26 @@ define([ "util/assert", "core/coretree", "core/tasync", "util/canon" ], function
 		}
 
 		function getAttributeNames(node) {
-			ASSERT(isValidNode(node));
+            ASSERT(isValidNode(node));
 
-			node = coretree.getChild(node, ATTRIBUTES);
-			var keys = coretree.getKeys(node);
-			var i = keys.length;
-			while (--i >= 0) {
-				if (keys[i].charAt(0) === "") {
-					console.log("***** This happens?");
-					keys.splice(i, 1);
-				}
-			}
+            node = (coretree.getProperty(node, ATTRIBUTES) || {});
+            var keys = coretree.getRawKeys(node);
+            var i = keys.length;
+            while (--i >= 0) {
+                if (keys[i].charAt(0) === "") {
+                    console.log("***** This happens?");
+                    keys.splice(i, 1);
+                }
+            }
 
-			return keys;
-		}
+            return keys;
+        }
 
 		function getRegistryNames(node) {
 			ASSERT(isValidNode(node));
 
-			node = coretree.getChild(node, REGISTRY);
-			var keys = coretree.getKeys(node);
+			node = (coretree.getProperty(node, REGISTRY) || {});
+			var keys = coretree.getRawKeys(node);
 			var i = keys.length;
 			while (--i >= 0) {
 				if (keys[i].charAt(0) === "") {
@@ -83,8 +83,9 @@ define([ "util/assert", "core/coretree", "core/tasync", "util/canon" ], function
 		}
 
 		function getAttribute(node, name) {
-			node = coretree.getChild(node, ATTRIBUTES);
-			return coretree.getProperty(node, name);
+			/*node = coretree.getChild(node, ATTRIBUTES);
+			return coretree.getProperty(node, name);*/
+            return (coretree.getProperty(node,ATTRIBUTES) || {})[name];
 		}
 
 		function delAttribute(node, name) {
@@ -98,8 +99,9 @@ define([ "util/assert", "core/coretree", "core/tasync", "util/canon" ], function
 		}
 
 		function getRegistry(node, name) {
-			node = coretree.getChild(node, REGISTRY);
-			return coretree.getProperty(node, name);
+			/*node = coretree.getChild(node, REGISTRY);
+			return coretree.getProperty(node, name);*/
+            return (coretree.getProperty(node, REGISTRY) || {})[name];
 		}
 
 		function delRegistry(node, name) {

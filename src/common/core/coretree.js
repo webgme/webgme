@@ -641,6 +641,26 @@ define([ "util/assert", "util/key", "core/future", "core/tasync", 'util/canon' ]
 			return keys;
 		};
 
+        var getRawKeys = function(object,predicate){
+            ASSERT(typeof predicate === "undefined" || typeof predicate === "function");
+            predicate = predicate || noUnderscore;
+
+            var keys = Object.keys(object);
+
+            var i = keys.length;
+            while (--i >= 0 && !predicate(keys[i])) {
+                keys.pop();
+            }
+
+            while (--i >= 0) {
+                if (!predicate(keys[i])) {
+                    keys[i] = keys.pop();
+                }
+            }
+
+            return keys;
+        }
+
 		// ------- persistence
 
 		var getHash = function (node) {
@@ -927,6 +947,7 @@ define([ "util/assert", "util/key", "core/future", "core/tasync", 'util/canon' ]
 			setProperty: setProperty,
 			deleteProperty: deleteProperty,
 			getKeys: getKeys,
+            getRawKeys: getRawKeys,
 
 			isHashed: isHashed,
 			setHashed: setHashed,
