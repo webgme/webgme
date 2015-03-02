@@ -1134,7 +1134,7 @@ define([
 
             return false;
         }
-        function getModifiedNodes(newerNodes){
+        /*function getModifiedNodes(newerNodes){
             var modifiedNodes = [],
                 keys = Object.keys(newerNodes),
                 i,found,
@@ -1151,6 +1151,17 @@ define([
                 }
             }
 
+            return modifiedNodes;
+        }*/
+        function getModifiedNodes(newerNodes) {
+            var modifiedNodes = [];
+            for (var i in _nodes) {
+                if (newerNodes[i]) {
+                    if (newerNodes[i].hash !== _nodes[i].hash && _nodes[i].hash !== "") {
+                        modifiedNodes.push(i);
+                    }
+                }
+            }
             return modifiedNodes;
         }
 
@@ -1249,7 +1260,7 @@ define([
             //TODO we try to avoid this
           } else {
             _nodes[path] = {node: node, hash: ""/*,incomplete:true,basic:basic*/};
-            _inheritanceHash[path] = getInheritanceChain(node);
+            //_inheritanceHash[path] = getInheritanceChain(node); TODO this only needed when real eventing will be reintroduce
           }
           return path;
         }
@@ -1511,7 +1522,7 @@ define([
         callback = callback || function(err){};
         _previousRootHash = _rootHash;
         _rootHash = newRootHash;
-        if(_previousRootHash){
+        /*if(_previousRootHash){
           getEventTree(_previousRootHash,_rootHash,function(err,diffTree){
             if(err){
               _rootHash = null;
@@ -1528,6 +1539,7 @@ define([
               });
             }
           });
+
         } else {
           loadRoot(newRootHash,function(err){
             if(err){
@@ -1537,103 +1549,15 @@ define([
               finalEvents();
             }
           });
-        }
-      }
-      function _loading(newRootHash, callback) {
-        callback = callback || function () {
-        };
-        var incomplete = false;
-        var modifiedPaths = {};
-        var missing = 2;
-        var finalEvents = function () {
-          if (_loadError > 0) {
-            //we assume that our immediate load was only partial
-            modifiedPaths = getModifiedNodes(_loadNodes);
-            _nodes = _loadNodes;
-            _loadNodes = {};
-            for (var i in _users) {
-              userEvents(i, modifiedPaths);
-            }
-            _loadError = 0;
-          } else if (_loadNodes[ROOT_PATH]) {
-            //we left the stuff in the loading rack, probably because there were no _nodes beforehand
-            _nodes = _loadNodes;
-            _loadNodes = {};
-          }
-          callback(null);
-        };
-
-        _previousRootHash = _rootHash;
-                _rootHash = newRootHash;
-                if(_previousRootHash){
-                    getEventTree(_previousRootHash,_rootHash,function(err,diffTree){
-                        if(err){
-                            _rootHash = null;
-                            callback(err);
-                        } else {
-                            _changeTree = diffTree;
-                            loadRoot(newRootHash,function(err){
-                                if(err){
-                                    _rootHash = null;
-                                    callback(err);
-                                } else {
-                                    if(--missing === 0){
-                                        finalEvents();
-                                    }
-                                }
-                            });
-                        }
-                    });
-                } else {
-                    loadRoot(newRootHash,function(err){
-                        if(err){
-                            _rootHash = null;
-                            callback(err);
-                        } else {
-                            if(--missing === 0){
-                                finalEvents();
-                            }
-                        }
-                    });
-                }
-
-
-        //here we try to make an immediate event building
-        //TODO we should deal with the full unloading!!!
-        //TODO we should check not to hide any issue related to immediate loading!!!
-        var hasEnoughNodes = false;
-        var counter = 0;
-        var limit = 0;
-        for (var i in _nodes) {
-          counter++;
-        }
-        limit = counter / 2;
-        counter = 0;
-        for (i in _loadNodes) {
-          counter++;
-        }
-        hasEnoughNodes = limit <= counter;
-        if (/*hasEnoughNodes*/false) {
-          modifiedPaths = getModifiedNodes(_loadNodes);
-          _nodes = {};
-          for (i in _loadNodes) {
-            _nodes[i] = _loadNodes[i];
-          }
-
-          for (i in _users) {
-            userEvents(i, modifiedPaths);
-          }
-
-          if (--missing === 0) {
-            finalEvents();
-          }
-
-        } else {
-          _loadError++;
-          if (--missing === 0) {
-            finalEvents();
-          }
-        }
+        }*/
+          loadRoot(newRootHash,function(err){
+              if(err){
+                  _rootHash = null;
+                  callback(err);
+              } else {
+                  finalEvents();
+              }
+          });
       }
 
       function saveRoot(msg, callback) {
