@@ -146,9 +146,10 @@ describe('standalone server', function () {
     }];
 
     addTest = function (serverUrl, requestTest) {
-        var url = requestTest.url || '/';
+        var url = requestTest.url || '/',
+            redirectText = requestTest.redirectUrl ? ' redirects to ' + requestTest.redirectUrl : ' ';
 
-        it('returns ' + requestTest.code + ' for ' + url, function (done) {
+        it('returns ' + requestTest.code + ' for ' + url + redirectText, function (done) {
             // TODO: add POST/DELETE etc support
             agent.get(serverUrl + url).end(function (err, res) {
                 if (err) {
