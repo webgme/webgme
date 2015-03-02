@@ -31,7 +31,7 @@ describe('NodeWorker', function () {
         config.enableExecutor = true;
 
         param.serverPort = config.port;
-
+        param.sessionId = 'testingNodeWorker';
         serverBaseUrl = 'http://127.0.0.1:' + config.port;
         workerConfig[serverBaseUrl] = {};
 

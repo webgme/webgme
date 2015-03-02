@@ -129,7 +129,7 @@ define(['blob/BlobClient', 'blob/BlobMetadata', 'http', 'https', 'util/StringStr
             } else {
                 options.headers = {
                     'webgmeclientsession': this._clientSession
-                }
+                };
             }
             callback(null, options);
         };

@@ -17,7 +17,7 @@ var requirejs = require('requirejs'),
 describe('BlobServerClient', function () {
     'use strict';
 
-    describe('http', function () {
+    describe('[http]', function () {
         before(function (done) {
             // we have to set the config here
             var config = WebGMEGlobal.getConfig(),
@@ -27,7 +27,7 @@ describe('BlobServerClient', function () {
             config.httpsecure = false;
 
             param.serverPort = config.port;
-
+            param.sessionId = 'testingBlobServerClient';
             serverBaseUrl = 'http://127.0.0.1:' + config.port;
 
             server = WebGME.standaloneServer(config);
@@ -64,7 +64,7 @@ describe('BlobServerClient', function () {
         });
     });
 
-    //describe('https', function () {
+    //describe('[https]', function () {
     //    before(function (done) {
     //        // we have to set the config here
     //        var config = WebGMEGlobal.getConfig(),
