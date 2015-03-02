@@ -79,7 +79,7 @@ define(['logManager',
                 __storageOptions.authentication = CONFIG.authentication;
                 __storageOptions.authorization = globalAuthorization;
                 __storageOptions.auth_deleteProject = __gmeAuth.deleteProject;
-                __storageOptions.getAuthorizationInfo = __gmeAuth.getAuthorizationInfo;
+                __storageOptions.getAuthorizationInfo = __gmeAuth.getAuthorizationInfoBySession;
             }
 
             __storageOptions.host = CONFIG.mongoip;
@@ -120,7 +120,9 @@ define(['logManager',
                 if (!err && data) {
                     switch (data.userType) {
                         case 'GME':
-                            __gmeAuth.authorize(sessionId, projectName, type, callback);
+                            __gmeAuth.getAuthorizationInfoBySession(sessionId, projectName, 'read', function (authInfo) {
+                                callback(authInfo[type] === true);
+                            });
                             break;
                         case 'vehicleForge':
                             __forgeAuth.authorize(sessionId, projectName, type, callback);
