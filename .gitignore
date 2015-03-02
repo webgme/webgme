@@ -5,7 +5,7 @@ bin
 */.idea
 *.class
 
-/node_modules
+node_modules
 
 *.log
 .idea
@@ -31,3 +31,6 @@ blob-local-storage
 *.swp
 
 webgme-*.tgz
+
+jobList.nedb
+workerList.nedb

@@ -84,7 +84,13 @@ describe('ExecutorClient', function () {
                 should.equal(typeof res, 'object');
                 should.equal(res.createTime, createTime);
                 should.equal(res.status, 'CREATED');
-                done();
+                jobInfo.status = 'FAILED';
+                executorClient.updateJob(jobInfo, function (err) {
+                    if (err) {
+                        done(err);
+                    }
+                    done();
+                });
             });
         });
     });
@@ -135,10 +141,5 @@ describe('ExecutorClient', function () {
             });
         });
     });
-    //it('getInfoByStatus SUCCESS should succeed', function (done) {
-    //    executorClient.getInfoByStatus('SUCCESS', function(err, res) {
-    //        should.equal(err, null);
-    //        done();
-    //    });
-    //});
+
 });

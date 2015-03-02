@@ -16,6 +16,8 @@ Run:
 Edit config.json
 With WebGME started, run nw.exe
 
+To run cls executor worker:
+node node_worker.js
 
 Authorization:
 To ensure only authorized workers are adding and running jobs, configure the pre-shared secret between the WebGME server and the workers.
