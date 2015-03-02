@@ -5,7 +5,7 @@ bin
 */.idea
 *.class
 
-/node_modules
+node_modules
 
 *.log
 .idea
@@ -32,6 +32,5 @@ blob-local-storage
 
 webgme-*.tgz
 
-src/middleware/executor/worker/node_modules
 jobList.nedb
 workerList.nedb
