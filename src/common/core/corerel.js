@@ -541,7 +541,7 @@ define([ "util/assert", "core/coretree", "core/tasync", "util/canon" ], function
 
 			return TASYNC.lift(children);
 		}
-        
+
         function getPointerNames(node) {
             ASSERT(isValidNode(node));
 
@@ -611,65 +611,59 @@ define([ "util/assert", "core/coretree", "core/tasync", "util/canon" ], function
             return false;
         }
 
-		function getOutsidePointerPath(node, name, source) {
-			ASSERT(isValidNode(node) && typeof name === "string");
-			ASSERT(typeof source === "string");
+        function getOutsidePointerPath(node, name, source) {
+            ASSERT(isValidNode(node) && typeof name === 'string');
+            ASSERT(typeof source === 'string');
 
-			var target;
+            var target;
 
-			do {
-				var child = coretree.getChild(node, OVERLAYS);
-				ASSERT(child);
+            do {
+                var child = (coretree.getProperty(node,OVERLAYS) || {})[source];
+                if(child){
+                    target = child[name];
+                    if(target !== undefined){
+                        break;
+                    }
+                }
 
-				child = coretree.getChild(child, source);
-				if (child) {
-					target = coretree.getProperty(child, name);
-					if (target !== undefined) {
-						break;
-					}
-				}
+                source = '/' + coretree.getRelid(node) + source;
+                node = coretree.getParent(node);
+            } while (node);
 
-				source = "/" + coretree.getRelid(node) + source;
-				node = coretree.getParent(node);
-			} while (node);
+            if (target !== undefined) {
+                ASSERT(node);
+                target = coretree.joinPaths(coretree.getPath(node), target);
+            }
 
-			if (target !== undefined) {
-				ASSERT(node);
-				target = coretree.joinPaths(coretree.getPath(node), target);
-			}
+            return target;
+        }
 
-			return target;
-		}
+        function loadPointer(node, name) {
+            ASSERT(isValidNode(node) && name);
 
-		function loadPointer(node, name) {
-			ASSERT(isValidNode(node) && name);
+            var source = '';
+            var target;
 
-			var source = "";
-			var target;
+            do {
+                var child = (coretree.getProperty(node,OVERLAYS) || {})[source];
+                if(child){
+                    target = child[name];
+                    if(target !== undefined){
+                        break;
+                    }
+                }
 
-			do {
-				var child = coretree.getChild(node, OVERLAYS);
-				ASSERT(child);
+                source = '/' + coretree.getRelid(node) + source;
+                node = coretree.getParent(node);
+            } while (node);
 
-				child = coretree.getChild(child, source);
-				if (child) {
-					target = coretree.getProperty(child, name);
-					if (target !== undefined) {
-						break;
-					}
-				}
-
-				source = "/" + coretree.getRelid(node) + source;
-				node = coretree.getParent(node);
-			} while (node);
-
-			if (target !== undefined) {
-				ASSERT(typeof target === "string" && node);
-				return coretree.loadByPath(node, target);
-			} else {
-				return null;
-			}
-		}
+            if (target !== undefined) {
+                ASSERT(typeof target === 'string' && node);
+                return coretree.loadByPath(node, target);
+            } else {
+                return null;
+            }
+        }
 
 		function getCollectionNames(node) {
 			ASSERT(isValidNode(node));
