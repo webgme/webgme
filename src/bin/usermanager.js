@@ -236,8 +236,8 @@ main = function () {
         .description('authorizes an organization for a project')
         .option('-a, --authorize <mode>', 'mode is rwd, read, write, delete', 'rwd')
         .option('-d, --deauthorize', 'deauthorizes user', false)
-        .action(function (username, projectname, options) {
-            return authUserOrGroup(username, projectname, options, 'authorizeOrganization');
+        .action(function (orgname, projectname, options) {
+            return authUserOrGroup(orgname, projectname, options, 'authorizeOrganization');
         })
         .on('--help', function () {
             console.log('    Organizations are authorized like users are authorized. See also: usermod_auth');

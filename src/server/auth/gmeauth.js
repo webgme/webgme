@@ -230,7 +230,7 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
 
         function _getProjection(/*args*/) {
             var ret = {};
-            for (var i = 0; i < arguments.length; i++) {
+            for (var i = 0; i < arguments.length; i += 1) {
                 ret[arguments[i]] = 1;
             }
             return ret;
@@ -253,8 +253,7 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
                             query['projects.' + projectName + '.' + op] = true;
                             return organizationCollection.findOne(query, {_id: 1});
                         }))];
-                }).spread(function(user, rwd)
-                {
+                }).spread(function(user, rwd) {
                     var ret = {};
                     ops.forEach(function (op, i) {
                         ret[op] = (user[op] || rwd[i]) ? true : false;
