@@ -149,5 +149,71 @@ describe('Artifact', function () {
                 });
             });
         });
+
+        it('should addObjectHash', function (done) {
+            var bc = new BlobClient(bcParam),
+                artifact = new Artifact('testartifact', bc);
+            bc.putFile('a.txt', 'tttt', function (err, hash) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                artifact.addObjectHash('a.txt', hash, function (err, hash) {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+                    var url = bc.getViewURL(hash);
+                    agent.get(url).end(function (err, res) {
+                        if (err) {
+                            done(err);
+                            return;
+                        }
+                        console.log(res);
+                        should.equal(res.status, 200);
+                        should.equal(res.text, 'tttt');
+                        done();
+                    });
+                });
+            });
+        });
+
+        it('should addObjectHashes', function (done) {
+            var bc = new BlobClient(bcParam),
+                filesToAdd = {
+                    'a.txt': 'tttt'
+                },
+                artifact = new Artifact('testartifact', bc);
+            bc.putFiles(filesToAdd, function (err, objHashes) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                artifact.addObjectHashes(objHashes, function (err, hashes) {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+                    artifact.save(function (err, artHash) {
+                        if (err) {
+                            done(err);
+                            return;
+                        }
+                        var url = bc.getViewURL(artHash, 'a.txt');
+                        agent.get(url).end(function (err, res) {
+                            if (err) {
+                                done(err);
+                                return;
+                            }
+                            console.log(res);
+                            should.equal(res.status, 200);
+                            should.equal(res.text, 'tttt');
+                            done();
+                        });
+                    });
+
+                });
+            });
+        });
     });
 });
