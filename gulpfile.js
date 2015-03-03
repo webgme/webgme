@@ -4,7 +4,7 @@ var gulp = require('gulp'),
     jshint = require('gulp-jshint'),
     shell = require('gulp-shell'),
     runSequence = require('run-sequence'),
-    srcPattern = 'src/**/*.js',
+    srcPattern = ['src/**/*.js', 'test/**/*.js'],
     clientSrcPattern = 'src/client/js/**/*.js';
 
 gulp.task('lint', function () {
