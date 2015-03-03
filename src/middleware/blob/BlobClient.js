@@ -1,10 +1,12 @@
+/*globals define*/
+/*jshint browser: true, node:true*/
 /*
- * Copyright (C) 2014 Vanderbilt University, All rights reserved.
- *
- * Author: Zsolt Lattmann
+ * @author lattmann / https://github.com/lattmann
+ * @author ksmyth / https://github.com/ksmyth
  */
 
 define(['./Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, BlobMetadata, superagent) {
+    'use strict';
 
     var BlobClient = function (parameters) {
         this.artifacts = [];
@@ -56,8 +58,8 @@ define(['./Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, Bl
         }
     };
 
-
     BlobClient.prototype.putFile = function (name, data, callback) {
+        var contentLength;
         function toArrayBuffer(buffer) {
             var ab = new ArrayBuffer(buffer.length);
             var view = new Uint8Array(ab);
@@ -76,9 +78,10 @@ define(['./Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, Bl
                 data = '';
             }
         }
+        contentLength = data.hasOwnProperty('length') ? data.length : data.byteLength;
         superagent.post(this.getCreateURL(name))
             .set('Content-Type', 'application/octet-stream')
-            .set('Content-Length', data.length)
+            .set('Content-Length', contentLength)
             .send(data)
             .end(function (err, res) {
                 if (err || res.status > 399) {
@@ -125,38 +128,39 @@ define(['./Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, Bl
     };
 
     BlobClient.prototype.putFiles = function (o, callback) {
-        var self = this;
+        var self = this,
+            error = '',
+            filenames = Object.keys(o),
+            remaining = filenames.length,
+            hashes = {},
+            putFile;
+        if (remaining === 0) {
+            callback(null, hashes);
+        }
+        putFile = function(filename, data) {
+            self.putFile(filename, data, function (err, hash) {
+                remaining -= 1;
 
-        var filenames = Object.keys(o);
-        var remaining = filenames.length;
+                hashes[filename] = hash;
 
-        var hashes = {};
+                if (err) {
+                    error += 'putFile error: ' + err.toString();
+                }
+
+                if (remaining === 0) {
+                    callback(error, hashes);
+                }
+            });
+        };
 
         for (var j = 0; j < filenames.length; j += 1) {
-            (function(filename, data) {
-
-                self.putFile(filename, data, function (err, hash) {
-                    remaining -= 1;
-
-                    hashes[filename] = hash;
-
-                    if (err) {
-                        // TODO: log/handle error
-                        return;
-                    }
-
-                    if (remaining === 0) {
-                        callback(null, hashes);
-                    }
-                });
-
-            })(filenames[j], o[filenames[j]]);
+            putFile(filenames[j], o[filenames[j]]);
         }
     };
 
     BlobClient.prototype.getSubObject = function (hash, subpath, callback) {
         return this.getObject(hash, callback, subpath);
-    }
+    };
 
     BlobClient.prototype.getObject = function (hash, callback, subpath) {
         superagent.parse['application/zip'] = function (obj, parseCallback) {
@@ -165,21 +169,21 @@ define(['./Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, Bl
             } else {
                 return obj;
             }
-        }
+        };
         //superagent.parse['application/json'] = superagent.parse['application/zip'];
 
         var req = superagent.get(this.getViewURL(hash, subpath));
         if (req.pipe) {
             // running on node
             var Writable = require('stream').Writable;
-            require('util').inherits(BuffersWritable, Writable);
-
-            function BuffersWritable(options) {
+            var BuffersWritable = function (options) {
                 Writable.call(this, options);
 
                 var self = this;
                 self.buffers = [];
-            }
+            };
+            require('util').inherits(BuffersWritable, Writable);
+
             BuffersWritable.prototype._write = function(chunk, encoding, callback) {
                 this.buffers.push(chunk);
                 callback();
@@ -207,10 +211,10 @@ define(['./Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, Bl
                 } else {
                     var contentType = req.xhr.getResponseHeader('content-type');
                     var response = req.xhr.response; // response is an arraybuffer
-                    if (contentType == 'application/json') {
-                        function utf8ArrayToString(uintArray) {
+                    if (contentType === 'application/json') {
+                        var utf8ArrayToString = function (uintArray) {
                             return decodeURIComponent(escape(String.fromCharCode.apply(null, uintArray)));
-                        }
+                        };
                         response = JSON.parse(utf8ArrayToString(new Uint8Array(response)));
                     }
                     callback(null, response);
@@ -259,28 +263,31 @@ define(['./Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, Bl
     };
 
     BlobClient.prototype.saveAllArtifacts = function (callback) {
-        var remaining = this.artifacts.length;
-        var hashes = [];
+        var remaining = this.artifacts.length,
+            hashes = [],
+            error = '',
+            saveCallback;
 
         if (remaining === 0) {
             callback(null, hashes);
         }
 
+        saveCallback = function(err, hash) {
+            remaining -= 1;
+
+            hashes.push(hash);
+
+            if (err) {
+                error += 'artifact.save err: ' + err.toString();
+            }
+            if (remaining === 0) {
+                callback(error, hashes);
+            }
+        };
+
         for (var i = 0; i < this.artifacts.length; i += 1) {
 
-            this.artifacts[i].save(function(err, hash) {
-                remaining -= 1;
-
-                hashes.push(hash);
-
-                if (err) {
-                    // TODO: log/handle errors
-                    return;
-                }
-                if (remaining === 0) {
-                    callback(null, hashes);
-                }
-            });
+            this.artifacts[i].save(saveCallback);
         }
     };
 

@@ -1,11 +1,12 @@
+/*globals define*/
+/*jshint browser: true, node:true*/
+
 /*
- * Copyright (C) 2014 Vanderbilt University, All rights reserved.
- *
- * Author: Zsolt Lattmann
+ * @author lattmann / https://github.com/lattmann
  */
 
 define(['blob/BlobMetadata', 'blob/BlobConfig', 'core/tasync'], function (BlobMetadata, BlobConfig, tasync) {
-
+    'use strict';
     /**
      * Creates a new instance of artifact, i.e. complex object, in memory. This object can be saved in the storage.
      * @param {string} name Artifact's name without extension
@@ -68,6 +69,69 @@ define(['blob/BlobMetadata', 'blob/BlobConfig', 'core/tasync'], function (BlobMe
     };
 
     /**
+     * Adds a hash to the artifact using the given file path.
+     * @param {string} name Path to the file in the artifact. Note: 'a/b/c.txt'
+     * @param {string} hash Metadata hash that has to be added.
+     * @param callback
+     */
+    Artifact.prototype.addObjectHash = function (name, hash, callback) {
+        var self = this;
+
+        if (BlobConfig.hashRegex.test(hash) === false) {
+            callback('Blob hash is invalid');
+            return;
+        }
+
+        self.blobClientGetMetadata.call(self.blobClient, hash, function (err, metadata) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            if (self.descriptor.content.hasOwnProperty(name)) {
+                callback('Another content with the same name was already added. ' + JSON.stringify(self.descriptor.content[name]));
+
+            } else {
+                self.descriptor.size += metadata.size;
+
+                self.descriptor.content[name] = {
+                    content: metadata.content,
+                    contentType: BlobMetadata.CONTENT_TYPES.OBJECT
+                };
+                callback(null, hash);
+            }
+        });
+    };
+
+    Artifact.prototype.addMetadataHash = function (name, hash, callback) {
+        var self = this;
+
+        if (BlobConfig.hashRegex.test(hash) === false) {
+            callback('Blob hash is invalid');
+            return;
+        }
+        self.blobClientGetMetadata.call(self.blobClient, hash, function (err, metadata) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            if (self.descriptor.content.hasOwnProperty(name)) {
+                callback('Another content with the same name was already added. ' + JSON.stringify(self.descriptor.content[name]));
+
+            } else {
+                self.descriptor.size += metadata.size;
+
+                self.descriptor.content[name] = {
+                    content: hash,
+                    contentType: BlobMetadata.CONTENT_TYPES.SOFT_LINK
+                };
+                callback(null, hash);
+            }
+        });
+    };
+
+    /**
      * Adds multiple files.
      * @param {Object.<string, Blob>} files files to add
      * @param callback
@@ -100,7 +164,6 @@ define(['blob/BlobMetadata', 'blob/BlobConfig', 'core/tasync'], function (BlobMe
             self.addFile(fileNames[i], files[fileNames[i]], counterCallback);
         }
     };
-
 
     /**
      * Adds multiple files as soft-links.
@@ -137,36 +200,6 @@ define(['blob/BlobMetadata', 'blob/BlobConfig', 'core/tasync'], function (BlobMe
     };
 
     /**
-     * Adds a hash to the artifact using the given file path.
-     * @param {string} name Path to the file in the artifact. Note: 'a/b/c.txt'
-     * @param {string} hash Metadata hash that has to be added.
-     * @param callback
-     */
-    Artifact.prototype.addObjectHash = function (name, hash, callback) {
-        var self = this;
-
-        self.blobClientGetMetadata.call(self.blobClient, hash, function (err, metadata) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            if (self.descriptor.content.hasOwnProperty(name)) {
-                callback('Another content with the same name was already added. ' + JSON.stringify(self.descriptor.content[name]));
-
-            } else {
-                self.descriptor.size += metadata.size;
-
-                self.descriptor.content[name] = {
-                    content: metadata.content,
-                    contentType: BlobMetadata.CONTENT_TYPES.OBJECT
-                };
-                callback(null, hash);
-            }
-        });
-    };
-
-    /**
      * Adds hashes to the artifact using the given file paths.
      * @param {object.<string, string>} objectHashes - Keys are file paths and values object hashes.
      * @param callback
@@ -198,34 +231,6 @@ define(['blob/BlobMetadata', 'blob/BlobConfig', 'core/tasync'], function (BlobMe
         for (i = 0; i < fileNames.length; i += 1) {
             self.addObjectHash(fileNames[i], objectHashes[fileNames[i]], counterCallback);
         }
-    };
-
-    Artifact.prototype.addMetadataHash = function (name, hash, callback) {
-        var self = this;
-
-        if (BlobConfig.hashRegex.test(hash) === false) {
-            callback("Blob hash is invalid");
-            return;
-        }
-        self.blobClientGetMetadata.call(self.blobClient, hash, function (err, metadata) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            if (self.descriptor.content.hasOwnProperty(name)) {
-                callback('Another content with the same name was already added. ' + JSON.stringify(self.descriptor.content[name]));
-
-            } else {
-                self.descriptor.size += metadata.size;
-
-                self.descriptor.content[name] = {
-                    content: hash,
-                    contentType: BlobMetadata.CONTENT_TYPES.SOFT_LINK
-                };
-                callback(null, hash);
-            }
-        });
     };
 
     /**

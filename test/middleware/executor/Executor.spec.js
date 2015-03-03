@@ -16,17 +16,19 @@ describe('Executor', function () {
     'use strict';
 
     afterEach(function (done) {
-        server.stop(done);
-        try {
-            fs.unlinkSync('test-tmp/jobList.nedb');
-        } catch (err) {
-            //console.log(err);
-        }
-        try {
-            fs.unlinkSync('test-tmp/workerList.nedb');
-        } catch (err) {
-            //console.log(err);
-        }
+        server.stop(function(err) {
+            try {
+                fs.unlinkSync('test-tmp/jobList.nedb');
+            } catch (error) {
+                //console.log(err);
+            }
+            try {
+                fs.unlinkSync('test-tmp/workerList.nedb');
+            } catch (error) {
+                //console.log(err);
+            }
+            done(err);
+        });
     });
 
     it('should return 200 at rest/executor/worker/ with enableExecutor=true', function (done) {
