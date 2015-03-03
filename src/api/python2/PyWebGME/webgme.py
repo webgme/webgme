@@ -1,5 +1,5 @@
 import requests
-
+#TODO this is an outdated file, will be updated and maintained in the future.
 #constants used throughout the module
 COMMAND_PROJECTS = "projects"
 COMMAND_BRANCHES = "branches"

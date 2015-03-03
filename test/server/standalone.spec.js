@@ -251,14 +251,14 @@ describe('standalone server', function () {
             });
         });
 
-        it('should return 200 /login/forge', function (done) {
+        it('should return 404 /login/forge', function (done) {
             agent.get(serverBaseUrl + '/login/forge').end(function (err, res) {
                 if (err) {
                     done(err);
                     return;
                 }
                 //console.log(res);
-                should.equal(res.status, 200);
+                should.equal(res.status, 404);
                 done();
             });
         });

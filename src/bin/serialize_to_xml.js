@@ -3,7 +3,7 @@
  *
  * Author: Tamas Kecskes
  */
-
+//TODO this is an outdated file, will be updated and maintained in the future.
 if (typeof define !== "function") {
     var requirejs = require("requirejs");
 
