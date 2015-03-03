@@ -1,3 +1,6 @@
+/*globals define*/
+/*jshint node:true*/
+
 /*
  * Copyright (C) 2014 Vanderbilt University, All rights reserved.
  *
@@ -8,7 +11,7 @@
 
 define(['blob/BlobClient', 'blob/BlobMetadata', 'http', 'https', 'util/StringStreamWriter'],
     function (BlobClient, BlobMetadata, http, https, StringStreamWriter) {
-
+        'use strict';
         /**
          * Initializes a new instance of a server side blob client that makes http requests.
          *
@@ -126,7 +129,7 @@ define(['blob/BlobClient', 'blob/BlobMetadata', 'http', 'https', 'util/StringStr
             } else {
                 options.headers = {
                     'webgmeclientsession': this._clientSession
-                }
+                };
             }
             callback(null, options);
         };

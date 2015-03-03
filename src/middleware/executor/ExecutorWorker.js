@@ -28,7 +28,7 @@ define(['logManager',
         if (process.platform === "win32") {
             UNZIP_EXE = "c:\\Program Files\\7-Zip\\7z.exe";
             UNZIP_ARGS = ["x", "-y"];
-        } else if (process.platform === "linux") {
+        } else if (process.platform === "linux" || process.platform === 'darwin') {
             UNZIP_EXE = "/usr/bin/unzip";
             UNZIP_ARGS = ["-o"];
         } else {
@@ -155,13 +155,17 @@ define(['logManager',
                                 errorCallback('Could not read ' + self.executorConfigFilename + ' err:' + err);
                                 return;
                             }
-
                             var executorConfig = JSON.parse(data);
+                            if (typeof executorConfig.cmd !== 'string' || typeof executorConfig.resultArtifacts !== 'object') {
+                                jobInfo.status = 'FAILED_EXECUTOR_CONFIG';
+                                errorCallback(self.executorConfigFilename +
+                                    ' is missing or wrong type for cmd and/or resultArtifacts.');
+                                return;
+                            }
                             var cmd = executorConfig.cmd;
-
-                            logger.debug('working directory: ' + jobDir + ' executing: ' + cmd);
-
-                            var child = child_process.spawn(cmd, [], {cwd: jobDir, stdio: ['ignore', 'pipe', 'pipe']});
+                            var args = executorConfig.args || [];
+                            logger.debug('working directory: ' + jobDir + ' executing: ' + cmd + ' with args: ' + args.toString());
+                            var child = child_process.spawn(cmd, args, {cwd: jobDir, stdio: ['ignore', 'pipe', 'pipe']});
                             var outlog = fs.createWriteStream(path.join(jobDir, 'job_stdout.txt'));
                             child.stdout.pipe(outlog);
                             child.stdout.pipe(fs.createWriteStream(path.join(self.workingDirectory, jobInfo.hash.substr(0, 6) + '_stdout.txt')));

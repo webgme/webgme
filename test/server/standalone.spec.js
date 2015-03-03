@@ -239,18 +239,6 @@ describe('standalone server', function () {
             });
         });
 
-        it('should return 200 /login/google', function (done) {
-            agent.get(serverBaseUrl + '/login/google').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 200);
-                done();
-            });
-        });
-
         it('should return 200 /login/google/return', function (done) {
             agent.get(serverBaseUrl + '/login/google/return').end(function (err, res) {
                 if (err) {
@@ -765,23 +753,29 @@ describe('standalone server', function () {
                 .then(function (collection_) {
                     collection = collection_;
                     return Q.ninvoke(collection, 'remove');
+                }).then(function () {
+                    return Q.ninvoke(db, 'collection', '_organizations')
+                        .then(function (orgs_) {
+                            return Q.ninvoke(orgs_, 'remove');
+                        });
                 });
 
-            gmeauth = Q.defer();
-            requirejs(['auth/gmeauth'], function (gmeauth_) {
-                gmeauth.resolve(gmeauth_({host: '127.0.0.1',
+            var gmeauthDeferred = Q.defer();
+            requirejs(['auth/gmeauth'], function (gmeauth) {
+                gmeauthDeferred.resolve(gmeauth({host: '127.0.0.1',
                     port: 27017,
                     database: config.mongodatabase
                 }));
             }, function (err) {
-                gmeauth.reject(err);
+                gmeauthDeferred.reject(err);
             });
 
-            var userReady = gmeauth.promise.then(function (gmeauth) {
+            var userReady = gmeauthDeferred.promise.then(function (gmeauth_) {
+                gmeauth = gmeauth_;
                 return dbConn.then(function () {
                     return gmeauth.addUser('user', 'user@example.com', 'plaintext', true, {overwrite: true});
                 }).then(function () {
-                    return gmeauth.authorizeByUserId('user', 'project', 'create', {read: true, write: true, delete: true});
+                    return gmeauth.authorizeByUserId('user', 'project', 'create', {read: true, write: true, delete: false});
                 }).then(function () {
                     return gmeauth.authorizeByUserId('user', 'unauthorized_project', 'create', {read: false, write: false, delete: false});
                 });
@@ -800,7 +794,7 @@ describe('standalone server', function () {
 
         after(function (done) {
             db.close();
-            gmeauth.promise.invoke('unload');
+            gmeauth.unload();
             server.stop(done);
         });
 
@@ -934,9 +928,8 @@ describe('standalone server', function () {
         });
 
         it('should auth with a new token', function (done) {
-            gmeauth.promise.then(function (gmeauth) {
-                return [gmeauth, gmeauth.generateTokenForUserId('user')];
-            }).spread(function (gmeauth, tokenId) {
+            gmeauth.generateTokenForUserId('user')
+            .then(function (tokenId) {
                 return Q.all([gmeauth.tokenAuthorization(tokenId, 'project'),
                     gmeauth.tokenAuthorization(tokenId, 'unauthorized_project'),
                     gmeauth.tokenAuthorization(tokenId, 'doesnt_exist_project')]);
@@ -945,17 +938,131 @@ describe('standalone server', function () {
             }).nodeify(done);
         });
 
-        it('should be able to revoke permissions', function (done) {
-            gmeauth.promise.then(function (gmeauth) {
-                return gmeauth.authorizeByUserId('user', 'project', 'delete', {})
-                    .then(function () {
-                        return gmeauth.authorizeByUserId('user', 'project', 'read', {});
-                    }).then(function (authorized) {
-                        if (authorized) {
-                            return Q.reject('should have been de-authorized');
-                        }
-                    });
-            }).nodeify(done);
+        it('should have permissions', function (done) {
+            return  gmeauth.getAuthorizationInfoByUserId('user', 'project')
+                .then(function (authorized) {
+                    authorized.should.deep.equal({read: true, write: true, delete: false});
+                }).then(function () {
+                    return gmeauth.getProjectAuthorizationByUserId('user', 'project');
+                }).then(function (authorized) {
+                    authorized.should.deep.equal({read: true, write: true, delete: false});
+                })
+                .nodeify(done);
         });
+
+        it('should be able to revoke permissions', function (done) {
+            return gmeauth.authorizeByUserId('user', 'project', 'delete', {})
+                .then(function () {
+                    return gmeauth.getAuthorizationInfoByUserId('user', 'project');
+                }).then(function (authorized) {
+                    authorized.should.deep.equal({read: false, write: false, delete: false});
+                }).then(function () {
+                    return gmeauth.getProjectAuthorizationByUserId('user', 'project');
+                }).then(function (authorized) {
+                    authorized.should.deep.equal({read: false, write: false, delete: false});
+                })
+                .nodeify(done);
+        });
+
+        it('should be able to add organization', function (done) {
+            var orgName = 'org1';
+            return gmeauth.addOrganization(orgName)
+                .then(function () {
+                    return gmeauth.getOrganization(orgName);
+                }).then(function () {
+                    return gmeauth.addUserToOrganization('user', orgName);
+                }).then(function () {
+                    return gmeauth.getOrganization(orgName);
+                }).then(function (org) {
+                    org.users.should.deep.equal([ 'user' ]);
+                }).nodeify(done);
+        });
+
+        it('should fail to add dup organization', function (done) {
+            var orgName = 'org1';
+            gmeauth.addOrganization(orgName)
+                .then(function () {
+                    done('should have been rejected');
+                }, function (/*err*/) {
+                    done();
+                });
+        });
+
+        it('should fail to add nonexistant organization', function (done) {
+            var orgName = 'org_doesnt_exist';
+            gmeauth.addUserToOrganization('user', orgName)
+                .then(function () {
+                    done('should have been rejected');
+                }, function (/*err*/) {
+                    done();
+                });
+        });
+
+        it('should fail to add nonexistant user to organization', function (done) {
+            var orgName = 'org1';
+            gmeauth.addUserToOrganization('user_doesnt_exist', orgName)
+                .then(function () {
+                    done('should have been rejected');
+                }, function (/*err*/) {
+                    done();
+                });
+        });
+
+        it('should authorize organization', function (done) {
+            var orgName = 'org1';
+            var projectName = 'org_project';
+            return gmeauth.authorizeOrganization(orgName, projectName, 'create', {read: true, write: true, delete: false })
+                .then(function () {
+                    return gmeauth.getAuthorizationInfoByOrgId(orgName, projectName);
+                }).then(function (rights) {
+                    rights.should.deep.equal({read: true, write: true, delete: false});
+                }).nodeify(done);
+        });
+
+        it('should give the user project permissions from the organization', function (done) {
+            return  gmeauth.getAuthorizationInfoByUserId('user', 'org_project')
+                .then(function (authorized) {
+                    authorized.should.deep.equal({read: false, write: false, delete: false});
+                }).then(function () {
+                    return gmeauth.getProjectAuthorizationByUserId('user', 'org_project');
+                }).then(function (authorized) {
+                    authorized.should.deep.equal({read: true, write: true, delete: false});
+                })
+                .nodeify(done);
+        });
+
+        it('should deauthorize organization', function (done) {
+            var orgName = 'org1';
+            var projectName = 'org_project';
+            return gmeauth.authorizeOrganization(orgName, projectName, 'delete', {})
+                .then(function () {
+                    return gmeauth.getAuthorizationInfoByOrgId(orgName, projectName);
+                }).then(function (rights) {
+                    rights.should.deep.equal({});
+                }).nodeify(done);
+        });
+
+        it('should remove user from organization', function (done) {
+            var orgName = 'org1';
+            gmeauth.removeUserFromOrganization('user', orgName)
+                .nodeify(done);
+        });
+
+        it('should remove organization', function (done) {
+            var orgName = 'org1';
+            gmeauth.removeOrganizationByOrgId(orgName)
+                .nodeify(done);
+        });
+
+        it('should fail to remove organization twice', function (done) {
+            var orgName = 'org1';
+            gmeauth.removeOrganizationByOrgId(orgName)
+                .then(function () {
+                    done('should have been rejected');
+                }, function (/*err*/) {
+                    done();
+                });
+        });
+
     });
 });

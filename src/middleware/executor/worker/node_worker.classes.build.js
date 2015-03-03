@@ -4065,7 +4065,7 @@ define('executor/ExecutorWorker',['logManager',
         if (process.platform === "win32") {
             UNZIP_EXE = "c:\\Program Files\\7-Zip\\7z.exe";
             UNZIP_ARGS = ["x", "-y"];
-        } else if (process.platform === "linux") {
+        } else if (process.platform === "linux" || process.platform === 'darwin') {
             UNZIP_EXE = "/usr/bin/unzip";
             UNZIP_ARGS = ["-o"];
         } else {
@@ -4192,13 +4192,17 @@ define('executor/ExecutorWorker',['logManager',
                                 errorCallback('Could not read ' + self.executorConfigFilename + ' err:' + err);
                                 return;
                             }
-
                             var executorConfig = JSON.parse(data);
+                            if (typeof executorConfig.cmd !== 'string' || typeof executorConfig.resultArtifacts !== 'object') {
+                                jobInfo.status = 'FAILED_EXECUTOR_CONFIG';
+                                errorCallback(self.executorConfigFilename +
+                                    ' is missing or wrong type for cmd and/or resultArtifacts.');
+                                return;
+                            }
                             var cmd = executorConfig.cmd;
-
-                            logger.debug('working directory: ' + jobDir + ' executing: ' + cmd);
-
-                            var child = child_process.spawn(cmd, [], {cwd: jobDir, stdio: ['ignore', 'pipe', 'pipe']});
+                            var args = executorConfig.args || [];
+                            logger.debug('working directory: ' + jobDir + ' executing: ' + cmd + ' with args: ' + args.toString());
+                            var child = child_process.spawn(cmd, args, {cwd: jobDir, stdio: ['ignore', 'pipe', 'pipe']});
                             var outlog = fs.createWriteStream(path.join(jobDir, 'job_stdout.txt'));
                             child.stdout.pipe(outlog);
                             child.stdout.pipe(fs.createWriteStream(path.join(self.workingDirectory, jobInfo.hash.substr(0, 6) + '_stdout.txt')));
@@ -4574,6 +4578,7 @@ define('executor/ExecutorWorkerController',[], function () {
     return ExecutorWorkerController;
 });
 
+/*jshint node:true*/
 var nodeRequire = require;
 
 if (typeof define !== 'undefined') {
@@ -4634,7 +4639,17 @@ if (nodeRequire.main === module) {
         path = nodeRequire('path'),
         cas = nodeRequire('ssl-root-cas/latest'),
         superagent = nodeRequire('superagent'),
+        configFileName = 'config.json',
+        workingDirectory = 'executor-temp',
         https = nodeRequire('https');
+
+    // This is used for tests
+    if (process.argv.length > 2) {
+        configFileName = process.argv[2];
+        if (process.argv.length > 3) {
+            workingDirectory = process.argv[3];
+        }
+    }
 
     cas.inject();
     fs.readdirSync(__dirname).forEach(function (file) {
@@ -4679,10 +4694,10 @@ if (nodeRequire.main === module) {
 
         function readConfig() {
             var config = {
-                "http://localhost:8888": {}
+                'http://127.0.0.1:8888': {}
             };
             try {
-                var configJSON = fs.readFileSync('config.json', {
+                var configJSON = fs.readFileSync(configFileName, {
                     encoding: 'utf8'
                 });
                 config = JSON.parse(configJSON);
@@ -4728,7 +4743,6 @@ if (nodeRequire.main === module) {
         }
 
         var workingDirectoryCount = 0;
-        var workingDirectory = 'executor-temp';
         var rimraf = nodeRequire('rimraf');
         rimraf(workingDirectory, function (err) {
             if (err) {
@@ -4740,7 +4754,7 @@ if (nodeRequire.main === module) {
             }
 
             readConfig();
-            fs.watch("config.json", function () {
+            fs.watch(configFileName, function () {
                 setTimeout(readConfig, 200);
             }); // setTimeout: likely handle O_TRUNC of config.json (though `move config.json.tmp config.json` is preferred)
         });

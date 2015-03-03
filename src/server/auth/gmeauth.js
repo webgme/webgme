@@ -8,13 +8,16 @@
 define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcrypt) {
     function GMEAuth(_options) {
         var _collectionName = _options.collection || '_users',
+            _organizationCollectionName = '_organizations',
             _session = _options.session,
             _userField = _options.user || 'username',
             _passwordField = _options.password || 'password',
             _tokenExpiration = _options.tokenTime || 0,
             db,
             collectionDeferred = Q.defer(),
-            collection = collectionDeferred.promise;
+            collection = collectionDeferred.promise,
+            organizationCollectionDeferred = Q.defer(),
+            organizationCollection = organizationCollectionDeferred.promise;
 
         /**
          * 'users' collection has these fields:
@@ -25,37 +28,54 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
          * tokenId: token associated with account
          * tokenCreation: time of token creation (they may be configured to expire)
          * projects: map from project name to object {read:, write:, delete: }
+         * orgs: array of orgIds
          */
-        collection.findOne = function () {
-            var args = arguments;
-            return collection.then(function (c) {
-                return Q.npost(c, 'findOne', args);
-            });
-        };
-        collection.find = function (query, projection) {
-            var args = arguments;
-            return collection.then(function (c) {
-                return Q.npost(c, 'find', args);
-            });
-        };
-        collection.update = function (query, update, options) {
-            var args = arguments;
-            return collection.then(function (c) {
-                return Q.npost(c, 'update', args);
-            });
-        };
-        collection.insert = function (data, options) {
-            var args = arguments;
-            return collection.then(function (c) {
-                return Q.npost(c, 'insert', args);
-            });
-        };
-        collection.remove = function (query, options) {
-            var args = arguments;
-            return collection.then(function (c) {
-                return Q.npost(c, 'remove', args);
-            });
-        };
+        /**
+         * '_organizations' collection has these fields:
+         * _id: username
+         * projects: map from project name to object {read:, write:, delete: }
+         */
+        function addMongoOpsToPromize(collection) {
+            collection.findOne = function () {
+                var args = arguments;
+                return collection.then(function (c) {
+                    return Q.npost(c, 'findOne', args);
+                });
+            };
+            collection.find = function (query, projection) {
+                var args = arguments;
+                return collection.then(function (c) {
+                    return Q.npost(c, 'find', args);
+                });
+            };
+            collection.update = function (query, update, options) {
+                var args = arguments;
+                return collection.then(function (c) {
+                    return Q.npost(c, 'update', args);
+                });
+            };
+            collection.insert = function (data, options) {
+                var args = arguments;
+                return collection.then(function (c) {
+                    return Q.npost(c, 'insert', args);
+                });
+            };
+            collection.remove = function (query, options) {
+                var args = arguments;
+                return collection.then(function (c) {
+                    return Q.npost(c, 'remove', args)
+                        .then(function (num) {
+                            // depending on mongodb hasWriteCommands, remove calls back with (num) or (num, backWardsCompatibiltyResults)
+                            if (Array.isArray(num)) {
+                                return num[0];
+                            }
+                            return num;
+                        });
+                });
+            };
+        }
+        addMongoOpsToPromize(collection);
+        addMongoOpsToPromize(organizationCollection);
 
         (function connect() {
             var userString = '';
@@ -82,6 +102,9 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
                             }
                         });
                 }
+                return Q.ninvoke(db, 'collection', _organizationCollectionName);
+            }).then(function (organizationCollection_) {
+                organizationCollectionDeferred.resolve(organizationCollection_);
             })
             .catch(function (err) {
                 // TODO better logging
@@ -131,6 +154,9 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
             }
             collection.findOne(query)
                 .then(function (userData) {
+                    if (!userData) {
+                        return Q.reject('no such user');
+                    }
                     if (gmail) {
                         req.session.udmId = userData._id;
                         req.session.authenticated = true;
@@ -155,41 +181,33 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
                 });
         }
 
-        // type: 'create' 'delete' or 'read'
+        // type: 'create' 'delete'
         // rights: {read: true, write: true, delete: true}
         function authorizeByUserId(userId, projectName, type, rights, callback) {
             if (type === 'create' || type === 'set') {
                 var update = { $set: {} };
                 update['$set']['projects.' + projectName] = rights;
                 return collection.update({_id: userId}, update)
-                    .then(function(numUpdated) {
-                        return numUpdated[0] === 1;
+                    .spread(function(numUpdated) {
+                        return numUpdated === 1;
                     })
                     .nodeify(callback);
             } else if (type === 'delete') {
                 var update = { $unset: {} };
                 update['$unset']['projects.' + projectName] = '';
                 return collection.update({_id: userId}, update)
-                    .then(function(numUpdated) {
+                    .spread(function(numUpdated) {
                         // FIXME this is always true. Try findAndUpdate instead
-                        return numUpdated[0] === 1;
+                        return numUpdated === 1;
                     })
                     .nodeify(callback);
             } else {
-                var projection = {};
-                projection['projects.' + projectName] = 1;
-                return collection.findOne({_id: userId}, projection)
-                    .then(function (userData) {
-                        if (!userData) {
-                            return Q.reject('unknown user');
-                        }
-                        return (userData.projects[projectName] || {})[type] === true;
-                    })
+                return Q.reject('unknown type ' + type)
                     .nodeify(callback);
             }
         }
 
-        function authorize(sessionId, projectName, type, callback) {
+        function authorizeBySession(sessionId, projectName, type, callback) {
             Q.ninvoke(_session, 'getSessionUser', sessionId)
                 .then(function (userId) {
                     if (!userId) {
@@ -205,15 +223,50 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
             projection['projects.' + projectName] = 1;
             return collection.findOne({_id: userId}, projection)
                 .then(function (userData) {
-                    return userData.projects[projectName];
+                    return userData.projects[projectName] || {read: false, write: false, delete: false};
                 })
                 .nodeify(callback);
         }
 
-        function getAuthorizationInfoBySession(sessionId, projectName, callback) {
+        function _getProjection(/*args*/) {
+            var ret = {};
+            for (var i = 0; i < arguments.length; i += 1) {
+                ret[arguments[i]] = 1;
+            }
+            return ret;
+        }
+
+        function getProjectAuthorizationByUserId(userId, projectName, callback) {
+            var ops = ['read', 'write', 'delete'];
+            return collection.findOne({_id: userId}, _getProjection('orgs', 'projects.' + projectName))
+                .then(function (userData) {
+                    if (!userData) {
+                        return Q.reject('No such user');
+                    }
+                    userData.orgs = userData.orgs || [];
+                    return [userData.projects[projectName] || {},
+                        Q.all(ops.map(function (op) {
+                            if ((userData.projects[projectName] || {})[op]) {
+                                return 1;
+                            }
+                            var query = { _id: { $in: userData.orgs } };
+                            query['projects.' + projectName + '.' + op] = true;
+                            return organizationCollection.findOne(query, {_id: 1});
+                        }))];
+                }).spread(function(user, rwd) {
+                    var ret = {};
+                    ops.forEach(function (op, i) {
+                        ret[op] = (user[op] || rwd[i]) ? true : false;
+                    });
+                    return ret;
+                })
+                .nodeify(callback);
+        }
+
+        function getProjectAuthorizationBySession(sessionId, projectName, callback) {
             Q.ninvoke(_session, 'getSessionUser', sessionId)
                 .then(function (userId) {
-                    return getAuthorizationInfoByUserId(userId, projectName, callback);
+                    return getProjectAuthorizationByUserId(userId, projectName, callback);
                 })
                 .catch(callback);
         }
@@ -231,7 +284,7 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
         function generateTokenByUserId(userId, callback) {
             var token = GUID() + 'token';
             return collection.update({_id: userId}, { $set: { tokenId: token, tokenCreated: (new Date()).getDate()} } )
-                .then(function () { return token; })
+                .spread(function () { return token; })
                 .nodeify(callback);
         }
 
@@ -309,8 +362,11 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
         function deleteProject(projectName, callback) {
             var update = { $unset: {} };
             update['$unset']['projects.' + projectName] = '';
-            return collection.update({}, update)
-                .then(function(/*numUpdated*/) {
+            return collection.update({}, update, { multi: true })
+                .then(function () {
+                    return organizationCollection.update({}, update, { multi: true });
+                })
+                .spread(function(/*numUpdated*/) {
                     return true;
                 })
                 .nodeify(callback);
@@ -322,7 +378,7 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
         }
 
         function addUser(userId, email, password, canCreate, options, callback) {
-            var data = {_id: userId, email: email, canCreate: canCreate, projects: {} };
+            var data = {_id: userId, email: email, canCreate: canCreate, projects: {}, orgs: [] };
             return Q.ninvoke(bcrypt, 'hash', password, 10 /* TODO: make this configurable */)
                 .then(function (hash) {
                     data.passwordHash = hash;
@@ -341,11 +397,119 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
             }).nodeify(callback);
         }
 
+        function addOrganization(orgId, callback) {
+            return organizationCollection.insert({ _id: orgId, projects: {} })
+                .nodeify(callback);
+        }
+
+        function getOrganization(orgId, callback) {
+            return organizationCollection.findOne({ _id: orgId })
+                .then(function (org) {
+                    if (!org) {
+                        return Q.reject('No such organization');
+                    }
+                    return [org, collection.find({ orgs: orgId }, { _id: 1 })];
+                })
+                .spread(function (org, users) {
+                    return [org, Q.ninvoke(users, 'toArray')];
+                })
+                .spread(function (org, users) {
+                    org.users = users.map(function (user) { return user._id; });
+                    return org;
+                })
+                .nodeify(callback);
+        }
+
+        function removeOrganizationByOrgId(orgId, callback) {
+            return organizationCollection.remove({ _id: orgId })
+                .then(function (count) {
+                    if (count === 0) {
+                        return Q.reject('No such organization');
+                    }
+                    return collection.update({ orgs: orgId }, { $pull: { orgs: orgId } }, { multi: true });
+                })
+                .nodeify(callback);
+        }
+
+        function addUserToOrganization(userId, orgId, callback) {
+            return organizationCollection.findOne({ _id: orgId })
+                .then(function (org) {
+                    if (!org) {
+                        return Q.reject('No such organization');
+                    }
+                })
+                .then(function () {
+                    return collection.update({ _id: userId }, { $addToSet: { orgs: orgId } })
+                        .spread(function (count) {
+                            if (count === 0) {
+                                return Q.reject('No such user');
+                            }
+                        });
+                })
+                .nodeify(callback);
+        }
+
+        function removeUserFromOrganization(userId, orgId, callback) {
+            return organizationCollection.findOne({ _id: orgId })
+                .then(function (org) {
+                    if (!org) {
+                        return Q.reject('No such organization');
+                    }
+                })
+                .then(function () {
+                    collection.update({ _id: userId }, { orgs: { $pull: orgId } });
+                })
+                .nodeify(callback);
+        }
+
+        // type: 'create' 'delete' or 'read'
+        // rights: {read: true, write: true, delete: true}
+        function authorizeOrganization(orgId, projectName, type, rights, callback) {
+            if (type === 'create' || type === 'set') {
+                var update = { $set: {} };
+                update['$set']['projects.' + projectName] = rights;
+                return organizationCollection.update({_id: orgId}, update)
+                    .spread(function(numUpdated) {
+                        if (numUpdated !== 1) {
+                            return Q.reject('No such organization \'' + orgId + '\'');
+                        }
+                        return numUpdated === 1;
+                    })
+                    .nodeify(callback);
+            } else if (type === 'delete') {
+                var update = { $unset: {} };
+                update['$unset']['projects.' + projectName] = '';
+                return organizationCollection.update({_id: orgId}, update)
+                    .spread(function(numUpdated) {
+                        // FIXME this is always true. Try findAndUpdate instead
+                        return numUpdated === 1;
+                    })
+                    .nodeify(callback);
+            } else {
+                return Q.reject('invalid type ' + type);
+            }
+        }
+
+        function getAuthorizationInfoByOrgId(orgId, projectName, callback) {
+            var projection = {};
+            projection['projects.' + projectName] = 1;
+            return organizationCollection.findOne({_id: orgId}, projection)
+                .then(function (userData) {
+                    if (!userData) {
+                        return Q.reject('No such organization');
+                    }
+                    return userData.projects[projectName] || {};
+                })
+                .nodeify(callback);
+        }
+
+
         return {
             authenticate: authenticate,
-            authorize: authorize,
+            authorize: authorizeBySession,
             deleteProject: deleteProject,
-            getAuthorizationInfo: getAuthorizationInfoBySession,
+            getProjectAuthorizationBySession: getProjectAuthorizationBySession,
+            getProjectAuthorizationByUserId: getProjectAuthorizationByUserId,
             tokenAuthorization: tokenAuthorization,
             generateToken: generateTokenBySession,
             generateTokenForUserId: generateTokenByUserId,
@@ -359,7 +523,15 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
             getAuthorizationInfoByUserId: getAuthorizationInfoByUserId,
             addUser: addUser,
             unload: unload,
-            _getProjectNames: _getProjectNames
+            _getProjectNames: _getProjectNames,
+
+            addOrganization: addOrganization,
+            getOrganization: getOrganization,
+            removeOrganizationByOrgId: removeOrganizationByOrgId,
+            addUserToOrganization: addUserToOrganization,
+            removeUserFromOrganization: removeUserFromOrganization,
+            authorizeOrganization: authorizeOrganization,
+            getAuthorizationInfoByOrgId: getAuthorizationInfoByOrgId
         };
     }
 

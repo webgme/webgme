@@ -1,6 +1,6 @@
 {
   "name": "webgme",
-  "version": "0.8.0-beta.1",
+  "version": "0.8.0-beta.2",
   "description": "Web based graphical domain specific modeling environments",
   "engines": {
     "node": ">=0.10.0"
@@ -58,7 +58,10 @@
     "run-sequence": "^1.0.2",
     "esprima": "=2.0.0",
     "istanbul": ">=0.3.5",
-    "chance": ">=0.7.3"
+    "chance": ">=0.7.3",
+    "pkginfo": ">=0.3.0",
+    "rimraf": "^2.2.8",
+    "ssl-root-cas": "^1.1.7"
   },
   "main": "webgme",
   "scripts": {

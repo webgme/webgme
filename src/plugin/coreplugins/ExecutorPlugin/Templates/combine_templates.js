@@ -1,22 +1,21 @@
-/*globals require*/
 /*
- * Copyright (C) 2014 Vanderbilt University, All rights reserved.
- *
- * Author: Zsolt Lattmann
- *
- * This script will combine all ejs files in the current directory (recursively)
- * into one Templates.js file. By importing this file as TEMPLATE you can retrieve the
- * content of each original ejs file through TEMPLATES['plugin.js.ejs'].
- *
- * Usage: Run this script in the directory with the ejs-templates, e.g. '%YourPlugin%/Templates'.
- */
+* Copyright (C) 2014 Vanderbilt University, All rights reserved.
+*
+* Author: Zsolt Lattmann, Patrik Meijer
+*
+* This script will combine all ejs files in the current directory (recursively)
+* into one Templates.js file. By importing this file as TEMPLATE you can retrieve the
+* content of each original ejs file through TEMPLATES['plugin.js.ejs'].
+*
+* Usage: Run this script in the directory with the ejs-templates, e.g. '%YourPlugin%/Templates'.
+*/
 
 var main = function () {
     'use strict';
     var fs = require('fs'),
         isEjsFile = function (str) {
             var ending = '.ejs',
-                lastIndex = str.lastIndexOf(ending);
+            lastIndex = str.lastIndexOf(ending);
             return (lastIndex !== -1) && (lastIndex + ending.length === str.length);
         },
         walk = function (dir, done) {

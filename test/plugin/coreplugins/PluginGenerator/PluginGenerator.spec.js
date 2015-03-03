@@ -1,23 +1,24 @@
-/*globals require, describe, it, before, WebGMEGlobal*/
+/*globals console, require, describe, it, before, WebGMEGlobal*/
 /**
  * @author pmeijer / https://github.com/pmeijer
  */
+
+require('../../../../webgme');
 var should = require('chai').should(),
-    WebGME = require('../../../../webgme'),
     requirejs = require('requirejs'),
-    config = WebGMEGlobal.getConfig(),
     esprima = require('esprima'),
     pluginConfig = {
         pluginID: 'NewPlugin',
         pluginName: 'New Plugin',
         description: '',
         test: true,
-        templateType: "None",// "JavaScript", "Python", "CSharp",
+        templateType: 'None',// "JavaScript", "Python", "CSharp",
         configStructure: false,
         core: false
     };
 
 function isValidJs(testString, logError) {
+    'use strict';
     var err = null;
 
     try {
@@ -34,9 +35,10 @@ function isValidJs(testString, logError) {
 }
 
 function runPlugin (pluginName, configuration, callback) {
-    var pluginBasePaths = 'plugin/coreplugins/'
-        plugin = requirejs(pluginBasePaths + pluginName + '/' + pluginName),
-        newPlugin = new plugin(),
+    'use strict';
+    var pluginBasePaths = 'plugin/coreplugins/',
+        Plugin = requirejs(pluginBasePaths + pluginName + '/' + pluginName),
+        plugin = new Plugin(),
         artifact = {
             addedFiles: {},
             addFile: function (fname, fstr, callback) {
@@ -45,15 +47,15 @@ function runPlugin (pluginName, configuration, callback) {
             }
         };
 
-    newPlugin.getCurrentConfig = function () {
+    plugin.getCurrentConfig = function () {
         return configuration;
-    }
+    };
 
-    newPlugin.createMessage = function (node, message, severity) {
+    plugin.createMessage = function (node, message, severity) {
 
     };
 
-    newPlugin.result = {
+    plugin.result = {
         success: false,
         artifact: artifact,
         setSuccess: function (value) {
@@ -63,16 +65,18 @@ function runPlugin (pluginName, configuration, callback) {
         }
     };
 
-    newPlugin.META = {
+    plugin.META = {
         FCO: '/1',
         FCO_instance: '/2'
     };
-    newPlugin.core = {
+
+    plugin.core = {
         getPath: function (node) {
             return '/1';
         }
-    }
-    newPlugin.logger = {
+    };
+
+    plugin.logger = {
         info: function (msg) {
             //console.log(msg)
         },
@@ -83,21 +87,21 @@ function runPlugin (pluginName, configuration, callback) {
             //console.warn(msg)
         },
         error: function (msg) {
-            console.error(msg)
+            console.error(msg);
         },
-    }
+    };
 
-    newPlugin.blobClient = {
+    plugin.blobClient = {
         createArtifact: function (name) {
             return artifact;
         },
         saveAllArtifacts: function (callback) {
             callback(null, ['aHash']);
         }
-    }
+    };
 
-    newPlugin.main(callback);
-};
+    plugin.main(callback);
+}
 
 describe('PluginGenerator', function () {
     'use strict';
@@ -108,16 +112,16 @@ describe('PluginGenerator', function () {
     });
 
     it ('test getName and version', function () {
-        var plugin = requirejs('plugin/coreplugins/PluginGenerator/PluginGenerator'),
-            newPlugin = new plugin();
-        should.equal(newPlugin.getName(), 'Plugin Generator');
-        should.equal(newPlugin.getVersion (), '0.1.1');
+        var Plugin = requirejs('plugin/coreplugins/PluginGenerator/PluginGenerator'),
+            plugin = new Plugin();
+        should.equal(plugin.getName(), 'Plugin Generator');
+        should.equal(plugin.getVersion(), '0.1.1');
     });
 
     it ('pluginConfig up to date', function () {
-        var plugin = requirejs('plugin/coreplugins/PluginGenerator/PluginGenerator'),
-            newPlugin = new plugin(),
-            pluginStructure = newPlugin.getConfigStructure(),
+        var Plugin = requirejs('plugin/coreplugins/PluginGenerator/PluginGenerator'),
+            plugin = new Plugin(),
+            pluginStructure = plugin.getConfigStructure(),
             i;
         should.equal(Object.keys(pluginConfig).length, pluginStructure.length);
 
@@ -146,7 +150,7 @@ describe('PluginGenerator', function () {
                 }
             }
             done();
-        })
+        });
     });
 
     it('default settings should generate three valid js files', function (done){
@@ -162,7 +166,7 @@ describe('PluginGenerator', function () {
                 should.equal(isValidJs(files[keys[i]], true), null);
             }
             done();
-        })
+        });
     });
 
     it('configStructure = true should generate three valid js files', function (done){
@@ -180,7 +184,7 @@ describe('PluginGenerator', function () {
                 should.equal(isValidJs(files[keys[i]], true), null);
             }
             done();
-        })
+        });
     });
 
     it('core = true should generate three valid js files', function (done){
@@ -198,7 +202,7 @@ describe('PluginGenerator', function () {
                 should.equal(isValidJs(files[keys[i]], true), null);
             }
             done();
-        })
+        });
     });
 
     it('core, configStructure = true should generate three valid js files', function (done){
@@ -217,7 +221,7 @@ describe('PluginGenerator', function () {
                 should.equal(isValidJs(files[keys[i]], true), null);
             }
             done();
-        })
+        });
     });
 
     it('test = false should generate two valid js files', function (done){
@@ -235,7 +239,7 @@ describe('PluginGenerator', function () {
                 should.equal(isValidJs(files[keys[i]], true), null);
             }
             done();
-        })
+        });
     });
 
     it('templateType = Python should generate four valid js files', function (done){
@@ -257,7 +261,7 @@ describe('PluginGenerator', function () {
                 }
             }
             done();
-        })
+        });
     });
 
     it('templateType = Python and core = true should generate four valid js files', function (done){
@@ -280,7 +284,7 @@ describe('PluginGenerator', function () {
                 }
             }
             done();
-        })
+        });
     });
 
     it('templateType = JavaScript should generate four valid js files', function (done){
@@ -302,7 +306,7 @@ describe('PluginGenerator', function () {
                 }
             }
             done();
-        })
+        });
     });
 
     it('templateType = CSharp should generate four valid js files', function (done){
@@ -324,6 +328,6 @@ describe('PluginGenerator', function () {
                 }
             }
             done();
-        })
+        });
     });
 });
