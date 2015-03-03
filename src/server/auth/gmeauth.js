@@ -23,7 +23,7 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
          * 'users' collection has these fields:
          * _id: username
          * email:
-         * password:
+         * passwordHash: bcrypt hash of password
          * canCreate: authorized to create new projects
          * tokenId: token associated with account
          * tokenCreation: time of token creation (they may be configured to expire)
@@ -208,14 +208,14 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
         }
 
         function authorizeBySession(sessionId, projectName, type, callback) {
-            Q.ninvoke(_session, 'getSessionUser', sessionId)
+            return Q.ninvoke(_session, 'getSessionUser', sessionId)
                 .then(function (userId) {
                     if (!userId) {
                         throw 'invalid session';
                     }
-                    return authorizeByUserId(userId, projectName, type, {read: true, write: true, delete: true}, callback);
+                    return authorizeByUserId(userId, projectName, type, {read: true, write: true, delete: true});
                 })
-                .catch(callback);
+                .nodeify(callback);
         }
 
         function getAuthorizationInfoByUserId(userId, projectName, callback) {
@@ -264,11 +264,11 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
         }
 
         function getProjectAuthorizationBySession(sessionId, projectName, callback) {
-            Q.ninvoke(_session, 'getSessionUser', sessionId)
+            return Q.ninvoke(_session, 'getSessionUser', sessionId)
                 .then(function (userId) {
-                    return getProjectAuthorizationByUserId(userId, projectName, callback);
+                    return getProjectAuthorizationByUserId(userId, projectName);
                 })
-                .catch(callback);
+                .nodeify(callback);
         }
 
         function tokenAuthorization(tokenId, projectName, callback) { //TODO currently we expect only reads via token usage
@@ -354,7 +354,18 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
                     if (!userData) {
                         return Q.reject('no such user');
                     }
+                    delete userData.passwordHash;
                     return userData;
+                })
+                .nodeify(callback);
+        }
+        function getAllUserAuthInfoBySession(sessionId, callback) {
+            return Q.ninvoke(_session, 'getSessionUser', sessionId)
+                .then(function (userId) {
+                    if (!userId) {
+                        throw 'invalid session';
+                    }
+                    return getAllUserAuthInfo(userId);
                 })
                 .nodeify(callback);
         }
@@ -518,6 +529,7 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
             tokenAuth: tokenAuth,
             getUserAuthInfo: getUserAuthInfo,
             getAllUserAuthInfo: getAllUserAuthInfo,
+            getAllUserAuthInfoBySession: getAllUserAuthInfoBySession,
             authorizeByUserId: authorizeByUserId,
             removeUserByUserId: removeUserByUserId,
             getAuthorizationInfoByUserId: getAuthorizationInfoByUserId,

@@ -79,7 +79,7 @@ define(['logManager',
                 __storageOptions.authentication = CONFIG.authentication;
                 __storageOptions.authorization = globalAuthorization;
                 __storageOptions.auth_deleteProject = __gmeAuth.deleteProject;
-                __storageOptions.getAuthorizationInfo = __gmeAuth.getAuthorizationInfoBySession;
+                __storageOptions.getAuthorizationInfo = __gmeAuth.getProjectAuthorizationBySession;
             }
 
             __storageOptions.host = CONFIG.mongoip;
@@ -120,9 +120,22 @@ define(['logManager',
                 if (!err && data) {
                     switch (data.userType) {
                         case 'GME':
-                            __gmeAuth.getAuthorizationInfoBySession(sessionId, projectName, 'read', function (authInfo) {
-                                callback(authInfo[type] === true);
-                            });
+                            if (type === 'create') {
+                                __gmeAuth.getAllUserAuthInfoBySession(sessionId)
+                                    .then(function (authInfo) {
+                                        if (authInfo.canCreate !== true) {
+                                            return false;
+                                        }
+                                        return __gmeAuth.authorize(sessionId, projectName, 'create')
+                                            .then(function () {
+                                                return true;
+                                            });
+                                }).nodeify(callback);
+                            } else {
+                                __gmeAuth.getProjectAuthorizationBySession(sessionId, projectName, function (err, authInfo) {
+                                    callback(err, authInfo[type] === true);
+                                });
+                            }
                             break;
                         case 'vehicleForge':
                             __forgeAuth.authorize(sessionId, projectName, type, callback);

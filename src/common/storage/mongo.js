@@ -151,7 +151,7 @@ define(["mongodb", "util/assert", "util/canon"], function (MONGODB, ASSERT, CANO
           for (var i = 0; i < collections.length; i++) {
             var p = collections[i].name.indexOf(".");
             var n = collections[i].name.substring(p + 1);
-            if (n.indexOf('system') === -1 && n.indexOf('.') === -1 && n !== '_users') {
+            if (n.indexOf('system') === -1 && n.indexOf('.') === -1 && n.indexOf('_') !== 0) {
               names.push(n);
             }
           }
