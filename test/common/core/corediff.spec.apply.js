@@ -2,6 +2,7 @@
  * Created by tamas on 2/23/15.
  */
 /* globals require, global, describe, before, after */
+(function() {
 require('../../_globals.js');
 var database = new global.WebGME.serverUserStorage({host:'127.0.0.1',port:27017,database:'multi',log:global.Log.create('mongoLog')}),
     FS = require('fs'),
@@ -159,3 +160,4 @@ describe('corediff',function(){
         });
     });
 });
+})();

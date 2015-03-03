@@ -2,6 +2,7 @@
  * Created by tamas on 2/18/15.
  */
 /* globals require, describe, before, it */
+(function() {
 require('../_globals');
 var diffCLI = require('../../src/bin/diff'),
     importCLI = require('../../src/bin/import'),
@@ -33,7 +34,7 @@ describe('diff CLI tests',function(){
                     if(err){
                         return done(err);
                     }
-                    diff.should.be.empty();
+                    diff.should.be.empty;
                     done();
                 });
             });
@@ -42,7 +43,7 @@ describe('diff CLI tests',function(){
                     if(err){
                         return done(err);
                     }
-                    diff.should.be.empty();
+                    diff.should.be.empty;
                     done();
                 });
             });
@@ -177,3 +178,4 @@ describe('diff CLI tests',function(){
         });
     });
 });
+})();

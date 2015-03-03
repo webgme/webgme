@@ -67,7 +67,6 @@ describe('Artifact', function () {
                         done(err);
                         return;
                     }
-                    console.log(res);
                     should.equal(res.status, 200);
                     should.equal(res.text, 'tttt');
                     done();
@@ -93,7 +92,6 @@ describe('Artifact', function () {
                         done(err);
                         return;
                     }
-                    console.log(res);
                     should.equal(res.status, 200);
                     should.equal(res.text, 'tttt');
                     done();
@@ -115,7 +113,6 @@ describe('Artifact', function () {
                         done(err);
                         return;
                     }
-                    console.log(res);
                     should.equal(res.status, 200);
                     should.equal(res.text, 'tttt');
                     done();
@@ -141,7 +138,6 @@ describe('Artifact', function () {
                         done(err);
                         return;
                     }
-                    console.log(res);
                     should.equal(res.status, 200);
                     should.equal(res.text, 'tttt');
                     done();
@@ -168,7 +164,6 @@ describe('Artifact', function () {
                             done(err);
                             return;
                         }
-                        console.log(res);
                         should.equal(res.status, 200);
                         should.equal(res.text, 'tttt');
                         done();
@@ -204,7 +199,6 @@ describe('Artifact', function () {
                                 done(err);
                                 return;
                             }
-                            console.log(res);
                             should.equal(res.status, 200);
                             should.equal(res.text, 'tttt');
                             done();
