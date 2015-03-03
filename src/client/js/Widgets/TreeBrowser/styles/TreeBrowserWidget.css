@@ -48,6 +48,8 @@
         font-style: normal;
         background: #beebff;
         border: 1px solid #99defd; }
+      .tree-browser ul.dynatree-container li span.dynatree-node.dynatree-selected.dynatree-focused a.dynatree-title {
+        background: #a3d7f3; }
       .tree-browser ul.dynatree-container li span.dynatree-node.node-progress a.dynatree-title {
         color: #aaaaaa;
         font-style: italic; }
