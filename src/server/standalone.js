@@ -3,7 +3,6 @@ define(['logManager',
     'fs',
     'express',
     'auth/gmeauth',
-    'auth/vehicleforgeauth',
     'auth/sessionstore',
     'passport',
     'passport-google',
@@ -24,7 +23,6 @@ define(['logManager',
              FS,
              Express,
              GMEAUTH,
-             VFAUTH,
              SSTORE,
              Passport,
              PassGoogle,
@@ -137,9 +135,6 @@ define(['logManager',
                                 });
                             }
                             break;
-                        case 'vehicleForge':
-                            __forgeAuth.authorize(sessionId, projectName, type, callback);
-                            break;
                         default:
                             callback('unknown user type', false);
                     }
@@ -248,18 +243,6 @@ define(['logManager',
                 }
             } else {
                 return next();
-            }
-        }
-
-        function checkVF(req, res, next) {
-            if (req.isAuthenticated() || (req.session && true === req.session.authenticated)) {
-                return next();
-            } else {
-                if (req.cookies['isisforge']) {
-                    res.redirect('/login/forge');
-                } else {
-                    return next();
-                }
             }
         }
 
@@ -373,7 +356,6 @@ define(['logManager',
             __storage = null,
             __storageOptions = {},
             __gmeAuth = null,
-            __forgeAuth = null,
             __secureSiteInfo = {},
             __app = null,
             __sessionStore,
@@ -416,7 +398,6 @@ define(['logManager',
             guest: CONFIG.guest,
             collection: CONFIG.usercollection
         });
-        __forgeAuth = new VFAUTH({session: __sessionStore});
 
         __logger.info("initializing passport module for user management");
         //TODO in the long run this also should move to some database
@@ -488,7 +469,7 @@ define(['logManager',
         });
 
         __logger.info("creating login routing rules for the static server");
-        __app.get('/',checkVF,ensureAuthenticated,function(req,res){
+        __app.get('/',ensureAuthenticated,function(req,res){
             /*res.sendfile(__clientBaseDir+'/index.html',{user:req.user},function(err){
              if (err) {
              console.log('fuck',err);
@@ -523,10 +504,6 @@ define(['logManager',
         });
         __app.get('/login/google',checkGoogleAuthentication,Passport.authenticate('google'));
         __app.get('/login/google/return',__gmeAuth.authenticate,function(req,res){
-            res.cookie('webgme', req.session.udmId);
-            redirectUrl(req,res);
-        });
-        __app.get('/login/forge',__forgeAuth.authenticate,function(req,res){
             res.cookie('webgme', req.session.udmId);
             redirectUrl(req,res);
         });
