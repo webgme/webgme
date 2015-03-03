@@ -123,7 +123,7 @@
         fill: yellow;
         stroke: red; }
       .diagram-designer .items svg.connection-container .path-edit-segment {
-        stroke: transparent;
+        stroke: rgba(0, 0, 0, 0);
         opacity: 0; }
       .diagram-designer .items svg.connection-container .segment-point {
         fill: yellow;

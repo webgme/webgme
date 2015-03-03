@@ -19,7 +19,7 @@
     line-height: 16px; }
   .part .svg-decorator.abstract .name {
     font-style: italic;
-    color: #AAAAAA; }
+    color: #aaaaaa; }
   .part .svg-decorator .ports {
     position: absolute;
     top: 0;
@@ -54,5 +54,3 @@
       -ms-transform: scaleX(-1);
       -o-transform: scaleX(-1);
       transform: scaleX(-1); }
-
-/*# sourceMappingURL=SVGDecorator.PartBrowserWidget.css.map */
