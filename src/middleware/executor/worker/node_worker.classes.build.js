@@ -4065,7 +4065,7 @@ define('executor/ExecutorWorker',['logManager',
         if (process.platform === "win32") {
             UNZIP_EXE = "c:\\Program Files\\7-Zip\\7z.exe";
             UNZIP_ARGS = ["x", "-y"];
-        } else if (process.platform === "linux") {
+        } else if (process.platform === "linux" || process.platform === 'darwin') {
             UNZIP_EXE = "/usr/bin/unzip";
             UNZIP_ARGS = ["-o"];
         } else {
