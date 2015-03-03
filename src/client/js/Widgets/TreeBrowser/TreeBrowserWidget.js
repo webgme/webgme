@@ -594,6 +594,7 @@ define(['logManager',
         for (i = 0; i < selNodes.length; i += 1) {
             selNodes[i].select(false);
         }
+        this._dropSelectionStateWithShift();
     };
 
 

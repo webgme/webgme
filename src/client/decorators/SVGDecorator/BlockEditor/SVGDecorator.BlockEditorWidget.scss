@@ -6,7 +6,8 @@
 
 //imports
 @import "../Core/_SVGDecorator";
-//@import "../../../scss/Widgets/DiagramDesigner/Connector";
+@import "../../../js/Widgets/DiagramDesigner/styles/Connector";
+@import "../../../js/Widgets/DiagramDesigner/styles/DiagramDesignerWidget";
 
 //include SVGDecoratorCore style
 @include svg_decorator_core;
@@ -44,9 +45,9 @@
         svg {
           border: $selected-border;
           background-color: $selected-background-color;
-          -webkit-box-shadow: $selected-box-shadow;
-          -moz-box-shadow: $selected-box-shadow;
-          box-shadow: $selected-box-shadow;
+          -webkit-box-shadow: inset 0 1px 1px $diagram-designer-selection-outline-shadow-start 0 0 4px $diagram-designer-selection-outline-shadow-end;
+          -moz-box-shadow: inset 0 1px 1px $diagram-designer-selection-outline-shadow-start, 0 0 4px $diagram-designer-selection-outline-shadow-end;
+          box-shadow: inset 0 1px 1px $diagram-designer-selection-outline-shadow-start, 0 0 4px $diagram-designer-selection-outline-shadow-end;
         }
       }
     }
