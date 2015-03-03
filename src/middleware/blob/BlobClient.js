@@ -2,6 +2,7 @@
 /*jshint browser: true, node:true*/
 /*
  * @author lattmann / https://github.com/lattmann
+ * @author ksmyth / https://github.com/ksmyth
  */
 
 define(['./Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, BlobMetadata, superagent) {

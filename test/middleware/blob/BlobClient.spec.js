@@ -1,6 +1,7 @@
 /*globals describe, it, before, after, beforeEach, WebGMEGlobal, WebGME*/
 /*jshint node:true*/
 /**
+ * @author ksmyth / https://github.com/ksmyth
  * @author pmeijer / https://github.com/pmeijer
  */
 
