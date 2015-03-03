@@ -252,22 +252,20 @@ define(['js/Constants',
             newAttributes = client.getOwnValidAttributeNames(this._metaInfo[CONSTANTS.GME_ID]),
             len,
             displayedAttributes = this._attributeNames.slice(0),
-            diff,
             attrLIBase = $('<li/>'),
             i;
 
+        // We have to remove all shown attributes (if type changed and name does not, we cannot detect the difference)
         //first get the ones that are not there anymore
-        diff = _.difference(displayedAttributes, newAttributes);
-        len = diff.length;
+        len = displayedAttributes.length;
         while (len--) {
-            this._removeAttribute(diff[len]);
+            this._removeAttribute(displayedAttributes[len]);
         }
 
         //second get the ones that are new
-        diff = _.difference(newAttributes, displayedAttributes);
-        len = diff.length;
+        len = newAttributes.length;
         while (len--) {
-            this._addAttribute(diff[len]);
+            this._addAttribute(newAttributes[len]);
         }
 
         //finally update UI
