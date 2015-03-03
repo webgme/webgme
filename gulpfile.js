@@ -1,15 +1,24 @@
-/*globals require, console, __dirname*/
+/*globals require, console*/
 
 var gulp = require('gulp'),
     jshint = require('gulp-jshint'),
     shell = require('gulp-shell'),
     runSequence = require('run-sequence'),
-    sourcePattern = 'src/client/js/**/*.js';
+    srcPattern = 'src/**/*.js',
+    clientSrcPattern = 'src/client/js/**/*.js';
 
 gulp.task('lint', function () {
     'use strict';
 
-    gulp.src(sourcePattern)
+    gulp.src(clientSrcPattern)
+        .pipe(jshint('.jshintrc'))
+        .pipe(jshint.reporter('jshint-stylish'));
+});
+
+gulp.task('lint-all', function () {
+    'use strict';
+
+    gulp.src(srcPattern)
         .pipe(jshint('.jshintrc'))
         .pipe(jshint.reporter('jshint-stylish'));
 });
@@ -23,7 +32,7 @@ function changeNotification(event) {
 function build() {
     'use strict';
 
-    var jsWatcher = gulp.watch(sourcePattern, [/*'js',*/ 'lint']);
+    var jsWatcher = gulp.watch(clientSrcPattern, [/*'js',*/ 'lint']);
 
     jsWatcher.on('change', changeNotification);
 }
@@ -39,6 +48,6 @@ gulp.task('dev', function (cb) {
     runSequence('rjs-build', 'register-watchers', cb);
 });
 
-gulp.task('compile-all', ['rjs-build'], function () {});
+gulp.task('compile-all', ['rjs-build', 'lint'], function () {});
 
 gulp.task('default', [/*'js',*/ 'lint'], build);
