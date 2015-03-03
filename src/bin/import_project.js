@@ -99,10 +99,10 @@ if (require.main === module) {
         projectfilepath: process.argv[3],
         mongoip: process.argv[4],
         mongoport: process.argv[5],
-        mongodb: process.argv[6],
+        mongodb: process.argv[6]
     };
     if (cmdOptions.projectname && cmdOptions.projectfilepath) {
-        var jProject = JSON.parse(FS.readFileSync(projectfilepath,'utf-8'));
+        var jProject = JSON.parse(FS.readFileSync(cmdOptions.projectfilepath,'utf-8'));
         importProject(cmdOptions.projectname, jProject, cmdOptions, function (err) {
             if (err) {
                 console.error('Importing' + cmdOptions.projectfilepath + ' failed with error: ' + err.toString());

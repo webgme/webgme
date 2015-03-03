@@ -319,6 +319,7 @@ define([ "util/assert" ], function (ASSERT) {
           //setBranchHash: project.setBranchHash,
 					getCommits: project.getCommits,
 					makeCommit: project.makeCommit,
+          getCommonAncestorCommit: project.getCommonAncestorCommit,
 					ID_NAME: project.ID_NAME
 				});
 			}

@@ -53,7 +53,8 @@ define(["mongodb", "util/assert", "util/canon"], function (MONGODB, ASSERT, CANO
       if(options.user && options.pwd){
         userString = options.user+":"+options.pwd+"@";
       }
-      MONGODB.MongoClient.connect("mongodb://" + userString + options.host + ":" + options.port + "/" + options.database, {
+      options.uri = options.uri || "mongodb://" + userString + options.host + ":" + options.port + "/" + options.database;
+      MONGODB.MongoClient.connect(options.uri, {
         'w': 1,
         'native-parser': true,
         'auto_reconnect': true,
@@ -194,6 +195,7 @@ define(["mongodb", "util/assert", "util/canon"], function (MONGODB, ASSERT, CANO
             getBranchHash: getBranchHash,
             setBranchHash: setBranchHash,
             getCommits: getCommits,
+            getCommonAncestorCommit: getCommonAncestorCommit,
             ID_NAME: ID_NAME
           });
         }
@@ -397,6 +399,91 @@ define(["mongodb", "util/assert", "util/canon"], function (MONGODB, ASSERT, CANO
         }).limit(number).sort({
           $natural: -1
         }).toArray(callback);
+      }
+
+      function getCommonAncestorCommit(commitA, commitB, callback) {
+        var ancestorsA = {},
+          ancestorsB = {},
+          newAncestorsA = [],
+          newAncestorsB = [],
+          getAncestors = function (commits, ancestorsSoFar, next) {
+            var needed = commits.length,
+              i, newCommits = [],
+              commitLoaded = function (err, commit) {
+                var i;
+                if (!err && commit) {
+                  for (i = 0; i < commit.parents.length; i++) {
+                    if (newCommits.indexOf(commit.parents[i]) === -1) {
+                      newCommits.push(commit.parents[i]);
+                    }
+                    ancestorsSoFar[commit.parents[i]] = true;
+                  }
+                }
+                if (--needed === 0) {
+                  next(newCommits);
+                }
+              };
+
+            if (needed === 0) {
+              next(newCommits);
+            } else {
+              for (i = 0; i < commits.length; i++) {
+                collection.findOne({
+                  _id: commits[i]
+                }, commitLoaded);
+              }
+            }
+          },
+          checkForCommon = function () {
+            var i;
+            for (i = 0; i < newAncestorsA.length; i++) {
+              if (ancestorsB[newAncestorsA[i]]) {
+                //we got a common parent so let's go with it
+                return newAncestorsA[i];
+              }
+            }
+            for (i = 0; i < newAncestorsB.length; i++) {
+              if (ancestorsA[newAncestorsB[i]]) {
+                //we got a common parent so let's go with it
+                return newAncestorsB[i];
+              }
+            }
+            return null;
+          },
+          loadStep = function () {
+            var candidate = checkForCommon(),
+              needed = 2,
+              bothLoaded = function () {
+                if (newAncestorsA.length > 0 || newAncestorsB.length > 0) {
+                  loadStep();
+                } else {
+                  callback('unable to find common ancestor commit', null);
+                }
+              };
+            if (candidate) {
+              return callback(null, candidate);
+            }
+            getAncestors(newAncestorsA, ancestorsA, function (nCommits) {
+              newAncestorsA = nCommits || [];
+              if (--needed === 0) {
+                bothLoaded();
+              }
+            });
+            getAncestors(newAncestorsB, ancestorsB, function (nCommits) {
+              newAncestorsB = nCommits || [];
+              if (--needed === 0) {
+                bothLoaded();
+              }
+            });
+          };
+
+        //initializing
+        ancestorsA[commitA] = true;
+        newAncestorsA = [commitA];
+        ancestorsB[commitB] = true;
+        newAncestorsB = [commitB];
+        loadStep();
+
       }
     }
 

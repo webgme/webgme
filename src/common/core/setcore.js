@@ -191,6 +191,15 @@ define([ "util/assert"], function (ASSERT) {
             }
             return [];
         };
+        setcore.getMemberOwnAttributeNames = function (node, setName, memberPath) {
+            ASSERT(typeof setName === 'string');
+            var memberRelId = getMemberRelId(node, setName, memberPath);
+            if (memberRelId) {
+                var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node, SETS_ID), setName), memberRelId);
+                return innerCore.getOwnAttributeNames(memberNode);
+            }
+            return [];
+        };
         setcore.getMemberAttribute = function(node,setName,memberPath,attrName){
             ASSERT(typeof setName === 'string' && typeof attrName === 'string');
             harmonizeMemberData(node,setName);
@@ -228,6 +237,15 @@ define([ "util/assert"], function (ASSERT) {
             if(memberRelId){
                 var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
                 return innerCore.getRegistryNames(memberNode);
+            }
+            return [];
+        };
+        setcore.getMemberOwnRegistryNames = function (node, setName, memberPath) {
+            ASSERT(typeof setName === 'string');
+            var memberRelId = getMemberRelId(node, setName, memberPath);
+            if (memberRelId) {
+                var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node, SETS_ID), setName), memberRelId);
+                return innerCore.getOwnRegistryNames(memberNode);
             }
             return [];
         };

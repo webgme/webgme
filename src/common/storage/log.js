@@ -78,6 +78,7 @@ define([ "util/assert" ], function (ASSERT) {
 						getBranchHash: getBranchHash,
 						setBranchHash: setBranchHash,
 						getCommits: getCommits,
+            getCommonAncestorCommit: getCommonAncestorCommit,
 						makeCommit: makeCommit,
                         setUser: project.setUser,
 						ID_NAME: project.ID_NAME
@@ -157,6 +158,14 @@ define([ "util/assert" ], function (ASSERT) {
 				logger.debug(projectName + '.makeCommit(' + parents + ',' + roothash + ',' + msg + ')');
 				return project.makeCommit(parents, roothash, msg, callback);
 			}
+
+      function getCommonAncestorCommit(commitA, commitB, callback) {
+        logger.debug(projectName + '.getCommonAncestorCommit(' + commitA + ',' + commitB + ')');
+        project.getCommonAncestorCommit(commitA, commitB, function (err, commit) {
+          logger.debug(projectName + '.getCommonAncestorCommit(' + commitA + ',' + commitB + ') ->(' + JSON.stringify(err) + ',' + commit + ')');
+          callback(err, commit);
+        });
+		}
 		}
 
         function simpleRequest (parameters,callback){

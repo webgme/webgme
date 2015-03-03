@@ -40,7 +40,6 @@ requirejs.config({
 var __CONFIG = requirejs('baseConfig' ),
     WebGMEGlobal;
 
-
 var getConfig = function(){
     return JSON.parse(JSON.stringify(__CONFIG));
 };
@@ -254,7 +253,8 @@ module.exports = {
     standaloneServer: requirejs('server/standalone'),
     logManager: requirejs('logManager'),
     runPlugin: requirejs('server/runplugin'),
-    serializer: requirejs('core/users/serialization')
+    serializer: requirejs('core/users/serialization'),
+    canon: requirejs('common/util/canon')
 };
 
 })( global );
