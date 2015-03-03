@@ -1,7 +1,7 @@
 /*globals describe, it, before, after, beforeEach, WebGMEGlobal, WebGME*/
 /*jshint node:true*/
 /**
- * @author ksmyth / https://github.com/ksmyth
+ * @author pmeijer / https://github.com/pmeijer
  */
 
 require('../../_globals.js');
@@ -12,7 +12,6 @@ var requirejs = require('requirejs'),
     should = chai.should(),
     superagent = require('superagent'),
     agent = superagent.agent(),
-    expect = chai.expect,
     BlobClient = requirejs('blob/BlobClient'),
     Artifact = requirejs('blob/Artifact'),
     server,
