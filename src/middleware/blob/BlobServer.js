@@ -143,7 +143,7 @@ define(['logManager',
                             // give more precise description about the error type and message. Resource if not available etc.
                             res.send(500);
                         } else {
-                            //res.send(200);
+                            //res.status(200);
                         }
                     });
                 }

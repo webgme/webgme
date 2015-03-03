@@ -56,22 +56,28 @@ describe('BlobClient', function () {
 
         it('should have putFile', function () {
             var bc = new BlobClient(bcParam);
-            expect(bc.__proto__.hasOwnProperty("putFile")).to.equal(true);
+            expect(bc.__proto__.hasOwnProperty('putFile')).to.equal(true);
         });
 
         it('should create json', function (done) {
             var bc = new BlobClient(bcParam);
 
-            bc.putFile("test.json", str2ab('{"1":2}'), function(err, hash) {
-                if (err)
+            bc.putFile('test.json', str2ab('{"1":2}'), function(err, hash) {
+                if (err) {
                     done(err);
+                    return;
+                }
                 bc.getMetadata(hash, function(err, metadata) {
-                    if (err)
+                    if (err) {
                         done(err);
+                        return;
+                    }
                     expect(metadata.mime).to.equal('application/json');
                     bc.getObject(hash, function(err, res) {
-                        if (err)
+                        if (err) {
                             done(err);
+                            return;
+                        }
                         expect(typeof res).to.equal('object');
                         expect(typeof res.prototype).to.equal('undefined');
                         //expect(res[1]).to.equal(2);
@@ -83,16 +89,22 @@ describe('BlobClient', function () {
 
         function createZip(data, done) {
             var bc = new BlobClient(bcParam);
-            bc.putFile("testzip.zip", data, function(err, hash) {
-                if (err)
-                    return done(err);
+            bc.putFile('testzip.zip', data, function(err, hash) {
+                if (err) {
+                    done(err);
+                    return;
+                }
                 bc.getMetadata(hash, function(err, metadata) {
-                    if (err)
-                        return done(err);
+                    if (err) {
+                        done(err);
+                        return;
+                    }
                     expect(metadata.mime).to.equal('application/zip');
                     bc.getObject(hash, function(err, res) {
-                        if (err)
-                            return done(err);
+                        if (err) {
+                            done(err);
+                            return;
+                        }
                         expect(res instanceof ArrayBuffer || res instanceof Buffer).to.equal(true);
                         var data2 = Array.apply([], new Uint8Array(res));
                         expect(data.length).to.equal(data2.length);
@@ -108,16 +120,22 @@ describe('BlobClient', function () {
         it('should create strange filenames', function (done) {
             var bc = new BlobClient(bcParam);
 
-            bc.putFile("te%s#t.json", '{"1":2}', function(err, hash) {
-                if (err)
+            bc.putFile('te%s#t.json', '{"1":2}', function(err, hash) {
+                if (err) {
                     done(err);
+                    return;
+                }
                 bc.getMetadata(hash, function(err, metadata) {
-                    if (err)
+                    if (err) {
                         done(err);
+                        return;
+                    }
                     expect(metadata.mime).to.equal('application/json');
                     bc.getObject(hash, function(err, res) {
-                        if (err)
+                        if (err) {
                             done(err);
+                            return;
+                        }
                         expect(typeof res).to.equal('object');
                         expect(typeof res.prototype).to.equal('undefined');
                         //expect(res[1]).to.equal(2);
@@ -129,19 +147,19 @@ describe('BlobClient', function () {
 
         if (typeof global !== 'undefined') {
             it('should create zip', function (done) {
-                var data = base64DecToArr("UEsDBAoAAAAAACNaNkWtbMPDBwAAAAcAAAAIAAAAZGF0YS5iaW5kYXRhIA0KUEsBAj8ACgAAAAAA\n" +
-                "I1o2Ra1sw8MHAAAABwAAAAgAJAAAAAAAAAAgAAAAAAAAAGRhdGEuYmluCgAgAAAAAAABABgAn3xF\n" +
-                "poDWzwGOVUWmgNbPAY5VRaaA1s8BUEsFBgAAAAABAAEAWgAAAC0AAAAAAA==");
+                var data = base64DecToArr('UEsDBAoAAAAAACNaNkWtbMPDBwAAAAcAAAAIAAAAZGF0YS5iaW5kYXRhIA0KUEsBAj8ACgAAAAAA\n' +
+                'I1o2Ra1sw8MHAAAABwAAAAgAJAAAAAAAAAAgAAAAAAAAAGRhdGEuYmluCgAgAAAAAAABABgAn3xF\n' +
+                'poDWzwGOVUWmgNbPAY5VRaaA1s8BUEsFBgAAAAABAAEAWgAAAC0AAAAAAA==');
                 createZip(data, done);
             });
         }
 
         if (typeof global !== 'undefined') { // i.e. if running under node-webkit
             // need this in package.json: "node-remote": "localhost"
-            it('should create zip from node-webkit Buffer', function (done) {
-                var data = base64DecToArr("UEsDBAoAAAAAACNaNkWtbMPDBwAAAAcAAAAIAAAAZGF0YS5iaW5kYXRhIA0KUEsBAj8ACgAAAAAA\n" +
-                "I1o2Ra1sw8MHAAAABwAAAAgAJAAAAAAAAAAgAAAAAAAAAGRhdGEuYmluCgAgAAAAAAABABgAn3xF\n" +
-                "poDWzwGOVUWmgNbPAY5VRaaA1s8BUEsFBgAAAAABAAEAWgAAAC0AAAAAAA==");
+            it('should create zip from Buffer', function (done) {
+                var data = base64DecToArr('UEsDBAoAAAAAACNaNkWtbMPDBwAAAAcAAAAIAAAAZGF0YS5iaW5kYXRhIA0KUEsBAj8ACgAAAAAA\n' +
+                'I1o2Ra1sw8MHAAAABwAAAAgAJAAAAAAAAAAgAAAAAAAAAGRhdGEuYmluCgAgAAAAAAABABgAn3xF\n' +
+                'poDWzwGOVUWmgNbPAY5VRaaA1s8BUEsFBgAAAAABAAEAWgAAAC0AAAAAAA==');
                 createZip(new Buffer(data), done);
             });
         }
@@ -152,9 +170,11 @@ describe('BlobClient', function () {
                 var f = new File('./npm_install.cmd', 'npm_install.cmd');
                 //expect(Object.getOwnPropertyNames(f).join(' ')).to.equal(0);
                 var bc = new BlobClient(bcParam);
-                bc.putFile("npm_install.cmd", f, function(err, hash) {
-                    if (err)
+                bc.putFile('npm_install.cmd', f, function(err, hash) {
+                    if (err) {
                         done(err);
+                        return;
+                    }
                     done();
                 });
             });
@@ -163,10 +183,11 @@ describe('BlobClient', function () {
         it('should create metadata', function (done) {
             var artifact = new Artifact('testartifact', new BlobClient(bcParam));
             artifact.addFiles({'file1': 'content1', 'file2': 'content2'}, function (err, hashes) {
-                if (err)
+                if (err) {
                     done(err);
+                    return;
+                }
                 expect(Object.keys(hashes).length).to.equal(2);
-
                 done();
             });
         });
@@ -179,11 +200,13 @@ describe('BlobClient', function () {
                 artifact = new BlobClient(bcParam).createArtifact('xmlAndJson');
             artifact.addFiles(filesToAdd, function (err, hashes) {
                 if (err) {
-                    return done('Could not add files : err' + err.toString());
+                    done('Could not add files : err' + err.toString());
+                    return;
                 }
                 artifact.save(function (err, hash) {
                     if (err) {
-                        return done('Could not save artifact : err' + err.toString());
+                        done('Could not save artifact : err' + err.toString());
+                        return;
                     }
                     var agent = superagent.agent();
                     var url = (new BlobClient(bcParam)).getViewURL(hash, 'j%s#on.json');
@@ -210,7 +233,87 @@ describe('BlobClient', function () {
             });
         });
 
+        it('putFiles should put multiple files', function (done) {
+            var bc = new BlobClient(bcParam),
+                filesToAdd = {
+                    'a.json': JSON.stringify({a: 1, b: 2}),
+                    'some.txt': 'Thsh shs'
+                };
+            bc.putFiles(filesToAdd, function (err, hashes) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                should.equal(Object.keys(hashes).length, 2);
+                done();
+            });
+        });
 
+        it('putFiles with empty object should return empty hashes obj', function (done) {
+            var bc = new BlobClient(bcParam),
+                filesToAdd = { };
+            bc.putFiles(filesToAdd, function (err, hashes) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                should.equal(Object.keys(hashes).length, 0);
+                done();
+            });
+        });
+
+        it('saveAllArtifacts with zero artifacts should return empty hashes list', function (done) {
+            var bc = new BlobClient(bcParam);
+            bc.saveAllArtifacts(function (err, hashes) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                should.equal(hashes.length, 0);
+                done();
+            });
+        });
+
+        it('saveAllArtifacts with empty artifacts should work', function (done) {
+            var bc = new BlobClient(bcParam);
+
+            bc.createArtifact('artie1');
+            bc.createArtifact('artie2');
+            bc.saveAllArtifacts(function (err, hashes) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                should.equal(hashes.length, 2);
+                done();
+            });
+        });
+
+        it('save and getArtifact should return same artifact', function (done) {
+            var bc = new BlobClient(bcParam),
+                artie = bc.createArtifact('artie');
+            artie.addFile('aname.txt', 'the text', function (err, hash) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                bc.saveAllArtifacts(function (err, hashes) {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+                    should.equal(hashes.length, 1);
+                    bc.getArtifact(hashes[0], function (err, artifact) {
+                        if (err) {
+                            done(err);
+                            return;
+                        }
+                        should.equal(artifact.name, 'artie.zip');
+                        done();
+                    });
+                });
+            });
+        });
         // https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/Base64_encoding_and_decoding
         function b64ToUint6 (nChr) {
             return nChr > 64 && nChr < 91 ?
