@@ -5,12 +5,13 @@
 //we use the globally available Storage as that is identical with the local.js
 
 require('../../_globals.js');
-var should = require('chai').should(),
-  requirejs= require('requirejs'),
-  GENKEY = requirejs('util/key');
 
 describe('local',function(){
-  var storage = new global.Storage();
+    var should = require('chai').should(),
+        requirejs= require('requirejs'),
+        GENKEY = requirejs('util/key'),
+        storage = new global.Storage();
+
   describe('Database',function(){
     it('should be empty initially',function(done){
       storage.getProjectNames(function(err,names){

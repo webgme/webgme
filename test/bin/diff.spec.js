@@ -2,17 +2,45 @@
  * Created by tamas on 2/18/15.
  */
 /* globals require, describe, before, it */
-(function() {
 require('../_globals');
-var diffCLI = require('../../src/bin/diff'),
-    importCLI = require('../../src/bin/import'),
-    FS=require('fs'),
-    should = require('chai').should(),
-    getJsonProject = function(path){
-        return JSON.parse(FS.readFileSync(path,'utf-8'));
-    };
 
 describe('diff CLI tests',function(){
+    var diffCLI = require('../../src/bin/diff'),
+        importCLI = require('../../src/bin/import'),
+        mongodb = require('mongodb'),
+        FS=require('fs'),
+        should = require('chai').should(),
+        getJsonProject = function(path){
+            return JSON.parse(FS.readFileSync(path,'utf-8'));
+        },
+
+        mongoUri = 'mongodb://127.0.0.1:27017/multi',
+        diffCliTest = 'diffCliTest';
+
+    before(function (done) {
+        // TODO: move this to globals.js as a utility function
+        mongodb.MongoClient.connect('mongodb://127.0.0.1:27017/multi', {
+            'w': 1,
+            'native-parser': true,
+            'auto_reconnect': true,
+            'poolSize': 20,
+            socketOptions: {keepAlive: 1}
+        }, function (err, db) {
+            if (err) {
+                done(err);
+                return;
+            }
+            db.dropCollection(diffCliTest, function (err) {
+                // ignores if the collection was not found
+                if (err && err.errmsg !== 'ns not found') {
+                    done(err);
+                    return;
+                }
+                done();
+            });
+        });
+    });
+
     describe('basic',function(){
         describe('no diff',function(){
             var jsonProject;
@@ -22,15 +50,15 @@ describe('diff CLI tests',function(){
                 } catch(err) {
                     return done(err);
                 }
-                importCLI.import('mongodb://127.0.0.1:27017/multi','diffCliTest',jsonProject,'source',function(err){
+                importCLI.import(mongoUri,diffCliTest,jsonProject,'source',function(err){
                     if(err){
                         return done(err);
                     }
-                    importCLI.import('mongodb://127.0.0.1:27017/multi','diffCliTest',jsonProject,'target',done);
+                    importCLI.import(mongoUri,diffCliTest,jsonProject,'target',done);
                 });
             });
             it('diff should be empty on identical project states source->target',function(done){
-                diffCLI.generateDiff('mongodb://127.0.0.1:27017/multi','diffCliTest','source','target',function(err,diff){
+                diffCLI.generateDiff(mongoUri,diffCliTest,'source','target',function(err,diff){
                     if(err){
                         return done(err);
                     }
@@ -39,7 +67,7 @@ describe('diff CLI tests',function(){
                 });
             });
             it('diff should be empty on identical project states target->source',function(done){
-                diffCLI.generateDiff('mongodb://127.0.0.1:27017/multi','diffCliTest','target','source',function(err,diff){
+                diffCLI.generateDiff(mongoUri,diffCliTest,'target','source',function(err,diff){
                     if(err){
                         return done(err);
                     }
@@ -57,15 +85,15 @@ describe('diff CLI tests',function(){
                 } catch(err) {
                     return done(err);
                 }
-                importCLI.import('mongodb://127.0.0.1:27017/multi','diffCliTest',source,'source',function(err){
+                importCLI.import(mongoUri,diffCliTest,source,'source',function(err){
                     if(err){
                         return done(err);
                     }
-                    importCLI.import('mongodb://127.0.0.1:27017/multi','diffCliTest',target,'target',done);
+                    importCLI.import(mongoUri,diffCliTest,target,'target',done);
                 });
             });
             it('new node should be visible in diff source->target',function(done){
-                diffCLI.generateDiff('mongodb://127.0.0.1:27017/multi','diffCliTest','source','target',function(err,diff){
+                diffCLI.generateDiff(mongoUri,diffCliTest,'source','target',function(err,diff){
                     if(err){
                         return done(err);
                     }
@@ -78,7 +106,7 @@ describe('diff CLI tests',function(){
                 });
             });
             it('node remove should be visible in diff target->source',function(done){
-                diffCLI.generateDiff('mongodb://127.0.0.1:27017/multi','diffCliTest','target','source',function(err,diff){
+                diffCLI.generateDiff(mongoUri,diffCliTest,'target','source',function(err,diff){
                     if(err){
                         return done(err);
                     }
@@ -99,15 +127,15 @@ describe('diff CLI tests',function(){
                 } catch(err) {
                     return done(err);
                 }
-                importCLI.import('mongodb://127.0.0.1:27017/multi','diffCliTest',source,'source',function(err){
+                importCLI.import(mongoUri,diffCliTest,source,'source',function(err){
                     if(err){
                         return done(err);
                     }
-                    importCLI.import('mongodb://127.0.0.1:27017/multi','diffCliTest',target,'target',done);
+                    importCLI.import(mongoUri,diffCliTest,target,'target',done);
                 });
             });
             it('changed attribute should be visible in diff source->target',function(done){
-                diffCLI.generateDiff('mongodb://127.0.0.1:27017/multi','diffCliTest','source','target',function(err,diff){
+                diffCLI.generateDiff(mongoUri,diffCliTest,'source','target',function(err,diff){
                     if(err){
                         return done(err);
                     }
@@ -120,7 +148,7 @@ describe('diff CLI tests',function(){
                 });
             });
             it('changed attribute should be visible in diff target->source',function(done){
-                diffCLI.generateDiff('mongodb://127.0.0.1:27017/multi','diffCliTest','target','source',function(err,diff){
+                diffCLI.generateDiff(mongoUri,diffCliTest,'target','source',function(err,diff){
                     if(err){
                         return done(err);
                     }
@@ -142,15 +170,15 @@ describe('diff CLI tests',function(){
                 } catch(err) {
                     return done(err);
                 }
-                importCLI.import('mongodb://127.0.0.1:27017/multi','diffCliTest',source,'source',function(err){
+                importCLI.import(mongoUri,diffCliTest,source,'source',function(err){
                     if(err){
                         return done(err);
                     }
-                    importCLI.import('mongodb://127.0.0.1:27017/multi','diffCliTest',target,'target',done);
+                    importCLI.import(mongoUri,diffCliTest,target,'target',done);
                 });
             });
             it('changed registry should be visible in diff source->target',function(done){
-                diffCLI.generateDiff('mongodb://127.0.0.1:27017/multi','diffCliTest','source','target',function(err,diff){
+                diffCLI.generateDiff(mongoUri,diffCliTest,'source','target',function(err,diff){
                     if(err){
                         return done(err);
                     }
@@ -163,7 +191,7 @@ describe('diff CLI tests',function(){
                 });
             });
             it('changed registry should be visible in diff target->source',function(done){
-                diffCLI.generateDiff('mongodb://127.0.0.1:27017/multi','diffCliTest','target','source',function(err,diff){
+                diffCLI.generateDiff(mongoUri,diffCliTest,'target','source',function(err,diff){
                     if(err){
                         return done(err);
                     }
@@ -178,4 +206,3 @@ describe('diff CLI tests',function(){
         });
     });
 });
-})();

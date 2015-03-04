@@ -7,21 +7,20 @@
 
 require('../../_globals.js');
 
-var requirejs = require('requirejs'),
-    rimraf = require('rimraf'),
-    chai = require('chai'),
-    should = chai.should(),
-    superagent = require('superagent'),
-    expect = chai.expect,
-    BlobClient = requirejs('blob/BlobClient'),
-    Artifact = requirejs('blob/Artifact'),
-    server,
-    serverBaseUrl;
-
-
 describe('BlobClient', function () {
     'use strict';
-    var bcParam = {};
+    var requirejs = require('requirejs'),
+        rimraf = require('rimraf'),
+        chai = require('chai'),
+        should = chai.should(),
+        superagent = require('superagent'),
+        expect = chai.expect,
+        BlobClient = requirejs('blob/BlobClient'),
+        Artifact = requirejs('blob/Artifact'),
+        server,
+        serverBaseUrl,
+
+        bcParam = {};
 
     describe('[http]', function () {
         before(function (done) {

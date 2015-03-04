@@ -4,17 +4,17 @@
  */
 
 require('../../_globals.js');
-var should = require('chai').should(),
-    WebGME = require('../../../webgme'),
-    requirejs = require('requirejs'),
-    config = WebGMEGlobal.getConfig(),
-
-    GUID = requirejs('common/util/guid');
 
 describe('GUID', function () {
     "use strict";
+    var should = require('chai').should(),
+        WebGME = require('../../../webgme'),
+        requirejs = require('requirejs'),
+        config = WebGMEGlobal.getConfig(),
 
-    var GUID_REGEXP = new RegExp('^[a-z0-9]{8}(-[a-z0-9]{4}){3}-[a-z0-9]{12}$', 'i');
+        GUID = requirejs('common/util/guid'),
+
+        GUID_REGEXP = new RegExp('^[a-z0-9]{8}(-[a-z0-9]{4}){3}-[a-z0-9]{12}$', 'i');
 
     it('should generate a valid guid format', function () {
         var guid = GUID();

@@ -4,22 +4,27 @@
  */
 
 require('../_globals.js');
-var should = require('chai').should(),
-    WebGME = require('../../webgme'),
-    requirejs = require('requirejs'),
-
-    superagent = require('superagent'),
-    mongodb = require('mongodb'),
-    Q = require('q'),
-    agent = superagent.agent(),
-
-    server,
-    serverBaseUrl;
-
-
 
 describe('standalone server', function () {
     'use strict';
+
+    var should = require('chai').should(),
+        WebGME = require('../../webgme'),
+        requirejs = require('requirejs'),
+
+        superagent = require('superagent'),
+        mongodb = require('mongodb'),
+        Q = require('q'),
+        agent = superagent.agent(),
+
+        server,
+        serverBaseUrl,
+
+        scenarios,
+        addScenario,
+        addTest,
+        i,
+        j;
 
     it('should start and stop and start and stop', function (done) {
         // we have to set the config here
@@ -37,43 +42,190 @@ describe('standalone server', function () {
         });
     });
 
-    describe('https server without authentication', function () {
+    scenarios = [{
+        type: 'http',
+        authentication: false,
+        port: 9001,
+        requests: [
+            {code: 200, url: '/'},
+            {code: 200, url: '/login'},
+            {code: 200, url: '/login/google/return', redirectUrl: '/'},
+            {code: 200, url: '/logout', redirectUrl: '/login'},
+            {code: 200, url: '/bin/getconfig.js'},
+            {code: 200, url: '/package.json'},
+            {code: 200, url: '/index.html'},
+            {code: 200, url: '/docs/tutorial.html'},
+            {code: 200, url: '/plugin/PluginBase.js'},
+            {code: 200, url: '/plugin/PluginBase.js'},
+            {code: 200, url: '/plugin/PluginGenerator/PluginGenerator/PluginGenerator'},
+            {code: 200, url: '/plugin/PluginGenerator/PluginGenerator/PluginGenerator.js'},
+            {code: 200, url: '/plugin/PluginGenerator/PluginGenerator/Templates/plugin.js.ejs'},
+            {code: 200, url: '/decorators/DefaultDecorator/DefaultDecorator.js'},
+            {code: 200, url: '/decorators/DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesignerWidget.css'},
+            {code: 200, url: '/decorators/DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesignerWidget.html'},
+            {code: 200, url: '/decorators/DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesignerWidget.js'},
+            {code: 200, url: '/rest/unknown'},
+            {code: 200, url: '/rest/does_not_exist'},
+            {code: 200, url: '/rest/help'},
+            {code: 200, url: '/listAllDecorators'},
+            {code: 200, url: '/listAllPlugins'},
+            {code: 200, url: '/listAllVisualizerDescriptors'},
 
-        var NODE_TLS_REJECT_UNAUTHORIZED = process.env.NODE_TLS_REJECT_UNAUTHORIZED;
+            {code: 401, url: '/login/client/fail'},
 
-        before(function (done) {
-            // we have to set the config here
-            var config = WebGMEGlobal.getConfig();
-            config.port = 9001;
-            config.authentication = false;
-            config.httpsecure = true;
+            {code: 404, url: '/login/forge'},
+            {code: 404, url: '/extlib/does_not_exist'},
+            {code: 404, url: '/pluginoutput/does_not_exist'},
+            {code: 404, url: '/plugin'},
+            {code: 404, url: '/plugin/'},
+            {code: 404, url: '/plugin/PluginGenerator'},
+            {code: 404, url: '/plugin/PluginGenerator/PluginGenerator'},
+            {code: 404, url: '/plugin/does_not_exist'},
+            {code: 404, url: '/decorators/'},
+            {code: 404, url: '/decorators/DefaultDecorator'},
+            {code: 404, url: '/decorators/DefaultDecorator/does_not_exist'},
+            {code: 404, url: '/rest'},
+            {code: 404, url: '/rest/etf'},
+            {code: 404, url: '/worker/simpleResult'},
+            {code: 404, url: '/login/client'},
+            {code: 404, url: '/docs/'},
+            {code: 404, url: '/index2.html'},
+            {code: 404, url: '/does_not_exist'},
+            {code: 404, url: '/does_not_exist.js'},
+            {code: 404, url: '/asdf'},
 
-            // TODO: would be nice to get this dynamically from server
-            serverBaseUrl = 'https://127.0.0.1:' + config.port;
+            {code: 410, url: '/getToken'},
+            {code: 410, url: '/checktoken/does_not_exist'},
 
-            process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+            {code: 500, url: '/worker/simpleResult/bad_parameter'}
+        ]
+    }, {
+        type: 'http',
+        authentication: true,
+        port: 9001,
+        requests: [
+            // should not allow access without auth
+            {code: 200, url: '/', redirectUrl: '/login'},
+            {code: 200, url: '/package.json', redirectUrl: '/login'},
+            {code: 200, url: '/file._js', redirectUrl: '/login'},
+            {code: 200, url: '/file.html', redirectUrl: '/login'},
+            {code: 200, url: '/file.gif', redirectUrl: '/login'},
+            {code: 200, url: '/file.png', redirectUrl: '/login'},
+            {code: 200, url: '/file.bmp', redirectUrl: '/login'},
+            {code: 200, url: '/file.svg', redirectUrl: '/login'},
+            {code: 200, url: '/file.json', redirectUrl: '/login'},
+            {code: 200, url: '/file.map', redirectUrl: '/login'},
+            {code: 200, url: '/listAllPlugins', redirectUrl: '/login'},
+            {code: 200, url: '/listAllDecorators', redirectUrl: '/login'},
+            {code: 200, url: '/listAllVisualizerDescriptors', redirectUrl: '/login'},
 
-            server = WebGME.standaloneServer(config);
-            server.start(done);
-        });
+            // should allow access without auth
+            {code: 200, url: '/lib/require/require.min.js'},
+            {code: 200, url: '/plugin/PluginResult.js'},
+            {code: 200, url: '/common/storage/cache.js'},
+            {code: 200, url: '/common/storage/client.js'},
+            {code: 200, url: '/middleware/blob/BlobClient.js'},
 
-        after(function (done) {
-            process.env.NODE_TLS_REJECT_UNAUTHORIZED = NODE_TLS_REJECT_UNAUTHORIZED;
 
-            server.stop(done);
-        });
+        ]
+    }, {
+        type: 'https',
+        authentication: false,
+        port: 9001,
+        requests: [
+            {code: 200, url: '/'}
+        ]
+    }, {
+        type: 'https',
+        authentication: true,
+        port: 9001,
+        requests: [
+            {code: 200, url: '/', redirectUrl: '/login'}
+        ]
+    }];
 
-        it('should return 200 /', function (done) {
-            agent.get(serverBaseUrl + '/').end(function (err, res) {
+    addTest = function (serverUrl, requestTest) {
+        var url = requestTest.url || '/',
+            redirectText = requestTest.redirectUrl ? ' redirects to ' + requestTest.redirectUrl : ' ';
+
+        it('returns ' + requestTest.code + ' for ' + url + redirectText, function (done) {
+            // TODO: add POST/DELETE etc support
+            agent.get(serverUrl + url).end(function (err, res) {
                 if (err) {
                     done(err);
                     return;
                 }
-                should.equal(res.status, 200);
+
+                should.equal(res.status, requestTest.code);
+
+                if (requestTest.redirectUrl) {
+                    // redirected
+                    should.equal(res.status, 200);
+                    if (res.headers.location) {
+                        should.equal(res.headers.location, requestTest.redirectUrl);
+                    }
+                    should.not.equal(res.headers.location, url);
+                    should.equal(res.redirects.length, 1);
+                } else {
+                    // was not redirected
+                    //should.equal(res.res.url, url); // FIXME: should server response set the url?
+                    if (res.headers.location) {
+                        should.equal(res.headers.location, url);
+                    }
+                    if (res.res.url) {
+                        should.equal(res.res.url, url);
+                    }
+
+                    should.equal(res.redirects.length, 0);
+                }
+
                 done();
             });
         });
-    });
+    };
+
+    addScenario = function (scenario) {
+
+        describe(scenario.type + ' server ' + (scenario.authentication ? 'with' : 'without') + ' auth', function () {
+            var NODE_TLS_REJECT_UNAUTHORIZED = process.env.NODE_TLS_REJECT_UNAUTHORIZED,
+                serverUrl = scenario.type + '://127.0.0.1:' + scenario.port;
+
+            before(function (done) {
+                // we have to set the config here
+                var config = WebGMEGlobal.getConfig();
+                config.port = scenario.port;
+                config.authentication = scenario.authentication;
+                config.httpsecure = scenario.type === 'https';
+
+                process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
+                server = WebGME.standaloneServer(config);
+                server.start(done);
+            });
+
+            beforeEach(function () {
+                agent = superagent.agent();
+            });
+
+            after(function (done) {
+                process.env.NODE_TLS_REJECT_UNAUTHORIZED = NODE_TLS_REJECT_UNAUTHORIZED;
+
+                server.stop(done);
+            });
+
+            // add all tests for this scenario
+            for (j = 0; j < scenario.requests.length; j += 1) {
+                addTest(serverUrl, scenario.requests[j]);
+            }
+
+        });
+    };
+
+    // create all scenarios
+    for (i = 0; i < scenarios.length; i += 1) {
+        addScenario(scenarios[i]);
+    }
+
 
     describe('http server without decorators', function () {
 
@@ -107,626 +259,11 @@ describe('standalone server', function () {
         });
     });
 
-    describe('http server without authentication', function () {
-
-        before(function (done) {
-            // we have to set the config here
-            var config = WebGMEGlobal.getConfig();
-            config.port = 9001;
-            config.authentication = false;
-
-            // TODO: would be nice to get this dynamically from server
-            serverBaseUrl = 'http://127.0.0.1:' + config.port;
-
-            server = WebGME.standaloneServer(config);
-            server.start(done);
-        });
-
-        after(function (done) {
-            server.stop(done);
-        });
-
-        it('should return 200 /', function (done) {
-            agent.get(serverBaseUrl + '/').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                should.equal(res.status, 200);
-                done();
-            });
-        });
-
-        it('should return 404 /doesnotexist', function (done) {
-            agent.get(serverBaseUrl + '/doesnotexist').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                should.equal(res.status, 404);
-                done();
-            });
-        });
-
-        it('should return 404 /asdf', function (done) {
-            agent.get(serverBaseUrl + '/asdf').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                should.equal(res.status, 404);
-                done();
-            });
-        });
-
-        it('should return 404 /doesnotexist.js', function (done) {
-            agent.get(serverBaseUrl + '/doesnotexist.js').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 404);
-                done();
-            });
-        });
-
-        // TOKEN TESTS BEGIN
-        it('should return 410 /gettoken', function (done) {
-            agent.get(serverBaseUrl + '/gettoken').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 410);
-                done();
-            });
-        });
-
-        it('should return 410 /checktoken/doesnotexist', function (done) {
-            agent.get(serverBaseUrl + '/checktoken/doesnotexist').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 410);
-                done();
-            });
-        });
-
-        // TOKEN TESTS END
-
-
-        // LOGIN PAGES BEGINS
-        // TODO: add POST test
-        it('should return 200 /login', function (done) {
-            agent.get(serverBaseUrl + '/login').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 200);
-                done();
-            });
-        });
-
-        // TODO: POST /login/client
-
-        it('should return 404 GET /login/client', function (done) {
-            agent.get(serverBaseUrl + '/login/client').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 404);
-                done();
-            });
-        });
-
-        it('should return 401 /login/client/fail', function (done) {
-            agent.get(serverBaseUrl + '/login/client/fail').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 401);
-                done();
-            });
-        });
-
-        it('should return 200 /login/google/return', function (done) {
-            agent.get(serverBaseUrl + '/login/google/return').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 200);
-                done();
-            });
-        });
-
-        it('should return 404 /login/forge', function (done) {
-            agent.get(serverBaseUrl + '/login/forge').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 404);
-                done();
-            });
-        });
-
-        it('should return 200 /logout', function (done) {
-            agent.get(serverBaseUrl + '/logout').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 200);
-                done();
-            });
-        });
-
-        // LOGIN PAGES ENDS
-
-        // STATIC RESOURCES TESTS BEGIN
-        it('should return 200 /bin/getconfig.js', function (done) {
-            agent.get(serverBaseUrl + '/bin/getconfig.js').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 200);
-                done();
-            });
-        });
-
-        it('should return 200 /package.json', function (done) {
-            agent.get(serverBaseUrl + '/package.json').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 200);
-                done();
-            });
-        });
-
-        it('should return 200 /index.html', function (done) {
-            agent.get(serverBaseUrl + '/index.html').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 200);
-                done();
-            });
-        });
-
-        it('should return 404 /index2.html', function (done) {
-            agent.get(serverBaseUrl + '/index2.html').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 404);
-                done();
-            });
-        });
-
-        it('should return 404 /docs/', function (done) {
-            agent.get(serverBaseUrl + '/docs/').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 404);
-                done();
-            });
-        });
-
-        it('should return 200 /docs/tutorial.html', function (done) {
-            agent.get(serverBaseUrl + '/docs/tutorial.html').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 200);
-                done();
-            });
-        });
-
-        // TODO: WE NEED A TEST THAT SUCCEEDS
-        it('should return 404 /extlib/doesnotexist', function (done) {
-            agent.get(serverBaseUrl + '/extlib/doesnotexist').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 404);
-                done();
-            });
-        });
-
-        // TODO: WHAT IS THIS RULE?
-        it('should return 404 /pluginoutput/doesnotexist', function (done) {
-            agent.get(serverBaseUrl + '/pluginoutput/doesnotexist').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 404);
-                done();
-            });
-        });
-
-        it('should return 404 /plugin', function (done) {
-            agent.get(serverBaseUrl + '/plugin').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 404);
-                done();
-            });
-        });
-
-        it('should return 404 /plugin/doesnotexist', function (done) {
-            agent.get(serverBaseUrl + '/plugin/doesnotexist').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 404);
-                done();
-            });
-        });
-
-
-        it('should return 200 /plugin/PluginBase.js', function (done) {
-            agent.get(serverBaseUrl + '/plugin/PluginBase.js').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 200);
-                done();
-            });
-        });
-
-        it('should return 404 /plugin/', function (done) {
-            agent.get(serverBaseUrl + '/plugin/').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 404);
-                done();
-            });
-        });
-
-        it('should return 404 /plugin/PluginGenerator', function (done) {
-            agent.get(serverBaseUrl + '/plugin/PluginGenerator').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 404);
-                done();
-            });
-        });
-
-        it('should return 404 /plugin/PluginGenerator/PluginGenerator', function (done) {
-            agent.get(serverBaseUrl + '/plugin/PluginGenerator/PluginGenerator').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 404);
-                done();
-            });
-        });
-
-        it('should return 200 /plugin/PluginGenerator/PluginGenerator/PluginGenerator', function (done) {
-            agent.get(serverBaseUrl + '/plugin/PluginGenerator/PluginGenerator/PluginGenerator').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 200);
-                done();
-            });
-        });
-
-        it('should return 200 /plugin/PluginGenerator/PluginGenerator/PluginGenerator.js', function (done) {
-            agent.get(serverBaseUrl + '/plugin/PluginGenerator/PluginGenerator/PluginGenerator.js').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 200);
-                done();
-            });
-        });
-
-        it('should return 200 /plugin/PluginGenerator/PluginGenerator/Templates/plugin.js.ejs', function (done) {
-            agent.get(serverBaseUrl + '/plugin/PluginGenerator/PluginGenerator/Templates/plugin.js.ejs').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 200);
-                done();
-            });
-        });
-
-
-        it('should return 404 /decorators/', function (done) {
-            agent.get(serverBaseUrl + '/decorators/').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 404);
-                done();
-            });
-        });
-
-        it('should return 404 /decorators/DefaultDecorator', function (done) {
-            agent.get(serverBaseUrl + '/decorators/DefaultDecorator').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 404);
-                done();
-            });
-        });
-
-        it('should return 200 /decorators/DefaultDecorator/DefaultDecorator.js', function (done) {
-            agent.get(serverBaseUrl + '/decorators/DefaultDecorator/DefaultDecorator.js').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 200);
-                done();
-            });
-        });
-
-        it('should return 200 /decorators/DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesignerWidget.css', function (done) {
-            agent.get(serverBaseUrl + '/decorators/DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesignerWidget.css').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 200);
-                done();
-            });
-        });
-
-        it('should return 200 /decorators/DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesignerWidget.html', function (done) {
-            agent.get(serverBaseUrl + '/decorators/DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesignerWidget.html').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 200);
-                done();
-            });
-        });
-
-        it('should return 200 /decorators/DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesignerWidget.js', function (done) {
-            agent.get(serverBaseUrl + '/decorators/DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesignerWidget.js').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 200);
-                done();
-            });
-        });
-
-        it('should return 404 /decorators/DefaultDecorator/doesnotexist', function (done) {
-            agent.get(serverBaseUrl + '/decorators/DefaultDecorator/doesnotexist').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 404);
-                done();
-            });
-        });
-        // STATIC RESOURCES TESTS END
-
-        // REST TESTS BEGIN
-        it('should return 404 /rest', function (done) {
-            agent.get(serverBaseUrl + '/rest').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 404);
-                done();
-            });
-        });
-
-        it('should return 200 (unknown command) /rest/unknown', function (done) {
-            agent.get(serverBaseUrl + '/rest/unknown').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 200);
-                done();
-            });
-        });
-
-        it('should return 200 (help command) /rest/help', function (done) {
-            agent.get(serverBaseUrl + '/rest/help').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 200);
-                done();
-            });
-        });
-
-        it('should return 404 (etf command) /rest/etf', function (done) {
-            agent.get(serverBaseUrl + '/rest/etf').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                //console.log(res);
-                should.equal(res.status, 404);
-                done();
-            });
-        });
-        // REST TESTS END
-
-        // WORKER TESTS BEGIN
-        it('should return with 404 (not enough parameters) /worker/simpleResult', function (done) {
-            agent.get(serverBaseUrl + '/worker/simpleResult').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                should.equal(res.status, 404);
-                done();
-            });
-        });
-        
-        it('should return with 500 (bad parameter) /worker/simpleResult/bad_parameter', function (done) {
-            agent.get(serverBaseUrl + '/worker/simpleResult/bad_parameter').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                should.equal(res.status, 500);
-                done();
-            });
-        });
-        // WORKER TESTS END
-
-
-        // DYNAMIC RESOURCES START
-        it('should return with all decorators /listAllDecorators', function (done) {
-            agent.get(serverBaseUrl + '/listAllDecorators').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                should.equal(res.status, 200);
-                done();
-            });
-        });
-
-        it('should return with all plugins /listAllPlugins', function (done) {
-            agent.get(serverBaseUrl + '/listAllPlugins').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                should.equal(res.status, 200);
-                done();
-            });
-        });
-
-        it('should return with all visualizers /listAllVisualizerDescriptors', function (done) {
-            agent.get(serverBaseUrl + '/listAllVisualizerDescriptors').end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                should.equal(res.status, 200);
-                done();
-            });
-        });
-        // DYNAMIC RESOURCES END
-    });
-
-
     describe('http server with authentication turned on', function () {
-        var shouldAccessWithoutAuth,
-            shouldRedirectToLogin;
 
         beforeEach(function () {
             agent = superagent.agent();
         });
-
-        shouldAccessWithoutAuth = function (location, done) {
-            agent.get(serverBaseUrl + location).end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                // no redirects
-                should.equal(res.status, 200);
-                //should.equal(res.res.url, location); // FIXME: should server response set the url?
-                if (res.headers.location) {
-                    should.equal(res.headers.location, location);
-                }
-                if (res.res.url) {
-                    should.equal(res.res.url, location);
-                }
-
-                should.equal(res.redirects.length, 0);
-                done();
-            });
-        };
-
-        shouldRedirectToLogin = function (location, done) {
-            agent.get(serverBaseUrl + location).end(function (err, res) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                // redirected to login page
-                should.equal(res.status, 200);
-                should.equal(res.headers.location, '/login'); // FIXME: add redirect url
-                should.not.equal(res.headers.location, location);
-                should.equal(res.redirects.length, 1);
-
-                done();
-            });
-        };
 
         var db;
         var collection;
@@ -833,80 +370,6 @@ describe('standalone server', function () {
             });
         });
 
-        // SHOULD ALL ACCESS TO
-        it('should allow access to /lib/require/require.min.js', function (done) {
-            shouldAccessWithoutAuth('/lib/require/require.min.js', done);
-        });
-
-        it('should allow access to /plugin/PluginResult.js', function (done) {
-            shouldAccessWithoutAuth('/plugin/PluginResult.js', done);
-        });
-
-        it('should allow access to /common/storage/cache.js', function (done) {
-            shouldAccessWithoutAuth('/common/storage/cache.js', done);
-        });
-
-        it('should allow access to /common/storage/client.js', function (done) {
-            shouldAccessWithoutAuth('/common/storage/client.js', done);
-        });
-
-        it('should allow access to /middleware/blob/BlobClient.js', function (done) {
-            shouldAccessWithoutAuth('/middleware/blob/BlobClient.js', done);
-        });
-
-        // SHOULD NOT ALL ACCESS AND SHOULD REDIRECT TO LOGIN PAGE
-        it('should redirect to login for /', function (done) {
-            shouldRedirectToLogin('/', done);
-        });
-
-        it('should redirect to login for /package.json', function (done) {
-            shouldRedirectToLogin('/package.json', done);
-        });
-
-
-        it('should redirect to login for /file._js', function (done) {
-            shouldRedirectToLogin('/file._js', done);
-        });
-
-        it('should redirect to login for /file.html', function (done) {
-            shouldRedirectToLogin('/file.html', done);
-        });
-
-        it('should redirect to login for /file.gif', function (done) {
-            shouldRedirectToLogin('/file.gif', done);
-        });
-
-        it('should redirect to login for /file.png', function (done) {
-            shouldRedirectToLogin('/file.png', done);
-        });
-
-        it('should redirect to login for /file.bmp', function (done) {
-            shouldRedirectToLogin('/file.bmp', done);
-        });
-
-        it('should redirect to login for /file.svg', function (done) {
-            shouldRedirectToLogin('/file.svg', done);
-        });
-
-        it('should redirect to login for /file.json', function (done) {
-            shouldRedirectToLogin('/file.json', done);
-        });
-
-        it('should redirect to login for /file.map', function (done) {
-            shouldRedirectToLogin('/file.map', done);
-        });
-
-        it('should redirect to login for /listAllPlugins', function (done) {
-            shouldRedirectToLogin('/listAllPlugins', done);
-        });
-
-        it('should redirect to login for /listAllDecorators', function (done) {
-            shouldRedirectToLogin('/listAllDecorators', done);
-        });
-
-        it('should redirect to login for /listAllVisualizerDescriptors', function (done) {
-            shouldRedirectToLogin('/listAllVisualizerDescriptors', done);
-        });
 
         var logIn = function(callback) {
             agent.post(serverBaseUrl + '/login?redirect=%2F')

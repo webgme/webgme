@@ -4,21 +4,21 @@
  */
 
 require('../../_globals.js');
-var should = require('chai').should(),
-    requirejs = require('requirejs'),
-    config = WebGMEGlobal.getConfig(),
-
-    CoreTree = requirejs('common/core/coretree'),
-
-    // TODO: replace with in memory storage
-
-    storage = new global.Storage({});
-
 
 describe('CoreTree', function () {
     "use strict";
 
-    var coreTree;
+    var should = require('chai').should(),
+        requirejs = require('requirejs'),
+        config = WebGMEGlobal.getConfig(),
+
+        CoreTree = requirejs('common/core/coretree'),
+
+    // TODO: replace with in memory storage
+
+        storage = new global.Storage({}),
+
+        coreTree;
 
     before(function (done) {
         storage.openDatabase(function (err) {

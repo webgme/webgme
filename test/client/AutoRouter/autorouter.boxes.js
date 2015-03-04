@@ -3,13 +3,13 @@
  * brollb
  */
 
-'use strict';
-var utils = require('./autorouter.common.js'),
-    assert = utils.assert,
-    router;
 
 // Tests
 describe('AutoRouter Box Tests', function(){
+    'use strict';
+    var utils = require('./autorouter.common.js'),
+        assert = utils.assert,
+        router;
 
   beforeEach(function() {
       router = utils.getNewGraph();

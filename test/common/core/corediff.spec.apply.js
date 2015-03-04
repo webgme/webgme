@@ -2,12 +2,9 @@
  * Created by tamas on 2/23/15.
  */
 /* globals require, global, describe, before, after */
-(function() {
 require('../../_globals.js');
-var database = new global.WebGME.serverUserStorage({host:'127.0.0.1',port:27017,database:'multi',log:global.Log.create('mongoLog')}),
-    FS = require('fs'),
-    should = require('chai').should();
-describe('corediff',function(){
+
+describe('corediff apply',function(){
     'use strict';
     var projectName = 'coreDiffApply',
         project,
@@ -18,6 +15,11 @@ describe('corediff',function(){
             return JSON.parse(FS.readFileSync(path,'utf-8'));
         },
         jsonProject;
+
+    var database = new global.WebGME.serverUserStorage({host:'127.0.0.1',port:27017,database:'multi',log:global.Log.create('mongoLog')}),
+        FS = require('fs'),
+        should = require('chai').should();
+
     before(function(done){
         jsonProject = getJsonProject('./test/common/core/corediff/base001.json');
         database.openDatabase(function(err){
@@ -160,4 +162,3 @@ describe('corediff',function(){
         });
     });
 });
-})();

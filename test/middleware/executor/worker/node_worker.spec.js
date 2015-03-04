@@ -6,21 +6,21 @@
 
 require('../../../_globals.js');
 
-var requirejs = require('requirejs'),
-    fs = require('fs'),
-    rimraf = require('rimraf'),
-    childProcess = require('child_process'),
-    should = require('chai').should(),
-    ExecutorClient = requirejs('executor/ExecutorClient'),
-    BlobServerClient = requirejs('blob/BlobServerClient'),
-    blobClient,
-    executorClient,
-    server,
-    nodeWorkerProcess,
-    serverBaseUrl;
-
 describe('NodeWorker', function () {
     'use strict';
+
+    var requirejs = require('requirejs'),
+        fs = require('fs'),
+        rimraf = require('rimraf'),
+        childProcess = require('child_process'),
+        should = require('chai').should(),
+        ExecutorClient = requirejs('executor/ExecutorClient'),
+        BlobServerClient = requirejs('blob/BlobServerClient'),
+        blobClient,
+        executorClient,
+        server,
+        nodeWorkerProcess,
+        serverBaseUrl;
 
     describe('[nonce not set]', function () {
         before(function (done) {
@@ -31,6 +31,7 @@ describe('NodeWorker', function () {
             config.port = 9005;
             config.authentication = false;
             config.enableExecutor = true;
+            config.executorNonce = null;
 
             param.serverPort = config.port;
             param.sessionId = 'testingNodeWorker';
@@ -55,7 +56,15 @@ describe('NodeWorker', function () {
                             var str = data.toString();
                             if (str.indexOf('Connected to') > -1) {
                                 done();
+                                return;
                             }
+
+                            if (str.indexOf('Error connecting to') > -1) {
+                                done(new Error(str));
+                                return;
+                            }
+
+                            //console.log(str);
                         });
                     });
                 }
@@ -108,10 +117,10 @@ describe('NodeWorker', function () {
             var config = WebGMEGlobal.getConfig(),
                 param = {},
                 workerConfig = {};
-            config.port = 9002;
+            config.port = 9005;
             config.authentication = false;
             config.enableExecutor = true;
-            config.executorNonce = 'aSecret';
+            config.executorNonce = 'aReallyLongSecret';
             WebGMEGlobal.setConfig({executorNonce: 'aReallyLongSecret'});
             param.serverPort = config.port;
             param.sessionId = 'testingNodeWorker';
@@ -136,7 +145,15 @@ describe('NodeWorker', function () {
                             var str = data.toString();
                             if (str.indexOf('Connected to') > -1) {
                                 done();
+                                return;
                             }
+
+                            if (str.indexOf('Error connecting to') > -1) {
+                                done(new Error(str));
+                                return;
+                            }
+
+                            //console.log(str);
                         });
                     });
                 }
@@ -215,7 +232,7 @@ describe('NodeWorker', function () {
                     executorClient.createJob({hash: hash}, function (err, jobInfo) {
                         var intervalId;
                         if (err) {
-                            done(err);
+                            done(new Error(err));
                             return;
                         }
                         intervalId = setInterval(function () {
@@ -263,7 +280,7 @@ describe('NodeWorker', function () {
                     executorClient.createJob({hash: hash}, function (err, jobInfo) {
                         var intervalId;
                         if (err) {
-                            done(err);
+                            done(new Error(err));
                             return;
                         }
                         intervalId = setInterval(function () {
@@ -291,7 +308,7 @@ describe('NodeWorker', function () {
             executorClient.createJob({hash: '911'}, function (err, jobInfo) {
                 var intervalId;
                 if (err) {
-                    done(err);
+                    done(new Error(err));
                     return;
                 }
                 intervalId = setInterval(function () {
@@ -331,7 +348,7 @@ describe('NodeWorker', function () {
                     executorClient.createJob({hash: hash}, function (err, jobInfo) {
                         var intervalId;
                         if (err) {
-                            done(err);
+                            done(new Error(err));
                             return;
                         }
                         intervalId = setInterval(function () {
@@ -378,7 +395,7 @@ describe('NodeWorker', function () {
                     executorClient.createJob({hash: hash}, function (err, jobInfo) {
                         var intervalId;
                         if (err) {
-                            done(err);
+                            done(new Error(err));
                             return;
                         }
                         intervalId = setInterval(function () {
@@ -424,7 +441,7 @@ describe('NodeWorker', function () {
                     executorClient.createJob({hash: hash}, function (err, jobInfo) {
                         var intervalId;
                         if (err) {
-                            done(err);
+                            done(new Error(err));
                             return;
                         }
                         intervalId = setInterval(function () {
@@ -456,11 +473,11 @@ describe('NodeWorker', function () {
                 param = {},
                 workerConfig = {},
                 killAndCleanUp;
-            config.port = 9003;
+            config.port = 9005;
             config.authentication = false;
             config.enableExecutor = true;
-            config.executorNonce = 'aSecret';
-            WebGMEGlobal.setConfig({executorNonce: 'aReallyLongSecret'});
+            config.executorNonce = 'aReallyLongSecret';
+
             param.serverPort = config.port;
             param.sessionId = 'testingNodeWorker';
             serverBaseUrl = 'http://127.0.0.1:' + config.port;

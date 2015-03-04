@@ -3,12 +3,13 @@
  */
 //these test intended to increase the test coverage on mongo module
 require('../../_globals.js');
-var FS = require('fs'),
-  storage = new global.WebGME.serverUserStorage({host:'127.0.0.1',port:27017,database:'multi',log:global.Log.create('mongoLog')}),
-  requirejs = require('requirejs');
-CANON = requirejs('../src/common/util/canon');
 
 describe('Core#Mongo#Coverage',function(){
+    var FS = require('fs'),
+        storage = new global.WebGME.serverUserStorage({host:'127.0.0.1',port:27017,database:'multi',log:global.Log.create('mongoLog')}),
+        requirejs = require('requirejs'),
+        CANON = requirejs('../src/common/util/canon');
+
   it('fails to connect to database',function(done){
     this.timeout(20000);
     storage = new global.WebGME.serverUserStorage({host:'127.0.0.1',port:65535,database:'multi',log:global.Log.create('mongoLog')});
