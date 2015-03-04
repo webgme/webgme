@@ -1,17 +1,20 @@
+/* jshint node:true, mocha: true*/
+
 /**
- * Created by tamas on 12/29/14.
+ * @author kecso / https://github.com/kecso
  */
-/* globals require, be, it, describe, before, after */
-    require('../../_globals.js');
+
+var testFixture = require('../../_globals.js');
 
 describe('corediff-base', function () {
-    var WebGME = require('../../../webgme'),
-        storage = new global.Storage(),
-        should = require('chai').should();
+    'use strict';
+    var storage = new testFixture.StorageLocal();
 
     describe('commitAncestor', function () {
         describe('straight line', function () {
-            var project, commitChain = [], chainLength = 1000;
+            var project,
+                commitChain = [],
+                chainLength = 1000;
             before(function (done) {
                 storage.openDatabase(function (err) {
                     if (err) {
@@ -27,7 +30,9 @@ describe('corediff-base', function () {
                         project = p;
                         //finally we create the commit chain
                         var needed = chainLength,
-                            ancestors = [], i, error = null,
+                            ancestors = [],
+                            i,
+                            error = null,
                             finalCheck = function (err) {
                                 error = error || err;
                                 if (--needed === 0) {
@@ -117,7 +122,9 @@ describe('corediff-base', function () {
                         //       /   o -- o           10,11
                         // o -- o -- o -- o -- o -- o 1,2,3,4,5,6
 
-                        var error = null, needed = 12, addCommit = function (ancestors) {
+                        var error = null,
+                            needed = 12,
+                            addCommit = function (ancestors) {
                                 var rootHash = '#' + Math.round((Math.random() * 100000000));
                                 commitChain.push(project.makeCommit(ancestors, rootHash, '_commit_', finalCheck));
                             },

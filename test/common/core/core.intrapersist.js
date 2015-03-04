@@ -1,83 +1,14 @@
+/*jshint node:true, mocha:true*/
 /**
- * Created by tkecskes on 12/18/2014.
+ * @author kecso / https://github.com/kecso
  */
-//these checks intended to check what changes should be visible between persists
-require('../../_globals.js');
+var tGlobals = require('../../_globals.js');
 
-describe('Core#IntraPersist', function () {
-    var FS = require('fs'),
-        storage = new global.Storage(),
+describe('Core IntraPersist', function () {
+    'use strict';
+    var storage = null,
         requirejs = require('requirejs'),
         CANON = requirejs('../src/common/util/canon');
-
-    function saveProject(txt, ancestors, next) {
-        core.persist(root, function (err) {
-            if (err) {
-                return next(err);
-            }
-
-            commit = project.makeCommit(ancestors, core.getHash(root), txt, function (err) {
-                if (err) {
-                    return next(err);
-                }
-                next(null, commit);
-            });
-        });
-    }
-
-    function loadJsonData(path) {
-        try {
-            jsonData = JSON.parse(FS.readFileSync(path, 'utf8'));
-        } catch (err) {
-            jsonData = null;
-            return false;
-        }
-
-        return true;
-    }
-
-    function importProject(projectJson, next) {
-
-        storage.getProjectNames(function (err, names) {
-            if (err) {
-                return next(err);
-            }
-            names = names || [];
-            if (names.indexOf(projectName) !== -1) {
-                return next(new Error('project already exists'));
-            }
-
-            storage.openProject(projectName, function (err, p) {
-                if (err || !p) {
-                    return next(err || new Error('unable to get quasi project'));
-                }
-
-                core = new global.WebGME.core(p);
-                project = p;
-                root = core.createNode();
-
-                global.WebGME.serializer.import(core, root, projectJson, function (err, log) {
-                    if (err) {
-                        return next(err);
-                    }
-                    saveProject('test initial import', [], next);
-                });
-            });
-        });
-    }
-
-    function deleteProject(next) {
-        storage.getProjectNames(function (err, names) {
-            if (err) {
-                return next(err);
-            }
-            if (names.indexOf(projectName) === -1) {
-                return next(new Error('no such project'));
-            }
-
-            storage.deleteProject(projectName, next);
-        });
-    }
 
     function loadNodes(paths, next) {
         var needed = paths.length,
@@ -89,7 +20,7 @@ describe('Core#IntraPersist', function () {
                     if (--needed === 0) {
                         next(error, nodes);
                     }
-                })
+                });
             };
         for (i = 0; i < paths.length; i++) {
             loadNode(paths[i]);
@@ -97,8 +28,7 @@ describe('Core#IntraPersist', function () {
     }
 
 //global variables of the test
-    var projectName = "test_intra_" + new Date().getTime(),
-        commit = '',
+    var commit = '',
         baseCommit = '',
         root = null,
         rootHash = '',
@@ -106,28 +36,28 @@ describe('Core#IntraPersist', function () {
         project = null;
 
 
-    describe('Core#IntraPersist#Pre', function () {
-        it('should open the database connection', function (done) {
-            storage.openDatabase(done);
-        });
+    describe('Pre', function () {
         it('import the basic project', function (done) {
-            loadJsonData('./test/asset/intraPersist.json');
-            if (jsonData === null) {
-                return done(new Error('unable to load project file'));
-            }
-            importProject(jsonData, function (err, c) {
+            tGlobals.importProject({
+                filePath: './test/asset/intraPersist.json',
+                projectName: 'coreIntrapersistTest'
+            }, function (err, result) {
                 if (err) {
-                    return done(err);
+                    done(err);
+                    return;
                 }
-
-                commit = c;
-                baseCommit = c;
+                storage = result.storage;
+                project = result.project;
+                core = result.core;
+                root = result.root;
+                commit = result.commitHash;
+                baseCommit = result.commitHash;
                 rootHash = core.getHash(root);
                 done();
             });
         });
     });
-    describe('Core#IntraPersist#SimpleChanges', function () {
+    describe('SimpleChanges', function () {
         var e1NodePath = '/1736622193/1271963336',
             e1NodePrimePath = '/1710723537/1271963336',
             s1NodePath = '/1736622193/274170516',
@@ -353,7 +283,7 @@ describe('Core#IntraPersist', function () {
             }
         });
     });
-    describe('Core#IntraPersist#Creation', function () {
+    describe('Creation', function () {
         var nodePath = '/989341553/1009293372',
             specialPath = '/989341553/138645871',
             examplePath = '/1736622193',
@@ -389,12 +319,12 @@ describe('Core#IntraPersist', function () {
             if (core.getAttribute(newNode, 'mySpeciality') !== 'nothing') {
                 throw new Error('new node attribute is not available');
             }
-            core.setAttribute(nodes[specialPath], 'mySpeciality', "shit");
+            core.setAttribute(nodes[specialPath], 'mySpeciality', 'shit');
             if (core.getAttribute(newNode, 'mySpeciality') !== 'shit') {
                 throw new Error('new node changed attribute is not available');
             }
 
-            core.setAttribute(nodes[specialPath], 'mySpeciality', "nothing");
+            core.setAttribute(nodes[specialPath], 'mySpeciality', 'nothing');
             core.deleteNode(newNode);
         });
         it('newly created nodes\' set should be fully available', function () {
@@ -428,7 +358,7 @@ describe('Core#IntraPersist', function () {
             }
         });
     });
-    describe('Core#IntraPersist#Move', function () {
+    describe('Move', function () {
         var nodePath = '/989341553/1009293372',
             specialPath = '/989341553/138645871',
             examplePath = '/1736622193',
@@ -455,20 +385,12 @@ describe('Core#IntraPersist', function () {
         });
         it('moved node should be available instantaneously', function () {
             var movedNode = core.moveNode(nodes[e1NodePath], root);
-            if (core.getPath(movedNode) !== "/1271963336") {
+            if (core.getPath(movedNode) !== '/1271963336') {
                 throw new Error('bad path of moved node');
             }
             if (core.getPath(nodes[e1NodePath]) !== e1NodePath) {
                 throw new Error('old object points to old place');
             }
-        });
-    });
-    describe('Core#IntraPersist#Post', function () {
-        it('removes the project', function (done) {
-            storage.deleteProject(projectName, done);
-        });
-        it('closes the database', function (done) {
-            storage.closeDatabase(done);
         });
     });
 });

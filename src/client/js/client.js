@@ -370,12 +370,13 @@ define([
         if (_addOns[name] === undefined) {
           _addOns[name] = "loading";
           _database.simpleRequest({command: 'connectedWorkerStart', workerName: name, project: _projectName, branch: _branch}, function (err, id) {
-            console.log('started addon', err);
             if (err) {
+              logger.error('starting addon failed ' + err);
               delete _addOns[name];
               return logger.error(err);
             }
 
+            logger.debug('started addon ' + name + ' ' + id);
             _addOns[name] = id;
           });
         }
@@ -422,7 +423,7 @@ define([
           keys = Object.keys(_addOns),
           callback = function (err) {
             if (err) {
-              console.log("stopAddOn", err);
+                logger.error("stopAddOn" + err);
             }
           };
         for (i = 0; i < keys.length; i++) {

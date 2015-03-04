@@ -1,41 +1,46 @@
-/**
- * Created by tamas on 2/23/15.
- */
-/* globals require, global, describe, before, after */
-require('../../_globals.js');
+/* jshint node:true, mocha: true*/
 
-describe('corediff apply',function(){
+/**
+ * @author kecso / https://github.com/kecso
+ */
+
+var testFixture = require('../../_globals.js');
+
+describe('corediff apply', function () {
     'use strict';
     var projectName = 'coreDiffApply',
         project,
         core,
         root,
         commit,
-        getJsonProject = function(path){
-            return JSON.parse(FS.readFileSync(path,'utf-8'));
-        },
+        getJsonProject = testFixture.loadJsonFile,
         jsonProject;
 
-    var database = new global.WebGME.serverUserStorage({host:'127.0.0.1',port:27017,database:'multi',log:global.Log.create('mongoLog')}),
-        FS = require('fs'),
-        should = require('chai').should();
+    var database = new testFixture.WebGME.serverUserStorage({
+        host: '127.0.0.1',
+        port: 27017,
+        database: 'multi',
+        log: testFixture.Log.create('mongoLog')
+    });
 
-    before(function(done){
+    before(function (done) {
         jsonProject = getJsonProject('./test/common/core/corediff/base001.json');
-        database.openDatabase(function(err){
-            if(err){
-                return done(err);
+        database.openDatabase(function (err) {
+            if (err) {
+                done(err);
             }
-            database.openProject(projectName,function(err,p){
-                if(err){
-                    return done(err);
+            database.openProject(projectName, function (err, p) {
+                if (err) {
+                    done(err);
+                    return;
                 }
                 project = p;
-                core = new global.WebGME.core(project);
+                core = new testFixture.WebGME.core(project);
                 root = core.createNode();
-                global.WebGME.serializer.import(core,root,jsonProject,function(err,log){
-                    if(err){
-                        return done(err);
+                testFixture.WebGME.serializer.import(core, root, jsonProject, function (err, log) {
+                    if (err) {
+                        done(err);
+                        return;
                     }
                     core.persist(root, function (err) {
                         if (err) {
@@ -45,12 +50,12 @@ describe('corediff apply',function(){
                             if (err) {
                                 return done(err);
                             }
-                            project.setBranchHash('base','',commit,function(err){
-                                if(err){
+                            project.setBranchHash('base', '', commit, function (err) {
+                                if (err) {
                                     return done(err);
                                 }
-                                project.closeProject(function(err){
-                                    if(err){
+                                project.closeProject(function (err) {
+                                    if (err) {
                                         return done(err);
                                     }
                                     database.closeDatabase(done);
@@ -62,45 +67,52 @@ describe('corediff apply',function(){
             });
         });
     });
-    after(function(done){
-        database.openDatabase(function(err){
-            if(err){
-                return done(err);
+    after(function (done) {
+        database.openDatabase(function (err) {
+            if (err) {
+                done(err);
+                return;
             }
 
-            database.deleteProject(projectName,function(err){
-                if(err){
-                    return done(err);
+            database.deleteProject(projectName, function (err) {
+                if (err) {
+                    done(err);
+                    return;
                 }
                 database.closeDatabase(done);
             });
         });
     });
-    describe('apply',function(){
-        before(function(done){
-            database.openDatabase(function(err){
-                if(err){
-                    return done(err);
+    describe('apply', function () {
+        before(function (done) {
+            database.openDatabase(function (err) {
+                if (err) {
+                    done(err);
+                    return;
                 }
-                database.openProject(projectName,function(err,p){
-                    if(err){
-                        return done(err);
+                database.openProject(projectName, function (err, p) {
+                    if (err) {
+                        done(err);
+                        return;
                     }
                     project = p;
-                    core = new global.WebGME.core(project);
-                    project.getBranchNames(function(err,names){
-                        if(err){
-                            return done(err);
+                    core = new testFixture.WebGME.core(project);
+                    project.getBranchNames(function (err, names) {
+                        if (err) {
+                            done(err);
+                            return;
                         }
-                        if(!names['base']){
-                            return done(new Error('missing branch'));
+                        if (!names.base) {
+                            done(new Error('missing branch'));
+                            return;
                         }
-                        project.loadObject(names['base'],function(err,c){
-                            if(err){
-                                return done(err);
+                        project.loadObject(names.base, function (err, c) {
+                            if (err) {
+                                done(err);
+                                return;
                             }
-                            core.loadRoot(c.root,function(err,r){
-                                if(err){
+                            core.loadRoot(c.root, function (err, r) {
+                                if (err) {
                                     return done(err);
                                 }
                                 root = r;
@@ -111,16 +123,16 @@ describe('corediff apply',function(){
                 });
             });
         });
-        after(function(done){
-            try{
+        after(function (done) {
+            try {
                 database.closeDatabase(done);
-            } catch(e){
+            } catch (e) {
                 done();
             }
         });
-        it('modifies several attributes',function(done){
-            core.applyTreeDiff(root,{attr:{name:'ROOTy'},1:{attr:{name:'FCOy'}}},function(err){
-                if(err){
+        it('modifies several attributes', function (done) {
+            core.applyTreeDiff(root, {attr: {name: 'ROOTy'}, 1: {attr: {name: 'FCOy'}}}, function (err) {
+                if (err) {
                     return done(err);
                 }
                 core.persist(root, function (err) {
@@ -132,25 +144,25 @@ describe('corediff apply',function(){
                         if (err) {
                             return done(err);
                         }
-                        project.setBranchHash('base',oldCommit,commit,function(err){
-                            if(err){
+                        project.setBranchHash('base', oldCommit, commit, function (err) {
+                            if (err) {
                                 return done(err);
                             }
                             //checking
-                            project.loadObject(commit,function(err,c){
-                                if(err){
+                            project.loadObject(commit, function (err, c) {
+                                if (err) {
                                     return done(err);
                                 }
-                                core.loadRoot(c.root,function(err,r){
-                                    if(err){
+                                core.loadRoot(c.root, function (err, r) {
+                                    if (err) {
                                         return done(err);
                                     }
-                                    core.getAttribute(r,'name').should.be.eql('ROOTy');
-                                    core.loadByPath(r,'/1',function(err,fco){
-                                        if(err){
+                                    core.getAttribute(r, 'name').should.be.eql('ROOTy');
+                                    core.loadByPath(r, '/1', function (err, fco) {
+                                        if (err) {
                                             return done(err);
                                         }
-                                        core.getAttribute(fco,'name').should.be.eql('FCOy');
+                                        core.getAttribute(fco, 'name').should.be.eql('FCOy');
                                         done();
                                     });
                                 });

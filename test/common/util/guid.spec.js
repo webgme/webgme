@@ -1,24 +1,18 @@
-/*globals require, describe, it, WebGMEGlobal*/
+/*globals require*/
+/*jshint node:true, mocha:true*/
 /**
  * @author lattmann / https://github.com/lattmann
  */
 
-require('../../_globals.js');
+var testFixture = require('../../_globals.js');
 
 describe('GUID', function () {
-    "use strict";
-    var should = require('chai').should(),
-        WebGME = require('../../../webgme'),
-        requirejs = require('requirejs'),
-        config = WebGMEGlobal.getConfig(),
-
-        GUID = requirejs('common/util/guid'),
-
+    'use strict';
+    var GUID = testFixture.requirejs('common/util/guid'),
         GUID_REGEXP = new RegExp('^[a-z0-9]{8}(-[a-z0-9]{4}){3}-[a-z0-9]{12}$', 'i');
 
     it('should generate a valid guid format', function () {
         var guid = GUID();
-        //console.log(guid, guid.match(GUID_REGEXP));
         guid.match(GUID_REGEXP).should.not.be.null;
     });
 

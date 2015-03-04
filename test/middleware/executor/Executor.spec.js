@@ -1,22 +1,22 @@
-/*globals require, describe, it, afterEach, WebGMEGlobal, WebGME*/
-
+/*globals require, WebGMEGlobal*/
+/*jshint mocha:true*/
 /**
  * @author pmeijer / https://github.com/pmeijer
  */
 
-require('../../_globals.js');
+var testFixture = require('../../_globals.js');
 
 describe('Executor', function () {
     'use strict';
 
-    var agent = require('superagent').agent(),
-        should = require('chai').should(),
-        fs = require('fs'),
+    var agent = testFixture.superagent.agent(),
+        should = testFixture.should,
+        fs = testFixture.fs,
         server,
         serverBaseUrl;
 
     afterEach(function (done) {
-        server.stop(function(err) {
+        server.stop(function (err) {
             try {
                 fs.unlinkSync('test-tmp/jobList.nedb');
             } catch (error) {
@@ -38,7 +38,7 @@ describe('Executor', function () {
 
         serverBaseUrl = 'http://127.0.0.1:' + config.port;
 
-        server = WebGME.standaloneServer(config);
+        server = testFixture.WebGME.standaloneServer(config);
         server.start(function () {
             agent.get(serverBaseUrl + '/rest/executor/worker/').end(function (err, res) {
                 if (err) {
@@ -58,7 +58,7 @@ describe('Executor', function () {
 
         serverBaseUrl = 'http://127.0.0.1:' + config.port;
 
-        server = WebGME.standaloneServer(config);
+        server = testFixture.WebGME.standaloneServer(config);
         server.start(function () {
             agent.get(serverBaseUrl + '/rest/executor/worker/').end(function (err, res) {
                 if (err) {

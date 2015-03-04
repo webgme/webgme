@@ -13,7 +13,7 @@
 var PATH = require('path'),
     FS = require('fs'),
     requirejs = require('requirejs'),
-    baseDir = __dirname,
+    baseDir = __dirname+'/src/',
     paths = {
         "logManager": "common/LogManager",
         "storage": "common/storage",
@@ -29,7 +29,6 @@ var PATH = require('path'),
         "blob": "middleware/blob",
         "executor": "middleware/executor",
     };
-baseDir += global.COVERAGE ? '/src-cov/': '/src/';
 //All other modules should only configure new path in respect with this base URL
 requirejs.config({
     nodeRequire: require,

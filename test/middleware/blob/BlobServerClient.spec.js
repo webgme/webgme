@@ -1,18 +1,17 @@
-/*globals describe, it, before, after, beforeEach, WebGMEGlobal, WebGME*/
-/*jshint node:true*/
+/*globals WebGMEGlobal*/
+/*jshint node:true, mocha:true*/
 /**
  * @author pmeijer / https://github.com/pmeijer
  */
 
-require('../../_globals.js');
+var testFixture = require('../../_globals.js');
 
 describe('BlobServerClient', function () {
     'use strict';
 
-    var requirejs = require('requirejs'),
-        rimraf = require('rimraf'),
-        should = require('chai').should(),
-        BlobServerClient = requirejs('blob/BlobServerClient'),
+    var rimraf = testFixture.rimraf,
+        should = testFixture.should,
+        BlobServerClient = testFixture.BlobServerClient,
         blobClient,
         server,
         serverBaseUrl;
@@ -30,7 +29,7 @@ describe('BlobServerClient', function () {
             param.sessionId = 'testingBlobServerClient';
             serverBaseUrl = 'http://127.0.0.1:' + config.port;
 
-            server = WebGME.standaloneServer(config);
+            server = testFixture.WebGME.standaloneServer(config);
             server.start(function () {
                 blobClient = new BlobServerClient(param);
                 done();
@@ -120,7 +119,7 @@ describe('BlobServerClient', function () {
                     'a.txt': 'This is text',
                     'a.json': '{a: 1}'
                 };
-            artifact.addFiles(filesToAdd, function (err, hashes) {
+            artifact.addFiles(filesToAdd, function (err/*, hashes*/) {
                 if (err) {
                     done(err);
                     return;
@@ -137,28 +136,28 @@ describe('BlobServerClient', function () {
         });
 
         it('getObject should return 404 for invalid hash', function (done) {
-            blobClient.getObject('this_is_not_a_valid_hash', function (err, data) {
+            blobClient.getObject('this_is_not_a_valid_hash', function (err/*, data*/) {
                 should.equal(err, 404);
                 done();
             });
         });
 
         it('getObject should return 500 for nonexisting hash', function (done) {
-            blobClient.getObject('a2b766e677947ad890b1b8d689557c2ed0ebd878', function (err, data) {
+            blobClient.getObject('a2b766e677947ad890b1b8d689557c2ed0ebd878', function (err/*, data*/) {
                 should.equal(err, 500);
                 done();
             });
         });
 
         it('getMetadata should return 500 for invalid hash', function (done) {
-            blobClient.getMetadata('this_is_not_a_valid_hash', function (err, data) {
+            blobClient.getMetadata('this_is_not_a_valid_hash', function (err/*, data*/) {
                 should.equal(err, 500);
                 done();
             });
         });
 
         it('getMetadata should return 500 for nonexisting hash', function (done) {
-            blobClient.getMetadata('a2b766e677947ad890b1b8d689557c2ed0ebd878', function (err, data) {
+            blobClient.getMetadata('a2b766e677947ad890b1b8d689557c2ed0ebd878', function (err/*, data*/) {
                 should.equal(err, 500);
                 done();
             });
