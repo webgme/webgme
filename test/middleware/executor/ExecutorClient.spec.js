@@ -37,17 +37,19 @@ describe('ExecutorClient', function () {
     });
 
     after(function (done) {
-        server.stop(done);
-        try {
-            fs.unlinkSync('test-tmp/jobList.nedb');
-        } catch (err) {
-            //console.log(err);
-        }
-        try {
-            fs.unlinkSync('test-tmp/workerList.nedb');
-        } catch (err) {
-            //console.log(err);
-        }
+        server.stop(function(err) {
+            try {
+                fs.unlinkSync('test-tmp/jobList.nedb');
+            } catch (error) {
+                //console.log(error);
+            }
+            try {
+                fs.unlinkSync('test-tmp/workerList.nedb');
+            } catch (error) {
+                //console.log(error);
+            }
+            done(err);
+        });
     });
 
     it('getWorkersInfo should return empty object', function (done) {

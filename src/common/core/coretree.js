@@ -641,6 +641,26 @@ define([ "util/assert", "util/key", "core/future", "core/tasync", 'util/canon' ]
 			return keys;
 		};
 
+        var getRawKeys = function(object,predicate){
+            ASSERT(typeof predicate === "undefined" || typeof predicate === "function");
+            predicate = predicate || noUnderscore;
+
+            var keys = Object.keys(object);
+
+            var i = keys.length;
+            while (--i >= 0 && !predicate(keys[i])) {
+                keys.pop();
+            }
+
+            while (--i >= 0) {
+                if (!predicate(keys[i])) {
+                    keys[i] = keys.pop();
+                }
+            }
+
+            return keys;
+        }
+
 		// ------- persistence
 
 		var getHash = function (node) {
@@ -763,6 +783,22 @@ define([ "util/assert", "util/key", "core/future", "core/tasync", 'util/canon' ]
 				return typeof node.data === "object" && node.data !== null ? node : null;
 			}
 		};
+
+		var getChildHash = function(node,relid){
+			ASSERT(isValidNode(node));
+
+			node = getChild(node, relid);
+
+			if (isValidHash(node.data)) {
+				// TODO: this is a hack, we should avoid loading it multiple
+				// times
+				return node.data;
+			} else {
+				return typeof node.data === "object" && node.data !== null ? getHash(node) : null;
+			}
+		};
+
+
 
 		var __loadChild2 = function (node, newdata) {
 			node = normalize(node);
@@ -911,6 +947,7 @@ define([ "util/assert", "util/key", "core/future", "core/tasync", 'util/canon' ]
 			setProperty: setProperty,
 			deleteProperty: deleteProperty,
 			getKeys: getKeys,
+            getRawKeys: getRawKeys,
 
 			isHashed: isHashed,
 			setHashed: setHashed,
@@ -920,7 +957,9 @@ define([ "util/assert", "util/key", "core/future", "core/tasync", 'util/canon' ]
 			loadChild: loadChild,
 			loadByPath: loadByPath,
 
-			isValidNode: isValidNode
+			isValidNode: isValidNode,
+
+			getChildHash: getChildHash
 		};
 	};
 });

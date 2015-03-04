@@ -8,7 +8,7 @@
     left: 2px; }
   .panel-base-wh .panel-header {
     background-color: #efefef;
-    border-bottom: 3px solid transparent;
+    border-bottom: 3px solid rgba(0, 0, 0, 0);
     white-space: nowrap; }
     .panel-base-wh .panel-header .panel-header-title {
       font-size: 21px;
@@ -102,7 +102,7 @@
   .side-panel .panel-base-wh .panel-header {
     padding: 3px;
     background-color: whitesmoke;
-    border-bottom: 3px solid transparent; }
+    border-bottom: 3px solid rgba(0, 0, 0, 0); }
     .side-panel .panel-base-wh .panel-header .ro-icon {
       position: relative;
       top: 0px;

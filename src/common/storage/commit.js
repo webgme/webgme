@@ -31,6 +31,7 @@ define([ "util/assert", "util/key", "util/canon" ], function (ASSERT, GENKEY, CA
 						getBranchHash: _project.getBranchHash,
 						setBranchHash: _project.setBranchHash,
 						getCommits: _project.getCommits,
+            getCommonAncestorCommit: _project.getCommonAncestorCommit,
 						makeCommit: makeCommit,
                         setUser: setUser,
 						ID_NAME: _project.ID_NAME

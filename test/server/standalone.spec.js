@@ -50,7 +50,6 @@ describe('standalone server', function () {
         requests: [
             {code: 200, url: '/'},
             {code: 200, url: '/login'},
-            {code: 200, url: '/login/forge', redirectUrl: '/'},
             {code: 200, url: '/login/google/return', redirectUrl: '/'},
             {code: 200, url: '/logout', redirectUrl: '/login'},
             {code: 200, url: '/bin/getconfig.js'},
@@ -75,6 +74,7 @@ describe('standalone server', function () {
 
             {code: 401, url: '/login/client/fail'},
 
+            {code: 404, url: '/login/forge'},
             {code: 404, url: '/extlib/does_not_exist'},
             {code: 404, url: '/pluginoutput/does_not_exist'},
             {code: 404, url: '/plugin'},
@@ -286,16 +286,35 @@ describe('standalone server', function () {
                 })
                 .then(function (db_) {
                     db = db_;
-                    return Q.ninvoke(db, 'collection', '_users');
-                })
-                .then(function (collection_) {
-                    collection = collection_;
-                    return Q.ninvoke(collection, 'remove');
-                }).then(function () {
-                    return Q.ninvoke(db, 'collection', '_organizations')
-                        .then(function (orgs_) {
-                            return Q.ninvoke(orgs_, 'remove');
-                        });
+                    return Q.all([
+                        Q.ninvoke(db, 'collection', '_users')
+                            .then(function (collection_) {
+                                collection = collection_;
+                                return Q.ninvoke(collection, 'remove')
+                            }),
+                        Q.ninvoke(db, 'collection', '_organizations')
+                            .then(function (orgs_) {
+                                return Q.ninvoke(orgs_, 'remove');
+                            }),
+                        Q.ninvoke(db, 'collection', 'ClientCreateProject')
+                            .then(function (createdProject) {
+                                return Q.ninvoke(createdProject, 'remove');
+                            }),
+                        Q.ninvoke(db, 'collection', 'project')
+                            .then(function (project) {
+                                return Q.ninvoke(project, 'remove')
+                                    .then(function () {
+                                        return Q.ninvoke(project, 'insert', {_id: '*info', dummy: true});
+                                    });
+                            }),
+                        Q.ninvoke(db, 'collection', 'unauthorized_project')
+                            .then(function (project) {
+                                return Q.ninvoke(project, 'remove')
+                                    .then(function () {
+                                        return Q.ninvoke(project, 'insert', {_id: '*info', dummy: true});
+                                    });
+                            })
+                    ]);
                 });
 
             var gmeauthDeferred = Q.defer();
@@ -353,16 +372,24 @@ describe('standalone server', function () {
         });
 
 
-        it('should log in', function (done) {
+        var logIn = function(callback) {
             agent.post(serverBaseUrl + '/login?redirect=%2F')
                 .type('form')
                 .send({ username: 'user'})
                 .send({ password: 'plaintext'})
                 .end(function (err, res) {
+                    if (err) {
+                        return callback(err);
+                    }
+                    should.equal(res.status, 200);
+                    callback(err, res);
+                });
+        };
+        it('should log in', function (done) {
+            logIn(function(err, res) {
                 if (err) {
                     return done(err);
                 }
-                should.equal(res.status, 200);
                 res.redirects.should.deep.equal([ serverBaseUrl + '/' ]);
 
                 agent.get(serverBaseUrl + '/gettoken')
@@ -403,7 +430,7 @@ describe('standalone server', function () {
         });
 
         it('should have permissions', function (done) {
-            return  gmeauth.getAuthorizationInfoByUserId('user', 'project')
+            return gmeauth.getAuthorizationInfoByUserId('user', 'project')
                 .then(function (authorized) {
                     authorized.should.deep.equal({read: true, write: true, delete: false});
                 }).then(function () {
@@ -413,6 +440,43 @@ describe('standalone server', function () {
                 })
                 .nodeify(done);
         });
+
+        it('should be able to open an authorized project', function (done) {
+            var projectName = 'project';
+            openSocketIo()
+                .then(function (socket) {
+                    return Q.ninvoke(socket, 'emit', 'openProject', projectName)
+                        .finally(function () {
+                            socket.disconnect();
+                        });
+                }).then(function () {
+                    return gmeauth.getProjectAuthorizationByUserId('user', projectName);
+                }).then(function (authorized) {
+                    authorized.should.deep.equal({read: true, write: true, delete: false});
+                }).nodeify(done);
+        });
+
+        it('should not be able to open an unauthorized project', function (done) {
+            var projectName = 'unauthorized_project';
+            openSocketIo()
+                .then(function (socket) {
+                    return Q.ninvoke(socket, 'emit', 'openProject', projectName)
+                        .finally(function () {
+                            socket.disconnect();
+                        });
+                }).then(function () {
+                    return gmeauth.getProjectAuthorizationByUserId('user', projectName);
+                }).then(function (authorized) {
+                    authorized.should.deep.equal({read: true, write: true, delete: true});
+                }).nodeify(function (err) {
+                    if (!err) {
+                        done('should have failed');
+                    }
+                    ('' + err).should.contain('missing necessary user rights');
+                    done();
+                });
+        });
+
 
         it('should be able to revoke permissions', function (done) {
             return gmeauth.authorizeByUserId('user', 'project', 'delete', {})
@@ -426,6 +490,44 @@ describe('standalone server', function () {
                     authorized.should.deep.equal({read: false, write: false, delete: false});
                 })
                 .nodeify(done);
+        });
+
+        var openSocketIo = function () {
+            var io = require('socket.io-client');
+            return Q.nfcall(logIn)
+                .then(function (/*res*/) {
+                    var socketReq = {url: serverBaseUrl};
+                    agent.attachCookies(socketReq);
+                    var socket = io.connect(serverBaseUrl,
+                        {
+                            'query': 'webGMESessionId=' + /webgmeSid=s:([^;.]+)/.exec(decodeURIComponent(socketReq.cookies))[1],
+                            'transports': ['websocket'],
+                            'multiplex': false
+                        });
+                    var defer = Q.defer();
+                    socket.on('error', function (err) {
+                        defer.reject(err);
+                    });
+                    socket.on('connect', function () {
+                        defer.resolve(socket);
+                    });
+                    return defer.promise;
+                });
+        };
+
+        it('should grant perms to newly-created project', function (done) {
+            var projectName = 'ClientCreateProject';
+            openSocketIo(projectName)
+                .then(function (socket) {
+                    return Q.ninvoke(socket, 'emit', 'openProject', projectName)
+                        .finally(function () {
+                            socket.disconnect();
+                        });
+                }).then(function () {
+                    return gmeauth.getProjectAuthorizationByUserId('user', projectName);
+                }).then(function (authorized) {
+                    authorized.should.deep.equal({read: true, write: true, delete: true});
+                }).nodeify(done);
         });
 
         it('should be able to add organization', function (done) {

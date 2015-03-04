@@ -51,7 +51,9 @@ define(['logManager',
         });
 
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_ASPECT, function (model, activeAspect) {
+          if(activeAspect !== undefined){
             self.selectedAspectChanged(activeAspect);
+          }
         });
     };
 
@@ -110,8 +112,14 @@ define(['logManager',
     };
 
     PartBrowserControl.prototype._eventCallback = function (events) {
+        //TODO eventing should be refactored
+        this._logger.debug('_eventCallback ' + events[0].etype);
+        events.shift();
+
         var i = events ? events.length : 0,
-            e;
+            e,
+            needsDecoratorUpdate = false;
+
 
         this._logger.debug("_eventCallback '" + i + "' items, events: " + JSON.stringify(events));
 
@@ -119,9 +127,11 @@ define(['logManager',
             e = events[i];
             switch (e.etype) {
                 case CONSTANTS.TERRITORY_EVENT_LOAD:
+                    needsDecoratorUpdate = true;
                     this._onLoad(e.eid);
                     break;
                 case CONSTANTS.TERRITORY_EVENT_UPDATE:
+                    needsDecoratorUpdate = true;
                     this._onUpdate(e.eid);
                     break;
                 case CONSTANTS.TERRITORY_EVENT_UNLOAD:
@@ -130,7 +140,10 @@ define(['logManager',
             }
         }
 
-        this._updateValidChildrenTypeDecorators();
+        if(needsDecoratorUpdate){
+            this._updateValidChildrenTypeDecorators();
+        }
+
 
         this._logger.debug("_eventCallback '" + events.length + "' items - DONE");
     };

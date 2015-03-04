@@ -17,7 +17,9 @@ define(['jquery',
         BACKGROUND_DOM_BASE = $('<div id="' + ID_LAYER + '"></div>'),
         body = $('body'),
         LI_BASE = $('<li><a tabindex="-1" href="#"></a></li>'),
-        DATA_KEY = 'key';
+        DATA_KEY = 'key',
+        minWidth = 200,
+        minHeight = 100;
 
     ContextMenu = function (params) {
         this._menuDiv = DOM_BASE.clone();
@@ -35,7 +37,11 @@ define(['jquery',
 
     ContextMenu.prototype.show = function (position) {
         var self = this,
-            callback = this._callback;
+            callback = this._callback,
+            windowHeight = $(window).height(),
+            windowWidth = $(window).width(),
+            availableHeight,
+            availableWidth;
 
         this.hide();
 
@@ -45,10 +51,18 @@ define(['jquery',
             position = {'x': 100, 'y': 100};
         }
 
+        availableHeight = windowHeight - position.y;
+        availableWidth = windowWidth - position.x;
+
+        this._menuUL.css({
+            'max-height': availableHeight > minHeight ? availableHeight : minHeight,
+            'max-width': availableWidth > minWidth ? availableWidth : minWidth
+        });
+
         this._menuDiv.css({
             display: "block",
-            left: position.x,
-            top: position.y
+            left: availableWidth > minWidth ? position.x : windowWidth - minWidth,
+            top: availableHeight > minHeight ? position.y : windowHeight - minHeight
         });
 
         if (callback) {

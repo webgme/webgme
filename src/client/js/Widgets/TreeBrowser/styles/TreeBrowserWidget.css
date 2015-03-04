@@ -1,3 +1,5 @@
+@import url("./../../../../css/dynatree/ui.dynatree.css");
+@import url("./../../../../css/contextmenu/jquery.contextMenu.css");
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
@@ -5,8 +7,6 @@
  */
 /*IMPORTS*/
 /* original DynaTree Vista-theme css from DynaTree distribution */
-@import url("/css/dynatree/ui.dynatree.css");
-@import url("/css/contextmenu/jquery.contextMenu.css");
 .tree-browser {
   /* DynaTree Vista-theme overrides */
   /* END OF --- DynaTree Vista-theme overrides */
@@ -48,6 +48,8 @@
         font-style: normal;
         background: #beebff;
         border: 1px solid #99defd; }
+      .tree-browser ul.dynatree-container li span.dynatree-node.dynatree-selected.dynatree-focused a.dynatree-title {
+        background: #a3d7f3; }
       .tree-browser ul.dynatree-container li span.dynatree-node.node-progress a.dynatree-title {
         color: #aaaaaa;
         font-style: italic; }

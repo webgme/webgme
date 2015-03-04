@@ -139,8 +139,8 @@
   .uml-state-machine .transition {
     width: 120px;
     height: 55px;
-    background-color: transparent;
-    border: 1px solid transparent; }
+    background-color: rgba(0, 0, 0, 0);
+    border: 1px solid rgba(0, 0, 0, 0); }
     .uml-state-machine .transition .svgContainer {
       width: 120px;
       height: 40px; }

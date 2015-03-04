@@ -71,6 +71,14 @@ define(['logManager',
         assert(x1 !== undefined && x2 !== undefined && y1 !== undefined && y2 !== undefined,
             'Missing size info for box');
 
+        // Make sure the rect is at least 3x3
+        var height = rect.getHeight(), 
+            width = rect.getWidth(),
+            dx = Math.max((3-width)/2, 0),
+            dy = Math.max((3-height)/2, 0);
+
+        rect.inflateRect(dx, dy);
+
         box.setRect(rect);
         return box;
     };

@@ -161,6 +161,7 @@ define(["util/assert"], function (ASSERT) {
         getBranchHash: getBranchHash,
         setBranchHash: setBranchHash,
         getCommits: getCommits,
+                getCommonAncestorCommit: getCommonAncestorCommit,
         ID_NAME: "_id"
       });
 
@@ -342,6 +343,79 @@ define(["util/assert"], function (ASSERT) {
         }
         callback(null, finds);
       }
+
+            function getCommonAncestorCommit(commitA, commitB, callback) {
+                var ancestorsA = {},
+                    ancestorsB = {},
+                    newAncestorsA = [],
+                    newAncestorsB = [],
+                    getAncestors = function (commits, ancestorsSoFar, next) {
+                        var i, j, newCommits = [],commit;
+                        for (i = 0; i < commits.length; i++) {
+                            commit = storage.getItem(database + SEPARATOR + project + SEPARATOR + commits[i]);
+                            if (commit) {
+                                commit = JSON.parse(commit);
+                                for(j=0;j<commit.parents.length;j++){
+                                    if (newCommits.indexOf(commit.parents[i]) === -1) {
+                                        newCommits.push(commit.parents[i]);
+                                    }
+                                    ancestorsSoFar[commit.parents[i]] = true;
+                                }
+                            }
+                        }
+                        next(newCommits);
+                    },
+                    checkForCommon = function () {
+                        var i;
+                        for (i = 0; i < newAncestorsA.length; i++) {
+                            if (ancestorsB[newAncestorsA[i]]) {
+                                //we got a common parent so let's go with it
+                                return newAncestorsA[i];
+                            }
+                        }
+                        for (i = 0; i < newAncestorsB.length; i++) {
+                            if (ancestorsA[newAncestorsB[i]]) {
+                                //we got a common parent so let's go with it
+                                return newAncestorsB[i];
+                            }
+                        }
+                        return null;
+                    },
+                    loadStep = function () {
+                        var candidate = checkForCommon(),
+                            needed = 2,
+                            bothLoaded = function () {
+                                if (newAncestorsA.length > 0 || newAncestorsB.length > 0) {
+                                    loadStep();
+                                } else {
+                                    callback('unable to find common ancestor commit', null);
+                                }
+                            };
+                        if (candidate) {
+                            return callback(null, candidate);
+                        }
+                        getAncestors(newAncestorsA, ancestorsA, function (nCommits) {
+                            newAncestorsA = nCommits || [];
+                            if (--needed === 0) {
+                                bothLoaded();
+                            }
+                        });
+                        getAncestors(newAncestorsB, ancestorsB, function (nCommits) {
+                            newAncestorsB = nCommits || [];
+                            if (--needed === 0) {
+                                bothLoaded();
+                            }
+                        });
+                    };
+
+                //initializing
+                ancestorsA[commitA] = true;
+                newAncestorsA = [commitA];
+                ancestorsB[commitB] = true;
+                newAncestorsB = [commitB];
+                loadStep();
+
+            }
 
     }
 

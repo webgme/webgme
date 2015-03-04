@@ -13,6 +13,8 @@ define([], function () {
         TERRITORY_EVENT_LOAD : 'load',
         TERRITORY_EVENT_UPDATE : 'update',
         TERRITORY_EVENT_UNLOAD : 'unload',
+        TERRITORY_EVENT_COMPLETE : 'complete',
+        TERRITORY_EVENT_INCOMPLETE : 'incomplete',
 
         /*
          * GME_ID: wherever a GME object ID needs to be present

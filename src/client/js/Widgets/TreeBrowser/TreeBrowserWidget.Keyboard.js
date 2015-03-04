@@ -11,9 +11,15 @@ define(['js/KeyboardManager/IKeyTarget'], function (IKeyTarget) {
     var TreeBrowserWidgetKeyboard;
 
     TreeBrowserWidgetKeyboard = function () {
+        this.selectionStartNode = null;
+        this.prevFocused = null;
     };
 
     _.extend(TreeBrowserWidgetKeyboard.prototype, IKeyTarget.prototype);
+
+    TreeBrowserWidgetKeyboard.prototype._dropSelectionStateWithShift = function () {
+        this.selectionStartNode = null;
+    };
 
     TreeBrowserWidgetKeyboard.prototype._registerKeyboardListener = function () {
         WebGMEGlobal.KeyboardManager.setListener(this);
@@ -25,10 +31,14 @@ define(['js/KeyboardManager/IKeyTarget'], function (IKeyTarget) {
 
     TreeBrowserWidgetKeyboard.prototype.onKeyDown = function (eventArgs) {
         var ret = true,
+            nodes = this._treeInstance.getSelectedNodes(),
             node = $.ui.dynatree.getNode(this._treeEl.find('.dynatree-focused')),
+            //prevFocused = $.ui.dynatree.getNode(this._treeEl.find('.dynatree-focused')),
             sib = null,
             parents,
-            i;
+            i,
+            idxStart,
+            idxCurrent;
 
         if (!node) {
             node = this._treeInstance.getSelectedNodes();
@@ -42,16 +52,21 @@ define(['js/KeyboardManager/IKeyTarget'], function (IKeyTarget) {
             }
         }
 
+        this.prevFocused = $.ui.dynatree.getNode(this._treeEl.find('.dynatree-focused'));
+
         switch (eventArgs.combo) {
             case 'del':
+                this._dropSelectionStateWithShift();
                 this._nodeDelete(node);
                 ret = false;
                 break;
             case 'return':
+                this._dropSelectionStateWithShift();
                 this.onNodeDoubleClicked(node.data.key);
                 ret = false;
                 break;
             case 'f2':
+                this._dropSelectionStateWithShift();
                 this._nodeEdit(node);
                 ret = false;
                 break;
@@ -60,6 +75,7 @@ define(['js/KeyboardManager/IKeyTarget'], function (IKeyTarget) {
                 if (eventArgs.shiftKey !== true) {
                     this._deselectSelectedNodes();
                 }
+
                 sib = node.getPrevSibling();
                 while (sib && sib.bExpanded && sib.childList) {
                     sib = sib.childList[sib.childList.length - 1];
@@ -70,6 +86,21 @@ define(['js/KeyboardManager/IKeyTarget'], function (IKeyTarget) {
                 if (sib) {
                     sib.focus();
                     sib.select(true);
+
+                    nodes = this._treeInstance.getSelectedNodes();
+
+                    if (eventArgs.shiftKey) {
+                        this.selectionStartNode = this.selectionStartNode || this.prevFocused;
+
+                        idxStart = nodes.indexOf(this.selectionStartNode);
+                        idxCurrent = nodes.indexOf(sib);
+
+                        if (idxCurrent >= idxStart) {
+                            if (this.prevFocused) {
+                                this.prevFocused.select(false);
+                            }
+                        }
+                    }
                 }
                 ret = false;
                 break;
@@ -92,10 +123,26 @@ define(['js/KeyboardManager/IKeyTarget'], function (IKeyTarget) {
                 if (sib) {
                     sib.focus();
                     sib.select(true);
+
+                    nodes = this._treeInstance.getSelectedNodes();
+
+                    if (eventArgs.shiftKey) {
+                        this.selectionStartNode = this.selectionStartNode || this.prevFocused;
+
+                        idxStart = nodes.indexOf(this.selectionStartNode);
+                        idxCurrent = nodes.indexOf(sib);
+
+                        if (idxCurrent <= idxStart) {
+                            if (this.prevFocused) {
+                                this.prevFocused.select(false);
+                            }
+                        }
+                    }
                 }
                 ret = false;
                 break;
             case 'left':
+                this._dropSelectionStateWithShift();
                 if (node.bExpanded) {
                     node.toggleExpand();
                     node.focus();
@@ -104,6 +151,7 @@ define(['js/KeyboardManager/IKeyTarget'], function (IKeyTarget) {
                 ret = false;
                 break;
             case 'right':
+                this._dropSelectionStateWithShift();
                 if (!node.bExpanded && (node.childList || node.data.isLazy)) {
                     node.toggleExpand();
                     node.focus();
@@ -112,14 +160,19 @@ define(['js/KeyboardManager/IKeyTarget'], function (IKeyTarget) {
                 ret = false;
                 break;
             case 'ctrl+c':
+                this._dropSelectionStateWithShift();
                 this._nodeCopy();
                 ret = false;
                 break;
             case 'ctrl+v':
+                this._dropSelectionStateWithShift();
                 this._nodePaste(node);
                 ret = false;
                 break;
         }
+
+        this.prevFocused = $.ui.dynatree.getNode(this._treeEl.find('.dynatree-focused'));
+        this.selectionStartNode = this.selectionStartNode || this.prevFocused;
 
         return ret;
     };

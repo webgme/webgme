@@ -107,6 +107,7 @@ define(["util/assert", "util/guid"], function (ASSERT, GUID) {
             setBranchHash: setBranchHash,
             getCommits: project.getCommits,
             makeCommit: project.makeCommit,
+            getCommonAncestorCommit: project.getCommonAncestorCommit,
             ID_NAME: project.ID_NAME
           });
         } else {

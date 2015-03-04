@@ -1,113 +1,359 @@
 /*
-Syntax error: Undefined variable: "$connector-background-color".
-        on line 22 of SVGDecorator.SnapEditorWidget.scss
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ * 
+ * Author: Robert Kereskenyi
+ */
+/*#DBEAFC;*/
+/*error decorator properties*/
+.diagram-designer {
+  outline: none; }
+  .diagram-designer .items {
+    position: absolute; }
+    .diagram-designer .items .designer-item,
+    .diagram-designer .items .designer-connection {
+      cursor: pointer; }
+    .diagram-designer .items .rubberband {
+      background: rgba(219, 234, 252, 0.49);
+      border: #52a8ec solid 1px;
+      z-index: 100000; }
+    .diagram-designer .items .selection-outline {
+      background: rgba(255, 255, 0, 0.05);
+      border: rgba(0, 0, 0, 0.5) dashed 1px;
+      position: absolute;
+      pointer-events: none;
+      z-index: 100;
+      -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075) 0 0 4px rgba(0, 0, 0, 0.3);
+      -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 4px rgba(0, 0, 0, 0.3);
+      box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 4px rgba(0, 0, 0, 0.3); }
+      .diagram-designer .items .selection-outline .s-btn {
+        position: absolute;
+        background-color: white;
+        border: none;
+        line-height: 14px;
+        padding: 3px 4px;
+        border-radius: 4px;
+        pointer-events: all;
+        cursor: pointer;
+        -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075) 0 0 4px rgba(0, 0, 0, 0.3);
+        -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 4px rgba(0, 0, 0, 0.3);
+        box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 4px rgba(0, 0, 0, 0.3);
+        background-color: #000;
+        color: #fff; }
+        .diagram-designer .items .selection-outline .s-btn.delete {
+          top: -13px;
+          right: -13px; }
+        .diagram-designer .items .selection-outline .s-btn.rotate.bottom {
+          left: 50%;
+          margin-left: -13px;
+          bottom: -13px; }
+        .diagram-designer .items .selection-outline .s-btn.contextmenu {
+          bottom: -13px;
+          right: -13px; }
+        .diagram-designer .items .selection-outline .s-btn.move {
+          top: -13px;
+          left: 50%;
+          margin-left: -13px; }
+        .diagram-designer .items .selection-outline .s-btn:hover {
+          background-color: #428bca; }
+      .diagram-designer .items .selection-outline .rotation-deg {
+        text-align: center;
+        vertical-align: middle;
+        position: absolute;
+        width: 100%;
+        height: 30px;
+        margin-top: -15px;
+        top: 50%;
+        line-height: 30px;
+        font-size: 30px;
+        color: #666666; }
+    .diagram-designer .items .connection-connector.connector {
+      background-color: #fefefe;
+      height: 10px;
+      width: 10px;
+      position: absolute;
+      cursor: pointer;
+      border: 1px solid blue;
+      z-index: 10;
+      background-color: white;
+      border-radius: 12px;
+      margin-left: -6px;
+      margin-top: -6px; }
+      .diagram-designer .items .connection-connector.connector:hover {
+        border-color: rgba(82, 168, 236, 0.8);
+        -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+        -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+        box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6); }
+    .diagram-designer .items .c-area {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background-color: #000000;
+      border-radius: 4px;
+      margin-top: -4px;
+      margin-left: -4px; }
+    .diagram-designer .items .c-d-end {
+      background-color: #fefefe;
+      height: 10px;
+      width: 10px;
+      position: absolute;
+      cursor: pointer;
+      border: 1px solid blue;
+      z-index: 10;
+      margin-top: -6px;
+      margin-left: -6px;
+      line-height: 10px;
+      font-size: 8px;
+      text-align: center;
+      font-weight: bold;
+      font-family: Verdana; }
+      .diagram-designer .items .c-d-end:hover {
+        border-color: rgba(82, 168, 236, 0.8);
+        -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+        -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+        box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6); }
+      .diagram-designer .items .c-d-end.src {
+        border-color: red;
+        color: red; }
+      .diagram-designer .items .c-d-end.dst {
+        border-color: blue;
+        color: blue; }
+    .diagram-designer .items .error-decorator {
+      background-color: #f2dede;
+      padding: 3px;
+      text-align: center;
+      border: 2px solid #000000; }
+    .diagram-designer .items svg.connection-container {
+      z-index: -1; }
+      .diagram-designer .items svg.connection-container .new-segment-point-marker {
+        pointer-events: none;
+        fill: yellow;
+        stroke: red; }
+      .diagram-designer .items svg.connection-container .path-edit-segment {
+        stroke: rgba(0, 0, 0, 0);
+        opacity: 0; }
+      .diagram-designer .items svg.connection-container .segment-point {
+        fill: yellow;
+        stroke: black;
+        cursor: pointer; }
+        .diagram-designer .items svg.connection-container .segment-point:hover {
+          fill: #ff7800; }
+      .diagram-designer .items svg.connection-container .segment-point-move-path {
+        stroke: #ff7800; }
+      .diagram-designer .items svg.connection-container .segment-point-bezier-control {
+        fill: white;
+        stroke: black;
+        cursor: pointer; }
+        .diagram-designer .items svg.connection-container .segment-point-bezier-control:hover {
+          fill: #ff7800; }
+    .diagram-designer .items div.c-t {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 0; }
+      .diagram-designer .items div.c-t div.c-text {
+        position: absolute;
+        font-size: 10px;
+        white-space: nowrap; }
+        .diagram-designer .items div.c-t div.c-text .c-name {
+          position: relative;
+          left: -50%;
+          cursor: default; }
+          .diagram-designer .items div.c-t div.c-text .c-name.v {
+            left: 1px; }
+        .diagram-designer .items div.c-t div.c-text input {
+          height: 20px !important;
+          min-width: 50px; }
+    .diagram-designer .items.highlight-mode .designer-item,
+    .diagram-designer .items.highlight-mode .designer-connection,
+    .diagram-designer .items.highlight-mode .c-t {
+      opacity: 0.1;
+      cursor: pointer; }
+    .diagram-designer .items.highlight-mode .designer-item.highlighted,
+    .diagram-designer .items.highlight-mode .designer-connection.highlighted,
+    .diagram-designer .items.highlight-mode .c-t.highlighted {
+      opacity: 1.0; }
+    .diagram-designer .items.connection-drawing .connector:hover {
+      background-color: lime; }
+  .diagram-designer .drop-region {
+    width: 0;
+    height: 0;
+    position: absolute;
+    top: 0;
+    left: 0; }
+    .diagram-designer .drop-region.accept-droppable {
+      background-color: rgba(0, 255, 0, 0.1); }
+    .diagram-designer .drop-region.reject-droppable {
+      background-color: rgba(255, 0, 0, 0.1); }
 
-17:     .svg-content {
-18:       svg {
-19:         border: $border;
-20: 
-21:         .connector {
-22:           fill: $connector-background-color;
-23:           stroke: $connection-border-color;
-24:           stroke-width: $connector-border-width;
-25: 
-26:           &:hover {
-27:             stroke: $connector-hover-border-color;
+div.css-zoom.diagram-designer-zoom {
+  position: absolute;
+  top: 30px;
+  left: 10px; }
 
-Backtrace:
-SVGDecorator.SnapEditorWidget.scss:22
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/script/tree/variable.rb:49:in `_perform'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/script/tree/node.rb:50:in `perform'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:366:in `visit_prop'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/base.rb:36:in `visit'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:152:in `block in visit'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/stack.rb:79:in `block in with_base'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/stack.rb:121:in `with_frame'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/stack.rb:79:in `with_base'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:152:in `visit'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:389:in `block (2 levels) in visit_rule'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:389:in `map'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:389:in `block in visit_rule'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:173:in `with_environment'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:387:in `visit_rule'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/base.rb:36:in `visit'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:152:in `block in visit'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/stack.rb:79:in `block in with_base'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/stack.rb:121:in `with_frame'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/stack.rb:79:in `with_base'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:152:in `visit'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:389:in `block (2 levels) in visit_rule'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:389:in `map'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:389:in `block in visit_rule'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:173:in `with_environment'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:387:in `visit_rule'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/base.rb:36:in `visit'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:152:in `block in visit'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/stack.rb:79:in `block in with_base'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/stack.rb:121:in `with_frame'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/stack.rb:79:in `with_base'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:152:in `visit'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:389:in `block (2 levels) in visit_rule'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:389:in `map'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:389:in `block in visit_rule'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:173:in `with_environment'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:387:in `visit_rule'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/base.rb:36:in `visit'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:152:in `block in visit'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/stack.rb:79:in `block in with_base'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/stack.rb:121:in `with_frame'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/stack.rb:79:in `with_base'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:152:in `visit'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:389:in `block (2 levels) in visit_rule'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:389:in `map'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:389:in `block in visit_rule'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:173:in `with_environment'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:387:in `visit_rule'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/base.rb:36:in `visit'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:152:in `block in visit'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/stack.rb:79:in `block in with_base'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/stack.rb:121:in `with_frame'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/stack.rb:79:in `with_base'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:152:in `visit'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:389:in `block (2 levels) in visit_rule'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:389:in `map'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:389:in `block in visit_rule'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:173:in `with_environment'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:387:in `visit_rule'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/base.rb:36:in `visit'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:152:in `block in visit'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/stack.rb:79:in `block in with_base'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/stack.rb:121:in `with_frame'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/stack.rb:79:in `with_base'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:152:in `visit'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/base.rb:52:in `block in visit_children'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/base.rb:52:in `map'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/base.rb:52:in `visit_children'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:161:in `block in visit_children'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:173:in `with_environment'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:160:in `visit_children'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/base.rb:36:in `block in visit'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:180:in `visit_root'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/base.rb:36:in `visit'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:151:in `visit'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/visitors/perform.rb:8:in `visit'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/root_node.rb:36:in `css_tree'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/tree/root_node.rb:20:in `render'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/engine.rb:274:in `render'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/plugin/compiler.rb:414:in `update_stylesheet'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/plugin/compiler.rb:189:in `block in update_stylesheets'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/plugin/compiler.rb:186:in `each'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/plugin/compiler.rb:186:in `update_stylesheets'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/plugin.rb:82:in `update_stylesheets'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/exec.rb:489:in `watch_or_update'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/exec.rb:346:in `process_result'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/exec.rb:43:in `parse'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/lib/sass/exec.rb:22:in `parse!'
-/Library/Ruby/Gems/2.0.0/gems/sass-3.3.7/bin/scss:13:in `<top (required)>'
-/usr/bin/scss:23:in `load'
-/usr/bin/scss:23:in `<main>'
-*/
-body:before {
-  white-space: pre;
-  font-family: monospace;
-  content: "Syntax error: Undefined variable: \"$connector-background-color\".\A         on line 22 of SVGDecorator.SnapEditorWidget.scss\A \A 17:     .svg-content {\A 18:       svg {\A 19:         border: $border;\A 20: \A 21:         .connector {\A 22:           fill: $connector-background-color;\A 23:           stroke: $connection-border-color;\A 24:           stroke-width: $connector-border-width;\A 25: \A 26:           &:hover {\A 27:             stroke: $connector-hover-border-color;"; }
+.w-tabs div.css-zoom.diagram-designer-zoom {
+  top: 70px; }
+
+div.diagram-designer-drag-outline {
+  white-space: nowrap; }
+
+/* TABS CONTAINER */
+.active-panel .diagram-designer-tabs-container {
+  background-color: rgba(235, 235, 235, 0.2); }
+
+.diagram-designer-tabs-container {
+  position: absolute;
+  top: 3px;
+  width: 100%;
+  height: 26px;
+  background-color: rgba(248, 248, 248, 0.4);
+  padding-top: 1px; }
+  .diagram-designer-tabs-container > div {
+    display: table-cell;
+    vertical-align: middle;
+    white-space: nowrap; }
+  .diagram-designer-tabs-container div.add-tab-container {
+    border-bottom: 1px solid #ddd;
+    padding-left: 3px;
+    padding-right: 3px;
+    padding-bottom: 0; }
+  .diagram-designer-tabs-container div.add-tab-container > div {
+    display: inline-block;
+    margin-right: 3px; }
+  .diagram-designer-tabs-container div.add-tab-container ul.dropdown-menu li a [class^="icon-"],
+  .diagram-designer-tabs-container div.add-tab-container ul.dropdown-menu li a [class*=" icon-"] {
+    margin-left: -17px;
+    margin-right: 3px; }
+  .diagram-designer-tabs-container .btn {
+    padding: 0 12px; }
+  .diagram-designer-tabs-container div.tab-list-container {
+    width: 100%;
+    overflow: hidden; }
+    .diagram-designer-tabs-container div.tab-list-container ul.nav {
+      position: relative;
+      margin-bottom: 0px;
+      height: 24px; }
+      .diagram-designer-tabs-container div.tab-list-container ul.nav.nav-tabs > li {
+        display: inline-block;
+        float: none; }
+        .diagram-designer-tabs-container div.tab-list-container ul.nav.nav-tabs > li > a {
+          padding-top: 5px;
+          padding-bottom: 5px;
+          line-height: 13px; }
+          .diagram-designer-tabs-container div.tab-list-container ul.nav.nav-tabs > li > a .tab-title {
+            white-space: nowrap;
+            display: inline-block;
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis; }
+            .diagram-designer-tabs-container div.tab-list-container ul.nav.nav-tabs > li > a .tab-title input {
+              min-width: 50px !important; }
+          .diagram-designer-tabs-container div.tab-list-container ul.nav.nav-tabs > li > a [class^="icon-"],
+          .diagram-designer-tabs-container div.tab-list-container ul.nav.nav-tabs > li > a [class*=" icon-"] {
+            margin-top: -2px;
+            margin-left: 2px;
+            cursor: pointer;
+            display: none; }
+        .diagram-designer-tabs-container div.tab-list-container ul.nav.nav-tabs > li.active > a [class^="icon-"],
+        .diagram-designer-tabs-container div.tab-list-container ul.nav.nav-tabs > li.active > a [class*=" icon-"] {
+          display: inline-block; }
+      .diagram-designer-tabs-container div.tab-list-container ul.nav.nav-tabs.ui-sortable li.ui-sortable-placeholder {
+        height: 0px !important; }
+      .diagram-designer-tabs-container div.tab-list-container ul.nav.nav-tabs.ui-sortable li.ui-sortable-helper {
+        top: 0px !important;
+        pointer-events: none; }
+
+.read-only .diagram-designer-tabs-container div.tab-list-container ul.nav.nav-tabs > li.active > a [class^="icon-"],
+.read-only .diagram-designer-tabs-container div.tab-list-container ul.nav.nav-tabs > li.active > a [class*=" icon-"] {
+  display: none; }
+
+.rotate-options {
+  top: -52px;
+  left: 16px;
+  display: none; }
+
+.svg-decorator {
+  text-align: center;
+  position: relative; }
+  .svg-decorator .svg-content svg {
+    vertical-align: top; }
+    .svg-decorator .svg-content svg .connection-area {
+      stroke: #FF0000;
+      stroke-width: 5.5; }
+  .svg-decorator .name {
+    white-space: nowrap;
+    font-size: 9px;
+    font-weight: bold;
+    text-transform: uppercase;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 16px;
+    line-height: 16px; }
+  .svg-decorator.abstract .name {
+    font-style: italic;
+    color: #aaaaaa; }
+  .svg-decorator .ports {
+    position: absolute;
+    top: 0;
+    font-size: 10px; }
+    .svg-decorator .ports.ports-l {
+      left: 0px; }
+    .svg-decorator .ports.ports-r {
+      left: 100px; }
+    .svg-decorator .ports .port {
+      position: absolute;
+      height: 13px;
+      line-height: 13px; }
+      .svg-decorator .ports .port .title {
+        position: absolute;
+        overflow: hidden;
+        text-overflow: ellipsis; }
+      .svg-decorator .ports .port .icon {
+        position: absolute; }
+        .svg-decorator .ports .port .icon img {
+          width: 13px;
+          height: 13px; }
+      .svg-decorator .ports .port .connector {
+        margin-left: 0;
+        margin-top: 0; }
+    .svg-decorator .ports.ports-l .port .title {
+      text-align: left; }
+    .svg-decorator .ports.ports-r .port .title {
+      text-align: right; }
+    .svg-decorator .ports.ports-r .port .icon img {
+      -webkit-transform: scaleX(-1);
+      -moz-transform: scaleX(-1);
+      -ms-transform: scaleX(-1);
+      -o-transform: scaleX(-1);
+      transform: scaleX(-1); }
+
+.designer-item .svg-decorator .svg-content svg {
+  border: none; }
+  .designer-item .svg-decorator .svg-content svg .connector {
+    fill: #fefefe;
+    stroke: blue;
+    stroke-width: 1px; }
+    .designer-item .svg-decorator .svg-content svg .connector:hover {
+      stroke: rgba(82, 168, 236, 0.8); }
+.designer-item .svg-decorator .connector {
+  background-color: #fefefe;
+  height: 10px;
+  width: 10px;
+  position: absolute;
+  cursor: pointer;
+  border: 1px solid blue;
+  z-index: 10;
+  margin-left: -6px;
+  margin-top: -6px; }
+  .designer-item .svg-decorator .connector:hover {
+    border-color: rgba(82, 168, 236, 0.8);
+    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+    -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6); }
+.designer-item.selected .svg-decorator .svg-content svg {
+  border: none;
+  background-color: rgba(219, 234, 252, 0.2);
+  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075) 0 0 4px rgba(0, 0, 0, 0.3);
+  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 4px rgba(0, 0, 0, 0.3);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 4px rgba(0, 0, 0, 0.3); }

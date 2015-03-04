@@ -159,6 +159,9 @@ define([
         _TOKEN = null,
         META = new BaseMeta(),
         _rootHash = null,
+        _previousRootHash = null,
+        _changeTree = null,
+        _inheritanceHash = {},
         _root = null,
         _gHash = 0,
         _addOns = {},
@@ -639,7 +642,7 @@ define([
                   _redoer.clean();
                   _redoer.addModification(newhash,"branch initial");
                   _selfCommits={};_selfCommits[newhash] = true;
-                }
+                };
                 var redoInfo = _redoer.checkStatus(),
                   canUndo = false,
                   canRedo = false;
@@ -1008,6 +1011,8 @@ define([
           _patterns = {};
           _msg = "";
           _recentCommits = [];
+          _previousRootHash = null;
+          _rootHash = null;
           _viewer = false;
           _readOnlyProject = false;
           _loadNodes = {};
@@ -1069,17 +1074,97 @@ define([
 
       }
 
-      function getModifiedNodes(newerNodes) {
-        var modifiedNodes = [];
-        for (var i in _nodes) {
-          if (newerNodes[i]) {
-            if (newerNodes[i].hash !== _nodes[i].hash && _nodes[i].hash !== "") {
-              modifiedNodes.push(i);
+        function getInheritanceChain(node){
+            var ancestors = [];
+            node = _core.getBase(node);
+            while(node){
+                ancestors.push(_core.getPath(node));
+                node = _core.getBase(node);
             }
-          }
+            return ancestors;
         }
-        return modifiedNodes;
-      }
+
+      function _getModifiedNodes(newerNodes){
+            var modifiedNodes = [];
+            for(var i in _nodes){
+                if(newerNodes[i]){
+                    if(newerNodes[i].hash !== _nodes[i].hash && _nodes[i].hash !== ""){
+                        modifiedNodes.push(i);
+                    }
+                }
+            }
+            return modifiedNodes;
+        }
+        function isInChangeTree(path){
+            var pathArray = path.split("/"),
+                diffObj = _changeTree,
+                index = 0,
+                found = false;
+
+            pathArray.shift();
+            if(pathArray.length === 0){
+                found = true;
+            }
+
+            if(!diffObj){
+                return false;
+            }
+
+            while(index<pathArray.length && !found){
+                if(diffObj[pathArray[index]]){
+                    diffObj = diffObj[pathArray[index]];
+                    if(++index === pathArray.length){
+                        found = true;
+                    }
+                } else {
+                    index = pathArray.length;
+                }
+            }
+
+            
+                if(found && diffObj){
+                  if(diffObj.removed !== undefined){
+                    return false;
+                  }
+                  if(diffObj.reg || diffObj.attr || diffObj.pointer || diffObj.set || diffObj.meta || diffObj.childrenListChanged){
+                      return true;
+                  }
+                }
+            
+
+            return false;
+        }
+        /*function getModifiedNodes(newerNodes){
+            var modifiedNodes = [],
+                keys = Object.keys(newerNodes),
+                i,found,
+                inheritanceArray;
+            for(i=0;i<keys.length;i++){
+                found = false;
+                inheritanceArray = getInheritanceChain(newerNodes[keys[i]].node);
+                inheritanceArray.unshift(keys[i]);
+                while(inheritanceArray.length > 0 && !found){
+                    if(isInChangeTree(inheritanceArray.shift())){
+                        found = true;
+                        modifiedNodes.push(keys[i]);
+                    }
+                }
+            }
+
+            return modifiedNodes;
+        }*/
+        function getModifiedNodes(newerNodes) {
+            var modifiedNodes = [];
+            for (var i in _nodes) {
+                if (newerNodes[i]) {
+                    if (newerNodes[i].hash !== _nodes[i].hash && _nodes[i].hash !== "") {
+                        modifiedNodes.push(i);
+                    }
+                }
+            }
+            return modifiedNodes;
+        }
+
 
       //this is just a first brute implementation it needs serious optimization!!!
       function fitsInPatternTypes(path, pattern) {
@@ -1135,6 +1220,7 @@ define([
           }
         }
 
+
         //added items
         for (i in newPaths) {
           if (!_users[userId].PATHS[i]) {
@@ -1152,15 +1238,17 @@ define([
         _users[userId].PATHS = newPaths;
 
 
+        //this is how the events should go
         if (events.length > 0) {
           if (_loadError > startErrorLevel) {
-            // TODO events.unshift({etype:'incomplete',eid:null});
+            events.unshift({etype: 'incomplete', eid: null});
           } else {
-            // TODO events.unshift({etype:'complete',eid:null});
+            events.unshift({etype: 'complete', eid: null});
           }
-
-          _users[userId].FN(events);
+        } else {
+          events.unshift({etype: 'complete', eid: null});
         }
+        _users[userId].FN(events);
       }
 
       function storeNode(node, basic) {
@@ -1172,6 +1260,7 @@ define([
             //TODO we try to avoid this
           } else {
             _nodes[path] = {node: node, hash: ""/*,incomplete:true,basic:basic*/};
+            //_inheritanceHash[path] = getInheritanceChain(node); TODO this only needed when real eventing will be reintroduce
           }
           return path;
         }
@@ -1317,15 +1406,58 @@ define([
         }
         return ordered;
       }
+      function getEventTree(oldRootHash,newRootHash,callback){
+                var error = null,
+                    sRoot = null,
+                    tRoot = null,
+                    start = new Date().getTime(),
+                    loadRoot = function(hash,root){
+                        _core.loadRoot(hash,function(err,r){
+                            error = error || err;
+                            if(sRoot === null && hash === oldRootHash){
+                                sRoot = r;
+                            } else {
+                                tRoot = r;
+                            }
+                            if(--needed === 0){
+                                rootsLoaded();
+                            }
+                        });
 
-      function loadRoot(newRootHash, callback) {
-        //with the newer approach we try to optimize a bit the mechanism of the loading and try to get rid of the paralellism behind it
-        var patterns = {},
-          orderedPatternIds = [],
-          error = null,
-          i, j, keysi, keysj;
-        _loadNodes = {};
-        _loadError = 0;
+                    },
+                    rootsLoaded = function(){
+                        if(error){
+                            return callback(error);
+                        }
+                        _core.generateLightTreeDiff(sRoot,tRoot,function(err,diff){
+              //console.log('genDiffTree',new Date().getTime()-start);
+              //console.log('diffTree',JSON.stringify(diff,null,2));
+                            callback(err,diff);
+                        });
+                    },
+                    needed = 2;
+                loadRoot(oldRootHash,sRoot);
+                loadRoot(newRootHash,tRoot);
+        }
+
+        function loadRoot(newRootHash,callback){
+            //with the newer approach we try to optimize a bit the mechanizm of the loading and try to get rid of the paralellism behind it
+            var patterns = {},
+                orderedPatternIds = [],
+                error = null,
+                i, j,keysi,keysj,
+                loadNextPattern = function(index){
+                    if(index<orderedPatternIds.length){
+                        loadPattern(_core,orderedPatternIds[index],patterns[orderedPatternIds[index]],_loadNodes,function(err){
+                            error = error || err;
+                            loadNextPattern(index+1);
+                        });
+                    } else {
+                        callback(error);
+                    }
+                };
+            _loadNodes = {};
+            _loadError = 0;
 
         //gathering the patterns
         keysi = Object.keys(_users);
@@ -1342,7 +1474,7 @@ define([
             }
           }
         }
-        //getting an orderd keylist
+        //getting an ordered key list
         orderedPatternIds = Object.keys(patterns);
         orderedPatternIds = orderStringArrayByElementLength(orderedPatternIds);
 
@@ -1376,77 +1508,56 @@ define([
       }
 
       //this is just a first brute implementation it needs serious optimization!!!
-      function loading(newRootHash, callback) {
-        callback = callback || function () {
-        };
-        var incomplete = false;
-        var modifiedPaths = {};
-        var missing = 2;
+      function loading(newRootHash,callback){
         var finalEvents = function () {
-          if (_loadError > 0) {
-            //we assume that our immediate load was only partial
-            modifiedPaths = getModifiedNodes(_loadNodes);
-            _nodes = _loadNodes;
-            _loadNodes = {};
-            for (var i in _users) {
-              userEvents(i, modifiedPaths);
-            }
-            _loadError = 0;
-          } else if (_loadNodes[ROOT_PATH]) {
-            //we left the stuff in the loading rack, probably because there were no _nodes beforehand
-            _nodes = _loadNodes;
-            _loadNodes = {};
+          var modifiedPaths;
+          modifiedPaths = getModifiedNodes(_loadNodes);
+          _nodes = _loadNodes;
+          _loadNodes = {};
+          for (var i in _users) {
+            userEvents(i, modifiedPaths);
           }
           callback(null);
         };
-
-        _rootHash = newRootHash
-        loadRoot(newRootHash, function (err) {
-          if (err) {
-            _rootHash = null;
-            callback(err);
-          } else {
-            if (--missing === 0) {
-              finalEvents();
+        callback = callback || function(err){};
+        _previousRootHash = _rootHash;
+        _rootHash = newRootHash;
+        /*if(_previousRootHash){
+          getEventTree(_previousRootHash,_rootHash,function(err,diffTree){
+            if(err){
+              _rootHash = null;
+              callback(err);
+            } else {
+              _changeTree = diffTree;
+              loadRoot(newRootHash,function(err){
+                if(err){
+                  _rootHash = null;
+                  callback(err);
+                } else {
+                  finalEvents();
+                }
+              });
             }
-          }
-        });
-        //here we try to make an immediate event building
-        //TODO we should deal with the full unloading!!!
-        //TODO we should check not to hide any issue related to immediate loading!!!
-        var hasEnoughNodes = false;
-        var counter = 0;
-        var limit = 0;
-        for (var i in _nodes) {
-          counter++;
-        }
-        limit = counter / 2;
-        counter = 0;
-        for (i in _loadNodes) {
-          counter++;
-        }
-        hasEnoughNodes = limit <= counter;
-        if (/*hasEnoughNodes*/false) {
-          modifiedPaths = getModifiedNodes(_loadNodes);
-          _nodes = {};
-          for (i in _loadNodes) {
-            _nodes[i] = _loadNodes[i];
-          }
-
-          for (i in _users) {
-            userEvents(i, modifiedPaths);
-          }
-
-          if (--missing === 0) {
-            finalEvents();
-          }
+          });
 
         } else {
-          _loadError++;
-          if (--missing === 0) {
-            finalEvents();
-          }
-        }
+          loadRoot(newRootHash,function(err){
+            if(err){
+              _rootHash = null;
+              callback(err);
+            } else {
+              finalEvents();
+            }
+          });
+        }*/
+          loadRoot(newRootHash,function(err){
+              if(err){
+                  _rootHash = null;
+                  callback(err);
+              } else {
+                  finalEvents();
+              }
+          });
       }
 
       function saveRoot(msg, callback) {
@@ -1530,7 +1641,7 @@ define([
                   if (--wait === 0) {
                     callback(null, fullList);
                   }
-                })
+                });
               }
             } else {
               callback(null, {});
@@ -2732,39 +2843,6 @@ define([
 
       }
 
-      //testing
-      function testMethod(testnumber) {
-        /*deleteBranchAsync("blabla",function(err){
-         getBranchesAsync(function(err,branches){
-         console.log('kecso');
-         });
-         /*setTimeout(function(){
-         getBranchesAsync(function(err,branches){
-         console.log('kecso');
-         });
-         },0);
-         });*/
-        //_database.getNextServerEvent("",function(err,guid,parameters){
-        //    console.log(err,guid,parameters);
-        //});
-        //connectToDatabaseAsync({open:true},function(err){
-        //    console.log('kecso connecting to database',err);
-        //});
-        //_self.addEventListener(_self.events.SERVER_BRANCH_UPDATED,function(client,data){
-        //    console.log(data);
-        //});
-        switch (testnumber) {
-          case 1:
-            break;
-          case 2:
-
-            break;
-          case 3:
-            break;
-        }
-
-      }
-
       //export and import functions
       function exportItems(paths, callback) {
         var nodes = [];
@@ -2786,6 +2864,7 @@ define([
           }
         });
       }
+
 
       function getExportItemsUrlAsync(paths, filename, callback) {
         _database.simpleRequest({command: 'dumpMoreNodes', name: _projectName, hash: _rootHash || _core.getHash(_nodes[ROOT_PATH].node), nodes: paths}, function (err, resId) {
@@ -3034,6 +3113,275 @@ define([
         });
       }
 
+      //TODO probably it would be a good idea to put this functionality to server
+      function getBaseOfCommits(one,other,callback){
+        _project.getCommonAncestorCommit(one,other,callback);
+      }
+      //TODO probably this would also beneficial if this would work on server as well
+      function getDiffTree(from,to,callback){
+        var needed = 2,error = null,
+          core = getNewCore(_project),
+          fromRoot={root:{},commit:from},
+          toRoot={root:{},commit:to},
+          rootsLoaded = function(){
+            if(error){
+              return callback(error,{});
+            }
+            _core.generateTreeDiff(fromRoot.root,toRoot.root,callback);
+          },
+          loadRoot = function(root){
+            _project.loadObject(root.commit,function(err,c){
+              error = error || ( err || c ? null : new Error('no commit object was found'));
+              if(!err && c){
+                core.loadRoot(c.root,function(err,r){
+                  error = error || ( err || r ? null : new Error('no root was found'));
+                  root.root = r;
+                  if(--needed === 0){
+                    rootsLoaded();
+                  }
+                });
+              } else {
+                if(--needed === 0){
+                  rootsLoaded();
+                }
+              }
+            });
+          };
+        loadRoot(fromRoot);
+        loadRoot(toRoot);
+
+      }
+
+      function getConflictOfDiffs(base,extension){
+        return _core.tryToConcatChanges(base,extension);
+      }
+      function getResolve(resolveObject){
+        return _core.applyResolution(resolveObject);
+      }
+      //TODO move to server
+      function applyDiff(branch,baseCommitHash,branchCommitHash,parents,diff,callback){
+        _project.loadObject(baseCommitHash,function(err,cObject){
+          var core = getNewCore(_project);
+          if(!err && cObject){
+            core.loadRoot(cObject.root,function(err,root){
+              if(!err && root){
+                core.applyTreeDiff(root,diff,function(err){
+                  if(err){
+                    return callback(err);
+                  }
+
+                  core.persist(root,function(err){
+                    if(err){
+                      return callback(err);
+                    }
+
+                    var newHash = _project.makeCommit(parents,core.getHash(root),"merging",function(err){
+                      if(err){
+                        return callback(err);
+                      }
+                      _project.setBranchHash(branch,branchCommitHash,newHash,callback);
+                    });
+                  });
+                });
+              } else {
+                callback(err || new Error('no root was found'));
+              }
+            });
+          } else {
+            callback(err || new Error('no commit object was found'));
+          }
+        });
+      }
+
+      function merge(whereBranch,whatCommit,whereCommit,callback){
+        ASSERT(_project && typeof whatCommit === 'string' && typeof whereCommit === 'string' && typeof callback === 'function');
+        _project.getCommonAncestorCommit(whatCommit,whereCommit,function(err,baseCommit){
+          if(!err && baseCommit){
+            var base,what,where,baseToWhat,baseToWhere,rootNeeds = 3,error = null,
+            rootsLoaded = function(){
+                var needed = 2,error = null;
+                _core.generateTreeDiff(base,what,function(err,diff){
+                  error = error || err;
+                  baseToWhat = diff;
+                  if(--needed===0){
+                    if(!error){
+                      diffsGenerated();
+                    } else {
+                      callback(error);
+                    }
+                  }
+                });
+                _core.generateTreeDiff(base,where,function(err,diff){
+                  error = error || err;
+                  baseToWhere = diff;
+                  if(--needed===0){
+                    if(!error){
+                      diffsGenerated();
+                    } else {
+                      callback(error);
+                    }
+                  }
+                });
+              },
+              diffsGenerated = function(){
+                var conflict = _core.tryToConcatChanges(baseToWhere,baseToWhat);
+                console.log('conflict object',conflict);
+                if(conflict.items.length === 0){
+                  //no conflict
+                  callback(null,conflict);
+                  /*
+                  _core.applyTreeDiff(base,conflict.merge,function(err){
+                    if(err){
+                      return callback(err);
+                    }
+                    _core.persist(base,function(err){
+                      if(err){
+                        callback(err);
+                      } else {
+                        var newHash = _project.makeCommit([whatCommit,whereCommit],_core.getHash(base), "merging", function(err){
+                          if(err){
+                            callback(err);
+                          } else {
+                            _project.setBranchHash(whereBranch,whereCommit,newHash,callback);
+                          }
+                        });
+                      }
+                    });
+                  });*/
+                } else {
+                  callback(null,conflict);
+                }
+                /*var endingWhatDiff = _core.concatTreeDiff(baseToWhere,baseToWhat),
+                  endingWhereDiff = _core.concatTreeDiff(baseToWhat,baseToWhere);
+                console.log('kecso endingwhatdiff',endingWhatDiff);
+                console.log('kecso endingwherediff',endingWhereDiff);
+                if(_core.isEqualDifferences(endingWhereDiff,endingWhatDiff)){
+                  _core.applyTreeDiff(base,endingWhatDiff,function(err){
+                    if(err){
+                      callback(err);
+                    } else {
+                      _core.persist(base,function(err){
+                        if(err){
+                          callback(err);
+                        } else {
+                          var newHash = _project.makeCommit([whatCommit,whereCommit],_core.getHash(base), "merging", function(err){
+                            if(err){
+                              callback(err);
+                            } else {
+                              console.log('setting branch hash after merge');
+                              _project.setBranchHash(whereBranch,whereCommit,newHash,callback);
+                            }
+                          });
+                        }
+                      });
+                    }
+
+                  });
+                } else {
+                  callback(new Error('there is a conflict...'),{
+                    baseObject:base,
+                    baseCommit:baseCommit,
+                    branch: whereBranch,
+                    mine:endingWhereDiff,
+                    mineCommit: whereCommit,
+                    theirs:endingWhatDiff,
+                    theirsCommit:whatCommit,
+                    conflictItems:_core.getConflictItems(endingWhereDiff,endingWhatDiff)});
+                }*/
+              };
+
+              _project.loadObject(baseCommit,function(err,baseCommitObject){
+                error = error || err;
+                if(!error && baseCommitObject){
+                  _core.loadRoot(baseCommitObject.root,function(err,r){
+                    error = error || err;
+                    base = r;
+                    if(--rootNeeds === 0){
+                      if(!error){
+                        rootsLoaded();
+                      } else {
+                        callback(error);
+                      }
+                    }
+                  });
+                } else {
+                  error = error || new Error('cannot load common ancestor commit');
+                  if(--rootNeeds === 0){
+                    callback(error);
+                  }
+                }
+              });
+              _project.loadObject(whatCommit,function(err,whatCommitObject){
+                error = error || err;
+                if(!error && whatCommitObject){
+                  _core.loadRoot(whatCommitObject.root,function(err,r){
+                    error = error || err;
+                    what = r;
+                    if(--rootNeeds === 0){
+                      if(!error){
+                        rootsLoaded();
+                      } else {
+                        callback(error);
+                      }
+                    }
+                  });
+                } else {
+                  error = error || new Error('cannot load the commit to merge');
+                  if(--rootNeeds === 0){
+                    callback(error);
+                  }
+                }
+              });
+              _project.loadObject(whereCommit,function(err,whereCommitObject){
+                error = error || err;
+                if(!error && whereCommitObject){
+                  _core.loadRoot(whereCommitObject.root,function(err,r){
+                    error = error || err;
+                    where = r;
+                    if(--rootNeeds === 0){
+                      if(!error){
+                        rootsLoaded();
+                      } else {
+                        callback(error);
+                      }
+                    }
+                  });
+                } else {
+                  error = error || new Error('cannot load the commit to merge into');
+                  if(--rootNeeds === 0){
+                    callback(error);
+                  }
+                }
+              });
+          } else {
+            callback(err || new Error('we cannot locate common ancestor commit!!!'));
+          }
+        });
+      }
+
+      function resolve(baseObject,mineDiff,branch,mineCommit,theirsCommit,resolvedConflictItems,callback){
+        mineDiff = _core.applyResolution(mineDiff,resolvedConflictItems);
+        _core.applyTreeDiff(baseObject,mineDiff,function(err){
+          if(err){
+            callback(err);
+          } else {
+            _core.persist(baseObject,function(err){
+              if(err){
+                callback(err);
+              } else {
+                var newHash = _project.makeCommit([theirsCommit,mineCommit],_core.getHash(baseObject), "merging", function(err){
+                  if(err){
+                    callback(err);
+                  } else {
+                    console.log('setting branch hash after merge');
+                    _project.setBranchHash(branch,mineCommit,newHash,callback);
+                  }
+                });
+              }
+            });
+          }
+        });
+      }
       //initialization
       function initialize() {
         _database = newDatabase();
@@ -3246,9 +3594,14 @@ define([
         undo: _redoer.undo,
         redo: _redoer.redo,
 
-        //testing
-        testMethod: testMethod
-
+        //merge
+        getBaseOfCommits: getBaseOfCommits,
+        getDiffTree: getDiffTree,
+        getConflictOfDiffs: getConflictOfDiffs,
+        applyDiff: applyDiff,
+        merge: merge,
+        getResolve: getResolve,
+        resolve: resolve
       };
     }
 
