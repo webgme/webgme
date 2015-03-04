@@ -6,14 +6,14 @@
 
 require('../../_globals.js');
 
-var agent = require('superagent').agent(),
-    should = require('chai').should(),
-    fs = require('fs'),
-    server,
-    serverBaseUrl;
-
 describe('Executor', function () {
     'use strict';
+
+    var agent = require('superagent').agent(),
+        should = require('chai').should(),
+        fs = require('fs'),
+        server,
+        serverBaseUrl;
 
     afterEach(function (done) {
         server.stop(function(err) {

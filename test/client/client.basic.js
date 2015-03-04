@@ -4,37 +4,6 @@
  */
 //these test intended to test the functions of the client layer
 require('../_globals');
-var should = require('chai').should(),
-    FS = require('fs'),
-  requirejs = require('requirejs'),
-  config = WebGMEGlobal.getConfig();
-config.port = 9002;
-config.authentication = false; //we have to make sure that our current config doesn't affect the tests
-
-requirejs.config({
-  nodeRequire: require,
-  paths:{
-    "logManager": "common/LogManager",
-    "storage": "common/storage",
-    "core": "common/core",
-    "server": "server",
-    "auth": "server/auth",
-    "util": "common/util",
-    "baseConfig" : "bin/getconfig",
-    "webgme": "webgme",
-    "plugin": "plugin",
-    "worker": "server/worker",
-    "coreclient": "common/core/users",
-    "blob": "middleware/blob",
-    "eventDispatcher": "common/EventDispatcher",
-    " /listAllDecorators": "../test/asset/empty",
-    " /listAllPlugins": "../test/asset/empty",
-    " /socket.io/socket.io.js": "socketio-client"
-  }
-});
-
-CANON = requirejs('common/util/canon');
-CLIENT = requirejs('client/js/client');
 
 /*
  //eventer
@@ -202,114 +171,147 @@ CLIENT = requirejs('client/js/client');
  //testing
  testMethod: testMethod
  */
-var SRV,CLNT,FCOID,commitHash,projectName = "test_client_basic_"+new Date().getTime(),TERR;
-var testTerritory = function(level,cb){
- var next = function(events){
-    cb(events);
-   },
-   event = function(events) {
-    //TODO maybe some checking can be done here as well
-    next(events);
-   },
-   guid = CLNT.addUI(this,event);
- function finish(){
-  CLNT.removeUI(guid);
- }
- function setNext(fn){
-  next = fn;
- }
- setTimeout(function(){
-  CLNT.updateTerritory(guid,{'':{children:level}});
- },1);
 
- return {
-  setNext: setNext,
-  finish: finish
- };
-};
-
-function createTestProject(callback) {
-
-    CLNT.connectToDatabaseAsync({},function (err) {
-   if (err) {
-    callback(err);
-    return;
-   }
-
-   CLNT.createProjectAsync(projectName,{},function (err) {
-    if (err) {
-     callback(err);
-     return;
-    }
-
-    CLNT.selectProjectAsync(projectName,function (err) {
-     if (err) {
-      callback(err);
-      return;
-     }
-
-     //TODO it would be best to use the actual constant values
-     CLNT.startTransaction();
-     CLNT.setRegistry("", 'validPlugins', "");
-     CLNT.setRegistry("", 'usedAddOns', "ConstraintAddOn");
-     FCOID = CLNT.createChild({parentId:'',guid:'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045',relid:'1'});
-     CLNT.setMeta('',{
-      children:{
-       items:[{$ref: FCOID}],
-       minItems:[-1],
-       maxItems:[-1]
-      },
-      attributes:{
-       name:{type:'string'}
-      },
-      pointers:{}
-     });
-     CLNT.setMeta(FCOID,{
-      children:{},
-      attributes:{
-       name:{type:'string'}
-      },
-      pointers:{}
-     });
-
-     //TODO constraint
-
-     CLNT.setAttributes('','name','ROOT');
-     CLNT.setRegistry('','ProjectRegistry',{FCO_ID:FCOID});
-
-     CLNT.setAttributes(FCOID,'name','FCO');
-     CLNT.setRegistry(FCOID,"decorator","");
-     CLNT.setRegistry(FCOID,"isPort",false);
-     CLNT.setRegistry(FCOID,"isAbstract",false);
-     CLNT.setRegistry(FCOID,"SVGIcon","");
-     CLNT.setRegistry(FCOID,"SVGIcon","");
-     CLNT.setRegistry(FCOID,"PortSVGIcon","");
-     CLNT.setRegistry(FCOID,"DisplayFormat","$name");
-
-     CLNT.createSet('','MetaAspectSet');
-     CLNT.addMember('',FCOID,'MetaAspectSet');
-
-     CLNT.createSet('','MetaAspectSet_000');
-     CLNT.setRegistry('','MetaSheets',[{SetID:'MetaAspectSet_000',order:0,title:'META'}]);
-     CLNT.addMember('',FCOID,'MetaAspectSet_000');
-     CLNT.setMemberRegistry('',FCOID,'MetaAspectSet_000','position',{x:100,y:100});
-
-     CLNT.completeTransaction('basic project seed',function(err){
-      if(err){
-       callback(err);
-       return;
-      }
-
-      commitHash = CLNT.getActualCommit();
-      callback();
-     });
-    });
-   });
- });
-
-}
 
 describe('Client tests', function () {
+    var should = require('chai').should(),
+        FS = require('fs'),
+        requirejs = require('requirejs'),
+        config = WebGMEGlobal.getConfig();
+    config.port = 9002;
+    config.authentication = false; //we have to make sure that our current config doesn't affect the tests
+
+    requirejs.config({
+        nodeRequire: require,
+        paths:{
+            "logManager": "common/LogManager",
+            "storage": "common/storage",
+            "core": "common/core",
+            "server": "server",
+            "auth": "server/auth",
+            "util": "common/util",
+            "baseConfig" : "bin/getconfig",
+            "webgme": "webgme",
+            "plugin": "plugin",
+            "worker": "server/worker",
+            "coreclient": "common/core/users",
+            "blob": "middleware/blob",
+            "eventDispatcher": "common/EventDispatcher",
+            " /listAllDecorators": "../test/asset/empty",
+            " /listAllPlugins": "../test/asset/empty",
+            " /socket.io/socket.io.js": "socketio-client"
+        }
+    });
+
+    var CANON = requirejs('common/util/canon');
+    var CLIENT = requirejs('client/js/client');
+
+    var SRV,CLNT,FCOID,commitHash,projectName = "test_client_basic_"+new Date().getTime(),TERR;
+    var testTerritory = function(level,cb){
+        var next = function(events){
+                cb(events);
+            },
+            event = function(events) {
+                //TODO maybe some checking can be done here as well
+                next(events);
+            },
+            guid = CLNT.addUI(this,event);
+        function finish(){
+            CLNT.removeUI(guid);
+        }
+        function setNext(fn){
+            next = fn;
+        }
+        setTimeout(function(){
+            CLNT.updateTerritory(guid,{'':{children:level}});
+        },1);
+
+        return {
+            setNext: setNext,
+            finish: finish
+        };
+    };
+
+    function createTestProject(callback) {
+
+        CLNT.connectToDatabaseAsync({},function (err) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            CLNT.createProjectAsync(projectName,{},function (err) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                CLNT.selectProjectAsync(projectName,function (err) {
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+
+                    //TODO it would be best to use the actual constant values
+                    CLNT.startTransaction();
+                    CLNT.setRegistry("", 'validPlugins', "");
+                    CLNT.setRegistry("", 'usedAddOns', "ConstraintAddOn");
+                    FCOID = CLNT.createChild({parentId:'',guid:'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045',relid:'1'});
+                    CLNT.setMeta('',{
+                        children:{
+                            items:[{$ref: FCOID}],
+                            minItems:[-1],
+                            maxItems:[-1]
+                        },
+                        attributes:{
+                            name:{type:'string'}
+                        },
+                        pointers:{}
+                    });
+                    CLNT.setMeta(FCOID,{
+                        children:{},
+                        attributes:{
+                            name:{type:'string'}
+                        },
+                        pointers:{}
+                    });
+
+                    //TODO constraint
+
+                    CLNT.setAttributes('','name','ROOT');
+                    CLNT.setRegistry('','ProjectRegistry',{FCO_ID:FCOID});
+
+                    CLNT.setAttributes(FCOID,'name','FCO');
+                    CLNT.setRegistry(FCOID,"decorator","");
+                    CLNT.setRegistry(FCOID,"isPort",false);
+                    CLNT.setRegistry(FCOID,"isAbstract",false);
+                    CLNT.setRegistry(FCOID,"SVGIcon","");
+                    CLNT.setRegistry(FCOID,"SVGIcon","");
+                    CLNT.setRegistry(FCOID,"PortSVGIcon","");
+                    CLNT.setRegistry(FCOID,"DisplayFormat","$name");
+
+                    CLNT.createSet('','MetaAspectSet');
+                    CLNT.addMember('',FCOID,'MetaAspectSet');
+
+                    CLNT.createSet('','MetaAspectSet_000');
+                    CLNT.setRegistry('','MetaSheets',[{SetID:'MetaAspectSet_000',order:0,title:'META'}]);
+                    CLNT.addMember('',FCOID,'MetaAspectSet_000');
+                    CLNT.setMemberRegistry('',FCOID,'MetaAspectSet_000','position',{x:100,y:100});
+
+                    CLNT.completeTransaction('basic project seed',function(err){
+                        if(err){
+                            callback(err);
+                            return;
+                        }
+
+                        commitHash = CLNT.getActualCommit();
+                        callback();
+                    });
+                });
+            });
+        });
+
+    }
 
     before(function(done) {
 

@@ -3,14 +3,19 @@
  * brollb
  */
 
-var common = require('./autorouter.common.js'),
-    assert = common.assert,
-    utils = common.webgme,
-    ARBugPlayer = require('./autorouter.replay.js'),
-    bugPlayer = new ARBugPlayer(),
-    options = 
-      {
-          after: function(router) {
+
+// Tests
+describe('AutoRouter Test Cases', function(){
+  'use strict';
+
+    var common = require('./autorouter.common.js'),
+        assert = common.assert,
+        utils = common.webgme,
+        ARBugPlayer = require('./autorouter.replay.js'),
+        bugPlayer = new ARBugPlayer(),
+        options =
+        {
+            after: function(router) {
                 'use strict';
                 // Call assertValid on every path
                 for (var j = router.graph.paths.length; j--;) {
@@ -18,26 +23,25 @@ var common = require('./autorouter.common.js'),
                 }
                 router.graph.assertValid();
             }
-      },
-      debug = {
-          verbose: true,
-          before: function(router) {
+        },
+        debug = {
+            verbose: true,
+            before: function(router) {
                 'use strict';
                 router._assertPortId2PathIsValid();
-          },
-          after: function(router) {
+            },
+            after: function(router) {
                 'use strict';
                 // Call assertValid on every path
                 router._assertPortId2PathIsValid();
                 options.after(router);
-          }
-      };
+            }
+        };
 
 
-utils.getNewGraph = common.getNewGraph;
-// Tests
-describe('AutoRouter Test Cases', function(){
-  'use strict';
+    utils.getNewGraph = common.getNewGraph;
+
+
   this.timeout(20000);
 
   it('basic model with ports',function() {

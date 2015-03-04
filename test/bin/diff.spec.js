@@ -2,17 +2,17 @@
  * Created by tamas on 2/18/15.
  */
 /* globals require, describe, before, it */
-(function() {
 require('../_globals');
-var diffCLI = require('../../src/bin/diff'),
-    importCLI = require('../../src/bin/import'),
-    FS=require('fs'),
-    should = require('chai').should(),
-    getJsonProject = function(path){
-        return JSON.parse(FS.readFileSync(path,'utf-8'));
-    };
 
 describe('diff CLI tests',function(){
+    var diffCLI = require('../../src/bin/diff'),
+        importCLI = require('../../src/bin/import'),
+        FS=require('fs'),
+        should = require('chai').should(),
+        getJsonProject = function(path){
+            return JSON.parse(FS.readFileSync(path,'utf-8'));
+        };
+
     describe('basic',function(){
         describe('no diff',function(){
             var jsonProject;
@@ -178,4 +178,3 @@ describe('diff CLI tests',function(){
         });
     });
 });
-})();

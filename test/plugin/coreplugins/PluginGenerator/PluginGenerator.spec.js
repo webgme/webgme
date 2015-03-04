@@ -4,107 +4,110 @@
  */
 
 require('../../../../webgme');
-var should = require('chai').should(),
-    requirejs = require('requirejs'),
-    esprima = require('esprima'),
-    pluginConfig = {
-        pluginID: 'NewPlugin',
-        pluginName: 'New Plugin',
-        description: '',
-        test: true,
-        templateType: 'None',// "JavaScript", "Python", "CSharp",
-        configStructure: false,
-        core: false
-    };
-
-function isValidJs(testString, logError) {
-    'use strict';
-    var err = null;
-
-    try {
-        esprima.parse(testString);
-    }
-    catch(e) {
-        err = e;
-        if (logError) {
-            console.error(err.toString());
-            console.error(testString);
-        }
-    }
-    return err;
-}
-
-function runPlugin (pluginName, configuration, callback) {
-    'use strict';
-    var pluginBasePaths = 'plugin/coreplugins/',
-        Plugin = requirejs(pluginBasePaths + pluginName + '/' + pluginName),
-        plugin = new Plugin(),
-        artifact = {
-            addedFiles: {},
-            addFile: function (fname, fstr, callback) {
-                this.addedFiles[fname] = fstr;
-                callback(null, 'hash');
-            }
-        };
-
-    plugin.getCurrentConfig = function () {
-        return configuration;
-    };
-
-    plugin.createMessage = function (node, message, severity) {
-
-    };
-
-    plugin.result = {
-        success: false,
-        artifact: artifact,
-        setSuccess: function (value) {
-            this.success = value;
-        },
-        addArtifact: function (art) {
-        }
-    };
-
-    plugin.META = {
-        FCO: '/1',
-        FCO_instance: '/2'
-    };
-
-    plugin.core = {
-        getPath: function (node) {
-            return '/1';
-        }
-    };
-
-    plugin.logger = {
-        info: function (msg) {
-            //console.log(msg)
-        },
-        debug: function (msg) {
-            //console.log(msg)
-        },
-        warning: function (msg) {
-            //console.warn(msg)
-        },
-        error: function (msg) {
-            console.error(msg);
-        },
-    };
-
-    plugin.blobClient = {
-        createArtifact: function (name) {
-            return artifact;
-        },
-        saveAllArtifacts: function (callback) {
-            callback(null, ['aHash']);
-        }
-    };
-
-    plugin.main(callback);
-}
 
 describe('PluginGenerator', function () {
     'use strict';
+
+    var should = require('chai').should(),
+        requirejs = require('requirejs'),
+        esprima = require('esprima'),
+        pluginConfig = {
+            pluginID: 'NewPlugin',
+            pluginName: 'New Plugin',
+            description: '',
+            test: true,
+            templateType: 'None',// "JavaScript", "Python", "CSharp",
+            configStructure: false,
+            core: false
+        };
+
+    function isValidJs(testString, logError) {
+        'use strict';
+        var err = null;
+
+        try {
+            esprima.parse(testString);
+        }
+        catch(e) {
+            err = e;
+            if (logError) {
+                console.error(err.toString());
+                console.error(testString);
+            }
+        }
+        return err;
+    }
+
+    function runPlugin (pluginName, configuration, callback) {
+        'use strict';
+        var pluginBasePaths = 'plugin/coreplugins/',
+            Plugin = requirejs(pluginBasePaths + pluginName + '/' + pluginName),
+            plugin = new Plugin(),
+            artifact = {
+                addedFiles: {},
+                addFile: function (fname, fstr, callback) {
+                    this.addedFiles[fname] = fstr;
+                    callback(null, 'hash');
+                }
+            };
+
+        plugin.getCurrentConfig = function () {
+            return configuration;
+        };
+
+        plugin.createMessage = function (node, message, severity) {
+
+        };
+
+        plugin.result = {
+            success: false,
+            artifact: artifact,
+            setSuccess: function (value) {
+                this.success = value;
+            },
+            addArtifact: function (art) {
+            }
+        };
+
+        plugin.META = {
+            FCO: '/1',
+            FCO_instance: '/2'
+        };
+
+        plugin.core = {
+            getPath: function (node) {
+                return '/1';
+            }
+        };
+
+        plugin.logger = {
+            info: function (msg) {
+                //console.log(msg)
+            },
+            debug: function (msg) {
+                //console.log(msg)
+            },
+            warning: function (msg) {
+                //console.warn(msg)
+            },
+            error: function (msg) {
+                console.error(msg);
+            },
+        };
+
+        plugin.blobClient = {
+            createArtifact: function (name) {
+                return artifact;
+            },
+            saveAllArtifacts: function (callback) {
+                callback(null, ['aHash']);
+            }
+        };
+
+        plugin.main(callback);
+    }
+
+
 
     it ('test esprima', function () {
         should.equal(isValidJs('var a = {x: 1, y: 2};', true), null);

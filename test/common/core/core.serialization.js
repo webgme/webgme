@@ -2,104 +2,105 @@
  * Created by tamas on 12/22/14.
  */
 require('../../_globals.js');
-var FS = require('fs'),
-    PATH = require('path'),
-    storage = new global.Storage(),
-    requirejs = require('requirejs'),
-    CANON = requirejs('../src/common/util/canon');
 
-function saveProject(txt, ancestors, next) {
-    core.persist(root, function (err) {
-        if (err) {
-            return next(err);
-        }
+describe('Core#Serialization', function () {
+    var FS = require('fs'),
+        PATH = require('path'),
+        storage = new global.Storage(),
+        requirejs = require('requirejs'),
+        CANON = requirejs('../src/common/util/canon');
 
-        commit = project.makeCommit(ancestors, core.getHash(root), txt, function (err) {
+    function saveProject(txt, ancestors, next) {
+        core.persist(root, function (err) {
             if (err) {
                 return next(err);
             }
-            next(null, commit);
-        });
-    });
-}
-function loadJsonData(path) {
-    try {
-        jsonData = JSON.parse(FS.readFileSync(path, 'utf8'));
-    } catch (err) {
-        jsonData = null;
-        return false;
-    }
 
-    return true;
-}
-function importProject(projectJson, next) {
-
-    storage.getProjectNames(function (err, names) {
-        if (err) {
-            return next(err);
-        }
-        names = names || [];
-        if (names.indexOf(projectName) !== -1) {
-            return next(new Error('project already exists'));
-        }
-
-        storage.openProject(projectName, function (err, p) {
-            if (err || !p) {
-                return next(err || new Error('unable to get quasi project'));
-            }
-
-            core = new global.WebGME.core(p);
-            project = p;
-            root = core.createNode();
-
-            global.WebGME.serializer.import(core, root, projectJson, function (err, log) {
+            commit = project.makeCommit(ancestors, core.getHash(root), txt, function (err) {
                 if (err) {
                     return next(err);
                 }
-                saveProject('test initial import', [], next);
+                next(null, commit);
             });
         });
-    });
-}
-function deleteProject(next) {
-    storage.getProjectNames(function (err, names) {
-        if (err) {
-            return next(err);
-        }
-        if (names.indexOf(projectName) === -1) {
-            return next(new Error('no such project'));
+    }
+    function loadJsonData(path) {
+        try {
+            jsonData = JSON.parse(FS.readFileSync(path, 'utf8'));
+        } catch (err) {
+            jsonData = null;
+            return false;
         }
 
-        storage.deleteProject(projectName, next);
-    });
-}
-function loadNodes(paths, next) {
-    var needed = paths.length,
-        nodes = {}, error = null, i,
-        loadNode = function (path) {
-            core.loadByPath(root, path, function (err, node) {
-                error = error || err;
-                nodes[path] = node;
-                if (--needed === 0) {
-                    next(error, nodes);
-                }
-            })
-        };
-    for (i = 0; i < paths.length; i++) {
-        loadNode(paths[i]);
+        return true;
     }
-}
+    function importProject(projectJson, next) {
+
+        storage.getProjectNames(function (err, names) {
+            if (err) {
+                return next(err);
+            }
+            names = names || [];
+            if (names.indexOf(projectName) !== -1) {
+                return next(new Error('project already exists'));
+            }
+
+            storage.openProject(projectName, function (err, p) {
+                if (err || !p) {
+                    return next(err || new Error('unable to get quasi project'));
+                }
+
+                core = new global.WebGME.core(p);
+                project = p;
+                root = core.createNode();
+
+                global.WebGME.serializer.import(core, root, projectJson, function (err, log) {
+                    if (err) {
+                        return next(err);
+                    }
+                    saveProject('test initial import', [], next);
+                });
+            });
+        });
+    }
+    function deleteProject(next) {
+        storage.getProjectNames(function (err, names) {
+            if (err) {
+                return next(err);
+            }
+            if (names.indexOf(projectName) === -1) {
+                return next(new Error('no such project'));
+            }
+
+            storage.deleteProject(projectName, next);
+        });
+    }
+    function loadNodes(paths, next) {
+        var needed = paths.length,
+            nodes = {}, error = null, i,
+            loadNode = function (path) {
+                core.loadByPath(root, path, function (err, node) {
+                    error = error || err;
+                    nodes[path] = node;
+                    if (--needed === 0) {
+                        next(error, nodes);
+                    }
+                })
+            };
+        for (i = 0; i < paths.length; i++) {
+            loadNode(paths[i]);
+        }
+    }
 
 //global variables of the test
-var projectName = "test_serialization_" + new Date().getTime(),
-    commit = '',
-    baseCommit = '',
-    root = null,
-    rootHash = '',
-    core = null,
-    project = null;
+    var projectName = "test_serialization_" + new Date().getTime(),
+        commit = '',
+        baseCommit = '',
+        root = null,
+        rootHash = '',
+        core = null,
+        project = null;
 
-describe('Core#Serialization', function () {
     var iData, eData, nodes, guids, paths, guidToPath;
     it('should open the database connection', function (done) {
         storage.openDatabase(done);

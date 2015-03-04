@@ -6,21 +6,21 @@
 
 require('../../../_globals.js');
 
-var requirejs = require('requirejs'),
-    fs = require('fs'),
-    rimraf = require('rimraf'),
-    childProcess = require('child_process'),
-    should = require('chai').should(),
-    ExecutorClient = requirejs('executor/ExecutorClient'),
-    BlobServerClient = requirejs('blob/BlobServerClient'),
-    blobClient,
-    executorClient,
-    server,
-    nodeWorkerProcess,
-    serverBaseUrl;
-
 describe('NodeWorker', function () {
     'use strict';
+
+    var requirejs = require('requirejs'),
+        fs = require('fs'),
+        rimraf = require('rimraf'),
+        childProcess = require('child_process'),
+        should = require('chai').should(),
+        ExecutorClient = requirejs('executor/ExecutorClient'),
+        BlobServerClient = requirejs('blob/BlobServerClient'),
+        blobClient,
+        executorClient,
+        server,
+        nodeWorkerProcess,
+        serverBaseUrl;
 
     describe('[nonce not set]', function () {
         before(function (done) {

@@ -3,28 +3,28 @@
  * brollb
  */
 
-'use strict';
-var common = require('./autorouter.common.js'),
-    assert = common.assert,
-    utils = common.webgme,
-    ARBugPlayer = require('./autorouter.replay.js'),
-    bugPlayer = new ARBugPlayer(),
-    router,
-    options = 
-      {
-          after: function(router) {
+// Tests
+describe('AutoRouter Misc Tests', function(){
+    'use strict';
+    var common = require('./autorouter.common.js'),
+        assert = common.assert,
+        utils = common.webgme,
+        ARBugPlayer = require('./autorouter.replay.js'),
+        bugPlayer = new ARBugPlayer(),
+        router,
+        options =
+        {
+            after: function(router) {
                 // Call assertValid on every path
                 for (var j = router.graph.paths.length; j--;) {
                     router.graph.paths[j].assertValid();
                 }
                 router.graph.assertValid();
             }
-      };
+        };
 
 
-utils.getNewGraph = common.getNewGraph;
-// Tests
-describe('AutoRouter Misc Tests', function(){
+    utils.getNewGraph = common.getNewGraph;
 
   beforeEach(function() {
       router = utils.getNewGraph();

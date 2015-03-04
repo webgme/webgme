@@ -6,16 +6,16 @@
 
 require('../../_globals.js');
 
-var requirejs = require('requirejs'),
-    fs = require('fs'),
-    should = require('chai').should(),
-    ExecutorClient = requirejs('executor/ExecutorClient'),
-    executorClient,
-    server,
-    serverBaseUrl;
-
 describe('ExecutorClient', function () {
     'use strict';
+
+    var requirejs = require('requirejs'),
+        fs = require('fs'),
+        should = require('chai').should(),
+        ExecutorClient = requirejs('executor/ExecutorClient'),
+        executorClient,
+        server,
+        serverBaseUrl;
 
     before(function (done) {
         // we have to set the config here

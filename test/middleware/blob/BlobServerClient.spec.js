@@ -6,16 +6,16 @@
 
 require('../../_globals.js');
 
-var requirejs = require('requirejs'),
-    rimraf = require('rimraf'),
-    should = require('chai').should(),
-    BlobServerClient = requirejs('blob/BlobServerClient'),
-    blobClient,
-    server,
-    serverBaseUrl;
-
 describe('BlobServerClient', function () {
     'use strict';
+
+    var requirejs = require('requirejs'),
+        rimraf = require('rimraf'),
+        should = require('chai').should(),
+        BlobServerClient = requirejs('blob/BlobServerClient'),
+        blobClient,
+        server,
+        serverBaseUrl;
 
     describe('[http]', function () {
         before(function (done) {

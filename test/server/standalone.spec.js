@@ -4,24 +4,23 @@
  */
 
 require('../_globals.js');
-var should = require('chai').should(),
-    WebGME = require('../../webgme'),
-    requirejs = require('requirejs'),
-
-    superagent = require('superagent'),
-    mongodb = require('mongodb'),
-    Q = require('q'),
-    agent = superagent.agent(),
-
-    server,
-    serverBaseUrl;
-
-
 
 describe('standalone server', function () {
     'use strict';
 
-    var scenarios,
+    var should = require('chai').should(),
+        WebGME = require('../../webgme'),
+        requirejs = require('requirejs'),
+
+        superagent = require('superagent'),
+        mongodb = require('mongodb'),
+        Q = require('q'),
+        agent = superagent.agent(),
+
+        server,
+        serverBaseUrl,
+
+        scenarios,
         addScenario,
         addTest,
         i,

@@ -1,25 +1,25 @@
 /*globals describe,beforeEach,it*/
-'use strict';
-
-var utils = require('./autorouter.common.js'),
-    assert = utils.assert,
-    router;
-
-var getPortFromBox = function(id, box) {
-    var portIds = Object.keys(box.ports),
-        portId,
-        port;
-
-    for (var j = portIds.length; j--;) {
-        portId = portIds[j];
-        if (portId.indexOf(id) !== -1) {
-            port = box.ports[portId];
-        }
-    }
-    return port;
-};
 
 describe('AutoRouter Port Tests', function() {
+    'use strict';
+
+    var utils = require('./autorouter.common.js'),
+        assert = utils.assert,
+        router;
+
+    var getPortFromBox = function(id, box) {
+        var portIds = Object.keys(box.ports),
+            portId,
+            port;
+
+        for (var j = portIds.length; j--;) {
+            portId = portIds[j];
+            if (portId.indexOf(id) !== -1) {
+                port = box.ports[portId];
+            }
+        }
+        return port;
+    };
 
   beforeEach(function() {
       router = utils.getNewGraph();
