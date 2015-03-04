@@ -64,7 +64,7 @@ describe('NodeWorker', function () {
                                 return;
                             }
 
-                            console.log(str);
+                            //console.log(str);
                         });
                     });
                 }
@@ -121,7 +121,7 @@ describe('NodeWorker', function () {
             config.authentication = false;
             config.enableExecutor = true;
             config.executorNonce = 'aReallyLongSecret';
-
+            WebGMEGlobal.setConfig({executorNonce: 'aReallyLongSecret'});
             param.serverPort = config.port;
             param.sessionId = 'testingNodeWorker';
             serverBaseUrl = 'http://127.0.0.1:' + config.port;
@@ -153,7 +153,7 @@ describe('NodeWorker', function () {
                                 return;
                             }
 
-                            console.log(str);
+                            //console.log(str);
                         });
                     });
                 }

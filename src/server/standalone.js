@@ -457,7 +457,7 @@ define(['logManager',
             __app.use(Passport.session());
 
             if (CONFIG.enableExecutor) {
-                var executorRest = new requirejs('executor/Executor');
+                var executorRest = requirejs('executor/Executor');
                 __app.use('/rest/executor', executorRest(CONFIG));
                 __logger.info('Executor listening at rest/executor');
             } else {
