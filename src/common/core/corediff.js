@@ -190,61 +190,6 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       }
       return {};
     }
-    function _set_diff(source, target) {
-      var sNames = _core.getSetNames(source),
-        tNames = _core.getSetNames(target),
-        sMembers, tMembers, i, j, memberDiff, sData, tData,
-        diff = {},
-        getMemberData = function (node, setName, memberPath) {
-          var keys,
-            data = {attr: {}, reg: {}},
-            i;
-
-          keys = _core.getMemberOwnAttributeNames(node, setName, memberPath);
-          for (i = 0; i < keys.length; i++) {
-            data.attr[keys[i]] = _core.getMemberAttribute(node, setName, memberPath, keys[i]);
-          }
-
-          keys = _core.getMemberOwnRegistryNames(node, setName, memberPath);
-          for (i = 0; i < keys.length; i++) {
-            data.attr[keys[i]] = _core.getMemberRegistry(node, setName, memberPath, keys[i]);
-          }
-
-          return data;
-        };
-
-      for (i = 0; i < sNames.length; i++) {
-        if (tNames.indexOf(sNames[i]) === -1) {
-          diff[sNames[i]] = TODELETESTRING;
-        }
-      }
-
-      for (i = 0; i < tNames.length; i++) {
-        if (sNames.indexOf(tNames[i]) === -1) {
-          sMembers = [];
-        } else {
-          sMembers = _core.getMemberPaths(source, tNames[i]);
-        }
-        tMembers = _core.getMemberPaths(target, tNames[i]);
-        memberDiff = {};
-        for (j = 0; j < sMembers.length; j++) {
-          if (tMembers.indexOf(sMembers[j]) === -1) {
-            memberDiff[sMembers[j]] = TODELETESTRING;
-          }
-        }
-
-        for (j = 0; j < tMembers.length; j++) {
-          sData = sMembers.indexOf(tMembers[j]) === -1 ? {} : getMemberData(source, tNames[i], tMembers[j]);
-          tData = getMemberData(target, tNames[i], tMembers[j]);
-          if (CANON.stringify(sData) !== CANON.stringify(tData)) {
-            memberDiff[tMembers[j]] = getMemberData(target, tNames[i], tMembers[j]);
-          }
-        }
-        diff[tNames[i]] = memberDiff;
-      }
-
-      return diff;
-    }
     function ovr_diff(source,target){
       var getOvrData = function(node){
         var paths,names,i,j,
@@ -275,64 +220,6 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
         return {source:sOvr,target:tOvr};
       }
       return {};
-    }
-
-    function _ovr_diff(source, target) {
-      // structure: path:{pointername:"targetpath"}
-      // diff structure: path:{pointername:{target:path,type:updated/removed/added}}
-      var i, j, paths, pNames,
-        diff = {},
-        basePath = _core.getPath(source),
-        sOvr = _core.getProperty(source, 'ovr') || {},
-        tOvr = _core.getProperty(target, 'ovr') || {};
-
-      //removals
-      paths = Object.keys(sOvr);
-      for (i = 0; i < paths.length; i++) {
-        if (paths[i].indexOf("_") === -1) {
-          //we do not care about technical relations - sets are handled elsewhere
-          pNames = Object.keys(sOvr[paths[i]]);
-          for (j = 0; j < pNames.length; j++) {
-            if (pNames[j].slice(-4) !== "-inv") {
-              //we only care about direct pointer changes and to real nodes
-              if (sOvr[paths[i]][pNames[j]].indexOf("_") === -1) {
-                if (!(tOvr[paths[i]] && tOvr[paths[i]][pNames[j]])) {
-                  diff[paths[i]] = diff[paths[i]] || {};
-                  diff[paths[i]][pNames[j]] = {target: null, type: "removed"};
-                }
-              }
-
-            }
-          }
-        }
-
-      }
-
-      //updates and additions
-      paths = Object.keys(tOvr);
-      for (i = 0; i < paths.length; i++) {
-        if (paths[i].indexOf("_") === -1) {
-          //we do not care about technical relations - sets are handled elsewhere
-          pNames = Object.keys(tOvr[paths[i]]);
-          for (j = 0; j < pNames.length; j++) {
-            if (pNames[j].slice(-4) !== "-inv") {
-              //we only care about direct pointer changes and to real nodes
-              if (tOvr[paths[i]][pNames[j]].indexOf("_") === -1) {
-                if (!(sOvr[paths[i]] && sOvr[paths[i]][pNames[j]])) {
-                  diff[paths[i]] = diff[paths[i]] || {};
-                  diff[paths[i]][pNames[j]] = {target: _core.joinPaths(basePath, tOvr[paths[i]][pNames[j]]), type: "added"};
-                } else if (sOvr[paths[i]][pNames[j]] !== tOvr[paths[i]][pNames[j]]) {
-                  diff[paths[i]] = diff[paths[i]] || {};
-                  diff[paths[i]][pNames[j]] = {target: _core.joinPaths(basePath, tOvr[paths[i]][pNames[j]]), type: "updated"};
-                }
-              }
-            }
-          }
-        }
-
-      }
-
-      return diff;
     }
 
     function meta_diff(source, target) {
@@ -416,19 +303,6 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       }
     }
 
-    function isEmptyDiff(diff) {
-      if (diff.removed && diff.removed.length > 0) {
-        return false;
-      }
-      if (diff.added && (diff.added.length > 0 || Object.keys(diff.added).length > 0)) {
-        return false;
-      }
-      if (diff.updated && Object.keys(diff.updated).length > 0) {
-        return false;
-      }
-      return true;
-    }
-
     function isEmptyNodeDiff(diff) {
       if (
         Object.keys(diff.children || {}).length > 0 ||
@@ -478,26 +352,6 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
           names = Object.keys(oDiff.target[paths[i]]);
           for(j=0;j<names.length;j++){
             tDiff.pointer.target[names[j]] = oDiff.target[paths[i]][names[j]];
-          }
-        }
-      }
-    }
-    function _extendDiffWithOvr(diff, oDiff) {
-      var i, j, keys = Object.keys(oDiff || {}),
-        names, tDiff, oDiffObj;
-      for (i = 0; i < keys.length; i++) {
-        tDiff = getPathOfDiff(diff, keys[i]);
-        if (tDiff.removed !== true) {
-          names = Object.keys(oDiff[keys[i]]);
-          for (j = 0; j < names.length; j++) {
-            oDiffObj = oDiff[keys[i]][names[j]];
-            if (oDiffObj.type === 'added' || oDiffObj.type === 'updated') {
-              tDiff.pointer = tDiff.pointer || {};
-              tDiff.pointer[names[j]] = oDiffObj.target;
-            } else if (!tDiff.pointer || !tDiff.pointer[names[j]]) {
-              tDiff.pointer = tDiff.pointer || {};
-              tDiff.pointer[names[j]] = TODELETESTRING;
-            }
           }
         }
       }
@@ -995,22 +849,6 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       },done);
     }
 
-    function getMovedNode(root, from, to) {
-      ASSERT(typeof from === 'string' && typeof to === 'string' && to !== '');
-      var parentPath = to.substring(0, to.lastIndexOf('/')),
-        parent = _core.loadByPath(root, fromTo[parentPath] || parentPath),
-        old = _core.loadByPath(root, from);
-
-      //clear the directories
-      delete fromTo[from];
-      delete toFrom[to];
-
-      return TASYNC.call(function (p, o) {
-        return _core.moveNode(o, p);
-      }, parent, old);
-
-    }
-
     function applyNodeChange(root, path, nodeDiff) {
       //check for move
       var node;
@@ -1044,20 +882,6 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
           return done;
       }, node);
     }
-
-      /*function applyNodeChange(root,path,diff){
-          return TASYNC.call(function(node){
-              console.warn(_core.getPath(node));
-            var relids = getDiffChildrenRelids(diff),
-                i,done=null;
-              applyAttributeChanges(node, diff.attr || {});
-              applyRegistryChanges(node, diff.reg || {});
-              for(i=0;i<relids.length;i++){
-                  done = TASYNC.join(done,applyNodeChange(root,path+'/'+relids[i],diff[relids[i]]));
-              }
-              return done;
-          },_core.loadByPath(root,path));
-      }*/
 
     function applyAttributeChanges(node, attrDiff) {
       var i, keys;
@@ -1348,47 +1172,6 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
         return TASYNC.join(makeInitialContainmentChanges(root,diff),applyNodeChange(root,'',diff));
     };
 
-
-    //concat diffs is needed to make 3-way merge
-    function getDiffTreeDictionray(treeDiff){
-      var dictionary = {pathToGuid:{},guidToPath:{}},
-        addElement = function(path,diff){
-          var keys = getDiffChildrenRelids(diff),
-            i;
-          for(i=0;i<keys.length;i++){
-            addElement(path+'/'+keys[i],diff[keys[i]]);
-          }
-          if(diff.guid){
-            dictionary.pathToGuid[path] = diff.guid;
-            if(!dictionary.guidToPath[diff.guid] || diff.movedFrom){
-              dictionary.guidToPath[diff.guid] = path;
-            }
-          }
-        };
-
-      addElement('',treeDiff);
-      return dictionary;
-    }
-
-    function _getNodeByGuid(diff,guid){
-      var path = _concat_dictionary.guidToPath[guid],
-        object = diff,
-        i;
-      if(typeof path === 'string'){
-        if(path === ''){
-          return diff;
-        }
-
-        path = path.split('/');
-        path.shift();
-        for(i=0;i<path.length;i++){
-          object = object[path[i]];
-        }
-        return object;
-      } else {
-        return null;
-      }
-    }
     function getNodeByGuid(diff,guid){
       var relids, i,temp;
       if(diff.guid === guid){
@@ -1494,8 +1277,6 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       return concat;
     }
 
-
-
     function getConflictByGuid(conflict,guid){
       var relids,i,result;
       if(conflict.guid === guid){
@@ -1524,22 +1305,6 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       }
       return null;
     }
-    function removedParentGuid(diff,path){
-      var i;
-      path = (path || "").split('/');
-      path.shift();
-      for (i = 0; i < path.length; i++) {
-        if(diff.removed === true){
-          return diff.guid;
-        }
-        if(diff[path[i]]){
-          diff = diff[path[i]]
-        } else {
-          return null;
-        }
-      }
-      return diff.removed === true ? diff.guid : null;
-    }
 
     function getGuidsOfDiff(diff){
       var relids = getDiffChildrenRelids(diff),
@@ -1550,58 +1315,6 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
       }
       return result;
     }
-
-    function applyToPath(diff,path,value){
-      var i,finalPath,keys;
-      path = (path || "").split('/');
-      path.shift();
-      finalPath = path.pop();
-      for(i=0;i<path.length;i++){
-        if(!diff[path[i]]){
-          diff[path[i]] = {};
-        }
-        diff = diff[path[i]];
-      }
-
-      if(typeof value === 'object'){
-        keys = Object.keys(value);
-        for(i=0;i<keys.length;i++){
-          diff[finalPath][keys[i]] = value[keys[i]];
-        }
-      } else {
-        diff[finalPath] = value;
-      }
-    }
-    /*function applyResolutionItem(diff,item){
-
-      //let's start with the easy ones
-      if(item.mine.path === item.theirs.path){
-        //we just simply apply it over our own diff
-        applyToPath(diff,item.theirs.path,item.theirs.value);
-      } else {
-        var currentPath = getPathByGuid(diff,item.guid,'');
-        if(item.mine.path.indexOf(currentPath) === 0){
-          //not yet moved so we move right now
-          insertAtPath(diff,item.theirs.path,getNodeByGuid(diff,item.guid));
-          //and remove from its original path
-          insertAtPath(diff,currentPath,{});
-          //with the move there is no data to apply...
-        } else {
-          //the move have already been made, so it is enough if we apply
-          applyToPath(diff,item.theirs.path,item.theirs.value);
-        }
-      }
-
-    }
-    _core.applyResolution = function(mine,conflicts){
-      var i;
-      for(i=0;i<conflicts.length;i++){
-        if(conflicts[i].selected === 'theirs'){
-          applyResolutionItem(mine,conflicts[i]);
-        }
-      }
-      return mine;
-    };*/
 
     //now we try a different approach, which maybe more simple
     function getCommonPathForConcat(path){
@@ -2372,16 +2085,6 @@ define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, AS
         }
       }
     }
-
-    /*function resolveConflictItem(diff,conflictItem){
-
-      //let's start with the easy ones :)
-
-      //if the two path is equal, the we can simply replace the base value
-      if(conflictItem.mine.path === conflictItem.theirs.path){
-        insertAtPath(diff,conflictItem.theirs.path,conflictItem.theirs.value);
-      }
-    }*/
 
     _core.applyResolution = function(conflictObject){
       //we apply conflict items to the merge and return it as a diff

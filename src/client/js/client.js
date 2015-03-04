@@ -2414,48 +2414,6 @@ define([
         }
       }
 
-      //Meta like descriptor functions
-      function setAttributeDescriptor(path, attributename, descriptor) {
-        if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
-          _core.setAttributeDescriptor(_nodes[path].node, attributename, descriptor);
-          saveRoot('setAttributeDescriptor(' + path + ',' + ',' + attributename + ')');
-        }
-      }
-
-      function delAttributeDescriptor(path, attributename) {
-        if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
-          _core.delAttributeDescriptor(_nodes[path].node, attributename);
-          saveRoot('delAttributeDescriptor(' + path + ',' + ',' + attributename + ')');
-        }
-      }
-
-      function setPointerDescriptor(path, pointername, descriptor) {
-        if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
-          _core.setPointerDescriptor(_nodes[path].node, pointername, descriptor);
-          saveRoot('setPointerDescriptor(' + path + ',' + ',' + pointername + ')');
-        }
-      }
-
-      function delPointerDescriptor(path, pointername) {
-        if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
-          _core.delPointerDescriptor(_nodes[path].node, pointername);
-          saveRoot('delPointerDescriptor(' + path + ',' + ',' + pointername + ')');
-        }
-      }
-
-      function setChildrenMetaDescriptor(path, descriptor) {
-        if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
-          _core.setNodeDescriptor(_nodes[path].node, descriptor);
-          saveRoot('setNodeDescriptor(' + path + ')');
-        }
-      }
-
-      function delChildrenMetaDescriptor(path) {
-        if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
-          _core.delNodeDescriptor(_nodes[path].node);
-          saveRoot('delNodeDescriptor(' + path + ')');
-        }
-      }
 
       function setBase(path, basepath) {
         /*if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
@@ -2723,36 +2681,6 @@ define([
           //return getMemberIds('ValidChildren');
           return META.getValidChildrenTypes(_id);
         };
-        var getAttributeDescriptor = function (attributename) {
-          return _core.getAttributeDescriptor(_nodes[_id].node, attributename);
-        };
-        var getEditableAttributeDescriptor = function (attributename) {
-          var descriptor = _core.getAttributeDescriptor(_nodes[_id].node, attributename);
-          if (typeof descriptor === 'object') {
-            descriptor = JSON.parse(JSON.stringify(descriptor));
-          }
-          return descriptor;
-        };
-        var getPointerDescriptor = function (pointername) {
-          return _core.getPointerDescriptor(_nodes[_id].node, pointername);
-        };
-        var getEditablePointerDescriptor = function (pointername) {
-          var descriptor = _core.getPointerDescriptor(_nodes[_id].node, pointername);
-          if (typeof descriptor === 'object') {
-            descriptor = JSON.parse(JSON.stringify(descriptor));
-          }
-          return descriptor;
-        };
-        var getChildrenMetaDescriptor = function () {
-          return _core.getNodeDescriptor(_nodes[_id].node);
-        };
-        var getEditableChildrenMetaDescriptor = function () {
-          var descriptor = _core.getNodeDescriptor(_nodes[_id].node);
-          if (typeof descriptor === 'object') {
-            descriptor = JSON.parse(JSON.stringify(descriptor));
-          }
-          return descriptor;
-        };
 
 
         //constraint functions
@@ -2819,12 +2747,6 @@ define([
 
             //META functions
             getValidChildrenTypes: getValidChildrenTypes,
-            getAttributeDescriptor: getAttributeDescriptor,
-            getEditableAttributeDescriptor: getEditableAttributeDescriptor,
-            getPointerDescriptor: getPointerDescriptor,
-            getEditablePointerDescriptor: getEditablePointerDescriptor,
-            getChildrenMetaDescriptor: getChildrenMetaDescriptor,
-            getEditableChildrenMetaDescriptor: getEditableChildrenMetaDescriptor,
 
             //constraint functions
             getConstraintNames: getConstraintNames,
@@ -3496,13 +3418,6 @@ define([
         createSet: createSet,
         deleteSet: deleteSet,
 
-        //desc and META
-        setAttributeDescriptor: setAttributeDescriptor,
-        delAttributeDescriptor: delAttributeDescriptor,
-        setPointerDescriptor: setPointerDescriptor,
-        delPointerDescriptor: delPointerDescriptor,
-        setChildrenMetaDescriptor: setChildrenMetaDescriptor,
-        delChildrenMetaDescriptor: delChildrenMetaDescriptor,
         setBase: setBase,
         delBase: delBase,
 

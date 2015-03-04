@@ -3,7 +3,7 @@ define([
   'plugin/PluginManagerBase',
   'blob/BlobRunPluginClient',
   'plugin/PluginResult',
-  'core/coreforplugins',
+  'core/core',
   'storage/serveruserstorage',
   'fs',
   'path',
