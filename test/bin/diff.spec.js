@@ -19,7 +19,7 @@ describe('diff CLI tests',function(){
 
     before(function (done) {
         // TODO: move this to globals.js as a utility function
-        mongodb.MongoClient.connect(mongoUri, {
+        mongodb.MongoClient.connect('mongodb://127.0.0.1:27017/multi', {
             'w': 1,
             'native-parser': true,
             'auto_reconnect': true,
@@ -31,7 +31,12 @@ describe('diff CLI tests',function(){
                 return;
             }
             db.dropCollection(diffCliTest, function (err) {
-                done(err);
+                // ignores if the collection was not found
+                if (err && err.errmsg !== 'ns not found') {
+                    done(err);
+                    return;
+                }
+                done();
             });
         });
     });

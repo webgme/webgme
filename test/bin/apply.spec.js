@@ -44,7 +44,12 @@ describe('apply CLI tests', function () {
             }
 
             db.dropCollection(applyCliTestProject, function (err) {
-                done(err);
+                // ignores if the collection was not found
+                if (err && err.errmsg !== 'ns not found') {
+                    done(err);
+                    return;
+                }
+                done();
             });
 
         });
