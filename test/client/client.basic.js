@@ -178,7 +178,7 @@ describe('Client tests', function () {
         FS = require('fs'),
         requirejs = require('requirejs'),
         config = WebGMEGlobal.getConfig();
-    config.port = 9002;
+    config.port = 9003;
     config.authentication = false; //we have to make sure that our current config doesn't affect the tests
 
     requirejs.config({

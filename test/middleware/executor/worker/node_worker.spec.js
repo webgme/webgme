@@ -31,6 +31,7 @@ describe('NodeWorker', function () {
             config.port = 9005;
             config.authentication = false;
             config.enableExecutor = true;
+            config.executorNonce = null;
 
             param.serverPort = config.port;
             param.sessionId = 'testingNodeWorker';
@@ -55,7 +56,15 @@ describe('NodeWorker', function () {
                             var str = data.toString();
                             if (str.indexOf('Connected to') > -1) {
                                 done();
+                                return;
                             }
+
+                            if (str.indexOf('Error connecting to') > -1) {
+                                done(new Error(str));
+                                return;
+                            }
+
+                            console.log(str);
                         });
                     });
                 }
@@ -108,15 +117,15 @@ describe('NodeWorker', function () {
             var config = WebGMEGlobal.getConfig(),
                 param = {},
                 workerConfig = {};
-            config.port = 9002;
+            config.port = 9005;
             config.authentication = false;
             config.enableExecutor = true;
-            config.executorNonce = 'aSecret';
-            WebGMEGlobal.setConfig({executorNonce: 'aReallyLongSecret'});
+            config.executorNonce = 'aReallyLongSecret';
+
             param.serverPort = config.port;
             param.sessionId = 'testingNodeWorker';
             serverBaseUrl = 'http://127.0.0.1:' + config.port;
-            workerConfig[serverBaseUrl] = {executorNonce: 'aReallyLongSecret'};
+            workerConfig[serverBaseUrl] = {executorNonce: config.executorNonce};
 
             server = WebGME.standaloneServer(config);
 
@@ -456,11 +465,11 @@ describe('NodeWorker', function () {
                 param = {},
                 workerConfig = {},
                 killAndCleanUp;
-            config.port = 9003;
+            config.port = 9005;
             config.authentication = false;
             config.enableExecutor = true;
-            config.executorNonce = 'aSecret';
-            WebGMEGlobal.setConfig({executorNonce: 'aReallyLongSecret'});
+            config.executorNonce = 'aReallyLongSecret';
+
             param.serverPort = config.port;
             param.sessionId = 'testingNodeWorker';
             serverBaseUrl = 'http://127.0.0.1:' + config.port;

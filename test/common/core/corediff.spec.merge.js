@@ -391,6 +391,10 @@ describe('corediff-merge', function () {
 
                                             //check values
                                             core.loadByPath(merged.root, '/579542227/651215756', function (err, a) {
+                                                if (err) {
+                                                    done(err);
+                                                    return;
+                                                }
                                                 core.getAttribute(a, 'priority').should.be.equal(2);
                                                 done();
                                             });

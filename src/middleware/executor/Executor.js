@@ -23,7 +23,7 @@ define(['logManager',
         var jobListDBFile = typeof TESTING !== 'undefined' ? 'test-tmp/jobList.nedb' : 'jobList.nedb';
         var workerListDBFile = typeof TESTING !== 'undefined' ? 'test-tmp/workerList.nedb' : 'workerList.nedb';
         var logger = logManager.create('REST-Executor'); //how to define your own logger which will use the global settings
-
+        var config = {};
         var jobList = new DataStore({filename: jobListDBFile, autoload: true});
         jobList.ensureIndex({fieldName: 'hash', unique: true}, function (err) {
             if (err) {
@@ -84,9 +84,6 @@ define(['logManager',
         watchLabelJobs();
 
         var ExecutorREST = function (req, res, next) {
-            //global config is accessible via WebGMEGlobal.getConfig()
-            var config = WebGMEGlobal.getConfig();
-            // logger.debug('Executor request');
 
             var authenticate = function () {
                 if (config.executorNonce) {
@@ -398,9 +395,10 @@ define(['logManager',
             }
         };
 
-
-        var setup = function () { //it has to be done this way, but this is probably a placeholder for later option parameters...
+        var setup = function (param) {
+            config = param || {};
             return ExecutorREST;
         };
-        return setup();
+
+        return setup;
     });

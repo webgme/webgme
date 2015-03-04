@@ -21,7 +21,7 @@ describe('ExecutorClient', function () {
         // we have to set the config here
         var config = WebGMEGlobal.getConfig(),
             param = {};
-        config.port = 9001;
+        config.port = 9005;
         config.authentication = false;
         config.enableExecutor = true;
 

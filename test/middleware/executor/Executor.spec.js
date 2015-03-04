@@ -33,7 +33,7 @@ describe('Executor', function () {
 
     it('should return 200 at rest/executor/worker/ with enableExecutor=true', function (done) {
         var config = WebGMEGlobal.getConfig();
-        config.port = 9001;
+        config.port = 9005;
         config.enableExecutor = true;
 
         serverBaseUrl = 'http://127.0.0.1:' + config.port;
@@ -53,7 +53,7 @@ describe('Executor', function () {
 
     it('should return 404 at rest/executor/worker/ with enableExecutor=false', function (done) {
         var config = WebGMEGlobal.getConfig();
-        config.port = 9001;
+        config.port = 9005;
         config.enableExecutor = false;
 
         serverBaseUrl = 'http://127.0.0.1:' + config.port;
