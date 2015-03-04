@@ -125,7 +125,7 @@ describe('NodeWorker', function () {
             param.serverPort = config.port;
             param.sessionId = 'testingNodeWorker';
             serverBaseUrl = 'http://127.0.0.1:' + config.port;
-            workerConfig[serverBaseUrl] = {executorNonce: config.executorNonce};
+            workerConfig[serverBaseUrl] = {executorNonce: 'aReallyLongSecret'};
 
             server = WebGME.standaloneServer(config);
 
@@ -145,7 +145,15 @@ describe('NodeWorker', function () {
                             var str = data.toString();
                             if (str.indexOf('Connected to') > -1) {
                                 done();
+                                return;
                             }
+
+                            if (str.indexOf('Error connecting to') > -1) {
+                                done(new Error(str));
+                                return;
+                            }
+
+                            console.log(str);
                         });
                     });
                 }
@@ -224,7 +232,7 @@ describe('NodeWorker', function () {
                     executorClient.createJob({hash: hash}, function (err, jobInfo) {
                         var intervalId;
                         if (err) {
-                            done(err);
+                            done(new Error(err));
                             return;
                         }
                         intervalId = setInterval(function () {
@@ -272,7 +280,7 @@ describe('NodeWorker', function () {
                     executorClient.createJob({hash: hash}, function (err, jobInfo) {
                         var intervalId;
                         if (err) {
-                            done(err);
+                            done(new Error(err));
                             return;
                         }
                         intervalId = setInterval(function () {
@@ -300,7 +308,7 @@ describe('NodeWorker', function () {
             executorClient.createJob({hash: '911'}, function (err, jobInfo) {
                 var intervalId;
                 if (err) {
-                    done(err);
+                    done(new Error(err));
                     return;
                 }
                 intervalId = setInterval(function () {
@@ -340,7 +348,7 @@ describe('NodeWorker', function () {
                     executorClient.createJob({hash: hash}, function (err, jobInfo) {
                         var intervalId;
                         if (err) {
-                            done(err);
+                            done(new Error(err));
                             return;
                         }
                         intervalId = setInterval(function () {
@@ -387,7 +395,7 @@ describe('NodeWorker', function () {
                     executorClient.createJob({hash: hash}, function (err, jobInfo) {
                         var intervalId;
                         if (err) {
-                            done(err);
+                            done(new Error(err));
                             return;
                         }
                         intervalId = setInterval(function () {
@@ -433,7 +441,7 @@ describe('NodeWorker', function () {
                     executorClient.createJob({hash: hash}, function (err, jobInfo) {
                         var intervalId;
                         if (err) {
-                            done(err);
+                            done(new Error(err));
                             return;
                         }
                         intervalId = setInterval(function () {
