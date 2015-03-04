@@ -10,14 +10,13 @@ define([
         'core/guidcore',
         'core/nullpointercore',
         'core/coreunwrap',
-        'core/descriptorcore',
         'core/coretype',
         'core/constraintcore',
         'core/coretree',
         'core/metacore',
         'core/coretreeloader',
         'core/corediff'],
-    function (CoreRel, Set, Guid, NullPtr, UnWrap, Descriptor, Type, Constraint, CoreTree, MetaCore, TreeLoader, CoreDiff)
+    function (CoreRel, Set, Guid, NullPtr, UnWrap, Type, Constraint, CoreTree, MetaCore, TreeLoader, CoreDiff)
 {
     "use strict";
 
@@ -25,7 +24,7 @@ define([
         options = options || {};
         options.usetype = options.usertype || 'nodejs';
 
-        var coreCon = new TreeLoader(new CoreDiff(new MetaCore(new Constraint(new Descriptor(new Guid(new Set(new NullPtr(new Type(new NullPtr(new CoreRel(new CoreTree(storage, options))))))))))));
+        var coreCon = new TreeLoader(new CoreDiff(new MetaCore(new Constraint(new Guid(new Set(new NullPtr(new Type(new NullPtr(new CoreRel(new CoreTree(storage, options)))))))))));
 
         if(options.usertype === 'tasync'){
             return coreCon;
