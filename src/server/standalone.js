@@ -17,7 +17,8 @@ define(['logManager',
     'blob/BlobFSBackend',
     'blob/BlobS3Backend',
     'blob/BlobServer',
-    'util/guid'
+    'util/guid',
+    'url'
 ], function (LogManager,
              Storage,
              FS,
@@ -37,7 +38,8 @@ define(['logManager',
              BlobFSBackend,
              BlobS3Backend,
              BlobServer,
-             GUID) {
+             GUID,
+             URL) {
     'use strict';
     function StandAloneServer(CONFIG) {
         // if the config is not set we use the global
@@ -490,7 +492,22 @@ define(['logManager',
             res.location('/login');
             expressFileSending(res, __clientBaseDir + '/login.html');
         });
-        __app.post('/login',__gmeAuth.authenticate,function(req,res){
+        __app.post('/login', function(req, res, next) {
+            var queryParams = [];
+            var url = URL.parse(req.url, true);
+            if (req.body && req.body.username) {
+                queryParams.push('username=' + encodeURIComponent(req.body.username));
+            }
+            if (url && url.query && url.query.redirect) {
+                queryParams.push('redirect=' + encodeURIComponent(req.query.redirect));
+            }
+            req.__gmeAuthFailUrl__ = '/login';
+            if (queryParams.length) {
+                req.__gmeAuthFailUrl__ += '?' + queryParams.join('&');
+            }
+            req.__gmeAuthFailUrl__ += '#failed';
+            next();
+        }, __gmeAuth.authenticate, function(req,res){
             res.cookie('webgme', req.session.udmId);
             redirectUrl(req,res);
         });

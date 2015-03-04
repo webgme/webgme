@@ -46,6 +46,14 @@
                 padding: 7px 9px;
             }
 
+            .form-error {
+                border: 1px solid #dd4b39;
+            }
+
+            #failed_holder {
+                color: #dd4b39;
+            }
+
             .gPlusButton {
                 position: relative;
                 padding-left: 32px;
@@ -73,11 +81,12 @@
                 <h2 class="form-signin-heading">WebGME sign in</h2>
                 <div class="row">
                     <div class="col-md-6">
-                        <input name="username" type="text" autocomplete="off" autofocus="autofocus" class="input-block-level" placeholder="Username">
+                        <input id="username_input" name="username" type="text" autocomplete="off" class="input-block-level" placeholder="Username">
                     </div>
                     <div class="col-md-6">
-                        <input name="password" type="password" autocomplete="off" class="input-block-level" placeholder="Password">
+                        <input id="password_input" name="password" type="password" autocomplete="off" class="input-block-level" placeholder="Password">
                     </div>
+                    <div class="col-md-8" id="failed_holder"></div>
                 </div>
                 <div class="row">
                     <div class="col-md-8">
@@ -100,7 +109,26 @@
         </div>
     </body>
     <script>
-        var form = document.getElementById("loginForm");
-        form.setAttribute("action",location.origin+'/login'+window.location.search);
+        function getParameterByName(name) {
+            var match = RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+            return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
+        }
+        var form = document.getElementById('loginForm'),
+            redirect = getParameterByName('redirect');
+        form.setAttribute('action', location.origin + '/login' + redirect ? ('?redirect=' + encodeURIComponent(redirect)) : '');
+    </script>
+    <script src="/lib/jquery/jquery-2.1.0.js"></script>
+    <script>
+        if (window.location.hash === '#failed') {
+            $('#password_input').addClass('form-error');
+            $('#password_input').focus();
+            document.getElementById('failed_holder').innerHTML = 'Invalid username or password';
+        } else {
+            $('#username_input').focus();
+        }
+        var username = getParameterByName('username');
+        if (username) {
+            document.getElementById('username_input').value = username;
+        }
     </script>
 </html>

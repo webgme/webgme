@@ -410,8 +410,7 @@ describe('standalone server', function () {
                     }
                     should.equal(res.status, 200);
                     res.redirects.should.deep.equal([
-                        'http://127.0.0.1:9001/',
-                        'http://127.0.0.1:9001/login?redirect=%2F%3Fredirect%3D%252F' // FIXME: this is not a desirable redirect
+                        'http://127.0.0.1:9001/login?username=user&redirect=%2F#failed'
                     ]);
                     done();
                 });
