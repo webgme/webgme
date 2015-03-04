@@ -4,7 +4,7 @@
 /* globals require, global, describe, before, after */
 require('../../_globals.js');
 
-describe('corediff',function(){
+describe('corediff apply',function(){
     'use strict';
     var projectName = 'coreDiffApply',
         project,

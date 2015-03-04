@@ -7,6 +7,7 @@ describe('apply CLI tests', function () {
     var applyCLI = require('../../src/bin/apply'),
         importCLI = require('../../src/bin/import'),
         exportCLI = require('../../src/bin/export'),
+        mongodb = require('mongodb'),
         FS = require('fs'),
         should = require('chai').should(),
         getJsonProject = function (path) {
@@ -23,8 +24,31 @@ describe('apply CLI tests', function () {
                 return object[path[i]].should.be.eql(value);
             }
             return i.should.be.eql(-1);
-        };
+        },
 
+        mongoUri = 'mongodb://127.0.0.1:27017/multi',
+        applyCliTestProject = 'applyCliTest';
+
+    before(function (done) {
+        // TODO: move this to globals.js as a utility function
+        mongodb.MongoClient.connect(mongoUri, {
+            'w': 1,
+            'native-parser': true,
+            'auto_reconnect': true,
+            'poolSize': 20,
+            socketOptions: {keepAlive: 1}
+        }, function (err, db) {
+            if (err) {
+                done(err);
+                return;
+            }
+
+            db.dropCollection(applyCliTestProject, function (err) {
+                done(err);
+            });
+
+        });
+    });
 
     describe('basic', function () {
         var jsonBaseProject;
@@ -32,14 +56,14 @@ describe('apply CLI tests', function () {
             jsonBaseProject = getJsonProject('./test/bin/apply/base001.json');
         });
         beforeEach(function (done) {
-            importCLI.import('mongodb://127.0.0.1:27017/multi', 'applyCliTest', jsonBaseProject, 'base', done);
+            importCLI.import(mongoUri, applyCliTestProject, jsonBaseProject, 'base', done);
         });
         it('project should remain the same after applying empty patch', function (done) {
-            applyCLI.applyPatch('mongodb://127.0.0.1:27017/multi', 'applyCliTest', 'base', {}, false, function (err, commit) {
+            applyCLI.applyPatch(mongoUri, applyCliTestProject, 'base', {}, false, function (err, commit) {
                 if (err) {
                     return done(err);
                 }
-                exportCLI.export('mongodb://127.0.0.1:27017/multi', 'applyCliTest', commit, function (err, jsonResultProject) {
+                exportCLI.export(mongoUri, applyCliTestProject, commit, function (err, jsonResultProject) {
                     if (err) {
                         return done(err);
                     }
@@ -49,11 +73,11 @@ describe('apply CLI tests', function () {
             });
         });
         it('simple attribute change', function (done) {
-            applyCLI.applyPatch('mongodb://127.0.0.1:27017/multi', 'applyCliTest', 'base', {attr: {name: "otherROOT"}}, false, function (err, commit) {
+            applyCLI.applyPatch(mongoUri, applyCliTestProject, 'base', {attr: {name: "otherROOT"}}, false, function (err, commit) {
                 if (err) {
                     return done(err);
                 }
-                exportCLI.export('mongodb://127.0.0.1:27017/multi', 'applyCliTest', commit, function (err, jsonResultProject) {
+                exportCLI.export(mongoUri, applyCliTestProject, commit, function (err, jsonResultProject) {
                     if (err) {
                         return done(err);
                     }
@@ -64,14 +88,14 @@ describe('apply CLI tests', function () {
         });
         //TODO fix this issue now tests has been removed
         it('multiple attribute change', function (done) {
-            applyCLI.applyPatch('mongodb://127.0.0.1:27017/multi', 'applyCliTest', 'base', {
+            applyCLI.applyPatch(mongoUri, applyCliTestProject, 'base', {
                 attr: {name: 'ROOTy'},
                 1: {attr: {name: 'FCOy'}}
             }, false, function (err, commit) {
                 if (err) {
                     return done(err);
                 }
-                exportCLI.export('mongodb://127.0.0.1:27017/multi', 'applyCliTest', commit, function (err, jsonResultProject) {
+                exportCLI.export(mongoUri, applyCliTestProject, commit, function (err, jsonResultProject) {
                     if (err) {
                         return done(err);
                     }
@@ -82,11 +106,11 @@ describe('apply CLI tests', function () {
             });
         });
         /*it('simple registry change',function(done){
-         applyCLI.applyPatch('mongodb://127.0.0.1:27017/multi','applyCliTest','base',{1:{reg:{position:{x:200,y:200}}}},false,function(err,commit){
+         applyCLI.applyPatch(mongoUri,applyCliTestProject,'base',{1:{reg:{position:{x:200,y:200}}}},false,function(err,commit){
          if(err){
          return done(err);
          }
-         exportCLI.export('mongodb://127.0.0.1:27017/multi','applyCliTest',commit,function(err,jsonResultProject){
+         exportCLI.export(mongoUri,applyCliTestProject,commit,function(err,jsonResultProject){
          if(err){
          return done(err);
          }
