@@ -630,7 +630,7 @@ define(['logManager',
             }
         });
         __app.get('/checktoken/:token', function (req, res) {
-            if (CONFIG.authenticated == true) {
+            if (CONFIG.authenticated == true) { // FIXME do we need to check CONFIG.authentication or session.authenticated?
                 if (__canCheckToken == true) {
                     setTimeout(function () {
                         __canCheckToken = true;
