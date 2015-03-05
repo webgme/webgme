@@ -15,7 +15,7 @@ var WebGME = require('../webgme'),
 
     Local = requirejs('storage/local'),
     Commit = requirejs('storage/commit'),
-    StorageLocal = function (options) {
+    Storage = function (options) {
         'use strict';
         return new Commit(new Local(options || {}));
     },
@@ -204,7 +204,7 @@ function loadNodes(parameters, done) {
 }
 module.exports = {
     WebGME: WebGME,
-    StorageLocal: StorageLocal,
+    Storage: Storage,
     Log: Log,
     generateKey: generateKey,
 
