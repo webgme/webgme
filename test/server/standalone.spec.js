@@ -291,13 +291,14 @@ describe('standalone server', function () {
 
                         socket = io.connect(serverBaseUrl,
                             {
-                                'query': socketReq.cookies,
+                                'query': 'webGMESessionId=' + /webgmeSid=s:([^;]+)\./.exec(decodeURIComponent(socketReq.cookies))[1],
                                 'transports': ['websocket'],
                                 'multiplex': false
                             });
 
                         socket.on('error', function (err) {
-                            defer.reject(err);
+                            socket.disconnect();
+                            defer.reject(err || 'could not connect');
                         });
                         socket.on('connect', function () {
                             defer.resolve(socket);
@@ -498,28 +499,27 @@ describe('standalone server', function () {
                 }).nodeify(done);
         });
 
-        // FIXME: Kevin please fix this test
-        //it('should not be able to open an unauthorized project', function (done) {
-        //    var projectName = 'unauthorized_project';
-        //    openSocketIo()
-        //        .then(function (socket) {
-        //            return Q.ninvoke(socket, 'emit', 'openProject', projectName)
-        //                .finally(function () {
-        //                    socket.disconnect();
-        //                });
-        //        }).then(function () {
-        //            return gmeauth.getProjectAuthorizationByUserId('user', projectName);
-        //        }).then(function (authorized) {
-        //            authorized.should.deep.equal({read: true, write: true, delete: true});
-        //        }).nodeify(function (err) {
-        //            if (!err) {
-        //                done(new Error('should have failed'));
-        //                return;
-        //            }
-        //            ('' + err).should.contain('missing necessary user rights');
-        //            done();
-        //        });
-        //});
+        it('should not be able to open an unauthorized project', function (done) {
+            var projectName = 'unauthorized_project';
+            openSocketIo()
+                .then(function (socket) {
+                    return Q.ninvoke(socket, 'emit', 'openProject', projectName)
+                        .finally(function () {
+                            socket.disconnect();
+                        });
+                }).then(function () {
+                    return gmeauth.getProjectAuthorizationByUserId('user', projectName);
+                }).then(function (authorized) {
+                    authorized.should.deep.equal({read: true, write: true, delete: true});
+                }).nodeify(function (err) {
+                    if (!err) {
+                        done(new Error('should have failed'));
+                        return;
+                    }
+                    ('' + err).should.contain('missing necessary user rights');
+                    done();
+                });
+        });
 
         it('should grant perms to newly-created project', function (done) {
             var projectName = 'ClientCreateProject';
@@ -530,7 +530,7 @@ describe('standalone server', function () {
                             socket.disconnect();
                         });
                 }).then(function () {
-                    return auth.getProjectAuthorizationByUserId('user', projectName);
+                    return gmeauth.getProjectAuthorizationByUserId('user', projectName);
                 }).then(function (authorized) {
                     authorized.should.deep.equal({read: true, write: true, delete: true});
                 }).nodeify(done);
