@@ -178,13 +178,13 @@ define([
           _configuration.host = "";
         }
       }
-      if(typeof WebGMEGlobal !== 'undefined') {
+      if(typeof TESTING === 'undefined') {
         require([_configuration.host + '/listAllDecorators', _configuration.host + '/listAllPlugins'], function (d, p) {
           AllDecorators = WebGMEGlobal.allDecorators;
           AllPlugins = WebGMEGlobal.allPlugins;
         });
       } else {
-        console.warn('WebGMEGlobal not defined - cannot get plugins.');
+        console.warn('TESTING is defined - we are not getting plugins and decorators.');
       }
 
 

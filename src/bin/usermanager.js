@@ -29,37 +29,30 @@ requirejs.config({
 GMEAuth = requirejs('auth/gmeauth');
 config = requirejs('bin/getconfig');
 
-main = function () {
+main = function (argv) {
     'use strict';
-
     var program = require('commander'),
         auth,
         mainDeferred = Q.defer(),
         setupGMEAuth = function (databaseConnectionString) {
             var mongoConnectionInfo,
-                uri;
-            if (databaseConnectionString) {
-                // this line throws a TypeError for invalid databaseConnectionString
+
+            // this line throws a TypeError for invalid databaseConnectionString
                 uri = MongoURI.parse(databaseConnectionString);
 
-                mongoConnectionInfo = {
-                    host: uri.hosts[0],
-                    port: uri.ports[0] || 27017,
-                    database: uri.database || 'multi'
-                };
-            } else {
-                mongoConnectionInfo = {
-                    host: config.mongoip,
-                    port: config.mongoport,
-                    database: config.mongodatabase
-                };
-            }
-
-            console.log(mongoConnectionInfo);
+            mongoConnectionInfo = {
+                host: uri.hosts[0],
+                port: uri.ports[0] || 27017,
+                database: uri.database || 'multi'
+            };
 
             auth = new GMEAuth(mongoConnectionInfo);
+
+            console.log(uri);
+
+            return uri;
         },
-        args = Array.prototype.slice.call(process.argv);
+        args = Array.prototype.slice.call(argv);
 
     if (args.length === 2) {
         args.push('--help');
@@ -67,7 +60,10 @@ main = function () {
 
     program
         .version('0.1.0')
-        .option('--db <database>', 'database connection string', 'mongodb://127.0.0.1:27017/multi');
+        .option('--db <database>', 'database connection string', 'mongodb://127.0.0.1:27017/multi')
+        .on('--help', function () {
+            mainDeferred.resolve();
+        });
 
     program
         .command('useradd <username> <email> <password>')
@@ -77,7 +73,7 @@ main = function () {
             setupGMEAuth(options.parent.db);
 
             // TODO: we may need to use a module like 'prompt' to get user password
-            auth.addUser(username, email, password, options.canCreate, { overwrite: true})
+            auth.addUser(username, email, password, options.canCreate, {overwrite: true})
                 .then(mainDeferred.resolve)
                 .catch(mainDeferred.reject)
                 .finally(auth.unload);
@@ -88,6 +84,7 @@ main = function () {
             console.log('    $ node usermanager.js useradd brubble brubble@example.com Password.123');
             console.log('    $ node usermanager.js useradd --canCreate brubble brubble@example.com Password.123');
             console.log();
+            // FIXME: resolve promise
         });
 
     program
@@ -111,6 +108,7 @@ main = function () {
             console.log('    $ node usermanager.js userlist');
             console.log('    $ node usermanager.js userlist user23');
             console.log();
+            // FIXME: resolve promise
         });
 
     program
@@ -122,7 +120,7 @@ main = function () {
             // TODO: we may need to use a module like 'prompt' to get user password
             return auth.getAllUserAuthInfo(username)
                 .then(function (userObject) {
-                    return auth.addUser(username, userObject.email, password, userObject.canCreate, { overwrite: true});
+                    return auth.addUser(username, userObject.email, password, userObject.canCreate, {overwrite: true});
                 })
                 .then(mainDeferred.resolve)
                 .catch(mainDeferred.reject)
@@ -134,6 +132,7 @@ main = function () {
             console.log();
             console.log('    $ node usermanager.js passwd brubble NewPass.123');
             console.log();
+            // FIXME: resolve promise
         });
 
     program
@@ -152,6 +151,7 @@ main = function () {
             console.log();
             console.log('    $ node usermanager.js userdel brubble');
             console.log();
+            // FIXME: resolve promise
         });
 
     program
@@ -170,6 +170,7 @@ main = function () {
             console.log();
             console.log('    $ node usermanager.js organizationadd neworg');
             console.log();
+            // FIXME: resolve promise
         });
 
     program
@@ -188,12 +189,13 @@ main = function () {
             console.log();
             console.log('    $ node usermanager.js organizationdel sample_organization');
             console.log();
+            // FIXME: resolve promise
         });
 
-    var authUserOrGroup = function(id, projectname, options, fn) {
+    var authUserOrGroup = function (id, projectname, options, fn) {
         var rights = {
-            read:   options.authorize.indexOf('r') !== -1,
-            write:  options.authorize.indexOf('w') !== -1,
+            read: options.authorize.indexOf('r') !== -1,
+            write: options.authorize.indexOf('w') !== -1,
             delete: options.authorize.indexOf('d') !== -1
         };
 
@@ -229,6 +231,8 @@ main = function () {
             console.log('    $ node usermanager.js usermod_auth --deauthorize user23 project42');
             console.log('    $ node usermanager.js usermod_auth -d user23 project42');
             console.log();
+            // FIXME: resolve promise
+
         });
 
     program
@@ -241,6 +245,8 @@ main = function () {
         })
         .on('--help', function () {
             console.log('    Organizations are authorized like users are authorized. See also: usermod_auth');
+            // FIXME: resolve promise
+
         });
 
     program
@@ -259,6 +265,8 @@ main = function () {
             console.log();
             console.log('    $ node usermanager.js usermod_organization_add user23 organization123');
             console.log();
+            // FIXME: resolve promise
+
         });
 
     program
@@ -277,6 +285,8 @@ main = function () {
             console.log();
             console.log('    $ node usermanager.js usermod_organization_del user23 organization123');
             console.log();
+            // FIXME: resolve promise
+
         });
 
 
@@ -285,9 +295,13 @@ main = function () {
     return mainDeferred.promise;
 };
 
+module.exports = {
+    main: main
+};
+
 if (require.main === module) {
-    
-    main()
+
+    main(process.argv)
         .then(function () {
             'use strict';
             console.log('Done');

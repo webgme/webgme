@@ -16,6 +16,7 @@ define(['logManager',
                     res.send(err);
                 } else {
                     res.status(200);
+                    res.setHeader('Content-type', 'application/json');
                     res.end(JSON.stringify(metadata, null, 4));
 
                 }

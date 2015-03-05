@@ -44,8 +44,6 @@ describe('Client tests', function () {
             'coreclient': 'common/core/users',
             'blob': 'middleware/blob',
             'eventDispatcher': 'common/EventDispatcher',
-            ' /listAllDecorators': '../test/asset/empty',
-            ' /listAllPlugins': '../test/asset/empty',
             ' /socket.io/socket.io.js': 'socketio-client'
         }
     });

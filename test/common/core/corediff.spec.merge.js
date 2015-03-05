@@ -11,7 +11,7 @@ describe('corediff-merge', function () {
     'use strict';
     var FS = testFixture.fs,
         WebGME = testFixture.WebGME,
-        storage = testFixture.StorageLocal();
+        storage = testFixture.Storage();
 
     describe('merge', function () {
         var project, core, root, commit, baseCommitHash, baseRootHash,
