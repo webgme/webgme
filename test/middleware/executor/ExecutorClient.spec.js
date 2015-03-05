@@ -1,18 +1,17 @@
-/*globals require, describe, it, before, after, WebGMEGlobal, WebGME*/
-
+/*globals WebGMEGlobal*/
+/*jshint node:true, mocha:true*/
 /**
  * @author pmeijer / https://github.com/pmeijer
  */
 
-require('../../_globals.js');
+var testFixture = require('../../_globals.js');
 
 describe('ExecutorClient', function () {
     'use strict';
 
-    var requirejs = require('requirejs'),
-        fs = require('fs'),
-        should = require('chai').should(),
-        ExecutorClient = requirejs('executor/ExecutorClient'),
+    var fs = testFixture.fs,
+        should = testFixture.should,
+        ExecutorClient = testFixture.ExecutorClient,
         executorClient,
         server,
         serverBaseUrl;
@@ -29,7 +28,7 @@ describe('ExecutorClient', function () {
 
         serverBaseUrl = 'http://127.0.0.1:' + config.port;
 
-        server = WebGME.standaloneServer(config);
+        server = testFixture.WebGME.standaloneServer(config);
         server.start(function () {
             executorClient = new ExecutorClient(param);
             done();
@@ -37,7 +36,7 @@ describe('ExecutorClient', function () {
     });
 
     after(function (done) {
-        server.stop(function(err) {
+        server.stop(function (err) {
             try {
                 fs.unlinkSync('test-tmp/jobList.nedb');
             } catch (error) {
@@ -98,14 +97,14 @@ describe('ExecutorClient', function () {
     });
 
     it('getInfo for non-existing hash should return 404', function (done) {
-        executorClient.getInfo('87704f10a36aa4214f5b0095ba8099e729a10f46', function (err, res) {
-            should.equal(err,404);
+        executorClient.getInfo('87704f10a36aa4214f5b0095ba8099e729a10f46', function (err/*, res*/) {
+            should.equal(err, 404);
             done();
         });
     });
 
     it('getAllInfo should return 500', function (done) {
-        executorClient.getAllInfo(function(err) {
+        executorClient.getAllInfo(function (err) {
             should.equal(err, 500);
             done();
         });

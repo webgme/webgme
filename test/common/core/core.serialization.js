@@ -1,99 +1,13 @@
+/*jshint node:true, mocha:true*/
 /**
- * Created by tamas on 12/22/14.
+ * @author kecso / https://github.com/kecso
  */
-require('../../_globals.js');
+var tGlobals = require('../../_globals.js');
 
-describe('Core#Serialization', function () {
-    var FS = require('fs'),
-        PATH = require('path'),
-        storage = new global.Storage(),
-        requirejs = require('requirejs'),
-        CANON = requirejs('../src/common/util/canon');
-
-    function saveProject(txt, ancestors, next) {
-        core.persist(root, function (err) {
-            if (err) {
-                return next(err);
-            }
-
-            commit = project.makeCommit(ancestors, core.getHash(root), txt, function (err) {
-                if (err) {
-                    return next(err);
-                }
-                next(null, commit);
-            });
-        });
-    }
-    function loadJsonData(path) {
-        try {
-            jsonData = JSON.parse(FS.readFileSync(path, 'utf8'));
-        } catch (err) {
-            jsonData = null;
-            return false;
-        }
-
-        return true;
-    }
-    function importProject(projectJson, next) {
-
-        storage.getProjectNames(function (err, names) {
-            if (err) {
-                return next(err);
-            }
-            names = names || [];
-            if (names.indexOf(projectName) !== -1) {
-                return next(new Error('project already exists'));
-            }
-
-            storage.openProject(projectName, function (err, p) {
-                if (err || !p) {
-                    return next(err || new Error('unable to get quasi project'));
-                }
-
-                core = new global.WebGME.core(p);
-                project = p;
-                root = core.createNode();
-
-                global.WebGME.serializer.import(core, root, projectJson, function (err, log) {
-                    if (err) {
-                        return next(err);
-                    }
-                    saveProject('test initial import', [], next);
-                });
-            });
-        });
-    }
-    function deleteProject(next) {
-        storage.getProjectNames(function (err, names) {
-            if (err) {
-                return next(err);
-            }
-            if (names.indexOf(projectName) === -1) {
-                return next(new Error('no such project'));
-            }
-
-            storage.deleteProject(projectName, next);
-        });
-    }
-    function loadNodes(paths, next) {
-        var needed = paths.length,
-            nodes = {}, error = null, i,
-            loadNode = function (path) {
-                core.loadByPath(root, path, function (err, node) {
-                    error = error || err;
-                    nodes[path] = node;
-                    if (--needed === 0) {
-                        next(error, nodes);
-                    }
-                })
-            };
-        for (i = 0; i < paths.length; i++) {
-            loadNode(paths[i]);
-        }
-    }
-
+describe('Core Serialization', function () {
+    'use strict';
 //global variables of the test
-    var projectName = "test_serialization_" + new Date().getTime(),
+    var storage = null,
         commit = '',
         baseCommit = '',
         root = null,
@@ -101,23 +15,30 @@ describe('Core#Serialization', function () {
         core = null,
         project = null;
 
-    var iData, eData, nodes, guids, paths, guidToPath;
-    it('should open the database connection', function (done) {
-        storage.openDatabase(done);
-    });
+    var iData,
+        eData,
+        nodes,
+        guids,
+        paths,
+        guidToPath,
+        jsonData;
     it('imports the example project', function (done) {
-        loadJsonData('./test/asset/exportimport.json');
-        if (jsonData === null) {
-            return done(new Error('unable to load project file'));
-        }
-        importProject(jsonData, function (err, c) {
+        tGlobals.importProject({
+            filePath: './test/asset/exportimport.json',
+            projectName: 'coreSerializationTest'
+        }, function (err, result) {
             if (err) {
-                return done(err);
+                done(err);
+                return;
             }
-
-            commit = c;
-            baseCommit = c;
+            storage = result.storage;
+            project = result.project;
+            commit = result.commitHash;
+            baseCommit = result.commitHash;
+            root = result.root;
+            core = result.core;
             rootHash = core.getHash(root);
+            jsonData = result.jsonProject;
             done();
         });
     });
@@ -125,17 +46,12 @@ describe('Core#Serialization', function () {
         this.timeout(5000);
         iData = jsonData;
         eData = {};
-        global.WebGME.serializer.export(core, root, function (err, exp) {
+        tGlobals.WebGME.serializer.export(core, root, function (err, exp) {
             if (err) {
                 return done(err);
             }
             eData = exp;
-            if (JSON.stringify(iData) !== JSON.stringify(eData)) {
-                //we print the exports only if there is some error
-                FS.writeFileSync(PATH.join('test-tmp', 'input.json'), JSON.stringify(iData, null, 2));
-                FS.writeFileSync(PATH.join('test-tmp', 'output.json'), JSON.stringify(eData, null, 2));
-                return done(new Error('the two object differs'));
-            }
+            iData.should.be.eql(eData);
             done();
         });
     });
@@ -165,12 +81,12 @@ describe('Core#Serialization', function () {
     });
     it('checks the paths', function () {
         var i, checkContainment = function (path, containment) {
-            var i;
+            var i,keys = Object.keys(containment);
             if (!paths[path]) {
                 throw new Error('missing path \'' + path + '\'');
             }
-            for (i in containment) {
-                checkContainment(path + '/' + iData.relids[i], containment[i]);
+            for (i=0;i<keys.length;i++) {
+                checkContainment(path + '/' + iData.relids[keys[i]], containment[keys[i]]);
             }
         };
         paths = {};
@@ -193,35 +109,36 @@ describe('Core#Serialization', function () {
         }
     });
     it('checks the attributes', function () {
-        var i, checkAttributes = function (node, ownAttributes) {
-            var i;
-            for (i in ownAttributes) {
-                if (CANON.stringify(core.getOwnAttribute(node, i)) !== CANON.stringify(ownAttributes[i])) {
-                    throw new Error('attribute mismatch [' + core.getGuid(node) + '] [' + i + ']');
-                }
+        var i, keys = Object.keys(guids),
+            checkAttributes = function (node, ownAttributes) {
+            var i,keys = Object.keys(ownAttributes);
+            for (i=0;i<keys.length;i++) {
+                ownAttributes[keys[i]].should.be.eql(core.getOwnAttribute(node, keys[i]));
             }
         };
 
-        for (i in guids) {
-            checkAttributes(guids[i], iData.nodes[i].attributes);
+
+        for (i=0;i<keys.length;i++) {
+            checkAttributes(guids[keys[i]], iData.nodes[keys[i]].attributes);
         }
     });
     it('checks the registry entries', function () {
-        var i, checkAttributes = function (node, ownRegistry) {
-            var i;
-            for (i in ownRegistry) {
-                if (CANON.stringify(core.getOwnRegistry(node, i)) !== CANON.stringify(ownRegistry[i])) {
-                    throw new Error('registry mismatch [' + core.getGuid(node) + '] [' + i + ']');
+        var i, keys = Object.keys(guids),
+            checkRegistry = function (node, ownRegistry) {
+                var i,keys = Object.keys(ownRegistry);
+                for (i=0;i<keys.length;i++) {
+                    ownRegistry[keys[i]].should.be.eql(core.getOwnRegistry(node, keys[i]));
                 }
-            }
-        };
+            };
 
-        for (i in guids) {
-            checkAttributes(guids[i], iData.nodes[i].registry);
+
+        for (i=0;i<keys.length;i++) {
+            checkRegistry(guids[keys[i]], iData.nodes[keys[i]].registry);
         }
     });
     it('checks base chains', function () {
-        var i, checkBases = function (node) {
+        var i, keys = Object.keys(guids),
+            checkBases = function (node) {
             var base = core.getBase(node);
             if (base) {
                 if (core.getGuid(base) === iData.nodes[core.getGuid(node)].base) {
@@ -233,80 +150,60 @@ describe('Core#Serialization', function () {
                 throw new Error('missing base in the project [' + core.getGuid(node) + ']');
             }
         };
-        for (i in guids) {
-            checkBases(guids[i]);
+        for (i=0;i<keys.length;i++) {
+            checkBases(guids[keys[i]]);
         }
     });
     it('checks pointers', function () {
-        var i, checkPointers = function (node) {
-            var i, iNode = iData.nodes[core.getGuid(node)].pointers;
-            for (i in iNode) {
-                if (iNode[i] === null) {
-                    if (core.getPointerPath(node, i) !== null) {
-                        throw new Error('not null target [' + core.getGuid(node) + '] [' + i + ']');
+        var i, keys = Object.keys(guids),
+            checkPointers = function (node) {
+            var i, iNode = iData.nodes[core.getGuid(node)].pointers,
+                keys = Object.keys(iNode);
+            for (i=0;i<keys.length;i++) {
+                if (iNode[keys[i]] === null) {
+                    if (core.getPointerPath(node, keys[i]) !== null) {
+                        throw new Error('not null target [' + core.getGuid(node) + '] [' + keys[i] + ']');
                     }
-                } else if (iNode[i] !== core.getGuid(paths[core.getPointerPath(node, i)])) {
-                    throw new Error('wrong pointer target [' + core.getGuid(node) + '] [' + i + ']');
+                } else if (iNode[keys[i]] !== core.getGuid(paths[core.getPointerPath(node, keys[i])])) {
+                    throw new Error('wrong pointer target [' + core.getGuid(node) + '] [' + keys[i] + ']');
                 }
             }
         };
 
-        for (i in guids) {
-            checkPointers(guids[i]);
+        for (i=0;i<keys.length;i++) {
+            checkPointers(guids[keys[i]]);
         }
     });
     it('checks set members', function () {
-        var i, checkMembers = function (node) {
-            var iNode = iData.nodes[core.getGuid(node)].sets, i, j, k, path;
-            for (i in iNode) {
-                for (j = 0; j < iNode[i].length; j++) {
+        var i, keys = Object.keys(guids),
+            checkMembers = function (node) {
+            var iNode = iData.nodes[core.getGuid(node)].sets, i, j, k, path,
+                keys = Object.keys(iNode),
+                values;
+            for (i=0;i<keys.length;i++) {
+                for (j = 0; j < iNode[keys[i]].length; j++) {
                     //guid
-                    if (!guidToPath[iNode[i][j].guid]) {
-                        throw new Error('set element missing [' + iNode[i][j].guid + ']');
+                    if (!guidToPath[iNode[keys[i]][j].guid]) {
+                        throw new Error('set element missing [' + iNode[keys[i]][j].guid + ']');
                     }
-                    path = guidToPath[iNode[i][j].guid];
+                    path = guidToPath[iNode[keys[i]][j].guid];
                     //attributes
-                    for (k in iNode[i][j].attributes) {
-                        if (CANON.stringify(iNode[i][j].attributes[k]) !== CANON.stringify(core.getMemberAttribute(node, i, path, k))) {
-                            throw new Error('wrong attribute [' + core.getGuid(node) + '] [' + i + '] [' + iNode[i][j].guid + '] [' + k + ']');
-                        }
+                    values = Object.keys(iNode[keys[i]][j].attributes);
+                    for (k=0;k<values.length;k++) {
+                        iNode[keys[i]][j].attributes[values[k]].should.be.eql(core.getMemberAttribute(node, keys[i], path, values[k]));
                     }
 
                     //registry
-                    for (k in iNode[i][j].registry) {
-                        if (CANON.stringify(iNode[i][j].registry[k]) !== CANON.stringify(core.getMemberRegistry(node, i, path, k))) {
-                            throw new Error('wrong registry [' + core.getGuid(node) + '] [' + i + '] [' + iNode[i][j].guid + '] [' + k + ']');
-                        }
+                    values = Object.keys(iNode[keys[i]][j].registry);
+                    for (k=0;k<values.length;k++) {
+                        iNode[keys[i]][j].registry[values[k]].should.be.eql(core.getMemberRegistry(node, keys[i], path, values[k]));
                     }
                 }
             }
         };
 
-        for (i in guids) {
-            checkMembers(guids[i]);
+        for (i=0;i<keys.length;i++) {
+            checkMembers(guids[keys[i]]);
         }
-    });
-    it('should close the project', function (done) {
-        project.closeProject(function (err) {
-            if (err) {
-                return done(err);
-            }
-            done();
-        });
-    });
-    it('should remove the test project', function (done) {
-        storage.getProjectNames(function (err, names) {
-            if (err) {
-                return done(err);
-            }
-            if (names.indexOf(projectName) === -1) {
-                return done(new Error('no such project'));
-            }
-
-            storage.deleteProject(projectName, done);
-        });
-    });
-    it('should close the database connection', function (done) {
-        storage.closeDatabase(done);
     });
 });

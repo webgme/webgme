@@ -61,7 +61,8 @@
     "chance": ">=0.7.3",
     "pkginfo": ">=0.3.0",
     "rimraf": "^2.2.8",
-    "ssl-root-cas": "^1.1.7"
+    "ssl-root-cas": "^1.1.7",
+    "jscs": "=1.11.3"
   },
   "main": "webgme",
   "scripts": {

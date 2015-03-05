@@ -1,21 +1,20 @@
-/*globals describe, it, before, after, beforeEach, WebGMEGlobal, WebGME*/
-/*jshint node:true*/
+/*globals WebGMEGlobal*/
+/*jshint node:true, mocha:true*/
 /**
  * @author pmeijer / https://github.com/pmeijer
  */
 
-require('../../../_globals.js');
+var testFixture = require('../../../_globals.js');
 
 describe('NodeWorker', function () {
     'use strict';
 
-    var requirejs = require('requirejs'),
-        fs = require('fs'),
-        rimraf = require('rimraf'),
-        childProcess = require('child_process'),
-        should = require('chai').should(),
-        ExecutorClient = requirejs('executor/ExecutorClient'),
-        BlobServerClient = requirejs('blob/BlobServerClient'),
+    var fs = testFixture.fs,
+        rimraf = testFixture.rimraf,
+        childProcess = testFixture.childProcess,
+        should = testFixture.should,
+        ExecutorClient = testFixture.ExecutorClient,
+        BlobClient = testFixture.BlobClient,
         blobClient,
         executorClient,
         server,
@@ -26,19 +25,22 @@ describe('NodeWorker', function () {
         before(function (done) {
             // we have to set the config here
             var config = WebGMEGlobal.getConfig(),
-                param = {},
+                clientsParam = {},
                 workerConfig = {};
             config.port = 9005;
             config.authentication = false;
             config.enableExecutor = true;
             config.executorNonce = null;
+            config.httpsecure = false;
 
-            param.serverPort = config.port;
-            param.sessionId = 'testingNodeWorker';
+            clientsParam.serverPort = config.port;
+            clientsParam.sessionId = 'testingNodeWorker';
+            clientsParam.httpsecure = config.httpsecure;
+            clientsParam.server = '127.0.0.1';
             serverBaseUrl = 'http://127.0.0.1:' + config.port;
             workerConfig[serverBaseUrl] = {};
 
-            server = WebGME.standaloneServer(config);
+            server = testFixture.WebGME.standaloneServer(config);
 
             fs.writeFile('test-tmp/worker_config.json', JSON.stringify(workerConfig), function (err) {
                 if (err) {
@@ -46,10 +48,12 @@ describe('NodeWorker', function () {
                 } else {
 
                     server.start(function () {
-                        executorClient = new ExecutorClient(param);
-                        blobClient = new BlobServerClient(param);
+                        executorClient = new ExecutorClient(clientsParam);
+                        blobClient = new BlobClient(clientsParam);
                         nodeWorkerProcess = childProcess.spawn('node',
-                            ['node_worker.js', '../../../../test-tmp/worker_config.json', '../../../../test-tmp/executor-tmp'],
+                            ['node_worker.js',
+                                '../../../../test-tmp/worker_config.json',
+                                '../../../../test-tmp/executor-tmp'],
                             {cwd: 'src/middleware/executor/worker'});
 
                         nodeWorkerProcess.stdout.on('data', function (data) {
@@ -115,19 +119,22 @@ describe('NodeWorker', function () {
         before(function (done) {
             // we have to set the config here
             var config = WebGMEGlobal.getConfig(),
-                param = {},
+                clientsParam = {},
                 workerConfig = {};
             config.port = 9005;
             config.authentication = false;
             config.enableExecutor = true;
+            config.httpsecure = false;
             config.executorNonce = 'aReallyLongSecret';
             WebGMEGlobal.setConfig({executorNonce: 'aReallyLongSecret'});
-            param.serverPort = config.port;
-            param.sessionId = 'testingNodeWorker';
+            clientsParam.serverPort = config.port;
+            clientsParam.sessionId = 'testingNodeWorker';
+            clientsParam.httpsecure = config.httpsecure;
+            clientsParam.server = '127.0.0.1';
             serverBaseUrl = 'http://127.0.0.1:' + config.port;
             workerConfig[serverBaseUrl] = {executorNonce: 'aReallyLongSecret'};
 
-            server = WebGME.standaloneServer(config);
+            server = testFixture.WebGME.standaloneServer(config);
 
             fs.writeFile('test-tmp/worker_config.json', JSON.stringify(workerConfig), function (err) {
                 if (err) {
@@ -135,10 +142,12 @@ describe('NodeWorker', function () {
                 } else {
 
                     server.start(function () {
-                        executorClient = new ExecutorClient(param);
-                        blobClient = new BlobServerClient(param);
+                        executorClient = new ExecutorClient(clientsParam);
+                        blobClient = new BlobClient(clientsParam);
                         nodeWorkerProcess = childProcess.spawn('node',
-                            ['node_worker.js', '../../../../test-tmp/worker_config.json', '../../../../test-tmp/executor-tmp'],
+                            ['node_worker.js',
+                                '../../../../test-tmp/worker_config.json',
+                                '../../../../test-tmp/executor-tmp'],
                             {cwd: 'src/middleware/executor/worker'});
 
                         nodeWorkerProcess.stdout.on('data', function (data) {
@@ -160,7 +169,7 @@ describe('NodeWorker', function () {
             });
         });
 
-        beforeEach(function(done) {
+        beforeEach(function (done) {
             rimraf('./test-tmp/blob-storage', function (err) {
                 if (err) {
                     done(err);
@@ -219,7 +228,7 @@ describe('NodeWorker', function () {
                 filesToAdd = {
                     'executor_config.json': JSON.stringify(executorConfig)
                 };
-            artifact.addFiles(filesToAdd, function (err, hashes) {
+            artifact.addFiles(filesToAdd, function (err/*, hashes*/) {
                 if (err) {
                     done(err);
                     return;
@@ -267,7 +276,7 @@ describe('NodeWorker', function () {
                     'executor_config.json': JSON.stringify(executorConfig),
                     'fail.js': 'process.exit(1)'
                 };
-            artifact.addFiles(filesToAdd, function (err, hashes) {
+            artifact.addFiles(filesToAdd, function (err/*, hashes*/) {
                 if (err) {
                     done(err);
                     return;
@@ -335,7 +344,7 @@ describe('NodeWorker', function () {
                 filesToAdd = {
                     'fail.js': 'process.exit(1)'
                 };
-            artifact.addFiles(filesToAdd, function (err, hashes) {
+            artifact.addFiles(filesToAdd, function (err/*, hashes*/) {
                 if (err) {
                     done(err);
                     return;
@@ -382,7 +391,7 @@ describe('NodeWorker', function () {
                 filesToAdd = {
                     'executor_config.json': JSON.stringify(executorConfig),
                 };
-            artifact.addFiles(filesToAdd, function (err, hashes) {
+            artifact.addFiles(filesToAdd, function (err/*, hashes*/) {
                 if (err) {
                     done(err);
                     return;
@@ -428,7 +437,7 @@ describe('NodeWorker', function () {
                 filesToAdd = {
                     'executor_config.json': JSON.stringify(executorConfig),
                 };
-            artifact.addFiles(filesToAdd, function (err, hashes) {
+            artifact.addFiles(filesToAdd, function (err/*, hashes*/) {
                 if (err) {
                     done(err);
                     return;
@@ -470,23 +479,26 @@ describe('NodeWorker', function () {
         it('worker should not attach', function (done) {
             // we have to set the config here
             var config = WebGMEGlobal.getConfig(),
-                param = {},
+                clientsParam = {},
                 workerConfig = {},
                 killAndCleanUp;
             config.port = 9005;
             config.authentication = false;
             config.enableExecutor = true;
+            config.httpsecure = false;
             config.executorNonce = 'aReallyLongSecret';
 
-            param.serverPort = config.port;
-            param.sessionId = 'testingNodeWorker';
+            clientsParam.serverPort = config.port;
+            clientsParam.sessionId = 'testingNodeWorker';
+            clientsParam.httpsecure = config.httpsecure;
+            clientsParam.server = '127.0.0.1';
             serverBaseUrl = 'http://127.0.0.1:' + config.port;
             workerConfig[serverBaseUrl] = {executorNonce: 'notMatching'};
 
-            server = WebGME.standaloneServer(config);
+            server = testFixture.WebGME.standaloneServer(config);
             killAndCleanUp = function (err) {
                 nodeWorkerProcess.kill('SIGINT');
-                server.stop(function(serverErr) {
+                server.stop(function (serverErr) {
                     try {
                         fs.unlinkSync('test-tmp/jobList.nedb');
                     } catch (err) {
@@ -517,10 +529,12 @@ describe('NodeWorker', function () {
                 } else {
 
                     server.start(function () {
-                        executorClient = new ExecutorClient(param);
-                        blobClient = new BlobServerClient(param);
+                        executorClient = new ExecutorClient(clientsParam);
+                        blobClient = new BlobClient(clientsParam);
                         nodeWorkerProcess = childProcess.spawn('node',
-                            ['node_worker.js', '../../../../test-tmp/worker_config.json', '../../../../test-tmp/executor-tmp'],
+                            ['node_worker.js',
+                                '../../../../test-tmp/worker_config.json',
+                                '../../../../test-tmp/executor-tmp'],
                             {cwd: 'src/middleware/executor/worker'});
 
                         nodeWorkerProcess.stdout.on('data', function (data) {

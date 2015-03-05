@@ -52,6 +52,10 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 return handshakeData.query.webGMESessionId;
             }
 
+            if(handshakeData && handshakeData.query && handshakeData.query[options.cookieID] && handshakeData.query[options.cookieID] !== 'undefined'){
+                return COOKIE.signedCookie(handshakeData.query[options.cookieID],options.secret);
+            }
+
             //we try to dig it from the signed cookie
             if(options.cookieID && options.secret && handshakeData && handshakeData.headers && handshakeData.headers.cookie) {
                 return COOKIE.signedCookie(URL.parseCookie(handshakeData.headers.cookie)[options.cookieID],options.secret);

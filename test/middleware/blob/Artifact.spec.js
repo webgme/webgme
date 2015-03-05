@@ -1,21 +1,19 @@
-/*globals describe, it, before, after, beforeEach, WebGMEGlobal, WebGME*/
-/*jshint node:true*/
+/*globals WebGMEGlobal*/
+/*jshint node:true, mocha:true*/
 /**
  * @author pmeijer / https://github.com/pmeijer
  */
 
-require('../../_globals.js');
+var testFixture = require('../../_globals.js');
 
 describe('Artifact', function () {
     'use strict';
-    var requirejs = require('requirejs'),
-        rimraf = require('rimraf'),
-        chai = require('chai'),
-        should = chai.should(),
-        superagent = require('superagent'),
+    var Artifact = testFixture.requirejs('blob/Artifact'),
+        rimraf = testFixture.rimraf,
+        should = testFixture.should,
+        superagent = testFixture.superagent,
         agent = superagent.agent(),
-        BlobClient = requirejs('blob/BlobClient'),
-        Artifact = requirejs('blob/Artifact'),
+        BlobClient = testFixture.BlobClient,
         server,
         serverBaseUrl,
 
@@ -33,7 +31,7 @@ describe('Artifact', function () {
             bcParam.serverPort = config.port;
             bcParam.server = '127.0.0.1';
             bcParam.httpsecure = config.httpsecure;
-            server = WebGME.standaloneServer(config);
+            server = testFixture.WebGME.standaloneServer(config);
             server.start(function () {
                 done();
             });
@@ -183,7 +181,7 @@ describe('Artifact', function () {
                     done(err);
                     return;
                 }
-                artifact.addObjectHashes(objHashes, function (err, hashes) {
+                artifact.addObjectHashes(objHashes, function (err/*, hashes*/) {
                     if (err) {
                         done(err);
                         return;

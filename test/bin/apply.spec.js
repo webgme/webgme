@@ -1,15 +1,19 @@
+/*jshint node:true, mocha:true */
+
 /**
- * Created by tamas on 2/18/15.
+ * @author kecso / https://github.com/kecso
  */
-require('../_globals');
+
+var testFixture = require('../_globals');
 
 describe('apply CLI tests', function () {
+    'use strict';
+
     var applyCLI = require('../../src/bin/apply'),
         importCLI = require('../../src/bin/import'),
         exportCLI = require('../../src/bin/export'),
-        mongodb = require('mongodb'),
-        FS = require('fs'),
-        should = require('chai').should(),
+        mongodb = testFixture.mongodb,
+        FS = testFixture.fs,
         getJsonProject = function (path) {
             return JSON.parse(FS.readFileSync(path, 'utf-8'));
         },
@@ -57,46 +61,59 @@ describe('apply CLI tests', function () {
 
     describe('basic', function () {
         var jsonBaseProject;
+
         before(function () {
             jsonBaseProject = getJsonProject('./test/bin/apply/base001.json');
         });
+
         beforeEach(function (done) {
             importCLI.import(mongoUri, applyCliTestProject, jsonBaseProject, 'base', done);
         });
+
         it('project should remain the same after applying empty patch', function (done) {
-            applyCLI.applyPatch(mongoUri, applyCliTestProject, 'base', {}, false, function (err, commit) {
+            var patch = {};
+            applyCLI.applyPatch(mongoUri, applyCliTestProject, 'base', patch, false, function (err, commit) {
                 if (err) {
-                    return done(err);
+                    done(err);
+                    return;
                 }
                 exportCLI.export(mongoUri, applyCliTestProject, commit, function (err, jsonResultProject) {
                     if (err) {
-                        return done(err);
+                        done(err);
+                        return;
                     }
                     jsonResultProject.should.be.eql(jsonBaseProject);
                     done();
                 });
             });
         });
+
         it('simple attribute change', function (done) {
-            applyCLI.applyPatch(mongoUri, applyCliTestProject, 'base', {attr: {name: "otherROOT"}}, false, function (err, commit) {
+            var patch = {attr: {name: 'otherROOT'}};
+            applyCLI.applyPatch(mongoUri, applyCliTestProject, 'base', patch, false, function (err, commit) {
                 if (err) {
-                    return done(err);
+                    done(err);
+                    return;
                 }
                 exportCLI.export(mongoUri, applyCliTestProject, commit, function (err, jsonResultProject) {
                     if (err) {
-                        return done(err);
+                        done(err);
+                        return;
                     }
-                    checkPath(jsonResultProject, '/nodes/03d36072-9e09-7866-cb4e-d0a36ff825f6/attributes/name', 'otherROOT');
+                    checkPath(jsonResultProject, '/nodes/03d36072-9e09-7866-cb4e-d0a36ff825f6/attributes/name',
+                        'otherROOT');
                     done();
                 });
             });
         });
+
         //TODO fix this issue now tests has been removed
         it('multiple attribute change', function (done) {
-            applyCLI.applyPatch(mongoUri, applyCliTestProject, 'base', {
+            var patch = {
                 attr: {name: 'ROOTy'},
                 1: {attr: {name: 'FCOy'}}
-            }, false, function (err, commit) {
+            };
+            applyCLI.applyPatch(mongoUri, applyCliTestProject, 'base', patch, false, function (err, commit) {
                 if (err) {
                     return done(err);
                 }
@@ -104,14 +121,16 @@ describe('apply CLI tests', function () {
                     if (err) {
                         return done(err);
                     }
-                    checkPath(jsonResultProject, '/nodes/03d36072-9e09-7866-cb4e-d0a36ff825f6/attributes/name', 'ROOTy');
+                    checkPath(jsonResultProject, '/nodes/03d36072-9e09-7866-cb4e-d0a36ff825f6/attributes/name',
+                        'ROOTy');
                     checkPath(jsonResultProject, '/nodes/cd891e7b-e2ea-e929-f6cd-9faf4f1fc045/attributes/name', 'FCOy');
                     done();
                 });
             });
         });
         /*it('simple registry change',function(done){
-         applyCLI.applyPatch(mongoUri,applyCliTestProject,'base',{1:{reg:{position:{x:200,y:200}}}},false,function(err,commit){
+         applyCLI.applyPatch(mongoUri,
+         applyCliTestProject,'base',{1:{reg:{position:{x:200,y:200}}}},false,function(err,commit){
          if(err){
          return done(err);
          }

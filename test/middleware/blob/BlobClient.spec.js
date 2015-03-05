@@ -1,22 +1,20 @@
-/*globals describe, it, before, after, beforeEach, WebGMEGlobal, WebGME*/
-/*jshint node:true*/
+/*globals WebGMEGlobal*/
+/*jshint node:true, mocha:true*/
 /**
  * @author ksmyth / https://github.com/ksmyth
  * @author pmeijer / https://github.com/pmeijer
  */
 
-require('../../_globals.js');
+var testFixture = require('../../_globals.js');
 
 describe('BlobClient', function () {
     'use strict';
-    var requirejs = require('requirejs'),
-        rimraf = require('rimraf'),
-        chai = require('chai'),
-        should = chai.should(),
-        superagent = require('superagent'),
-        expect = chai.expect,
-        BlobClient = requirejs('blob/BlobClient'),
-        Artifact = requirejs('blob/Artifact'),
+    var rimraf = testFixture.rimraf,
+        should = testFixture.should,
+        superagent = testFixture.superagent,
+        expect = testFixture.expect,
+        BlobClient = testFixture.BlobClient,
+        Artifact = testFixture.requirejs('blob/Artifact'),
         server,
         serverBaseUrl,
 
@@ -34,7 +32,7 @@ describe('BlobClient', function () {
             bcParam.serverPort = config.port;
             bcParam.server = '127.0.0.1';
             bcParam.httpsecure = config.httpsecure;
-            server = WebGME.standaloneServer(config);
+            server = testFixture.WebGME.standaloneServer(config);
             server.start(function () {
                 done();
             });
@@ -56,7 +54,7 @@ describe('BlobClient', function () {
 
         it('should have putFile', function () {
             var bc = new BlobClient(bcParam);
-            expect(bc.__proto__.hasOwnProperty('putFile')).to.equal(true);
+            expect(typeof bc.putFile === 'function').to.equal(true);
         });
 
         it('should create json', function (done) {
@@ -166,11 +164,12 @@ describe('BlobClient', function () {
 
         if (typeof global !== 'undefined' && typeof window !== 'undefined') { // i.e. if running under node-webkit
             // need this in package.json: "node-remote": "localhost"
+            /*globals File*/
             it('should create zip from node-webkit File', function (done) {
                 var f = new File('./npm_install.cmd', 'npm_install.cmd');
                 //expect(Object.getOwnPropertyNames(f).join(' ')).to.equal(0);
                 var bc = new BlobClient(bcParam);
-                bc.putFile('npm_install.cmd', f, function(err, hash) {
+                bc.putFile('npm_install.cmd', f, function(err/*, hash*/) {
                     if (err) {
                         done(err);
                         return;
@@ -198,7 +197,7 @@ describe('BlobClient', function () {
                     'x#m%l.xml': '<doc/>'
                 },
                 artifact = new BlobClient(bcParam).createArtifact('xmlAndJson');
-            artifact.addFiles(filesToAdd, function (err, hashes) {
+            artifact.addFiles(filesToAdd, function (err/*, hashes*/) {
                 if (err) {
                     done('Could not add files : err' + err.toString());
                     return;
@@ -210,7 +209,7 @@ describe('BlobClient', function () {
                     }
                     var agent = superagent.agent();
                     var url = (new BlobClient(bcParam)).getViewURL(hash, 'j%s#on.json');
-                    console.log(url);
+                    //console.log(url);
                     agent.get(url).end(function (err, res) {
                         if (err) {
                             done(err);
@@ -292,7 +291,7 @@ describe('BlobClient', function () {
         it('save and getArtifact should return same artifact', function (done) {
             var bc = new BlobClient(bcParam),
                 artie = bc.createArtifact('artie');
-            artie.addFile('aname.txt', 'the text', function (err, hash) {
+            artie.addFile('aname.txt', 'the text', function (err/*, hash*/) {
                 if (err) {
                     done(err);
                     return;
@@ -331,8 +330,8 @@ describe('BlobClient', function () {
         }
 
         function base64DecToArr (sBase64, nBlocksSize) {
-            var
-                sB64Enc = sBase64.replace(/[^A-Za-z0-9\+\/]/g, ""), nInLen = sB64Enc.length,
+            /*jslint bitwise: true */
+            var sB64Enc = sBase64.replace(/[^A-Za-z0-9\+\/]/g, ''), nInLen = sB64Enc.length,
                 nOutLen = nBlocksSize ? Math.ceil((nInLen * 3 + 1 >> 2) / nBlocksSize) * nBlocksSize : nInLen * 3 + 1 >> 2,
                 taBytes = new Uint8Array(nOutLen);
 

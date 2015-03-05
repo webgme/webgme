@@ -1,6 +1,8 @@
+/*globals WebGMEGlobal*/
 /**
- * Created by tamas on 1/1/15.
+ * @author kecso / https://github.com/kecso
  */
+
 if (typeof WebGMEGlobal === 'undefined') {
     WebGMEGlobal = {};
 }
