@@ -28,13 +28,13 @@ requirejs(['worker/constants',
     'logManager',
     'fs',
     'path',
-    'blob/BlobServerClient',
+    'blob/BlobClient',
     'plugin/PluginManagerBase',
     'plugin/PluginResult',
     'storage/clientstorage',
     'coreclient/serialization',
     'auth/gmeauth'],
-  function (CONSTANT, Core, Storage, GUID, DUMP, logManager, FS, PATH, BlobServerClient, PluginManagerBase, PluginResult, ConnectedStorage, Serialization, GMEAUTH) {
+  function (CONSTANT, Core, Storage, GUID, DUMP, logManager, FS, PATH, BlobClient, PluginManagerBase, PluginResult, ConnectedStorage, Serialization, GMEAUTH) {
     'use strict';
     var storage = null,
       core = null,
@@ -208,10 +208,10 @@ requirejs(['worker/constants',
             plugins[name] = interpreter;
             var manager = new PluginManagerBase(project, Core, plugins);
 
-            context.managerConfig.blobClient = new BlobServerClient({
+            context.managerConfig.blobClient = new BlobClient({
               serverPort: _CONFIG.port,
               httpsecure: _CONFIG.httpsecure,
-              sessionId: webGMESessionId
+              server: _CONFIG.server || '127.0.0.1'
             });
 
             manager.initialize(null, function (pluginConfigs, configSaveCallback) {
