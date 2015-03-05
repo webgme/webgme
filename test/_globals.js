@@ -15,12 +15,15 @@ var WebGME = require('../webgme'),
 
     Local = requirejs('storage/local'),
     Commit = requirejs('storage/commit'),
-    Storage = function Storage(options) {
+    Storage = function (options) {
         'use strict';
         return new Commit(new Local(options || {}));
     },
     Log = requirejs('../src/common/LogManager'),
     generateKey = requirejs('util/key'),
+
+    GMEAuth = requirejs('auth/gmeauth'),
+    SessionStore = requirejs('auth/sessionstore'),
 
     ExecutorClient = requirejs('executor/ExecutorClient'),
     BlobServerClient = requirejs('blob/BlobServerClient'),
@@ -201,9 +204,12 @@ function loadNodes(parameters, done) {
 }
 module.exports = {
     WebGME: WebGME,
-    StorageLocal: Storage,
+    Storage: Storage,
     Log: Log,
     generateKey: generateKey,
+
+    GMEAuth: GMEAuth,
+    SessionStore: SessionStore,
 
     ExecutorClient: ExecutorClient,
     BlobServerClient: BlobServerClient,

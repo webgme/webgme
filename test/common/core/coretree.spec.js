@@ -16,7 +16,7 @@ describe('CoreTree', function () {
 
     // TODO: replace with in memory storage
 
-        storage = new testFixture.StorageLocal({}),
+        storage = new testFixture.Storage({}),
 
         coreTree;
 

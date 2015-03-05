@@ -10,7 +10,7 @@ var testFixture = require('../../_globals.js');
 
 describe('local', function () {
     'use strict';
-    var storage = new testFixture.StorageLocal();
+    var storage = new testFixture.Storage();
 
     describe('Database', function () {
         it('should be empty initially', function (done) {
