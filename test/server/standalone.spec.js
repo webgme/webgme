@@ -29,6 +29,7 @@ describe('standalone server', function () {
         j;
 
     it('should start and stop and start and stop', function (done) {
+        this.timeout(5000);
         // we have to set the config here
         var config = WebGMEGlobal.getConfig();
         config.port = 9001;
@@ -291,13 +292,14 @@ describe('standalone server', function () {
 
                         socket = io.connect(serverBaseUrl,
                             {
-                                'query': socketReq.cookies,
+                                'query': 'webGMESessionId=' + /webgmeSid=s:([^;]+)\./.exec(decodeURIComponent(socketReq.cookies))[1],
                                 'transports': ['websocket'],
                                 'multiplex': false
                             });
 
                         socket.on('error', function (err) {
-                            defer.reject(err);
+                            socket.disconnect();
+                            defer.reject(err || 'could not connect');
                         });
                         socket.on('connect', function () {
                             defer.resolve(socket);
@@ -482,28 +484,6 @@ describe('standalone server', function () {
                 });
         });
 
-        it('should auth with a new token', function (done) {
-            gmeauth.generateTokenForUserId('user')
-            .then(function (tokenId) {
-                return Q.all([gmeauth.tokenAuthorization(tokenId, 'project'),
-                    gmeauth.tokenAuthorization(tokenId, 'unauthorized_project'),
-                    gmeauth.tokenAuthorization(tokenId, 'doesnt_exist_project')]);
-            }).then(function (authorized) {
-                authorized.should.deep.equal([true, false, false]);
-            }).nodeify(done);
-        });
-
-        it('should have permissions', function (done) {
-            return gmeauth.getAuthorizationInfoByUserId('user', 'project')
-                .then(function (authorized) {
-                    authorized.should.deep.equal({read: true, write: true, delete: false});
-                }).then(function () {
-                    return gmeauth.getProjectAuthorizationByUserId('user', 'project');
-                }).then(function (authorized) {
-                    authorized.should.deep.equal({read: true, write: true, delete: false});
-                })
-                .nodeify(done);
-        });
 
         it('should be able to open an authorized project', function (done) {
             var projectName = 'project';
@@ -520,42 +500,26 @@ describe('standalone server', function () {
                 }).nodeify(done);
         });
 
-        // FIXME: Kevin please fix this test
-        //it('should not be able to open an unauthorized project', function (done) {
-        //    var projectName = 'unauthorized_project';
-        //    openSocketIo()
-        //        .then(function (socket) {
-        //            return Q.ninvoke(socket, 'emit', 'openProject', projectName)
-        //                .finally(function () {
-        //                    socket.disconnect();
-        //                });
-        //        }).then(function () {
-        //            return gmeauth.getProjectAuthorizationByUserId('user', projectName);
-        //        }).then(function (authorized) {
-        //            authorized.should.deep.equal({read: true, write: true, delete: true});
-        //        }).nodeify(function (err) {
-        //            if (!err) {
-        //                done(new Error('should have failed'));
-        //                return;
-        //            }
-        //            ('' + err).should.contain('missing necessary user rights');
-        //            done();
-        //        });
-        //});
-
-
-        it('should be able to revoke permissions', function (done) {
-            return gmeauth.authorizeByUserId('user', 'project', 'delete', {})
-                .then(function () {
-                    return gmeauth.getAuthorizationInfoByUserId('user', 'project');
-                }).then(function (authorized) {
-                    authorized.should.deep.equal({read: false, write: false, delete: false});
+        it('should not be able to open an unauthorized project', function (done) {
+            var projectName = 'unauthorized_project';
+            openSocketIo()
+                .then(function (socket) {
+                    return Q.ninvoke(socket, 'emit', 'openProject', projectName)
+                        .finally(function () {
+                            socket.disconnect();
+                        });
                 }).then(function () {
-                    return gmeauth.getProjectAuthorizationByUserId('user', 'project');
+                    return gmeauth.getProjectAuthorizationByUserId('user', projectName);
                 }).then(function (authorized) {
-                    authorized.should.deep.equal({read: false, write: false, delete: false});
-                })
-                .nodeify(done);
+                    authorized.should.deep.equal({read: true, write: true, delete: true});
+                }).nodeify(function (err) {
+                    if (!err) {
+                        done(new Error('should have failed'));
+                        return;
+                    }
+                    ('' + err).should.contain('missing necessary user rights');
+                    done();
+                });
         });
 
         it('should grant perms to newly-created project', function (done) {
@@ -571,108 +535,6 @@ describe('standalone server', function () {
                 }).then(function (authorized) {
                     authorized.should.deep.equal({read: true, write: true, delete: true});
                 }).nodeify(done);
-        });
-
-        it('should be able to add organization', function (done) {
-            var orgName = 'org1';
-            return gmeauth.addOrganization(orgName)
-                .then(function () {
-                    return gmeauth.getOrganization(orgName);
-                }).then(function () {
-                    return gmeauth.addUserToOrganization('user', orgName);
-                }).then(function () {
-                    return gmeauth.getOrganization(orgName);
-                }).then(function (org) {
-                    org.users.should.deep.equal([ 'user' ]);
-                }).nodeify(done);
-        });
-
-        it('should fail to add dup organization', function (done) {
-            var orgName = 'org1';
-            gmeauth.addOrganization(orgName)
-                .then(function () {
-                    done('should have been rejected');
-                }, function (/*err*/) {
-                    done();
-                });
-        });
-
-        it('should fail to add nonexistant organization', function (done) {
-            var orgName = 'org_doesnt_exist';
-            gmeauth.addUserToOrganization('user', orgName)
-                .then(function () {
-                    done('should have been rejected');
-                }, function (/*err*/) {
-                    done();
-                });
-        });
-
-        it('should fail to add nonexistant user to organization', function (done) {
-            var orgName = 'org1';
-            gmeauth.addUserToOrganization('user_doesnt_exist', orgName)
-                .then(function () {
-                    done('should have been rejected');
-                }, function (/*err*/) {
-                    done();
-                });
-        });
-
-        it('should authorize organization', function (done) {
-            var orgName = 'org1',
-                projectName = 'org_project';
-
-            return gmeauth.authorizeOrganization(orgName, projectName, 'create', {read: true, write: true, delete: false })
-                .then(function () {
-                    return gmeauth.getAuthorizationInfoByOrgId(orgName, projectName);
-                }).then(function (rights) {
-                    rights.should.deep.equal({read: true, write: true, delete: false});
-                }).nodeify(done);
-        });
-
-        it('should give the user project permissions from the organization', function (done) {
-            return gmeauth.getAuthorizationInfoByUserId('user', 'org_project')
-                .then(function (authorized) {
-                    authorized.should.deep.equal({read: false, write: false, delete: false});
-                }).then(function () {
-                    return gmeauth.getProjectAuthorizationByUserId('user', 'org_project');
-                }).then(function (authorized) {
-                    authorized.should.deep.equal({read: true, write: true, delete: false});
-                })
-                .nodeify(done);
-        });
-
-        it('should deauthorize organization', function (done) {
-            var orgName = 'org1',
-                projectName = 'org_project';
-            
-            return gmeauth.authorizeOrganization(orgName, projectName, 'delete', {})
-                .then(function () {
-                    return gmeauth.getAuthorizationInfoByOrgId(orgName, projectName);
-                }).then(function (rights) {
-                    rights.should.deep.equal({});
-                }).nodeify(done);
-        });
-
-        it('should remove user from organization', function (done) {
-            var orgName = 'org1';
-            gmeauth.removeUserFromOrganization('user', orgName)
-                .nodeify(done);
-        });
-
-        it('should remove organization', function (done) {
-            var orgName = 'org1';
-            gmeauth.removeOrganizationByOrgId(orgName)
-                .nodeify(done);
-        });
-
-        it('should fail to remove organization twice', function (done) {
-            var orgName = 'org1';
-            gmeauth.removeOrganizationByOrgId(orgName)
-                .then(function () {
-                    done('should have been rejected');
-                }, function (/*err*/) {
-                    done();
-                });
         });
 
     });

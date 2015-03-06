@@ -70,6 +70,7 @@
     "test": "node node_modules/mocha/bin/mocha --recursive test",
     "test_cover_win": "node_modules\\.bin\\istanbul.cmd --hook-run-in-context cover node_modules\\mocha\\bin\\_mocha -- -R spec --recursive test",
     "test_cover": "node node_modules/istanbul/lib/cli.js --hook-run-in-context cover node_modules/mocha/bin/_mocha -- -R spec --recursive test",
-    "prepublish": "gulp compile-all"
+    "prepublish": "gulp compile-all",
+    "postinstall": "node ./node_modules/requirejs/bin/r.js -o ./utils/build/webgme.classes/cbuild.js"
   }
 }

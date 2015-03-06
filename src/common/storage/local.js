@@ -259,7 +259,7 @@ define(["util/assert"], function (ASSERT) {
         for (var i = 0; i < storage.length; i++) {
           var keyArray = storage.key(i).split(SEPARATOR);
           ASSERT(keyArray.length === 3);
-          if (BRANCH_REGEXP.test(keyArray[2])) {
+          if (BRANCH_REGEXP.test('*'+ keyArray[2])) {
             if (keyArray[0] === database && keyArray[1] === project) {
               branchNames.push(keyArray[2]);
             }
@@ -269,7 +269,7 @@ define(["util/assert"], function (ASSERT) {
       }
 
       function getBranchHash(branch, oldhash, callback) {
-        ASSERT(typeof branch === "string" && BRANCH_REGEXP.test(branch));
+        ASSERT(typeof branch === "string" && BRANCH_REGEXP.test('*'+ branch));
         ASSERT(typeof oldhash === "string" && (oldhash === "" || HASH_REGEXP.test(oldhash)));
         ASSERT(typeof callback === "function");
 

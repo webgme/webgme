@@ -164,6 +164,7 @@ define(['blob/BlobMetadata',
                     if (remaining === 0) {
                         // empty zip no files contained
                         // FIXME: this empty zip is not handled correctly.
+                        writeStream.end(); // pmeijer -> this seems to work
                         callback(null, zip.generate({type:'nodeBuffer'}), metadata.name);
                         return;
                     }

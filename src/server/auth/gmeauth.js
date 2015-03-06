@@ -121,6 +121,8 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
                 .nodeify(callback);
         }
 
+
+        // TODO: unused function ???
         function getUserProject(id, projectName, callback) {
             return collection.findOne({_id: id})
                 .then(function (userData) {
@@ -333,7 +335,6 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
                     }
                     return [true, userData._id];
                 })
-                .spread()
                 .nodeify(callback);
         }
 
@@ -403,9 +404,7 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
         }
 
         function _getProjectNames(callback) {
-            return collection.then(function() {
-                return Q.ninvoke(db, 'getCollectionNames');
-            }).nodeify(callback);
+            return Q.ninvoke(db, 'collectionNames').nodeify(callback);
         }
 
         function addOrganization(orgId, callback) {
@@ -497,7 +496,8 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
                     })
                     .nodeify(callback);
             } else {
-                return Q.reject('invalid type ' + type);
+                return Q.reject('invalid type ' + type)
+                    .nodeify(callback);
             }
         }
 
@@ -505,11 +505,11 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
             var projection = {};
             projection['projects.' + projectName] = 1;
             return organizationCollection.findOne({_id: orgId}, projection)
-                .then(function (userData) {
-                    if (!userData) {
+                .then(function (orgData) {
+                    if (!orgData) {
                         return Q.reject('No such organization');
                     }
-                    return userData.projects[projectName] || {};
+                    return orgData.projects[projectName] || {};
                 })
                 .nodeify(callback);
         }
