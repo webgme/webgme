@@ -79,7 +79,7 @@ describe('standalone server', function () {
 
             {code: 404, url: '/login/forge'},
             {code: 404, url: '/extlib/does_not_exist'},
-            {code: 404, url: '/pluginoutput/does_not_exist'},
+            //{code: 404, url: '/pluginoutput/does_not_exist'},
             {code: 404, url: '/plugin'},
             {code: 404, url: '/plugin/'},
             {code: 404, url: '/plugin/PluginGenerator'},

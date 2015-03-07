@@ -21,7 +21,7 @@ describe('configuration', function () {
     it('should load global as a default config', function () {
         var config;
         process.env.NODE_ENV = '';
-        config = require('../../config/index');
+        config = require('../../config');
 
         config.should.deep.equal(configGlobal);
     });
@@ -29,7 +29,7 @@ describe('configuration', function () {
     it('should load test config', function () {
         var config;
         process.env.NODE_ENV = 'test';
-        config = require('../../config/index');
+        config = require('../../config');
 
         config.should.deep.equal(configTest);
     });

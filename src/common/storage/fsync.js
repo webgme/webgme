@@ -5,8 +5,8 @@
 define(["util/assert"], function (ASSERT) {
     "use strict";
 
-    function Database(_database, options) {
-        ASSERT(typeof options === "object" && typeof _database === "object");
+    function Database(_database, gmeConfig) {
+        ASSERT(typeof gmeConfig === "object" && typeof _database === "object");
 
         function fsyncDatabase(callback) {
             _database.fsyncDatabase(callback);

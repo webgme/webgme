@@ -20,7 +20,7 @@ define(["mongodb", "util/assert", "util/canon"], function (MONGODB, ASSERT, CANO
 
   function Database(options) {
     ASSERT(typeof options === "object");
-
+    var gmeConfig = options.globConf;
     options.host = options.host || "localhost";
     options.port = options.port || 27017;
     options.database = options.database || "webgme";
@@ -49,18 +49,7 @@ define(["mongodb", "util/assert", "util/canon"], function (MONGODB, ASSERT, CANO
        }
        });*/
 
-      var userString = "";
-      if(options.user && options.pwd){
-        userString = options.user+":"+options.pwd+"@";
-      }
-      options.uri = options.uri || "mongodb://" + userString + options.host + ":" + options.port + "/" + options.database;
-      MONGODB.MongoClient.connect(options.uri, {
-        'w': 1,
-        'native-parser': true,
-        'auto_reconnect': true,
-        'poolSize': 20,
-        socketOptions: {keepAlive: 1}
-      }, function (err, db) {
+      MONGODB.MongoClient.connect(gmeConfig.mongo.uri, gmeConfig.mongo.options, function (err, db) {
         if (!err && db) {
           mongo = db;
           callback(null);

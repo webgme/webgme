@@ -1,5 +1,6 @@
 /*global __dirname, webGMEGlobal, require, process, setImmediate */
-var requirejs = require("requirejs"),
+var
+    requirejs = require("requirejs"),
   BASEPATH = __dirname + "/../..",
   WEBGME = require(BASEPATH + '/../webgme');
 requirejs.config({
@@ -59,9 +60,9 @@ requirejs(['worker/constants',
     var initialize = function (parameters) {
       if (initialized !== true) {
         initialized = true;
-
-        WebGMEGlobal.setConfig(parameters.globConf);
-        _CONFIG = parameters.globConf;
+          var gmeConfig = parameters.globConf;
+          WEBGME.addToRequireJsPaths(gmeConfig);
+        _CONFIG = gmeConfig;
         if (_CONFIG.authentication === true) {
           AUTH = GMEAUTH(parameters.auth);
         }
@@ -71,7 +72,8 @@ requirejs(['worker/constants',
           'database': _CONFIG.mongodatabase,
           'user': _CONFIG.mongouser,
           'pwd': _CONFIG.mongopwd,
-          'log': logManager.create('SERVER-WORKER-' + process.pid)
+          'log': logManager.create('SERVER-WORKER-' + process.pid),
+          globConf: gmeConfig
         });
         storage.openDatabase(function (err) {
           if (err) {

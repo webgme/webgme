@@ -28,10 +28,10 @@ define([ "util/assert" ], function (ASSERT) {
 		};
 	};
 
-	var Database = function (database, options) {
-		ASSERT(typeof database === "object" && typeof options === "object");
-
-		options.cache = options.cache || 2000;
+	var Database = function (database, gmeConfig) {
+		ASSERT(typeof database === "object" && typeof gmeConfig === "object");
+        //TODO: Add this to the default configuration
+		gmeConfig.cache = gmeConfig.cache || 2000;
 
 		var projects = {};
 		var dlock = new Lock();
@@ -124,7 +124,7 @@ define([ "util/assert" ], function (ASSERT) {
 				deepFreeze(obj);
 				cache[key] = obj;
 
-				if (++cacheSize >= options.cache) {
+				if (++cacheSize >= gmeConfig.cache) {
 					backup = cache;
 					cache = {};
 					cacheSize = 0;
