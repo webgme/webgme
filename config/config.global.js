@@ -17,7 +17,13 @@ var config = {
     },
 
     client: {
-        appDir: './src/client'
+        appDir: './src/client',
+        // Used in client/WebGME.js to load initial project.
+        defaultProject: {
+            name: null,
+            branch: null,
+            node: null
+        }
     },
 
     mongo: {

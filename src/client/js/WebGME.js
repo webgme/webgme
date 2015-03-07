@@ -30,7 +30,7 @@ define(['logManager',
     'js/Utils/PreferencesHelper',
     'js/Dialogs/Projects/ProjectsDialog',
     'js/Utils/InterpreterManager'], function (logManager,
-                                            CONFIG,
+                                            gmeConfig,
                                             packagejson,
                                             Client,
                                             CONSTANTS,
@@ -67,7 +67,7 @@ define(['logManager',
             projectOpenDialog,
             openProjectLoadDialog;
 
-        initialThingsToDo.branchToLoad = initialThingsToDo.branchToLoad || CONFIG.branch;
+        initialThingsToDo.branchToLoad = initialThingsToDo.branchToLoad ||  gmeConfig.client.defaultProject.branch;
 
         layoutManager = new LayoutManager();
         layoutManager.loadLayout(initialThingsToDo.layoutToLoad, function () {
@@ -76,7 +76,7 @@ define(['logManager',
                 len = layoutPanels ? layoutPanels.length : 0,
                 i;
 
-            client = new Client(CONFIG);
+            client = new Client(gmeConfig);
             WebGMEGlobal.Client = client;
 
             WebGMEGlobal.InterpreterManager = new InterpreterManager(client);
@@ -206,9 +206,10 @@ define(['logManager',
                         });
                     } else {
 
-                        initialThingsToDo.projectToLoad = initialThingsToDo.projectToLoad || CONFIG.project;
+                        initialThingsToDo.projectToLoad = initialThingsToDo.projectToLoad ||
+                            gmeConfig.client.defaultProject.name;
 
-                        if(!initialThingsToDo.projectToLoad){
+                        if (!initialThingsToDo.projectToLoad){
                             openProjectLoadDialog();
                         } else {
                             client.connectToDatabaseAsync({
