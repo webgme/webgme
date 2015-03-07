@@ -9,7 +9,8 @@ var testFixture = require('../_globals');
 describe('apply CLI tests', function () {
     'use strict';
 
-    var applyCLI = require('../../src/bin/apply'),
+    var gmeConfig = testFixture.getGmeConfig(),
+        applyCLI = require('../../src/bin/apply'),
         importCLI = require('../../src/bin/import'),
         exportCLI = require('../../src/bin/export'),
         mongodb = testFixture.mongodb,

@@ -10,7 +10,8 @@ var testFixture = require('../../_globals.js');
 describe('session store', function () {
     'use strict';
 
-    var SessionStore = testFixture.SessionStore,
+    var gmeConfig = testFixture.getGmeConfig(),
+        SessionStore = testFixture.SessionStore,
         should = testFixture.should;
 
     it('creates a session store', function () {

@@ -9,7 +9,8 @@ var testFixture = require('../../../_globals.js');
 describe('NodeWorker', function () {
     'use strict';
 
-    var fs = testFixture.fs,
+    var gmeConfig = testFixture.getGmeConfig(),
+        fs = testFixture.fs,
         rimraf = testFixture.rimraf,
         childProcess = testFixture.childProcess,
         should = testFixture.should,

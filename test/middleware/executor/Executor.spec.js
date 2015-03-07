@@ -9,7 +9,8 @@ var testFixture = require('../../_globals.js');
 describe('Executor', function () {
     'use strict';
 
-    var agent = testFixture.superagent.agent(),
+    var gmeConfig = testFixture.getGmeConfig(),
+        agent = testFixture.superagent.agent(),
         should = testFixture.should,
         fs = testFixture.fs,
         server,

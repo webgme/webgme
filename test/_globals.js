@@ -9,8 +9,17 @@
 //TODO TESTING have to be set before including webgme
 global.TESTING = true;
 
+// TODO: maybe add the testing flag to config?
+process.env.NODE_ENV = 'test';
+
 //adding a local storage class to the global Namespace
-var WebGME = require('../webgme'),
+var gmeConfig = require('../config'),
+    getGmeConfig = function () {
+        'use strict';
+        // makes sure that for each request it returns with a unique object and tests will not interfere
+        return JSON.parse(JSON.stringify(gmeConfig));
+    },
+    WebGME = require('../webgme'),
     requirejs = require('requirejs'),
 
     Local = requirejs('storage/local'),
@@ -203,6 +212,8 @@ function loadNodes(parameters, done) {
      */
 }
 module.exports = {
+    getGmeConfig: getGmeConfig,
+
     WebGME: WebGME,
     Storage: Storage,
     Log: Log,

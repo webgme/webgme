@@ -8,7 +8,8 @@ var testFixture = require('../_globals');
 
 describe('diff CLI tests', function () {
     'use strict';
-    var diffCLI = require('../../src/bin/diff'),
+    var gmeConfig = testFixture.getGmeConfig(),
+        diffCLI = require('../../src/bin/diff'),
         importCLI = require('../../src/bin/import'),
         mongodb = testFixture.mongodb,
         FS = testFixture.fs,

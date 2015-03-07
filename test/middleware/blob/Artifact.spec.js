@@ -8,7 +8,8 @@ var testFixture = require('../../_globals.js');
 
 describe('Artifact', function () {
     'use strict';
-    var Artifact = testFixture.requirejs('blob/Artifact'),
+    var gmeConfig = testFixture.getGmeConfig(),
+        Artifact = testFixture.requirejs('blob/Artifact'),
         rimraf = testFixture.rimraf,
         should = testFixture.should,
         superagent = testFixture.superagent,

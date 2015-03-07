@@ -9,7 +9,8 @@ var testFixture = require('../../../_globals.js');
 describe('PluginGenerator', function () {
     'use strict';
 
-    var should = testFixture.should,
+    var gmeConfig = testFixture.getGmeConfig(),
+        should = testFixture.should,
         requirejs = testFixture.requirejs,
         esprima = require('esprima'),
         pluginConfig = {

@@ -8,7 +8,8 @@ var testFixture = require('../../_globals.js');
 
 describe('corediff apply', function () {
     'use strict';
-    var projectName = 'coreDiffApply',
+    var gmeConfig = testFixture.getGmeConfig(),
+        projectName = 'coreDiffApply',
         project,
         core,
         root,

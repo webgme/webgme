@@ -3,11 +3,12 @@
 /**
  * @author kecso / https://github.com/kecso
  */
-var tGlobals = require('../../_globals.js');
+var testFixture = require('../../_globals.js');
 
 describe('corerel', function () {
     'use strict';
-    var storage = null,
+    var gmeConfig = testFixture.getGmeConfig(),
+        storage = null,
         project = null,
         baseCommitHash = '',
         root = null,
@@ -15,7 +16,7 @@ describe('corerel', function () {
 
     before(function (done) {
         //load the project, import it, and save the base commit hash
-        tGlobals.importProject({
+        testFixture.importProject({
             filePath: './test/common/core/corerel/base001.json',
             projectName: 'coreRelTests'
         }, function (err, result) {

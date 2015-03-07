@@ -9,7 +9,8 @@ var testFixture = require('../_globals');
 describe('Client tests', function () {
     'use strict';
 
-    var should = testFixture.should,
+    var gmeConfig = testFixture.getGmeConfig(),
+        should = testFixture.should,
         WebGME = testFixture.WebGME,
         requirejs = testFixture.requirejs,
         config = WebGMEGlobal.getConfig(),

@@ -11,7 +11,8 @@ var testFixture = require('../../_globals.js');
 describe('GME authentication', function () {
     'use strict';
 
-    var GMEAuth = testFixture.GMEAuth,
+    var gmeConfig = testFixture.getGmeConfig(),
+        GMEAuth = testFixture.GMEAuth,
         should = testFixture.should,
         mongodb = testFixture.mongodb,
         Q = testFixture.Q,

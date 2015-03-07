@@ -9,7 +9,8 @@ var testFixture = require('../_globals.js');
 describe('standalone server', function () {
     'use strict';
 
-    var WebGME = testFixture.WebGME,
+    var gmeConfig = testFixture.getGmeConfig(),
+        WebGME = testFixture.WebGME,
         requirejs = require('requirejs'),
 
         should = testFixture.should,

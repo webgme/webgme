@@ -9,7 +9,8 @@ var testFixture = require('../../_globals.js');
 describe('ExecutorClient', function () {
     'use strict';
 
-    var fs = testFixture.fs,
+    var gmeConfig = testFixture.getGmeConfig(),
+        fs = testFixture.fs,
         should = testFixture.should,
         ExecutorClient = testFixture.ExecutorClient,
         executorClient,

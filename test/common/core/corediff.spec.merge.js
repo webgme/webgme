@@ -9,7 +9,8 @@ var testFixture = require('../../_globals.js');
 
 describe('corediff-merge', function () {
     'use strict';
-    var FS = testFixture.fs,
+    var gmeConfig = testFixture.getGmeConfig(),
+        FS = testFixture.fs,
         WebGME = testFixture.WebGME,
         storage = testFixture.Storage();
 

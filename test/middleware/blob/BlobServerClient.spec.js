@@ -9,7 +9,8 @@ var testFixture = require('../../_globals.js');
 describe('BlobServerClient', function () {
     'use strict';
 
-    var rimraf = testFixture.rimraf,
+    var gmeConfig = testFixture.getGmeConfig(),
+        rimraf = testFixture.rimraf,
         should = testFixture.should,
         BlobServerClient = testFixture.BlobServerClient,
         blobClient,

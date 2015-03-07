@@ -10,7 +10,8 @@ var testFixture = require('../_globals');
 describe('User manager command line interface (CLI)', function () {
     'use strict';
 
-    var should = testFixture.should,
+    var gmeConfig = testFixture.getGmeConfig(),
+        should = testFixture.should,
         spawn = testFixture.childProcess.spawn,
         requirejs = testFixture.requirejs,
         mongodb = testFixture.mongodb,

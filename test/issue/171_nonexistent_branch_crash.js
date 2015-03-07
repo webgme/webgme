@@ -8,7 +8,8 @@ var testFixture = require('../_globals.js');
 
 describe('issue 171 server crashes when trying to switch to non-existent branch', function () {
     'use strict';
-    var requirejs = testFixture.requirejs,
+    var gmeConfig = testFixture.getGmeConfig(),
+        requirejs = testFixture.requirejs,
         ClientClass,
         WebGME = testFixture.WebGME,
         Q = testFixture.Q,
@@ -17,6 +18,7 @@ describe('issue 171 server crashes when trying to switch to non-existent branch'
         client,
         should = testFixture.should,
         server;
+
 
     requirejs.config({
         nodeRequire: require,
