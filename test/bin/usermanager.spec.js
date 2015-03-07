@@ -162,7 +162,43 @@ describe('User manager command line interface (CLI)', function () {
             oldConsoleError = console.error,
             oldProcessStdoutWrite = process.stdout.write,
             dbConn,
-            db;
+            db,
+
+            i,
+            helpForCommands = [
+                'useradd',
+                'userlist',
+                'passwd',
+                'userdel',
+                'organizationadd',
+                'organizationdel',
+                'usermod_auth',
+                'orgmod_auth',
+                'usermod_organization_add',
+                'usermod_organization_del'
+            ],
+            addTest,
+
+            suppressLogAndExit = function () {
+                process.exit = function (code) {
+                    // TODO: would be nice to send notifications for test
+                    console.log(code);
+                };
+                console.log = function () {
+                    //console.info(arguments);
+                };
+                console.error = function () {
+                    //console.info(arguments);
+                };
+                process.stdout.write = function () {
+                };
+            },
+            restoreLogAndExit = function () {
+                console.log = oldConsoleLog;
+                console.error = oldConsoleError;
+                process.stdout.write = oldProcessStdoutWrite;
+                process.exit = oldProcessExit;
+            };
 
         before(function (done) {
 
@@ -203,9 +239,9 @@ describe('User manager command line interface (CLI)', function () {
             dbConn.nodeify(done);
         });
 
-
         after(function (done) {
-            process.exit = oldProcessExit;
+            // just to be safe
+            restoreLogAndExit();
             db.close(true, function (err) {
                 if (err) {
                     done(err);
@@ -219,215 +255,349 @@ describe('User manager command line interface (CLI)', function () {
             userManager.should.have.property('main');
         });
 
+        // Test if help is printed for all commands.
+        // If a new command is introduced add it to the helpForCommands list
+        addTest = function (helpForCommand) {
+            it('should print help for ' + helpForCommand, function (done) {
+                suppressLogAndExit();
+
+                userManager.main(['node', filename, helpForCommand, '--help'])
+                    .then(function () {
+                        restoreLogAndExit();
+                        done();
+                    })
+                    .catch(function (err) {
+                        restoreLogAndExit();
+                        if (err instanceof SyntaxError) {
+                            done();
+                        } else {
+                            done(err);
+                        }
+                    });
+            });
+        };
+
+        for (i = 0; i < helpForCommands.length; i += 1) {
+            addTest(helpForCommands[i]);
+        }
+
+        // individual tests
         it('should print help', function (done) {
-            process.exit = function (code) {
-                // TODO: would be nice to send notifications for test
-                console.log(code);
-            };
-
-            console.log = function () {
-                //console.info(arguments);
-            };
-            console.error = function () {
-                //console.info(arguments);
-            };
-            process.stdout.write = function () {
-            };
-
+            suppressLogAndExit();
 
             userManager.main(['node', filename])
                 .then(function () {
-                    console.log = oldConsoleLog;
-                    console.error = oldConsoleError;
-                    process.stdout.write = oldProcessStdoutWrite;
+                    restoreLogAndExit();
                     done();
                 })
                 .catch(function (err) {
-                    console.log = oldConsoleLog;
-                    console.error = oldConsoleError;
-                    process.stdout.write = oldProcessStdoutWrite;
+                    restoreLogAndExit();
                     done(err);
                 });
         });
 
         it('should print help with -h', function (done) {
-            console.log = function () {
-                //console.info(arguments);
-            };
-            process.stdout.write = function () {
-            };
+            suppressLogAndExit();
 
             userManager.main(['node', filename, '-h'])
                 .then(function () {
-                    console.log = oldConsoleLog;
-                    process.stdout.write = oldProcessStdoutWrite;
+                    restoreLogAndExit();
                     done();
                 })
                 .catch(function (err) {
-                    console.log = oldConsoleLog;
-                    process.stdout.write = oldProcessStdoutWrite;
+                    restoreLogAndExit();
                     done(err);
                 });
         });
 
         it('should add user if db is defined', function (done) {
-
-            process.exit = function (code) {
-                // TODO: would be nice to send notifications for test
-                console.log(code);
-            };
-            console.log = function () {
-                //console.info(arguments);
-            };
+            suppressLogAndExit();
 
             userManager.main(['node', filename, '--db', mongoUri, 'useradd', 'user', 'user@example.com', 'plaintext'])
                 .then(function () {
-                    console.log = oldConsoleLog;
+                    restoreLogAndExit();
                     done();
                 })
                 .catch(function (err) {
-                    console.log = oldConsoleLog;
+                    restoreLogAndExit();
                     done(err);
                 });
         });
 
 
         it('should add user if db is not defined', function (done) {
-
-            process.exit = function (code) {
-                // TODO: would be nice to send notifications for test
-                console.log(code);
-            };
-            console.log = function () {
-                //console.info(arguments);
-            };
+            suppressLogAndExit();
 
             userManager.main(['node', filename, 'useradd', 'user', 'user@example.com', 'plaintext'])
                 .then(function () {
-                    console.log = oldConsoleLog;
+                    restoreLogAndExit();
                     done();
                 })
                 .catch(function (err) {
-                    console.log = oldConsoleLog;
+                    restoreLogAndExit();
                     done(err);
                 });
         });
 
 
         it('should add user if db port and name are not defined', function (done) {
-
-            process.exit = function (code) {
-                // TODO: would be nice to send notifications for test
-                console.log(code);
-            };
-            console.log = function () {
-                //console.info(arguments);
-            };
+            suppressLogAndExit();
 
             userManager.main(['node', filename, '--db', 'mongodb://' + uri.hosts[0], 'useradd', 'user', 'user@example.com', 'plaintext'])
                 .then(function () {
-                    console.log = oldConsoleLog;
+                    restoreLogAndExit();
                     done();
                 })
                 .catch(function (err) {
-                    console.log = oldConsoleLog;
+                    restoreLogAndExit();
                     done(err);
                 });
         });
 
-
         it('should list user', function (done) {
-
-            process.exit = function (code) {
-                // TODO: would be nice to send notifications for test
-                console.log(code);
-            };
-            console.log = function () {
-                //console.info(arguments);
-            };
+            suppressLogAndExit();
 
             userManager.main(['node', filename, '--db', mongoUri, 'useradd', 'user', 'user@example.com', 'plaintext'])
                 .then(function () {
                     return userManager.main(['node', filename, '--db', mongoUri, 'userlist', 'user']);
                 })
                 .then(function () {
-                    console.log = oldConsoleLog;
+                    restoreLogAndExit();
                     done();
                 })
                 .catch(function (err) {
-                    console.log = oldConsoleLog;
+                    restoreLogAndExit();
                     done(err);
                 });
         });
 
         it('should change user password', function (done) {
-
-            process.exit = function (code) {
-                // TODO: would be nice to send notifications for test
-                console.log(code);
-            };
-            console.log = function () {
-                //console.info(arguments);
-            };
+            suppressLogAndExit();
 
             userManager.main(['node', filename, '--db', mongoUri, 'useradd', 'user', 'user@example.com', 'plaintext'])
                 .then(function () {
                     return userManager.main(['node', filename, '--db', mongoUri, 'passwd', 'user', 'plaintext2']);
                 })
                 .then(function () {
-                    console.log = oldConsoleLog;
+                    restoreLogAndExit();
                     done();
                 })
                 .catch(function (err) {
-                    console.log = oldConsoleLog;
+                    restoreLogAndExit();
                     done(err);
                 });
         });
 
         it('should delete user', function (done) {
-
-            process.exit = function (code) {
-                // TODO: would be nice to send notifications for test
-                console.log(code);
-            };
-            console.log = function () {
-                //console.info(arguments);
-            };
+            suppressLogAndExit();
 
             userManager.main(['node', filename, '--db', mongoUri, 'useradd', 'user_to_delete', 'user@example.com', 'plaintext'])
                 .then(function () {
                     return userManager.main(['node', filename, '--db', mongoUri, 'userdel', 'user_to_delete']);
                 })
                 .then(function () {
-                    console.log = oldConsoleLog;
+                    restoreLogAndExit();
                     done();
                 })
                 .catch(function (err) {
-                    console.log = oldConsoleLog;
+                    restoreLogAndExit();
                     done(err);
                 });
         });
 
         it('adds organization', function (done) {
-
-            process.exit = function (code) {
-                // TODO: would be nice to send notifications for test
-                console.log(code);
-            };
-            console.log = function () {
-                //console.info(arguments);
-            };
+            suppressLogAndExit();
 
             userManager.main(['node', filename, '--db', mongoUri, 'organizationadd', 'org1'])
                 .then(function () {
-                    console.log = oldConsoleLog;
+                    restoreLogAndExit();
                     done();
                 })
                 .catch(function (err) {
-                    console.log = oldConsoleLog;
+                    restoreLogAndExit();
                     done(err);
                 });
         });
 
+
+        it('deletes an existing organization', function (done) {
+            suppressLogAndExit();
+
+            userManager.main(['node', filename, '--db', mongoUri, 'organizationadd', 'org2'])
+                .then(function () {
+                    return userManager.main(['node', filename, '--db', mongoUri, 'organizationdel', 'org2']);
+
+                })
+                .then(function () {
+                    restoreLogAndExit();
+                    done();
+                })
+                .catch(function (err) {
+                    restoreLogAndExit();
+                    done(err);
+                });
+        });
+
+
+        it('should authorize user userauth_mod', function (done) {
+            suppressLogAndExit();
+
+            userManager.main(['node', filename, '--db', mongoUri, 'useradd', 'user', 'user@example.com', 'plaintext'])
+                .then(function () {
+                    return userManager.main(['node', filename, '--db', mongoUri, 'usermod_auth', 'user', 'project1']);
+                })
+                .then(function () {
+                    restoreLogAndExit();
+                    done();
+                })
+                .catch(function (err) {
+                    restoreLogAndExit();
+                    done(err);
+                });
+        });
+
+        it('should authorize user userauth_mod rw', function (done) {
+            suppressLogAndExit();
+
+            userManager.main(['node', filename, '--db', mongoUri, 'useradd', 'user', 'user@example.com', 'plaintext'])
+                .then(function () {
+                    return userManager.main(['node', filename, '--db', mongoUri, 'usermod_auth', 'user', 'project1', '-a', 'rw']);
+                })
+                .then(function () {
+                    restoreLogAndExit();
+                    done();
+                })
+                .catch(function (err) {
+                    restoreLogAndExit();
+                    done(err);
+                });
+        });
+
+        it('should authorize then deauthorize user userauth_mod', function (done) {
+            suppressLogAndExit();
+
+            userManager.main(['node', filename, '--db', mongoUri, 'useradd', 'user', 'user@example.com', 'plaintext'])
+                .then(function () {
+                    return userManager.main(['node', filename, '--db', mongoUri, 'usermod_auth', 'user', 'project1', '-d']);
+                })
+                .then(function () {
+                    restoreLogAndExit();
+                    done();
+                })
+                .catch(function (err) {
+                    restoreLogAndExit();
+                    done(err);
+                });
+        });
+
+
+        it('should authorize organization orgauth_mod', function (done) {
+            suppressLogAndExit();
+
+            userManager.main(['node', filename, '--db', mongoUri, 'organizationadd', 'org11'])
+                .then(function () {
+                    return userManager.main(['node', filename, '--db', mongoUri, 'orgmod_auth', 'org11', 'project11']);
+                })
+                .then(function () {
+                    return userManager.main(['node', filename, '--db', mongoUri, 'organizationdel', 'org11']);
+                })
+                .then(function () {
+                    restoreLogAndExit();
+                    done();
+                })
+                .catch(function (err) {
+                    restoreLogAndExit();
+                    done(err);
+                });
+        });
+
+        it('should authorize organization orgauth_mod rw', function (done) {
+            suppressLogAndExit();
+
+            userManager.main(['node', filename, '--db', mongoUri, 'organizationadd', 'org11'])
+                .then(function () {
+                    return userManager.main(['node', filename, '--db', mongoUri, 'orgmod_auth', 'org11', 'project11', '-a', 'rw']);
+                })
+                .then(function () {
+                    return userManager.main(['node', filename, '--db', mongoUri, 'organizationdel', 'org11']);
+                })
+                .then(function () {
+                    restoreLogAndExit();
+                    done();
+                })
+                .catch(function (err) {
+                    restoreLogAndExit();
+                    done(err);
+                });
+        });
+
+        it('should authorize then deauthorize organization orgauth_mod', function (done) {
+            suppressLogAndExit();
+
+            userManager.main(['node', filename, '--db', mongoUri, 'organizationadd', 'org11'])
+                .then(function () {
+                    return userManager.main(['node', filename, '--db', mongoUri, 'orgmod_auth', 'org11', 'project11', '-d']);
+                })
+                .then(function () {
+                    return userManager.main(['node', filename, '--db', mongoUri, 'organizationdel', 'org11']);
+                })
+                .then(function () {
+                    restoreLogAndExit();
+                    done();
+                })
+                .catch(function (err) {
+                    restoreLogAndExit();
+                    done(err);
+                });
+        });
+
+        it('should add user to organization usermod_organization_add', function (done) {
+            suppressLogAndExit();
+
+            userManager.main(['node', filename, '--db', mongoUri, 'organizationadd', 'org11'])
+                .then(function () {
+                    return userManager.main(['node', filename, '--db', mongoUri, 'useradd', 'user', 'user@example.com', 'plaintext']);
+                })
+                .then(function () {
+                    return userManager.main(['node', filename, '--db', mongoUri, 'usermod_organization_add', 'user', 'org11']);
+                })
+                .then(function () {
+                    return userManager.main(['node', filename, '--db', mongoUri, 'organizationdel', 'org11']);
+                })
+                .then(function () {
+                    restoreLogAndExit();
+                    done();
+                })
+                .catch(function (err) {
+                    restoreLogAndExit();
+                    done(err);
+                });
+        });
+
+        it('should add user to organization and remove it usermod_organization_del', function (done) {
+            suppressLogAndExit();
+
+            userManager.main(['node', filename, '--db', mongoUri, 'organizationadd', 'org11'])
+                .then(function () {
+                    return userManager.main(['node', filename, '--db', mongoUri, 'useradd', 'user', 'user@example.com', 'plaintext']);
+                })
+                .then(function () {
+                    return userManager.main(['node', filename, '--db', mongoUri, 'usermod_organization_add', 'user', 'org11']);
+                })
+                .then(function () {
+                    return userManager.main(['node', filename, '--db', mongoUri, 'usermod_organization_del', 'user', 'org11']);
+                })
+                .then(function () {
+                    return userManager.main(['node', filename, '--db', mongoUri, 'organizationdel', 'org11']);
+                })
+                .then(function () {
+                    restoreLogAndExit();
+                    done();
+                })
+                .catch(function (err) {
+                    restoreLogAndExit();
+                    done(err);
+                });
+        });
     });
 });
