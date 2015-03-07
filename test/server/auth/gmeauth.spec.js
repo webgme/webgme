@@ -8,7 +8,7 @@
 var testFixture = require('../../_globals.js');
 
 
-describe.skip('GME authentication', function () {
+describe('GME authentication', function () {
     'use strict';
 
     var gmeConfig = testFixture.getGmeConfig(),
@@ -19,26 +19,12 @@ describe.skip('GME authentication', function () {
 
         auth,
         dbConn,
-        db,
-        config = {
-            mongodatabase: 'webgme_tests'
-        };
+        db;
 
     before(function (done) {
-        auth = new GMEAuth({
-            host: '127.0.0.1',
-            port: 27017,
-            database: 'webgme-tests'
-        });
+        auth = new GMEAuth(null, gmeConfig);
 
-
-        dbConn = Q.ninvoke(mongodb.MongoClient, 'connect', 'mongodb://127.0.0.1/' + config.mongodatabase, {
-            'w': 1,
-            'native-parser': true,
-            'auto_reconnect': true,
-            'poolSize': 20,
-            socketOptions: {keepAlive: 1}
-        })
+        dbConn = Q.ninvoke(mongodb.MongoClient, 'connect', gmeConfig.mongo.uri,gmeConfig.mongo.options)
             .then(function (db_) {
                 db = db_;
                 return Q.all([
@@ -114,8 +100,8 @@ describe.skip('GME authentication', function () {
         auth.addUser('no_overwrite_user' + (new Date()).toISOString(), 'no_overwrite_user@example.com', 'plaintext', true, {overwrite: false}, done);
     });
 
-    it.skip('adds user without overwrite', function () {
-        //auth.addUser('no_overwrite_user', 'no_overwrite_user@example.com', 'plaintext', true, {overwrite: false}, done);
+    it('adds user without overwrite', function (done) {
+        auth.addUser('no_overwrite_user', 'no_overwrite_user@example.com', 'plaintext', true, {overwrite: false}, done);
     });
 
     it('adds a user without email address', function (done) {

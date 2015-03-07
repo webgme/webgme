@@ -36,18 +36,18 @@ main = function (argv) {
         setupGMEAuth = function (databaseConnectionString) {
             var mongoConnectionInfo,
 
-                config = require('../../config');
+                gmeConfig = require('../../config');
 
             if (databaseConnectionString) {
                 // this line throws a TypeError for invalid databaseConnectionString
                 MongoURI.parse(databaseConnectionString);
 
-                config.mongo.uri = databaseConnectionString;
+                gmeConfig.mongo.uri = databaseConnectionString;
             }
 
-            auth = new GMEAuth(null, config);
+            auth = new GMEAuth(null, gmeConfig);
 
-            console.log(config.mongo.uri);
+            console.log(gmeConfig.mongo.uri);
         },
         args = Array.prototype.slice.call(argv);
 

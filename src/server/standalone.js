@@ -18,6 +18,7 @@ define(['logManager',
     'blob/BlobS3Backend',
     'blob/BlobServer',
     'util/guid',
+    'util/assert',
     'url'
 ], function (LogManager,
              Storage,
@@ -39,9 +40,40 @@ define(['logManager',
              BlobS3Backend,
              BlobServer,
              GUID,
+             ASSERT,
              URL) {
     'use strict';
     function StandAloneServer(gmeConfig) {
+        var self = this;
+        this.serverUrl = '';
+
+        /**
+         * Gets the server's url based on the gmeConfig that was given to the constructor.
+         * @returns {string}
+         */
+        function getUrl () {
+            var url = '';
+
+            // use the cached version if we already built the string
+            if (self.serverUrl) {
+                return self.serverUrl;
+            }
+
+            if (gmeConfig.server.https.enable) {
+                url += 'https://';
+            } else {
+                url += 'http://';
+            }
+
+            url += '127.0.0.1';
+            url += ':';
+            url += gmeConfig.server.port;
+
+            // cache it
+            self.serverUrl = url;
+            return self.serverUrl;
+        }
+
         //public functions
         function start(callback) {
             if (typeof callback !== 'function') {
@@ -177,16 +209,14 @@ define(['logManager',
         }
 
         function checkREST(req, res, next) {
-            var baseUrl = gmeConfig.httpsecure === true ? 'https://' : 'http://' + req.headers.host + '/rest';
+            var baseUrl = gmeConfig.server.https.enable === true ? 'https://' : 'http://' + req.headers.host + '/rest';
             if (__REST === null) {
                 var restAuthorization;
                 if (gmeConfig.authentication === true) {
                     restAuthorization = __gmeAuth.tokenAuthorization;
                 }
                 __REST = new REST({
-                    host: gmeConfig.mongoip,
-                    port: gmeConfig.mongoport,
-                    database: gmeConfig.mongodatabase,
+                    globConf: gmeConfig,
                     baseUrl: baseUrl,
                     authorization: restAuthorization
                 });
@@ -198,7 +228,7 @@ define(['logManager',
 
 
         function ensureAuthenticated(req, res, next) {
-            if (true === gmeConfig.authentication) {
+            if (true === gmeConfig.authentication.enable) {
                 if (req.isAuthenticated() || (req.session && true === req.session.authenticated)) {
                     return next();
                 } else {
@@ -466,12 +496,6 @@ define(['logManager',
 
         __logger.info("creating login routing rules for the static server");
         __app.get('/',ensureAuthenticated,function(req,res){
-            /*res.sendfile(__clientBaseDir+'/index.html',{user:req.user},function(err){
-             if (err) {
-             console.log('fuck',err);
-             res.send(404);
-             }
-             });*/
             expressFileSending(res, __clientBaseDir + '/index.html');
         });
         __app.get('/logout', function (req, res) {
@@ -802,6 +826,7 @@ define(['logManager',
 
         return {
 
+            getUrl: getUrl,
             start: start,
             stop: stop
         }

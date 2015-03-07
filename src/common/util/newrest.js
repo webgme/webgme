@@ -19,7 +19,7 @@ define([
     function Rest(_parameters){
         _parameters.baseUrl = _parameters.baseUrl || "http://localhost/rest";
         _parameters.authorization = /*_parameters.authorization || */function(token,projectname,callback){callback(null,true);}; //TODO temporary removal of second authorization check
-        var _storage = new Storage({'host':_parameters.host,'port':_parameters.port,'database':_parameters.database,'log':logManager.create('REST-actor')}),
+        var _storage = new Storage({'globConf':_parameters.globConf,'log':logManager.create('REST-actor')}),
             _baseUrl = _parameters.baseUrl,
             _initialized = false,
             _opened = false,
