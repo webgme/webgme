@@ -111,9 +111,9 @@ function(ASSERT,Child, process, CONSTANTS){
                             port:_parameters.mongoport,
                             db:_parameters.mongodb,
                             serverPort:_parameters.serverPort,
-                            paths: _parameters.globConf.requirejsPaths || WebGMEGlobal.getConfig().paths,
+                            paths: _parameters.globConf.requirejsPaths,
                             auth: _parameters.auth,
-                            globConf : _parameters.globConf || WebGMEGlobal.getConfig()
+                            globConf : _parameters.globConf
                         });
                         break;
                     case CONSTANTS.msgTypes.initialized:

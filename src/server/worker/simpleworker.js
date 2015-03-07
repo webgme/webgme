@@ -1,4 +1,4 @@
-/*global __dirname, webGMEGlobal, require, process, setImmediate */
+/*global __dirname, require, process, setImmediate */
 var
     requirejs = require("requirejs"),
   BASEPATH = __dirname + "/../..",
@@ -47,6 +47,7 @@ requirejs(['worker/constants',
       initialized = false,
       AUTH = null,
       _addOn = null,
+        gmeConfig,
       _CONFIG = null;
 
     var initResult = function () {
@@ -60,8 +61,9 @@ requirejs(['worker/constants',
     var initialize = function (parameters) {
       if (initialized !== true) {
         initialized = true;
-          var gmeConfig = parameters.globConf;
+          gmeConfig = parameters.globConf;
           WEBGME.addToRequireJsPaths(gmeConfig);
+          console.error(JSON.stringify(requirejs.s.contexts._.config, null, 4)); // TODO remove me
         _CONFIG = gmeConfig;
         if (_CONFIG.authentication === true) {
           AUTH = GMEAUTH(parameters.auth);
@@ -168,8 +170,8 @@ requirejs(['worker/constants',
     var getConnectedStorage = function (webGMESessionId, callback) {
       var connStorage = new ConnectedStorage({
         type: 'node',
-        host: (_CONFIG.httpsecure === true ? 'https' : 'http') + '://127.0.0.1',
-        port: _CONFIG.port,
+        host: (gmeConfig.server.https.enable === true ? 'https' : 'http') + '://127.0.0.1',
+        port: gmeConfig.server.port,
         log: logManager.create('SERVER-WORKER-PLUGIN-' + process.pid),
         webGMESessionId: webGMESessionId
       });
@@ -198,10 +200,12 @@ requirejs(['worker/constants',
     };
 
     var getPlugin = function (name) {
+      console.error('plugin/' + name + '/' + name + '/' + name);
       return requirejs('plugin/' + name + '/' + name + '/' + name);
     };
     var executePlugin = function (userId, name, webGMESessionId, context, callback) {
       var interpreter = getPlugin(name);
+        console.error('interpreter', interpreter);
       if (interpreter) {
         getProject(context.managerConfig.project, webGMESessionId, function (err, project) {
           if (!err) {
@@ -209,19 +213,21 @@ requirejs(['worker/constants',
             var plugins = {};
             plugins[name] = interpreter;
             var manager = new PluginManagerBase(project, Core, plugins);
-
+              console.error('manager');
             context.managerConfig.blobClient = new BlobClient({
-              serverPort: _CONFIG.port,
-              httpsecure: _CONFIG.httpsecure,
-              server: _CONFIG.server || '127.0.0.1'
+              serverPort: gmeConfig.server.port,
+              httpsecure: gmeConfig.server.https.enable,
+              server: '127.0.0.1'
             });
 
             manager.initialize(null, function (pluginConfigs, configSaveCallback) {
               if (configSaveCallback) {
+                  console.error('configSaveCallback');
                 configSaveCallback(context.pluginConfigs);
               }
-
+                console.error('initialize');
               manager.executePlugin(name, context.managerConfig, function (err, result) {
+                  console.error('executed');
                 if (!err && result) {
                   callback(null, result.serialize());
                 } else {
@@ -233,6 +239,7 @@ requirejs(['worker/constants',
             });
           } else {
             var newErrorPluginResult = new PluginResult();
+              console.error('unable to get project');
             callback(new Error('unable to get project'), newErrorPluginResult.serialize());
           }
         });
