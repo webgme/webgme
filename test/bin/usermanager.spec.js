@@ -7,7 +7,7 @@
 
 var testFixture = require('../_globals');
 
-describe.skip('User manager command line interface (CLI)', function () {
+describe('User manager command line interface (CLI)', function () {
     'use strict';
 
     var gmeConfig = testFixture.getGmeConfig(),
@@ -18,7 +18,7 @@ describe.skip('User manager command line interface (CLI)', function () {
         Q = testFixture.Q,
         userManager = requirejs('../bin/usermanager'),
         filename = require('path').normalize('src/bin/usermanager.js'),
-        mongoUri = 'mongodb://127.0.0.1:27017/webgme_tests',
+        mongoUri = gmeConfig.mongo.uri,
         uri = require('mongo-uri').parse(mongoUri);
 
     // N.B: child process does NOT generate coverage result and it is also somewhat slower.
@@ -127,6 +127,32 @@ describe.skip('User manager command line interface (CLI)', function () {
                 done();
             });
         });
+
+        it('should print help for useradd subcommand', function (done) {
+            var nodeUserManager = spawn('node', [filename, 'useradd', '--help']),
+                stdoutData,
+                err;
+
+            nodeUserManager.stdout.on('data', function (data) {
+                stdoutData = stdoutData || '';
+                stdoutData += data.toString();
+                //console.log(data.toString());
+            });
+
+            nodeUserManager.stderr.on('data', function (data) {
+                err = err || '';
+                err += data.toString();
+                //console.log(data.toString());
+            });
+
+            nodeUserManager.on('close', function (code) {
+                stdoutData.should.contain('Usage:');
+                stdoutData.should.contain('--help');
+                should.not.exist(err);
+                should.equal(code, 0);
+                done();
+            });
+        });
     });
 
     describe('as a library', function () {
@@ -140,13 +166,7 @@ describe.skip('User manager command line interface (CLI)', function () {
 
         before(function (done) {
 
-            dbConn = Q.ninvoke(mongodb.MongoClient, 'connect', mongoUri, {
-                'w': 1,
-                'native-parser': true,
-                'auto_reconnect': true,
-                'poolSize': 20,
-                socketOptions: {keepAlive: 1}
-            })
+            dbConn = Q.ninvoke(mongodb.MongoClient, 'connect', mongoUri, gmeConfig.mongo.options)
                 .then(function (db_) {
                     db = db_;
                     return Q.all([
@@ -230,26 +250,12 @@ describe.skip('User manager command line interface (CLI)', function () {
                 });
         });
 
-        it.skip('should print help with -h', function (done) {
+        it('should print help with -h', function (done) {
             console.log = function () {
                 //console.info(arguments);
             };
 
             userManager.main(['node', filename, '-h'])
-                .then(function () {
-                    done();
-                })
-                .catch(function (err) {
-                    done(err);
-                });
-        });
-
-        it.skip('should print help with --unknown', function (done) {
-            console.log = function () {
-                //console.info(arguments);
-            };
-
-            userManager.main(['node', filename, '--unknown'])
                 .then(function () {
                     done();
                 })
@@ -313,27 +319,6 @@ describe.skip('User manager command line interface (CLI)', function () {
             };
 
             userManager.main(['node', filename, '--db', 'mongodb://' + uri.hosts[0], 'useradd', 'user', 'user@example.com', 'plaintext'])
-                .then(function () {
-                    console.log = oldConsoleLog;
-                    done();
-                })
-                .catch(function (err) {
-                    console.log = oldConsoleLog;
-                    done(err);
-                });
-        });
-
-        it.skip('should have help useradd', function (done) {
-
-            process.exit = function (code) {
-                // TODO: would be nice to send notifications for test
-                console.log(code);
-            };
-            console.log = function () {
-                //console.info(arguments);
-            };
-
-            userManager.main(['node', filename, 'help', 'useradd'])
                 .then(function () {
                     console.log = oldConsoleLog;
                     done();
@@ -417,49 +402,23 @@ describe.skip('User manager command line interface (CLI)', function () {
         });
 
 
-        it.skip('should add organization', function (done) {
+        // FIXME: this test does not behave as we expect
+        //it('should add organization', function (done) {
+        //
+        //    process.exit = function (code) {
+        //        // TODO: would be nice to send notifications for test
+        //        console.log(code);
+        //    };
+        //    console.log = function () {
+        //        //console.info(arguments);
+        //    };
+        //    userManager.main(['node', filename, '--db', mongoUri, 'organizationdel', 'org1'])
+        //        .finally(function () {
+        //            // del org is ok to fail
+        //            return userManager.main(['node', filename, '--db', mongoUri, 'organizationadd', 'org1']);
+        //        })
+        //        .nodeify(done);
+        //});
 
-            process.exit = function (code) {
-                // TODO: would be nice to send notifications for test
-                console.log(code);
-            };
-            console.log = function () {
-                //console.info(arguments);
-            };
-
-            userManager.main(['node', filename, '--db', mongoUri, 'organizationadd', 'org1'])
-                .then(function () {
-                    console.log = oldConsoleLog;
-                    done();
-                })
-                .catch(function (err) {
-                    console.log = oldConsoleLog;
-                    done(err);
-                });
-        });
-
-        it.skip('should add organization', function (done) {
-
-            process.exit = function (code) {
-                // TODO: would be nice to send notifications for test
-                console.log(code);
-            };
-            console.log = function () {
-                //console.info(arguments);
-            };
-
-            userManager.main(['node', filename, '--db', mongoUri, 'organizationadd', 'org1'])
-                .then(function () {
-                    return userManager.main(['node', filename, '--db', mongoUri, 'organizationdel', 'org1']);
-                })
-                .then(function () {
-                    console.log = oldConsoleLog;
-                    done();
-                })
-                .catch(function (err) {
-                    console.log = oldConsoleLog;
-                    done(err);
-                });
-        });
     });
 });

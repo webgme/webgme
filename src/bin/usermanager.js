@@ -47,8 +47,6 @@ main = function (argv) {
             auth = new GMEAuth(null, config);
 
             console.log(config.mongo.uri);
-
-            return uri;
         },
         args = Array.prototype.slice.call(argv);
 

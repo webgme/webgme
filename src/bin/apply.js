@@ -21,7 +21,7 @@ Core = requirejs('core/core');
 Storage = requirejs('storage/serveruserstorage');
 
 var applyPatch = function(mongoUri,projectId,branchOrCommit,patch,noUpdate,callback){
-    var database = new Storage({uri:mongoUri,log:{debug:function(msg){},error:function(msg){}}}), //we do not want debugging
+    var database = new Storage({globConf: {mongo: {uri: mongoUri}},log:{debug:function(msg){},error:function(msg){}}}), //we do not want debugging
         project,
         core,
         root,

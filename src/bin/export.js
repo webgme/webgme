@@ -23,7 +23,7 @@ Core = requirejs('core/core');
 Storage = requirejs('storage/serveruserstorage');
 Serialization = requirejs('coreclient/serialization');
 var exportProject = function(mongoUri,projectId,branchOrCommit,callback){
-    var core,project,root,database = new Storage({uri:mongoUri,log:{debug:function(msg){},error:function(msg){}}}), //we do not want debugging
+    var core,project,root,database = new Storage({globConf: {mongo: {uri: mongoUri}},log:{debug:function(msg){},error:function(msg){}}}), //we do not want debugging
         close = function(error,data){
             try{
                 project.closeProject(function(){

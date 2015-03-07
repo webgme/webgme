@@ -23,7 +23,7 @@ Storage = requirejs('storage/serveruserstorage');
 Serialization = requirejs('coreclient/serialization');
 
 var importProject = function(mongoUri,projectId,jsonProject,branch,callback){
-    var core,project,root,commit,database = new Storage({uri:mongoUri,log:{debug:function(msg){},error:function(msg){}}}), //we do not want debugging
+    var core,project,root,commit,database = new Storage({globConf: {mongo: {uri: mongoUri}},log:{debug:function(msg){},error:function(msg){}}}), //we do not want debugging
         close = function(error){
             try{
                 project.closeProject(function(){
