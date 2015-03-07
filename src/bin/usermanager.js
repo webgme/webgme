@@ -291,9 +291,6 @@ main = function (argv) {
     return mainDeferred.promise;
 };
 
-module.exports = {
-    main: main
-};
 
 if (require.main === module) {
 
