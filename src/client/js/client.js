@@ -267,11 +267,11 @@ define([
 
       function newDatabase() {
         var storageOptions ={log: LogManager.create('client-storage'), host: _configuration.host};
-        if(typeof WebGMEGlobal !== 'undefined' && WebGMEGlobal.TESTING === true){
+        if(typeof TESTING !== 'undefined'){
           storageOptions.type = 'node';
           storageOptions.host = 'http://localhost';
           storageOptions.port = _configuration.port;
-          storageOptions.user = "TEST";
+          storageOptions.user = 'TEST';
         } else {
           storageOptions.user = getUserId();
         }

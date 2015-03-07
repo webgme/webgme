@@ -8,8 +8,7 @@ var testFixture = require('../../_globals.js');
 
 describe('Artifact', function () {
     'use strict';
-    var gmeConfig = testFixture.getGmeConfig(),
-        Artifact = testFixture.requirejs('blob/Artifact'),
+    var Artifact = testFixture.requirejs('blob/Artifact'),
         rimraf = testFixture.rimraf,
         should = testFixture.should,
         superagent = testFixture.superagent,
@@ -23,16 +22,14 @@ describe('Artifact', function () {
     describe('[http]', function () {
         before(function (done) {
             // we have to set the config here
-            var config = WebGMEGlobal.getConfig();
-            config.port = 9006;
-            config.authentication = false;
-            config.httpsecure = false;
-
-            serverBaseUrl = 'http://127.0.0.1:' + config.port;
-            bcParam.serverPort = config.port;
+            var gmeConfig = testFixture.getGmeConfig();
+            gmeConfig.server.port = 9006;
+            gmeConfig.server.https.enable = false;
+            serverBaseUrl = 'http://127.0.0.1:' + gmeConfig.server.port;
+            bcParam.serverPort = gmeConfig.server.port;
             bcParam.server = '127.0.0.1';
-            bcParam.httpsecure = config.httpsecure;
-            server = testFixture.WebGME.standaloneServer(config);
+            bcParam.httpsecure = gmeConfig.server.https.enable;
+            server = testFixture.WebGME.standaloneServer(gmeConfig);
             server.start(function () {
                 done();
             });

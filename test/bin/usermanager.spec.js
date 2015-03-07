@@ -7,7 +7,7 @@
 
 var testFixture = require('../_globals');
 
-describe('User manager command line interface (CLI)', function () {
+describe.skip('User manager command line interface (CLI)', function () {
     'use strict';
 
     var gmeConfig = testFixture.getGmeConfig(),

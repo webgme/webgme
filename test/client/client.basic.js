@@ -13,7 +13,6 @@ describe('Client tests', function () {
         should = testFixture.should,
         WebGME = testFixture.WebGME,
         requirejs = testFixture.requirejs,
-        config = WebGMEGlobal.getConfig(),
 
         ClientClass,
 
@@ -26,24 +25,10 @@ describe('Client tests', function () {
 
         testTerritory;
 
-    config.port = 9003;
-    config.authentication = false; //we have to make sure that our current config doesn't affect the tests
+    gmeConfig.server.port = 9003;
 
     requirejs.config({
-        nodeRequire: require,
         paths: {
-            'logManager': 'common/LogManager',
-            'storage': 'common/storage',
-            'core': 'common/core',
-            'server': 'server',
-            'auth': 'server/auth',
-            'util': 'common/util',
-            'baseConfig': 'bin/getconfig',
-            'webgme': 'webgme',
-            'plugin': 'plugin',
-            'worker': 'server/worker',
-            'coreclient': 'common/core/users',
-            'blob': 'middleware/blob',
             'eventDispatcher': 'common/EventDispatcher',
             ' /socket.io/socket.io.js': 'socketio-client'
         }
@@ -165,9 +150,9 @@ describe('Client tests', function () {
 
     before(function (done) {
 
-        server = new WebGME.standaloneServer(config);
+        server = new WebGME.standaloneServer(gmeConfig);
         server.start(function () {
-            client = new ClientClass({host: ' ', port: config.port});
+            client = new ClientClass({host: ' ', port: gmeConfig.server.port});
 
             createTestProject(done);
         });

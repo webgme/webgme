@@ -23,7 +23,7 @@ define(['logManager',
         var jobListDBFile = typeof TESTING !== 'undefined' ? 'test-tmp/jobList.nedb' : 'jobList.nedb';
         var workerListDBFile = typeof TESTING !== 'undefined' ? 'test-tmp/workerList.nedb' : 'workerList.nedb';
         var logger = logManager.create('REST-Executor'); //how to define your own logger which will use the global settings
-        var config = {};
+        var gmeConfig;
         var jobList = new DataStore({filename: jobListDBFile, autoload: true});
         jobList.ensureIndex({fieldName: 'hash', unique: true}, function (err) {
             if (err) {
@@ -86,8 +86,8 @@ define(['logManager',
         var ExecutorREST = function (req, res, next) {
 
             var authenticate = function () {
-                if (config.executorNonce) {
-                    if (!req.headers['x-executor-nonce'] || bufferEqual(new Buffer(req.headers['x-executor-nonce']), new Buffer(config.executorNonce)) !== true) {
+                if (gmeConfig.executor.nonce) {
+                    if (!req.headers['x-executor-nonce'] || bufferEqual(new Buffer(req.headers['x-executor-nonce']), new Buffer(gmeConfig.executor.nonce)) !== true) {
                         res.send(403);
                         return false;
                     }
@@ -395,8 +395,8 @@ define(['logManager',
             }
         };
 
-        var setup = function (param) {
-            config = param || {};
+        var setup = function (_gmeConfig) {
+            gmeConfig = _gmeConfig;
             return ExecutorREST;
         };
 

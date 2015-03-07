@@ -211,6 +211,9 @@ function loadNodes(parameters, done) {
      }
      */
 }
+
+WebGME.addToRequireJsPaths(gmeConfig);
+
 module.exports = {
     getGmeConfig: getGmeConfig,
 

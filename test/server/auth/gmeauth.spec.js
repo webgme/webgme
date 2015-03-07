@@ -8,7 +8,7 @@
 var testFixture = require('../../_globals.js');
 
 
-describe('GME authentication', function () {
+describe.skip('GME authentication', function () {
     'use strict';
 
     var gmeConfig = testFixture.getGmeConfig(),

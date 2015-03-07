@@ -9,8 +9,7 @@ var testFixture = require('../../_globals.js');
 describe('ExecutorClient', function () {
     'use strict';
 
-    var gmeConfig = testFixture.getGmeConfig(),
-        fs = testFixture.fs,
+    var fs = testFixture.fs,
         should = testFixture.should,
         ExecutorClient = testFixture.ExecutorClient,
         executorClient,
@@ -19,17 +18,18 @@ describe('ExecutorClient', function () {
 
     before(function (done) {
         // we have to set the config here
-        var config = WebGMEGlobal.getConfig(),
+        var gmeConfig = testFixture.getGmeConfig(),
             param = {};
-        config.port = 9005;
-        config.authentication = false;
-        config.enableExecutor = true;
 
-        param.serverPort = config.port;
+        gmeConfig.server.port = 9006;
+        gmeConfig.executor.enable = true;
 
-        serverBaseUrl = 'http://127.0.0.1:' + config.port;
 
-        server = testFixture.WebGME.standaloneServer(config);
+        serverBaseUrl = 'http://127.0.0.1:' + gmeConfig.server.port;
+        param.serverPort = gmeConfig.server.port;
+        param.httpsecure = gmeConfig.server.https.enable;
+
+        server = testFixture.WebGME.standaloneServer(gmeConfig);
         server.start(function () {
             executorClient = new ExecutorClient(param);
             done();

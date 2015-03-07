@@ -9,39 +9,37 @@ var testFixture = require('../../../_globals.js');
 describe('NodeWorker', function () {
     'use strict';
 
-    var gmeConfig = testFixture.getGmeConfig(),
-        fs = testFixture.fs,
+    var fs = testFixture.fs,
         rimraf = testFixture.rimraf,
         childProcess = testFixture.childProcess,
         should = testFixture.should,
         ExecutorClient = testFixture.ExecutorClient,
         BlobClient = testFixture.BlobClient,
         blobClient,
-        executorClient,
         server,
         nodeWorkerProcess,
         serverBaseUrl;
 
     describe('[nonce not set]', function () {
+        var executorClient;
         before(function (done) {
-            // we have to set the config here
-            var config = WebGMEGlobal.getConfig(),
+            var gmeConfig = testFixture.getGmeConfig(),
                 clientsParam = {},
                 workerConfig = {};
-            config.port = 9005;
-            config.authentication = false;
-            config.enableExecutor = true;
-            config.executorNonce = null;
-            config.httpsecure = false;
+            gmeConfig.server.port = 9005;
+            gmeConfig.executor.enable = true;
+            gmeConfig.executor.nonce = null;
+            gmeConfig.server.https.enable = false;
 
-            clientsParam.serverPort = config.port;
+            clientsParam.serverPort = gmeConfig.server.port;
             clientsParam.sessionId = 'testingNodeWorker';
-            clientsParam.httpsecure = config.httpsecure;
             clientsParam.server = '127.0.0.1';
-            serverBaseUrl = 'http://127.0.0.1:' + config.port;
+            clientsParam.httpsecure = gmeConfig.server.https.enable;
+
+            serverBaseUrl = 'http://127.0.0.1:' + gmeConfig.server.port;
             workerConfig[serverBaseUrl] = {};
 
-            server = testFixture.WebGME.standaloneServer(config);
+            server = testFixture.WebGME.standaloneServer(gmeConfig);
 
             fs.writeFile('test-tmp/worker_config.json', JSON.stringify(workerConfig), function (err) {
                 if (err) {
@@ -117,25 +115,26 @@ describe('NodeWorker', function () {
     });
 
     describe('[nonce match]', function () {
+        var executorClient;
         before(function (done) {
-            // we have to set the config here
-            var config = WebGMEGlobal.getConfig(),
+            var gmeConfig = testFixture.getGmeConfig(),
                 clientsParam = {},
                 workerConfig = {};
-            config.port = 9005;
-            config.authentication = false;
-            config.enableExecutor = true;
-            config.httpsecure = false;
-            config.executorNonce = 'aReallyLongSecret';
-            WebGMEGlobal.setConfig({executorNonce: 'aReallyLongSecret'});
-            clientsParam.serverPort = config.port;
+            gmeConfig.server.port = 9005;
+            gmeConfig.executor.enable = true;
+            gmeConfig.executor.nonce = 'aReallyLongSecret';
+            gmeConfig.server.https.enable = false;
+
+            clientsParam.serverPort = gmeConfig.server.port;
             clientsParam.sessionId = 'testingNodeWorker';
-            clientsParam.httpsecure = config.httpsecure;
             clientsParam.server = '127.0.0.1';
-            serverBaseUrl = 'http://127.0.0.1:' + config.port;
+            clientsParam.httpsecure = gmeConfig.server.https.enable;
+            clientsParam.executorNonce = 'aReallyLongSecret';
+
+            serverBaseUrl = 'http://127.0.0.1:' + gmeConfig.server.port;
             workerConfig[serverBaseUrl] = {executorNonce: 'aReallyLongSecret'};
 
-            server = testFixture.WebGME.standaloneServer(config);
+            server = testFixture.WebGME.standaloneServer(gmeConfig);
 
             fs.writeFile('test-tmp/worker_config.json', JSON.stringify(workerConfig), function (err) {
                 if (err) {
@@ -477,26 +476,29 @@ describe('NodeWorker', function () {
     });
 
     describe('[nonce no match]', function () {
+        var executorClient;
         it('worker should not attach', function (done) {
             // we have to set the config here
-            var config = WebGMEGlobal.getConfig(),
+            var gmeConfig = testFixture.getGmeConfig(),
                 clientsParam = {},
-                workerConfig = {},
-                killAndCleanUp;
-            config.port = 9005;
-            config.authentication = false;
-            config.enableExecutor = true;
-            config.httpsecure = false;
-            config.executorNonce = 'aReallyLongSecret';
+                killAndCleanUp,
+                workerConfig = {};
+            gmeConfig.server.port = 9005;
+            gmeConfig.executor.enable = true;
+            gmeConfig.executor.nonce = 'aReallyLongSecret';
+            gmeConfig.server.https.enable = false;
 
-            clientsParam.serverPort = config.port;
+            clientsParam.serverPort = gmeConfig.server.port;
             clientsParam.sessionId = 'testingNodeWorker';
-            clientsParam.httpsecure = config.httpsecure;
             clientsParam.server = '127.0.0.1';
-            serverBaseUrl = 'http://127.0.0.1:' + config.port;
+            clientsParam.httpsecure = gmeConfig.server.https.enable;
+            clientsParam.executorNonce = 'aReallyLongSecret';
+
+            serverBaseUrl = 'http://127.0.0.1:' + gmeConfig.server.port;
             workerConfig[serverBaseUrl] = {executorNonce: 'notMatching'};
 
-            server = testFixture.WebGME.standaloneServer(config);
+            server = testFixture.WebGME.standaloneServer(gmeConfig);
+
             killAndCleanUp = function (err) {
                 nodeWorkerProcess.kill('SIGINT');
                 server.stop(function (serverErr) {
@@ -518,7 +520,7 @@ describe('NodeWorker', function () {
                     if (serverErr) {
                         done(serverErr);
                     } else if (err) {
-                        done(err);
+                        done(new Error(err));
                     } else {
                         done();
                     }
@@ -531,6 +533,7 @@ describe('NodeWorker', function () {
 
                     server.start(function () {
                         executorClient = new ExecutorClient(clientsParam);
+                        //console.log(executorClient);
                         blobClient = new BlobClient(clientsParam);
                         nodeWorkerProcess = childProcess.spawn('node',
                             ['node_worker.js',
@@ -554,28 +557,28 @@ describe('NodeWorker', function () {
     });
 
     describe('[https nonce match]', function () {
-        var nodeTLSRejectUnauthorized;
+
+        var nodeTLSRejectUnauthorized, executorClient;
         before(function (done) {
-            // we have to set the config here
-            var config = WebGMEGlobal.getConfig(),
+            var gmeConfig = testFixture.getGmeConfig(),
                 clientsParam = {},
                 workerConfig = {};
             nodeTLSRejectUnauthorized = process.env.NODE_TLS_REJECT_UNAUTHORIZED;
-            process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-            config.port = 9005;
-            config.authentication = false;
-            config.enableExecutor = true;
-            config.httpsecure = true;
-            config.executorNonce = 'aReallyLongSecret';
-            WebGMEGlobal.setConfig({executorNonce: 'aReallyLongSecret'});
-            clientsParam.serverPort = config.port;
-            clientsParam.sessionId = 'testingNodeWorker';
-            clientsParam.httpsecure = config.httpsecure;
-            clientsParam.server = '127.0.0.1';
-            serverBaseUrl = 'https://127.0.0.1:' + config.port;
-            workerConfig[serverBaseUrl] = {executorNonce: 'aReallyLongSecret'};
+            gmeConfig.server.port = 9005;
+            gmeConfig.executor.enable = true;
+            gmeConfig.executor.nonce = 'aReallyLongSecret';
+            gmeConfig.server.https.enable = true;
 
-            server = testFixture.WebGME.standaloneServer(config);
+            clientsParam.serverPort = gmeConfig.server.port;
+            clientsParam.sessionId = 'testingNodeWorker';
+            clientsParam.server = '127.0.0.1';
+            clientsParam.httpsecure = gmeConfig.server.https.enable;
+            clientsParam.executorNonce = 'aReallyLongSecret';
+
+            serverBaseUrl = 'https://127.0.0.1:' + gmeConfig.server.port;
+            workerConfig[serverBaseUrl] = {executorNonce: 'aReallyLongSecret'};
+            process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+            server = testFixture.WebGME.standaloneServer(gmeConfig);
 
             fs.writeFile('test-tmp/worker_config.json', JSON.stringify(workerConfig), function (err) {
                 if (err) {

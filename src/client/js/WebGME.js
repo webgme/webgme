@@ -11,7 +11,7 @@ WebGMEGlobal['SUPPORTS_TOUCH'] = 'ontouchstart' in window || navigator.msMaxTouc
 
 // let require load all the toplevel needed script and call us on domReady
 define(['logManager',
-    'bin/getconfig',
+    'text!gmeConfig.json',
     'text!package.json',
     'js/client',
     'js/Constants',
@@ -30,7 +30,7 @@ define(['logManager',
     'js/Utils/PreferencesHelper',
     'js/Dialogs/Projects/ProjectsDialog',
     'js/Utils/InterpreterManager'], function (logManager,
-                                            gmeConfig,
+                                            gmeConfigJson,
                                             packagejson,
                                             Client,
                                             CONSTANTS,
@@ -52,7 +52,8 @@ define(['logManager',
 
     "use strict";
 
-    var npmJSON = JSON.parse(packagejson);
+    var npmJSON = JSON.parse(packagejson),
+        gmeConfig = JSON.parse(gmeConfigJson);
     WebGMEGlobal.version = npmJSON.version;
 
 

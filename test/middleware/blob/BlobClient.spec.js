@@ -9,8 +9,7 @@ var testFixture = require('../../_globals.js');
 
 describe('BlobClient', function () {
     'use strict';
-    var gmeConfig = testFixture.getGmeConfig(),
-        rimraf = testFixture.rimraf,
+    var rimraf = testFixture.rimraf,
         should = testFixture.should,
         superagent = testFixture.superagent,
         expect = testFixture.expect,
@@ -24,16 +23,14 @@ describe('BlobClient', function () {
     describe('[http]', function () {
         before(function (done) {
             // we have to set the config here
-            var config = WebGMEGlobal.getConfig();
-            config.port = 9005;
-            config.authentication = false;
-            config.httpsecure = false;
-
-            serverBaseUrl = 'http://127.0.0.1:' + config.port;
-            bcParam.serverPort = config.port;
+            var gmeConfig = testFixture.getGmeConfig();
+            gmeConfig.server.port = 9006;
+            gmeConfig.server.https.enable = false;
+            serverBaseUrl = 'http://127.0.0.1:' + gmeConfig.server.port;
+            bcParam.serverPort = gmeConfig.server.port;
             bcParam.server = '127.0.0.1';
-            bcParam.httpsecure = config.httpsecure;
-            server = testFixture.WebGME.standaloneServer(config);
+            bcParam.httpsecure = gmeConfig.server.https.enable;
+            server = testFixture.WebGME.standaloneServer(gmeConfig);
             server.start(function () {
                 done();
             });
@@ -289,17 +286,17 @@ describe('BlobClient', function () {
     describe('[https]', function () {
         before(function (done) {
             // we have to set the config here
-            var config = WebGMEGlobal.getConfig();
             nodeTLSRejectUnauthorized = process.env.NODE_TLS_REJECT_UNAUTHORIZED;
-            config.port = 9006;
-            config.authentication = false;
-            config.httpsecure = true;
-            process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-            serverBaseUrl = 'http://127.0.0.1:' + config.port;
-            bcParam.serverPort = config.port;
+            var gmeConfig = testFixture.getGmeConfig();
+            gmeConfig.server.port = 9006;
+            gmeConfig.server.https.enable = true;
+            serverBaseUrl = 'https://127.0.0.1:' + gmeConfig.server.port;
+            bcParam.serverPort = gmeConfig.server.port;
             bcParam.server = '127.0.0.1';
-            bcParam.httpsecure = config.httpsecure;
-            server = testFixture.WebGME.standaloneServer(config);
+            bcParam.httpsecure = gmeConfig.server.https.enable;
+            process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+            server = testFixture.WebGME.standaloneServer(gmeConfig);
+
             server.start(function () {
                 done();
             });

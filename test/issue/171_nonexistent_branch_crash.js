@@ -13,7 +13,6 @@ describe('issue 171 server crashes when trying to switch to non-existent branch'
         ClientClass,
         WebGME = testFixture.WebGME,
         Q = testFixture.Q,
-        config = WebGMEGlobal.getConfig(),
         projectName = 'issue171',
         client,
         should = testFixture.should,
@@ -23,30 +22,18 @@ describe('issue 171 server crashes when trying to switch to non-existent branch'
     requirejs.config({
         nodeRequire: require,
         paths: {
-            'logManager': 'common/LogManager',
-            'storage': 'common/storage',
-            'core': 'common/core',
-            'server': 'server',
-            'auth': 'server/auth',
-            'util': 'common/util',
-            'baseConfig': 'bin/getconfig',
-            'webgme': 'webgme',
-            'plugin': 'plugin',
-            'worker': 'server/worker',
-            'coreclient': 'common/core/users',
-            'blob': 'middleware/blob',
             'eventDispatcher': 'common/EventDispatcher',
             ' /socket.io/socket.io.js': 'socketio-client'
         }
     });
 
-    config.port = 9003;
-    server = new WebGME.standaloneServer(config);
+    gmeConfig.server.port = 9003;
+    server = new WebGME.standaloneServer(gmeConfig);
     ClientClass = requirejs('client/js/client');
 
     before(function (done) {
         server.start(function () {
-            client = new ClientClass({host: ' ', port: config.port});
+            client = new ClientClass({host: ' ', port: gmeConfig.server.port});
             done();
         });
     });

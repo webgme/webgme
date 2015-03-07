@@ -130,7 +130,7 @@ require(
         'backbone',
         'js/WebGME',
         'clientUtil',
-        'bin/getconfig',
+        'text!gmeConfig.json',
 
         'angular',
         'angular-route',
@@ -139,12 +139,12 @@ require(
 
     ],
     function (domReady, jQuery, jQueryUi, jQueryUiiPad, jqueryWebGME, jqueryDataTables, bootstrap, underscore,
-              backbone, webGME, util, gmeConfig) {
+              backbone, webGME, util, gmeConfigJson) {
 
         'use strict';
 
         domReady(function () {
-
+            var gmeConfig = JSON.parse(gmeConfigJson);
             if (gmeConfig.log.debug) {
                 DEBUG = gmeConfig.log.debug;
             }

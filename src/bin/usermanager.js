@@ -12,7 +12,6 @@ var requirejs = require('requirejs'),
     MongoURI = require('mongo-uri'),
 
     GMEAuth,
-    config,
 
     main;
 
@@ -27,7 +26,6 @@ requirejs.config({
 });
 
 GMEAuth = requirejs('auth/gmeauth');
-config = requirejs('bin/getconfig');
 
 main = function (argv) {
     'use strict';
@@ -37,18 +35,18 @@ main = function (argv) {
         setupGMEAuth = function (databaseConnectionString) {
             var mongoConnectionInfo,
 
-            // this line throws a TypeError for invalid databaseConnectionString
-                uri = MongoURI.parse(databaseConnectionString);
+                config = require('../../config');
 
-            mongoConnectionInfo = {
-                host: uri.hosts[0],
-                port: uri.ports[0] || 27017,
-                database: uri.database || 'multi'
-            };
+            if (databaseConnectionString) {
+                // this line throws a TypeError for invalid databaseConnectionString
+                MongoURI.parse(databaseConnectionString);
 
-            auth = new GMEAuth(mongoConnectionInfo);
+                config.mongo.uri = databaseConnectionString;
+            }
 
-            console.log(uri);
+            auth = new GMEAuth(null, config);
+
+            console.log(config.mongo.uri);
 
             return uri;
         },

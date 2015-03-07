@@ -18,9 +18,7 @@ describe('corediff apply', function () {
         jsonProject;
 
     var database = new testFixture.WebGME.serverUserStorage({
-        host: '127.0.0.1',
-        port: 27017,
-        database: 'multi',
+        globConf: gmeConfig,
         log: testFixture.Log.create('mongoLog')
     });
 

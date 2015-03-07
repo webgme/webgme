@@ -519,12 +519,21 @@ define(['logManager',
             redirectUrl(req,res);
         });
 
+        //TODO: only node_worker/index.html and common/util/common are using this
         __logger.info("creating decorator specific routing rules");
         __app.get('/bin/getconfig.js', ensureAuthenticated, function (req, res) {
             res.status(200);
             res.setHeader('Content-type', 'application/javascript');
             res.end("define([],function(){ return " + JSON.stringify(gmeConfig) + ";});");
         });
+
+        __logger.info("creating gmeConfig.json specific routing rules");
+        __app.get('/gmeConfig.json', ensureAuthenticated, function (req, res) {
+            res.status(200);
+            //res.setHeader('Content-type', 'application/javascript');
+            res.end(JSON.stringify(gmeConfig));
+        });
+
         __logger.info("creating decorator specific routing rules");
         __app.get(/^\/decorators\/.*/, ensureAuthenticated, function (req, res) {
             var tryNext = function (index) {
