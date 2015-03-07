@@ -1,26 +1,7 @@
 /*global __dirname, require, process, setImmediate */
-var
-    requirejs = require("requirejs"),
-  BASEPATH = __dirname + "/../..",
-  WEBGME = require(BASEPATH + '/../webgme');
-requirejs.config({
-  nodeRequire: require,
-  baseUrl: BASEPATH,
-  paths: {
-    "logManager": "common/LogManager",
-    "storage": "common/storage",
-    "core": "common/core",
-    "server": "server",
-    "auth": "server/auth",
-    "util": "common/util",
-    "baseConfig": "bin/getconfig",
-    "webgme": "webgme",
-    "plugin": "plugin",
-    "worker": "server/worker",
-    "coreclient": "common/core/users",
-    "blob": "middleware/blob"
-  }
-});
+var requirejs = require("requirejs"),
+    WEBGME = require(__dirname + '/../../../webgme');
+
 requirejs(['worker/constants',
     'core/core',
     'storage/serveruserstorage',
@@ -63,7 +44,7 @@ requirejs(['worker/constants',
         initialized = true;
           gmeConfig = parameters.globConf;
           WEBGME.addToRequireJsPaths(gmeConfig);
-          console.error(JSON.stringify(requirejs.s.contexts._.config, null, 4)); // TODO remove me
+          //console.error(JSON.stringify(requirejs.s.contexts._.config, null, 4)); // TODO remove me
         _CONFIG = gmeConfig;
         if (_CONFIG.authentication === true) {
           AUTH = GMEAUTH(parameters.auth);
@@ -200,12 +181,10 @@ requirejs(['worker/constants',
     };
 
     var getPlugin = function (name) {
-      console.error('plugin/' + name + '/' + name + '/' + name);
       return requirejs('plugin/' + name + '/' + name + '/' + name);
     };
     var executePlugin = function (userId, name, webGMESessionId, context, callback) {
       var interpreter = getPlugin(name);
-        console.error('interpreter', interpreter);
       if (interpreter) {
         getProject(context.managerConfig.project, webGMESessionId, function (err, project) {
           if (!err) {
@@ -213,7 +192,6 @@ requirejs(['worker/constants',
             var plugins = {};
             plugins[name] = interpreter;
             var manager = new PluginManagerBase(project, Core, plugins);
-              console.error('manager');
             context.managerConfig.blobClient = new BlobClient({
               serverPort: gmeConfig.server.port,
               httpsecure: gmeConfig.server.https.enable,
@@ -222,12 +200,9 @@ requirejs(['worker/constants',
 
             manager.initialize(null, function (pluginConfigs, configSaveCallback) {
               if (configSaveCallback) {
-                  console.error('configSaveCallback');
                 configSaveCallback(context.pluginConfigs);
               }
-                console.error('initialize');
               manager.executePlugin(name, context.managerConfig, function (err, result) {
-                  console.error('executed');
                 if (!err && result) {
                   callback(null, result.serialize());
                 } else {
