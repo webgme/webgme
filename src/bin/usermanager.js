@@ -29,7 +29,8 @@ GMEAuth = requirejs('auth/gmeauth');
 
 main = function (argv) {
     'use strict';
-    var program = require('commander'),
+    var Command = require('commander').Command,
+        program = new Command(), // we need a new program (Command) instance every time when main is called.
         auth,
         mainDeferred = Q.defer(),
         setupGMEAuth = function (databaseConnectionString) {
@@ -291,6 +292,9 @@ main = function (argv) {
     return mainDeferred.promise;
 };
 
+module.exports = {
+    main: main
+};
 
 if (require.main === module) {
 

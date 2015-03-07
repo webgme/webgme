@@ -155,7 +155,7 @@ describe('User manager command line interface (CLI)', function () {
         });
     });
 
-    describe.skip('as a library', function () {
+    describe('as a library', function () {
 
         var oldProcessExit = process.exit,
             oldConsoleLog = console.log,
@@ -214,212 +214,220 @@ describe('User manager command line interface (CLI)', function () {
                 done();
             });
         });
-        //
-        //it('should have a main', function () {
-        //    userManager.should.have.property('main');
-        //});
-        //
-        //it('should print help', function (done) {
-        //    process.exit = function (code) {
-        //        // TODO: would be nice to send notifications for test
-        //        console.log(code);
-        //    };
-        //
-        //    console.log = function () {
-        //        //console.info(arguments);
-        //    };
-        //    console.error = function () {
-        //        //console.info(arguments);
-        //    };
-        //    process.stdout.write = function () {
-        //    };
-        //
-        //
-        //    userManager.main(['node', filename])
-        //        .then(function () {
-        //            console.log = oldConsoleLog;
-        //            console.error = oldConsoleError;
-        //            process.stdout.write = oldProcessStdoutWrite;
-        //            done();
-        //        })
-        //        .catch(function (err) {
-        //            console.log = oldConsoleLog;
-        //            console.error = oldConsoleError;
-        //            process.stdout.write = oldProcessStdoutWrite;
-        //            done(err);
-        //        });
-        //});
-        //
-        //it('should print help with -h', function (done) {
-        //    console.log = function () {
-        //        //console.info(arguments);
-        //    };
-        //
-        //    userManager.main(['node', filename, '-h'])
-        //        .then(function () {
-        //            done();
-        //        })
-        //        .catch(function (err) {
-        //            done(err);
-        //        });
-        //});
-        //
-        //it('should add user if db is defined', function (done) {
-        //
-        //    process.exit = function (code) {
-        //        // TODO: would be nice to send notifications for test
-        //        console.log(code);
-        //    };
-        //    console.log = function () {
-        //        //console.info(arguments);
-        //    };
-        //
-        //    userManager.main(['node', filename, '--db', mongoUri, 'useradd', 'user', 'user@example.com', 'plaintext'])
-        //        .then(function () {
-        //            console.log = oldConsoleLog;
-        //            done();
-        //        })
-        //        .catch(function (err) {
-        //            console.log = oldConsoleLog;
-        //            done(err);
-        //        });
-        //});
-        //
-        //
-        //it('should add user if db is not defined', function (done) {
-        //
-        //    process.exit = function (code) {
-        //        // TODO: would be nice to send notifications for test
-        //        console.log(code);
-        //    };
-        //    console.log = function () {
-        //        //console.info(arguments);
-        //    };
-        //
-        //    userManager.main(['node', filename, 'useradd', 'user', 'user@example.com', 'plaintext'])
-        //        .then(function () {
-        //            console.log = oldConsoleLog;
-        //            done();
-        //        })
-        //        .catch(function (err) {
-        //            console.log = oldConsoleLog;
-        //            done(err);
-        //        });
-        //});
-        //
-        //
-        //it('should add user if db port and name are not defined', function (done) {
-        //
-        //    process.exit = function (code) {
-        //        // TODO: would be nice to send notifications for test
-        //        console.log(code);
-        //    };
-        //    console.log = function () {
-        //        //console.info(arguments);
-        //    };
-        //
-        //    userManager.main(['node', filename, '--db', 'mongodb://' + uri.hosts[0], 'useradd', 'user', 'user@example.com', 'plaintext'])
-        //        .then(function () {
-        //            console.log = oldConsoleLog;
-        //            done();
-        //        })
-        //        .catch(function (err) {
-        //            console.log = oldConsoleLog;
-        //            done(err);
-        //        });
-        //});
-        //
-        //
-        //it('should list user', function (done) {
-        //
-        //    process.exit = function (code) {
-        //        // TODO: would be nice to send notifications for test
-        //        console.log(code);
-        //    };
-        //    console.log = function () {
-        //        //console.info(arguments);
-        //    };
-        //
-        //    userManager.main(['node', filename, '--db', mongoUri, 'useradd', 'user', 'user@example.com', 'plaintext'])
-        //        .then(function () {
-        //            return userManager.main(['node', filename, '--db', mongoUri, 'userlist', 'user']);
-        //        })
-        //        .then(function () {
-        //            console.log = oldConsoleLog;
-        //            done();
-        //        })
-        //        .catch(function (err) {
-        //            console.log = oldConsoleLog;
-        //            done(err);
-        //        });
-        //});
-        //
-        //it('should change user password', function (done) {
-        //
-        //    process.exit = function (code) {
-        //        // TODO: would be nice to send notifications for test
-        //        console.log(code);
-        //    };
-        //    console.log = function () {
-        //        //console.info(arguments);
-        //    };
-        //
-        //    userManager.main(['node', filename, '--db', mongoUri, 'useradd', 'user', 'user@example.com', 'plaintext'])
-        //        .then(function () {
-        //            return userManager.main(['node', filename, '--db', mongoUri, 'passwd', 'user', 'plaintext2']);
-        //        })
-        //        .then(function () {
-        //            console.log = oldConsoleLog;
-        //            done();
-        //        })
-        //        .catch(function (err) {
-        //            console.log = oldConsoleLog;
-        //            done(err);
-        //        });
-        //});
-        //
-        //it('should delete user', function (done) {
-        //
-        //    process.exit = function (code) {
-        //        // TODO: would be nice to send notifications for test
-        //        console.log(code);
-        //    };
-        //    console.log = function () {
-        //        //console.info(arguments);
-        //    };
-        //
-        //    userManager.main(['node', filename, '--db', mongoUri, 'useradd', 'user_to_delete', 'user@example.com', 'plaintext'])
-        //        .then(function () {
-        //            return userManager.main(['node', filename, '--db', mongoUri, 'userdel', 'user_to_delete']);
-        //        })
-        //        .then(function () {
-        //            console.log = oldConsoleLog;
-        //            done();
-        //        })
-        //        .catch(function (err) {
-        //            console.log = oldConsoleLog;
-        //            done(err);
-        //        });
-        //});
-        //
-        //
-        //// FIXME: this test does not behave as we expect
-        ////it('should add organization', function (done) {
-        ////
-        ////    process.exit = function (code) {
-        ////        // TODO: would be nice to send notifications for test
-        ////        console.log(code);
-        ////    };
-        ////    console.log = function () {
-        ////        //console.info(arguments);
-        ////    };
-        ////    userManager.main(['node', filename, '--db', mongoUri, 'organizationdel', 'org1'])
-        ////        .finally(function () {
-        ////            // del org is ok to fail
-        ////            return userManager.main(['node', filename, '--db', mongoUri, 'organizationadd', 'org1']);
-        ////        })
-        ////        .nodeify(done);
-        ////});
+
+        it('should have a main', function () {
+            userManager.should.have.property('main');
+        });
+
+        it('should print help', function (done) {
+            process.exit = function (code) {
+                // TODO: would be nice to send notifications for test
+                console.log(code);
+            };
+
+            console.log = function () {
+                //console.info(arguments);
+            };
+            console.error = function () {
+                //console.info(arguments);
+            };
+            process.stdout.write = function () {
+            };
+
+
+            userManager.main(['node', filename])
+                .then(function () {
+                    console.log = oldConsoleLog;
+                    console.error = oldConsoleError;
+                    process.stdout.write = oldProcessStdoutWrite;
+                    done();
+                })
+                .catch(function (err) {
+                    console.log = oldConsoleLog;
+                    console.error = oldConsoleError;
+                    process.stdout.write = oldProcessStdoutWrite;
+                    done(err);
+                });
+        });
+
+        it('should print help with -h', function (done) {
+            console.log = function () {
+                //console.info(arguments);
+            };
+            process.stdout.write = function () {
+            };
+
+            userManager.main(['node', filename, '-h'])
+                .then(function () {
+                    console.log = oldConsoleLog;
+                    process.stdout.write = oldProcessStdoutWrite;
+                    done();
+                })
+                .catch(function (err) {
+                    console.log = oldConsoleLog;
+                    process.stdout.write = oldProcessStdoutWrite;
+                    done(err);
+                });
+        });
+
+        it('should add user if db is defined', function (done) {
+
+            process.exit = function (code) {
+                // TODO: would be nice to send notifications for test
+                console.log(code);
+            };
+            console.log = function () {
+                //console.info(arguments);
+            };
+
+            userManager.main(['node', filename, '--db', mongoUri, 'useradd', 'user', 'user@example.com', 'plaintext'])
+                .then(function () {
+                    console.log = oldConsoleLog;
+                    done();
+                })
+                .catch(function (err) {
+                    console.log = oldConsoleLog;
+                    done(err);
+                });
+        });
+
+
+        it('should add user if db is not defined', function (done) {
+
+            process.exit = function (code) {
+                // TODO: would be nice to send notifications for test
+                console.log(code);
+            };
+            console.log = function () {
+                //console.info(arguments);
+            };
+
+            userManager.main(['node', filename, 'useradd', 'user', 'user@example.com', 'plaintext'])
+                .then(function () {
+                    console.log = oldConsoleLog;
+                    done();
+                })
+                .catch(function (err) {
+                    console.log = oldConsoleLog;
+                    done(err);
+                });
+        });
+
+
+        it('should add user if db port and name are not defined', function (done) {
+
+            process.exit = function (code) {
+                // TODO: would be nice to send notifications for test
+                console.log(code);
+            };
+            console.log = function () {
+                //console.info(arguments);
+            };
+
+            userManager.main(['node', filename, '--db', 'mongodb://' + uri.hosts[0], 'useradd', 'user', 'user@example.com', 'plaintext'])
+                .then(function () {
+                    console.log = oldConsoleLog;
+                    done();
+                })
+                .catch(function (err) {
+                    console.log = oldConsoleLog;
+                    done(err);
+                });
+        });
+
+
+        it('should list user', function (done) {
+
+            process.exit = function (code) {
+                // TODO: would be nice to send notifications for test
+                console.log(code);
+            };
+            console.log = function () {
+                //console.info(arguments);
+            };
+
+            userManager.main(['node', filename, '--db', mongoUri, 'useradd', 'user', 'user@example.com', 'plaintext'])
+                .then(function () {
+                    return userManager.main(['node', filename, '--db', mongoUri, 'userlist', 'user']);
+                })
+                .then(function () {
+                    console.log = oldConsoleLog;
+                    done();
+                })
+                .catch(function (err) {
+                    console.log = oldConsoleLog;
+                    done(err);
+                });
+        });
+
+        it('should change user password', function (done) {
+
+            process.exit = function (code) {
+                // TODO: would be nice to send notifications for test
+                console.log(code);
+            };
+            console.log = function () {
+                //console.info(arguments);
+            };
+
+            userManager.main(['node', filename, '--db', mongoUri, 'useradd', 'user', 'user@example.com', 'plaintext'])
+                .then(function () {
+                    return userManager.main(['node', filename, '--db', mongoUri, 'passwd', 'user', 'plaintext2']);
+                })
+                .then(function () {
+                    console.log = oldConsoleLog;
+                    done();
+                })
+                .catch(function (err) {
+                    console.log = oldConsoleLog;
+                    done(err);
+                });
+        });
+
+        it('should delete user', function (done) {
+
+            process.exit = function (code) {
+                // TODO: would be nice to send notifications for test
+                console.log(code);
+            };
+            console.log = function () {
+                //console.info(arguments);
+            };
+
+            userManager.main(['node', filename, '--db', mongoUri, 'useradd', 'user_to_delete', 'user@example.com', 'plaintext'])
+                .then(function () {
+                    return userManager.main(['node', filename, '--db', mongoUri, 'userdel', 'user_to_delete']);
+                })
+                .then(function () {
+                    console.log = oldConsoleLog;
+                    done();
+                })
+                .catch(function (err) {
+                    console.log = oldConsoleLog;
+                    done(err);
+                });
+        });
+
+        it('adds organization', function (done) {
+
+            process.exit = function (code) {
+                // TODO: would be nice to send notifications for test
+                console.log(code);
+            };
+            console.log = function () {
+                //console.info(arguments);
+            };
+
+            userManager.main(['node', filename, '--db', mongoUri, 'organizationadd', 'org1'])
+                .then(function () {
+                    console.log = oldConsoleLog;
+                    done();
+                })
+                .catch(function (err) {
+                    console.log = oldConsoleLog;
+                    done(err);
+                });
+        });
 
     });
 });
