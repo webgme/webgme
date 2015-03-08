@@ -3,91 +3,144 @@
 /**
  * @author kecso / https://github.com/kecso
  */
-var tGlobals = require('../../_globals.js');
+var testFixture = require('../../_globals.js');
 
 describe('corerel', function () {
     'use strict';
-    var storage = null,
-        project = null,
-        baseCommitHash = '',
-        root = null,
-        core = null;
+    var storage = new testFixture.Storage(),
+        Rel = testFixture.requirejs('common/core/corerel'),
+        Tree = testFixture.requirejs('common/core/coretree'),
+        TASYNC = testFixture.requirejs('common/core/tasync'),
+        Core = function (s) {
+            return new Rel(new Tree(s));
+        },
+        project,
+        core,
+        root;
 
-    before(function (done) {
-        //load the project, import it, and save the base commit hash
-        tGlobals.importProject({
-            filePath: './test/common/core/corerel/base001.json',
-            projectName: 'coreRelTests'
-        }, function (err, result) {
+    beforeEach(function (done) {
+        storage.openDatabase(function (err) {
             if (err) {
                 done(err);
                 return;
             }
-            storage = result.storage;
-            project = result.project;
-            core = result.core;
-            baseCommitHash = result.commitHash;
-            root = result.root;
-            done();
-        });
-    });
-
-    it('loads the children of the root and checks them', function (done) {
-        core.loadChildren(root, function (err, children) {
-            var i, checkObject = {};
-            if (err) {
-                done(err);
-                return;
-            }
-
-
-            children.should.have.length(3);
-            for (i = 0; i < children.length; i++) {
-                checkObject[core.getGuid(children[i])] = core.getAttribute(children[i], 'name');
-            }
-            checkObject.should.be.eql({
-                'b04de7e4-2c78-2b5c-d5c4-7e258cb5167a': 'sProject',
-                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': 'FCO',
-                '55d8fca7-515f-3654-667b-b9ccb9d9645b': 'language'
-            });
-            done();
-
-        });
-    });
-
-    it('checks the collections of Aladdin', function (done) {
-        core.loadByPath(root, '/361825802/609643723', function (err, aladdin) {
-            if (err) {
-                done(err);
-                return;
-            }
-            core.isValidNode(aladdin).should.be.true;
-
-            core.loadCollection(aladdin, 'src', function (err, relations) {
+            storage.openProject('coreRelTesting', function (err, p) {
+                var child;
                 if (err) {
                     done(err);
                     return;
                 }
-                relations.should.have.length(3);
+                project = p;
+                core = new Core(project);
+                root = core.createNode();
+                child = core.createNode({parent: root});
+                core.setAttribute(child, 'name', 'child');
+                core.setRegistry(child, 'position', {x: 100, y: 100});
+                core.setPointer(child, 'parent', root);
+
                 done();
             });
         });
     });
-    it('checks the path of children of sProject', function (done) {
-        core.loadByPath(root, '/361825802', function (err, sProject) {
+    afterEach(function (done) {
+        storage.deleteProject('coreRelTesting', function (err) {
             if (err) {
                 done(err);
                 return;
             }
-            var paths = core.getChildrenPaths(sProject);
-            paths.should.have.length(23);
-            paths.should.include.members([
-                '/361825802/518187827',
-                '/361825802/1428171139',
-                '/361825802/1231207531',
-                '/361825802/1994757842'
-            ]);
-            done();
+            storage.closeDatabase(done);
         });
+    });
+    it('should load all children', function (done) {
+        TASYNC.call(function (children) {
+            children.should.have.length(1);
+            done();
+        }, core.loadChildren(root));
+    });
+    it('child should have pointer and root should not', function (done) {
+        TASYNC.call(function (children) {
+            var child = children[0];
+            core.hasPointer(child, 'parent').should.be.true;
+            core.getPointerPath(child, 'parent').should.be.eql(core.getPath(root));
+            core.hasPointer(root, 'parent').should.be.false;
+            done();
+        }, core.loadChildren(root));
+    });
+    it('root should have collection and child should not', function (done) {
+        TASYNC.call(function (children) {
+            var child = children[0];
+            core.getCollectionNames(child).should.be.empty;
+            core.getCollectionNames(root).should.be.eql(['parent']);
+            core.getCollectionPaths(root, 'parent').should.include.members([core.getPath(child)]);
+            done();
+        }, core.loadChildren(root));
+    });
+    it('copying nodes should work fine', function (done) {
+        TASYNC.call(function (children) {
+            var child = children[0],
+                copyOne = core.copyNode(child, root),
+                copies = core.copyNodes([child, copyOne], root),
+                grandChild = core.copyNode(copyOne, child),
+                grandCopy = core.copyNode(grandChild, root);
+            core.getAttribute(copyOne, 'name').should.be.eql(core.getAttribute(child, 'name'));
+            copies.should.have.length(2);
+            core.getRegistry(copies[0], 'position').should.be.eql(core.getRegistry(copyOne, 'position'));
+            core.getPointerPath(copies[1], 'parent').should.be.eql(core.getPointerPath(copies[0], 'parent'));
+            core.getPointerPath(grandChild, 'parent').should.be.eql(core.getPointerPath(grandCopy, 'parent'));
+            core.getRelid(grandChild).should.not.be.eql(core.getRelid(copyOne));
+            core.getRelid(grandChild).should.not.be.eql(core.getRelid(grandCopy));
+            done();
+        }, core.loadChildren(root));
+    });
+    it('loading collection and pointer', function (done) {
+        TASYNC.call(function (children) {
+            children.should.have.length(1);
+            var child = children[0];
+            core.getAttribute(child, 'name').should.be.equal('child');
+            TASYNC.call(function (pointer) {
+                pointer.should.be.eql(root);
+                done();
+            }, core.loadPointer(child, 'parent'));
+        }, core.loadCollection(root, 'parent'));
+    });
+    it('getting outside pointer path', function (done) {
+        TASYNC.call(function (children) {
+            var child = children[0],
+                other = core.createNode({parent: root}),
+                grandChild = core.createNode({parent: child});
+            core.setPointer(grandChild, 'ptr', other);
+            core.getOutsidePointerPath(child, 'ptr', '/' + core.getRelid(grandChild))
+                .should.be.eql(core.getPointerPath(grandChild, 'ptr'));
+
+            done();
+        }, core.loadChildren(root));
+    });
+    it('getting chilrdren paths', function (done) {
+        TASYNC.call(function (children) {
+            core.getChildrenPaths(root).should.include.members([core.getPath(children[0])]);
+
+            done();
+        }, core.loadChildren(root));
+    });
+    it('moving node around', function (done) {
+        TASYNC.call(function (children) {
+            var child = children[0],
+                node = core.createNode({parent: root}),
+                relid = core.getRelid(node);
+
+            node = core.moveNode(node, child);
+            core.getRelid(node).should.be.eql(relid);
+            core.getPath(node).should.contain(core.getPath(child));
+
+            node = core.moveNode(node, root);
+            core.getRelid(node).should.be.eql(relid);
+            core.getPath(node).should.not.contain(core.getPath(child));
+
+            node = core.moveNode(node, root);
+            core.getRelid(node).should.not.be.eql(relid);
+            core.getPath(node).should.not.contain(core.getPath(child));
+
+            done();
+        }, core.loadChildren(root));
     });
 });
