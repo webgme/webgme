@@ -9,37 +9,42 @@ describe('configuration', function () {
     var should = require('chai').should(),
         oldNodeEnv = process.env.NODE_ENV,
         path = require('path'),
-        configPath = path.join(__dirname, '..', '..', 'config', 'index.js'),
-        configGlobal = require('../../config/config.global.js'),
-        configTest = require('../../config/config.test.js');
+        configPath = path.join(__dirname, '..', '..', 'config'),
+        unloadConfigs = function () {
+            // clear the cached files
+            var key,
+                i,
+                modulesToUnload = [];
+
+            for (key in require.cache) {
+                if (key.indexOf(configPath) > -1) {
+                    modulesToUnload.push(key);
+                }
+            }
+
+            for (i = 0; i < modulesToUnload.length; i += 1) {
+                delete require.cache[modulesToUnload[i]];
+            }
+        };
 
     before(function () {
 
     });
 
     beforeEach(function () {
-        // clear the cached files
-        var key,
-            i,
-            modulesToUnload = [];
-
-        for (key in require.cache) {
-            if (key.indexOf(configPath) > -1) {
-                modulesToUnload.push(key);
-            }
-        }
-
-        for (i = 0; i < modulesToUnload.length; i += 1) {
-            delete require.cache[modulesToUnload[i]];
-        }
+        unloadConfigs();
     });
 
     after(function () {
+        unloadConfigs();
         process.env.NODE_ENV = oldNodeEnv;
+        // restore config
+        require('../../config');
     });
 
     it('should load global as a default config', function () {
-        var config;
+        var config,
+            configGlobal = require('../../config/config.global.js');
         process.env.NODE_ENV = '';
         config = require('../../config');
 
@@ -47,7 +52,8 @@ describe('configuration', function () {
     });
 
     it('should load test config', function () {
-        var config;
+        var config,
+            configTest = require('../../config/config.test.js');
         process.env.NODE_ENV = 'test';
         config = require('../../config');
 
@@ -69,7 +75,6 @@ describe('configuration', function () {
         (function () {
             config = require('../../config');
         }).should.throw(Error);
-
     });
 
 });

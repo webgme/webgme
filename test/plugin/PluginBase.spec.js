@@ -9,7 +9,9 @@ describe('Plugin Base', function () {
     'use strict';
 
     var should = testFixture.should,
-        PluginBase = testFixture.requirejs('plugin/PluginBase');
+        PluginBase = testFixture.requirejs('plugin/PluginBase'),
+        PluginResult = testFixture.requirejs('plugin/PluginResult'),
+        PluginConfig = testFixture.requirejs('plugin/PluginConfig');
 
     it('should instantiate PluginBase and have defined properties', function () {
         var pluginBase = new PluginBase();
@@ -55,7 +57,8 @@ describe('Plugin Base', function () {
     it('should throw if main is called', function () {
         var pluginBase = new PluginBase();
         (function () {
-            pluginBase.main(function () {});
+            pluginBase.main(function () {
+            });
         }).should.throw();
     });
 
@@ -81,6 +84,158 @@ describe('Plugin Base', function () {
         pluginBase.getConfigStructure().should.deep.equal([]);
     });
 
+    it('should initialize PluginBase without a logger', function () {
+        var pluginBase = new PluginBase();
+        pluginBase.initialize(null /* logger */, null /* blobClient */);
+        pluginBase.logger.should.equal(console);
+    });
+
+    it('should initialize PluginBase with a custom logger', function () {
+        var pluginBase = new PluginBase(),
+            logger = {
+                debug: function (/*msg*/) {
+                    // debug message
+                }
+            };
+        pluginBase.initialize(logger, null /* blobClient */);
+        pluginBase.logger.should.equal(logger);
+    });
+
+    it('should configure PluginBase', function () {
+        var pluginBase = new PluginBase(),
+            logger = {
+                debug: function (/*msg*/) {
+                    // debug message
+                }
+            };
+        pluginBase.initialize(logger, null /* blobClient */);
+        pluginBase.configure({} /* empty configuration */);
+        pluginBase.isConfigured.should.be.true;
+    });
+
+    it('should configure with commitHash PluginBase', function () {
+        var pluginBase = new PluginBase(),
+            logger = {
+                debug: function (/*msg*/) {
+                    // debug message
+                }
+            };
+        pluginBase.initialize(logger, null /* blobClient */);
+        pluginBase.configure({
+            branchName: 'master',
+            commitHash: 'abcdefg12345'
+        });
+        pluginBase.commitHash.should.equal('abcdefg12345');
+        pluginBase.branchName.should.equal('master');
+        pluginBase.branchHash.should.equal('abcdefg12345');
+    });
+
+    it('should update success PluginBase', function () {
+        var pluginBase = new PluginBase(),
+            logger = {
+                debug: function (/*msg*/) {
+                    // debug message
+                }
+            };
+        pluginBase.initialize(logger, null /* blobClient */);
+        pluginBase.configure({} /* empty configuration */);
+
+        // setup for this test
+        pluginBase.result.success = true;
+
+        pluginBase.updateSuccess(true, 'ok');
+        pluginBase.result.getSuccess().should.be.true;
+        pluginBase.updateSuccess(false, 'not ok');
+        pluginBase.result.getSuccess().should.be.false;
+        pluginBase.updateSuccess(true, 'should remain false');
+        pluginBase.result.getSuccess().should.be.false;
+    });
+
+
+    it('should update META', function () {
+        var pluginBase = new PluginBase(),
+            generatedMETA = {
+                'FCO': '/1',
+                'element1': '/2'
+            };
+
+        pluginBase.META = {
+            'FCO': '/1/2/3',
+            'element2': '/444'
+        };
+
+        pluginBase.updateMETA(generatedMETA);
+
+        pluginBase.META.should.deep.equal({
+            'FCO': '/1/2/3',
+            'element2': '/444'
+        });
+
+        generatedMETA.should.deep.equal({
+            'FCO': '/1/2/3',
+            'element1': '/2',
+            'element2': '/444'
+        });
+
+    });
+
+    it('should get set current config', function () {
+        var pluginBase = new PluginBase(),
+            config = {'key1': 42};
+
+        pluginBase.setCurrentConfig(config);
+        pluginBase.getCurrentConfig().should.equal(config);
+    });
+
+
+    it('should get default custom config', function () {
+        var pluginBase = new PluginBase(),
+            defaultConfig;
+
+        // emulate plugin override
+        pluginBase.getConfigStructure = function () {
+            return [{
+                'name': 'logChildrenNames',
+                'displayName': 'Log Children Names',
+                'description': '',
+                'value': true, // this is the 'default config'
+                'valueType': 'boolean',
+                'readOnly': false
+            }, {
+                'name': 'logLevel',
+                'displayName': 'Logger level',
+                'description': '',
+                'value': 'info',
+                'valueType': 'string',
+                'valueItems': [
+                    'debug',
+                    'info',
+                    'warn',
+                    'error'
+                ],
+                'readOnly': false
+            }, {
+                'name': 'maxChildrenToLog',
+                'displayName': 'Maximum children to log',
+                'description': 'Set this parameter to blabla',
+                'value': 4,
+                'minValue': 1,
+                'valueType': 'number',
+                'readOnly': false
+            }];
+        };
+
+        defaultConfig = pluginBase.getDefaultConfig();
+
+        defaultConfig.should.be.instanceOf(PluginConfig);
+
+        // getDefaultConfig returns with a PluginConfig object we should serialize it.
+        defaultConfig.serialize().should.deep.equal({
+            'logChildrenNames': true,
+            'logLevel': 'info',
+            'maxChildrenToLog': 4
+        });
+    });
 
 
 });

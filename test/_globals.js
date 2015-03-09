@@ -17,6 +17,10 @@ var gmeConfig = require('../config'),
     getGmeConfig = function () {
         'use strict';
         // makes sure that for each request it returns with a unique object and tests will not interfere
+        if (!gmeConfig) {
+            // if some tests are deleting or unloading the config
+            gmeConfig = require('../config');
+        }
         return JSON.parse(JSON.stringify(gmeConfig));
     },
     WebGME = require('../webgme'),
