@@ -272,9 +272,9 @@ define([
             protocolStr;
         if(typeof TESTING !== 'undefined'){
           protocolStr = gmeConfig.server.https.enable ? 'https' : 'http';
+
           storageOptions.type = 'node';
           storageOptions.host = protocolStr + '://localhost';
-          storageOptions.port = gmeConfig.server.port;
           storageOptions.user = 'TEST';
         } else {
           storageOptions.user = getUserId();

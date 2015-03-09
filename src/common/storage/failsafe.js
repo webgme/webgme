@@ -17,10 +17,8 @@ define(["util/assert", "util/guid"], function (ASSERT, GUID) {
   function Database(_database, options) {
     ASSERT(typeof options === "object" && typeof _database === "object");
     var gmeConfig = options.globConf;
-    options.failsafe = gmeConfig.storage.failSafe;
-    options.failsafefrequency = gmeConfig.storage.failSafeFrequency;
-    options.timeout = gmeConfig.storage.timeout;
 
+      //FIXME: what to do with options.database? Where to parse the mongouri? Is it needed? It has a default of "noID", is that ok?
     var exceptionErrors = [], fsId = "FS", dbId = options.database || "noID", SEPARATOR = "$", STATUS_CONNECTED = "connected", pendingStorage = {}, storage = null;
 
     function loadPending() {
@@ -49,11 +47,11 @@ define(["util/assert", "util/guid"], function (ASSERT, GUID) {
     }
 
     function openDatabase(callback) {
-      if (options.failsafe === "local" && localStorage) {
+      if (gmeConfig.storage.failSafe === "local" && localStorage) {
         storage = localStorage;
-      } else if (options.failsafe === "session" && sessionStorage) {
+      } else if (gmeConfig.storage.failSafe === "session" && sessionStorage) {
         storage = sessionStorage;
-      } else if (options.failsafe === "memory") {
+      } else if (gmeConfig.storage.failSafe === "memory") {
         storage = {
           length: 0,
           keys: [],
@@ -76,7 +74,7 @@ define(["util/assert", "util/guid"], function (ASSERT, GUID) {
 
       if (storage) {
         loadPending();
-        setInterval(savePending, options.failsafefrequency);
+        setInterval(savePending, gmeConfig.storage.failSafeFrequency);
         _database.openDatabase(callback);
       } else {
         callback(new Error('cannot initialize fail safe storage'));
@@ -344,7 +342,7 @@ define(["util/assert", "util/guid"], function (ASSERT, GUID) {
           if (myhash === oldhash) {
             setTimeout(function () {
               callback(null, oldhash, branchObj.fork);
-            }, options.timeout);
+            }, gmeConfig.storage.timeout);
           } else {
             callback(null, myhash, branchObj.fork);
           }
