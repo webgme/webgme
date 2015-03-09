@@ -5,12 +5,13 @@
 
 var testFixture = require('../_globals');
 
-describe('Plugin Base', function () {
+describe('Plugin Manager Base', function () {
     'use strict';
 
     var should = testFixture.should,
         PluginManagerBase = testFixture.requirejs('plugin/PluginManagerBase'),
-        PluginGenerator = testFixture.requirejs('plugin/PluginGenerator/PluginGenerator/PluginGenerator');
+        PluginGenerator = testFixture.requirejs('plugin/PluginGenerator/PluginGenerator/PluginGenerator'),
+        Storage = testFixture.Storage;
 
     it('should instantiate PluginManagerBase and have defined properties', function () {
         var pluginManagerBase,
@@ -35,9 +36,7 @@ describe('Plugin Base', function () {
 
     it('should initialize PluginManagerBase', function () {
         var pluginManagerBase,
-            pluginManagerConfig = {
-                PluginGenerator: PluginGenerator
-            };
+            pluginManagerConfig = {};
 
         pluginManagerBase = new PluginManagerBase(null, null, pluginManagerConfig);
 
@@ -46,19 +45,63 @@ describe('Plugin Base', function () {
         }).should.not.throw();
     });
 
-    it('should initialize PluginManagerBase with configCallback', function () {
+    it('should get plugin by name', function () {
         var pluginManagerBase,
             pluginManagerConfig = {
                 PluginGenerator: PluginGenerator
-            },
-            configCallback = function () {
-
             };
 
         pluginManagerBase = new PluginManagerBase(null, null, pluginManagerConfig);
 
-        (function () {
-            pluginManagerBase.initialize(null, configCallback, null);
-        }).should.not.throw();
+        pluginManagerBase.initialize(null, null, null);
+        pluginManagerBase.getPluginByName('PluginGenerator').should.equal(PluginGenerator);
     });
+
+    describe.skip('Plugin execution', function () {
+        var storage,
+            project,
+            core,
+            root,
+            commit,
+            baseCommit,
+            rootHash;
+
+        before(function (done) {
+            testFixture.importProject({
+                filePath: './test/asset/intraPersist.json',
+                projectName: 'PluginManagerBase'
+            }, function (err, result) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                storage = result.storage;
+                project = result.project;
+                core = result.core;
+                root = result.root;
+                commit = result.commitHash;
+                baseCommit = result.commitHash;
+                rootHash = core.getHash(root);
+                done();
+            });
+        });
+
+        it('should execute plugin', function () {
+            var pluginManagerBase,
+                pluginManagerConfig = {
+                    PluginGenerator: PluginGenerator
+                },
+                managerConfiguration = {
+
+                };
+
+            pluginManagerBase = new PluginManagerBase(new Storage(), core, pluginManagerConfig);
+
+            pluginManagerBase.initialize(null, null, null);
+            pluginManagerBase.executePlugin('PluginGenerator', managerConfiguration, function (err, result) {
+
+            });
+        });
+    });
+
 });
