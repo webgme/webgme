@@ -12,9 +12,10 @@ define(['core/core',
                                                PluginConfigDialog) {
     "use strict";
 
-    var InterpreterManager = function (client) {
+    var InterpreterManager = function (client, gmeConfig) {
         this._client = client;
         //this._manager = new PluginManagerBase();
+        this._gmeConfig = gmeConfig;
         this._savedConfigs = {};
     };
 
@@ -50,7 +51,8 @@ define(['core/core',
                 var plugins = {},
                     runWithConfiguration;
                 plugins[name] = plugin;
-                var pluginManager = new PluginManagerBase(self._client.getProjectObject(), Core, plugins);
+                var pluginManager = new PluginManagerBase(self._client.getProjectObject(), Core, plugins,
+                    self._gmeConfig);
                 pluginManager.initialize(null, function (pluginConfigs, configSaveCallback) {
                     //#1: display config to user
                     var hackedConfig = {

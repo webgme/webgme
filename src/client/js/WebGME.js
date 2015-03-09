@@ -77,10 +77,10 @@ define(['logManager',
                 len = layoutPanels ? layoutPanels.length : 0,
                 i;
 
-            client = new Client({globConf: gmeConfig});
+            client = new Client({gmeConfig: gmeConfig});
             WebGMEGlobal.Client = client;
 
-            WebGMEGlobal.InterpreterManager = new InterpreterManager(client);
+            WebGMEGlobal.InterpreterManager = new InterpreterManager(client, gmeConfig);
 
             Object.defineProperty(WebGMEGlobal, 'State', {
                 value : StateManager.initialize(),

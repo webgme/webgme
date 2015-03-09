@@ -33,7 +33,7 @@ describe('issue 171 server crashes when trying to switch to non-existent branch'
 
     before(function (done) {
         server.start(function () {
-            client = new ClientClass({host: ' ', port: gmeConfig.server.port, globConf: gmeConfig});
+            client = new ClientClass({host: ' ', gmeConfig: gmeConfig});
             done();
         });
     });

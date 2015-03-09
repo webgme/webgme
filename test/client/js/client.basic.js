@@ -152,7 +152,7 @@ describe('Client tests', function () {
 
         server = new WebGME.standaloneServer(gmeConfig);
         server.start(function () {
-            client = new ClientClass({host: ' ', port: gmeConfig.server.port, globConf: gmeConfig});
+            client = new ClientClass({host: ' ', gmeConfig: gmeConfig});
 
             createTestProject(done);
         });

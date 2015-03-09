@@ -168,7 +168,7 @@ define([
         _constraintCallback = null,
         _redoer = null,
         _selfCommits = {},
-        gmeConfig = _configuration.globConf,
+        gmeConfig = _configuration.gmeConfig,
         AllPlugins, AllDecorators;
 
 
