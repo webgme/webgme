@@ -22,7 +22,6 @@ requirejs.config({
 });
 Core = requirejs('core/core');
 Storage = requirejs('storage/serveruserstorage');
-TASYNC = requirejs('core/tasync');
 
 program
     .version('0.1.0')
@@ -51,42 +50,27 @@ if(!program.theirs){
     process.exit(0);
 }
 
-//helper functions
-var getBranchHash, //wrapped variant of storage's getBranchHash
-    makeCommit, //wrapped variant of storage's makeCommit
-    getCommonAncestorCommit, //wrapped version of storage's getCommonAncestorCommit
-    getCommitHash = function(branchOrCommit){
-        console.log('getCH',branchOrCommit);
-        if(BRANCH_REGEXP.test(branchOrCommit)){
-            return TASYNC.call(function(commitHash){
-                if(!commitHash){
-                    return null;
-                }
-                return commitHash;
-            },getBranchHash(branchOrCommit,'#hack'));
-        }
-        return branchOrCommit;
-    },
-    getRoot = function(commitHash){
-        console.log('getR',commitHash);
-        var openWithCommitHash = function(cHash){
-            return TASYNC.call(function(cObj){
-                if(!cObj){
-                    console.warn('unknown commit id');
-                    process.exit(0);
-                }
-                if(cObj && cObj.root){
-                    return core.loadRoot(cObj.root);
-                } else {
-                    return null;
-                }
-            },project.loadObject(cHash));
-        };
-        if(HASH_REGEXP.test(commitHash)){
-            return openWithCommitHash(commitHash);
-        } else {
-            return null;
-        }
+//connecting to mongoDB and opening project
+var database = new Storage({uri:program.mongoDatabaseUri,log:{debug:function(msg){},error:function(msg){}}}), //we do not want debugging
+    project,
+    core,
+    myCommitHash,
+    theirCommitHash,
+    baseCommitHash,
+    myDiff,
+    theirDiff,
+    baseRoot,
+    myRoot,
+    theirRoot,
+    conflict,
+    getRoot = function(commitHash,next){
+        project.loadObject(commitHash,function(err,commit){
+            if(err || !commit){
+                next(err || new Error('unknown commit hash: ',commitHash));
+                return;
+            }
+            core.loadRoot(commit.root,next);
+        });
     },
     finishUp = function(){
         try{
@@ -114,83 +98,207 @@ var getBranchHash, //wrapped variant of storage's getBranchHash
                 //TODO should we do something here???
             }
         }
-    },
-    getDiff = function(sourceRoot,targetRoot){
-        console.log('getD',core.getHash(sourceRoot),core.getHash(targetRoot));
-        if(!sourceRoot || !targetRoot){
-            console.warn('unable to load all necessary roots');
-            finishUp();
-        }
-        return core.generateTreeDiff(sourceRoot,targetRoot);
     };
 
-
-//connecting to mongoDB and opening project
-var database = new Storage({uri:program.mongoDatabaseUri,log:{debug:function(msg){},error:function(msg){}}}), //we do not want debugging
-    project,core,myCommitHash,theirCommitHash,baseCommitHash,myDiff,theirDiff,baseRoot,myRoot,theirRoot;
 database.openDatabase(function(err){
     if(err){
         console.warn(err);
         process.exit(0);
     }
     database.openProject(program.projectIdentifier,function(err,p){
+        var baseCommitCalculated = function(err,bc){
+                if(err){
+                    console.warn('error during common ancestor commit search:',err);
+                    finishUp();
+                }
+                baseCommitHash = bc;
+                needed = 2;
+
+                getRoot(baseCommitHash,function(err,root){
+                    if(err || !root){
+                        console.warn('unable to load base root:',err || new Error('unknown object'));
+                        finishUp();
+                    }
+                    baseRoot = root;
+
+                    calculateDiff(true,diffCalculated);
+                    calculateDiff(false,diffCalculated);
+                });
+
+            },
+            diffCalculated = function(err){
+                error = error || err;
+                if(--needed === 0){
+                    if(error){
+                        console.warn('unable to generate diffs:', error);
+                        finishUp();
+                    }
+                    diffsGenerated();
+                }
+            },
+            calculateDiff = function(isMine,next){
+                var commitHash = isMine ? myCommitHash : theirCommitHash;
+
+                getRoot(commitHash,function(err,root){
+                    if(err || !root){
+                        next(err || new Error('unknown object'));
+                        return;
+                    }
+                    if(isMine){
+                        myRoot = root;
+                    } else {
+                        theirRoot = root;
+                    }
+                    core.generateTreeDiff(baseRoot,root,function(err,diff){
+                        if(err){
+                            next(err);
+                            return;
+                        }
+
+                        if(isMine){
+                            myRoot = root;
+                            myDiff = diff;
+                        } else {
+                            theirRoot = root;
+                            theirDiff = diff;
+                        }
+                        next();
+                    });
+                });
+            },
+            saveResults = function(dontPrintBaseCommit){
+                if(program.pathPrefix){
+                    try{
+                        FS.writeFileSync(program.pathPrefix+'.mine',JSON.stringify(myDiff,null,2));
+                        FS.writeFileSync(program.pathPrefix+'.theirs',JSON.stringify(theirDiff,null,2));
+                        if(conflict){
+                            FS.writeFileSync(program.pathPrefix+'.conflict',JSON.stringify(conflict,null,2));
+                        }
+                        if(dontPrintBaseCommit !== true){
+                            console.log('base commit hash to apply merged diff: ',baseCommitHash);
+                        }
+                        finishUp();
+                    } catch(err) {
+                        console.warn('cannot create output files:',err);
+                        finishUp();
+                    }
+                } else {
+                    //generate result to console;
+                    console.log('necessary information for successfull merge:');
+                    console.log('base commit hash to apply merged diff: ',baseCommitHash);
+                    console.log('diff base->mine: ',JSON.stringify(myDiff,null,2));
+                    console.log('diff base->theirs: ',JSON.stringify(theirDiff,null,2));
+                    finishUp();
+                }
+            },
+            diffsGenerated = function(){
+                //so we are ready with the first phase, let's create the conflict object
+                conflict = core.tryToConcatChanges(myDiff,theirDiff);
+                var autoFailureReason;
+
+                if(program.autoMerge && conflict !== null && conflict.items.length === 0){
+                    //we try to apply our merge if possible
+                    core.applyTreeDiff(baseRoot,conflict.merge,function(err){
+                        if(err){
+                            console.warn('unable to finish automatic merge:',err);
+                            saveResults();
+                        }
+                        core.persist(baseRoot,function(err){
+                            if(err){
+                                console.warn('unable to update project:',err);
+                                saveResults();
+                            }
+                            var newHash = core.getHash(baseRoot),
+                                newCommitHash = project.makeCommit([myCommitHash,theirCommitHash],newHash,'merging ['+program.mine+'] into ['+program.theirs+']',function(err){
+                                    if(err){
+                                        console.warn('unable to create commit:',err);
+                                        saveResults();
+                                    }
+
+                                    if(BRANCH_REGEXP.test(program.theirs)){
+                                        //we updates the branch as well
+                                        project.setBranchHash(program.theirs,theirCommitHash,newCommitHash,function(err){
+                                            if(err){
+                                                console.warn('unable to update branch '+program.theirs);
+                                                console.warn('the merge result is saved to commit: ',newCommitHash);
+                                                saveResults();
+                                            }
+                                            console.warn('branch '+program.theirs+' have been updated successfully');
+                                            saveResults(true);
+                                        });
+                                    } else {
+                                        console.warn('the merge result is saved to commit: ',newCommitHash);
+                                        saveResults();
+                                    }
+                                });
+                        });
+                    });
+
+                } else {
+                    if(program.autoMerge){
+                        if(conflict === null){
+                            autoFailureReason = ' cannot do automatic merge as empty conflict object was generated';
+                        } else if(conflict.item.length > 0){
+                            autoFailureReason = 'cannot do automatic merge as there are conflicts that cannot be resolved';
+                        }
+                        console.warn(autoFailureReason);
+                    }
+
+                    saveResults();
+                }
+            },
+            needed = 2, error = null,
+            commitSearched = function(err){
+                error = error || err;
+                if(--needed === 0){
+                    //we can go to the next step
+                    if(error){
+                        console.warn('unable to find all necessary commit hashes:',error);
+                        finishUp();
+                    }
+                    project.getCommonAncestorCommit(myCommitHash,theirCommitHash,baseCommitCalculated);
+                }
+            },
+            getCommitHash = function(isMine,inputIdentifier,next){
+                if(HASH_REGEXP.test(inputIdentifier)){
+                    if(isMine){
+                        myCommitHash = inputIdentifier;
+                    } else {
+                        theirCommitHash = inputIdentifier;
+                    }
+                    next();
+                    return;
+                } else if(BRANCH_REGEXP.test(inputIdentifier)){
+                    project.getBranchNames(function(err,names){
+                        if(err){
+                            next(err);
+                            return;
+                        }
+                        if(!names[inputIdentifier]){
+                            next('unknown branch ['+inputIdentifier+']');
+                            return;
+                        }
+
+                        if(isMine){
+                            myCommitHash = names[inputIdentifier];
+                        } else {
+                            theirCommitHash = names[inputIdentifier];
+                        }
+                        next();
+                        return;
+                    });
+                }
+            };
+
         if(err){
             console.warn(err);
             process.exit(0);
         }
         project = p;
-        getBranchHash = TASYNC.wrap(project.getBranchHash);
-        makeCommit = TASYNC.wrap(project.makeCommit);
-        getCommonAncestorCommit = TASYNC.wrap(project.getCommonAncestorCommit);
-        core = new Core(project,{usertype:'tasync'});
-        myCommitHash = getCommitHash(program.mine);
-        theirCommitHash = getCommitHash(program.theirs);
-        baseCommitHash = TASYNC.call(function(mine, theirs){
-            if(!mine || !theirs){
-                console.warn('cannot get all necessary commits');
-                process.exit(0);
-            }
-            console.log('getAnc');
-            return getCommonAncestorCommit(mine,theirs);
-        },myCommitHash,theirCommitHash);
+        core = new Core(project);
 
-        myRoot = TASYNC.call(getRoot,myCommitHash);
-        theirRoot = TASYNC.call(getRoot,theirCommitHash);
-        baseRoot = TASYNC.call(function(cHash){
-            if(!cHash){
-                console.warn('unable to determine common ancestor commit');
-                finishUp();
-            }
-            return getRoot(cHash);
-        },baseCommitHash);
-
-        myDiff = TASYNC.call(getDiff,baseRoot,myRoot);
-        theirDiff = TASYNC.call(getDiff,baseRoot,theirRoot);
-
-        TASYNC.call(function(mine,theirs){
-            if(!mine || !theirs){
-                console.warn('unable to compute all necessary diffs');
-                finishUp();
-            }
-            if(!program.pathPrefix){
-                console.log('necessary information for successfull merge:');
-                console.log('base commit hash to apply merged diff: ',baseCommitHash);
-                console.log('diff base->mine: ',JSON.stringify(mine,null,2));
-                console.log('diff base->theirs: ',JSON.stringify(theirs,null,2));
-            } else {
-                try{
-                    FS.writeFileSync(program.pathPrefix+'.mine',JSON.stringify(mine,null,2));
-                    FS.writeFileSync(program.pathPrefix+'.theirs',JSON.stringify(theirs,null,2));
-                } catch(err) {
-                    console.warn('cannot create output files:',err);
-                    finishUp();
-                }
-                console.log('base commit hash to apply merged diff: ',baseCommitHash);
-            }
-            if(program.autoMerge){
-                console.log('TODO');
-            }
-            finishUp();
-        },myDiff,theirDiff);
+        needed = 2;
+        getCommitHash(true,program.mine,commitSearched);
+        getCommitHash(false,program.theirs,commitSearched);
     });
 });
