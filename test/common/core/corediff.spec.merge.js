@@ -12,7 +12,7 @@ describe('corediff-merge', function () {
     var gmeConfig = testFixture.getGmeConfig(),
         FS = testFixture.fs,
         WebGME = testFixture.WebGME,
-        storage = testFixture.Storage();
+        storage = testFixture.Storage({globConf: gmeConfig});
 
     describe('merge', function () {
         var project, core, root, commit, baseCommitHash, baseRootHash,
@@ -66,7 +66,7 @@ describe('corediff-merge', function () {
                         return;
                     }
 
-                    core = new WebGME.core(project);
+                    core = new WebGME.core(project, {globConf: gmeConfig});
                     root = core.createNode();
 
                     WebGME.serializer.import(core, root, jsonProject, function (err/*log*/) {

@@ -26,7 +26,7 @@ var gmeConfig = require('../config'),
     Commit = requirejs('storage/commit'),
     Storage = function (options) {
         'use strict';
-        return new Commit(new Local(options || {}));
+        return new Commit(new Local(options || {}), options || {});
     },
     Log = requirejs('../src/common/LogManager'),
     generateKey = requirejs('util/key'),
@@ -109,7 +109,7 @@ function importProject(parameters, done) {
         result.storage = parameters.storage;
     } else {
         if (!parameters.mongoUri) {
-            result.storage = new Storage();
+            result.storage = new Storage({globConf: gmeConfig});
         }
     }
 
@@ -125,7 +125,7 @@ function importProject(parameters, done) {
                 return;
             }
             result.project = p;
-            result.core = new WebGME.core(result.project);
+            result.core = new WebGME.core(result.project, {globConf: parameters.gmeConfig});
             result.root = result.core.createNode();
             WebGME.serializer.import(result.core,
                 result.root,

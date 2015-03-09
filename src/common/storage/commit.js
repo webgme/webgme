@@ -9,8 +9,10 @@ define([ "util/assert", "util/key", "util/canon" ], function (ASSERT, GENKEY, CA
 	var HASH_REGEXP = new RegExp("^#[0-9a-zA-Z_]*$");
 
 	function Database (_database,_options) {
-        _options = _options || {};
+        var gmeConfig = _options.globConf;
 		ASSERT(typeof _database === "object");
+		ASSERT(typeof _options === "object");
+		ASSERT(typeof gmeConfig.storage.keyType === "string");
 
 		function openProject (projectName, callback) {
 
@@ -57,7 +59,7 @@ define([ "util/assert", "util/key", "util/canon" ], function (ASSERT, GENKEY, CA
 					type: "commit"
 				};
 
-				var id = '#' + GENKEY(commitObj);
+				var id = '#' + GENKEY(commitObj, gmeConfig);
 				commitObj[_project.ID_NAME] = id;
 
 				_project.insertObject(commitObj, function (err) {

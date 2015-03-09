@@ -5,7 +5,8 @@
 define(["util/assert"], function (ASSERT) {
     "use strict";
 
-    function Database(_database, gmeConfig) {
+    function Database(_database, options) {
+        var gmeConfig = options.globConf;
         ASSERT(typeof gmeConfig === "object" && typeof _database === "object");
 
         function fsyncDatabase(callback) {

@@ -9,7 +9,8 @@ define([ "util/assert", "util/zssha1", "util/canon" ], function (ASSERT,SHA1,CAN
 
     var zsSHA = new SHA1();
 
-    function Database (_innerDb, gmeConfig) {
+    function Database (_innerDb, options) {
+        var gmeConfig = options.globConf;
         ASSERT(typeof gmeConfig === "object" && typeof _innerDb === "object");
         var database = {};
         for(var i in _innerDb){

@@ -43,6 +43,8 @@ define([ "util/assert", "util/key", "core/future", "core/tasync", 'util/canon' ]
 	var rootCounter = 0;
 
 	return function (storage, options) {
+        var gmeConfig = options.globConf;
+        //TODO: Should these be options?
 		var MAX_AGE = (options && options.maxage) || 3;
 		var MAX_TICKS = (options && options.maxticks) || 2000;
 		var MAX_MUTATE = (options && options.maxmutate) || 30000;
@@ -728,7 +730,7 @@ define([ "util/assert", "util/key", "core/future", "core/tasync", 'util/canon' ]
 				ASSERT(hash === "" || typeof hash === "undefined");
 
 				if (hash === "") {
-					hash = "#" + GENKEY(data);
+					hash = "#" + GENKEY(data, gmeConfig);
 					data[ID_NAME] = hash;
 
 					done = FUTURE.join(done, storage.insertObject(data));

@@ -20,7 +20,9 @@ Core = requirejs('core/core');
 Storage = requirejs('storage/serveruserstorage');
 
 var generateDiff = function(mongoUri,projectId,sourceBranchOrCommit,targetBranchOrCommit,callback){
-    var database = new Storage({globConf: {mongo: {uri: mongoUri}},log:{debug:function(msg){},error:function(msg){}}}), //we do not want debugging
+    var database = new Storage(
+            {globConf: {mongo: {uri: mongoUri},  storage: { keyType: 'plainSHA1'}},  //FIXME: should these read from config?
+            log:{debug:function(msg){},error:function(msg){}}}), //we do not want debugging
         project,
         core,
         close = function(error,data){

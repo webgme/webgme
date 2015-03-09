@@ -21,10 +21,10 @@ define(["mongodb", "util/assert", "util/canon"], function (MONGODB, ASSERT, CANO
   function Database(options) {
     ASSERT(typeof options === "object");
     var gmeConfig = options.globConf;
-    options.host = options.host || "localhost";
-    options.port = options.port || 27017;
-    options.database = options.database || "webgme";
-    options.timeout = options.timeout || (1000 * 60 * 10);
+    //options.host = options.host || "localhost";
+    //options.port = options.port || 27017;
+    //options.database = options.database || "webgme";
+    options.timeout = options.timeout || (1000 * 60 * 10); //FIXME is this the same as gmeConfig.storage.timeout ??
 
     var mongo = null;
 

@@ -17,7 +17,7 @@ describe('CoreTree', function () {
 
     // TODO: replace with in memory storage
 
-        storage = new testFixture.Storage({}),
+        storage = new testFixture.Storage({globConf: gmeConfig}),
 
         coreTree;
 
@@ -34,7 +34,7 @@ describe('CoreTree', function () {
                     return;
                 }
 
-                coreTree = new CoreTree(project);
+                coreTree = new CoreTree(project, {globConf: gmeConfig});
                 done();
             });
         });

@@ -23,7 +23,9 @@ Storage = requirejs('storage/serveruserstorage');
 Serialization = requirejs('coreclient/serialization');
 
 var importProject = function(mongoUri,projectId,jsonProject,branch,callback){
-    var core,project,root,commit,database = new Storage({globConf: {mongo: {uri: mongoUri}},log:{debug:function(msg){},error:function(msg){}}}), //we do not want debugging
+    var core,project,root,commit,database = new Storage({
+            globConf: {mongo: {uri: mongoUri}, storage: { keyType: 'plainSHA1'}}, //FIXME: should these read from config?
+            log:{debug:function(msg){},error:function(msg){}}}), //we do not want debugging
         close = function(error){
             try{
                 project.closeProject(function(){
@@ -50,7 +52,7 @@ var importProject = function(mongoUri,projectId,jsonProject,branch,callback){
                 });
             } else {
                 project = p;
-                core = new Core(project);
+                core = new Core(project, {globConf: {storage: { keyType: 'plainSHA1'}}});
                 root = core.createNode({parent:null,base:null});
                 Serialization.import(core,root,jsonProject,function(err){
                     if(err){

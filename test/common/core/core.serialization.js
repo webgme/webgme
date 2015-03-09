@@ -26,7 +26,8 @@ describe('Core Serialization', function () {
     it('imports the example project', function (done) {
         testFixture.importProject({
             filePath: './test/asset/exportimport.json',
-            projectName: 'coreSerializationTest'
+            projectName: 'coreSerializationTest',
+            gmeConfig: gmeConfig
         }, function (err, result) {
             if (err) {
                 done(err);

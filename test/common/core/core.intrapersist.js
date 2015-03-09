@@ -43,7 +43,8 @@ describe('Core IntraPersist', function () {
         it('import the basic project', function (done) {
             testFixture.importProject({
                 filePath: './test/asset/intraPersist.json',
-                projectName: 'coreIntrapersistTest'
+                projectName: 'coreIntrapersistTest',
+                gmeConfig: gmeConfig
             }, function (err, result) {
                 if (err) {
                     done(err);

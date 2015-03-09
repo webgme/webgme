@@ -34,7 +34,7 @@ describe('corediff apply', function () {
                     return;
                 }
                 project = p;
-                core = new testFixture.WebGME.core(project);
+                core = new testFixture.WebGME.core(project, {globConf: gmeConfig});
                 root = core.createNode();
                 testFixture.WebGME.serializer.import(core, root, jsonProject, function (err, log) {
                     if (err) {
@@ -95,7 +95,7 @@ describe('corediff apply', function () {
                         return;
                     }
                     project = p;
-                    core = new testFixture.WebGME.core(project);
+                    core = new testFixture.WebGME.core(project, {globConf: gmeConfig});
                     project.getBranchNames(function (err, names) {
                         if (err) {
                             done(err);

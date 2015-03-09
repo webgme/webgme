@@ -18,7 +18,8 @@ describe('corerel', function () {
         //load the project, import it, and save the base commit hash
         testFixture.importProject({
             filePath: './test/common/core/corerel/base001.json',
-            projectName: 'coreRelTests'
+            projectName: 'coreRelTests',
+            gmeConfig: gmeConfig
         }, function (err, result) {
             if (err) {
                 done(err);

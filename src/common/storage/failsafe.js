@@ -17,9 +17,9 @@ define(["util/assert", "util/guid"], function (ASSERT, GUID) {
   function Database(_database, options) {
     ASSERT(typeof options === "object" && typeof _database === "object");
     var gmeConfig = options.globConf;
-    options.failsafe = options.failsafe || "memory";
-    options.failsafefrequency = options.failsafefrequency || 10000;
-    options.timeout = options.timeout || 10000;
+    options.failsafe = gmeConfig.storage.failSafe;
+    options.failsafefrequency = gmeConfig.storage.failSafeFrequency;
+    options.timeout = gmeConfig.storage.timeout;
 
     var exceptionErrors = [], fsId = "FS", dbId = options.database || "noID", SEPARATOR = "$", STATUS_CONNECTED = "connected", pendingStorage = {}, storage = null;
 

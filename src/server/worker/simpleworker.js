@@ -28,8 +28,7 @@ requirejs(['worker/constants',
       initialized = false,
       AUTH = null,
       _addOn = null,
-        gmeConfig,
-      _CONFIG = null;
+        gmeConfig;
 
     var initResult = function () {
       core = null;
@@ -42,19 +41,12 @@ requirejs(['worker/constants',
     var initialize = function (parameters) {
       if (initialized !== true) {
         initialized = true;
-          gmeConfig = parameters.globConf;
+          gmeConfig = parameters.gmeConfig;
           WEBGME.addToRequireJsPaths(gmeConfig);
-          //console.error(JSON.stringify(requirejs.s.contexts._.config, null, 4)); // TODO remove me
-        _CONFIG = gmeConfig;
-        if (_CONFIG.authentication === true) {
-          AUTH = GMEAUTH(parameters.auth);
+        if (gmeConfig.authentication.enable === true) {
+          AUTH = GMEAUTH({ }, gmeConfig); //FIXME: Should session really be empty object??
         }
         storage = new Storage({
-          'host': _CONFIG.mongoip,
-          'port': _CONFIG.mongoport,
-          'database': _CONFIG.mongodatabase,
-          'user': _CONFIG.mongouser,
-          'pwd': _CONFIG.mongopwd,
           'log': logManager.create('SERVER-WORKER-' + process.pid),
           globConf: gmeConfig
         });
@@ -84,7 +76,7 @@ requirejs(['worker/constants',
         if (err) {
           return callback(err);
         }
-        var core = new Core(project);
+        var core = new Core(project, {globConf: gmeConfig});
         core.loadRoot(hash, function (err, root) {
           if (err) {
             return callback(err);
@@ -108,7 +100,7 @@ requirejs(['worker/constants',
             if (err) {
               callback(err);
             } else {
-              var core = new Core(project);
+              var core = new Core(project, {globConf: gmeConfig});
               core.loadRoot(hash, function (err, root) {
                 if (err) {
                   callback(err);
@@ -150,9 +142,9 @@ requirejs(['worker/constants',
     //TODO the getContext should be refactored!!!
     var getConnectedStorage = function (webGMESessionId, callback) {
       var connStorage = new ConnectedStorage({
+        globConf: gmeConfig,
         type: 'node',
         host: (gmeConfig.server.https.enable === true ? 'https' : 'http') + '://127.0.0.1',
-        port: gmeConfig.server.port,
         log: logManager.create('SERVER-WORKER-PLUGIN-' + process.pid),
         webGMESessionId: webGMESessionId
       });

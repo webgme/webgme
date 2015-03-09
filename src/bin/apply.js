@@ -21,7 +21,9 @@ Core = requirejs('core/core');
 Storage = requirejs('storage/serveruserstorage');
 
 var applyPatch = function(mongoUri,projectId,branchOrCommit,patch,noUpdate,callback){
-    var database = new Storage({globConf: {mongo: {uri: mongoUri}},log:{debug:function(msg){},error:function(msg){}}}), //we do not want debugging
+    var database = new Storage({
+            globConf: {mongo: {uri: mongoUri}, storage: { keyType: 'plainSHA1'}}, //FIXME: should these read from config?
+            log:{debug:function(msg){},error:function(msg){}}}), //we do not want debugging
         project,
         core,
         root,
@@ -82,7 +84,7 @@ var applyPatch = function(mongoUri,projectId,branchOrCommit,patch,noUpdate,callb
                     return close(err);
                 }
                 project = p;
-                core = new Core(project);
+                core = new Core(project, {globConf: {mongo: {uri: mongoUri}, storage: { keyType: 'plainSHA1'}}}); //FIXME: should these read from config?
 
                 getRoot(function(err,r){
                     if(err){

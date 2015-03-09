@@ -8,16 +8,17 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
     "use strict";
 
     function Database (options) {
+        var gmeConfig = options.globConf;
         ASSERT(typeof options === "object");
 
         options.type = options.type || "browser";
-        options.timeout = options.timeout || 100000;
+        options.timeout = gmeConfig.storage.timeout;
 
         var _hostAddress = null;
         if(options.type === "browser") {
             _hostAddress = options.host || window.location.protocol + '//' + window.location.host;
         } else {
-            _hostAddress = options.host + (options.port ? ':'+options.port : "");
+            _hostAddress = options.host + (gmeConfig.server.port ? ':' + gmeConfig.server.port : "");
         }
 
 
@@ -131,14 +132,17 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                 };
 
                 var IOReady = function () {
-                    socket = IO.connect(_hostAddress,{
-                        'connect timeout': 10,
-                        'reconnection delay': 1,
-                        'force new connection': true,
-                        'reconnect': false, // FIXME: should we set it to true?
-                        'query':"webGMESessionId="+options.webGMESessionId, //this option is only used when some user initiated server function connects to the webgme server
-                        'transports': ['websocket']
-                    });
+                    var socketIoOpts = JSON.parse(JSON.stringify(gmeConfig.socketIO)); // Copy this values.
+                    socketIoOpts.query = "webGMESessionId=" + options.webGMESessionId; //FIXME this will be undefined in some cases
+                    socket = IO.connect(_hostAddress, socketIoOpts);
+                    //socket = IO.connect(_hostAddress,{
+                    //    'connect timeout': 10,
+                    //    'reconnection delay': 1,
+                    //    'force new connection': true,
+                    //    'reconnect': false, // FIXME: should we set it to true?
+                    //    'query':"webGMESessionId="+options.webGMESessionId, //this option is only used when some user initiated server function connects to the webgme server
+                    //    'transports': ['websocket']
+                    //});
 
                     socket.on('connect', function () {
                         socketConnected = true;

@@ -13,9 +13,11 @@ describe('Core Mongo Coverage', function () {
         });
 
     it('fails to connect to database', function (done) {
+        var gmeConfigAltered = testFixture.getGmeConfig();
         this.timeout(20000);
+        gmeConfigAltered.mongo.uri = 'mongodb://127.0.0.1:65535/multi';
         storage = new testFixture.WebGME.serverUserStorage({
-            globConf: { mongo: {uri: 'mongodb://127.0.0.1:65535/multi'} },
+            globConf: gmeConfigAltered,
             log: testFixture.Log.create('mongoLog')
         });
         storage.openDatabase(function (err) {

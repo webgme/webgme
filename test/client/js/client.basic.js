@@ -4,7 +4,7 @@
  * @author kecso / https://github.com/kecso
  */
 
-var testFixture = require('../_globals');
+var testFixture = require('../../_globals');
 
 describe('Client tests', function () {
     'use strict';
@@ -152,7 +152,7 @@ describe('Client tests', function () {
 
         server = new WebGME.standaloneServer(gmeConfig);
         server.start(function () {
-            client = new ClientClass({host: ' ', port: gmeConfig.server.port});
+            client = new ClientClass({host: ' ', port: gmeConfig.server.port, globConf: gmeConfig});
 
             createTestProject(done);
         });

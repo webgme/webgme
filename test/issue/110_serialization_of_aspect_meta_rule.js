@@ -22,7 +22,8 @@ describe('issue110 testing', function () {
     it('import the problematic project', function (done) {
         testFixture.importProject({
             filePath: './test/issue/110/input.json',
-            projectName: 'issue110test'
+            projectName: 'issue110test',
+            gmeConfig: gmeConfig
         }, function (err, result) {
             if (err) {
                 done(err);

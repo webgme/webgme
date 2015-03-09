@@ -92,39 +92,36 @@ define(['logManager',
             __storageOptions = {
                 combined: __httpServer,
                 logger: LogManager.create('StandAloneWebGMEServer-socket.io'),
-                session: false,
-                cookieID: gmeConfig.server.sessionCookieId
+                session: false
             };
             if (true === gmeConfig.authentication.enable) {
-                __storageOptions.auth = {
-                    session: {},
-                    host: gmeConfig.mongoip,
-                    port: gmeConfig.mongoport,
-                    database: gmeConfig.mongodatabase,
-                    guest: gmeConfig.guest
-                };
+                //__storageOptions.auth = {
+                //    session: {},
+                //    host: gmeConfig.mongoip,
+                //    port: gmeConfig.mongoport,
+                //    database: gmeConfig.mongodatabase,
+                //    guest: gmeConfig.guest
+                //};
                 __storageOptions.session = true;
                 __storageOptions.sessioncheck = __sessionStore.check;
-                __storageOptions.secret = gmeConfig.sessioncookiesecret;
-                __storageOptions.authentication = gmeConfig.authentication;
                 __storageOptions.authorization = globalAuthorization;
                 __storageOptions.auth_deleteProject = __gmeAuth.deleteProject;
                 __storageOptions.getAuthorizationInfo = __gmeAuth.getProjectAuthorizationBySession;
             }
 
-            __storageOptions.host = gmeConfig.mongoip;
-            __storageOptions.port = gmeConfig.mongoport;
-            __storageOptions.database = gmeConfig.mongodatabase;
-            __storageOptions.user = gmeConfig.mongouser;
-            __storageOptions.pwd = gmeConfig.mongopwd;
+            //__storageOptions.host = gmeConfig.mongoip;
+            //__storageOptions.port = gmeConfig.mongoport;
+            //__storageOptions.database = gmeConfig.mongodatabase;
+            //__storageOptions.user = gmeConfig.mongouser;
+            //__storageOptions.pwd = gmeConfig.mongopwd;
 
             __storageOptions.log = LogManager.create('StandAloneWebGMEServer-storage');
             __storageOptions.getToken = __gmeAuth.getToken;
 
-            __storageOptions.pluginBasePaths = gmeConfig.pluginBasePaths;
-            __storageOptions.cache = gmeConfig.cacheSize;
+            //__storageOptions.pluginBasePaths = gmeConfig.plugin.basePaths;
+            //__storageOptions.cache = gmeConfig.cacheSize;
 
-            __storageOptions.webServerPort = gmeConfig.port;
+            //__storageOptions.webServerPort = gmeConfig.server.port;
 
             __storageOptions.sessionToUser = __sessionStore.getSessionUser;
 

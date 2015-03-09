@@ -11,7 +11,7 @@ var testFixture = require('../../_globals.js');
 describe('local', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
-        storage = new testFixture.Storage();
+        storage = new testFixture.Storage({globConf: gmeConfig});
 
     describe('Database', function () {
         it('should be empty initially', function (done) {
@@ -109,7 +109,7 @@ describe('local', function () {
 
             object[project.ID_NAME] = '';
             object.value = 'my value';
-            id = '#' + testFixture.generateKey(object);
+            id = '#' + testFixture.generateKey(object, gmeConfig);
             object[project.ID_NAME] = id;
             project.insertObject(object, function (err) {
                 if (err) {

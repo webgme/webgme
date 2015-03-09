@@ -77,7 +77,7 @@ define(['logManager',
                 len = layoutPanels ? layoutPanels.length : 0,
                 i;
 
-            client = new Client(gmeConfig);
+            client = new Client({globConf: gmeConfig});
             WebGMEGlobal.Client = client;
 
             WebGMEGlobal.InterpreterManager = new InterpreterManager(client);

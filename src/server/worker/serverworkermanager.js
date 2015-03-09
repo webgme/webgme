@@ -8,8 +8,7 @@ function(ASSERT,Child, process, CONSTANTS){
             _idToPid = {},
            _waitingRequests = [];
 
-        _parameters = _parameters || {};
-        _parameters.maxworkers = _parameters.maxworkers || 10;
+        _parameters.maxworkers = _parameters.maxworkers || 10; //FIXME add to configuration?
 
         //helping functions
         //TODO always check if this works properly
@@ -107,13 +106,7 @@ function(ASSERT,Child, process, CONSTANTS){
                         //this arrives when the worker seems ready for initialization
                         worker.worker.send({
                             command:CONSTANTS.workerCommands.initialize,
-                            ip:_parameters.mongoip,
-                            port:_parameters.mongoport,
-                            db:_parameters.mongodb,
-                            serverPort:_parameters.serverPort,
-                            paths: _parameters.globConf.requirejsPaths,
-                            auth: _parameters.auth,
-                            globConf : _parameters.globConf
+                            gmeConfig: _parameters.globConf
                         });
                         break;
                     case CONSTANTS.msgTypes.initialized:

@@ -46,9 +46,9 @@ define([
     }
 
 
-    function getNewCore(project) {
+    function getNewCore(project, gmeConfig) {
       //return new NullPointerCore(new DescriptorCore(new SetCore(new GuidCore(new Core(project)))));
-      var options = {autopersist: true, usertype: 'nodejs'};
+      var options = {autopersist: true, usertype: 'nodejs', globConf: gmeConfig};
       return Core(project, options);
     }
 
@@ -168,6 +168,7 @@ define([
         _constraintCallback = null,
         _redoer = null,
         _selfCommits = {},
+        gmeConfig = _configuration.globConf,
         AllPlugins, AllDecorators;
 
 
@@ -208,21 +209,22 @@ define([
       }
 
       //default configuration
+        //FIXME: Are these gme options or not??
       _configuration = _configuration || {};
       _configuration.autoreconnect = _configuration.autoreconnect === null || _configuration.autoreconnect === undefined ? true : _configuration.autoreconnect;
       _configuration.reconndelay = _configuration.reconndelay || 1000;
       _configuration.reconnamount = _configuration.reconnamount || 1000;
       _configuration.autostart = _configuration.autostart === null || _configuration.autostart === undefined ? false : _configuration.autostart;
 
-      if( typeof GME !== 'undefined'){
-        GME.config = GME.config || {};
-        GME.config.keyType = _configuration.storageKeyType;
-      }
-
-      if( typeof WebGMEGlobal !== 'undefined'){
-        WebGMEGlobal.config = WebGMEGlobal.config || {};
-        WebGMEGlobal.config.keyType = _configuration.storageKeyType;
-      }
+      //if( typeof GME !== 'undefined'){
+      //  GME.config = GME.config || {};
+      //  GME.config.keyType = _configuration.storageKeyType;
+      //}
+      //
+      //if( typeof WebGMEGlobal !== 'undefined'){
+      //  WebGMEGlobal.config = WebGMEGlobal.config || {};
+      //  WebGMEGlobal.config.keyType = _configuration.storageKeyType;
+      //}
 
       //TODO remove the usage of jquery
       //$.extend(_self, new EventDispatcher());
@@ -266,15 +268,18 @@ define([
       }
 
       function newDatabase() {
-        var storageOptions ={log: LogManager.create('client-storage'), host: _configuration.host};
+        var storageOptions ={log: LogManager.create('client-storage'), host: _configuration.host},
+            protocolStr;
         if(typeof TESTING !== 'undefined'){
+          protocolStr = gmeConfig.server.https.enable ? 'https' : 'http';
           storageOptions.type = 'node';
-          storageOptions.host = 'http://localhost';
-          storageOptions.port = _configuration.port;
+          storageOptions.host = protocolStr + '://localhost';
+          storageOptions.port = gmeConfig.server.port;
           storageOptions.user = 'TEST';
         } else {
           storageOptions.user = getUserId();
         }
+        storageOptions.globConf = gmeConfig;
         return Storage(storageOptions);
       }
 
@@ -734,6 +739,7 @@ define([
       function networkWatcher() {
         _networkStatus = "";
         var running = true;
+        //FIXME: Are these gme options or not??
         var autoReconnect = _configuration.autoreconnect ? true : false;
         var reConnDelay = _configuration.reconndelay || 1000;
         var reConnAmount = _configuration.reconnamount || 1000;
@@ -928,7 +934,7 @@ define([
                   _inTransaction = false;
                   _nodes = {};
                   _metaNodes = {};
-                  _core = getNewCore(_project);
+                  _core = getNewCore(_project, gmeConfig);
                   META.initialize(_core, _metaNodes, saveRoot);
                   if (_commitCache) {
                     _commitCache.clearCache();
@@ -1045,7 +1051,7 @@ define([
       }
 
       function createEmptyProject(project, callback) {
-        var core = getNewCore(project),
+        var core = getNewCore(project, gmeConfig),
           root = core.createNode(),
           rootHash = '',
           commitHash = '';
@@ -3043,7 +3049,7 @@ define([
       //TODO probably this would also beneficial if this would work on server as well
       function getDiffTree(from,to,callback){
         var needed = 2,error = null,
-          core = getNewCore(_project),
+          core = getNewCore(_project, gmeConfig),
           fromRoot={root:{},commit:from},
           toRoot={root:{},commit:to},
           rootsLoaded = function(){
@@ -3084,7 +3090,7 @@ define([
       //TODO move to server
       function applyDiff(branch,baseCommitHash,branchCommitHash,parents,diff,callback){
         _project.loadObject(baseCommitHash,function(err,cObject){
-          var core = getNewCore(_project);
+          var core = getNewCore(_project, gmeConfig);
           if(!err && cObject){
             core.loadRoot(cObject.root,function(err,root){
               if(!err && root){
@@ -3315,6 +3321,7 @@ define([
             _database.getProjectNames(function (err, names) {
               if (!err && names && names.length > 0) {
                 var projectName = null;
+                  //FIXME: Who sets this project?
                 if (_configuration.project && names.indexOf(_configuration.project) !== -1) {
                   projectName = _configuration.project;
                 } else {
@@ -3334,7 +3341,7 @@ define([
           }
         });
       }
-
+      //FIXME: Who sets this configuration?
       if (_configuration.autostart) {
         initialize();
       }
