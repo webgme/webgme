@@ -1,7 +1,7 @@
 /*jshint node: true*/
 /**
  * @author lattmann / https://github.com/lattmann
- * @author pemijer / https://github.com/pmeijer
+ * @author pmeijer / https://github.com/pmeijer
  */
 
 var config = {
