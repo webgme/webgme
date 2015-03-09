@@ -509,7 +509,7 @@ requirejs(['worker/constants',
       getConnectedStorage(webGMESessionId, function (err, cs) {
         if (!err && cs) {
           connStorage = cs;
-          _addOn = new addOnClass(Core, connStorage);
+          _addOn = new addOnClass(Core, connStorage, gmeConfig);
           //for the initialization we need the project as well
           getConnectedProject(connStorage, projectName, function (err, project) {
             if (err) {

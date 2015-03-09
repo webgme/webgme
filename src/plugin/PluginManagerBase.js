@@ -19,14 +19,16 @@ define([
     function (PluginBase, PluginContext, LogManager) {
 
         var PluginManagerBase = function (storage, Core, plugins, gmeConfig) {
+            this.gmeConfig = gmeConfig; // global configuration of webgme
             this.logger = LogManager.create("PluginManager");
             this._Core = Core;       // webgme core class is used to operate on objects
             this._storage = storage; // webgme storage
             this._plugins = plugins; // key value pair of pluginName: pluginType - plugins are already loaded/downloaded
             this._pluginConfigs = {}; // keeps track of the current configuration for each plugins by name
-            this._gmeConfig = gmeConfig; // global configuration of webgme
-            if (!gmeConfig) {
-                throw new Error('PluginManagerBase takes gmeConfig as parameter!');  // TODO: this error check is temporary
+
+            if (!this.gmeConfig) {
+                // TODO: this error check is temporary
+                throw new Error('PluginManagerBase takes gmeConfig as parameter!');
             }
 
             var pluginNames = Object.keys(this._plugins);
@@ -142,7 +144,7 @@ define([
 
             pluginContext.project = this._storage;
             pluginContext.projectName = managerConfiguration.project;
-            pluginContext.core = new self._Core(pluginContext.project, {globConf: self._gmeConfig});
+            pluginContext.core = new self._Core(pluginContext.project, {globConf: self.gmeConfig});
             pluginContext.commitHash = managerConfiguration.commit;
             pluginContext.activeNode = null;    // active object
             pluginContext.activeSelection = []; // selected objects

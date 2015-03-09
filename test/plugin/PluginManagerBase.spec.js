@@ -8,7 +8,8 @@ var testFixture = require('../_globals');
 describe('Plugin Manager Base', function () {
     'use strict';
 
-    var should = testFixture.should,
+    var gmeConfig = testFixture.getGmeConfig(),
+        should = testFixture.should,
         PluginManagerBase = testFixture.requirejs('plugin/PluginManagerBase'),
         PluginGenerator = testFixture.requirejs('plugin/PluginGenerator/PluginGenerator/PluginGenerator'),
         Storage = testFixture.Storage;
@@ -19,7 +20,7 @@ describe('Plugin Manager Base', function () {
                 PluginGenerator: PluginGenerator
             };
 
-        pluginManagerBase = new PluginManagerBase(null, null, pluginManagerConfig);
+        pluginManagerBase = new PluginManagerBase(null, null, pluginManagerConfig, gmeConfig);
 
         should.exist(pluginManagerBase);
         pluginManagerBase.should.have.property('logger');
@@ -38,7 +39,7 @@ describe('Plugin Manager Base', function () {
         var pluginManagerBase,
             pluginManagerConfig = {};
 
-        pluginManagerBase = new PluginManagerBase(null, null, pluginManagerConfig);
+        pluginManagerBase = new PluginManagerBase(null, null, pluginManagerConfig, gmeConfig);
 
         (function () {
             pluginManagerBase.initialize(null, null, null);
@@ -51,7 +52,7 @@ describe('Plugin Manager Base', function () {
                 PluginGenerator: PluginGenerator
             };
 
-        pluginManagerBase = new PluginManagerBase(null, null, pluginManagerConfig);
+        pluginManagerBase = new PluginManagerBase(null, null, pluginManagerConfig, gmeConfig);
 
         pluginManagerBase.initialize(null, null, null);
         pluginManagerBase.getPluginByName('PluginGenerator').should.equal(PluginGenerator);

@@ -102,7 +102,7 @@ define(['logManager',
                 //    database: gmeConfig.mongodatabase,
                 //    guest: gmeConfig.guest
                 //};
-                __storageOptions.session = true;
+                __storageOptions.session = true; // FIXME: How does this differ from gmeConfig.authentication.enable?
                 __storageOptions.sessioncheck = __sessionStore.check;
                 __storageOptions.authorization = globalAuthorization;
                 __storageOptions.auth_deleteProject = __gmeAuth.deleteProject;
