@@ -145,15 +145,16 @@ function importProject(parameters, done) {
                             return;
                         }
 
-                        result.commit = result.project.makeCommit(
+                        result.project.makeCommit(
                             [],
                             result.core.getHash(result.root),
                             'importing project',
-                            function (err) {
+                            function (err, id) {
                                 if (err) {
                                     done(err);
                                     return;
                                 }
+                                result.commitHash = id;
                                 result.project.getBranchNames(function (err, names) {
                                     var oldHash = '';
                                     if (err) {

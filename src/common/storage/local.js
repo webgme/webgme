@@ -255,17 +255,35 @@ define(["util/assert"], function (ASSERT) {
       function getBranchNames(callback) {
         ASSERT(typeof callback === "function");
 
-        var branchNames = [];
+        var branchNames = {},
+            pending = 0,
+            updateBranchEntry = function (branchName) {
+              getBranchHash(branchName, '', function (err, hash) {
+                  pending -= 1;
+                  branchNames[branchName] = hash;
+                  done();
+              });
+            },
+            done = function () {
+              if (i === storage.length && pending === 0) {
+                  callback(null, branchNames);
+              }
+            };
+
         for (var i = 0; i < storage.length; i++) {
           var keyArray = storage.key(i).split(SEPARATOR);
           ASSERT(keyArray.length === 3);
-          if (BRANCH_REGEXP.test('*'+ keyArray[2])) {
+          if (BRANCH_REGEXP.test(keyArray[2])) {
             if (keyArray[0] === database && keyArray[1] === project) {
-              branchNames.push(keyArray[2]);
+                // TODO:  double check this line, *master => master, and return with an object of branches
+                var branchName = keyArray[2].slice(1);
+                pending += 1;
+                updateBranchEntry(branchName);
             }
           }
         }
-        callback(null, branchNames);
+
+          done();
       }
 
       function getBranchHash(branch, oldhash, callback) {
@@ -273,7 +291,7 @@ define(["util/assert"], function (ASSERT) {
         ASSERT(typeof oldhash === "string" && (oldhash === "" || HASH_REGEXP.test(oldhash)));
         ASSERT(typeof callback === "function");
 
-        var hash = storage.getItem(database + SEPARATOR + project + SEPARATOR + branch);
+        var hash = storage.getItem(database + SEPARATOR + project + SEPARATOR + '*' + branch);
         if (hash) {
           hash = JSON.parse(hash);
         }
@@ -282,7 +300,7 @@ define(["util/assert"], function (ASSERT) {
           callback(null, hash, null);
         } else {
           setTimeout(function () {
-            hash = storage.getItem(database + SEPARATOR + project + SEPARATOR + branch);
+            hash = storage.getItem(database + SEPARATOR + project + SEPARATOR + '*' + branch);
             if (hash) {
               hash = JSON.parse(hash);
             }

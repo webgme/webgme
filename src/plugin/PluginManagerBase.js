@@ -163,10 +163,9 @@ define([
 
                                 if (err) {
                                     self.logger.error('unable to load active selection: ' + activeNodePath);
-                                    return;
+                                } else {
+                                    pluginContext.activeSelection.push(activeNode);
                                 }
-
-                                pluginContext.activeSelection.push(activeNode);
 
                                 if (remaining === 0) {
                                     // all nodes from active selection are loaded

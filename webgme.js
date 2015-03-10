@@ -111,6 +111,7 @@ function addToRequireJsPaths(gmeConfig, baseDir) {
     //console.error(JSON.stringify(requirejs.s.contexts._.config, null, 4)); // TODO remove me
 }
 
+// FIXME: classes must start with uppercase, instances must start with lowercase
 module.exports = {
     addToRequireJsPaths: addToRequireJsPaths,
     clientStorage: requirejs('storage/clientstorage'),
