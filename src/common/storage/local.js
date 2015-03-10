@@ -311,12 +311,12 @@ define(["util/assert"], function (ASSERT) {
       }
 
       function setBranchHash(branch, oldhash, newhash, callback) {
-        ASSERT(typeof branch === "string" && BRANCH_REGEXP.test(branch));
+        ASSERT(typeof branch === "string" && BRANCH_REGEXP.test('*'+ branch));
         ASSERT(typeof oldhash === "string" && (oldhash === "" || HASH_REGEXP.test(oldhash)));
         ASSERT(typeof newhash === "string" && (newhash === "" || HASH_REGEXP.test(newhash)));
         ASSERT(typeof callback === "function");
 
-        var hash = storage.getItem(database + SEPARATOR + project + SEPARATOR + branch);
+        var hash = storage.getItem(database + SEPARATOR + project + SEPARATOR + '*' + branch);
         if (hash) {
           hash = JSON.parse(hash);
         }
@@ -331,9 +331,9 @@ define(["util/assert"], function (ASSERT) {
         } else {
           if (oldhash === hash) {
             if (newhash === "") {
-              storage.removeItem(database + SEPARATOR + project + SEPARATOR + branch);
+              storage.removeItem(database + SEPARATOR + project + SEPARATOR + '*' + branch);
             } else {
-              storage.setItem(database + SEPARATOR + project + SEPARATOR + branch, JSON.stringify({
+              storage.setItem(database + SEPARATOR + project + SEPARATOR + '*' + branch, JSON.stringify({
                 _id: branch,
                 hash: newhash
               }));

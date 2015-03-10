@@ -166,7 +166,7 @@ function importProject(parameters, done) {
                                         oldHash = names[result.branchName];
                                     }
                                     //TODO check the branch naming... probably need to add some layer to the local storage
-                                    result.project.setBranchHash('*' + result.branchName,
+                                    result.project.setBranchHash(result.branchName,
                                         oldHash,
                                         result.commitHash,
                                         function (err) {
