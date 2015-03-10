@@ -11,6 +11,7 @@ describe('Plugin Manager Base', function () {
     var WebGME = testFixture.WebGME,
         PluginManagerBase = testFixture.requirejs('plugin/PluginManagerBase'),
         PluginGenerator = testFixture.requirejs('plugin/PluginGenerator/PluginGenerator/PluginGenerator'),
+        MinimalWorkingExample = testFixture.requirejs('plugin/MinimalWorkingExample/MinimalWorkingExample/MinimalWorkingExample'),
         Storage = testFixture.Storage;
 
     describe('plugin manager API', function () {
@@ -130,8 +131,59 @@ describe('Plugin Manager Base', function () {
             server.stop(done);
         });
 
+        it('should execute plugin MinimalWorkingExample on commit and save', function (done) {
+            var pluginManagerBase,
+                pluginManagerConfig = {
+                    PluginGenerator: PluginGenerator,
+                    MinimalWorkingExample: MinimalWorkingExample
+                },
+                managerConfiguration = {
+                    commit: commit,
+                    activeSelection: [],
+                    blobClient: blobClient
+                };
 
-        it('should execute plugin', function (done) {
+            pluginManagerBase = new PluginManagerBase(project, WebGME.core, pluginManagerConfig, gmeConfig);
+
+            pluginManagerBase.initialize(null, null, null);
+            pluginManagerBase.executePlugin('MinimalWorkingExample', managerConfiguration, function (err, result) {
+                // TODO: do proper check.
+                if (err) {
+                    done(new Error(err));
+                    return;
+                }
+                //console.log(result);
+                done();
+            });
+        });
+
+        it('should execute plugin MinimalWorkingExample on branch and save', function (done) {
+            var pluginManagerBase,
+                pluginManagerConfig = {
+                    PluginGenerator: PluginGenerator,
+                    MinimalWorkingExample: MinimalWorkingExample
+                },
+                managerConfiguration = {
+                    branchName: 'master',
+                    activeSelection: [],
+                    blobClient: blobClient
+                };
+
+            pluginManagerBase = new PluginManagerBase(project, WebGME.core, pluginManagerConfig, gmeConfig);
+
+            pluginManagerBase.initialize(null, null, null);
+            pluginManagerBase.executePlugin('MinimalWorkingExample', managerConfiguration, function (err, result) {
+                // TODO: do proper check.
+                if (err) {
+                    done(new Error(err));
+                    return;
+                }
+                //console.log(result);
+                done();
+            });
+        });
+
+        it('should execute plugin PluginGenerator', function (done) {
             var pluginManagerBase,
                 pluginManagerConfig = {
                     PluginGenerator: PluginGenerator
@@ -265,7 +317,6 @@ describe('Plugin Manager Base', function () {
                     PluginGenerator: PluginGenerator
                 },
                 managerConfiguration = {
-                    // FIXME: for some reason branchName fails
                     commit: commit,
                     activeNode: 'does not exist',
                     activeSelection: [''],
@@ -293,7 +344,6 @@ describe('Plugin Manager Base', function () {
                     PluginGenerator: PluginGenerator
                 },
                 managerConfiguration = {
-                    // FIXME: for some reason branchName fails
                     commit: commit,
                     activeSelection: ['does not exist'],
                     blobClient: blobClient
@@ -320,7 +370,6 @@ describe('Plugin Manager Base', function () {
                     PluginGenerator: PluginGenerator
                 },
                 managerConfiguration = {
-                    // FIXME: for some reason branchName fails
                     commit: 'does not exist',
                     activeSelection: [''],
                     blobClient: blobClient
