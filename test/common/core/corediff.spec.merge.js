@@ -221,6 +221,7 @@ describe('corediff-merge', function () {
                 });
             });
             it('changing to the same value', function (done) {
+                this.timeout(4000); // TODO: Why does this take so much time?
                 var changeA = {},
                     changeB = {};
                 changeA.diff = {
@@ -597,6 +598,7 @@ describe('corediff-merge', function () {
                 });
             });
             it('changing to the same value', function (done) {
+                this.timeout(4000); // TODO: Why does this take so much time?
                 var changeA = {},
                     changeB = {};
                 changeA.diff = {
