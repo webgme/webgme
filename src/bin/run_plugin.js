@@ -1,18 +1,19 @@
-var webGme = require('../../webgme'),
+/*jshint node: true*/
+var gmeConfig = require('../../config'),
+    webGme = require('../../webgme'),
     program = require('commander'),
     PATH = require('path'),
     configFilename,
-    resolvedFilename,
-    commandLineConfig,
-    CONFIG = WebGMEGlobal.getConfig(),
+    pluginConfigFilename,
+    resolvedPluginConfigFilename,
+    pluginConfigJson,
     projectName,
     branch,
     pluginName,
-    selectedID,
+    activeNode,
     activeSelection = [], // TODO: get this as a list of IDs from command line
     pluginConfig = {};
-
-program.option('-c, --config <name>', 'Configuration file');
+webGme.addToRequireJsPaths(gmeConfig);
 program.option('-p, --project <name>', 'Name of the project.', 'uj');
 program.option('-b, --branch <name>', 'Name of the branch.', 'master');
 program.option('-j, --pluginConfigPath <name>', 'Path to json file with plugin options that should be overwritten.', '');
@@ -20,7 +21,7 @@ program.option('-n, --pluginName <name><mandatory>', 'Path to given plugin.');
 program.option('-s, --selectedObjID <webGMEID>', 'ID to selected component.', '');
 program.parse(process.argv);
 
-if(program.pluginName === undefined){
+if (program.pluginName === undefined) {
     program.help();
 } else {
     //getting program options
@@ -32,7 +33,7 @@ if(program.pluginName === undefined){
     pluginConfigFilename = program.pluginConfigPath;
 }
 
-console.log('executing '+pluginName+' plugin');
+console.log('executing ' + pluginName + ' plugin');
 
 if (pluginConfigFilename) {
     resolvedPluginConfigFilename = PATH.resolve(pluginConfigFilename);
@@ -40,20 +41,6 @@ if (pluginConfigFilename) {
 } else {
     pluginConfigJson = {};
 }
-
-if (configFilename) {
-    // TODO: check if file exists and it is json
-    resolvedFilename = PATH.resolve(configFilename);
-    commandLineConfig = require(resolvedFilename);
-
-    WebGMEGlobal.setConfig(commandLineConfig);
-    // TODO: check if command line config valid or not
-    // TODO: probably we should not overwrite the dictionary and array options
-    for (var key in commandLineConfig) {
-        CONFIG[key] = commandLineConfig[key];
-    }
-}
-
 
 //setting plugin config
 pluginConfig.projectName = projectName;
@@ -63,10 +50,13 @@ pluginConfig.activeNode = activeNode;
 pluginConfig.activeSelection = activeSelection;
 pluginConfig.pluginConfig = pluginConfigJson;
 
-webGme.runPlugin.main(CONFIG,pluginConfig,function(err,result){
+webGme.runPlugin.main(gmeConfig, pluginConfig, function (err, result) {
+    'use strict';
     if (err) {
         console.log('execution stopped:', err, result);
+        process.exit(1);
     } else {
         console.log('execution was successful:', err, result);
+        process.exit(0);
     }
 });
