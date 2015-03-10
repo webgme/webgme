@@ -1,4 +1,3 @@
-/*globals require*/
 /*jshint node:true, mocha:true*/
 /**
  * @author ksmyth / https://github.com/ksmyth

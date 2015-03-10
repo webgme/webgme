@@ -88,11 +88,13 @@ function (ASSERT,
                         pluginConfig.blobClient = new BlobRunPluginClient(blobBackend);
                         pluginConfig.commit = branchHash;
 
+                        // FIXME: pluginConfig supposed to be managerConfig!
                         pluginManager.executePlugin(pluginName, pluginConfig, function (err, result) {
                             logger.debug(JSON.stringify(result, null, 2));
                             project.closeProject();
-                            storage.closeDatabase();
-                            callback(err, result);
+                            storage.closeDatabase(function () {
+                                callback(err, result);
+                            });
                         });
                     });
                 });

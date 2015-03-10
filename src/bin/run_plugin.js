@@ -2,7 +2,7 @@
 
 var main;
 
-main = function (argv) {
+main = function (argv, callback) {
     'use strict';
     var gmeConfig = require('../../config'),
         webGme = require('../../webgme'),
@@ -19,6 +19,8 @@ main = function (argv) {
         activeNode,
         activeSelection = [], // TODO: get this as a list of IDs from command line
         pluginConfig = {};
+
+    callback = callback || function () {};
 
     webGme.addToRequireJsPaths(gmeConfig);
 
@@ -61,12 +63,13 @@ main = function (argv) {
     pluginConfig.pluginConfig = pluginConfigJson;
 
     webGme.runPlugin.main(gmeConfig, pluginConfig, function (err, result) {
-        'use strict';
         if (err) {
             console.log('execution stopped:', err, result);
+            callback(err, result);
             process.exit(1);
         } else {
             console.log('execution was successful:', err, result);
+            callback(err, result);
             process.exit(0);
         }
     });
