@@ -348,17 +348,18 @@ define(['logManager',
         }
 
         function setupExternalRestModules() {
-            __logger.info('initializing external REST modules');
-            var keys = Object.keys(gmeConfig.rest.components),
+            var modul,
+                keys = Object.keys(gmeConfig.rest.components),
                 i;
+            __logger.info('initializing external REST modules');
             for (i = 0; i < keys.length; i++) {
-                var modul = requirejs(gmeConfig.rest.components[keys[i]]);
+                modul = requirejs(gmeConfig.rest.components[keys[i]]);
                 if (modul) {
-                    __logger.info('adding RExtraST [' + gmeConfig.rest.components[keys[i]] + '] to - /rest/external/' + keys[i]);
-                    __app.use('/rest/external/' + keys[i], modul);
+                    __logger.info('adding rest component [' + gmeConfig.rest.components[keys[i]] + '] to' +
+                        ' - /rest/external/' + keys[i]);
+                    __app.use('/rest/external/' + keys[i], modul(gmeConfig));
                 } else {
-                    console.log("Loading " + gmeConfig.rest.components[keys[i]] + " failed.");
-                    process.exit(2);
+                    throw new Error('Loading ' + gmeConfig.rest.components[keys[i]] + ' failed.');
                 }
             }
         }
