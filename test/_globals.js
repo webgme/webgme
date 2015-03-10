@@ -39,7 +39,6 @@ var gmeConfig = require('../config'),
     SessionStore = requirejs('auth/sessionstore'),
 
     ExecutorClient = requirejs('executor/ExecutorClient'),
-    BlobServerClient = requirejs('blob/BlobServerClient'),
     BlobClient = requirejs('blob/BlobClient'),
 
     should = require('chai').should(),
@@ -231,7 +230,6 @@ module.exports = {
     SessionStore: SessionStore,
 
     ExecutorClient: ExecutorClient,
-    BlobServerClient: BlobServerClient,
     BlobClient: BlobClient,
 
     requirejs: requirejs,
