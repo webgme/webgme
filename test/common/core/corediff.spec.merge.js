@@ -207,8 +207,16 @@ describe('corediff-merge', function () {
 
                                         //check values
                                         core.loadByPath(merged.root, '/579542227/651215756', function (err, a) {
+                                            if (err) {
+                                                done(err);
+                                                return;
+                                            }
                                             core.getAttribute(a, 'priority').should.be.equal(2);
                                             core.loadByPath(merged.root, '/579542227/2088994530', function (err, a) {
+                                                if (err) {
+                                                    done(err);
+                                                    return;
+                                                }
                                                 core.getAttribute(a, 'priority').should.be.equal(2);
                                                 done();
                                             });
@@ -221,7 +229,6 @@ describe('corediff-merge', function () {
                 });
             });
             it('changing to the same value', function (done) {
-                this.timeout(4000); // TODO: Why does this take so much time?
                 var changeA = {},
                     changeB = {};
                 changeA.diff = {
@@ -380,6 +387,10 @@ describe('corediff-merge', function () {
 
                                         //check values
                                         core.loadByPath(merged.root, '/579542227/651215756', function (err, a) {
+                                            if (err) {
+                                                done(err);
+                                                return;
+                                            }
                                             core.getAttribute(a, 'priority').should.be.equal(3);
                                             done();
                                         });
@@ -476,6 +487,10 @@ describe('corediff-merge', function () {
 
                                         //check values
                                         core.loadByPath(merged.root, '/1786679144/651215756', function (err, a) {
+                                            if (err) {
+                                                done(err);
+                                                return;
+                                            }
                                             core.getAttribute(a, 'priority').should.be.equal(2);
                                             done();
                                         });
@@ -582,9 +597,17 @@ describe('corediff-merge', function () {
 
                                         //check values
                                         core.loadByPath(merged.root, '/579542227/651215756', function (err, a) {
+                                            if (err) {
+                                                done(err);
+                                                return;
+                                            }
                                             core.getRegistry(a, 'position').x.should.be.equal(200);
                                             core.getRegistry(a, 'position').y.should.be.equal(200);
                                             core.loadByPath(merged.root, '/579542227/2088994530', function (err, a) {
+                                                if (err) {
+                                                    done(err);
+                                                    return;
+                                                }
                                                 core.getRegistry(a, 'position').x.should.be.equal(300);
                                                 core.getRegistry(a, 'position').y.should.be.equal(300);
                                                 done();
@@ -598,7 +621,6 @@ describe('corediff-merge', function () {
                 });
             });
             it('changing to the same value', function (done) {
-                this.timeout(4000); // TODO: Why does this take so much time?
                 var changeA = {},
                     changeB = {};
                 changeA.diff = {
@@ -672,6 +694,10 @@ describe('corediff-merge', function () {
 
                                         //check values
                                         core.loadByPath(merged.root, '/579542227/651215756', function (err, a) {
+                                            if (err) {
+                                                done(err);
+                                                return;
+                                            }
                                             core.getRegistry(a, 'position').x.should.be.equal(200);
                                             core.getRegistry(a, 'position').y.should.be.equal(200);
                                             done();
@@ -758,6 +784,10 @@ describe('corediff-merge', function () {
 
                                         //check values
                                         core.loadByPath(merged.root, '/579542227/651215756', function (err, a) {
+                                            if (err) {
+                                                done(err);
+                                                return;
+                                            }
                                             core.getRegistry(a, 'position').x.should.be.equal(300);
                                             core.getRegistry(a, 'position').y.should.be.equal(300);
                                             done();
@@ -840,6 +870,10 @@ describe('corediff-merge', function () {
 
                                         //check values
                                         core.loadByPath(merged.root, '/1786679144/651215756', function (err, a) {
+                                            if (err) {
+                                                done(err);
+                                                return;
+                                            }
                                             core.getRegistry(a, 'position').x.should.be.equal(200);
                                             core.getRegistry(a, 'position').y.should.be.equal(200);
                                             done();

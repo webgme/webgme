@@ -78,11 +78,10 @@ describe('User manager command line interface (CLI)', function () {
 
         it('should print help with -h', function (done) {
             var nodeUserManager = spawn('node', [filename, '-h']),
-                stdoutData,
+                stdoutData = '',
                 err;
 
             nodeUserManager.stdout.on('data', function (data) {
-                stdoutData = stdoutData || '';
                 stdoutData += data.toString();
                 //console.log(data.toString());
             });
