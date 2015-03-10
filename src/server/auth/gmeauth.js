@@ -384,7 +384,7 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
 
         function addUser(userId, email, password, canCreate, options, callback) {
             var data = {_id: userId, email: email, canCreate: canCreate, projects: {}, orgs: [] };
-            return Q.ninvoke(bcrypt, 'hash', password, 10 /* TODO: make this configurable */)
+            return Q.ninvoke(bcrypt, 'hash', password, gmeConfig.authentication.salts)
                 .then(function (hash) {
                     data.passwordHash = hash;
                     if (!options.overwrite) {

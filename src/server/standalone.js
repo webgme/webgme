@@ -632,8 +632,17 @@ define(['logManager',
 
         __logger.info("creating blob related rules");
 
-        var blobBackend = new BlobFSBackend();
-        //var blobBackend = new BlobS3Backend();
+        var blobBackend;
+
+        if (gmeConfig.blob.type === 'FS') {
+            blobBackend = new BlobFSBackend(gmeConfig);
+        } else if (gmeConfig.blob.type === 'S3') {
+            //var blobBackend = new BlobS3Backend(gmeConfig);
+            throw new Error('S3 blob not fully supported');
+        } else {
+            throw new Error('Only FS and S3 blobs valid blob types.');
+        }
+
         BlobServer.createExpressBlob(__app, blobBackend, ensureAuthenticated, __logger);
 
         //client contents - js/html/css
