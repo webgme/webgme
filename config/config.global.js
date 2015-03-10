@@ -67,7 +67,9 @@ var config = {
 
     executor: {
         enable: false,
-        nonce: null
+        outputDir: './',
+        nonce: null,
+        workerRefreshInterval: 5000
     },
 
     plugin: {

@@ -9,12 +9,11 @@ var testFixture = require('../../_globals.js');
 describe('ExecutorClient', function () {
     'use strict';
 
-    var fs = testFixture.fs,
+    var rimraf = testFixture.rimraf,
         should = testFixture.should,
         ExecutorClient = testFixture.ExecutorClient,
         executorClient,
-        server,
-        serverBaseUrl;
+        server;
 
     before(function (done) {
         // we have to set the config here
@@ -24,30 +23,24 @@ describe('ExecutorClient', function () {
         gmeConfig.server.port = 9006;
         gmeConfig.executor.enable = true;
 
-
-        serverBaseUrl = 'http://127.0.0.1:' + gmeConfig.server.port;
         param.serverPort = gmeConfig.server.port;
         param.httpsecure = gmeConfig.server.https.enable;
 
-        server = testFixture.WebGME.standaloneServer(gmeConfig);
-        server.start(function () {
-            executorClient = new ExecutorClient(param);
-            done();
+        rimraf('./test-tmp/executor', function (err) {
+            if (err) {
+                done(err);
+                return;
+            }
+            server = testFixture.WebGME.standaloneServer(gmeConfig);
+            server.start(function () {
+                executorClient = new ExecutorClient(param);
+                done();
+            });
         });
     });
 
     after(function (done) {
         server.stop(function (err) {
-            try {
-                fs.unlinkSync('test-tmp/jobList.nedb');
-            } catch (error) {
-                //console.log(error);
-            }
-            try {
-                fs.unlinkSync('test-tmp/workerList.nedb');
-            } catch (error) {
-                //console.log(error);
-            }
             done(err);
         });
     });
