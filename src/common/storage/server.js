@@ -239,18 +239,28 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                     var oldon = socket.on;
                     socket.on = function (msg, cb) {
                         oldon.apply(socket, [msg, function () {
+                            var logmsg = socket.id + " " + msg;
                             var args = [];
                             for (var i = 0; i < arguments.length; i++) {
                                 args[i] = arguments[i];
                             }
                             if (msg === 'insertObjects') {
-                                msg = msg + ' ' + Object.keys(args[1]).length;
+                                logmsg = logmsg + ' ' + Object.keys(args[1]).length;
+                            }
+                            if (msg === 'setBranchHash') {
+                                logmsg = logmsg + ' ' + args[1] + ': ' + args[2] + ' -> ' + args[3];
+                            }
+                            if (msg === 'getBranchHash') {
+                                logmsg = logmsg + ' ' + args[1] + ': ' + args[2];
                             }
                             var time1 = process.hrtime();
                             var callback2 = args[args.length - 1];
                             args[args.length - 1] = function () {
-                                var time2 = process.hrtime();
-                                console.log(msg + " " + (((time2[0] - time1[0]) * 1000) + ((time2[1] - time1[1]) / 1000 / 1000 | 0)));
+                                var time2 = process.hrtime(time1);
+                                if (msg === 'getBranchHash') {
+                                    logmsg = logmsg + ' ' + arguments[1];
+                                }
+                                console.log(logmsg + " " + ((time2[0] * 1000) + (time2[1] / 1000 / 1000 | 0)));
                                 callback2.apply(this, arguments);
                             };
                             cb.apply(this, args);
