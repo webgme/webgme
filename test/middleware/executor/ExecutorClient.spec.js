@@ -105,21 +105,30 @@ describe('ExecutorClient', function () {
                 return;
             }
             console.log(res);
-            done(new Error('should have failed with 500'));
+            done(new Error('should have failed with 404'));
         });
     });
 
     it('should get info by status', function (done) {
-        executorClient.getInfoByStatus('CREATED', function (err/*, res*/) {
-            should.equal(err, 500);
+        executorClient.getInfoByStatus('CREATED', function (err, res) {
+            if (err) {
+                done(new Error(err));
+                return;
+            }
+            expect(res).deep.equal({});
             done();
         });
     });
 
     it('getAllInfo should return 500', function (done) {
-        executorClient.getAllInfo(function (err) {
-            should.equal(err, 500);
-            done();
+        executorClient.getAllInfo(function (err, res) {
+            if (err) {
+                should.equal(err, 500);
+                done();
+                return;
+            }
+            console.log(res);
+            done(new Error('should have failed with 500'));
         });
     });
 
