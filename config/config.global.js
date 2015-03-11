@@ -5,6 +5,8 @@
  */
 
 var config = {
+    debug: false,
+
     server: {
         port: 8888,
         sessionCookieId: 'webgmeSid',
@@ -46,7 +48,6 @@ var config = {
     },
 
     log: {
-        debug: false,
         level: 1, // 5 = ALL, 4 = DEBUG, 3 = INFO, 2 = WARNING, 1 = ERROR, 0 = OFF
         file: 'server.log'
     },
@@ -93,6 +94,7 @@ var config = {
     },
 
     storage: {
+        cache: 2000,
         keyType: 'plainSHA1', // 'rand160Bits', 'ZSSHA', 'plainSHA1',
         timeout: 10000,
         failSafe: 'memory',

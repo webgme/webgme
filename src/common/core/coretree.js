@@ -44,10 +44,9 @@ define([ "util/assert", "util/key", "core/future", "core/tasync", 'util/canon' ]
 
 	return function (storage, options) {
         var gmeConfig = options.globConf;
-        //TODO: Should these be options?
-		var MAX_AGE = (options && options.maxage) || 3;
-		var MAX_TICKS = (options && options.maxticks) || 2000;
-		var MAX_MUTATE = (options && options.maxmutate) || 30000;
+		var MAX_AGE = 3; // MAGIC NUMBER
+		var MAX_TICKS = 2000; // MAGIC NUMBER
+		var MAX_MUTATE = 30000; // MAGIC NUMBER
 		var autopersist = (options && options.autopersist) || false;
 
 		var ID_NAME = storage.ID_NAME;

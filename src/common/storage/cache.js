@@ -31,8 +31,6 @@ define([ "util/assert" ], function (ASSERT) {
 	var Database = function (database, options) {
         var gmeConfig = options.globConf;
 		ASSERT(typeof database === "object" && typeof gmeConfig === "object");
-        //TODO: Add this to the default configuration
-        options.cache = options.cache || 2000;
 
 		var projects = {};
 		var dlock = new Lock();
@@ -115,7 +113,7 @@ define([ "util/assert" ], function (ASSERT) {
 					maybeFreeze(obj[key]);
 				}
 			};
-			if (typeof WebGMEGlobal !== 'undefined' && typeof WebGMEGlobal.getConfig !== 'undefined' && !WebGMEGlobal.getConfig().debug) {
+			if (gmeConfig.debug === false) {
 				deepFreeze = function () { };
 			}
 
@@ -125,7 +123,7 @@ define([ "util/assert" ], function (ASSERT) {
 				deepFreeze(obj);
 				cache[key] = obj;
 
-				if (++cacheSize >= gmeConfig.cache) {
+				if (++cacheSize >= gmeConfig.storage.cache) {
 					backup = cache;
 					cache = {};
 					cacheSize = 0;
@@ -308,7 +306,7 @@ define([ "util/assert" ], function (ASSERT) {
                         cacheProject[key] = project[key];
                     }
                 }
-                if (options.cache !== 0) {
+                if (gmeConfig.storage.cache !== 0) {
                     cacheProject.loadObject = loadObject;
                     cacheProject.insertObject = insertObject;
                 }

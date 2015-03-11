@@ -6,8 +6,8 @@
 
 define(["util/assert", "util/guid"], function (ASSERT, GUID) {
   "use strict";
-  var BRANCH_OBJ_ID = '*branch*';
-  var BRANCH_STATES = {
+  var BRANCH_OBJ_ID = '*branch*'; // MAGIC CONSTANT
+  var BRANCH_STATES = {  // MAGIC CONSTANT
     SYNC: 'sync',
     FORKED: 'forked',
     DISCONNECTED: 'disconnected',
@@ -18,8 +18,13 @@ define(["util/assert", "util/guid"], function (ASSERT, GUID) {
     ASSERT(typeof options === "object" && typeof _database === "object");
     var gmeConfig = options.globConf;
 
-      //FIXME: what to do with options.database? Where to parse the mongouri? Is it needed? It has a default of "noID", is that ok?
-    var exceptionErrors = [], fsId = "FS", dbId = options.database || "noID", SEPARATOR = "$", STATUS_CONNECTED = "connected", pendingStorage = {}, storage = null;
+    var exceptionErrors = [],
+        fsId = "FS", // MAGIC CONSTANT
+        dbId = "noID", // MAGIC CONSTANT
+        SEPARATOR = "$", // MAGIC CONSTANT
+        STATUS_CONNECTED = "connected", // MAGIC CONSTANT
+        pendingStorage = {},
+        storage = null;
 
     function loadPending() {
       for (var i = 0; i < storage.length; i++) {
