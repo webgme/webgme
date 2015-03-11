@@ -126,7 +126,7 @@ define(['logManager',
             __storageOptions.sessionToUser = __sessionStore.getSessionUser;
 
             __storageOptions.globConf = gmeConfig;
-            __storage = Storage(__storageOptions);
+            __storage = Storage(__storageOptions); // FIXME: why do not we use the 'new' keyword here?
             //end of storage creation
             __storage.open();
         }

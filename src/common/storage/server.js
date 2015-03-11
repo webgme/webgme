@@ -689,7 +689,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
             });
 
             _workerManager = new SWM({
-                sessionToUser:options.sessionToUser,
+                sessionToUser: options.sessionToUser,
                 globConf: gmeConfig
             });
         }

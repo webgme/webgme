@@ -9,4 +9,4 @@ webgme.addToRequireJsPaths(gmeConfig, path.join(__dirname, '..', '..'));
 
 myServer = new webgme.standaloneServer(gmeConfig);
 myServer.start();
-console.log(gmeConfig);
+//console.log(gmeConfig);

@@ -15,7 +15,8 @@ var config = {
             enable: false,
             certificateFile: './src/bin/proba-cert.pem',
             keyFile: './src/bin/proba-key.pem'
-        }
+        },
+        maxWorkers: 10
     },
 
     client: {
