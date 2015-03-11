@@ -212,20 +212,10 @@ define([
       //default configuration
         //FIXME: Are these gme options or not??
       _configuration = _configuration || {};
-      _configuration.autoreconnect = true;
-      _configuration.reconndelay = 1000;
-      _configuration.reconnamount = 1000;
-      _configuration.autostart = false;
-
-      //if( typeof GME !== 'undefined'){
-      //  GME.config = GME.config || {};
-      //  GME.config.keyType = _configuration.storageKeyType;
-      //}
-      //
-      //if( typeof WebGMEGlobal !== 'undefined'){
-      //  WebGMEGlobal.config = WebGMEGlobal.config || {};
-      //  WebGMEGlobal.config.keyType = _configuration.storageKeyType;
-      //}
+      _configuration.autoreconnect = true; // MAGIC NUMBERS
+      _configuration.reconndelay = 1000; // MAGIC NUMBERS
+      _configuration.reconnamount = 1000; // MAGIC NUMBERS
+      _configuration.autostart = false; // MAGIC NUMBERS
 
       //TODO remove the usage of jquery
       //$.extend(_self, new EventDispatcher());
