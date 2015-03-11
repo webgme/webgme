@@ -98,9 +98,14 @@ describe('ExecutorClient', function () {
     });
 
     it('getInfo for non-existing hash should return 404', function (done) {
-        executorClient.getInfo('87704f10a36aa4214f5b0095ba8099e729a10f46', function (err/*, res*/) {
-            should.equal(err, 404);
-            done();
+        executorClient.getInfo('87704f10a36aa4214f5b0095ba8099e729a10f46', function (err, res) {
+            if (err) {
+                should.equal(err, 404);
+                done();
+                return;
+            }
+            console.log(res);
+            done(new Error('should have failed with 500'));
         });
     });
 
