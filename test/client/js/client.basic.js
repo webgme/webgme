@@ -411,7 +411,7 @@ describe('Client tests', function () {
     });
 
     // TODO: move this to plugin tests???
-    describe('Run plugins', function () {
+    describe.skip('Run plugins', function () {
         var runPluginOnServer = function (pluginName, config, pluginConfig, callback) {
             requirejs(['plugin/' + pluginName + '/' + pluginName + '/' + pluginName],
                 function (PluginClass) {
