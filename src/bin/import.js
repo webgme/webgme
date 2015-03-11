@@ -11,7 +11,8 @@ var requirejs = require("requirejs"),
     Storage,
     Serialization,
     jsonProject,
-    gmeConfig = require('../../config'),
+    path = require('path'),
+    gmeConfig = require(path.join(process.cwd(), 'config')),
     webgme = require('../../webgme');
 
 webgme.addToRequireJsPaths(gmeConfig);

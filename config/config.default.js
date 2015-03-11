@@ -4,7 +4,8 @@
  * @author pmeijer / https://github.com/pmeijer
  */
 
-var config = {
+var path = require('path'),
+    config = {
     debug: false,
 
     server: {
@@ -14,13 +15,13 @@ var config = {
         sessionCookieSecret: 'meWebGMEez',
         https: {
             enable: false,
-            certificateFile: './certificates/sample-cert.pem',
-            keyFile: './certificates/sample-key.pem'
+            certificateFile: path.join(__dirname, '../certificates/sample-cert.pem'),
+            keyFile: path.join(__dirname, '../certificates/sample-key.pem')
         }
     },
 
     client: {
-        appDir: './src/client',
+        appDir: path.join(__dirname, '../src/client'),
         // Used in client/WebGME.js to load initial project.
         defaultProject: {
             name: null,
@@ -76,7 +77,7 @@ var config = {
 
     plugin: {
         allowServerExecution: false,
-        basePaths: ['./src/plugin/coreplugins']
+        basePaths: [path.join(__dirname, '../src/plugin/coreplugins')]
     },
 
     rest: {
@@ -86,12 +87,12 @@ var config = {
 
     addOn: {
         enable: true,
-        basePaths: ['./src/addon/core']
+        basePaths: [path.join(__dirname, '../src/addon/core')]
     },
 
     visualization: {
-        decoratorPaths: ['./src/client/decorators'],
-        visualizerDescriptors: ['./src/client/js/Visualizers.json']
+        decoratorPaths: [path.join(__dirname, '../src/client/decorators')],
+        visualizerDescriptors: [path.join(__dirname, '../src/client/js/Visualizers.json')]
     },
 
     storage: {

@@ -11,7 +11,8 @@ var program = require('commander'),
     Core,
     Storage,
     patchJson,
-    gmeConfig = require('../../config'),
+    path = require('path'),
+    gmeConfig = require(path.join(process.cwd(), 'config')),
     webgme = require('../../webgme');
 
 webgme.addToRequireJsPaths(gmeConfig);

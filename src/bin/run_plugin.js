@@ -7,11 +7,11 @@ var main;
 
 main = function (argv, callback) {
     'use strict';
-    var gmeConfig = require('../../config'),
+    var path = require('path'),
+        gmeConfig = require(path.join(process.cwd(), 'config')),
         webGme = require('../../webgme'),
         Command = require('commander').Command,
         program = new Command(),
-        PATH = require('path'),
         configFilename,
         pluginConfigFilename,
         resolvedPluginConfigFilename,
@@ -51,7 +51,7 @@ main = function (argv, callback) {
     console.log('executing ' + pluginName + ' plugin');
 
     if (pluginConfigFilename) {
-        resolvedPluginConfigFilename = PATH.resolve(pluginConfigFilename);
+        resolvedPluginConfigFilename = path.resolve(pluginConfigFilename);
         pluginConfigJson = require(resolvedPluginConfigFilename);
     } else {
         pluginConfigJson = {};

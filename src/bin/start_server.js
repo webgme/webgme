@@ -4,7 +4,7 @@
  */
 
 var path = require('path'),
-    gmeConfig = require('../../config'),
+    gmeConfig = require(path.join(process.cwd(), 'config')),
     webgme = require('../../webgme'),
     myServer;
 
