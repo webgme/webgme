@@ -133,7 +133,7 @@ define([
 
     }
 
-    function Client(_configuration) {
+    function Client(gmeConfig) {
       var _self = this,
         logger = LogManager.create("client"),
         _database = null,
@@ -169,23 +169,22 @@ define([
         _constraintCallback = null,
         _redoer = null,
         _selfCommits = {},
-        gmeConfig = _configuration.gmeConfig,
+        _configuration = {},
         AllPlugins, AllDecorators;
 
 
-      if (!_configuration.host) {
-        if (window) {
-          _configuration.host = window.location.protocol + "//" + window.location.host;
-        } else {
-          _configuration.host = "";
-        }
-      }
       if(typeof TESTING === 'undefined') {
+          if (window) {
+              _configuration.host = window.location.protocol + '//' + window.location.host;
+          } else {
+              _configuration.host = '';
+          }
         require([_configuration.host + '/listAllDecorators', _configuration.host + '/listAllPlugins'], function (d, p) {
           AllDecorators = WebGMEGlobal.allDecorators;
           AllPlugins = WebGMEGlobal.allPlugins;
         });
       } else {
+        _configuration.host = ' ';
         console.warn('TESTING is defined - we are not getting plugins and decorators.');
       }
 
@@ -211,7 +210,6 @@ define([
 
       //default configuration
         //FIXME: Are these gme options or not??
-      _configuration = _configuration || {};
       _configuration.autoreconnect = true; // MAGIC NUMBERS
       _configuration.reconndelay = 1000; // MAGIC NUMBERS
       _configuration.reconnamount = 1000; // MAGIC NUMBERS

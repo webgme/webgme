@@ -352,6 +352,7 @@ describe('standalone server', function () {
             gmeauth,
             sockets = [],
             socketId,
+            gmeConfig = testFixture.getGmeConfig(),
             logIn = function (callback) {
                 agent.post(serverBaseUrl + '/login?redirect=%2F')
                     .type('form')
@@ -378,7 +379,7 @@ describe('standalone server', function () {
                         socket = io.connect(serverBaseUrl,
                             {
                                 'query': 'webGMESessionId=' + /webgmeSid=s:([^;]+)\./.exec(decodeURIComponent(socketReq.cookies))[1],
-                                'transports': ['websocket'],
+                                'transports': gmeConfig.socketIO.transports,
                                 'multiplex': false
                             });
 
@@ -491,10 +492,6 @@ describe('standalone server', function () {
                         done(err);
                         return;
                     }
-                    server.stop(function () {
-                        //console.log('done');
-                        done();
-                    });
 
                     // destroy all socket io connections
                     // this will ensures that the server stops as soon as possible and the test will not timeout.
@@ -504,6 +501,11 @@ describe('standalone server', function () {
                             sockets[socketId].destroy();
                         }
                     }
+
+                    server.stop(function () {
+                        //console.log('done');
+                        done();
+                    });
                 });
             });
         });
