@@ -50,9 +50,52 @@ describe('BlobClient', function () {
             server.stop(done);
         });
 
+        it('should get metadata url', function () {
+            var bc = new BlobClient(bcParam);
+            expect(typeof bc.getMetadataURL === 'function').to.equal(true);
+            expect(bc.getMetadataURL()).to.contain('metadata');
+            expect(bc.getMetadataURL('1234567890abcdef')).to.contain('1234567890abcdef');
+        });
+
+        it('should get download url', function () {
+            var bc = new BlobClient(bcParam);
+            expect(typeof bc.getDownloadURL === 'function').to.equal(true);
+            expect(bc.getDownloadURL()).to.contain('download');
+            expect(bc.getDownloadURL('1234567890abcdef')).to.contain('1234567890abcdef');
+            expect(bc.getDownloadURL('1234567890abcdef', 'some/path/to/a/file.txt')).to.contain('1234567890abcdef/some%2Fpath%2Fto%2Fa%2Ffile.txt');
+        });
+
         it('should have putFile', function () {
             var bc = new BlobClient(bcParam);
             expect(typeof bc.putFile === 'function').to.equal(true);
+        });
+
+        it('should create file from empty buffer', function (done) {
+            var bc = new BlobClient(bcParam);
+
+            bc.putFile('test.txt', new Buffer(0), function (err, hash) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                bc.getMetadata(hash, function (err, metadata) {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+                    expect(metadata.mime).to.equal('text/plain');
+                    bc.getObject(hash, function (err, res) {
+                        if (err) {
+                            done(err);
+                            return;
+                        }
+                        expect(typeof res).to.equal('object');
+                        expect(typeof res.prototype).to.equal('undefined');
+                        //expect(res[1]).to.equal(2);
+                        done();
+                    });
+                });
+            });
         });
 
         it('should create json', function (done) {
