@@ -227,7 +227,7 @@ requirejs(['worker/constants',
             return callback("" + err);
           }
 
-          var core = new Core(project),
+          var core = new Core(project, {globConf: gmeConfig}),
             root = core.createNode({parent: null, base: null});
           Serialization.import(core, root, jsonProject, function (err) {
             if (err) {

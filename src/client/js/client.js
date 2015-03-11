@@ -48,7 +48,8 @@ define([
 
     function getNewCore(project, gmeConfig) {
       //return new NullPointerCore(new DescriptorCore(new SetCore(new GuidCore(new Core(project)))));
-      var options = {autopersist: true, usertype: 'nodejs', globConf: gmeConfig};
+        // FIXME: why usertype is nodejs when it is running from the browser?
+      var options = {usertype: 'nodejs', globConf: gmeConfig};
       return Core(project, options);
     }
 
@@ -211,10 +212,10 @@ define([
       //default configuration
         //FIXME: Are these gme options or not??
       _configuration = _configuration || {};
-      _configuration.autoreconnect = _configuration.autoreconnect === null || _configuration.autoreconnect === undefined ? true : _configuration.autoreconnect;
-      _configuration.reconndelay = _configuration.reconndelay || 1000;
-      _configuration.reconnamount = _configuration.reconnamount || 1000;
-      _configuration.autostart = _configuration.autostart === null || _configuration.autostart === undefined ? false : _configuration.autostart;
+      _configuration.autoreconnect = true;
+      _configuration.reconndelay = 1000;
+      _configuration.reconnamount = 1000;
+      _configuration.autostart = false;
 
       //if( typeof GME !== 'undefined'){
       //  GME.config = GME.config || {};
@@ -274,7 +275,7 @@ define([
           protocolStr = gmeConfig.server.https.enable ? 'https' : 'http';
 
           storageOptions.type = 'node';
-          storageOptions.host = protocolStr + '://localhost';
+          storageOptions.host = protocolStr + '://127.0.0.1';
           storageOptions.user = 'TEST';
         } else {
           storageOptions.user = getUserId();
@@ -740,9 +741,9 @@ define([
         _networkStatus = "";
         var running = true;
         //FIXME: Are these gme options or not??
-        var autoReconnect = _configuration.autoreconnect ? true : false;
-        var reConnDelay = _configuration.reconndelay || 1000;
-        var reConnAmount = _configuration.reconnamount || 1000;
+        var autoReconnect = _configuration.autoreconnect;
+        var reConnDelay = _configuration.reconndelay;
+        var reConnAmount = _configuration.reconnamount;
         var reconnecting = function () {
           var counter = 0;
           var timerId = setInterval(function () {

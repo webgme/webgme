@@ -47,7 +47,6 @@ define([ "util/assert", "util/key", "core/future", "core/tasync", 'util/canon' ]
 		var MAX_AGE = 3; // MAGIC NUMBER
 		var MAX_TICKS = 2000; // MAGIC NUMBER
 		var MAX_MUTATE = 30000; // MAGIC NUMBER
-		var autopersist = (options && options.autopersist) || false;
 
 		var ID_NAME = storage.ID_NAME;
 		var EMPTY_DATA = {};
@@ -458,7 +457,7 @@ define([ "util/assert", "util/key", "core/future", "core/tasync", 'util/canon' ]
 			}
 
 			// TODO: infinite cycle if MAX_MUTATE is smaller than depth!
-			if (autopersist && ++mutateCount > MAX_MUTATE) {
+			if (gmeConfig.storage.autoPersist && ++mutateCount > MAX_MUTATE) {
 				mutateCount = 0;
 
 				for (var i = 0; i < roots.length; ++i) {

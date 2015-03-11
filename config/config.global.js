@@ -95,6 +95,7 @@ var config = {
     },
 
     storage: {
+        autoPersist: true, // core setting
         cache: 2000,
         keyType: 'plainSHA1', // 'rand160Bits', 'ZSSHA', 'plainSHA1',
         timeout: 10000,

@@ -22,7 +22,7 @@ define([
 
     function core(storage,options){
         options = options || {};
-        options.usertype = options.usertype || 'nodejs';
+        options.usertype = options.usertype || 'nodejs'; // FIXME: why this is nodejs???
 
         var coreCon = new TreeLoader(new CoreDiff(new MetaCore(new Constraint(new Guid(new Set(new NullPtr(new Type(new NullPtr(new CoreRel(new CoreTree(storage, options)))))))))));
 
