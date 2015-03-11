@@ -21,11 +21,6 @@ define(["mongodb", "util/assert", "util/canon"], function (MONGODB, ASSERT, CANO
   function Database(options) {
     ASSERT(typeof options === "object");
     var gmeConfig = options.globConf;
-    //options.host = options.host || "localhost";
-    //options.port = options.port || 27017;
-    //options.database = options.database || "webgme";
-    options.timeout = options.timeout || (1000 * 60 * 10); //FIXME is this the same as gmeConfig.storage.timeout ??
-
     var mongo = null;
 
     function openDatabase(callback) {
@@ -126,7 +121,7 @@ define(["mongodb", "util/assert", "util/canon"], function (MONGODB, ASSERT, CANO
             newstatus = STATUS_CLOSED;
           }
           callback(null, newstatus);
-        }, options.timeout);
+        }, gmeConfig.storage.timeout);
       }
     }
 
@@ -318,7 +313,7 @@ define(["mongodb", "util/assert", "util/canon"], function (MONGODB, ASSERT, CANO
             if (oldhash === null || oldhash !== newhash) {
               callback(null, newhash, null);
             } else {
-              setTimeout(callback, options.timeout, null, newhash, null);
+              setTimeout(callback, gmeConfig.storage.timeout, null, newhash, null);
             }
           }
         });

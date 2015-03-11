@@ -9,8 +9,6 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
     var server = function(_database,options){
         ASSERT(typeof _database === 'object');
         var gmeConfig = options.globConf;
-        //options = options || {};
-        //options.port = options.port || 80;
 
         // Functions passed via options
         options.authorization = options.authorization || function(sessionID,projectName,type,callback){callback(null,true);};

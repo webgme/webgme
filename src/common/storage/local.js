@@ -7,28 +7,23 @@
 define(["util/assert"], function (ASSERT) {
   "use strict";
 
-  var PROJECT_REGEXP = new RegExp("^[0-9a-zA-Z_]*$");
-  var HASH_REGEXP = new RegExp("^#[0-9a-zA-Z_]*$");
-  var BRANCH_REGEXP = new RegExp("^\\*[0-9a-zA-Z_]*$");
-  var SEPARATOR = '$';
-  var STATUS_UNREACHABLE = "storage unreachable";
-  var STATUS_CONNECTED = "connected";
-  var PROJECT_INFO_ID = '*info*';
+  var PROJECT_REGEXP = new RegExp("^[0-9a-zA-Z_]*$"); // MAGIC CONSTANT
+  var HASH_REGEXP = new RegExp("^#[0-9a-zA-Z_]*$"); // MAGIC CONSTANT
+  var BRANCH_REGEXP = new RegExp("^\\*[0-9a-zA-Z_]*$"); // MAGIC CONSTANT
+  var SEPARATOR = '$'; // MAGIC CONSTANT
+  var STATUS_UNREACHABLE = "storage unreachable"; // MAGIC CONSTANT
+  var STATUS_CONNECTED = "connected"; // MAGIC CONSTANT
+  var PROJECT_INFO_ID = '*info*'; // MAGIC CONSTANT
 
   function Database(options) {
-    ASSERT(typeof options === "object");
-
-    options.host = options.host || "localhost";
-    options.port = options.port || 27017;
-    options.database = options.database || "webgme";
-    options.timeout = options.timeout || 1000000;
-    options.local = options.local || "memory";
+      ASSERT(typeof options === "object");
+      var gmeConfig = options.globConf;
 
     var storage = null,
-      database = options.database,
+      database = 'webgme',// FIXME: is this a constant all the time?
       storageOk = false;
 
-    if (options.local === "memory") {
+    if (gmeConfig.storage.failSafe === "memory") {
       storageOk = true;
       storage = {
         length: 0,
@@ -60,13 +55,13 @@ define(["util/assert"], function (ASSERT) {
         }
       };
     } else {
-      if (options.local === "local") {
+      if (gmeConfig.storage.failSafe === "local") {
         if (localStorage) {
           storageOk = true;
           storage = localStorage;
         }
       }
-      if (options.local == "session") {
+      if (gmeConfig.storage.failSafe === "session") {
         if (sessionStorage) {
           storageOk = true;
           storage = sessionStorage;
@@ -99,7 +94,7 @@ define(["util/assert"], function (ASSERT) {
       if (oldstatus !== STATUS_UNREACHABLE) {
         callback(null, STATUS_CONNECTED);
       } else {
-        setTimeout(callback, options.timeout, null, STATUS_CONNECTED);
+        setTimeout(callback, gmeConfig.storage.timeout, null, STATUS_CONNECTED);
       }
     }
 
@@ -306,7 +301,7 @@ define(["util/assert"], function (ASSERT) {
             }
             hash = (hash && hash.hash) || "";
             callback(null, hash, null);
-          }, options.timeout);
+          }, gmeConfig.storage.timeout);
         }
       }
 

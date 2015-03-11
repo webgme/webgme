@@ -112,7 +112,7 @@ function importProject(parameters, done) {
         result.storage = parameters.storage;
     } else {
         if (!parameters.mongoUri) {
-            result.storage = new Storage({globConf: gmeConfig});
+            result.storage = new Storage({globConf: parameters.gmeConfig});
         }
     }
 

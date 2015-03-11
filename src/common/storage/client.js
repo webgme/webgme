@@ -17,7 +17,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
         if(options.type === "browser") {
             _hostAddress = options.host || window.location.protocol + '//' + window.location.host;
         } else {
-            _hostAddress = options.host + (gmeConfig.server.port ? ':' + gmeConfig.server.port : "");
+            _hostAddress = options.host + ':' + gmeConfig.server.port;
         }
 
 
