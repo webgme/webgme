@@ -12,10 +12,9 @@ describe('User manager command line interface (CLI)', function () {
     var gmeConfig = testFixture.getGmeConfig(),
         should = testFixture.should,
         spawn = testFixture.childProcess.spawn,
-        requirejs = testFixture.requirejs,
         mongodb = testFixture.mongodb,
         Q = testFixture.Q,
-        userManager = requirejs('../bin/usermanager'),
+        userManager = require('../../src/bin/usermanager'),
         filename = require('path').normalize('src/bin/usermanager.js'),
         mongoUri = gmeConfig.mongo.uri,
         uri = require('mongo-uri').parse(mongoUri);

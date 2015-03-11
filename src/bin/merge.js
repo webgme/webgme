@@ -1,8 +1,6 @@
+/*jshint node: true*/
 /**
- * Created by tamas on 2/17/15.
- */
-/**
- * Created by tamas on 2/17/15.
+ * @author kecso / https://github.com/kecso
  */
 
 var program = require('commander'),

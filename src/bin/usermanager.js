@@ -1,4 +1,4 @@
-/*globals require, process, __dirname, console, module*/
+/*jshint node: true*/
 /**
  * NOTE: Expected to be run only under nodejs.
  *
@@ -13,17 +13,12 @@ var requirejs = require('requirejs'),
 
     GMEAuth,
 
-    main;
+    main,
 
-requirejs.config({
-    nodeRequire: require,
-    baseUrl: __dirname + '/..',
-    paths: {
-        'util': 'common/util',
-        'auth': 'server/auth',
-        'bin': 'bin'
-    }
-});
+    gmeConfig = require('../../config'),
+    webgme = require('../../webgme');
+
+webgme.addToRequireJsPaths(gmeConfig);
 
 GMEAuth = requirejs('auth/gmeauth');
 
@@ -34,10 +29,6 @@ main = function (argv) {
         auth,
         mainDeferred = Q.defer(),
         setupGMEAuth = function (databaseConnectionString) {
-            var mongoConnectionInfo,
-
-                gmeConfig = require('../../config');
-
             if (databaseConnectionString) {
                 // this line throws a TypeError for invalid databaseConnectionString
                 MongoURI.parse(databaseConnectionString);

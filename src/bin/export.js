@@ -1,31 +1,32 @@
+/*jshint node: true*/
 /**
- * Created by tamas on 2/18/15.
+ * @author kecso / https://github.com/kecso
  */
+
 var requirejs = require("requirejs"),
     program = require('commander'),
     BRANCH_REGEXP = new RegExp("^[0-9a-zA-Z_]*$"),
     HASH_REGEXP = new RegExp("^#[0-9a-zA-Z_]*$"),
     FS = require('fs'),
-    Core,Storage,Serialization,
-    jsonProject;
+    Core,
+    Storage,
+    Serialization,
+    jsonProject,
+    gmeConfig = require('../../config'),
+    webgme = require('../../webgme');
 
-requirejs.config({
-    nodeRequire: require,
-    baseUrl: __dirname + '/../',
-    paths: {
-        "storage": "common/storage",
-        "core": "common/core",
-        "util": "common/util",
-        "coreclient": "common/core/users"
-    }
-});
+webgme.addToRequireJsPaths(gmeConfig);
+
 Core = requirejs('core/core');
 Storage = requirejs('storage/serveruserstorage');
 Serialization = requirejs('coreclient/serialization');
+
 var exportProject = function(mongoUri,projectId,branchOrCommit,callback){
-    var core,project,root,database = new Storage({
-            globConf: {mongo: {uri: mongoUri},  storage: { keyType: 'plainSHA1'}},  //FIXME: should these read from config?
-            log:{debug:function(msg){},error:function(msg){}}}), //we do not want debugging
+    'use strict';
+    var core,
+        project,
+        root,
+        database,
         close = function(error,data){
             try{
                 project.closeProject(function(){
@@ -62,6 +63,15 @@ var exportProject = function(mongoUri,projectId,branchOrCommit,callback){
                 return next(new Error('unknown branch'));
             });
         };
+
+    gmeConfig.mongo.uri = mongoUri || gmeConfig.mongo.uri;
+    database = new Storage({
+        globConf: gmeConfig,
+        log: {
+            debug: function (msg) {},
+            error: function (msg) {}
+        }}); //we do not want debugging
+
     database.openDatabase(function(err){
         if(err){
             return callback(err);
@@ -79,7 +89,7 @@ var exportProject = function(mongoUri,projectId,branchOrCommit,callback){
                     return close(err);
                 }
                 project = p;
-                core = new Core(project);
+                core = new Core(project, {globConf: gmeConfig});
                 getRoot(function(err,r){
                     if(err){
                         return close(err);

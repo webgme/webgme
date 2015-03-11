@@ -1,5 +1,4 @@
-/*globals require, console*/
-/*jshint node:true */
+/*jshint node: true */
 /**
  * @author lattmann / https://github.com/lattmann
  */

@@ -1,4 +1,7 @@
 /*jshint node: true*/
+/**
+ * @author lattmann / https://github.com/lattmann
+ */
 
 var main;
 

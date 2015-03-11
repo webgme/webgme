@@ -30,7 +30,7 @@ requirejs.config({
     }
 });
 
-function addToRequireJsPaths(gmeConfig, baseDir) {
+function addToRequireJsPaths(gmeConfig) {
     'use strict';
 
     var isGoodExtraAsset = function (name, filePath) {

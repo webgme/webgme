@@ -13,8 +13,8 @@ var config = {
         sessionCookieSecret: 'meWebGMEez',
         https: {
             enable: false,
-            certificateFile: './src/bin/proba-cert.pem',
-            keyFile: './src/bin/proba-key.pem'
+            certificateFile: './certificates/sample-cert.pem',
+            keyFile: './certificates/sample-key.pem'
         },
         maxWorkers: 10
     },
