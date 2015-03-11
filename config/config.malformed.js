@@ -3,7 +3,7 @@
  * @author lattmann / https://github.com/lattmann
  */
 
-var config = require('./config.global');
+var config = require('./config.default');
 
 config.server = {};
 

@@ -9,14 +9,14 @@ var config = {
 
     server: {
         port: 8888,
+        maxWorkers: 10,
         sessionCookieId: 'webgmeSid',
         sessionCookieSecret: 'meWebGMEez',
         https: {
             enable: false,
             certificateFile: './certificates/sample-cert.pem',
             keyFile: './certificates/sample-key.pem'
-        },
-        maxWorkers: 10
+        }
     },
 
     client: {
@@ -76,7 +76,7 @@ var config = {
 
     plugin: {
         allowServerExecution: false,
-        basePaths: ['./src/plugin/coreplugins'],
+        basePaths: ['./src/plugin/coreplugins']
     },
 
     rest: {

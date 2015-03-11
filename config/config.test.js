@@ -4,7 +4,7 @@
  * @author pmeijer / https://github.com/pmeijer
  */
 
-var config = require('./config.global');
+var config = require('./config.default');
 
 config.server.port = 9001;
 

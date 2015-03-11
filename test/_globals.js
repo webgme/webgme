@@ -5,11 +5,8 @@
  * @author kecso / https://github.com/kecso
  */
 
-// TODO: try without the global - run middleware tests
-//TODO TESTING have to be set before including webgme
 global.TESTING = true;
 
-// TODO: maybe add the testing flag to config?
 process.env.NODE_ENV = 'test';
 
 //adding a local storage class to the global Namespace

@@ -7,7 +7,7 @@ describe('configuration', function () {
     'use strict';
 
     var should = require('chai').should(),
-        oldNodeEnv = process.env.NODE_ENV,
+        oldNodeEnv = process.env.NODE_ENV || '',
         path = require('path'),
         configPath = path.join(__dirname, '..', '..', 'config'),
         unloadConfigs = function () {
@@ -44,11 +44,11 @@ describe('configuration', function () {
 
     it('should load global as a default config', function () {
         var config,
-            configGlobal = require('../../config/config.global.js');
+            configDefault = require('../../config/config.default.js');
         process.env.NODE_ENV = '';
         config = require('../../config');
 
-        config.should.deep.equal(configGlobal);
+        config.should.deep.equal(configDefault);
     });
 
     it('should load test config', function () {
