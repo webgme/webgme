@@ -189,7 +189,7 @@ define(['logManager',
             if (__googleAuthenticationSet === true) {
                 return next();
             } else {
-                var protocolPrefix = gmeConfig.httpsecure === true ? 'https://' : 'http://';
+                var protocolPrefix = gmeConfig.server.https.enable === true ? 'https://' : 'http://';
                 Passport.use(new __googleStrategy({
                         returnURL: protocolPrefix + req.headers.host + '/login/google/return',
                         realm: protocolPrefix + req.headers.host
@@ -207,7 +207,7 @@ define(['logManager',
             var baseUrl = gmeConfig.server.https.enable === true ? 'https://' : 'http://' + req.headers.host + '/rest';
             if (__REST === null) {
                 var restAuthorization;
-                if (gmeConfig.authentication === true) {
+                if (gmeConfig.authentication.enable === true) {
                     restAuthorization = __gmeAuth.tokenAuthorization;
                 }
                 __REST = new REST({
