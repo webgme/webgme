@@ -365,7 +365,7 @@ define(["util/assert", "util/guid"], function (ASSERT, GUID) {
         var returnFunction = function (err) {
           if (!err) {
             var index = branchObj.local.indexOf(newhash);
-            ASSERT(index !== -1 || branchObj.state === BRANCH_STATES.SYNC);
+            // setBranchHash may return out of order, so this will not hold: ASSERT(index !== -1 || branchObj.state === BRANCH_STATES.SYNC);
             if (index !== -1) {
               branchObj.local.splice(index, branchObj.local.length - index);
             }
