@@ -11,6 +11,7 @@ describe('ExecutorClient', function () {
 
     var rimraf = testFixture.rimraf,
         should = testFixture.should,
+        expect = testFixture.expect,
         ExecutorClient = testFixture.ExecutorClient,
         executorClient,
         server;
@@ -43,6 +44,12 @@ describe('ExecutorClient', function () {
         server.stop(function (err) {
             done(err);
         });
+    });
+
+    it('should get create url', function () {
+        expect(typeof executorClient.getCreateURL === 'function').to.equal(true);
+        expect(executorClient.getCreateURL()).to.contain('create');
+        expect(executorClient.getCreateURL('1234567890abcdef')).to.contain('1234567890abcdef');
     });
 
     it('getWorkersInfo should return empty object', function (done) {
@@ -97,6 +104,13 @@ describe('ExecutorClient', function () {
         });
     });
 
+    it('should get info by status', function (done) {
+        executorClient.getInfoByStatus('CREATED', function (err/*, res*/) {
+            should.equal(err, 500);
+            done();
+        });
+    });
+
     it('getAllInfo should return 500', function (done) {
         executorClient.getAllInfo(function (err) {
             should.equal(err, 500);
@@ -136,5 +150,4 @@ describe('ExecutorClient', function () {
             });
         });
     });
-
 });
