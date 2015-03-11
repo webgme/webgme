@@ -8,7 +8,7 @@ var path = require('path'),
     webgme = require('../../webgme'),
     myServer;
 
-webgme.addToRequireJsPaths(gmeConfig, path.join(__dirname, '..', '..'));
+webgme.addToRequireJsPaths(gmeConfig);
 
 myServer = new webgme.standaloneServer(gmeConfig);
 myServer.start();
