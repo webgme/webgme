@@ -102,7 +102,7 @@ define(['logManager',
                 //next should be always called / the response should be sent otherwise this thread will stop without and end
 
                 var query = {};
-                if (req.query.hasOwnProperty('status')) {
+                if (req.query.status) { // req.query.hasOwnProperty raises TypeError on node 0.11.16 [!]
                     query.status = req.query.status;
                 }
                 jobList.find(query, function (err, docs) {
