@@ -131,17 +131,11 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                 };
 
                 var IOReady = function () {
-                    var socketIoOpts = JSON.parse(JSON.stringify(gmeConfig.socketIO)); // Copy this values.
-                    socketIoOpts.query = "webGMESessionId=" + options.webGMESessionId; //FIXME this will be undefined in some cases
+                    var socketIoOpts = JSON.parse(JSON.stringify(gmeConfig.socketIO)); // Copy these values.
+                    if (options.webGMESessionId) {
+                        socketIoOpts.query = 'webGMESessionId=' + options.webGMESessionId; //FIXME this will be undefined in some cases
+                    }
                     socket = IO.connect(_hostAddress, socketIoOpts);
-                    //socket = IO.connect(_hostAddress,{
-                    //    'connect timeout': 10,
-                    //    'reconnection delay': 1,
-                    //    'force new connection': true,
-                    //    'reconnect': false, // FIXME: should we set it to true?
-                    //    'query':"webGMESessionId="+options.webGMESessionId, //this option is only used when some user initiated server function connects to the webgme server
-                    //    'transports': ['websocket']
-                    //});
 
                     socket.on('connect', function () {
                         socketConnected = true;

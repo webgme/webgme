@@ -26,24 +26,6 @@ define(["mongodb", "util/assert", "util/canon"], function (MONGODB, ASSERT, CANO
     function openDatabase(callback) {
       //ASSERT(mongo === null && typeof callback === "function");
 
-
-      /*mongo = new MONGODB.Db(options.database, new MONGODB.Server(options.host, options.port), {
-       'w': 1,
-       'auto_reconnect': true,
-       'poolSize': 20,
-       socketOptions: {keepAlive: 1}
-       });
-
-       mongo.open(function (err) {
-       if (err) {
-       mongo.close();
-       mongo = null;
-       callback(err);
-       } else {
-       callback(null);
-       }
-       });*/
-
       MONGODB.MongoClient.connect(gmeConfig.mongo.uri, gmeConfig.mongo.options, function (err, db) {
         if (!err && db) {
           mongo = db;

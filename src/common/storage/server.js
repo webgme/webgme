@@ -166,40 +166,16 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
         }
 
         function open(){
-            //TODO: this socketIO should probably have the same options as the client.
-            _socket = IO.listen(options.combined ? options.combined : gmeConfig.server.port,{
-                'transports': [
-                    'websocket'
-                ]
+            _socket = IO.listen(options.combined ? options.combined : gmeConfig.server.port, {
+                'transports': gmeConfig.socketIO.transports
             });
 
             _socket.use(function(socket, next) {
                 var handshakeData = socket.handshake;
                 //either the html header contains some webgme signed cookie with the sessionID
                 // or the data has a webGMESession member which should also contain the sessionID - currently the same as the cookie
-                if (options.session === true){
-                    var sessionID;
-                    /*if(data.webGMESessionId === undefined){
-                        if(data.query && data.query.webGMESessionId && data.query.webGMESessionId !== 'undefined'){
-                            sessionID = data.query.webGMESessionId;
-                        }
-                    }
-                    if(sessionID === null || sessionID === undefined){
-                        if(data.headers.cookie){
-                            var cookie = URL.parseCookie(data.headers.cookie);
-                            if(cookie[options.cookieID] !== undefined || cookie[options.cookieID] !== null){
-                                sessionID = require('connect').utils.parseSignedCookie(cookie[options.cookieID],options.secret);
-                                data.query = data.query || {};
-                                data.query.webGMESessionId = sessionID;
-                                data.webGMESessionId = sessionID;
-                            }
-                        } else {
-                            console.log('DEBUG COOKIE INFO', JSON.stringify(data.headers));
-                            console.log('DEBUG HANDSHAKE INFO', JSON.stringify(data.query));
-                            return accept(null,false);
-                        }
-                    }*/
-                    sessionID = getSessionID(handshakeData);
+                if (gmeConfig.authentication.enable === true){
+                    var sessionID = getSessionID(handshakeData);
                     options.sessioncheck(sessionID,function(err,isOk){
                         if(!err && isOk === true){
                             return next();

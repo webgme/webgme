@@ -91,8 +91,7 @@ define(['logManager',
             //creating the proper storage for the standalone server
             __storageOptions = {
                 combined: __httpServer,
-                logger: LogManager.create('StandAloneWebGMEServer-socket.io'),
-                session: false
+                logger: LogManager.create('StandAloneWebGMEServer-socket.io')
             };
             if (true === gmeConfig.authentication.enable) {
                 //__storageOptions.auth = {
@@ -102,7 +101,6 @@ define(['logManager',
                 //    database: gmeConfig.mongodatabase,
                 //    guest: gmeConfig.guest
                 //};
-                __storageOptions.session = true; // FIXME: How does this differ from gmeConfig.authentication.enable?
                 __storageOptions.sessioncheck = __sessionStore.check;
                 __storageOptions.authorization = globalAuthorization;
                 __storageOptions.auth_deleteProject = __gmeAuth.deleteProject;
