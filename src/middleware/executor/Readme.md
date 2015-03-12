@@ -13,11 +13,11 @@ See also `ExecutorClient.js`. See `JobInfo.js` for the list of fields.
 
 ### Usage of Executor Client ###
 
-See [`executor_worker/README.txt`](./executor_worker/README.txt) and [`executor_worker/README.md`](./executor_worker/README.md)
+See [`worker/README.txt`](./worker/README.txt) and [`worker/README.md`](./worker/README.md)
 
 ### Labels ###
 
-See [`executor_worker/README.txt`](./executor_worker/README.txt)
+See [`worker/README.txt`](./worker/README.txt)
 
 ### Job storage ###
 
