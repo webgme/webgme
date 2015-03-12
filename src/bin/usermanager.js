@@ -49,7 +49,7 @@ main = function (argv) {
 
     program
         .version('0.1.0')
-        .option('--db <database>', 'database connection string', 'mongodb://127.0.0.1:27017/multi')
+        .option('--db <database>', 'database connection string')
         .on('--help', function () {
             mainDeferred.resolve();
         });

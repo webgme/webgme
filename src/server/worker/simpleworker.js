@@ -13,10 +13,11 @@ requirejs(['worker/constants',
     'blob/BlobClient',
     'plugin/PluginManagerBase',
     'plugin/PluginResult',
+    'plugin/PluginMessage',
     'storage/clientstorage',
     'coreclient/serialization',
     'auth/gmeauth'],
-  function (CONSTANT, Core, Storage, GUID, DUMP, logManager, FS, PATH, BlobClient, PluginManagerBase, PluginResult, ConnectedStorage, Serialization, GMEAUTH) {
+  function (CONSTANT, Core, Storage, GUID, DUMP, logManager, FS, PATH, BlobClient, PluginManagerBase, PluginResult, PluginMessage, ConnectedStorage, Serialization, GMEAUTH) {
     'use strict';
     var storage = null,
       core = null,
@@ -607,14 +608,43 @@ requirejs(['worker/constants',
           }
           break;
         case CONSTANT.workerCommands.executePlugin:
-          if (typeof parameters.name === 'string' && typeof parameters.context === 'object') {
-            executePlugin(parameters.userId, parameters.name, parameters.webGMESessionId, parameters.context, function (err, result) {
-              safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: result});
-            });
-          } else {
-            initResult();
-            safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: 'invalid parameters', result: {}});
-          }
+            if (gmeConfig.plugin.allowServerExecution) {
+                if (typeof parameters.name === 'string' && typeof parameters.context === 'object') {
+                    executePlugin(parameters.userId,
+                        parameters.name,
+                        parameters.webGMESessionId,
+                        parameters.context,
+                        function (err, result) {
+                            safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: result});
+                        });
+                } else {
+                    initResult();
+                    safeSend({
+                        pid: process.pid,
+                        type: CONSTANT.msgTypes.result,
+                        error: 'invalid parameters',
+                        result: {}
+                    });
+                }
+            } else {
+                initResult();
+                var pluginResult = new PluginResult(),
+                    pluginMessage = new PluginMessage();
+                pluginMessage.severity = 'error';
+                pluginMessage.message = 'plugin execution on server side is disabled';
+                pluginResult.setSuccess(false);
+                pluginResult.pluginName = parameters.name;
+                pluginResult.addMessage(pluginMessage);
+                pluginResult.setStartTime((new Date()).toISOString());
+                pluginResult.setFinishTime((new Date()).toISOString());
+                pluginResult.setError(pluginMessage.message);
+                safeSend({
+                    pid: process.pid,
+                    type: CONSTANT.msgTypes.result,
+                    error: null,
+                    result: pluginResult.serialize()
+                });
+            }
           break;
         case CONSTANT.workerCommands.exportLibrary:
           if (typeof parameters.name === 'string' && typeof parameters.hash === 'string' && typeof parameters.path === 'string') {
