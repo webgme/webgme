@@ -73,7 +73,7 @@ Please use JSHint. Consult .jshintrc for details.
 Always declare your globals at the top of the source.
 
 Use [JSDoc](http://en.wikipedia.org/wiki/JSDoc) syntax to annotate source code with documentation, eg. specify authors as:
-```
+```JavaScript
 /**
  * @author <your_github_username> / https://github.com/<your_github_username>
  */
