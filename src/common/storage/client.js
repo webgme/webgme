@@ -8,16 +8,16 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
     "use strict";
 
     function Database (options) {
+        var gmeConfig = options.globConf;
         ASSERT(typeof options === "object");
 
         options.type = options.type || "browser";
-        options.timeout = options.timeout || 100000;
 
         var _hostAddress = null;
         if(options.type === "browser") {
             _hostAddress = options.host || window.location.protocol + '//' + window.location.host;
         } else {
-            _hostAddress = options.host + (options.port ? ':'+options.port : "");
+            _hostAddress = options.host + ':' + gmeConfig.server.port;
         }
 
 
@@ -127,18 +127,15 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                 var guid = GUID(), firstConnection = true;
                 callbacks[guid] = {
                     cb: callback,
-                    to: setTimeout(callbackTimeout, options.timeout, guid)
+                    to: setTimeout(callbackTimeout, gmeConfig.storage.timeout, guid)
                 };
 
                 var IOReady = function () {
-                    socket = IO.connect(_hostAddress,{
-                        'connect timeout': 10,
-                        'reconnection delay': 1,
-                        'force new connection': true,
-                        'reconnect': false, // FIXME: should we set it to true?
-                        'query':"webGMESessionId="+options.webGMESessionId, //this option is only used when some user initiated server function connects to the webgme server
-                        'transports': ['websocket']
-                    });
+                    var socketIoOpts = JSON.parse(JSON.stringify(gmeConfig.socketIO)); // Copy these values.
+                    if (options.webGMESessionId) {
+                        socketIoOpts.query = 'webGMESessionId=' + options.webGMESessionId; //FIXME this will be undefined in some cases
+                    }
+                    socket = IO.connect(_hostAddress, socketIoOpts);
 
                     socket.on('connect', function () {
                         socketConnected = true;
@@ -211,7 +208,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                 var guid = GUID();
                 callbacks[guid] = {
                     cb: callback,
-                    to: setTimeout(callbackTimeout, options.timeout, guid)
+                    to: setTimeout(callbackTimeout, gmeConfig.storage.timeout, guid)
                 };
                 socket.emit('closeDatabase', function (err) {
                     if(callbacks[guid]){
@@ -231,7 +228,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                 var guid = GUID();
                 callbacks[guid] = {
                     cb: callback,
-                    to: setTimeout(callbackTimeout, options.timeout, guid)
+                    to: setTimeout(callbackTimeout, gmeConfig.storage.timeout, guid)
                 };
                 socket.emit('fsyncDatabase', projectName, function (err) {
                     if(callbacks[guid]){
@@ -253,7 +250,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                 var guid = GUID();
                 getDbStatusCallbacks[guid] = {
                     cb: callback,
-                    to: setTimeout(callbackTimeout, options.timeout, guid)
+                    to: setTimeout(callbackTimeout, gmeConfig.storage.timeout, guid)
                 };
                 if (status !== STATUS_NETWORK_DISCONNECTED) {
                     socket.emit('getDatabaseStatus', oldstatus, function (err, newstatus) {
@@ -284,7 +281,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                 var guid = GUID();
                 callbacks[guid] = {
                     cb: callback,
-                    to: setTimeout(callbackTimeout, options.timeout, guid)
+                    to: setTimeout(callbackTimeout, gmeConfig.storage.timeout, guid)
                 };
                 socket.emit('getProjectNames', function (err, names) {
                     if(callbacks[guid]){
@@ -304,7 +301,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                 var guid = GUID();
                 callbacks[guid] = {
                     cb: callback,
-                    to: setTimeout(callbackTimeout, options.timeout, guid)
+                    to: setTimeout(callbackTimeout, gmeConfig.storage.timeout, guid)
                 };
                 socket.emit('getAllowedProjectNames', function (err, names) {
                     if(callbacks[guid]){
@@ -323,7 +320,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                 var guid = GUID();
                 callbacks[guid] = {
                     cb: callback,
-                    to: setTimeout(callbackTimeout, options.timeout, guid)
+                    to: setTimeout(callbackTimeout, gmeConfig.storage.timeout, guid)
                 };
                 socket.emit('getAuthorizationInfo', name, function (err, authInfo) {
                     if(callbacks[guid]){
@@ -343,7 +340,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                 var guid = GUID();
                 callbacks[guid] = {
                     cb: callback,
-                    to: setTimeout(callbackTimeout, options.timeout, guid)
+                    to: setTimeout(callbackTimeout, gmeConfig.storage.timeout, guid)
                 };
                 socket.emit('deleteProject', project, function (err) {
                     if(callbacks[guid]){
@@ -362,7 +359,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                 var guid = GUID();
                 callbacks[guid] = {
                     cb: callback,
-                    to: setTimeout(callbackTimeout,options.timeout, guid)
+                    to: setTimeout(callbackTimeout, gmeConfig.storage.timeout, guid)
                 };
                 socket.emit('getNextServerEvent',latestGuid,function(err,newGuid,eventParams){
                     if(callbacks[guid]){
@@ -384,7 +381,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                     var guid = GUID();
                     callbacks[guid] = {
                         cb: callback,
-                        to: setTimeout(callbackTimeout, options.timeout, guid)
+                        to: setTimeout(callbackTimeout, gmeConfig.storage.timeout, guid)
                     };
                     socket.emit('openProject', project, function (err) {
                         if (!err) {
@@ -428,7 +425,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                     var guid = GUID();
                     callbacks[guid] = {
                         cb: callback,
-                        to: setTimeout(callbackTimeout, options.timeout, guid)
+                        to: setTimeout(callbackTimeout, gmeConfig.storage.timeout, guid)
                     };
                     flushSaveBucket();
                     socket.emit('fsyncDatabase', project, function (err) {
@@ -451,7 +448,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                     var guid = GUID();
                     getDbStatusCallbacks[guid] = {
                         cb: callback,
-                        to: setTimeout(callbackTimeout, options.timeout, guid)
+                        to: setTimeout(callbackTimeout, gmeConfig.storage.timeout, guid)
                     };
                     if (socketConnected) {
                         socket.emit('getDatabaseStatus', oldstatus, function (err, newstatus) {
@@ -475,7 +472,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                     var guid = GUID();
                     callbacks[guid] = {
                         cb: callback,
-                        to: setTimeout(callbackTimeout, options.timeout, guid)
+                        to: setTimeout(callbackTimeout, gmeConfig.storage.timeout, guid)
                     };
                     socket.emit('closeProject', project, function (err) {
                         if (callbacks[guid]) {
@@ -592,7 +589,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                     var guid = GUID();
                     callbacks[guid] = {
                         cb: callback,
-                        to: setTimeout(callbackTimeout, options.timeout, guid)
+                        to: setTimeout(callbackTimeout, gmeConfig.storage.timeout, guid)
                     };
                     socket.emit('insertObject', project, object, function (err) {
                         if (callbacks[guid]) {
@@ -611,7 +608,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                     var guid = GUID();
                     callbacks[guid] = {
                         cb: callback,
-                        to: setTimeout(callbackTimeout, options.timeout, guid)
+                        to: setTimeout(callbackTimeout, gmeConfig.storage.timeout, guid)
                     };
                     socket.emit('getInfo', project, function (err,info) {
                         if (callbacks[guid]) {
@@ -630,7 +627,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                     var guid = GUID();
                     callbacks[guid] = {
                         cb: callback,
-                        to: setTimeout(callbackTimeout, options.timeout, guid)
+                        to: setTimeout(callbackTimeout, gmeConfig.storage.timeout, guid)
                     };
                     socket.emit('setInfo', project, info, function (err) {
                         if (callbacks[guid]) {
@@ -650,7 +647,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                     var guid = GUID();
                     callbacks[guid] = {
                         cb: callback,
-                        to: setTimeout(callbackTimeout, options.timeout, guid)
+                        to: setTimeout(callbackTimeout, gmeConfig.storage.timeout, guid)
                     };
                     socket.emit('findHash', project, beginning, function (err) {
                         if (callbacks[guid]) {
@@ -670,7 +667,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                     var guid = GUID();
                     callbacks[guid] = {
                         cb: callback,
-                        to: setTimeout(callbackTimeout, options.timeout, guid)
+                        to: setTimeout(callbackTimeout, gmeConfig.storage.timeout, guid)
                     };
                     socket.emit('dumpObjects', project, function (err) {
                         if (callbacks[guid]) {
@@ -690,7 +687,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                     var guid = GUID();
                     callbacks[guid] = {
                         cb: callback,
-                        to: setTimeout(callbackTimeout, options.timeout, guid)
+                        to: setTimeout(callbackTimeout, gmeConfig.storage.timeout, guid)
                     };
                     socket.emit('getBranchNames', project, function (err, names) {
                         if (callbacks[guid]) {
@@ -714,7 +711,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                 } else {
                     getBranchHashCallbacks[guid] = {
                         cb: callback,
-                        to: setTimeout(callbackTimeout, options.timeout, guid),
+                        to: setTimeout(callbackTimeout, gmeConfig.storage.timeout, guid),
                         branch: branch,
                         oldhash: oldhash,
                         project: project
@@ -739,7 +736,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                     var guid = GUID();
                     callbacks[guid] = {
                         cb: callback,
-                        to: setTimeout(callbackTimeout, options.timeout, guid)
+                        to: setTimeout(callbackTimeout, gmeConfig.storage.timeout, guid)
                     };
                     flushSaveBucket();
                     socket.emit('setBranchHash', project, branch, oldhash, newhash, function (err) {
@@ -760,7 +757,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                     var guid = GUID();
                     callbacks[guid] = {
                         cb: callback,
-                        to: setTimeout(callbackTimeout, options.timeout, guid)
+                        to: setTimeout(callbackTimeout, gmeConfig.storage.timeout, guid)
                     };
                     socket.emit('getCommits', project, before, number, function (err, commits) {
                         if (callbacks[guid]) {
@@ -780,7 +777,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                     var guid = GUID();
                     callbacks[guid] = {
                         cb: callback,
-                        to: setTimeout(callbackTimeout, options.timeout, guid)
+                        to: setTimeout(callbackTimeout, gmeConfig.storage.timeout, guid)
                     };
                     socket.emit('makeCommit', project, parents, roothash, msg, function (err) {
                         if (callbacks[guid]) {
@@ -800,7 +797,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
           var guid = GUID();
           callbacks[guid] = {
             cb: callback,
-            to: setTimeout(callbackTimeout, options.timeout, guid)
+            to: setTimeout(callbackTimeout, gmeConfig.storage.timeout, guid)
           };
           socket.emit('getCommonAncestorCommit', project, commitA, commitB, function (err, commit) {
             if (callbacks[guid]) {
@@ -821,7 +818,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                 var guid = GUID();
                 callbacks[guid] = {
                     cb: callback,
-                    to: setTimeout(callbackTimeout,100*options.timeout, guid)
+                    to: setTimeout(callbackTimeout,100*gmeConfig.storage.timeout, guid)
                 };
                 socket.emit('simpleRequest',parameters,function(err,resId){
                     if(callbacks[guid]){
@@ -840,7 +837,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                 var guid = GUID();
                 callbacks[guid] = {
                     cb: callback,
-                    to: setTimeout(callbackTimeout,100*options.timeout, guid)
+                    to: setTimeout(callbackTimeout,100*gmeConfig.storage.timeout, guid)
                 };
                 socket.emit('simpleResult',resultId,function(err,result){
                     if(callbacks[guid]){
@@ -859,7 +856,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                 var guid = GUID();
                 callbacks[guid] = {
                     cb: callback,
-                    to: setTimeout(callbackTimeout,100*options.timeout, guid)
+                    to: setTimeout(callbackTimeout,100*gmeConfig.storage.timeout, guid)
                 };
                 socket.emit('simpleQuery',workerId,parameters,function(err,result){
                     if(callbacks[guid]){
@@ -878,7 +875,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                 var guid = GUID();
                 callbacks[guid] = {
                     cb: callback,
-                    to: setTimeout(callbackTimeout,100*options.timeout, guid)
+                    to: setTimeout(callbackTimeout,100*gmeConfig.storage.timeout, guid)
                 };
                 socket.emit('getToken',function(err,result){
                     if(callbacks[guid]){

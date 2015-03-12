@@ -16,9 +16,9 @@ define(['./BlobBackendBase',
     'util/ensureDir'],
     function (BlobBackendBase, fs, crypto, path, util, GUID, ensureDir) {
     'use strict';
-    var BlobFSBackend = function () {
+    var BlobFSBackend = function (gmeConfig) {
         BlobBackendBase.call(this);
-        this.blobDir = typeof TESTING !== 'undefined' ? './test-tmp/blob-storage' : './blob-local-storage';
+        this.blobDir = gmeConfig.blob.fsDir;
     };
 
     // Inherits from BlobManagerBase

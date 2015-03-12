@@ -1,29 +1,33 @@
+/*jshint node: true*/
 /**
- * Created by tamas on 2/18/15.
+ * @author kecso / https://github.com/kecso
  */
+
 var requirejs = require("requirejs"),
     program = require('commander'),
     BRANCH_REGEXP = new RegExp("^[0-9a-zA-Z_]*$"),
     FS = require('fs'),
-    Core,Storage,Serialization,
-    jsonProject;
+    Core,
+    Storage,
+    Serialization,
+    jsonProject,
+    path = require('path'),
+    gmeConfig = require(path.join(process.cwd(), 'config')),
+    webgme = require('../../webgme');
 
-requirejs.config({
-    nodeRequire: require,
-    baseUrl: __dirname + '/../',
-    paths: {
-        "storage": "common/storage",
-        "core": "common/core",
-        "util": "common/util",
-        "coreclient": "common/core/users"
-    }
-});
+webgme.addToRequireJsPaths(gmeConfig);
+
+
 Core = requirejs('core/core');
 Storage = requirejs('storage/serveruserstorage');
 Serialization = requirejs('coreclient/serialization');
 
 var importProject = function(mongoUri,projectId,jsonProject,branch,callback){
-    var core,project,root,commit,database = new Storage({uri:mongoUri,log:{debug:function(msg){},error:function(msg){}}}), //we do not want debugging
+    var core,
+        project,
+        root,
+        commit,
+        database,
         close = function(error){
             try{
                 project.closeProject(function(){
@@ -38,6 +42,14 @@ var importProject = function(mongoUri,projectId,jsonProject,branch,callback){
             }
         };
 
+    gmeConfig.mongo.uri = mongoUri || gmeConfig.mongo.uri;
+    database = new Storage({
+        globConf: gmeConfig,
+        log: {
+            debug: function (msg) {},
+            error: function (msg) {}
+        }}); //we do not want debugging
+
     database.openDatabase(function(err){
         if(err){
             return callback(err);
@@ -50,7 +62,7 @@ var importProject = function(mongoUri,projectId,jsonProject,branch,callback){
                 });
             } else {
                 project = p;
-                core = new Core(project);
+                core = new Core(project, {globConf: gmeConfig});
                 root = core.createNode({parent:null,base:null});
                 Serialization.import(core,root,jsonProject,function(err){
                     if(err){

@@ -9,46 +9,47 @@ var testFixture = require('../../_globals.js');
 describe('ExecutorClient', function () {
     'use strict';
 
-    var fs = testFixture.fs,
+    var rimraf = testFixture.rimraf,
         should = testFixture.should,
+        expect = testFixture.expect,
         ExecutorClient = testFixture.ExecutorClient,
         executorClient,
-        server,
-        serverBaseUrl;
+        server;
 
     before(function (done) {
         // we have to set the config here
-        var config = WebGMEGlobal.getConfig(),
+        var gmeConfig = testFixture.getGmeConfig(),
             param = {};
-        config.port = 9005;
-        config.authentication = false;
-        config.enableExecutor = true;
 
-        param.serverPort = config.port;
+        gmeConfig.server.port = 9006;
+        gmeConfig.executor.enable = true;
 
-        serverBaseUrl = 'http://127.0.0.1:' + config.port;
+        param.serverPort = gmeConfig.server.port;
+        param.httpsecure = gmeConfig.server.https.enable;
 
-        server = testFixture.WebGME.standaloneServer(config);
-        server.start(function () {
-            executorClient = new ExecutorClient(param);
-            done();
+        rimraf('./test-tmp/executor', function (err) {
+            if (err) {
+                done(err);
+                return;
+            }
+            server = testFixture.WebGME.standaloneServer(gmeConfig);
+            server.start(function () {
+                executorClient = new ExecutorClient(param);
+                done();
+            });
         });
     });
 
     after(function (done) {
         server.stop(function (err) {
-            try {
-                fs.unlinkSync('test-tmp/jobList.nedb');
-            } catch (error) {
-                //console.log(error);
-            }
-            try {
-                fs.unlinkSync('test-tmp/workerList.nedb');
-            } catch (error) {
-                //console.log(error);
-            }
             done(err);
         });
+    });
+
+    it('should get create url', function () {
+        expect(typeof executorClient.getCreateURL === 'function').to.equal(true);
+        expect(executorClient.getCreateURL()).to.contain('create');
+        expect(executorClient.getCreateURL('1234567890abcdef')).to.contain('1234567890abcdef');
     });
 
     it('getWorkersInfo should return empty object', function (done) {
@@ -97,16 +98,37 @@ describe('ExecutorClient', function () {
     });
 
     it('getInfo for non-existing hash should return 404', function (done) {
-        executorClient.getInfo('87704f10a36aa4214f5b0095ba8099e729a10f46', function (err/*, res*/) {
-            should.equal(err, 404);
+        executorClient.getInfo('87704f10a36aa4214f5b0095ba8099e729a10f46', function (err, res) {
+            if (err) {
+                should.equal(err, 404);
+                done();
+                return;
+            }
+            console.log(res);
+            done(new Error('should have failed with 404'));
+        });
+    });
+
+    it('should get info by status', function (done) {
+        executorClient.getInfoByStatus('CREATED', function (err, res) {
+            if (err) {
+                done(new Error(err));
+                return;
+            }
+            expect(res).deep.equal({});
             done();
         });
     });
 
     it('getAllInfo should return 500', function (done) {
-        executorClient.getAllInfo(function (err) {
-            should.equal(err, 500);
-            done();
+        executorClient.getAllInfo(function (err, res) {
+            if (err) {
+                should.equal(err, 500);
+                done();
+                return;
+            }
+            console.log(res);
+            done(new Error('should have failed with 500'));
         });
     });
 
@@ -142,5 +164,4 @@ describe('ExecutorClient', function () {
             });
         });
     });
-
 });

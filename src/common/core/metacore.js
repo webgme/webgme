@@ -95,11 +95,11 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv", "util/canon" ], 
             var validNames = core.getPointerNames(MetaNode(node)) || [],
                 i,
                 validPointerNames = [],
-                metaPointerNode;
-
+                metaPointerNode, max;
             for(i=0;i<validNames.length;i++){
                 metaPointerNode = MetaPointerNode(node,validNames[i]);
-                if(metaPointerNode.max === 1){ //TODO specify what makes something a pointer and what a set??? - can you extend a pointer to a set????
+                max = core.getAttribute(metaPointerNode,'max');
+                if(max === 1){ //TODO specify what makes something a pointer and what a set??? - can you extend a pointer to a set????
                     validPointerNames.push(validNames[i]);
                 }
             }
@@ -111,11 +111,12 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv", "util/canon" ], 
             var validNames = core.getPointerNames(MetaNode(node)) || [],
                 i,
                 validSetNames = [],
-                metaPointerNode;
+                metaPointerNode, max;
 
             for(i=0;i<validNames.length;i++){
                 metaPointerNode = MetaPointerNode(node,validNames[i]);
-                if(metaPointerNode.max === undefined || metaPointerNode.max === -1 || metaPointerNode.max > 1){ //TODO specify what makes something a pointer and what a set??? - can you extend a pointer to a set????
+                max = core.getAttribute(metaPointerNode,'max');
+                if(max === undefined || max === -1 || max > 1){ //TODO specify what makes something a pointer and what a set??? - can you extend a pointer to a set????
                     validSetNames.push(validNames[i]);
                 }
             }
@@ -423,8 +424,8 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv", "util/canon" ], 
             }
         };
         core.delPointerMeta = function(node,name){
+            core.deleteNode(_MetaPointerNode(node,name),true);
             core.deletePointer(MetaNode(node),name);
-            core.deleteNode(_MetaPointerNode(node,name));
         };
 
         core.setAspectMetaTarget = function(node,name,target){
@@ -437,8 +438,8 @@ define([ "util/assert", "core/core", "core/tasync", "util/jjv", "util/canon" ], 
             }
         };
         core.delAspectMeta = function(node,name){
+            core.deleteNode(_MetaAspectNode(node,name),true);
             core.deletePointer(MetaAspectsNode(node),name);
-            core.deleteNode(_MetaAspectNode(node,name));
         };
 
         //type related extra query functions

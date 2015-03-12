@@ -8,15 +8,20 @@
 
 define([],
     function(){
-        var AddOnBase = function(Core,Storage){
+        var AddOnBase = function(Core,Storage, gmeConfig){
             this._Core = Core;
-            this._Storage = Storage;
+            this._Storage = Storage; //TODO: Should Storage be lower-case? It seems to be an instance..
+            this.gmeConfig = gmeConfig;
             this.core = null;
             this.logger = null;
             this.project = null;
             this.branchName = '';
             this.projectName = '';
             this.commit = null;
+            if (!this.gmeConfig) {
+                // TODO: this error check is temporary
+                throw new Error('AddOnBase takes gmeConfig as parameter!');
+            }
 
         };
         AddOnBase.prototype.getName = function () {
@@ -72,7 +77,7 @@ define([],
                 return false;
             }
             this.project = parameters.project;
-            this.core = new this._Core(this.project);
+            this.core = new this._Core(this.project, {globConf: this.gmeConfig});
             this.projectName = parameters.projectName;
             this.branchName = parameters.branchName;
 

@@ -1,3 +1,4 @@
+/*jshint node: true*/
 /**
  * Script for generating configuration and server starting point for a DSML repository.
  * Run this script from the root of the DSML repository.

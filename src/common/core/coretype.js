@@ -587,7 +587,18 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
                 ASSERT(node);
                 target = coretree.joinPaths(oldcore.getPath(node), target);
             }
-            return target || basePath || (hasNullTarget ? null : undefined);
+
+            if(typeof target === 'string'){
+                return target;
+            }
+            if(typeof basePath === 'string'){
+                return basePath;
+            }
+            if(hasNullTarget === true){
+                return null;
+            }
+            return undefined;
+
         };
         core.getOwnPointerPath = function(node,name){
             oldcore.getPointerPath(node,name);
@@ -713,16 +724,6 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 
 
             return copiedNodes;
-        };
-
-        core.getDataForSingleHash = function(node){
-            ASSERT(isValidNode(node));
-            var datas = [];
-            while(node){
-                datas.push(oldcore.getDataForSingleHash(node));
-                node = core.getBase(node);
-            }
-            return datas;
         };
 
         core.getChildrenPaths = function(node){

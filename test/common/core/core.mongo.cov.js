@@ -2,24 +2,23 @@
 /**
  * @author kecso / https://github.com/kecso
  */
-var tGlobals = require('../../_globals.js');
+var testFixture = require('../../_globals.js');
 
 describe('Core Mongo Coverage', function () {
     'use strict';
-    var storage = new tGlobals.WebGME.serverUserStorage({
-            host: '127.0.0.1',
-            port: 27017,
-            database: 'multi',
-            log: tGlobals.Log.create('mongoLog')
+    var gmeConfig = testFixture.getGmeConfig(),
+        storage = new testFixture.WebGME.serverUserStorage({
+            globConf: gmeConfig,
+            log: testFixture.Log.create('mongoLog')
         });
 
     it('fails to connect to database', function (done) {
+        var gmeConfigAltered = testFixture.getGmeConfig();
         this.timeout(20000);
-        storage = new tGlobals.WebGME.serverUserStorage({
-            host: '127.0.0.1',
-            port: 65535,
-            database: 'multi',
-            log: tGlobals.Log.create('mongoLog')
+        gmeConfigAltered.mongo.uri = 'mongodb://127.0.0.1:65535/multi';
+        storage = new testFixture.WebGME.serverUserStorage({
+            globConf: gmeConfigAltered,
+            log: testFixture.Log.create('mongoLog')
         });
         storage.openDatabase(function (err) {
             if (!err) {
@@ -29,11 +28,9 @@ describe('Core Mongo Coverage', function () {
         });
     });
     it('try double database closing', function (done) {
-        storage = new tGlobals.WebGME.serverUserStorage({
-            host: '127.0.0.1',
-            port: 27017,
-            database: 'multi',
-            log: tGlobals.Log.create('mongoLog')
+        storage = new testFixture.WebGME.serverUserStorage({
+            globConf: gmeConfig,
+            log: testFixture.Log.create('mongoLog')
         });
         storage.openDatabase(function (err) {
             if (err) {

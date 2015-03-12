@@ -4,15 +4,14 @@
  * Author: Tamas Kecskes
  */
 
-define([ 'storage/mongo', 'storage/server', 'storage/cache', 'storage/log', 'storage/broadcaster', 'storage/fsync'], function (Mongo,Server,Cache,Log,Broadcaster,Fsync) {
+define([ 'storage/mongo', 'storage/server', 'storage/cache', 'storage/log', 'storage/broadcaster', 'storage/fsync'],
+    function (Mongo, Server, Cache, Log, Broadcaster, Fsync) {
     "use strict";
     function server(options){
         var storages = [];
         // storages.push(Broadcaster);
         storages.push(Fsync);
-        if (options.cache !== 0) {
-            storages.push(Cache);
-        }
+        storages.push(Cache);
         storages.push(Log);
         storages.push(Server);
 

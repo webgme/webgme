@@ -7,16 +7,17 @@
 var testFixture = require('../../_globals.js');
 
 describe('CoreTree', function () {
-    "use strict";
+    'use strict';
 
-    var should = require('chai').should(),
+    var gmeConfig = testFixture.getGmeConfig(),
+        should = require('chai').should(),
         requirejs = require('requirejs'),
 
         CoreTree = requirejs('common/core/coretree'),
 
     // TODO: replace with in memory storage
 
-        storage = new testFixture.Storage({}),
+        storage = new testFixture.Storage({globConf: gmeConfig}),
 
         coreTree;
 
@@ -33,7 +34,7 @@ describe('CoreTree', function () {
                     return;
                 }
 
-                coreTree = new CoreTree(project);
+                coreTree = new CoreTree(project, {globConf: gmeConfig});
                 done();
             });
         });

@@ -11,8 +11,8 @@ WebGMEGlobal['SUPPORTS_TOUCH'] = 'ontouchstart' in window || navigator.msMaxTouc
 
 // let require load all the toplevel needed script and call us on domReady
 define(['logManager',
-    'bin/getconfig',
-    'text!package.json',
+    'text!/gmeConfig.json',
+    'text!/package.json',
     'js/client',
     'js/Constants',
     'js/Utils/GMEConcepts',
@@ -30,7 +30,7 @@ define(['logManager',
     'js/Utils/PreferencesHelper',
     'js/Dialogs/Projects/ProjectsDialog',
     'js/Utils/InterpreterManager'], function (logManager,
-                                            CONFIG,
+                                            gmeConfigJson,
                                             packagejson,
                                             Client,
                                             CONSTANTS,
@@ -52,7 +52,8 @@ define(['logManager',
 
     "use strict";
 
-    var npmJSON = JSON.parse(packagejson);
+    var npmJSON = JSON.parse(packagejson),
+        gmeConfig = JSON.parse(gmeConfigJson);
     WebGMEGlobal.version = npmJSON.version;
 
 
@@ -67,7 +68,7 @@ define(['logManager',
             projectOpenDialog,
             openProjectLoadDialog;
 
-        initialThingsToDo.branchToLoad = initialThingsToDo.branchToLoad || CONFIG.branch;
+        initialThingsToDo.branchToLoad = initialThingsToDo.branchToLoad ||  gmeConfig.client.defaultProject.branch;
 
         layoutManager = new LayoutManager();
         layoutManager.loadLayout(initialThingsToDo.layoutToLoad, function () {
@@ -76,10 +77,10 @@ define(['logManager',
                 len = layoutPanels ? layoutPanels.length : 0,
                 i;
 
-            client = new Client(CONFIG);
+            client = new Client(gmeConfig);
             WebGMEGlobal.Client = client;
 
-            WebGMEGlobal.InterpreterManager = new InterpreterManager(client);
+            WebGMEGlobal.InterpreterManager = new InterpreterManager(client, gmeConfig);
 
             Object.defineProperty(WebGMEGlobal, 'State', {
                 value : StateManager.initialize(),
@@ -206,9 +207,10 @@ define(['logManager',
                         });
                     } else {
 
-                        initialThingsToDo.projectToLoad = initialThingsToDo.projectToLoad || CONFIG.project;
+                        initialThingsToDo.projectToLoad = initialThingsToDo.projectToLoad ||
+                            gmeConfig.client.defaultProject.name;
 
-                        if(!initialThingsToDo.projectToLoad){
+                        if (!initialThingsToDo.projectToLoad){
                             openProjectLoadDialog();
                         } else {
                             client.connectToDatabaseAsync({

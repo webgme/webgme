@@ -2,12 +2,13 @@
 /**
  * @author kecso / https://github.com/kecso
  */
-var tGlobals = require('../../_globals.js');
+var testFixture = require('../../_globals.js');
 
 describe('Core Serialization', function () {
     'use strict';
 //global variables of the test
-    var storage = null,
+    var gmeConfig = testFixture.getGmeConfig(),
+        storage = null,
         commit = '',
         baseCommit = '',
         root = null,
@@ -23,9 +24,10 @@ describe('Core Serialization', function () {
         guidToPath,
         jsonData;
     it('imports the example project', function (done) {
-        tGlobals.importProject({
+        testFixture.importProject({
             filePath: './test/asset/exportimport.json',
-            projectName: 'coreSerializationTest'
+            projectName: 'coreSerializationTest',
+            gmeConfig: gmeConfig
         }, function (err, result) {
             if (err) {
                 done(err);
@@ -46,7 +48,7 @@ describe('Core Serialization', function () {
         this.timeout(5000);
         iData = jsonData;
         eData = {};
-        tGlobals.WebGME.serializer.export(core, root, function (err, exp) {
+        testFixture.WebGME.serializer.export(core, root, function (err, exp) {
             if (err) {
                 return done(err);
             }

@@ -43,10 +43,10 @@ define([ "util/assert", "util/key", "core/future", "core/tasync", 'util/canon' ]
 	var rootCounter = 0;
 
 	return function (storage, options) {
-		var MAX_AGE = (options && options.maxage) || 3;
-		var MAX_TICKS = (options && options.maxticks) || 2000;
-		var MAX_MUTATE = (options && options.maxmutate) || 30000;
-		var autopersist = (options && options.autopersist) || false;
+        var gmeConfig = options.globConf;
+		var MAX_AGE = 3; // MAGIC NUMBER
+		var MAX_TICKS = 2000; // MAGIC NUMBER
+		var MAX_MUTATE = 30000; // MAGIC NUMBER
 
 		var ID_NAME = storage.ID_NAME;
 		var EMPTY_DATA = {};
@@ -457,7 +457,7 @@ define([ "util/assert", "util/key", "core/future", "core/tasync", 'util/canon' ]
 			}
 
 			// TODO: infinite cycle if MAX_MUTATE is smaller than depth!
-			if (autopersist && ++mutateCount > MAX_MUTATE) {
+			if (gmeConfig.storage.autoPersist && ++mutateCount > MAX_MUTATE) {
 				mutateCount = 0;
 
 				for (var i = 0; i < roots.length; ++i) {
@@ -728,7 +728,7 @@ define([ "util/assert", "util/key", "core/future", "core/tasync", 'util/canon' ]
 				ASSERT(hash === "" || typeof hash === "undefined");
 
 				if (hash === "") {
-					hash = "#" + GENKEY(data);
+					hash = "#" + GENKEY(data, gmeConfig);
 					data[ID_NAME] = hash;
 
 					done = FUTURE.join(done, storage.insertObject(data));

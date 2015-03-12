@@ -4,8 +4,8 @@
 define(['addon/AddOnBase'],function(Base) {
 
     'use strict';
-    var ConstraintAddOn = function (core, storage) {
-        Base.call(this, core, storage);
+    var ConstraintAddOn = function (core, storage, gmeConfig) {
+        Base.call(this, core, storage, gmeConfig);
     };
 
     ConstraintAddOn.prototype = Object.create(Base.prototype);

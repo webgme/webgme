@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2012-2013 Vanderbilt University, All rights reserved.
- * 
+ *
  * Author: Miklos Maroti
  */
 
@@ -29,9 +29,8 @@ define([ "util/assert" ], function (ASSERT) {
 	};
 
 	var Database = function (database, options) {
-		ASSERT(typeof database === "object" && typeof options === "object");
-
-		options.cache = options.cache || 2000;
+        var gmeConfig = options.globConf;
+		ASSERT(typeof database === "object" && typeof gmeConfig === "object");
 
 		var projects = {};
 		var dlock = new Lock();
@@ -114,7 +113,7 @@ define([ "util/assert" ], function (ASSERT) {
 					maybeFreeze(obj[key]);
 				}
 			};
-			if (typeof WebGMEGlobal !== 'undefined' && typeof WebGMEGlobal.getConfig !== 'undefined' && !WebGMEGlobal.getConfig().debug) {
+			if (gmeConfig.debug === false) {
 				deepFreeze = function () { };
 			}
 
@@ -124,7 +123,7 @@ define([ "util/assert" ], function (ASSERT) {
 				deepFreeze(obj);
 				cache[key] = obj;
 
-				if (++cacheSize >= options.cache) {
+				if (++cacheSize >= gmeConfig.storage.cache) {
 					backup = cache;
 					cache = {};
 					cacheSize = 0;
@@ -301,27 +300,22 @@ define([ "util/assert" ], function (ASSERT) {
 			function reopenProject (callback) {
 				ASSERT(project !== null && refcount >= 0 && typeof callback === "function");
 
-				++refcount;
-				callback(null, {
-					fsyncDatabase: project.fsyncDatabase,
-					getDatabaseStatus: project.getDatabaseStatus,
-					closeProject: closeProject,
-					loadObject: loadObject,
-					insertObject: insertObject,
-					getInfo: project.getInfo,
-					setInfo: project.setInfo,
-					findHash: project.findHash,
-					dumpObjects: project.dumpObjects,
-					getBranchNames: project.getBranchNames,
-					getBranchHash: getBranchHash,
-					setBranchHash: setBranchHash,
-          //getBranchHash: project.getBranchHash,
-          //setBranchHash: project.setBranchHash,
-					getCommits: project.getCommits,
-					makeCommit: project.makeCommit,
-          getCommonAncestorCommit: project.getCommonAncestorCommit,
-					ID_NAME: project.ID_NAME
-				});
+                var cacheProject = {};
+                for (var key in project) {
+                    if (project.hasOwnProperty(key)) {
+                        cacheProject[key] = project[key];
+                    }
+                }
+                if (gmeConfig.storage.cache !== 0) {
+                    cacheProject.loadObject = loadObject;
+                    cacheProject.insertObject = insertObject;
+                }
+                cacheProject.getBranchHash = getBranchHash;
+                cacheProject.setBranchHash = setBranchHash;
+                cacheProject.closeProject = closeProject;
+
+                ++refcount;
+                callback(null, cacheProject);
 			}
 
 			return {

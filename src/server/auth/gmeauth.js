@@ -6,13 +6,14 @@
  */
 
 define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcrypt) {
-    function GMEAuth(_options) {
-        var _collectionName = _options.collection || '_users',
+    function GMEAuth(session, gmeConfig) {
+        // TODO: make sure that gmeConfig passes all config
+        var _collectionName = '_users',
             _organizationCollectionName = '_organizations',
-            _session = _options.session,
-            _userField = _options.user || 'username',
-            _passwordField = _options.password || 'password',
-            _tokenExpiration = _options.tokenTime || 0,
+            _session = session,
+            _userField = 'username',
+            _passwordField = 'password',
+            _tokenExpiration = 0,
             db,
             collectionDeferred = Q.defer(),
             collection = collectionDeferred.promise,
@@ -78,23 +79,15 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
         addMongoOpsToPromize(organizationCollection);
 
         (function connect() {
-            var userString = '';
-            if(_options.user && _options.pwd){
-                userString = _options.user + ':' + _options.pwd + '@';
-            }
-            Q.ninvoke(Mongodb.MongoClient, 'connect', 'mongodb://' + userString + _options.host + ':' + _options.port + '/' + _options.database, {
-                'w': 1,
-                'native-parser': true,
-                'auto_reconnect': true,
-                'poolSize': 20,
-                socketOptions: {keepAlive: 1}
-            }).then(function (db_) {
+            Q.ninvoke(Mongodb.MongoClient, 'connect', gmeConfig.mongo.uri,
+                gmeConfig.mongo.options
+            ).then(function (db_) {
                 db = db_;
                 return Q.ninvoke(db, 'collection', _collectionName);
             }).then(function (collection_) {
                 collectionDeferred.resolve(collection_);
-                if (_options.guest) {
-                    collection.findOne({_id: 'anonymous'})
+                if (gmeConfig.authentication.allowGuests) {
+                    collection.findOne({_id: gmeConfig.authentication.guestAccount})
                         .then(function (userData) {
                             if (!userData) {
                                 console.error('User "anonymous" not found. Create it with src/bin/usermanager.js or anonymous access will not work. ' +
@@ -391,7 +384,7 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
 
         function addUser(userId, email, password, canCreate, options, callback) {
             var data = {_id: userId, email: email, canCreate: canCreate, projects: {}, orgs: [] };
-            return Q.ninvoke(bcrypt, 'hash', password, 10 /* TODO: make this configurable */)
+            return Q.ninvoke(bcrypt, 'hash', password, gmeConfig.authentication.salts)
                 .then(function (hash) {
                     data.passwordHash = hash;
                     if (!options.overwrite) {

@@ -1,8 +1,6 @@
+/*jshint node: true*/
 /**
- * Created by tamas on 2/17/15.
- */
-/**
- * Created by tamas on 2/17/15.
+ * @author kecso / https://github.com/kecso
  */
 
 var program = require('commander'),
@@ -100,6 +98,8 @@ var database = new Storage({uri:program.mongoDatabaseUri,log:{debug:function(msg
         }
     };
 
+        globConf: {mongo: {uri: program.mongoDatabaseUri},  storage: { keyType: 'plainSHA1'}},  //FIXME: should these read from config?
+        log:{debug:function(msg){},error:function(msg){}}}), //we do not want debugging
 database.openDatabase(function(err){
     if(err){
         console.warn(err);

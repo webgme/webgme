@@ -242,29 +242,6 @@ define([ "util/assert", "core/coretree", "core/tasync", "util/canon" ], function
 			return node;
 		}
 
-		function getDataForSingleHash(node) {
-			ASSERT(isValidNode(node));
-
-			var data = {
-				attributes: coretree.getProperty(node, ATTRIBUTES),
-				registry: coretree.getProperty(node, REGISTRY),
-				children: coretree.getKeys(node)
-			};
-			var prefix = "";
-
-			while (node) {
-				var overlays = coretree.getChild(node, OVERLAYS);
-				var rels = coretree.getProperty(overlays, prefix);
-				data[prefix] = rels;
-
-				prefix = "/" + coretree.getRelid(node) + prefix;
-				node = coretree.getParent(node);
-			}
-
-			data = JSON.stringify(data);
-			return data;
-		}
-
 		function deleteNode(node) {
 			ASSERT(isValidNode(node));
 
@@ -677,9 +654,9 @@ define([ "util/assert", "core/coretree", "core/tasync", "util/canon" ], function
 				var child = coretree.getProperty(coretree.getChild(node, OVERLAYS), target);
 				if (child) {
 					for (var name in child) {
-						if (!isPointerName(name)) {
+						if (!isPointerName(name) && name !== '_mutable') {
 							name = name.slice(0, -COLLSUFFIX.length);
-							if (names.indexOf(name) < 0) {
+							if (isPointerName(name) && names.indexOf(name) < 0) {
 								names.push(name);
 							}
 						}
@@ -843,8 +820,6 @@ define([ "util/assert", "core/coretree", "core/tasync", "util/canon" ], function
 		corerel.getCollectionNames = getCollectionNames;
 		corerel.getCollectionPaths = getCollectionPaths;
 		corerel.loadCollection = loadCollection;
-
-        corerel.getDataForSingleHash = getDataForSingleHash;
 
 		corerel.getCoreTree = function() {
 			return coretree;

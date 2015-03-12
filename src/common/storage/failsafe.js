@@ -6,8 +6,8 @@
 
 define(["util/assert", "util/guid"], function (ASSERT, GUID) {
   "use strict";
-  var BRANCH_OBJ_ID = '*branch*';
-  var BRANCH_STATES = {
+  var BRANCH_OBJ_ID = '*branch*'; // MAGIC CONSTANT
+  var BRANCH_STATES = {  // MAGIC CONSTANT
     SYNC: 'sync',
     FORKED: 'forked',
     DISCONNECTED: 'disconnected',
@@ -16,11 +16,15 @@ define(["util/assert", "util/guid"], function (ASSERT, GUID) {
 
   function Database(_database, options) {
     ASSERT(typeof options === "object" && typeof _database === "object");
-    options.failsafe = options.failsafe || "memory";
-    options.failsafefrequency = options.failsafefrequency || 10000;
-    options.timeout = options.timeout || 10000;
+    var gmeConfig = options.globConf;
 
-    var exceptionErrors = [], fsId = "FS", dbId = options.database || "noID", SEPARATOR = "$", STATUS_CONNECTED = "connected", pendingStorage = {}, storage = null;
+    var exceptionErrors = [],
+        fsId = "FS", // MAGIC CONSTANT
+        dbId = "noID", // MAGIC CONSTANT
+        SEPARATOR = "$", // MAGIC CONSTANT
+        STATUS_CONNECTED = "connected", // MAGIC CONSTANT
+        pendingStorage = {},
+        storage = null;
 
     function loadPending() {
       for (var i = 0; i < storage.length; i++) {
@@ -48,11 +52,11 @@ define(["util/assert", "util/guid"], function (ASSERT, GUID) {
     }
 
     function openDatabase(callback) {
-      if (options.failsafe === "local" && localStorage) {
+      if (gmeConfig.storage.failSafe === "local" && localStorage) {
         storage = localStorage;
-      } else if (options.failsafe === "session" && sessionStorage) {
+      } else if (gmeConfig.storage.failSafe === "session" && sessionStorage) {
         storage = sessionStorage;
-      } else if (options.failsafe === "memory") {
+      } else if (gmeConfig.storage.failSafe === "memory") {
         storage = {
           length: 0,
           keys: [],
@@ -75,7 +79,7 @@ define(["util/assert", "util/guid"], function (ASSERT, GUID) {
 
       if (storage) {
         loadPending();
-        setInterval(savePending, options.failsafefrequency);
+        setInterval(savePending, gmeConfig.storage.failSafeFrequency);
         _database.openDatabase(callback);
       } else {
         callback(new Error('cannot initialize fail safe storage'));
@@ -343,7 +347,7 @@ define(["util/assert", "util/guid"], function (ASSERT, GUID) {
           if (myhash === oldhash) {
             setTimeout(function () {
               callback(null, oldhash, branchObj.fork);
-            }, options.timeout);
+            }, gmeConfig.storage.timeout);
           } else {
             callback(null, myhash, branchObj.fork);
           }
@@ -365,7 +369,7 @@ define(["util/assert", "util/guid"], function (ASSERT, GUID) {
         var returnFunction = function (err) {
           if (!err) {
             var index = branchObj.local.indexOf(newhash);
-            ASSERT(index !== -1 || branchObj.state === BRANCH_STATES.SYNC);
+            // setBranchHash may return out of order, so this will not hold: ASSERT(index !== -1 || branchObj.state === BRANCH_STATES.SYNC);
             if (index !== -1) {
               branchObj.local.splice(index, branchObj.local.length - index);
             }

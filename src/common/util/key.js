@@ -22,19 +22,8 @@ define([
         return result;
     }
 
-    return function KeyGenerator(object) {
-        if (keyType === null) {
-            if (typeof WebGMEGlobal !== 'undefined' && WebGMEGlobal.config && typeof WebGMEGlobal.config.keyType === 'string') {
-                keyType = WebGMEGlobal.config.keyType;
-            } else if (typeof WebGMEGlobal !== 'undefined' && typeof WebGMEGlobal.getConfig === 'function') {
-                keyType = WebGMEGlobal.getConfig().storageKeyType || 'plainSHA1';
-            } else if (typeof GME !== 'undefined' && GME.config && typeof GME.config.keyType === 'string') {
-                keyType = GME.config.keyType;
-            } else {
-                keyType = 'plainSHA1';
-            }
-        }
-
+    return function KeyGenerator(object, gmeConfig) {
+        keyType = gmeConfig.storage.keyType;
         ASSERT(typeof keyType === 'string');
 
         switch (keyType) {

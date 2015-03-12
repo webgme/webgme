@@ -20,47 +20,13 @@ define(["mongodb", "util/assert", "util/canon"], function (MONGODB, ASSERT, CANO
 
   function Database(options) {
     ASSERT(typeof options === "object");
-
-    options.host = options.host || "localhost";
-    options.port = options.port || 27017;
-    options.database = options.database || "webgme";
-    options.timeout = options.timeout || (1000 * 60 * 10);
-
+    var gmeConfig = options.globConf;
     var mongo = null;
 
     function openDatabase(callback) {
       //ASSERT(mongo === null && typeof callback === "function");
 
-
-      /*mongo = new MONGODB.Db(options.database, new MONGODB.Server(options.host, options.port), {
-       'w': 1,
-       'auto_reconnect': true,
-       'poolSize': 20,
-       socketOptions: {keepAlive: 1}
-       });
-
-       mongo.open(function (err) {
-       if (err) {
-       mongo.close();
-       mongo = null;
-       callback(err);
-       } else {
-       callback(null);
-       }
-       });*/
-
-      var userString = "";
-      if(options.user && options.pwd){
-        userString = options.user+":"+options.pwd+"@";
-      }
-      options.uri = options.uri || "mongodb://" + userString + options.host + ":" + options.port + "/" + options.database;
-      MONGODB.MongoClient.connect(options.uri, {
-        'w': 1,
-        'native-parser': true,
-        'auto_reconnect': true,
-        'poolSize': 20,
-        socketOptions: {keepAlive: 1}
-      }, function (err, db) {
+      MONGODB.MongoClient.connect(gmeConfig.mongo.uri, gmeConfig.mongo.options, function (err, db) {
         if (!err && db) {
           mongo = db;
           callback(null);
@@ -137,7 +103,7 @@ define(["mongodb", "util/assert", "util/canon"], function (MONGODB, ASSERT, CANO
             newstatus = STATUS_CLOSED;
           }
           callback(null, newstatus);
-        }, options.timeout);
+        }, gmeConfig.storage.timeout);
       }
     }
 
@@ -329,7 +295,7 @@ define(["mongodb", "util/assert", "util/canon"], function (MONGODB, ASSERT, CANO
             if (oldhash === null || oldhash !== newhash) {
               callback(null, newhash, null);
             } else {
-              setTimeout(callback, options.timeout, null, newhash, null);
+              setTimeout(callback, gmeConfig.storage.timeout, null, newhash, null);
             }
           }
         });

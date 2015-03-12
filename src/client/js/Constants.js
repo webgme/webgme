@@ -4,7 +4,7 @@
  * STRING CONSTANT DEFINITIONS USED IN CLIENT JAVASCRIPT (INHERITS ALL THE CONSTANST FROM COMMON/CONSTANST.JS)
  */
 
-define(['underscore', 'common/Constants'], function (underscore, COMMON_CONSTANTS) {
+define(['underscore', '/common/Constants.js'], function (underscore, COMMON_CONSTANTS) {
 
     "use strict";
 
