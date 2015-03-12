@@ -438,7 +438,7 @@ define(['logManager',
 
         __app.configure(function () {
             //counting of requests works only in debug mode
-            if (gmeConfig.log.debug === true) {
+            if (gmeConfig.debug === true) {
                 setInterval(function () {
                     if (__reportedRequestCounter !== __requestCounter) {
                         __reportedRequestCounter = __requestCounter;
@@ -675,8 +675,8 @@ define(['logManager',
             }
         });
         __app.get('/checktoken/:token', function (req, res) {
-            if (gmeConfig.authenticated == true) { // FIXME do we need to check CONFIG.authentication or session.authenticated?
-                if (__canCheckToken == true) {
+            if (gmeConfig.authentication.enable === true) { // FIXME do we need to check CONFIG.authentication or session.authenticated?
+                if (__canCheckToken === true) {
                     setTimeout(function () {
                         __canCheckToken = true;
                     }, 10000);
@@ -808,7 +808,7 @@ define(['logManager',
             res.send(404);
         });
 
-        if (gmeConfig.log.debug === true) {
+        if (gmeConfig.debug === true) {
             console.log('gmeConfig of webgme server:');
             console.log(gmeConfig);
         }

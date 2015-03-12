@@ -145,8 +145,8 @@ require(
 
         domReady(function () {
             var gmeConfig = JSON.parse(gmeConfigJson);
-            if (gmeConfig.log.debug) {
-                DEBUG = gmeConfig.log.debug;
+            if (gmeConfig.debug) {
+                DEBUG = gmeConfig.debug;
             }
 
             //#2 check URL
