@@ -68,7 +68,10 @@ define(['logManager',
             projectOpenDialog,
             openProjectLoadDialog;
 
+        // URL query has higher priority than the config.
+        initialThingsToDo.projectToLoad = initialThingsToDo.projectToLoad || gmeConfig.client.defaultProject.name;
         initialThingsToDo.branchToLoad = initialThingsToDo.branchToLoad ||  gmeConfig.client.defaultProject.branch;
+        initialThingsToDo.objectToLoad = initialThingsToDo.objectToLoad || gmeConfig.client.defaultProject.node;
 
         layoutManager = new LayoutManager();
         layoutManager.loadLayout(initialThingsToDo.layoutToLoad, function () {
@@ -206,10 +209,6 @@ define(['logManager',
                             }
                         });
                     } else {
-
-                        initialThingsToDo.projectToLoad = initialThingsToDo.projectToLoad ||
-                            gmeConfig.client.defaultProject.name;
-
                         if (!initialThingsToDo.projectToLoad){
                             openProjectLoadDialog();
                         } else {

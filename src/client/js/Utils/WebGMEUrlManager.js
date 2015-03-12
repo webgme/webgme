@@ -15,7 +15,7 @@ define ([
             layoutToLoad: util.getURLParameterByName('layout') || 'DefaultLayout',
             commitToLoad: util.getURLParameterByName('commit').toLowerCase(),
             projectToLoad:  util.getURLParameterByName('project'),
-            objectToLoad: util.getURLParameterByName('activeObject').toLowerCase(),
+            objectToLoad: util.getURLParameterByName('node').toLowerCase(),
             createNewProject: util.getURLParameterByName('create') === "true",
             branchToLoad: util.getURLParameterByName('branch')
         };
