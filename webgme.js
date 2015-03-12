@@ -122,5 +122,6 @@ module.exports = {
     logManager: requirejs('logManager'),
     runPlugin: requirejs('server/runplugin'),
     serializer: requirejs('core/users/serialization'),
-    canon: requirejs('common/util/canon')
+    canon: requirejs('common/util/canon'),
+    requirejs: requirejs
 };
