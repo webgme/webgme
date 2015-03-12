@@ -256,7 +256,7 @@ define(['logManager',
                                 res.send(400); //no use for redirecting in this case
                             }
                         });
-                    } else if (gmeConfig.guest) {
+                    } else if (gmeConfig.authentication.allowGuests) {
                         req.session.authenticated = true;
                         req.session.udmId = 'anonymous';
                         req.session.userType = 'GME';
