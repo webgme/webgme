@@ -258,7 +258,7 @@ define(['logManager',
                         });
                     } else if (gmeConfig.authentication.allowGuests) {
                         req.session.authenticated = true;
-                        req.session.udmId = 'anonymous';
+                        req.session.udmId = gmeConfig.authentication.guestAccount;
                         req.session.userType = 'GME';
                         res.cookie('webgme', req.session.udmId);
                         return next();

@@ -89,9 +89,11 @@ define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcry
                 if (gmeConfig.authentication.allowGuests) {
                     collection.findOne({_id: gmeConfig.authentication.guestAccount})
                         .then(function (userData) {
+                            var guestAcc = gmeConfig.authentication.guestAccount;
                             if (!userData) {
-                                console.error('User "anonymous" not found. Create it with src/bin/usermanager.js or anonymous access will not work. ' +
-                                'Disable anonymous access by setting config.guest = false');
+                                console.error('User "' + guestAcc + '" not found. Create it with ' +
+                                'src/bin/usermanager.js or ' + guestAcc + 'access will not work. ' +
+                                'Disable guest access by setting gmeConfig.authentication.allowGuests = false');
                             }
                         });
                 }
