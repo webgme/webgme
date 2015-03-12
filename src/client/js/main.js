@@ -14,7 +14,7 @@ var DEBUG = false,
 
 // configure require path and modules
 require.config({
-    baseUrl: '/',
+    baseUrl: './',
 
     map: {
          '*': {
@@ -55,14 +55,16 @@ require.config({
         'raphael_vml': 'lib/raphael/raphael.vml',
 
         //WebGME custom modules
-        'logManager': 'common/LogManager',
-        'eventDispatcher': 'common/EventDispatcher',
+        'logManager': '/common/LogManager',
+        'eventDispatcher': '/common/EventDispatcher',
 
-        'util': 'common/util',
-        'core': 'common/core',
-        'coreclient': 'common/core/users',
-        'storage': 'common/storage',
-        'blob': 'middleware/blob',
+        'util': '/common/util',
+        'core': '/common/core',
+        'coreclient': '/common/core/users',
+        'storage': '/common/storage',
+        'blob': '/middleware/blob',
+        'plugin': '/plugin',
+        'panels': '/panels',
 
         'notificationManager': 'js/NotificationManager',
         'clientUtil': 'js/util',
@@ -107,8 +109,8 @@ require.config({
             'jquery-WebGME',
             'css!/css/main.css',
             'css!/css/themes/dawn.css',
-            'css!/fonts/font-awesome/css/font-awesome.min.css',
-            'css!/fonts/webgme-icons/style.css'
+            'css!fonts/font-awesome/css/font-awesome.min.css',
+            'css!fonts/webgme-icons/style.css'
         ],
         'jquery-csszoom': ['jquery-ui'],
         'jquery-spectrum': ['jquery'],
@@ -130,7 +132,7 @@ require(
         'backbone',
         'js/WebGME',
         'clientUtil',
-        'text!gmeConfig.json',
+        'text!/gmeConfig.json',
 
         'angular',
         'angular-route',
@@ -163,7 +165,7 @@ require(
             for (var i = 0; i < keys.length; i += 1) {
 
                 // assume this is a relative path from the current working directory
-                gmeConfig.requirejsPaths[keys[i]] = 'extlib/' + gmeConfig.requirejsPaths[keys[i]];
+                gmeConfig.requirejsPaths[keys[i]] = '/extlib/' + gmeConfig.requirejsPaths[keys[i]];
             }
 
             // update client config to route the external lib requests
