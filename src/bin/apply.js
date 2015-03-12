@@ -1,5 +1,6 @@
+/*jshint node: true*/
 /**
- * Created by tamas on 2/17/15.
+ * @author kecso / https://github.com/kecso
  */
 
 var program = require('commander'),
@@ -9,19 +10,19 @@ var program = require('commander'),
     FS = require('fs'),
     Core,
     Storage,
-    patchJson;
-requirejs.config({
-    paths:{
-        'core': './../../src/common/core',
-        'storage': './../../src/common/storage',
-        'util': './../../src/common/util'
-    }
-});
+    patchJson,
+    path = require('path'),
+    gmeConfig = require(path.join(process.cwd(), 'config')),
+    webgme = require('../../webgme');
+
+webgme.addToRequireJsPaths(gmeConfig);
+
 Core = requirejs('core/core');
 Storage = requirejs('storage/serveruserstorage');
 
 var applyPatch = function(mongoUri,projectId,branchOrCommit,patch,noUpdate,callback){
-    var database = new Storage({uri:mongoUri,log:{debug:function(msg){},error:function(msg){}}}), //we do not want debugging
+    'use strict';
+    var database,
         project,
         core,
         root,
@@ -66,6 +67,15 @@ var applyPatch = function(mongoUri,projectId,branchOrCommit,patch,noUpdate,callb
                 return next(new Error('nor commit nor branch input'));
             }
         };
+
+    gmeConfig.mongo.uri = mongoUri || gmeConfig.mongo.uri;
+    database = new Storage({
+        globConf: gmeConfig,
+        log: {
+            debug: function (msg) {},
+            error: function (msg) {}
+        }}); //we do not want debugging
+
     database.openDatabase(function(err){
         if(err){
             return callback(err);
@@ -82,7 +92,7 @@ var applyPatch = function(mongoUri,projectId,branchOrCommit,patch,noUpdate,callb
                     return close(err);
                 }
                 project = p;
-                core = new Core(project);
+                core = new Core(project, {globConf: gmeConfig});
 
                 getRoot(function(err,r){
                     if(err){

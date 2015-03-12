@@ -4,11 +4,12 @@
  * @author kecso / https://github.com/kecso
  */
 
-var testFixtures = require('./../_globals.js');
+var testFixture = require('./../_globals.js');
 
 describe('issue110 testing', function () {
     'use strict';
-    var storage = null,
+    var gmeConfig = testFixture.getGmeConfig(),
+        storage = null,
 
         // global helper functions and globally used variables
         baseCommit = null,
@@ -19,9 +20,10 @@ describe('issue110 testing', function () {
         core = null;
 
     it('import the problematic project', function (done) {
-        testFixtures.importProject({
+        testFixture.importProject({
             filePath: './test/issue/110/input.json',
-            projectName: 'issue110test'
+            projectName: 'issue110test',
+            gmeConfig: gmeConfig
         }, function (err, result) {
             if (err) {
                 done(err);

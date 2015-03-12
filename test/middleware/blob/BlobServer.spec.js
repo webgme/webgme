@@ -9,7 +9,8 @@ var testFixture = require('../../_globals.js');
 describe('BlobServer', function () {
     'use strict';
 
-    var agent = testFixture.superagent.agent(),
+    var gmeConfig = testFixture.getGmeConfig(),
+        agent = testFixture.superagent.agent(),
         should = testFixture.should,
         rimraf = testFixture.rimraf,
         BlobClient = testFixture.BlobClient,
@@ -20,20 +21,21 @@ describe('BlobServer', function () {
 
     beforeEach(function (done) {
         // we have to set the config here
-        var config = WebGMEGlobal.getConfig();
-        config.port = 9005;
-        config.authentication = false;
-        config.httpsecure = false;
-        bcParam.serverPort = config.port;
+        var gmeConfig = testFixture.getGmeConfig();
+        gmeConfig.server.port = 9006;
+        gmeConfig.server.https.enable = false;
+        serverBaseUrl = 'http://127.0.0.1:' + gmeConfig.server.port;
+        bcParam.serverPort = gmeConfig.server.port;
         bcParam.server = '127.0.0.1';
-        bcParam.httpsecure = config.httpsecure;
+        bcParam.httpsecure = gmeConfig.server.https.enable;
+
         rimraf('./test-tmp/blob-storage', function (err) {
             if (err) {
                 done(err);
                 return;
             }
-            serverBaseUrl = 'http://127.0.0.1:' + config.port;
-            server = testFixture.WebGME.standaloneServer(config);
+
+            server = testFixture.WebGME.standaloneServer(gmeConfig);
             server.start(function (err) {
                 done(err);
             });

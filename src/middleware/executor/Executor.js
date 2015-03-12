@@ -15,26 +15,20 @@ define(['logManager',
         'child_process',
         'buffer-equal-constant-time',
         'nedb',
+        'mkdirp',
         'executor/JobInfo',
         'executor/WorkerInfo'
     ],
-    function (logManager, fs, path, child_process, bufferEqual, DataStore, JobInfo, WorkerInfo) {
+    function (logManager, fs, path, child_process, bufferEqual, DataStore, mkdirp, JobInfo, WorkerInfo) {
         'use strict';
-        var jobListDBFile = typeof TESTING !== 'undefined' ? 'test-tmp/jobList.nedb' : 'jobList.nedb';
-        var workerListDBFile = typeof TESTING !== 'undefined' ? 'test-tmp/workerList.nedb' : 'workerList.nedb';
-        var logger = logManager.create('REST-Executor'); //how to define your own logger which will use the global settings
-        var config = {};
-        var jobList = new DataStore({filename: jobListDBFile, autoload: true});
-        jobList.ensureIndex({fieldName: 'hash', unique: true}, function (err) {
-            if (err) {
-                console.error(err);
-                process.exit(1);
-            }
-        });
+        var jobListDBFile,
+            workerListDBFile,
+            gmeConfig,
+            jobList,
+            workerList,
+            workerRefreshInterval,
+            logger = logManager.create('REST-Executor'); //TODO: how to define your own logger which will use the global settings
 
-        var workerRefreshInterval = typeof TESTING !== 'undefined' ? 100 : 5 * 1000;
-        // worker = { clientId:, lastSeen: }
-        var workerList = new DataStore({filename: workerListDBFile, autoload: true});
         var workerTimeout = function () {
             if (process.uptime() < workerRefreshInterval / 1000 * 5) {
                 return;
@@ -60,6 +54,7 @@ define(['logManager',
 
         var labelJobs = {}; // map from label to blob hash
         var labelJobsFilename = 'labelJobs.json'; // TODO put somewhere that makes sense
+
         function updateLabelJobs() {
             var fs = require('fs');
             fs.readFile(labelJobsFilename, {encoding: 'utf-8'}, function (err, data) {
@@ -86,8 +81,8 @@ define(['logManager',
         var ExecutorREST = function (req, res, next) {
 
             var authenticate = function () {
-                if (config.executorNonce) {
-                    if (!req.headers['x-executor-nonce'] || bufferEqual(new Buffer(req.headers['x-executor-nonce']), new Buffer(config.executorNonce)) !== true) {
+                if (gmeConfig.executor.nonce) {
+                    if (!req.headers['x-executor-nonce'] || bufferEqual(new Buffer(req.headers['x-executor-nonce']), new Buffer(gmeConfig.executor.nonce)) !== true) {
                         res.send(403);
                         return false;
                     }
@@ -107,7 +102,7 @@ define(['logManager',
                 //next should be always called / the response should be sent otherwise this thread will stop without and end
 
                 var query = {};
-                if (req.query.hasOwnProperty('status')) {
+                if (req.query.status) { // req.query.hasOwnProperty raises TypeError on node 0.11.16 [!]
                     query.status = req.query.status;
                 }
                 jobList.find(query, function (err, docs) {
@@ -395,8 +390,21 @@ define(['logManager',
             }
         };
 
-        var setup = function (param) {
-            config = param || {};
+        var setup = function (_gmeConfig) {
+            gmeConfig = _gmeConfig;
+            mkdirp.sync(gmeConfig.executor.outputDir);
+            jobListDBFile = path.join(gmeConfig.executor.outputDir, 'jobList.nedb');
+            workerListDBFile = path.join(gmeConfig.executor.outputDir, 'workerList.nedb');
+            jobList = new DataStore({filename: jobListDBFile, autoload: true});
+            workerList = new DataStore({filename: workerListDBFile, autoload: true});
+            workerRefreshInterval = gmeConfig.executor.workerRefreshInterval;
+
+            jobList.ensureIndex({fieldName: 'hash', unique: true}, function (err) {
+                if (err) {
+                    logger.error('Failure in ExecutorRest');
+                    throw new Error(err);
+                }
+            });
             return ExecutorREST;
         };
 

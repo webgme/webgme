@@ -7,13 +7,14 @@ var testFixture = require('../../_globals.js');
 
 describe('corerel', function () {
     'use strict';
-    var storage = new testFixture.Storage(),
+    var gmeConfig = testFixture.getGmeConfig(),
+        storage = new testFixture.Storage({globConf: gmeConfig}),
         Type = testFixture.requirejs('common/core/coretype'),
         Rel = testFixture.requirejs('common/core/corerel'),
         Tree = testFixture.requirejs('common/core/coretree'),
         TASYNC = testFixture.requirejs('common/core/tasync'),
-        Core = function (s) {
-            return new Type(new Rel(new Tree(s)));
+        Core = function (s, options) {
+            return new Type(new Rel(new Tree(s, options), options), options);
         },
         project,
         core,
@@ -32,7 +33,7 @@ describe('corerel', function () {
                     return;
                 }
                 project = p;
-                core = new Core(project);
+                core = new Core(project, {globConf: gmeConfig});
                 root = core.createNode();
                 base = core.createNode({parent: root});
                 core.setAttribute(base, 'name', 'base');

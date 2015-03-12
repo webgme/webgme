@@ -1,4 +1,3 @@
-/*globals WebGMEGlobal*/
 /*jshint node:true, mocha:true*/
 /**
  * @author pmeijer / https://github.com/pmeijer
@@ -7,912 +6,758 @@
 var testFixture = require('../../../_globals.js');
 
 describe('NodeWorker', function () {
-    'use strict';
+        'use strict';
 
-    var fs = testFixture.fs,
-        rimraf = testFixture.rimraf,
-        childProcess = testFixture.childProcess,
-        should = testFixture.should,
-        ExecutorClient = testFixture.ExecutorClient,
-        BlobClient = testFixture.BlobClient,
-        blobClient,
-        executorClient,
-        server,
-        nodeWorkerProcess,
-        serverBaseUrl;
+        var Q = testFixture.Q,
+            fs = testFixture.fs,
+            rimraf = testFixture.rimraf,
+            childProcess = testFixture.childProcess,
+            should = testFixture.should,
+            ExecutorClient = testFixture.ExecutorClient,
+            BlobClient = testFixture.BlobClient,
+            executorClient,
+            blobClient,
+            server,
+            nodeWorkerProcess;
 
-    describe('[nonce not set]', function () {
-        before(function (done) {
-            // we have to set the config here
-            var config = WebGMEGlobal.getConfig(),
-                clientsParam = {},
-                workerConfig = {};
-            config.port = 9005;
-            config.authentication = false;
-            config.enableExecutor = true;
-            config.executorNonce = null;
-            config.httpsecure = false;
+        function startServer(gmeConfig, workerNonce, callback) {
+            Q.nfcall(rimraf, './test-tmp/blob-local-storage')
+                .then(function () {
+                    return Q.nfcall(rimraf, './test-tmp/executor');
+                })
+                .then(function () {
+                    return Q.nfcall(rimraf, './test-tmp/executor-tmp');
+                })
+                .then(function () {
+                    return Q.nfcall(rimraf, 'test-tmp/worker_config.json');
+                })
+                .then(function () {
+                    var clientsParam = {};
 
-            clientsParam.serverPort = config.port;
-            clientsParam.sessionId = 'testingNodeWorker';
-            clientsParam.httpsecure = config.httpsecure;
-            clientsParam.server = '127.0.0.1';
-            serverBaseUrl = 'http://127.0.0.1:' + config.port;
-            workerConfig[serverBaseUrl] = {};
+                    clientsParam.serverPort = gmeConfig.server.port;
+                    clientsParam.sessionId = 'testingNodeWorker';
+                    clientsParam.server = '127.0.0.1';
+                    clientsParam.httpsecure = gmeConfig.server.https.enable;
+                    clientsParam.executorNonce = gmeConfig.executor.nonce;
 
-            server = testFixture.WebGME.standaloneServer(config);
-
-            fs.writeFile('test-tmp/worker_config.json', JSON.stringify(workerConfig), function (err) {
-                if (err) {
-                    done(err);
-                } else {
-
+                    server = testFixture.WebGME.standaloneServer(gmeConfig);
                     server.start(function () {
+                        var workerConfig = {};
                         executorClient = new ExecutorClient(clientsParam);
                         blobClient = new BlobClient(clientsParam);
-                        nodeWorkerProcess = childProcess.spawn('node',
-                            ['node_worker.js',
-                                '../../../../test-tmp/worker_config.json',
-                                '../../../../test-tmp/executor-tmp'],
-                            {cwd: 'src/middleware/executor/worker'});
-
-                        nodeWorkerProcess.stdout.on('data', function (data) {
-                            var str = data.toString();
-                            if (str.indexOf('Connected to') > -1) {
-                                done();
-                                return;
-                            }
-
-                            if (str.indexOf('Error connecting to') > -1) {
-                                done(new Error(str));
-                                return;
-                            }
-
-                            //console.log(str);
-                        });
+                        workerConfig[server.getUrl()] = workerNonce ? {executorNonce: workerNonce} : {};
+                        return Q.nfcall(fs.writeFile, 'test-tmp/worker_config.json', JSON.stringify(workerConfig));
                     });
-                }
-            });
-        });
+                })
+                .then(function () {
+                    var deferred = Q.defer(),
+                        args = ['node_worker.js', '../../../../test-tmp/worker_config.json',
+                            '../../../../test-tmp/executor-tmp'],
+                        timeoutId = setTimeout(function () {
+                            deferred.reject('Worker did not respond in time');
+                        }, 3000);
 
-        after(function (done) {
-            nodeWorkerProcess.kill('SIGINT');
-            server.stop(function (err) {
-                try {
-                    fs.unlinkSync('test-tmp/jobList.nedb');
-                } catch (err) {
-                    //console.log(err);
-                }
-                try {
-                    fs.unlinkSync('test-tmp/workerList.nedb');
-                } catch (err) {
-                    //console.log(err);
-                }
-                try {
-                    fs.unlinkSync('test-tmp/worker_config.json');
-                } catch (err) {
-                    //console.log(err);
-                }
-                if (err) {
-                    done(err);
-                } else {
-                    done();
-                }
-            });
-        });
+                    nodeWorkerProcess = childProcess.spawn('node', args, {cwd: 'src/middleware/executor/worker'});
 
-        it('getWorkersInfo should return one worker', function (done) {
-            executorClient.getWorkersInfo(function (err, res) {
-                var keys = Object.keys(res);
-                if (err) {
-                    done(err);
-                    return;
-                }
-                should.equal(typeof res, 'object', 'getWorkersInfo return object');
-                should.equal(keys.length > 0, true, 'workers attached');
-                done();
-            });
-        });
-    });
-
-    describe('[nonce match]', function () {
-        before(function (done) {
-            // we have to set the config here
-            var config = WebGMEGlobal.getConfig(),
-                clientsParam = {},
-                workerConfig = {};
-            config.port = 9005;
-            config.authentication = false;
-            config.enableExecutor = true;
-            config.httpsecure = false;
-            config.executorNonce = 'aReallyLongSecret';
-            WebGMEGlobal.setConfig({executorNonce: 'aReallyLongSecret'});
-            clientsParam.serverPort = config.port;
-            clientsParam.sessionId = 'testingNodeWorker';
-            clientsParam.httpsecure = config.httpsecure;
-            clientsParam.server = '127.0.0.1';
-            serverBaseUrl = 'http://127.0.0.1:' + config.port;
-            workerConfig[serverBaseUrl] = {executorNonce: 'aReallyLongSecret'};
-
-            server = testFixture.WebGME.standaloneServer(config);
-
-            fs.writeFile('test-tmp/worker_config.json', JSON.stringify(workerConfig), function (err) {
-                if (err) {
-                    done(err);
-                } else {
-
-                    server.start(function () {
-                        executorClient = new ExecutorClient(clientsParam);
-                        blobClient = new BlobClient(clientsParam);
-                        nodeWorkerProcess = childProcess.spawn('node',
-                            ['node_worker.js',
-                                '../../../../test-tmp/worker_config.json',
-                                '../../../../test-tmp/executor-tmp'],
-                            {cwd: 'src/middleware/executor/worker'});
-
-                        nodeWorkerProcess.stdout.on('data', function (data) {
-                            var str = data.toString();
-                            if (str.indexOf('Connected to') > -1) {
-                                done();
-                                return;
-                            }
-
-                            if (str.indexOf('Error connecting to') > -1) {
-                                done(new Error(str));
-                                return;
-                            }
-
-                            //console.log(str);
-                        });
+                    nodeWorkerProcess.stdout.on('data', function (data) {
+                        var str = data.toString();
+                        console.log(str);
+                        if (str.indexOf('Connected to') > -1) {
+                            clearTimeout(timeoutId);
+                            deferred.resolve(true);
+                        } else if (str.indexOf('Server returned 403') > -1) {
+                            clearTimeout(timeoutId);
+                            deferred.resolve(false);
+                        } else if (str.indexOf('Error connecting to') > -1) {
+                            clearTimeout(timeoutId);
+                            deferred.resolve(false);
+                        }
                     });
-                }
-            });
-        });
+                    return deferred.promise;
+                })
+                .catch(function (err) {
+                    throw new Error(err);
+                })
+                .nodeify(callback);
+        }
 
-        beforeEach(function (done) {
-            rimraf('./test-tmp/blob-storage', function (err) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                done();
-            });
-        });
+        describe('[nonce not set]', function () {
 
-        after(function (done) {
-            nodeWorkerProcess.kill('SIGINT');
-            server.stop(function (err) {
-                try {
-                    fs.unlinkSync('test-tmp/jobList.nedb');
-                } catch (err) {
-                    //console.log(err);
-                }
-                try {
-                    fs.unlinkSync('test-tmp/workerList.nedb');
-                } catch (err) {
-                    //console.log(err);
-                }
-                try {
-                    fs.unlinkSync('test-tmp/worker_config.json');
-                } catch (err) {
-                    //console.log(err);
-                }
-                if (err) {
-                    done(err);
-                } else {
-                    done();
-                }
-            });
-        });
+            before(function (done) {
+                var gmeConfig = testFixture.getGmeConfig();
+                this.timeout(5000);
+                gmeConfig.server.port = 9005;
+                gmeConfig.executor.enable = true;
+                gmeConfig.executor.nonce = null;
+                gmeConfig.server.https.enable = false;
 
-        it('getWorkersInfo should return at least one worker', function (done) {
-            executorClient.getWorkersInfo(function (err, res) {
-                var keys = Object.keys(res);
-                if (err) {
-                    done(err);
-                    return;
-                }
-                should.equal(typeof res, 'object', 'getWorkersInfo return object');
-                should.equal(keys.length > 0, true, 'worker attached');
-                done();
-            });
-        });
-
-        it('createJob with cmd node -h should return SUCCESS', function (done) {
-            var executorConfig = {
-                    cmd: 'node',
-                    args: ['-h'],
-                    resultArtifacts: [{name: 'all', resultPatterns: []}]
-                },
-                artifact = blobClient.createArtifact('execFiles'),
-                filesToAdd = {
-                    'executor_config.json': JSON.stringify(executorConfig)
-                };
-            artifact.addFiles(filesToAdd, function (err/*, hashes*/) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                artifact.save(function (err, hash) {
+                startServer(gmeConfig, null, function (err, connected) {
                     if (err) {
                         done(err);
                         return;
                     }
-                    executorClient.createJob({hash: hash}, function (err, jobInfo) {
-                        var intervalId;
-                        if (err) {
-                            done(new Error(err));
-                            return;
-                        }
-                        intervalId = setInterval(function () {
-                            executorClient.getInfo(jobInfo.hash, function (err, res) {
-                                if (err) {
-                                    done(err);
-                                    return;
-                                }
-
-                                if (res.status === 'CREATED' || res.status === 'RUNNING') {
-                                    // The job is still running..
-                                    return;
-                                }
-                                clearInterval(intervalId);
-                                should.equal(res.status, 'SUCCESS');
-                                done();
-                            });
-                        }, 100);
-                    });
+                    if (connected) {
+                        done();
+                    } else {
+                        done(new Error('Worker did not attach.'));
+                    }
                 });
             });
-        });
 
-        it('createJob with node fail.js should return FAILED_TO_EXECUTE', function (done) {
-            var executorConfig = {
-                    cmd: 'node',
-                    args: ['fail.js'],
-                    resultArtifacts: [{name: 'all', resultPatterns: []}]
-                },
-                artifact = blobClient.createArtifact('execFiles'),
-                filesToAdd = {
-                    'executor_config.json': JSON.stringify(executorConfig),
-                    'fail.js': 'process.exit(1)'
-                };
-            artifact.addFiles(filesToAdd, function (err/*, hashes*/) {
-                if (err) {
+            after(function (done) {
+                nodeWorkerProcess.kill('SIGINT');
+                server.stop(function (err) {
                     done(err);
-                    return;
-                }
-                artifact.save(function (err, hash) {
+                });
+            });
+
+            it('getWorkersInfo should return one worker', function (done) {
+                executorClient.getWorkersInfo(function (err, res) {
+                    var keys = Object.keys(res);
                     if (err) {
                         done(err);
                         return;
                     }
-                    executorClient.createJob({hash: hash}, function (err, jobInfo) {
-                        var intervalId;
-                        if (err) {
-                            done(new Error(err));
-                            return;
-                        }
-                        intervalId = setInterval(function () {
-                            executorClient.getInfo(jobInfo.hash, function (err, res) {
-                                if (err) {
-                                    done(err);
-                                    return;
-                                }
-
-                                if (res.status === 'CREATED' || res.status === 'RUNNING') {
-                                    // The job is still running..
-                                    return;
-                                }
-                                clearInterval(intervalId);
-                                should.equal(res.status, 'FAILED_TO_EXECUTE');
-                                done();
-                            });
-                        }, 100);
-                    });
+                    should.equal(typeof res, 'object', 'getWorkersInfo return object');
+                    should.equal(keys.length > 0, true, 'workers attached');
+                    done();
                 });
             });
         });
 
-        it('createJob with invalid hash should return FAILED_TO_GET_SOURCE_METADATA', function (done) {
-            executorClient.createJob({hash: '911'}, function (err, jobInfo) {
-                var intervalId;
-                if (err) {
-                    done(new Error(err));
-                    return;
-                }
-                intervalId = setInterval(function () {
-                    executorClient.getInfo(jobInfo.hash, function (err, res) {
+        describe('[nonce match]', function () {
+            before(function (done) {
+                var gmeConfig = testFixture.getGmeConfig();
+                this.timeout(5000);
+                gmeConfig.server.port = 9005;
+                gmeConfig.executor.enable = true;
+                gmeConfig.executor.nonce = 'aReallyLongSecret';
+                gmeConfig.server.https.enable = false;
+
+                startServer(gmeConfig, 'aReallyLongSecret', function (err, connected) {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+                    if (connected) {
+                        done();
+                    } else {
+                        done(new Error('Worker did not attach.'));
+                    }
+                });
+            });
+
+            after(function (done) {
+                nodeWorkerProcess.kill('SIGINT');
+                server.stop(function (err) {
+                    done(err);
+                });
+            });
+
+            it('getWorkersInfo should return at least one worker', function (done) {
+                executorClient.getWorkersInfo(function (err, res) {
+                    var keys = Object.keys(res);
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+                    should.equal(typeof res, 'object', 'getWorkersInfo return object');
+                    should.equal(keys.length > 0, true, 'worker attached');
+                    done();
+                });
+            });
+
+            it('createJob with cmd node -h should return SUCCESS', function (done) {
+                var executorConfig = {
+                        cmd: 'node',
+                        args: ['-h'],
+                        resultArtifacts: [{name: 'all', resultPatterns: []}]
+                    },
+                    artifact = blobClient.createArtifact('execFiles'),
+                    filesToAdd = {
+                        'executor_config.json': JSON.stringify(executorConfig)
+                    };
+                artifact.addFiles(filesToAdd, function (err/*, hashes*/) {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+                    artifact.save(function (err, hash) {
                         if (err) {
                             done(err);
                             return;
                         }
+                        executorClient.createJob({hash: hash}, function (err, jobInfo) {
+                            var intervalId;
+                            if (err) {
+                                done(new Error(err));
+                                return;
+                            }
+                            intervalId = setInterval(function () {
+                                executorClient.getInfo(jobInfo.hash, function (err, res) {
+                                    if (err) {
+                                        done(err);
+                                        return;
+                                    }
 
-                        if (res.status === 'CREATED' || res.status === 'RUNNING') {
-                            // The job is still running..
-                            return;
-                        }
-                        clearInterval(intervalId);
-                        should.equal(res.status, 'FAILED_TO_GET_SOURCE_METADATA');
-                        done();
+                                    if (res.status === 'CREATED' || res.status === 'RUNNING') {
+                                        // The job is still running..
+                                        return;
+                                    }
+                                    clearInterval(intervalId);
+                                    should.equal(res.status, 'SUCCESS');
+                                    done();
+                                });
+                            }, 100);
+                        });
                     });
-                }, 100);
+                });
             });
-        });
 
-        it('createJob with without executor_config.json should return FAILED_EXECUTOR_CONFIG', function (done) {
-            var artifact = blobClient.createArtifact('execFiles'),
-                filesToAdd = {
-                    'fail.js': 'process.exit(1)'
-                };
-            artifact.addFiles(filesToAdd, function (err/*, hashes*/) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                artifact.save(function (err, hash) {
+            it('createJob with node fail.js should return FAILED_TO_EXECUTE', function (done) {
+                var executorConfig = {
+                        cmd: 'node',
+                        args: ['fail.js'],
+                        resultArtifacts: [{name: 'all', resultPatterns: []}]
+                    },
+                    artifact = blobClient.createArtifact('execFiles'),
+                    filesToAdd = {
+                        'executor_config.json': JSON.stringify(executorConfig),
+                        'fail.js': 'process.exit(1)'
+                    };
+                artifact.addFiles(filesToAdd, function (err/*, hashes*/) {
                     if (err) {
                         done(err);
                         return;
                     }
-                    executorClient.createJob({hash: hash}, function (err, jobInfo) {
-                        var intervalId;
+                    artifact.save(function (err, hash) {
                         if (err) {
-                            done(new Error(err));
+                            done(err);
                             return;
                         }
-                        intervalId = setInterval(function () {
-                            executorClient.getInfo(jobInfo.hash, function (err, res) {
-                                if (err) {
-                                    done(err);
-                                    return;
-                                }
+                        executorClient.createJob({hash: hash}, function (err, jobInfo) {
+                            var intervalId;
+                            if (err) {
+                                done(new Error(err));
+                                return;
+                            }
+                            intervalId = setInterval(function () {
+                                executorClient.getInfo(jobInfo.hash, function (err, res) {
+                                    if (err) {
+                                        done(err);
+                                        return;
+                                    }
 
-                                if (res.status === 'CREATED' || res.status === 'RUNNING') {
-                                    // The job is still running..
-                                    return;
-                                }
-                                clearInterval(intervalId);
-                                should.equal(res.status, 'FAILED_EXECUTOR_CONFIG');
-                                done();
-                            });
-                        }, 100);
+                                    if (res.status === 'CREATED' || res.status === 'RUNNING') {
+                                        // The job is still running..
+                                        return;
+                                    }
+                                    clearInterval(intervalId);
+                                    should.equal(res.status, 'FAILED_TO_EXECUTE');
+                                    done();
+                                });
+                            }, 100);
+                        });
+                    });
+                });
+            });
+
+            it('createJob with invalid hash should return FAILED_TO_GET_SOURCE_METADATA', function (done) {
+                executorClient.createJob({hash: '911'}, function (err, jobInfo) {
+                    var intervalId;
+                    if (err) {
+                        done(new Error(err));
+                        return;
+                    }
+                    intervalId = setInterval(function () {
+                        executorClient.getInfo(jobInfo.hash, function (err, res) {
+                            if (err) {
+                                done(err);
+                                return;
+                            }
+
+                            if (res.status === 'CREATED' || res.status === 'RUNNING') {
+                                // The job is still running..
+                                return;
+                            }
+                            clearInterval(intervalId);
+                            should.equal(res.status, 'FAILED_TO_GET_SOURCE_METADATA');
+                            done();
+                        });
+                    }, 100);
+                });
+            });
+
+            it('createJob with without executor_config.json should return FAILED_EXECUTOR_CONFIG', function (done) {
+                var artifact = blobClient.createArtifact('execFiles'),
+                    filesToAdd = {
+                        'fail.js': 'process.exit(1)'
+                    };
+                artifact.addFiles(filesToAdd, function (err/*, hashes*/) {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+                    artifact.save(function (err, hash) {
+                        if (err) {
+                            done(err);
+                            return;
+                        }
+                        executorClient.createJob({hash: hash}, function (err, jobInfo) {
+                            var intervalId;
+                            if (err) {
+                                done(new Error(err));
+                                return;
+                            }
+                            intervalId = setInterval(function () {
+                                executorClient.getInfo(jobInfo.hash, function (err, res) {
+                                    if (err) {
+                                        done(err);
+                                        return;
+                                    }
+
+                                    if (res.status === 'CREATED' || res.status === 'RUNNING') {
+                                        // The job is still running..
+                                        return;
+                                    }
+                                    clearInterval(intervalId);
+                                    should.equal(res.status, 'FAILED_EXECUTOR_CONFIG');
+                                    done();
+                                });
+                            }, 100);
+                        });
+                    });
+                });
+            });
+
+            it('createJob with missing cmd should return FAILED_EXECUTOR_CONFIG', function (done) {
+                var executorConfig = {
+                        ccmd: 'node',
+                        args: ['-h'],
+                        resultArtifacts: [{name: 'all', resultPatterns: []}]
+                    },
+                    artifact = blobClient.createArtifact('execFiles'),
+                    filesToAdd = {
+                        'executor_config.json': JSON.stringify(executorConfig),
+                    };
+                artifact.addFiles(filesToAdd, function (err/*, hashes*/) {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+                    artifact.save(function (err, hash) {
+                        if (err) {
+                            done(err);
+                            return;
+                        }
+                        executorClient.createJob({hash: hash}, function (err, jobInfo) {
+                            var intervalId;
+                            if (err) {
+                                done(new Error(err));
+                                return;
+                            }
+                            intervalId = setInterval(function () {
+                                executorClient.getInfo(jobInfo.hash, function (err, res) {
+                                    if (err) {
+                                        done(err);
+                                        return;
+                                    }
+
+                                    if (res.status === 'CREATED' || res.status === 'RUNNING') {
+                                        // The job is still running..
+                                        return;
+                                    }
+                                    clearInterval(intervalId);
+                                    should.equal(res.status, 'FAILED_EXECUTOR_CONFIG');
+                                    done();
+                                });
+                            }, 100);
+                        });
+                    });
+                });
+            });
+
+            it('createJob with missing resultArtifacts should return FAILED_EXECUTOR_CONFIG', function (done) {
+                var executorConfig = {
+                        cmd: 'node',
+                        args: ['-h']
+                    },
+                    artifact = blobClient.createArtifact('execFiles'),
+                    filesToAdd = {
+                        'executor_config.json': JSON.stringify(executorConfig),
+                    };
+                artifact.addFiles(filesToAdd, function (err/*, hashes*/) {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+                    artifact.save(function (err, hash) {
+                        if (err) {
+                            done(err);
+                            return;
+                        }
+                        executorClient.createJob({hash: hash}, function (err, jobInfo) {
+                            var intervalId;
+                            if (err) {
+                                done(new Error(err));
+                                return;
+                            }
+                            intervalId = setInterval(function () {
+                                executorClient.getInfo(jobInfo.hash, function (err, res) {
+                                    if (err) {
+                                        done(err);
+                                        return;
+                                    }
+
+                                    if (res.status === 'CREATED' || res.status === 'RUNNING') {
+                                        // The job is still running..
+                                        return;
+                                    }
+                                    clearInterval(intervalId);
+                                    should.equal(res.status, 'FAILED_EXECUTOR_CONFIG');
+                                    done();
+                                });
+                            }, 100);
+                        });
                     });
                 });
             });
         });
 
-        it('createJob with missing cmd should return FAILED_EXECUTOR_CONFIG', function (done) {
-            var executorConfig = {
-                    ccmd: 'node',
-                    args: ['-h'],
-                    resultArtifacts: [{name: 'all', resultPatterns: []}]
-                },
-                artifact = blobClient.createArtifact('execFiles'),
-                filesToAdd = {
-                    'executor_config.json': JSON.stringify(executorConfig),
-                };
-            artifact.addFiles(filesToAdd, function (err/*, hashes*/) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                artifact.save(function (err, hash) {
+        describe('[nonce not matching]', function () {
+            it('worker should not attach', function (done) {
+                var gmeConfig = testFixture.getGmeConfig();
+                this.timeout(5000);
+                gmeConfig.server.port = 9005;
+                gmeConfig.executor.enable = true;
+                gmeConfig.executor.nonce = 'aReallyLongSecret';
+                gmeConfig.server.https.enable = false;
+
+                startServer(gmeConfig, 'notMatching', function (err, connected) {
                     if (err) {
                         done(err);
                         return;
                     }
-                    executorClient.createJob({hash: hash}, function (err, jobInfo) {
-                        var intervalId;
-                        if (err) {
-                            done(new Error(err));
-                            return;
-                        }
-                        intervalId = setInterval(function () {
-                            executorClient.getInfo(jobInfo.hash, function (err, res) {
-                                if (err) {
-                                    done(err);
-                                    return;
-                                }
-
-                                if (res.status === 'CREATED' || res.status === 'RUNNING') {
-                                    // The job is still running..
-                                    return;
-                                }
-                                clearInterval(intervalId);
-                                should.equal(res.status, 'FAILED_EXECUTOR_CONFIG');
-                                done();
-                            });
-                        }, 100);
-                    });
-                });
-            });
-        });
-
-        it('createJob with missing resultArtifacts should return FAILED_EXECUTOR_CONFIG', function (done) {
-            var executorConfig = {
-                    cmd: 'node',
-                    args: ['-h']
-                },
-                artifact = blobClient.createArtifact('execFiles'),
-                filesToAdd = {
-                    'executor_config.json': JSON.stringify(executorConfig),
-                };
-            artifact.addFiles(filesToAdd, function (err/*, hashes*/) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                artifact.save(function (err, hash) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-                    executorClient.createJob({hash: hash}, function (err, jobInfo) {
-                        var intervalId;
-                        if (err) {
-                            done(new Error(err));
-                            return;
-                        }
-                        intervalId = setInterval(function () {
-                            executorClient.getInfo(jobInfo.hash, function (err, res) {
-                                if (err) {
-                                    done(err);
-                                    return;
-                                }
-
-                                if (res.status === 'CREATED' || res.status === 'RUNNING') {
-                                    // The job is still running..
-                                    return;
-                                }
-                                clearInterval(intervalId);
-                                should.equal(res.status, 'FAILED_EXECUTOR_CONFIG');
-                                done();
-                            });
-                        }, 100);
-                    });
-                });
-            });
-        });
-    });
-
-    describe('[nonce no match]', function () {
-        it('worker should not attach', function (done) {
-            // we have to set the config here
-            var config = WebGMEGlobal.getConfig(),
-                clientsParam = {},
-                workerConfig = {},
-                killAndCleanUp;
-            config.port = 9005;
-            config.authentication = false;
-            config.enableExecutor = true;
-            config.httpsecure = false;
-            config.executorNonce = 'aReallyLongSecret';
-
-            clientsParam.serverPort = config.port;
-            clientsParam.sessionId = 'testingNodeWorker';
-            clientsParam.httpsecure = config.httpsecure;
-            clientsParam.server = '127.0.0.1';
-            serverBaseUrl = 'http://127.0.0.1:' + config.port;
-            workerConfig[serverBaseUrl] = {executorNonce: 'notMatching'};
-
-            server = testFixture.WebGME.standaloneServer(config);
-            killAndCleanUp = function (err) {
-                nodeWorkerProcess.kill('SIGINT');
-                server.stop(function (serverErr) {
-                    try {
-                        fs.unlinkSync('test-tmp/jobList.nedb');
-                    } catch (err) {
-                        //console.log(err);
-                    }
-                    try {
-                        fs.unlinkSync('test-tmp/workerList.nedb');
-                    } catch (err) {
-                        //console.log(err);
-                    }
-                    try {
-                        fs.unlinkSync('test-tmp/worker_config.json');
-                    } catch (err) {
-                        //console.log(err);
-                    }
-                    if (serverErr) {
-                        done(serverErr);
-                    } else if (err) {
-                        done(err);
+                    if (connected) {
+                        done(new Error('Worker did attached when it should not have done so.'));
                     } else {
                         done();
                     }
                 });
-            };
-            fs.writeFile('test-tmp/worker_config.json', JSON.stringify(workerConfig), function (err) {
-                if (err) {
+            });
+
+            after(function (done) {
+                nodeWorkerProcess.kill('SIGINT');
+                server.stop(function (err) {
                     done(err);
-                } else {
-
-                    server.start(function () {
-                        executorClient = new ExecutorClient(clientsParam);
-                        blobClient = new BlobClient(clientsParam);
-                        nodeWorkerProcess = childProcess.spawn('node',
-                            ['node_worker.js',
-                                '../../../../test-tmp/worker_config.json',
-                                '../../../../test-tmp/executor-tmp'],
-                            {cwd: 'src/middleware/executor/worker'});
-
-                        nodeWorkerProcess.stdout.on('data', function (data) {
-                            var str = data.toString();
-                            if (str.indexOf('Connected to') > -1) {
-                                killAndCleanUp('Node worker did connect with non-matching nonce.');
-                            }
-                            if (str.indexOf('Server returned 403') > -1) {
-                                killAndCleanUp(null);
-                            }
-                        });
-                    });
-                }
+                });
             });
         });
-    });
 
-    describe('[https nonce match]', function () {
-        var nodeTLSRejectUnauthorized;
-        before(function (done) {
-            // we have to set the config here
-            var config = WebGMEGlobal.getConfig(),
-                clientsParam = {},
-                workerConfig = {};
+        describe('[https nonce match]', function () {
+            var nodeTLSRejectUnauthorized;
+
             nodeTLSRejectUnauthorized = process.env.NODE_TLS_REJECT_UNAUTHORIZED;
-            process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-            config.port = 9005;
-            config.authentication = false;
-            config.enableExecutor = true;
-            config.httpsecure = true;
-            config.executorNonce = 'aReallyLongSecret';
-            WebGMEGlobal.setConfig({executorNonce: 'aReallyLongSecret'});
-            clientsParam.serverPort = config.port;
-            clientsParam.sessionId = 'testingNodeWorker';
-            clientsParam.httpsecure = config.httpsecure;
-            clientsParam.server = '127.0.0.1';
-            serverBaseUrl = 'https://127.0.0.1:' + config.port;
-            workerConfig[serverBaseUrl] = {executorNonce: 'aReallyLongSecret'};
 
-            server = testFixture.WebGME.standaloneServer(config);
+            before(function (done) {
+                var gmeConfig = testFixture.getGmeConfig();
+                this.timeout(5000);
+                gmeConfig.server.port = 9005;
+                gmeConfig.executor.enable = true;
+                gmeConfig.executor.nonce = 'aReallyLongSecret';
+                gmeConfig.server.https.enable = true;
 
-            fs.writeFile('test-tmp/worker_config.json', JSON.stringify(workerConfig), function (err) {
-                if (err) {
-                    done(err);
-                } else {
-
-                    server.start(function () {
-                        executorClient = new ExecutorClient(clientsParam);
-                        blobClient = new BlobClient(clientsParam);
-                        nodeWorkerProcess = childProcess.spawn('node',
-                            ['node_worker.js',
-                                '../../../../test-tmp/worker_config.json',
-                                '../../../../test-tmp/executor-tmp'],
-                            {cwd: 'src/middleware/executor/worker'});
-
-                        nodeWorkerProcess.stdout.on('data', function (data) {
-                            var str = data.toString();
-                            if (str.indexOf('Connected to') > -1) {
-                                done();
-                                return;
-                            }
-
-                            if (str.indexOf('Error connecting to') > -1) {
-                                done(new Error(str));
-                                return;
-                            }
-
-                            //console.log(str);
-                        });
-                    });
-                }
+                process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+                startServer(gmeConfig, 'aReallyLongSecret', function (err, connected) {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+                    if (connected) {
+                        done();
+                    } else {
+                        done(new Error('Worker did not attach.'));
+                    }
+                });
             });
-        });
 
-        beforeEach(function (done) {
-            rimraf('./test-tmp/blob-storage', function (err) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                done();
-            });
-        });
-
-        after(function (done) {
-            nodeWorkerProcess.kill('SIGINT');
-            server.stop(function (err) {
+            after(function (done) {
+                nodeWorkerProcess.kill('SIGINT');
                 process.env.NODE_TLS_REJECT_UNAUTHORIZED = nodeTLSRejectUnauthorized;
-                try {
-                    fs.unlinkSync('test-tmp/jobList.nedb');
-                } catch (err) {
-                    //console.log(err);
-                }
-                try {
-                    fs.unlinkSync('test-tmp/workerList.nedb');
-                } catch (err) {
-                    //console.log(err);
-                }
-                try {
-                    fs.unlinkSync('test-tmp/worker_config.json');
-                } catch (err) {
-                    //console.log(err);
-                }
-                if (err) {
+                server.stop(function (err) {
                     done(err);
-                } else {
+                });
+            });
+
+            it('getWorkersInfo should return at least one worker', function (done) {
+                executorClient.getWorkersInfo(function (err, res) {
+                    var keys = Object.keys(res);
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+                    should.equal(typeof res, 'object', 'getWorkersInfo return object');
+                    should.equal(keys.length > 0, true, 'worker attached');
                     done();
-                }
+                });
             });
-        });
 
-        it('getWorkersInfo should return at least one worker', function (done) {
-            executorClient.getWorkersInfo(function (err, res) {
-                var keys = Object.keys(res);
-                if (err) {
-                    done(err);
-                    return;
-                }
-                should.equal(typeof res, 'object', 'getWorkersInfo return object');
-                should.equal(keys.length > 0, true, 'worker attached');
-                done();
-            });
-        });
-
-        it('createJob with cmd node -h should return SUCCESS', function (done) {
-            var executorConfig = {
-                    cmd: 'node',
-                    args: ['-h'],
-                    resultArtifacts: [{name: 'all', resultPatterns: []}]
-                },
-                artifact = blobClient.createArtifact('execFiles'),
-                filesToAdd = {
-                    'executor_config.json': JSON.stringify(executorConfig)
-                };
-            artifact.addFiles(filesToAdd, function (err/*, hashes*/) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                artifact.save(function (err, hash) {
+            it('createJob with cmd node -h should return SUCCESS', function (done) {
+                var executorConfig = {
+                        cmd: 'node',
+                        args: ['-h'],
+                        resultArtifacts: [{name: 'all', resultPatterns: []}]
+                    },
+                    artifact = blobClient.createArtifact('execFiles'),
+                    filesToAdd = {
+                        'executor_config.json': JSON.stringify(executorConfig)
+                    };
+                artifact.addFiles(filesToAdd, function (err/*, hashes*/) {
                     if (err) {
                         done(err);
                         return;
                     }
-                    executorClient.createJob({hash: hash}, function (err, jobInfo) {
-                        var intervalId;
-                        if (err) {
-                            done(new Error(err));
-                            return;
-                        }
-                        intervalId = setInterval(function () {
-                            executorClient.getInfo(jobInfo.hash, function (err, res) {
-                                if (err) {
-                                    done(err);
-                                    return;
-                                }
-
-                                if (res.status === 'CREATED' || res.status === 'RUNNING') {
-                                    // The job is still running..
-                                    return;
-                                }
-                                clearInterval(intervalId);
-                                should.equal(res.status, 'SUCCESS');
-                                done();
-                            });
-                        }, 100);
-                    });
-                });
-            });
-        });
-
-        it('createJob with node fail.js should return FAILED_TO_EXECUTE', function (done) {
-            var executorConfig = {
-                    cmd: 'node',
-                    args: ['fail.js'],
-                    resultArtifacts: [{name: 'all', resultPatterns: []}]
-                },
-                artifact = blobClient.createArtifact('execFiles'),
-                filesToAdd = {
-                    'executor_config.json': JSON.stringify(executorConfig),
-                    'fail.js': 'process.exit(1)'
-                };
-            artifact.addFiles(filesToAdd, function (err/*, hashes*/) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                artifact.save(function (err, hash) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-                    executorClient.createJob({hash: hash}, function (err, jobInfo) {
-                        var intervalId;
-                        if (err) {
-                            done(new Error(err));
-                            return;
-                        }
-                        intervalId = setInterval(function () {
-                            executorClient.getInfo(jobInfo.hash, function (err, res) {
-                                if (err) {
-                                    done(err);
-                                    return;
-                                }
-
-                                if (res.status === 'CREATED' || res.status === 'RUNNING') {
-                                    // The job is still running..
-                                    return;
-                                }
-                                clearInterval(intervalId);
-                                should.equal(res.status, 'FAILED_TO_EXECUTE');
-                                done();
-                            });
-                        }, 100);
-                    });
-                });
-            });
-        });
-
-        it('createJob with invalid hash should return FAILED_TO_GET_SOURCE_METADATA', function (done) {
-            executorClient.createJob({hash: '911'}, function (err, jobInfo) {
-                var intervalId;
-                if (err) {
-                    done(new Error(err));
-                    return;
-                }
-                intervalId = setInterval(function () {
-                    executorClient.getInfo(jobInfo.hash, function (err, res) {
+                    artifact.save(function (err, hash) {
                         if (err) {
                             done(err);
                             return;
                         }
+                        executorClient.createJob({hash: hash}, function (err, jobInfo) {
+                            var intervalId;
+                            if (err) {
+                                done(new Error(err));
+                                return;
+                            }
+                            intervalId = setInterval(function () {
+                                executorClient.getInfo(jobInfo.hash, function (err, res) {
+                                    if (err) {
+                                        done(err);
+                                        return;
+                                    }
 
-                        if (res.status === 'CREATED' || res.status === 'RUNNING') {
-                            // The job is still running..
-                            return;
-                        }
-                        clearInterval(intervalId);
-                        should.equal(res.status, 'FAILED_TO_GET_SOURCE_METADATA');
-                        done();
+                                    if (res.status === 'CREATED' || res.status === 'RUNNING') {
+                                        // The job is still running..
+                                        return;
+                                    }
+                                    clearInterval(intervalId);
+                                    should.equal(res.status, 'SUCCESS');
+                                    done();
+                                });
+                            }, 100);
+                        });
                     });
-                }, 100);
+                });
             });
-        });
 
-        it('createJob with without executor_config.json should return FAILED_EXECUTOR_CONFIG', function (done) {
-            var artifact = blobClient.createArtifact('execFiles'),
-                filesToAdd = {
-                    'fail.js': 'process.exit(1)'
-                };
-            artifact.addFiles(filesToAdd, function (err/*, hashes*/) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                artifact.save(function (err, hash) {
+            it('createJob with node fail.js should return FAILED_TO_EXECUTE', function (done) {
+                var executorConfig = {
+                        cmd: 'node',
+                        args: ['fail.js'],
+                        resultArtifacts: [{name: 'all', resultPatterns: []}]
+                    },
+                    artifact = blobClient.createArtifact('execFiles'),
+                    filesToAdd = {
+                        'executor_config.json': JSON.stringify(executorConfig),
+                        'fail.js': 'process.exit(1)'
+                    };
+                artifact.addFiles(filesToAdd, function (err/*, hashes*/) {
                     if (err) {
                         done(err);
                         return;
                     }
-                    executorClient.createJob({hash: hash}, function (err, jobInfo) {
-                        var intervalId;
+                    artifact.save(function (err, hash) {
                         if (err) {
-                            done(new Error(err));
+                            done(err);
                             return;
                         }
-                        intervalId = setInterval(function () {
-                            executorClient.getInfo(jobInfo.hash, function (err, res) {
-                                if (err) {
-                                    done(err);
-                                    return;
-                                }
+                        executorClient.createJob({hash: hash}, function (err, jobInfo) {
+                            var intervalId;
+                            if (err) {
+                                done(new Error(err));
+                                return;
+                            }
+                            intervalId = setInterval(function () {
+                                executorClient.getInfo(jobInfo.hash, function (err, res) {
+                                    if (err) {
+                                        done(err);
+                                        return;
+                                    }
 
-                                if (res.status === 'CREATED' || res.status === 'RUNNING') {
-                                    // The job is still running..
-                                    return;
-                                }
-                                clearInterval(intervalId);
-                                should.equal(res.status, 'FAILED_EXECUTOR_CONFIG');
-                                done();
-                            });
-                        }, 100);
+                                    if (res.status === 'CREATED' || res.status === 'RUNNING') {
+                                        // The job is still running..
+                                        return;
+                                    }
+                                    clearInterval(intervalId);
+                                    should.equal(res.status, 'FAILED_TO_EXECUTE');
+                                    done();
+                                });
+                            }, 100);
+                        });
                     });
                 });
             });
-        });
 
-        it('createJob with missing cmd should return FAILED_EXECUTOR_CONFIG', function (done) {
-            var executorConfig = {
-                    ccmd: 'node',
-                    args: ['-h'],
-                    resultArtifacts: [{name: 'all', resultPatterns: []}]
-                },
-                artifact = blobClient.createArtifact('execFiles'),
-                filesToAdd = {
-                    'executor_config.json': JSON.stringify(executorConfig),
-                };
-            artifact.addFiles(filesToAdd, function (err/*, hashes*/) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                artifact.save(function (err, hash) {
+            it('createJob with invalid hash should return FAILED_TO_GET_SOURCE_METADATA', function (done) {
+                executorClient.createJob({hash: '911'}, function (err, jobInfo) {
+                    var intervalId;
+                    if (err) {
+                        done(new Error(err));
+                        return;
+                    }
+                    intervalId = setInterval(function () {
+                        executorClient.getInfo(jobInfo.hash, function (err, res) {
+                            if (err) {
+                                done(err);
+                                return;
+                            }
+
+                            if (res.status === 'CREATED' || res.status === 'RUNNING') {
+                                // The job is still running..
+                                return;
+                            }
+                            clearInterval(intervalId);
+                            should.equal(res.status, 'FAILED_TO_GET_SOURCE_METADATA');
+                            done();
+                        });
+                    }, 100);
+                });
+            });
+
+            it('createJob with without executor_config.json should return FAILED_EXECUTOR_CONFIG', function (done) {
+                var artifact = blobClient.createArtifact('execFiles'),
+                    filesToAdd = {
+                        'fail.js': 'process.exit(1)'
+                    };
+                artifact.addFiles(filesToAdd, function (err/*, hashes*/) {
                     if (err) {
                         done(err);
                         return;
                     }
-                    executorClient.createJob({hash: hash}, function (err, jobInfo) {
-                        var intervalId;
+                    artifact.save(function (err, hash) {
                         if (err) {
-                            done(new Error(err));
+                            done(err);
                             return;
                         }
-                        intervalId = setInterval(function () {
-                            executorClient.getInfo(jobInfo.hash, function (err, res) {
-                                if (err) {
-                                    done(err);
-                                    return;
-                                }
+                        executorClient.createJob({hash: hash}, function (err, jobInfo) {
+                            var intervalId;
+                            if (err) {
+                                done(new Error(err));
+                                return;
+                            }
+                            intervalId = setInterval(function () {
+                                executorClient.getInfo(jobInfo.hash, function (err, res) {
+                                    if (err) {
+                                        done(err);
+                                        return;
+                                    }
 
-                                if (res.status === 'CREATED' || res.status === 'RUNNING') {
-                                    // The job is still running..
-                                    return;
-                                }
-                                clearInterval(intervalId);
-                                should.equal(res.status, 'FAILED_EXECUTOR_CONFIG');
-                                done();
-                            });
-                        }, 100);
+                                    if (res.status === 'CREATED' || res.status === 'RUNNING') {
+                                        // The job is still running..
+                                        return;
+                                    }
+                                    clearInterval(intervalId);
+                                    should.equal(res.status, 'FAILED_EXECUTOR_CONFIG');
+                                    done();
+                                });
+                            }, 100);
+                        });
                     });
                 });
             });
-        });
 
-        it('createJob with missing resultArtifacts should return FAILED_EXECUTOR_CONFIG', function (done) {
-            var executorConfig = {
-                    cmd: 'node',
-                    args: ['-h']
-                },
-                artifact = blobClient.createArtifact('execFiles'),
-                filesToAdd = {
-                    'executor_config.json': JSON.stringify(executorConfig),
-                };
-            artifact.addFiles(filesToAdd, function (err/*, hashes*/) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                artifact.save(function (err, hash) {
+            it('createJob with missing cmd should return FAILED_EXECUTOR_CONFIG', function (done) {
+                var executorConfig = {
+                        ccmd: 'node',
+                        args: ['-h'],
+                        resultArtifacts: [{name: 'all', resultPatterns: []}]
+                    },
+                    artifact = blobClient.createArtifact('execFiles'),
+                    filesToAdd = {
+                        'executor_config.json': JSON.stringify(executorConfig),
+                    };
+                artifact.addFiles(filesToAdd, function (err/*, hashes*/) {
                     if (err) {
                         done(err);
                         return;
                     }
-                    executorClient.createJob({hash: hash}, function (err, jobInfo) {
-                        var intervalId;
+                    artifact.save(function (err, hash) {
                         if (err) {
-                            done(new Error(err));
+                            done(err);
                             return;
                         }
-                        intervalId = setInterval(function () {
-                            executorClient.getInfo(jobInfo.hash, function (err, res) {
-                                if (err) {
-                                    done(err);
-                                    return;
-                                }
+                        executorClient.createJob({hash: hash}, function (err, jobInfo) {
+                            var intervalId;
+                            if (err) {
+                                done(new Error(err));
+                                return;
+                            }
+                            intervalId = setInterval(function () {
+                                executorClient.getInfo(jobInfo.hash, function (err, res) {
+                                    if (err) {
+                                        done(err);
+                                        return;
+                                    }
 
-                                if (res.status === 'CREATED' || res.status === 'RUNNING') {
-                                    // The job is still running..
-                                    return;
-                                }
-                                clearInterval(intervalId);
-                                should.equal(res.status, 'FAILED_EXECUTOR_CONFIG');
-                                done();
-                            });
-                        }, 100);
+                                    if (res.status === 'CREATED' || res.status === 'RUNNING') {
+                                        // The job is still running..
+                                        return;
+                                    }
+                                    clearInterval(intervalId);
+                                    should.equal(res.status, 'FAILED_EXECUTOR_CONFIG');
+                                    done();
+                                });
+                            }, 100);
+                        });
+                    });
+                });
+            });
+
+            it('createJob with missing resultArtifacts should return FAILED_EXECUTOR_CONFIG', function (done) {
+                var executorConfig = {
+                        cmd: 'node',
+                        args: ['-h']
+                    },
+                    artifact = blobClient.createArtifact('execFiles'),
+                    filesToAdd = {
+                        'executor_config.json': JSON.stringify(executorConfig),
+                    };
+                artifact.addFiles(filesToAdd, function (err/*, hashes*/) {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+                    artifact.save(function (err, hash) {
+                        if (err) {
+                            done(err);
+                            return;
+                        }
+                        executorClient.createJob({hash: hash}, function (err, jobInfo) {
+                            var intervalId;
+                            if (err) {
+                                done(new Error(err));
+                                return;
+                            }
+                            intervalId = setInterval(function () {
+                                executorClient.getInfo(jobInfo.hash, function (err, res) {
+                                    if (err) {
+                                        done(err);
+                                        return;
+                                    }
+
+                                    if (res.status === 'CREATED' || res.status === 'RUNNING') {
+                                        // The job is still running..
+                                        return;
+                                    }
+                                    clearInterval(intervalId);
+                                    should.equal(res.status, 'FAILED_EXECUTOR_CONFIG');
+                                    done();
+                                });
+                            }, 100);
+                        });
                     });
                 });
             });
         });
-    });
-});
+    }
+)
+;

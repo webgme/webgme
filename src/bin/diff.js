@@ -1,5 +1,6 @@
+/*jshint node: true*/
 /**
- * Created by tamas on 2/17/15.
+ * @author kecso / https://github.com/kecso
  */
 
 var program = require('commander'),
@@ -8,19 +9,19 @@ var program = require('commander'),
     requirejs = require('requirejs'),
     FS = require('fs'),
     Core,
-    Storage;
-requirejs.config({
-    paths:{
-        'core': './../../src/common/core',
-        'storage': './../../src/common/storage',
-        'util': './../../src/common/util'
-    }
-});
+    Storage,
+    path = require('path'),
+    gmeConfig = require(path.join(process.cwd(), 'config')),
+    webgme = require('../../webgme');
+
+webgme.addToRequireJsPaths(gmeConfig);
+
 Core = requirejs('core/core');
 Storage = requirejs('storage/serveruserstorage');
 
 var generateDiff = function(mongoUri,projectId,sourceBranchOrCommit,targetBranchOrCommit,callback){
-    var database = new Storage({uri:mongoUri,log:{debug:function(msg){},error:function(msg){}}}), //we do not want debugging
+    'use strict';
+    var database,
         project,
         core,
         close = function(error,data){
@@ -59,6 +60,14 @@ var generateDiff = function(mongoUri,projectId,sourceBranchOrCommit,targetBranch
             }
         };
 
+    gmeConfig.mongo.uri = mongoUri || gmeConfig.mongo.uri;
+    database = new Storage({
+        globConf: gmeConfig,
+        log: {
+            debug: function (msg) {},
+            error: function (msg) {}
+        }}); //we do not want debugging
+
     database.openDatabase(function(err){
         if(err){
             return callback(err);
@@ -68,7 +77,7 @@ var generateDiff = function(mongoUri,projectId,sourceBranchOrCommit,targetBranch
                 return close(err, null);
             }
             project = p;
-            core = new Core(project);
+            core = new Core(project, {globConf: gmeConfig});
 
             var needed = 2,
                 error = null,

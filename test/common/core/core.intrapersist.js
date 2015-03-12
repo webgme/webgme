@@ -2,17 +2,20 @@
 /**
  * @author kecso / https://github.com/kecso
  */
-var tGlobals = require('../../_globals.js');
+var testFixture = require('../../_globals.js');
 
 describe('Core IntraPersist', function () {
     'use strict';
-    var storage = null,
+    var gmeConfig = testFixture.getGmeConfig(),
+        storage = null,
         requirejs = require('requirejs'),
         CANON = requirejs('../src/common/util/canon');
 
     function loadNodes(paths, next) {
         var needed = paths.length,
-            nodes = {}, error = null, i,
+            nodes = {},
+            error = null,
+            i,
             loadNode = function (path) {
                 core.loadByPath(root, path, function (err, node) {
                     error = error || err;
@@ -38,9 +41,10 @@ describe('Core IntraPersist', function () {
 
     describe('Pre', function () {
         it('import the basic project', function (done) {
-            tGlobals.importProject({
+            testFixture.importProject({
                 filePath: './test/asset/intraPersist.json',
-                projectName: 'coreIntrapersistTest'
+                projectName: 'coreIntrapersistTest',
+                gmeConfig: gmeConfig
             }, function (err, result) {
                 if (err) {
                     done(err);

@@ -5,10 +5,11 @@
  */
 //these tests intended to ensure that every used feature of mongodb and its used client is work as expected
 
-var tGlobals = require('../../_globals.js');
+var testFixture = require('../../_globals.js');
 describe('mongo database', function () {
     'use strict';
-    var db,
+    var gmeConfig = testFixture.getGmeConfig(),
+        db,
         collection,
         collectionName = 'mongotest___test',
         fsyncDatabase = function (callback) {
@@ -41,7 +42,7 @@ describe('mongo database', function () {
         };
 
     before(function (done) {
-        tGlobals.mongodb.MongoClient.connect('mongodb://127.0.0.1/mongotest', {
+        testFixture.mongodb.MongoClient.connect('mongodb://127.0.0.1/mongotest', {
             'w': 1,
             'native-parser': true,
             'auto_reconnect': true,

@@ -8,7 +8,8 @@ var testFixture = require('../../_globals.js');
 
 describe('corediff apply', function () {
     'use strict';
-    var projectName = 'coreDiffApply',
+    var gmeConfig = testFixture.getGmeConfig(),
+        projectName = 'coreDiffApply',
         project,
         core,
         root,
@@ -17,9 +18,7 @@ describe('corediff apply', function () {
         jsonProject;
 
     var database = new testFixture.WebGME.serverUserStorage({
-        host: '127.0.0.1',
-        port: 27017,
-        database: 'multi',
+        globConf: gmeConfig,
         log: testFixture.Log.create('mongoLog')
     });
 
@@ -35,7 +34,7 @@ describe('corediff apply', function () {
                     return;
                 }
                 project = p;
-                core = new testFixture.WebGME.core(project);
+                core = new testFixture.WebGME.core(project, {globConf: gmeConfig});
                 root = core.createNode();
                 testFixture.WebGME.serializer.import(core, root, jsonProject, function (err, log) {
                     if (err) {
@@ -96,7 +95,7 @@ describe('corediff apply', function () {
                         return;
                     }
                     project = p;
-                    core = new testFixture.WebGME.core(project);
+                    core = new testFixture.WebGME.core(project, {globConf: gmeConfig});
                     project.getBranchNames(function (err, names) {
                         if (err) {
                             done(err);

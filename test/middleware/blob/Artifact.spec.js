@@ -11,6 +11,7 @@ describe('Artifact', function () {
     var Artifact = testFixture.requirejs('blob/Artifact'),
         rimraf = testFixture.rimraf,
         should = testFixture.should,
+        expect = testFixture.expect,
         superagent = testFixture.superagent,
         agent = superagent.agent(),
         BlobClient = testFixture.BlobClient,
@@ -22,16 +23,14 @@ describe('Artifact', function () {
     describe('[http]', function () {
         before(function (done) {
             // we have to set the config here
-            var config = WebGMEGlobal.getConfig();
-            config.port = 9006;
-            config.authentication = false;
-            config.httpsecure = false;
-
-            serverBaseUrl = 'http://127.0.0.1:' + config.port;
-            bcParam.serverPort = config.port;
+            var gmeConfig = testFixture.getGmeConfig();
+            gmeConfig.server.port = 9006;
+            gmeConfig.server.https.enable = false;
+            serverBaseUrl = 'http://127.0.0.1:' + gmeConfig.server.port;
+            bcParam.serverPort = gmeConfig.server.port;
             bcParam.server = '127.0.0.1';
-            bcParam.httpsecure = config.httpsecure;
-            server = testFixture.WebGME.standaloneServer(config);
+            bcParam.httpsecure = gmeConfig.server.https.enable;
+            server = testFixture.WebGME.standaloneServer(gmeConfig);
             server.start(function () {
                 done();
             });
@@ -97,6 +96,20 @@ describe('Artifact', function () {
             });
         });
 
+        it('should succeed with no files addFiles', function (done) {
+            var bc = new BlobClient(bcParam),
+                filesToAdd = {},
+                artifact = new Artifact('testartifact', bc);
+            artifact.addFiles(filesToAdd, function (err, hashes) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                expect(hashes).deep.equal([]);
+                done();
+            });
+        });
+
         it('should addFileAsSoftLink', function (done) {
             var bc = new BlobClient(bcParam),
                 artifact = new Artifact('testartifact', bc);
@@ -143,6 +156,20 @@ describe('Artifact', function () {
             });
         });
 
+        it('should succeed with no files addFilesAsSoftLinks', function (done) {
+            var bc = new BlobClient(bcParam),
+                filesToAdd = {},
+                artifact = new Artifact('testartifact', bc);
+            artifact.addFilesAsSoftLinks(filesToAdd, function (err, hashes) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                expect(hashes).deep.equal([]);
+                done();
+            });
+        });
+
         it('should addObjectHash', function (done) {
             var bc = new BlobClient(bcParam),
                 artifact = new Artifact('testartifact', bc);
@@ -165,6 +192,42 @@ describe('Artifact', function () {
                         should.equal(res.status, 200);
                         should.equal(res.text, 'tttt');
                         done();
+                    });
+                });
+            });
+        });
+
+        it('should fail to add invalid object hash addObjectHash', function (done) {
+            var bc = new BlobClient(bcParam),
+                artifact = new Artifact('testartifact', bc);
+            artifact.addObjectHash('a.txt', 'invalid hash', function (err, hash) {
+                if (err.indexOf('hash is invalid') > -1) {
+                    done();
+                    return;
+                }
+                done(new Error('should have failed to add an invalid hash to artifact ' + err));
+            });
+        });
+
+        it('should fail to add different content with the same name addObjectHash', function (done) {
+            var bc = new BlobClient(bcParam),
+                artifact = new Artifact('testartifact', bc);
+            bc.putFile('a.txt', 'tttt', function (err, hash) {
+                if (err) {
+                    done(new Error(err));
+                    return;
+                }
+                artifact.addObjectHash('a.txt', hash, function (err, hash) {
+                    if (err) {
+                        done(new Error(err));
+                        return;
+                    }
+                    artifact.addObjectHash('a.txt', hash, function (err, hash) {
+                        if (err.indexOf('same name was already added') > -1) {
+                            done();
+                            return;
+                        }
+                        done(new Error('should have failed to add objects with the same name ' + err));
                     });
                 });
             });
@@ -204,6 +267,105 @@ describe('Artifact', function () {
                     });
 
                 });
+            });
+        });
+
+        it('should succeed with no hashes addObjectHashes', function (done) {
+            var bc = new BlobClient(bcParam),
+                objHashes = {},
+                artifact = new Artifact('testartifact', bc);
+
+            artifact.addObjectHashes(objHashes, function (err, hashes) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                expect(hashes).deep.equal([]);
+                done();
+            });
+        });
+
+        it('should fail to add invalid object hash addMetadataHash', function (done) {
+            var bc = new BlobClient(bcParam),
+                artifact = new Artifact('testartifact', bc);
+            artifact.addMetadataHash('a.txt', 'invalid hash', function (err, hash) {
+                if (err.indexOf('hash is invalid') > -1) {
+                    done();
+                    return;
+                }
+                done(new Error('should have failed to add an invalid hash to artifact ' + err));
+            });
+        });
+
+
+        it('should fail to add different content with the same name addMetadataHash', function (done) {
+            var bc = new BlobClient(bcParam),
+                artifact = new Artifact('testartifact', bc);
+            bc.putFile('a.txt', 'tttt', function (err, hash) {
+                if (err) {
+                    done(new Error(err));
+                    return;
+                }
+                artifact.addMetadataHash('a.txt', hash, function (err, hash) {
+                    if (err) {
+                        done(new Error(err));
+                        return;
+                    }
+                    artifact.addMetadataHash('a.txt', hash, function (err, hash) {
+                        if (err.indexOf('same name was already added') > -1) {
+                            done();
+                            return;
+                        }
+                        done(new Error('should have failed to add objects with the same name ' + err));
+                    });
+                });
+            });
+        });
+
+        it('should fail with wrong hash addObjectHashes', function (done) {
+            var bc = new BlobClient(bcParam),
+                objHashes = {
+                    'a.txt': '0123456789abcdef0123456789abcdef01234567'
+                },
+                artifact = new Artifact('testartifact', bc);
+
+            artifact.addObjectHashes(objHashes, function (err, hashes) {
+                if (err.indexOf('Failed adding objectHashes:') > -1) {
+                    done();
+                    return;
+                }
+                done(new Error('should have failed with bad hashes.'));
+            });
+        });
+
+        it('should fail with wrong hashes addMetadataHashes', function (done) {
+            var bc = new BlobClient(bcParam),
+                objHashes = {
+                    'a.txt': '0123456789abcdef0123456789abcdef01234567'
+                },
+                artifact = new Artifact('testartifact', bc);
+
+            artifact.addMetadataHashes(objHashes, function (err, hashes) {
+                if (err.indexOf('Failed adding objectHashes:') > -1) {
+                    done();
+                    return;
+                }
+                done(new Error('should have failed with bad hashes.'));
+            });
+        });
+
+        it('should succeed with no hashes addMetadataHashes', function (done) {
+            var bc = new BlobClient(bcParam),
+                objHashes = {},
+                artifact = new Artifact('testartifact', bc);
+
+            artifact.addMetadataHashes(objHashes, function (err, hashes) {
+                if (err) {
+                    done(new Error(err));
+                    return;
+                }
+                expect(hashes).deep.equal([]);
+                done();
             });
         });
     });

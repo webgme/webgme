@@ -130,7 +130,7 @@ require(
         'backbone',
         'js/WebGME',
         'clientUtil',
-        'bin/getconfig',
+        'text!gmeConfig.json',
 
         'angular',
         'angular-route',
@@ -139,14 +139,14 @@ require(
 
     ],
     function (domReady, jQuery, jQueryUi, jQueryUiiPad, jqueryWebGME, jqueryDataTables, bootstrap, underscore,
-              backbone, webGME, util, CONFIG) {
+              backbone, webGME, util, gmeConfigJson) {
 
         'use strict';
 
         domReady(function () {
-
-            if (CONFIG.hasOwnProperty('debug')) {
-                DEBUG = CONFIG.debug;
+            var gmeConfig = JSON.parse(gmeConfigJson);
+            if (gmeConfig.debug) {
+                DEBUG = gmeConfig.debug;
             }
 
             //#2 check URL
@@ -157,24 +157,20 @@ require(
                 DEBUG = false;
             }
 
-            if (CONFIG.paths) {
+            // attach external libraries to extlib/*
 
-                // attach external libraries to extlib/*
+            var keys = Object.keys(gmeConfig.requirejsPaths);
+            for (var i = 0; i < keys.length; i += 1) {
 
-                var keys = Object.keys(CONFIG.paths);
-                for (var i = 0; i < keys.length; i += 1) {
-
-                    // assume this is a relative path from the current working directory
-                    CONFIG.paths[keys[i]] = 'extlib/' + CONFIG.paths[keys[i]];
-                }
-
-                // update client config to route the external lib requests
-
-                require.config({
-                    paths: CONFIG.paths
-                });
-
+                // assume this is a relative path from the current working directory
+                gmeConfig.requirejsPaths[keys[i]] = 'extlib/' + gmeConfig.requirejsPaths[keys[i]];
             }
+
+            // update client config to route the external lib requests
+
+            require.config({
+                paths: gmeConfig.requirejsPaths
+            });
 
 
             // Extended disable function

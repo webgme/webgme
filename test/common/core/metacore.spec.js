@@ -8,7 +8,8 @@ var testFixture = require('../../_globals.js');
 
 describe('meta core', function () {
     'use strict';
-    var storage = testFixture.Storage(),
+    var gmeConfig = testFixture.getGmeConfig(),
+        storage = testFixture.Storage({globConf: gmeConfig}),
         project,
         core,
         root,
@@ -30,7 +31,7 @@ describe('meta core', function () {
                     return;
                 }
                 project = p;
-                core = new testFixture.WebGME.core(project);
+                core = new testFixture.WebGME.core(project, {globConf: gmeConfig});
                 root = core.createNode();
                 base = core.createNode({parent: root});
                 core.setAttribute(base, 'name', 'base');

@@ -1,25 +1,7 @@
-/*global __dirname, webGMEGlobal, require, process, setImmediate */
+/*global __dirname, require, process, setImmediate */
 var requirejs = require("requirejs"),
-  BASEPATH = __dirname + "/../..",
-  WEBGME = require(BASEPATH + '/../webgme');
-requirejs.config({
-  nodeRequire: require,
-  baseUrl: BASEPATH,
-  paths: {
-    "logManager": "common/LogManager",
-    "storage": "common/storage",
-    "core": "common/core",
-    "server": "server",
-    "auth": "server/auth",
-    "util": "common/util",
-    "baseConfig": "bin/getconfig",
-    "webgme": "webgme",
-    "plugin": "plugin",
-    "worker": "server/worker",
-    "coreclient": "common/core/users",
-    "blob": "middleware/blob"
-  }
-});
+    WEBGME = require(__dirname + '/../../../webgme');
+
 requirejs(['worker/constants',
     'core/core',
     'storage/serveruserstorage',
@@ -31,10 +13,11 @@ requirejs(['worker/constants',
     'blob/BlobClient',
     'plugin/PluginManagerBase',
     'plugin/PluginResult',
+    'plugin/PluginMessage',
     'storage/clientstorage',
     'coreclient/serialization',
     'auth/gmeauth'],
-  function (CONSTANT, Core, Storage, GUID, DUMP, logManager, FS, PATH, BlobClient, PluginManagerBase, PluginResult, ConnectedStorage, Serialization, GMEAUTH) {
+  function (CONSTANT, Core, Storage, GUID, DUMP, logManager, FS, PATH, BlobClient, PluginManagerBase, PluginResult, PluginMessage, ConnectedStorage, Serialization, GMEAUTH) {
     'use strict';
     var storage = null,
       core = null,
@@ -46,7 +29,7 @@ requirejs(['worker/constants',
       initialized = false,
       AUTH = null,
       _addOn = null,
-      _CONFIG = null;
+        gmeConfig;
 
     var initResult = function () {
       core = null;
@@ -59,19 +42,14 @@ requirejs(['worker/constants',
     var initialize = function (parameters) {
       if (initialized !== true) {
         initialized = true;
-
-        WebGMEGlobal.setConfig(parameters.globConf);
-        _CONFIG = parameters.globConf;
-        if (_CONFIG.authentication === true) {
-          AUTH = GMEAUTH(parameters.auth);
+          gmeConfig = parameters.gmeConfig;
+          WEBGME.addToRequireJsPaths(gmeConfig);
+        if (gmeConfig.authentication.enable === true) {
+          AUTH = GMEAUTH({ }, gmeConfig); //FIXME: Should session really be empty object??
         }
         storage = new Storage({
-          'host': _CONFIG.mongoip,
-          'port': _CONFIG.mongoport,
-          'database': _CONFIG.mongodatabase,
-          'user': _CONFIG.mongouser,
-          'pwd': _CONFIG.mongopwd,
-          'log': logManager.create('SERVER-WORKER-' + process.pid)
+          'log': logManager.create('SERVER-WORKER-' + process.pid),
+          globConf: gmeConfig
         });
         storage.openDatabase(function (err) {
           if (err) {
@@ -99,7 +77,7 @@ requirejs(['worker/constants',
         if (err) {
           return callback(err);
         }
-        var core = new Core(project);
+        var core = new Core(project, {globConf: gmeConfig});
         core.loadRoot(hash, function (err, root) {
           if (err) {
             return callback(err);
@@ -123,7 +101,7 @@ requirejs(['worker/constants',
             if (err) {
               callback(err);
             } else {
-              var core = new Core(project);
+              var core = new Core(project, {globConf: gmeConfig});
               core.loadRoot(hash, function (err, root) {
                 if (err) {
                   callback(err);
@@ -165,9 +143,9 @@ requirejs(['worker/constants',
     //TODO the getContext should be refactored!!!
     var getConnectedStorage = function (webGMESessionId, callback) {
       var connStorage = new ConnectedStorage({
+        globConf: gmeConfig,
         type: 'node',
-        host: (_CONFIG.httpsecure === true ? 'https' : 'http') + '://127.0.0.1',
-        port: _CONFIG.port,
+        host: (gmeConfig.server.https.enable === true ? 'https' : 'http') + '://127.0.0.1',
         log: logManager.create('SERVER-WORKER-PLUGIN-' + process.pid),
         webGMESessionId: webGMESessionId
       });
@@ -206,19 +184,17 @@ requirejs(['worker/constants',
             project.setUser(userId);
             var plugins = {};
             plugins[name] = interpreter;
-            var manager = new PluginManagerBase(project, Core, plugins);
-
+            var manager = new PluginManagerBase(project, Core, plugins, gmeConfig);
             context.managerConfig.blobClient = new BlobClient({
-              serverPort: _CONFIG.port,
-              httpsecure: _CONFIG.httpsecure,
-              server: _CONFIG.server || '127.0.0.1'
+              serverPort: gmeConfig.server.port,
+              httpsecure: gmeConfig.server.https.enable,
+              server: '127.0.0.1'
             });
 
             manager.initialize(null, function (pluginConfigs, configSaveCallback) {
               if (configSaveCallback) {
                 configSaveCallback(context.pluginConfigs);
               }
-
               manager.executePlugin(name, context.managerConfig, function (err, result) {
                 if (!err && result) {
                   callback(null, result.serialize());
@@ -231,6 +207,7 @@ requirejs(['worker/constants',
             });
           } else {
             var newErrorPluginResult = new PluginResult();
+              console.error('unable to get project');
             callback(new Error('unable to get project'), newErrorPluginResult.serialize());
           }
         });
@@ -251,7 +228,7 @@ requirejs(['worker/constants',
             return callback("" + err);
           }
 
-          var core = new Core(project),
+          var core = new Core(project, {globConf: gmeConfig}),
             root = core.createNode({parent: null, base: null});
           Serialization.import(core, root, jsonProject, function (err) {
             if (err) {
@@ -533,7 +510,7 @@ requirejs(['worker/constants',
       getConnectedStorage(webGMESessionId, function (err, cs) {
         if (!err && cs) {
           connStorage = cs;
-          _addOn = new addOnClass(Core, connStorage);
+          _addOn = new addOnClass(Core, connStorage, gmeConfig);
           //for the initialization we need the project as well
           getConnectedProject(connStorage, projectName, function (err, project) {
             if (err) {
@@ -631,14 +608,43 @@ requirejs(['worker/constants',
           }
           break;
         case CONSTANT.workerCommands.executePlugin:
-          if (typeof parameters.name === 'string' && typeof parameters.context === 'object') {
-            executePlugin(parameters.userId, parameters.name, parameters.webGMESessionId, parameters.context, function (err, result) {
-              safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: result});
-            });
-          } else {
-            initResult();
-            safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: 'invalid parameters', result: {}});
-          }
+            if (gmeConfig.plugin.allowServerExecution) {
+                if (typeof parameters.name === 'string' && typeof parameters.context === 'object') {
+                    executePlugin(parameters.userId,
+                        parameters.name,
+                        parameters.webGMESessionId,
+                        parameters.context,
+                        function (err, result) {
+                            safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: result});
+                        });
+                } else {
+                    initResult();
+                    safeSend({
+                        pid: process.pid,
+                        type: CONSTANT.msgTypes.result,
+                        error: 'invalid parameters',
+                        result: {}
+                    });
+                }
+            } else {
+                initResult();
+                var pluginResult = new PluginResult(),
+                    pluginMessage = new PluginMessage();
+                pluginMessage.severity = 'error';
+                pluginMessage.message = 'plugin execution on server side is disabled';
+                pluginResult.setSuccess(false);
+                pluginResult.pluginName = parameters.name;
+                pluginResult.addMessage(pluginMessage);
+                pluginResult.setStartTime((new Date()).toISOString());
+                pluginResult.setFinishTime((new Date()).toISOString());
+                pluginResult.setError(pluginMessage.message);
+                safeSend({
+                    pid: process.pid,
+                    type: CONSTANT.msgTypes.result,
+                    error: null,
+                    result: pluginResult.serialize()
+                });
+            }
           break;
         case CONSTANT.workerCommands.exportLibrary:
           if (typeof parameters.name === 'string' && typeof parameters.hash === 'string' && typeof parameters.path === 'string') {

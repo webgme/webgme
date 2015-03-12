@@ -4,8 +4,8 @@
 define(['addon/AddOnBase'],function(Base){
 
     'use strict';
-    var HistoryAddOn = function(core,storage){
-        Base.call(this,core,storage);
+    var HistoryAddOn = function(core,storage, gmeConfig){
+        Base.call(this,core,storage, gmeConfig);
     };
 
     HistoryAddOn.prototype = Object.create(Base.prototype);

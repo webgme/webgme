@@ -5,19 +5,29 @@
  * @author kecso / https://github.com/kecso
  */
 
-// TODO: try without the global - run middleware tests
-//TODO TESTING have to be set before including webgme
 global.TESTING = true;
 
+process.env.NODE_ENV = 'test';
+
 //adding a local storage class to the global Namespace
-var WebGME = require('../webgme'),
+var gmeConfig = require('../config'),
+    getGmeConfig = function () {
+        'use strict';
+        // makes sure that for each request it returns with a unique object and tests will not interfere
+        if (!gmeConfig) {
+            // if some tests are deleting or unloading the config
+            gmeConfig = require('../config');
+        }
+        return JSON.parse(JSON.stringify(gmeConfig));
+    },
+    WebGME = require('../webgme'),
     requirejs = require('requirejs'),
 
     Local = requirejs('storage/local'),
     Commit = requirejs('storage/commit'),
     Storage = function (options) {
         'use strict';
-        return new Commit(new Local(options || {}));
+        return new Commit(new Local(options || {}), options || {});
     },
     Log = requirejs('../src/common/LogManager'),
     generateKey = requirejs('util/key'),
@@ -26,7 +36,6 @@ var WebGME = require('../webgme'),
     SessionStore = requirejs('auth/sessionstore'),
 
     ExecutorClient = requirejs('executor/ExecutorClient'),
-    BlobServerClient = requirejs('blob/BlobServerClient'),
     BlobClient = requirejs('blob/BlobClient'),
 
     should = require('chai').should(),
@@ -100,7 +109,7 @@ function importProject(parameters, done) {
         result.storage = parameters.storage;
     } else {
         if (!parameters.mongoUri) {
-            result.storage = new Storage();
+            result.storage = new Storage({globConf: parameters.gmeConfig});
         }
     }
 
@@ -116,7 +125,7 @@ function importProject(parameters, done) {
                 return;
             }
             result.project = p;
-            result.core = new WebGME.core(result.project);
+            result.core = new WebGME.core(result.project, {globConf: parameters.gmeConfig});
             result.root = result.core.createNode();
             WebGME.serializer.import(result.core,
                 result.root,
@@ -132,15 +141,16 @@ function importProject(parameters, done) {
                             return;
                         }
 
-                        result.commit = result.project.makeCommit(
+                        result.project.makeCommit(
                             [],
                             result.core.getHash(result.root),
                             'importing project',
-                            function (err) {
+                            function (err, id) {
                                 if (err) {
                                     done(err);
                                     return;
                                 }
+                                result.commitHash = id;
                                 result.project.getBranchNames(function (err, names) {
                                     var oldHash = '';
                                     if (err) {
@@ -152,7 +162,7 @@ function importProject(parameters, done) {
                                         oldHash = names[result.branchName];
                                     }
                                     //TODO check the branch naming... probably need to add some layer to the local storage
-                                    result.project.setBranchHash('*' + result.branchName,
+                                    result.project.setBranchHash(result.branchName,
                                         oldHash,
                                         result.commitHash,
                                         function (err) {
@@ -202,7 +212,12 @@ function loadNodes(parameters, done) {
      }
      */
 }
+
+WebGME.addToRequireJsPaths(gmeConfig);
+
 module.exports = {
+    getGmeConfig: getGmeConfig,
+
     WebGME: WebGME,
     Storage: Storage,
     Log: Log,
@@ -212,7 +227,6 @@ module.exports = {
     SessionStore: SessionStore,
 
     ExecutorClient: ExecutorClient,
-    BlobServerClient: BlobServerClient,
     BlobClient: BlobClient,
 
     requirejs: requirejs,

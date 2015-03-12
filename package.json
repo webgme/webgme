@@ -38,14 +38,15 @@
     "passport-google": "=0.3.0",
     "process": "=0.10.0",
     "jszip": "=2.2.0",
-    "commander": "=2.1.0",
+    "commander": "=2.6.0",
     "aws-sdk": "=1.18.0",
     "superagent": "=0.18.2",
     "buffer-equal-constant-time": "=1.0.1",
     "nedb": "=0.10.5",
     "unzip": "=0.1.8",
     "minimatch": "=0.3.0",
-    "q": "=1.1.2"
+    "q": "=1.1.2",
+    "mkdirp": "=0.5.0"
   },
   "devDependencies": {
     "gulp": "=3.8.6",

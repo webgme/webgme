@@ -6,10 +6,8 @@ function(ASSERT,Child, process, CONSTANTS){
             _workerCount = 0,
             _myWorkers = {},
             _idToPid = {},
-           _waitingRequests = [];
-
-        _parameters = _parameters || {};
-        _parameters.maxworkers = _parameters.maxworkers || 10;
+            _waitingRequests = [],
+            gmeConfig = _parameters.globConf;
 
         //helping functions
         //TODO always check if this works properly
@@ -18,7 +16,7 @@ function(ASSERT,Child, process, CONSTANTS){
         }
 
         function reserveWorker(){
-            if(_workerCount < _parameters.maxworkers){
+            if(_workerCount < gmeConfig.server.maxWorkers){
                 var worker = Child.fork(getBaseDir()+'/server/worker/simpleworker.js', [],
                     { execArgv: process.execArgv.filter(function (arg) { return arg.indexOf('--debug-brk') !== 0 }) });
                 _myWorkers[worker.pid] = {worker:worker,state:CONSTANTS.workerStates.initializing,type:null,cb:null};
@@ -107,13 +105,7 @@ function(ASSERT,Child, process, CONSTANTS){
                         //this arrives when the worker seems ready for initialization
                         worker.worker.send({
                             command:CONSTANTS.workerCommands.initialize,
-                            ip:_parameters.mongoip,
-                            port:_parameters.mongoport,
-                            db:_parameters.mongodb,
-                            serverPort:_parameters.serverPort,
-                            paths: _parameters.globConf.paths || WebGMEGlobal.getConfig().paths,
-                            auth: _parameters.auth,
-                            globConf : _parameters.globConf || WebGMEGlobal.getConfig()
+                            gmeConfig: gmeConfig
                         });
                         break;
                     case CONSTANTS.msgTypes.initialized:
@@ -136,7 +128,7 @@ function(ASSERT,Child, process, CONSTANTS){
         }
 
         function request(parameters,callback){
-            if(_workerCount<_parameters.maxworkers){
+            if(_workerCount<gmeConfig.server.maxWorkers){
                 //there is resource for worker
                 reserveWorker();
             }

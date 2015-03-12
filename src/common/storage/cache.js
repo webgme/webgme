@@ -29,9 +29,8 @@ define([ "util/assert" ], function (ASSERT) {
 	};
 
 	var Database = function (database, options) {
-		ASSERT(typeof database === "object" && typeof options === "object");
-
-		options.cache = options.cache || 2000;
+        var gmeConfig = options.globConf;
+		ASSERT(typeof database === "object" && typeof gmeConfig === "object");
 
 		var projects = {};
 		var dlock = new Lock();
@@ -114,7 +113,7 @@ define([ "util/assert" ], function (ASSERT) {
 					maybeFreeze(obj[key]);
 				}
 			};
-			if (typeof WebGMEGlobal !== 'undefined' && typeof WebGMEGlobal.getConfig !== 'undefined' && !WebGMEGlobal.getConfig().debug) {
+			if (gmeConfig.debug === false) {
 				deepFreeze = function () { };
 			}
 
@@ -124,7 +123,7 @@ define([ "util/assert" ], function (ASSERT) {
 				deepFreeze(obj);
 				cache[key] = obj;
 
-				if (++cacheSize >= options.cache) {
+				if (++cacheSize >= gmeConfig.storage.cache) {
 					backup = cache;
 					cache = {};
 					cacheSize = 0;
@@ -307,7 +306,7 @@ define([ "util/assert" ], function (ASSERT) {
                         cacheProject[key] = project[key];
                     }
                 }
-                if (options.cache !== 0) {
+                if (gmeConfig.storage.cache !== 0) {
                     cacheProject.loadObject = loadObject;
                     cacheProject.insertObject = insertObject;
                 }

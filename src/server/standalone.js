@@ -18,6 +18,7 @@ define(['logManager',
     'blob/BlobS3Backend',
     'blob/BlobServer',
     'util/guid',
+    'util/assert',
     'url'
 ], function (LogManager,
              Storage,
@@ -39,67 +40,91 @@ define(['logManager',
              BlobS3Backend,
              BlobServer,
              GUID,
+             ASSERT,
              URL) {
     'use strict';
-    function StandAloneServer(CONFIG) {
-        // if the config is not set we use the global
-        CONFIG = CONFIG || WebGMEGlobal.getConfig();
+    function StandAloneServer(gmeConfig) {
+        var self = this;
+        this.serverUrl = '';
+
+        /**
+         * Gets the server's url based on the gmeConfig that was given to the constructor.
+         * @returns {string}
+         */
+        function getUrl () {
+            var url = '';
+
+            // use the cached version if we already built the string
+            if (self.serverUrl) {
+                return self.serverUrl;
+            }
+
+            if (gmeConfig.server.https.enable) {
+                url += 'https://';
+            } else {
+                url += 'http://';
+            }
+
+            url += '127.0.0.1';
+            url += ':';
+            url += gmeConfig.server.port;
+
+            // cache it
+            self.serverUrl = url;
+            return self.serverUrl;
+        }
+
         //public functions
         function start(callback) {
             if (typeof callback !== 'function') {
                 callback = function () {
                 };
             }
-            if (CONFIG.httpsecure) {
+            if (gmeConfig.server.https.enable) {
                 __httpServer = Https.createServer({
                     key: __secureSiteInfo.key,
                     cert: __secureSiteInfo.certificate
-                }, __app).listen(CONFIG.port, callback);
+                }, __app).listen(gmeConfig.server.port, callback);
             } else {
-                __httpServer = Http.createServer(__app).listen(CONFIG.port, callback);
+                __httpServer = Http.createServer(__app).listen(gmeConfig.server.port, callback);
             }
             //creating the proper storage for the standalone server
             __storageOptions = {
                 combined: __httpServer,
-                logger: LogManager.create('StandAloneWebGMEServer-socket.io'),
-                session: false,
-                cookieID: CONFIG.sessioncookieid
+                logger: LogManager.create('StandAloneWebGMEServer-socket.io')
             };
-            if (true === CONFIG.authentication) {
-                __storageOptions.auth = {
-                    session: {},
-                    host: CONFIG.mongoip,
-                    port: CONFIG.mongoport,
-                    database: CONFIG.mongodatabase,
-                    guest: CONFIG.guest
-                };
-                __storageOptions.session = true;
+            if (true === gmeConfig.authentication.enable) {
+                //__storageOptions.auth = {
+                //    session: {},
+                //    host: gmeConfig.mongoip,
+                //    port: gmeConfig.mongoport,
+                //    database: gmeConfig.mongodatabase,
+                //    guest: gmeConfig.guest
+                //};
                 __storageOptions.sessioncheck = __sessionStore.check;
-                __storageOptions.secret = CONFIG.sessioncookiesecret;
-                __storageOptions.authentication = CONFIG.authentication;
                 __storageOptions.authorization = globalAuthorization;
                 __storageOptions.auth_deleteProject = __gmeAuth.deleteProject;
                 __storageOptions.getAuthorizationInfo = __gmeAuth.getProjectAuthorizationBySession;
             }
 
-            __storageOptions.host = CONFIG.mongoip;
-            __storageOptions.port = CONFIG.mongoport;
-            __storageOptions.database = CONFIG.mongodatabase;
-            __storageOptions.user = CONFIG.mongouser;
-            __storageOptions.pwd = CONFIG.mongopwd;
+            //__storageOptions.host = gmeConfig.mongoip;
+            //__storageOptions.port = gmeConfig.mongoport;
+            //__storageOptions.database = gmeConfig.mongodatabase;
+            //__storageOptions.user = gmeConfig.mongouser;
+            //__storageOptions.pwd = gmeConfig.mongopwd;
+
             __storageOptions.log = LogManager.create('StandAloneWebGMEServer-storage');
             __storageOptions.getToken = __gmeAuth.getToken;
 
-            __storageOptions.intoutdir = CONFIG.intoutdir;
-            __storageOptions.pluginBasePaths = CONFIG.pluginBasePaths;
-            __storageOptions.cache = CONFIG.cacheSize;
+            //__storageOptions.pluginBasePaths = gmeConfig.plugin.basePaths;
+            //__storageOptions.cache = gmeConfig.cacheSize;
 
-            __storageOptions.webServerPort = CONFIG.port;
+            //__storageOptions.webServerPort = gmeConfig.server.port;
 
             __storageOptions.sessionToUser = __sessionStore.getSessionUser;
 
-            __storageOptions.globConf = CONFIG;
-            __storage = Storage(__storageOptions);
+            __storageOptions.globConf = gmeConfig;
+            __storage = Storage(__storageOptions); // FIXME: why do not we use the 'new' keyword here?
             //end of storage creation
             __storage.open();
         }
@@ -164,7 +189,7 @@ define(['logManager',
             if (__googleAuthenticationSet === true) {
                 return next();
             } else {
-                var protocolPrefix = CONFIG.httpsecure === true ? 'https://' : 'http://';
+                var protocolPrefix = gmeConfig.server.https.enable === true ? 'https://' : 'http://';
                 Passport.use(new __googleStrategy({
                         returnURL: protocolPrefix + req.headers.host + '/login/google/return',
                         realm: protocolPrefix + req.headers.host
@@ -179,16 +204,14 @@ define(['logManager',
         }
 
         function checkREST(req, res, next) {
-            var baseUrl = CONFIG.httpsecure === true ? 'https://' : 'http://' + req.headers.host + '/rest';
+            var baseUrl = gmeConfig.server.https.enable === true ? 'https://' : 'http://' + req.headers.host + '/rest';
             if (__REST === null) {
                 var restAuthorization;
-                if (CONFIG.authentication === true) {
+                if (gmeConfig.authentication.enable === true) {
                     restAuthorization = __gmeAuth.tokenAuthorization;
                 }
                 __REST = new REST({
-                    host: CONFIG.mongoip,
-                    port: CONFIG.mongoport,
-                    database: CONFIG.mongodatabase,
+                    globConf: gmeConfig,
                     baseUrl: baseUrl,
                     authorization: restAuthorization
                 });
@@ -200,7 +223,7 @@ define(['logManager',
 
 
         function ensureAuthenticated(req, res, next) {
-            if (true === CONFIG.authentication) {
+            if (true === gmeConfig.authentication.enable) {
                 if (req.isAuthenticated() || (req.session && true === req.session.authenticated)) {
                     return next();
                 } else {
@@ -233,7 +256,7 @@ define(['logManager',
                                 res.send(400); //no use for redirecting in this case
                             }
                         });
-                    } else if (CONFIG.guest) {
+                    } else if (gmeConfig.authentication.allowGuests) {
                         req.session.authenticated = true;
                         req.session.udmId = 'anonymous';
                         req.session.userType = 'GME';
@@ -267,19 +290,15 @@ define(['logManager',
         }
 
         function getPluginBasePathByName(pluginName) {
-            if (CONFIG.pluginBasePaths && CONFIG.pluginBasePaths.length) {
-                for (var i = 0; i < CONFIG.pluginBasePaths.length; i++) {
-                    var additional = FS.readdirSync(CONFIG.pluginBasePaths[i]);
-                    for (var j = 0; j < additional.length; j++) {
-                        if (additional[j] === pluginName) {
-                            if (isGoodExtraAsset(additional[j], Path.join(CONFIG.pluginBasePaths[i], additional[j]))) {
-                                return CONFIG.pluginBasePaths[i];
-                            }
+            for (var i = 0; i < gmeConfig.plugin.basePaths.length; i++) {
+                var additional = FS.readdirSync(gmeConfig.plugin.basePaths[i]);
+                for (var j = 0; j < additional.length; j++) {
+                    if (additional[j] === pluginName) {
+                        if (isGoodExtraAsset(additional[j], Path.join(gmeConfig.plugin.basePaths[i], additional[j]))) {
+                            return gmeConfig.plugin.basePaths[i];
                         }
                     }
                 }
-            } else {
-                return null;
             }
         }
 
@@ -310,8 +329,8 @@ define(['logManager',
                 allVisualizersDescriptor = [],
                 i, j;
 
-            for (i = 0; i < CONFIG.visualizerDescriptors.length; i++) {
-                var descriptor = getVisualizerDescriptor(CONFIG.visualizerDescriptors[i]);
+            for (i = 0; i < gmeConfig.visualization.visualizerDescriptors.length; i++) {
+                var descriptor = getVisualizerDescriptor(gmeConfig.visualization.visualizerDescriptors[i]);
                 if (descriptor.length) {
                     for (j = 0; j < descriptor.length; j++) {
                         var index = indexById(allVisualizersDescriptor, descriptor[j].id);
@@ -327,18 +346,18 @@ define(['logManager',
         }
 
         function setupExternalRestModules() {
-            __logger.info('initializing external REST modules');
-            CONFIG.rextrast = CONFIG.rextrast || {};
-            var keys = Object.keys(CONFIG.rextrast),
+            var modul,
+                keys = Object.keys(gmeConfig.rest.components),
                 i;
+            __logger.info('initializing external REST modules');
             for (i = 0; i < keys.length; i++) {
-                var modul = requirejs(CONFIG.rextrast[keys[i]]);
+                modul = requirejs(gmeConfig.rest.components[keys[i]]);
                 if (modul) {
-                    __logger.info('adding RExtraST [' + CONFIG.rextrast[keys[i]] + '] to - /rest/external/' + keys[i]);
-                    __app.use('/rest/external/' + keys[i], modul);
+                    __logger.info('adding rest component [' + gmeConfig.rest.components[keys[i]] + '] to' +
+                        ' - /rest/external/' + keys[i]);
+                    __app.use('/rest/external/' + keys[i], modul(gmeConfig));
                 } else {
-                    console.log("Loading " + CONFIG.rextrast[keys[i]] + " failed.");
-                    process.exit(2);
+                    throw new Error('Loading ' + gmeConfig.rest.components[keys[i]] + ' failed.');
                 }
             }
         }
@@ -367,39 +386,40 @@ define(['logManager',
             __REST = null,
             __canCheckToken = true,
             __httpServer = null,
-            __logoutUrl = CONFIG.logoutUrl || '/',
-            __baseDir = WebGMEGlobal.baseDir,
-            __clientBaseDir = CONFIG.clientAppDir || __baseDir + '/client',
+            __logoutUrl = gmeConfig.authentication.logOutUrl || '/',
+            __baseDir = requirejs.s.contexts._.config.baseUrl,// TODO: this is ugly
+            __clientBaseDir = gmeConfig.client.appDir,
             __requestCounter = 0,
             __reportedRequestCounter = 0,
             __requestCheckInterval = 2500;
 
         //creating the logmanager
-        LogManager.setLogLevel(CONFIG.loglevel || LogManager.logLevels.WARNING);
+        LogManager.setLogLevel(gmeConfig.log.level);
         LogManager.useColors(true);
-        LogManager.setFileLogPath(CONFIG.logfile || 'server.log');
+        LogManager.setFileLogPath(gmeConfig.log.file);
         __logger = LogManager.create("StandAloneWebGMEServer-main");
         //end of logmanager initializing stuff
 
         __logger.info("starting standalone server initialization");
         //initializing https extra infos
-        if (CONFIG.httpsecure === true) { //TODO we should make it also configurable
-            __secureSiteInfo.key = FS.readFileSync("./src/bin/proba-key.pem");
-            __secureSiteInfo.certificate = FS.readFileSync("./src/bin/proba-cert.pem");
+        if (gmeConfig.server.https.enable === true) { //TODO move this from here
+            __secureSiteInfo.key = FS.readFileSync(gmeConfig.server.https.keyFile);
+            __secureSiteInfo.certificate = FS.readFileSync(gmeConfig.server.https.certificateFile);
         }
 
         __logger.info("initializing session storage");
         __sessionStore = new SSTORE();
 
         __logger.info("initializing authentication modules");
-        __gmeAuth = new GMEAUTH({
-            session: __sessionStore,
-            host: CONFIG.mongoip,
-            port: CONFIG.mongoport,
-            database: CONFIG.mongodatabase,
-            guest: CONFIG.guest,
-            collection: CONFIG.usercollection
-        });
+        //TODO: do we need to create this even though authentication is disabled?
+        __gmeAuth = new GMEAUTH(__sessionStore, gmeConfig);
+        //    session: __sessionStore,
+        //    host: gmeConfig.mongoip,
+        //    port: gmeConfig.mongoport,
+        //    database: gmeConfig.mongodatabase,
+        //    guest: gmeConfig.guest,
+        //    collection: gmeConfig.usercollection
+        //});
 
         __logger.info("initializing passport module for user management");
         //TODO in the long run this also should move to some database
@@ -418,7 +438,7 @@ define(['logManager',
 
         __app.configure(function () {
             //counting of requests works only in debug mode
-            if (CONFIG.debug === true) {
+            if (gmeConfig.debug === true) {
                 setInterval(function () {
                     if (__reportedRequestCounter !== __requestCounter) {
                         __reportedRequestCounter = __requestCounter;
@@ -452,15 +472,15 @@ define(['logManager',
             __app.use(Express.multipart({defer: true})); // required to upload files. (body parser should not be used!)
             __app.use(Express.session({
                 store: __sessionStore,
-                secret: CONFIG.sessioncookiesecret,
-                key: CONFIG.sessioncookieid
+                secret: gmeConfig.server.sessionCookieSecret,
+                key: gmeConfig.server.sessionCookieId
             }));
             __app.use(Passport.initialize());
             __app.use(Passport.session());
 
-            if (CONFIG.enableExecutor) {
+            if (gmeConfig.executor.enable) {
                 var executorRest = requirejs('executor/Executor');
-                __app.use('/rest/executor', executorRest(CONFIG));
+                __app.use('/rest/executor', executorRest(gmeConfig));
                 __logger.info('Executor listening at rest/executor');
             } else {
                 __logger.info('Executor not enabled. Add "enableExecutor: true" to config.js for activation.');
@@ -472,12 +492,6 @@ define(['logManager',
 
         __logger.info("creating login routing rules for the static server");
         __app.get('/',ensureAuthenticated,function(req,res){
-            /*res.sendfile(__clientBaseDir+'/index.html',{user:req.user},function(err){
-             if (err) {
-             console.log('fuck',err);
-             res.send(404);
-             }
-             });*/
             expressFileSending(res, __clientBaseDir + '/index.html');
         });
         __app.get('/logout', function (req, res) {
@@ -525,17 +539,26 @@ define(['logManager',
             redirectUrl(req,res);
         });
 
+        //TODO: only node_worker/index.html and common/util/common are using this
         __logger.info("creating decorator specific routing rules");
         __app.get('/bin/getconfig.js', ensureAuthenticated, function (req, res) {
             res.status(200);
             res.setHeader('Content-type', 'application/javascript');
-            res.end("define([],function(){ return " + JSON.stringify(CONFIG) + ";});");
+            res.end("define([],function(){ return " + JSON.stringify(gmeConfig) + ";});");
         });
+
+        __logger.info("creating gmeConfig.json specific routing rules");
+        __app.get('/gmeConfig.json', ensureAuthenticated, function (req, res) {
+            res.status(200);
+            //res.setHeader('Content-type', 'application/javascript');
+            res.end(JSON.stringify(gmeConfig));
+        });
+
         __logger.info("creating decorator specific routing rules");
         __app.get(/^\/decorators\/.*/, ensureAuthenticated, function (req, res) {
             var tryNext = function (index) {
-                if (index < CONFIG.decoratorpaths.length) {
-                    res.sendfile(Path.join(CONFIG.decoratorpaths[index], req.url.substring(12)), function (err) {
+                if (index < gmeConfig.visualization.decoratorPaths.length) {
+                    res.sendfile(Path.join(gmeConfig.visualization.decoratorPaths[index], req.url.substring(12)), function (err) {
                         if (err && err.code !== 'ECONNRESET') {
                             tryNext(index + 1);
                         }
@@ -545,7 +568,7 @@ define(['logManager',
                 }
             };
 
-            if (CONFIG.decoratorpaths && CONFIG.decoratorpaths.length) {
+            if (gmeConfig.visualization.decoratorPaths && gmeConfig.visualization.decoratorPaths.length) {
                 tryNext(0);
             } else {
                 res.send(404);
@@ -579,10 +602,6 @@ define(['logManager',
                 }
             });
         });
-        __app.get(/^\/pluginoutput\/.*/, ensureAuthenticated, function (req, res) {
-            expressFileSending(res, req.path.replace('/pluginoutput', CONFIG.intoutdir));
-        });
-
 
         __logger.info("creating external library specific routing rules");
         __app.get(/^\/extlib\/.*/, ensureAuthenticated, function (req, res) {
@@ -612,8 +631,17 @@ define(['logManager',
 
         __logger.info("creating blob related rules");
 
-        var blobBackend = new BlobFSBackend();
-        //var blobBackend = new BlobS3Backend();
+        var blobBackend;
+
+        if (gmeConfig.blob.type === 'FS') {
+            blobBackend = new BlobFSBackend(gmeConfig);
+        } else if (gmeConfig.blob.type === 'S3') {
+            //var blobBackend = new BlobS3Backend(gmeConfig);
+            throw new Error('S3 blob not fully supported');
+        } else {
+            throw new Error('Only FS and S3 blobs valid blob types.');
+        }
+
         BlobServer.createExpressBlob(__app, blobBackend, ensureAuthenticated, __logger);
 
         //client contents - js/html/css
@@ -634,7 +662,7 @@ define(['logManager',
 
         __logger.info("creating token related routing rules");
         __app.get('/gettoken',ensureAuthenticated,function(req,res){
-            if (CONFIG.secureREST == true) {
+            if (gmeConfig.rest.secure) {
                 __gmeAuth.getToken(req.session.id, function (err, token) {
                     if (err) {
                         res.send(err);
@@ -647,8 +675,8 @@ define(['logManager',
             }
         });
         __app.get('/checktoken/:token', function (req, res) {
-            if (CONFIG.authenticated == true) { // FIXME do we need to check CONFIG.authentication or session.authenticated?
-                if (__canCheckToken == true) {
+            if (gmeConfig.authentication.enable === true) { // FIXME do we need to check CONFIG.authentication or session.authenticated?
+                if (__canCheckToken === true) {
                     setTimeout(function () {
                         __canCheckToken = true;
                     }, 10000);
@@ -735,14 +763,12 @@ define(['logManager',
         __logger.info("creating list asset rules");
         __app.get('/listAllDecorators', ensureAuthenticated, function (req, res) {
             var names = []; //TODO we add everything in the directories!!!
-            if (CONFIG.decoratorpaths && CONFIG.decoratorpaths.length) {
-                for (var i = 0; i < CONFIG.decoratorpaths.length; i++) {
-                    var additional = FS.readdirSync(CONFIG.decoratorpaths[i]);
-                    for (var j = 0; j < additional.length; j++) {
-                        if (names.indexOf(additional[j]) === -1) {
-                            if (isGoodExtraAsset(additional[j], Path.join(CONFIG.decoratorpaths[i], additional[j]))) {
-                                names.push(additional[j]);
-                            }
+            for (var i = 0; i < gmeConfig.visualization.decoratorPaths.length; i++) {
+                var additional = FS.readdirSync(gmeConfig.visualization.decoratorPaths[i]);
+                for (var j = 0; j < additional.length; j++) {
+                    if (names.indexOf(additional[j]) === -1) {
+                        if (isGoodExtraAsset(additional[j], Path.join(gmeConfig.visualization.decoratorPaths[i], additional[j]))) {
+                            names.push(additional[j]);
                         }
                     }
                 }
@@ -754,14 +780,12 @@ define(['logManager',
         });
         __app.get('/listAllPlugins', ensureAuthenticated, function (req, res) {
             var names = []; //we add only the "*.js" files from the directories
-            if (CONFIG.pluginBasePaths && CONFIG.pluginBasePaths.length) {
-                for (var i = 0; i < CONFIG.pluginBasePaths.length; i++) {
-                    var additional = FS.readdirSync(CONFIG.pluginBasePaths[i]);
-                    for (var j = 0; j < additional.length; j++) {
-                        if (names.indexOf(additional[j]) === -1) {
-                            if (isGoodExtraAsset(additional[j], Path.join(CONFIG.pluginBasePaths[i], additional[j]))) {
-                                names.push(additional[j]);
-                            }
+            for (var i = 0; i < gmeConfig.plugin.basePaths.length; i++) {
+                var additional = FS.readdirSync(gmeConfig.plugin.basePaths[i]);
+                for (var j = 0; j < additional.length; j++) {
+                    if (names.indexOf(additional[j]) === -1) {
+                        if (isGoodExtraAsset(additional[j], Path.join(gmeConfig.plugin.basePaths[i], additional[j]))) {
+                            names.push(additional[j]);
                         }
                     }
                 }
@@ -784,16 +808,17 @@ define(['logManager',
             res.send(404);
         });
 
-        if (CONFIG.debug === true) {
-            console.log('parameters of webgme server:');
-            console.log(CONFIG);
+        if (gmeConfig.debug === true) {
+            console.log('gmeConfig of webgme server:');
+            console.log(gmeConfig);
         }
         var networkIfs = OS.networkInterfaces();
         var addresses = 'Valid addresses of webgme server: ';
         for (var dev in networkIfs) {
             networkIfs[dev].forEach(function (netIf) {
                 if (netIf.family === 'IPv4') {
-                    var address = (CONFIG.httpsecure ? 'https' : 'http') + '://' + netIf.address + ':' + CONFIG.port;
+                    var address = (gmeConfig.server.https.enable ? 'https' : 'http') + '://' +
+                        netIf.address + ':' + gmeConfig.server.port;
                     addresses = addresses + '  ' + address;
                 }
             });
@@ -806,6 +831,7 @@ define(['logManager',
 
         return {
 
+            getUrl: getUrl,
             start: start,
             stop: stop
         }

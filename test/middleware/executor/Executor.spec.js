@@ -9,37 +9,35 @@ var testFixture = require('../../_globals.js');
 describe('Executor', function () {
     'use strict';
 
-    var agent = testFixture.superagent.agent(),
+    var gmeConfig,
+        agent = testFixture.superagent.agent(),
         should = testFixture.should,
-        fs = testFixture.fs,
-        server,
-        serverBaseUrl;
+        rimraf = testFixture.rimraf,
+        server;
+
+    beforeEach(function (done) {
+        rimraf('./test-tmp/executor', function (err) {
+            if (err) {
+                done(err);
+                return;
+            }
+            gmeConfig = testFixture.getGmeConfig();
+            gmeConfig.server.port = 9006;
+            done();
+        });
+    });
 
     afterEach(function (done) {
         server.stop(function (err) {
-            try {
-                fs.unlinkSync('test-tmp/jobList.nedb');
-            } catch (error) {
-                //console.log(err);
-            }
-            try {
-                fs.unlinkSync('test-tmp/workerList.nedb');
-            } catch (error) {
-                //console.log(err);
-            }
             done(err);
         });
     });
 
     it('should return 200 at rest/executor/worker/ with enableExecutor=true', function (done) {
-        var config = WebGMEGlobal.getConfig();
-        config.port = 9005;
-        config.enableExecutor = true;
-
-        serverBaseUrl = 'http://127.0.0.1:' + config.port;
-
-        server = testFixture.WebGME.standaloneServer(config);
+        gmeConfig.executor.enable = true;
+        server = testFixture.WebGME.standaloneServer(gmeConfig);
         server.start(function () {
+            var serverBaseUrl = server.getUrl();
             agent.get(serverBaseUrl + '/rest/executor/worker/').end(function (err, res) {
                 if (err) {
                     done(err);
@@ -52,14 +50,10 @@ describe('Executor', function () {
     });
 
     it('should return 404 at rest/executor/worker/ with enableExecutor=false', function (done) {
-        var config = WebGMEGlobal.getConfig();
-        config.port = 9005;
-        config.enableExecutor = false;
-
-        serverBaseUrl = 'http://127.0.0.1:' + config.port;
-
-        server = testFixture.WebGME.standaloneServer(config);
+        gmeConfig.executor.enable = false;
+        server = testFixture.WebGME.standaloneServer(gmeConfig);
         server.start(function () {
+            var serverBaseUrl = server.getUrl();
             agent.get(serverBaseUrl + '/rest/executor/worker/').end(function (err, res) {
                 if (err) {
                     done(err);

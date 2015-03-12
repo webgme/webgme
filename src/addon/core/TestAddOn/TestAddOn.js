@@ -4,8 +4,8 @@
 define(['addon/AddOnBase'],function(Base){
 
     'use strict';
-    var TestAddOn = function(core,storage){
-        Base.call(this,core,storage);
+    var TestAddOn = function(core,storage, gmeConfig){
+        Base.call(this,core,storage, gmeConfig);
     };
 
     // Prototypal inheritance from PluginBase.

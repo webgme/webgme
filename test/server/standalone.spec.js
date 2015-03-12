@@ -31,11 +31,10 @@ describe('standalone server', function () {
     it('should start and stop and start and stop', function (done) {
         this.timeout(5000);
         // we have to set the config here
-        var config = WebGMEGlobal.getConfig();
-        config.port = 9001;
-        config.authentication = false;
+        var gmeConfig = testFixture.getGmeConfig()
+        gmeConfig.server.port = 9001;
 
-        server = WebGME.standaloneServer(config);
+        server = WebGME.standaloneServer(gmeConfig);
         server.start(function () {
             server.stop(function () {
                 server.start(function () {
@@ -78,7 +77,7 @@ describe('standalone server', function () {
 
             {code: 404, url: '/login/forge'},
             {code: 404, url: '/extlib/does_not_exist'},
-            {code: 404, url: '/pluginoutput/does_not_exist'},
+            //{code: 404, url: '/pluginoutput/does_not_exist'},
             {code: 404, url: '/plugin'},
             {code: 404, url: '/plugin/'},
             {code: 404, url: '/plugin/PluginGenerator'},
@@ -145,13 +144,13 @@ describe('standalone server', function () {
         ]
     }];
 
-    addTest = function (serverUrl, requestTest) {
+    addTest = function (requestTest) {
         var url = requestTest.url || '/',
             redirectText = requestTest.redirectUrl ? ' redirects to ' + requestTest.redirectUrl : ' ';
 
         it('returns ' + requestTest.code + ' for ' + url + redirectText, function (done) {
             // TODO: add POST/DELETE etc support
-            agent.get(serverUrl + url).end(function (err, res) {
+            agent.get(server.getUrl() + url).end(function (err, res) {
                 if (err) {
                     done(err);
                     return;
@@ -166,6 +165,7 @@ describe('standalone server', function () {
                         should.equal(res.headers.location, requestTest.redirectUrl);
                     }
                     should.not.equal(res.headers.location, url);
+                    console.log(res.headers.location, url, requestTest.redirectUrl);
                     should.equal(res.redirects.length, 1);
                 } else {
                     // was not redirected
@@ -189,19 +189,93 @@ describe('standalone server', function () {
 
         describe(scenario.type + ' server ' + (scenario.authentication ? 'with' : 'without') + ' auth', function () {
             var nodeTLSRejectUnauthorized = process.env.NODE_TLS_REJECT_UNAUTHORIZED,
-                serverUrl = scenario.type + '://127.0.0.1:' + scenario.port;
+                gmeauth,
+                db;
 
             before(function (done) {
                 // we have to set the config here
-                var config = WebGMEGlobal.getConfig();
-                config.port = scenario.port;
-                config.authentication = scenario.authentication;
-                config.httpsecure = scenario.type === 'https';
+                var dbConn,
+                    gmeauthDeferred,
+                    userReady,
+                    serverReady = Q.defer(),
+                    gmeConfig = testFixture.getGmeConfig();
+
+                gmeConfig.server.port = scenario.port;
+                gmeConfig.authentication.enable = scenario.authentication;
+                gmeConfig.authentication.allowGuests = false;
+                gmeConfig.authentication.guestAccount = 'guestUserName';
+                gmeConfig.server.https.enable = scenario.type === 'https';
 
                 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-                server = WebGME.standaloneServer(config);
-                server.start(done);
+                dbConn = Q.ninvoke(mongodb.MongoClient, 'connect', gmeConfig.mongo.uri, gmeConfig.mongo.options)
+                    .then(function (db_) {
+                        db = db_;
+                        return Q.all([
+                            Q.ninvoke(db, 'collection', '_users')
+                                .then(function (collection_) {
+                                    return Q.ninvoke(collection_, 'remove');
+                                }),
+                            Q.ninvoke(db, 'collection', '_organizations')
+                                .then(function (orgs_) {
+                                    return Q.ninvoke(orgs_, 'remove');
+                                }),
+                            Q.ninvoke(db, 'collection', 'ClientCreateProject')
+                                .then(function (createdProject) {
+                                    return Q.ninvoke(createdProject, 'remove');
+                                }),
+                            Q.ninvoke(db, 'collection', 'project')
+                                .then(function (project) {
+                                    return Q.ninvoke(project, 'remove')
+                                        .then(function () {
+                                            return Q.ninvoke(project, 'insert', {_id: '*info', dummy: true});
+                                        });
+                                }),
+                            Q.ninvoke(db, 'collection', 'unauthorized_project')
+                                .then(function (project) {
+                                    return Q.ninvoke(project, 'remove')
+                                        .then(function () {
+                                            return Q.ninvoke(project, 'insert', {_id: '*info', dummy: true});
+                                        });
+                                })
+                        ]);
+                    });
+
+                gmeauthDeferred = Q.defer();
+                requirejs(['auth/gmeauth'], function (gmeauth) {
+                    gmeauthDeferred.resolve(gmeauth(null /* session */, gmeConfig));
+                }, function (err) {
+                    gmeauthDeferred.reject(err);
+                });
+
+                userReady = gmeauthDeferred.promise.then(function (gmeauth_) {
+                    gmeauth = gmeauth_;
+                    return dbConn.then(function () {
+                        var account = gmeConfig.authentication.guestAccount;
+                        return gmeauth.addUser(account, account + '@example.com', account, true, {overwrite: true});
+                    }).then(function () {
+                        return gmeauth.addUser('user', 'user@example.com', 'plaintext', true, {overwrite: true});
+                    }).then(function () {
+                        return gmeauth.authorizeByUserId('user', 'project', 'create', {
+                            read: true,
+                            write: true,
+                            delete: false
+                        });
+                    }).then(function () {
+                        return gmeauth.authorizeByUserId('user', 'unauthorized_project', 'create', {
+                            read: false,
+                            write: false,
+                            delete: false
+                        });
+                    });
+                });
+
+                server = WebGME.standaloneServer(gmeConfig);
+                serverBaseUrl = server.getUrl();
+                server.start(serverReady.makeNodeResolver());
+
+                Q.all([serverReady, dbConn, userReady])
+                    .nodeify(done);
             });
 
             beforeEach(function () {
@@ -210,13 +284,27 @@ describe('standalone server', function () {
 
             after(function (done) {
                 process.env.NODE_TLS_REJECT_UNAUTHORIZED = nodeTLSRejectUnauthorized;
-
-                server.stop(done);
+                db.close(true, function (err) {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+                    gmeauth.unload(function (err) {
+                        if (err) {
+                            done(err);
+                            return;
+                        }
+                        server.stop(function () {
+                            //console.log('done');
+                            done();
+                        });
+                    });
+                });
             });
 
             // add all tests for this scenario
             for (j = 0; j < scenario.requests.length; j += 1) {
-                addTest(serverUrl, scenario.requests[j]);
+                addTest(scenario.requests[j]);
             }
 
         });
@@ -232,15 +320,12 @@ describe('standalone server', function () {
 
         before(function (done) {
             // we have to set the config here
-            var config = WebGMEGlobal.getConfig();
-            config.port = 9001;
-            config.authentication = false;
-            config.decoratorpaths  = [];
+            var gmeConfig = testFixture.getGmeConfig();
+            gmeConfig.server.port = 9001;
+            gmeConfig.visualization.decoratorPaths  = [];
 
-            // TODO: would be nice to get this dynamically from server
-            serverBaseUrl = 'http://127.0.0.1:' + config.port;
-
-            server = WebGME.standaloneServer(config);
+            server = WebGME.standaloneServer(gmeConfig);
+            serverBaseUrl = server.getUrl();
             server.start(done);
         });
 
@@ -267,6 +352,7 @@ describe('standalone server', function () {
             gmeauth,
             sockets = [],
             socketId,
+            gmeConfig = testFixture.getGmeConfig(),
             logIn = function (callback) {
                 agent.post(serverBaseUrl + '/login?redirect=%2F')
                     .type('form')
@@ -293,7 +379,7 @@ describe('standalone server', function () {
                         socket = io.connect(serverBaseUrl,
                             {
                                 'query': 'webGMESessionId=' + /webgmeSid=s:([^;]+)\./.exec(decodeURIComponent(socketReq.cookies))[1],
-                                'transports': ['websocket'],
+                                'transports': gmeConfig.socketIO.transports,
                                 'multiplex': false
                             });
 
@@ -321,20 +407,13 @@ describe('standalone server', function () {
                 gmeauthDeferred,
                 userReady,
                 serverReady = Q.defer(),
-                config = WebGMEGlobal.getConfig();
+                gmeConfig = testFixture.getGmeConfig();
 
-            config.port = 9001;
-            config.authentication = true;
-            config.guest = false;
-            config.mongodatabase = 'webgme_tests';
+            gmeConfig.server.port = 9001;
+            gmeConfig.authentication.enable = true;
+            gmeConfig.authentication.allowGuests = false;
 
-            dbConn = Q.ninvoke(mongodb.MongoClient, 'connect', 'mongodb://127.0.0.1/' + config.mongodatabase, {
-                    'w': 1,
-                    'native-parser': true,
-                    'auto_reconnect': true,
-                    'poolSize': 20,
-                    socketOptions: {keepAlive: 1}
-                })
+            dbConn = Q.ninvoke(mongodb.MongoClient, 'connect', gmeConfig.mongo.uri, gmeConfig.mongo.options)
                 .then(function (db_) {
                     db = db_;
                     return Q.all([
@@ -370,10 +449,7 @@ describe('standalone server', function () {
 
             gmeauthDeferred = Q.defer();
             requirejs(['auth/gmeauth'], function (gmeauth) {
-                gmeauthDeferred.resolve(gmeauth({host: '127.0.0.1',
-                    port: 27017,
-                    database: config.mongodatabase
-                }));
+                gmeauthDeferred.resolve(gmeauth(null /* session */, gmeConfig));
             }, function (err) {
                 gmeauthDeferred.reject(err);
             });
@@ -397,10 +473,8 @@ describe('standalone server', function () {
                 });
             });
 
-            // TODO: would be nice to get this dynamically from server
-            serverBaseUrl = 'http://127.0.0.1:' + config.port;
-
-            server = WebGME.standaloneServer(config);
+            server = WebGME.standaloneServer(gmeConfig);
+            serverBaseUrl = server.getUrl();
             server.start(serverReady.makeNodeResolver());
 
             Q.all([serverReady, dbConn, userReady])
@@ -418,10 +492,6 @@ describe('standalone server', function () {
                         done(err);
                         return;
                     }
-                    server.stop(function () {
-                        //console.log('done');
-                        done();
-                    });
 
                     // destroy all socket io connections
                     // this will ensures that the server stops as soon as possible and the test will not timeout.
@@ -431,6 +501,11 @@ describe('standalone server', function () {
                             sockets[socketId].destroy();
                         }
                     }
+
+                    server.stop(function () {
+                        //console.log('done');
+                        done();
+                    });
                 });
             });
         });

@@ -1,8 +1,6 @@
+/*jshint node: true*/
 /**
- * Created by tamas on 2/17/15.
- */
-/**
- * Created by tamas on 2/17/15.
+ * @author kecso / https://github.com/kecso
  */
 
 var program = require('commander'),
@@ -126,7 +124,9 @@ var getBranchHash, //wrapped variant of storage's getBranchHash
 
 
 //connecting to mongoDB and opening project
-var database = new Storage({uri:program.mongoDatabaseUri,log:{debug:function(msg){},error:function(msg){}}}), //we do not want debugging
+var database = new Storage({
+        globConf: {mongo: {uri: program.mongoDatabaseUri},  storage: { keyType: 'plainSHA1'}},  //FIXME: should these read from config?
+        log:{debug:function(msg){},error:function(msg){}}}), //we do not want debugging
     project,core,myCommitHash,theirCommitHash,baseCommitHash,myDiff,theirDiff,baseRoot,myRoot,theirRoot;
 database.openDatabase(function(err){
     if(err){

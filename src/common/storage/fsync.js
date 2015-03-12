@@ -2,12 +2,10 @@
  * @author ksmyth / https://github.com/ksmyth
  */
 
-define(["util/assert"], function (ASSERT) {
+define([], function () {
     "use strict";
 
-    function Database(_database, options) {
-        ASSERT(typeof options === "object" && typeof _database === "object");
-
+    function Database(_database) {
         function fsyncDatabase(callback) {
             _database.fsyncDatabase(callback);
         }

@@ -8,7 +8,8 @@ var testFixture = require('../_globals');
 
 describe('diff CLI tests', function () {
     'use strict';
-    var diffCLI = require('../../src/bin/diff'),
+    var gmeConfig = testFixture.getGmeConfig(),
+        diffCLI = require('../../src/bin/diff'),
         importCLI = require('../../src/bin/import'),
         mongodb = testFixture.mongodb,
         FS = testFixture.fs,
@@ -16,18 +17,12 @@ describe('diff CLI tests', function () {
             return JSON.parse(FS.readFileSync(path, 'utf-8'));
         },
 
-        mongoUri = 'mongodb://127.0.0.1:27017/multi',
+        mongoUri = gmeConfig.mongo.uri,
         diffCliTest = 'diffCliTest';
 
     before(function (done) {
         // TODO: move this to globals.js as a utility function
-        mongodb.MongoClient.connect('mongodb://127.0.0.1:27017/multi', {
-            'w': 1,
-            'native-parser': true,
-            'auto_reconnect': true,
-            'poolSize': 20,
-            socketOptions: {keepAlive: 1}
-        }, function (err, db) {
+        mongodb.MongoClient.connect(mongoUri, gmeConfig.mongo.options, function (err, db) {
             if (err) {
                 done(err);
                 return;

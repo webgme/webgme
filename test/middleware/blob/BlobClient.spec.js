@@ -23,16 +23,14 @@ describe('BlobClient', function () {
     describe('[http]', function () {
         before(function (done) {
             // we have to set the config here
-            var config = WebGMEGlobal.getConfig();
-            config.port = 9005;
-            config.authentication = false;
-            config.httpsecure = false;
-
-            serverBaseUrl = 'http://127.0.0.1:' + config.port;
-            bcParam.serverPort = config.port;
+            var gmeConfig = testFixture.getGmeConfig();
+            gmeConfig.server.port = 9006;
+            gmeConfig.server.https.enable = false;
+            serverBaseUrl = 'http://127.0.0.1:' + gmeConfig.server.port;
+            bcParam.serverPort = gmeConfig.server.port;
             bcParam.server = '127.0.0.1';
-            bcParam.httpsecure = config.httpsecure;
-            server = testFixture.WebGME.standaloneServer(config);
+            bcParam.httpsecure = gmeConfig.server.https.enable;
+            server = testFixture.WebGME.standaloneServer(gmeConfig);
             server.start(function () {
                 done();
             });
@@ -52,9 +50,52 @@ describe('BlobClient', function () {
             server.stop(done);
         });
 
+        it('should get metadata url', function () {
+            var bc = new BlobClient(bcParam);
+            expect(typeof bc.getMetadataURL === 'function').to.equal(true);
+            expect(bc.getMetadataURL()).to.contain('metadata');
+            expect(bc.getMetadataURL('1234567890abcdef')).to.contain('1234567890abcdef');
+        });
+
+        it('should get download url', function () {
+            var bc = new BlobClient(bcParam);
+            expect(typeof bc.getDownloadURL === 'function').to.equal(true);
+            expect(bc.getDownloadURL()).to.contain('download');
+            expect(bc.getDownloadURL('1234567890abcdef')).to.contain('1234567890abcdef');
+            expect(bc.getDownloadURL('1234567890abcdef', 'some/path/to/a/file.txt')).to.contain('1234567890abcdef/some%2Fpath%2Fto%2Fa%2Ffile.txt');
+        });
+
         it('should have putFile', function () {
             var bc = new BlobClient(bcParam);
             expect(typeof bc.putFile === 'function').to.equal(true);
+        });
+
+        it('should create file from empty buffer', function (done) {
+            var bc = new BlobClient(bcParam);
+
+            bc.putFile('test.txt', new Buffer(0), function (err, hash) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                bc.getMetadata(hash, function (err, metadata) {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+                    expect(metadata.mime).to.equal('text/plain');
+                    bc.getObject(hash, function (err, res) {
+                        if (err) {
+                            done(err);
+                            return;
+                        }
+                        expect(typeof res).to.equal('object');
+                        expect(typeof res.prototype).to.equal('undefined');
+                        //expect(res[1]).to.equal(2);
+                        done();
+                    });
+                });
+            });
         });
 
         it('should create json', function (done) {
@@ -288,17 +329,17 @@ describe('BlobClient', function () {
     describe('[https]', function () {
         before(function (done) {
             // we have to set the config here
-            var config = WebGMEGlobal.getConfig();
             nodeTLSRejectUnauthorized = process.env.NODE_TLS_REJECT_UNAUTHORIZED;
-            config.port = 9006;
-            config.authentication = false;
-            config.httpsecure = true;
-            process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-            serverBaseUrl = 'http://127.0.0.1:' + config.port;
-            bcParam.serverPort = config.port;
+            var gmeConfig = testFixture.getGmeConfig();
+            gmeConfig.server.port = 9006;
+            gmeConfig.server.https.enable = true;
+            serverBaseUrl = 'https://127.0.0.1:' + gmeConfig.server.port;
+            bcParam.serverPort = gmeConfig.server.port;
             bcParam.server = '127.0.0.1';
-            bcParam.httpsecure = config.httpsecure;
-            server = testFixture.WebGME.standaloneServer(config);
+            bcParam.httpsecure = gmeConfig.server.https.enable;
+            process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+            server = testFixture.WebGME.standaloneServer(gmeConfig);
+
             server.start(function () {
                 done();
             });

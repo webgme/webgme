@@ -17,9 +17,10 @@ define([
     ){
 
     function Rest(_parameters){
-        _parameters.baseUrl = _parameters.baseUrl || "http://localhost/rest";
+        var gmeConfig = _parameters.globConf;
+        _parameters.baseUrl = _parameters.baseUrl || "http://localhost/rest"; // FIXME: This should come from config
         _parameters.authorization = /*_parameters.authorization || */function(token,projectname,callback){callback(null,true);}; //TODO temporary removal of second authorization check
-        var _storage = new Storage({'host':_parameters.host,'port':_parameters.port,'database':_parameters.database,'log':logManager.create('REST-actor')}),
+        var _storage = new Storage({'globConf': gmeConfig, 'log':logManager.create('REST-actor')}),
             _baseUrl = _parameters.baseUrl,
             _initialized = false,
             _opened = false,
@@ -164,7 +165,7 @@ define([
                 if(err){
                     callback(_HTTPError.internalServerError,err);
                 } else {
-                    var core = new Core(project);
+                    var core = new Core(project, {globConf: gmeConfig});
                     core.loadRoot(rootHash,function(err,root){
                         if(err){
                             callback(_HTTPError.internalServerError,err);
@@ -192,7 +193,7 @@ define([
                 if(err){
                     callback(_HTTPError.internalServerError,err);
                 } else {
-                    var core = new Core(project);
+                    var core = new Core(project, {globConf: gmeConfig});
                     core.loadRoot(rootHash,function(err,root){
                         if(err){
                             callback(_HTTPError.internalServerError,err);
@@ -263,7 +264,7 @@ define([
                     }
 
                     project = pr;
-                    core = new Core(project);
+                    core = new Core(project, {globConf: gmeConfig});
 
                     if(rootHash){
                         initialized();

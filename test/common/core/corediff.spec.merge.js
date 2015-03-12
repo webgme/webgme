@@ -9,9 +9,10 @@ var testFixture = require('../../_globals.js');
 
 describe('corediff-merge', function () {
     'use strict';
-    var FS = testFixture.fs,
+    var gmeConfig = testFixture.getGmeConfig(),
+        FS = testFixture.fs,
         WebGME = testFixture.WebGME,
-        storage = testFixture.Storage();
+        storage = testFixture.Storage({globConf: gmeConfig});
 
     describe('merge', function () {
         var project, core, root, commit, baseCommitHash, baseRootHash,
@@ -65,7 +66,7 @@ describe('corediff-merge', function () {
                         return;
                     }
 
-                    core = new WebGME.core(project);
+                    core = new WebGME.core(project, {globConf: gmeConfig});
                     root = core.createNode();
 
                     WebGME.serializer.import(core, root, jsonProject, function (err/*log*/) {
@@ -206,8 +207,16 @@ describe('corediff-merge', function () {
 
                                         //check values
                                         core.loadByPath(merged.root, '/579542227/651215756', function (err, a) {
+                                            if (err) {
+                                                done(err);
+                                                return;
+                                            }
                                             core.getAttribute(a, 'priority').should.be.equal(2);
                                             core.loadByPath(merged.root, '/579542227/2088994530', function (err, a) {
+                                                if (err) {
+                                                    done(err);
+                                                    return;
+                                                }
                                                 core.getAttribute(a, 'priority').should.be.equal(2);
                                                 done();
                                             });
@@ -378,6 +387,10 @@ describe('corediff-merge', function () {
 
                                         //check values
                                         core.loadByPath(merged.root, '/579542227/651215756', function (err, a) {
+                                            if (err) {
+                                                done(err);
+                                                return;
+                                            }
                                             core.getAttribute(a, 'priority').should.be.equal(3);
                                             done();
                                         });
@@ -474,6 +487,10 @@ describe('corediff-merge', function () {
 
                                         //check values
                                         core.loadByPath(merged.root, '/1786679144/651215756', function (err, a) {
+                                            if (err) {
+                                                done(err);
+                                                return;
+                                            }
                                             core.getAttribute(a, 'priority').should.be.equal(2);
                                             done();
                                         });
@@ -580,9 +597,17 @@ describe('corediff-merge', function () {
 
                                         //check values
                                         core.loadByPath(merged.root, '/579542227/651215756', function (err, a) {
+                                            if (err) {
+                                                done(err);
+                                                return;
+                                            }
                                             core.getRegistry(a, 'position').x.should.be.equal(200);
                                             core.getRegistry(a, 'position').y.should.be.equal(200);
                                             core.loadByPath(merged.root, '/579542227/2088994530', function (err, a) {
+                                                if (err) {
+                                                    done(err);
+                                                    return;
+                                                }
                                                 core.getRegistry(a, 'position').x.should.be.equal(300);
                                                 core.getRegistry(a, 'position').y.should.be.equal(300);
                                                 done();
@@ -669,6 +694,10 @@ describe('corediff-merge', function () {
 
                                         //check values
                                         core.loadByPath(merged.root, '/579542227/651215756', function (err, a) {
+                                            if (err) {
+                                                done(err);
+                                                return;
+                                            }
                                             core.getRegistry(a, 'position').x.should.be.equal(200);
                                             core.getRegistry(a, 'position').y.should.be.equal(200);
                                             done();
@@ -755,6 +784,10 @@ describe('corediff-merge', function () {
 
                                         //check values
                                         core.loadByPath(merged.root, '/579542227/651215756', function (err, a) {
+                                            if (err) {
+                                                done(err);
+                                                return;
+                                            }
                                             core.getRegistry(a, 'position').x.should.be.equal(300);
                                             core.getRegistry(a, 'position').y.should.be.equal(300);
                                             done();
@@ -837,6 +870,10 @@ describe('corediff-merge', function () {
 
                                         //check values
                                         core.loadByPath(merged.root, '/1786679144/651215756', function (err, a) {
+                                            if (err) {
+                                                done(err);
+                                                return;
+                                            }
                                             core.getRegistry(a, 'position').x.should.be.equal(200);
                                             core.getRegistry(a, 'position').y.should.be.equal(200);
                                             done();
