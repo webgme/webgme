@@ -188,7 +188,8 @@ requirejs(['worker/constants',
             context.managerConfig.blobClient = new BlobClient({
               serverPort: gmeConfig.server.port,
               httpsecure: gmeConfig.server.https.enable,
-              server: '127.0.0.1'
+              server: '127.0.0.1',
+              webgmeclientsession: webGMESessionId
             });
 
             manager.initialize(null, function (pluginConfigs, configSaveCallback) {

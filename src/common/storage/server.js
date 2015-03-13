@@ -46,19 +46,19 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
             };
 
         function getSessionID(handshakeData){
-            if(handshakeData && handshakeData.query && handshakeData.query.webGMESessionId && handshakeData.query.webGMESessionId !== 'undefined'){
-                return handshakeData.query.webGMESessionId;
+            var sessionId;
+            if (handshakeData) {
+                if (handshakeData.query && handshakeData.query.webGMESessionId && handshakeData.query.webGMESessionId !== 'undefined') {
+                    // TODO: Isn't this branch deprecated?
+                    sessionId = handshakeData.query.webGMESessionId;
+                } else if (handshakeData.query && handshakeData.query[gmeConfig.server.sessionCookieId] && handshakeData.query[gmeConfig.server.sessionCookieId] !== 'undefined') {
+                    sessionId = COOKIE.signedCookie(handshakeData.query[gmeConfig.server.sessionCookieId], gmeConfig.server.sessionCookieSecret);
+                } else if (gmeConfig.server.sessionCookieId && gmeConfig.server.sessionCookieSecret && handshakeData.headers && handshakeData.headers.cookie) {
+                    //we try to dig it from the signed cookie
+                    sessionId = COOKIE.signedCookie(URL.parseCookie(handshakeData.headers.cookie)[gmeConfig.server.sessionCookieId], gmeConfig.server.sessionCookieSecret);
+                }
             }
-
-            if(handshakeData && handshakeData.query && handshakeData.query[gmeConfig.server.sessionCookieId] && handshakeData.query[gmeConfig.server.sessionCookieId] !== 'undefined'){
-                return COOKIE.signedCookie(handshakeData.query[gmeConfig.server.sessionCookieId], gmeConfig.server.sessionCookieSecret);
-            }
-
-            //we try to dig it from the signed cookie
-            if(gmeConfig.server.sessionCookieId && gmeConfig.server.sessionCookieSecret && handshakeData && handshakeData.headers && handshakeData.headers.cookie) {
-                return COOKIE.signedCookie(URL.parseCookie(handshakeData.headers.cookie)[gmeConfig.server.sessionCookieId], gmeConfig.server.sessionCookieSecret);
-            }
-            return undefined;
+            return sessionId;
         }
 
         function checkDatabase(callback){
@@ -626,6 +626,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                     };
 
                     parameters.webGMESessionId = getSessionID(socket.handshake) || null;
+                    console.log('socket.handshake', socket.handshake);
                     if (gmeConfig.authentication.enable === false) {
                         request();
                     } else {
@@ -633,6 +634,7 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                             if (err || !userId) {
                                 return callback(err || 'unauthorized');
                             }
+                            console.log('parameters.webGMESessionId', parameters.webGMESessionId)
                             parameters.userId = userId;
                             request();
                         });
