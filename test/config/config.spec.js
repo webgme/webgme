@@ -9,6 +9,7 @@ describe('configuration', function () {
     var should = require('chai').should(),
         oldNodeEnv = process.env.NODE_ENV || '',
         path = require('path'),
+        getClientConfig = require('../../config/getclientconfig'),
         configPath = path.join(__dirname, '..', '..', 'config'),
         unloadConfigs = function () {
             // clear the cached files
@@ -77,4 +78,43 @@ describe('configuration', function () {
         }).should.throw(Error);
     });
 
+    it('clientconfig should not expose mongo', function () {
+        var config,
+            clientConfig;
+        process.env.NODE_ENV = '';
+        config = require('../../config');
+        clientConfig = getClientConfig(config);
+
+        should.equal(clientConfig.hasOwnProperty('mongo'), false);
+    });
+
+    it('clientconfig should not expose executor.nonce', function () {
+        var config,
+            clientConfig;
+        process.env.NODE_ENV = '';
+        config = require('../../config');
+        clientConfig = getClientConfig(config);
+
+        should.equal(clientConfig.executor.hasOwnProperty('nonce'), false);
+    });
+
+    it('clientconfig should not expose server.sessionCookieSecret', function () {
+        var config,
+            clientConfig;
+        process.env.NODE_ENV = '';
+        config = require('../../config');
+        clientConfig = getClientConfig(config);
+
+        should.equal(clientConfig.server.hasOwnProperty('sessionCookieSecret'), false);
+    });
+
+    it('clientconfig should not expose server.https.certificateFile', function () {
+        var config,
+            clientConfig;
+        process.env.NODE_ENV = '';
+        config = require('../../config');
+        clientConfig = getClientConfig(config);
+
+        should.equal(clientConfig.server.https.hasOwnProperty('certificateFile'), false);
+    });
 });

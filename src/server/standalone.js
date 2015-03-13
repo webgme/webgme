@@ -44,7 +44,9 @@ define(['logManager',
              URL) {
     'use strict';
     function StandAloneServer(gmeConfig) {
-        var self = this;
+        var self = this,
+            clientConfig = require(Path.join(requirejs.s.contexts._.config.baseUrl,
+                '../config/getclientconfig'))(gmeConfig);
         this.serverUrl = '';
 
         /**
@@ -94,32 +96,14 @@ define(['logManager',
                 logger: LogManager.create('StandAloneWebGMEServer-socket.io')
             };
             if (true === gmeConfig.authentication.enable) {
-                //__storageOptions.auth = {
-                //    session: {},
-                //    host: gmeConfig.mongoip,
-                //    port: gmeConfig.mongoport,
-                //    database: gmeConfig.mongodatabase,
-                //    guest: gmeConfig.guest
-                //};
                 __storageOptions.sessioncheck = __sessionStore.check;
                 __storageOptions.authorization = globalAuthorization;
                 __storageOptions.auth_deleteProject = __gmeAuth.deleteProject;
                 __storageOptions.getAuthorizationInfo = __gmeAuth.getProjectAuthorizationBySession;
             }
 
-            //__storageOptions.host = gmeConfig.mongoip;
-            //__storageOptions.port = gmeConfig.mongoport;
-            //__storageOptions.database = gmeConfig.mongodatabase;
-            //__storageOptions.user = gmeConfig.mongouser;
-            //__storageOptions.pwd = gmeConfig.mongopwd;
-
             __storageOptions.log = LogManager.create('StandAloneWebGMEServer-storage');
             __storageOptions.getToken = __gmeAuth.getToken;
-
-            //__storageOptions.pluginBasePaths = gmeConfig.plugin.basePaths;
-            //__storageOptions.cache = gmeConfig.cacheSize;
-
-            //__storageOptions.webServerPort = gmeConfig.server.port;
 
             __storageOptions.sessionToUser = __sessionStore.getSessionUser;
 
@@ -413,13 +397,6 @@ define(['logManager',
         __logger.info("initializing authentication modules");
         //TODO: do we need to create this even though authentication is disabled?
         __gmeAuth = new GMEAUTH(__sessionStore, gmeConfig);
-        //    session: __sessionStore,
-        //    host: gmeConfig.mongoip,
-        //    port: gmeConfig.mongoport,
-        //    database: gmeConfig.mongodatabase,
-        //    guest: gmeConfig.guest,
-        //    collection: gmeConfig.usercollection
-        //});
 
         __logger.info("initializing passport module for user management");
         //TODO in the long run this also should move to some database
@@ -544,14 +521,13 @@ define(['logManager',
         __app.get('/bin/getconfig.js', ensureAuthenticated, function (req, res) {
             res.status(200);
             res.setHeader('Content-type', 'application/javascript');
-            res.end("define([],function(){ return " + JSON.stringify(gmeConfig) + ";});");
+            res.end("define([],function(){ return " + JSON.stringify(clientConfig) + ";});");
         });
 
         __logger.info("creating gmeConfig.json specific routing rules");
         __app.get('/gmeConfig.json', ensureAuthenticated, function (req, res) {
             res.status(200);
-            //res.setHeader('Content-type', 'application/javascript');
-            res.end(JSON.stringify(gmeConfig));
+            res.end(JSON.stringify(clientConfig));
         });
 
         __logger.info("creating decorator specific routing rules");
