@@ -22,7 +22,9 @@ module.exports = function (config) {
 
 
         // list of files to exclude
-        exclude: [],
+        exclude: [
+             'src/middleware/executor/worker/node_modules/**/*.js'
+        ],
 
 
         // preprocess matching files before serving them to the browser
