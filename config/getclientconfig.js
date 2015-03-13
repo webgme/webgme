@@ -15,6 +15,8 @@ function getClientConfig(gmeConfig) {
     delete clientConfig.mongo;
     delete clientConfig.blob;
 
+    clientConfig.storage.cache = clientCacheSize;
+
     return clientConfig;
 }
 
