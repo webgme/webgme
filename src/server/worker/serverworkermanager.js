@@ -52,7 +52,17 @@ function(ASSERT,Child, process, CONSTANTS){
                 }
             } else {
                 //there is no need for the worker so we simply kill it
-                freeWorker(workerPid);
+                var firstIdleWorker = undefined;
+                var idleWorkerCount = 0;
+                Object.getOwnPropertyNames(_myWorkers).forEach(function (pid) {
+                    if (_myWorkers[pid].state === CONSTANTS.workerStates.free) {
+                        if (firstIdleWorker === undefined) {
+                            firstIdleWorker = _myWorkers[pid];
+                        } else {
+                            freeWorker(pid);
+                        }
+                    }
+                });
             }
         }
         function messageHandling(msg){
@@ -133,6 +143,11 @@ function(ASSERT,Child, process, CONSTANTS){
                 reserveWorker();
             }
             _waitingRequests.push({request:parameters,cb:callback});
+            Object.getOwnPropertyNames(_myWorkers).forEach(function (pid) {
+                if (_myWorkers[pid].state === CONSTANTS.workerStates.free) {
+                    assignRequest(pid);
+                }
+            });
         }
         function result(id,callback){
             var worker,message = null;
@@ -171,6 +186,7 @@ function(ASSERT,Child, process, CONSTANTS){
                 callback('wrong request identification');
             }
         }
+        reserveWorker();
 
         return {
             request : request,
