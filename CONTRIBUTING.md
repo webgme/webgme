@@ -1,6 +1,6 @@
 # Contributing
 
-1. Check for [existing issues](https://github.com/github/webgme/issues) and confirm that it has not been already fixed in the [master branch](https://github.com/webgme/webgme/commits/master)
+1. Check for [existing issues](https://github.com/webgme/webgme/issues) and confirm that it has not been already fixed in the [master branch](https://github.com/webgme/webgme/commits/master)
 2. Fork the repo and clone it locally
 3. Create a new branch for your contribution
 4. Add tests
