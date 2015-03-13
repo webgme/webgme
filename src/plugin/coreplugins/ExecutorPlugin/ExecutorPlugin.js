@@ -136,7 +136,7 @@ define(['plugin/PluginConfig',
                 },
                 filesToAdd,
                 artifact;
-
+            self.logger.info('inside main');
             // This is just to track the current node path in the result from the execution.
             if (config.update) {
                 if (!self.activeNode) {
@@ -144,6 +144,7 @@ define(['plugin/PluginConfig',
                     return;
                 }
                 executorConfig.args.push(self.core.getPath(self.activeNode));
+                self.logger.info('will write back to model');
             } else {
                 executorConfig.args.push('dummy');
             }
@@ -164,22 +165,28 @@ define(['plugin/PluginConfig',
                     callback(err, self.result);
                     return;
                 }
+                self.logger.info('added files');
                 artifact.save(function (err, hash) {
                     var executorClient;
                     if (err) {
                         callback(err, self.result);
                         return;
                     }
+                    self.logger.info('artifact saved');
                     self.result.addArtifact(hash);
-                    executorClient = new ExecutorClient();
+                    executorClient = new ExecutorClient({
+                        httpsecure: self.gmeConfig.server.https.enable,
+                        serverPort: self.gmeConfig.server.port
+                    });
+                    self.logger.info('created new ExecutorClient instance');
                     // Here the hash of the artifact is passed to the new job.
                     executorClient.createJob({hash: hash}, function (err, jobInfo) {
-                        var intervalID,
-                            atSucceedJob;
+                        var intervalID;
                         if (err) {
                             callback('Creating job failed: ' + err.toString(), self.result);
                             return;
                         }
+                        self.logger.info('job created');
                         self.logger.debug(jobInfo);
                         // This will be called after a succeed job
 
@@ -215,6 +222,7 @@ define(['plugin/PluginConfig',
         ExecutorPlugin.prototype.atSucceedJob = function (jobInfo, mainCallback) {
             var self = this;
             //After the job has been executed jobInfo will contain the result hashes.
+            self.logger.info('job succeeded');
             self.blobClient.getMetadata(jobInfo.resultHashes.resultFile, function (err, metaData) {
                 var newNameJsonHash;
                 if (err) {
