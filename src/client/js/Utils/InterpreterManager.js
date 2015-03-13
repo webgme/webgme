@@ -55,15 +55,16 @@ define(['core/core',
                     self.gmeConfig);
                 pluginManager.initialize(null, function (pluginConfigs, configSaveCallback) {
                     //#1: display config to user
-                    var hackedConfig = {
+                    var noServerExecution = self.gmeConfig.plugin.allowServerExecution === false,
+                        hackedConfig = {
                         'Global Options': [
                             {
                                 "name": "runOnServer",
                                 "displayName": "Execute on Server",
-                                "description": '',
+                                "description": noServerExecution ? 'Server side execution is disabled.' : '',
                                 "value": false, // this is the 'default config'
                                 "valueType": "boolean",
-                                "readOnly": false
+                                "readOnly": noServerExecution
                             }
                         ]
                     };
