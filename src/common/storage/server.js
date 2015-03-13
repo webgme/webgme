@@ -626,7 +626,6 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                     };
 
                     parameters.webGMESessionId = getSessionID(socket.handshake) || null;
-                    console.log('socket.handshake', socket.handshake);
                     if (gmeConfig.authentication.enable === false) {
                         request();
                     } else {
@@ -634,7 +633,6 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                             if (err || !userId) {
                                 return callback(err || 'unauthorized');
                             }
-                            console.log('parameters.webGMESessionId', parameters.webGMESessionId)
                             parameters.userId = userId;
                             request();
                         });
