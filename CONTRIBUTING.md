@@ -12,7 +12,7 @@
 
 ## Development guidelines
 
-* Configure your editor to use [`.jshintrc`](.jsthintrc) and [`.jscsrc`](.jscsrc)
+* Configure your editor to use [`.jshintrc`](.jshintrc) and [`.jscsrc`](.jscsrc)
 * Don't update the version in `package.json`, the webgme package maintainers will do it
 
 ```JavaScript
