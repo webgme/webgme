@@ -20,7 +20,6 @@ describe('issue 171 server crashes when trying to switch to non-existent branch'
 
 
     requirejs.config({
-        nodeRequire: require,
         paths: {
             'eventDispatcher': 'common/EventDispatcher',
             ' /socket.io/socket.io.js': 'socketio-client'

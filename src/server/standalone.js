@@ -45,7 +45,8 @@ define(['logManager',
     'use strict';
     function StandAloneServer(gmeConfig) {
         var self = this,
-            clientConfig = getClientConfig(gmeConfig);
+            clientConfig = require(Path.join(requirejs.s.contexts._.config.baseUrl,
+                '../config/getclientconfig'))(gmeConfig);
         this.serverUrl = '';
 
         /**
@@ -352,22 +353,6 @@ define(['logManager',
                     httpResult.send(404);
                 }
             });
-        }
-
-        /**
-         *  Strips away sensitive data from gmeConfig, use before sending it to the client.
-         */
-        function getClientConfig(gmeConfig) {
-            var cConfig = JSON.parse(JSON.stringify(gmeConfig));
-
-            delete cConfig.server.sessionCookieSecret;
-            delete cConfig.server.https.certificateFile;
-            delete cConfig.server.https.keyFile;
-            delete cConfig.executor.nonce;
-            delete cConfig.mongo;
-            delete cConfig.blob;
-
-            return cConfig;
         }
 
         //here starts the main part
