@@ -159,10 +159,13 @@ describe('Client tests', function () {
     });
 
     after(function (done) {
+        this.timeout(5000);
         client.deleteProjectAsync(projectName, function (err) {
-            server.stop(function (serverError) {
-                done(err || serverError);
-            });
+            //client.closeDatabase(function (err) {
+                server.stop(function (serverError) {
+                    done(err || serverError);
+                });
+            //});
         });
     });
 
