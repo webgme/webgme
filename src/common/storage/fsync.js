@@ -131,6 +131,7 @@ define([], function () {
                         getCommits: project.getCommits,
                         makeCommit: project.makeCommit,
                         setUser: project.setUser,
+                        getCommonAncestorCommit: project.getCommonAncestorCommit,
                         ID_NAME: project.ID_NAME
                     });
                 } else {
