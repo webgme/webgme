@@ -15,7 +15,12 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
 
         var _hostAddress = null;
         if(options.type === "browser") {
-            _hostAddress = options.host || window.location.protocol + '//' + window.location.host;
+            if (window.__karma__) {
+                // TRICKY: karma uses web sockets too, we need to use the gme server's port
+                _hostAddress = window.location.protocol + '//localhost:' + gmeConfig.server.port;
+            } else {
+                _hostAddress = options.host || window.location.protocol + '//' + window.location.host;
+            }
         } else {
             _hostAddress = options.host + ':' + gmeConfig.server.port;
         }

@@ -12,7 +12,7 @@ describe('First browser test', function () {
         expect(1).to.equal(1);
     });
 
-    it.skip('should fail', function () {
-        expect(1).to.equal(0);
-    });
+    //it('should fail', function () {
+    //    expect(1).to.equal(0);
+    //});
 });

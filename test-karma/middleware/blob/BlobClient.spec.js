@@ -8,6 +8,7 @@ describe('Browser BlobClient', function () {
         Artifact;
 
     before(function (done) {
+        this.timeout(5000);
         requirejs(['blob/BlobClient', 'blob/Artifact'], function (BlobClient_, Artifact_) {
             BlobClient = BlobClient_;
             Artifact = Artifact_;
