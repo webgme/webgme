@@ -55,7 +55,7 @@ function(ASSERT,Child, process, CONSTANTS){
                 var firstIdleWorker = undefined;
                 var idleWorkerCount = 0;
                 Object.getOwnPropertyNames(_myWorkers).forEach(function (pid) {
-                    if (_myWorkers[pid].state == CONSTANTS.workerStates.free) {
+                    if (_myWorkers[pid].state === CONSTANTS.workerStates.free) {
                         if (firstIdleWorker === undefined) {
                             firstIdleWorker = _myWorkers[pid];
                         } else {
@@ -144,7 +144,7 @@ function(ASSERT,Child, process, CONSTANTS){
             }
             _waitingRequests.push({request:parameters,cb:callback});
             Object.getOwnPropertyNames(_myWorkers).forEach(function (pid) {
-                if (_myWorkers[pid].state == CONSTANTS.workerStates.free) {
+                if (_myWorkers[pid].state === CONSTANTS.workerStates.free) {
                     assignRequest(pid);
                 }
             });
