@@ -265,66 +265,77 @@ var merge = function (mongoUri, projectId, sourceBranchOrCommit, targetBranchOrC
         });
     });
 };
-program
-    .version('0.1.0')
-    .option('-m, --mongo-database-uri [url]', 'URI to connect to mongoDB where the project is stored')
-    .option('-p, --project-identifier [value]', 'project identifier')
-    .option('-M, --mine [branch/commit]', 'my version of the project')
-    .option('-T, --theirs [branch/commit]', 'their version of the project')
-    .option('-P, --path-prefix [value]', 'path prefix for the output diff files')
-    .option('-a, --auto-merge', 'if given then we try to automatically merge into their branch/commit')
-    .parse(process.argv);
+
+
+module.exports.merge = merge;
+if( require.main === module){
+    program
+        .version('0.1.0')
+        .option('-m, --mongo-database-uri [uri]', 'URI to connect to mongoDB where the project is stored')
+        .option('-p, --project-identifier [value]', 'project identifier')
+        .option('-M, --mine [branch/commit]', 'my version of the project')
+        .option('-T, --theirs [branch/commit]', 'their version of the project')
+        .option('-P, --path-prefix [value]', 'path prefix for the output diff files')
+        .option('-a, --auto-merge', 'if given then we try to automatically merge into their branch/commit')
+        .parse(process.argv);
 //check necessary arguments
-if (!program.mongoDatabaseUri) {
-    console.warn('mongoDB URL is a mandatory parameter!');
-    process.exit(0);
-}
-if (!program.projectIdentifier) {
-    console.warn('project identifier is a mandatory parameter!');
-    process.exit(0);
-}
-if (!program.mine) {
-    console.warn('my branch/commit is a mandatory parameter!');
-    process.exit(0);
-}
-if (!program.theirs) {
-    console.warn('their branch/commit is a mandatory parameter!');
-    process.exit(0);
-}
-
-merge(program.mongoDatabaseUri, program.projectIdentifier, program.mine, program.theirs, program.autoMerge, function (err, result) {
-    'use strict';
-    if (err) {
-        console.warn('merging failed: ', err);
+    if (!program.mongoDatabaseUri && !gmeConfig.mongo.uri) {
+        console.warn('there is no preconfigured mongoDb commection so the mongo-database-uri parameter is mandatory');
+        program.help();
     }
-    //it is possible that we have enough stuff to still print some results to the screen or to some file
-    if (result.updatedBranch) {
-        console.log('branch [' + result.updatedBranch + '] was sucessfully updated with the merged result');
-    } else if (result.finalCommitHash) {
-        console.log('merge was successfully saved to commit [' + result.finalCommitHash + ']');
-    } else if (result.baseCommitHash && result.diff.mine && result.diff.theirs) {
-        console.log('to finish merge you have to apply your changes to commit[' + result.baseCommitHash + ']');
+    if (!program.projectIdentifier) {
+        console.warn('project identifier is a mandatory parameter!');
+        program.help();
+    }
+    if(!program.mine){
+        console.warn('my branch/commit parameter is mandatory!');
+        program.help();
+    } else if(!(HASH_REGEXP.test(program.mine) || BRANCH_REGEXP.test(program.mine))){
+        console.warn('invalid \'mine\' parameter!');
+        program.help();
+    }
+    if(!program.theirs){
+        console.warn('their branch/commit parameter is mandatory!');
+        program.help();
+    } else if(!(HASH_REGEXP.test(program.theirs) || BRANCH_REGEXP.test(program.theirs))){
+        console.warn('invalid \'theirs\' parameter!');
+        program.help();
     }
 
-    if (program.pathPrefix) {
-        if (result.diff.mine && result.diff.theirs) {
-            FS.writeFileSync(program.pathPrefix + '.mine', JSON.stringify(result.diff.mine, null, 2));
-            FS.writeFileSync(program.pathPrefix + '.theirs', JSON.stringify(result.diff.theirs, null, 2));
-            if (result.conflict) {
-                FS.writeFileSync(program.pathPrefix + '.conflict', JSON.stringify(result.conflict, null, 2));
+    merge(program.mongoDatabaseUri, program.projectIdentifier, program.mine, program.theirs, program.autoMerge, function (err, result) {
+        'use strict';
+        if (err) {
+            console.warn('merging failed: ', err);
+        }
+        //it is possible that we have enough stuff to still print some results to the screen or to some file
+        if (result.updatedBranch) {
+            console.log('branch [' + result.updatedBranch + '] was sucessfully updated with the merged result');
+        } else if (result.finalCommitHash) {
+            console.log('merge was successfully saved to commit [' + result.finalCommitHash + ']');
+        } else if (result.baseCommitHash && result.diff.mine && result.diff.theirs) {
+            console.log('to finish merge you have to apply your changes to commit[' + result.baseCommitHash + ']');
+        }
+
+        if (program.pathPrefix) {
+            if (result.diff.mine && result.diff.theirs) {
+                FS.writeFileSync(program.pathPrefix + '.mine', JSON.stringify(result.diff.mine, null, 2));
+                FS.writeFileSync(program.pathPrefix + '.theirs', JSON.stringify(result.diff.theirs, null, 2));
+                if (result.conflict) {
+                    FS.writeFileSync(program.pathPrefix + '.conflict', JSON.stringify(result.conflict, null, 2));
+                }
+            }
+        } else if (!result.updatedBranch && !result.finalCommitHash) {
+            //if there were no prefix given we put anything to console only if the merge failed at some point or was not even tried
+            if (result.diff.mine && result.diff.theirs) {
+                console.log('diff base->mine:');
+                console.log(JSON.stringify(result.diff.mine, null, 2));
+                console.log('diff base->theirs:');
+                console.log(JSON.stringify(result.diff.theirs, null, 2));
+                if (result.conflict) {
+                    console.log('conflict object:');
+                    console.log(JSON.stringify(result.conflict, null, 2));
+                }
             }
         }
-    } else if (!result.updatedBranch && !result.finalCommitHash) {
-        //if there were no prefix given we put anything to console only if the merge failed at some point or was not even tried
-        if (result.diff.mine && result.diff.theirs) {
-            console.log('diff base->mine:');
-            console.log(JSON.stringify(result.diff.mine, null, 2));
-            console.log('diff base->theirs:');
-            console.log(JSON.stringify(result.diff.theirs, null, 2));
-            if (result.conflict) {
-                console.log('conflict object:');
-                console.log(JSON.stringify(result.conflict, null, 2));
-            }
-        }
-    }
-});
+    });
+}
