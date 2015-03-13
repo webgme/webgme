@@ -661,7 +661,7 @@ define(['util/assert'],function(ASSERT){
             _core.delConstraint(node,keys[i]);
         }
 
-        keys = Object.keys(jsonNode.constraints);
+        keys = Object.keys(jsonNode.constraints || {});
         for(i=0;i<keys.length;i++){
             _core.setConstraint(node,keys[i],jsonNode.constraints[keys[i]]);
         }
