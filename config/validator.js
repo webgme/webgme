@@ -1,52 +1,164 @@
 /*jshint node:true*/
 /**
  * @author lattmann / https://github.com/lattmann
+ * @author pmeijer / https://github.com/pmeijer
  */
 
-// implement assert here to avoid dependency on runtime
-function ASSERT(condition, message) {
+var configFileName;
+
+function throwTypeMiss(name, value, typeStr) {
     'use strict';
-    if (!condition) {
-        message = message || 'Assertion failed';
-        if (Error !== undefined) {
-            throw new Error(message);
-        }
-        throw message; // Fallback
+    var msg;
+    if (configFileName) {
+        msg = 'In ' + configFileName;
+    } else {
+        msg = 'In configuration';
+    }
+    msg +=  ': ' + name + ' must be a(n) ' + typeStr + '. Got: "' + value + '".';
+    throw new Error(msg);
+}
+
+function assertTypeOf(name, value, type, orFalsy) {
+    'use strict';
+    if (orFalsy && !value) {
+        return;
+    }
+    if (typeof value !== type) {
+        throwTypeMiss(name, value, type);
+    }
+}
+
+function assertObject(name, value, orFalsy) {
+    'use strict';
+    assertTypeOf(name, value, 'object', orFalsy);
+}
+
+function assertString(name, value, orFalsy) {
+    'use strict';
+    assertTypeOf(name, value, 'string', orFalsy);
+}
+
+function assertNumber(name, value, orFalsy) {
+    'use strict';
+    assertTypeOf(name, value, 'number', orFalsy);
+}
+
+function assertBoolean(name, value, orFalsy) {
+    'use strict';
+    assertTypeOf(name, value, 'boolean', orFalsy);
+}
+
+function assertArray(name, value) {
+    'use strict';
+    if (value instanceof Array == false) {
+        throwTypeMiss(name, value, 'array');
     }
 }
 
 // We will fail as early as possible
-// TODO: add type checks
-
 function validateConfig (configOrFileName) {
     'use strict';
-    var configFileName,
-        config;
+    var config;
 
     if (typeof configOrFileName === 'string') {
         configFileName = configOrFileName;
         config = require(configFileName);
     } else {
-        configFileName = 'unknown';
         config = configOrFileName;
     }
-    ASSERT(config !== undefined,
-        configFileName + ' GME configuration must be an object. Got: ' + config);
 
-// server configuration
-    ASSERT(config.server !== undefined,
-        configFileName + ' GME configuration must have server object. Got: ' + config.server);
-    ASSERT(config.server.port !== undefined,
-        configFileName + ' GME server configuration must have a port. Got: ' + config.server.port);
-    ASSERT(config.server.https !== undefined,
-        configFileName + ' GME server configuration must have an https object');
-    ASSERT(config.server.https.enable !== undefined);
+    assertObject('config', config);
 
-// mongo configuration
-    ASSERT(config.mongo !== undefined);
-    ASSERT(config.mongo.uri !== undefined);
-    ASSERT(config.mongo.options !== undefined);
-// TODO: check all mandatory options
+    // addOn
+    assertObject('config.addOn', config.addOn);
+    //assertBoolean('config.addOn.enable', config.addOn.enable);
+    assertArray('config.addOn.basePaths', config.addOn.basePaths);
+
+    // authentication
+    assertObject('config.authentication', config.authentication);
+    assertBoolean('config.authentication.enable', config.authentication.enable);
+    assertBoolean('config.authentication.allowGuests', config.authentication.allowGuests);
+    assertString('config.authentication.guestAccount', config.authentication.guestAccount);
+    assertString('config.authentication.logOutUrl', config.authentication.logOutUrl);
+    assertNumber('config.authentication.salts', config.authentication.salts);
+
+    // blob
+    assertObject('config.blob', config.blob);
+    assertString('config.blob.type', config.blob.type);
+    assertString('config.blob.fsDir', config.blob.fsDir);
+    //assertObject('config.blob.s3', config.blob.s3);
+
+    // client
+    assertObject('config.client', config.client);
+    assertString('config.client.appDir', config.client.appDir);
+    assertObject('config.client.defaultProject', config.client.defaultProject);
+    assertString('config.client.defaultProject.name', config.client.defaultProject.name, true);
+    assertString('config.client.defaultProject.branch', config.client.defaultProject.name, true);
+    assertString('config.client.defaultProject.node', config.client.defaultProject.name, true);
+
+    // debug
+    assertBoolean('config.debug', config.debug);
+
+    // executor
+    assertObject('config.executor', config.executor);
+    assertBoolean('config.executor.enable', config.executor.enable);
+    assertString('config.executor.nonce', config.executor.nonce, true);
+    assertString('config.executor.outputDir', config.executor.outputDir);
+    assertNumber('config.executor.workerRefreshInterval', config.executor.workerRefreshInterval);
+
+    // log
+    assertObject('config.log', config.log);
+    assertNumber('config.log.level', config.log.level);
+    assertString('config.log.file', config.log.file);
+
+    // mongo configuration
+    assertObject('config.mongo', config.mongo);
+    assertString('config.mongo.uri', config.mongo.uri);
+    assertObject('config.mongo.options', config.mongo.options);
+
+    // plugin
+    assertObject('config.plugin', config.plugin);
+    assertBoolean('config.plugin.allowServerExecution', config.plugin.allowServerExecution);
+    assertArray('config.plugin.basePaths', config.plugin.basePaths);
+
+    // requirejsPaths
+    assertObject('config.requirejsPaths', config.requirejsPaths);
+
+    // rest
+    assertObject('config.rest', config.rest);
+    assertBoolean('config.rest.secure', config.rest.secure);
+    assertObject('config.rest.components', config.rest.components);
+
+    // server configuration
+    assertObject('config.server', config.server);
+    assertNumber('config.server.port', config.server.port);
+    assertNumber('config.server.maxWorkers', config.server.maxWorkers);
+    assertString('config.server.sessionCookieId', config.server.sessionCookieId);
+    assertString('config.server.sessionCookieSecret', config.server.sessionCookieSecret);
+    assertObject('config.server.https', config.server.https);
+    assertBoolean('config.server.https.enable', config.server.https.enable);
+    assertString('config.server.https.certificateFile', config.server.https.certificateFile);
+    assertString('config.server.https.keyFile', config.server.https.keyFile);
+
+    // socketIO
+    assertObject('config.socketIO', config.socketIO);
+    assertArray('config.socketIO.transports', config.socketIO.transports);
+
+    // storage
+    assertObject('config.storage', config.storage);
+    assertBoolean('config.storage.autoPersist', config.storage.autoPersist);
+    assertNumber('config.storage.cache', config.storage.cache);
+    assertNumber('config.storage.failSafeFrequency', config.storage.failSafeFrequency);
+    assertNumber('config.storage.timeout', config.storage.timeout);
+    assertString('config.storage.keyType', config.storage.keyType);
+    assertString('config.storage.failSafe', config.storage.failSafe);
+
+    //visualization
+    assertObject('config.visualization', config.visualization);
+    assertArray('config.visualization.decoratorPaths', config.visualization.decoratorPaths);
+    assertArray('config.visualization.visualizerDescriptors', config.visualization.visualizerDescriptors);
+
+    //TODO Check ranges and enumerations.
 }
 
 module.exports = validateConfig;
