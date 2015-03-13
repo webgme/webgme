@@ -105,7 +105,7 @@ var applyPatch = function(mongoUri,projectId,branchOrCommit,patch,noUpdate,callb
                         }
                         core.persist(root,function(){});
                         commit = project.makeCommit([baseCommitHash],core.getHash(root),JSON.stringify(patch,null,2),function(){}); //TODO meaningful commit text
-                        if(noUpdate || !HASH_REGEXP.test(branchOrCommit)){
+                        if(noUpdate || !BRANCH_REGEXP.test(branchOrCommit)){
                             return close(null,commit);
                         }
 
@@ -164,7 +164,7 @@ if(require.main === module){
         if(err){
             console.warn('there was an error during the application of the patch: ',err);
         } else {
-            console.warn('patch applied successfully to project \''+program.projectIdentifier+'\'');
+            console.log('patch applied successfully to project \''+program.projectIdentifier+'\'');
         }
         process.exit(0);
     });
