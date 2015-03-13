@@ -3,25 +3,15 @@
  * @author kecso / https://github.com/kecso
  */
 
-var program = require('commander'),
-    HASH_REGEXP = new RegExp('^#[0-9a-zA-Z_]*$'),
+var HASH_REGEXP = new RegExp('^#[0-9a-zA-Z_]*$'),
     BRANCH_REGEXP = new RegExp('^[0-9a-zA-Z_]*$'),
     Q = require('q'),
-    requirejs = require('requirejs'),
+    WebGME = require('../../webgme'),
     FS = require('fs'),
     path = require('path'),
     gmeConfig = require(path.join(process.cwd(), 'config')),
-    Core,
-    Storage;
-requirejs.config({
-    paths: {
-        'core': './../../src/common/core',
-        'storage': './../../src/common/storage',
-        'util': './../../src/common/util'
-    }
-});
-Core = requirejs('core/core');
-Storage = requirejs('storage/serveruserstorage');
+    Core = WebGME.core,
+    Storage = WebGME.serverUserStorage;
 
 var merge = function (mongoUri, projectId, sourceBranchOrCommit, targetBranchOrCommit, autoMerge, callback) {
         'use strict';
