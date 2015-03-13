@@ -44,7 +44,8 @@ define(['logManager',
              URL) {
     'use strict';
     function StandAloneServer(gmeConfig) {
-        var self = this;
+        var self = this,
+            clientConfig = getClientConfig(gmeConfig);
         this.serverUrl = '';
 
         /**
@@ -357,16 +358,16 @@ define(['logManager',
          *  Strips away sensitive data from gmeConfig, use before sending it to the client.
          */
         function getClientConfig(gmeConfig) {
-            var clientConfig = JSON.parse(JSON.stringify(gmeConfig));
+            var cConfig = JSON.parse(JSON.stringify(gmeConfig));
 
-            delete clientConfig.server.sessionCookieSecret;
-            delete clientConfig.server.https.certificateFile;
-            delete clientConfig.server.https.keyFile;
-            delete clientConfig.executor.nonce;
-            delete clientConfig.mongo;
-            delete clientConfig.blob;
+            delete cConfig.server.sessionCookieSecret;
+            delete cConfig.server.https.certificateFile;
+            delete cConfig.server.https.keyFile;
+            delete cConfig.executor.nonce;
+            delete cConfig.mongo;
+            delete cConfig.blob;
 
-            return clientConfig;
+            return cConfig;
         }
 
         //here starts the main part
@@ -535,13 +536,13 @@ define(['logManager',
         __app.get('/bin/getconfig.js', ensureAuthenticated, function (req, res) {
             res.status(200);
             res.setHeader('Content-type', 'application/javascript');
-            res.end("define([],function(){ return " + JSON.stringify(getClientConfig(gmeConfig)) + ";});");
+            res.end("define([],function(){ return " + JSON.stringify(clientConfig) + ";});");
         });
 
         __logger.info("creating gmeConfig.json specific routing rules");
         __app.get('/gmeConfig.json', ensureAuthenticated, function (req, res) {
             res.status(200);
-            res.end(JSON.stringify(getClientConfig(gmeConfig)));
+            res.end(JSON.stringify(clientConfig));
         });
 
         __logger.info("creating decorator specific routing rules");
