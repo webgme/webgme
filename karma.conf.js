@@ -1,5 +1,20 @@
+/*jshint node: true */
 // Karma configuration
 // Generated on Thu Mar 12 2015 16:54:00 GMT-0500 (Central Daylight Time)
+
+// use test configuration
+process.env.NODE_ENV = 'test';
+
+// load gme configuration
+var gmeConfig = require('./config'),
+    webgme = require('./webgme');
+
+webgme.addToRequireJsPaths(gmeConfig);
+
+var server = webgme.standaloneServer(gmeConfig);
+server.start(function () {
+    console.log('webgme server started');
+});
 
 module.exports = function (config) {
     config.set({
@@ -10,34 +25,34 @@ module.exports = function (config) {
 
         // frameworks to use
         // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-        frameworks: ['mocha', 'requirejs', 'chai', 'express-http-server'],
+        frameworks: ['mocha', 'requirejs', 'chai'],
 
 
         // list of files / patterns to load in the browser
         files: [
             {pattern: 'src/**/*.js', included: false},
-            {pattern: 'test-browser/**/*.spec.js', included: false},
+            {pattern: 'test-karma/**/*.spec.js', included: false},
             'test-main.js'
         ],
 
 
         // list of files to exclude
         exclude: [
-             'src/middleware/executor/worker/node_modules/**/*.js'
+            'src/middleware/executor/worker/node_modules/**/*.js'
         ],
 
 
         // preprocess matching files before serving them to the browser
         // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
         preprocessors: {
-            '**/*.js': ['coverage']
+            'src/**/*.js': ['coverage']
         },
 
 
         // test results reporter to use
         // possible values: 'dots', 'progress'
         // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-        reporters: ['progress', 'coverage'],
+        reporters: ['mocha', 'coverage'],
 
 
         // web server port
@@ -66,34 +81,13 @@ module.exports = function (config) {
         // if true, Karma captures browsers, runs the tests and exits
         singleRun: false,
 
+
+        // forward these requests to the webgme server. All other files are server by the karma web server
         proxies: {
-            '/rest': 'http://localhost:8965/rest'
-        },
-
-        expressHttpServer: {
-            port: 8965,
-            appVisitor: function (app, log) {
-                function ensureAuthenticated(req, res, next) {
-                    req.session = {udmId: 'karma_test_user'};
-                    next();
-                };
-                var webgme = require('./webgme');
-                var gmeConfig = require('./config');
-
-                var requirejs = webgme.requirejs;
-
-                requirejs(['blob/BlobFSBackend', 'blob/BlobServer'], function (BlobFSBackend, BlobServer) {
-                    var blobBackend = new BlobFSBackend(gmeConfig);
-                    BlobServer.createExpressBlob(app, blobBackend, ensureAuthenticated, log);
-                });
-                app.use(function (req, res, next) {
-                    // TODO: possible race between client and above requirejs call
-                    next();
-                });
-                app.get('/rest/blob/istesting', function (req, res) {
-                    res.end('It is working! Done.', 200);
-                });
-            }
+            '/base/gmeConfig.json': 'http://localhost:' + gmeConfig.server.port + '/gmeConfig.json',
+            '/rest': 'http://localhost:' + gmeConfig.server.port + '/rest',
+            '/listAllDecorators': 'http://localhost:' + gmeConfig.server.port + '/listAllDecorators',
+            '/listAllPlugins': 'http://localhost:' + gmeConfig.server.port + '/listAllPlugins'
         }
     });
 };
