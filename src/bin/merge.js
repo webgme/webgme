@@ -292,7 +292,7 @@ if (!program.theirs) {
     process.exit(0);
 }
 
-merge(program.mongoDatabaseUri, program.projectIdentifier, program.mine, program.theirs, program.automerge, function (err, result) {
+merge(program.mongoDatabaseUri, program.projectIdentifier, program.mine, program.theirs, program.autoMerge, function (err, result) {
     'use strict';
     if (err) {
         console.warn('merging failed: ', err);
