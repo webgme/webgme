@@ -38,6 +38,7 @@ define(['plugin/PluginConfig',
 
             this.result = null;
             this.isConfigured = false;
+            this.gmeConfig = null;
         };
 
         //--------------------------------------------------------------------------------------------------------------
@@ -390,15 +391,20 @@ define(['plugin/PluginConfig',
          *
          * @param {logManager} logger - logging capability to console (or file) based on PluginManager configuration
          * @param {blob.BlobClient} blobClient - virtual file system where files can be generated then saved as a zip file.
+         * @param {object} gmeConfig - global configuration for webGME.
          */
-        PluginBase.prototype.initialize = function (logger, blobClient) {
+        PluginBase.prototype.initialize = function (logger, blobClient, gmeConfig) {
             if (logger) {
                 this.logger = logger;
             } else {
                 this.logger = console;
             }
-
+            if (!gmeConfig) {
+                // TODO: Remove this check at some point
+                throw new Error('gmeConfig was not provided to Plugin.initialize!');
+            }
             this.blobClient = blobClient;
+            this.gmeConfig = gmeConfig;
 
             this._currentConfig = null;
             // initialize default configuration

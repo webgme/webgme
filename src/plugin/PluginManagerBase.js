@@ -247,7 +247,7 @@ define([
 
             var pluginLogger = LogManager.create('Plugin.' + name);
 
-            plugin.initialize(pluginLogger, managerConfiguration.blobClient);
+            plugin.initialize(pluginLogger, managerConfiguration.blobClient, self.gmeConfig);
 
             plugin.setCurrentConfig(this._pluginConfigs[name]);
             for (var key in managerConfiguration.pluginConfig) {

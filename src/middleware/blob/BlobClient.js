@@ -15,6 +15,7 @@ define(['./Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, Bl
             this.server = parameters.server || this.server;
             this.serverPort = parameters.serverPort || this.serverPort;
             this.httpsecure = (parameters.httpsecure !== undefined) ? parameters.httpsecure : this.httpsecure;
+            this.webgmeclientsession = parameters.webgmeclientsession;
         }
         this.blobUrl = '';
         if (this.httpsecure !== undefined && this.server && this.serverPort) {
@@ -59,7 +60,8 @@ define(['./Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, Bl
     };
 
     BlobClient.prototype.putFile = function (name, data, callback) {
-        var contentLength;
+        var contentLength,
+            req;
         function toArrayBuffer(buffer) {
             var ab = new ArrayBuffer(buffer.length);
             var view = new Uint8Array(ab);
@@ -79,8 +81,11 @@ define(['./Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, Bl
             }
         }
         contentLength = data.hasOwnProperty('length') ? data.length : data.byteLength;
-        superagent.post(this.getCreateURL(name))
-            .set('Content-Type', 'application/octet-stream')
+        req = superagent.post(this.getCreateURL(name));
+        if (this.webgmeclientsession) {
+            req.set('webgmeclientsession', this.webgmeclientsession);
+        }
+        req.set('Content-Type', 'application/octet-stream')
             .set('Content-Length', contentLength)
             .send(data)
             .end(function (err, res) {
@@ -96,12 +101,11 @@ define(['./Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, Bl
     };
 
     BlobClient.prototype.putMetadata = function (metadataDescriptor, callback) {
-        var self = this;
-        var metadata = new BlobMetadata(metadataDescriptor);
-
+        var metadata = new BlobMetadata(metadataDescriptor),
+            blob,
+            contentLength,
+            req;
         // FIXME: in production mode do not indent the json file.
-        var blob;
-        var contentLength;
         if (typeof Blob !== 'undefined') {
             blob = new Blob([JSON.stringify(metadata.serialize(), null, 4)], {type: 'text/plain'});
             contentLength = blob.size;
@@ -110,8 +114,11 @@ define(['./Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, Bl
             contentLength = blob.length;
         }
 
-        superagent.post(this.getCreateURL(metadataDescriptor.name, true))
-            .set('Content-Type', 'application/octet-stream')
+        req = superagent.post(this.getCreateURL(metadataDescriptor.name, true));
+        if (this.webgmeclientsession) {
+            req.set('webgmeclientsession', this.webgmeclientsession);
+        }
+        req.set('Content-Type', 'application/octet-stream')
             .set('Content-Length', contentLength)
             .send(blob)
             .end(function (err, res) {
@@ -173,6 +180,9 @@ define(['./Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, Bl
         //superagent.parse['application/json'] = superagent.parse['application/zip'];
 
         var req = superagent.get(this.getViewURL(hash, subpath));
+        if (this.webgmeclientsession) {
+            req.set('webgmeclientsession', this.webgmeclientsession);
+        }
         if (req.pipe) {
             // running on node
             var Writable = require('stream').Writable;
@@ -225,14 +235,17 @@ define(['./Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, Bl
     };
 
     BlobClient.prototype.getMetadata = function (hash, callback) {
-        superagent.get(this.getMetadataURL(hash))
-            .end(function (err, res) {
-                if (err || res.status > 399) {
-                    callback(err || res.status);
-                } else {
-                    callback(null, JSON.parse(res.text));
-                }
-            });
+        var req = superagent.get(this.getMetadataURL(hash));
+        if (this.webgmeclientsession) {
+            req.set('webgmeclientsession', this.webgmeclientsession);
+        }
+        req.end(function (err, res) {
+            if (err || res.status > 399) {
+                callback(err || res.status);
+            } else {
+                callback(null, JSON.parse(res.text));
+            }
+        });
     };
 
     BlobClient.prototype.createArtifact = function (name) {

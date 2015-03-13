@@ -9,6 +9,7 @@ describe('Plugin Base', function () {
     'use strict';
 
     var should = testFixture.should,
+        gmeConfig = testFixture.getGmeConfig(),
         PluginBase = testFixture.requirejs('plugin/PluginBase'),
         PluginResult = testFixture.requirejs('plugin/PluginResult'),
         PluginConfig = testFixture.requirejs('plugin/PluginConfig');
@@ -86,7 +87,7 @@ describe('Plugin Base', function () {
 
     it('should initialize PluginBase without a logger', function () {
         var pluginBase = new PluginBase();
-        pluginBase.initialize(null /* logger */, null /* blobClient */);
+        pluginBase.initialize(null /* logger */, null /* blobClient */, gmeConfig);
         pluginBase.logger.should.equal(console);
     });
 
@@ -97,7 +98,7 @@ describe('Plugin Base', function () {
                     // debug message
                 }
             };
-        pluginBase.initialize(logger, null /* blobClient */);
+        pluginBase.initialize(logger, null /* blobClient */, gmeConfig);
         pluginBase.logger.should.equal(logger);
     });
 
@@ -108,7 +109,7 @@ describe('Plugin Base', function () {
                     // debug message
                 }
             };
-        pluginBase.initialize(logger, null /* blobClient */);
+        pluginBase.initialize(logger, null /* blobClient */, gmeConfig);
         pluginBase.configure({} /* empty configuration */);
         pluginBase.isConfigured.should.be.true;
     });
@@ -120,7 +121,7 @@ describe('Plugin Base', function () {
                     // debug message
                 }
             };
-        pluginBase.initialize(logger, null /* blobClient */);
+        pluginBase.initialize(logger, null /* blobClient */, gmeConfig);
         pluginBase.configure({
             branchName: 'master',
             commitHash: 'abcdefg12345'
@@ -137,7 +138,7 @@ describe('Plugin Base', function () {
                     // debug message
                 }
             };
-        pluginBase.initialize(logger, null /* blobClient */);
+        pluginBase.initialize(logger, null /* blobClient */, gmeConfig);
         pluginBase.configure({} /* empty configuration */);
 
         // setup for this test
