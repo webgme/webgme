@@ -3495,6 +3495,7 @@ define([
         setValidationCallback: setValidationCallback,
         getDetailedHistoryAsync: getDetailedHistoryAsync,
         getRunningAddOnNames: getRunningAddOnNames,
+          addOnsAllowed: gmeConfig.addOn.enable === true,
 
         //territory functions for the UI
         addUI: addUI,

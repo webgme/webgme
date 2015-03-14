@@ -38,9 +38,9 @@ define( ['clientUtil',
       this._pluginToolBar = new PluginToolbar( this._client );
 
         //TODO the toolbar also has to be optional, but how???
-        //if(this._client.getRunningAddOnNames().indexOf('ConstraintAddOn') !== -1){
+        if(this._client.addOnsAllowed === true){
             this._constraintToolBar = new ConstraintToolBar( this._client );
-        //}
+        }
 
       //TODO: remove
       //this._createDummyControls();
