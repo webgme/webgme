@@ -684,6 +684,9 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
             var cleanup = function () {
                 _objects = {};
                 _projects = {};
+                if (_workerManager) {
+                    _workerManager.stop();
+                }
                 //_references = {};
                 _databaseOpened = false;
             };
