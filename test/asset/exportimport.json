@@ -88,6 +88,7 @@
     "06f202c7-1901-c99e-58f2-2f0cecd90b6c": {
       "attributes": {},
       "base": "be0da876-c3b3-facb-8a7b-db880d2433da",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -109,6 +110,7 @@
     "0c1466ca-10be-28da-800c-db90986b8040": {
       "attributes": {},
       "base": "b4ebcc7b-ca0c-1b8f-5285-2f147996b8f6",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -136,6 +138,7 @@
         "value": 0
       },
       "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -177,6 +180,7 @@
     "1585896d-40fe-7eb3-2287-53e7acc4d9ce": {
       "attributes": {},
       "base": "3757539a-72c8-0d17-76b8-075efdb82cc5",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -202,6 +206,7 @@
     "170ce7cd-2bb9-4490-9553-247b1c5a9f3a": {
       "attributes": {},
       "base": "aff34d7c-f10b-77c5-47da-d0fffda7a78c",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -234,6 +239,7 @@
     "18a8d6bf-55b0-a67d-4cb1-41b06fb75bb3": {
       "attributes": {},
       "base": "1585896d-40fe-7eb3-2287-53e7acc4d9ce",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -268,6 +274,7 @@
         "value": "10"
       },
       "base": "7dc4051c-d6ad-53f9-1c34-331eb83b399b",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -300,6 +307,7 @@
     "433e5587-3ecc-480a-f483-8141f9eaeb04": {
       "attributes": {},
       "base": "4e130a55-2b82-90c4-9ab5-93163a996979",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -326,6 +334,7 @@
         "name": "Language"
       },
       "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -359,6 +368,7 @@
     "4e130a55-2b82-90c4-9ab5-93163a996979": {
       "attributes": {},
       "base": "6cc1d0a2-19b4-e360-ce8a-c7af6be59c72",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -385,6 +395,7 @@
         "name": "extra"
       },
       "base": "12466408-2420-ac04-5396-75cc4d9a3e32",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -427,6 +438,7 @@
         "priority": "LOW"
       },
       "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -491,6 +503,7 @@
         "priority": "MEDIUM"
       },
       "base": "86a06c5b-7104-0cba-87fd-b56901b37c68",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -527,6 +540,7 @@
         "speciality": false
       },
       "base": "12466408-2420-ac04-5396-75cc4d9a3e32",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -572,6 +586,7 @@
     "800cc859-d673-dcaf-7dd3-96116fa8d0fa": {
       "attributes": {},
       "base": "8d21978b-c33d-0461-13e5-8446acdb5287",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -611,6 +626,7 @@
         "name": "relationSpecial"
       },
       "base": "6307a7d0-616c-0cb6-6620-95ab3f44fe7f",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -658,6 +674,7 @@
     "8d21978b-c33d-0461-13e5-8446acdb5287": {
       "attributes": {},
       "base": "aff34d7c-f10b-77c5-47da-d0fffda7a78c",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -690,6 +707,7 @@
     "8fa8f92b-a87a-3e42-a431-f3da1c451473": {
       "attributes": {},
       "base": "3757539a-72c8-0d17-76b8-075efdb82cc5",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -715,6 +733,7 @@
     "91f22d53-e4cb-51a1-b072-9d669f2b44ac": {
       "attributes": {},
       "base": "9cdf7281-f185-896f-de44-8f315c58c6d1",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -738,6 +757,7 @@
         "name": "modelSInstance"
       },
       "base": "d867a97f-ae75-bc97-86db-0a90162a0edc",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -763,6 +783,7 @@
     "9639168c-f83a-682b-06ba-7bad28ea4dfd": {
       "attributes": {},
       "base": "b4ebcc7b-ca0c-1b8f-5285-2f147996b8f6",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -787,6 +808,7 @@
     "9b14495e-ed74-b0e5-688c-69faeb99cf80": {
       "attributes": {},
       "base": "9639168c-f83a-682b-06ba-7bad28ea4dfd",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -811,6 +833,7 @@
     "9cdf7281-f185-896f-de44-8f315c58c6d1": {
       "attributes": {},
       "base": "be0da876-c3b3-facb-8a7b-db880d2433da",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -832,6 +855,7 @@
     "a491c03f-966e-6379-6bd0-282a1571376d": {
       "attributes": {},
       "base": "a9bc9fed-8320-bbb7-05e6-3a7dd602b510",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -858,6 +882,7 @@
         "priority": "HIGH"
       },
       "base": "86a06c5b-7104-0cba-87fd-b56901b37c68",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -894,6 +919,7 @@
         "value": "1"
       },
       "base": "12466408-2420-ac04-5396-75cc4d9a3e32",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -933,6 +959,7 @@
     "b4ebcc7b-ca0c-1b8f-5285-2f147996b8f6": {
       "attributes": {},
       "base": "86a06c5b-7104-0cba-87fd-b56901b37c68",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -969,6 +996,7 @@
         "value": "2"
       },
       "base": "12466408-2420-ac04-5396-75cc4d9a3e32",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -999,6 +1027,7 @@
         "name": "model"
       },
       "base": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -1044,6 +1073,7 @@
         "name": "FCO"
       },
       "base": null,
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -1077,6 +1107,7 @@
     "d43e7a13-c306-d035-1c03-332b8a18a4c4": {
       "attributes": {},
       "base": "6cc1d0a2-19b4-e360-ce8a-c7af6be59c72",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -1103,6 +1134,7 @@
         "name": "modelSpecial"
       },
       "base": "bfdd1144-9c43-cf33-d2e4-5e294756fbd7",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -1137,6 +1169,7 @@
         "value": "2"
       },
       "base": "7dc4051c-d6ad-53f9-1c34-331eb83b399b",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -1171,6 +1204,7 @@
         "name": "ROOT"
       },
       "base": null,
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -1384,6 +1418,7 @@
     "e9c6502d-1d3d-c5c7-eff2-9d0b397929bf": {
       "attributes": {},
       "base": "e4eb0fff-0873-1d09-81c4-8f5cfa0aabc2",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -1416,6 +1451,7 @@
         "name": "modelInstance"
       },
       "base": "bfdd1144-9c43-cf33-d2e4-5e294756fbd7",
+      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
