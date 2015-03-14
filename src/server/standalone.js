@@ -157,7 +157,7 @@ define(['logManager',
         }
         function getRedirectUrlParameter(req){
             //return '?redirect=' + URL.addSpecialChars(req.url);
-            return '?redirect=' + encodeURIComponent(req.url);
+            return '?redirect=' + encodeURIComponent(req.originalUrl);
         }
         function redirectUrl(req,res){
             if(req.query.redirect){
@@ -330,16 +330,16 @@ define(['logManager',
         }
 
         function setupExternalRestModules() {
-            var modul,
+            var restComponent,
                 keys = Object.keys(gmeConfig.rest.components),
                 i;
             __logger.info('initializing external REST modules');
             for (i = 0; i < keys.length; i++) {
-                modul = requirejs(gmeConfig.rest.components[keys[i]]);
-                if (modul) {
+                restComponent = requirejs(gmeConfig.rest.components[keys[i]]);
+                if (restComponent) {
                     __logger.info('adding rest component [' + gmeConfig.rest.components[keys[i]] + '] to' +
                         ' - /rest/external/' + keys[i]);
-                    __app.use('/rest/external/' + keys[i], modul(gmeConfig));
+                    __app.use('/rest/external/' + keys[i], restComponent(gmeConfig, ensureAuthenticated));
                 } else {
                     throw new Error('Loading ' + gmeConfig.rest.components[keys[i]] + ' failed.');
                 }

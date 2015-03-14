@@ -1,21 +1,33 @@
-define(['logManager'],function(logManager){
+define(['logManager'], function (logManager) {
     //here you can define global variables for your middleware
     var counter = 0,
-        gmeConfig, //global config is passed by standaloneserver.js
-        logger = logManager.create('exampleRExtraST'); //how to define your own logger which will use the global settings
-    var exampleRExtraST = function(req,res,next){
-        counter++;
-        if(counter%10){
-            logger.info(JSON.stringify(config,null,2));
-        }
+        ensureAuthenticated,
+        gmeConfig, //global config is passed by server/standalone.js
+        logger = logManager.create('ExampleRestComponent');
+        //how to define your own logger which will use the global settings
 
-        //next should be always called / the response should be sent otherwise this thread will stop without and end
-        res.send(200);
+    var ExampleRestComponent = function (req, res, next) {
+        var handleRequest = function () {
+            counter++;
+            if (counter % 10) {
+                logger.info(JSON.stringify(gmeConfig, null, 2));
+            }
+
+            // call next if request is not handled here.
+
+            res.send(JSON.stringify({ExampleRestComponent: 'says hello'}));
+        };
+
+        // the request can be handled with ensureAuthenticated
+        ensureAuthenticated(req, res, handleRequest);
     };
-    var setup = function (_gmeConfig) { //it has to be done this way, but this is probably a placeholder for later option parameters...
+
+    var setup = function (_gmeConfig, _ensureAuthenticated) {
         gmeConfig = _gmeConfig;
-        return exampleRExtraST;
+        ensureAuthenticated = _ensureAuthenticated;
+        return ExampleRestComponent;
     };
+
     return setup;
 });
 

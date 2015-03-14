@@ -20,11 +20,13 @@ function(ASSERT,Child, process, CONSTANTS){
                 var worker = Child.fork(getBaseDir()+'/server/worker/simpleworker.js', [],
                     { execArgv: process.execArgv.filter(function (arg) { return arg.indexOf('--debug-brk') !== 0 }) });
                 _myWorkers[worker.pid] = {worker:worker,state:CONSTANTS.workerStates.initializing,type:null,cb:null};
+                //console.log('workerPid forked', worker.pid);
                 worker.on('message', messageHandling);
                 _workerCount++;
 
             }
         }
+
         function freeWorker(workerPid){
             if(_myWorkers[workerPid]){
                 _myWorkers[workerPid].worker.kill();
@@ -35,6 +37,15 @@ function(ASSERT,Child, process, CONSTANTS){
                     reserveWorker();
                 }
             }
+        }
+        function freeAllWorkers(){
+            Object.keys(_myWorkers).forEach(function(workerPid) {
+                _myWorkers[workerPid].worker.kill();
+                //console.log('workerPid killed', workerPid);
+            });
+        }
+        function stop() {
+            freeAllWorkers();
         }
         function assignRequest(workerPid){
             if(_waitingRequests.length > 0){
@@ -191,7 +202,8 @@ function(ASSERT,Child, process, CONSTANTS){
         return {
             request : request,
             result  : result,
-            query   : query
+            query   : query,
+            stop: stop
         };
    }
    return ServerWorkerManager;
