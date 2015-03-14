@@ -395,34 +395,38 @@ define([
 
       //generic project related addOn handling
       function updateRunningAddOns(root) {
-        var neededAddOns = _core.getRegistry(root, "usedAddOns"),
-          i,
-          runningAddOns = getRunningAddOnNames();
-        neededAddOns = neededAddOns ? neededAddOns.split(" ") : [];
-        for (i = 0; i < neededAddOns.length; i++) {
-          if (!_addOns[neededAddOns[i]]) {
-            startAddOn(neededAddOns[i]);
+          if(gmeConfig.addOn.enable === true) {
+              var neededAddOns = _core.getRegistry(root, "usedAddOns"),
+                  i,
+                  runningAddOns = getRunningAddOnNames();
+              neededAddOns = neededAddOns ? neededAddOns.split(" ") : [];
+              for (i = 0; i < neededAddOns.length; i++) {
+                  if (!_addOns[neededAddOns[i]]) {
+                      startAddOn(neededAddOns[i]);
+                  }
+              }
+              for (i = 0; i < runningAddOns.length; i++) {
+                  if (neededAddOns.indexOf(runningAddOns[i]) === -1) {
+                      stopAddOn(runningAddOns[i], function (err) {
+                      });
+                  }
+              }
           }
-        }
-        for (i = 0; i < runningAddOns.length; i++) {
-          if (neededAddOns.indexOf(runningAddOns[i]) === -1) {
-            stopAddOn(runningAddOns[i], function (err) {
-            });
-          }
-        }
       }
 
       function stopRunningAddOns() {
-        var i,
-          keys = Object.keys(_addOns),
-          callback = function (err) {
-            if (err) {
-                logger.error("stopAddOn" + err);
-            }
-          };
-        for (i = 0; i < keys.length; i++) {
-          stopAddOn(keys[i], callback);
-        }
+          if(gmeConfig.addOn.enable === true){
+              var i,
+                  keys = Object.keys(_addOns),
+                  callback = function (err) {
+                      if (err) {
+                          logger.error("stopAddOn" + err);
+                      }
+                  };
+              for (i = 0; i < keys.length; i++) {
+                  stopAddOn(keys[i], callback);
+              }
+          }
       }
 
       function getRunningAddOnNames() {
@@ -3495,6 +3499,7 @@ define([
         setValidationCallback: setValidationCallback,
         getDetailedHistoryAsync: getDetailedHistoryAsync,
         getRunningAddOnNames: getRunningAddOnNames,
+          addOnsAllowed: gmeConfig.addOn.enable === true,
 
         //territory functions for the UI
         addUI: addUI,
