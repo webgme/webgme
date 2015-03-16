@@ -110,12 +110,20 @@
     </body>
     <script>
         function getParameterByName(name) {
-            var match = RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
-            return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
+            var match = RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search),
+                result;
+            if (match) {
+                result = decodeURIComponent(match[1].replace(/\+/g, ' '));
+            }
+            return result;
         }
         var form = document.getElementById('loginForm'),
-            redirect = getParameterByName('redirect');
-        form.setAttribute('action', location.origin + '/login' + redirect ? ('?redirect=' + encodeURIComponent(redirect)) : '');
+            redirect = getParameterByName('redirect'),
+            redirectQuery = '';
+        if (redirect) {
+            redirectQuery = '?redirect=' + encodeURIComponent(redirect);
+        }
+        form.setAttribute('action', location.origin + '/login' + redirectQuery);
     </script>
     <script src="/lib/jquery/jquery-2.1.0.js"></script>
     <script>
