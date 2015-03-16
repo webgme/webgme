@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2012-2013 Vanderbilt University, All rights reserved.
- * 
+ *
  * Author: Miklos Maroti
  */
 
@@ -264,7 +264,7 @@ define(["mongodb", "util/assert", "util/canon"], function (MONGODB, ASSERT, CANO
 
         collection.find({
           _id: {
-            $regex: "^\\*"
+            $regex: BRANCH_REGEXP.source
           }
         }).toArray(function (err, docs) {
           if (err) {
