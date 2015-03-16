@@ -69,9 +69,12 @@ define(['logManager',
             openProjectLoadDialog;
 
         // URL query has higher priority than the config.
-        initialThingsToDo.projectToLoad = initialThingsToDo.projectToLoad || gmeConfig.client.defaultProject.name;
-        initialThingsToDo.branchToLoad = initialThingsToDo.branchToLoad ||  gmeConfig.client.defaultProject.branch;
-        initialThingsToDo.objectToLoad = initialThingsToDo.objectToLoad || gmeConfig.client.defaultProject.node;
+        if ((initialThingsToDo.projectToLoad || initialThingsToDo.createNewProject) === false) {
+            initialThingsToDo.projectToLoad = gmeConfig.client.defaultProject.name;
+            initialThingsToDo.branchToLoad = initialThingsToDo.branchToLoad ||  gmeConfig.client.defaultProject.branch;
+            initialThingsToDo.objectToLoad = initialThingsToDo.objectToLoad || gmeConfig.client.defaultProject.node;
+        }
+
 
         layoutManager = new LayoutManager();
         layoutManager.loadLayout(initialThingsToDo.layoutToLoad, function () {
