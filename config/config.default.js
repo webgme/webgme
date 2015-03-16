@@ -7,7 +7,7 @@
 var path = require('path'),
     config = {
         addOn: {
-            enable: true,
+            enable: false,
             basePaths: [path.join(__dirname, '../src/addon/core')]
         },
 

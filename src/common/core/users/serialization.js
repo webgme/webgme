@@ -267,7 +267,8 @@ define(['util/assert'],function(ASSERT){
             parent:_core.getParent(node) ? _core.getGuid(_core.getParent(node)) : null,
             pointers:getPointersOfNode(node),
             registry:getRegistryOfNode(node),
-            sets:getSetsOfNode(node)
+            sets:getSetsOfNode(node),
+            constraints: getConstraintsOfNode(node)
         };
     }
     function baseGuid(path){
@@ -385,6 +386,15 @@ define(['util/assert'],function(ASSERT){
             result = {};
         for(i=0;i<names.length;i++){
             result[names[i]] = _core.getRegistry(node,names[i]);
+        }
+        return result;
+    }
+    function getConstraintsOfNode(node){
+        var names = _core.getOwnConstraintNames(node).sort(),
+            i,
+            result = {};
+        for(i=0;i<names.length;i++){
+            result[names[i]] = _core.getConstraint(node,names[i]);
         }
         return result;
     }
@@ -642,6 +652,20 @@ define(['util/assert'],function(ASSERT){
             _core.setAttribute(node,keys[i],jsonNode.attributes[keys[i]]);
         }
     }
+    function updateConstraints(guid){
+        var keys, i,
+            node = _nodes[guid],
+            jsonNode = _import.nodes[guid];
+        keys = _core.getOwnConstraintNames(node);
+        for(i=0;i<keys.length;i++){
+            _core.delConstraint(node,keys[i]);
+        }
+
+        keys = Object.keys(jsonNode.constraints || {});
+        for(i=0;i<keys.length;i++){
+            _core.setConstraint(node,keys[i],jsonNode.constraints[keys[i]]);
+        }
+    }
     //this function does not cover relations - it means only attributes and registry have been updated here
     function updateNode(guid,parent){
         //first we check if the node have to be moved
@@ -654,6 +678,7 @@ define(['util/assert'],function(ASSERT){
 
         updateAttributes(guid);
         updateRegistry(guid);
+        updateConstraints(guid);
     }
 
     //this function doesn't not cover relations - so only attributes and registry have been taken care of here
@@ -661,6 +686,7 @@ define(['util/assert'],function(ASSERT){
         //at this point we assume that an empty vessel has been already created and part of the _nodes
         updateAttributes(guid);
         updateRegistry(guid);
+        updateConstraints(guid);
     }
 
     function getInheritanceBasedGuidOrder(){

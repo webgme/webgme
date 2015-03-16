@@ -755,26 +755,58 @@ requirejs(['worker/constants',
             }
           });
           break;
-        case CONSTANT.workerCommands.connectedWorkerStart:
-          initConnectedWorker(parameters.workerName, parameters.webGMESessionId, parameters.project, parameters.branch, function (err) {
-            if (err) {
-              safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: err, resid: null});
-            } else {
-              safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: null, resid: process.pid});
-            }
-          });
-          break;
-        case CONSTANT.workerCommands.connectedWorkerQuery:
-          connectedWorkerQuery(parameters, function (err, result) {
-            safeSend({pid: process.pid, type: CONSTANT.msgTypes.query, error: err, result: result});
-          });
-          break;
-        case CONSTANT.workerCommands.connectedWorkerStop:
-          connectedworkerStop(function (err) {
-            safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: null});
-          });
-          break;
-        default:
+          case CONSTANT.workerCommands.connectedWorkerStart:
+              if (gmeConfig.addOn.enable === true) {
+                  initConnectedWorker(parameters.workerName, parameters.webGMESessionId, parameters.project, parameters.branch, function (err) {
+                      if (err) {
+                          safeSend({pid: process.pid, type: CONSTANT.msgTypes.request, error: err, resid: null});
+                      } else {
+                          safeSend({
+                              pid: process.pid,
+                              type: CONSTANT.msgTypes.request,
+                              error: null,
+                              resid: process.pid
+                          });
+                      }
+                  });
+              } else {
+                  safeSend({
+                      pid: process.pid,
+                      type: CONSTANT.msgTypes.request,
+                      error: "addOn functionality not enabled",
+                      resid: null
+                  });
+              }
+              break;
+          case CONSTANT.workerCommands.connectedWorkerQuery:
+              if (gmeConfig.addOn.enable === true) {
+                  connectedWorkerQuery(parameters, function (err, result) {
+                      safeSend({pid: process.pid, type: CONSTANT.msgTypes.query, error: err, result: result});
+                  });
+                  break;
+              } else {
+                  safeSend({
+                      pid: process.pid,
+                      type: CONSTANT.msgTypes.request,
+                      error: "addOn functionality not enabled",
+                      resid: null
+                  });
+              }
+          case CONSTANT.workerCommands.connectedWorkerStop:
+              if (gmeConfig.addOn.enable === true) {
+                  connectedworkerStop(function (err) {
+                      safeSend({pid: process.pid, type: CONSTANT.msgTypes.result, error: err, result: null});
+                  });
+                  break;
+              } else {
+                  safeSend({
+                      pid: process.pid,
+                      type: CONSTANT.msgTypes.request,
+                      error: "addOn functionality not enabled",
+                      resid: null
+                  });
+              }
+          default:
           safeSend({error: 'unknown command'});
       }
     });

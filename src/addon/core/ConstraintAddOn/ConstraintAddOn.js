@@ -166,8 +166,13 @@ define(['addon/AddOnBase'],function(Base) {
                     error = error || err;
                     message[name] = msg;
 
-                    if(msg.hasViolation === true){
+                    if(err){
                         message.hasViolation = true;
+                    }
+                    if(msg){
+                        if(msg.hasViolation === true){
+                            message.hasViolation = true;
+                        }
                     }
 
                     if(--needed === 0){
@@ -198,7 +203,13 @@ define(['addon/AddOnBase'],function(Base) {
         if(!self.contraints[script]){
             var a="";
             eval("a = "+script);
-            self.contraints[script] = a;
+            self.contraints[script] = function(core,node,callback){
+                try{
+                    a(core,node,callback);
+                } catch (e){
+                    callback(null,{hasViolation:true,message:"Exception was thrown during constraint execution:\n"+ e.toString()});
+                }
+            };
             self.contraintsStorage[script] = {};
         }
         self.contraints[script].call(self.contraintsStorage[script],self.core,node,callback);

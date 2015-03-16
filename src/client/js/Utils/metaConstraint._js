@@ -29,14 +29,14 @@ function(core, node, callback) {
                 //min
                 if(meta.children.min && meta.children.min !== -1){
                     if(children.length < meta.children.min){
-                        returnValue.hasVialoation = true;
+                        returnValue.hasViolation = true;
                         returnValue.message += "node hase fewer nodes than needed\n";
                     }
                 }
                 //max
                 if(meta.children.max && meta.children.max !== -1){
                     if(children.length > meta.children.max){
-                        returnValue.hasVialoation = true;
+                        returnValue.hasViolation = true;
                         returnValue.message += "node hase more nodes than allowed\n";
                     }
                 }
@@ -87,7 +87,7 @@ function(core, node, callback) {
                         }
 
                         if(!core.isValidTargetOf(target,node,name)){
-                            returnValue.hasVialoation = true;
+                            returnValue.hasViolation = true;
                             returnValue.message += "target of pointer "+ name +" is invalid\n";
                         }
                         return checkDone();
@@ -104,7 +104,7 @@ function(core, node, callback) {
             if(needs > 0){
                 for(i=0;i<names.length;i++){
                     if(validNames.indexOf(names[i]) === -1){
-                        returnValue.hasVialoation = true;
+                        returnValue.hasViolation = true;
                         returnValue.message += " invalid pointer "+ names[i] +" has been found\n";
                         checkDone();
                     } else {
