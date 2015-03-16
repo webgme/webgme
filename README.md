@@ -49,12 +49,14 @@ All runnable javascript programs are stored in the `src/bin` directory, you shou
 Each script supports the `--help` or `-h` command line parameter, which will list all possible parameters.
 
 * `start_server.js`: it starts a web server, which opens a connection to the configured MongoDB.
-* `parse_xme.js` __outdated__: parses a desktop GME xme file and imports it into a webgme database.
-* `serialize_to_xml.js` __outdated__: creates a desktop GME xme file from a given webgme project.
 * `run_plugin.js`: executes a plugin via a direct MongoDB connection.
 * `merge.js`: merges two branches if there are no conflicts.
 * `usermanager.js`: manages users, organizations, and project authorization (read, write, delete).
- 
+* `export.js`: exports a (snapshot of a) branch into a json file.
+* `import.js`: imports a (snapshot of a) branch into a webgme project.
+* `parse_xme.js` __outdated__: parses a desktop GME xme file and imports it into a webgme database.
+* `serialize_to_xml.js` __outdated__: creates a desktop GME xme file from a given webgme project.
+
 # License
 
 See the [LICENSE](LICENSE) file.
