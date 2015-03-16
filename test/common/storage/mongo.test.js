@@ -43,11 +43,15 @@ describe('mongo database', function () {
 
     before(function (done) {
         testFixture.mongodb.MongoClient.connect('mongodb://127.0.0.1/mongotest', {
-            'w': 1,
-            'native-parser': true,
-            'auto_reconnect': true,
-            'poolSize': 20,
-            socketOptions: {keepAlive: 1}
+            db: {
+                'w': 1,
+                'native_parser': true
+            },
+            server: {
+                'auto_reconnect': true,
+                'poolSize': 20,
+                'socketOptions': {'keepAlive': 1}
+            }
         }, function (err, d) {
             if (!err && d) {
                 db = d;

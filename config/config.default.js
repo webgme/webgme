@@ -52,11 +52,15 @@ var path = require('path'),
         mongo: {
             uri: 'mongodb://127.0.0.1:27017/multi',
             options: {
-                w: 1,
-                'native-parser': true,
-                'auto_reconnect': true,
-                poolSize: 20,
-                socketOptions: {keepAlive: 1}
+                db: {
+                    w: 1,
+                    native_parser: true
+                },
+                server: {
+                    auto_reconnect: true,
+                    socketOptions: {keepAlive: 1},
+                    poolSize: 20
+                }
             }
         },
 

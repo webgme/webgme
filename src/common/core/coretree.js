@@ -44,6 +44,7 @@ define([ "util/assert", "util/key", "core/future", "core/tasync", 'util/canon' ]
 
 	return function (storage, options) {
         var gmeConfig = options.globConf;
+		ASSERT(gmeConfig && typeof gmeConfig === "object");
 		var MAX_AGE = 3; // MAGIC NUMBER
 		var MAX_TICKS = 2000; // MAGIC NUMBER
 		var MAX_MUTATE = 30000; // MAGIC NUMBER
