@@ -92,10 +92,16 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
                     }
                     basechild = core.loadChild( base, relid);
                     return TASYNC.call(function(b,c,n,r){
-                        child = c || core.getChild(n,r);
-                        child.base = b;
-                        core.getCoreTree().setHashed(child,true);
-                        return child;
+                        if(c){
+                            child = c;
+                            child.base = b;
+                            return child;
+                        } else {
+                            child = core.getChild(n,r);
+                            core.setHashed(child,true,true);
+                            child.base = b;
+                            return child;
+                        }
                     },basechild,child,node,relid);
                 }
             }

@@ -441,7 +441,7 @@ define([ "util/assert", "util/key", "core/future", "core/tasync", 'util/canon' ]
 		};
 
 		var __areEquivalent = function (data1, data2) {
-			return data1 === data2 || (typeof data1 === "string" && data1 === __getChildData(data2, ID_NAME)) || (__isEmptyData(data1) && __isEmptyData(data2));
+            return data1 === data2 || (typeof data1 === "string" && data1 === __getChildData(data2, ID_NAME)) || (__isEmptyData(data1) && __isEmptyData(data2));
 		};
 
 		var mutateCount = 0;
@@ -488,7 +488,7 @@ define([ "util/assert", "util/key", "core/future", "core/tasync", 'util/canon' ]
 			}
 
 			if (node.parent !== null) {
-				ASSERT(__areEquivalent(__getChildData(node.parent.data, node.relid), node.data));
+                ASSERT(__areEquivalent(__getChildData(node.parent.data, node.relid), node.data));
 				node.parent.data[node.relid] = copy;
 			}
 
@@ -684,13 +684,15 @@ define([ "util/assert", "util/key", "core/future", "core/tasync", 'util/canon' ]
 			return typeof node.data === "object" && node.data !== null && typeof node.data[ID_NAME] === "string";
 		};
 
-		var setHashed = function (node, hashed) {
+		var setHashed = function (node, hashed, noMutate) {
 			ASSERT(typeof hashed === "boolean");
 
 			node = normalize(node);
-			if (!mutate(node)) {
-				throw new Error("incorrect node data");
-			}
+            if(!noMutate){
+                if (!mutate(node)) {
+                    throw new Error("incorrect node data");
+                }
+            }
 
 			if (hashed) {
 				node.data[ID_NAME] = "";
