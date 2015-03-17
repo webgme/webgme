@@ -79,8 +79,8 @@ require.config({
         'moment': 'lib/moment/moment.min',
 
         // Angular and modules
-        'angular': 'lib/angular/angular-1.2.19/angular' + ( DEBUG ? '.min' : '' ),
-        'angular-route': 'lib/angular/angular-1.2.19/angular-route' + ( DEBUG ? '.min' : '' ),
+        'angular': 'lib/angular/angular-1.2.28/angular' + ( DEBUG ? '.min' : '' ),
+        'angular-route': 'lib/angular/angular-1.2.28/angular-route' + ( DEBUG ? '.min' : '' ),
         'angular-route-styles': 'lib/angular/angular-route-styles/route-styles',
         'angular-ui-bootstrap': 'lib/angular/ui-bootstrap/ui-bootstrap-tpls-0.11.0.min'
     },
