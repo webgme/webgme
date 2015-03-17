@@ -24,9 +24,30 @@ define(['js/PanelBase/PanelBase',
         'gme.ui.headerPanel', [
           'isis.ui.dropdownNavigator',
           'gme.ui.ProjectNavigator'
-        ]).run(function() {
+        ]).run(function ($rootScope, $location) {
+            // FIXME: this might not be the best place to put it...
+            if (WebGMEGlobal && WebGMEGlobal.State) {
+                WebGMEGlobal.State.on('change', function () {
+                    var newurl = ''; // default if project is not open
+                    if (WebGMEGlobal.State.getActiveProjectName()) {
+                        newurl = 'project=' + WebGMEGlobal.State.getActiveProjectName();
+                        if (WebGMEGlobal.State.getActiveBranch()) {
+                            newurl += '&branch=' + WebGMEGlobal.State.getActiveBranch();
+                        } // else if getActiveCommit()
 
-    });
+                        if (WebGMEGlobal.State.getActiveObject() ||
+                            WebGMEGlobal.State.getActiveObject() === '' /* root */) {
+                            newurl += '&node=' + WebGMEGlobal.State.getActiveObject();
+                        }
+                    }
+
+                    $location.search(newurl);
+                    $rootScope.$apply();
+                });
+            } else {
+                console.error('WebGMEGlobal.State does not exist, cannot update url based on state changes.');
+            }
+        });
 
     HeaderPanel = function (layoutManager, params) {
         var options = {};

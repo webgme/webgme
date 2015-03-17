@@ -135,8 +135,8 @@ require(
         'text!/gmeConfig.json',
 
         'angular',
-        'angular-route',
-        'angular-route-styles',
+        //'angular-route',
+        //'angular-route-styles',
         'angular-ui-bootstrap'
 
     ],
@@ -193,12 +193,14 @@ require(
             // has to be initialized as early as possible
             var gmeApp = angular.module(
                 'gmeApp', [
-                    'ngRoute',
-                    'routeStyles',
+                    //'ngRoute',
+                    //'routeStyles',
                     'ui.bootstrap',
                     'gme.ui.projectsDialog',
                     'gme.ui.headerPanel'
-                ]);
+                ]).config(function($locationProvider) {
+                    $locationProvider.html5Mode(true);
+                });
 
             webGME.start( function(client) {
 

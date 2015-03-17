@@ -109,7 +109,7 @@ define(['logManager',
                 if (aspectNames.indexOf(this._selectedAspect) === -1) {
                     this.logger.warning('The currently selected aspect "' + this._selectedAspect + '" does not exist in the object "' + desc.name + ' (' + nodeId + ')", falling back to "All"');
                     this._selectedAspect = CONSTANTS.ASPECT_ALL;
-                    WebGMEGlobal.State.setActiveAspect(CONSTANTS.ASPECT_ALL);
+                    WebGMEGlobal.State.registerActiveAspect(CONSTANTS.ASPECT_ALL);
                 }
             }
 
