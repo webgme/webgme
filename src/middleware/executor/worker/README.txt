@@ -7,7 +7,7 @@ The executor_worker may run on a different machine than the WebGME server.
 
 To run the GUI executor worker on Windows:
 
-Download node-webkit (e.g. http://dl.node-webkit.org/v0.9.2/node-webkit-v0.9.2-win-ia32.zip) and unzip into this directory.
+Download node-webkit (e.g. http://dl.nwjs.io/v0.9.2/node-webkit-v0.9.2-win-ia32.zip) and unzip into this directory.
   curl -f -o %userprofile%\Downloads\node-webkit-v0.9.2-win-ia32.zip -z %userprofile%\Downloads\node-webkit-v0.9.2-win-ia32.zip http://dl.nwjs.io/v0.9.2/node-webkit-v0.9.2-win-ia32.zip
   "c:\Program Files\7-Zip\7z.exe" x  %userprofile%\Downloads\node-webkit-v0.9.2-win-ia32.zip
 Run:
