@@ -622,7 +622,7 @@ define(['logManager',
 
         //client contents - js/html/css
         //stuff that considered not protected 
-        __app.get(/^\/.*\.(css|ico|ttf|woff|js)$/, function (req, res) {
+        __app.get(/^\/.*\.(css|ico|ttf|woff|js|cur)$/, function (req, res) {
             expressFileSending(res, Path.join(__clientBaseDir, req.path));
         });
 
