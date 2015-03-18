@@ -201,6 +201,9 @@ define(['./Artifact', 'blob/BlobMetadata', 'superagent'], function (Artifact, Bl
 
             var buffers = new BuffersWritable();
             buffers.on('finish', function () {
+                if (req.req.res.statusCode > 399) {
+                    return callback(req.req.res.statusCode);
+                }
                 callback(null, Buffer.concat(buffers.buffers));
             });
             buffers.on('error', function (err) {
