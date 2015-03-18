@@ -151,8 +151,13 @@ define(['util/assert', 'common/core/core'], function (ASSERT, Core) {
     function _loadCommitHash(parameters, result, gmeConfig, callback) {
         var core;
         result.project.loadObject(result.commitHash, function (err, commitObj) {
-            if (err) {
-                callback(err);
+            if (err || !commitObj) {
+                if (commitObj) {
+                    callback(err);
+                } else {
+                    callback('No such commitHash "' + result.commitHash + '", in project "' +
+                        parameters.projectName + '".');
+                }
                 return;
             }
             core = parameters.core || new Core(result.project, {globConf: gmeConfig});

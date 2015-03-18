@@ -13,6 +13,28 @@ describe('openContext', function () {
         openContext = testFixture.requirejs('common/util/opencontext'),
         Core = testFixture.WebGME.core;
 
+    function importAndCloseProject(importParam, callback) {
+        testFixture.importProject(importParam, function (err, result) {
+            if (err) {
+                callback(err);
+                return;
+            }
+            result.project.closeProject(function (err) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+                importParam.storage.closeDatabase(function (err) {
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+                    callback(null, result.commitHash);
+                });
+            });
+        });
+    }
+
     describe('using local-storage', function () {
         var storage,// Will get local one from importProject.
             project,
@@ -26,14 +48,10 @@ describe('openContext', function () {
                 branchName: 'master',
                 gmeConfig: gmeConfig
             };
-
-            testFixture.importProject(importParam, function (err, result) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                storage = result.storage;
-                commitHash = result.commitHash;
+            storage = new testFixture.Storage({globConf: gmeConfig});
+            importParam.storage = storage;
+            importAndCloseProject(importParam, function (err, _commitHash) {
+                commitHash = _commitHash;
                 done(err);
             });
         });
@@ -41,7 +59,9 @@ describe('openContext', function () {
         afterEach(function (done) {
             if (project) {
                 project.closeProject(function (err) {
-                    done(err);
+                    storage.closeDatabase(function (err) {
+                        done(err);
+                    });
                 });
             } else {
                 done();
@@ -61,6 +81,7 @@ describe('openContext', function () {
             openContext(storage, gmeConfig, parameters, function (err, result) {
                 expect(err).equal(null);
                 expect(result).to.have.keys('project');
+                project = result.project;
                 done();
             });
         });
@@ -70,22 +91,62 @@ describe('openContext', function () {
                 projectName: 'doesNotExist'
             };
             openContext(storage, gmeConfig, parameters, function (err, result) {
-                expect(err).to.equal('"doesNotExist" does not exists among: doesExist. ' +
-                'Set flag "createProject" to create a new project.');
+                expect(err).to.have.string('"doesNotExist" does not exists among: ');
+                project = null;
                 done();
             });
         });
 
         it('should open non-existing project with flag createProject=true', function (done) {
             var parameters = {
-                projectName: 'doesNotExist',
+                projectName: 'willBeCreated',
                 createProject: true
             };
             openContext(storage, gmeConfig, parameters, function (err, result) {
                 expect(err).equal(null);
                 expect(result).to.have.keys('commitHash', 'core', 'project', 'rootNode');
+                project = result.project;
                 done();
             });
+        });
+
+        it('should return error with createProject=true when project exists', function (done) {
+            var parameters = {
+                projectName: 'doesExist',
+                createProject: true
+            };
+            openContext(storage, gmeConfig, parameters, function (err, result) {
+                expect(err).to.have.string('"doesExist" already exists:');
+                project = null;
+                done();
+            });
+        });
+
+        it('should open with createProject=true, overwriteProject=true when project exists', function (done) {
+            var importParam = {
+                    filePath: './test/asset/sm_basic.json',
+                    projectName: 'willBeOverwritten',
+                    branchName: 'master',
+                    gmeConfig: gmeConfig,
+                    storage: storage
+                },
+                parameters = {
+                    projectName: 'willBeOverwritten',
+                    createProject: true,
+                    overwriteProject: true
+                };
+            importAndCloseProject(importParam, function (err, commitHash) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                openContext(storage, gmeConfig, parameters, function (err, result) {
+                    expect(err).equal(null);
+                    expect(result).to.have.keys('commitHash', 'core', 'project', 'rootNode');
+                    project = result.project;
+                    done();
+                });
+            })
         });
 
         it('should load existing branch', function (done) {
@@ -96,6 +157,7 @@ describe('openContext', function () {
             openContext(storage, gmeConfig, parameters, function (err, result) {
                 expect(err).equal(null);
                 expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core');
+                project = result.project;
                 done();
             });
         });
@@ -107,6 +169,32 @@ describe('openContext', function () {
             };
             openContext(storage, gmeConfig, parameters, function (err, result) {
                 expect(err).to.equal('"b1_lancer" not in project: "doesExist".');
+                project = null
+                done();
+            });
+        });
+
+        it('should load existing commitHash', function (done) {
+            var parameters = {
+                projectName: 'doesExist',
+                commitHash: commitHash
+            };
+            openContext(storage, gmeConfig, parameters, function (err, result) {
+                expect(err).equal(null);
+                expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core');
+                project = result.project;
+                done();
+            });
+        });
+
+        it('should return error with non-existing commitHash', function (done) {
+            var parameters = {
+                projectName: 'doesExist',
+                commitHash: commitHash.substring(0, commitHash.length - 1)
+            };
+            openContext(storage, gmeConfig, parameters, function (err, result) {
+                expect(err).to.have.string('No such commitHash "');
+                project = null;
                 done();
             });
         });
@@ -121,6 +209,7 @@ describe('openContext', function () {
                 expect(err).equal(null);
                 expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core', 'META');
                 expect(result.META).to.have.keys('FCO', 'language', 'state', 'transition');
+                project = result.project;
                 done();
             });
         });
@@ -137,6 +226,7 @@ describe('openContext', function () {
                 expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core', 'META', 'nodes');
                 expect(result.META).to.have.keys('FCO', 'language', 'state', 'transition');
                 expect(result.nodes).to.have.keys('/960660211/1365653822', '/1');
+                project = result.project;
                 done();
             });
         });
@@ -151,11 +241,12 @@ describe('openContext', function () {
                 expect(err).equal(null);
                 expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core', 'nodes');
                 expect(result.nodes).to.have.keys('/960660211/1365653822', '/1');
+                project = result.project;
                 done();
             });
         });
 
-        // FIXME: This returns with nodes [!], could it be the local storage?
+        // FIXME: This returns with nodes [!]
         //it('should return error with non-existing nodeIds', function (done) {
         //    var parameters = {
         //        projectName: 'doesExist',
@@ -164,6 +255,7 @@ describe('openContext', function () {
         //    };
         //    openContext(storage, gmeConfig, parameters, function (err, result) {
         //        expect(err).equal(null);
+        //        project = null;
         //        done();
         //    });
         //});
@@ -194,21 +286,9 @@ describe('openContext', function () {
                     webGMESessionId: 'testopencontext'
                 });
                 importParam.storage = storage;
-                testFixture.importProject(importParam, function (err, result) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-                    commitHash = result.commitHash;
-                    result.project.closeProject(function (err) {
-                        if (err) {
-                            done(err);
-                            return;
-                        }
-                        storage.closeDatabase(function (err) {
-                            done(err);
-                        });
-                    });
+                importAndCloseProject(importParam, function (err, _commitHash) {
+                    commitHash = _commitHash;
+                    done(err);
                 });
             });
         });
@@ -274,6 +354,45 @@ describe('openContext', function () {
             });
         });
 
+        it('should return error with createProject=true when project exists', function (done) {
+            var parameters = {
+                projectName: 'doesExist',
+                createProject: true
+            };
+            openContext(storage, gmeConfig, parameters, function (err, result) {
+                expect(err).to.have.string('"doesExist" already exists:');
+                project = null;
+                done();
+            });
+        });
+
+        it('should open with createProject=true, overwriteProject=true when project exists', function (done) {
+            var importParam = {
+                    filePath: './test/asset/sm_basic.json',
+                    projectName: 'willBeOverwritten',
+                    branchName: 'master',
+                    gmeConfig: gmeConfig,
+                    storage: storage
+                },
+                parameters = {
+                    projectName: 'willBeOverwritten',
+                    createProject: true,
+                    overwriteProject: true
+                };
+            importAndCloseProject(importParam, function (err, commitHash) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                openContext(storage, gmeConfig, parameters, function (err, result) {
+                    expect(err).equal(null);
+                    expect(result).to.have.keys('commitHash', 'core', 'project', 'rootNode');
+                    project = result.project;
+                    done();
+                });
+            })
+        });
+
         it('should load existing branch', function (done) {
             var parameters = {
                 projectName: 'doesExist',
@@ -295,6 +414,31 @@ describe('openContext', function () {
             openContext(storage, gmeConfig, parameters, function (err, result) {
                 expect(err).to.equal('"b1_lancer" not in project: "doesExist".');
                 project = null
+                done();
+            });
+        });
+
+        it('should load existing commitHash', function (done) {
+            var parameters = {
+                projectName: 'doesExist',
+                commitHash: commitHash
+            };
+            openContext(storage, gmeConfig, parameters, function (err, result) {
+                expect(err).equal(null);
+                expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core');
+                project = result.project;
+                done();
+            });
+        });
+
+        it('should return error with non-existing commitHash', function (done) {
+            var parameters = {
+                projectName: 'doesExist',
+                commitHash: commitHash.substring(0, commitHash.length - 1)
+            };
+            openContext(storage, gmeConfig, parameters, function (err, result) {
+                expect(err).to.have.string('No such commitHash "');
+                project = null;
                 done();
             });
         });
@@ -382,21 +526,9 @@ describe('openContext', function () {
                 log: testFixture.Log.create('openContext')
             });
             importParam.storage = storage;
-            testFixture.importProject(importParam, function (err, result) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                commitHash = result.commitHash;
-                result.project.closeProject(function (err) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-                    storage.closeDatabase(function (err) {
-                        done(err);
-                    });
-                });
+            importAndCloseProject(importParam, function (err, _commitHash) {
+                commitHash = _commitHash;
+                done(err);
             });
         });
 
@@ -459,6 +591,45 @@ describe('openContext', function () {
             });
         });
 
+        it('should return error with createProject=true when project exists', function (done) {
+            var parameters = {
+                projectName: 'doesExist',
+                createProject: true
+            };
+            openContext(storage, gmeConfig, parameters, function (err, result) {
+                expect(err).to.have.string('"doesExist" already exists:');
+                project = null;
+                done();
+            });
+        });
+
+        it('should open with createProject=true, overwriteProject=true when project exists', function (done) {
+            var importParam = {
+                    filePath: './test/asset/sm_basic.json',
+                    projectName: 'willBeOverwritten',
+                    branchName: 'master',
+                    gmeConfig: gmeConfig,
+                    storage: storage
+                },
+                parameters = {
+                    projectName: 'willBeOverwritten',
+                    createProject: true,
+                    overwriteProject: true
+            };
+            importAndCloseProject(importParam, function (err, commitHash) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                openContext(storage, gmeConfig, parameters, function (err, result) {
+                    expect(err).equal(null);
+                    expect(result).to.have.keys('commitHash', 'core', 'project', 'rootNode');
+                    project = result.project;
+                    done();
+                });
+            })
+        });
+
         it('should load existing branch', function (done) {
             var parameters = {
                 projectName: 'doesExist',
@@ -480,6 +651,31 @@ describe('openContext', function () {
             openContext(storage, gmeConfig, parameters, function (err, result) {
                 expect(err).to.equal('"b1_lancer" not in project: "doesExist".');
                 project = null
+                done();
+            });
+        });
+
+        it('should load existing commitHash', function (done) {
+            var parameters = {
+                projectName: 'doesExist',
+                commitHash: commitHash
+            };
+            openContext(storage, gmeConfig, parameters, function (err, result) {
+                expect(err).equal(null);
+                expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core');
+                project = result.project;
+                done();
+            });
+        });
+
+        it('should return error with non-existing commitHash', function (done) {
+            var parameters = {
+                projectName: 'doesExist',
+                commitHash: commitHash.substring(0, commitHash.length - 1)
+            };
+            openContext(storage, gmeConfig, parameters, function (err, result) {
+                expect(err).to.have.string('No such commitHash "');
+                project = null;
                 done();
             });
         });
