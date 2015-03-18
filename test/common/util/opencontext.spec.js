@@ -103,8 +103,64 @@ describe('openContext', function () {
                 branchName: 'b1_lancer'
             };
             openContext(storage, gmeConfig, parameters, function (err, result) {
-                console.log(err);
                 expect(err).to.equal('"b1_lancer" not in project: "doesExist".');
+                done();
+            });
+        });
+
+        it('should load the meta nodes', function (done) {
+            var parameters = {
+                projectName: 'doesExist',
+                branchName: 'master',
+                meta: true
+            };
+            openContext(storage, gmeConfig, parameters, function (err, result) {
+                expect(err).equal(null);
+                expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core', 'META');
+                expect(result.META).to.have.keys('FCO', 'language', 'state', 'transition');
+                done();
+            });
+        });
+
+        it('should load the meta nodes and nodeIds', function (done) {
+            var parameters = {
+                projectName: 'doesExist',
+                branchName: 'master',
+                meta: true,
+                nodeIds: ['/960660211/1365653822', '/1']
+            };
+            openContext(storage, gmeConfig, parameters, function (err, result) {
+                expect(err).equal(null);
+                expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core', 'META', 'nodes');
+                expect(result.META).to.have.keys('FCO', 'language', 'state', 'transition');
+                expect(result.nodes).to.have.keys('/960660211/1365653822', '/1');
+                done();
+            });
+        });
+
+        it('should load the nodeIds', function (done) {
+            var parameters = {
+                projectName: 'doesExist',
+                branchName: 'master',
+                nodeIds: ['/960660211/1365653822', '/1']
+            };
+            openContext(storage, gmeConfig, parameters, function (err, result) {
+                expect(err).equal(null);
+                expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core', 'nodes');
+                expect(result.nodes).to.have.keys('/960660211/1365653822', '/1');
+                done();
+            });
+        });
+
+        // FIXME: This returns with nodes [!], could it be the local storage?
+        it.skip('should return error with non-existing nodeIds', function (done) {
+            var parameters = {
+                projectName: 'doesExist',
+                branchName: 'master',
+                nodeIds: ['/960660211/1365653822/144', '/12']
+            };
+            openContext(storage, gmeConfig, parameters, function (err, result) {
+                expect(err).equal(null);
                 done();
             });
         });

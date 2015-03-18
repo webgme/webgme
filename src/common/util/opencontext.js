@@ -16,7 +16,7 @@ define(['util/assert', 'common/core/core'], function (ASSERT, Core) {
      * @param {boolean} [parameters.overwriteProject] - if found will overwrite the existing project -> result.project
      * @param {string} [parameters.branchName] - name of branch to load root from. -> result.rootNode, result.commitHash
      * @param {string} [parameters.commitHash] - if branchName not given commitHash will be loaded. -> result.rootNode
-     * @param {string} [parameters.nodeIds] - //TODO: will load all specified node ids. -> result.nodes
+     * @param {[string]} [parameters.nodeIds] - //TODO: will load all specified node ids. -> result.nodes
      * @param {boolean} [parameters.meta] - //TODO: will load all META-nodes. -> result.META
      * @param {object} [parameters.core] - Used if branchName or commitHash is specified (a new Core will be created
      *                                     if needed and not provided here). -> result.core
@@ -89,6 +89,7 @@ define(['util/assert', 'common/core/core'], function (ASSERT, Core) {
                                                 closeOnError(err);
                                                 return;
                                             }
+                                            callback(null, result);
                                         });
                                     } else {
                                         callback(null, result);
@@ -146,8 +147,78 @@ define(['util/assert', 'common/core/core'], function (ASSERT, Core) {
     }
 
     function _loadNodes(parameters, result, callback) {
-        callback('Not implemented!');
+        var metaNodes = [],
+            metaIds,
+            loadSpecifiedNodes = function () {
+                _loadNodesById(result, parameters.nodeIds, false, function (err, nodes) {
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+                    result.nodes = nodes;
+                    callback(null);
+                });
+            };
+
+        if (parameters.meta) {
+            metaIds = result.core.getMemberPaths(result.rootNode, 'MetaAspectSet');
+            _loadNodesById(result, metaIds, true, function (err, metaNodes) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+                result.META = metaNodes;
+                if (parameters.nodeIds) {
+                    loadSpecifiedNodes();
+                } else {
+                    callback(null);
+                }
+            });
+        } else {
+            loadSpecifiedNodes();
+        }
     }
+
+    function _loadNodesById(result, nodeIds, insertByName, callback) {
+        var len = nodeIds.length,
+            error = '',
+            nodeObjs = [];
+
+
+        var allNodesLoadedHandler = function () {
+            var i,
+                objMap = {};
+
+            if (error) {
+                callback(error);
+                return;
+            }
+
+            for (i = 0; i < nodeObjs.length; i += 1) {
+                if (insertByName) {
+                    objMap[result.core.getAttribute(nodeObjs[i], 'name')] = nodeObjs[i];
+                } else {
+                    objMap[result.core.getPath(nodeObjs[i])] = nodeObjs[i];
+                }
+            }
+            callback(null, objMap);
+        };
+
+        var loadedNodeHandler = function (err, nodeObj) {
+            if (err) {
+                error += err;
+            }
+            nodeObjs.push(nodeObj);
+
+            if (nodeObjs.length === nodeIds.length) {
+                allNodesLoadedHandler();
+            }
+        };
+
+        while (len--) {
+            result.core.loadByPath(result.rootNode, nodeIds[len], loadedNodeHandler);
+        }
+    };
 
     return openContext;
 });
