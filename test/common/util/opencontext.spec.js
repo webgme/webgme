@@ -363,4 +363,187 @@ describe('openContext', function () {
 
     });
 
+    describe('using server-user-storage', function () {
+        var storage,
+            project,
+            commitHash,
+            gmeConfig = testFixture.getGmeConfig();
+
+        before(function (done) {
+            var importParam = {
+                filePath: './test/asset/sm_basic.json',
+                projectName: 'doesExist',
+                branchName: 'master',
+                gmeConfig: gmeConfig,
+                storage: null
+            };
+            storage = new WebGME.serverUserStorage({
+                globConf: gmeConfig,
+                log: testFixture.Log.create('openContext')
+            });
+            importParam.storage = storage;
+            testFixture.importProject(importParam, function (err, result) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                commitHash = result.commitHash;
+                result.project.closeProject(function (err) {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+                    storage.closeDatabase(function (err) {
+                        done(err);
+                    });
+                });
+            });
+        });
+
+        afterEach(function (done) {
+            if (project) {
+                project.closeProject(function (err) {
+                    storage.closeDatabase(function (err) {
+                        done(err);
+                    });
+                });
+            } else {
+                done();
+            }
+        });
+
+        after(function (done) {
+            storage.openDatabase(function (err) {
+                storage.deleteProject('willBeCreated', function (err) {
+                    storage.closeDatabase(function (err) {
+                        done();
+                    });
+                });
+            });
+
+        });
+
+        it('should open existing project', function (done) {
+            var parameters = {
+                projectName: 'doesExist'
+            };
+            openContext(storage, gmeConfig, parameters, function (err, result) {
+                expect(err).equal(null);
+                expect(result).to.have.keys('project');
+                project = result.project;
+                done();
+            });
+        });
+
+        it('should return error with non-existing project', function (done) {
+            var parameters = {
+                projectName: 'doesNotExist'
+            };
+            openContext(storage, gmeConfig, parameters, function (err, result) {
+                expect(err).to.have.string('"doesNotExist" does not exists among: ');
+                project = null;
+                done();
+            });
+        });
+
+        it('should open non-existing project with flag createProject=true', function (done) {
+            var parameters = {
+                projectName: 'willBeCreated',
+                createProject: true
+            };
+            openContext(storage, gmeConfig, parameters, function (err, result) {
+                expect(err).equal(null);
+                expect(result).to.have.keys('commitHash', 'core', 'project', 'rootNode');
+                project = result.project;
+                done();
+            });
+        });
+
+        it('should load existing branch', function (done) {
+            var parameters = {
+                projectName: 'doesExist',
+                branchName: 'master'
+            };
+            openContext(storage, gmeConfig, parameters, function (err, result) {
+                expect(err).equal(null);
+                expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core');
+                project = result.project;
+                done();
+            });
+        });
+
+        it('should return error with non-existing branchName', function (done) {
+            var parameters = {
+                projectName: 'doesExist',
+                branchName: 'b1_lancer'
+            };
+            openContext(storage, gmeConfig, parameters, function (err, result) {
+                expect(err).to.equal('"b1_lancer" not in project: "doesExist".');
+                project = null
+                done();
+            });
+        });
+
+        it('should load the meta nodes', function (done) {
+            var parameters = {
+                projectName: 'doesExist',
+                branchName: 'master',
+                meta: true
+            };
+            openContext(storage, gmeConfig, parameters, function (err, result) {
+                expect(err).equal(null);
+                expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core', 'META');
+                expect(result.META).to.have.keys('FCO', 'language', 'state', 'transition');
+                project = result.project;
+                done();
+            });
+        });
+
+        it('should load the meta nodes and nodeIds', function (done) {
+            var parameters = {
+                projectName: 'doesExist',
+                branchName: 'master',
+                meta: true,
+                nodeIds: ['/960660211/1365653822', '/1']
+            };
+            openContext(storage, gmeConfig, parameters, function (err, result) {
+                expect(err).equal(null);
+                expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core', 'META', 'nodes');
+                expect(result.META).to.have.keys('FCO', 'language', 'state', 'transition');
+                expect(result.nodes).to.have.keys('/960660211/1365653822', '/1');
+                project = result.project;
+                done();
+            });
+        });
+
+        it('should load the nodeIds', function (done) {
+            var parameters = {
+                projectName: 'doesExist',
+                branchName: 'master',
+                nodeIds: ['/960660211/1365653822', '/1']
+            };
+            openContext(storage, gmeConfig, parameters, function (err, result) {
+                expect(err).equal(null);
+                expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core', 'nodes');
+                expect(result.nodes).to.have.keys('/960660211/1365653822', '/1');
+                project = result.project;
+                done();
+            });
+        });
+
+        // FIXME: This returns with nodes [!]
+        //it('should return error with non-existing nodeIds', function (done) {
+        //    var parameters = {
+        //        projectName: 'doesExist',
+        //        branchName: 'master',
+        //        nodeIds: ['/960660211/1365653822/144', '/12']
+        //    };
+        //    openContext(storage, gmeConfig, parameters, function (err, result) {
+        //        expect(err).equal(null);
+        //        project = null;
+        //        done();
+        //    });
+        //});
+
+    });
 });
