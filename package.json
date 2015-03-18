@@ -40,7 +40,7 @@
     "jszip": "=2.2.0",
     "commander": "=2.6.0",
     "aws-sdk": "=1.18.0",
-    "superagent": "=0.18.2",
+    "superagent": "=0.21.0",
     "buffer-equal-constant-time": "=1.0.1",
     "nedb": "=0.10.5",
     "unzip": "=0.1.8",
