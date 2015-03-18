@@ -73,6 +73,7 @@ define(['logManager',
             initialThingsToDo.projectToLoad = gmeConfig.client.defaultProject.name;
             initialThingsToDo.branchToLoad = initialThingsToDo.branchToLoad ||  gmeConfig.client.defaultProject.branch;
             initialThingsToDo.objectToLoad = initialThingsToDo.objectToLoad || gmeConfig.client.defaultProject.node;
+            // TODO: add commit to load
         }
 
 
@@ -261,15 +262,20 @@ define(['logManager',
         };
 
         selectObject = function () {
-            if (initialThingsToDo.objectToLoad) {
-                if (initialThingsToDo.objectToLoad.toLowerCase() === 'root') {
-                    initialThingsToDo.objectToLoad = CONSTANTS.PROJECT_ROOT_ID;
-                }
-                setTimeout(function () {
-                    WebGMEGlobal.State.registerActiveObject(initialThingsToDo.objectToLoad);
-                }, 1000);
-            }
+            //if (initialThingsToDo.objectToLoad) {
+            //    if (initialThingsToDo.objectToLoad.toLowerCase() === 'root') {
+            //        initialThingsToDo.objectToLoad = CONSTANTS.PROJECT_ROOT_ID;
+            //    }
+            //    setTimeout(function () {
+            //        WebGMEGlobal.State.registerActiveObject(initialThingsToDo.objectToLoad);
+            //    }, 1000);
+            //}
+
+            setTimeout(function () {
+                WebGMEUrlManager.loadStateFromParsedUrl(initialThingsToDo);
+            }, 1000);
         };
+
 
         loadBranch = function (branchName) {
             client.selectBranchAsync(branchName, function (err) {

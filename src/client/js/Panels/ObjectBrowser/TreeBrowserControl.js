@@ -244,9 +244,11 @@ define(['logManager',
         //called when the user double-cliked on a node in the tree
         treeBrowser.onNodeDoubleClicked = function (nodeId) {
             logger.debug("Firing onNodeDoubleClicked with nodeId: " + nodeId);
-            WebGMEGlobal.State.registerActiveObject(nodeId);
-            WebGMEGlobal.State.registerActiveAspect(CONSTANTS.ASPECT_ALL);
-            WebGMEGlobal.State.registerActiveVisualizer(DEFAULT_VISUALIZER);
+            var settings = {};
+            settings[CONSTANTS.STATE_ACTIVE_OBJECT] = nodeId;
+            settings[CONSTANTS.STATE_ACTIVE_ASPECT] = CONSTANTS.ASPECT_ALL;
+            settings[CONSTANTS.STATE_ACTIVE_VISUALIZER] = DEFAULT_VISUALIZER;
+            WebGMEGlobal.State.set(settings);
         };
 
         treeBrowser.onExtendMenuItems = function (nodeId, menuItems) {
@@ -310,9 +312,11 @@ define(['logManager',
                 menuItems["openInCrossCut"] = { //Open in crosscuts
                     "name": "Open in 'Crosscuts'",
                     "callback": function(/*key, options*/){
-                        WebGMEGlobal.State.registerActiveObject(nodeId);
-                        WebGMEGlobal.State.registerActiveAspect(CONSTANTS.ASPECT_ALL);
-                        WebGMEGlobal.State.registerActiveVisualizer(CROSSCUT_VISUALIZER);
+                        var settings = {};
+                        settings[CONSTANTS.STATE_ACTIVE_OBJECT] = nodeId;
+                        settings[CONSTANTS.STATE_ACTIVE_ASPECT] = CONSTANTS.ASPECT_ALL;
+                        settings[CONSTANTS.STATE_ACTIVE_VISUALIZER] = CROSSCUT_VISUALIZER;
+                        WebGMEGlobal.State.set(settings);
                     },
                     "icon": false
                 };
@@ -322,9 +326,11 @@ define(['logManager',
                 menuItems.openInSetEditor = { //Open in crosscuts
                     "name": "Open in 'Set membership'",
                     "callback": function(/*key, options*/){
-                        WebGMEGlobal.State.registerActiveObject(nodeId);
-                        WebGMEGlobal.State.registerActiveAspect(CONSTANTS.ASPECT_ALL);
-                        WebGMEGlobal.State.registerActiveVisualizer(SET_VISUALIZER);
+                        var settings = {};
+                        settings[CONSTANTS.STATE_ACTIVE_OBJECT] = nodeId;
+                        settings[CONSTANTS.STATE_ACTIVE_ASPECT] = CONSTANTS.ASPECT_ALL;
+                        settings[CONSTANTS.STATE_ACTIVE_VISUALIZER] = SET_VISUALIZER;
+                        WebGMEGlobal.State.set(settings);
                     },
                     "icon": false
                 };

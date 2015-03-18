@@ -12,8 +12,9 @@ define(['js/PanelBase/PanelBase',
     'js/Toolbar/Toolbar',
     './DefaultToolbar',
     'isis-ui-components/dropdownNavigator/dropdownNavigator',
-    './ProjectNavigatorController'
-], function (PanelBase, ProjectTitleWidget, UserProfileWidget, toolbar, DefaultToolbar, DropDownNavigator, ProjectNavigatorController) {
+    './ProjectNavigatorController',
+    'js/Utils/WebGMEUrlManager'
+], function (PanelBase, ProjectTitleWidget, UserProfileWidget, toolbar, DefaultToolbar, DropDownNavigator, ProjectNavigatorController, WebGMEUrlManager) {
 
     "use strict";
 
@@ -28,23 +29,21 @@ define(['js/PanelBase/PanelBase',
             // FIXME: this might not be the best place to put it...
             if (WebGMEGlobal && WebGMEGlobal.State) {
                 WebGMEGlobal.State.on('change', function () {
-                    var newurl = ''; // default if project is not open
-                    if (WebGMEGlobal.State.getActiveProjectName()) {
-                        newurl = 'project=' + WebGMEGlobal.State.getActiveProjectName();
-                        if (WebGMEGlobal.State.getActiveBranch()) {
-                            newurl += '&branch=' + WebGMEGlobal.State.getActiveBranch();
-                        } // else if getActiveCommit()
+                    var searchQuery = WebGMEUrlManager.serializeStateToUrl();
 
-                        if (WebGMEGlobal.State.getActiveObject() ||
-                            WebGMEGlobal.State.getActiveObject() === '' /* root */) {
-                            newurl += '&node=' + WebGMEGlobal.State.getActiveObject();
-                        }
+                    // set the state that gets pushed into the history
+                    $location.state(WebGMEGlobal.State.toJSON());
+
+                    // setting the search query based on the state
+                    $location.search(searchQuery);
+
+                    // forcing the update
+                    if (!$rootScope.$$phase) {
+                        $rootScope.$apply();
                     }
-
-                    $location.search(newurl);
-                    $rootScope.$apply();
                 });
             } else {
+                // FIXME: this should be a hard error, we do not have a logger here.
                 console.error('WebGMEGlobal.State does not exist, cannot update url based on state changes.');
             }
         });
