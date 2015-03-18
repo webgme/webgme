@@ -274,7 +274,6 @@ describe('openContext', function () {
                 gmeConfig: gmeConfig,
                 storage: null
             };
-            gmeConfig.server.port = 9001;
             server = WebGME.standaloneServer(gmeConfig);
             server.start(function (err) {
                 storage = new WebGME.clientStorage({
@@ -314,7 +313,6 @@ describe('openContext', function () {
                     });
                 });
             });
-
         });
 
         it('should open existing project', function (done) {

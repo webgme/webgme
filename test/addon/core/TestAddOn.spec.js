@@ -49,7 +49,6 @@ describe('TestAddOn', function () {
                 gmeConfig: gmeConfig,
                 storage: null
             };
-        gmeConfig.server.port = 9001;
         server = WebGME.standaloneServer(gmeConfig);
         server.start(function () {
             getConnectedStorage('sessionId', gmeConfig, function (err, storage) {
@@ -72,7 +71,7 @@ describe('TestAddOn', function () {
                         };
                         addon.start(startParam, function (err) {
                             expect(err).equal(null);
-                            done();
+                            server.stop(done);
                         });
                     });
 

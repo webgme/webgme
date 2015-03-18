@@ -22,7 +22,6 @@ describe('Executor', function () {
                 return;
             }
             gmeConfig = testFixture.getGmeConfig();
-            gmeConfig.server.port = 9006;
             done();
         });
     });

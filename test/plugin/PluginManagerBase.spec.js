@@ -83,7 +83,6 @@ describe('Plugin Manager Base', function () {
 
             gmeConfig = testFixture.getGmeConfig();
 
-        gmeConfig.server.port = 9006;
         gmeConfig.server.https.enable = false;
 
         before(function (done) {

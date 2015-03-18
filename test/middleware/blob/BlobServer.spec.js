@@ -22,7 +22,6 @@ describe('BlobServer', function () {
     beforeEach(function (done) {
         // we have to set the config here
         var gmeConfig = testFixture.getGmeConfig();
-        gmeConfig.server.port = 9006;
         gmeConfig.server.https.enable = false;
         serverBaseUrl = 'http://127.0.0.1:' + gmeConfig.server.port;
         bcParam.serverPort = gmeConfig.server.port;
