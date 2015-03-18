@@ -1,37 +1,47 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<title>WebGME</title>
+<head>
+    <script type="text/javascript">
+        // angularJS needs this path to be set
+        // we set it from Javascript, because webgme can be used as a library
+        //  then the url will be /extlib/node_modules/src/client/ otherwise /
+        // NOTE: /index.html may not work this way, request /
+        document.write('<base href="' + document.location.href + '" />');
+    </script>
 
-        <!-- Load main.js with RequireJS and launch the app from there -->
-        <script data-main="js/main" src="lib/require/require.min.js"></script>
+    <title>WebGME</title>
 
-        <!-- favicon -->
-        <link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico">
+    <!-- Load main.js with RequireJS and launch the app from there -->
+    <script data-main="js/main" src="lib/require/require.min.js"></script>
 
-        <base href="/">
+    <!-- favicon -->
+    <link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico">
 
-        <style>
-            .default-container {
-                position: absolute;
-                width: 100%; height: 86px;
-                line-height: 100%;
-                text-align: center;
-                top: 50%;
-                margin: 0 0 0 0;
-                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-                font-size: 12px;
-            }
+    <!--<base href="/extlib/node_modules/webgme/src/client/">-->
 
-            .default-container>span{
-                font-weight: bold;
-            }
 
-        </style>
-	</head>
-    <body>
-        <div class="default-container">
-            <span>WebGME...</span>
-        </div>
-    </body>
+    <style>
+        .default-container {
+            position: absolute;
+            width: 100%;
+            height: 86px;
+            line-height: 100%;
+            text-align: center;
+            top: 50%;
+            margin: 0 0 0 0;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 12px;
+        }
+
+        .default-container > span {
+            font-weight: bold;
+        }
+
+    </style>
+</head>
+<body>
+<div class="default-container">
+    <span>WebGME...</span>
+</div>
+</body>
 </html>

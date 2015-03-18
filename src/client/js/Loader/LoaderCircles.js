@@ -4,7 +4,7 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['css!/js/Loader/styles/LoaderCircles.css'], function () {
+define(['css!js/Loader/styles/LoaderCircles.css'], function () {
     "use strict";
 
     var LoaderCircles,
@@ -55,18 +55,18 @@ define(['css!/js/Loader/styles/LoaderCircles.css'], function () {
 
             if (this._size) {
                 this._circleOuter.css({"width": this._size,
-                                       "height": this._size,
-                                       "border-radius": this._size});
+                    "height": this._size,
+                    "border-radius": this._size});
 
                 this._circleInner.css({"width": this._size - CIRCLE_I_SIZE_DIFF,
-                                       "height": this._size - CIRCLE_I_SIZE_DIFF,
-                                       "border-radius": this._size - CIRCLE_I_SIZE_DIFF,
-                                       "top": 0 - CIRCLE_O_SHADOW_SIZE/3 - this._size/2 - (this._size - CIRCLE_I_SIZE_DIFF)/2 - 2 * CIRCLE_BORDER_SIZE});
+                    "height": this._size - CIRCLE_I_SIZE_DIFF,
+                    "border-radius": this._size - CIRCLE_I_SIZE_DIFF,
+                    "top": 0 - CIRCLE_O_SHADOW_SIZE/3 - this._size/2 - (this._size - CIRCLE_I_SIZE_DIFF)/2 - 2 * CIRCLE_BORDER_SIZE});
 
                 this._loaderContainer.css({"width": this._size + CIRCLE_O_SHADOW_SIZE,
-                                           "height": this._size + CIRCLE_O_SHADOW_SIZE,
-                                           "margin-top": (this._size + CIRCLE_O_SHADOW_SIZE) / -2,
-                                           "margin-left": (this._size + CIRCLE_O_SHADOW_SIZE) / -2});
+                    "height": this._size + CIRCLE_O_SHADOW_SIZE,
+                    "margin-top": (this._size + CIRCLE_O_SHADOW_SIZE) / -2,
+                    "margin-left": (this._size + CIRCLE_O_SHADOW_SIZE) / -2});
             }
 
             this._loaderContainer.append(this._circleOuter).append(this._circleInner);

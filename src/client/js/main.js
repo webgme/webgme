@@ -17,7 +17,7 @@ require.config({
     baseUrl: './',
 
     map: {
-         '*': {
+        '*': {
             'css': 'lib/require/require-css/css',
             'text': 'lib/require/require-text/text'
         }
@@ -86,11 +86,11 @@ require.config({
     },
 
     shim: {
-        
+
         'angular-route': ['angular'],
         'angular-route-styles': ['angular'],
         'angular-ui-bootstrap': ['angular'],
-        
+
         'jquery-ui': ['jquery'],
         'jquery-ui-iPad': ['jquery','jquery-ui'],
 
@@ -107,8 +107,8 @@ require.config({
         'jquery-dataTables-bootstrapped': ['jquery-dataTables'],
         'js/WebGME': [
             'jquery-WebGME',
-            'css!/css/main.css',
-            'css!/css/themes/dawn.css',
+            'css!' + document.location.pathname + 'css/main.css',
+            'css!' + document.location.pathname + 'css/themes/dawn.css',
             'css!fonts/font-awesome/css/font-awesome.min.css',
             'css!fonts/webgme-icons/style.css'
         ],
@@ -181,9 +181,9 @@ require(
                     return this.each(function() {
                         var $this = $(this);
                         if($this.is('input, button')) {
-                          this.disabled = state;
+                            this.disabled = state;
                         } else {
-                          $this.toggleClass('disabled', state);
+                            $this.toggleClass('disabled', state);
                         }
                     });
                 }
