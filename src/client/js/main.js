@@ -79,8 +79,8 @@ require.config({
         'moment': 'lib/moment/moment.min',
 
         // Angular and modules
-        'angular': 'lib/angular/angular-1.2.19/angular' + ( DEBUG ? '.min' : '' ),
-        'angular-route': 'lib/angular/angular-1.2.19/angular-route' + ( DEBUG ? '.min' : '' ),
+        'angular': 'lib/angular/angular-1.3.15/angular' + ( DEBUG ? '.min' : '' ),
+        'angular-route': 'lib/angular/angular-1.3.15/angular-route' + ( DEBUG ? '.min' : '' ),
         'angular-route-styles': 'lib/angular/angular-route-styles/route-styles',
         'angular-ui-bootstrap': 'lib/angular/ui-bootstrap/ui-bootstrap-tpls-0.11.0.min'
     },
@@ -135,8 +135,8 @@ require(
         'text!/gmeConfig.json',
 
         'angular',
-        'angular-route',
-        'angular-route-styles',
+        //'angular-route',
+        //'angular-route-styles',
         'angular-ui-bootstrap'
 
     ],
@@ -193,12 +193,14 @@ require(
             // has to be initialized as early as possible
             var gmeApp = angular.module(
                 'gmeApp', [
-                    'ngRoute',
-                    'routeStyles',
+                    //'ngRoute',
+                    //'routeStyles',
                     'ui.bootstrap',
                     'gme.ui.projectsDialog',
                     'gme.ui.headerPanel'
-                ]);
+                ]).config(function($locationProvider) {
+                    $locationProvider.html5Mode(true);
+                });
 
             webGME.start( function(client) {
 

@@ -16,8 +16,7 @@ define(['jquery',
 
     var _saveState = function (stateObj) {
         if (_stateLoading === false) {
-            logger.debug('saving state:' + JSON.stringify(stateObj));
-            window.history.pushState(stateObj, null, null);
+            // HeaderPanel.js sets the url and updates the state using angular
         }
     };
 
