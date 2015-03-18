@@ -92,6 +92,7 @@ $table-row-height: 25px; //equals Widgets/ProjectRepository/ProjectRepositoryWid
           > div.input-group {
             margin-bottom: 0;
             display: inline-flex;
+            display: -webkit-inline-flex;
             > input {
               height: 100%;
               width: 150px;
