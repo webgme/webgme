@@ -7,16 +7,62 @@ process.env.NODE_ENV = 'test';
 
 // load gme configuration
 var gmeConfig = require('./config'),
-    webgme = require('./webgme');
+    webgme = require('./webgme'),
+    importCli = require('./src/bin/import'),
+    testFixture = require('./test/_globals');
 
 webgme.addToRequireJsPaths(gmeConfig);
 
-var server = webgme.standaloneServer(gmeConfig);
-server.start(function () {
-    console.log('webgme server started');
-});
+(function initializeServer() {
+    'use strict';
+    var server = webgme.standaloneServer(gmeConfig),
+        importProject = function (projectName, filePath) {
+            importCli.import(
+                gmeConfig.mongo.uri,
+                projectName,
+                JSON.parse(testFixture.fs.readFileSync(filePath, 'utf8')),
+                'master',
+                function (err) {
+                    error = error || err;
+                    console.log(projectName, 'have been imported: ', err);
+                    if (--needed === 0) {
+                        finishInitialization();
+                    }
+                });
+        },
+        projectsToImport = [
+            {name: 'ProjectAndBranchOperationsTest', path: './test/asset/sm_basic.json'},
+            {name: 'metaQueryAndManipulationTest', path: './test-karma/client/js/client/metaTestProject.json'},
+            {name: 'ClientNodeInquiryTests', path: './test-karma/client/js/client/clientNodeTestProject.json'},
+            {name: 'nodeManipulationProject', path: './test-karma/client/js/client/clientNodeTestProject.json'},
+            {name: 'RESTLikeTests', path: './test-karma/client/js/client/clientNodeTestProject.json'},
+            {name: 'undoRedoTests', path: './test-karma/client/js/client/clientNodeTestProject.json'},
+            {name: 'territoryProject', path: './test-karma/client/js/client/clientNodeTestProject.json'}
+        ],
+        needed = projectsToImport.length,
+        i,
+        error = null,
+        finishInitialization = function () {
+            if (error) {
+                console.log('server side initialization failed [' + error + '].');
+            } else {
+                console.log('server side initialization was successful, starting webgme server');
+                server.start(function () {
+                    console.log('webgme server started');
+                });
+            }
+        };
+
+    for (i = 0; i < projectsToImport.length; i++) {
+        importProject(projectsToImport[i].name, projectsToImport[i].path);
+    }
+
+}());
+
 
 module.exports = function (config) {
+    'use strict';
+
     config.set({
 
         // base path that will be used to resolve all patterns (eg. files, exclude)
@@ -31,7 +77,8 @@ module.exports = function (config) {
         // list of files / patterns to load in the browser
         files: [
             {pattern: 'src/**/*.js', included: false},
-            {pattern: 'test-karma/**/*.spec.js', included: false},
+            //{pattern: 'test-karma/**/*.spec.js', included: false},
+            {pattern: 'test-karma/client/**/*.spec.js', included: false},
             'test-main.js'
         ],
 
@@ -64,7 +111,8 @@ module.exports = function (config) {
 
 
         // level of logging
-        // possible values: config.LOG_DISABLE || config.LOG_ERROR || config.LOG_WARN || config.LOG_INFO || config.LOG_DEBUG
+        // possible values:
+        // config.LOG_DISABLE || config.LOG_ERROR || config.LOG_WARN || config.LOG_INFO || config.LOG_DEBUG
         logLevel: config.LOG_INFO,
 
 
@@ -86,6 +134,7 @@ module.exports = function (config) {
         proxies: {
             '/base/gmeConfig.json': 'http://localhost:' + gmeConfig.server.port + '/gmeConfig.json',
             '/rest': 'http://localhost:' + gmeConfig.server.port + '/rest',
+            '/worker': 'http://localhost:' + gmeConfig.server.port + '/worker',
             '/listAllDecorators': 'http://localhost:' + gmeConfig.server.port + '/listAllDecorators',
             '/listAllPlugins': 'http://localhost:' + gmeConfig.server.port + '/listAllPlugins'
         }

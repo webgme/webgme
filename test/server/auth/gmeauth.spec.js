@@ -24,7 +24,7 @@ describe('GME authentication', function () {
     before(function (done) {
         auth = new GMEAuth(null, gmeConfig);
 
-        dbConn = Q.ninvoke(mongodb.MongoClient, 'connect', gmeConfig.mongo.uri,gmeConfig.mongo.options)
+        dbConn = Q.ninvoke(mongodb.MongoClient, 'connect', gmeConfig.mongo.uri, gmeConfig.mongo.options)
             .then(function (db_) {
                 db = db_;
                 return Q.all([
