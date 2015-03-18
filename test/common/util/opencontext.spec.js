@@ -51,6 +51,7 @@ describe('openContext', function () {
             storage = new testFixture.Storage({globConf: gmeConfig});
             importParam.storage = storage;
             importAndCloseProject(importParam, function (err, _commitHash) {
+                expect(err).equal(null);
                 commitHash = _commitHash;
                 done(err);
             });
@@ -136,10 +137,7 @@ describe('openContext', function () {
                     overwriteProject: true
                 };
             importAndCloseProject(importParam, function (err, commitHash) {
-                if (err) {
-                    done(err);
-                    return;
-                }
+                expect(err).equal(null);
                 openContext(storage, gmeConfig, parameters, function (err, result) {
                     expect(err).equal(null);
                     expect(result).to.have.keys('commitHash', 'core', 'project', 'rootNode');
@@ -287,6 +285,7 @@ describe('openContext', function () {
                 });
                 importParam.storage = storage;
                 importAndCloseProject(importParam, function (err, _commitHash) {
+                    expect(err).equal(null);
                     commitHash = _commitHash;
                     done(err);
                 });
@@ -380,10 +379,7 @@ describe('openContext', function () {
                     overwriteProject: true
                 };
             importAndCloseProject(importParam, function (err, commitHash) {
-                if (err) {
-                    done(err);
-                    return;
-                }
+                expect(err).equal(null);
                 openContext(storage, gmeConfig, parameters, function (err, result) {
                     expect(err).equal(null);
                     expect(result).to.have.keys('commitHash', 'core', 'project', 'rootNode');
@@ -617,10 +613,7 @@ describe('openContext', function () {
                     overwriteProject: true
             };
             importAndCloseProject(importParam, function (err, commitHash) {
-                if (err) {
-                    done(err);
-                    return;
-                }
+                expect(err).equal(null);
                 openContext(storage, gmeConfig, parameters, function (err, result) {
                     expect(err).equal(null);
                     expect(result).to.have.keys('commitHash', 'core', 'project', 'rootNode');
