@@ -83,7 +83,7 @@ describe('openContext', function () {
             };
             openContext(storage, gmeConfig, parameters, function (err, result) {
                 expect(err).equal(null);
-                expect(result).to.have.keys('project');
+                expect(result).to.have.keys('commitHash', 'core', 'project', 'rootNode');
                 done();
             });
         });
@@ -226,10 +226,17 @@ describe('openContext', function () {
         });
 
         after(function (done) {
-            server.stop(function () {
-                done();
+            storage.openDatabase(function (err) {
+                storage.deleteProject('willBeCreated', function (err) {
+                    storage.closeDatabase(function (err) {
+                        server.stop(function () {
+                            done();
+                        });
+                    });
+                });
             });
-        })
+
+        });
 
         it('should open existing project', function (done) {
             var parameters = {
@@ -261,7 +268,7 @@ describe('openContext', function () {
             };
             openContext(storage, gmeConfig, parameters, function (err, result) {
                 expect(err).equal(null);
-                expect(result).to.have.keys('project');
+                expect(result).to.have.keys('commitHash', 'core', 'project', 'rootNode');
                 project = result.project;
                 done();
             });
@@ -339,7 +346,7 @@ describe('openContext', function () {
             });
         });
 
-        // FIXME: This returns with nodes [!], could it be the local storage?
+        // FIXME: This returns with nodes [!]
         //it('should return error with non-existing nodeIds', function (done) {
         //    var parameters = {
         //        projectName: 'doesExist',
@@ -352,6 +359,8 @@ describe('openContext', function () {
         //        done();
         //    });
         //});
+
+
     });
 
 });

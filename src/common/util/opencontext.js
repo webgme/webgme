@@ -6,18 +6,23 @@
 define(['util/assert', 'common/core/core'], function (ASSERT, Core) {
 
     /**
-     * Opens the context specified by the parameters and returns a result object containing
-     * data.
-     * @param {object} storage - clientstorage, serveruserstorage or localstorage
+     * Opens the context specified by the parameters and returns a result object.
+     * If no error is returned the database and the project are kept open, otherwise they are closed.
+     * @param {object} storage - client-storage, server-user-storage or local-storage
      * @param {object} gmeConfig - global webgme configuration
      * @param {object} parameters
      * @param {string} [parameters.projectName] - name of project to open -> result.project
-     * @param {boolean} [parameters.createProject] - if not found will create a project -> result.project
-     * @param {boolean} [parameters.overwriteProject] - if found will overwrite the existing project -> result.project
+     * @param {boolean} [parameters.createProject] - if not found will create a project
+     *                                              -> result.rootNode, result.commitHash, result.core
+     * @param {boolean} [parameters.overwriteProject] - if found will overwrite the existing project
+     *                                              -> result.rootNode, result.commitHash, result.core
+     *
+     * The following group is only valid when not creating a new project:
      * @param {string} [parameters.branchName] - name of branch to load root from. -> result.rootNode, result.commitHash
      * @param {string} [parameters.commitHash] - if branchName not given commitHash will be loaded. -> result.rootNode
-     * @param {[string]} [parameters.nodeIds] - //TODO: will load all specified node ids. -> result.nodes
-     * @param {boolean} [parameters.meta] - //TODO: will load all META-nodes. -> result.META
+     * @param {[string]} [parameters.nodeIds] -loads all specified node ids. -> result.nodes
+     * @param {boolean} [parameters.meta] - loads all META-nodes. -> result.META
+     *
      * @param {object} [parameters.core] - Used if branchName or commitHash is specified (a new Core will be created
      *                                     if needed and not provided here). -> result.core
      * @param {function} callback
@@ -70,8 +75,25 @@ define(['util/assert', 'common/core/core'], function (ASSERT, Core) {
                             return;
                         }
                         result.project = project;
-
-                        if (parameters.branchName || parameters.commitHash) {
+                        if (parameters.createProject || parameters.overwriteProject) {
+                            if (projectExists) {
+                                _deleteAndPersistEmptyProject(storage, parameters, result, gmeConfig, function (err) {
+                                    if (err) {
+                                        closeOnError(err);
+                                        return;
+                                    }
+                                    callback(null, result);
+                                });
+                            } else {
+                                _persistEmptyProject(parameters, result, gmeConfig, function (err) {
+                                    if (err) {
+                                        closeOnError(err);
+                                        return;
+                                    }
+                                    callback(null, result);
+                                });
+                            }
+                        } else if (parameters.branchName || parameters.commitHash) {
                             _getCommitHash(parameters, result, function (err) {
                                 if (err) {
                                     closeOnError(err);
@@ -218,6 +240,60 @@ define(['util/assert', 'common/core/core'], function (ASSERT, Core) {
         while (len--) {
             result.core.loadByPath(result.rootNode, nodeIds[len], loadedNodeHandler);
         }
+    };
+
+    function _deleteAndPersistEmptyProject(storage, parameters, result, gmeConfig, callback) {
+        result.project.closeProject(function (err) {
+            if (err) {
+                callback(err);
+                return;
+            }
+            storage.deleteProject(parameters.projectName, function (err) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+                storage.openProject(parameters.projectName, function (err, project) {
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+                    result.project = project;
+                    _persistEmptyProject(parameters, result, gmeConfig, callback);
+                });
+            });
+        });
+
+    };
+
+    function _persistEmptyProject(parameters, result, gmeConfig, callback) {
+        var core = parameters.core || new Core(result.project, {globConf: gmeConfig});
+
+        result.core = core;
+        result.rootNode = result.core.createNode();
+
+        result.core.persist(result.rootNode, function (err) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            result.project.makeCommit([], result.core.getHash(result.rootNode), 'create empty project', function (err, commitHash) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+                result.commitHash = commitHash;
+
+                result.project.setBranchHash('master', '', result.commitHash, function (err) {
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+                    callback(null);
+                });
+            });
+        });
     };
 
     return openContext;
