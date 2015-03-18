@@ -2,6 +2,12 @@ define(['logManager',
     'storage/serverstorage',
     'fs',
     'express',
+    'express-session',
+    'compression',
+    'cookie-parser',
+    'body-parser',
+    'method-override',
+    'connect-multiparty',
     'auth/gmeauth',
     'auth/sessionstore',
     'passport',
@@ -24,6 +30,12 @@ define(['logManager',
              Storage,
              FS,
              Express,
+             session,
+             compression,
+             cookieParser,
+             bodyParser,
+             methodOverride,
+             multipart,
              GMEAUTH,
              SSTORE,
              Passport,
@@ -221,10 +233,10 @@ define(['logManager',
                                     res.cookie('webgme', req.session.udmId);
                                     return next();
                                 } else {
-                                    res.send(400); //TODO find proper error code
+                                    res.sendStatus(400); //TODO find proper error code
                                 }
                             } else {
-                                res.send(400); //TODO find proper error code
+                                res.sendStatus(400); //TODO find proper error code
                             }
                         });
                     }
@@ -237,7 +249,7 @@ define(['logManager',
                                 res.cookie('webgme', req.session.udmId);
                                 return next();
                             } else {
-                                res.send(400); //no use for redirecting in this case
+                                res.sendStatus(400); //no use for redirecting in this case
                             }
                         });
                     } else if (gmeConfig.authentication.allowGuests) {
@@ -347,10 +359,10 @@ define(['logManager',
         }
 
         function expressFileSending(httpResult, path) {
-            httpResult.sendfile(path, function (err) {
+            httpResult.sendFile(path, function (err) {
                 //TODO we should check for all kind of error that should be handled differently
                 if (err && err.code !== 'ECONNRESET') {
-                    httpResult.send(404);
+                    httpResult.sendStatus(404);
                 }
             });
         }
@@ -413,7 +425,7 @@ define(['logManager',
         __logger.info("initializing static server");
         __app = Express();
 
-        __app.configure(function () {
+        //__app.configure(function () {
             //counting of requests works only in debug mode
             if (gmeConfig.debug === true) {
                 setInterval(function () {
@@ -442,15 +454,20 @@ define(['logManager',
                 next();
             });
 
-            __app.use(Express.compress());
-            __app.use(Express.cookieParser());
-            __app.use(Express.bodyParser());
-            __app.use(Express.methodOverride());
-            __app.use(Express.multipart({defer: true})); // required to upload files. (body parser should not be used!)
-            __app.use(Express.session({
+            __app.use(compression());
+            __app.use(cookieParser());
+            __app.use(bodyParser.urlencoded({
+                extended: true
+            }));
+            __app.use(bodyParser.json());
+            __app.use(methodOverride());
+            __app.use(multipart({defer: true})); // required to upload files. (body parser should not be used!)
+            __app.use(session({
                 store: __sessionStore,
                 secret: gmeConfig.server.sessionCookieSecret,
-                key: gmeConfig.server.sessionCookieId
+                key: gmeConfig.server.sessionCookieId,
+                saveUninitialized: true,
+                resave: true
             }));
             __app.use(Passport.initialize());
             __app.use(Passport.session());
@@ -465,7 +482,7 @@ define(['logManager',
 
             setupExternalRestModules();
 
-        });
+        //});
 
         __logger.info("creating login routing rules for the static server");
         __app.get('/',ensureAuthenticated,function(req,res){
@@ -504,11 +521,11 @@ define(['logManager',
         });
         __app.post('/login/client', prepClientLogin, __gmeAuth.authenticate, function (req, res) {
             res.cookie('webgme', req.session.udmId);
-            res.send(200);
+            res.sendStatus(200);
         });
         __app.get('/login/client/fail', function (req, res) {
             res.clearCookie('webgme');
-            res.send(401);
+            res.sendStatus(401);
         });
         __app.get('/login/google',checkGoogleAuthentication,Passport.authenticate('google'));
         __app.get('/login/google/return',__gmeAuth.authenticate,function(req,res){
@@ -534,27 +551,27 @@ define(['logManager',
         __app.get(/^\/decorators\/.*/, ensureAuthenticated, function (req, res) {
             var tryNext = function (index) {
                 if (index < gmeConfig.visualization.decoratorPaths.length) {
-                    res.sendfile(Path.join(gmeConfig.visualization.decoratorPaths[index], req.url.substring(12)), function (err) {
+                    res.sendFile(Path.join(gmeConfig.visualization.decoratorPaths[index], req.url.substring(12)), function (err) {
                         if (err && err.code !== 'ECONNRESET') {
                             tryNext(index + 1);
                         }
                     });
                 } else {
-                    res.send(404);
+                    res.sendStatus(404);
                 }
             };
 
             if (gmeConfig.visualization.decoratorPaths && gmeConfig.visualization.decoratorPaths.length) {
                 tryNext(0);
             } else {
-                res.send(404);
+                res.sendStatus(404);
             }
         });
 
         __logger.info("creating plug-in specific routing rules");
         __app.get(/^\/plugin\/.*/, function (req, res) {
             //first we try to give back the common plugin/modules
-            res.sendfile(Path.join(__baseDir, req.path), function (err) {
+            res.sendFile(Path.join(__baseDir, req.path), function (err) {
                 if (err && err.code !== 'ECONNRESET') {
                     //this means that it is probably plugin/pluginName or plugin/pluginName/relativePath format so we try to look for those in our config
                     //first we check if we have the plugin registered in our config
@@ -573,7 +590,7 @@ define(['logManager',
                     if (typeof basePath === 'string' && typeof relPath === 'string') {
                         expressFileSending(res, Path.resolve(Path.join(basePath, relPath)));
                     } else {
-                        res.send(404);
+                        res.sendStatus(404);
                     }
                 }
             });
@@ -589,7 +606,8 @@ define(['logManager',
 
             var relPath = urlArray.join('/');
 
-            expressFileSending(res, relPath);
+            // must pass the full path
+            expressFileSending(res, Path.resolve(Path.join(process.cwd(), relPath)));
         });
 
         __logger.info("creating basic static content related routing rules");
@@ -647,7 +665,7 @@ define(['logManager',
                     }
                 });
             } else {
-                res.send(410); //special error for the interpreters to know there is no need for token
+                res.sendStatus(410); //special error for the interpreters to know there is no need for token
             }
         });
         __app.get('/checktoken/:token', function (req, res) {
@@ -659,16 +677,16 @@ define(['logManager',
                     __canCheckToken = false;
                     __gmeAuth.checkToken(req.params.token, function (isValid) {
                         if (isValid === true) {
-                            res.send(200);
+                            res.sendStatus(200);
                         } else {
-                            res.send(403);
+                            res.sendStatus(403);
                         }
                     });
                 } else {
-                    res.send(403);
+                    res.sendStatus(403);
                 }
             } else {
-                res.send(410); //special error for the interpreters to know there is no need for token
+                res.sendStatus(410); //special error for the interpreters to know there is no need for token
             }
         });
 
@@ -677,7 +695,7 @@ define(['logManager',
         __app.get('/rest/:command',ensureAuthenticated,checkREST,function(req,res){
             __REST.initialize(function (err) {
                 if (err) {
-                    res.send(500);
+                    res.sendStatus(500);
                 } else {
                     __REST.doRESTCommand(__REST.request.GET, req.params.command, req.headers.webGMEToken, req.query, function (httpStatus, object) {
 
@@ -715,7 +733,7 @@ define(['logManager',
             if (urlArray.length > 3) {
                 __storage.getWorkerResult(urlArray[3], function (err, result) {
                     if (err) {
-                        res.send(500);
+                        res.sendStatus(500);
                     } else {
                         var filename = 'exportedNodes.json';
                         if (urlArray[4]) {
@@ -731,7 +749,7 @@ define(['logManager',
                     }
                 });
             } else {
-                res.send(404);
+                res.sendStatus(404);
             }
         });
 
@@ -781,7 +799,7 @@ define(['logManager',
 
         __logger.info("creating all other request rule - error 404 -");
         __app.get('*', function (req, res) {
-            res.send(404);
+            res.sendStatus(404);
         });
 
         if (gmeConfig.debug === true) {
