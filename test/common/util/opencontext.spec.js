@@ -67,7 +67,20 @@ describe('openContext', function () {
                 projectName: 'doesNotExist'
             };
             openContext(storage, gmeConfig, parameters, function (err, result) {
-                expect(err).to.equal('"doesNotExist" does not exists among: doesExist');
+                expect(err).to.equal('"doesNotExist" does not exists among: doesExist. ' +
+                    'Set flag "createProject" to create a new project.');
+                done();
+            });
+        });
+
+        it('should open non-existing project with flag createProject=true', function (done) {
+            var parameters = {
+                projectName: 'doesNotExist',
+                createProject: true
+            };
+            openContext(storage, gmeConfig, parameters, function (err, result) {
+                expect(err).equal(null);
+                expect(result).to.have.keys('project');
                 done();
             });
         });
