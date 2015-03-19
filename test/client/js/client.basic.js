@@ -267,6 +267,7 @@ describe('Client tests', function () {
                     if (i > 30) {
                         clearInterval(interval);
                         done('addon load timed out');
+                        return;
                     }
                     if (client.getRunningAddOnNames().length === 1) {
                         clearInterval(interval);
