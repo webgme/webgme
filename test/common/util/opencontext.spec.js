@@ -10,8 +10,7 @@ describe('openContext', function () {
 
     var expect = testFixture.expect,
         WebGME = testFixture.WebGME,
-        openContext = testFixture.requirejs('common/util/opencontext'),
-        Core = testFixture.WebGME.core;
+        openContext = testFixture.requirejs('common/util/opencontext');
 
     function importAndCloseProject(importParam, callback) {
         testFixture.importProject(importParam, function (err, result) {
@@ -59,9 +58,9 @@ describe('openContext', function () {
 
         afterEach(function (done) {
             if (project) {
-                project.closeProject(function (err) {
-                    storage.closeDatabase(function (err) {
-                        done(err);
+                project.closeProject(function (err1) {
+                    storage.closeDatabase(function (err2) {
+                        done(err1 || err2 || null);
                     });
                 });
             } else {
@@ -73,8 +72,7 @@ describe('openContext', function () {
             storage.closeDatabase(function (err) {
                 done(err);
             });
-        })
-
+        });
         it('should open existing project', function (done) {
             var parameters = {
                 projectName: 'doesExist'
@@ -91,7 +89,7 @@ describe('openContext', function () {
             var parameters = {
                 projectName: 'doesNotExist'
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
                 expect(err).to.have.string('"doesNotExist" does not exists among: ');
                 project = null;
                 done();
@@ -116,7 +114,7 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 createProject: true
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
                 expect(err).to.have.string('"doesExist" already exists:');
                 project = null;
                 done();
@@ -136,7 +134,7 @@ describe('openContext', function () {
                     createProject: true,
                     overwriteProject: true
                 };
-            importAndCloseProject(importParam, function (err, commitHash) {
+            importAndCloseProject(importParam, function (err/*, commitHash*/) {
                 expect(err).equal(null);
                 openContext(storage, gmeConfig, parameters, function (err, result) {
                     expect(err).equal(null);
@@ -144,7 +142,7 @@ describe('openContext', function () {
                     project = result.project;
                     done();
                 });
-            })
+            });
         });
 
         it('should load existing branch', function (done) {
@@ -165,9 +163,9 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 branchName: 'b1_lancer'
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
                 expect(err).to.equal('"b1_lancer" not in project: "doesExist".');
-                project = null
+                project = null;
                 done();
             });
         });
@@ -190,7 +188,57 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 commitHash: commitHash.substring(0, commitHash.length - 1)
             };
+            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
+                expect(err).to.have.string('No such commitHash "');
+                project = null;
+                done();
+            });
+        });
+
+        it('should load existing branch when passed in branchOrCommit', function (done) {
+            var parameters = {
+                projectName: 'doesExist',
+                branchOrCommit: commitHash
+            };
             openContext(storage, gmeConfig, parameters, function (err, result) {
+                expect(err).equal(null);
+                expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core');
+                project = result.project;
+                done();
+            });
+        });
+
+        it('should load existing commitHash when passed in branchOrCommit', function (done) {
+            var parameters = {
+                projectName: 'doesExist',
+                branchOrCommit: 'master'
+            };
+            openContext(storage, gmeConfig, parameters, function (err, result) {
+                expect(err).equal(null);
+                expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core');
+                project = result.project;
+                done();
+            });
+        });
+
+        it('should return error with non-existing branchName when passed in branchOrCommit', function (done) {
+            var parameters = {
+                projectName: 'doesExist',
+                branchOrCommit: 'b1_lancer'
+            };
+            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
+                expect(err).to.equal('"b1_lancer" not in project: "doesExist".');
+                project = null;
+                done();
+            });
+        });
+
+        it('should return error with non-existing commitHash when passed in branchOrCommit', function (done) {
+            var parameters = {
+                projectName: 'doesExist',
+                branchOrCommit: commitHash.substring(0, commitHash.length - 1)
+            };
+            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
                 expect(err).to.have.string('No such commitHash "');
                 project = null;
                 done();
@@ -257,6 +305,7 @@ describe('openContext', function () {
         //        done();
         //    });
         //});
+
     });
 
     describe('using client-storage', function () {
@@ -276,6 +325,7 @@ describe('openContext', function () {
             };
             server = WebGME.standaloneServer(gmeConfig);
             server.start(function (err) {
+                expect(err).to.equal(undefined);
                 storage = new WebGME.clientStorage({
                     globConf: gmeConfig,
                     type: 'node',
@@ -293,9 +343,9 @@ describe('openContext', function () {
 
         afterEach(function (done) {
             if (project) {
-                project.closeProject(function (err) {
-                    storage.closeDatabase(function (err) {
-                        done(err);
+                project.closeProject(function (err1) {
+                    storage.closeDatabase(function (err2) {
+                        done(err1 || err2 || null);
                     });
                 });
             } else {
@@ -304,11 +354,11 @@ describe('openContext', function () {
         });
 
         after(function (done) {
-            storage.openDatabase(function (err) {
-                storage.deleteProject('willBeCreated', function (err) {
-                    storage.closeDatabase(function (err) {
-                        server.stop(function () {
-                            done();
+            storage.openDatabase(function (err1) {
+                storage.deleteProject('willBeCreated', function (err2) {
+                    storage.closeDatabase(function (err3) {
+                        server.stop(function (err4) {
+                            done(err1 || err2 || err3 || err4 || null);
                         });
                     });
                 });
@@ -331,7 +381,7 @@ describe('openContext', function () {
             var parameters = {
                 projectName: 'doesNotExist'
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
                 expect(err).to.have.string('"doesNotExist" does not exists among: ');
                 project = null;
                 done();
@@ -356,7 +406,7 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 createProject: true
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
                 expect(err).to.have.string('"doesExist" already exists:');
                 project = null;
                 done();
@@ -376,7 +426,7 @@ describe('openContext', function () {
                     createProject: true,
                     overwriteProject: true
                 };
-            importAndCloseProject(importParam, function (err, commitHash) {
+            importAndCloseProject(importParam, function (err/*, commitHash*/) {
                 expect(err).equal(null);
                 openContext(storage, gmeConfig, parameters, function (err, result) {
                     expect(err).equal(null);
@@ -384,7 +434,7 @@ describe('openContext', function () {
                     project = result.project;
                     done();
                 });
-            })
+            });
         });
 
         it('should load existing branch', function (done) {
@@ -405,9 +455,9 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 branchName: 'b1_lancer'
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
                 expect(err).to.equal('"b1_lancer" not in project: "doesExist".');
-                project = null
+                project = null;
                 done();
             });
         });
@@ -430,7 +480,57 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 commitHash: commitHash.substring(0, commitHash.length - 1)
             };
+            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
+                expect(err).to.have.string('No such commitHash "');
+                project = null;
+                done();
+            });
+        });
+
+        it('should load existing branch when passed in branchOrCommit', function (done) {
+            var parameters = {
+                projectName: 'doesExist',
+                branchOrCommit: commitHash
+            };
             openContext(storage, gmeConfig, parameters, function (err, result) {
+                expect(err).equal(null);
+                expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core');
+                project = result.project;
+                done();
+            });
+        });
+
+        it('should load existing commitHash when passed in branchOrCommit', function (done) {
+            var parameters = {
+                projectName: 'doesExist',
+                branchOrCommit: 'master'
+            };
+            openContext(storage, gmeConfig, parameters, function (err, result) {
+                expect(err).equal(null);
+                expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core');
+                project = result.project;
+                done();
+            });
+        });
+
+        it('should return error with non-existing branchName when passed in branchOrCommit', function (done) {
+            var parameters = {
+                projectName: 'doesExist',
+                branchOrCommit: 'b1_lancer'
+            };
+            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
+                expect(err).to.equal('"b1_lancer" not in project: "doesExist".');
+                project = null;
+                done();
+            });
+        });
+
+        it('should return error with non-existing commitHash when passed in branchOrCommit', function (done) {
+            var parameters = {
+                projectName: 'doesExist',
+                branchOrCommit: commitHash.substring(0, commitHash.length - 1)
+            };
+            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
                 expect(err).to.have.string('No such commitHash "');
                 project = null;
                 done();
@@ -497,7 +597,6 @@ describe('openContext', function () {
         //        done();
         //    });
         //});
-
 
     });
 
@@ -528,9 +627,9 @@ describe('openContext', function () {
 
         afterEach(function (done) {
             if (project) {
-                project.closeProject(function (err) {
-                    storage.closeDatabase(function (err) {
-                        done(err);
+                project.closeProject(function (err1) {
+                    storage.closeDatabase(function (err2) {
+                        done(err1 || err2 || null);
                     });
                 });
             } else {
@@ -539,16 +638,14 @@ describe('openContext', function () {
         });
 
         after(function (done) {
-            storage.openDatabase(function (err) {
-                storage.deleteProject('willBeCreated', function (err) {
-                    storage.closeDatabase(function (err) {
-                        done();
+            storage.openDatabase(function (err1) {
+                storage.deleteProject('willBeCreated', function (err2) {
+                    storage.closeDatabase(function (err3) {
+                        done(err1 || err2 || err3 || null);
                     });
                 });
             });
-
         });
-
         it('should open existing project', function (done) {
             var parameters = {
                 projectName: 'doesExist'
@@ -565,7 +662,7 @@ describe('openContext', function () {
             var parameters = {
                 projectName: 'doesNotExist'
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
                 expect(err).to.have.string('"doesNotExist" does not exists among: ');
                 project = null;
                 done();
@@ -590,7 +687,7 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 createProject: true
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
                 expect(err).to.have.string('"doesExist" already exists:');
                 project = null;
                 done();
@@ -609,8 +706,8 @@ describe('openContext', function () {
                     projectName: 'willBeOverwritten',
                     createProject: true,
                     overwriteProject: true
-            };
-            importAndCloseProject(importParam, function (err, commitHash) {
+                };
+            importAndCloseProject(importParam, function (err/*, commitHash*/) {
                 expect(err).equal(null);
                 openContext(storage, gmeConfig, parameters, function (err, result) {
                     expect(err).equal(null);
@@ -618,7 +715,7 @@ describe('openContext', function () {
                     project = result.project;
                     done();
                 });
-            })
+            });
         });
 
         it('should load existing branch', function (done) {
@@ -639,9 +736,9 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 branchName: 'b1_lancer'
             };
-            openContext(storage, gmeConfig, parameters, function (err, result) {
+            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
                 expect(err).to.equal('"b1_lancer" not in project: "doesExist".');
-                project = null
+                project = null;
                 done();
             });
         });
@@ -664,7 +761,57 @@ describe('openContext', function () {
                 projectName: 'doesExist',
                 commitHash: commitHash.substring(0, commitHash.length - 1)
             };
+            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
+                expect(err).to.have.string('No such commitHash "');
+                project = null;
+                done();
+            });
+        });
+
+        it('should load existing branch when passed in branchOrCommit', function (done) {
+            var parameters = {
+                projectName: 'doesExist',
+                branchOrCommit: commitHash
+            };
             openContext(storage, gmeConfig, parameters, function (err, result) {
+                expect(err).equal(null);
+                expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core');
+                project = result.project;
+                done();
+            });
+        });
+
+        it('should load existing commitHash when passed in branchOrCommit', function (done) {
+            var parameters = {
+                projectName: 'doesExist',
+                branchOrCommit: 'master'
+            };
+            openContext(storage, gmeConfig, parameters, function (err, result) {
+                expect(err).equal(null);
+                expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core');
+                project = result.project;
+                done();
+            });
+        });
+
+        it('should return error with non-existing branchName when passed in branchOrCommit', function (done) {
+            var parameters = {
+                projectName: 'doesExist',
+                branchOrCommit: 'b1_lancer'
+            };
+            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
+                expect(err).to.equal('"b1_lancer" not in project: "doesExist".');
+                project = null;
+                done();
+            });
+        });
+
+        it('should return error with non-existing commitHash when passed in branchOrCommit', function (done) {
+            var parameters = {
+                projectName: 'doesExist',
+                branchOrCommit: commitHash.substring(0, commitHash.length - 1)
+            };
+            openContext(storage, gmeConfig, parameters, function (err/*, result*/) {
                 expect(err).to.have.string('No such commitHash "');
                 project = null;
                 done();

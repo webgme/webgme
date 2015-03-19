@@ -1,10 +1,13 @@
+/*globals define*/
 /*jshint node:true*/
 /**
  * @author pmeijer / https://github.com/pmeijer
  */
 
 define(['util/assert', 'common/core/core'], function (ASSERT, Core) {
-
+    'use strict';
+    var HASH_REGEXP = new RegExp('^#[0-9a-zA-Z_]*$'),
+        BRANCH_REGEXP = new RegExp('^[0-9a-zA-Z_]*$');
     /**
      * Opens the context specified by the parameters and returns a result object.
      * If no error is returned the database and the project are kept open, otherwise they are closed.
@@ -19,7 +22,8 @@ define(['util/assert', 'common/core/core'], function (ASSERT, Core) {
      *
      * The following group is only valid when not creating a new project:
      * @param {string} [parameters.branchName] - name of branch to load root from. -> result.rootNode, result.commitHash
-     * @param {string} [parameters.commitHash] - if branchName not given commitHash will be loaded. -> result.rootNode
+     * @param {string} [parameters.commitHash] - if branchName given commitHash will be loaded. -> result.rootNode
+     * @param {string} [parameters.branchOrCommit] - REGEXPs will determine if branch or commit -> result.rootNode
      * @param {[string]} [parameters.nodePaths] -loads all specified node paths. -> result.nodes
      * @param {boolean} [parameters.meta] - loads all META-nodes. -> result.META
      *
@@ -29,7 +33,6 @@ define(['util/assert', 'common/core/core'], function (ASSERT, Core) {
      */
     var openContext = function (storage, gmeConfig, parameters, callback) {
         var result = {},
-            core,
             closeOnError = function (err) {
                 if (result.project) {
                     result.project.closeProject(function () {
@@ -93,7 +96,7 @@ define(['util/assert', 'common/core/core'], function (ASSERT, Core) {
                                     callback(null, result);
                                 });
                             }
-                        } else if (parameters.branchName || parameters.commitHash) {
+                        } else if (parameters.branchName || parameters.commitHash || parameters.branchOrCommit) {
                             _getCommitHash(parameters, result, function (err) {
                                 if (err) {
                                     closeOnError(err);
@@ -130,20 +133,34 @@ define(['util/assert', 'common/core/core'], function (ASSERT, Core) {
     };
 
     function _getCommitHash(parameters, result, callback) {
-        if (parameters.branchName) {
+        var branchName = parameters.branchName,
+            commitHash = parameters.commitHash;
+
+        if (parameters.branchOrCommit) {
+            if (BRANCH_REGEXP.test(parameters.branchOrCommit)) {
+                branchName = parameters.branchOrCommit;
+            } else if (HASH_REGEXP.test(parameters.branchOrCommit)) {
+                commitHash = parameters.branchOrCommit;
+            } else {
+                callback('branchOrCommit: "' +  parameters.branchOrCommit + '" does no match any regular expression.');
+                return;
+            }
+        }
+
+        if (branchName) {
             result.project.getBranchNames(function (err, names) {
                 if (err) {
                     callback(err);
-                } else if (names.hasOwnProperty(parameters.branchName) === false) {
-                    callback('"' + parameters.branchName + '" not in project: "' +
+                } else if (names.hasOwnProperty(branchName) === false) {
+                    callback('"' + branchName + '" not in project: "' +
                     parameters.projectName + '".');
                 } else {
-                    result.commitHash = names[parameters.branchName];
+                    result.commitHash = names[branchName];
                     callback(null);
                 }
             });
         } else {
-            result.commitHash = parameters.commitHash;
+            result.commitHash = commitHash;
             callback(null);
         }
     }
@@ -174,8 +191,7 @@ define(['util/assert', 'common/core/core'], function (ASSERT, Core) {
     }
 
     function _loadNodes(parameters, result, callback) {
-        var metaNodes = [],
-            metaIds,
+        var metaIds,
             loadSpecifiedNodes = function () {
                 _loadNodesByPath(result, parameters.nodePaths, false, function (err, nodes) {
                     if (err) {
@@ -245,7 +261,7 @@ define(['util/assert', 'common/core/core'], function (ASSERT, Core) {
         while (len--) {
             result.core.loadByPath(result.rootNode, nodePaths[len], loadedNodeHandler);
         }
-    };
+    }
 
     function _deleteAndPersistEmptyProject(storage, parameters, result, gmeConfig, callback) {
         result.project.closeProject(function (err) {
@@ -268,8 +284,7 @@ define(['util/assert', 'common/core/core'], function (ASSERT, Core) {
                 });
             });
         });
-
-    };
+    }
 
     function _persistEmptyProject(parameters, result, gmeConfig, callback) {
         var core = parameters.core || new Core(result.project, {globConf: gmeConfig});
@@ -299,7 +314,7 @@ define(['util/assert', 'common/core/core'], function (ASSERT, Core) {
                 });
             });
         });
-    };
+    }
 
     return openContext;
 });
