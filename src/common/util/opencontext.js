@@ -97,30 +97,35 @@ define(['util/assert', 'common/core/core'], function (ASSERT, Core) {
                                 });
                             }
                         } else if (parameters.branchName || parameters.commitHash || parameters.branchOrCommit) {
-                            _getCommitHash(parameters, result, function (err) {
-                                if (err) {
-                                    closeOnError(err);
-                                    return;
-                                }
-                                _loadCommitHash(parameters, result, gmeConfig, function (err) {
+                            if (parameters.branchOrCommit instanceof Array) {
+                                closeOnError('TODO: can only load one root[!]');
+                                return;
+                            } else {
+                                _getCommitHash(parameters, result, function (err) {
                                     if (err) {
                                         closeOnError(err);
                                         return;
                                     }
+                                    _loadCommitHash(parameters, result, gmeConfig, function (err) {
+                                        if (err) {
+                                            closeOnError(err);
+                                            return;
+                                        }
 
-                                    if (parameters.nodePaths || parameters.meta) {
-                                        _loadNodes(parameters, result, function (err) {
-                                            if (err) {
-                                                closeOnError(err);
-                                                return;
-                                            }
+                                        if (parameters.nodePaths || parameters.meta) {
+                                            _loadNodes(parameters, result, function (err) {
+                                                if (err) {
+                                                    closeOnError(err);
+                                                    return;
+                                                }
+                                                callback(null, result);
+                                            });
+                                        } else {
                                             callback(null, result);
-                                        });
-                                    } else {
-                                        callback(null, result);
-                                    }
+                                        }
+                                    });
                                 });
-                            });
+                            }
                         } else {
                             callback(null, result);
                         }
@@ -186,7 +191,7 @@ define(['util/assert', 'common/core/core'], function (ASSERT, Core) {
                 }
                 result.rootNode = rootNode;
                 result.core = core;
-                callback(null);
+                callback(null, core, rootNode);
             });
         });
     }
