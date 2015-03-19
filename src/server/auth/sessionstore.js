@@ -4,9 +4,9 @@
  * Author: Tamas Kecskes
  */
 
-define(['express'],function(express){
+define(['express-session'],function(session){
     function sessionStore(){
-        var MemoryStore = express.session.MemoryStore,
+        var MemoryStore = session.MemoryStore,
             store = new MemoryStore();
         store.check = function(sid,callback){
             store.get(sid,function(err,data){
