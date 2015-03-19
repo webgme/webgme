@@ -215,7 +215,7 @@ describe('openContext', function () {
             };
             openContext(storage, gmeConfig, parameters, function (err, result) {
                 expect(err).equal(null);
-                expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core');
+                expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core', 'branchName');
                 project = result.project;
                 done();
             });
@@ -507,7 +507,7 @@ describe('openContext', function () {
             };
             openContext(storage, gmeConfig, parameters, function (err, result) {
                 expect(err).equal(null);
-                expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core');
+                expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core', 'branchName');
                 project = result.project;
                 done();
             });
@@ -788,7 +788,7 @@ describe('openContext', function () {
             };
             openContext(storage, gmeConfig, parameters, function (err, result) {
                 expect(err).equal(null);
-                expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core');
+                expect(result).to.have.keys('project', 'rootNode', 'commitHash', 'core', 'branchName');
                 project = result.project;
                 done();
             });

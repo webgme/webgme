@@ -22,7 +22,7 @@ openContext = requirejs('common/util/opencontext');
 Storage = requirejs('storage/serveruserstorage');
 Serialization = requirejs('coreclient/serialization');
 
-var importProject = function (mongoUri, projectId, jsonProject, branchName, callback) {
+var importProject = function (mongoUri, projectId, jsonProject, branchName, overwrite, callback) {
     'use strict';
     var storage,
         project,
@@ -53,7 +53,9 @@ var importProject = function (mongoUri, projectId, jsonProject, branchName, call
 
     contextParams = {
         projectName: projectId,
-        overwriteProject: true
+        createProject: true,
+        overwriteProject: overwrite,
+        branchName: branchName
     };
 
     openContext(storage, gmeConfig, contextParams, function (err, context) {
@@ -102,6 +104,7 @@ if (require.main === module) {
         .option('-m, --mongo-database-uri [url]', 'URI to connect to mongoDB where the project is stored')
         .option('-p, --project-identifier [value]', 'project identifier')
         .option('-b, --branch [branch]', 'the branch that should be created with the imported data')
+        .option('-o --overwrite [boolean]', 'if a project exist it will be deleted and created again')
         .parse(process.argv);
 //check necessary arguments
     if (program.args.length !== 1) {
@@ -134,7 +137,7 @@ if (require.main === module) {
         process.exit(0);
     }
     //calling the import function
-    importProject(program.mongoDatabaseUri, program.projectIdentifier, jsonProject, program.branch,
+    importProject(program.mongoDatabaseUri, program.projectIdentifier, jsonProject, program.branch, program.overwrite,
         function (err, commitHash) {
             'use strict';
             if (err) {

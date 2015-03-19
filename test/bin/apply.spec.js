@@ -62,7 +62,7 @@ describe('apply CLI tests', function () {
         });
 
         beforeEach(function (done) {
-            importCLI.import(mongoUri, applyCliTestProject, jsonBaseProject, 'base', done);
+            importCLI.import(mongoUri, applyCliTestProject, jsonBaseProject, 'base', true, done);
         });
 
         it('project should remain the same after applying empty patch', function (done) {

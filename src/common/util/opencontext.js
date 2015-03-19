@@ -66,7 +66,7 @@ define(['util/assert', 'common/core/core'], function (ASSERT, Core) {
                         closeOnError('"' + parameters.projectName + '" does not exists among: ' +
                         projectNames.toString() + '. Set flag "createProject" to create a new project.');
                         return;
-                    } else if (projectExists && parameters.createProject && !parameters.overwriteProject) {
+                    } else if (projectExists && parameters.createProject && !parameters.overwriteProject && !parameters.branchName) {
                         closeOnError('"' + parameters.projectName + '" already exists: ' +
                         projectNames.toString() + '. Set flag "overwriteProject" to overwrite project.');
                         return;
@@ -79,7 +79,7 @@ define(['util/assert', 'common/core/core'], function (ASSERT, Core) {
                         }
                         result.project = project;
                         if (parameters.createProject || parameters.overwriteProject) {
-                            if (projectExists) {
+                            if (projectExists && parameters.overwriteProject) {
                                 _deleteAndPersistEmptyProject(storage, parameters, result, gmeConfig, function (err) {
                                     if (err) {
                                         closeOnError(err);
@@ -306,7 +306,7 @@ define(['util/assert', 'common/core/core'], function (ASSERT, Core) {
                 }
                 result.commitHash = commitHash;
 
-                result.project.setBranchHash('master', '', result.commitHash, function (err) {
+                result.project.setBranchHash(parameters.branchName || 'master', '', result.commitHash, function (err) {
                     if (err) {
                         callback(err);
                         return;

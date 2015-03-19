@@ -61,7 +61,7 @@ describe('import CLI tests', function () {
             branchName: 'master',
             nodePaths: [nodePath]
         };
-        importCLI.import(null, contextParam.projectName, jsonProject, null, function (err, commitHash) {
+        importCLI.import(null, contextParam.projectName, jsonProject, null, true, function (err, commitHash) {
             expect(err).to.equal(null);
             expect(typeof commitHash).to.equal('string');
             openContext(storage, gmeConfig, contextParam, function (err, context) {
@@ -83,7 +83,7 @@ describe('import CLI tests', function () {
             branchName: 'b1',
             nodePaths: [nodePath]
         };
-        importCLI.import(null, contextParam.projectName, jsonProject, contextParam.branchName, function (err, commitHash) {
+        importCLI.import(null, contextParam.projectName, jsonProject, contextParam.branchName, true, function (err, commitHash) {
             expect(err).to.equal(null);
             expect(typeof commitHash).to.equal('string');
             openContext(storage, gmeConfig, contextParam, function (err, context) {
@@ -107,7 +107,7 @@ describe('import CLI tests', function () {
             },
             tmpJsonProject = testFixture.loadJsonFile('./test/asset/sm_basic_basic.json');
 
-        importCLI.import(null, contextParam.projectName, tmpJsonProject, null, function (err, commitHash) {
+        importCLI.import(null, contextParam.projectName, tmpJsonProject, null, true, function (err, commitHash) {
             expect(err).to.equal(null);
             expect(typeof commitHash).to.equal('string');
 
@@ -124,7 +124,7 @@ describe('import CLI tests', function () {
                 closeContext(function (err) {
                     expect(err).to.equal(null);
 
-                    importCLI.import(null, contextParam.projectName, jsonProject, null, function (err, commitHash) {
+                    importCLI.import(null, contextParam.projectName, jsonProject, null, true, function (err, commitHash) {
                         expect(err).to.equal(null);
                         expect(typeof commitHash).to.equal('string');
 

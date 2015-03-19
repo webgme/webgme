@@ -49,12 +49,12 @@ describe('diff CLI tests', function () {
                     done(err);
                     return;
                 }
-                importCLI.import(mongoUri, diffCliTest, jsonProject, 'source', function (err) {
+                importCLI.import(mongoUri, diffCliTest, jsonProject, 'source', true, function (err) {
                     if (err) {
                         done(err);
                         return;
                     }
-                    importCLI.import(mongoUri, diffCliTest, jsonProject, 'target', done);
+                    importCLI.import(mongoUri, diffCliTest, jsonProject, 'target', false, done);
                 });
             });
 
@@ -93,12 +93,12 @@ describe('diff CLI tests', function () {
                     done(err);
                     return;
                 }
-                importCLI.import(mongoUri, diffCliTest, source, 'source', function (err) {
+                importCLI.import(mongoUri, diffCliTest, source, 'source', true, function (err) {
                     if (err) {
                         done(err);
                         return;
                     }
-                    importCLI.import(mongoUri, diffCliTest, target, 'target', done);
+                    importCLI.import(mongoUri, diffCliTest, target, 'target', false, done);
                 });
             });
 
@@ -144,12 +144,12 @@ describe('diff CLI tests', function () {
                     done(err);
                     return;
                 }
-                importCLI.import(mongoUri, diffCliTest, source, 'source', function (err) {
+                importCLI.import(mongoUri, diffCliTest, source, 'source', true, function (err) {
                     if (err) {
                         done(err);
                         return;
                     }
-                    importCLI.import(mongoUri, diffCliTest, target, 'target', done);
+                    importCLI.import(mongoUri, diffCliTest, target, 'target', false, done);
                 });
             });
 
@@ -196,12 +196,12 @@ describe('diff CLI tests', function () {
                     done(err);
                     return;
                 }
-                importCLI.import(mongoUri, diffCliTest, source, 'source', function (err) {
+                importCLI.import(mongoUri, diffCliTest, source, 'source', true, function (err) {
                     if (err) {
                         done(err);
                         return;
                     }
-                    importCLI.import(mongoUri, diffCliTest, target, 'target', done);
+                    importCLI.import(mongoUri, diffCliTest, target, 'target', false, done);
                 });
             });
 

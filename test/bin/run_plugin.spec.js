@@ -42,7 +42,7 @@ describe('Run plugin CLI', function () {
                     done(err);
                     return;
                 }
-                importCLI.import(gmeConfig.mongo.uri, projectName, jsonProject, 'master', function (err) {
+                importCLI.import(gmeConfig.mongo.uri, projectName, jsonProject, 'master', true, function (err) {
                     if (err) {
                         done(err);
                         return;
