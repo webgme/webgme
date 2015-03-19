@@ -78,6 +78,12 @@ define(['logManager',
                 selfPatterns ={};
                 selfPatterns[projectRootID] = { "children": 2}; //TODO make this loaded from constants
                 client.updateTerritory(selfId, selfPatterns);
+
+                // expand root
+                // FIXME: how to detect, when the root is loaded for the first time
+                setTimeout(function () {
+                    loadingRootTreeNode.expand(true);
+                }, 100);
             } else {
                 setTimeout(initialize, 500);
             }
@@ -370,7 +376,6 @@ define(['logManager',
             if (eventType === "insert") {
                 //check if this control shows any interest for this object
                 if (nodes[objectId]) {
-
                     //if the object is in "loading" state according to the local hashmap
                     //update the "loading" node accordingly
                     if (nodes[objectId].state === stateLoading) {
