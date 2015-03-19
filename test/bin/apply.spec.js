@@ -14,6 +14,7 @@ describe('apply CLI tests', function () {
         importCLI = require('../../src/bin/import'),
         exportCLI = require('../../src/bin/export'),
         mongodb = testFixture.mongodb,
+        mongoConn,
         FS = testFixture.fs,
         getJsonProject = function (path) {
             return JSON.parse(FS.readFileSync(path, 'utf-8'));
@@ -41,7 +42,7 @@ describe('apply CLI tests', function () {
                 done(err);
                 return;
             }
-
+            mongoConn = db;
             db.dropCollection(applyCliTestProject, function (err) {
                 // ignores if the collection was not found
                 if (err && err.errmsg !== 'ns not found') {
@@ -52,6 +53,11 @@ describe('apply CLI tests', function () {
             });
 
         });
+    });
+
+    after(function (done) {
+        mongoConn.close();
+        done();
     });
 
     describe('basic', function () {

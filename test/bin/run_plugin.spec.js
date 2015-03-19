@@ -13,6 +13,7 @@ describe('Run plugin CLI', function () {
         should = testFixture.should,
         spawn = testFixture.childProcess.spawn,
         mongodb = require('mongodb'),
+        mongoConn,
         importCLI = require('../../src/bin/import'),
         fs = require('fs'),
         filename = require('path').normalize('src/bin/run_plugin.js'),
@@ -29,6 +30,7 @@ describe('Run plugin CLI', function () {
                 done(err);
                 return;
             }
+            mongoConn = db;
             db.dropCollection(projectName, function (err) {
                 // ignores if the collection was not found
                 if (err && err.errmsg !== 'ns not found') {
@@ -53,6 +55,10 @@ describe('Run plugin CLI', function () {
         });
     });
 
+    after(function (done) {
+        mongoConn.close();
+        done();
+    });
 
     describe('as a child process', function () {
         it('should run the Minimal Working Example plugin', function (done) {

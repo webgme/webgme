@@ -12,6 +12,7 @@ describe('diff CLI tests', function () {
         diffCLI = require('../../src/bin/diff'),
         importCLI = require('../../src/bin/import'),
         mongodb = testFixture.mongodb,
+        mongoConn,
         FS = testFixture.fs,
         getJsonProject = function (path) {
             return JSON.parse(FS.readFileSync(path, 'utf-8'));
@@ -27,6 +28,7 @@ describe('diff CLI tests', function () {
                 done(err);
                 return;
             }
+            mongoConn = db;
             db.dropCollection(diffCliTest, function (err) {
                 // ignores if the collection was not found
                 if (err && err.errmsg !== 'ns not found') {
@@ -36,6 +38,11 @@ describe('diff CLI tests', function () {
                 done();
             });
         });
+    });
+
+    after(function (done) {
+        mongoConn.close();
+        done();
     });
 
     describe('basic', function () {
