@@ -26,7 +26,6 @@ describe('issue 171 server crashes when trying to switch to non-existent branch'
         }
     });
 
-    gmeConfig.server.port = 9003;
     server = new WebGME.standaloneServer(gmeConfig);
     ClientClass = requirejs('client/js/client');
 

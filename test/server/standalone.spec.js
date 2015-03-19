@@ -32,7 +32,6 @@ describe('standalone server', function () {
         this.timeout(5000);
         // we have to set the config here
         var gmeConfig = testFixture.getGmeConfig()
-        gmeConfig.server.port = 9001;
 
         server = WebGME.standaloneServer(gmeConfig);
         server.start(function () {
@@ -321,7 +320,6 @@ describe('standalone server', function () {
         before(function (done) {
             // we have to set the config here
             var gmeConfig = testFixture.getGmeConfig();
-            gmeConfig.server.port = 9001;
             gmeConfig.visualization.decoratorPaths  = [];
 
             server = WebGME.standaloneServer(gmeConfig);
@@ -409,7 +407,6 @@ describe('standalone server', function () {
                 serverReady = Q.defer(),
                 gmeConfig = testFixture.getGmeConfig();
 
-            gmeConfig.server.port = 9001;
             gmeConfig.authentication.enable = true;
             gmeConfig.authentication.allowGuests = false;
 

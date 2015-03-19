@@ -21,7 +21,6 @@ describe('ExecutorClient', function () {
         var gmeConfig = testFixture.getGmeConfig(),
             param = {};
 
-        gmeConfig.server.port = 9006;
         gmeConfig.executor.enable = true;
 
         param.serverPort = gmeConfig.server.port;

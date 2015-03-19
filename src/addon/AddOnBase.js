@@ -1,13 +1,14 @@
-/*
- * Copyright (C) 2014 Vanderbilt University, All rights reserved.
- *
- * Author: Tamas Kecskes
+/*globals define*/
+/*jshint node:true*/
+
+/**
+ * @author kecso / https://github.com/kecso
  */
 
-'use strict';
 
 define([],
     function(){
+        'use strict';
         var AddOnBase = function(Core,Storage, gmeConfig){
             this._Core = Core;
             this._Storage = Storage; //TODO: Should Storage be lower-case? It seems to be an instance..

@@ -25,7 +25,6 @@ describe('Client tests', function () {
 
         testTerritory;
 
-    gmeConfig.server.port = 9003;
     gmeConfig.addOn.enable = true;
 
     requirejs.config({

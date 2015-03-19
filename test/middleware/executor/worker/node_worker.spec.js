@@ -86,7 +86,6 @@ describe('NodeWorker', function () {
             before(function (done) {
                 var gmeConfig = testFixture.getGmeConfig();
                 this.timeout(5000);
-                gmeConfig.server.port = 9005;
                 gmeConfig.executor.enable = true;
                 gmeConfig.executor.nonce = null;
                 gmeConfig.server.https.enable = false;
@@ -129,7 +128,6 @@ describe('NodeWorker', function () {
             before(function (done) {
                 var gmeConfig = testFixture.getGmeConfig();
                 this.timeout(5000);
-                gmeConfig.server.port = 9005;
                 gmeConfig.executor.enable = true;
                 gmeConfig.executor.nonce = 'aReallyLongSecret';
                 gmeConfig.server.https.enable = false;
@@ -428,7 +426,6 @@ describe('NodeWorker', function () {
             it('worker should not attach', function (done) {
                 var gmeConfig = testFixture.getGmeConfig();
                 this.timeout(5000);
-                gmeConfig.server.port = 9005;
                 gmeConfig.executor.enable = true;
                 gmeConfig.executor.nonce = 'aReallyLongSecret';
                 gmeConfig.server.https.enable = false;
@@ -462,7 +459,6 @@ describe('NodeWorker', function () {
             before(function (done) {
                 var gmeConfig = testFixture.getGmeConfig();
                 this.timeout(5000);
-                gmeConfig.server.port = 9005;
                 gmeConfig.executor.enable = true;
                 gmeConfig.executor.nonce = 'aReallyLongSecret';
                 gmeConfig.server.https.enable = true;

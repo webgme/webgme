@@ -24,7 +24,6 @@ describe('BlobClient', function () {
         before(function (done) {
             // we have to set the config here
             var gmeConfig = testFixture.getGmeConfig();
-            gmeConfig.server.port = 9006;
             gmeConfig.server.https.enable = false;
             serverBaseUrl = 'http://127.0.0.1:' + gmeConfig.server.port;
             bcParam.serverPort = gmeConfig.server.port;
@@ -331,7 +330,6 @@ describe('BlobClient', function () {
             // we have to set the config here
             nodeTLSRejectUnauthorized = process.env.NODE_TLS_REJECT_UNAUTHORIZED;
             var gmeConfig = testFixture.getGmeConfig();
-            gmeConfig.server.port = 9006;
             gmeConfig.server.https.enable = true;
             serverBaseUrl = 'https://127.0.0.1:' + gmeConfig.server.port;
             bcParam.serverPort = gmeConfig.server.port;
