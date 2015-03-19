@@ -199,7 +199,10 @@ require(
                     'gme.ui.projectsDialog',
                     'gme.ui.headerPanel'
                 ]).config(function($locationProvider) {
-                    $locationProvider.html5Mode(true);
+                    $locationProvider.html5Mode({
+                        enabled: true,
+                        requireBase: false // https://github.com/angular/angular.js/issues/8934
+                    });
                 });
 
             webGME.start( function(client) {
