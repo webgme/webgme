@@ -3,109 +3,70 @@
  * @author kecso / https://github.com/kecso
  */
 
-var requirejs = require("requirejs"),
+var requirejs = require('requirejs'),
     program = require('commander'),
-    BRANCH_REGEXP = new RegExp("^[0-9a-zA-Z_]*$"),
-    HASH_REGEXP = new RegExp("^#[0-9a-zA-Z_]*$"),
+    BRANCH_REGEXP = new RegExp('^[0-9a-zA-Z_]*$'),
+    HASH_REGEXP = new RegExp('^#[0-9a-zA-Z_]*$'),
     FS = require('fs'),
-    Core,
+    openContext,
     Storage,
     Serialization,
-    jsonProject,
     path = require('path'),
     gmeConfig = require(path.join(process.cwd(), 'config')),
     webgme = require('../../webgme');
 
 webgme.addToRequireJsPaths(gmeConfig);
 
-Core = requirejs('core/core');
+openContext = requirejs('common/util/opencontext');
 Storage = requirejs('storage/serveruserstorage');
 Serialization = requirejs('coreclient/serialization');
 
-var exportProject = function(mongoUri,projectId,branchOrCommit,callback){
+var exportProject = function (mongoUri, projectId, branchOrCommit, callback) {
     'use strict';
-    var core,
+    var storage,
         project,
-        root,
-        database,
-        close = function(error,data){
-            try{
-                project.closeProject(function(){
-                    database.closeDatabase(function(){
-                        callback(error,data);
-                    });
-                });
-            } catch(err){
-                database.closeDatabase(function(){
-                    callback(error,data);
-                });
+        contextParams,
+        silentLog = {
+            debug: function () {
+            },
+            error: function () {
             }
         },
-        getRoot = function(next){
-            var getRootFromCommitHash = function(cHash){
-                project.loadObject(cHash,function(err,cObj){
-                    if(err){
-                        return next(err);
-                    }
-                    core.loadRoot(cObj.root,next);
+        closeContext = function (error, data) {
+            try {
+                project.closeProject(function () {
+                    storage.closeDatabase(function () {
+                        callback(error, data);
+                    });
                 });
-            };
-            if(HASH_REGEXP.test(branchOrCommit)){
-                return getRootFromCommitHash(branchOrCommit);
+            } catch (err) {
+                storage.closeDatabase(function () {
+                    callback(error, data);
+                });
             }
-            //it must be a branch name
-            project.getBranchNames(function(err,names){
-                if(err){
-                    return next(err);
-                }
-                if(names[branchOrCommit]){
-                    return getRootFromCommitHash(names[branchOrCommit]);
-                }
-                return next(new Error('unknown branch'));
-            });
         };
 
     gmeConfig.mongo.uri = mongoUri || gmeConfig.mongo.uri;
-    database = new Storage({
-        globConf: gmeConfig,
-        log: {
-            debug: function (msg) {},
-            error: function (msg) {}
-        }}); //we do not want debugging
+    storage = new Storage({globConf: gmeConfig, log: silentLog});
 
-    database.openDatabase(function(err){
-        if(err){
-            return callback(err);
+    contextParams = {
+        projectName: projectId,
+        branchOrCommit: branchOrCommit
+    };
+
+    openContext(storage, gmeConfig, contextParams, function (err, context) {
+        if (err) {
+            callback(err);
+            return;
         }
-        database.getProjectNames(function(err,names){
-            if(err){
-                return close(err);
-            }
-            if(names.indexOf(projectId) === -1){
-                return close(new Error('unknown project'));
-            }
-
-            database.openProject(projectId,function(err,p){
-                if(err){
-                    return close(err);
-                }
-                project = p;
-                core = new Core(project, {globConf: gmeConfig});
-                getRoot(function(err,r){
-                    if(err){
-                        return close(err);
-                    }
-                    root = r;
-                    Serialization.export(core,root,close);
-                });
-            });
-        });
+        project = context.project;
+        Serialization.export(context.core, context.rootNode, closeContext);
     });
 };
 
 module.exports.export = exportProject;
 
-if(require.main === module){
+if (require.main === module) {
     program
         .version('0.1.0')
         .option('-m, --mongo-database-uri [url]', 'URI to connect to mongoDB where the project is stored')
@@ -115,39 +76,39 @@ if(require.main === module){
         .parse(process.argv);
 //check necessary arguments
 
-    if(!program.mongoDatabaseUri){
+    if (!program.mongoDatabaseUri) {
         console.warn('mongoDB URL is a mandatory parameter!');
         process.exit(0);
     }
-    if(!program.projectIdentifier){
+    if (!program.projectIdentifier) {
         console.warn('project identifier is a mandatory parameter!');
         process.exit(0);
     }
 
-    if(!program.source){
+    if (!program.source) {
         console.warn('source is a mandatory parameter!');
         process.exit(0);
     }
-    if(!BRANCH_REGEXP.test(program.source) && ! HASH_REGEXP.test(program.source)){
+    if (!BRANCH_REGEXP.test(program.source) && !HASH_REGEXP.test(program.source)) {
         console.warn('source format is invalid!');
         process.exit(0);
     }
 
     //calling the export function
-    exportProject(program.mongoDatabaseUri,program.projectIdentifier,program.source,function(err,jsonProject){
-        if(err){
-            console.warn('error during project export: ',err);
+    exportProject(program.mongoDatabaseUri, program.projectIdentifier, program.source, function (err, jsonProject) {
+        if (err) {
+            console.warn('error during project export: ', err);
         } else {
-            if(program.out){
-                try{
-                    FS.writeFileSync(program.out,JSON.stringify(jsonProject,null,2));
-                    console.warn('project \''+program.projectIdentifier+'\' hase been successfully written to \''+program.out+'\'');
-                } catch(err){
-                    console.warn('failed to create output file: '+err);
+            if (program.out) {
+                try {
+                    FS.writeFileSync(program.out, JSON.stringify(jsonProject, null, 2));
+                    console.warn('project \'' + program.projectIdentifier + '\' hase been successfully written to \'' + program.out + '\'');
+                } catch (err) {
+                    console.warn('failed to create output file: ' + err);
                 }
             } else {
-                console.warn('project \''+program.projectIdentifier+'\':');
-                console.warn(JSON.stringify(jsonProject,null,2));
+                console.warn('project \'' + program.projectIdentifier + '\':');
+                console.warn(JSON.stringify(jsonProject, null, 2));
             }
         }
         process.exit(0);

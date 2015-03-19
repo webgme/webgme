@@ -3,11 +3,11 @@
  * @author kecso / https://github.com/kecso
  */
 
-var requirejs = require("requirejs"),
+var requirejs = require('requirejs'),
     program = require('commander'),
-    BRANCH_REGEXP = new RegExp("^[0-9a-zA-Z_]*$"),
+    BRANCH_REGEXP = new RegExp('^[0-9a-zA-Z_]*$'),
     FS = require('fs'),
-    Core,
+    openContext,
     Storage,
     Serialization,
     jsonProject,
@@ -18,78 +18,84 @@ var requirejs = require("requirejs"),
 webgme.addToRequireJsPaths(gmeConfig);
 
 
-Core = requirejs('core/core');
+openContext = requirejs('common/util/opencontext');
 Storage = requirejs('storage/serveruserstorage');
 Serialization = requirejs('coreclient/serialization');
 
-var importProject = function(mongoUri,projectId,jsonProject,branch,callback){
-    var core,
+var importProject = function (mongoUri, projectId, jsonProject, branchName, callback) {
+    'use strict';
+    var storage,
         project,
-        root,
-        commit,
-        database,
-        close = function(error){
-            try{
-                project.closeProject(function(){
-                    database.closeDatabase(function(){
-                        callback(error);
+        contextParams,
+        silentLog = {
+            debug: function () {
+            },
+            error: function () {
+            }
+        },
+        closeContext = function (error, data) {
+            try {
+                project.closeProject(function () {
+                    storage.closeDatabase(function () {
+                        callback(error, data);
                     });
                 });
-            } catch(err){
-                database.closeDatabase(function(){
-                    callback(error);
+            } catch (err) {
+                storage.closeDatabase(function () {
+                    callback(error, data);
                 });
             }
         };
 
     gmeConfig.mongo.uri = mongoUri || gmeConfig.mongo.uri;
-    database = new Storage({
-        globConf: gmeConfig,
-        log: {
-            debug: function (msg) {},
-            error: function (msg) {}
-        }}); //we do not want debugging
+    storage = new Storage({globConf: gmeConfig, log: silentLog});
+    branchName = branchName || 'master';
 
-    database.openDatabase(function(err){
-        if(err){
-            return callback(err);
+    contextParams = {
+        projectName: projectId,
+        overwriteProject: true
+    };
+
+    openContext(storage, gmeConfig, contextParams, function (err, context) {
+        if (err) {
+            callback(err);
+            return;
         }
-
-        database.openProject(projectId,function(err,p){
-            if(err){
-                database.closeDatabase(function(){
-                    return callback(err);
-                });
-            } else {
-                project = p;
-                core = new Core(project, {globConf: gmeConfig});
-                root = core.createNode({parent:null,base:null});
-                Serialization.import(core,root,jsonProject,function(err){
-                    if(err){
-                        return close(err);
-                    }
-                    core.persist(root,function(){});
-                    commit = project.makeCommit([],core.getHash(root),"project imported by import.js CLI",function(){});
-                    project.getBranchHash(branch,'#hack',function(err,oldCommit){
-                        if(err){
-                            return callback(new Error('project imported to commit: '+commit+', but branch cannot be updated.'));
-                        }
-                        project.setBranchHash(branch,oldCommit,commit,function(err){
-                            if(err){
-                                return callback(new Error('project imported to commit: '+commit+', but branch cannot be updated.'));
-                            }
-                            callback(null);
-                        });
-                    });
-                });
+        project = context.project;
+        Serialization.import(context.core, context.rootNode, jsonProject, function (err) {
+            if (err) {
+                closeContext(err);
+                return;
             }
+            context.core.persist(context.rootNode, function () {
+                project.makeCommit([], context.core.getHash(context.rootNode), 'project imported by import.js CLI',
+                    function (err, commitHash) {
+                        project.getBranchHash(branchName, '#hack', function (err, oldBranchHash) {
+                            if (err) {
+                                closeContext('project imported to commit: ' + commitHash + ', but branch "' +
+                                    branchName + '" could not be updated.', commitHash);
+                                return;
+                            }
+                            project.setBranchHash(branchName, oldBranchHash, commitHash, function (err) {
+                                if (err) {
+                                    closeContext('project imported to commit: ' + commitHash + ', but branch "' +
+                                        branchName + '" could not be updated.', commitHash);
+                                    return;
+                                }
+                                closeContext(null, commitHash);
+                            });
+                        });
+                    }
+                );
+            });
+
         });
     });
 };
 
 module.exports.import = importProject;
 
-if(require.main === module){
+if (require.main === module) {
     program
         .version('0.1.0')
         .usage('<project-file> [options]')
@@ -98,38 +104,46 @@ if(require.main === module){
         .option('-b, --branch [branch]', 'the branch that should be created with the imported data')
         .parse(process.argv);
 //check necessary arguments
-    if(program.args.length !== 1){
+    if (program.args.length !== 1) {
         console.warn('wrong parameters');
         program.help();
     }
 
-    if(!program.mongoDatabaseUri){
-        console.warn('mongoDB URL is a mandatory parameter!');
-        process.exit(0);
-    }
-    if(!program.projectIdentifier){
+    //if (!program.mongoDatabaseUri) {
+    //    console.warn('mongoDB URL is a mandatory parameter!');
+    //    process.exit(1);
+    //}
+    if (!program.projectIdentifier) {
         console.warn('project identifier is a mandatory parameter!');
-        process.exit(0);
+        process.exit(1);
+    }
+    if (program.branch && !BRANCH_REGEXP.test(program.branch)) {
+        console.warn(program.branch + ' is not a valid branch name!');
+        process.exit(1);
     }
 
-    if(!program.branch || !BRANCH_REGEXP.test(program.branch)){
-        program.branch = 'master';
+    if (!program.branch) {
+        console.log('branch is not given, master will be used');
     }
 
     //loading the project file and seeing if it is a valid JSON object
-    try{
-        jsonProject = JSON.parse(FS.readFileSync(program.args[0],'utf-8'));
+    try {
+        jsonProject = JSON.parse(FS.readFileSync(program.args[0], 'utf-8'));
     } catch (err) {
-        console.warn('unable to load project file: ',err);
+        console.warn('unable to load project file: ', err);
         process.exit(0);
     }
     //calling the import function
-    importProject(program.mongoDatabaseUri,program.projectIdentifier,jsonProject,program.branch,function(err){
-        if(err){
-            console.warn('error during project import: ',err);
-        } else {
-            console.warn('branch \''+program.branch+'\' of project \''+program.projectIdentifier+'\' have been successfully imported');
+    importProject(program.mongoDatabaseUri, program.projectIdentifier, jsonProject, program.branch,
+        function (err, commitHash) {
+            'use strict';
+            if (err) {
+                console.warn('error during project import: ', err);
+            } else {
+                console.warn('branch "' + program.branch + '" of project "' + program.projectIdentifier +
+                    '" have been successfully imported at commitHash: ' + commitHash + '.');
+            }
+            process.exit(0);
         }
-        process.exit(0);
-    });
+    );
 }

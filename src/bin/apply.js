@@ -4,7 +4,6 @@
  */
 
 var program = require('commander'),
-    HASH_REGEXP = new RegExp('^#[0-9a-zA-Z_]*$'),
     requirejs = require('requirejs'),
     FS = require('fs'),
     Storage,
@@ -24,6 +23,12 @@ var applyPatch = function (mongoUri, projectId, branchOrCommit, patch, noUpdate,
     var storage,
         project,
         contextParams,
+        silentLog = {
+            debug: function () {
+            },
+            error: function () {
+            }
+        },
         closeContext = function (error, data) {
             try {
                 project.closeProject(function () {
@@ -40,25 +45,12 @@ var applyPatch = function (mongoUri, projectId, branchOrCommit, patch, noUpdate,
 
     gmeConfig.mongo.uri = mongoUri || gmeConfig.mongo.uri;
 
-    storage = new Storage({
-        globConf: gmeConfig,
-        log: {
-            debug: function () {
-            },
-            error: function () {
-            }
-        }
-    });
+    storage = new Storage({globConf: gmeConfig, log: silentLog});
 
     contextParams = {
         projectName: projectId,
+        branchOrCommit: branchOrCommit
     };
-
-    if (HASH_REGEXP.test(branchOrCommit)) {
-        contextParams.commitHash = branchOrCommit;
-    } else {
-        contextParams.branchName = branchOrCommit;
-    }
 
     openContext(storage, gmeConfig, contextParams, function (err, context) {
         if (err) {
@@ -87,7 +79,7 @@ var applyPatch = function (mongoUri, projectId, branchOrCommit, patch, noUpdate,
                             return;
                         }
 
-                        project.setBranchHash(contextParams.branchName, context.commitHash, newCommitHash,
+                        project.setBranchHash(context.branchName, context.commitHash, newCommitHash,
                             function (err) {
                                 closeContext(err, newCommitHash);
                                 return;

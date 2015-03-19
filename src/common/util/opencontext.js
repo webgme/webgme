@@ -139,6 +139,7 @@ define(['util/assert', 'common/core/core'], function (ASSERT, Core) {
         if (parameters.branchOrCommit) {
             if (BRANCH_REGEXP.test(parameters.branchOrCommit)) {
                 branchName = parameters.branchOrCommit;
+                result.branchName = branchName;
             } else if (HASH_REGEXP.test(parameters.branchOrCommit)) {
                 commitHash = parameters.branchOrCommit;
             } else {
