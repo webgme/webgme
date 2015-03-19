@@ -212,12 +212,12 @@ describe('openContext', function () {
             });
         });
 
-        it('should load the meta nodes and nodeIds', function (done) {
+        it('should load the meta nodes and nodePaths', function (done) {
             var parameters = {
                 projectName: 'doesExist',
                 branchName: 'master',
                 meta: true,
-                nodeIds: ['/960660211/1365653822', '/1']
+                nodePaths: ['/960660211/1365653822', '/1']
             };
             openContext(storage, gmeConfig, parameters, function (err, result) {
                 expect(err).equal(null);
@@ -229,11 +229,11 @@ describe('openContext', function () {
             });
         });
 
-        it('should load the nodeIds', function (done) {
+        it('should load the nodePaths', function (done) {
             var parameters = {
                 projectName: 'doesExist',
                 branchName: 'master',
-                nodeIds: ['/960660211/1365653822', '/1']
+                nodePaths: ['/960660211/1365653822', '/1']
             };
             openContext(storage, gmeConfig, parameters, function (err, result) {
                 expect(err).equal(null);
@@ -452,12 +452,12 @@ describe('openContext', function () {
             });
         });
 
-        it('should load the meta nodes and nodeIds', function (done) {
+        it('should load the meta nodes and nodePaths', function (done) {
             var parameters = {
                 projectName: 'doesExist',
                 branchName: 'master',
                 meta: true,
-                nodeIds: ['/960660211/1365653822', '/1']
+                nodePaths: ['/960660211/1365653822', '/1']
             };
             openContext(storage, gmeConfig, parameters, function (err, result) {
                 expect(err).equal(null);
@@ -469,11 +469,11 @@ describe('openContext', function () {
             });
         });
 
-        it('should load the nodeIds', function (done) {
+        it('should load the nodePaths', function (done) {
             var parameters = {
                 projectName: 'doesExist',
                 branchName: 'master',
-                nodeIds: ['/960660211/1365653822', '/1']
+                nodePaths: ['/960660211/1365653822', '/1']
             };
             openContext(storage, gmeConfig, parameters, function (err, result) {
                 expect(err).equal(null);
@@ -686,12 +686,12 @@ describe('openContext', function () {
             });
         });
 
-        it('should load the meta nodes and nodeIds', function (done) {
+        it('should load the meta nodes and nodePaths', function (done) {
             var parameters = {
                 projectName: 'doesExist',
                 branchName: 'master',
                 meta: true,
-                nodeIds: ['/960660211/1365653822', '/1']
+                nodePaths: ['/960660211/1365653822', '/1']
             };
             openContext(storage, gmeConfig, parameters, function (err, result) {
                 expect(err).equal(null);
@@ -703,11 +703,11 @@ describe('openContext', function () {
             });
         });
 
-        it('should load the nodeIds', function (done) {
+        it('should load the nodePaths', function (done) {
             var parameters = {
                 projectName: 'doesExist',
                 branchName: 'master',
-                nodeIds: ['/960660211/1365653822', '/1']
+                nodePaths: ['/960660211/1365653822', '/1']
             };
             openContext(storage, gmeConfig, parameters, function (err, result) {
                 expect(err).equal(null);

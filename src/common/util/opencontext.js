@@ -20,7 +20,7 @@ define(['util/assert', 'common/core/core'], function (ASSERT, Core) {
      * The following group is only valid when not creating a new project:
      * @param {string} [parameters.branchName] - name of branch to load root from. -> result.rootNode, result.commitHash
      * @param {string} [parameters.commitHash] - if branchName not given commitHash will be loaded. -> result.rootNode
-     * @param {[string]} [parameters.nodeIds] -loads all specified node ids. -> result.nodes
+     * @param {[string]} [parameters.nodePaths] -loads all specified node paths. -> result.nodes
      * @param {boolean} [parameters.meta] - loads all META-nodes. -> result.META
      *
      * @param {object} [parameters.core] - Used if branchName or commitHash is specified (a new Core will be created
@@ -105,7 +105,7 @@ define(['util/assert', 'common/core/core'], function (ASSERT, Core) {
                                         return;
                                     }
 
-                                    if (parameters.nodeIds || parameters.meta) {
+                                    if (parameters.nodePaths || parameters.meta) {
                                         _loadNodes(parameters, result, function (err) {
                                             if (err) {
                                                 closeOnError(err);
@@ -177,7 +177,7 @@ define(['util/assert', 'common/core/core'], function (ASSERT, Core) {
         var metaNodes = [],
             metaIds,
             loadSpecifiedNodes = function () {
-                _loadNodesById(result, parameters.nodeIds, false, function (err, nodes) {
+                _loadNodesByPath(result, parameters.nodePaths, false, function (err, nodes) {
                     if (err) {
                         callback(err);
                         return;
@@ -189,13 +189,13 @@ define(['util/assert', 'common/core/core'], function (ASSERT, Core) {
 
         if (parameters.meta) {
             metaIds = result.core.getMemberPaths(result.rootNode, 'MetaAspectSet');
-            _loadNodesById(result, metaIds, true, function (err, metaNodes) {
+            _loadNodesByPath(result, metaIds, true, function (err, metaNodes) {
                 if (err) {
                     callback(err);
                     return;
                 }
                 result.META = metaNodes;
-                if (parameters.nodeIds) {
+                if (parameters.nodePaths) {
                     loadSpecifiedNodes();
                 } else {
                     callback(null);
@@ -206,8 +206,8 @@ define(['util/assert', 'common/core/core'], function (ASSERT, Core) {
         }
     }
 
-    function _loadNodesById(result, nodeIds, insertByName, callback) {
-        var len = nodeIds.length,
+    function _loadNodesByPath(result, nodePaths, insertByName, callback) {
+        var len = nodePaths.length,
             error = '',
             nodeObjs = [];
 
@@ -237,13 +237,13 @@ define(['util/assert', 'common/core/core'], function (ASSERT, Core) {
             }
             nodeObjs.push(nodeObj);
 
-            if (nodeObjs.length === nodeIds.length) {
+            if (nodeObjs.length === nodePaths.length) {
                 allNodesLoadedHandler();
             }
         };
 
         while (len--) {
-            result.core.loadByPath(result.rootNode, nodeIds[len], loadedNodeHandler);
+            result.core.loadByPath(result.rootNode, nodePaths[len], loadedNodeHandler);
         }
     };
 
