@@ -13,6 +13,7 @@ define([
     'plugin/PluginResult',
     'core/core',
     'storage/serveruserstorage',
+    'common/util/opencontext',
     'fs',
     'path',
     'logManager',
@@ -24,6 +25,7 @@ function (ASSERT,
           PluginResult,
           Core,
           Storage,
+          openContext,
           FS,
           PATH,
           logManager,
@@ -40,6 +42,7 @@ function (ASSERT,
                 logger = logManager.create('runPlugin'),
                 storage,
                 plugins = {},
+                contextParams,
                 errorResult = new PluginResult();
 
             pluginConfig.activeSelection = pluginConfig.activeSelection || [];
@@ -57,8 +60,14 @@ function (ASSERT,
             });
 
             plugins[pluginName] = Plugin;
+            pluginConfig.branch = pluginConfig.branch || 'master';
 
-            storage.openDatabase(function (err) {
+            contextParams = {
+                projectName: pluginConfig.projectName,
+                branchName: pluginConfig.branch
+            };
+
+            openContext(storage, gmeConfig, contextParams, function (err, context) {
                 if (err) {
                     logger.error(err);
                     if (callback) {
@@ -66,35 +75,19 @@ function (ASSERT,
                     }
                     return;
                 }
-                storage.openProject(pluginConfig.projectName, function (err, project) {
-                    if (err) {
-                        logger.error(err);
-                        callback(err, errorResult);
-                        return;
-                    }
+                var pluginManager = new PluginManager(context.project, Core, plugins, gmeConfig);
+                var blobBackend = new BlobFSBackend(gmeConfig);
+                //var blobBackend  = new BlobS3Backend();
 
-                    pluginConfig.branch = pluginConfig.branch || 'master';
+                pluginConfig.blobClient = new BlobRunPluginClient(blobBackend);
+                pluginConfig.commit = context.commitHash;
 
-                    project.getBranchHash(pluginConfig.branch, null, function (err, branchHash) {
-                        if (err) {
-                            logger.error(err);
-                            callback(err, errorResult);
-                            return;
-                        }
-                        var pluginManager = new PluginManager(project, Core, plugins, gmeConfig);
-                        var blobBackend = new BlobFSBackend(gmeConfig);
-                        //var blobBackend  = new BlobS3Backend();
-
-                        pluginConfig.blobClient = new BlobRunPluginClient(blobBackend);
-                        pluginConfig.commit = branchHash;
-
-                        // FIXME: pluginConfig supposed to be managerConfig!
-                        pluginManager.executePlugin(pluginName, pluginConfig, function (err, result) {
-                            logger.debug(JSON.stringify(result, null, 2));
-                            project.closeProject();
-                            storage.closeDatabase(function () {
-                                callback(err, result);
-                            });
+                // FIXME: pluginConfig supposed to be managerConfig!
+                pluginManager.executePlugin(pluginName, pluginConfig, function (err, result) {
+                    logger.debug(JSON.stringify(result, null, 2));
+                    context.project.closeProject(function () {
+                        storage.closeDatabase(function () {
+                            callback(err, result);
                         });
                     });
                 });
