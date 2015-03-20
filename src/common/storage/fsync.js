@@ -15,12 +15,11 @@ define([], function () {
         }
 
         function openProject(projectName, callback) {
-            var project = null;
-
             var Heap = require('heap');
             var writeOps = new Heap();
             var numWriteOps = 0;
             var fsyncs = [];
+            var project;
 
             var doWriteOp = function doWriteOp(this_, fn /*, ...*/) {
                 var args = Array.prototype.slice.call(arguments, 2);
@@ -112,30 +111,24 @@ define([], function () {
                 });
             }
 
+            _database.openProject(projectName, function (err, childProject) {
+                if (!err && childProject) {
+                    project = childProject;
+                    var fsyncProject = {};
+                    for (var key in childProject) {
+                        if (childProject.hasOwnProperty(key)) {
+                            fsyncProject[key] = childProject[key];
+                        }
+                    }
+                    fsyncProject.fsyncDatabase = fsyncDatabase;
+                    fsyncProject.setBranchHash = setBranchHash;
+                    fsyncProject.insertObject = insertObject;
+                    fsyncProject.setInfo = setInfo;
+                    fsyncProject.closeProject = closeProject;
 
-            _database.openProject(projectName, function (err, proj) {
-                if (!err && proj) {
-                    project = proj;
-                    callback(null, {
-                        fsyncDatabase: fsyncDatabase,
-                        closeProject: closeProject,
-                        loadObject: project.loadObject,
-                        getInfo: project.getInfo,
-                        setInfo: setInfo,
-                        insertObject: insertObject,
-                        findHash: project.findHash,
-                        dumpObjects: project.dumpObjects,
-                        getBranchNames: project.getBranchNames,
-                        getBranchHash: project.getBranchHash,
-                        setBranchHash: project.setBranchHash,
-                        getCommits: project.getCommits,
-                        makeCommit: project.makeCommit,
-                        setUser: project.setUser,
-                        getCommonAncestorCommit: project.getCommonAncestorCommit,
-                        ID_NAME: project.ID_NAME
-                    });
+                    callback(null, fsyncProject);
                 } else {
-                    callback(err, proj);
+                    callback(err, childProject);
                 }
             });
 
