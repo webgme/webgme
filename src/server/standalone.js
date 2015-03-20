@@ -605,9 +605,14 @@ define(['logManager',
             urlArray.shift();
 
             var relPath = urlArray.join('/');
-
+            var absPath = Path.resolve(Path.join(process.cwd(), relPath));
             // must pass the full path
-            expressFileSending(res, Path.resolve(Path.join(process.cwd(), relPath)));
+            if (relPath.lastIndexOf('/') === relPath.length - 1) {
+                // if URL ends with /, append / to support sending index.html
+                absPath = absPath + '/';
+            }
+
+            expressFileSending(res, absPath);
         });
 
         __logger.info("creating basic static content related routing rules");
