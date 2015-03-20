@@ -113,38 +113,41 @@ if (require.main === module) {
         .parse(process.argv);
 
 //check necessary arguments
-    if (!program.mongoDatabaseUri) {
-        console.warn('mongoDB URL is a mandatory parameter!');
-        process.exit(0);
-    }
+//    if (!program.mongoDatabaseUri) {
+//        console.warn('mongoDB URL is a mandatory parameter!');
+//        process.exit(0);
+//    }
     if (!program.projectIdentifier) {
         console.warn('project identifier is a mandatory parameter!');
-        process.exit(0);
+        program.help();
     }
     if (!program.source) {
         console.warn('source is a mandatory parameter!');
-        process.exit(0);
+        program.help();
     }
     if (!program.target) {
         console.warn('target is a mandatory parameter!');
-        process.exit(0);
+        program.help();
     }
 
-    generateDiff(program.mongoDatabaseUri, program.projectIdentifier, program.source, program.target, function (err, diff) {
-        if (err) {
-            console.warn('diff generation finished with error: ', err);
+    generateDiff(program.mongoDatabaseUri, program.projectIdentifier, program.source, program.target,
+        function (err, diff) {
+            'use strict';
+            if (err) {
+                console.warn('diff generation finished with error: ', err);
+                process.exit(0);
+            }
+            if (program.out) {
+                try {
+                    FS.writeFileSync(program.out, JSON.stringify(diff, null, 2));
+                } catch (err) {
+                    console.warn('unable to create output file:', err);
+                }
+            } else {
+                console.log('generated diff:');
+                console.log(JSON.stringify(diff, null, 2));
+            }
             process.exit(0);
         }
-        if (program.out) {
-            try {
-                FS.writeFileSync(program.out, JSON.stringify(diff, null, 2));
-            } catch (err) {
-                console.warn('unable to create output file:', err);
-            }
-        } else {
-            console.log('generated diff:');
-            console.log(JSON.stringify(diff, null, 2));
-        }
-        process.exit(0);
-    });
+    );
 }

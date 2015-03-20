@@ -105,21 +105,14 @@ if (require.main === module) {
         .option('-n, --no-update', 'show if we should not update the branch')
         .parse(process.argv);
 //check necessary arguments
-    if (program.args.length !== 1) {
-        console.warn('wrong parameters');
-    }
 
-    if (!program.mongoDatabaseUri) {
-        console.warn('mongoDB URL is a mandatory parameter!');
-        process.exit(0);
-    }
     if (!program.projectIdentifier) {
         console.warn('project identifier is a mandatory parameter!');
-        process.exit(0);
+        program.help();
     }
     if (!program.target) {
         console.warn('target is a mandatory parameter!');
-        process.exit(0);
+        program.help();
     }
 
     //load path file
@@ -127,7 +120,7 @@ if (require.main === module) {
         patchJson = JSON.parse(FS.readFileSync(program.args[0], 'utf-8'));
     } catch (err) {
         console.warn('unable to load patch file: ', err);
-        process.exit(0);
+        process.exit(1);
     }
 
     applyPatch(program.mongoDatabaseUri, program.projectIdentifier, program.target, patchJson, program.noUpdate,

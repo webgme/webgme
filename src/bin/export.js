@@ -76,41 +76,45 @@ if (require.main === module) {
         .parse(process.argv);
 //check necessary arguments
 
-    if (!program.mongoDatabaseUri) {
-        console.warn('mongoDB URL is a mandatory parameter!');
-        process.exit(0);
-    }
     if (!program.projectIdentifier) {
         console.warn('project identifier is a mandatory parameter!');
-        process.exit(0);
+        program.help();
     }
 
     if (!program.source) {
         console.warn('source is a mandatory parameter!');
-        process.exit(0);
+        program.help();
     }
     if (!BRANCH_REGEXP.test(program.source) && !HASH_REGEXP.test(program.source)) {
         console.warn('source format is invalid!');
-        process.exit(0);
+        program.help();
     }
 
     //calling the export function
-    exportProject(program.mongoDatabaseUri, program.projectIdentifier, program.source, function (err, jsonProject) {
-        if (err) {
-            console.warn('error during project export: ', err);
-        } else {
-            if (program.out) {
-                try {
-                    FS.writeFileSync(program.out, JSON.stringify(jsonProject, null, 2));
-                    console.warn('project \'' + program.projectIdentifier + '\' hase been successfully written to \'' + program.out + '\'');
-                } catch (err) {
-                    console.warn('failed to create output file: ' + err);
-                }
+    exportProject(program.mongoDatabaseUri, program.projectIdentifier, program.source,
+        function (err, jsonProject) {
+            'use strict';
+            if (err) {
+                console.error('error during project export: ', err);
+                process.exit(1);
             } else {
-                console.warn('project \'' + program.projectIdentifier + '\':');
-                console.warn(JSON.stringify(jsonProject, null, 2));
+                if (program.out) {
+                    try {
+                        FS.writeFileSync(program.out, JSON.stringify(jsonProject, null, 2));
+                        console.log('project \'' + program.projectIdentifier +
+                            '\' hase been successfully written to \'' + program.out + '\'');
+                        process.exit(0);
+                    } catch (err) {
+                        console.error('failed to create output file: ' + err);
+                        process.exit(1);
+                    }
+                } else {
+                    console.log('project \'' + program.projectIdentifier + '\':');
+                    console.log(JSON.stringify(jsonProject, null, 2));
+                    process.exit(0);
+                }
             }
+
         }
-        process.exit(0);
-    });
+    );
 }

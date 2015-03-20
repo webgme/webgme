@@ -107,46 +107,39 @@ if (require.main === module) {
         .option('-o --overwrite [boolean]', 'if a project exist it will be deleted and created again')
         .parse(process.argv);
 //check necessary arguments
-    if (program.args.length !== 1) {
-        console.warn('wrong parameters');
+
+    if (!program.projectIdentifier) {
+        console.error('project identifier is a mandatory parameter!');
+        program.help();
+    }
+    if (program.branch && !BRANCH_REGEXP.test(program.branch)) {
+        console.error(program.branch + ' is not a valid branch name!');
         program.help();
     }
 
-    //if (!program.mongoDatabaseUri) {
-    //    console.warn('mongoDB URL is a mandatory parameter!');
-    //    process.exit(1);
-    //}
-    if (!program.projectIdentifier) {
-        console.warn('project identifier is a mandatory parameter!');
-        process.exit(1);
-    }
-    if (program.branch && !BRANCH_REGEXP.test(program.branch)) {
-        console.warn(program.branch + ' is not a valid branch name!');
-        process.exit(1);
-    }
-
     if (!program.branch) {
-        console.log('branch is not given, master will be used');
+        console.warn('branch is not given, master will be used');
     }
 
     //loading the project file and seeing if it is a valid JSON object
     try {
         jsonProject = JSON.parse(FS.readFileSync(program.args[0], 'utf-8'));
     } catch (err) {
-        console.warn('unable to load project file: ', err);
-        process.exit(0);
+        console.error('unable to load project file: ', err);
+        process.exit(1);
     }
     //calling the import function
     importProject(program.mongoDatabaseUri, program.projectIdentifier, jsonProject, program.branch, program.overwrite,
         function (err, commitHash) {
             'use strict';
             if (err) {
-                console.warn('error during project import: ', err);
+                console.error('error during project import: ', err);
+                process.exit(0);
             } else {
                 console.warn('branch "' + program.branch + '" of project "' + program.projectIdentifier +
                     '" have been successfully imported at commitHash: ' + commitHash + '.');
+                process.exit(0);
             }
-            process.exit(0);
         }
     );
 }

@@ -27,7 +27,7 @@ main = function (argv, callback) {
 
     webGme.addToRequireJsPaths(gmeConfig);
 
-    program.option('-p, --project <name>', 'Name of the project.', 'projectName');
+    program.option('-p, --project <name><mandatory>', 'Name of the project.');
     program.option('-b, --branch <name>', 'Name of the branch.', 'master');
     program.option('-j, --pluginConfigPath <name>',
         'Path to json file with plugin options that should be overwritten.',
@@ -36,19 +36,20 @@ main = function (argv, callback) {
     program.option('-s, --selectedObjID <webGMEID>', 'ID to selected component.', '');
     program.parse(argv);
 
-    if (program.pluginName === undefined) {
+    if (!(program.pluginName && program.project)) {
         program.help();
-    } else {
-        //getting program options
-        projectName = program.project;
-        branch = program.branch;
-        pluginName = program.pluginName;
-        activeNode = program.selectedObjID;
-        configFilename = program.config;
-        pluginConfigFilename = program.pluginConfigPath;
+        console.log('A project and pluginName must be specified.');
     }
 
-    console.log('executing ' + pluginName + ' plugin');
+    //getting program options
+    projectName = program.project;
+    branch = program.branch;
+    pluginName = program.pluginName;
+    activeNode = program.selectedObjID;
+    configFilename = program.config;
+    pluginConfigFilename = program.pluginConfigPath;
+
+    console.log('Executing ' + pluginName + ' plugin');
 
     if (pluginConfigFilename) {
         resolvedPluginConfigFilename = path.resolve(pluginConfigFilename);
