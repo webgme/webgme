@@ -81,7 +81,6 @@ define([ "util/assert" ], function (ASSERT) {
 			var ID_NAME = project.ID_NAME;
 
 			var refcount = 0;
-			var branches = {};
 			var missing = {};
 			var backup = {};
 			var cache = {};
@@ -235,66 +234,10 @@ define([ "util/assert" ], function (ASSERT) {
 					}
 				}
 
-				for (key in branches) {
-					callbacks = branches[key];
-					while ((cb = callbacks.pop())) {
-						cb(err);
-					}
-				}
-
-				branches = {};
 				missing = {};
 				backup = {};
 				cache = {};
 				cacheSize = 0;
-			}
-
-			function getBranchHash (name, oldhash, callback) {
-				ASSERT(typeof name === "string" && typeof callback === "function");
-				ASSERT(typeof oldhash === "string" || oldhash === null);
-
-				var tag = name + "@" + oldhash;
-				var branch = branches[tag];
-				if (typeof branch === "undefined") {
-					branch = [ callback ];
-					branches[tag] = branch;
-
-					project.getBranchHash(name, oldhash, function (err, newhash, forkedhash) {
-						if (branches[tag] === branch) {
-							var cb;
-							delete branches[tag];
-
-							while ((cb = branch.pop())) {
-								cb(err, newhash, forkedhash);
-							}
-						}
-					});
-				} else {
-					branch.push(callback);
-				}
-			}
-
-			function setBranchHash (name, oldhash, newhash, callback) {
-				ASSERT(typeof name === "string" && typeof oldhash === "string");
-				ASSERT(typeof newhash === "string" && typeof callback === "function");
-
-				project.setBranchHash(name, oldhash, newhash, function (err) {
-					if (!err) {
-						var prefix = name + "@", tag;
-						for (tag in branches) {
-							if (tag.substr(0, prefix.length) === prefix) {
-								var cb, branch = branches[tag];
-								delete branches[tag];
-
-								while ((cb = branch.pop())) {
-									cb(err, newhash, null);
-								}
-							}
-						}
-					}
-
-					callback(err);
-				});
 			}
 
 			function reopenProject (callback) {
@@ -310,8 +253,6 @@ define([ "util/assert" ], function (ASSERT) {
                     cacheProject.loadObject = loadObject;
                     cacheProject.insertObject = insertObject;
                 }
-                cacheProject.getBranchHash = getBranchHash;
-                cacheProject.setBranchHash = setBranchHash;
                 cacheProject.closeProject = closeProject;
 
                 ++refcount;

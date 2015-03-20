@@ -9,8 +9,8 @@ define([ 'storage/mongo', 'storage/server', 'storage/cache', 'storage/log', 'sto
     "use strict";
     function server(options){
         var storages = [];
-        // storages.push(Broadcaster);
         storages.push(Fsync);
+        storages.push(Broadcaster);
         storages.push(Cache);
         storages.push(Log);
         storages.push(Server);
