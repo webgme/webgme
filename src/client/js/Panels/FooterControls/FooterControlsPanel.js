@@ -59,8 +59,21 @@ define([
 
         //add version UI piece
         pullLeft = $('<div class="pull-left inline"></div>');
-        pullLeft.append($('<div class="navbar-text"><div class="webgme-version">version: ' + WebGMEGlobal.version + '</div></div>'));
+        var version;
+        if (WebGMEGlobal.NpmVersion) {
+            version = 'version: <a href="https://github.com/webgme/webgme/releases/tag/v' + WebGMEGlobal.version + '">' + WebGMEGlobal.version + '</a>';
+        } else {
+            version = 'version: ' + WebGMEGlobal.version + '</a>';
+        }
+        pullLeft.append($('<div class="navbar-text"><div class="webgme-version">' + version + '</div></div>'));
+
         navBarInner.append(pullLeft);
+
+        if (WebGMEGlobal.GitHubVersion) {
+            pullLeft = $('<div class="pull-left inline"></div>');
+            pullLeft.append($('<div class="navbar-text"><div class="webgme-version">SHA1 or branch - <a href="https://github.com/webgme/webgme/commits/' + WebGMEGlobal.GitHubVersion + '">' + WebGMEGlobal.GitHubVersion + '</a></div></div>'));
+            navBarInner.append(pullLeft);
+        }
 
         //padding from screen right edge
         navBarInner.append(separator.clone());

@@ -53,8 +53,15 @@ define(['logManager',
     "use strict";
 
     var npmJSON = JSON.parse(packagejson),
-        gmeConfig = JSON.parse(gmeConfigJson);
+        gmeConfig = JSON.parse(gmeConfigJson),
+        npmJSONFromSplit;
     WebGMEGlobal.version = npmJSON.version;
+    WebGMEGlobal.NpmVersion = npmJSON.dist ? npmJSON.version : '';
+    WebGMEGlobal.GitHubVersion = '';
+    if (npmJSON._from) {
+        npmJSONFromSplit = npmJSON._from.split('/');
+        WebGMEGlobal.GitHubVersion = npmJSONFromSplit[npmJSONFromSplit.length - 1];
+    }
 
 
     var _webGMEStart = function ( afterPanelsLoaded ) {
