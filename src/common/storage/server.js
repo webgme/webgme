@@ -211,13 +211,17 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                 });
 
                 if (process.env['LOG_WEBGME_TIMING']) {
+                    var msgno = 0;
                     var oldon = socket.on;
                     socket.on = function (msg, cb) {
                         oldon.apply(socket, [msg, function () {
-                            var logmsg = socket.id + " " + msg;
+                            var logmsg = socket.id + " " + msgno++ + " " + msg;
                             var args = [];
                             for (var i = 0; i < arguments.length; i++) {
                                 args[i] = arguments[i];
+                            }
+                            if (msg === 'openProject') {
+                                logmsg = logmsg + ' ' + args[0];
                             }
                             if (msg === 'insertObjects') {
                                 logmsg = logmsg + ' ' + Object.keys(args[1]).length;
@@ -228,14 +232,15 @@ define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkerma
                             if (msg === 'getBranchHash') {
                                 logmsg = logmsg + ' ' + args[1] + ': ' + args[2];
                             }
+                            console.log(logmsg + " recvd");
                             var time1 = process.hrtime();
                             var callback2 = args[args.length - 1];
-                            args[args.length - 1] = function () {
+                            args[args.length - 1] = function (err) {
                                 var time2 = process.hrtime(time1);
                                 if (msg === 'getBranchHash') {
-                                    logmsg = logmsg + ' ' + arguments[1];
+                                    logmsg = logmsg + ' ' + arguments[1] + (arguments[2] ? ' ERROR: forked ' + arguments[2] : '');
                                 }
-                                console.log(logmsg + " " + ((time2[0] * 1000) + (time2[1] / 1000 / 1000 | 0)));
+                                console.log(logmsg + " " + ((time2[0] * 1000) + (time2[1] / 1000 / 1000 | 0)) + " " + err);
                                 callback2.apply(this, arguments);
                             };
                             cb.apply(this, args);
