@@ -550,8 +550,11 @@ define(['logManager',
         __logger.info("creating decorator specific routing rules");
         __app.get(/^\/decorators\/.*/, ensureAuthenticated, function (req, res) {
             var tryNext = function (index) {
+                var resolvedPath;
                 if (index < gmeConfig.visualization.decoratorPaths.length) {
-                    res.sendFile(Path.join(gmeConfig.visualization.decoratorPaths[index], req.url.substring(12)), function (err) {
+                    resolvedPath = Path.resolve(gmeConfig.visualization.decoratorPaths[index]);
+                    resolvedPath = Path.join(resolvedPath, req.url.substring('/decorators/'.length));
+                    res.sendFile(resolvedPath, function (err) {
                         if (err && err.code !== 'ECONNRESET') {
                             tryNext(index + 1);
                         }
