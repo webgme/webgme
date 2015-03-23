@@ -1,40 +1,45 @@
+/*globals define*/
+/*jshint node:true*/
+
 /**
- * Created by tkecskes on 7/30/2014.
+ * @author kecso / https://github.com/kecso
  */
-define(['addon/AddOnBase'],function(Base){
+
+define(['addon/AddOnBase'], function (AddOnBase) {
 
     'use strict';
-    var HistoryAddOn = function(core,storage, gmeConfig){
-        Base.call(this,core,storage, gmeConfig);
+    var HistoryAddOn = function (Core, storage, gmeConfig) {
+        AddOnBase.call(this, Core, storage, gmeConfig);
     };
 
-    HistoryAddOn.prototype = Object.create(Base.prototype);
+    HistoryAddOn.prototype = Object.create(AddOnBase.prototype);
     HistoryAddOn.prototype.constructor = HistoryAddOn;
 
 
-    HistoryAddOn.prototype.getName = function(){
+    HistoryAddOn.prototype.getName = function () {
         return 'HistoryAddOn';
     };
 
-    HistoryAddOn.prototype.update = function(root){
-        console.log('HistoryAddOn',new Date().getTime(),'update',this.core.getGuid(root),this.core.getHash(root));
+    HistoryAddOn.prototype.update = function (root) {
+        console.log('HistoryAddOn', new Date().getTime(), 'update', this.core.getGuid(root), this.core.getHash(root));
     };
 
-    HistoryAddOn.prototype.query = function(parameters,callback){
-        callback(null,this.tree);
+    HistoryAddOn.prototype.query = function (parameters, callback) {
+        callback(null, this.tree);
     };
 
-    HistoryAddOn.prototype.start = function(parameters,callback){
+    HistoryAddOn.prototype.start = function (parameters, callback) {
         var self = this;
-        Base.prototype.start.call(this,parameters,function(err){
-            if(err){
+        AddOnBase.prototype.start.call(this, parameters, function (err) {
+            if (err) {
                 return callback(err);
             }
 
             self.buildInitial(callback);
         });
     };
-    HistoryAddOn.prototype.stop = function(callback){
+
+    HistoryAddOn.prototype.stop = function (callback) {
         //there is no need for special stop sequence
         //TODO maybe we could close the project and the database, but right now it seems unnecessary
         callback(null);
@@ -42,120 +47,123 @@ define(['addon/AddOnBase'],function(Base){
 
     //special HistoryAddOn elements
     HistoryAddOn.prototype.tree = {};
-    HistoryAddOn.prototype.buildInitial = function(callback){
+
+    HistoryAddOn.prototype.buildInitial = function (callback) {
         var self = this,
-            handleChildren = function(node,treeObject,cb){
-            var relIds = self.core.getChildrenRelids(node),
-                waiting = relIds.length,
-                relId,
-                insideCallback = function(){
-                    if(--waiting === 0){
-                        cb();
-                    }
-                },
-                i;
-            if(waiting > 0){
-                self.core.loadChildren(node,function(err,children){
-                    if(err){
-                        return cb();
-                    }
-                    for(i=0;i<children.length;i++){
-                        relId = self.core.getRelid(children[i]);
-                        treeObject.children[relId] = {
-                            'hash'        : self.core.getHash(children[i]),
-                            'lastChanged' : self.commit,
-                            'path'        : self.core.getPath(children[i]),
-                            'children'    : {},
-                            'latest'      : false
-                        };
-                        handleChildren(children[i],treeObject.children[relId],insideCallback);
-                    }
-                });
-            } else {
-                cb();
-            }
-        };
+            handleChildren = function (node, treeObject, cb) {
+                var relIds = self.core.getChildrenRelids(node),
+                    waiting = relIds.length,
+                    relId,
+                    insideCallback = function () {
+                        if (--waiting === 0) {
+                            cb();
+                        }
+                    },
+                    i;
+                if (waiting > 0) {
+                    self.core.loadChildren(node, function (err, children) {
+                        if (err) {
+                            return cb();
+                        }
+                        for (i = 0; i < children.length; i++) {
+                            relId = self.core.getRelid(children[i]);
+                            treeObject.children[relId] = {
+                                'hash': self.core.getHash(children[i]),
+                                'lastChanged': self.commit,
+                                'path': self.core.getPath(children[i]),
+                                'children': {},
+                                'latest': false
+                            };
+                            handleChildren(children[i], treeObject.children[relId], insideCallback);
+                        }
+                    });
+                } else {
+                    cb();
+                }
+            };
 
         self.tree = {};
-        self.project.getBranchHash(self.branchName,"#hack",function(err,commitHash){
-            if(err){
+        self.project.getBranchHash(self.branchName, '#hack', function (err, commitHash) {
+            if (err) {
                 return callback(err);
             }
 
             self.commit = commitHash;
-            self.project.loadObject(commitHash,function(err,commit){
-                if(err || !commit){
+            self.project.loadObject(commitHash, function (err, commit) {
+                if (err || !commit) {
                     return callback(err || new Error('the latest commit of the branch cannot be found'));
                 }
 
                 self.tree = {
-                    'hash'        : commit.root,
-                    'lastChanged' : commitHash,
-                    'path'        : "",
-                    'children'    : {},
-                    'latest'      : true
+                    'hash': commit.root,
+                    'lastChanged': commitHash,
+                    'path': '',
+                    'children': {},
+                    'latest': true
                 };
 
-                self.core.loadRoot(commit.root,function(err,root){
-                    if(err || !root){
+                self.core.loadRoot(commit.root, function (err, root) {
+                    if (err || !root) {
                         return callback(err || new Error('the root of the branch cannot be found'));
                     }
 
-                    handleChildren(root,self.tree,function(){
+                    handleChildren(root, self.tree, function () {
                         callback(null);
                     });
                 });
             });
         });
     };
-    HistoryAddOn.prototype.update = function(root){
+    HistoryAddOn.prototype.update = function (root) {
         var self = this,
-            checkNode = function(node,treeObject,callback){
+            checkNode = function (node, treeObject, callback) {
                 var newRelIds = self.core.getChildrenRelids(node),
                     oldRelIds = Object.keys(treeObject.children),
                     waiting = newRelIds.length,
-                    innerCallback = function(){
-                        if(--waiting === 0){
+                    innerCallback = function () {
+                        if (--waiting === 0) {
                             callback();
                         }
                     },
                     i;
-                if(self.core.getHash(node) !== treeObject.hash){
+                if (self.core.getHash(node) !== treeObject.hash) {
                     treeObject.hash = self.core.getHash(node);
                     treeObject.lastChanged = self.commit;
                     treeObject.path = self.core.getPath(node);
                     treeObject.latest = true;
 
-                    if(waiting > 0){
+                    if (waiting > 0) {
                         //we have children we update the structure of the tree according
-                        for(i=0;i<newRelIds.length;i++){
-                            if(!treeObject.children[newRelIds[i]]){
+                        for (i = 0; i < newRelIds.length; i++) {
+                            if (!treeObject.children[newRelIds[i]]) {
                                 //new node
                                 treeObject.children[newRelIds[i]] = {
-                                    'hash'        : null,
-                                    'path'        : null,
-                                    'lastChanged' : null,
-                                    'children'    : {},
-                                    'latest'      : false
+                                    'hash': null,
+                                    'path': null,
+                                    'lastChanged': null,
+                                    'children': {},
+                                    'latest': false
                                 };
                             }
                         }
 
-                        for(i=0;i<oldRelIds.length;i++){
-                            if(newRelIds.indexOf(oldRelIds[i]) === -1){
+                        for (i = 0; i < oldRelIds.length; i++) {
+                            if (newRelIds.indexOf(oldRelIds[i]) === -1) {
                                 //removed child
                                 delete treeObject.children[oldRelIds[i]];
                             }
                         }
 
                         //now we load the children and call ourselves recursively
-                        self.core.loadChildren(node,function(err,children){
-                            if(err){
+                        self.core.loadChildren(node, function (err, children) {
+                            if (err) {
                                 return callback();
                             }
 
-                            for(i=0;i<children.length;i++){
-                                checkNode(children[i],treeObject.children[self.core.getRelid(children[i])],innerCallback);
+                            for (i = 0; i < children.length; i++) {
+                                checkNode(children[i],
+                                    treeObject.children[self.core.getRelid(children[i])],
+                                    innerCallback);
                             }
                         });
                     } else {
@@ -166,7 +174,8 @@ define(['addon/AddOnBase'],function(Base){
                     callback();
                 }
             };
-        checkNode(root,self.tree,function(){});
+        checkNode(root, self.tree, function () {
+        });
     };
     return HistoryAddOn;
 });
