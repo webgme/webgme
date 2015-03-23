@@ -50,7 +50,7 @@ define([],
                                             if (err) {
                                                 return self._storage.getNextServerEvent(lastGuid, nextServerEvent);
                                             }
-                                            self.update(root);
+                                            self.update(root); // FIXME: This is most likely an asynchronous function..
                                             return self._storage.getNextServerEvent(lastGuid, nextServerEvent);
                                         });
                                     });

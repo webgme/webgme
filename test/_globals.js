@@ -37,6 +37,7 @@ var gmeConfig = require('../config'),
 
     ExecutorClient = requirejs('executor/ExecutorClient'),
     BlobClient = requirejs('blob/BlobClient'),
+    openContext = requirejs('common/util/opencontext'),
 
     should = require('chai').should(),
     expect = require('chai').expect,
@@ -63,13 +64,14 @@ function importProject(parameters, done) {
     //TODO by default it should create a localStorage and put the project there
 
     var result = {
-        storage: {},
-        root: {},
-        commitHash: '',
-        branchName: 'master',
-        project: {},
-        core: {}
-    };
+            storage: {},
+            root: {},
+            commitHash: '',
+            branchName: 'master',
+            project: {},
+            core: {}
+        },
+        contextParam = {};
     /*
      parameters:
      storage - a storage object, where the project should be created (if not given and mongoUri is not defined we create a new local one and use it
@@ -94,7 +96,7 @@ function importProject(parameters, done) {
      */
 
     //TODO should be written in promise style
-    if(!parameters.jsonProject){
+    if (!parameters.jsonProject) {
         (undefined === parameters.filePath).should.be.false;
         result.jsonProject = loadJsonFile(parameters.filePath);
     } else {
@@ -113,67 +115,66 @@ function importProject(parameters, done) {
         }
     }
 
-    result.storage.openDatabase(function (err) {
+    contextParam = {
+        projectName: parameters.projectName,
+        overwriteProject: true,
+        branchName: result.BranchName
+    };
+
+    openContext(result.storage, parameters.gmeConfig, contextParam, function (err, context) {
         if (err) {
             done(err);
             return;
         }
+        result.project = context.project;
+        result.core = context.core;
+        result.root = context.rootNode;
 
-        result.storage.openProject(parameters.projectName, function (err, p) {
-            if (err || !p) {
-                done(err || new Error('unable to create empty project'));
-                return;
-            }
-            result.project = p;
-            result.core = new WebGME.core(result.project, {globConf: parameters.gmeConfig});
-            result.root = result.core.createNode();
-            WebGME.serializer.import(result.core,
-                result.root,
-                result.jsonProject,
-                function (err) {
+        WebGME.serializer.import(result.core,
+            result.root,
+            result.jsonProject,
+            function (err) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                result.core.persist(result.root, function (err) {
                     if (err) {
                         done(err);
                         return;
                     }
-                    result.core.persist(result.root, function (err) {
-                        if (err) {
-                            done(err);
-                            return;
-                        }
 
-                        result.project.makeCommit(
-                            [],
-                            result.core.getHash(result.root),
-                            'importing project',
-                            function (err, id) {
+                    result.project.makeCommit(
+                        [],
+                        result.core.getHash(result.root),
+                        'importing project',
+                        function (err, id) {
+                            if (err) {
+                                done(err);
+                                return;
+                            }
+                            result.commitHash = id;
+                            result.project.getBranchNames(function (err, names) {
+                                var oldHash = '';
                                 if (err) {
                                     done(err);
                                     return;
                                 }
-                                result.commitHash = id;
-                                result.project.getBranchNames(function (err, names) {
-                                    var oldHash = '';
-                                    if (err) {
-                                        done(err);
-                                        return;
-                                    }
 
-                                    if (names && names[result.branchName]) {
-                                        oldHash = names[result.branchName];
-                                    }
-                                    //TODO check the branch naming... probably need to add some layer to the local storage
-                                    result.project.setBranchHash(result.branchName,
-                                        oldHash,
-                                        result.commitHash,
-                                        function (err) {
-                                            done(err, result);
-                                        });
-                                });
+                                if (names && names[result.branchName]) {
+                                    oldHash = names[result.branchName];
+                                }
+                                //TODO check the branch naming... probably need to add some layer to the local storage
+                                result.project.setBranchHash(result.branchName,
+                                    oldHash,
+                                    result.commitHash,
+                                    function (err) {
+                                        done(err, result);
+                                    });
                             });
-                    });
-
+                        });
                 });
-        });
+            });
     });
 }
 
@@ -245,5 +246,6 @@ module.exports = {
     checkWholeProject: checkWholeProject,
     exportProject: exportProject,
     deleteProject: deleteProject,
-    loadNodes: loadNodes
+    loadNodes: loadNodes,
+    openContext: openContext
 };
