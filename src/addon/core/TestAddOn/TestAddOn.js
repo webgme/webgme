@@ -22,21 +22,26 @@ define(['addon/AddOnBase'], function (AddOnBase) {
     };
 
     TestAddOn.prototype.update = function (root) {
-        console.log('TestAddOn', new Date().getTime(), 'update', this.core.getGuid(root), this.core.getHash(root));
+        this.logger.log('TestAddOn', new Date().getTime(), 'update', this.core.getGuid(root), this.core.getHash(root));
     };
 
     TestAddOn.prototype.query = function (parameters, callback) {
-        console.log('TestAddOn', new Date().getTime(), 'query', parameters);
+        this.logger.log('TestAddOn', new Date().getTime(), 'query', parameters);
         callback(null, parameters);
     };
 
     TestAddOn.prototype.stop = function (callback) {
-        console.log('TestAddOn', new Date().getTime(), 'stop');
+        this.logger.log('TestAddOn', new Date().getTime(), 'stop');
         callback(null);
     };
 
     TestAddOn.prototype.start = function (parameters, callback) {
-        console.log('TestAddOn', new Date().getTime(), 'start');
+        if (parameters.logger) {
+            this.logger = parameters.logger;
+        } else {
+            this.logger = console;
+        }
+        this.logger.log('TestAddOn', new Date().getTime(), 'start');
         AddOnBase.prototype.start.call(this, parameters, callback);
     };
 

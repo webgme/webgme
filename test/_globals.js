@@ -178,6 +178,37 @@ function importProject(parameters, done) {
     });
 }
 
+function saveChanges(parameters, done) {
+    'use strict';
+    expect(typeof parameters.project).to.equal('object');
+    expect(typeof parameters.core).to.equal('object');
+    expect(typeof parameters.rootNode).to.equal('object');
+
+    parameters.core.persist(parameters.rootNode, function (err) {
+        var newRootHash;
+        if (err) {
+            done(err);
+            return;
+        }
+
+        newRootHash = parameters.core.getHash(parameters.rootNode);
+        parameters.project.makeCommit([], newRootHash, 'create empty project', function (err, commitHash) {
+            if (err) {
+                done(err);
+                return;
+            }
+
+            parameters.project.setBranchHash(parameters.branchName || 'master', '', commitHash, function (err) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                done(null, newRootHash, commitHash);
+            });
+        });
+    });
+}
+
 function checkWholeProject(parameters, done) {
     //TODO this should export the given project and check against a file or a jsonObject to be deeply equal
 }
@@ -247,5 +278,6 @@ module.exports = {
     exportProject: exportProject,
     deleteProject: deleteProject,
     loadNodes: loadNodes,
+    saveChanges: saveChanges,
     openContext: openContext
 };
