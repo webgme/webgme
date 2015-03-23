@@ -71,7 +71,7 @@ function validateConfig (configOrFileName) {
 
     // addOn
     assertObject('config.addOn', config.addOn);
-    //assertBoolean('config.addOn.enable', config.addOn.enable);
+    assertBoolean('config.addOn.enable', config.addOn.enable);
     assertArray('config.addOn.basePaths', config.addOn.basePaths);
 
     // authentication
