@@ -100,10 +100,12 @@ div.spacer {
     padding-left: 5px;
 }
 
+.webgme-version a,
 .webgme-copyright a {
     color: #cfd0d9;
 }
 
+.webgme-version a:hover,
 .webgme-copyright a:hover {
     color: #0088cc;
     text-decoration: none;
