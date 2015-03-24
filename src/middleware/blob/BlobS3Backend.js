@@ -7,9 +7,9 @@
 define(['./BlobBackendBase',
         'fs',
         'crypto',
-        'util/guid',
+        'common/util/guid',
         'aws-sdk',
-        'util/StringStreamReader'],
+        'common/util/StringStreamReader'],
     function (BlobBackendBase, fs, crypto, GUID, AWS, StringStreamReader) {
 
         var BlobS3Backend = function () {

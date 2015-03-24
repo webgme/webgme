@@ -4,7 +4,7 @@
  * Author: Tamas Kecskes
  */
 
-define([ "util/assert", "util/key", "util/canon" ], function (ASSERT, GENKEY, CANON) {
+define([ "common/util/assert", "common/util/key", "common/util/canon" ], function (ASSERT, GENKEY, CANON) {
 	"use strict";
 	var HASH_REGEXP = new RegExp("^#[0-9a-zA-Z_]*$");
 

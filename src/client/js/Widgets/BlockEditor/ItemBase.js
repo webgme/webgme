@@ -4,7 +4,7 @@
  *
  */
 
-define(['logManager',
+define(['common/LogManager',
     './ErrorDecorator'], function (logManager,
                                    ErrorDecorator) {
 

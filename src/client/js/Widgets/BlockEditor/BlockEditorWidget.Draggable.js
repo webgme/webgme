@@ -7,7 +7,7 @@
 
 define(['js/DragDrop/DragSource',
         'js/DragDrop/DragHelper',
-        'util/assert',
+        'common/util/assert',
         './BlockEditorWidget.Constants'], function (dragSource,
                                                    dragHelper,
                                                    assert,

@@ -5,7 +5,7 @@
  * @author lattmann / https://github.com/lattmann
  */
 
-define(['blob/BlobMetadata', 'blob/BlobConfig', 'core/tasync'], function (BlobMetadata, BlobConfig, tasync) {
+define(['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tasync'], function (BlobMetadata, BlobConfig, tasync) {
     'use strict';
     /**
      * Creates a new instance of artifact, i.e. complex object, in memory. This object can be saved in the storage.

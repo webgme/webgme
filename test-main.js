@@ -38,14 +38,15 @@ require.config({
         // MAGIC ... from src/client/js/main.js
         'executor': './src/middleware/executor',
         'blob': './src/middleware/blob',
-        'core': './src/common/core',
-        'storage': './src/common/storage',
+        'common': './src/common',
+        //'core': './src/common/core',
+        //'storage': './src/common/storage',
 
         'js': './src/client/js',
-        'util': './src/common/util',
-        'eventDispatcher': './src/common/EventDispatcher',
-        'logManager': './src/common/LogManager',
-        'coreclient': './src/common/core/users',
+        //'util': './src/common/util',
+        //'eventDispatcher': './src/common/EventDispatcher',
+        //'logManager': './src/common/LogManager',
+        //'coreclient': './src/common/core/users',
 
         'superagent': './src/client/lib/superagent/superagent',
         'jszip': './src/client/lib/jszip/jszip'

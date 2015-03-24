@@ -7,16 +7,16 @@
  */
 
 define([
-    'util/assert',
+    'common/util/assert',
     'plugin/PluginManagerBase',
     'blob/BlobRunPluginClient',
     'plugin/PluginResult',
-    'core/core',
-    'storage/serveruserstorage',
+    'common/core/core',
+    'common/storage/serveruserstorage',
     'common/util/opencontext',
     'fs',
     'path',
-    'logManager',
+    'common/LogManager',
     'blob/BlobFSBackend',
     'blob/BlobS3Backend'],
 function (ASSERT,

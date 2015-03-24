@@ -3025,7 +3025,7 @@ define('blob/BlobMetadata',['blob/BlobConfig'], function(BlobConfig){
 	};
 
 	if (typeof define === "function" && define.amd) {
-		define('core/tasync',[], function () {
+		define('common/core/tasync',[], function () {
 			return TASYNC;
 		});
 	} else {
@@ -3040,7 +3040,7 @@ define('blob/BlobMetadata',['blob/BlobConfig'], function(BlobConfig){
  * @author lattmann / https://github.com/lattmann
  */
 
-define('blob/Artifact',['blob/BlobMetadata', 'blob/BlobConfig', 'core/tasync'], function (BlobMetadata, BlobConfig, tasync) {
+define('blob/Artifact',['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tasync'], function (BlobMetadata, BlobConfig, tasync) {
     
     /**
      * Creates a new instance of artifact, i.e. complex object, in memory. This object can be saved in the storage.

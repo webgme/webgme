@@ -7,7 +7,7 @@ it not searches for GUID!!! so be careful when to use this method
 */
 
 define([
-    'coreclient/meta'
+    'common/core/users/meta'
 ],function(
     BaseMeta
     ){

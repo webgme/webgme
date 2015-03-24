@@ -4,7 +4,7 @@
  * Author: Tamas Kecskes
  */
 
-define(["util/assert"], function (ASSERT) {
+define(["common/util/assert"], function (ASSERT) {
   "use strict";
 
   var PROJECT_REGEXP = new RegExp("^[0-9a-zA-Z_]*$"); // MAGIC CONSTANT

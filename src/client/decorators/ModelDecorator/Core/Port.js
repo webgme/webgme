@@ -1,6 +1,6 @@
 /*globals define, _, WebGMEGlobal*/
 
-define(['logManager',
+define(['common/LogManager',
         'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
         'js/Constants'], function (logManager,
                                      DiagramDesignerWidgetConstants,

@@ -4,7 +4,7 @@
  * @author pmeijer / https://github.com/pmeijer
  */
 
-define(['util/assert', 'common/core/core'], function (ASSERT, Core) {
+define(['common/util/assert', 'common/core/core'], function (ASSERT, Core) {
     'use strict';
     var HASH_REGEXP = new RegExp('^#[0-9a-zA-Z_]*$'),
         BRANCH_REGEXP = new RegExp('^[0-9a-zA-Z_]*$');

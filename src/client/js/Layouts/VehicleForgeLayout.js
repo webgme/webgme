@@ -6,7 +6,7 @@
  */
 
 define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
-    'logManager',
+    'common/LogManager',
     './DefaultLayout',
     'text!./templates/DefaultLayout.html',
     'text!./VehicleForgeLayoutConfig.json'], function (_jQueryLayout,

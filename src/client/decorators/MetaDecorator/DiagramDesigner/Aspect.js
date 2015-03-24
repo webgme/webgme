@@ -3,7 +3,7 @@
  */
 
 
-define(['logManager'], function (logManager) {
+define(['common/LogManager'], function (logManager) {
 
     "use strict";
 

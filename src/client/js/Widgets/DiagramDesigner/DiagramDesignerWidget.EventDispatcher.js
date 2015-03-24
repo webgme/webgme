@@ -1,6 +1,6 @@
 /*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
-define(['eventDispatcher'], function (EventDispatcher) {
+define(['common/EventDispatcher'], function (EventDispatcher) {
 
     "use strict";
 

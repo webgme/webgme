@@ -2,7 +2,7 @@
  * Created by tkecskes on 1/22/2015.
  */
 //this module implements the node-by-node serialization
-define(['util/assert','util/canon'],function(ASSERT,CANON){
+define(['common/util/assert','common/util/canon'],function(ASSERT,CANON){
 
   function exportLibrary(core,libraryRoot,callback){
     //export-global variables and their initialization

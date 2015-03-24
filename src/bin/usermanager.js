@@ -21,7 +21,7 @@ var requirejs = require('requirejs'),
 
 webgme.addToRequireJsPaths(gmeConfig);
 
-GMEAuth = requirejs('auth/gmeauth');
+GMEAuth = requirejs('server/auth/gmeauth');
 
 main = function (argv) {
     'use strict';

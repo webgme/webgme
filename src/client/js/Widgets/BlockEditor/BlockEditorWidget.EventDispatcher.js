@@ -2,7 +2,7 @@
 /*
  * @author brollb / https://github/brollb
  */
-define(['eventDispatcher'], function (EventDispatcher) {
+define(['common/EventDispatcher'], function (EventDispatcher) {
 
     "use strict";
 

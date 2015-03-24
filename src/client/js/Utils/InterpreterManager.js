@@ -1,6 +1,6 @@
 /*globals define, _, requirejs, WebGMEGlobal*/
 
-define(['core/core',
+define(['common/core/core',
         'plugin/PluginManagerBase',
         'plugin/PluginResult',
         'blob/BlobClient',

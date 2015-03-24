@@ -9,7 +9,7 @@
  curl -X POST -H "Content-Type: application/json" -d {\"status\":\"CREATED\"} http://localhost:8855/rest/executor/update/77704f10a36aa4214f5b0095ba8099e729a10f46
  */
 
-define(['logManager',
+define(['common/LogManager',
         'fs',
         'path',
         'child_process',
@@ -83,7 +83,7 @@ define(['logManager',
             var authenticate = function () {
                 if (gmeConfig.executor.nonce) {
                     if (!req.headers['x-executor-nonce'] || bufferEqual(new Buffer(req.headers['x-executor-nonce']), new Buffer(gmeConfig.executor.nonce)) !== true) {
-                        res.send(403);
+                        res.sendStatus(403);
                         return false;
                     }
                 }
@@ -94,7 +94,7 @@ define(['logManager',
             var pathParts = url.pathname.split('/');
 
             if (pathParts.length < 2) {
-                res.send(404);
+                res.sendStatus(404);
                 return;
             }
 
@@ -107,7 +107,7 @@ define(['logManager',
                 }
                 jobList.find(query, function (err, docs) {
                     if (err) {
-                        res.send(500);
+                        res.sendStatus(500);
                         return;
                     }
                     var jobList = {};
@@ -123,7 +123,7 @@ define(['logManager',
 //            res.sendfile(path.join('src', 'rest', 'executor', 'index2.html'), function (err) {
 //                if (err) {
 //                    logger.error(err);
-//                    res.send(500);
+//                    res.sendStatus(500);
 //                }
 //            });
 
@@ -146,7 +146,7 @@ define(['logManager',
                         authenticate() && ExecutorRESTUpdate(req, res, next);
                         break;
                     default:
-                        res.send(404);
+                        res.sendStatus(404);
                         break;
                 }
 
@@ -156,12 +156,12 @@ define(['logManager',
 
         var ExecutorRESTCreate = function (req, res, next) {
             if (req.method !== 'POST') {
-                res.send(405);
+                res.sendStatus(405);
             }
             var url = req.url.split('/');
 
             if (url.length < 3 || !url[2]) {
-                res.send(404);
+                res.sendStatus(404);
                 return;
             }
             var hash = url[2];
@@ -174,11 +174,11 @@ define(['logManager',
             // TODO: check if hash ok
             jobList.find({hash: hash}, function (err, docs) {
                 if (err) {
-                    res.send(500);
+                    res.sendStatus(500);
                 } else if (docs.length === 0) {
                     jobList.update({hash: hash}, jobInfo, {upsert: true}, function (err) {
                         if (err) {
-                            res.send(500);
+                            res.sendStatus(500);
                         } else {
                             delete jobInfo._id;
                             res.send(jobInfo);
@@ -195,25 +195,25 @@ define(['logManager',
 
         var ExecutorRESTUpdate = function (req, res, next) {
             if (req.method !== 'POST') {
-                res.send(405);
+                res.sendStatus(405);
             }
             var url = req.url.split('/');
 
             if (url.length < 3 || !url[2]) {
-                res.send(404);
+                res.sendStatus(404);
                 return;
             }
             var hash = url[2];
 
             if (hash) {
             } else {
-                res.send(500);
+                res.sendStatus(500);
                 return;
             }
 
             jobList.find({hash: hash}, function (err, docs) {
                 if (err) {
-                    res.send(500);
+                    res.sendStatus(500);
                 } else if (docs.length) {
                     var jobInfo = new JobInfo(docs[0]);
                     var jobInfoUpdate = new JobInfo(req.body);
@@ -225,15 +225,15 @@ define(['logManager',
                     }
                     jobList.update({hash: hash}, jobInfo, function (err, numReplaced) {
                         if (err) {
-                            res.send(500);
+                            res.sendStatus(500);
                         } else if (numReplaced !== 1) {
-                            res.send(404);
+                            res.sendStatus(404);
                         } else {
-                            res.send(200);
+                            res.sendStatus(200);
                         }
                     });
                 } else {
-                    res.send(404);
+                    res.sendStatus(404);
                 }
             });
 
@@ -269,7 +269,7 @@ define(['logManager',
 
         var ExecutorRESTWorkerAPI = function (req, res, next) {
             if (req.method !== 'POST' && req.method !== 'GET') {
-                res.send(405);
+                res.sendStatus(405);
                 return;
             }
             if (req.method === 'GET') {
@@ -280,7 +280,7 @@ define(['logManager',
             var pathParts = url.pathname.split('/');
 
             if (pathParts.length < 2) {
-                res.send(404);
+                res.sendStatus(404);
                 return;
             }
 
@@ -300,7 +300,7 @@ define(['logManager',
                         $not: {labels: {$nin: clientRequest.labels}}
                     }).limit(clientRequest.availableProcesses).exec(function (err, docs) {
                         if (err) {
-                            res.send(500);
+                            res.sendStatus(500);
                             return; // FIXME need to return 2x
                         }
 
@@ -316,7 +316,7 @@ define(['logManager',
                                 }
                             }, function (err, numReplaced) {
                                 if (err) {
-                                    res.send(500);
+                                    res.sendStatus(500);
                                     return;
                                 } else if (numReplaced) {
                                     serverResponse.jobsToStart.push(docs[i].hash);
@@ -335,14 +335,14 @@ define(['logManager',
 
         var ExecutorRESTCancel = function (req, res, next) {
             if (req.method !== 'POST') {
-                res.send(405);
+                res.sendStatus(405);
                 return;
             }
 
             var url = req.url.split('/');
 
             if (url.length < 3 || !url[2]) {
-                res.send(500);
+                res.sendStatus(500);
                 return;
             }
 
@@ -352,9 +352,9 @@ define(['logManager',
                 // TODO
                 executorBackend.cancelJob(hash);
 
-                res.send(200);
+                res.sendStatus(200);
             } else {
-                res.send(500);
+                res.sendStatus(500);
             }
 
         };
@@ -362,14 +362,14 @@ define(['logManager',
 
         var ExecutorRESTInfo = function (req, res, next) {
             if (req.method !== 'GET') {
-                res.send(405);
+                res.sendStatus(405);
                 return;
             }
 
             var url = req.url.split('/');
 
             if (url.length < 3 || !url[2]) {
-                res.send(500);
+                res.sendStatus(500);
                 return;
             }
 
@@ -378,15 +378,15 @@ define(['logManager',
             if (hash) {
                 jobList.find({hash: hash}, function (err, docs) {
                     if (err) {
-                        res.send(500);
+                        res.sendStatus(500);
                     } else if (docs.length) {
                         res.send(docs[0]);
                     } else {
-                        res.send(404);
+                        res.sendStatus(404);
                     }
                 });
             } else {
-                res.send(500);
+                res.sendStatus(500);
             }
         };
 

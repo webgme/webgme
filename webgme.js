@@ -14,19 +14,8 @@ requirejs.config({
     nodeRequire: require,
     baseUrl: requireJsBase,
     paths: {
-        "logManager": "common/LogManager",
-        "storage": "common/storage",
-        "core": "common/core",
-        "server": "server",
-        "auth": "server/auth",
-        "util": "common/util",
-        "baseConfig": "bin/getconfig",
-        "webgme": "webgme",
-        "plugin": "plugin",
-        "worker": "server/worker",
-        "coreclient": "common/core/users",
-        "blob": "middleware/blob",
-        "executor": "middleware/executor",
+        blob: 'middleware/blob',
+        executor: 'middleware/executor'
     }
 });
 
@@ -114,14 +103,14 @@ function addToRequireJsPaths(gmeConfig) {
 // FIXME: classes must start with uppercase, instances must start with lowercase
 module.exports = {
     addToRequireJsPaths: addToRequireJsPaths,
-    clientStorage: requirejs('storage/clientstorage'),
-    serverStorage: requirejs('storage/serverstorage'),
-    serverUserStorage: requirejs('storage/serveruserstorage'),
-    core: requirejs('core/core'),
+    clientStorage: requirejs('common/storage/clientstorage'),
+    serverStorage: requirejs('common/storage/serverstorage'),
+    serverUserStorage: requirejs('common/storage/serveruserstorage'),
+    core: requirejs('common/core/core'),
     standaloneServer: requirejs('server/standalone'),
-    logManager: requirejs('logManager'),
+    logManager: requirejs('common/LogManager'),
     runPlugin: requirejs('server/runplugin'),
-    serializer: requirejs('core/users/serialization'),
+    serializer: requirejs('common/core/users/serialization'),
     canon: requirejs('common/util/canon'),
     requirejs: requirejs
 };

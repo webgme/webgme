@@ -9,9 +9,9 @@ define(['blob/BlobMetadata',
     'fs',
     'jszip',
     'mime',
-    'util/guid',
-    'util/StringStreamReader',
-    'util/StringStreamWriter'], function (BlobMetadata, BlobConfig, fs, jszip, mime, GUID, StringStreamReader, StringStreamWriter) {
+    'common/util/guid',
+    'common/util/StringStreamReader',
+    'common/util/StringStreamWriter'], function (BlobMetadata, BlobConfig, fs, jszip, mime, GUID, StringStreamReader, StringStreamWriter) {
 
     var BlobBackendBase = function () {
         this.contentBucket = 'wg-content';

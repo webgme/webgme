@@ -1,4 +1,4 @@
-define(["util/assert"], function (ASSERT) {
+define(["common/util/assert"], function (ASSERT) {
     "use strict";
 
     var Database = function (database, options) {

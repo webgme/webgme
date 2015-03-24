@@ -5,7 +5,7 @@
  */
 
 
-define(['logManager',
+define(['common/LogManager',
         './AttributeDetailsDialog'], function (logManager,
                                                AttributeDetailsDialog) {
 

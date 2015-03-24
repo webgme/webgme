@@ -4,7 +4,7 @@
  * Author: Tamas Kecskes
  */
 
-define([ "util/assert","util/guid","util/url","socket.io","worker/serverworkermanager","cookie-parser" ], function(ASSERT,GUID,URL,IO,SWM,COOKIE){
+define([ "common/util/assert","common/util/guid","common/util/url","socket.io","server/worker/serverworkermanager","cookie-parser" ], function(ASSERT,GUID,URL,IO,SWM,COOKIE){
 
     var server = function(_database,options){
         ASSERT(typeof _database === 'object');

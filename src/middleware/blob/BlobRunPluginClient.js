@@ -6,7 +6,7 @@
  * Should be used only by developers in developer mode. Application server shall not run at the same time.
  */
 
-define(['blob/BlobClient', 'blob/BlobMetadata', 'util/StringStreamWriter'],
+define(['blob/BlobClient', 'blob/BlobMetadata', 'common/util/StringStreamWriter'],
     function (BlobClient, BlobMetadata, StringStreamWriter) {
 
         /**

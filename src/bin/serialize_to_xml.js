@@ -16,7 +16,7 @@ if (typeof define !== "function") {
         baseUrl: __dirname + "/.."
     });
 
-    requirejs([ "util/common", "util/assert", "core/tasync", "bin/serialize_to_xml" ], function (COMMON, ASSERT, TASYNC, serializer) {
+    requirejs([ "common/util/common", "common/util/assert", "common/core/tasync", "bin/serialize_to_xml" ], function (COMMON, ASSERT, TASYNC, serializer) {
         "use strict";
 
         TASYNC.trycatch(main, function (error) {
@@ -154,7 +154,7 @@ if (typeof define !== "function") {
     });
 }
 
-define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 'storage/cache', 'storage/mongo' ], function (ASSERT, TASYNC, COMMON,fs,Commit,Cache,Mongo) {
+define([ "common/util/assert", "common/core/tasync", "common/util/common", 'fs', 'common/storage/commit', 'common/storage/cache', 'common/storage/mongo' ], function (ASSERT, TASYNC, COMMON,fs,Commit,Cache,Mongo) {
 // attributes reserved for easier JSON to XML conversion
 // _type : show the type of the XML tag
 // _attr : object which contain all the attributes of the XML node

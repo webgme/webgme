@@ -5,7 +5,7 @@
  * @author brollb / https://github/brollb
  */
 
-define(['logManager',
+define(['common/LogManager',
         './AutoRouter.Point',
         './AutoRouter.Size'], function (logManager,
                                             ArPoint,

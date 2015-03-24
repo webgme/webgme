@@ -8,7 +8,7 @@
 
 define(['plugin/PluginConfig',
         'plugin/PluginBase',
-        'util/ejs',
+        'common/util/ejs',
         'plugin/PluginGenerator/PluginGenerator/Templates/Templates'],
     function (PluginConfig, PluginBase, ejs, TEMPLATES) {
         'use strict';

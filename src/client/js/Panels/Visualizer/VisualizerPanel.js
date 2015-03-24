@@ -5,8 +5,8 @@
  * @author nabana / https://github.com/nabana
  */
 
-define(['logManager',
-    'loaderProgressBar',
+define(['common/LogManager',
+    'js/Loader/LoaderProgressBar',
     'js/Constants',
     'js/PanelBase/PanelBaseWithHeader',
     'js/Panels/SplitPanel/SplitPanel',

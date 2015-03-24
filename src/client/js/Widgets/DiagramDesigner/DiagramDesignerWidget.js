@@ -6,10 +6,10 @@
  */
 
 
-define(['logManager',
+define(['common/LogManager',
     'js/Constants',
     'raphaeljs',
-    'loaderCircles',
+    'js/Loader/LoaderCircles',
     'js/Widgets/DiagramDesigner/SelectionManager',
     'js/Widgets/DiagramDesigner/DragManager.Native',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',

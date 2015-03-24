@@ -5,8 +5,8 @@
  * @author brollb / https://github/brollb
  */
 
-define(['logManager',
-	    'util/assert',
+define(['common/LogManager',
+	    'common/util/assert',
         './AutoRouter.Constants',
         './AutoRouter.Utils',
         './AutoRouter.Point',

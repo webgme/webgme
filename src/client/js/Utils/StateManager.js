@@ -3,7 +3,7 @@
 define(['jquery',
     'backbone',
     'js/Constants',
-    'util/assert'], function (_jquery,
+    'common/util/assert'], function (_jquery,
                                _backbone,
                                CONSTANTS,
                                ASSERT) {

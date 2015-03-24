@@ -2,12 +2,12 @@
 
 define('webgme.classes',
     [
-        'client',
+        'client/js/client',
         'blob/BlobClient',
         'executor/ExecutorClient',
         'js/Utils/InterpreterManager',
-        'core/core',
-        'storage/clientstorage'
+        'common/core/core',
+        'common/storage/clientstorage'
     ], function (Client, BlobClient, ExecutorClient, InterpreterManager, Core, Storage) {
 
         'use strict';

@@ -17,7 +17,7 @@ setConstraint(node,constraintObj)
 getConstraintNames(node)
 delConstraint(node,name)
  */
-define([ "util/assert" ], function (ASSERT) {
+define([ "common/util/assert" ], function (ASSERT) {
     "use strict";
     var CONSTRAINTS_RELID = "_constraints";
     var C_DEF_PRIORITY = 1;

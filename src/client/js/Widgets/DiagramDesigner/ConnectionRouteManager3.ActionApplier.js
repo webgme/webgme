@@ -1,6 +1,6 @@
 /*globals define*/
 define(['./AutoRouter', 
-        'util/assert'], function (AutoRouter, 
+        'common/util/assert'], function (AutoRouter,
                                  assert) {
 
     "use strict";

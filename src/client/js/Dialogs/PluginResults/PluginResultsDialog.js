@@ -6,7 +6,7 @@
  */
 
 
-define(['clientUtil',
+define(['js/util',
     'blob/BlobClient',
     'text!./templates/PluginResultsDialog.html',
     'css!./styles/PluginResultsDialog.css'], function (clientUtil,

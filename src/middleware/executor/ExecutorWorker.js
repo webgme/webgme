@@ -7,7 +7,7 @@
 // eb.executorClient.createJob('1092dd2b135af5d164b9d157b5360391246064db', function (err, res) { console.log(require('util').inspect(res)); })
 // eb.executorClient.getInfoByStatus('CREATED', function(err, res) { console.log("xxx " + require('util').inspect(res)); })
 
-define(['logManager',
+define(['common/LogManager',
         'blob/BlobClient',
         'blob/BlobMetadata',
         'fs',

@@ -4,7 +4,7 @@
  * Author: Tamas Kecskes
  */
 
-define([ 'storage/mongo', 'storage/server', 'storage/cache', 'storage/log', 'storage/broadcaster', 'storage/fsync'],
+define([ 'common/storage/mongo', 'common/storage/server', 'common/storage/cache', 'common/storage/log', 'common/storage/broadcaster', 'common/storage/fsync'],
     function (Mongo, Server, Cache, Log, Broadcaster, Fsync) {
     "use strict";
     function server(options){

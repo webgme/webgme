@@ -5,7 +5,7 @@
  * @author nabana / https://github.com/nabana
  */
 
-define(['logManager',
+define(['common/LogManager',
     'text!./templates/ProjectRepositoryDialog.html',
     'js/Widgets/ProjectRepository/ProjectRepositoryWidget'], function (logManager,
                                                  projectRepositoryDialogTemplate,

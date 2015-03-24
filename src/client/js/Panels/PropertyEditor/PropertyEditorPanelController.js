@@ -5,8 +5,8 @@
  * @author nabana / https://github.com/nabana
  */
 
-define(['logManager',
-    'clientUtil',
+define(['common/LogManager',
+    'js/util',
     'js/NodePropertyNames',
     'js/RegistryKeys',
     'js/Constants',

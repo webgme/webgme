@@ -31,7 +31,7 @@ describe('standalone server', function () {
     it('should start and stop and start and stop', function (done) {
         this.timeout(5000);
         // we have to set the config here
-        var gmeConfig = testFixture.getGmeConfig()
+        var gmeConfig = testFixture.getGmeConfig();
 
         server = WebGME.standaloneServer(gmeConfig);
         server.start(function () {
@@ -241,7 +241,7 @@ describe('standalone server', function () {
                     });
 
                 gmeauthDeferred = Q.defer();
-                requirejs(['auth/gmeauth'], function (gmeauth) {
+                requirejs(['server/auth/gmeauth'], function (gmeauth) {
                     gmeauthDeferred.resolve(gmeauth(null /* session */, gmeConfig));
                 }, function (err) {
                     gmeauthDeferred.reject(err);
@@ -445,7 +445,7 @@ describe('standalone server', function () {
                 });
 
             gmeauthDeferred = Q.defer();
-            requirejs(['auth/gmeauth'], function (gmeauth) {
+            requirejs(['server/auth/gmeauth'], function (gmeauth) {
                 gmeauthDeferred.resolve(gmeauth(null /* session */, gmeConfig));
             }, function (err) {
                 gmeauthDeferred.reject(err);

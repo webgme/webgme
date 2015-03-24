@@ -1,7 +1,7 @@
 /*globals define, _, $, console, angular, WebGMEGlobal*/
 
-define(['logManager',
-    'clientUtil',
+define(['common/LogManager',
+    'js/util',
     'js/Constants',
     'js/Utils/GMEConcepts',
     'js/NodePropertyNames',

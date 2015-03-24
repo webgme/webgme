@@ -5,7 +5,7 @@
  * @author nabana / https://github.com/nabana
  */
 
-define( ['clientUtil',
+define( ['js/util',
   'js/Constants',
   'js/Utils/METAAspectHelper',
   'js/Utils/ExportManager',

@@ -1,7 +1,7 @@
 /**
  * Created by tkecskes on 12/11/2014.
  */
-define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TASYNC) {
+define([ "common/util/assert", "common/core/core", "common/core/tasync" ], function(ASSERT, Core, TASYNC) {
   "use strict";
 
   // ----------------- CoreTreeLoader -----------------

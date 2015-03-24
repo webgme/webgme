@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define(["mongodb", "util/assert", "util/canon"], function (MONGODB, ASSERT, CANON) {
+define(["mongodb", "common/util/assert", "common/util/canon"], function (MONGODB, ASSERT, CANON) {
   "use strict";
 
   var PROJECT_REGEXP = new RegExp("^[0-9a-zA-Z_]*$");

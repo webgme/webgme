@@ -3,8 +3,8 @@
  * @author brollb / https:// github/brollb
  */
 
-define(['logManager',
-    'clientUtil',
+define(['common/LogManager',
+    'js/util',
     'js/Constants',
     'js/NodePropertyNames',
     'js/RegistryKeys',

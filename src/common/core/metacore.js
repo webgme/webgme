@@ -1,4 +1,4 @@
-define([ "util/assert", "core/core", "core/tasync", "util/jjv", "util/canon" ], function(ASSERT, Core, TASYNC, JsonValidator, CANON) {
+define([ "common/util/assert", "common/core/core", "common/core/tasync", "common/util/jjv", "common/util/canon" ], function(ASSERT, Core, TASYNC, JsonValidator, CANON) {
     "use strict";
 
     // ----------------- CoreType -----------------

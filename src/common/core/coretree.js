@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "util/assert", "util/key", "core/future", "core/tasync", 'util/canon' ], function (ASSERT, GENKEY, FUTURE, TASYNC, CANON) {
+define([ "common/util/assert", "common/util/key", "common/core/future", "common/core/tasync", 'common/util/canon' ], function (ASSERT, GENKEY, FUTURE, TASYNC, CANON) {
 	"use strict";
 
 	var HASH_REGEXP = new RegExp("#[0-9a-f]{40}");

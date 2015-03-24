@@ -1,6 +1,6 @@
 define([
-    'coreclient/meta',
-    'util/url'
+    'common/core/users/meta',
+    'common/util/url'
 ],function(
     BaseMeta,
     URL

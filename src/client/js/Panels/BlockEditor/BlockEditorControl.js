@@ -3,7 +3,7 @@
  * @author brollb / https://github/brollb
  */
 
-define(['logManager',
+define(['common/LogManager',
     'js/Constants',
     'js/Widgets/BlockEditor/BlockEditorWidget.Constants',
     'js/NodePropertyNames',

@@ -3,7 +3,7 @@
  *
  * Author: Tamas Kecskes
  */
-define(['util/canon', 'core/tasync', 'util/assert'], function (CANON, TASYNC, ASSERT) {
+define(['common/util/canon', 'common/core/tasync', 'common/util/assert'], function (CANON, TASYNC, ASSERT) {
   "use strict";
 
 

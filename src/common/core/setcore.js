@@ -4,7 +4,7 @@
  * Author: Tamas Kecskes
  */
 
-define([ "util/assert"], function (ASSERT) {
+define([ "common/util/assert"], function (ASSERT) {
     "use strict";
 
     var SETS_ID = '_sets';

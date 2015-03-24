@@ -4,7 +4,7 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['logManager',
+define(['common/LogManager',
         'js/Utils/GMEConcepts',
         'js/NodePropertyNames',
         'js/Utils/ExportManager',

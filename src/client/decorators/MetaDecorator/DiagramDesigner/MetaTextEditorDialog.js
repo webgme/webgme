@@ -4,7 +4,7 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['clientUtil',
+define(['js/util',
     'text!./templates/MetaTextEditorDialog.html',
     'codemirror',
     'css!./styles/MetaTextEditorDialog.css'], function ( util,

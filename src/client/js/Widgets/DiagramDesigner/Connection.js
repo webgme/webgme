@@ -4,8 +4,8 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['logManager',
-    'clientUtil',
+define(['common/LogManager',
+    'js/util',
     './DiagramDesignerWidget.Constants',
     './DiagramDesignerWidget.OperatingModes',
     './Connection.EditSegment',

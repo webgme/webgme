@@ -17,7 +17,7 @@ var program = require('commander'),
 webgme.addToRequireJsPaths(gmeConfig);
 
 openContext = requirejs('common/util/opencontext');
-Storage = requirejs('storage/serveruserstorage');
+Storage = requirejs('common/storage/serveruserstorage');
 
 var generateDiff = function (mongoUri, projectId, sourceBranchOrCommit, targetBranchOrCommit, callback) {
     'use strict';
