@@ -48,7 +48,7 @@ describe('TestAddOn', function () {
         });
     });
 
-    it('should start', function (done) {
+    it('should start, update and stop', function (done) {
         importParam = {
             filePath: './test/asset/sm_basic.json',
             projectName: 'TestAddOn',
@@ -87,12 +87,17 @@ describe('TestAddOn', function () {
                         expect(err).equal(null);
                         console.log(rootHash);
                         console.log(commitHash);
-                        //setTimeout(function () {
-                        expect(logMessages.length).to.equal(2);
-                        expect(logMessages[1][4]).to.equal(rootHash);
+
                         console.log(logMessages);
-                        done();
-                        //}, 50);
+                        addOn.stop(function (err) {
+                            expect(err).equal(null);
+                            expect(logMessages.length).to.equal(3);
+                            expect(logMessages[0][2]).to.equal('start');
+                            expect(logMessages[1][2]).to.equal('update');
+                            expect(logMessages[1][4]).to.equal(rootHash);
+                            expect(logMessages[2][2]).to.equal('stop');
+                            done();
+                        });
                     }
                 );
 
