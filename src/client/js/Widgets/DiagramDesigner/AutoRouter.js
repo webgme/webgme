@@ -14,8 +14,7 @@ define(['logManager',
            './AutoRouter.Graph',
            './AutoRouter.Box',
            './AutoRouter.Port',
-           './AutoRouter.Path',
-           './AutoRouter.CustomPathData'],
+           './AutoRouter.Path'],
        function (logManager, 
                  assert, 
                  CONSTANTS, 
@@ -25,8 +24,7 @@ define(['logManager',
                  AutoRouterGraph, 
                  AutoRouterBox, 
                  AutoRouterPort,
-                 AutoRouterPath,
-                 CustomPathData) {
+                 AutoRouterPath) {
 
     'use strict'; 
 
@@ -628,11 +626,11 @@ define(['logManager',
 
         // Convert args.points to array of [ArPoint] 's
         while (i < args.points.length) {
-            points.push(new CustomPathData(args.points[i], args.points[i]));
+            points.push(new ArPoint(args.points[i][0], args.points[i][1]));
             ++i;
         }
 
-        path.setCustomPathData(points);
+        path.setCustomPathPoints(points);
 
     };
 

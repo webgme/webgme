@@ -83,8 +83,6 @@ define(['logManager',
             edge,
             i;
 
-        //path.getCustomizedEdgeIndexes(indexes);
-
         if (isPathAutoRouted) {
             i = -1;
             while(++i < indexes.length) {
@@ -125,9 +123,9 @@ define(['logManager',
                 assert(goodAngle,
                     'AREdgeList.addEdges: Utils.isRightAngle (dir) FAILED!');
 
-                    if (!goodAngle) {
-                        skipEdge = true;
-                    }
+                if (!goodAngle) {
+                    skipEdge = true;
+                }
 
             }
 
@@ -149,11 +147,11 @@ define(['logManager',
                             isEdgeCustomFixed = true;
                         }
 
-                        edge.setEdgeCustomFixed(isEdgeCustomFixed);
+                        edge.edgeCustomFixed = isEdgeCustomFixed;
 
                     } else {
 
-                        edge.setEdgeCustomFixed(dir === CONSTANTS.DirSkew);
+                        edge.edgeCustomFixed = dir === CONSTANTS.DirSkew;
                     }
 
                     startPort = path.getStartPort();
@@ -168,11 +166,11 @@ define(['logManager',
                     'AREdgeList.addEdges: endPort !== null FAILED!');
 
                     isEndPortConnectToCenter = endPort.isConnectToCenter();
-                    isPathFixed = path.isFixed();
+                    isPathFixed = path.isFixed() || !path.isAutoRouted();
 
-                    edge.setEdgeFixed(edge.getEdgeCustomFixed() || isPathFixed ||
+                    edge.edgeFixed = edge.edgeCustomFixed || isPathFixed ||
                     (edge.isStartPointPrevNull() && isStartPortConnectToCenter) ||
-                    (edge.isEndPointNextNull() && isEndPortConnectToCenter));
+                    (edge.isEndPointNextNull() && isEndPortConnectToCenter);
 
                     if (dir !== CONSTANTS.DirSkew) {
                         this._positionLoadY(edge);
@@ -237,7 +235,7 @@ define(['logManager',
                 edge.startpointPrev = startpointPrev;
                 edge.endpointNext = endpointNext;
 
-                edge.setEdgeFixed(true);
+                edge.edgeFixed = true;
 
                 this._positionLoadY(edge);
                 this._positionLoadB(edge);
@@ -288,7 +286,7 @@ define(['logManager',
                     edge.startpointPrev = startpointPrev;
                     edge.endpointNext = endpointNext;
 
-                    edge.setEdgeFixed(true);
+                    edge.edgeFixed = true;
 
                     this._positionLoadY(edge);
                     this._positionLoadB(edge);
@@ -326,7 +324,7 @@ define(['logManager',
                     edge.startpointPrev = startpointPrev;
                     edge.endpointNext = endpointNext;
 
-                    edge.setEdgeFixed(true);
+                    edge.edgeFixed = true;
 
                     this._positionLoadY(edge);
                     this.insert(edge);
@@ -357,10 +355,6 @@ define(['logManager',
             this.remove(this.orderFirst);
         }
     };
-
-    AutoRouterEdgeList.prototype.isEmpty = function() {
-        return this.orderFirst === null;
-    }; 
 
     AutoRouterEdgeList.prototype.getEdge = function(path, startpoint) {
         var edge = this.orderFirst;
@@ -424,19 +418,20 @@ define(['logManager',
         return null;
     };        
 
-    AutoRouterEdgeList.prototype.dumpEdges = function(msg) {
+    AutoRouterEdgeList.prototype.dumpEdges = function(msg, logger) {
         var edge = this.orderFirst,
+            log = logger || _logger.debug,
             total = 1;
 
-        _logger.debug(msg);
+        log(msg);
 
         while(edge !== null) {
-            _logger.debug('\t' + edge.startpoint.x + ', ' + edge.startpoint.y + '\t\t' + edge.endpoint.x + ', ' + edge.endpoint.y + '\t\t\t(' + (edge.getEdgeFixed() ? 'FIXED' : 'MOVEABLE' ) + ')\t\t' + (edge.bracketClosing ? 'Bracket Closing' : (edge.bracketOpening ? 'Bracket Opening' : '')));
+            log('\t' + edge.startpoint.x + ', ' + edge.startpoint.y + '\t\t' + edge.endpoint.x + ', ' + edge.endpoint.y + '\t\t\t(' + (edge.edgeFixed ? 'FIXED' : 'MOVEABLE' ) + ')\t\t' + (edge.bracketClosing ? 'Bracket Closing' : (edge.bracketOpening ? 'Bracket Opening' : '')));
             edge = edge.orderNext;
             total++;
         }
 
-        _logger.debug('Total Edges: ' + total);
+        log('Total Edges: ' + total);
     };
 
     AutoRouterEdgeList.prototype.getEdgeCount = function() {
@@ -585,8 +580,8 @@ define(['logManager',
         assert(edge !== null,
                'AREdgeList.position_LoadB: edge !== null FAILED');
 
-        edge.bracketOpening = !edge.getEdgeFixed() && this._bracketIsOpening(edge);
-        edge.bracketClosing = !edge.getEdgeFixed() && this._bracketIsClosing(edge);
+        edge.bracketOpening = !edge.edgeFixed && this._bracketIsOpening(edge);
+        edge.bracketClosing = !edge.edgeFixed && this._bracketIsClosing(edge);
     };
 
     AutoRouterEdgeList.prototype._positionAllStoreY = function () {
@@ -1371,10 +1366,10 @@ define(['logManager',
 
         assert(blocked !== null && blocker !== null,
                'AREdgeList._blockPushForward: blocked !== null && blocker !== null FAILED');
-               assert(blocked.positionY >= blocker.positionY,
-                      'AREdgeList._blockPushForward: blocked.positionY >= blocker.positionY FAILED');
-                      assert(blocked.getBlockNext() !== null,
-                             'AREdgeList._blockPushForward: blocked.getBlockNext() !== null FAILED');
+        assert(blocked.positionY >= blocker.positionY,
+              'AREdgeList._blockPushForward: blocked.positionY >= blocker.positionY FAILED');
+        assert(blocked.getBlockNext() !== null,
+              'AREdgeList._blockPushForward: blocked.getBlockNext() !== null FAILED');
 
         var f = 0,
             g = 0,
@@ -1492,7 +1487,7 @@ blocked,
                         modified = this._blockPushBackward(blocked, blocker) || modified;
                     }
 
-                    if (!blocker.getEdgeFixed()) {
+                    if (!blocker.edgeFixed) {
                         if (blocked.bracketOpening || blocker.bracketClosing) {
                             if (sMinF < blocked.positionY) {
                                 sMinF = blocked.positionY;
@@ -1573,7 +1568,7 @@ blocked,
                         modified = this._blockPushForward(blocked, blocker) || modified;
                     }
 
-                    if (!blocker.getEdgeFixed()) {
+                    if (!blocker.edgeFixed) {
                         if (blocker.bracketOpening || blocked.bracketClosing) {
                             if (sMinF > blocked.positionY) {
                                 sMinF = blocked.positionY;
@@ -1634,17 +1629,17 @@ blocked,
         while(second !== null) {
             if ( second.getClosestPrev() !== null && second.getClosestPrev().getClosestNext() !== (second) && //Check if it references itself
                     second.getClosestNext() !== null && second.getClosestNext().getClosestPrev() === (second) ) {
-                assert(!second.getEdgeFixed(),
-                       'AREdgeList.blockSwitchWrongs: !second.getEdgeFixed() FAILED');
+                assert(!second.edgeFixed,
+                       'AREdgeList.blockSwitchWrongs: !second.edgeFixed FAILED');
 
                 edge = second;
                 next = edge.getClosestNext();
 
                 while (next !== null && edge === next.getClosestPrev()) {
-                    assert(edge !== null && !edge.getEdgeFixed(),
-                           'AREdgeList.blockSwitchWrongs: edge != null && !edge.getEdgeFixed() FAILED');
-                           assert(next !== null && !next.getEdgeFixed(),
-                                  'AREdgeList.blockSwitchWrongs: next != null && !next.getEdgeFixed() FAILED');
+                    assert(edge !== null && !edge.edgeFixed,
+                           'AREdgeList.blockSwitchWrongs: edge != null && !edge.edgeFixed FAILED');
+                    assert(next !== null && !next.edgeFixed,
+                           'AREdgeList.blockSwitchWrongs: next != null && !next.edgeFixed FAILED');
 
                     ey = edge.positionY;
                     ny = next.positionY;

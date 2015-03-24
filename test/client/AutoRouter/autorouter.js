@@ -17,6 +17,35 @@ describe('AutoRouter Tests', function () {
         router = utils.getNewGraph();
     });
 
+    it('should create custom paths', function () {
+        var box1 = utils.addBox({x: 100, y: 100}),
+            box2 = utils.addBox({x: 900, y: 900}),
+            srcId = Object.keys(box1.ports)[0],
+            dstId = Object.keys(box2.ports)[0],
+            path;
+
+        router.addPath({src: box1.ports[srcId], dst: box2.ports[dstId]});
+        path = router.graph.paths[0].id;
+
+        // Set some points!
+        var points = [[200, 200], [700,700]];
+        router.setPathCustomPoints({path: path, 
+                                    points: points});
+
+        router.routeSync();
+
+        // Check the points
+        var finalPoints = router.getPathPoints(path);
+        assert(finalPoints.length === 2, 'Path missing points: '+finalPoints);
+        for (var i = 0; i < finalPoints.length; i++) {
+            for (var j = 0; j < 2; j++) {
+                assert(points[i][j] === finalPoints[i][j], 
+                    'Points do not match. Expected '+ points[i][j] +
+                    ' but found '+finalPoints[i][j]);
+            }
+        }
+    });
+
     it('should create basic paths', function () {
         var box1 = utils.addBox({x: 100, y: 100}),
             box2 = utils.addBox({x: 900, y: 900}),
