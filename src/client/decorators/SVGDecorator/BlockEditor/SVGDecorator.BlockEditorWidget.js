@@ -5,7 +5,7 @@
  */
 
 define(['js/Constants',
-        'util/assert',
+        'common/util/assert',
         'js/Widgets/BlockEditor/BlockEditorWidget.DecoratorBase',
         'js/Widgets/BlockEditor/BlockEditorWidget.DecoratorBase.ConnectionAreas',
         'js/Widgets/BlockEditor/BlockEditorWidget.DecoratorBase.Stretch',

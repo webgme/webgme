@@ -29,7 +29,7 @@ describe('Client tests', function () {
 
     requirejs.config({
         paths: {
-            'eventDispatcher': 'common/EventDispatcher',
+            //'eventDispatcher': 'common/EventDispatcher',
             ' /socket.io/socket.io.js': 'socketio-client'
         }
     });

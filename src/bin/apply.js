@@ -15,7 +15,7 @@ var program = require('commander'),
 
 webgme.addToRequireJsPaths(gmeConfig);
 
-Storage = requirejs('storage/serveruserstorage');
+Storage = requirejs('common/storage/serveruserstorage');
 openContext = requirejs('common/util/opencontext');
 
 var applyPatch = function (mongoUri, projectId, branchOrCommit, patch, noUpdate, callback) {

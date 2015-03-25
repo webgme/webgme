@@ -4,7 +4,7 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['logManager',
+define(['common/LogManager',
         'css!./styles/ProjectTitleWidget.css'], function (logManager) {
 
     "use strict";

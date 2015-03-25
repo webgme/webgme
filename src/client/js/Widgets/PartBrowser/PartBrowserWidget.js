@@ -5,7 +5,7 @@
  * @author nabana / https://github.com/nabana
  */
 
-define(['logManager',
+define(['common/LogManager',
     'js/Constants',
     'js/DragDrop/DragSource',
     'css!./styles/PartBrowserWidget.css'], function (logManager,

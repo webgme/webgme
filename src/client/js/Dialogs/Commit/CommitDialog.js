@@ -6,7 +6,7 @@
  */
 
 define([
-    'logManager',
+    'common/LogManager',
     'text!./templates/CommitDialog.html',
     'css!./styles/CommitDialog.css'
 ], function (logManager,

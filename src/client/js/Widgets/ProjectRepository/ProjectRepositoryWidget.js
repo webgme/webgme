@@ -5,9 +5,9 @@
  * @author nabana / https://github.com/nabana
  */
 
-define(['logManager',
-    'clientUtil',
-    'loaderCircles',
+define(['common/LogManager',
+    'js/util',
+    'js/Loader/LoaderCircles',
     './ProjectRepositoryWidgetControl',
     'moment',
     'raphaeljs',

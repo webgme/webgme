@@ -1,27 +1,19 @@
 ({
   name: "webgme.classes",
   out: "../../../dist/webgme.classes.build.js",
-  baseUrl: "../../../",
+  baseUrl: "../../../src",
   paths: {
-    "webgme.classes": "./utils/build/webgme.classes/webgme.classes",
-    util: "./src/common/util",
-    eventDispatcher: "./src/common/EventDispatcher",
-    core: "./src/common/core",
-    coreclient: "./src/common/core/users",
-    storage: "./src/common/storage",
-    logManager: "./src/common/LogManager",
-    blob: "./src/middleware/blob",
-    executor: "./src/middleware/executor",
-    superagent: "./node_modules/superagent/superagent",
-    client: "./src/client/js/client",
-    plugin: "./src/plugin",
-    js: './src/client/js/',
-    'js/Dialogs/PluginConfig/PluginConfigDialog': './utils/build/empty/empty'
+    "webgme.classes": "../utils/build/webgme.classes/webgme.classes",
+    blob: "./middleware/blob",
+    executor: "./middleware/executor",
+    superagent: "./client/lib/superagent/superagent",
+    js: './client/js/',
+    'js/Dialogs/PluginConfig/PluginConfigDialog': '../utils/build/empty/empty'
   },
   optimize: "none",
   generateSourceMaps: true,
   insertRequire: ["webgme.classes"],
-  include: ['./node_modules/requirejs/require'],
+  include: ['../node_modules/requirejs/require'],
   wrap: {
     startFile: 'start.frag',
     endFile: 'end.frag'

@@ -3,7 +3,7 @@
  */
 
 
-define(['logManager',
+define(['common/LogManager',
         'mime',
         'blob/BlobMetadata'], function(logManager, mime, BlobMetadata) {
 
@@ -43,7 +43,7 @@ define(['logManager',
             var filename = 'not_defined.txt';
 
             if (req.params.filename !== null && req.params.filename !== '') {
-                filename = req.params.filename
+                filename = req.params.filename;
             }
 
             // regular file
@@ -145,7 +145,7 @@ define(['logManager',
                             res.removeHeader('Content-disposition');
                             res.removeHeader('Content-type');
                             // give more precise description about the error type and message. Resource if not available etc.
-                            res.send(500);
+                            res.sendStatus(500);
                         } else {
                             //res.status(200);
                         }

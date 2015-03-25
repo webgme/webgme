@@ -1,4 +1,4 @@
-define(['logManager'], function (logManager) {
+define(['common/LogManager'], function (logManager) {
     //here you can define global variables for your middleware
     var counter = 0,
         ensureAuthenticated,

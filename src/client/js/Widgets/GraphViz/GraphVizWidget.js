@@ -4,7 +4,7 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['logManager',
+define(['common/LogManager',
         'js/Widgets/GraphViz/GraphVizWidget.Zoom',
         'd3',
         'css!./styles/GraphVizWidget.css'], function (logManager,

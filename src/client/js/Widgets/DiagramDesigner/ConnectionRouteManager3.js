@@ -1,9 +1,9 @@
 /*globals define, _*/
 
-define(['logManager', 
+define(['common/LogManager',
         './AutoRouter', 
         './ConnectionRouteManager3.ActionApplier.js', 
-        'util/assert', 
+        'common/util/assert',
         './Profiler'], function (logManager, 
                                  AutoRouter, 
                                  ActionApplier, 

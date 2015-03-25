@@ -1,7 +1,7 @@
 /*globals define, _, requirejs, WebGMEGlobal*/
 
-define(['logManager',
-    'clientUtil',
+define(['common/LogManager',
+    'js/util',
     'js/Constants',
     'js/NodePropertyNames'], function (logManager,
                                     util,

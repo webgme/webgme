@@ -5,8 +5,8 @@
  */
 
 
-define(['logManager',
-    'clientUtil',
+define(['common/LogManager',
+    'js/util',
     './DiagramDesignerWidget.Constants'], function (logManager,
                             clientUtil,
                             DiagramDesignerWidgetConstants) {

@@ -6,7 +6,7 @@
  */
 
 
-define(['loaderCircles',
+define(['js/Loader/LoaderCircles',
     'text!./templates/ImportDialog.html',
     'css!./styles/ImportDialog.css'], function (
         LoaderCircles,

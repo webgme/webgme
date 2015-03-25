@@ -5,7 +5,7 @@
  */
 
 define(['jquery',
-        'logManager'], function (_jquery,
+        'common/LogManager'], function (_jquery,
                                  logManager) {
 
     "use strict";

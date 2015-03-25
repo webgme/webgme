@@ -11,7 +11,7 @@
 define(['js/Constants',
     '../Core/ModelicaDecorator.Core',
     'js/NodePropertyNames',
-    'loaderProgressBar',
+    'js/Loader/LoaderProgressBar',
     'js/Widgets/PartBrowser/PartBrowserWidget.DecoratorBase',
     'text!../DiagramDesigner/ModelicaDecorator.DiagramDesignerWidget.html',
     'css!./ModelicaDecorator.PartBrowserWidget.css'], function (CONSTANTS,

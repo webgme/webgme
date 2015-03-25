@@ -13,7 +13,7 @@
 define(['plugin/PluginConfig',
         'plugin/PluginBase',
         'middleware/executor/ExecutorClient',
-        'util/ejs',
+        'common/util/ejs',
         'plugin/ExecutorPlugin/ExecutorPlugin/Templates/Templates'],
     function (PluginConfig, PluginBase, ExecutorClient, ejs, TEMPLATES) {
         'use strict';

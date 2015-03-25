@@ -3,7 +3,7 @@
 // Although this import also asume that there is no loop in the references so it can simply wait for
 
 define([
-    'coreclient/meta'
+    'common/core/users/meta'
 ],function(
     BaseMeta
     ){

@@ -4,7 +4,7 @@
  * Author: Tamas Kecskes
  */
 
-define(["util/assert", "util/guid"], function (ASSERT, GUID) {
+define(["common/util/assert", "common/util/guid"], function (ASSERT, GUID) {
   "use strict";
   var BRANCH_OBJ_ID = '*branch*'; // MAGIC CONSTANT
   var BRANCH_STATES = {  // MAGIC CONSTANT

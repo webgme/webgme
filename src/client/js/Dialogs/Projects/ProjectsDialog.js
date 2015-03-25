@@ -8,8 +8,8 @@
 
 define( [
   'angular',
-  'logManager',
-  'loaderCircles',
+  'common/LogManager',
+  'js/Loader/LoaderCircles',
   'js/Utils/GMEConcepts',
   'js/Dialogs/Import/ImportDialog',
   'text!./templates/ProjectsDialog.html',

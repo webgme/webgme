@@ -5,8 +5,8 @@
  */
 
 
-define(['logManager',
-    'clientUtil',
+define(['common/LogManager',
+    'js/util',
     'js/Constants',
     'js/Widgets/DataGrid/DataGridWidget.Droppable',
     'text!./templates/DataTableTemplate.html',

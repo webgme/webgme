@@ -23,17 +23,17 @@ var gmeConfig = require('../config'),
     WebGME = require('../webgme'),
     requirejs = require('requirejs'),
 
-    Local = requirejs('storage/local'),
-    Commit = requirejs('storage/commit'),
+    Local = requirejs('common/storage/local'),
+    Commit = requirejs('common/storage/commit'),
     Storage = function (options) {
         'use strict';
         return new Commit(new Local(options || {}), options || {});
     },
     Log = requirejs('../src/common/LogManager'),
-    generateKey = requirejs('util/key'),
+    generateKey = requirejs('common/util/key'),
 
-    GMEAuth = requirejs('auth/gmeauth'),
-    SessionStore = requirejs('auth/sessionstore'),
+    GMEAuth = requirejs('server/auth/gmeauth'),
+    SessionStore = requirejs('server/auth/sessionstore'),
 
     ExecutorClient = requirejs('executor/ExecutorClient'),
     BlobClient = requirejs('blob/BlobClient'),

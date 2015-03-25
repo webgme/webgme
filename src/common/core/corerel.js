@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "util/assert", "core/coretree", "core/tasync", "util/canon" ], function (ASSERT, CoreTree, TASYNC, CANON) {
+define([ "common/util/assert", "common/core/coretree", "common/core/tasync", "common/util/canon" ], function (ASSERT, CoreTree, TASYNC, CANON) {
 	"use strict";
 
 	// ----------------- RELID -----------------

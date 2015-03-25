@@ -1,6 +1,6 @@
 /*globals define, _, requirejs, WebGMEGlobal*/
 
-define(['logManager',
+define(['common/LogManager',
     'js/Controls/DropDownMenu',
     'js/Controls/PopoverBox'], function (logManager,
                                         DropDownMenu,

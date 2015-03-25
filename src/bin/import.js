@@ -19,8 +19,8 @@ webgme.addToRequireJsPaths(gmeConfig);
 
 
 openContext = requirejs('common/util/opencontext');
-Storage = requirejs('storage/serveruserstorage');
-Serialization = requirejs('coreclient/serialization');
+Storage = requirejs('common/storage/serveruserstorage');
+Serialization = requirejs('common/core/users/serialization');
 
 var importProject = function (mongoUri, projectId, jsonProject, branchName, overwrite, callback) {
     'use strict';

@@ -4,7 +4,7 @@
  * Author: Tamas Kecskes
  */
 
-define([ "util/assert", "util/guid", "core/tasync" ], function (ASSERT, GUID, TASYNC) {
+define([ "common/util/assert", "common/util/guid", "common/core/tasync" ], function (ASSERT, GUID, TASYNC) {
 	"use strict";
 
 	var GUID_REGEXP = new RegExp("[a-z0-9]{8}(-[a-z0-9]{4}){3}-[a-z0-9]{12}", 'i');

@@ -6,16 +6,16 @@
 
 var requirejs = require('requirejs');
 
-requirejs.config({
-    //baseUrl: 'src/',
-    paths: {
-        'logManager': 'common/LogManager',
-        'util/assert': 'common/util/assert'
-    }
-});
+//requirejs.config({
+//    //baseUrl: 'src/',
+//    paths: {
+//        //'logManager': 'common/LogManager',
+//        //'util/assert': 'common/util/assert'
+//    }
+//});
 
 var AutoRouter = requirejs('client/js/Widgets/DiagramDesigner/AutoRouter'),
-    assert = requirejs('util/assert'),
+    assert = requirejs('common/util/assert'),
     router;
 
 // Set up helpers

@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "util/assert" ], function (ASSERT) {
+define([ "common/util/assert" ], function (ASSERT) {
 	"use strict";
 
 	var Lock = function () {

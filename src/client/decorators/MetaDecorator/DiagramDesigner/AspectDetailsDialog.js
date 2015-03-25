@@ -4,7 +4,7 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['clientUtil',
+define(['js/util',
     'js/Constants',
     'text!./templates/AspectDetailsDialog.html',
     'css!./styles/AspectDetailsDialog.css'], function ( util,

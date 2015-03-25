@@ -1,11 +1,11 @@
 define([
-    'core/core',
-    'storage/serveruserstorage',
-    'coreclient/tojson',
-    'coreclient/dump',
-    'util/url',
-    'logManager',
-    'coreclient/serialization'
+    'common/core/core',
+    'common/storage/serveruserstorage',
+    'common/core/users/tojson',
+    'common/core/users/dump',
+    'common/util/url',
+    'common/LogManager',
+    'common/core/users/serialization'
 ],function(
     Core,
     Storage,

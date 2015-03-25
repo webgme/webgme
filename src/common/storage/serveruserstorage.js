@@ -4,7 +4,7 @@
  * Author: Tamas Kecskes
  */
 
-define([ 'storage/mongo', 'storage/cache', 'storage/log', 'storage/commit','storage/fsync'], function (Mongo, Cache, Log, Commit,Fsync) {
+define([ 'common/storage/mongo', 'common/storage/cache', 'common/storage/log', 'common/storage/commit', 'common/storage/fsync'], function (Mongo, Cache, Log, Commit,Fsync) {
     "use strict";
     function server(options){
         return new Log(new Commit(new Cache(new Fsync(new Mongo(options), options), options), options), options);

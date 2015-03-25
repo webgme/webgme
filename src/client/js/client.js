@@ -1,21 +1,21 @@
 /*globals define, _, requirejs, WebGMEGlobal, GME*/
 
 define([
-    'util/assert',
-    'eventDispatcher',
-    'util/guid',
-    'core/core',
-    'storage/clientstorage',
-    'logManager',
-    'util/url',
-    'coreclient/meta',
-    'coreclient/tojson',
-    'coreclient/dump',
-    'coreclient/dumpmore',
-    'coreclient/import',
-    'coreclient/copyimport',
-    'coreclient/serialization',
-    'core/tasync'
+    'common/util/assert',
+    'common/EventDispatcher',
+    'common/util/guid',
+    'common/core/core',
+    'common/storage/clientstorage',
+    'common/LogManager',
+    'common/util/url',
+    'common/core/users/meta',
+    'common/core/users/tojson',
+    'common/core/users/dump',
+    'common/core/users/dumpmore',
+    'common/core/users/import',
+    'common/core/users/copyimport',
+    'common/core/users/serialization',
+    'common/core/tasync'
   ],
   function (
     ASSERT,

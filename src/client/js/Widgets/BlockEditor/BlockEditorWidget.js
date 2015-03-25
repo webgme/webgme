@@ -5,7 +5,7 @@
  * @author brollb / https:// github/brollb
  */
 
-define(['logManager',
+define(['common/LogManager',
         'raphaeljs',
         './BlockEditorWidget.Zoom',
         './BlockEditorWidget.Mouse',
@@ -20,8 +20,8 @@ define(['logManager',
         './SearchManager',
         './SelectionManager',
         './HighlightManager',
-        'util/assert',
-        'loaderCircles',
+        'common/util/assert',
+        'js/Loader/LoaderCircles',
         'css!./styles/BlockEditorWidget.css',
         'css!./styles/BlockEditorWidget.DecoratorBase.ConnectionArea.css'
 ], function (logManager,

@@ -5,7 +5,7 @@
  * @author brollb / https://github/brollb
  */
 
-define(['logManager',
+define(['common/LogManager',
     'js/Widgets/BlockEditor/BlockEditorWidget.Constants'], function (logManager,
                                                                    BlockEditorWidgetConstants) {
 

@@ -7,7 +7,7 @@
 
 "use strict";
 
-define(['clientUtil',
+define(['js/util',
     'text!./templates/ConstraintDetailsDialog.html',
     'codemirror',
     'css!./styles/ConstraintDetailsDialog.css'], function ( util,

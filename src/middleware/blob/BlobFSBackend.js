@@ -12,8 +12,8 @@ define(['./BlobBackendBase',
     'crypto',
     'path',
     'util',
-    'util/guid',
-    'util/ensureDir'],
+    'common/util/guid',
+    'common/util/ensureDir'],
     function (BlobBackendBase, fs, crypto, path, util, GUID, ensureDir) {
     'use strict';
     var BlobFSBackend = function (gmeConfig) {

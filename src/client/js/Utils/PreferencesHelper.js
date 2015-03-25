@@ -1,7 +1,7 @@
 /*globals define, _, requirejs, WebGMEGlobal*/
 
 define(['underscore',
-        'util/assert'], function (_underscore,
+        'common/util/assert'], function (_underscore,
                                  ASSERT) {
 
     "use strict";

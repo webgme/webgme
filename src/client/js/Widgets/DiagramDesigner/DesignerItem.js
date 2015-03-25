@@ -1,6 +1,6 @@
 /*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
-define(['logManager',
+define(['common/LogManager',
     './DiagramDesignerWidget.Constants',
     './ErrorDecorator'], function (logManager,
                                  DiagramDesignerWidgetConstants,

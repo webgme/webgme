@@ -5,7 +5,7 @@
  */
 
 define(['lib/jquery/jquery.gritter.min',
-        'clientUtil'], function (myjgrowl, mygritter, util) {
+        'js/util'], function (myjgrowl, mygritter, util) {
 
     "use strict";
 

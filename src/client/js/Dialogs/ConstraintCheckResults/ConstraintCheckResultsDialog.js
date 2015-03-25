@@ -7,7 +7,7 @@
  */
 
 
-define(['clientUtil',
+define(['js/util',
     'text!./templates/ConstraintCheckResultsDialog.html',
     'css!./styles/ConstraintCheckResultsDialog.css'], function (clientUtil, pluginResultsDialogTemplate) {
 

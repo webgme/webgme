@@ -4,7 +4,7 @@
  * @author brollb / https://github/brollb
  */
 
-define(['logManager',
+define(['common/LogManager',
         './BlockEditorWidget.Constants',
         './ItemBase'], function (logManager,
                                  BLOCK_CONSTANTS,

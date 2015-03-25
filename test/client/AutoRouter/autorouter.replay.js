@@ -9,8 +9,8 @@ var requirejs = require('requirejs');
 requirejs.config({
     //baseUrl: 'src/',
     paths: {
-        'logManager': 'common/LogManager',
-        'util/assert': 'common/util/assert',
+        //'logManager': 'common/LogManager',
+        //'util/assert': 'common/util/assert',
         'underscore': 'client/lib/underscore/underscore-min'
     }
 });

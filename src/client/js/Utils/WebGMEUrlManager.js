@@ -2,7 +2,7 @@
 /*globals define, _, requirejs, WebGMEGlobal*/
 
 define ([
-        'clientUtil',
+        'js/util',
         'js/Constants'
     ],
     function(util, CONSTANTS) {

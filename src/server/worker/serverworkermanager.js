@@ -1,4 +1,4 @@
-define(['util/assert','child_process', 'process', 'worker/constants','util/guid'],
+define(['common/util/assert','child_process', 'process', 'server/worker/constants','common/util/guid'],
 function(ASSERT,Child, process, CONSTANTS){
     'use strict';
     function ServerWorkerManager(_parameters){

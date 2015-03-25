@@ -1,7 +1,7 @@
 /*globals define, _, requirejs, WebGMEGlobal*/
 
-define(['logManager',
-        'loaderCircles'], function (logManager,
+define(['common/LogManager',
+        'js/Loader/LoaderCircles'], function (logManager,
                                     LoaderCircles) {
 
     "use strict";

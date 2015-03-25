@@ -6,7 +6,7 @@
  */
 
 define(['./AutoRouter.Constants',
-	    'util/assert',
+	    'common/util/assert',
 	    './AutoRouter.Rect',
         './AutoRouter.Point'], function(CONSTANTS,
                                         assert,

@@ -1,14 +1,14 @@
 /*globals define, _, requirejs, WebGMEGlobal*/
 
 define(['jquery',
-        'util/guid',
+        'common/util/guid',
         'js/Constants',
         'js/NodePropertyNames',
         'js/RegistryKeys',
         './GMEConcepts.FCO',
         './METAAspectHelper',
         'js/Panels/MetaEditor/MetaEditorConstants',
-        'clientUtil',
+        'js/util',
         'text!./metaConstraint._js'
     ], function (
     _jquery,

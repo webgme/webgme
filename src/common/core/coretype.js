@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TASYNC) {
+define([ "common/util/assert", "common/core/core", "common/core/tasync" ], function(ASSERT, Core, TASYNC) {
 	"use strict";
 
 	// ----------------- CoreType -----------------

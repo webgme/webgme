@@ -6,8 +6,8 @@
  */
 
 
-define(['logManager',
-    'clientUtil',
+define(['common/LogManager',
+    'js/util',
     'js/Constants',
     'js/Utils/GMEConcepts',
     'js/NodePropertyNames'], function (logManager,

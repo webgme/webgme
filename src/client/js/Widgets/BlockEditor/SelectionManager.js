@@ -5,8 +5,8 @@
  * @author brollb / https://github/brollb
  */
 
-define(['logManager',
-        'clientUtil'], function (logManager,
+define(['common/LogManager',
+        'js/util'], function (logManager,
                                  clientUtil) {
 
     "use strict";

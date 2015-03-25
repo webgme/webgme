@@ -7,7 +7,7 @@
 /*
  * WIDGET TreeBrowserWidget based on DynaTree
  */
-define(['logManager',
+define(['common/LogManager',
     'js/Constants',
     './TreeBrowserWidget.Keyboard',
     'js/DragDrop/DragSource',

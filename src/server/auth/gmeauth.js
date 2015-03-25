@@ -5,7 +5,7 @@
  * Author: Tamas Kecskes
  */
 
-define(['mongodb', 'q', 'util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcrypt) {
+define(['mongodb', 'q', 'common/util/guid', 'bcrypt'], function (Mongodb, Q, GUID, bcrypt) {
     function GMEAuth(session, gmeConfig) {
         // TODO: make sure that gmeConfig passes all config
         var _collectionName = '_users',

@@ -6,7 +6,7 @@
 
 
 
-define(['clientUtil',
+define(['js/util',
     'text!./templates/AttributeDetailsDialog.html',
     'css!./styles/AttributeDetailsDialog.css'], function ( util,
                                                 attributeDetailsDialogTemplate) {

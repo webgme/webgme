@@ -10,7 +10,7 @@ WebGMEGlobal['SUPPORTS_TOUCH'] = 'ontouchstart' in window || navigator.msMaxTouc
 
 
 // let require load all the toplevel needed script and call us on domReady
-define(['logManager',
+define(['common/LogManager',
     'text!/gmeConfig.json',
     'text!/package.json',
     'js/client',

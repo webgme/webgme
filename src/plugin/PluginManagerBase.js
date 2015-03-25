@@ -15,7 +15,7 @@
 define([
         './PluginBase',
         './PluginContext',
-        'logManager'],
+        'common/LogManager'],
     function (PluginBase, PluginContext, LogManager) {
 
         var PluginManagerBase = function (storage, Core, plugins, gmeConfig) {

@@ -1,7 +1,7 @@
 /*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
 define(['jquery',
-        'logManager'], function (__jquery,
+        'common/LogManager'], function (__jquery,
                                  logManager) {
 
     "use strict";
