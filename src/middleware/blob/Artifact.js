@@ -127,7 +127,7 @@ define(['blob/BlobMetadata', 'blob/BlobConfig', 'common/core/tasync'], function 
                 }
             };
 
-        if (typeof size === 'Function') {
+        if (typeof size === 'function') {
             callback = size;
             size = undefined;
         }
