@@ -4,10 +4,11 @@
  * @author brollb / https://github.com/brollb
  */
 
-var requirejs = require('requirejs');
+var testFixture = require('../../_globals.js'),
+    requirejs = testFixture.requirejs;
 
 requirejs.config({
-    baseUrl: 'src/',
+    //baseUrl: 'src/',
     paths: {
         'logManager': 'common/LogManager',
         'util/assert': 'common/util/assert',
