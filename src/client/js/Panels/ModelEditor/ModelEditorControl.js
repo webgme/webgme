@@ -1,6 +1,6 @@
 /*globals define, _, requirejs, WebGMEGlobal*/
 
-define(['common/LogManager',
+define(['js/logger',
     'js/Constants',
     'js/NodePropertyNames',
     'js/RegistryKeys',
@@ -8,7 +8,7 @@ define(['common/LogManager',
     './ModelEditorControl.DiagramDesignerWidgetEventHandlers',
     'js/Utils/GMEConcepts',
     'js/Utils/GMEVisualConcepts',
-    'js/Utils/PreferencesHelper'], function (logManager,
+    'js/Utils/PreferencesHelper'], function (Logger,
                                                         CONSTANTS,
                                                         nodePropertyNames,
                                                         REGISTRY_KEYS,
@@ -32,7 +32,8 @@ define(['common/LogManager',
     ModelEditorControl = function (options) {
         var self = this;
 
-        this.logger = options.logger || logManager.create(options.loggerName || "ModelEditorControl");
+        this.logger = options.logger || Logger.create(options.loggerName || 'gme:Panels:ModelEditor:' +
+            'ModelEditorControl', WebGMEGlobal.gmeConfig.client.log);
 
         this._client = options.client;
 
@@ -115,7 +116,7 @@ define(['common/LogManager',
                 //make sure that the selectedAspect exist in the node, otherwise fallback to All
                 var aspectNames = this._client.getMetaAspectNames(nodeId) || [];
                 if (aspectNames.indexOf(this._selectedAspect) === -1) {
-                    this.logger.warning('The currently selected aspect "' + this._selectedAspect + '" does not exist in the object "' + desc.name + ' (' + nodeId + ')", falling back to "All"');
+                    this.logger.warn('The currently selected aspect "' + this._selectedAspect + '" does not exist in the object "' + desc.name + ' (' + nodeId + ')", falling back to "All"');
                     this._selectedAspect = CONSTANTS.ASPECT_ALL;
                     WebGMEGlobal.State.registerActiveAspect(CONSTANTS.ASPECT_ALL);
                 }
@@ -297,7 +298,7 @@ define(['common/LogManager',
         var orderedConnectionEvents = [];
 
         if (this._delayedConnections && this._delayedConnections.length > 0) {
-            /*this.logger.warning('_delayedConnections: ' + this._delayedConnections.length );*/
+            /*this.logger.warn('_delayedConnections: ' + this._delayedConnections.length );*/
             for (i = 0; i < this._delayedConnections.length; i += 1) {
                 orderedConnectionEvents.push({'etype': CONSTANTS.TERRITORY_EVENT_LOAD,
                                               'eid': this._delayedConnections[i],
@@ -692,7 +693,7 @@ define(['common/LogManager',
 
                                     len -= 1;
                                 } else {
-                                    this.logger.warning('Updating connections...Existing connections are less than the needed src-dst combo...');
+                                    this.logger.warn('Updating connections...Existing connections are less than the needed src-dst combo...');
                                     //let's create a connection
                                     _.extend(objDesc, this.getConnectionDescriptor(gmeID));
                                     var uiComponent = this.designerCanvas.createConnection(objDesc);

@@ -4,14 +4,14 @@ define(['jquery',
         'underscore',
         'js/Constants',
         'js/NodePropertyNames',
-        'common/LogManager',
+        'js/logger',
         'js/Panels/MetaEditor/MetaEditorConstants',
         'common/EventDispatcher',
         'text!./METATemplate.js'], function (_jquery,
                                     _underscore,
                                     CONSTANTS,
                                     nodePropertyNames,
-                                    logManager,
+                                    Logger,
                                     MetaEditorConstants,
                                     EventDispatcher,
                                     METATemplateJS) {
@@ -25,7 +25,7 @@ define(['jquery',
         TerritoryUI,
         _metaMembers,
         _patterns = {},
-        _logger = logManager.create("METAAspectHelper"),
+        _logger,
         _events = {'META_ASPECT_CHANGED': 'META_ASPECT_CHANGED'},
         _metaTypes;
 
@@ -165,6 +165,7 @@ define(['jquery',
 
     var _initialize = function (c) {
         //if already initialized, just return
+        _logger = Logger.create('gme:Utils:METAAspectHelper', WebGMEGlobal.gmeConfig.client.log);
         if (_client) {
             return;
         }
@@ -311,7 +312,7 @@ define(['jquery',
 
 
     //return utility functions
-    return { initialize: _initialize,
+    return {initialize: _initialize,
             isMETAType: _isMETAType,
             getMetaAspectMembers: _getMetaAspectMembers,
             events: _events,

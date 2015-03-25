@@ -1,7 +1,7 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, WebGMEGlobal*/
 
-define(['common/LogManager',
-        'js/Loader/LoaderCircles'], function (logManager,
+define(['js/logger',
+        'js/Loader/LoaderCircles'], function (Logger,
                                     LoaderCircles) {
 
     "use strict";
@@ -13,7 +13,7 @@ define(['common/LogManager',
     LayoutManager = function () {
         this._currentLayout = undefined;
         this._currentLayoutName = undefined;
-        this._logger = logManager.create('LayoutManager');
+        this._logger = Logger.create('gme:LayoutManager:LayoutManager', WebGMEGlobal.gmeConfig.client.log);
         this._logger.debug('LayoutManager created.');
         this._startProgressBar();
         this._panels = {};

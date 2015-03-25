@@ -1,8 +1,8 @@
 /*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
-define(['common/LogManager',
+define(['js/logger',
         'js/Widgets/DiagramDesigner/DragScroll',
-        'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'], function (logManager,
+        'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'], function (Logger,
                                                     DragScroll,
                                                     DiagramDesignerWidgetConstants) {
     "use strict";
@@ -17,7 +17,8 @@ define(['common/LogManager',
         MOUSE_UP = 'mouseup.' + EVENT_POSTFIX;
 
     DragManager = function (options) {
-        this.logger = (options && options.logger) || logManager.create(((options && options.loggerName) || "DragManager"));
+        var loggerName = (options && options.loggerName) || 'gme:Widgets:DiagramDesigner:DragManager';
+        this.logger = (options && options.logger) || Logger.create(loggerName, WebGMEGlobal.gmeConfig.client.log);
 
         this._diagramDesigner = options ? options.diagramDesigner : null;
 

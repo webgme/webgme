@@ -1,6 +1,6 @@
 /*globals define, _, requirejs, WebGMEGlobal*/
 
-define(['common/LogManager',
+define(['js/logger',
     'js/RegistryKeys',
     'js/Constants',
     './CrosscutConstants',
@@ -8,7 +8,7 @@ define(['common/LogManager',
     'js/Utils/GMEConcepts',
     'js/Panels/ControllerBase/DiagramDesignerWidgetMultiTabMemberListControllerBase',
     'js/Panels/MetaEditor/MetaRelations',
-    'js/NodePropertyNames'], function (logManager,
+    'js/NodePropertyNames'], function (Logger,
                                              REGISTRY_KEYS,
                                              CONSTANTS,
                                                CrosscutConstants,
@@ -27,7 +27,7 @@ define(['common/LogManager',
 
     CrosscutController = function (options) {
         options = options || {};
-        options.loggerName = "CrosscutController";
+        options.loggerName = 'gme:Panels:CrossCut:CrosscutController';
 
         DiagramDesignerWidgetMultiTabMemberListControllerBase.call(this, options);
 
@@ -848,7 +848,7 @@ define(['common/LogManager',
                         //it's a pointer that's allowed to be deleted
                         _client.delPointer(lineDesc.GMESrcId, lineDesc.name);
                     } else {
-                        logger.warning('can not delete pointer from: ' + lineDesc.GMESrcId + ', type: ' + lineDesc.name);
+                        logger.warn('can not delete pointer from: ' + lineDesc.GMESrcId + ', type: ' + lineDesc.name);
                     }
                 }
             }

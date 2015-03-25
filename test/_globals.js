@@ -6,6 +6,7 @@
  */
 
 global.TESTING = true;
+global.WebGMEGlobal = {};
 
 process.env.NODE_ENV = 'test';
 
@@ -29,7 +30,7 @@ var gmeConfig = require('../config'),
         'use strict';
         return new Commit(new Local(options || {}), options || {});
     },
-    Log = requirejs('../src/common/LogManager'),
+    Logger = require('../src/server/logger'),
     generateKey = requirejs('common/util/key'),
 
     GMEAuth = requirejs('server/auth/gmeauth'),
@@ -46,10 +47,7 @@ var gmeConfig = require('../config'),
     Q = require('q'),
     fs = require('fs'),
     rimraf = require('rimraf'),
-    childProcess = require('child_process')
-    ;
-
-Log.setFileLogPath('../test-tmp/testexecution.log');
+    childProcess = require('child_process');
 
 //TODO globally used functions to implement
 function loadJsonFile(path) {
@@ -72,7 +70,8 @@ function importProject(parameters, done) {
     };
     /*
      parameters:
-     storage - a storage object, where the project should be created (if not given and mongoUri is not defined we create a new local one and use it
+     storage - a storage object, where the project should be created (if not given and mongoUri is not defined we
+               create a new local one and use it
      filePath - the filePath, where we can find the project
      jsonProject - already loaded project
      projectName - the name of the project
@@ -94,14 +93,14 @@ function importProject(parameters, done) {
      */
 
     //TODO should be written in promise style
-    if(!parameters.jsonProject){
-        (undefined === parameters.filePath).should.be.false;
+    if (!parameters.jsonProject) {
+        expect(typeof parameters.filePath).to.equal('string');
         result.jsonProject = loadJsonFile(parameters.filePath);
     } else {
         result.jsonProject = parameters.jsonProject;
     }
 
-    (undefined === parameters.projectName).should.be.false;
+    expect(typeof parameters.projectName).to.equal('string');
 
     result.branchName = parameters.branchName || 'master';
 
@@ -161,7 +160,8 @@ function importProject(parameters, done) {
                                     if (names && names[result.branchName]) {
                                         oldHash = names[result.branchName];
                                     }
-                                    //TODO check the branch naming... probably need to add some layer to the local storage
+                                    //TODO check the branch naming... probably need to add some layer to
+                                    // the local storage
                                     result.project.setBranchHash(result.branchName,
                                         oldHash,
                                         result.commitHash,
@@ -177,50 +177,37 @@ function importProject(parameters, done) {
     });
 }
 
-function checkWholeProject(parameters, done) {
+function checkWholeProject(/*parameters, done*/) {
     //TODO this should export the given project and check against a file or a jsonObject to be deeply equal
 }
 
-function exportProject(parameters, done) {
+function exportProject(/*parameters, done*/) {
     //TODO gives back a jsonObject which is the export of the project
     //should work with project object, or mongoUri as well
     //in case of mongoUri it should open the connection before and close after - or just simply use the exportCLI
 }
 
-function deleteProject(parameters, done) {
+function deleteProject(/*parameters, done*/) {
     //TODO should work with storage object and mongoUri although probably we only need to delete if we use mongo
 }
 
-function loadNodes(parameters, done) {
-    //TODO loads multiple paths of the input project and returns the loaded objects
-    /*
-     function loadNodes(paths, next) {
-     var needed = paths.length,
-     nodes = {}, error = null, i,
-     loadNode = function (path) {
-     core.loadByPath(root, path, function (err, node) {
-     error = error || err;
-     nodes[path] = node;
-     if (--needed === 0) {
-     next(error, nodes);
-     }
-     })
-     };
-     for (i = 0; i < paths.length; i++) {
-     loadNode(paths[i]);
-     }
-     }
-     */
-}
-
 WebGME.addToRequireJsPaths(gmeConfig);
+
+// This is for the client side test-cases (only add paths here!)
+requirejs.config({
+    paths: {
+        js: 'client/js',
+        ' /socket.io/socket.io.js': 'socketio-client',
+        underscore: 'client/lib/underscore/underscore-min'
+    }
+});
 
 module.exports = {
     getGmeConfig: getGmeConfig,
 
     WebGME: WebGME,
     Storage: Storage,
-    Log: Log,
+    Logger: Logger,
     generateKey: generateKey,
 
     GMEAuth: GMEAuth,
@@ -244,6 +231,5 @@ module.exports = {
     importProject: importProject,
     checkWholeProject: checkWholeProject,
     exportProject: exportProject,
-    deleteProject: deleteProject,
-    loadNodes: loadNodes
+    deleteProject: deleteProject
 };

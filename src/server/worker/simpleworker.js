@@ -1,13 +1,13 @@
 /*global __dirname, require, process, setImmediate */
 var requirejs = require("requirejs"),
-    WEBGME = require(__dirname + '/../../../webgme');
+    WEBGME = require(__dirname + '/../../../webgme'),
+    Logger = require(require('path').join(requirejs.s.contexts._.config.baseUrl, 'server/logger'));
 
 requirejs(['server/worker/constants',
     'common/core/core',
     'common/storage/serveruserstorage',
     'common/util/guid',
     'common/core/users/dumpmore',
-    'common/LogManager',
     'fs',
     'path',
     'blob/BlobClient',
@@ -17,7 +17,7 @@ requirejs(['server/worker/constants',
     'common/storage/clientstorage',
     'common/core/users/serialization',
     'server/auth/gmeauth'],
-  function (CONSTANT, Core, Storage, GUID, DUMP, logManager, FS, PATH, BlobClient, PluginManagerBase, PluginResult, PluginMessage, ConnectedStorage, Serialization, GMEAUTH) {
+  function (CONSTANT, Core, Storage, GUID, DUMP, FS, PATH, BlobClient, PluginManagerBase, PluginResult, PluginMessage, ConnectedStorage, Serialization, GMEAUTH) {
     'use strict';
     var storage = null,
       core = null,
@@ -29,7 +29,8 @@ requirejs(['server/worker/constants',
       initialized = false,
       AUTH = null,
       _addOn = null,
-        gmeConfig;
+        gmeConfig,
+        logger;
 
     var initResult = function () {
       core = null;
@@ -44,11 +45,12 @@ requirejs(['server/worker/constants',
         initialized = true;
           gmeConfig = parameters.gmeConfig;
           WEBGME.addToRequireJsPaths(gmeConfig);
+          logger = Logger.create('gme:server:worker:simpleworker:' + process.pid, gmeConfig.server.log);
         if (gmeConfig.authentication.enable === true) {
           AUTH = GMEAUTH({ }, gmeConfig); //FIXME: Should session really be empty object??
         }
         storage = new Storage({
-          'log': logManager.create('SERVER-WORKER-' + process.pid),
+          log: Logger.create('gme:server:worker:simpleworker:storage:' + process.pid, gmeConfig.server.log),
           globConf: gmeConfig
         });
         storage.openDatabase(function (err) {
@@ -146,7 +148,7 @@ requirejs(['server/worker/constants',
         globConf: gmeConfig,
         type: 'node',
         host: (gmeConfig.server.https.enable === true ? 'https' : 'http') + '://127.0.0.1',
-        log: logManager.create('SERVER-WORKER-PLUGIN-' + process.pid),
+        log: Logger.create('gme:server:worker:simpleworker:plugin:' + process.pid, gmeConfig.server.log),
         webGMESessionId: webGMESessionId
       });
       connStorage.openDatabase(function (err) {
@@ -184,7 +186,7 @@ requirejs(['server/worker/constants',
             project.setUser(userId);
             var plugins = {};
             plugins[name] = interpreter;
-            var manager = new PluginManagerBase(project, Core, plugins, gmeConfig);
+            var manager = new PluginManagerBase(project, Core, Logger, plugins, gmeConfig);
             context.managerConfig.blobClient = new BlobClient({
               serverPort: gmeConfig.server.port,
               httpsecure: gmeConfig.server.https.enable,
@@ -208,7 +210,7 @@ requirejs(['server/worker/constants',
             });
           } else {
             var newErrorPluginResult = new PluginResult();
-              console.error('unable to get project');
+              logger.error('unable to get project');
             callback(new Error('unable to get project'), newErrorPluginResult.serialize());
           }
         });

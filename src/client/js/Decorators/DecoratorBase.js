@@ -1,6 +1,6 @@
-/*globals define, _, requirejs, WebGMEGlobal, Raphael*/
+/*globals define, WebGMEGlobal*/
 
-define(['common/LogManager'], function (logManager) {
+define(['js/logger'], function (Logger) {
 
     "use strict";
 
@@ -8,8 +8,9 @@ define(['common/LogManager'], function (logManager) {
         DECORATOR_ID = "DecoratorBase";
 
     DecoratorBase = function (params) {
-
-        this.logger = logManager.create(params.loggerName || this.DECORATORID);
+        var loggerName = 'gme:Decorators:DecoratorBase:';
+        loggerName = params.loggerName ? loggerName += params.loggerName : loggerName += this.DECORATORID;
+        this.logger = Logger.create(loggerName, WebGMEGlobal.gmeConfig.client.log);
 
         this.supportedWidgetMap = {};
 

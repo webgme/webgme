@@ -1,8 +1,8 @@
 /*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
 define(['jquery',
-        'common/LogManager'], function ( _jquery,
-                                  logManager) {
+        'js/logger'], function ( _jquery,
+                                  Logger) {
 
     "use strict";
 
@@ -10,13 +10,13 @@ define(['jquery',
 
     PanelBase = function (options, layoutManager) {
         //this.logger --- logger instance for the Panel
-        var loggerName = "PanelBase";
+        var loggerName = "gme:PanelBase:PanelBase";
 
         if (options && options[PanelBase.OPTIONS.LOGGER_INSTANCE_NAME]) {
-            loggerName = options[PanelBase.OPTIONS.LOGGER_INSTANCE_NAME];
+            loggerName = 'gme:' + options[PanelBase.OPTIONS.LOGGER_INSTANCE_NAME];
         }
 
-        this.logger = logManager.create(loggerName);
+        this.logger = Logger.create(loggerName, WebGMEGlobal.gmeConfig.client.log);
 
         this.$pEl = this.$el = $('<div/>');
 

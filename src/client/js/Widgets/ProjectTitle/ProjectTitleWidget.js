@@ -4,8 +4,8 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['common/LogManager',
-        'css!./styles/ProjectTitleWidget.css'], function (logManager) {
+define(['js/logger',
+        'css!./styles/ProjectTitleWidget.css'], function (Logger) {
 
     "use strict";
 
@@ -13,7 +13,7 @@ define(['common/LogManager',
         PROJECT_TITLE_WIDGET_TEMPLATE = '<div class="project-title navbar-text"><span class="title">WebGME</span><span class="readOnlyInfo">[READ ONLY]</span></div>';
 
     ProjectTitleWidget = function (containerEl, client) {
-        this._logger = logManager.create("ProjectTitleWidget");
+        this._logger = Logger.create('gme:Widgets:ProjectTitle:ProjectTitleWidget', WebGMEGlobal.gmeConfig.client.log);
 
         this._client = client;
         this._el = containerEl;

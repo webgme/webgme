@@ -1,6 +1,6 @@
 /*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
-define(['common/LogManager'], function (logManager) {
+define(['js/logger'], function (Logger) {
 
     "use strict";
 
@@ -9,7 +9,7 @@ define(['common/LogManager'], function (logManager) {
         NOT_FOUND = "___N/A___";
 
     DecoratorManager = function () {
-        this._logger = logManager.create("DecoratorManager");
+        this._logger = Logger.create('gme:Decorators:DecoratorManager', WebGMEGlobal.gmeConfig.client.log);
 
         this._decorators = {};
         this._widgetDecoratorCache = {};

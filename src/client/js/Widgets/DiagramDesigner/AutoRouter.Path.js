@@ -1,14 +1,14 @@
 /*globals define*/
 
 
-define( ['common/LogManager',
+define( ['js/logger',
             'common/util/assert',
             './AutoRouter.Constants',
             './AutoRouter.Utils',
             './AutoRouter.Point',
             './AutoRouter.Rect',
             './AutoRouter.PointList'],
-        function ( logManager, assert, CONSTANTS, Utils, ArPoint, ArRect, ArPointListPath ) {
+        function ( Logger, assert, CONSTANTS, Utils, ArPoint, ArRect, ArPointListPath ) {
 
 
     'use strict'; 

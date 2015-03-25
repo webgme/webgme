@@ -11,6 +11,7 @@ function getClientConfig(gmeConfig) {
     delete clientConfig.server.sessionCookieSecret;
     delete clientConfig.server.https.certificateFile;
     delete clientConfig.server.https.keyFile;
+    delete clientConfig.server.log;
     delete clientConfig.executor.nonce;
     delete clientConfig.mongo;
     delete clientConfig.blob;

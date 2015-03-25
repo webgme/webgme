@@ -7,13 +7,13 @@
 /*
  * WIDGET TreeBrowserWidget based on DynaTree
  */
-define(['common/LogManager',
+define(['js/logger',
     'js/Constants',
     './TreeBrowserWidget.Keyboard',
     'js/DragDrop/DragSource',
     'lib/jquery/jquery.dynatree-1.2.5.min',
     'lib/jquery/jquery.contextMenu',
-    'css!./styles/TreeBrowserWidget.css'], function (logManager, CONSTANTS, TreeBrowserWidgetKeyboard, dragSource) {
+    'css!./styles/TreeBrowserWidget.css'], function (Logger, CONSTANTS, TreeBrowserWidgetKeyboard, dragSource) {
 
     "use strict";
 
@@ -22,7 +22,7 @@ define(['common/LogManager',
 
     var TreeBrowserWidget = function (container/*, params*/) {
         //get this._logger instance for this component
-        this._logger = logManager.create("TreeBrowserWidget");
+        this._logger = Logger.create('gme:Widgets:TreeBrowser:TreeBrowserWidget', WebGMEGlobal.gmeConfig.client.log);
 
         //save parent control
         this._el =  container;

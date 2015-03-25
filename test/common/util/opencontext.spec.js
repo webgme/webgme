@@ -604,7 +604,9 @@ describe('openContext', function () {
         var storage,
             project,
             commitHash,
-            gmeConfig = testFixture.getGmeConfig();
+            gmeConfig = testFixture.getGmeConfig(),
+            logger = testFixture.Logger.createWithGmeConfig('opencontext:using server-user-storage:storage', gmeConfig);
+
 
         before(function (done) {
             var importParam = {
@@ -616,7 +618,7 @@ describe('openContext', function () {
             };
             storage = new WebGME.serverUserStorage({
                 globConf: gmeConfig,
-                log: testFixture.Log.create('openContext')
+                log: logger
             });
             importParam.storage = storage;
             importAndCloseProject(importParam, function (err, _commitHash) {
@@ -646,6 +648,7 @@ describe('openContext', function () {
                 });
             });
         });
+
         it('should open existing project', function (done) {
             var parameters = {
                 projectName: 'doesExist'

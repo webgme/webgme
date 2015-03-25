@@ -2095,7 +2095,7 @@ define("node_modules/requirejs/require", function(){});
  * -------- EVENT DIASPATCHER -------
  */
 
-define('eventDispatcher',[], function () {
+define('common/eventDispatcher',[], function () {
     var EventDispatcher = function () {
         this._eventList = {};
     };
@@ -3516,6 +3516,9 @@ define('blob/BlobClient',['./Artifact', 'blob/BlobMetadata', 'superagent'], func
 
             var buffers = new BuffersWritable();
             buffers.on('finish', function () {
+                if (req.req.res.statusCode > 399) {
+                    return callback(req.req.res.statusCode);
+                }
                 callback(null, Buffer.concat(buffers.buffers));
             });
             buffers.on('error', function (err) {
@@ -3621,6 +3624,7 @@ define('blob/BlobClient',['./Artifact', 'blob/BlobMetadata', 'superagent'], func
 
     return BlobClient;
 });
+
 /*
  * Copyright (C) 2012 Vanderbilt University, All rights reserved.
  *
@@ -3632,7 +3636,7 @@ define('blob/BlobClient',['./Artifact', 'blob/BlobMetadata', 'superagent'], func
  * -------- LOGMANAGER -------
  */
 
-define('logManager',[], function () {
+define('common/logManager',[], function () {
 
 	var logLevels = {
 		"ALL": 5,
@@ -4059,8 +4063,7 @@ define('executor/JobInfo',[], function() {
 // eb.executorClient.createJob('1092dd2b135af5d164b9d157b5360391246064db', function (err, res) { console.log(require('util').inspect(res)); })
 // eb.executorClient.getInfoByStatus('CREATED', function(err, res) { console.log("xxx " + require('util').inspect(res)); })
 
-define('executor/ExecutorWorker',['logManager',
-        'blob/BlobClient',
+define('executor/ExecutorWorker',['blob/BlobClient',
         'blob/BlobMetadata',
         'fs',
         'util',
@@ -4074,7 +4077,7 @@ define('executor/ExecutorWorker',['logManager',
         'superagent',
         'rimraf'
     ],
-    function (logManager, BlobClient, BlobMetadata, fs, util, events, path, child_process, minimatch, ExecutorClient, WorkerInfo, JobInfo, superagent, rimraf) {
+    function (BlobClient, BlobMetadata, fs, util, events, path, child_process, minimatch, ExecutorClient, WorkerInfo, JobInfo, superagent, rimraf) {
         var UNZIP_EXE;
         var UNZIP_ARGS;
         if (process.platform === "win32") {
@@ -4112,12 +4115,6 @@ define('executor/ExecutorWorker',['logManager',
     };
 
     //here you can define global variables for your middleware
-    var logger = // logManager.create('REST-External-Executor'); //how to define your own logger which will use the global settings
-        function() { };
-    logger.prototype.error = function(x) { console.log(x); };
-    logger.prototype.info = logger.prototype.error;
-    logger.prototype.debug = logger.prototype.error;
-    logger = new logger();
 
     var ExecutorWorker = function (parameters) {
         this.blobClient = new BlobClient({server: parameters.server, serverPort: parameters.serverPort, httpsecure: parameters.httpsecure });
@@ -4216,7 +4213,7 @@ define('executor/ExecutorWorker',['logManager',
                             }
                             var cmd = executorConfig.cmd;
                             var args = executorConfig.args || [];
-                            logger.debug('working directory: ' + jobDir + ' executing: ' + cmd + ' with args: ' + args.toString());
+                            console.log('working directory: ' + jobDir + ' executing: ' + cmd + ' with args: ' + args.toString());
                             var child = child_process.spawn(cmd, args, {cwd: jobDir, stdio: ['ignore', 'pipe', 'pipe']});
                             var outlog = fs.createWriteStream(path.join(jobDir, 'job_stdout.txt'));
                             child.stdout.pipe(outlog);
@@ -4227,7 +4224,7 @@ define('executor/ExecutorWorker',['logManager',
                                     jobInfo.finishTime = new Date().toISOString();
 
                                     if (code !== 0) {
-                                        logger.error(jobInfo.hash + ' exec error: ' + code);
+                                        console.error(jobInfo.hash + ' exec error: ' + code);
                                         jobInfo.status = 'FAILED_TO_EXECUTE';
                                     }
 
@@ -4286,7 +4283,7 @@ define('executor/ExecutorWorker',['logManager',
                 };
             counter = filesToArchive.length;
             if (filesToArchive.length === 0) {
-                logger.info(jobInfo.hash + ' There were no files to archive..');
+                console.info(jobInfo.hash + ' There were no files to archive..');
                 counterCallback(null);
             }
             for (i = 0; i < filesToArchive.length; i += 1) {
@@ -4299,7 +4296,7 @@ define('executor/ExecutorWorker',['logManager',
                 jointArtifact.addFileAsSoftLink(filename, data, function (err, hash) {
                     var j;
                     if (err) {
-                        logger.error(jobInfo.hash + ' Failed to archive as "' + filename + '" from "' + filePath + '", err: ' + err);
+                        console.error(jobInfo.hash + ' Failed to archive as "' + filename + '" from "' + filePath + '", err: ' + err);
                         callback('FAILED_TO_ARCHIVE_FILE');
                     } else {
                         // Add the file-hash to the results artifacts containing the filename.
@@ -4318,7 +4315,7 @@ define('executor/ExecutorWorker',['logManager',
             if (typeof File === 'undefined') { // nodejs doesn't have File
                 fs.readFile(filePath, function (err, data) {
                     if (err) {
-                        logger.error(jobInfo.hash + ' Failed to archive as "' + filename + '" from "' + filePath + '", err: ' + err);
+                        console.error(jobInfo.hash + ' Failed to archive as "' + filename + '" from "' + filePath + '", err: ' + err);
                         return callback('FAILED_TO_ARCHIVE_FILE');
                     }
                     archiveData(null, data);
@@ -4335,7 +4332,7 @@ define('executor/ExecutorWorker',['logManager',
                     i,
                     counterCallback;
                 if (err) {
-                    logger.error(jobInfo.hash + " " + err);
+                    console.error(jobInfo.hash + " " + err);
                     jobInfo.status = 'FAILED_TO_SAVE_JOINT_ARTIFACT';
                     self.sendJobUpdate(jobInfo);
                 } else {
@@ -4361,7 +4358,7 @@ define('executor/ExecutorWorker',['logManager',
                     }
                     rimraf(directory, function (err) {
                         if (err) {
-                            logger.error('Could not delete executor-temp file, err: ' + err);
+                            console.error('Could not delete executor-temp file, err: ' + err);
                         }
                         jobInfo.resultSuperSetHash = resultHash;
                         for (i = 0; i < resultsArtifacts.length; i += 1) {
@@ -4375,12 +4372,12 @@ define('executor/ExecutorWorker',['logManager',
         addObjectHashesAndSaveArtifact = function (resultArtifact, callback) {
             resultArtifact.artifact.addMetadataHashes(resultArtifact.files, function (err, hashes) {
                 if (err) {
-                    logger.error(jobInfo.hash + " " + err);
+                    console.error(jobInfo.hash + " " + err);
                     return callback('FAILED_TO_ADD_OBJECT_HASHES');
                 }
                 resultArtifact.artifact.save(function (err, resultHash) {
                     if (err) {
-                        logger.error(jobInfo.hash + " " + err);
+                        console.error(jobInfo.hash + " " + err);
                         return callback('FAILED_TO_SAVE_ARTIFACT');
                     }
                     jobInfo.resultHashes[resultArtifact.name] = resultHash;
@@ -4488,7 +4485,7 @@ define('executor/ExecutorWorker',['logManager',
                                 self.availableProcessesContainer.availableProcesses -= 1;
                                 self.emit('jobUpdate', info);
                                 self.startJob(info, function (err) {
-                                    logger.error(info.hash + " failed to run: " + err + ". Status: " + info.status);
+                                    console.error(info.hash + " failed to run: " + err + ". Status: " + info.status);
                                     self.sendJobUpdate(info);
                                 }, function(jobInfo, jobDir, executorConfig) {
                                     self.saveJobResults(jobInfo, jobDir, executorConfig);
@@ -4504,14 +4501,14 @@ define('executor/ExecutorWorker',['logManager',
                                         var info = { hash: response.labelJobs[label] };
                                         self.startJob(info, function (err) {
                                             this.availableProcessesContainer.availableProcesses += 1;
-                                            logger.error("Label job " + label + "(" + info.hash + ") failed to run: " + err + ". Status: " + info.status);
+                                            console.error("Label job " + label + "(" + info.hash + ") failed to run: " + err + ". Status: " + info.status);
                                         }, function(jobInfo, jobDir, executorConfig) {
                                             this.availableProcessesContainer.availableProcesses += 1;
                                             if (jobInfo.status !== 'FAILED_TO_EXECUTE') {
                                                 self.clientRequest.labels.push(label);
-                                                logger.info("Label job " + label + " succeeded. Labels are " + JSON.stringify(self.clientRequest.labels));
+                                                console.info("Label job " + label + " succeeded. Labels are " + JSON.stringify(self.clientRequest.labels));
                                             } else {
-                                                logger.error("Label job " + label + "(" + info.hash + ") run failed: " + err + ". Status: " + info.status);
+                                                console.error("Label job " + label + "(" + info.hash + ") run failed: " + err + ". Status: " + info.status);
                                             }
                                         });
                                     })(label);
@@ -4599,9 +4596,9 @@ var nodeRequire = require;
 if (typeof define !== 'undefined') {
 
     define('node_worker', [
-        'eventDispatcher',
+        'common/eventDispatcher',
         'blob/BlobClient',
-        'logManager',
+        'common/logManager',
         'executor/ExecutorWorker',
         'executor/JobInfo',
         'executor/ExecutorWorkerController',

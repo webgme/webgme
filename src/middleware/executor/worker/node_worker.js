@@ -4,9 +4,9 @@ var nodeRequire = require;
 if (typeof define !== 'undefined') {
 
     define('node_worker', [
-        'eventDispatcher',
+        'common/eventDispatcher',
         'blob/BlobClient',
-        'logManager',
+        'common/logManager',
         'executor/ExecutorWorker',
         'executor/JobInfo',
         'executor/ExecutorWorkerController',

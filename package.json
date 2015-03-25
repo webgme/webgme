@@ -31,6 +31,7 @@
     "compression": "=1.4.3",
     "connect-multiparty": "=1.2.5",
     "cookie-parser": "=1.3.4",
+    "debug": "=2.1.3",
     "express": "=4.12.3",
     "express-session": "=1.10.4",
     "heap": "=0.2.6",
@@ -51,7 +52,8 @@
     "socket.io": "=1.3.5",
     "socket.io-client": "=1.3.5",
     "superagent": "=0.21.0",
-    "unzip": "=0.1.11"
+    "unzip": "=0.1.11",
+    "winston": "=0.9.0"
   },
   "devDependencies": {
     "chai": "^2.1.2",

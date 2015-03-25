@@ -1,6 +1,6 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, _, WebGMEGlobal*/
 
-define(['common/LogManager',
+define(['js/logger',
         'common/util/guid',
         'js/Constants',
         'js/NodePropertyNames',
@@ -8,7 +8,7 @@ define(['common/LogManager',
         'js/Utils/GMEConcepts',
         'js/Utils/GMEVisualConcepts',
         'js/DragDrop/DragHelper',
-        'js/Utils/PreferencesHelper'], function (logManager,
+        'js/Utils/PreferencesHelper'], function (Logger,
                                    generateGuid,
                                    CONSTANTS,
                                    nodePropertyNames,
@@ -29,7 +29,9 @@ define(['common/LogManager',
         MEMBER_POSITION_REGISTRY_KEY = REGISTRY_KEYS.POSITION;
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase = function (options) {
-        this.logger = logManager.create(options.loggerName || "DiagramDesignerWidgetMultiTabMemberListControllerBase");
+        var loggerName = options.loggerName || 'gme:Panels:ControllerBase:' +
+            'DiagramDesignerWidgetMultiTabMemberListControllerBase';
+        this.logger = Logger.create(loggerName, WebGMEGlobal.client.log);
 
         this._client = options.client;
 
@@ -398,13 +400,13 @@ define(['common/LogManager',
          };
         */
 
-        this.logger.warning('DiagramDesignerWidgetMultiTabMemberListControllerBase.getOrderedMemberListInfo(memberListContainerObject) is not overridden for object "' + memberListContainerObject + '", returning default...');
+        this.logger.warn('DiagramDesignerWidgetMultiTabMemberListControllerBase.getOrderedMemberListInfo(memberListContainerObject) is not overridden for object "' + memberListContainerObject + '", returning default...');
 
         return undefined;
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.getMemberListSetsRegistryKey = function () {
-        this.logger.warning('DiagramDesignerWidgetMultiTabMemberListControllerBase.getMemberListSetsRegistryKey is not overridden, returning default value...');
+        this.logger.warn('DiagramDesignerWidgetMultiTabMemberListControllerBase.getMemberListSetsRegistryKey is not overridden, returning default value...');
         return undefined;
     };
 
@@ -854,7 +856,7 @@ define(['common/LogManager',
         var itemIDList = [];
         for (i = 0; i < orderedItemEvents.length; i += 1) {
             j = orderedItemEvents[i];
-            //this.logger.warning("ID: " + j.eid);
+            //this.logger.warn("ID: " + j.eid);
             itemIDList.push(j.eid);
         }
 
@@ -862,7 +864,7 @@ define(['common/LogManager',
         for (i = 0; i < orderedConnectionEvents.length; i += 1) {
             j = orderedConnectionEvents[i];
             var connconn = itemIDList.indexOf(j.desc.srcID) === -1 && itemIDList.indexOf(j.desc.dstID) === -1;
-            //this.logger.warning("ID: " + x.eid + ", SRC: " + x.desc.srcID + ", DST: " + x.desc.dstID + (connconn ? " *****" : ""));
+            //this.logger.warn("ID: " + x.eid + ", SRC: " + x.desc.srcID + ", DST: " + x.desc.dstID + (connconn ? " *****" : ""));
         }*/
         /** END OF --- LOG ORDERED CONNECTION LIST ********************/
 
@@ -1182,7 +1184,7 @@ define(['common/LogManager',
 
                             len -= 1;
                         } else {
-                            this.logger.warning('Updating connections...Existing connections are less than the needed src-dst combo...');
+                            this.logger.warn('Updating connections...Existing connections are less than the needed src-dst combo...');
                             //let's create a connection
                             var uiComponent = this._widget.createConnection(objDesc);
                             this.logger.debug('Connection: ' + uiComponent.id + ' for GME object: ' + gmeID);
@@ -1541,7 +1543,7 @@ define(['common/LogManager',
         var result = {'SetID': 'SET_',
                       'Title': 'Tab '};
 
-        this.logger.warning('DiagramDesignerWidgetMultiTabMemberListControllerBase.getNewSetNamePrefixDesc is not overridden, returning default value: ' + JSON.stringify(result));
+        this.logger.warn('DiagramDesignerWidgetMultiTabMemberListControllerBase.getNewSetNamePrefixDesc is not overridden, returning default value: ' + JSON.stringify(result));
         return result;
     };
 

@@ -4,20 +4,20 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['common/LogManager',
+define(['js/logger',
         'js/Utils/GMEConcepts',
         'js/NodePropertyNames',
         'js/Utils/ExportManager',
         'js/Utils/ImportManager',
         'js/Constants',
         'js/RegistryKeys',
-        'css!./styles/TreeBrowserControl.css'], function (logManager,
-                                                                       GMEConcepts,
-                                                                       nodePropertyNames,
-                                                                       ExportManager,
-                                                                       ImportManager,
-                                                                       CONSTANTS,
-                                                                       REGISTRY_KEYS) {
+        'css!./styles/TreeBrowserControl.css'], function (Logger,
+                                                           GMEConcepts,
+                                                           nodePropertyNames,
+                                                           ExportManager,
+                                                           ImportManager,
+                                                           CONSTANTS,
+                                                           REGISTRY_KEYS) {
 
     "use strict";
 
@@ -47,7 +47,7 @@ define(['common/LogManager',
             getNodeClass;
 
         //get logger instance for this component
-        logger = logManager.create("TreeBrowserControl");
+        logger = Logger.create('gme:Panels:ObjectBrowser:TreeBrowserControl', WebGMEGlobal.gmeConfig.client.log);
         this._logger = logger;
 
         this._client = client;
@@ -230,7 +230,7 @@ define(['common/LogManager',
             //temporary fix to not allow deleting ROOT AND FCO
             while (i--) {
                 if (!GMEConcepts.canDeleteNode(selectedIds[i])) {
-                    logger.warning('Can not delete item with ID: ' + selectedIds[i] + '. Possibly it is the ROOT or FCO');
+                    logger.warn('Can not delete item with ID: ' + selectedIds[i] + '. Possibly it is the ROOT or FCO');
                     selectedIds.splice(i, 1);
                 }
             }
@@ -647,7 +647,7 @@ define(['common/LogManager',
             params[childId]['registry'][REGISTRY_KEYS.POSITION] = {x: 100, y: 100};
             client.createChildren(params);
         } else {
-            logger.warning("Can not create child instance of '" + childId + "', in parent object: '" + nodeId + "'");
+            logger.warn("Can not create child instance of '" + childId + "', in parent object: '" + nodeId + "'");
         }
     };
 

@@ -5,7 +5,7 @@
  * @author nabana / https://github.com/nabana
  */
 
-define(['common/LogManager',
+define(['js/logger',
     'js/util',
     'js/NodePropertyNames',
     'js/RegistryKeys',
@@ -13,15 +13,15 @@ define(['common/LogManager',
     'js/Utils/DisplayFormat',
     'js/Dialogs/DecoratorSVGExplorer/DecoratorSVGExplorerDialog',
     'js/Controls/PropertyGrid/PropertyGridWidgets',
-    './PointerWidget'], function (logManager,
-                                        util,
-                                        nodePropertyNames,
-                                        REGISTRY_KEYS,
-                                        CONSTANTS,
-                                        displayFormat,
-                                        DecoratorSVGExplorerDialog,
-                                        PropertyGridWidgets,
-                                        PointerWidget) {
+    './PointerWidget'], function (Logger,
+                                util,
+                                nodePropertyNames,
+                                REGISTRY_KEYS,
+                                CONSTANTS,
+                                displayFormat,
+                                DecoratorSVGExplorerDialog,
+                                PropertyGridWidgets,
+                                PointerWidget) {
 
     "use strict";
 
@@ -54,7 +54,8 @@ define(['common/LogManager',
 
         this._initEventHandlers();
 
-        this._logger = logManager.create("PropertyEditorController");
+        this._logger = Logger.create('gme:Panels:PropertyEditor:PropertyEditorController',
+            WebGMEGlobal.gmeConfig.client.log);
         this._logger.debug("Created");
     };
 

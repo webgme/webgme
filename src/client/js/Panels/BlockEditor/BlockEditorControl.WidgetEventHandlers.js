@@ -3,7 +3,7 @@
  * @author brollb / https:// github/brollb
  */
 
-define(['common/LogManager',
+define(['js/logger',
     'js/util',
     'js/Constants',
     'js/NodePropertyNames',
@@ -12,7 +12,7 @@ define(['common/LogManager',
     'js/Utils/ExportManager',
     'js/Widgets/BlockEditor/BlockEditorWidget.Constants',
     'js/Widgets/BlockEditor/BlockEditorWidget.Utils',
-    'js/DragDrop/DragHelper'], function (logManager,
+    'js/DragDrop/DragHelper'], function (Logger,
                                          util,
                                          CONSTANTS,
                                          nodePropertyNames,
@@ -197,7 +197,7 @@ define(['common/LogManager',
             if (GMEConcepts.canDeleteNode(objID)) {
                 objIdList.pushUnique(objID);
             } else {
-                this.logger.warning('Can not delete item with ID: ' + objID + '. Possibly it is the ROOT or FCO');
+                this.logger.warn('Can not delete item with ID: ' + objID + '. Possibly it is the ROOT or FCO');
             }
         }
 
@@ -1195,9 +1195,9 @@ define(['common/LogManager',
                             this._client.startTransaction();
                             this._client.copyMoreNodes(params);
                             this._client.completeTransaction();
-                            this.logger.warning('Pasted ' + childrenIDs.length + ' items successfully into node (' + parentID + ')');
+                            this.logger.warn('Pasted ' + childrenIDs.length + ' items successfully into node (' + parentID + ')');
                         } else {
-                            this.logger.warning('Can not paste items because not all the items on the clipboard can be created as a child of the currently opened node (' + parentID + ')');
+                            this.logger.warn('Can not paste items because not all the items on the clipboard can be created as a child of the currently opened node (' + parentID + ')');
                         }
                     }
                 }

@@ -108,7 +108,6 @@ module.exports = {
     serverUserStorage: requirejs('common/storage/serveruserstorage'),
     core: requirejs('common/core/core'),
     standaloneServer: requirejs('server/standalone'),
-    logManager: requirejs('common/LogManager'),
     runPlugin: requirejs('server/runplugin'),
     serializer: requirejs('common/core/users/serialization'),
     canon: requirejs('common/util/canon'),

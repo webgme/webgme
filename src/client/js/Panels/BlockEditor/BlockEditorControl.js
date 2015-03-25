@@ -3,7 +3,7 @@
  * @author brollb / https://github/brollb
  */
 
-define(['common/LogManager',
+define(['js/logger',
     'js/Constants',
     'js/Widgets/BlockEditor/BlockEditorWidget.Constants',
     'js/NodePropertyNames',
@@ -11,7 +11,7 @@ define(['common/LogManager',
     'js/Utils/PreferencesHelper',
     'js/Utils/DisplayFormat',
     './BlockEditorControl.WidgetEventHandlers',
-    'js/Utils/GMEConcepts'], function (logManager,
+    'js/Utils/GMEConcepts'], function (Logger,
                                         CONSTANTS,
                                         SNAP_CONSTANTS,
                                         nodePropertyNames,
@@ -30,7 +30,8 @@ define(['common/LogManager',
 
     var BlockEditorControl = function(params){
         this._client = params.client;
-        this.logger = params.logger || logManager.create(params.loggerName || "BlockEditorControl");
+        var loggerName = params.loggerName || 'gme:BlockEditor:BlockEditorControl';
+        this.logger = params.logger || Logger.create(loggerName, WebGMEGlobal.gmeConfig.client.log);
 
         this.snapCanvas = params.widget;
         this._attachClientEventListeners();

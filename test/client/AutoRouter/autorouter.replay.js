@@ -7,15 +7,6 @@
 var testFixture = require('../../_globals.js'),
     requirejs = testFixture.requirejs;
 
-requirejs.config({
-    //baseUrl: 'src/',
-    paths: {
-        //'logManager': 'common/LogManager',
-        //'util/assert': 'common/util/assert',
-        'underscore': 'client/lib/underscore/underscore-min'
-    }
-});
-
 var ActionApplier = requirejs('client/js/Widgets/DiagramDesigner/ConnectionRouteManager3.ActionApplier'),
     _ = requirejs('underscore'),
     verbose,

@@ -122,6 +122,54 @@ describe('NodeWorker', function () {
                     done();
                 });
             });
+
+            it('createJob with cmd node -h should return SUCCESS', function (done) {
+                this.timeout(20000);
+                var executorConfig = {
+                        cmd: 'node',
+                        args: ['-h'],
+                        resultArtifacts: [{name: 'all', resultPatterns: []}]
+                    },
+                    artifact = blobClient.createArtifact('execFiles'),
+                    filesToAdd = {
+                        'executor_config.json': JSON.stringify(executorConfig)
+                    };
+                artifact.addFiles(filesToAdd, function (err/*, hashes*/) {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+                    artifact.save(function (err, hash) {
+                        if (err) {
+                            done(err);
+                            return;
+                        }
+                        executorClient.createJob({hash: hash}, function (err, jobInfo) {
+                            var intervalId;
+                            if (err) {
+                                done(new Error(err));
+                                return;
+                            }
+                            intervalId = setInterval(function () {
+                                executorClient.getInfo(jobInfo.hash, function (err, res) {
+                                    if (err) {
+                                        done(err);
+                                        return;
+                                    }
+
+                                    if (res.status === 'CREATED' || res.status === 'RUNNING') {
+                                        // The job is still running..
+                                        return;
+                                    }
+                                    clearInterval(intervalId);
+                                    should.equal(res.status, 'SUCCESS');
+                                    done();
+                                });
+                            }, 100);
+                        });
+                    });
+                });
+            });
         });
 
         describe('[nonce match]', function () {
@@ -755,5 +803,4 @@ describe('NodeWorker', function () {
             });
         });
     }
-)
-;
+);

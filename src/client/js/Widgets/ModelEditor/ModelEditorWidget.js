@@ -10,7 +10,7 @@ define(['js/DragDrop/DragHelper',
 
     ModelEditorWidget = function (container, params) {
         params = params || {};
-        params.loggerName = "ModelEditorWidget";
+        params.loggerName = 'gme:Widgets:ModelEditor:ModelEditorWidget';
 
         params.tabsEnabled = true;
         params.addTabs = false;

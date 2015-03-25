@@ -1,4 +1,4 @@
-/*globals define, Raphael, window*/
+/*globals define, Raphael, window, WebGMEGlobal*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -6,7 +6,7 @@
  */
 
 
-define(['common/LogManager',
+define(['js/logger',
     'js/Constants',
     'raphaeljs',
     'js/Loader/LoaderCircles',
@@ -33,7 +33,7 @@ define(['common/LogManager',
     './DiagramDesignerWidget.Toolbar',
     './DiagramDesignerWidget.Mouse',
     './DiagramDesignerWidget.Tabs',
-    'css!./styles/DiagramDesignerWidget.css'], function (logManager,
+    'css!./styles/DiagramDesignerWidget.css'], function (Logger,
                                                       CONSTANTS,
                                                       raphaeljs,
                                                       LoaderCircles,
@@ -74,7 +74,7 @@ define(['common/LogManager',
         DEBUG = window.DEBUG,
         _ = window._;
 
-    var defaultParams = {'loggerName': 'DiagramDesignerWidget',
+    var defaultParams = {'loggerName': 'gme:Widgets:DiagramDesigner:DiagramDesignerWidget',
                          'gridSize': 10,
                          'droppable': true,
                          'zoomValues': [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5, 10],
@@ -89,7 +89,7 @@ define(['common/LogManager',
         _.extend(params, defaultParams, par);
 
         //create logger instance with specified name
-        this.logger = logManager.create(params.loggerName);
+        this.logger = Logger.create(params.loggerName, WebGMEGlobal.gmeConfig.client.log);
 
         //save DOM container
         this.$el = container;

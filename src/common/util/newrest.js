@@ -1,10 +1,10 @@
+/*globals define*/
 define([
     'common/core/core',
     'common/storage/serveruserstorage',
     'common/core/users/tojson',
     'common/core/users/dump',
     'common/util/url',
-    'common/LogManager',
     'common/core/users/serialization'
 ],function(
     Core,
@@ -12,15 +12,15 @@ define([
     ToJson,
     Dump,
     URL,
-    logManager,
     Serialization
     ){
+    var Logger = require(require('path').join(requirejs.s.contexts._.config.baseUrl, 'server/logger'));
 
     function Rest(_parameters){
         var gmeConfig = _parameters.globConf;
         _parameters.baseUrl = _parameters.baseUrl || "http://localhost/rest"; // FIXME: This should come from config
         _parameters.authorization = /*_parameters.authorization || */function(token,projectname,callback){callback(null,true);}; //TODO temporary removal of second authorization check
-        var _storage = new Storage({'globConf': gmeConfig, 'log':logManager.create('REST-actor')}),
+        var _storage = new Storage({'globConf': gmeConfig, 'log': Logger.create('gme:common:util:newrest:storage', gmeConfig.server.log)}),
             _baseUrl = _parameters.baseUrl,
             _initialized = false,
             _opened = false,

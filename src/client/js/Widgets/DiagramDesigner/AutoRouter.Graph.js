@@ -1,11 +1,11 @@
-/*globals setTimeout,define*/
+/*globals setTimeout, define, WebGMEGlobal*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
  * @author brollb / https://github/brollb
  */
 
-define(['common/LogManager',
+define(['js/logger',
            'common/util/assert',
            './AutoRouter.Constants',
            './AutoRouter.Utils',
@@ -16,7 +16,7 @@ define(['common/LogManager',
            './AutoRouter.Port',
            './AutoRouter.Box',
            './AutoRouter.Edge',
-           './AutoRouter.EdgeList'], function ( logManager, assert, CONSTANTS, Utils, ArPoint, ArPointListPath, ArRect,
+           './AutoRouter.EdgeList'], function ( Logger, assert, CONSTANTS, Utils, ArPoint, ArPointListPath, ArRect,
                                                AutoRouterPath,
                                                AutoRouterPort,
                                                AutoRouterBox,
@@ -25,7 +25,7 @@ define(['common/LogManager',
 
     'use strict'; 
 
-	var _logger = logManager.create('AutoRouterGraph'),
+	var _logger = Logger.create('gme:Widgets:DiagramDesigner:AutoRouter.Graph', WebGMEGlobal.gmeConfig.client.log),
         COUNTER = 1;  // Used for unique ids
 
     var AutoRouterGraph = function () {

@@ -1,12 +1,12 @@
 /*globals define, _, requirejs, WebGMEGlobal*/
 
-define(['common/LogManager',
+define(['js/logger',
         'js/Utils/GMEConcepts',
         'js/NodePropertyNames',
-        'js/Constants'], function (logManager,
-                                                                       GMEConcepts,
-                                                                       nodePropertyNames,
-                                                                       CONSTANTS) {
+        'js/Constants'], function (Logger,
+                                   GMEConcepts,
+                                   nodePropertyNames,
+                                   CONSTANTS) {
 
     "use strict";
 
@@ -26,7 +26,8 @@ define(['common/LogManager',
         this._client = client;
         this._treeBrowser = treeBrowser;
         this._treeBrowser._enableNodeRename = false;
-        this._logger = logManager.create("InheritanceBrowserControl");
+        this._logger = Logger.create('gme:Panels:ObjectBrowser:InheritanceBrowserControl',
+            WebGMEGlobal.gmeConfig.client.log);
 
         setTimeout(function () {
             self._initialize();

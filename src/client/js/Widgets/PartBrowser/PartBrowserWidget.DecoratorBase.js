@@ -4,8 +4,8 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['common/LogManager',
-        'js/Decorators/WidgetDecoratorBase'], function (logManager,
+define(['js/logger',
+        'js/Decorators/WidgetDecoratorBase'], function (Logger,
                                                         WidgetDecoratorBase) {
     "use strict";
 
