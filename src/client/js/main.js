@@ -125,6 +125,7 @@ require(
         'js/WebGME',
         'js/util',
         'text!/gmeConfig.json',
+        'js/logger',
 
         'angular',
         //'angular-route',
@@ -133,7 +134,7 @@ require(
 
     ],
     function (domReady, jQuery, jQueryUi, jQueryUiiPad, jqueryWebGME, jqueryDataTables, bootstrap, underscore,
-              backbone, webGME, util, gmeConfigJson) {
+              backbone, webGME, util, gmeConfigJson, Logger) {
 
         'use strict';
 
@@ -142,6 +143,10 @@ require(
             if (gmeConfig.debug) {
                 DEBUG = gmeConfig.debug;
             }
+
+            var log = Logger.create('gme', gmeConfig.client.log);
+            log.debug('domReady, got gmeConfig');
+
 
             //#2 check URL
             var d = util.getURLParameterByName('debug').toLowerCase();
@@ -155,7 +160,6 @@ require(
 
             var keys = Object.keys(gmeConfig.requirejsPaths);
             for (var i = 0; i < keys.length; i += 1) {
-
                 // assume this is a relative path from the current working directory
                 gmeConfig.requirejsPaths[keys[i]] = '/extlib/' + gmeConfig.requirejsPaths[keys[i]];
             }

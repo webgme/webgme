@@ -27,6 +27,10 @@ var path = require('path'),
 
         client: {
             appDir: path.join(__dirname, '../src/client'),
+            log: {
+                level: 'debug' // To see log messages in the browser inspector set:
+                               // localStorage.debug = '*' (or 'gme*', 'gme:core*')
+            },
             // Used in client/WebGME.js to load initial project.
             defaultProject: {
                 name: null,
@@ -81,6 +85,32 @@ var path = require('path'),
             maxWorkers: 10,
             sessionCookieId: 'webgmeSid',
             sessionCookieSecret: 'meWebGMEez',
+            log: {
+                transports: [{
+                    transportType: 'Console',
+                    options: {
+                        level: 'warn',
+                        colorize: true,
+                        timestamp: true,
+                        prettyPrint: true,
+                        depth: 2
+                    }
+                }, {
+                    transportType: 'File',
+                    options: {
+                        name: 'info-file',
+                        filename: './server.log',
+                        level: 'info'
+                    }
+                }, {
+                    transportType: 'File',
+                    options: {
+                        name: 'error-file',
+                        filename: './server-error.log',
+                        level: 'error'
+                    }
+                }]
+            },
             https: {
                 enable: false,
                 certificateFile: path.join(__dirname, '../certificates/sample-cert.pem'),

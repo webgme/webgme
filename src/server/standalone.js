@@ -58,7 +58,8 @@ define(['common/LogManager',
     function StandAloneServer(gmeConfig) {
         var self = this,
             clientConfig = require(Path.join(requirejs.s.contexts._.config.baseUrl,
-                '../config/getclientconfig'))(gmeConfig);
+                '../config/getclientconfig'))(gmeConfig),
+            Logger = require(Path.join(requirejs.s.contexts._.config.baseUrl, 'server/logger'));
         this.serverUrl = '';
 
         /**
@@ -362,6 +363,7 @@ define(['common/LogManager',
             httpResult.sendFile(path, function (err) {
                 //TODO we should check for all kind of error that should be handled differently
                 if (err && err.code !== 'ECONNRESET') {
+                    __logger.error(path);
                     httpResult.sendStatus(404);
                 }
             });
@@ -393,7 +395,7 @@ define(['common/LogManager',
         LogManager.setLogLevel(gmeConfig.log.level);
         LogManager.useColors(true);
         LogManager.setFileLogPath(gmeConfig.log.file);
-        __logger = LogManager.create("StandAloneWebGMEServer-main");
+        __logger = Logger.create("StandAloneWebGMEServer-main", gmeConfig.server.log);
         //end of logmanager initializing stuff
 
         __logger.info("starting standalone server initialization");
