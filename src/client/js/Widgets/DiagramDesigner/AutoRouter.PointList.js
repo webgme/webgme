@@ -44,24 +44,6 @@ define(['common/LogManager',
         return this[this.length-1];
     };
 
-    ArPointListPath.prototype.getHeadEdge = function(start, end) {
-
-        var pos = this.length;
-        if (this.length < 2) {
-            return pos;
-        }
-
-        pos = 0;
-        assert( pos < this.length, 'ArPointListPath.getHeadEdge: pos < this.length FAILED');
-
-        start = this[pos++];
-        assert( pos < this.length, 'ArPointListPath.getHeadEdge: pos < this.length FAILED');
-
-        end = this[pos];
-
-        return pos;
-    };
-
     ArPointListPath.prototype.getTailEdge = function() {
         if ( this.length < 2 ) {
             return this.length ;
@@ -72,23 +54,6 @@ define(['common/LogManager',
             start = this[pos];
 
         return { 'pos': pos, 'start': start, 'end': end };
-    };
-
-    ArPointListPath.prototype.getNextEdge = function(pos, start, end) {
-        if (CONSTANTS.DEBUG) {
-            this.AssertValidPos(pos);
-        }
-
-        pos++;
-        assert( pos < this.length, 'ArPointListPath.getNextEdge: pos < this.length FAILED');
-
-        var p = pos;
-        start = this[p++];
-        if ( p === this.length) {
-            pos = this.length;
-        } else {
-            end = this[p];
-        }
     };
 
     ArPointListPath.prototype.getPrevEdge = function(pos, start, end) {
@@ -115,23 +80,6 @@ define(['common/LogManager',
         end = this[pos];
     };
 
-    ArPointListPath.prototype.getHeadEdgePtrs = function(start, end) {
-        if ( this.length < 2 ) {
-            return { 'pos': this.length };
-        }
-
-        var pos = 0;
-
-        assert( pos < this.length, 'ArPointListPath.getHeadEdgePtrs: pos < this.length FAILED');
-
-        start = this[pos++];
-        assert( pos < this.length, 'ArPointListPath.getHeadEdgePtrs: pos < this.length FAILED');
-
-        end = this[pos];
-
-        return { 'pos': pos, 'start': start, 'end': end };
-    };
-
     ArPointListPath.prototype.getTailEdgePtrs = function() {
         var pos = this.length,
             start,
@@ -151,19 +99,6 @@ define(['common/LogManager',
         return { 'pos': pos, 'start': start, 'end': end };
     };
 
-    ArPointListPath.prototype.getNextEdgePtrs = function(pos, start, end) {
-        if (CONSTANTS.DEBUG) {
-            this.AssertValidPos(pos);
-        }
-
-        start = this[pos++];
-        if (pos < this.length) {
-            end = this[pos];
-        }
-
-        return { 'pos': pos, 'start': start, 'end': end };
-    };
-
     ArPointListPath.prototype.getPrevEdgePtrs = function(pos) {
         var start,
             end;
@@ -179,17 +114,6 @@ define(['common/LogManager',
         }
 
         return {pos: pos, start: start, end: end};
-    };
-
-    ArPointListPath.prototype.getEdgePtrs = function(pos, start, end) {
-        if (CONSTANTS.DEBUG) {
-            this.AssertValidPos(pos);
-        }
-
-        start.assign(this[pos++]);
-        assert( pos < this.length, 'ArPointListPath.getEdgePtrs: pos < this.length FAILED');
-
-        end.assign(this[pos]);
     };
 
     ArPointListPath.prototype.getStartPoint = function(pos) {
@@ -242,43 +166,6 @@ define(['common/LogManager',
         return this[pos];
     };
 
-    ArPointListPath.prototype.getEdgePosBeforePoint = function(pos) {
-        if (CONSTANTS.DEBUG) {
-            this.AssertValidPos(pos);
-        }
-
-        pos--;
-        return pos;
-    };
-
-    ArPointListPath.prototype.getEdgePosAfterPoint = function(pos) {
-        if (CONSTANTS.DEBUG) {
-            this.AssertValidPos(pos);
-        }
-
-        var p = pos + 1;
-
-        if (p === this.length) {
-            return this.length;
-        }
-
-        return pos;
-    };
-
-    ArPointListPath.prototype.getEdgePosForStartPoint = function(start) {
-        var pos = 0;
-        while (pos < this.length) {
-            if (this[pos++] === start) {
-                assert(pos < this.length, 'ArPointListPath.getEdgePosForStartPoint: pos < this.length FAILED');
-                pos--;
-                break;
-            }
-        }
-
-        assert(pos < this.length, 'ArPointListPath.getEdgePosForStartPoint: pos < this.length FAILED');
-        return pos;
-    };
-
     ArPointListPath.prototype.assertValid = function(msg) {
         // Check to make sure each point makes a horizontal/vertical line with it's neighbors
         msg = msg || '';
@@ -296,16 +183,18 @@ define(['common/LogManager',
     };
 
     ArPointListPath.prototype.dumpPoints = function(msg) {
-        _logger.debug(msg + ', points dump begin:');
+        msg += ', points dump begin:\n';
         var pos = 0,
             i = 0,
             p;
         while (pos < this.length) {
             p = this[pos++];
-            _logger.debug(i + '.: (' + p.x + ', ' + p.y + ')');
+            msg += i + '.: (' + p.x + ', ' + p.y + ')\n';
             i++;
         }
-        _logger.debug('points dump end.');
+        msg += 'points dump end.';
+        _logger.debug(msg);
+        return msg;
     };
 
     return ArPointListPath;

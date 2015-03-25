@@ -35,41 +35,6 @@ define( ['common/LogManager',
 
     //----Points
 
-    AutoRouterPath.prototype.getPointPosAt = function (point, nearness){
-        var pos = 0,
-            oldpos;
-
-        while ( pos < this.points.length ) {
-            oldpos = pos;
-            if ( Utils.isPointNear(this.points[pos++], point, nearness) ){
-                return oldpos;
-            }
-        }
-
-        return this.points.length;
-    };
-
-    AutoRouterPath.prototype.getEdgePosAt = function (point, nearness){
-        var tmp = this.points.getTailEdge(),
-            a = tmp.start,
-            b = tmp.end,
-            pos = tmp.pos;
-
-        while ( pos < this.points.length) {
-            if ( Utils.isPointNearLine(point, a, b, nearness) ){
-                return pos;
-            }
-
-            tmp = this.points.getPrevEdge(pos, a, b);
-            a = tmp.start;
-            b = tmp.end;
-            pos = tmp.pos;
-
-        }
-
-        return this.points.length;
-    };
-
     AutoRouterPath.prototype.hasOwner = function() {
         return this.owner !== null;
     };
@@ -177,21 +142,17 @@ define( ['common/LogManager',
 
 
         //Getting target
-        var pt;
-        if (this.customPathData.length){
-            tgt = new ArPoint(this.customPathData[0].getX(), this.customPathData[0].getY());
-        } else {
-            var x = 0,
-                y = 0;
+        var pt,
+            x = 0,
+            y = 0;
 
-            i = this.endports.length;
-            while (i--){
-                pt = this.endports[i].rect.getCenter();
-                x += pt.x;
-                y += pt.y;
-            }
-            tgt = new ArPoint(x/this.endports.length, y/this.endports.length);
+        i = this.endports.length;
+        while (i--){
+            pt = this.endports[i].rect.getCenter();
+            x += pt.x;
+            y += pt.y;
         }
+        tgt = new ArPoint(x/this.endports.length, y/this.endports.length);
 
         //Get the optimal port to the target
         this.startport = Utils.getOptimalPorts(srcPorts, tgt);
@@ -250,22 +211,17 @@ define( ['common/LogManager',
         }
 
         //Getting target
-        var pt;
-        if (this.customPathData.length){
-            i = this.customPathData.length - 1;
-            tgt = new ArPoint(this.customPathData[i].getX(), this.customPathData[i].getY());
-        }else{
-            var x = 0,
-                y = 0;
+        var pt,
+            x = 0,
+            y = 0;
 
-            i = this.startports.length;
-            while (i--){
-                pt = this.startports[i].rect.getCenter();
-                x += pt.x;
-                y += pt.y;
-            }
-            tgt = new ArPoint(x/this.startports.length, y/this.startports.length);
+        i = this.startports.length;
+        while (i--){
+            pt = this.startports[i].rect.getCenter();
+            x += pt.x;
+            y += pt.y;
         }
+        tgt = new ArPoint(x/this.startports.length, y/this.startports.length);
 
         //Get the optimal port to the target
         this.endport = Utils.getOptimalPorts(dstPorts, tgt);
@@ -280,7 +236,7 @@ define( ['common/LogManager',
             endportHasLimited = this.endport.hasLimitedDirs();
             endportCanHave = this.endport.canHaveStartEndPointOn(enddir, false);
         }
-        if ( enddir === CONSTANTS.DirNone ||							// like above
+        if (enddir === CONSTANTS.DirNone ||							// like above
                 endportHasLimited && !endportCanHave){
             enddir = this.endport.getStartEndDirTo(tgt, false, this.startport === this.endport ? startdir : CONSTANTS.DirNone );
         }
@@ -304,14 +260,6 @@ define( ['common/LogManager',
         this.points = new ArPointListPath();
         this.state = CONSTANTS.PathStateDefault;
         this.clearPorts();
-    };
-
-    AutoRouterPath.prototype.hasNoPoint = function() {
-        return this.points.length === 0;
-    };
-
-    AutoRouterPath.prototype.getPointCount = function() {
-        return this.points.length;
     };
 
     AutoRouterPath.prototype.getStartBox = function() {
@@ -435,45 +383,6 @@ define( ['common/LogManager',
         return this.points;
     };
 
-    AutoRouterPath.prototype.setPoints = function(npoints){
-        this.points = new ArPointListPath();
-        var pos = 0;
-
-        while (pos < npoints.length){
-            this.points.push(npoints.pos);
-        }
-    };
-
-    AutoRouterPath.prototype.getSurroundRect = function() {
-        var rect = new ArRect(Infinity,Infinity,-Infinity,-Infinity),
-            pos = 0,
-            point;
-
-        while ( pos < this.points.length) {
-            point = this.points[pos++];
-
-            rect.left = Math.min(rect.left, point.x);
-            rect.ceil = Math.min(rect.ceil, point.y);
-            rect.right = Math.max(rect.right, point.x);
-            rect.floor = Math.max(rect.floor, point.y);
-        }
-
-        if (rect.left === Infinity || rect.top === Infinity ||
-               rect.right === -Infinity || rect.bottom === -Infinity) {
-            rect.setRectEmpty();
-        }
-
-        return rect;
-    };
-
-    AutoRouterPath.prototype.isEmpty = function() {
-        return this.points.length === 0;
-    };
-
-    AutoRouterPath.prototype.isPathAt = function(point, nearness){
-        return this.getEdgePosAt(point, nearness) !== this.points.length();
-    };
-
     AutoRouterPath.prototype.isPathClip = function(r, isStartOrEndRect){
         var tmp = this.points.getTailEdge(),
             a = tmp.start,
@@ -511,14 +420,6 @@ define( ['common/LogManager',
         return ((this.attributes & CONSTANTS.PathFixed) === 0);
     };
 
-    AutoRouterPath.prototype.isHighLighted = function() {
-        return ((this.attributes & CONSTANTS.PathHighLighted) !== 0);
-    };
-
-    AutoRouterPath.prototype.getState = function() {
-        return this.state;
-    };
-
     AutoRouterPath.prototype.setState = function(s){
         assert(this.owner !== null, 'ARPath.setState: this.owner !== null FAILED');
 
@@ -552,202 +453,20 @@ define( ['common/LogManager',
         this.attributes = (this.attributes & ~CONSTANTS.PathStartMask) + pathStart;
     };
 
-    AutoRouterPath.prototype.setCustomPathData = function(pDat){
-        this.customPathData = pDat;
+    AutoRouterPath.prototype.setCustomPathPoints = function(points){
+        this.customPathData = points;
+        this.points = new ArPointListPath().concat(points);
 
-        // Disconnect path
-        this.owner.disconnect(this);
-    };
-
-    AutoRouterPath.prototype.applyCustomizationsBeforeAutoConnectPoints = function() {
-        var plist = [];
-
-        if (this.customPathData.length === 0){
-            return;
-        }
-
-        var i = 0,
-            pt;
-
-        while ( i < this.customPathData.length ){
-            if ( this.customPathData[i].getType() === CONSTANTS.CustomPointCustomization ){
-                pt = new ArPoint();
-                pt.x = this.customPathData[i].getX();
-                pt.y = this.customPathData[i].getY();
-                plist.push( [ pt ] );
-            }
-
-            ++i;
-        }
-
-        return plist;
-    };
-
-    AutoRouterPath.prototype.applyCustomizationsAfterAutoConnectPointsAndStuff = function() {
-        //This sets customizations of the type 'CONSTANTS.SimpleEdgeDisplacement'
-        if (this.customPathData.length === 0){
-            return;
-        }
-
-        var numEdges = this.points.length - 1,
-            ii;
-        if (this.isAutoRoutingOn) {
-            ii = 0;
-            while (ii < this.customPathData.length){
-                if ((this.customPathData[ii]).getEdgeCount() !== numEdges &&
-                        (this.customPathData[ii]).getType() === CONSTANTS.SimpleEdgeDisplacement) {
-                    this.pathDataToDelete.push(this.customPathData[ii]);
-                    this.customPathData.splice(ii, 1);
-                } else {
-                    ++ii;
-                }
-            }
-        }
-
-        var currEdgeIndex = 0,
-            tmp = this.points.getHeadEdgePtrs(),
-            end = tmp.end,
-            start = tmp.start,
-            pos = tmp.pos,
-            isHorizontalVar,
-            doNotApply,
-            increment,
-            dir,
-            xToSet,
-            yToSet,
-            startRect,
-            endRect,
-            minLimit,
-            maxLimit,
-            valueToSet;
-
-        while (pos < this.points.length){
-            ii = 0;
-            while (ii < this.customPathData.length) {
-                increment = true;
-                if (currEdgeIndex === (this.customPathData[ii]).getEdgeIndex()) {
-                    if ((this.customPathData[ii]).getType() === CONSTANTS.SimpleEdgeDisplacement) {
-                        dir = Utils.getDir (end.minus(start));
-                        isHorizontalVar = (Utils.isHorizontal(dir) !== 0);
-                        doNotApply = false;
-                        if ((this.customPathData[ii]).isHorizontalOrVertical() === isHorizontalVar) {
-                            xToSet = (this.customPathData[ii]).getX();
-                            yToSet = (this.customPathData[ii]).getY();
-                            // Check if the edge displacement at the end of the path
-                            // is still within the boundary limits of the start or the end box
-                            if (currEdgeIndex === 0 || currEdgeIndex === numEdges - 1) {
-                                startRect = this.startport.rect;
-                                    endRect = this.endport.rect;
-                                    minLimit = (currEdgeIndex === 0 ?
-                                            ((this.customPathData[ii]).IsHorizontalOrVertical() ? startRect.ceil : startRect.left) :
-                                            ((this.customPathData[ii]).IsHorizontalOrVertical() ? endRect.ceil : endRect.left));
-                                    maxLimit = (currEdgeIndex === 0 ?
-                                            ((this.customPathData[ii]).IsHorizontalOrVertical() ? startRect.floor : startRect.right) :
-                                            ((this.customPathData[ii]).IsHorizontalOrVertical() ? endRect.floor : endRect.right));
-                                    valueToSet = (this.customPathData[ii]).IsHorizontalOrVertical() ? yToSet : xToSet;
-                                if (valueToSet < minLimit || valueToSet > maxLimit){
-                                    doNotApply = true;
-                                }
-                            }
-                            if (!doNotApply) {
-                                if ((this.customPathData[ii]).isHorizontalOrVertical()) {
-                                    start.y = yToSet;
-                                    end.y = yToSet;
-                                } else {
-                                    start.x = xToSet;
-                                    end.x = xToSet;
-                                }
-                            }
-                        }
-                        if ((this.customPathData[ii]).isHorizontalOrVertical() !== isHorizontalVar || doNotApply) {
-                            // something went wrong, invalid data: direction (horz/vert) not match
-                            //						assert(false);
-                            this.pathDataToDelete.push(this.customPathData[ii]);
-                            this.customPathData.splice(ii, 1);
-                            increment = false;
-                        }
-                    }
-                }
-                if (increment){
-                    ++ii;
-                }
-            }
-
-            tmp = this.points.getNextEdgePtrs(pos, start, end);
-            pos = tmp.pos;
-            start = tmp.start;
-            end = tmp.end;
-
-            currEdgeIndex++;
-        }
+        // Set as connected
+        this.setState(CONSTANTS.PathStateConnected);
     };
 
     AutoRouterPath.prototype.removePathCustomizations = function() {
-        var ii = 0;
-        while (ii < this.customPathData.length){
-            this.pathDataToDelete.push(this.customPathData[ii++]);
-        }
         this.customPathData = [];
-    };
-
-    AutoRouterPath.prototype.markPathCustomizationsForDeletion = function(asp){
-        var ii = 0;
-        while (ii < this.customPathData.length) {
-            if ((this.customPathData[ii]).getAspect() === asp){
-                this.pathDataToDelete.push(this.customPathData[ii]);
-            }
-            ++ii;
-        }
-    };
-
-    AutoRouterPath.prototype.removeInvalidPathCustomizations = function(asp){
-        // We only inhibit/delete those edges, which has an edge count
-        // (redundant data intended for this very sanity check)
-        // doesn't equal to edge count
-        var ii = 0,
-            numEdges = this.points.length - 1;
-        while (ii < this.customPathData.length) {
-            if ((this.customPathData[ii]).getAspect() === asp) {
-                if ((this.customPathData[ii]).getEdgeCount() !== numEdges &&
-                        (this.customPathData[ii]).getType() === CONSTANTS.SimpleEdgeDisplacement) {
-                    this.customPathData.splice(ii, 1);
-                } else {
-                    ++ii;
-                }
-            } else {
-                ++ii;
-            }
-        }
     };
 
     AutoRouterPath.prototype.areTherePathCustomizations = function() {
         return this.customPathData.length !== 0;
-    };
-
-    AutoRouterPath.prototype.areThereDeletedPathCustomizations = function() {
-        return this.pathDataToDelete.length !== 0;
-    };
-
-    AutoRouterPath.prototype.getDeletedCustomPathData = function(cpd){
-        var ii = 0;
-        while (ii < this.pathDataToDelete.length){
-            cpd.push(this.pathDataToDelete[ii++]);
-        }
-    };
-
-    AutoRouterPath.prototype.getCustomizedEdgeIndexes = function(indexes){
-        indexes = [];
-        var ii = 0,
-            edgeIndex;
-
-        while (ii < this.customPathData.length) {
-            if (this.isAutoRouted() && (this.customPathData[ii]).getType() === CONSTANTS.SimpleEdgeDisplacement ||
-                    !this.isAutoRouted() && (this.customPathData[ii]).getType() !== CONSTANTS.SimpleEdgeDisplacement) {
-                edgeIndex = (this.customPathData[ii]).getEdgeIndex();
-                indexes.push(edgeIndex);
-            }
-            ++ii;
-        }
     };
 
     AutoRouterPath.prototype.isAutoRouted = function() {

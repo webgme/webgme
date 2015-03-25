@@ -455,7 +455,9 @@ define(['common/LogManager',
             Utils.stepOneInDir(startpoint, Utils.nextClockwiseDir(startdir));
         }
 
-        if (path.isAutoRouted() && this.box2bufferBox[startId] === this.box2bufferBox[endId] && 
+        if (!path.isAutoRouted()) {
+            return this.horizontal.addPathEdges(path) && this.vertical.addPathEdges(path);
+        } else if (this.box2bufferBox[startId] === this.box2bufferBox[endId] && 
             startdir === Utils.reverseDir(enddir) && startRoot !== endRoot) {
 
             return this._connectPointsSharingParentBox(path, startpoint, endpoint, startdir);
@@ -522,10 +524,6 @@ define(['common/LogManager',
         // Apply custom edge modifications - step 1
         // (Step 1: Move the desired edges - see in AutoRouterGraph::Connect(AutoRouterPath* path, ArPoint& startpoint, ArPoint& endpoint)
         //  Step 2: Fix the desired edges - see in AutoRouterEdgeList::addEdges(AutoRouterPath* path))
-        if (isAutoRouted) {
-            path.applyCustomizationsAfterAutoConnectPointsAndStuff();
-        }
-
         return this.horizontal.addPathEdges(path) && this.vertical.addPathEdges(path);
     };
 
@@ -555,7 +553,6 @@ define(['common/LogManager',
         path.addTail(endpoint);
 
         path.setState(CONSTANTS.PathStateConnected);
-        path.applyCustomizationsAfterAutoConnectPointsAndStuff();
 
         return this.horizontal.addPathEdges(path) && this.vertical.addPathEdges(path);
 

@@ -136,20 +136,20 @@ define(['common/LogManager',
 
             this.sectionX1 = otherEdge.sectionX1;
             this.sectionX2 = otherEdge.sectionX2;
-            this.setSectionNext(otherEdge.getSectionNext(true) );
-            this.setSectionDown(otherEdge.getSectionDown(true) );
+            this.setSectionNext(otherEdge.getSectionNext(true));
+            this.setSectionDown(otherEdge.getSectionDown(true));
 
-            this.setEdgeFixed(otherEdge.getEdgeFixed() );
-            this.setEdgeCustomFixed(otherEdge.getEdgeCustomFixed() );
-            this.setEdgeCanpassed(otherEdge.getEdgeCanpassed() );
-            this.setDirection(otherEdge.getDirection() );
+            this.edgeFixed = otherEdge.edgeFixed;
+            this.edgeCustomFixed = otherEdge.edgeCustomFixed;
+            this.setEdgeCanpassed(otherEdge.getEdgeCanpassed());
+            this.setDirection(otherEdge.getDirection());
 
-            this.setBlockPrev(otherEdge.getBlockPrev() );
-            this.setBlockNext(otherEdge.getBlockNext() );
-            this.setBlockTrace(otherEdge.getBlockTrace() );
+            this.setBlockPrev(otherEdge.getBlockPrev());
+            this.setBlockNext(otherEdge.getBlockNext());
+            this.setBlockTrace(otherEdge.getBlockTrace());
 
-            this.setClosestPrev(otherEdge.getClosestPrev() );
-            this.setClosestNext(otherEdge.getClosestNext() );
+            this.setClosestPrev(otherEdge.getClosestPrev());
+            this.setClosestNext(otherEdge.getClosestNext());
 
             return this;
         }
@@ -167,11 +167,6 @@ define(['common/LogManager',
 
     AutoRouterEdge.prototype.isStartPointPrevNull = function () {
         return !this.startpointPrev;
-    };
-
-    // REMOVE
-    AutoRouterEdge.prototype.setStartPointPrev = function (point){
-        this.startpointPrev = point || null;
     };
 
     AutoRouterEdge.prototype.getStartPoint = function (){
@@ -281,22 +276,6 @@ define(['common/LogManager',
         } else {
             this.sectionDown = [downSection];
         }
-    };
-
-    AutoRouterEdge.prototype.getEdgeFixed = function(){
-        return this.edgeFixed;
-    };
-
-    AutoRouterEdge.prototype.setEdgeFixed = function(ef){ //boolean
-        this.edgeFixed = ef;
-    };
-
-    AutoRouterEdge.prototype.getEdgeCustomFixed = function(){
-        return this.edgeCustomFixed;
-    };
-
-    AutoRouterEdge.prototype.setEdgeCustomFixed = function(ecf){
-        this.edgeCustomFixed = ecf;
     };
 
     AutoRouterEdge.prototype.getEdgeCanpassed =  function(){
