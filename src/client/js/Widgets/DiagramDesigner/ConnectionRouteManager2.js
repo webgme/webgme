@@ -8,7 +8,7 @@ define(['js/logger'], function (Logger) {
         DESIGNERITEM_SUBCOMPONENT_SEPARATOR = "_x_";
 
     ConnectionRouteManager2 = function (options) {
-        var loggerName = (options && options.loggerName) || 'gme:Widgets:DiagramDesigner:ConnectionRouteManagerBasic';
+        var loggerName = (options && options.loggerName) || 'gme:Widgets:DiagramDesigner:ConnectionRouteManager2';
         this.logger = (options && options.logger) || Logger.create(loggerName, WebGMEGlobal.gmeConfig.client.log);
 
         this.diagramDesigner = options ? options.diagramDesigner : null;

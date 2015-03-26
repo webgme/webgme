@@ -1,13 +1,13 @@
-/*globals define, Raphael, window*/
+/*globals define, Raphael, window, WebGMEGlobal*/
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
 
-define(['common/LogManager',
+define(['js/logger',
     'js/util',
-    './DiagramDesignerWidget.Constants'], function (logManager,
+    './DiagramDesignerWidget.Constants'], function (Logger,
                             clientUtil,
                             DiagramDesignerWidgetConstants) {
 
@@ -20,8 +20,9 @@ define(['common/LogManager',
         MOUSE_EVENT_POSTFIX = "SelectionManager";
 
     SelectionManager = function (options) {
-        this.logger = (options && options.logger) || logManager.create(((options && options.loggerName) || "SelectionManager"));
-
+        var loggerName = (options && options.loggerName) || 'gme:Widgets:DiagramDesigner:SelectionManager';
+        this.logger = (options && options.logger) || Logger.create(loggerName, WebGMEGlobal.gmeConfig.client.log);
+        
         this._diagramDesigner = options ? options.diagramDesigner : null;
 
         if (this._diagramDesigner === undefined || this._diagramDesigner === null) {

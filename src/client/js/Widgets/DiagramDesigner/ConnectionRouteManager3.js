@@ -1,10 +1,10 @@
-/*globals define, _*/
+/*globals define, _, WebGMEGlobal*/
 
-define(['common/LogManager',
+define(['js/logger',
         './AutoRouter', 
         './ConnectionRouteManager3.ActionApplier.js', 
         'common/util/assert',
-        './Profiler'], function (logManager, 
+        './Profiler'], function (Logger,
                                  AutoRouter, 
                                  ActionApplier, 
                                  assert, 
@@ -17,7 +17,8 @@ define(['common/LogManager',
         ASYNC = false;
 
     ConnectionRouteManager3 = function (options) {
-        this.logger = (options && options.logger) || logManager.create(((options && options.loggerName) || "ConnectionRouteManager3"));
+        var loggerName = (options && options.loggerName) || 'gme:Widgets:DiagramDesigner:ConnectionRouteManager3';
+        this.logger = (options && options.logger) || Logger.create(loggerName, WebGMEGlobal.gmeConfig.client.log);
 
         this.diagramDesigner = options ? options.diagramDesigner : null;
 
