@@ -1,6 +1,6 @@
 /*globals define, _, requirejs, WebGMEGlobal*/
 
-define(['common/LogManager',
+define(['js/logger',
     'js/Constants',
     'js/NodePropertyNames',
     'js/RegistryKeys',
@@ -8,7 +8,7 @@ define(['common/LogManager',
     './ModelEditorControl.DiagramDesignerWidgetEventHandlers',
     'js/Utils/GMEConcepts',
     'js/Utils/GMEVisualConcepts',
-    'js/Utils/PreferencesHelper'], function (logManager,
+    'js/Utils/PreferencesHelper'], function (Logger,
                                                         CONSTANTS,
                                                         nodePropertyNames,
                                                         REGISTRY_KEYS,
@@ -32,7 +32,8 @@ define(['common/LogManager',
     ModelEditorControl = function (options) {
         var self = this;
 
-        this.logger = options.logger || logManager.create(options.loggerName || "ModelEditorControl");
+        this.logger = options.logger || Logger.create(options.loggerName || 'gme:Panels:ModelicaEditor:' +
+            'ModelEditorControl', WebGMEGlobal.gmeConfig.client.log);
 
         this._client = options.client;
 

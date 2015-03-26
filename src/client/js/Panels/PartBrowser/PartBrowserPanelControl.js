@@ -1,12 +1,12 @@
 /*globals define, _, requirejs, WebGMEGlobal*/
 
-define(['common/LogManager',
+define(['js/logger',
     'js/Constants',
     'js/Utils/GMEConcepts',
     'js/NodePropertyNames',
     'js/RegistryKeys',
     'js/Utils/METAAspectHelper',
-    'js/Utils/PreferencesHelper'], function (logManager,
+    'js/Utils/PreferencesHelper'], function (Logger,
                              CONSTANTS,
                              GMEConcepts,
                              nodePropertyNames,
@@ -39,7 +39,7 @@ define(['common/LogManager',
 
         this._initDragDropFeatures();
 
-        this._logger = logManager.create("PartBrowserControl");
+        this._logger = Logger.create("gme:Panels:PartBrowser:PartBrowserControl", WebGMEGlobal.gmeConfig.client.log);
         this._logger.debug("Created");
 
         METAAspectHelper.addEventListener(METAAspectHelper.events.META_ASPECT_CHANGED, function () {

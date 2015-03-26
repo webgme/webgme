@@ -1,12 +1,12 @@
-/*globals define,_*/
+/*globals define, _, WebGMEGlobal*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  * 
  * @author brollb / https://github/brollb
  */
 
-define(['common/LogManager',
-    'js/Widgets/BlockEditor/BlockEditorWidget.Constants'], function (logManager,
+define(['js/logger',
+    'js/Widgets/BlockEditor/BlockEditorWidget.Constants'], function (Logger,
                                                                    BlockEditorWidgetConstants) {
 
     "use strict";
@@ -14,7 +14,8 @@ define(['common/LogManager',
     var HighlightManager;
 
     HighlightManager = function (options) {
-        this.logger = logManager.create(((options && options.loggerName) || "HighlightManager"));
+        var loggerName = (options && options.loggerName) || 'gme:Widgets:BlockEditor:HighlightManager';
+        this.logger = Logger.create(loggerName, WebGMEGlobal.gmeConfig.client.log);
 
         this._widget = options ? options.widget : null;
 

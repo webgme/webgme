@@ -5,16 +5,16 @@
  */
 
 
-define(['common/LogManager',
+define(['js/logger',
     'js/util',
     'js/Constants',
     'js/Widgets/DataGrid/DataGridWidget.Droppable',
     'text!./templates/DataTableTemplate.html',
-    'css!./styles/DataGridWidget.css'], function (logManager,
-                                                           util,
-                                                          CONSTANTS,
-                                                          DataGridWidgetDroppable,
-                                                          dataTableTemplate) {
+    'css!./styles/DataGridWidget.css'], function (Logger,
+                                                  util,
+                                                  CONSTANTS,
+                                                  DataGridWidgetDroppable,
+                                                  dataTableTemplate) {
     "use strict";
 
     var DataGridWidget,
@@ -27,7 +27,7 @@ define(['common/LogManager',
         ROW_COMMAND_EDIT_TITLE = "edit row";
 
     DataGridWidget = function (container, params) {
-        this.logger = logManager.create("DataGridWidget");
+        this.logger = Logger.create('gme:Widgets:DataGridWidget', WebGMEGlobal.gmeConfig.client.log);
 
         this.$el = container;
 

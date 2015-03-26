@@ -5,13 +5,13 @@
  * @author nabana / https://github.com/nabana
  */
 
-define(['common/LogManager',
+define(['js/logger',
     'js/Loader/LoaderProgressBar',
     'js/Constants',
     'js/PanelBase/PanelBaseWithHeader',
     'js/Panels/SplitPanel/SplitPanel',
     '/listAllVisualizerDescriptors',
-    'css!./styles/VisualizerPanel.css'], function (logManager,
+    'css!./styles/VisualizerPanel.css'], function (Logger,
                                     LoaderProgressBar,
                                     CONSTANTS,
                                     PanelBaseWithHeader,

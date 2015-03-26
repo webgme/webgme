@@ -1,12 +1,12 @@
-/*globals define,_*/
+/*globals define, _, WebGMEGlobal*/
 
 /*
  * @author brollb / https://github/brollb
  */
 
-define(['common/LogManager',
+define(['js/logger',
         './BlockEditorWidget.Constants',
-        './ItemBase'], function (logManager,
+        './ItemBase'], function (Logger,
                                  BLOCK_CONSTANTS,
                                  ItemBase) {
 
@@ -28,7 +28,8 @@ define(['common/LogManager',
         ItemBase.prototype.initialize.call(this, NAME, objId, canvas);
 
         //Logger
-        this.logger = logManager.create("LinkableItem_" + this.id);
+        this.logger = Logger.create('gme:Widgets:BlockEditor:LinkableItem_' + this.id,
+            WebGMEGlobal.gmeConfig.client.log);
 
         //Linkable items that depend on this one for location
         //That is, the child nodes and the 'next' ptr

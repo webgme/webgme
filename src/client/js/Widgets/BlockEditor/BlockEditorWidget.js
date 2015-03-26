@@ -5,7 +5,7 @@
  * @author brollb / https:// github/brollb
  */
 
-define(['common/LogManager',
+define(['js/logger',
         'raphaeljs',
         './BlockEditorWidget.Zoom',
         './BlockEditorWidget.Mouse',
@@ -24,7 +24,7 @@ define(['common/LogManager',
         'js/Loader/LoaderCircles',
         'css!./styles/BlockEditorWidget.css',
         'css!./styles/BlockEditorWidget.DecoratorBase.ConnectionArea.css'
-], function (logManager,
+], function (Logger,
              raphaeljs,
              BlockEditorWidgetZoom,
              BlockEditorWidgetMouse,
@@ -59,7 +59,7 @@ define(['common/LogManager',
 
     BlockEditorWidget = function (container, params) {
         params = params || {};
-        params.loggerName = "BlockEditorWidget";
+        params.loggerName = 'gme:Widgets:BlockEditor:BlockEditorWidget';
 
         // merge default values with the given parameters
         _.extend(params, defaultParams);
@@ -89,7 +89,7 @@ define(['common/LogManager',
         this._zoomRatio = 1;
 
         // if the widget has to support drop feature at all
-        this.logger = logManager.create(params.loggerName);
+        this.logger = Logger.create(params.loggerName, WebGMEGlobal.gmeConfig.client.log);
         this._droppable = params.droppable;
 
         this._init(container, params);
