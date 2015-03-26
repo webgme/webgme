@@ -1,8 +1,8 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, WebGMEGlobal*/
 
-define(['common/LogManager',
+define(['js/logger',
     'js/Controls/DropDownMenu',
-    'js/Controls/PopoverBox'], function (logManager,
+    'js/Controls/PopoverBox'], function (Logger,
                                         DropDownMenu,
                                         PopoverBox) {
 
@@ -12,7 +12,8 @@ define(['common/LogManager',
         ITEM_VALUE_CONNECT = 'connect';
 
     NetworkStatusWidget = function (containerEl, client) {
-        this._logger = logManager.create("NetworkStatusWidget");
+        this._logger = Logger.create('gme:Widgets:NetworkStatus:NetworkStatusWidget',
+            WebGMEGlobal.gmeConfig.client.log);
 
         this._client = client;
         this._el = containerEl;

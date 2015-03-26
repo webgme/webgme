@@ -1,7 +1,7 @@
 /*globals define, _, requirejs, WebGMEGlobal*/
 
-define(['common/LogManager',
-    'js/Controls/DropDownMenu'], function (logManager,
+define(['js/logger',
+    'js/Controls/DropDownMenu'], function (Logger,
                                            DropDownMenu) {
 
     "use strict";
@@ -10,7 +10,8 @@ define(['common/LogManager',
         LOG_PREFIX = "LOG: ";
 
     LogLevelManagerWidget = function (containerEl) {
-        this._logger = logManager.create("LogLevelManagerWidget");
+        this._logger = Logger.create('gme:Widgets:LogLevelManager:LogLevelManagerWidget',
+            WebGMEGlobal.gmeConfig.client.log);
 
         this._statusColors = { "OFF": "BLACK",
             "ERROR": "RED",
@@ -38,13 +39,13 @@ define(['common/LogManager',
             "size": "micro"});
 
         this._dropUpMenu.onItemClicked = function (val) {
-            logManager.setLogLevel(logManager.logLevels[val]);
+            //Logger.setLogLevel(Logger.logLevels[val]);
             self._refreshButtonText();
         };
 
         this._el.append(this._dropUpMenu.getEl());
 
-        this._logLevels = _.extend({}, logManager.logLevels );
+        this._logLevels = _.extend({}, Logger.logLevels );
         this._logLevelsById = {};
 
         //get all available log status
@@ -65,10 +66,10 @@ define(['common/LogManager',
     };
 
     LogLevelManagerWidget.prototype._refreshButtonText = function () {
-        var currentLogLevel = logManager.getLogLevel();
+        //var currentLogLevel = Logger.getLogLevel();
 
-        this._dropUpMenu.setTitle(LOG_PREFIX + this._logLevelsById[currentLogLevel]);
-        this._dropUpMenu.setColor(this._dropUpMenu.COLORS[this._statusColors[this._logLevelsById[currentLogLevel]]]);
+        //this._dropUpMenu.setTitle(LOG_PREFIX + this._logLevelsById[currentLogLevel]);
+        //this._dropUpMenu.setColor(this._dropUpMenu.COLORS[this._statusColors[this._logLevelsById[currentLogLevel]]]);
     };
 
     return LogLevelManagerWidget;

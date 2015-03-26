@@ -5,7 +5,7 @@
  * @author nabana / https://github.com/nabana
  */
 
-define(['common/LogManager',
+define(['js/logger',
     'js/util',
     'js/Loader/LoaderCircles',
     './ProjectRepositoryWidgetControl',
@@ -13,7 +13,7 @@ define(['common/LogManager',
     'raphaeljs',
     'css!./styles/ProjectRepositoryWidget.css'],
         function (
-            logManager,
+            Logger,
             util,
             LoaderCircles,
             ProjectRepositoryWidgetControl,
@@ -59,7 +59,8 @@ define(['common/LogManager',
         //attach its controller
         new ProjectRepositoryWidgetControl(client, this);
 
-        this._logger = logManager.create("ProjectRepositoryWidget");
+        this._logger = Logger.create("gme:Widgets:ProjectRepository:ProjectRepositoryWidget",
+            WebGMEGlobal.gmeConfig.client.log);
         this._logger.debug("Created");
     };
 

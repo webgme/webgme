@@ -30,8 +30,8 @@ define(['js/logger',
 
     var BlockEditorControl = function(params){
         this._client = params.client;
-        this.logger = params.logger || Logger.create(params.loggerName || "gme:BlockEditor:BlockEditorControl",
-            WebGMEGlobal.gmeConfig.client.log);
+        var loggerName = params.loggerName || 'gme:BlockEditor:BlockEditorControl';
+        this.logger = params.logger || Logger.create(loggerName, WebGMEGlobal.gmeConfig.client.log);
 
         this.snapCanvas = params.widget;
         this._attachClientEventListeners();

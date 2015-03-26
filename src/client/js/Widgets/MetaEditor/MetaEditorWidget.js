@@ -4,18 +4,18 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['common/LogManager',
+define(['js/logger',
     'js/util',
     'js/DragDrop/DragHelper',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget',
     'js/Controls/iCheckBox',
     './MetaEditorPointerNamesDialog',
-    'css!./styles/MetaEditorWidget.css'], function (logManager,
-                                                             clientUtil,
-                                                             DragHelper,
-                                                             DiagramDesignerWidget,
-                                                             iCheckBox,
-                                                             MetaEditorPointerNamesDialog) {
+    'css!./styles/MetaEditorWidget.css'], function (Logger,
+                                                    clientUtil,
+                                                    DragHelper,
+                                                    DiagramDesignerWidget,
+                                                    iCheckBox,
+                                                    MetaEditorPointerNamesDialog) {
 
     "use strict";
 
@@ -25,7 +25,7 @@ define(['common/LogManager',
 
     MetaEditorWidget = function (container, params) {
         params = params || {};
-        params.loggerName = "MetaEditorWidget";
+        params.loggerName = 'gme:Widgets:MetaEditor:MetaEditorWidget';
 
         //disable line style parameter controls in toolbar
         params.lineStyleControls = true;

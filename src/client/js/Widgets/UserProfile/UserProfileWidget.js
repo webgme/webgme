@@ -4,8 +4,8 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['common/LogManager',
-    'css!./styles/UserProfileWidget.css'], function (logManager) {
+define(['js/logger',
+    'css!./styles/UserProfileWidget.css'], function (Logger) {
 
     "use strict";
 
@@ -14,7 +14,7 @@ define(['common/LogManager',
         USER_PROFILE_WIDGET_TEMPLATE_NOTLOGGEDIN = '<i class="glyphicon glyphicon-user" title="Not logged in"></i>';
 
     UserProfileWidget = function (containerEl, client) {
-        this._logger = logManager.create("UserProfileWidget");
+        this._logger = Logger.create('gme:Widgets:UserProfile:UserProfileWidget', WebGMEGlobal.gmeConfig.client.log);
 
         this._client = client;
         this._el = containerEl;

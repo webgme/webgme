@@ -1,6 +1,6 @@
-/*globals define, _, requirejs, WebGMEGlobal*/
+/*globals define, _, WebGMEGlobal*/
 
-define(['common/LogManager'], function (logManager) {
+define(['js/Logger'], function (Logger) {
 
     "use strict";
 
@@ -52,7 +52,9 @@ define(['common/LogManager'], function (logManager) {
             self._loadMoreCommits(num);
         };
 
-        this._logger = logManager.create("RepositoryLogControl");
+        this._logger = Logger.create(
+            'gme:Widgets:ProjectRepository:ProjectRepositoryWidgetControl_RepositoryLogControl',
+            WebGMEGlobal.gmeConfig.client.log);
         this._logger.debug("Created");
     };
 
