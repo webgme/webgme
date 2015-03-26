@@ -108,7 +108,8 @@ var path = require('path'),
                     options: {
                         name: 'error-file',
                         filename: './server-error.log',
-                        level: 'error'
+                        level: 'error',
+                        handleExceptions: true
                     }
                 }]
             },
