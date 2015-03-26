@@ -88,6 +88,7 @@ var path = require('path'),
             log: {
                 transports: [{
                     transportType: 'Console',
+                    //patterns: ['gme:server:*', '-gme:server:worker*'], // ['gme:server:worker:*'], ['gme:server:*', '-gme:server:worker*']
                     options: {
                         level: 'info',
                         colorize: true,

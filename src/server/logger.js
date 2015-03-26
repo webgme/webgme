@@ -13,7 +13,14 @@ var winston = require('winston');
 function createLogger(name, options) {
     var winstonOptions = {transports: []},
         i,
-        transport;
+        transport,
+
+        j,
+        len,
+        patterns,
+        pattern,
+        shouldSkip,
+        shouldInclude;
 
     if (!options) {
         throw new Error('options is a mandatory parameter.');
@@ -23,10 +30,33 @@ function createLogger(name, options) {
         throw new Error('options.transports is a mandatory parameter.');
     }
 
+
     for (i = 0; i < options.transports.length; i += 1) {
-        options.transports[i].options.label = name;
-        transport = new (winston.transports[options.transports[i].transportType])(options.transports[i].options);
-        winstonOptions.transports.push(transport);
+
+        patterns = options.transports[i].patterns || ['*']; // log everything by default
+        len = patterns.length;
+
+        shouldSkip = false;
+        shouldInclude = false;
+        for (j = 0; j < len; j += 1) {
+            if (patterns[j] === '') {
+                // ignore empty strings
+                continue;
+            }
+            pattern = patterns[j].replace(/\*/g, '.*?');
+            if (pattern[0] === '-') {
+                shouldSkip = shouldSkip || (new RegExp('^' + pattern.substr(1) + '$')).test(name);
+            } else {
+                shouldInclude = shouldInclude || (new RegExp('^' + pattern + '$')).test(name);
+            }
+        }
+
+        if (shouldInclude && shouldSkip === false) {
+            // add the transport
+            options.transports[i].options.label = name;
+            transport = new (winston.transports[options.transports[i].transportType])(options.transports[i].options);
+            winstonOptions.transports.push(transport);
+        }
     }
 
     return winston.loggers.add(name, winstonOptions);
@@ -34,4 +64,4 @@ function createLogger(name, options) {
 
 module.exports = {
     create: createLogger
-}
+};
