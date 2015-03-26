@@ -101,7 +101,8 @@ var path = require('path'),
                     options: {
                         name: 'info-file',
                         filename: './server.log',
-                        level: 'info'
+                        level: 'info',
+                        json: false
                     }
                 }, {
                     transportType: 'File',
@@ -109,7 +110,8 @@ var path = require('path'),
                         name: 'error-file',
                         filename: './server-error.log',
                         level: 'error',
-                        handleExceptions: true
+                        handleExceptions: true,
+                        json: false
                     }
                 }]
             },
