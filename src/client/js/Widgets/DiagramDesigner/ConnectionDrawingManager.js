@@ -1,9 +1,9 @@
 /*globals define, _, requirejs, WebGMEGlobal, Raphael*/
 
-define(['common/LogManager',
+define(['js/logger',
         'js/Constants',
         'js/Widgets/DiagramDesigner/DragScroll',
-        './DiagramDesignerWidget.Constants'], function (logManager,
+        './DiagramDesignerWidget.Constants'], function (Logger,
                                                         CONSTANTS,
                                                         DragScroll,
                                                         DiagramDesignerWidgetConstants) {
@@ -32,7 +32,8 @@ define(['common/LogManager',
      * It draws the connection on a Raphael SVG paper
      */
     ConnectionDrawingManager = function (options) {
-        this.logger = logManager.create(((options && options.loggerName) || "ConnectionDrawingManager"));
+        var loggerName = (options && options.loggerName) || 'gme:Widgets:DiagramDesigner:ConnectionDrawingManager';
+        this.logger = Logger.create(loggerName, WebGMEGlobal.gmeConfig.client.log);
 
         this._diagramDesigner = options ? options.diagramDesigner : null;
 

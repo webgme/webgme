@@ -1,14 +1,14 @@
-/*globals define*/
+/*globals define, WebGMEGlobal*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
  * @author brollb / https://github/brollb
  */
 
-define(['common/LogManager',
-	    'common/util/assert',
+define(['js/logger',
+        'common/util/assert',
         './AutoRouter.Constants',
-        './AutoRouter.Utils'], function (logManager,
+        './AutoRouter.Utils'], function (Logger,
                                          assert,
                                          CONSTANTS,
                                          Utils) {
@@ -16,7 +16,7 @@ define(['common/LogManager',
 
     'use strict'; 
 
-    var _logger = logManager.create('AutoRouterPointList');
+    var _logger = Logger.create('gme:Widgets:DiagramDesigner:AutoRouter.PointList', WebGMEGlobal.gmeConfig.client.log);
     var array = [];
     var ArPointListPath = function () {
     };

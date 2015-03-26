@@ -1,18 +1,18 @@
-/*globals define*/
+/*globals define, WebGMEGlobal*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
  * @author brollb / https://github/brollb
  */
 
-define(['common/LogManager',
+define(['js/logger',
        'common/util/assert',
        './AutoRouter.Constants',
        './AutoRouter.Utils',
        './AutoRouter.Path',
        './AutoRouter.Port',
        './AutoRouter.Box',
-       './AutoRouter.Edge'], function (logManager, 
+       './AutoRouter.Edge'], function (Logger,
                                        assert,
                                        CONSTANTS,
                                        Utils,
@@ -25,7 +25,7 @@ define(['common/LogManager',
 
     //----------------------AutoRouterEdgeList
 
-    var _logger = logManager.create('AutoRouterEdgeList');
+    var _logger = Logger.create('gme:Widgets:DiagramDesigner:AutoRouter.EdgeList', WebGMEGlobal.gmeConfig.client.log);
     var AutoRouterEdgeList = function (b) {
         this.owner = null;
 
