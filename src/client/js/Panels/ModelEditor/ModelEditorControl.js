@@ -32,7 +32,7 @@ define(['js/logger',
     ModelEditorControl = function (options) {
         var self = this;
 
-        this.logger = options.logger || Logger.create(options.loggerName || 'gme:Panels:ModelicaEditor:' +
+        this.logger = options.logger || Logger.create(options.loggerName || 'gme:Panels:ModelEditor:' +
             'ModelEditorControl', WebGMEGlobal.gmeConfig.client.log);
 
         this._client = options.client;
